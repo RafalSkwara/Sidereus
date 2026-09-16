@@ -1,0 +1,31 @@
+# Revisit after stack selection — this is deliberately generic, since the
+# framework, package manager and test runner are not chosen yet.
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
