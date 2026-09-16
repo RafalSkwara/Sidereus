@@ -2,10 +2,10 @@
 project: "Sidereus"
 context_type: greenfield
 created: 2026-09-15
-updated: 2026-09-15
+updated: 2026-09-16
 checkpoint:
-  current_phase: 5
-  phases_completed: [1, 2, 3, 4]
+  current_phase: 8
+  phases_completed: [1, 2, 3, 4, 5, 6, 7]
   gray_areas_resolved:
     - topic: "pain category"
       decision: "decision paralysis is primary; data scattered across tools, workflow friction, and gear-blindness are its mechanism"
@@ -29,8 +29,13 @@ checkpoint:
       decision: "schema's two values kept (must-have | nice-to-have); 'first to cut' nuance recorded in a separate ## Cut order block rather than as a third priority value"
     - topic: "last-eyepiece deletion"
       decision: "SUPERSEDED during the Socratic round. Original decision was to guard the last eyepiece like the last site and telescope; reversed to allow deletion always, with empty states carrying the weight (see FR-021)."
-  frs_drafted: 23
-  quality_check_status: pending
+  frs_drafted: 24
+  quality_check_status: accepted
+product_type: web-app
+target_scale:
+  users: medium
+  qps: low
+  data_volume: small
 timeline_budget:
   mvp_weeks: 6
   hard_deadline: 2026-11-04
@@ -221,7 +226,7 @@ not yet observing, building toward their own first sessions.
   > weight. This supersedes the earlier decision to guard the last eyepiece.
 
 ### Night conditions
-- FR-010: User can see a go / marginal / no-go verdict and the astronomical darkness window for a selected site and night, with all times shown in the site's timezone. Priority: must-have
+- FR-010: User can see a go / marginal / no-go verdict and the dark window for a selected site and night, with all times shown in the site's timezone. The dark window runs between the site's Bortle-dependent sun-altitude thresholds (tunable parameter #7). Priority: must-have
   > Socrates: Counter-arguments considered: "astronomical darkness is the wrong
   > threshold at a light-polluted site", "a three-level verdict overstates
   > forecast confidence", "site-local time serves a case the persona doesn't
@@ -243,7 +248,7 @@ not yet observing, building toward their own first sessions.
   > remedies - one resolves tomorrow, the other in three months - and one empty
   > state will serve both badly." Resolution: FR split. FR-020 now covers the
   > weather no-go only; the seasonal case becomes FR-023.
-- FR-023: At a site and season with no astronomical darkness, user sees an explanation of the latitude and season cause, and the date astronomical darkness returns. Priority: must-have
+- FR-023: Where the sun never reaches the site's darkness threshold for a night, user sees an explanation of the latitude and season cause, and the date the dark window returns. Priority: must-have
   > Socrates: Counter-arguments considered: "naming the return date is a forward
   > search rather than a calculation", "it's a property of the site, not the
   > night", "the reference user may never reproduce it locally." Resolution:
@@ -251,12 +256,16 @@ not yet observing, building toward their own first sessions.
   > screen with no explanation is the worst outcome for a beginner.
 
 ### Object ranking
-- FR-013: User can see up to five ranked Messier objects for a selected site, night and telescope, each with its best observing window. Only objects clearing a minimum object score are shown, and the view states how many cleared it. Priority: must-have
+- FR-013: User can see up to five ranked Messier objects for a selected site, night and telescope, each with its best observing window, its constellation, and its altitude and compass direction at that time (for example "SW, 45 deg"). Only objects clearing a minimum object score are shown, and the view states how many cleared it. Priority: must-have
   > Socrates: Counter-argument accepted: "five is arbitrary and forces filler -
   > on a marginal night under a bright moon there may be two objects genuinely
   > worth the effort, and padding puts bad recommendations beside good ones with
   > no visible distinction." Resolution: FR amended - the list is gated by a
   > quality bar and the count itself becomes information about the night.
+  > Further amended at the closing cross-check: each entry also carries its
+  > constellation (already present in the catalogue data) and its altitude and
+  > compass direction at the best time, which orients a beginner without
+  > crossing into the star-hopping non-goal.
 - FR-014: User can see a recommended pair of their own eyepieces for each ranked object: a finding eyepiece (widest true field of view) and a detail eyepiece (the highest magnification that still fits the object and respects the exit-pupil floor). Priority: must-have
   > Socrates: Two counter-arguments accepted: "a 7 mm exit-pupil ceiling is a
   > young person's pupil - past roughly 40 it's nearer 5 mm, and under suburban
@@ -301,26 +310,89 @@ not yet observing, building toward their own first sessions.
   > is already in the cut order, and a log you can only write from tonight's
   > ranking is a strange log.
 
-## Cut order
+### Night usability
+- FR-024: User can switch the interface to a red night mode that preserves dark adaptation. Priority: must-have
+  > Socrates: Raised during Phase 5 rather than the FR round. It answers the
+  > dark-adaptation counter-argument offered against FR-016 - which was not the
+  > counter-argument accepted there - so it is new scope, not a carried
+  > resolution. Recorded as an FR with a cut-order entry rather than as a
+  > priority value the schema does not have.
 
-Recorded 2026-09-15. These FRs are in the MVP as planned; they are the first to
-drop at the week-2 checkpoint if the engine spike is not producing a sane top 5.
-This is a delivery plan, not a priority label - all remain must-have until cut.
+## Non-Functional Requirements
 
-1. FR-011 and FR-012 - the 7-night strip and site switching. The data model
-   stays multi-site regardless; only the UI is cut.
-2. FR-022 - manual log entry. Marking from the ranking (FR-016) survives.
-3. FR-003 - password reset, included only if the auth provider sends email with
-   no extra setup.
+- Identical inputs produce identical output: the same site, night, telescope and
+  observation log always yield the same verdict and the same ranking.
+- Altitude and timing results agree with an independent planetarium reference
+  within a stated tolerance. Candidate: 1 degree of altitude and 5 minutes of
+  time; the tolerance itself is uncalibrated (see Open Questions).
+- All times are shown in the selected site's timezone and remain correct across
+  daylight-saving transitions, including the 25-hour night of 25 October 2026.
+- A signed-in session survives a rolling 30 days without re-authentication, so a
+  session never expires on someone standing in a dark field.
+- From the start of onboarding to the first ranked list takes under a minute of
+  interaction, measured excluding sign-up form typing.
+- A site's coordinates are rounded to approximately 1 km at capture, are never
+  written to logs, and never leave the product except in the forecast and
+  geocoding lookups that require them.
+- No user can read or modify another user's data, verified by a test that
+  exercises the boundary outside the user interface.
+- With current weather data unavailable, the most recent successful forecast for
+  that site is shown together with its age, and moon, twilight and altitude
+  results remain usable.
+- The product stays within the forecast provider's non-commercial fair-use
+  limits.
+- The Tonight view renders within about 2 seconds against warm data, and ranking
+  the full Messier catalogue completes in under a second.
+- The interface is dark by default and usable without destroying dark
+  adaptation.
+- OpenNGC (CC BY-SA 4.0) and Open-Meteo (CC BY 4.0) are credited in the product,
+  as their licences require.
 
-## Timeline acknowledgment
+## Business Logic
 
-Acknowledged on 2026-09-15: 6-week MVP requires sustained dedication; user
-accepted. Capacity is 40-55 hours across 6-7 weeks (~7-8 h/week), against a hard
-deadline of 2026-11-04 with the final week reserved for tests, CI/CD, deployment
-and documentation. A cut trigger is pre-committed: if the engine spike is not
-producing a sane top 5 by the end of week 2, the 7-night strip and multi-site UI
-are dropped immediately rather than in week 6.
+For a given site, night and telescope, Sidereus decides whether the night is
+worth setting up for and which Messier objects the user can realistically see,
+when, and with which eyepieces.
+
+The rule consumes what the user has told the product about where they observe
+(location, sky quality, and the lowest altitude they can usefully see down to),
+what they own (a telescope's aperture and focal length, and each eyepiece's
+focal length and apparent field of view), and what they have already seen and
+how well it went. To that it adds the conditions for each night ahead: the cloud
+and humidity forecast, the moon's position and illumination, and the times at
+which the sky is dark enough to observe.
+
+It produces two separate judgments. The first is about the night: whether the
+sky will be usable, expressed as a verdict with its reason and the window of
+darkness it applies to. The second is about the objects: which of them clear a
+quality bar for that night and telescope, in what order, during which window
+each is best placed, and which two of the user's own eyepieces to use - one to
+find it, one to look closely. Objects already seen are pushed down gently rather
+than removed, and an object the user tried and could not make out is not pushed
+down at all.
+
+The user encounters both on one screen. The verdict answers whether to go out;
+the ranking answers what to do once outside, with each entry carrying the single
+factor that most distinguishes it from the others in the list.
+
+### Invariants
+
+Decided now. These do not vary and are not tuned.
+
+- An object below the site's minimum altitude throughout the dark window never
+  ranks.
+- A no-go night shows no ranking.
+- An object that does not fit an eyepiece's true field of view is not
+  recommended for that eyepiece.
+- A log entry rated 1-2 of 5 never deprioritizes its object.
+- Nights 4-7 carry no verdict.
+
+### Tunable parameters
+
+Every number in the scoring is a tunable parameter with an uncalibrated
+candidate value, listed by name in Open Questions and resolved at the end of the
+engine-spike milestone. They are recorded as candidates rather than decisions so
+that nothing downstream treats an armchair guess as settled.
 
 ## Access Control
 
@@ -341,3 +413,137 @@ to get the user to their first ranked list in under a minute. That target is
 carried into Success Criteria and Non-Functional Requirements.
 
 A read-only demo account is post-MVP.
+
+## Non-Goals
+
+Functional:
+
+- **Astrophotography.** No exposure planning, tracking, guiding or imaging
+  advice. The largest adjacent scope in the hobby and the one most likely to
+  arrive as one more field on the equipment form.
+- **Anything outside the Messier catalogue.** No planets, Moon, comets, double
+  stars or NGC objects, in the ranking or the log. The catalogue is a filter
+  change away, which is exactly why the boundary has to be written down.
+- **Finding the object.** No star-hopping directions, sky charts or finder
+  views. The user locates objects with other tools such as Stellarium or printed
+  charts. Accepted boundary: the product answers whether to go out and what to
+  look at, not how to find it. Partially mitigated by FR-013, which names each
+  object's constellation and its altitude and compass direction at the best
+  time. Named anchor stars remain post-MVP.
+- **Hardware control.** No GoTo mount or telescope integration.
+- **Notifications.** No push, email or "clear tonight" alerts.
+- **Social and sharing features.** No shared sites, club accounts, public logs
+  or comparison with other observers. Keeps the flat access model honest.
+- **AI features.** The planner chat, object descriptions and summaries are
+  post-MVP. Only the scoring functions' tool-callable shape is kept.
+
+Non-functional:
+
+- **Modelling seeing, transparency or light pollution.** No jet-stream or seeing
+  forecasts, no light-pollution maps, no automatic Bortle class from
+  coordinates. Sky quality stays a coarse number the user sets.
+- **Native mobile app.** Web only; a responsive layout is sufficient.
+
+## Open Questions
+
+Tunable scoring parameters (1-9) carry uncalibrated candidate values so the
+engine spike can start. Owner: user. Resolution point: end of the engine-spike
+milestone, approximately 2026-09-30.
+
+1. **Component weights for the object score** - candidate (uncalibrated):
+   altitude duration 0.35, moon interference 0.30, brightness versus limiting
+   magnitude 0.25, Bortle surface-brightness penalty 0.10.
+2. **Verdict cloud thresholds** - candidate (uncalibrated): go if there is a
+   contiguous run of at least 2 hours below 30% cloud within the dark window;
+   marginal if at least 1 hour below 65%; otherwise no-go. Humidity above 90%
+   caps the verdict at marginal. Scored on the longest contiguous clear run
+   rather than a mean, so that a late clearance is not averaged away.
+3. **Minimum object score** - candidate (uncalibrated): 0.45 on a 0-1 scale.
+4. **Exit-pupil ceiling and floor** - candidate (uncalibrated): 5.5 mm ceiling,
+   0.7 mm floor.
+5. **Bortle penalty** - candidate (uncalibrated): applies to objects fainter
+   than about 21 mag/arcsec2 surface brightness, scaling from 0 at Bortle 1-2 to
+   0.40 at Bortle 8-9. OpenNGC does not carry surface brightness for every
+   Messier object, clusters especially, so where it is missing the penalty falls
+   back to object type (galaxies and diffuse nebulae penalized).
+6. **Log penalty size** - candidate (uncalibrated): 0.15 subtracted for entries
+   rated 3 or above; zero for entries rated 1-2.
+7. **Darkness threshold by Bortle class** - candidate (uncalibrated): sun at
+   -18 degrees for Bortle 1-4, -15 for 5-6, -12 for 7-9. At 52 degrees north
+   this means -12 is always reached, -15 is missed only around the solstice, and
+   -18 is missed from roughly late May to mid-July.
+8. **Default minimum altitude** - candidate (uncalibrated): 15 degrees. Peak
+   altitude from 52 degrees north is 38 degrees plus declination, so 15 keeps
+   objects down to about -23 declination and excludes roughly 14 Messier
+   objects. A 25-degree default would have excluded roughly 28, including all of
+   Sagittarius and Scorpius. Users with obstructed horizons raise it per site.
+9. **Ephemeris tolerance** - candidate (uncalibrated): 1 degree of altitude and
+   5 minutes of time against Stellarium.
+10. **Which telescope and eyepiece-kit presets ship** - the fixed, named preset
+    set required by FR-006. Owner: user. Blocks the under-a-minute onboarding
+    claim in Success Criteria.
+11. **Database and authentication choice** - deferred to stack selection. The
+    auth provider must ship password reset without extra email setup, or FR-003
+    is cut.
+12. **Open-Meteo geocoding terms** - confirm the geocoding endpoint's
+    non-commercial fair-use terms before FR-004 depends on it.
+
+## Cut order
+
+Recorded 2026-09-15. These FRs are in the MVP as planned; they are the first to
+drop at the week-2 checkpoint if the engine spike is not producing a sane top 5.
+This is a delivery plan, not a priority label - all remain must-have until cut.
+
+1. FR-011 and FR-012 - the 7-night strip and site switching. The data model
+   stays multi-site regardless; only the UI is cut.
+2. FR-022 - manual log entry. Marking from the ranking (FR-016) survives.
+3. FR-003 - password reset, included only if the auth provider sends email with
+   no extra setup.
+4. FR-024 - red night mode. Dark theme by default (an NFR) survives; the red
+   filter is the cut.
+
+## Timeline acknowledgment
+
+Acknowledged on 2026-09-15: 6-week MVP requires sustained dedication; user
+accepted. Capacity is 40-55 hours across 6-7 weeks (~7-8 h/week), against a hard
+deadline of 2026-11-04 with the final week reserved for tests, CI/CD, deployment
+and documentation. A cut trigger is pre-committed: if the engine spike is not
+producing a sane top 5 by the end of week 2, the 7-night strip and multi-site UI
+are dropped immediately rather than in week 6.
+
+## Forward: tech-stack
+
+Not part of the PRD. Captured for the stack-selection step that follows.
+
+- Database and authentication are open; the auth provider must supply password
+  reset and, post-MVP, email verification and OAuth.
+- Open-Meteo for forecasts and for place-name geocoding (same vendor).
+- astronomy-engine for moon, twilight and altitude computation.
+- OpenNGC as the catalogue source, filtered to Messier, so extending to NGC is a
+  filter change rather than a new integration.
+- Playwright for the end-to-end test.
+- A coordinate-to-timezone lookup is required by the site-local time NFR.
+- AI is post-MVP and optional: tool-calling over the scoring functions, with the
+  user supplying their own key.
+
+## Forward: technical-roadmap
+
+Not part of the PRD. Captured for implementation planning.
+
+- The scoring code is pure and performs no I/O, which is what makes the
+  determinism NFR and the fixture-based tests possible.
+- Data isolation is enforced at the persistence layer, not only on interface
+  routes.
+- Ranking executes server-side.
+- Forecasts are cached per site with roughly a 1-hour lifetime.
+- A fixture forecast adapter backs the end-to-end test.
+- Engine unit tests run against fixture forecasts; deprioritization is tested
+  with fixture logs.
+- Validation: ephemeris against Stellarium, top-5 ranking sanity against
+  Telescopius for 2-3 nights.
+- Build order: engine, then auth and onboarding, then Tonight, then the log.
+  Final week reserved for tests, CI/CD, deployment and documentation.
+- Scale note (100x probe): the domain rule does not change with scale, only
+  delivery. At 1k-10k users, forecasts would be cached by grid cell using the
+  already-rounded coordinates and shared between nearby users, because per-site
+  fetching would exceed Open-Meteo's free non-commercial allowance.
