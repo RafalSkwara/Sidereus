@@ -72,8 +72,9 @@ not yet observing, building toward their own first sessions.
   an evening; a false "no-go" costs only a night. Where the forecast is
   uncertain, "marginal" must be reachable rather than rounding up to "go".
 - Forecast outage degrades, never blanks. With weather data unavailable, moon,
-  twilight and altitude results remain usable behind an explicit "no weather
-  data" state rather than an error page.
+  twilight and altitude results remain usable. The last successful forecast is
+  shown with its age where one exists; otherwise an explicit "no weather data"
+  state is shown. Neither case produces an error page.
 
 ## User Stories
 
@@ -100,6 +101,52 @@ not yet observing, building toward their own first sessions.
   reason are shown in place of the ranking.
 - All times are rendered in the selected site's timezone.
 
+### US-02: User is told why tonight is a no-go and when to try next
+
+- **Given** a signed-in user with a site and telescope
+- **When** they open the Tonight view on a night the forecast rules no-go
+- **Then** they see the no-go verdict with its reason and the next night that is
+  not a no-go, in place of a ranking
+
+#### Acceptance Criteria
+- No object ranking is shown on a no-go night (FR-020, Business Logic
+  invariant).
+- Where the site has no dark window for the night, the explanation names the
+  latitude and season cause and the date the dark window returns, instead of a
+  weather reason (FR-023).
+- With no weather data, the view falls back to the last forecast with its age or
+  an explicit "no weather data" state, never an error page.
+
+### US-03: User compares nights across two sites to decide on a drive
+
+- **Given** a signed-in user with a home site and a darker second site
+- **When** they view the next 7 nights and switch between the two sites
+- **Then** they see, for each site, a verdict on nights 1-3 and moon and
+  darkness data with a cloud outlook on nights 4-7, so a "marginal at home
+  Thursday, go at the dark site Saturday" decision can be read off
+
+#### Acceptance Criteria
+- Nights 4-7 show no verdict (FR-011, Business Logic invariant).
+- All times are rendered in the selected site's timezone, including across the
+  2026-10-25 daylight-saving transition.
+- Switching sites re-runs the same 7-night view for the selected site (FR-012).
+
+### US-04: User logs an observation and sees it reflected in later rankings
+
+- **Given** a signed-in user looking at tonight's ranking
+- **When** they mark an object as observed, confirm the night, and rate it
+  3 or above
+- **Then** later rankings show that object mildly deprioritized and, where it
+  still ranks, tagged "seen N times - last [date]"
+
+#### Acceptance Criteria
+- The entry stores object, observing night, rating, site and telescope; the
+  night is prefilled and editable before saving (FR-016).
+- An entry rated 1-2 applies no penalty, so the object stays on the list
+  (FR-018, Business Logic invariant).
+- The user can edit or delete the entry afterwards (FR-017), and entries remain
+  readable after their site or telescope is deleted (FR-021).
+
 ## Functional Requirements
 
 ### Accounts
@@ -116,8 +163,8 @@ not yet observing, building toward their own first sessions.
 - FR-003: User can reset a forgotten password. Priority: must-have
   > Socrates: Counter-argument considered: "it drags back the email dependency
   > that cutting verification removed." Resolution: stands. Already conditional
-  > on the auth provider shipping it with no extra setup, and first in the cut
-  > order.
+  > on the auth provider shipping it with no extra setup, and in the cut order
+  > (position 3).
 
 ### Onboarding
 - FR-004: New user can set a home observing site using browser geolocation or place-name search; stored coordinates are rounded to approximately 1 km. The site is created with the default name "Home" and a default minimum altitude, both editable via FR-007. Priority: must-have
@@ -186,7 +233,8 @@ not yet observing, building toward their own first sessions.
 - FR-012: User can switch the selected site and see the same 7-night view for it. Priority: must-have
   > Socrates: Counter-arguments considered: "the real question is a comparison,
   > not a switch", "it serves the secondary persona." Resolution: stands. It is
-  > the cheapest form of multi-site and is already first in the cut order.
+  > the cheapest form of multi-site and is already first in the cut order
+  > (position 1, together with FR-011).
 - FR-020: On a no-go night, user sees the verdict, its reason, and the next night that is not a no-go, instead of an empty or misleading ranking. Priority: must-have
   > Socrates: Counter-argument accepted: "'clouded out tonight' and 'no
   > astronomical darkness this season' are unrelated conditions with unrelated
@@ -229,7 +277,7 @@ not yet observing, building toward their own first sessions.
   > tonight.
 
 ### Observation log
-- FR-016: User can mark a ranked object as observed. The entry stores the observing night (the evening date), prefilled from the ranking's selected night, which the user can confirm or edit in the form. Priority: must-have
+- FR-016: User can mark a ranked object as observed. The entry stores the object, the observing night (the evening date), a 1-5 rating of how well it went, and the site and telescope used. The night is prefilled from the ranking's selected night, and the site and telescope from the ranking's selection; the user can confirm or edit all of them in the form. Priority: must-have
   > Socrates: Counter-argument accepted: "prefilling tonight will often be
   > wrong - logging happens next morning from memory, and confidently wrong
   > entries then feed the deprioritization rule." Resolution: FR amended - the
@@ -263,6 +311,20 @@ not yet observing, building toward their own first sessions.
   > resolution. Recorded as an FR with a cut-order entry rather than as a
   > priority value the schema does not have.
 
+### Cut order
+
+Recorded 2026-09-15 in shape-notes. Every FR above is must-have; this is a
+delivery plan, not a priority label. These are the first to drop at the week-2
+checkpoint if the engine spike is not producing a sane top 5.
+
+1. FR-011 and FR-012 - the 7-night strip and site switching. The data model
+   stays multi-site regardless; only the UI is cut.
+2. FR-022 - manual log entry. Marking from the ranking (FR-016) survives.
+3. FR-003 - password reset, included only if the auth provider sends email with
+   no extra setup.
+4. FR-024 - red night mode. Dark theme by default (an NFR) survives; the red
+   filter is the cut.
+
 ## Non-Functional Requirements
 
 - Identical inputs produce identical output: the same site, night, telescope and
@@ -282,8 +344,9 @@ not yet observing, building toward their own first sessions.
 - No user can read or modify another user's data, verified by a test that
   exercises the boundary outside the user interface.
 - With current weather data unavailable, the most recent successful forecast for
-  that site is shown together with its age, and moon, twilight and altitude
-  results remain usable.
+  that site is shown together with its age, or an explicit "no weather data"
+  state where none has been fetched; moon, twilight and altitude results remain
+  usable in both cases.
 - The product stays within the forecast provider's non-commercial fair-use
   limits.
 - The Tonight view renders within about 2 seconds against warm data, and ranking
@@ -348,9 +411,12 @@ Public surface is a static landing page only - what the product does, plus
 screenshots. Every product route is gated; an unauthenticated request to a gated
 route returns the user to sign-in and continues to the requested page afterwards.
 
-Sign-up and sign-in are email + password for the MVP, using the auth provider's
-built-in verification and password-reset flows rather than hand-built screens.
-The concrete mechanism is decided at stack selection. OAuth is post-MVP.
+Sign-up and sign-in are email + password for the MVP. Email verification is
+disabled in the MVP: sign-up leads straight into onboarding. Password reset uses
+the auth provider's built-in flow rather than a hand-built screen, and is kept
+only if the provider ships it without extra email setup (FR-003). The concrete
+mechanism is decided at stack selection. Email verification and OAuth are
+post-MVP.
 
 Immediately after sign-up, onboarding uses equipment presets and a Bortle picker
 to get the user to their first ranked list in under a minute. That target is
