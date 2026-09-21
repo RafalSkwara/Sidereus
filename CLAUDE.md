@@ -1,55 +1,63 @@
-# Rules for AI
+# CLAUDE.md
 
-This file provides guidance to AI Agent when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+**Sidereus** — a web app that tells a beginner amateur astronomer whether tonight is worth setting up for (go / marginal / no-go) and which Messier objects to point at, with an eyepiece pair from their own kit. Product requirements, invariants and tunable scoring parameters live in `@context/foundation/prd.md`; the stack rationale in `@context/foundation/tech-stack.md`. Work runs through the 10x `context/` workflow with in-flight changes under `context/changes/<id>/`.
+
+The codebase is currently the untouched `10x-astro-starter` scaffold plus `context/`. No product code exists yet; the starter's auth flow and dashboard are the only features.
+
+## Tripwires (read first)
+
+- **Never write to `context/archive/`.** Archived changes are immutable; open a new change instead.
+- **CI does not run.** `.github/workflows/ci.yml` triggers on `master`, but the repo's default branch is `main`. Fix the branch filter before relying on CI.
+- **`createClient()` in `@src/lib/supabase.ts` returns `null`** when `SUPABASE_URL` / `SUPABASE_KEY` are unset (both are `optional: true` in the `astro:env` schema). Every caller must handle `null`; the app boots without Supabase and `@src/lib/config-status.ts` renders a warning banner via the layout.
+- **Error-response shape for API routes**: no JSON errors. Routes redirect back to the originating page with `?error=<encoded message>`; the `.astro` page reads `Astro.url.searchParams.get("error")` and passes it to the React form as `serverError`. Follow this in new routes.
+- **`npm audit` needs `--registry https://registry.npmjs.org`** on this machine: the default registry is a private Nexus mirror that rejects the advisories endpoint.
+- **Node ≥ 24.16** (`.nvmrc` pins 24.21.0, `package.json` engines enforce it). Two ESLint Astro packages declare narrow `engines.node` ranges; mismatch warnings at install are upstream noise, not blockers.
+- **Deploy target is Cloudflare Workers** (with static assets), never Pages: `@astrojs/cloudflare` v13+ dropped Pages support. `name` is `sidereus` in `package.json` and `wrangler.jsonc`; `tech-stack.md` says `cloudflare-workers`. Platform decision and risk register: `context/foundation/infrastructure.md`.
 
 ## Commands
 
-- `npm run dev` — start dev server (Cloudflare workerd runtime)
-- `npm run build` — production build (SSR via `@astrojs/cloudflare`)
-- `npm run preview` — preview production build
-- `npm run lint` — ESLint with type-checked rules
-- `npm run lint:fix` — auto-fix lint issues
-- `npm run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
-- `npm run smoke` — dependency-free auth-flow smoke test (`scripts/smoke.mjs`) against a running server, `BASE_URL` env (default `http://localhost:4321`). Run after dependency upgrades; CI runs it against the production preview with a local Supabase.
+```bash
+npm run dev          # Astro dev server on the Cloudflare workerd runtime, http://localhost:4321
+npm run build        # production SSR build (@astrojs/cloudflare adapter)
+npm run preview      # serve the production build
+npm run lint         # ESLint (type-checked); lint:fix to auto-fix
+npm run format       # Prettier (astro + tailwind plugins)
+npx astro check      # TS/Astro type check — CI runs this, `npm run lint` does not
+npx astro sync       # regenerate .astro/types.d.ts (CI runs it before lint)
+npm run smoke        # scripts/smoke.mjs: HTTP walk of signup→signin→dashboard→signout against BASE_URL
+npx supabase start   # local Supabase (Docker); email confirmations are disabled in supabase/config.toml
+npx wrangler deploy  # deploy (secrets via `npx wrangler secret put`)
+```
 
-Pre-commit hooks: husky + lint-staged runs `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css,md}`.
+There is **no unit test runner**. The smoke script is the only automated check and needs a running server plus a reachable Supabase with email confirmation off. When adding a test framework, wire it into the `ci` job.
+
+Pre-commit runs lint-staged (husky); the file globs are in `@package.json`.
+
+Env: `SUPABASE_URL`, `SUPABASE_KEY` in `.env` (Node/astro CLI) **and** `.dev.vars` (Cloudflare local dev). Both gitignored.
 
 ## Architecture
 
-**Astro 7 SSR app** with React 19 islands, Tailwind 4, Supabase auth, and shadcn/ui components. Deployed to Cloudflare Workers.
+Stack and versions: `@README.md`. `output: "server"` — every page and route is SSR by default; no `prerender` flags needed. React islands only where there is client state (forms use `client:load`). shadcn/ui aliases are in `components.json`.
 
-### Rendering mode
+**Request flow**: `@src/middleware.ts` runs on every request, builds a cookie-backed Supabase SSR client, resolves the user into `Astro.locals.user` (typed in `src/env.d.ts`), and redirects unauthenticated requests on `PROTECTED_ROUTES` (prefix match) to `/auth/signin`. Add new gated paths to that array. The PRD requires the post-login redirect to continue to the originally requested page; the middleware does not do this yet.
 
-Full server-side rendering (`output: "server"` in astro.config.mjs). All pages are server-rendered by default. API routes must export `const prerender = false`.
+**Auth surfaces**: pages under `src/pages/auth/`, POST handlers under `src/pages/api/auth/`, React forms under `src/components/auth/`. Forms do client-side validation only and submit as plain HTML POSTs; the server is the source of truth.
 
-### Auth flow
+**Layout**: `@src/layouts/Layout.astro` wraps every page and renders config-status banners. All user-facing copy is English; the two Polish strings in `src/lib/config-status.ts` are starter leftovers, translate them when you next touch that file.
 
-- `src/lib/supabase.ts` — creates a Supabase SSR client using `@supabase/ssr` with cookie-based sessions. Uses `astro:env/server` for `SUPABASE_URL` and `SUPABASE_KEY` (server-only secrets declared in astro.config.mjs `env.schema`).
-- `src/middleware.ts` — runs on every request, resolves the current user, attaches to `context.locals.user`. Redirects unauthenticated users away from routes listed in `PROTECTED_ROUTES`.
-- API endpoints: `src/pages/api/auth/{signin,signup,signout}.ts`
-- Auth pages: `src/pages/auth/{signin,signup,confirm-email}.astro`
-- Protected page example: `src/pages/dashboard.astro`
+## Conventions
 
-### Key conventions
+- Import via the `@/*` alias (→ `src/*`). Merge Tailwind classes with `cn()` from `@/lib/utils`, never string concatenation.
+- shadcn components go in `src/components/ui/` via `npx shadcn@latest add <name>`. Hooks alias resolves to `src/hooks/` (per `components.json`).
+- Business logic and services in `src/lib/`. The PRD's scoring engine must be pure and deterministic (identical inputs → identical verdict and ranking), so keep it free of I/O.
+- Database changes as Supabase migrations in `supabase/migrations/` named `YYYYMMDDHHmmss_short_description.sql`, RLS enabled with per-operation policies. Per-user isolation is a PRD non-functional requirement and must be testable outside the UI.
+- Lint rules live in `@eslint.config.js`; run `npm run lint` before committing.
+- Default branch `main`; feature branches `feat/<topic>`; PRs merged via GitHub.
 
-- **Path alias**: `@/*` maps to `./src/*` (tsconfig paths).
-- **Astro components** for static content/layout; **React components** only when interactivity is needed.
-- **Tailwind class merging**: use the `cn()` helper from `@/lib/utils` (clsx + tailwind-merge) for conditional/merged class names. Do not concatenate class strings manually.
-- **shadcn/ui**: components live in `src/components/ui/`, "new-york" style variant. Install new ones with `npx shadcn@latest add [name]`.
-- **API routes**: use uppercase `GET`, `POST` exports; validate input with zod.
-- **Supabase migrations**: `supabase/migrations/` using naming format `YYYYMMDDHHmmss_short_description.sql`. Always enable RLS on new tables with granular per-operation, per-role policies.
-- **React**: no Next.js directives ("use client" etc.). Extract hooks to `src/components/hooks/`.
-- **Services/helpers** go in `src/lib/` (or `src/lib/services/` for extracted business logic).
-- **Shared types** (entities, DTOs) go in `src/types.ts`.
+## Also loaded
 
-### Environment
-
-- Node.js v22.14.0 (see `.nvmrc`)
-- Env vars: `SUPABASE_URL`, `SUPABASE_KEY` (copy `.env.example` to `.env` for Node, or `.dev.vars` for Cloudflare local dev)
-- Local Supabase: `npx supabase start` (requires Docker)
-- Cloudflare local dev: secrets go in `.dev.vars` (gitignored)
-- Deploy: `npx wrangler deploy` (requires Cloudflare account + `wrangler` auth)
-
-## CI
-
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs lint + build on every push and PR to master. Requires `SUPABASE_URL` and `SUPABASE_KEY` repository secrets for the build step.
+Claude Code also loads `/Users/rafalskwara/projects/CLAUDE.md` (parent directory, 10xDevs lesson notes about the `/10x-*` skills). It describes the tooling, not this project.
