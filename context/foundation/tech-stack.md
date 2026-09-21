@@ -5,7 +5,7 @@ project_name: sidereus
 hints:
   language_family: js
   team_size: solo
-  deployment_target: cloudflare-pages
+  deployment_target: cloudflare-workers
   ci_provider: github-actions
   ci_default_flow: auto-deploy-on-merge
   bootstrapper_confidence: first-class
@@ -33,5 +33,5 @@ and the coordinate-to-timezone lookup are all short-lived and fit the Cloudflare
 edge runtime, with KV available for the hourly per-site forecast cache the
 PRD's outage behaviour assumes. Payments, realtime, AI and background jobs are
 out of scope per Non-Goals, so none of the starter's gaps are exercised.
-Deployment is Cloudflare Pages, the starter default; CI runs on GitHub Actions
+Deployment is Cloudflare Workers with Static Assets (the adapter dropped Pages support at v13; see infrastructure.md); CI runs on GitHub Actions
 with auto-deploy on merge, matching the PRD's final-week CI/CD plan.
