@@ -486,10 +486,10 @@ None. New files only, plus one CI step, one `package.json` change and doc edits.
 #### Automated
 
 - [ ] 4.1 `npm test` passes end to end with zero `todo` fixtures remaining
-- [x] 4.2 `npm run lint && npx astro check && npm run build` pass
-- [x] 4.3 `tolerance-report.md` exists and contains a row for each of the three fixtures
+- [x] 4.2 `npm run lint && npx astro check && npm run build` pass — c0ff12a
+- [x] 4.3 `tolerance-report.md` exists and contains a row for each of the three fixtures — c0ff12a
 
 #### Manual
 
-- [x] 4.4 User reads the tolerance report and decides whether Open Question 9's candidate stands or is widened; the roadmap sentence reflects that decision
-- [x] 4.5 User confirms `CLAUDE.md` reads correctly (test command present, stale CI tripwire gone)
+- [x] 4.4 User reads the tolerance report and decides whether Open Question 9's candidate stands or is widened; the roadmap sentence reflects that decision — c0ff12a
+- [x] 4.5 User confirms `CLAUDE.md` reads correctly (test command present, stale CI tripwire gone) — c0ff12a
