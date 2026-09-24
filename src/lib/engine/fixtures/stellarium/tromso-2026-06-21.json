@@ -1,0 +1,64 @@
+{
+  "site": {
+    "name": "Tromsø",
+    "latitudeDeg": 69.65,
+    "longitudeDeg": 18.96,
+    "elevationM": 10,
+    "timeZone": "Europe/Oslo"
+  },
+  "night": "2026-06-21",
+  "source": {
+    "tool": "Stellarium",
+    "version": "",
+    "capturedBy": "RS",
+    "capturedAt": "2026-09-24"
+  },
+  "sun": {
+    "status": "captured",
+    "expectNoDarkness": true,
+    "sunset": null,
+    "sunrise": null,
+    "darkStart": {
+      "thresholdDeg": -18,
+      "time": null
+    },
+    "darkEnd": {
+      "thresholdDeg": -18,
+      "time": null
+    }
+  },
+  "moon": {
+    "status": "pending",
+    "samples": [
+      {
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null,
+        "illuminatedFraction": null
+      }
+    ]
+  },
+  "objects": {
+    "status": "pending",
+    "samples": [
+      {
+        "id": "M13",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      },
+      {
+        "id": "M57",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      },
+      {
+        "id": "M81",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      }
+    ]
+  }
+}

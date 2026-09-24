@@ -1,0 +1,72 @@
+/**
+ * Shared vocabulary of the sky engine. Everything here is plain data: the engine is pure
+ * (no clock, environment or network), so callers pass every input explicitly.
+ */
+
+/** An observing location. Coordinates are rounded to ~1 km upstream; the engine does not round. */
+export interface Site {
+  latitudeDeg: number;
+  longitudeDeg: number;
+  /** Metres above sea level. Defaults to 0 when omitted. */
+  elevationM?: number;
+  /** IANA time zone id, e.g. "Europe/Warsaw". Supplied by the caller; the engine never looks it up. */
+  timeZone: string;
+}
+
+/**
+ * The "observing night of date D": from local noon on D to local noon on D+1 in the site's
+ * time zone. It always contains exactly one sunset, at most one dark window and one sunrise,
+ * and it survives the after-midnight case and the 25-hour DST night without special cases.
+ */
+export interface ObservingNight {
+  /** Evening date, site-local, `YYYY-MM-DD`. */
+  date: string;
+  timeZone: string;
+  /** Local noon on `date`, as a UTC instant. */
+  start: Date;
+  /** Local noon on the following calendar day, as a UTC instant. */
+  end: Date;
+}
+
+export interface Interval {
+  start: Date;
+  end: Date;
+}
+
+/**
+ * When the sky is dark enough to observe: the sun is below `thresholdDeg` (a Bortle-dependent
+ * candidate parameter). `none` means the threshold is never reached that night, which is the
+ * "no dark window this season" case (FR-023); it carries the sun's minimum altitude and when
+ * it occurs so a caller can explain why.
+ */
+export type DarkWindow =
+  | {
+      kind: "window";
+      thresholdDeg: number;
+      start: Date;
+      end: Date;
+      /** True when dawn was not found inside the night and `end` was clamped to the night's end. */
+      clampedToNightEnd: boolean;
+    }
+  | {
+      kind: "none";
+      thresholdDeg: number;
+      minSunAltitudeDeg: number;
+      /** Instant of the sun's lower culmination (its lowest point) during the night. */
+      at: Date;
+    };
+
+/** Where something is in the observer's sky at one instant. Azimuth is degrees clockwise from north. */
+export interface HorizontalPosition {
+  time: Date;
+  altitudeDeg: number;
+  azimuthDeg: number;
+}
+
+/** J2000 equatorial coordinates of a fixed object, as stored in the catalogue. */
+export interface EquatorialJ2000 {
+  /** Right ascension in hours, [0, 24). */
+  raHours: number;
+  /** Declination in degrees, [-90, 90]. */
+  decDeg: number;
+}

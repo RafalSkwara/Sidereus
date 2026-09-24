@@ -443,30 +443,30 @@ None. New files only, plus one CI step, one `package.json` change and doc edits.
 
 #### Automated
 
-- [x] 1.1 `npm test` runs Vitest and passes with the catalogue tests green
-- [x] 1.2 `node scripts/build-catalogue.mjs` exits 0 and a second run leaves `git status` clean for `src/lib/catalogue/`
-- [x] 1.3 `npm run lint` passes (scripts block covers the new `.mjs`; test file passes type-checked rules)
-- [x] 1.4 `npx astro check` passes
-- [x] 1.5 `npm run build` still succeeds with the new dependency
-- [x] 1.6 `.github/workflows/ci.yml` contains `npm test` in the `ci` job
+- [x] 1.1 `npm test` runs Vitest and passes with the catalogue tests green — 5117faa
+- [x] 1.2 `node scripts/build-catalogue.mjs` exits 0 and a second run leaves `git status` clean for `src/lib/catalogue/` — 5117faa
+- [x] 1.3 `npm run lint` passes (scripts block covers the new `.mjs`; test file passes type-checked rules) — 5117faa
+- [x] 1.4 `npx astro check` passes — 5117faa
+- [x] 1.5 `npm run build` still succeeds with the new dependency — 5117faa
+- [x] 1.6 `.github/workflows/ci.yml` contains `npm test` in the `ci` job — 5117faa
 
 #### Manual
 
-- [x] 1.7 Skim `messier.json` for M1, M31, M45, M102 and confirm designation, type and constellation read correctly
-- [x] 1.8 Confirm the `## Data sources` wording in `README.md` is acceptable
+- [x] 1.7 Skim `messier.json` for M1, M31, M45, M102 and confirm designation, type and constellation read correctly — 5117faa
+- [x] 1.8 Confirm the `## Data sources` wording in `README.md` is acceptable — 5117faa
 
 ### Phase 2: Night model, sun events and dark window
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes with all synthetic sun and night tests green and fixture tests reported as `todo` (not skipped silently)
-- [ ] 2.2 `npm run lint` and `npx astro check` pass on the new engine files
-- [ ] 2.3 The purity guard test (`purity.test.ts`) finds no `Date.now`, argument-less `new Date()`, `Math.random`, `process.env`, `fetch(`, `node:fs` or `fs` token in `src/lib/engine/**`, excluding `*.test.ts` and `fixtures/**`
+- [x] 2.1 `npm test` passes with all synthetic sun and night tests green and fixture tests reported as `todo` (not skipped silently)
+- [x] 2.2 `npm run lint` and `npx astro check` pass on the new engine files
+- [x] 2.3 The purity guard test (`purity.test.ts`) finds no `Date.now`, argument-less `new Date()`, `Math.random`, `process.env`, `fetch(`, `node:fs` or `fs` token in `src/lib/engine/**`, excluding `*.test.ts` and `fixtures/**`
 
 #### Manual
 
-- [ ] 2.4 User captures sun values for all three fixtures per the README protocol, flips `sun.status` to `captured`, and `npm test` passes the fixture-driven sun assertions within tolerance
-- [ ] 2.5 User confirms the fixture README steps were sufficient to reproduce the reading without guesswork
+- [x] 2.4 User captures sun values for all three fixtures per the README protocol, flips `sun.status` to `captured`, and `npm test` passes the fixture-driven sun assertions within tolerance
+- [x] 2.5 User confirms the fixture README steps were sufficient to reproduce the reading without guesswork
 
 ### Phase 3: Moon and object positions
 
