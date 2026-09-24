@@ -472,24 +472,24 @@ None. New files only, plus one CI step, one `package.json` change and doc edits.
 
 #### Automated
 
-- [x] 3.1 `npm test` passes: synthetic moon/object tests, determinism test, timing test within its bound (1000 ms local, 3000 ms on CI)
-- [x] 3.2 `npm run lint`, `npx astro check`, `npm run build` pass
-- [x] 3.3 Purity guard from Phase 2 still passes with the new files
+- [x] 3.1 `npm test` passes: synthetic moon/object tests, determinism test, timing test within its bound (1000 ms local, 3000 ms on CI) — b267f5c
+- [x] 3.2 `npm run lint`, `npx astro check`, `npm run build` pass — b267f5c
+- [x] 3.3 Purity guard from Phase 2 still passes with the new files — b267f5c
 
 #### Manual
 
-- [x] 3.4 User captures moon samples (at least two instants on the 2026-10-24 Warsaw night and one for Tromsø; the 2026-10-10 moon section is not-applicable) and object samples (M31, M13, M42 or whichever are up; at least three per Warsaw night) per the protocol, flips statuses to `captured`, and `npm test` passes the fixture assertions within tolerance
-- [x] 3.5 User eyeballs one `bestWindow` result for M31 on 2026-10-10 against Stellarium's transit time (within 5 minutes)
+- [x] 3.4 User captures moon samples (at least two instants on the 2026-10-24 Warsaw night and one for Tromsø; the 2026-10-10 moon section is not-applicable) and object samples (M31, M13, M42 or whichever are up; at least three per Warsaw night) per the protocol, flips statuses to `captured`, and `npm test` passes the fixture assertions within tolerance — b267f5c
+- [x] 3.5 User eyeballs one `bestWindow` result for M31 on 2026-10-10 against Stellarium's transit time (within 5 minutes) — b267f5c
 
 ### Phase 4: Tolerance report and hand-off
 
 #### Automated
 
 - [ ] 4.1 `npm test` passes end to end with zero `todo` fixtures remaining
-- [ ] 4.2 `npm run lint && npx astro check && npm run build` pass
-- [ ] 4.3 `tolerance-report.md` exists and contains a row for each of the three fixtures
+- [x] 4.2 `npm run lint && npx astro check && npm run build` pass
+- [x] 4.3 `tolerance-report.md` exists and contains a row for each of the three fixtures
 
 #### Manual
 
-- [ ] 4.4 User reads the tolerance report and decides whether Open Question 9's candidate stands or is widened; the roadmap sentence reflects that decision
-- [ ] 4.5 User confirms `CLAUDE.md` reads correctly (test command present, stale CI tripwire gone)
+- [x] 4.4 User reads the tolerance report and decides whether Open Question 9's candidate stands or is widened; the roadmap sentence reflects that decision
+- [x] 4.5 User confirms `CLAUDE.md` reads correctly (test command present, stale CI tripwire gone)
