@@ -182,11 +182,26 @@ It needs a reachable Supabase instance (local or cloud) with email confirmation 
 
 ## CI
 
-GitHub Actions runs two jobs on every push and PR to `master`:
+GitHub Actions runs two jobs on every push and PR to `main`:
 
-- **ci** — lint, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
+- **ci** — lint, `astro check`, unit tests (`npm test`) and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
 - **smoke** — starts a local Supabase via the Supabase CLI, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
+
+## Data sources
+
+- **[OpenNGC](https://github.com/mattiaverga/OpenNGC)** by Mattia Verga, licensed
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The Messier catalogue in
+  `src/lib/catalogue/` is generated from OpenNGC at commit `da90466031b0372c896588b85be6016c617e205b`
+  by `npm run catalogue:build`. The generated catalogue files are derived works and are themselves
+  licensed CC BY-SA 4.0; see `src/lib/catalogue/LICENSE-DATA.md` for the exact changes and acknowledgements.
+  - This research has made use of the NASA/IPAC Extragalactic Database (NED), which is operated by the
+    Jet Propulsion Laboratory, California Institute of Technology, under contract with the National
+    Aeronautics and Space Administration.
+  - This research has made use of the SIMBAD database, operated at CDS, Strasbourg, France.
+  - OpenNGC used several HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj, smcclustrs).
+- **[astronomy-engine](https://github.com/cosinekitty/astronomy)** by Don Cross (MIT) provides the sun,
+  moon and object position calculations.
 
 ## License
 
-MIT
+MIT (application code). Catalogue data files are CC BY-SA 4.0 — see "Data sources" above.

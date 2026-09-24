@@ -1,0 +1,46 @@
+{
+  "source": "https://github.com/mattiaverga/OpenNGC",
+  "files": [
+    "database_files/NGC.csv",
+    "database_files/addendum.csv"
+  ],
+  "commit": "da90466031b0372c896588b85be6016c617e205b",
+  "retrievedAt": "2026-07-26",
+  "licence": "CC BY-SA 4.0",
+  "count": 110,
+  "overrides": [
+    {
+      "messier": 102,
+      "action": "drop",
+      "sourceName": "M102",
+      "reason": "OpenNGC follows NED and lists M102 as a duplicate of M101 (type Dup). This catalogue follows the common observing identification instead."
+    },
+    {
+      "messier": 102,
+      "action": "assign",
+      "sourceName": "NGC5866",
+      "reason": "NGC 5866 is listed as M102, matching Stellarium and most observing guides."
+    }
+  ],
+  "normalisations": [
+    "RA HH:MM:SS.ss -> decimal hours (6 dp); Dec ±DD:MM:SS.s -> decimal degrees (6 dp), sign taken from the string",
+    "Constellation codes Se1/Se2 -> Ser",
+    "Empty numeric fields -> null",
+    "Designations: NGC0224 -> NGC 224, IC4715 -> IC 4715, Mel022 -> Mel 22, M040 -> M40",
+    "commonName: first entry of the Common names column, or null"
+  ],
+  "typeMap": {
+    "G": "galaxy",
+    "GCl": "globular-cluster",
+    "OCl": "open-cluster",
+    "PN": "planetary-nebula",
+    "Neb": "nebula",
+    "HII": "emission-nebula",
+    "RfN": "reflection-nebula",
+    "SNR": "supernova-remnant",
+    "Cl+N": "cluster-with-nebula",
+    "*Ass": "asterism",
+    "**": "double-star",
+    "Other": "other"
+  }
+}
