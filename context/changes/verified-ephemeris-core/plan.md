@@ -459,27 +459,27 @@ None. New files only, plus one CI step, one `package.json` change and doc edits.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with all synthetic sun and night tests green and fixture tests reported as `todo` (not skipped silently)
-- [x] 2.2 `npm run lint` and `npx astro check` pass on the new engine files
-- [x] 2.3 The purity guard test (`purity.test.ts`) finds no `Date.now`, argument-less `new Date()`, `Math.random`, `process.env`, `fetch(`, `node:fs` or `fs` token in `src/lib/engine/**`, excluding `*.test.ts` and `fixtures/**`
+- [x] 2.1 `npm test` passes with all synthetic sun and night tests green and fixture tests reported as `todo` (not skipped silently) — e56529e
+- [x] 2.2 `npm run lint` and `npx astro check` pass on the new engine files — e56529e
+- [x] 2.3 The purity guard test (`purity.test.ts`) finds no `Date.now`, argument-less `new Date()`, `Math.random`, `process.env`, `fetch(`, `node:fs` or `fs` token in `src/lib/engine/**`, excluding `*.test.ts` and `fixtures/**` — e56529e
 
 #### Manual
 
-- [x] 2.4 User captures sun values for all three fixtures per the README protocol, flips `sun.status` to `captured`, and `npm test` passes the fixture-driven sun assertions within tolerance
-- [x] 2.5 User confirms the fixture README steps were sufficient to reproduce the reading without guesswork
+- [x] 2.4 User captures sun values for all three fixtures per the README protocol, flips `sun.status` to `captured`, and `npm test` passes the fixture-driven sun assertions within tolerance — e56529e
+- [x] 2.5 User confirms the fixture README steps were sufficient to reproduce the reading without guesswork — e56529e
 
 ### Phase 3: Moon and object positions
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes: synthetic moon/object tests, determinism test, timing test within its bound (1000 ms local, 3000 ms on CI)
-- [ ] 3.2 `npm run lint`, `npx astro check`, `npm run build` pass
-- [ ] 3.3 Purity guard from Phase 2 still passes with the new files
+- [x] 3.1 `npm test` passes: synthetic moon/object tests, determinism test, timing test within its bound (1000 ms local, 3000 ms on CI)
+- [x] 3.2 `npm run lint`, `npx astro check`, `npm run build` pass
+- [x] 3.3 Purity guard from Phase 2 still passes with the new files
 
 #### Manual
 
-- [ ] 3.4 User captures moon samples (at least two instants on the 2026-10-24 Warsaw night and one for Tromsø; the 2026-10-10 moon section is not-applicable) and object samples (M31, M13, M42 or whichever are up; at least three per Warsaw night) per the protocol, flips statuses to `captured`, and `npm test` passes the fixture assertions within tolerance
-- [ ] 3.5 User eyeballs one `bestWindow` result for M31 on 2026-10-10 against Stellarium's transit time (within 5 minutes)
+- [x] 3.4 User captures moon samples (at least two instants on the 2026-10-24 Warsaw night and one for Tromsø; the 2026-10-10 moon section is not-applicable) and object samples (M31, M13, M42 or whichever are up; at least three per Warsaw night) per the protocol, flips statuses to `captured`, and `npm test` passes the fixture assertions within tolerance
+- [x] 3.5 User eyeballs one `bestWindow` result for M31 on 2026-10-10 against Stellarium's transit time (within 5 minutes)
 
 ### Phase 4: Tolerance report and hand-off
 
