@@ -1,0 +1,58 @@
+{
+  "site": {
+    "name": "Warsaw centre",
+    "latitudeDeg": 52.23,
+    "longitudeDeg": 21.01,
+    "elevationM": 110,
+    "timeZone": "Europe/Warsaw"
+  },
+  "night": "2026-10-10",
+  "source": {
+    "tool": "Stellarium",
+    "version": "",
+    "capturedBy": "RS",
+    "capturedAt": "2026-09-24"
+  },
+  "sun": {
+    "status": "captured",
+    "expectNoDarkness": false,
+    "sunset": "2026-10-10T17:53:00+02:00",
+    "sunrise": "2026-10-11T06:54:00+02:00",
+    "darkStart": {
+      "thresholdDeg": -18,
+      "time": "2026-10-10T19:45:00+02:00"
+    },
+    "darkEnd": {
+      "thresholdDeg": -18,
+      "time": "2026-10-11T05:00:00+02:00"
+    }
+  },
+  "moon": {
+    "status": "not-applicable",
+    "reason": "New moon 2026-10-10: the Moon is within degrees of the Sun and below the horizon for the whole dark window.",
+    "samples": []
+  },
+  "objects": {
+    "status": "pending",
+    "samples": [
+      {
+        "id": "M31",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      },
+      {
+        "id": "M13",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      },
+      {
+        "id": "M45",
+        "time": null,
+        "altitudeDeg": null,
+        "azimuthDeg": null
+      }
+    ]
+  }
+}
