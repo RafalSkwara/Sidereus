@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { FIXTURES, fixtureTimeMs, minutesBetween } from "./index";
+import { FIXTURES, circularDeltaDeg, fixtureTimeMs, minutesBetween, siteOf } from "./index";
 import { findMessier } from "@/lib/catalogue";
-import { moonState } from "@/lib/engine/moon";
-import { observingNight } from "@/lib/engine/night";
-import { objectPosition } from "@/lib/engine/objects";
-import { ALTITUDE_TOLERANCE_DEG, TIME_TOLERANCE_MINUTES } from "@/lib/engine/parameters";
-import { darkWindow, sunEvents } from "@/lib/engine/sun";
-import type { Site } from "@/lib/engine/types";
+import {
+  ALTITUDE_TOLERANCE_DEG,
+  TIME_TOLERANCE_MINUTES,
+  darkWindow,
+  moonState,
+  objectPosition,
+  observingNight,
+  sunEvents,
+} from "@/lib/engine";
 
 /**
  * Tolerance report: prints the maximum deviation between the engine and every captured Stellarium
@@ -24,20 +27,6 @@ interface Row {
   unit: "min" | "deg" | "fraction";
   tolerance: number;
   samples: number;
-}
-
-function circularDeltaDeg(a: number, b: number): number {
-  const d = Math.abs(a - b) % 360;
-  return Math.min(d, 360 - d);
-}
-
-function siteOf(fixture: (typeof FIXTURES)[number]): Site {
-  return {
-    latitudeDeg: fixture.site.latitudeDeg,
-    longitudeDeg: fixture.site.longitudeDeg,
-    elevationM: fixture.site.elevationM,
-    timeZone: fixture.site.timeZone,
-  };
 }
 
 function buildReport(): { rows: Row[]; pending: string[] } {

@@ -99,7 +99,14 @@ function round(n, digits) {
 }
 
 function nullableNumber(value) {
-  return value === "" ? null : Number(value);
+  if (value === "") {
+    return null;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    throw new Error(`Non-numeric value "${value}" in a numeric column`);
+  }
+  return n;
 }
 
 function designationFor(name) {

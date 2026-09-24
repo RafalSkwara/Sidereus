@@ -45,7 +45,9 @@ export type DarkWindow =
       thresholdDeg: number;
       start: Date;
       end: Date;
-      /** True when dawn was not found inside the night and `end` was clamped to the night's end. */
+      /** True when the sun was already below the threshold at the night's start (polar night); `start` is the night's start. */
+      clampedToNightStart: boolean;
+      /** True when the sun was still below the threshold at the night's end; `end` is the night's end. */
       clampedToNightEnd: boolean;
     }
   | {

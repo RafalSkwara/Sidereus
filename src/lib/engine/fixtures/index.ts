@@ -1,3 +1,6 @@
+import { findMessier } from "@/lib/catalogue";
+
+import type { EquatorialJ2000, Site } from "../types";
 import tromso20260621 from "./stellarium/tromso-2026-06-21.json";
 import warsaw20261010 from "./stellarium/warsaw-2026-10-10.json";
 import warsaw20261024 from "./stellarium/warsaw-2026-10-24.json";
@@ -229,6 +232,35 @@ export const FIXTURES: readonly StellariumFixture[] = [
   parseFixture(warsaw20261024, "warsaw-2026-10-24"),
   parseFixture(tromso20260621, "tromso-2026-06-21"),
 ];
+
+/** Synthetic-test sites shared across the engine tests (public reference points, not anyone's home). */
+export const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110, timeZone: "Europe/Warsaw" };
+export const TROMSO: Site = { latitudeDeg: 69.65, longitudeDeg: 18.96, elevationM: 10, timeZone: "Europe/Oslo" };
+
+/** J2000 coordinates of a catalogue object by fixture id ("M31"); throws for an unknown id. */
+export function messierTarget(id: string): EquatorialJ2000 {
+  const object = findMessier(Number(id.slice(1)));
+  if (object === undefined) {
+    throw new Error(`fixture references ${id}, which is not in the Messier catalogue`);
+  }
+  return { raHours: object.raHours, decDeg: object.decDeg };
+}
+
+/** The engine `Site` for a fixture (shared by every fixture-driven test). */
+export function siteOf(fixture: StellariumFixture): Site {
+  return {
+    latitudeDeg: fixture.site.latitudeDeg,
+    longitudeDeg: fixture.site.longitudeDeg,
+    elevationM: fixture.site.elevationM,
+    timeZone: fixture.site.timeZone,
+  };
+}
+
+/** Smallest angle between two azimuths in degrees, wrapping at 360 (shared by every azimuth assertion). */
+export function circularDeltaDeg(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return Math.min(d, 360 - d);
+}
 
 /** Parses a fixture time (ISO 8601 with offset) to epoch milliseconds. */
 export function fixtureTimeMs(iso8601: string): number {

@@ -1,13 +1,10 @@
 import { describe, expect, it, test } from "vitest";
 
-import { FIXTURES, fixtureTimeMs, minutesBetween } from "./fixtures";
+import { FIXTURES, TROMSO, WARSAW, fixtureTimeMs, minutesBetween, siteOf } from "./fixtures";
 import { observingNight } from "./night";
 import { TIME_TOLERANCE_MINUTES, darknessThresholdDegForBortle } from "./parameters";
 import { darkWindow, sunAltitudeDeg, sunEvents } from "./sun";
 import type { Site } from "./types";
-
-const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110, timeZone: "Europe/Warsaw" };
-const TROMSO: Site = { latitudeDeg: 69.65, longitudeDeg: 18.96, elevationM: 10, timeZone: "Europe/Oslo" };
 
 describe("darkWindow (synthetic)", () => {
   const night = observingNight("2026-10-10", WARSAW.timeZone);
@@ -68,6 +65,31 @@ describe("darkWindow (synthetic)", () => {
     expect(nautical.kind).toBe("window");
   });
 
+  it("handles a polar night where the sun is already below the threshold at local noon", () => {
+    const svalbardNorth: Site = { latitudeDeg: 80, longitudeDeg: 20, elevationM: 0, timeZone: "Europe/Oslo" };
+    const december = observingNight("2026-12-21", svalbardNorth.timeZone);
+    // Noon sun altitude ≈ 90 − 80 − 23.4 = −13.4°: already below −12°, never above it all night.
+    const nautical = darkWindow(svalbardNorth, december, -12);
+    expect(nautical.kind).toBe("window");
+    if (nautical.kind === "window") {
+      expect(nautical.start.getTime()).toBe(december.start.getTime());
+      expect(nautical.end.getTime()).toBe(december.end.getTime());
+      expect(nautical.clampedToNightStart).toBe(true);
+      expect(nautical.clampedToNightEnd).toBe(true);
+    }
+    // −18° is crossed after noon and again before the next noon: an ordinary, unclamped window.
+    const astronomical = darkWindow(svalbardNorth, december, -18);
+    expect(astronomical.kind).toBe("window");
+    if (astronomical.kind === "window") {
+      expect(astronomical.clampedToNightStart).toBe(false);
+      expect(astronomical.clampedToNightEnd).toBe(false);
+      expect(astronomical.start.getTime()).toBeGreaterThan(december.start.getTime());
+      expect(astronomical.end.getTime()).toBeLessThan(december.end.getTime());
+      expect(sunAltitudeDeg(svalbardNorth, astronomical.start)).toBeCloseTo(-18, 1);
+      expect(sunAltitudeDeg(svalbardNorth, astronomical.end)).toBeCloseTo(-18, 1);
+    }
+  });
+
   it("orders sunset, dark window and sunrise within the night", () => {
     const events = sunEvents(WARSAW, night);
     const dw = darkWindow(WARSAW, night, -18);
@@ -109,12 +131,7 @@ describe("sun events vs Stellarium fixtures", () => {
       continue;
     }
     const sun = fixture.sun;
-    const site: Site = {
-      latitudeDeg: fixture.site.latitudeDeg,
-      longitudeDeg: fixture.site.longitudeDeg,
-      elevationM: fixture.site.elevationM,
-      timeZone: fixture.site.timeZone,
-    };
+    const site = siteOf(fixture);
     const night = observingNight(fixture.night, site.timeZone);
 
     it(`${fixture.name}: sunset and sunrise within ${TIME_TOLERANCE_MINUTES} min`, () => {
@@ -140,21 +157,23 @@ describe("sun events vs Stellarium fixtures", () => {
     });
 
     it(`${fixture.name}: dark window at ${sun.darkStart.thresholdDeg}° within ${TIME_TOLERANCE_MINUTES} min`, () => {
+      expect(sun.darkEnd.thresholdDeg).toBe(sun.darkStart.thresholdDeg);
       const dw = darkWindow(site, night, sun.darkStart.thresholdDeg);
       if (sun.expectNoDarkness) {
         expect(dw.kind).toBe("none");
+        expect(sun.darkStart.time).toBeNull();
+        expect(sun.darkEnd.time).toBeNull();
         return;
       }
+      // A captured fixture that expects darkness must carry both crossing times, or it asserts nothing.
+      expect(sun.darkStart.time).not.toBeNull();
+      expect(sun.darkEnd.time).not.toBeNull();
       expect(dw.kind).toBe("window");
-      if (dw.kind !== "window") {
+      if (dw.kind !== "window" || sun.darkStart.time === null || sun.darkEnd.time === null) {
         return;
       }
-      if (sun.darkStart.time !== null) {
-        expect(minutesBetween(dw.start, fixtureTimeMs(sun.darkStart.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
-      }
-      if (sun.darkEnd.time !== null) {
-        expect(minutesBetween(dw.end, fixtureTimeMs(sun.darkEnd.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
-      }
+      expect(minutesBetween(dw.start, fixtureTimeMs(sun.darkStart.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
+      expect(minutesBetween(dw.end, fixtureTimeMs(sun.darkEnd.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
     });
   }
 });

@@ -1,30 +1,13 @@
 import { Body, EquatorFromVector, GeoVector } from "astronomy-engine";
 import { describe, expect, it, test } from "vitest";
 
-import { findMessier } from "@/lib/catalogue";
-
-import { FIXTURES, fixtureTimeMs } from "./fixtures";
+import { FIXTURES, WARSAW, circularDeltaDeg, fixtureTimeMs, messierTarget, siteOf } from "./fixtures";
 import { moonSeparationDeg, moonState, moonTrack } from "./moon";
 import { observingNight } from "./night";
 import { ALTITUDE_TOLERANCE_DEG } from "./parameters";
-import type { EquatorialJ2000, Site } from "./types";
+import type { EquatorialJ2000 } from "./types";
 
-const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110, timeZone: "Europe/Warsaw" };
 const ILLUMINATION_TOLERANCE = 0.02;
-
-/** Smallest angle between two azimuths, degrees. */
-function azimuthDifferenceDeg(a: number, b: number): number {
-  const d = Math.abs(a - b) % 360;
-  return Math.min(d, 360 - d);
-}
-
-function messierTarget(id: string): EquatorialJ2000 {
-  const object = findMessier(Number(id.slice(1)));
-  if (object === undefined) {
-    throw new Error(`fixture references ${id}, which is not in the Messier catalogue`);
-  }
-  return { raHours: object.raHours, decDeg: object.decDeg };
-}
 
 describe("moonState (synthetic)", () => {
   // 2026-10-10 is a new-moon night (new moon 15:50 UTC) and is never used for moon assertions.
@@ -66,9 +49,10 @@ describe("moonState (synthetic)", () => {
     expect(moonState(WARSAW, midnight.time)).toEqual(midnight);
   });
 
-  it("rejects a non-positive step", () => {
+  it("rejects a step below one minute", () => {
     expect(() => moonTrack(WARSAW, night, 0)).toThrow(RangeError);
     expect(() => moonTrack(WARSAW, night, -10)).toThrow(RangeError);
+    expect(() => moonTrack(WARSAW, night, 0.5)).toThrow(RangeError);
   });
 });
 
@@ -115,18 +99,13 @@ describe("moon vs Stellarium fixtures", () => {
       continue;
     }
     const moon = fixture.moon;
-    const site: Site = {
-      latitudeDeg: fixture.site.latitudeDeg,
-      longitudeDeg: fixture.site.longitudeDeg,
-      elevationM: fixture.site.elevationM,
-      timeZone: fixture.site.timeZone,
-    };
+    const site = siteOf(fixture);
 
     it(`${fixture.name}: ${moon.samples.length} moon samples within ${ALTITUDE_TOLERANCE_DEG}° and ${ILLUMINATION_TOLERANCE} illumination`, () => {
       for (const sample of moon.samples) {
         const state = moonState(site, new Date(fixtureTimeMs(sample.time)));
         expect(Math.abs(state.altitudeDeg - sample.altitudeDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
-        expect(azimuthDifferenceDeg(state.azimuthDeg, sample.azimuthDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
+        expect(circularDeltaDeg(state.azimuthDeg, sample.azimuthDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
         expect(Math.abs(state.illuminatedFraction - sample.illuminatedFraction)).toBeLessThanOrEqual(
           ILLUMINATION_TOLERANCE,
         );

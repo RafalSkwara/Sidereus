@@ -1,7 +1,7 @@
 ---
 change_id: verified-ephemeris-core
 title: Verified ephemeris core - Messier catalogue, night model, sun/moon/object positions
-status: implemented
+status: impl_reviewed
 created: 2026-09-22
 updated: 2026-09-24
 archived_at: null

@@ -17,10 +17,17 @@ const ENGINE_DIR = fileURLToPath(new URL(".", import.meta.url));
 const FORBIDDEN: { name: string; pattern: RegExp }[] = [
   { name: "Date.now", pattern: /\bDate\.now\b/ },
   { name: "argument-less new Date()", pattern: /\bnew Date\(\s*\)/ },
+  { name: "performance.now", pattern: /\bperformance\.now\b/ },
   { name: "Math.random", pattern: /\bMath\.random\b/ },
-  { name: "process.env", pattern: /\bprocess\.env\b/ },
+  { name: "process.env / process.", pattern: /\bprocess\.(env|hrtime|cwd|platform)\b/ },
   { name: "fetch(", pattern: /\bfetch\(/ },
-  { name: "node:fs / fs import", pattern: /["'](node:fs(\/promises)?|fs(\/promises)?)["']/ },
+  { name: "node:* import", pattern: /["']node:[a-z_/]+["']/ },
+  { name: "bare fs import", pattern: /["']fs(\/promises)?["']/ },
+  {
+    name: "Intl.DateTimeFormat without an explicit time zone",
+    pattern: /Intl\.DateTimeFormat\(\s*\)|Intl\.DateTimeFormat\(\s*["'][^"']*["']\s*\)/,
+  },
+  { name: "toLocale* (process locale/zone)", pattern: /\.toLocale(Date|Time)?String\(/ },
 ];
 
 function engineSourceFiles(dir: string): string[] {

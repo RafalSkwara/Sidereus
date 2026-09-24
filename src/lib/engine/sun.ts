@@ -23,7 +23,10 @@ export function sunAltitudeDeg(site: Site, time: Date): number {
 
 /**
  * Sunset and sunrise inside the night (refracted, upper-limb, per astronomy-engine's rise/set
- * definition). Either is `null` when it does not occur, e.g. under a midnight sun.
+ * definition). Either is `null` when it does not occur. Note that `{ sunset: null, sunrise: null }`
+ * covers two opposite situations, midnight sun and polar night; callers that need to tell them
+ * apart use `darkWindow`, whose `none` variant carries the sun's minimum altitude and whose window
+ * variant flags a night that is dark from the start.
  */
 export function sunEvents(site: Site, night: ObservingNight): { sunset: Date | null; sunrise: Date | null } {
   const observer = observerFor(site);
@@ -51,20 +54,64 @@ export function darkWindow(site: Site, night: ObservingNight, thresholdDeg: numb
   }
   const observer = observerFor(site);
 
-  const lowest = SearchHourAngle(Body.Sun, observer, 12, night.start, 1);
-  const minSunAltitudeDeg = sunAltitudeDeg(site, lowest.time.date);
+  const lowestAt = SearchHourAngle(Body.Sun, observer, 12, night.start, 1).time.date;
+  const minSunAltitudeDeg = sunAltitudeDeg(site, lowestAt);
   if (minSunAltitudeDeg >= thresholdDeg) {
-    return { kind: "none", thresholdDeg, minSunAltitudeDeg, at: lowest.time.date };
+    return { kind: "none", thresholdDeg, minSunAltitudeDeg, at: lowestAt };
   }
 
-  const dusk = SearchAltitude(Body.Sun, observer, -1, night.start, 1, thresholdDeg);
-  if (dusk === null || dusk.date >= night.end) {
-    return { kind: "none", thresholdDeg, minSunAltitudeDeg, at: lowest.time.date };
+  // From here on the threshold IS reached, so a window exists. The sun's altitude is monotone on
+  // each leg [night.start, lowestAt] (falling) and [lowestAt, night.end] (rising); the library
+  // search is tried first and bisection on those legs is the exact fallback when it misses (its
+  // documented weakness near the minimum, or a polar night where the sun is already below the
+  // threshold at local noon).
+  let start: Date;
+  let clampedToNightStart = false;
+  if (sunAltitudeDeg(site, night.start) < thresholdDeg) {
+    start = night.start;
+    clampedToNightStart = true;
+  } else {
+    const dusk = SearchAltitude(Body.Sun, observer, -1, night.start, 1, thresholdDeg);
+    start =
+      dusk !== null && dusk.date <= lowestAt ? dusk.date : bisectCrossing(site, night.start, lowestAt, thresholdDeg);
   }
 
-  const dawn = SearchAltitude(Body.Sun, observer, 1, dusk.date, 1, thresholdDeg);
-  if (dawn === null || dawn.date > night.end) {
-    return { kind: "window", thresholdDeg, start: dusk.date, end: night.end, clampedToNightEnd: true };
+  let end: Date;
+  let clampedToNightEnd = false;
+  if (sunAltitudeDeg(site, night.end) < thresholdDeg) {
+    end = night.end;
+    clampedToNightEnd = true;
+  } else {
+    const dawn = SearchAltitude(Body.Sun, observer, 1, lowestAt, 1, thresholdDeg);
+    end = dawn !== null && dawn.date <= night.end ? dawn.date : bisectCrossing(site, lowestAt, night.end, thresholdDeg);
   }
-  return { kind: "window", thresholdDeg, start: dusk.date, end: dawn.date, clampedToNightEnd: false };
+
+  return { kind: "window", thresholdDeg, start, end, clampedToNightStart, clampedToNightEnd };
+}
+
+const BISECTION_TOLERANCE_MS = 1_000;
+
+/**
+ * Instant between `a` and `b` where the sun's altitude crosses `thresholdDeg`, to 1 s. The leg must
+ * be monotone with the threshold strictly between the two endpoint altitudes; callers guarantee
+ * this by splitting the night at the sun's lower culmination.
+ */
+function bisectCrossing(site: Site, a: Date, b: Date, thresholdDeg: number): Date {
+  let lo = a.getTime();
+  let hi = b.getTime();
+  const loSide = Math.sign(sunAltitudeDeg(site, a) - thresholdDeg);
+  const hiSide = Math.sign(sunAltitudeDeg(site, b) - thresholdDeg);
+  if (loSide === hiSide) {
+    throw new Error("darkWindow: bisection leg does not straddle the threshold");
+  }
+  while (hi - lo > BISECTION_TOLERANCE_MS) {
+    const mid = Math.floor((lo + hi) / 2);
+    const midSide = Math.sign(sunAltitudeDeg(site, new Date(mid)) - thresholdDeg);
+    if (midSide === loSide) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return new Date(hi);
 }

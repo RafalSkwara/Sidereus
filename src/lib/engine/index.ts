@@ -9,5 +9,5 @@ export { observingNight } from "./night";
 export { darkWindow, sunAltitudeDeg, sunEvents } from "./sun";
 export { moonSeparationDeg, moonState, moonTrack } from "./moon";
 export type { MoonState } from "./moon";
-export { bestWindow, objectPosition, objectTrack } from "./objects";
+export { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects";
 export type { BestWindow } from "./objects";

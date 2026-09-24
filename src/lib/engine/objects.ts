@@ -34,6 +34,29 @@ export function objectPosition(site: Site, time: Date, target: EquatorialJ2000):
   return positionWithRotation(Rotation_EQJ_HOR(time, observerFor(site)), time, target);
 }
 
+/**
+ * Tracks for many objects over the same grid. The J2000→horizontal rotation (precession, nutation,
+ * sidereal time) is computed once per instant and shared by every target, so ranking the whole
+ * catalogue costs one rotation per sample rather than one per sample per object. Result `[i]` is
+ * the track of `targets[i]`.
+ */
+export function objectTracks(
+  site: Site,
+  interval: Interval,
+  targets: readonly EquatorialJ2000[],
+  stepMinutes = DEFAULT_TRACK_STEP_MINUTES,
+): HorizontalPosition[][] {
+  const observer = observerFor(site);
+  const tracks: HorizontalPosition[][] = targets.map(() => []);
+  for (const time of sampleInstants(interval, stepMinutes)) {
+    const rotation = Rotation_EQJ_HOR(time, observer);
+    targets.forEach((target, i) => {
+      tracks[i].push(positionWithRotation(rotation, time, target));
+    });
+  }
+  return tracks;
+}
+
 /** `objectPosition` sampled across `interval` every `stepMinutes`, inclusive of both ends. */
 export function objectTrack(
   site: Site,
@@ -41,10 +64,7 @@ export function objectTrack(
   target: EquatorialJ2000,
   stepMinutes = DEFAULT_TRACK_STEP_MINUTES,
 ): HorizontalPosition[] {
-  const observer = observerFor(site);
-  return sampleInstants(interval, stepMinutes).map((time) =>
-    positionWithRotation(Rotation_EQJ_HOR(time, observer), time, target),
-  );
+  return objectTracks(site, interval, [target], stepMinutes)[0];
 }
 
 /**

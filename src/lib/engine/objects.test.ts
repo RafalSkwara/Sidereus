@@ -1,29 +1,11 @@
 import { describe, expect, it, test } from "vitest";
 
-import { findMessier } from "@/lib/catalogue";
-
-import { FIXTURES, fixtureTimeMs } from "./fixtures";
+import { FIXTURES, WARSAW, circularDeltaDeg, fixtureTimeMs, messierTarget, siteOf } from "./fixtures";
 import { observingNight } from "./night";
-import { bestWindow, objectPosition, objectTrack } from "./objects";
+import { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects";
 import { ALTITUDE_TOLERANCE_DEG } from "./parameters";
 import { darkWindow } from "./sun";
-import type { EquatorialJ2000, HorizontalPosition, Site } from "./types";
-
-const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110, timeZone: "Europe/Warsaw" };
-
-/** Smallest angle between two azimuths, degrees. */
-function azimuthDifferenceDeg(a: number, b: number): number {
-  const d = Math.abs(a - b) % 360;
-  return Math.min(d, 360 - d);
-}
-
-function messierTarget(id: string): EquatorialJ2000 {
-  const object = findMessier(Number(id.slice(1)));
-  if (object === undefined) {
-    throw new Error(`fixture references ${id}, which is not in the Messier catalogue`);
-  }
-  return { raHours: object.raHours, decDeg: object.decDeg };
-}
+import type { HorizontalPosition } from "./types";
 
 function highest(track: readonly HorizontalPosition[]): HorizontalPosition {
   return track.reduce((top, sample) => (sample.altitudeDeg > top.altitudeDeg ? sample : top));
@@ -48,7 +30,7 @@ describe("objectPosition / objectTrack (synthetic)", () => {
     // altitude the azimuth moves about 1° per minute, so a 10-minute grid can sit 5° off.
     const fine = objectTrack(WARSAW, night, m31, 1);
     const transit = highest(fine);
-    expect(azimuthDifferenceDeg(transit.azimuthDeg, 180)).toBeLessThanOrEqual(2);
+    expect(circularDeltaDeg(transit.azimuthDeg, 180)).toBeLessThanOrEqual(2);
     expect(transit.time.getTime()).toBeGreaterThan(night.start.getTime());
     expect(transit.time.getTime()).toBeLessThan(night.end.getTime());
   });
@@ -92,8 +74,19 @@ describe("objectPosition / objectTrack (synthetic)", () => {
     expect(objectTrack(WARSAW, night, m31)).toEqual(objectTrack(WARSAW, night, m31));
   });
 
-  it("rejects a non-positive step and an inverted interval", () => {
+  it("objectTracks shares one rotation per instant and matches per-object tracks exactly", () => {
+    const targets = [m31, messierTarget("M13"), messierTarget("M45")];
+    const shared = objectTracks(WARSAW, night, targets, 30);
+    expect(shared).toHaveLength(3);
+    targets.forEach((target, i) => {
+      expect(shared[i]).toEqual(objectTrack(WARSAW, night, target, 30));
+    });
+    expect(objectTracks(WARSAW, night, [], 30)).toEqual([]);
+  });
+
+  it("rejects a step below one minute and an inverted interval", () => {
     expect(() => objectTrack(WARSAW, night, m31, 0)).toThrow(RangeError);
+    expect(() => objectTrack(WARSAW, night, m31, 0.25)).toThrow(RangeError);
     expect(() => objectTrack(WARSAW, { start: night.end, end: night.start }, m31)).toThrow(RangeError);
   });
 });
@@ -160,18 +153,13 @@ describe("object positions vs Stellarium fixtures", () => {
       continue;
     }
     const objects = fixture.objects;
-    const site: Site = {
-      latitudeDeg: fixture.site.latitudeDeg,
-      longitudeDeg: fixture.site.longitudeDeg,
-      elevationM: fixture.site.elevationM,
-      timeZone: fixture.site.timeZone,
-    };
+    const site = siteOf(fixture);
 
     it(`${fixture.name}: ${objects.samples.length} object samples within ${ALTITUDE_TOLERANCE_DEG}°`, () => {
       for (const s of objects.samples) {
         const position = objectPosition(site, new Date(fixtureTimeMs(s.time)), messierTarget(s.id));
         expect(Math.abs(position.altitudeDeg - s.altitudeDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
-        expect(azimuthDifferenceDeg(position.azimuthDeg, s.azimuthDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
+        expect(circularDeltaDeg(position.azimuthDeg, s.azimuthDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
       }
     });
   }
