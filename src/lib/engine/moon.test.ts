@@ -77,13 +77,16 @@ describe("moonSeparationDeg (synthetic)", () => {
   it("is symmetric: a target and its antipode sum to 180°", () => {
     for (const target of targets) {
       const antipode: EquatorialJ2000 = { raHours: (target.raHours + 12) % 24, decDeg: -target.decDeg };
-      expect(moonSeparationDeg(time, target) + moonSeparationDeg(time, antipode)).toBeCloseTo(180, 6);
+      // 4 decimal places = 5e-5° (0.2 arcsec): loose enough for trig round-trips to agree across CPUs.
+      expect(moonSeparationDeg(time, target) + moonSeparationDeg(time, antipode)).toBeCloseTo(180, 4);
     }
   });
 
   it("is zero for a target at the Moon's own geocentric J2000 position", () => {
     const moon = EquatorFromVector(GeoVector(Body.Moon, time, true));
-    expect(moonSeparationDeg(time, { raHours: moon.ra, decDeg: moon.dec })).toBeCloseTo(0, 6);
+    // Vector → RA/Dec → vector leaves ~1e-6° of float residual that differs between CPUs (CI on
+    // x86 measured 1.2e-6°); 4 decimal places (5e-5°, 0.2 arcsec) is the physically meaningful bound.
+    expect(moonSeparationDeg(time, { raHours: moon.ra, decDeg: moon.dec })).toBeCloseTo(0, 4);
   });
 
   it("is deterministic", () => {
