@@ -1,0 +1,79 @@
+---
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import { siteStore, type SiteRecord } from "@/lib/gear/store";
+
+const LOAD_FAILED = "Could not load your sites. Please try again.";
+
+const error = Astro.url.searchParams.get("error");
+const { supabase } = Astro.locals;
+
+let sites: SiteRecord[] = [];
+let loadError: string | null = null;
+if (supabase) {
+  try {
+    sites = await siteStore.list(supabase);
+  } catch {
+    loadError = LOAD_FAILED;
+  }
+}
+
+const primaryLink =
+  "inline-flex items-center justify-center rounded-lg bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200";
+---
+
+<GearShell title="My gear">
+  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">Your sky, your kit</p>
+  <h1 class="mb-6 font-serif text-4xl text-amber-50 sm:text-5xl">My gear</h1>
+
+  <div class="mb-6 empty:hidden">
+    <ServerError message={error} />
+  </div>
+
+  {supabase ? (
+    <section aria-labelledby="sites-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 id="sites-heading" class="font-serif text-2xl text-amber-50">
+          Sites
+        </h2>
+        <a href="/gear/sites/new" class:list={[primaryLink]}>
+          Add site
+        </a>
+      </div>
+
+      {loadError ? (
+        <ServerError message={loadError} />
+      ) : sites.length === 0 ? (
+        <p class="text-sm text-slate-300/70">
+          No sites yet. Add the place you observe from, so tonight's verdict uses your sky.
+        </p>
+      ) : (
+        <ul class="divide-y divide-white/10">
+          {sites.map((site) => (
+            <li>
+              <a
+                href={`/gear/sites/${site.id}`}
+                class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+              >
+                <span class="block font-medium break-words text-amber-50">{site.name}</span>
+                <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
+                  <span>
+                    {site.latitudeDeg.toFixed(2)}, {site.longitudeDeg.toFixed(2)}
+                  </span>
+                  <span>Bortle {site.bortle}</span>
+                  <span>Min {site.minAltitudeDeg}°</span>
+                  <span class="break-all">
+                    {site.timeZone} ({site.timeZoneSource === "manual" ? "pinned" : "auto"})
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  ) : (
+    <DatabaseMissing />
+  )}
+</GearShell>

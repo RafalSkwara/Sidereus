@@ -477,7 +477,7 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Manual
 
-- [ ] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub
+- [x] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub
 - [ ] 1.7 After merge to `main`, the `migrate` job succeeds and the hosted project's Table Editor shows `sites`, `telescopes` and `eyepieces` with RLS enabled
 - [x] 1.8 Temporarily dropping one policy locally (for example `sites` select) makes `npm run test:db` fail, which confirms the suite can catch a missing policy; then restore it — 0f17021
 
@@ -485,21 +485,21 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with the new gear tests green and the engine purity guard still passing (tz-lookup lives in `src/lib/gear/`, not `src/lib/engine/`)
-- [x] 2.2 `npm run lint` passes, and `npx eslint --print-config src/lib/gear/store.ts | grep -A1 '"no-console"'` shows level 2 (error)
-- [x] 2.3 `npx astro check` and `npm run build` pass, the build bundles tz-lookup, and `npx wrangler deploy --dry-run` reports an upload size within the Free plan limit (assumes the existing local `wrangler login`)
+- [x] 2.1 `npm test` passes with the new gear tests green and the engine purity guard still passing (tz-lookup lives in `src/lib/gear/`, not `src/lib/engine/`) — f4a6375
+- [x] 2.2 `npm run lint` passes, and `npx eslint --print-config src/lib/gear/store.ts | grep -A1 '"no-console"'` shows level 2 (error) — f4a6375
+- [x] 2.3 `npx astro check` and `npm run build` pass, the build bundles tz-lookup, and `npx wrangler deploy --dry-run` reports an upload size within the Free plan limit (assumes the existing local `wrangler login`) — f4a6375
 
 #### Manual
 
-- [x] 2.4 User reads the schema ranges (aperture 20–1000 mm, telescope focal length 100–5000 mm, eyepiece focal length 2–60 mm, AFOV 30–120°, min altitude 0–60°) and confirms none of them excludes real beginner kit
+- [x] 2.4 User reads the schema ranges (aperture 20–1000 mm, telescope focal length 100–5000 mm, eyepiece focal length 2–60 mm, AFOV 30–120°, min altitude 0–60°) and confirms none of them excludes real beginner kit — f4a6375
 
 ### Phase 3: Sites UI
 
 #### Automated
 
-- [ ] 3.1 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 3.2 `npm run smoke` still passes with the moved form primitives (auth unchanged)
-- [ ] 3.3 `grep -rn "console\." src/pages/api/gear src/lib/gear` returns nothing
+- [x] 3.1 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 3.2 `npm run smoke` still passes with the moved form primitives (auth unchanged)
+- [x] 3.3 `grep -rn "console\." src/pages/api/gear src/lib/gear` returns nothing
 
 #### Manual
 
