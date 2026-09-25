@@ -55,7 +55,10 @@ npm run dev
 - `npm run lint` - Run ESLint with type-checked rules
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Run Prettier
-- `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
+- `npm test` - Run the unit tests (Vitest)
+- `npm run test:db` - Run the per-user isolation suite in `tests/db/` against a running local Supabase (`npx supabase start` first)
+- `npm run db:types` - Regenerate `src/lib/database.types.ts` from the local Supabase schema (never edit that file by hand)
+- `npm run smoke` - Smoke test the auth flow and the gear routes against a running server backed by local Supabase (`BASE_URL`, defaults to `http://localhost:4321`)
 
 ## Project Structure
 
@@ -112,7 +115,7 @@ npx supabase stop
 
 The local Studio UI is available at `http://localhost:54323`.
 
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+`npx supabase start` applies the migrations in `supabase/migrations/` (sites, telescopes and eyepieces, each with per-user RLS). The hosted project's schema changes only when CI's `migrate` job runs after a merge to `main`.
 
 ### Using a cloud Supabase project instead
 
@@ -169,14 +172,14 @@ Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or
 
 ## Smoke test
 
-`scripts/smoke.mjs` is a dependency-free Node script that walks the whole auth flow (sign-up, sign-in, protected page, sign-out) over HTTP. Run it against the dev server or the production preview after dependency upgrades:
+`scripts/smoke.mjs` is a dependency-free Node script that walks the auth flow (sign-up, sign-in, protected page, sign-out) and the gear routes (create a site, a telescope and an eyepiece; reject an invalid site) over HTTP. Run it against the dev server or the production preview after dependency upgrades:
 
 ```bash
 npm run dev            # or: npm run build && npm run preview
 BASE_URL=http://localhost:4321 npm run smoke
 ```
 
-It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+It needs a local Supabase (`npx supabase start`, email confirmation disabled in `supabase/config.toml`). Never run it against the hosted project: it signs up real users.
 
 > **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
 

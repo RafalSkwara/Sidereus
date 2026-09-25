@@ -477,7 +477,7 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Manual
 
-- [x] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub
+- [x] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub — 7de74e4
 - [ ] 1.7 After merge to `main`, the `migrate` job succeeds and the hosted project's Table Editor shows `sites`, `telescopes` and `eyepieces` with RLS enabled
 - [x] 1.8 Temporarily dropping one policy locally (for example `sites` select) makes `npm run test:db` fail, which confirms the suite can catch a missing policy; then restore it — 0f17021
 
@@ -497,9 +497,9 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Automated
 
-- [x] 3.1 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 3.2 `npm run smoke` still passes with the moved form primitives (auth unchanged)
-- [x] 3.3 `grep -rn "console\." src/pages/api/gear src/lib/gear` returns nothing
+- [x] 3.1 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass — 7de74e4
+- [x] 3.2 `npm run smoke` still passes with the moved form primitives (auth unchanged) — 7de74e4
+- [x] 3.3 `grep -rn "console\." src/pages/api/gear src/lib/gear` returns nothing — 7de74e4
 
 #### Manual
 
@@ -515,9 +515,9 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Automated
 
-- [ ] 4.1 `npm test`, `npm run test:db`, `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 4.2 `npm run smoke` passes against a local preview with local Supabase, including the new gear steps
-- [ ] 4.3 `CLAUDE.md` mentions `test:db`, `db:types` and the isolation-suite rule
+- [x] 4.1 `npm test`, `npm run test:db`, `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 4.2 `npm run smoke` passes against a local preview with local Supabase, including the new gear steps
+- [x] 4.3 `CLAUDE.md` mentions `test:db`, `db:types` and the isolation-suite rule
 
 #### Manual
 

@@ -1,9 +1,18 @@
-// Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together.
-// Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
+// Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow and the gear routes still work
+// together. Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
+// It signs up a throwaway user and writes gear rows, so point it at local Supabase only (as CI does), never hosted.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const email = `smoke-${Date.now()}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
+const site = {
+  name: "Smoke site",
+  latitudeDeg: "52.23",
+  longitudeDeg: "21.01",
+  bortle: "5",
+  minAltitudeDeg: "20",
+  timeZoneMode: "auto",
+};
 const jar = new Map();
 
 function cookieHeader() {
@@ -53,9 +62,39 @@ const steps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     { status: 302, location: "/" },
   ],
+  ["gear renders", () => request("/gear"), { status: 200 }],
+  [
+    "create site redirects to gear",
+    () => request("/api/gear/sites", { method: "POST", form: site }),
+    { status: 302, location: "/gear", exact: true },
+  ],
+  [
+    "invalid site returns to form with error",
+    () => request("/api/gear/sites", { method: "POST", form: { ...site, latitudeDeg: "95" } }),
+    { status: 302, location: "/gear/sites/new?error=" },
+  ],
+  [
+    "create telescope redirects to gear",
+    () =>
+      request("/api/gear/telescopes", {
+        method: "POST",
+        form: { name: "Smoke Newtonian", apertureMm: "130", focalLengthMm: "650" },
+      }),
+    { status: 302, location: "/gear", exact: true },
+  ],
+  [
+    "create eyepiece redirects to gear",
+    () =>
+      request("/api/gear/eyepieces", {
+        method: "POST",
+        form: { name: "Smoke Plossl", focalLengthMm: "25", afovPreset: "plossl" },
+      }),
+    { status: 302, location: "/gear", exact: true },
+  ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],
 ];
 
 let failed = 0;
@@ -63,7 +102,8 @@ for (const [name, run, expected] of steps) {
   const actual = await run();
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined || actual.location.startsWith(expected.location));
+    (expected.location === undefined ||
+      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location)));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
