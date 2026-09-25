@@ -1,10 +1,10 @@
 ---
 change_id: no-go-and-no-darkness-explanations
 title: No-go and no-darkness explanations
-status: implemented
+status: archived
 created: 2026-09-25
 updated: 2026-09-25
-archived_at: null
+archived_at: 2026-09-25T20:08:35Z
 ---
 
 ## Notes
