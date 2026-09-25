@@ -1,0 +1,3 @@
+-- No seed data yet.
+-- supabase/config.toml ([db.seed]) points `supabase db reset` at this file; it stays comment-only
+-- until a change needs fixture rows. Per-user data is created by the app or by tests/db/.

@@ -5,6 +5,8 @@ const PROTECTED_ROUTES = ["/dashboard"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
+  // One per-request client: the same instance resolves the user and serves DB queries in pages and routes.
+  context.locals.supabase = supabase;
 
   if (supabase) {
     const {

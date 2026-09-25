@@ -43,7 +43,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ | -------- |
 | F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | in-progress |
 | F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | proposed |
-| S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | ready    |
+| S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | in-progress |
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | proposed |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | proposed |
 | S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02    | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | blocked  |
@@ -118,7 +118,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is where the first per-user tables appear, so the isolation test that the NFR demands lands here or every later slice inherits the gap. Coordinates are entered through the plain site form in this slice; the beginner-friendly geolocation and place-name search arrive in S-03. Sequenced before the north star because S-02 has nothing to run against without a site and a telescope.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-02: Tonight view: verdict and ranked Messier list
 

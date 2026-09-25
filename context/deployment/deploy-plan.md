@@ -128,3 +128,31 @@ _(filled in as steps complete)_
 | Supabase | project ref `kzdovsrpyxhfduusaqlu`, publishable key in use, email confirmation off |
 | Rollback | `npx wrangler rollback <version-id> -m "<reason>" -y` (secrets and KV untouched) |
 | Skipped (out of scope) | custom domain (user will add later), KV forecast cache (no code yet), CI deploy job (PRD final week; `ci.yml` branch trigger fixed to `main` so the existing lint/check/build/smoke jobs now run), local `.env`/`.dev.vars` (human) |
+
+## Database migrations
+
+Added with change `sites-and-gear-management` (the first schema). Migrations live in `supabase/migrations/` and reach the hosted project `kzdovsrpyxhfduusaqlu` through CI; the app deploy (`npx wrangler deploy`) stays manual until F-02.
+
+**GitHub environment secrets** **[HUMAN]**: create the environment `production` (Settings → Environments → New environment), set Deployment branches to `main` only (optionally add yourself as a required reviewer, which makes each migration wait for an approval click), and add both secrets under its Environment secrets. The `migrate` job declares `environment: production`, so no other job or branch can read them. CLI alternative: `gh secret set <NAME> --env production`.
+
+| Secret | Where to get it |
+|---|---|
+| `SUPABASE_ACCESS_TOKEN` | Supabase dashboard → Account → Access Tokens → generate a personal access token. It is account-wide (every project), so revoke it there if CI access should end |
+| `SUPABASE_DB_PASSWORD` | The database password chosen when the project was created (Step 4); reset it under Project Settings → Database if lost |
+
+**`migrate` job gating** (`.github/workflows/ci.yml`): `needs: [ci, smoke]`, `environment: production`, runs only when `github.event_name == 'push' && github.ref == 'refs/heads/main'`, `concurrency: migrate` so two pushes never migrate at once. Steps: checkout → `supabase/setup-cli@v1` → `supabase link --project-ref kzdovsrpyxhfduusaqlu` → `supabase db push`. Pull requests never touch the hosted database; the `smoke` job applies migrations to a throwaway local Supabase, runs `npm run test:db` (RLS isolation suite) and checks `src/lib/database.types.ts` for drift.
+
+**Manual fallback** (if the job fails or secrets are missing), from the repo root with the same two values in the environment:
+```
+npx supabase link --project-ref kzdovsrpyxhfduusaqlu
+npx supabase db push
+```
+`db push` applies only migrations not yet recorded in the remote `supabase_migrations.schema_migrations` table and prints them first.
+
+**Rules**:
+- Forward-only. Never edit or delete a migration that has been pushed; fix mistakes with a new migration.
+- Additive until F-02. Because `migrate` runs on merge while the Worker deploy is manual and may lag, the live app can run against a newer schema. That is safe only while migrations add (tables, nullable or defaulted columns, policies) and never drop, rename or tighten what the deployed code uses. `20260924120000_sites_and_gear.sql` is additive (three new tables). A breaking migration needs a coordinated deploy, and F-02's CI deploy job should then run the app deploy in the same pipeline.
+
+### Migration log
+
+_(one dated line per production push; none has run yet)_
