@@ -335,25 +335,25 @@ Compose the explanations and the forecast line into `TonightView`, give each one
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 The engine purity guard covers `outlook.ts` and passes (part of `npm test`)
+- [x] 1.1 Unit tests pass: `npm test` — 85069cf
+- [x] 1.2 Type check passes: `npx astro check` — 85069cf
+- [x] 1.3 Lint passes: `npm run lint` — 85069cf
+- [x] 1.4 The engine purity guard covers `outlook.ts` and passes (part of `npm test`) — 85069cf
 
 ### Phase 2: Tonight explanations and forecast status
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 McMurdo site shows the no-darkness cause and a return date matching an independent twilight table within one night
-- [ ] 2.6 Stub forecast shows a weather no-go with the next night, and the "no clear night through" line when all nights are cloudy
-- [ ] 2.7 Outage with a saved copy shows its age, never shows go, and keeps the ranking on a marginal night
-- [ ] 2.8 Outage with no saved copy shows "No weather data", a marginal verdict with a ranking, and no error page
-- [ ] 2.9 A normal night shows "Forecast updated … ago" and no explanation block
+- [x] 2.5 McMurdo site shows the no-darkness cause and a return date matching an independent twilight table within one night
+- [x] 2.6 Stub forecast shows a weather no-go with the next night, and the "no clear night through" line when all nights are cloudy
+- [x] 2.7 Outage with a saved copy shows its age, never shows go, and keeps the ranking on a marginal night
+- [x] 2.8 Outage with no saved copy shows "No weather data", a marginal verdict with a ranking, and no error page
+- [x] 2.9 A normal night shows "Forecast updated … ago" and no explanation block
 - [ ] 2.10 Deployed `/tonight` renders and Workers Logs show no `exceededCpu` / 1102

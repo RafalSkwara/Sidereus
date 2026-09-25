@@ -63,7 +63,8 @@ const telescope = telescopes.at(0);
 if (site && telescope) {
   const now = new Date();
   try {
-    // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal.
+    // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
+    // a saved copy served in an outage comes back flagged `fallback`, and buildTonight caps it at marginal.
     const result = await getForecast({
       fetchFn: globalThis.fetch.bind(globalThis),
       cache: kvForecastCache(),
@@ -72,7 +73,7 @@ if (site && telescope) {
       now,
       ...(FORECAST_BASE_URL ? { baseUrl: FORECAST_BASE_URL } : {}),
     });
-    view = buildTonight({ site, telescope, eyepieces, forecast: result?.forecast ?? null, now });
+    view = buildTonight({ site, telescope, eyepieces, forecast: result, now });
   } catch {
     tonightError = TONIGHT_FAILED;
   }
@@ -127,6 +128,8 @@ const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
             text={view.verdictText}
             darkWindow={view.darkWindow}
             timeZone={view.timeZone}
+            forecastStatus={view.forecastStatus}
+            explanation={view.explanation}
           />
 
           {view.ranking && (
