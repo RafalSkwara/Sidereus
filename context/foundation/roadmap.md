@@ -41,7 +41,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 
 | ID   | Change ID                               | Outcome (user can …)                                                                                                     | Prerequisites | PRD refs                                                                 | Status   |
 | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ | -------- |
-| F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | in-progress |
+| F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | done        |
 | F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | proposed |
 | S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | done        |
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | proposed |
@@ -91,7 +91,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Is 1 degree of altitude and 5 minutes of time (Open Question 9) achievable against the reference, or does the tolerance need to widen? — Owner: user. Block: no (candidate value lets the work start; the result calibrates it).
 - **Risk:** Every ranking and the "never recommends the physically impossible" guardrail rest on this being right, so it comes first. Scope is deliberately capped: no scoring, no verdict, no forecast, no persistence here; those arrive in S-02 where a user first sees them.
-- **Status:** in-progress
+- **Status:** done
 
 ### F-02: CI runs tests and deploys on merge
 
@@ -298,3 +298,4 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate.)
 
 - **S-01: user can create, view, update and delete their observing sites (name, coordinates rounded to about 1 km at capture, Bortle class, minimum altitude), telescopes (name, aperture, focal length) and eyepieces (name, focal length, apparent field of view chosen through a type picker), and no user can read or change another user's records.** — Archived 2026-09-25 → `context/archive/2026-09-24-sites-and-gear-management/`. Lesson: —.
+- **F-01: (foundation) the Messier catalogue is loaded from the licensed source, and moon position and illumination, the Bortle-dependent dark window, and object altitude over a night agree with the independent planetarium reference within the candidate tolerance, all exercised by fixture-driven unit tests that run without network access.** — Archived 2026-09-25 → `context/archive/2026-09-22-verified-ephemeris-core/`. Lesson: —.
