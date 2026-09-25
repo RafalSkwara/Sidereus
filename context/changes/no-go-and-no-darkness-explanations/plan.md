@@ -344,16 +344,16 @@ Compose the explanations and the forecast line into `TonightView`, give each one
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass: `npm test` — ee874db
+- [x] 2.2 Type check passes: `npx astro check` — ee874db
+- [x] 2.3 Lint passes: `npm run lint` — ee874db
+- [x] 2.4 Production build succeeds: `npm run build` — ee874db
 
 #### Manual
 
-- [x] 2.5 McMurdo site shows the no-darkness cause and a return date matching an independent twilight table within one night
-- [x] 2.6 Stub forecast shows a weather no-go with the next night, and the "no clear night through" line when all nights are cloudy
-- [x] 2.7 Outage with a saved copy shows its age, never shows go, and keeps the ranking on a marginal night
-- [x] 2.8 Outage with no saved copy shows "No weather data", a marginal verdict with a ranking, and no error page
-- [x] 2.9 A normal night shows "Forecast updated … ago" and no explanation block
+- [x] 2.5 McMurdo site shows the no-darkness cause and a return date matching an independent twilight table within one night — ee874db
+- [x] 2.6 Stub forecast shows a weather no-go with the next night, and the "no clear night through" line when all nights are cloudy — ee874db
+- [x] 2.7 Outage with a saved copy shows its age, never shows go, and keeps the ranking on a marginal night — ee874db
+- [x] 2.8 Outage with no saved copy shows "No weather data", a marginal verdict with a ranking, and no error page — ee874db
+- [x] 2.9 A normal night shows "Forecast updated … ago" and no explanation block — ee874db
 - [ ] 2.10 Deployed `/tonight` renders and Workers Logs show no `exceededCpu` / 1102
