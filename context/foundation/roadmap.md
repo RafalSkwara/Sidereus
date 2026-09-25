@@ -271,7 +271,15 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 9. **Ephemeris tolerance** — candidate (uncalibrated): 1 degree of altitude and 5 minutes of time against an independent planetarium reference. — Owner: user. Block: none (measured by F-01). Measured by F-01 on 2026-09-24 against Stellarium: sun events and −18° twilight crossings within 1 minute across three fixtures (Warsaw autumn, Warsaw DST night, Tromsø midnight sun); moon and object positions spot-checked within about 1° but not recorded as fixtures — see `context/changes/verified-ephemeris-core/tolerance-report.md`. The 5-minute candidate holds with a wide margin; the 1° altitude candidate is not yet formally measured.
 10. **Which telescope and eyepiece-kit presets ship** — the fixed, named preset set required by FR-006. — Owner: user. Block: S-03.
 11. **Geocoding terms** — confirm the geocoding endpoint's non-commercial fair-use terms before FR-004 depends on it. — Owner: user. Block: none for planning; gates S-03 implementation.
-12. **Cut checkpoint** — when S-02 lands, does it produce a sane top 5 against the observation-planner reference? If not, which of the PRD's cut-order items (S-05; manual entry in S-07; reset in S-09; S-10) drop, and does S-03 still get the full preset flow? — Owner: user. Block: roadmap-wide (decides whether the Parked section grows).
+12. **Cut checkpoint** — when S-02 lands, does it produce a sane top 5 against the observation-planner reference? If not, which of the PRD's cut-order items (S-05; manual entry in S-07; reset in S-09; S-10) drop, and does S-03 still get the full preset flow? — Owner: user. Block: roadmap-wide (decides whether the Parked section grows). **Answered 2026-09-25 (user): sane, no cuts.** The S-02 checkpoint (`context/changes/tonight-verdict-and-ranking/checkpoint.md`) found the top 5 sane on three nights:
+    - Warsaw 2026-10-10 and 2026-10-24, and Bieszczady 2027-04-06 (80 mm);
+    - 15/15 invariant checks passed;
+    - positions within 0.005° of Skyfield/DE421.
+
+    Consequences:
+    - S-05, the manual-entry half of S-07, the reset half of S-09 and S-10 stay in scope, and S-03 keeps the full preset flow.
+    - PRD Success Criterion #2's "independent observation planner" (Telescopius) was replaced by an independent Skyfield recompute plus published seasonal lists, because the agent cannot read Telescopius' lists (they are drawn by JavaScript).
+    - Calibration refinements are tracked in #21 and the Free-plan CPU re-measurement in #22.
 
 ## Parked
 

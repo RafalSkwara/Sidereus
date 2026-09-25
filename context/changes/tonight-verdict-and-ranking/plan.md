@@ -512,24 +512,24 @@ No database migration. There's one new KV namespace (created in Phase 2), and th
 
 #### Automated
 
-- [x] 3.1 `npm test` passes with the tonight composition and format tests green
-- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 3.3 CI's smoke job passes with the three new Tonight steps
+- [x] 3.1 `npm test` passes with the tonight composition and format tests green — 72d9166
+- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass — 72d9166
+- [x] 3.3 CI's smoke job passes with the three new Tonight steps — 72d9166
 
 #### Manual
 
-- [x] 3.4 Against local Supabase with `npm run dev`, a user with one site, one telescope and two eyepieces sees the verdict, dark window and ranked cards with times in the site's zone; the Topbar link and attribution are present
-- [x] 3.5 Deleting all eyepieces leaves the ranking without eyepiece lines; with no telescope, the page shows the add-a-telescope prompt
-- [x] 3.6 Setting `FORECAST_BASE_URL` to an unreachable host in local `.dev.vars` shows "marginal — no weather data" with the ranking, never an error page
+- [x] 3.4 Against local Supabase with `npm run dev`, a user with one site, one telescope and two eyepieces sees the verdict, dark window and ranked cards with times in the site's zone; the Topbar link and attribution are present — 72d9166
+- [x] 3.5 Deleting all eyepieces leaves the ranking without eyepiece lines; with no telescope, the page shows the add-a-telescope prompt — 72d9166
+- [x] 3.6 Setting `FORECAST_BASE_URL` to an unreachable host in local `.dev.vars` shows "marginal — no weather data" with the ranking, never an error page — 72d9166
 
 ### Phase 4: Deploy, CPU check and sanity checkpoint
 
 #### Automated
 
-- [ ] 4.1 `npx wrangler deploy` from an up-to-date `main` succeeds
-- [ ] 4.2 `checkpoint.md` exists with a CPU section and three night sections, each containing a top-5 table, a Skyfield comparison and an invariant check
+- [x] 4.1 `npx wrangler deploy` from an up-to-date `main` succeeds
+- [x] 4.2 `checkpoint.md` exists with a CPU section and three night sections, each containing a top-5 table, a Skyfield comparison and an invariant check
 
 #### Manual
 
-- [ ] 4.3 Open `/tonight` on production and confirm it renders with a live verdict (or "no weather data") for your own site
-- [ ] 4.4 Read `checkpoint.md` and accept or reject the sanity verdict and the Free/Paid outcome; the roadmap's question 12 entry reflects your decision
+- [x] 4.3 Open `/tonight` on production and confirm it renders with a live verdict (or "no weather data") for your own site
+- [x] 4.4 Read `checkpoint.md` and accept or reject the sanity verdict and the Free/Paid outcome; the roadmap's question 12 entry reflects your decision
