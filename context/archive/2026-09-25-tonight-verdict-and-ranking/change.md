@@ -1,10 +1,10 @@
 ---
 change_id: tonight-verdict-and-ranking
 title: Tonight verdict and ranking
-status: implemented
+status: archived
 created: 2026-09-25
 updated: 2026-09-25
-archived_at: null
+archived_at: 2026-09-25T17:02:02Z
 ---
 
 ## Notes
