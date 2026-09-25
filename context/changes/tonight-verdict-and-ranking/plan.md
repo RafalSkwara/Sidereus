@@ -526,10 +526,10 @@ No database migration. There's one new KV namespace (created in Phase 2), and th
 
 #### Automated
 
-- [x] 4.1 `npx wrangler deploy` from an up-to-date `main` succeeds
-- [x] 4.2 `checkpoint.md` exists with a CPU section and three night sections, each containing a top-5 table, a Skyfield comparison and an invariant check
+- [x] 4.1 `npx wrangler deploy` from an up-to-date `main` succeeds — deb9a75
+- [x] 4.2 `checkpoint.md` exists with a CPU section and three night sections, each containing a top-5 table, a Skyfield comparison and an invariant check — deb9a75
 
 #### Manual
 
-- [x] 4.3 Open `/tonight` on production and confirm it renders with a live verdict (or "no weather data") for your own site
-- [x] 4.4 Read `checkpoint.md` and accept or reject the sanity verdict and the Free/Paid outcome; the roadmap's question 12 entry reflects your decision
+- [x] 4.3 Open `/tonight` on production and confirm it renders with a live verdict (or "no weather data") for your own site — deb9a75
+- [x] 4.4 Read `checkpoint.md` and accept or reject the sanity verdict and the Free/Paid outcome; the roadmap's question 12 entry reflects your decision — deb9a75
