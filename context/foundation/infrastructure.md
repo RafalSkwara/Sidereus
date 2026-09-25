@@ -280,6 +280,9 @@ root.
    `npx wrangler kv namespace create FORECAST_CACHE --update-config` writes the
    binding into `wrangler.jsonc`; read it in code via
    `import { env } from "cloudflare:workers"`.
+   **Done 2026-09-25 (S-02):** namespace id `61441b2363ea41fca5731cfbc735b006`,
+   committed in `wrangler.jsonc`; binding types come from `npm run cf:types`.
+   First deploy with it: version `499fddc8-1627-4d7c-96eb-8b2ea9abe7fc`.
 5. **Set production secrets and deploy.**
    `echo "$SUPABASE_URL" | npx wrangler secret put SUPABASE_URL`,
    `echo "$SUPABASE_KEY" | npx wrangler secret put SUPABASE_KEY`, then
