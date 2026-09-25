@@ -478,7 +478,7 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 #### Manual
 
 - [x] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub — 7de74e4
-- [ ] 1.7 After merge to `main`, the `migrate` job succeeds and the hosted project's Table Editor shows `sites`, `telescopes` and `eyepieces` with RLS enabled
+- [x] 1.7 After merge to `main`, the `migrate` job succeeds and the hosted project's Table Editor shows `sites`, `telescopes` and `eyepieces` with RLS enabled
 - [x] 1.8 Temporarily dropping one policy locally (for example `sites` select) makes `npm run test:db` fail, which confirms the suite can catch a missing policy; then restore it — 0f17021
 
 ### Phase 2: Gear domain: schemas, rounding, timezone and store
@@ -503,13 +503,13 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Manual
 
-- [ ] 3.4 Signed in on the dev server: "My gear" appears in the top bar and `/gear` shows the empty Sites state
-- [ ] 3.5 Create a site at 52.229676, 21.012229 with automatic zone: the hub shows 52.23, 21.01 and `Europe/Warsaw (auto)`
-- [ ] 3.6 Edit it to 69.65, 18.96 with the zone still automatic: the zone becomes `Europe/Oslo`. Then pin `Europe/Warsaw`, change the coordinates again, and confirm the pinned zone is kept
-- [ ] 3.7 Invalid latitude (95) is blocked in the form. Submitting it anyway (for example with devtools) returns to the form with an error, and the URL contains no coordinates
-- [ ] 3.8 Delete asks for confirmation and removes the site. Opening another user's site id (from a second account) shows 404
-- [ ] 3.9 Signed out, `/gear` and a POST to `/api/gear/sites` redirect to `/auth/signin`
-- [ ] 3.10 The pages are usable at 360 px width
+- [x] 3.4 Signed in on the dev server: "My gear" appears in the top bar and `/gear` shows the empty Sites state
+- [x] 3.5 Create a site at 52.229676, 21.012229 with automatic zone: the hub shows 52.23, 21.01 and `Europe/Warsaw (auto)`
+- [x] 3.6 Edit it to 69.65, 18.96 with the zone still automatic: the zone becomes `Europe/Oslo`. Then pin `Europe/Warsaw`, change the coordinates again, and confirm the pinned zone is kept
+- [x] 3.7 Invalid latitude (95) is blocked in the form. Submitting it anyway (for example with devtools) returns to the form with an error, and the URL contains no coordinates
+- [x] 3.8 Delete asks for confirmation and removes the site. Opening another user's site id (from a second account) shows 404
+- [x] 3.9 Signed out, `/gear` and a POST to `/api/gear/sites` redirect to `/auth/signin`
+- [x] 3.10 The pages are usable at 360 px width
 
 ### Phase 4: Telescopes and eyepieces UI
 
@@ -521,7 +521,7 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Manual
 
-- [ ] 4.4 Create a 130 mm / 650 mm telescope: the hub shows f/5. Edit it and delete it
-- [ ] 4.5 Create eyepieces "25 mm Plössl" (Plössl), "10 mm" (Wide-field) and "6 mm" (Other, 100°): the hub shows AFOVs 50°, 68° and 100°, and editing the 100° one preselects "Other" with 100 filled in
-- [ ] 4.6 Delete every eyepiece and telescope: the hub shows their empty states and nothing errors
-- [ ] 4.7 The whole flow works at 360 px width and matches the homepage's look
+- [x] 4.4 Create a 130 mm / 650 mm telescope: the hub shows f/5. Edit it and delete it
+- [x] 4.5 Create eyepieces "25 mm Plössl" (Plössl), "10 mm" (Wide-field) and "6 mm" (Other, 100°): the hub shows AFOVs 50°, 68° and 100°, and editing the 100° one preselects "Other" with 100 filled in
+- [x] 4.6 Delete every eyepiece and telescope: the hub shows their empty states and nothing errors
+- [x] 4.7 The whole flow works at 360 px width and matches the homepage's look

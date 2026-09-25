@@ -1,7 +1,7 @@
 ---
 change_id: sites-and-gear-management
 title: Sites and gear management - per-user observing sites, telescopes and eyepieces with verified isolation
-status: implementing
+status: implemented
 created: 2026-09-24
 updated: 2026-09-25
 archived_at: null
