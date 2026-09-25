@@ -44,7 +44,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | done        |
 | F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | proposed |
 | S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | done        |
-| S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | proposed |
+| S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | in-progress |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | proposed |
 | S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02    | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | blocked  |
 | S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02    | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
@@ -138,7 +138,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Default minimum altitude (Open Question 8) — Owner: user. Block: no.
   - Does the ranking's compute cost on the chosen edge runtime stay under the free plan's limit? The upgrade trigger is recorded in infrastructure.md's Risk Register. — Owner: user. Block: no.
 - **Risk:** This is the north star and the outcome the PRD's cut checkpoint tests. It introduces the forecast integration and its hourly per-site cache, the verdict, the object score and the eyepiece pairing in one slice because they are only meaningful together on one screen; the ephemeris underneath is already verified by F-01, which keeps this slice's risk on the scoring logic rather than the sky maths. If the top 5 is not sane here, the cut order drops S-05, the manual-entry half of S-07, the reset half of S-09 and S-10.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-04: No-go and no-darkness explanations
 
