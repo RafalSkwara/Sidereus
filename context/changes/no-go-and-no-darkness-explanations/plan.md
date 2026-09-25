@@ -356,4 +356,4 @@ Compose the explanations and the forecast line into `TonightView`, give each one
 - [x] 2.7 Outage with a saved copy shows its age, never shows go, and keeps the ranking on a marginal night — ee874db
 - [x] 2.8 Outage with no saved copy shows "No weather data", a marginal verdict with a ranking, and no error page — ee874db
 - [x] 2.9 A normal night shows "Forecast updated … ago" and no explanation block — ee874db
-- [ ] 2.10 Deployed `/tonight` renders and Workers Logs show no `exceededCpu` / 1102
+- [x] 2.10 Deployed `/tonight` renders and Workers Logs show no `exceededCpu` / 1102 — 75111bb
