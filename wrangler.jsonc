@@ -9,7 +9,12 @@
     "directory": "./dist",
     "not_found_handling": "404-page",
   },
+  // Per-site Open-Meteo forecast cache (src/lib/forecast/kv-cache.ts). After changing bindings,
+  // rerun `npm run cf:types` and commit worker-configuration.d.ts.
+  "kv_namespaces": [{ "binding": "FORECAST_CACHE", "id": "61441b2363ea41fca5731cfbc735b006" }],
   "observability": {
     "enabled": true,
+    // The Open-Meteo request's query string carries site coordinates; keep it out of logs and traces.
+    "redact_query_string": true,
   },
 }

@@ -486,27 +486,27 @@ No database migration. There's one new KV namespace (created in Phase 2), and th
 
 #### Automated
 
-- [x] 1.1 `npm test` passes with the new score, eyepiece and ranking tests green
-- [x] 1.2 The determinism test covers `rankObjects` and asserts identical output on repeat runs
-- [x] 1.3 The timing test asserts a full `rankObjects` run under 1000 ms locally
-- [x] 1.4 The purity guard still passes with the new engine files
-- [x] 1.5 `npm run lint` and `npx astro check` pass
+- [x] 1.1 `npm test` passes with the new score, eyepiece and ranking tests green — d43b309
+- [x] 1.2 The determinism test covers `rankObjects` and asserts identical output on repeat runs — d43b309
+- [x] 1.3 The timing test asserts a full `rankObjects` run under 1000 ms locally — d43b309
+- [x] 1.4 The purity guard still passes with the new engine files — d43b309
+- [x] 1.5 `npm run lint` and `npx astro check` pass — d43b309
 
 #### Manual
 
-- [x] 1.6 Skim the ranked output the agent prints (via a throwaway, uncommitted test file run by vitest) for Warsaw 2026-10-10 (Bortle 6, 150/750, 25 mm + 10 mm Plössl): the top 5 contains no object you would call impossible from that place and date, and each lead reason reads plausibly
+- [x] 1.6 Skim the ranked output the agent prints (via a throwaway, uncommitted test file run by vitest) for Warsaw 2026-10-10 (Bortle 6, 150/750, 25 mm + 10 mm Plössl): the top 5 contains no object you would call impossible from that place and date, and each lead reason reads plausibly — d43b309
 
 ### Phase 2: Verdict and forecast
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes with the verdict, night-date and forecast tests green
-- [ ] 2.2 The purity guard passes (no fetch or clock in `src/lib/engine/`); `src/lib/forecast/` is the only place that calls fetch
-- [ ] 2.3 `npm run lint`, `npx astro check` and `npm run build` pass with the real `FORECAST_CACHE` namespace id and generated binding types committed
+- [x] 2.1 `npm test` passes with the verdict, night-date and forecast tests green
+- [x] 2.2 The purity guard passes (no fetch or clock in `src/lib/engine/`); `src/lib/forecast/` is the only place that calls fetch
+- [x] 2.3 `npm run lint`, `npx astro check` and `npm run build` pass with the real `FORECAST_CACHE` namespace id and generated binding types committed
 
 #### Manual
 
-- [ ] 2.4 Review a live forecast the agent fetches for a test coordinate (via a throwaway, uncommitted test file run by vitest), printed as the mapped hourly rows next to Open-Meteo's own JSON for the same hours: the values and UTC hours match
+- [x] 2.4 Review a live forecast the agent fetches for a test coordinate (via a throwaway, uncommitted test file run by vitest), printed as the mapped hourly rows next to Open-Meteo's own JSON for the same hours: the values and UTC hours match
 
 ### Phase 3: Tonight page
 

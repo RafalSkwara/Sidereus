@@ -102,3 +102,19 @@ export function observingNight(date: string, timeZone: string): ObservingNight {
   const end = localNoon(addDays(date, 1), timeZone);
   return { date, timeZone, start, end };
 }
+
+/**
+ * The evening date (`YYYY-MM-DD`, site-local) of the observing night that contains `instant`.
+ * Nights run from local noon to local noon, so before local noon this is the previous date: at
+ * 01:30 the night in progress is still "tonight". Consistent with `observingNight`:
+ * `observingNight(observingNightDateFor(t, z), z)` always contains `t`.
+ */
+export function observingNightDateFor(instant: Date, timeZone: string): string {
+  const wall = new Date(wallClockAsUtcMs(instant.getTime(), timeZone));
+  const date = formatCalendarDate({
+    year: wall.getUTCFullYear(),
+    month: wall.getUTCMonth() + 1,
+    day: wall.getUTCDate(),
+  });
+  return wall.getUTCHours() < 12 ? addDays(date, -1) : date;
+}

@@ -5,7 +5,7 @@
 
 export type * from "./types";
 export * from "./parameters";
-export { observingNight } from "./night";
+export { observingNight, observingNightDateFor } from "./night";
 export { darkWindow, sunAltitudeDeg, sunEvents } from "./sun";
 export { moonSeparationDeg, moonState, moonTrack } from "./moon";
 export type { MoonState } from "./moon";
@@ -23,3 +23,4 @@ export type {
 } from "./eyepieces";
 export { rankObjects, reasonComponents } from "./ranking";
 export type { RankInput, RankTelescope, RankableObject, RankedEntry, Ranking, ReasonComponents } from "./ranking";
+export { verdict } from "./verdict";
