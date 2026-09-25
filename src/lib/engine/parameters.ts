@@ -32,3 +32,11 @@ export const TIME_TOLERANCE_MINUTES = 5;
 
 /** Candidate: sampling step for altitude tracks over a night, minutes. Coarsen before optimising code. */
 export const DEFAULT_TRACK_STEP_MINUTES = 10;
+
+/**
+ * Candidate (PRD Open Question 8): default minimum altitude for a new site, degrees. Objects below it
+ * are treated as hidden by the horizon. The `sites.min_altitude_deg` column default and the site
+ * form's initial value match it. Islands import it from `@/lib/engine/parameters` directly (this file
+ * has no imports), never from the `@/lib/engine` barrel, which pulls in astronomy-engine.
+ */
+export const DEFAULT_MIN_ALTITUDE_DEG = 15;

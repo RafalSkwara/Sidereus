@@ -469,29 +469,29 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Automated
 
-- [x] 1.1 `npx supabase start` (or `npx supabase db reset`) applies the migration without errors
-- [x] 1.2 `npm run test:db` passes against local Supabase, with every table covering the positive control and all four cross-user operations plus anonymous select
-- [x] 1.3 `npm run db:types` leaves `git status` clean for `src/lib/database.types.ts`
-- [x] 1.4 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 1.5 `.github/workflows/ci.yml` contains the `test:db` step and the types-drift step in `smoke`, and a `migrate` job with `needs: [ci, smoke]` and the `main`-push condition
+- [x] 1.1 `npx supabase start` (or `npx supabase db reset`) applies the migration without errors — 0f17021
+- [x] 1.2 `npm run test:db` passes against local Supabase, with every table covering the positive control and all four cross-user operations plus anonymous select — 0f17021
+- [x] 1.3 `npm run db:types` leaves `git status` clean for `src/lib/database.types.ts` — 0f17021
+- [x] 1.4 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass — 0f17021
+- [x] 1.5 `.github/workflows/ci.yml` contains the `test:db` step and the types-drift step in `smoke`, and a `migrate` job with `needs: [ci, smoke]` and the `main`-push condition — 0f17021
 
 #### Manual
 
 - [ ] 1.6 User adds the `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` repository secrets on GitHub
 - [ ] 1.7 After merge to `main`, the `migrate` job succeeds and the hosted project's Table Editor shows `sites`, `telescopes` and `eyepieces` with RLS enabled
-- [x] 1.8 Temporarily dropping one policy locally (for example `sites` select) makes `npm run test:db` fail, which confirms the suite can catch a missing policy; then restore it
+- [x] 1.8 Temporarily dropping one policy locally (for example `sites` select) makes `npm run test:db` fail, which confirms the suite can catch a missing policy; then restore it — 0f17021
 
 ### Phase 2: Gear domain: schemas, rounding, timezone and store
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes with the new gear tests green and the engine purity guard still passing (tz-lookup lives in `src/lib/gear/`, not `src/lib/engine/`)
-- [ ] 2.2 `npm run lint` passes, and `npx eslint --print-config src/lib/gear/store.ts | grep -A1 '"no-console"'` shows level 2 (error)
-- [ ] 2.3 `npx astro check` and `npm run build` pass, the build bundles tz-lookup, and `npx wrangler deploy --dry-run` reports an upload size within the Free plan limit (assumes the existing local `wrangler login`)
+- [x] 2.1 `npm test` passes with the new gear tests green and the engine purity guard still passing (tz-lookup lives in `src/lib/gear/`, not `src/lib/engine/`)
+- [x] 2.2 `npm run lint` passes, and `npx eslint --print-config src/lib/gear/store.ts | grep -A1 '"no-console"'` shows level 2 (error)
+- [x] 2.3 `npx astro check` and `npm run build` pass, the build bundles tz-lookup, and `npx wrangler deploy --dry-run` reports an upload size within the Free plan limit (assumes the existing local `wrangler login`)
 
 #### Manual
 
-- [ ] 2.4 User reads the schema ranges (aperture 20–1000 mm, telescope focal length 100–5000 mm, eyepiece focal length 2–60 mm, AFOV 30–120°, min altitude 0–60°) and confirms none of them excludes real beginner kit
+- [x] 2.4 User reads the schema ranges (aperture 20–1000 mm, telescope focal length 100–5000 mm, eyepiece focal length 2–60 mm, AFOV 30–120°, min altitude 0–60°) and confirms none of them excludes real beginner kit
 
 ### Phase 3: Sites UI
 
