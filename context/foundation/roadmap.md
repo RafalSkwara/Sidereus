@@ -42,7 +42,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ID   | Change ID                               | Outcome (user can …)                                                                                                     | Prerequisites | PRD refs                                                                 | Status   |
 | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ | -------- |
 | F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | done        |
-| F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | proposed |
+| F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | in-progress |
 | S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | done        |
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | done        |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | in-progress |
@@ -104,7 +104,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The PRD schedules CI/CD last, which with `top_blocker: time` is exactly when it would be squeezed out; doing it right after F-01 turns it into wiring only. Deferring it means every slice ships by hand. Kept minimal: no preview environments, no staging database (see Parked).
-- **Status:** proposed
+- **Status:** in-progress
 
 ## Slices
 

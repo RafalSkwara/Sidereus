@@ -43,7 +43,7 @@ npm run db:types     # regenerate src/lib/database.types.ts from the local Supab
 npm run catalogue:build  # regenerate src/lib/catalogue/messier*.json from the pinned OpenNGC commit
 npm run smoke        # scripts/smoke.mjs: HTTP walk of signup→signin→gear writes→signout against BASE_URL (local Supabase only)
 npx supabase start   # local Supabase (Docker); email confirmations are disabled in supabase/config.toml
-npx wrangler deploy  # deploy (secrets via `npx wrangler secret put`)
+npx wrangler deploy  # manual hotfix deploy only: merges to main deploy via CI's `deploy` job (secrets via `npx wrangler secret put`)
 ```
 
 Unit tests live next to the code as `*.test.ts` and run in CI's `ci` job after `astro check`. Tests that compare the engine with hand-read Stellarium values are driven by fixtures under `src/lib/engine/fixtures/`; a fixture section still marked `pending` shows up as a **todo** in the test output, never as a silent pass (capture protocol in that directory's README). The smoke script is a separate HTTP check and needs a running server plus local Supabase (email confirmation off). `npm run test:db` and the smoke test run in CI's `smoke` job against a local Supabase.
