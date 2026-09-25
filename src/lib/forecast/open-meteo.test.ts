@@ -38,7 +38,7 @@ describe("mapForecastResponse", () => {
 });
 
 describe("fetchForecast", () => {
-  it("requests hourly cloud and humidity in unixtime with a past day and a timeout", async () => {
+  it("requests four days of hourly cloud and humidity in unixtime with a past day and a timeout", async () => {
     const fake = fakeFetch(() => jsonResponse(openMeteoBody(START_S, [10])));
     await fetchForecast(fake.fetchFn, SITE);
     expect(fake.calls).toHaveLength(1);
@@ -51,7 +51,7 @@ describe("fetchForecast", () => {
       timezone: "GMT",
       timeformat: "unixtime",
       past_days: "1",
-      forecast_days: "3",
+      forecast_days: "4",
     });
     expect(init?.signal).toBeInstanceOf(AbortSignal);
     expect(FORECAST_TIMEOUT_MS).toBe(3000);

@@ -13,7 +13,7 @@ import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-
  * - Otherwise it refetches and stores the result for `FORECAST_CACHE_TTL_SECONDS`, which keeps a
  *   stale copy around for outages.
  * - When the fetch fails it serves any stored copy with matching coordinates, whatever its age,
- *   and returns `null` only when nothing usable exists.
+ *   flagged as `fallback`, and returns `null` only when nothing usable exists.
  * - Cache read and write errors behave like a miss and never throw.
  *
  * Privacy: keys use the site id, never coordinates; nothing here logs.
@@ -47,6 +47,8 @@ type StoredForecast = z.infer<typeof storedSchema>;
 export interface ForecastResult {
   forecast: HourlyForecast;
   fetchedAt: Date;
+  /** True only when the fetch failed and a stored copy was served in its place. */
+  fallback: boolean;
 }
 
 export interface GetForecastInput {
@@ -72,9 +74,10 @@ function toStored(result: ForecastResult, coords: ForecastCoords): StoredForecas
   };
 }
 
-function fromStored(stored: StoredForecast): ForecastResult {
+function fromStored(stored: StoredForecast, fallback: boolean): ForecastResult {
   return {
     fetchedAt: new Date(stored.fetchedAt),
+    fallback,
     forecast: {
       hours: stored.hours.map((hour) => ({
         start: new Date(hour.start),
@@ -122,15 +125,19 @@ export async function getForecast({
   if (usable) {
     const ageMs = now.getTime() - Date.parse(stored.fetchedAt);
     if (ageMs >= 0 && ageMs < FORECAST_FRESH_MS) {
-      return fromStored(stored);
+      return fromStored(stored, false);
     }
   }
 
   try {
-    const result: ForecastResult = { forecast: await fetchForecast(fetchFn, coords, baseUrl), fetchedAt: now };
+    const result: ForecastResult = {
+      forecast: await fetchForecast(fetchFn, coords, baseUrl),
+      fetchedAt: now,
+      fallback: false,
+    };
     await writeCache(cache, key, toStored(result, coords));
     return result;
   } catch (_error) {
-    return usable ? fromStored(stored) : null;
+    return usable ? fromStored(stored, true) : null;
   }
 }

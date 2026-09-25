@@ -5,10 +5,15 @@ import type { Verdict } from "@/lib/engine";
 import {
   clearedLine,
   compassPoint,
+  darkReturnText,
+  forecastStatusText,
+  formatAge,
   formatDirection,
   formatDuration,
   formatNightDate,
   formatTime,
+  nextNightText,
+  noDarknessCauseText,
   reasonLine,
   verdictReasonText,
   type ReasonEntry,
@@ -123,6 +128,10 @@ describe("verdictReasonText", () => {
       { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: null } },
       "no forecast covers the dark window",
     ],
+    [
+      { level: "marginal", reason: { kind: "fallback-cap", runHours: 5, cloudPct: 10 } },
+      "the last saved forecast showed 5 h in a row with at most 10% cloud, but it could not be refreshed",
+    ],
     [{ level: "marginal", reason: { kind: "no-weather-data" } }, "no weather data"],
     [{ level: "no-go", reason: { kind: "no-darkness" } }, "the sky never gets dark enough tonight"],
   ])("%j", (v, text) => {
@@ -135,5 +144,97 @@ describe("clearedLine", () => {
     expect(clearedLine(0)).toBe("No object cleared the bar tonight");
     expect(clearedLine(1)).toBe("1 object cleared the bar tonight");
     expect(clearedLine(18)).toBe("18 objects cleared the bar tonight");
+  });
+});
+
+describe("formatAge", () => {
+  const MINUTE = 60_000;
+  it.each([
+    [-1_000, "less than a minute"],
+    [59_000, "less than a minute"],
+    [MINUTE, "1 min"],
+    [59 * MINUTE, "59 min"],
+    [60 * MINUTE, "1 h"],
+    [(47 * 60 + 59) * MINUTE, "47 h"],
+    [48 * 60 * MINUTE, "2 days"],
+  ])("%s ms → %s", (ms, text) => {
+    expect(formatAge(ms)).toBe(text);
+  });
+});
+
+describe("forecastStatusText", () => {
+  it("has one line per status", () => {
+    expect(forecastStatusText({ kind: "fresh", ageMs: 20 * 60_000 })).toBe("Forecast updated 20 min ago");
+    expect(forecastStatusText({ kind: "fallback", ageMs: 3 * 3_600_000 })).toBe(
+      "Weather service unreachable — showing the forecast from 3 h ago",
+    );
+    expect(forecastStatusText({ kind: "none" })).toBe(
+      "No weather data — the weather service could not be reached and no earlier forecast is saved",
+    );
+  });
+});
+
+describe("nextNightText", () => {
+  it("names the next night with its level and reason", () => {
+    expect(
+      nextNightText({
+        kind: "found",
+        date: "2026-10-12",
+        verdict: { level: "go", reason: { kind: "clear-run", runHours: 6, cloudPct: 10 } },
+      }),
+    ).toBe(
+      "Next night worth a look: Monday, 12 October 2026 — go, 6 h in a row with at most 10% cloud in the dark window",
+    );
+  });
+
+  it("says how far the forecast was judged when no night qualifies", () => {
+    expect(nextNightText({ kind: "none", lastJudgedDate: "2026-10-12" })).toBe(
+      "No clear night in the forecast through Monday, 12 October 2026",
+    );
+  });
+
+  it("says the forecast ends at tonight when nothing after it was judged", () => {
+    expect(nextNightText({ kind: "none", lastJudgedDate: null })).toBe(
+      "The forecast doesn't reach past tonight, so there is no next night to suggest yet",
+    );
+  });
+});
+
+describe("noDarknessCauseText", () => {
+  it("says the sun stays up under the midnight sun", () => {
+    expect(noDarknessCauseText({ latitudeDeg: 69.65, minSunAltitudeDeg: 3.1, thresholdDeg: -18, bortle: 2 })).toBe(
+      "At 70° N at this time of year the sun stays above the horizon all night",
+    );
+  });
+
+  it("names how far the sun sinks against the Bortle threshold", () => {
+    expect(noDarknessCauseText({ latitudeDeg: 60.17, minSunAltitudeDeg: -6.4, thresholdDeg: -18, bortle: 3 })).toBe(
+      "At 60° N at this time of year the sun only sinks 6° below the horizon, short of the 18° your Bortle 3 sky needs",
+    );
+  });
+
+  it("reads southern latitudes as S", () => {
+    expect(noDarknessCauseText({ latitudeDeg: -77.85, minSunAltitudeDeg: -9.2, thresholdDeg: -12, bortle: 8 })).toBe(
+      "At 78° S at this time of year the sun only sinks 9° below the horizon, short of the 12° your Bortle 8 sky needs",
+    );
+  });
+
+  it("truncates the depth so it always reads short of the threshold", () => {
+    expect(noDarknessCauseText({ latitudeDeg: 55, minSunAltitudeDeg: -17.8, thresholdDeg: -18, bortle: 1 })).toBe(
+      "At 55° N at this time of year the sun only sinks 17° below the horizon, short of the 18° your Bortle 1 sky needs",
+    );
+  });
+});
+
+describe("darkReturnText", () => {
+  it("names the night and its window in the site's zone", () => {
+    const window = { start: new Date("2026-08-21T20:30:00Z"), end: new Date("2026-08-22T00:15:00Z") };
+    expect(darkReturnText({ date: "2026-08-21", window }, "Europe/Oslo")).toBe(
+      "The dark window returns on the night of Friday, 21 August 2026 (22:30–02:15)",
+    );
+  });
+
+  it("says when it does not return within the search", () => {
+    expect(darkReturnText(null, "Europe/Oslo")).toBe("It does not return within the next year");
   });
 });

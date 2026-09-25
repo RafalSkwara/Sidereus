@@ -170,3 +170,18 @@ export const VERDICT_THRESHOLDS: Readonly<{
   marginalRunHours: 1,
   humidityCapPct: 90,
 };
+
+// Night outlook (S-04) ----------------------------------------------------------------------------
+
+/** FR-011, invariant 5: nights 1-3 (tonight and the next two) carry a verdict; later nights do not. */
+export const VERDICT_NIGHTS = 3;
+
+/** How far ahead, in nights, the search for the dark window's return looks (a full year and a day). */
+export const DARK_RETURN_MAX_NIGHTS = 366;
+
+/**
+ * Step of the dark-window return search, nights. The no-darkness season is one contiguous run, and
+ * the dark season after it is far longer than this, so checking every seventh night and scanning
+ * back through the last step finds the same first night as checking every night.
+ */
+export const DARK_RETURN_STRIDE_NIGHTS = 7;

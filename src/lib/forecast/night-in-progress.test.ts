@@ -15,7 +15,8 @@ import { fakeFetch, jsonResponse, openMeteoBody } from "./test-helpers";
 /**
  * A user opening the page at 01:30 local, after UTC midnight, must get the verdict for the night in
  * progress, judged on the evening's hours. Open-Meteo's series starts at 00:00 UTC today unless
- * `past_days=1` is requested, so without it the evening before UTC midnight would be missing.
+ * `past_days=1` is requested, so without it the evening before UTC midnight would be missing and
+ * the night would have no weather data.
  */
 
 const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, timeZone: "Europe/Warsaw" };
@@ -42,9 +43,9 @@ describe("the night in progress after UTC midnight", () => {
   });
 
   it("judges the verdict on the evening hours that a past_days=1 response carries", async () => {
-    // past_days=1 + forecast_days=3: four days of hours from 00:00 UTC yesterday.
+    // past_days=1 + forecast_days=4: five days of hours from 00:00 UTC yesterday.
     const seriesStart = new Date("2026-11-10T00:00:00Z");
-    const hours = 4 * HOURS_PER_DAY;
+    const hours = 5 * HOURS_PER_DAY;
     const fake = fakeFetch(() =>
       jsonResponse(openMeteoBody(seriesStart.getTime() / 1000, cloudFrom(seriesStart, hours))),
     );
@@ -56,13 +57,14 @@ describe("the night in progress after UTC midnight", () => {
     expect(result.reason).toMatchObject({ kind: "clear-run", cloudPct: 10 });
   });
 
-  it("would lose those hours if the series started at 00:00 UTC today", async () => {
+  it("would have no weather data for the night if the series started at 00:00 UTC today", async () => {
+    // forecast_days=4 alone: four days of hours from 00:00 UTC today, missing the evening.
     const seriesStart = new Date("2026-11-11T00:00:00Z");
-    const hours = 3 * HOURS_PER_DAY;
+    const hours = 4 * HOURS_PER_DAY;
     const fake = fakeFetch(() =>
       jsonResponse(openMeteoBody(seriesStart.getTime() / 1000, cloudFrom(seriesStart, hours))),
     );
     const forecast = await fetchForecast(fake.fetchFn, WARSAW);
-    expect(verdict(window, forecast).level).toBe("no-go");
+    expect(verdict(window, forecast)).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
   });
 });

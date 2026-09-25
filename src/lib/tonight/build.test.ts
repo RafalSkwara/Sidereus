@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { findMessier, MESSIER } from "@/lib/catalogue";
 import { MAX_RANKED_OBJECTS, type HourlyForecast } from "@/lib/engine";
+import { TROMSO } from "@/lib/engine/fixtures";
+import type { ForecastResult } from "@/lib/forecast/service";
 import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 
 import { buildTonight, type TonightRanking, type TonightView } from "./build";
@@ -29,6 +31,17 @@ const HELSINKI_DARK: SiteRecord = {
   timeZone: "Europe/Helsinki",
 };
 
+/** Tromsø at the solstice: midnight sun, no dark window at any Bortle. */
+const TROMSO_SITE: SiteRecord = {
+  ...WARSAW,
+  id: "site-3",
+  name: "North",
+  latitudeDeg: TROMSO.latitudeDeg,
+  longitudeDeg: TROMSO.longitudeDeg,
+  bortle: 2,
+  timeZone: TROMSO.timeZone,
+};
+
 const TELESCOPE: TelescopeRecord = {
   id: "scope-1",
   name: "Skywatcher 150P",
@@ -45,16 +58,31 @@ const EYEPIECES: EyepieceRecord[] = [
 /** Early evening in Warsaw on 2026-10-10 (20:00 CEST). */
 const NOW = new Date("2026-10-10T18:00:00Z");
 
+const HOUR_MS = 3_600_000;
+
+/** Hourly forecast from `fromUtc` for `hours` hours, each hour's cloud cover given by `cloudPct`. */
+function hourlyForecast(fromUtc: string, hours: number, cloudPct: (start: Date) => number): HourlyForecast {
+  const from = Date.parse(fromUtc);
+  return {
+    hours: Array.from({ length: hours }, (_, i) => {
+      const start = new Date(from + i * HOUR_MS);
+      return { start, cloudCoverPct: cloudPct(start), humidityPct: 60 };
+    }),
+  };
+}
+
 /** Hourly forecast from 00:00 UTC on `fromUtc` for 48 h, every hour at `cloudPct`. */
 function uniformForecast(fromUtc: string, cloudPct: number): HourlyForecast {
-  const start = Date.parse(fromUtc);
-  return {
-    hours: Array.from({ length: 48 }, (_, i) => ({
-      start: new Date(start + i * 3_600_000),
-      cloudCoverPct: cloudPct,
-      humidityPct: 60,
-    })),
-  };
+  return hourlyForecast(fromUtc, 48, () => cloudPct);
+}
+
+/** A service result fetched 20 min before `NOW`, fresh unless `fallback`. */
+function result(
+  forecast: HourlyForecast,
+  fallback = false,
+  fetchedAt = new Date(NOW.getTime() - 20 * 60_000),
+): ForecastResult {
+  return { forecast, fetchedAt, fallback };
 }
 
 function rankingOf(view: TonightView): TonightRanking {
@@ -70,7 +98,7 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 5),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
       now: NOW,
     });
 
@@ -110,7 +138,7 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 5),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
       now: NOW,
     });
     const pairs = rankingOf(view).entries.map((entry) => entry.pair);
@@ -129,7 +157,7 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: [],
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 5),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
       now: NOW,
     });
     expect(view.hasEyepieces).toBe(false);
@@ -142,7 +170,7 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 100),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)),
       now: NOW,
     });
     expect(view.verdict.level).toBe("no-go");
@@ -155,7 +183,7 @@ describe("buildTonight", () => {
       site: HELSINKI_DARK,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-06-21T00:00:00Z", 0),
+      forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
       now: new Date("2026-06-21T19:00:00Z"),
     });
     expect(view.darkWindow).toEqual({ kind: "none" });
@@ -176,7 +204,7 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 5),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
       now: NOW,
       catalogue: MESSIER.filter((object) => object.messier === 7),
     });
@@ -200,9 +228,106 @@ describe("buildTonight", () => {
       site: WARSAW,
       telescope: TELESCOPE,
       eyepieces: EYEPIECES,
-      forecast: uniformForecast("2026-10-10T00:00:00Z", 20),
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 20)),
       now: NOW,
     };
     expect(buildTonight(input)).toEqual(buildTonight(input));
+  });
+  it("explains a weather no-go with the next night worth a look", () => {
+    // Warsaw's observing nights start at local noon, 10:00 UTC: nights 1 and 2 overcast, night 3 clear.
+    const night3 = Date.parse("2026-10-12T10:00:00Z");
+    const view = buildTonight({
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(hourlyForecast("2026-10-10T00:00:00Z", 96, (start) => (start.getTime() < night3 ? 100 : 10))),
+      now: NOW,
+    });
+    expect(view.verdict.level).toBe("no-go");
+    expect(view.ranking).toBeNull();
+    expect(view.explanation?.kind).toBe("weather-no-go");
+    if (view.explanation?.kind === "weather-no-go") {
+      expect(view.explanation.nextText).toMatch(/^Next night worth a look: Monday, 12 October 2026 — go, /);
+    }
+  });
+
+  it("explains a no-darkness night with its cause and the dark window's return", () => {
+    const view = buildTonight({
+      site: TROMSO_SITE,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+      // 22:00 in Tromsø (CEST) on 2026-06-21.
+      now: new Date("2026-06-21T20:00:00Z"),
+    });
+    expect(view.date).toBe("2026-06-21");
+    expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
+    expect(view.ranking).toBeNull();
+    expect(view.explanation?.kind).toBe("no-darkness");
+    if (view.explanation?.kind === "no-darkness") {
+      expect(view.explanation.causeText).toBe(
+        "At 70° N at this time of year the sun stays above the horizon all night",
+      );
+      // The return night itself is pinned against a night-by-night scan in the engine's outlook tests.
+      expect(view.explanation.returnText).toMatch(
+        /^The dark window returns on the night of Wednesday, 16 September 2026 \(\d{2}:\d{2}–\d{2}:\d{2}\)$/,
+      );
+    }
+  });
+
+  it("gives no explanation on a go night", () => {
+    const view = buildTonight({
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+      now: NOW,
+    });
+    expect(view.explanation).toBeNull();
+  });
+
+  it("reports whether the forecast is fresh, a saved copy or missing", () => {
+    const build = (forecast: ForecastResult | null) =>
+      buildTonight({ site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW });
+    const forecast = uniformForecast("2026-10-10T00:00:00Z", 5);
+
+    expect(build(result(forecast)).forecastStatus).toEqual({ kind: "fresh", text: "Forecast updated 20 min ago" });
+    expect(build(result(forecast, true, new Date(NOW.getTime() - 3 * HOUR_MS))).forecastStatus).toEqual({
+      kind: "fallback",
+      text: "Weather service unreachable — showing the forecast from 3 h ago",
+    });
+    expect(build(null).forecastStatus).toEqual({
+      kind: "none",
+      text: "No weather data — the weather service could not be reached and no earlier forecast is saved",
+    });
+  });
+
+  it("caps a go at marginal on a saved copy and still ranks", () => {
+    const view = buildTonight({
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5), true),
+      now: NOW,
+    });
+    expect(view.verdict).toMatchObject({ level: "marginal", reason: { kind: "fallback-cap", cloudPct: 5 } });
+    expect(view.verdictText).toMatch(/^the last saved forecast showed \d+ h in a row with at most 5% cloud/);
+    expect(view.explanation).toBeNull();
+    expect(rankingOf(view).entries.length).toBeGreaterThan(0);
+  });
+
+  it("reads a forecast that ends mid-window as no weather data, with a ranking", () => {
+    // The series stops at 22:00 UTC (midnight in Warsaw), inside tonight's dark window.
+    const view = buildTonight({
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(hourlyForecast("2026-10-10T00:00:00Z", 23, () => 5)),
+      now: NOW,
+    });
+    expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+    expect(view.verdictText).toBe("no weather data");
+    expect(view.explanation).toBeNull();
+    expect(rankingOf(view).entries.length).toBeGreaterThan(0);
   });
 });

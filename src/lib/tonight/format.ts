@@ -1,4 +1,4 @@
-import type { HorizontalPosition, ObjectScore, ScoreComponent, Verdict } from "@/lib/engine";
+import type { HorizontalPosition, Interval, NextNight, ObjectScore, ScoreComponent, Verdict } from "@/lib/engine";
 
 /**
  * Display formatting for the Tonight view: times, directions and the fixed phrase templates. Every
@@ -7,6 +7,8 @@ import type { HorizontalPosition, ObjectScore, ScoreComponent, Verdict } from "@
  */
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 
 const COMPASS_POINTS = [
   "N",
@@ -121,6 +123,8 @@ export function verdictReasonText(verdict: Verdict): string {
       return `${reason.runHours} h in a row with at most ${reason.cloudPct}% cloud in the dark window`;
     case "humidity-cap":
       return `clear enough, but humidity reaches ${reason.maxHumidityPct}%, so expect dew and haze`;
+    case "fallback-cap":
+      return `the last saved forecast showed ${reason.runHours} h in a row with at most ${reason.cloudPct}% cloud, but it could not be refreshed`;
     case "cloudy":
       return reason.minCloudPct === null
         ? "no forecast covers the dark window"
@@ -138,4 +142,87 @@ export function clearedLine(clearedCount: number): string {
     return "No object cleared the bar tonight";
   }
   return clearedCount === 1 ? "1 object cleared the bar tonight" : `${clearedCount} objects cleared the bar tonight`;
+}
+
+/**
+ * How old something is, for "… ago": "less than a minute" under a minute (a negative age, from a
+ * clock skew, reads the same), then whole minutes, whole hours under 48 h, and whole days. Every
+ * unit is truncated, so an age never reads older than it is.
+ */
+export function formatAge(ms: number): string {
+  if (ms < MINUTE_MS) {
+    return "less than a minute";
+  }
+  if (ms < HOUR_MS) {
+    return `${Math.trunc(ms / MINUTE_MS)} min`;
+  }
+  if (ms < 2 * DAY_MS) {
+    return `${Math.trunc(ms / HOUR_MS)} h`;
+  }
+  return `${Math.trunc(ms / DAY_MS)} days`;
+}
+
+/**
+ * Where tonight's weather came from: a fresh forecast, a saved copy served because the refresh
+ * failed, or nothing. `ageMs` is how long ago the forecast was fetched.
+ */
+export type ForecastStatus = { kind: "fresh"; ageMs: number } | { kind: "fallback"; ageMs: number } | { kind: "none" };
+
+/** The forecast line shown under the dark window (NFR forecast outage). */
+export function forecastStatusText(status: ForecastStatus): string {
+  switch (status.kind) {
+    case "fresh":
+      return `Forecast updated ${formatAge(status.ageMs)} ago`;
+    case "fallback":
+      return `Weather service unreachable — showing the forecast from ${formatAge(status.ageMs)} ago`;
+    case "none":
+      return "No weather data — the weather service could not be reached and no earlier forecast is saved";
+  }
+}
+
+/** What a weather no-go night suggests next (FR-020), within the verdict horizon. */
+export function nextNightText(next: NextNight): string {
+  if (next.kind === "found") {
+    return `Next night worth a look: ${formatNightDate(next.date)} — ${next.verdict.level}, ${verdictReasonText(next.verdict)}`;
+  }
+  return next.lastJudgedDate === null
+    ? "The forecast doesn't reach past tonight, so there is no next night to suggest yet"
+    : `No clear night in the forecast through ${formatNightDate(next.lastJudgedDate)}`;
+}
+
+export interface NoDarknessCause {
+  latitudeDeg: number;
+  /** The sun's lowest altitude tonight, from the dark window's `none` variant. */
+  minSunAltitudeDeg: number;
+  /** The Bortle-dependent darkness threshold, negative degrees. */
+  thresholdDeg: number;
+  bortle: number;
+}
+
+/**
+ * Why there is no dark window tonight (FR-023): latitude, season and how far the sun sinks against
+ * the site's threshold. The latitude is rounded to the whole degree and appears only on the user's
+ * own page, never in a URL or a log. The sinking depth is truncated, so it always reads as short of
+ * the threshold (−17.8° at −18° reads 17°).
+ */
+export function noDarknessCauseText({ latitudeDeg, minSunAltitudeDeg, thresholdDeg, bortle }: NoDarknessCause): string {
+  const latitude = `${Math.round(Math.abs(latitudeDeg))}° ${latitudeDeg < 0 ? "S" : "N"}`;
+  if (minSunAltitudeDeg >= 0) {
+    return `At ${latitude} at this time of year the sun stays above the horizon all night`;
+  }
+  const depth = Math.trunc(Math.abs(minSunAltitudeDeg));
+  return `At ${latitude} at this time of year the sun only sinks ${depth}° below the horizon, short of the ${Math.abs(thresholdDeg)}° your Bortle ${bortle} sky needs`;
+}
+
+/** The first night after tonight with a dark window, as `darkWindowReturn` finds it, or null. */
+export type DarkReturn = { date: string; window: Interval } | null;
+
+/** When the dark window comes back (FR-023), with that night's window in the site's time zone. */
+export function darkReturnText(result: DarkReturn, timeZone: string): string {
+  if (result === null) {
+    return "It does not return within the next year";
+  }
+  const start = formatTime(result.window.start, timeZone);
+  const end = formatTime(result.window.end, timeZone);
+  return `The dark window returns on the night of ${formatNightDate(result.date)} (${start}–${end})`;
 }

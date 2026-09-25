@@ -1,6 +1,6 @@
 ---
 import type { VerdictLevel } from "@/lib/engine";
-import type { TonightDarkWindow } from "@/lib/tonight/build";
+import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
 
 interface Props {
   level: VerdictLevel;
@@ -8,9 +8,12 @@ interface Props {
   text: string;
   darkWindow: TonightDarkWindow;
   timeZone: string;
+  forecastStatus: TonightForecastStatus;
+  /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
+  explanation: TonightExplanation | null;
 }
 
-const { level, text, darkWindow, timeZone } = Astro.props;
+const { level, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
 
 const LABELS: Record<VerdictLevel, string> = { go: "Go", marginal: "Marginal", "no-go": "No-go" };
 const TONES: Record<VerdictLevel, string> = {
@@ -23,6 +26,12 @@ const DOTS: Record<VerdictLevel, string> = {
   marginal: "bg-amber-300",
   "no-go": "bg-red-400",
 };
+// A saved copy or no forecast at all stands out from the routine "Forecast updated … ago".
+const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
+  fresh: "text-slate-400/80",
+  fallback: "text-amber-200/90",
+  none: "text-amber-200/90",
+};
 ---
 
 <section aria-labelledby="verdict-heading" class:list={["rounded-2xl border p-4 sm:p-6", TONES[level]]}>
@@ -34,15 +43,20 @@ const DOTS: Record<VerdictLevel, string> = {
     </span>
     <span class="text-lg text-slate-200/90">— {text}</span>
   </h2>
+  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-slate-200/90">{explanation.nextText}</p>}
+  {explanation?.kind === "no-darkness" && <p class="mt-3 text-slate-200/90">{explanation.causeText}</p>}
   <p class="mt-3 text-sm text-slate-300/80">
     {darkWindow.kind === "window" ? (
       <>
         Dark from <span class="text-amber-100">{darkWindow.start}</span> to{" "}
         <span class="text-amber-100">{darkWindow.end}</span>
       </>
+    ) : explanation?.kind === "no-darkness" ? (
+      explanation.returnText
     ) : (
       "No dark window tonight"
     )}
     <span class="text-slate-400/80"> · times in {timeZone}</span>
   </p>
+  <p class:list={["mt-1 text-sm", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
 </section>

@@ -110,10 +110,72 @@ describe("verdict", () => {
     });
   });
 
-  it("is no-go with no minimum cloud when the forecast covers none of the window", () => {
+  it("still breaks a run at a missing hour when the series spans the window", () => {
+    expect(verdict(sixHours, forecast([20, 20, null, 20, null, 20]))).toEqual({
+      level: "go",
+      reason: { kind: "clear-run", runHours: 2, cloudPct: 20 },
+    });
+    expect(verdict(sixHours, forecast([20, null, 20, null, 20, null, 100])).level).toBe("marginal");
+  });
+
+  it("has no weather data when the series ends partway through the window", () => {
+    expect(verdict(sixHours, forecast([10, 10, 10, 10]))).toEqual({
+      level: "marginal",
+      reason: { kind: "no-weather-data" },
+    });
+  });
+
+  it("has no weather data when the series starts after the window starts", () => {
+    expect(verdict(sixHours, forecast([10, 10, 10, 10], 60, 2))).toEqual({
+      level: "marginal",
+      reason: { kind: "no-weather-data" },
+    });
+  });
+
+  it("has no weather data when the series is empty", () => {
+    expect(verdict(sixHours, { hours: [] })).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+  });
+
+  it("has no weather data when the series lies entirely after the window", () => {
     expect(verdict(sixHours, forecast([10, 10], 60, 24))).toEqual({
-      level: "no-go",
-      reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: null },
+      level: "marginal",
+      reason: { kind: "no-weather-data" },
+    });
+  });
+
+  it("counts a window whose last hour is the series' last hour as covered", () => {
+    const partial = windowBetween(at(0), new Date(BASE + 5.5 * HOUR_MS));
+    expect(verdict(partial, forecast([100, 100, 100, 100, 20, 20])).level).toBe("go");
+  });
+
+  describe("with a fallback (saved, unrefreshed) forecast", () => {
+    const fallback = { fallback: true };
+
+    it("caps a go at marginal and carries the go run", () => {
+      expect(verdict(sixHours, forecast([100, 20, 10, 25, 100, 100]), fallback)).toEqual({
+        level: "marginal",
+        reason: { kind: "fallback-cap", runHours: 3, cloudPct: 25 },
+      });
+    });
+
+    it("lets the humidity cap win over the fallback cap", () => {
+      expect(verdict(sixHours, forecast([20, 20, 20, 20, 20, 20], 95), fallback)).toEqual({
+        level: "marginal",
+        reason: { kind: "humidity-cap", maxHumidityPct: 95 },
+      });
+    });
+
+    it("leaves a marginal and a no-go unchanged", () => {
+      const marginal = forecast([100, 100, 50, 100, 100, 100]);
+      expect(verdict(sixHours, marginal, fallback)).toEqual(verdict(sixHours, marginal));
+      const overcast = forecast([100, 90, 80, 95, 100, 70]);
+      expect(verdict(sixHours, overcast, fallback)).toEqual(verdict(sixHours, overcast));
+      expect(verdict(sixHours, overcast, fallback).level).toBe("no-go");
+    });
+
+    it("defaults to not a fallback", () => {
+      expect(verdict(sixHours, forecast([20, 20, 100, 100, 100, 100])).level).toBe("go");
+      expect(verdict(sixHours, forecast([20, 20, 100, 100, 100, 100]), { fallback: false }).level).toBe("go");
     });
   });
 

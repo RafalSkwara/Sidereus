@@ -37,7 +37,11 @@ const responseSchema = z.object({
     ),
 });
 
-/** The request URL. `past_days=1` keeps the evening before UTC midnight in the series. */
+/**
+ * The request URL. `past_days=1` keeps the evening before UTC midnight in the series, and
+ * `forecast_days=4` reaches past the morning of the third night, so all three verdict nights are
+ * covered.
+ */
 export function forecastUrl(site: ForecastCoords, baseUrl: string = OPEN_METEO_BASE_URL): URL {
   const url = new URL("/v1/forecast", baseUrl);
   url.searchParams.set("latitude", String(site.latitudeDeg));
@@ -46,7 +50,7 @@ export function forecastUrl(site: ForecastCoords, baseUrl: string = OPEN_METEO_B
   url.searchParams.set("timezone", "GMT");
   url.searchParams.set("timeformat", "unixtime");
   url.searchParams.set("past_days", "1");
-  url.searchParams.set("forecast_days", "3");
+  url.searchParams.set("forecast_days", "4");
   return url;
 }
 
