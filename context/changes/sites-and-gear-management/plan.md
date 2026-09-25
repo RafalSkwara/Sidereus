@@ -515,9 +515,9 @@ tz-lookup adds about 88 KB unpacked to the Worker bundle. The upload was 2.06 Mi
 
 #### Automated
 
-- [x] 4.1 `npm test`, `npm run test:db`, `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 4.2 `npm run smoke` passes against a local preview with local Supabase, including the new gear steps
-- [x] 4.3 `CLAUDE.md` mentions `test:db`, `db:types` and the isolation-suite rule
+- [x] 4.1 `npm test`, `npm run test:db`, `npm run lint`, `npx astro check` and `npm run build` pass — 8585c8b
+- [x] 4.2 `npm run smoke` passes against a local preview with local Supabase, including the new gear steps — 8585c8b
+- [x] 4.3 `CLAUDE.md` mentions `test:db`, `db:types` and the isolation-suite rule — 8585c8b
 
 #### Manual
 
