@@ -13,7 +13,10 @@ const { user } = Astro.locals;
   <div class="flex items-center gap-3 text-sm">
     {user ? (
       <>
-        <span class="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100">
+        <a href="/gear" class="text-amber-200/90 transition-colors hover:text-amber-50">
+          My gear
+        </a>
+        <span class="hidden items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100 sm:inline-flex">
           <span class="size-1.5 rounded-full bg-emerald-300" aria-hidden="true"></span>
           Welcome!
         </span>

@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inputBase =
-  "w-full rounded-lg bg-white/10 border px-3 py-2 pl-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors";
+  "w-full rounded-lg bg-white/10 border px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors";
 
 interface FormFieldProps {
   id: string;
@@ -15,8 +15,12 @@ interface FormFieldProps {
   placeholder?: string;
   error?: string;
   hint?: ReactNode;
-  icon: ReactNode;
+  icon?: ReactNode;
   endContent?: ReactNode;
+  min?: number | string;
+  max?: number | string;
+  step?: number | string;
+  inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
 }
 
 export function FormField({
@@ -31,6 +35,10 @@ export function FormField({
   hint,
   icon,
   endContent,
+  min,
+  max,
+  step,
+  inputMode,
 }: FormFieldProps) {
   return (
     <div>
@@ -38,7 +46,7 @@ export function FormField({
         {label}
       </label>
       <div className="relative">
-        <span className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/40">{icon}</span>
+        {icon ? <span className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/40">{icon}</span> : null}
         <input
           id={id}
           name={name ?? id}
@@ -48,8 +56,13 @@ export function FormField({
             onChange(e.target.value);
           }}
           placeholder={placeholder}
+          min={min}
+          max={max}
+          step={step}
+          inputMode={inputMode}
           className={cn(
             inputBase,
+            icon && "pl-10",
             error ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
           )}
         />

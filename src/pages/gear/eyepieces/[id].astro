@@ -1,0 +1,70 @@
+---
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import EyepieceForm from "@/components/gear/EyepieceForm";
+import DeleteButton from "@/components/gear/DeleteButton";
+import { ServerError } from "@/components/forms/ServerError";
+import { eyepieceStore, type EyepieceRecord } from "@/lib/gear/store";
+
+const LOAD_FAILED = "Could not load the eyepiece. Please try again.";
+
+const id = Astro.params.id ?? "";
+const error = Astro.url.searchParams.get("error");
+const { supabase } = Astro.locals;
+
+let eyepiece: EyepieceRecord | null = null;
+let loadError: string | null = null;
+if (supabase) {
+  try {
+    eyepiece = await eyepieceStore.get(supabase, id);
+  } catch {
+    loadError = LOAD_FAILED;
+  }
+  if (!eyepiece && !loadError) {
+    Astro.response.status = 404;
+  }
+}
+---
+
+<GearShell title={eyepiece ? eyepiece.name : "Eyepiece"}>
+  <a href="/gear" class="mb-4 inline-block text-sm text-amber-200/80 hover:text-amber-50">
+    ← My gear
+  </a>
+  {!supabase ? (
+    <DatabaseMissing />
+  ) : loadError ? (
+    <ServerError message={loadError} />
+  ) : eyepiece ? (
+    <>
+      <h1 class="mb-6 font-serif text-3xl break-words text-amber-50 sm:text-4xl">Edit eyepiece</h1>
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+        <EyepieceForm
+          action={`/api/gear/eyepieces/${encodeURIComponent(eyepiece.id)}`}
+          initial={{
+            name: eyepiece.name,
+            focalLengthMm: eyepiece.focalLengthMm,
+            afovDeg: eyepiece.afovDeg,
+          }}
+          serverError={error}
+          client:load
+        />
+      </div>
+      <div class="mt-6">
+        <DeleteButton
+          action={`/api/gear/eyepieces/${encodeURIComponent(eyepiece.id)}/delete`}
+          label="Delete eyepiece"
+          confirmMessage="Delete this eyepiece? This cannot be undone."
+          client:load
+        />
+      </div>
+    </>
+  ) : (
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <h1 class="font-serif text-3xl text-amber-50">Not found</h1>
+      <p class="mt-2 text-sm text-slate-300/80">This eyepiece does not exist, or it is not yours.</p>
+      <a href="/gear" class="mt-4 inline-block text-sm text-amber-200 hover:text-amber-50">
+        Back to My gear
+      </a>
+    </div>
+  )}
+</GearShell>
