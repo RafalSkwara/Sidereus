@@ -500,27 +500,27 @@ No database migration. There's one new KV namespace (created in Phase 2), and th
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with the verdict, night-date and forecast tests green
-- [x] 2.2 The purity guard passes (no fetch or clock in `src/lib/engine/`); `src/lib/forecast/` is the only place that calls fetch
-- [x] 2.3 `npm run lint`, `npx astro check` and `npm run build` pass with the real `FORECAST_CACHE` namespace id and generated binding types committed
+- [x] 2.1 `npm test` passes with the verdict, night-date and forecast tests green — e7e4091
+- [x] 2.2 The purity guard passes (no fetch or clock in `src/lib/engine/`); `src/lib/forecast/` is the only place that calls fetch — e7e4091
+- [x] 2.3 `npm run lint`, `npx astro check` and `npm run build` pass with the real `FORECAST_CACHE` namespace id and generated binding types committed — e7e4091
 
 #### Manual
 
-- [x] 2.4 Review a live forecast the agent fetches for a test coordinate (via a throwaway, uncommitted test file run by vitest), printed as the mapped hourly rows next to Open-Meteo's own JSON for the same hours: the values and UTC hours match
+- [x] 2.4 Review a live forecast the agent fetches for a test coordinate (via a throwaway, uncommitted test file run by vitest), printed as the mapped hourly rows next to Open-Meteo's own JSON for the same hours: the values and UTC hours match — e7e4091
 
 ### Phase 3: Tonight page
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes with the tonight composition and format tests green
-- [ ] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 3.1 `npm test` passes with the tonight composition and format tests green
+- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
 - [ ] 3.3 CI's smoke job passes with the three new Tonight steps
 
 #### Manual
 
-- [ ] 3.4 Against local Supabase with `npm run dev`, a user with one site, one telescope and two eyepieces sees the verdict, dark window and ranked cards with times in the site's zone; the Topbar link and attribution are present
-- [ ] 3.5 Deleting all eyepieces leaves the ranking without eyepiece lines; with no telescope, the page shows the add-a-telescope prompt
-- [ ] 3.6 Setting `FORECAST_BASE_URL` to an unreachable host in local `.dev.vars` shows "marginal — no weather data" with the ranking, never an error page
+- [x] 3.4 Against local Supabase with `npm run dev`, a user with one site, one telescope and two eyepieces sees the verdict, dark window and ranked cards with times in the site's zone; the Topbar link and attribution are present
+- [x] 3.5 Deleting all eyepieces leaves the ranking without eyepiece lines; with no telescope, the page shows the add-a-telescope prompt
+- [x] 3.6 Setting `FORECAST_BASE_URL` to an unreachable host in local `.dev.vars` shows "marginal — no weather data" with the ranking, never an error page
 
 ### Phase 4: Deploy, CPU check and sanity checkpoint
 

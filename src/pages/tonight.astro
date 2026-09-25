@@ -1,0 +1,161 @@
+---
+import { FORECAST_BASE_URL } from "astro:env/server";
+
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import Attribution from "@/components/tonight/Attribution.astro";
+import ObjectCard from "@/components/tonight/ObjectCard.astro";
+import VerdictCard from "@/components/tonight/VerdictCard.astro";
+import { kvForecastCache } from "@/lib/forecast/kv-cache";
+import { getForecast } from "@/lib/forecast/service";
+import {
+  eyepieceStore,
+  siteStore,
+  telescopeStore,
+  type EyepieceRecord,
+  type SiteRecord,
+  type TelescopeRecord,
+} from "@/lib/gear/store";
+import { buildTonight, type TonightView } from "@/lib/tonight/build";
+
+// Fixed, value-free messages: nothing about the site (coordinates included) ever reaches the page or a log.
+const SITES_FAILED = "Could not load your sites. Please try again.";
+const TELESCOPES_FAILED = "Could not load your telescopes. Please try again.";
+const EYEPIECES_FAILED = "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.";
+const TONIGHT_FAILED = "Could not work out tonight's sky. Please try again.";
+
+const { supabase } = Astro.locals;
+
+/** Loads one list; a failure only affects what depends on it, never the whole page. */
+async function load<T>(list: () => Promise<T[]>, failed: string): Promise<{ items: T[]; error: string | null }> {
+  try {
+    return { items: await list(), error: null };
+  } catch {
+    return { items: [], error: failed };
+  }
+}
+
+let sites: SiteRecord[] = [];
+let telescopes: TelescopeRecord[] = [];
+let eyepieces: EyepieceRecord[] = [];
+let sitesError: string | null = null;
+let telescopesError: string | null = null;
+let eyepiecesError: string | null = null;
+let view: TonightView | null = null;
+let tonightError: string | null = null;
+
+if (supabase) {
+  const [siteResult, telescopeResult, eyepieceResult] = await Promise.all([
+    load(() => siteStore.list(supabase), SITES_FAILED),
+    load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
+    load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
+  ]);
+  ({ items: sites, error: sitesError } = siteResult);
+  ({ items: telescopes, error: telescopesError } = telescopeResult);
+  ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
+}
+
+// S-02 uses the oldest site and the oldest telescope (both lists are in `created_at` order).
+const site = sites.at(0);
+const telescope = telescopes.at(0);
+
+if (site && telescope) {
+  const now = new Date();
+  try {
+    // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal.
+    const result = await getForecast({
+      fetchFn: globalThis.fetch.bind(globalThis),
+      cache: kvForecastCache(),
+      siteId: site.id,
+      coords: { latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg },
+      now,
+      ...(FORECAST_BASE_URL ? { baseUrl: FORECAST_BASE_URL } : {}),
+    });
+    view = buildTonight({ site, telescope, eyepieces, forecast: result?.forecast ?? null, now });
+  } catch {
+    tonightError = TONIGHT_FAILED;
+  }
+}
+
+const primaryLink =
+  "inline-flex items-center justify-center rounded-lg bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200";
+const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
+---
+
+<GearShell title="Tonight">
+  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">
+    {view ? view.dateLabel : "Your sky, tonight"}
+  </p>
+  <h1 class="mb-2 font-serif text-4xl text-amber-50 sm:text-5xl">Tonight</h1>
+  {site && telescope && (
+    <p class="mb-6 text-sm text-slate-300/80">
+      <a href="/gear" class="text-amber-200/90 transition-colors hover:text-amber-50">
+        {site.name} · {telescope.name}
+      </a>
+    </p>
+  )}
+
+  {supabase ? (
+    <div class="mt-6 space-y-6">
+      {sitesError && <ServerError message={sitesError} />}
+      {telescopesError && <ServerError message={telescopesError} />}
+
+      {!sitesError && !site && (
+        <div class:list={[promptCard]}>
+          <p class="mb-4 text-slate-200/90">Add an observing site to see tonight</p>
+          <a href="/gear/sites/new" class:list={[primaryLink]}>
+            Add site
+          </a>
+        </div>
+      )}
+      {!telescopesError && !telescope && (
+        <div class:list={[promptCard]}>
+          <p class="mb-4 text-slate-200/90">Add a telescope to see tonight</p>
+          <a href="/gear/telescopes/new" class:list={[primaryLink]}>
+            Add telescope
+          </a>
+        </div>
+      )}
+
+      {tonightError && <ServerError message={tonightError} />}
+
+      {view && (
+        <>
+          <VerdictCard
+            level={view.verdict.level}
+            text={view.verdictText}
+            darkWindow={view.darkWindow}
+            timeZone={view.timeZone}
+          />
+
+          {view.ranking && (
+            <section aria-labelledby="ranking-heading">
+              <h2 id="ranking-heading" class="mb-4 font-serif text-2xl text-amber-50">
+                {view.ranking.clearedText}
+              </h2>
+              {eyepiecesError && (
+                <div class="mb-4">
+                  <ServerError message={eyepiecesError} />
+                </div>
+              )}
+              {view.ranking.entries.length > 0 && (
+                <ol class="space-y-4">
+                  {view.ranking.entries.map((entry, i) => (
+                    <ObjectCard entry={entry} rank={i + 1} />
+                  ))}
+                </ol>
+              )}
+            </section>
+          )}
+        </>
+      )}
+    </div>
+  ) : (
+    <DatabaseMissing />
+  )}
+
+  <div class="mt-10 border-t border-white/10 pt-4">
+    <Attribution />
+  </div>
+</GearShell>
