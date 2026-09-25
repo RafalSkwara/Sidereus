@@ -38,6 +38,7 @@ describe("getForecast", () => {
     expect(fake.calls).toHaveLength(0);
     expect(result).toEqual({
       fetchedAt: new Date(NOW.getTime() - 59 * MINUTE_MS),
+      fallback: false,
       forecast: { hours: [{ start: new Date("2026-10-10T18:00:00Z"), cloudCoverPct: 42, humidityPct: 70 }] },
     });
   });
@@ -48,6 +49,7 @@ describe("getForecast", () => {
     const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now: NOW });
     expect(fake.calls).toHaveLength(1);
     expect(result?.fetchedAt).toEqual(NOW);
+    expect(result?.fallback).toBe(false);
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual([5, 15]);
 
     expect(cache.puts).toHaveLength(1);
@@ -96,13 +98,14 @@ describe("getForecast", () => {
     expect(fake.calls[0].url.origin).toBe("http://127.0.0.1:9");
   });
 
-  it("falls back to a stale copy of any age when the fetch fails", async () => {
+  it("falls back to a stale copy of any age when the fetch fails, flagged as a fallback", async () => {
     const fake = fakeFetch(failingResponse);
     const cache = memoryCache({ [KEY]: storedEntry(3 * 24 * 60, 42) });
     const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now: NOW });
     expect(fake.calls).toHaveLength(1);
     expect(result?.forecast.hours[0].cloudCoverPct).toBe(42);
     expect(result?.fetchedAt).toEqual(new Date(NOW.getTime() - 3 * 24 * 60 * MINUTE_MS));
+    expect(result?.fallback).toBe(true);
     expect(cache.puts).toHaveLength(0);
   });
 

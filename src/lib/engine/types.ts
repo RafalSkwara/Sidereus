@@ -82,7 +82,8 @@ export interface ForecastHour {
 
 /**
  * Hourly weather for a site, as the verdict consumes it. Hours start on whole UTC hours; an hour
- * the provider did not report is simply absent (the verdict counts it as not clear).
+ * the provider did not report inside the series is simply absent (the verdict counts it as not
+ * clear). A dark window reaching past either end of the series has no weather data.
  */
 export interface HourlyForecast {
   hours: ForecastHour[];
@@ -104,7 +105,15 @@ export type VerdictReason =
    * `minCloudPct` is the least cloudy dark hour, or null when no dark hour has data.
    */
   | { kind: "cloudy"; bestRunHours: number; minCloudPct: number | null }
-  /** No forecast was available; the verdict defaults to marginal. */
+  /**
+   * The clouds allowed a go, but the forecast is a saved copy that could not be refreshed, so the
+   * verdict is capped at marginal. Carries the go run.
+   */
+  | { kind: "fallback-cap"; runHours: number; cloudPct: number }
+  /**
+   * No forecast was available, or its series does not span the dark window; the verdict defaults
+   * to marginal.
+   */
   | { kind: "no-weather-data" }
   /** The sun never gets low enough tonight for a dark window. */
   | { kind: "no-darkness" };

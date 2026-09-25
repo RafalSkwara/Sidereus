@@ -121,6 +121,8 @@ export function verdictReasonText(verdict: Verdict): string {
       return `${reason.runHours} h in a row with at most ${reason.cloudPct}% cloud in the dark window`;
     case "humidity-cap":
       return `clear enough, but humidity reaches ${reason.maxHumidityPct}%, so expect dew and haze`;
+    case "fallback-cap":
+      return `the last saved forecast showed ${reason.runHours} h in a row with at most ${reason.cloudPct}% cloud, but it could not be refreshed`;
     case "cloudy":
       return reason.minCloudPct === null
         ? "no forecast covers the dark window"
