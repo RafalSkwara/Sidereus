@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Sidereus** — a web app that tells a beginner amateur astronomer whether tonight is worth setting up for (go / marginal / no-go) and which Messier objects to point at, with an eyepiece pair from their own kit. Product requirements, invariants and tunable scoring parameters live in `@context/foundation/prd.md`; the stack rationale in `@context/foundation/tech-stack.md`. Work runs through the 10x `context/` workflow with in-flight changes under `context/changes/<id>/`.
 
-Product code so far: the pure sky engine in `src/lib/engine/` and the generated Messier catalogue in `src/lib/catalogue/` (roadmap F-01), plus per-user observing sites, telescopes and eyepieces managed under `/gear` (S-01). Besides `/gear`, the starter's auth flow and dashboard are the user-facing features; the Tonight view (S-02) is next.
+Product code so far: the pure sky engine in `src/lib/engine/` and the generated Messier catalogue in `src/lib/catalogue/` (roadmap F-01), plus per-user observing sites, telescopes and eyepieces managed under `/gear` (S-01), and the gated `/tonight` view (S-02): verdict, dark window and up to five ranked objects from the engine's pure scoring (`score.ts`, `ranking.ts`, `eyepieces.ts`, `verdict.ts`), with the Open-Meteo forecast behind a Workers KV cache in `src/lib/forecast/` (only `kv-cache.ts` imports `cloudflare:workers`; tests pass an in-memory cache).
 
 ## Tripwires (read first)
 
@@ -20,6 +20,7 @@ Product code so far: the pure sky engine in `src/lib/engine/` and the generated 
 - **Coordinates never go into URLs or logs.** `?error=` values are fixed strings, never form values; `no-console` is an error under `src/lib/gear` and `src/pages/api/gear`. Gear routes redirect with a fixed "Could not save…" message that deliberately hides the DB error; to debug, reproduce against local Supabase, not by surfacing the error text.
 - **Island imports**: browser islands import engine constants from `@/lib/engine/parameters` (the one exception to the barrel rule) and never import `src/lib/gear/timezone.ts` (server-only tz lookup) or `store.ts`.
 - **Local `.env` / `.dev.vars` point at the hosted Supabase project**, whose schema changes only when CI's `migrate` job runs after a merge to `main`. Until then `/gear` pages fail on the dev server against hosted. Run the smoke test against local Supabase (as CI does), never against hosted: it signs up real users.
+- **`npm run build` copies `.dev.vars` into `dist/server/.dev.vars`, and `npm run preview` reads that copy.** After changing `.dev.vars` (e.g. `FORECAST_BASE_URL` to simulate a forecast outage), rebuild before previewing; `npm run dev` picks changes up directly.
 - **A 302 has no response body in DevTools.** To see a route's error, read the `Location` header, and enable Preserve log so the redirect is not cleared.
 - **`npm audit` needs `--registry https://registry.npmjs.org`** on this machine: the default registry is a private Nexus mirror that rejects the advisories endpoint.
 - **Node ≥ 24.16** (`.nvmrc` pins 24.21.0, `package.json` engines enforce it). Two ESLint Astro packages declare narrow `engines.node` ranges; mismatch warnings at install are upstream noise, not blockers.

@@ -1,4 +1,4 @@
-// Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow and the gear routes still work
+// Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the gear routes and /tonight still work
 // together. Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // It signs up a throwaway user and writes gear rows, so point it at local Supabase only (as CI does), never hosted.
 
@@ -47,6 +47,7 @@ async function request(path, { method = "GET", form } = {}) {
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["tonight redirects anonymous user", () => request("/tonight"), { status: 302, location: "/auth/signin" }],
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -91,10 +92,13 @@ const steps = [
       }),
     { status: 302, location: "/gear", exact: true },
   ],
+  // Renders even when the forecast is unreachable: the verdict falls back to "marginal — no weather data".
+  ["tonight renders for signed-in user", () => request("/tonight"), { status: 200 }],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],
+  ["tonight redirects after signout", () => request("/tonight"), { status: 302, location: "/auth/signin" }],
 ];
 
 let failed = 0;

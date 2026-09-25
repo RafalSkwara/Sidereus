@@ -13,6 +13,9 @@ const { user } = Astro.locals;
   <div class="flex items-center gap-3 text-sm">
     {user ? (
       <>
+        <a href="/tonight" class="text-amber-200/90 transition-colors hover:text-amber-50">
+          Tonight
+        </a>
         <a href="/gear" class="text-amber-200/90 transition-colors hover:text-amber-50">
           My gear
         </a>

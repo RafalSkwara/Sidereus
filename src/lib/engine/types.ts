@@ -72,3 +72,44 @@ export interface EquatorialJ2000 {
   /** Declination in degrees, [-90, 90]. */
   decDeg: number;
 }
+
+/** One forecast hour, covering `[start, start + 1 h)`. Percentages are 0-100. */
+export interface ForecastHour {
+  start: Date;
+  cloudCoverPct: number;
+  humidityPct: number;
+}
+
+/**
+ * Hourly weather for a site, as the verdict consumes it. Hours start on whole UTC hours; an hour
+ * the provider did not report is simply absent (the verdict counts it as not clear).
+ */
+export interface HourlyForecast {
+  hours: ForecastHour[];
+}
+
+export type VerdictLevel = "go" | "marginal" | "no-go";
+
+/**
+ * Why the verdict came out as it did, with what the UI needs to phrase it. Run lengths count
+ * whole forecast hours that overlap the dark window.
+ */
+export type VerdictReason =
+  /** A contiguous run of `runHours` hours cleared the level's cloud threshold; `cloudPct` is the cloudiest hour in it. */
+  | { kind: "clear-run"; runHours: number; cloudPct: number }
+  /** The clouds allowed a go, but at least one dark hour was above the humidity cap (dew, haze). */
+  | { kind: "humidity-cap"; maxHumidityPct: number }
+  /**
+   * No run was long enough. `bestRunHours` is the longest run below the marginal cloud threshold;
+   * `minCloudPct` is the least cloudy dark hour, or null when no dark hour has data.
+   */
+  | { kind: "cloudy"; bestRunHours: number; minCloudPct: number | null }
+  /** No forecast was available; the verdict defaults to marginal. */
+  | { kind: "no-weather-data" }
+  /** The sun never gets low enough tonight for a dark window. */
+  | { kind: "no-darkness" };
+
+export interface Verdict {
+  level: VerdictLevel;
+  reason: VerdictReason;
+}

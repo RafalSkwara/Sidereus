@@ -2,13 +2,21 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { MESSIER } from "@/lib/catalogue";
 
-import { darkWindow, moonTrack, objectTracks, observingNight } from "./index";
-import type { HorizontalPosition, MoonState, Site } from "./index";
+import {
+  darkWindow,
+  darknessThresholdDegForBortle,
+  moonTrack,
+  objectTracks,
+  observingNight,
+  rankObjects,
+} from "./index";
+import type { HorizontalPosition, MoonState, Ranking, Site } from "./index";
 
 /**
  * The PRD's determinism NFR (identical inputs → identical verdict and ranking) and the ranking-time
- * NFR ("ranking under a second"), as tests over the engine's position-sampling share: the dark
- * window, the Moon track and one track per catalogue object over the dark window.
+ * NFR ("ranking under a second"), as tests over the engine's position-sampling share (the dark
+ * window, the Moon track and one track per catalogue object over the dark window) and over the full
+ * S-02 ranking (`rankObjects`: scoring, sorting, reasons and eyepiece pairing on top of that).
  *
  * The timing budget is asserted locally only. On CI the measured time is logged but not asserted,
  * because shared runners are too noisy for a wall-clock bound to be a reliable signal. `process.env`
@@ -86,6 +94,71 @@ describe("engine determinism and budget", () => {
     const { first, second } = getRuns();
     console.info(
       `engine full run (dark window + moon + 110 object tracks): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
+    );
+    expect(Number.isFinite(second.ms)).toBe(true);
+    if (process.env.CI === undefined) {
+      expect(first.ms).toBeLessThan(LOCAL_BUDGET_MS);
+      expect(second.ms).toBeLessThan(LOCAL_BUDGET_MS);
+    }
+  });
+});
+
+/** The S-02 ranking for Warsaw on 2026-10-10: Bortle 6, a 150/750 telescope, 25 mm and 10 mm Plössls. */
+function fullRanking(): Ranking {
+  const bortle = 6;
+  const night = observingNight("2026-10-10", WARSAW.timeZone);
+  const dark = darkWindow(WARSAW, night, darknessThresholdDegForBortle(bortle));
+  if (dark.kind !== "window") {
+    throw new Error("expected a dark window on 2026-10-10 in Warsaw");
+  }
+  return rankObjects({
+    site: WARSAW,
+    bortle,
+    minAltitudeDeg: 15,
+    darkWindow: dark,
+    telescope: { id: "t1", apertureMm: 150, focalLengthMm: 750 },
+    eyepieces: [
+      { id: "e25", focalLengthMm: 25, afovDeg: 50 },
+      { id: "e10", focalLengthMm: 10, afovDeg: 50 },
+    ],
+    catalogue: MESSIER,
+  });
+}
+
+describe("ranking determinism and budget", () => {
+  let runs: { first: { ranking: Ranking; ms: number }; second: { ranking: Ranking; ms: number } } | null = null;
+  const getRuns = () => {
+    if (runs === null) {
+      throw new Error("beforeAll did not execute");
+    }
+    return runs;
+  };
+  const timedRanking = (): { ranking: Ranking; ms: number } => {
+    const started = performance.now();
+    const ranking = fullRanking();
+    return { ranking, ms: performance.now() - started };
+  };
+
+  beforeAll(() => {
+    runs = { first: timedRanking(), second: timedRanking() };
+  });
+
+  it("ranks something on a clear-sky new-moon night", () => {
+    expect(getRuns().first.ranking.entries.length).toBeGreaterThan(0);
+  });
+
+  it("yields deep-equal rankings for two identical runs", () => {
+    const { first, second } = getRuns();
+    expect(second.ranking).toEqual(first.ranking);
+    const asNumbers = (ranking: Ranking): string =>
+      JSON.stringify(ranking, (_key, value: unknown) => (value instanceof Date ? value.getTime() : value));
+    expect(asNumbers(second.ranking)).toBe(asNumbers(first.ranking));
+  });
+
+  it(`runs dark window + rankObjects over the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
+    const { first, second } = getRuns();
+    console.info(
+      `ranking full run (dark window + rankObjects, 110 objects): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
     );
     expect(Number.isFinite(second.ms)).toBe(true);
     if (process.env.CI === undefined) {

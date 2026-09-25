@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addDays, localNoon, observingNight, parseCalendarDate } from "./night";
+import { addDays, localNoon, observingNight, observingNightDateFor, parseCalendarDate } from "./night";
 
 const HOUR_MS = 3_600_000;
 
@@ -50,5 +50,55 @@ describe("observingNight", () => {
     expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
     expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
     expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
+  });
+});
+
+describe("observingNightDateFor", () => {
+  const zone = "Europe/Warsaw";
+
+  it("maps 01:30 local to the previous evening's date", () => {
+    // 01:30 CEST on 2026-10-11 is 23:30 UTC on 2026-10-10.
+    expect(observingNightDateFor(new Date("2026-10-10T23:30:00Z"), zone)).toBe("2026-10-10");
+    // After UTC midnight too: 01:30 CET on 2026-11-11 is 00:30 UTC the same day.
+    expect(observingNightDateFor(new Date("2026-11-11T00:30:00Z"), zone)).toBe("2026-11-10");
+  });
+
+  it("maps 13:00 local to the same date", () => {
+    expect(observingNightDateFor(new Date("2026-10-10T11:00:00Z"), zone)).toBe("2026-10-10");
+  });
+
+  it("switches at local noon, inclusive", () => {
+    expect(observingNightDateFor(new Date("2026-10-10T09:59:59Z"), zone)).toBe("2026-10-09");
+    expect(observingNightDateFor(new Date("2026-10-10T10:00:00Z"), zone)).toBe("2026-10-10");
+  });
+
+  it("stays on the evening date for all 25 hours of the 2026-10-25 DST night", () => {
+    // 11:00 UTC on 10-25 is 12:00 CET, the first instant of the next night.
+    for (const [iso, expected] of [
+      ["2026-10-24T10:00:00Z", "2026-10-24"], // 12:00 CEST
+      ["2026-10-25T00:30:00Z", "2026-10-24"], // 02:30 CEST, first pass
+      ["2026-10-25T01:30:00Z", "2026-10-24"], // 02:30 CET, second pass
+      ["2026-10-25T10:00:00Z", "2026-10-24"], // 11:00 CET
+      ["2026-10-25T10:59:59Z", "2026-10-24"],
+      ["2026-10-25T11:00:00Z", "2026-10-25"],
+    ] as const) {
+      expect(observingNightDateFor(new Date(iso), zone)).toBe(expected);
+    }
+  });
+
+  it("returns a night that contains the instant, hour by hour across the DST change", () => {
+    for (let t = Date.UTC(2026, 9, 23, 0, 0); t < Date.UTC(2026, 9, 27, 0, 0); t += 30 * 60_000) {
+      const instant = new Date(t);
+      const night = observingNight(observingNightDateFor(instant, zone), zone);
+      expect(night.start.getTime()).toBeLessThanOrEqual(t);
+      expect(night.end.getTime()).toBeGreaterThan(t);
+    }
+  });
+
+  it("uses the given zone, not the process zone", () => {
+    const instant = new Date("2026-06-21T20:00:00Z");
+    expect(observingNightDateFor(instant, "Pacific/Auckland")).toBe("2026-06-21"); // 08:00 on 06-22
+    expect(observingNightDateFor(instant, "America/Los_Angeles")).toBe("2026-06-21"); // 13:00
+    expect(observingNightDateFor(new Date("2026-06-21T10:00:00Z"), "Pacific/Auckland")).toBe("2026-06-21"); // 22:00
   });
 });

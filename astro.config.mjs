@@ -18,6 +18,8 @@ export default defineConfig({
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      // Overrides the Open-Meteo base URL; only used to simulate a forecast outage locally.
+      FORECAST_BASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });

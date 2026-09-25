@@ -1,10 +1,10 @@
 ---
 change_id: verified-ephemeris-core
 title: Verified ephemeris core - Messier catalogue, night model, sun/moon/object positions
-status: impl_reviewed
+status: archived
 created: 2026-09-22
-updated: 2026-09-24
-archived_at: null
+updated: 2026-09-25
+archived_at: 2026-09-25T13:47:43Z
 ---
 
 ## Notes
@@ -13,3 +13,4 @@ Roadmap item F-01 (`context/foundation/roadmap.md`), milestone M-1. Tracked on t
 - 2026-09-24, Phase 3 manual gate: the user spot-checked several engine-predicted moon and object positions against Stellarium ("roughly correct, in fact surprisingly correct") and accepted 3.4/3.5 on that basis without recording the values. The `moon`/`objects` fixture sections therefore remain `pending` (6 todos in `npm test`); the sun sections are fully captured (all within 1 min). Phase 4's criterion "zero todo fixtures remaining" cannot be met honestly until those values are recorded — decision deferred to Phase 4.
 - Fixtures and capture protocol: `src/lib/engine/fixtures/README.md`, values in `src/lib/engine/fixtures/stellarium/*.json` (sun sections captured 2026-09-24; moon/objects pending).
 - Tolerance report: `context/changes/verified-ephemeris-core/tolerance-report.md` (regenerate the numbers with `npm test -- --reporter=verbose` and read the `[tolerance]` lines).
+- 2026-09-25, archive decision: the user chose to archive with plan row 4.1 ("zero `todo` fixtures") deliberately deferred. The six moon/object Stellarium captures, the empty `source.version` fields and the formal measurement of the 1° altitude candidate move to follow-up issue #19 (https://github.com/RafalSkwara/Sidereus/issues/19). Sun and dark-window values are captured and within tolerance; S-02 can build on the engine as is.
