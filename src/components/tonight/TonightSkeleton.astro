@@ -4,7 +4,8 @@
 import { getMessages } from "@/i18n";
 
 const t = getMessages(Astro.locals.locale).tonight;
-const bar = "rounded bg-muted motion-safe:animate-pulse";
+// bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish inside the cards.
+const bar = "rounded bg-border motion-safe:animate-pulse";
 ---
 
 <div role="status" aria-busy="true">
@@ -16,9 +17,12 @@ const bar = "rounded bg-muted motion-safe:animate-pulse";
 
     <div class="mt-6 space-y-6">
       <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-6">
-        <div class:list={[bar, "h-4 w-32"]}></div>
-        <div class:list={[bar, "h-8 w-3/4"]}></div>
+        <div class:list={[bar, "h-3 w-28"]}></div>
+        <div class:list={[bar, "h-8 w-1/2"]}></div>
+        <div class:list={[bar, "h-4 w-full"]}></div>
+        <div class:list={[bar, "h-4 w-2/3"]}></div>
         <div class:list={[bar, "h-4 w-1/2"]}></div>
+        <div class:list={[bar, "h-3 w-1/3"]}></div>
       </div>
 
       <div>
@@ -37,7 +41,7 @@ const bar = "rounded bg-muted motion-safe:animate-pulse";
 
   <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
   <p class="slow-hint mt-6 text-sm text-muted-foreground">
-    {t.loadingSlow}
+    {t.loadingSlow}{" "}
     <a href="/tonight" class="font-semibold text-primary underline-offset-4 hover:underline">
       {t.reload}
     </a>
