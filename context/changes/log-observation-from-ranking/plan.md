@@ -435,10 +435,10 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Automated
 
-- [x] 4.1 Unit tests pass, including the new build and format cases: `npm test`
-- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [x] 4.3 New Playwright spec passes against local Supabase and the forecast fixture: `npm run test:e2e -- observation-log`
-- [x] 4.4 Existing e2e and smoke checks still pass: `npm run test:e2e && npm run smoke`
+- [x] 4.1 Unit tests pass, including the new build and format cases: `npm test` — 52cbc87
+- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — 52cbc87
+- [x] 4.3 New Playwright spec passes against local Supabase and the forecast fixture: `npm run test:e2e -- observation-log` — 52cbc87
+- [x] 4.4 Existing e2e and smoke checks still pass: `npm run test:e2e && npm run smoke` — 52cbc87
 
 #### Manual
 
