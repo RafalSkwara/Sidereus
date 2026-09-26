@@ -1,177 +1,27 @@
 ---
-import { FORECAST_BASE_URL } from "astro:env/server";
-
 import GearShell from "@/components/gear/GearShell.astro";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
-import { ServerError } from "@/components/forms/ServerError";
 import Attribution from "@/components/tonight/Attribution.astro";
-import ObjectCard from "@/components/tonight/ObjectCard.astro";
-import VerdictCard from "@/components/tonight/VerdictCard.astro";
-import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { kvForecastCache } from "@/lib/forecast/kv-cache";
-import { getForecast } from "@/lib/forecast/service";
-import {
-  eyepieceStore,
-  siteStore,
-  telescopeStore,
-  type EyepieceRecord,
-  type SiteRecord,
-  type TelescopeRecord,
-} from "@/lib/gear/store";
-import { buildTonight, type TonightView } from "@/lib/tonight/build";
-
-// Fixed, value-free message keys: nothing about the site (coordinates included) ever reaches the page or a log.
-const SITES_FAILED: MessageKey = "errors.load.sites";
-const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
-const EYEPIECES_FAILED: MessageKey = "tonight.eyepiecesFailed";
-const TONIGHT_FAILED: MessageKey = "tonight.failed";
+import TonightContent from "@/components/tonight/TonightContent.astro";
+import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
+import { getMessages } from "@/i18n";
 
 const { supabase, locale } = Astro.locals;
-const m = getMessages(locale);
-const t = m.tonight;
-const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
-
-/** Loads one list; a failure only affects what depends on it, never the whole page. */
-async function load<T>(
-  list: () => Promise<T[]>,
-  failed: MessageKey,
-): Promise<{ items: T[]; error: MessageKey | null }> {
-  try {
-    return { items: await list(), error: null };
-  } catch {
-    return { items: [], error: failed };
-  }
-}
-
-let sites: SiteRecord[] = [];
-let telescopes: TelescopeRecord[] = [];
-let eyepieces: EyepieceRecord[] = [];
-let sitesError: MessageKey | null = null;
-let telescopesError: MessageKey | null = null;
-let eyepiecesError: MessageKey | null = null;
-let view: TonightView | null = null;
-let tonightError: MessageKey | null = null;
-
-if (supabase) {
-  const [siteResult, telescopeResult, eyepieceResult] = await Promise.all([
-    load(() => siteStore.list(supabase), SITES_FAILED),
-    load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
-    load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
-  ]);
-  ({ items: sites, error: sitesError } = siteResult);
-  ({ items: telescopes, error: telescopesError } = telescopeResult);
-  ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
-}
-
-// S-02 uses the oldest site and the oldest telescope (both lists are in `created_at` order).
-const site = sites.at(0);
-const telescope = telescopes.at(0);
-// No site and no telescope (e.g. onboarding abandoned): one route back to setup instead of two cards (FR-021
-// single-item empty states stay as they are).
-const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
-
-if (site && telescope) {
-  const now = new Date();
-  try {
-    // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
-    // a saved copy served in an outage comes back flagged `fallback`, and buildTonight caps it at marginal.
-    const result = await getForecast({
-      fetchFn: globalThis.fetch.bind(globalThis),
-      cache: kvForecastCache(),
-      siteId: site.id,
-      coords: { latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg },
-      now,
-      ...(FORECAST_BASE_URL ? { baseUrl: FORECAST_BASE_URL } : {}),
-    });
-    view = buildTonight({ site, telescope, eyepieces, forecast: result, now }, locale);
-  } catch {
-    tonightError = TONIGHT_FAILED;
-  }
-}
-
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
-const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
+const t = getMessages(locale).tonight;
 ---
 
 <GearShell title={t.title}>
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{view ? view.dateLabel : t.kicker}</p>
-  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-  {site && telescope && (
-    <p class="mb-6 text-sm text-muted-foreground">
-      <a href="/gear" class="transition-colors hover:text-heading">
-        {site.name} · {telescope.name}
-      </a>
-    </p>
-  )}
-
   {supabase ? (
-    <div class="mt-6 space-y-6">
-      {sitesError && <ServerError message={translate(sitesError)} />}
-      {telescopesError && <ServerError message={translate(telescopesError)} />}
-
-      {needsSetup && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.setupPrompt}</p>
-          <a href="/onboarding" class:list={[primaryLink]}>
-            {t.setup}
-          </a>
-        </div>
-      )}
-      {!needsSetup && !sitesError && !site && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.addSitePrompt}</p>
-          <a href="/gear/sites/new" class:list={[primaryLink]}>
-            {t.addSite}
-          </a>
-        </div>
-      )}
-      {!needsSetup && !telescopesError && !telescope && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.addTelescopePrompt}</p>
-          <a href="/gear/telescopes/new" class:list={[primaryLink]}>
-            {t.addTelescope}
-          </a>
-        </div>
-      )}
-
-      {tonightError && <ServerError message={translate(tonightError)} />}
-
-      {view && (
-        <>
-          <VerdictCard
-            level={view.verdict.level}
-            text={view.verdictText}
-            darkWindow={view.darkWindow}
-            timeZone={view.timeZone}
-            forecastStatus={view.forecastStatus}
-            explanation={view.explanation}
-          />
-
-          {view.ranking && (
-            <section aria-labelledby="ranking-heading">
-              <h2 id="ranking-heading" class="mb-4 font-display text-2xl font-semibold text-heading">
-                {view.ranking.clearedText}
-              </h2>
-              {eyepiecesError && (
-                <div class="mb-4">
-                  <ServerError message={translate(eyepiecesError)} />
-                </div>
-              )}
-              {view.ranking.entries.length > 0 && (
-                <ol class="space-y-4">
-                  {view.ranking.entries.map((entry, i) => (
-                    <ObjectCard entry={entry} rank={i + 1} />
-                  ))}
-                </ol>
-              )}
-            </section>
-          )}
-        </>
-      )}
-    </div>
+    // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in.
+    <TonightContent server:defer>
+      <TonightSkeleton slot="fallback" />
+    </TonightContent>
   ) : (
-    <DatabaseMissing />
+    <>
+      <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+      <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+      <DatabaseMissing />
+    </>
   )}
 
   <div class="mt-10 border-t border-border pt-4">

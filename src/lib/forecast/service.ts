@@ -59,6 +59,11 @@ export interface GetForecastInput {
   now: Date;
   /** Open-Meteo base URL; the page passes the optional `FORECAST_BASE_URL` override. */
   baseUrl?: string;
+  /**
+   * Runs the cache write after the response instead of awaiting it; the page passes the Worker's
+   * `waitUntil`. Without it the write is awaited.
+   */
+  defer?: (task: Promise<void>) => void;
 }
 
 function toStored(result: ForecastResult, coords: ForecastCoords): StoredForecast {
@@ -117,6 +122,7 @@ export async function getForecast({
   coords,
   now,
   baseUrl = OPEN_METEO_BASE_URL,
+  defer,
 }: GetForecastInput): Promise<ForecastResult | null> {
   const key = forecastCacheKey(siteId);
   const stored = await readCache(cache, key);
@@ -135,7 +141,13 @@ export async function getForecast({
       fetchedAt: now,
       fallback: false,
     };
-    await writeCache(cache, key, toStored(result, coords));
+    // writeCache never rejects, so a deferred write cannot surface as an unhandled rejection.
+    const write = writeCache(cache, key, toStored(result, coords));
+    if (defer) {
+      defer(write);
+    } else {
+      await write;
+    }
     return result;
   } catch (_error) {
     return usable ? fromStored(stored, true) : null;

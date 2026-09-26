@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 
-import { noopForecastCache, type ForecastCache } from "./cache";
+import { KV_READ_TIMEOUT_MS, noopForecastCache, withReadTimeout, type ForecastCache } from "./cache";
 
 /**
  * The `FORECAST_CACHE` Workers KV namespace as a `ForecastCache`, or a no-op cache when the binding
@@ -12,8 +12,11 @@ export function kvForecastCache(): ForecastCache {
   if (kv === undefined) {
     return noopForecastCache;
   }
-  return {
-    get: (key) => kv.get(key),
-    put: (key, value, options) => kv.put(key, value, options),
-  };
+  return withReadTimeout(
+    {
+      get: (key) => kv.get(key),
+      put: (key, value, options) => kv.put(key, value, options),
+    },
+    KV_READ_TIMEOUT_MS,
+  );
 }

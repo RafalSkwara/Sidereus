@@ -169,4 +169,39 @@ describe("getForecast", () => {
       getForecast({ fetchFn: failing.fetchFn, cache: throwing, siteId: SITE_ID, coords: COORDS, now: NOW }),
     ).resolves.toBeNull();
   });
+
+  it("returns a fresh forecast without waiting for the cache write when given a defer hook", async () => {
+    const fake = fakeFetch(liveResponse);
+    let finishWrite = () => {
+      // replaced once the write starts
+    };
+    const puts: string[] = [];
+    const slowCache: ForecastCache = {
+      get: () => Promise.resolve(null),
+      put: (key) =>
+        new Promise<void>((resolve) => {
+          finishWrite = () => {
+            puts.push(key);
+            resolve();
+          };
+        }),
+    };
+    const deferred: Promise<void>[] = [];
+
+    const result = await getForecast({
+      fetchFn: fake.fetchFn,
+      cache: slowCache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+      defer: (task) => deferred.push(task),
+    });
+
+    expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual([5, 15]);
+    expect(deferred).toHaveLength(1);
+    expect(puts).toHaveLength(0);
+    finishWrite();
+    await deferred[0];
+    expect(puts).toEqual([KEY]);
+  });
 });

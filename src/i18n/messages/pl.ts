@@ -363,6 +363,9 @@ export const pl = {
     setup: "Skonfiguruj",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
     failed: "Nie udało się obliczyć dzisiejszego nieba. Spróbuj ponownie.",
+    loading: "Wczytuję dzisiejsze niebo…",
+    loadingSlow: "To trwa dłużej niż zwykle.",
+    reload: "Odśwież",
 
     card: {
       kicker: "Ocena nocy",

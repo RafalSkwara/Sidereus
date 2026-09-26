@@ -347,6 +347,9 @@ export const en = {
     setup: "Set up",
     eyepiecesFailed: "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.",
     failed: "Could not work out tonight's sky. Please try again.",
+    loading: "Loading tonight's sky…",
+    loadingSlow: "This is taking longer than usual.",
+    reload: "Reload",
 
     card: {
       kicker: "Tonight's verdict",

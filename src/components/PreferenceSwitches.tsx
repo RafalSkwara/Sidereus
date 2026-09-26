@@ -8,12 +8,24 @@ interface PreferenceSwitchesProps {
   locale: Locale;
 }
 
+const LOCALE_SEGMENTS: { value: Locale; text: string }[] = [
+  { value: "en", text: "EN" },
+  { value: "pl", text: "PL" },
+];
+
+/** Remembers the language and reloads: copy is rendered on the server, so a language change needs a fresh page. */
+function reloadInLocale(next: Locale) {
+  document.cookie = preferenceCookie(LOCALE_COOKIE, next);
+  window.location.reload();
+}
+
 const groupClass = "flex gap-0.5 rounded-full border border-border p-0.5";
 const segmentClass = cn(
   "inline-flex h-10 min-w-11 cursor-pointer items-center justify-center rounded-full px-2 text-[13px] font-semibold",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:bg-selected aria-pressed:text-selected-foreground",
   "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+  "disabled:cursor-progress",
 );
 
 function MoonIcon() {
@@ -60,6 +72,8 @@ function SunIcon() {
 export default function PreferenceSwitches({ theme: initialTheme, locale }: PreferenceSwitchesProps) {
   const labels = getMessages(locale).preferences;
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  // Set once a language is picked: the reload can take a moment, so the tap is acknowledged at once.
+  const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
 
   function chooseTheme(next: Theme) {
     document.documentElement.dataset.theme = next;
@@ -68,10 +82,9 @@ export default function PreferenceSwitches({ theme: initialTheme, locale }: Pref
   }
 
   function chooseLocale(next: Locale) {
-    if (next === locale) return;
-    document.cookie = preferenceCookie(LOCALE_COOKIE, next);
-    // Copy is rendered on the server, so a language change needs a fresh page.
-    window.location.reload();
+    if (next === locale || pendingLocale) return;
+    setPendingLocale(next);
+    reloadInLocale(next);
   }
 
   return (
@@ -100,31 +113,33 @@ export default function PreferenceSwitches({ theme: initialTheme, locale }: Pref
           <SunIcon />
         </button>
       </div>
-      <div role="group" aria-label={labels.language} className={groupClass}>
-        <button
-          type="button"
-          lang="en"
-          title={labels.english}
-          aria-pressed={locale === "en"}
-          className={segmentClass}
-          onClick={() => {
-            chooseLocale("en");
-          }}
-        >
-          EN
-        </button>
-        <button
-          type="button"
-          lang="pl"
-          title={labels.polish}
-          aria-pressed={locale === "pl"}
-          className={segmentClass}
-          onClick={() => {
-            chooseLocale("pl");
-          }}
-        >
-          PL
-        </button>
+      <div role="group" aria-label={labels.language} aria-busy={pendingLocale !== null} className={groupClass}>
+        {LOCALE_SEGMENTS.map(({ value, text }) => (
+          <button
+            key={value}
+            type="button"
+            lang={value}
+            title={value === "en" ? labels.english : labels.polish}
+            aria-pressed={locale === value}
+            disabled={pendingLocale !== null}
+            className={segmentClass}
+            onClick={() => {
+              chooseLocale(value);
+            }}
+          >
+            {pendingLocale === value ? (
+              <>
+                <span
+                  className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
+                  aria-hidden="true"
+                />
+                <span className="sr-only">{text}</span>
+              </>
+            ) : (
+              text
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );
