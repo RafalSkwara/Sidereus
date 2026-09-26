@@ -610,29 +610,29 @@ The public landing page says what the product does and shows it. Every entry poi
 
 #### Automated
 
-- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [x] 2.2 `npm run build` succeeds
-- [x] 2.3 `npm run smoke` passes against a local preview with local Supabase, including the new onboarding steps
+- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass — 79e9bc9
+- [x] 2.2 `npm run build` succeeds — 79e9bc9
+- [x] 2.3 `npm run smoke` passes against a local preview with local Supabase, including the new onboarding steps — 79e9bc9
 
 #### Manual
 
-- [x] 2.4 A fresh sign-up lands on `/onboarding` and reaches a ranked Tonight in under a minute of interaction using place search (stopwatch, excluding sign-up typing)
-- [x] 2.5 "Use my location" sets the site and shows only the rounded location; denying the permission leaves place search working
-- [x] 2.6 With geocoding blocked in DevTools, the "Enter coordinates instead" fallback completes onboarding
-- [x] 2.7 `/onboarding` after finishing redirects to `/tonight`, and a new account that skips onboarding sees the "Set up" card on Tonight
-- [x] 2.8 No coordinates appear in any URL or in the dev-server log during onboarding
+- [x] 2.4 A fresh sign-up lands on `/onboarding` and reaches a ranked Tonight in under a minute of interaction using place search (stopwatch, excluding sign-up typing) — 79e9bc9
+- [x] 2.5 "Use my location" sets the site and shows only the rounded location; denying the permission leaves place search working — 79e9bc9
+- [x] 2.6 With geocoding blocked in DevTools, the "Enter coordinates instead" fallback completes onboarding — 79e9bc9
+- [x] 2.7 `/onboarding` after finishing redirects to `/tonight`, and a new account that skips onboarding sees the "Set up" card on Tonight — 79e9bc9
+- [x] 2.8 No coordinates appear in any URL or in the dev-server log during onboarding — 79e9bc9
 
 ### Phase 3: End-to-end test
 
 #### Automated
 
-- [ ] 3.1 `npm run test:e2e` passes locally against a preview built with `FORECAST_BASE_URL` pointing at the fixture server
-- [ ] 3.2 `npm test`, `npm run lint` and `npx astro check` pass, and Vitest does not pick up the Playwright specs
+- [x] 3.1 `npm run test:e2e` passes locally against a preview built with `FORECAST_BASE_URL` pointing at the fixture server
+- [x] 3.2 `npm test`, `npm run lint` and `npx astro check` pass, and Vitest does not pick up the Playwright specs
 - [ ] 3.3 CI's smoke job runs the Playwright spec and is green on the PR
 
 #### Manual
 
-- [ ] 3.4 Temporarily breaking the sign-up → `/onboarding` redirect makes the e2e spec fail (then revert)
+- [x] 3.4 Temporarily breaking the sign-up → `/onboarding` redirect makes the e2e spec fail (then revert)
 
 ### Phase 4: Landing and entry points
 
