@@ -1,22 +1,5 @@
 ---
-import AuthShell from "@/components/AuthShell.astro";
-import { getMessages } from "@/i18n";
-
-const { user, locale } = Astro.locals;
-const t = getMessages(locale).dashboard;
+// The starter's dashboard is retired: a returning user lands on Tonight. The path stays in PROTECTED_ROUTES,
+// so an anonymous visitor is still sent to sign-in first.
+return Astro.redirect("/tonight");
 ---
-
-<AuthShell title={t.title} centered>
-  <p class="break-words text-foreground">
-    {t.welcome} <span class="font-semibold text-heading">{user?.email}</span>
-  </p>
-  <p class="mt-2 text-sm text-muted-foreground">{t.note}</p>
-  <form method="POST" action="/api/auth/signout" class="mt-6">
-    <button
-      type="submit"
-      class="cursor-pointer rounded-lg border border-border px-4 py-2 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-    >
-      {t.signOut}
-    </button>
-  </form>
-</AuthShell>

@@ -1,0 +1,55 @@
+---
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import { getMessages } from "@/i18n";
+import { hasAnyGear } from "@/lib/onboarding/store";
+
+// `?error=` carries a message key; the island translates it.
+const error = Astro.url.searchParams.get("error");
+const { supabase, locale } = Astro.locals;
+const t = getMessages(locale).onboarding;
+
+if (supabase) {
+  let onboarded = false;
+  try {
+    onboarded = await hasAnyGear(supabase);
+  } catch {
+    // Unknown whether the user has gear: show the setup anyway. `complete_onboarding` refuses a
+    // user who already has a site or telescope, so a second run cannot duplicate anything.
+  }
+  if (onboarded) {
+    return Astro.redirect("/tonight");
+  }
+}
+
+const link = "underline decoration-border underline-offset-2 transition-colors hover:text-heading";
+---
+
+<GearShell title={t.title}>
+  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+  <p class="mb-8 text-[15px] text-muted-foreground">{t.intro}</p>
+  {supabase ? (
+    <OnboardingWizard action="/api/onboarding" serverError={error} locale={locale} client:load />
+  ) : (
+    <DatabaseMissing />
+  )}
+
+  <div class="mt-10 border-t border-border pt-4">
+    <p class="text-xs text-muted-foreground">
+      {t.credit.placeSearch}{" "}
+      <a href="https://open-meteo.com/en/docs/geocoding-api" class:list={[link]} rel="noopener noreferrer">
+        Open-Meteo Geocoding API
+      </a>{" "}
+      · {t.credit.locationData}{" "}
+      <a href="https://www.geonames.org/" class:list={[link]} rel="noopener noreferrer">
+        GeoNames
+      </a>{" "}
+      (
+      <a href="https://creativecommons.org/licenses/by/4.0/" class:list={[link]} rel="noopener noreferrer">
+        CC BY 4.0
+      </a>
+      )
+    </p>
+  </div>
+</GearShell>

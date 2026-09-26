@@ -12,11 +12,12 @@ export const POST: APIRoute = async (context) => {
   if (!supabase) {
     return context.redirect(`/auth/signup?error=${encodeURIComponent(AUTH_NOT_CONFIGURED)}`);
   }
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
     return context.redirect(`/auth/signup?error=${encodeURIComponent(authErrorKey(error))}`);
   }
 
-  return context.redirect("/auth/confirm-email");
+  // With email confirmation off, sign-up already starts a session: go straight into the first-run setup.
+  return context.redirect(data.session ? "/onboarding" : "/auth/confirm-email");
 };

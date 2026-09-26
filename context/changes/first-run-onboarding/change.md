@@ -1,7 +1,7 @@
 ---
 change_id: first-run-onboarding
 title: First run onboarding
-status: implementing
+status: implemented
 created: 2026-09-26
 updated: 2026-09-26
 archived_at: null

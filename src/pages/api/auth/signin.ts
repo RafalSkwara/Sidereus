@@ -18,5 +18,6 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/auth/signin?error=${encodeURIComponent(authErrorKey(error))}`);
   }
 
-  return context.redirect("/");
+  // A returning user lands on the product (S-03); continuing to the originally requested page is S-09.
+  return context.redirect("/tonight");
 };

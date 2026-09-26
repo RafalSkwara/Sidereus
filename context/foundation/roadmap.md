@@ -178,8 +178,8 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** S-04, S-05, S-06, S-08, S-10
 - **Blockers:** —
 - **Unknowns:**
-  - Which telescope and eyepiece-kit presets ship, by name and values (Open Question 10)? FR-006 requires a fixed, named set. — Owner: user. Block: yes.
-  - Do the geocoding endpoint's non-commercial fair-use terms allow place-name search (Open Question 12)? — Owner: user. Block: no (confirm before implementation; planning can proceed with the same-vendor assumption and a named fallback).
+  - Which telescope and eyepiece-kit presets ship, by name and values (Open Question 10)? FR-006 requires a fixed, named set. — Owner: user. Block: yes. **Answered 2026-09-26:** see Open Question 10 (five telescope presets, three eyepiece kits, five sky scenes).
+  - Do the geocoding endpoint's non-commercial fair-use terms allow place-name search (Open Question 11)? — Owner: user. Block: no (confirm before implementation; planning can proceed with the same-vendor assumption and a named fallback). **Answered 2026-09-26:** see Open Question 11 (Open-Meteo free tier, called from the browser, GeoNames credit on `/onboarding`).
 - **Risk:** Carries the first Primary Success Criterion, and the end-to-end test from shape-notes (sign in, add site and gear, ranked list, with a fixture forecast) belongs here because this is the flow it exercises. Blocked until the preset list is named; naming it is a short user decision, not research.
 - **Status:** in-progress
 
@@ -286,8 +286,12 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 7. **Darkness threshold by Bortle class** — candidate (uncalibrated): sun at -18 degrees for Bortle 1-4, -15 for 5-6, -12 for 7-9. — Owner: user. Block: none (calibrates F-01, S-02, S-04).
 8. **Default minimum altitude** — candidate (uncalibrated): 15 degrees. — Owner: user. Block: none (calibrates S-01, S-03).
 9. **Ephemeris tolerance** — candidate (uncalibrated): 1 degree of altitude and 5 minutes of time against an independent planetarium reference. — Owner: user. Block: none (measured by F-01). Measured by F-01 on 2026-09-24 against Stellarium: sun events and −18° twilight crossings within 1 minute across three fixtures (Warsaw autumn, Warsaw DST night, Tromsø midnight sun); moon and object positions spot-checked within about 1° but not recorded as fixtures — see `context/changes/verified-ephemeris-core/tolerance-report.md`. The 5-minute candidate holds with a wide margin; the 1° altitude candidate is not yet formally measured.
-10. **Which telescope and eyepiece-kit presets ship** — the fixed, named preset set required by FR-006. — Owner: user. Block: S-03.
-11. **Geocoding terms** — confirm the geocoding endpoint's non-commercial fair-use terms before FR-004 depends on it. — Owner: user. Block: none for planning; gates S-03 implementation.
+10. **Which telescope and eyepiece-kit presets ship** — the fixed, named preset set required by FR-006. — Owner: user. Block: S-03. **Answered 2026-09-26 (user, S-03 `first-run-onboarding`).** The shipped set is in `src/lib/onboarding/presets.ts`; names are catalogue keys under `onboarding.*` in `src/i18n/messages/`:
+    - Telescopes (aperture/focal length in mm): 102 mm refractor 102/500, 130 mm reflector 130/650, 150 mm reflector 150/750 (the default, the calibrated reference kit), 8-inch Dobsonian 200/1200, 127 mm Maksutov 127/1500.
+    - Eyepiece kits, all Plössl (50° AFOV): Supplied pair 25 and 10 mm (the default); Plössl set 32, 17, 13, 8 and 6 mm; No eyepieces yet (empty).
+    - Sky scenes → Bortle: City centre 8, Suburb 6 (the default), Outer suburb or small town 5, Village or countryside 4, Remote dark site 2. Classes 1, 3, 7 and 9 stay reachable in `/gear`.
+    - Every value stays editable before saving; the site is named "Home" with the default minimum altitude.
+11. **Geocoding terms** — confirm the geocoding endpoint's non-commercial fair-use terms before FR-004 depends on it. — Owner: user. Block: none for planning; gates S-03 implementation. **Answered 2026-09-26 (S-03 `first-run-onboarding`): the Open-Meteo Geocoding API on the free tier** (non-commercial use, 10,000 calls a day, data under CC BY 4.0). It is called from the visitor's browser, not proxied or cached by the Worker, and `/onboarding` shows the credit "Location data based on GeoNames" with the Open-Meteo link. "Enter coordinates instead" is the fallback when search is unavailable.
 12. **Cut checkpoint** — when S-02 lands, does it produce a sane top 5 against the observation-planner reference? If not, which of the PRD's cut-order items (S-05; manual entry in S-07; reset in S-09; S-10) drop, and does S-03 still get the full preset flow? — Owner: user. Block: roadmap-wide (decides whether the Parked section grows). **Answered 2026-09-25 (user): sane, no cuts.** The S-02 checkpoint (`context/changes/tonight-verdict-and-ranking/checkpoint.md`) found the top 5 sane on three nights:
     - Warsaw 2026-10-10 and 2026-10-24, and Bieszczady 2027-04-06 (80 mm);
     - 15/15 invariant checks passed;

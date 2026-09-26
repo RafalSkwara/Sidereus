@@ -64,9 +64,17 @@ export const en = {
     tagline: "Is tonight worth setting up for?",
     lead: "A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces you already own.",
     verdictsLabel: "Night verdicts",
-    goToDashboard: "Go to dashboard",
+    howItWorks: "How it works",
+    steps: {
+      where: "Tell us where you observe",
+      kit: "Pick your telescope and eyepieces",
+      tonight: "Get tonight's verdict and up to five targets",
+    },
+    getStarted: "Get started",
     signIn: "Sign in",
-    signUp: "Sign up",
+    openTonight: "Open Tonight",
+    screenshotAlt:
+      "Sidereus Tonight view: a Go verdict with the night's dark window, then the ranked Messier objects, each with where to look and which eyepiece to use.",
     footerPrefix: "Named after Galileo's",
     footerWork: "Sidereus Nuncius",
     footerSuffix: ", 1610.",
@@ -120,13 +128,6 @@ export const en = {
         link: "Back to sign in",
       },
     },
-  },
-
-  dashboard: {
-    title: "Dashboard",
-    welcome: "Welcome,",
-    note: "This page is only for authenticated users.",
-    signOut: "Sign out",
   },
 
   databaseMissing: {
@@ -239,6 +240,58 @@ export const en = {
   },
 
   onboarding: {
+    title: "Set up Sidereus",
+    intro: "Three quick choices, and tonight's verdict is ready. You can change any of it later in My gear.",
+    submit: "Show me tonight",
+    locationRequired: "Set a location above to continue.",
+    where: {
+      kicker: "1 · Where",
+      heading: "Where do you observe from?",
+      hint: "Your home, or wherever you usually set up. It is saved to about 1 km, never more precisely.",
+      useLocation: "Use my location",
+      locating: "Finding your location...",
+      locationDenied:
+        "Location access is blocked, so search for a place instead. You can allow it later in your browser settings.",
+      locationUnavailable: "Your location could not be found. Search for a place instead.",
+      or: "or",
+      searchLabel: "Search for a town or city",
+      searchPlaceholder: "e.g. Kraków",
+      searching: "Searching...",
+      noResults: "No places found. Check the spelling or try a nearby town.",
+      resultsLabel: "Matching places",
+      resultsCount: {
+        one: (p) => `${p.count} place found`,
+        other: (p) => `${p.count} places found`,
+      } as PluralForms<Count>,
+      searchFallback: "You can enter coordinates instead, below.",
+      manualToggle: "Enter coordinates instead",
+      usingDevice: "Using your current location (about 1 km)",
+      usingPlace: (p: { place: string }) => `Using ${p.place} (about 1 km)`,
+      usingCoordinates: "Using the coordinates you entered, rounded to about 1 km",
+    },
+    sky: {
+      kicker: "2 · Sky",
+      heading: "How dark is your sky?",
+      hint: "Pick the scene closest to a clear, moonless night where you observe.",
+    },
+    kit: {
+      kicker: "3 · Kit",
+      heading: "What's in your kit?",
+      telescope: "Telescope",
+      telescopeHint:
+        "Pick the closest match, then adjust the numbers if yours differ. They are printed on the tube or in the manual.",
+      eyepieces: "Eyepieces",
+      eyepiecesHint: "Start from a set, then edit, remove or add eyepieces to match your case.",
+      emptyKit: "Add them later in My gear",
+      noEyepieces: "No eyepieces yet. Tonight's list still works, and you can add them later.",
+      eyepieceLegend: (p: { number: string }) => `Eyepiece ${p.number}`,
+      removeEyepiece: (p: { number: string }) => `Remove eyepiece ${p.number}`,
+      eyepieceLimit: "That's 10, the most you can add here. Add more later in My gear.",
+    },
+    credit: {
+      placeSearch: "Place search:",
+      locationData: "Location data based on",
+    },
     /** The name every onboarding site gets (FR-004); it can be renamed later in `/gear`. */
     homeSiteName: "Home",
     telescopes: {
@@ -290,6 +343,8 @@ export const en = {
     addSite: "Add site",
     addTelescopePrompt: "Add a telescope to see tonight",
     addTelescope: "Add telescope",
+    setupPrompt: "Set up your site and telescope in about a minute",
+    setup: "Set up",
     eyepiecesFailed: "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.",
     failed: "Could not work out tonight's sky. Please try again.",
 

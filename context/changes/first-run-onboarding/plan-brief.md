@@ -39,6 +39,7 @@ A new visitor should go from the landing page to tonight's ranked Messier list i
 | Sign-in and `/dashboard` | Sign-in → `/tonight`; `/dashboard` redirects to `/tonight` | S-02 deferred this; continuing to the requested page stays in S-09. |
 | Landing | Current hero plus a 3-step strip and one screenshot captured by a Playwright helper | Meets "what it does, plus screenshots" with one image that is reproducible. |
 | E2E test | Playwright in CI's smoke job, with a forecast fixture server via `FORECAST_BASE_URL` and geocoding stubbed | Honours the shape-notes commitment and exercises the real island and redirects. |
+| UI conventions (added after F-03) | Tokens only; every string an `en` + `pl` catalogue key; `?error=` carries keys; "Home"/"Dom" site name by locale; e2e pins `lang=en`, plus one Polish-browser test | F-03 (PR #32) landed first so onboarding is built themeable and bilingual from the start. |
 | Geocoding terms (OQ 11/12) | Open-Meteo free tier: non-commercial, 10,000 calls a day, CC BY 4.0, credit "Location data based on GeoNames" | Sidereus has no ads or subscriptions; the credit is shown on `/onboarding`. |
 
 ## Scope
