@@ -472,6 +472,25 @@ export const en = {
    * Every value a route may put into `?error=`, a zod issue may carry, or a store may return. Fixed
    * strings only: none of them may ever contain a submitted value.
    */
+  log: {
+    kicker: "Observation log",
+    title: (p: { object: string }) => `Log ${p.object}`,
+    intro: "Confirm the night, site and telescope, then rate how it went.",
+    night: "Observing night",
+    nightHint: "The evening the night began, even if you looked after midnight.",
+    site: "Site",
+    telescope: "Telescope",
+    rating: "How did it go?",
+    ratingLow: "1 · Couldn't make it out",
+    ratingHigh: "5 · Superb",
+    ratingHint: "A rating of 1-2 keeps the object where it is; 3-5 moves it down gently in later rankings.",
+    submit: "Save observation",
+    back: "← Tonight",
+    objectNotFound: "That object is not in the Messier catalogue.",
+    needsGear: "Add a site and a telescope before logging an observation.",
+    addGear: "Go to my gear",
+  },
+
   errors: {
     generic: "Something went wrong. Please try again.",
     notConfigured: "The database is not configured.",

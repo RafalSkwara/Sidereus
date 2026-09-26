@@ -482,6 +482,25 @@ export const pl = {
     },
   },
 
+  log: {
+    kicker: "Dziennik obserwacji",
+    title: (p) => `Zapisz ${p.object}`,
+    intro: "Potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+    night: "Noc obserwacji",
+    nightHint: "Data wieczoru, w którym zaczęła się noc — także gdy obserwacja była po północy.",
+    site: "Stanowisko",
+    telescope: "Teleskop",
+    rating: "Jak poszło?",
+    ratingLow: "1 · Nie udało się dostrzec",
+    ratingHigh: "5 · Znakomicie",
+    ratingHint: "Ocena 1–2 zostawia obiekt na swoim miejscu; 3–5 lekko obniża go w kolejnych rankingach.",
+    submit: "Zapisz obserwację",
+    back: "← Dziś w nocy",
+    objectNotFound: "Tego obiektu nie ma w katalogu Messiera.",
+    needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
+    addGear: "Przejdź do sprzętu",
+  },
+
   errors: {
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
     notConfigured: "Baza danych nie jest skonfigurowana.",

@@ -410,19 +410,19 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Automated
 
-- [x] 2.1 Engine unit tests pass, including the new log and ranking cases: `npm test`
-- [x] 2.2 Purity guard still passes (no clock, env or I/O in `log.ts`): `npm test -- purity`
-- [x] 2.3 Determinism test passes with a non-empty log: `npm test -- determinism`
-- [x] 2.4 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Engine unit tests pass, including the new log and ranking cases: `npm test` — d23c525
+- [x] 2.2 Purity guard still passes (no clock, env or I/O in `log.ts`): `npm test -- purity` — d23c525
+- [x] 2.3 Determinism test passes with a non-empty log: `npm test -- determinism` — d23c525
+- [x] 2.4 Type check and lint pass: `npx astro check && npm run lint` — d23c525
 
 ### Phase 3: Mark-observed form and route
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test`
-- [ ] 3.2 i18n parity test passes with the new `log.*` and error keys: `npm test -- i18n`
-- [ ] 3.3 No hardcoded colours in the new components: `npm test -- no-hardcoded-colors`
-- [ ] 3.4 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 3.1 Unit tests pass: `npm test`
+- [x] 3.2 i18n parity test passes with the new `log.*` and error keys: `npm test -- i18n`
+- [x] 3.3 No hardcoded colours in the new components: `npm test -- no-hardcoded-colors`
+- [x] 3.4 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
 
 #### Manual
 
