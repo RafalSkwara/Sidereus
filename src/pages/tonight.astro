@@ -82,6 +82,10 @@ if (site && telescope) {
       coords: { latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg },
       now,
       ...(FORECAST_BASE_URL ? { baseUrl: FORECAST_BASE_URL } : {}),
+      // The KV write runs after the response is sent.
+      defer: (task) => {
+        Astro.locals.cfContext.waitUntil(task);
+      },
     });
     view = buildTonight({ site, telescope, eyepieces, forecast: result, now }, locale);
   } catch {

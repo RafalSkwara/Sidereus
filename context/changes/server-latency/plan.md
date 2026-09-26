@@ -283,11 +283,11 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Type check passes: `npx astro sync && npx astro check`
-- [x] 1.3 Unit tests pass, including the new `fetch-timeout.test.ts`: `npm test`
-- [x] 1.4 Production build succeeds: `npm run build`
-- [x] 1.5 Wrangler accepts the config: `npx wrangler deploy --dry-run`
+- [x] 1.1 Lint passes: `npm run lint` — bee5f57
+- [x] 1.2 Type check passes: `npx astro sync && npx astro check` — bee5f57
+- [x] 1.3 Unit tests pass, including the new `fetch-timeout.test.ts`: `npm test` — bee5f57
+- [x] 1.4 Production build succeeds: `npm run build` — bee5f57
+- [x] 1.5 Wrangler accepts the config: `npx wrangler deploy --dry-run` — bee5f57
 
 #### Manual
 
@@ -298,10 +298,10 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Unit tests pass, including the new deferred-write and read-timeout cases: `npm test`
-- [ ] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Unit tests pass, including the new deferred-write and read-timeout cases: `npm test`
+- [x] 2.4 Production build succeeds: `npm run build`
 
 #### Manual
 
