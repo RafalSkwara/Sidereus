@@ -638,12 +638,12 @@ The public landing page says what the product does and shows it. Every entry poi
 
 #### Automated
 
-- [x] 4.1 `npm run lint`, `npx astro check` and `npm test` pass
-- [x] 4.2 `npm run smoke` passes with the updated sign-in and dashboard expectations
-- [x] 4.3 `npm run test:e2e` still passes
+- [x] 4.1 `npm run lint`, `npx astro check` and `npm test` pass — d8a9318
+- [x] 4.2 `npm run smoke` passes with the updated sign-in and dashboard expectations — d8a9318
+- [x] 4.3 `npm run test:e2e` still passes — d8a9318
 
 #### Manual
 
-- [x] 4.4 The landing page reviewed signed out and signed in, at desktop and phone width: how-it-works strip, screenshot, CTAs
-- [x] 4.5 Sign-in lands on `/tonight`, and `/dashboard` redirects to `/tonight`
-- [x] 4.6 Roadmap Open Questions 10 and 11 read as answered with the shipped values
+- [x] 4.4 The landing page reviewed signed out and signed in, at desktop and phone width: how-it-works strip, screenshot, CTAs — d8a9318
+- [x] 4.5 Sign-in lands on `/tonight`, and `/dashboard` redirects to `/tonight` — d8a9318
+- [x] 4.6 Roadmap Open Questions 10 and 11 read as answered with the shipped values — d8a9318
