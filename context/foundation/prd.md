@@ -1,6 +1,6 @@
 ---
 project: "Sidereus"
-version: 1
+version: 2
 status: draft
 created: 2026-09-16
 context_type: greenfield
@@ -311,6 +311,19 @@ not yet observing, building toward their own first sessions.
   > resolution. Recorded as an FR with a cut-order entry rather than as a
   > priority value the schema does not have.
 
+### Interface
+- FR-025: User can switch the interface between a dark theme (the default) and a light theme; the choice is remembered on the device. Priority: must-have
+  > Added 2026-09-26 (v2) by the user after S-02 and S-04 had shipped UI, not
+  > from the shaping round: theming was never designed, and retrofitting it
+  > after every view exists costs more than building on shared colour tokens
+  > now. The dark default (NFR) and the red night mode (FR-024) are unchanged;
+  > the red mode becomes one more theme on the same tokens.
+- FR-026: User can switch the interface language between English and Polish. All product copy, including verdict reasons, object explanations and error messages, and all date and time formatting follow the selected language. Priority: must-have
+  > Added 2026-09-26 (v2) by the user, for the same reason as FR-025: every
+  > view built with hard-coded English copy is rework later. The language
+  > infrastructure is must-have; the Polish copy itself is in the cut order
+  > (position 5), so English-only can ship if time runs out.
+
 ### Cut order
 
 Recorded 2026-09-15 in shape-notes. Every FR above is must-have; this is a
@@ -324,6 +337,9 @@ checkpoint if the engine spike is not producing a sane top 5.
    no extra setup.
 4. FR-024 - red night mode. Dark theme by default (an NFR) survives; the red
    filter is the cut.
+5. FR-026 Polish copy - added 2026-09-26 (v2). The language switch and message
+   catalogue survive with English as the only language; translating every
+   string into Polish is the cut.
 
 ## Non-Functional Requirements
 

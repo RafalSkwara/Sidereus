@@ -126,7 +126,22 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      complete_onboarding: {
+        Args: {
+          aperture_mm: number;
+          bortle: number;
+          eyepieces: Json;
+          focal_length_mm: number;
+          latitude_deg: number;
+          longitude_deg: number;
+          min_altitude_deg: number;
+          site_name: string;
+          telescope_name: string;
+          time_zone: string;
+          time_zone_source: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

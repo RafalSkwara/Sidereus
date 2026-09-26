@@ -3,8 +3,8 @@ project: Sidereus
 version: 1
 status: draft
 created: 2026-09-22
-updated: 2026-09-25
-prd_version: 1
+updated: 2026-09-26
+prd_version: 2
 main_goal: speed
 top_blocker: time
 milestone_id: mvp-night-decision
@@ -14,7 +14,7 @@ milestone_status: open
 
 # Roadmap: Sidereus
 
-> Derived from `context/foundation/prd.md` (v1), `context/foundation/tech-stack.md`, `context/foundation/infrastructure.md`, `context/deployment/deploy-plan.md`, the `## Forward: technical-roadmap` block of `context/foundation/shape-notes.md`, and an auto-researched codebase baseline.
+> Derived from `context/foundation/prd.md` (v2), `context/foundation/tech-stack.md`, `context/foundation/infrastructure.md`, `context/deployment/deploy-plan.md`, the `## Forward: technical-roadmap` block of `context/foundation/shape-notes.md`, and an auto-researched codebase baseline.
 > Edit-in-place; archive when superseded.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
@@ -23,9 +23,9 @@ milestone_status: open
 **M-1: MVP night decision** — Status: open
 
 - **Intent:** A signed-in beginner gets, from their own site and kit, an honest verdict on whether tonight is worth setting up for and a ranked, explained shortlist of Messier objects to point at, with the supporting flows (onboarding, multi-night planning, observation log, account hardening) that PRD v1 declares as must-have.
-- **Source materials:** `context/foundation/prd.md` (v1)
+- **Source materials:** `context/foundation/prd.md` (v2; FR-025 and FR-026 added 2026-09-26)
 - **Done when:** every F-NN and S-NN below is `done`.
-- **Scope anchors:** FR-001 through FR-024 (all 24 must-have functional requirements), US-01 through US-04, the Business Logic invariants, and the Non-Functional Requirements they depend on.
+- **Scope anchors:** FR-001 through FR-026 (all 26 must-have functional requirements), US-01 through US-04, the Business Logic invariants, and the Non-Functional Requirements they depend on.
 
 ## Vision recap
 
@@ -43,16 +43,17 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ | -------- |
 | F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | done        |
 | F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | done        |
+| F-03 | ui-foundation                           | (foundation) every screen draws its colours from shared theme tokens and its copy from an English/Polish message catalogue; the user can switch light/dark theme and language | —             | FR-025, FR-026, NFR dark default, NFR attribution | ready    |
 | S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | done        |
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | done        |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | done        |
-| S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02    | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | blocked  |
-| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02    | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
-| S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02          | US-04, FR-016, FR-018                                                    | proposed |
+| S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02, F-03 | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | in-progress |
+| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
+| S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | proposed |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | proposed |
-| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02    | FR-019, FR-021                                                           | proposed |
-| S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | —             | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | ready    |
-| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02          | FR-024, NFR dark default                                                 | proposed |
+| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | proposed |
+| S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
+| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | proposed |
 
 ## Streams
 
@@ -60,10 +61,10 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 
 | Stream | Theme                               | Chain                                              | Note                                                                                                                    |
 | ------ | ----------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| A      | Night decision main line            | `F-01` → `S-01` → `S-02` → `S-04` → `S-03`         | The shortest chain of slices that satisfies both Primary Success Criteria; `main_goal: speed` puts everything else behind it.          |
+| A      | Night decision main line            | `F-01` → `S-01` → `S-02` → `S-04` → `F-03` → `S-03` | The shortest chain of slices that satisfies both Primary Success Criteria; `main_goal: speed` puts everything else behind it. `F-03` sits before S-03's UI phases (S-03 phase 1 is a pure data layer and may land first). |
 | B      | More than one site or telescope     | `S-05` → `S-08`                                    | Joins Stream A at `S-02`. Multi-site and multi-telescope cases; `S-05` is cut-order #1 and drops cleanly if the checkpoint fires. |
 | C      | Observation log                     | `S-06` → `S-07`                                    | Joins Stream A at `S-02`. Closes the learning loop; `S-07` carries cut-order #2 (manual entry).                          |
-| D      | Ship path and hardening tail        | `F-02` → `S-09` → `S-10`                           | `F-02` joins Stream A at `F-01`; `S-09` has no prerequisites and can run at any point; `S-10` is cut-order #4.           |
+| D      | Ship path and hardening tail        | `F-02` → `S-09` → `S-10`                           | `F-02` joins Stream A at `F-01`; `S-09` and `S-10` join Stream A at `F-03`; `S-10` is cut-order #4.           |
 
 ## Baseline
 
@@ -105,6 +106,21 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:** —
 - **Risk:** The PRD schedules CI/CD last, which with `top_blocker: time` is exactly when it would be squeezed out; doing it right after F-01 turns it into wiring only. Deferring it means every slice ships by hand. Kept minimal: no preview environments, no staging database (see Parked).
 - **Status:** done
+
+### F-03: UI foundation — themes and languages
+
+- **Outcome:** (foundation) every screen takes its colours from shared theme tokens and its user-facing copy (including verdict reasons, object explanations and error messages) from a message catalogue in English and Polish, with locale-aware dates and times; the user can switch between the dark theme (default) and a light theme, and between English and Polish, and the choice is remembered on the device. A short design pass settles the tokens and the look of the key screens first.
+- **Change ID:** ui-foundation
+- **PRD refs:** FR-025, FR-026, NFR dark by default, NFR attribution (credits translated with the rest of the copy)
+- **Unlocks:** S-03's UI phases (onboarding island, landing page) and S-05, S-06, S-07, S-08, S-09 build on tokens and message keys from the start instead of being retrofitted; S-10 becomes a third theme on the same tokens.
+- **Prerequisites:** — (retrofits the landing, auth, gear and Tonight screens that S-01, S-02 and S-04 already shipped)
+- **Parallel with:** S-03 phase 1 only (data layer, no UI)
+- **Blockers:** —
+- **Unknowns:**
+  - Is the language carried in the URL or stored as a preference? — Owner: user. Block: no (decided in `/10x-plan ui-foundation`).
+  - Visual direction for the design pass (palette, type, density) — Owner: user. Block: no (settled at the start of the change).
+- **Risk:** Added mid-milestone by the user (PRD v2) because every view built on hard-coded colours and English strings is rework later; placed right after S-04 and before S-03's UI so the largest remaining island is built once. Scope is capped at tokens, the two switches, the catalogue and retrofitting the screens that already exist, with no new product capability. Polish copy is cut-order #5 if time runs short.
+- **Status:** ready
 
 ## Slices
 
@@ -158,21 +174,21 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Outcome:** a visitor can read what the product does on the public landing page, sign up, and be walked through setting a home site (browser geolocation or place-name search, coordinates rounded to about 1 km, site named "Home" with the default minimum altitude), picking sky quality from a plain-language Bortle picker, and accepting an editable telescope and eyepiece-kit preset, arriving at Tonight in under a minute of interaction without looking up a single number.
 - **Change ID:** first-run-onboarding
 - **PRD refs:** US-01, FR-001 (sign-up is the entry), FR-004, FR-005, FR-006; NFR under-a-minute onboarding; Access Control (public surface is a static landing page only); Success Criteria Primary #1
-- **Prerequisites:** S-01, S-02
+- **Prerequisites:** S-01, S-02, F-03 (phase 1, a pure data layer, may land before F-03; phases 2-4 build UI on F-03)
 - **Parallel with:** S-04, S-05, S-06, S-08, S-10
 - **Blockers:** —
 - **Unknowns:**
   - Which telescope and eyepiece-kit presets ship, by name and values (Open Question 10)? FR-006 requires a fixed, named set. — Owner: user. Block: yes.
   - Do the geocoding endpoint's non-commercial fair-use terms allow place-name search (Open Question 12)? — Owner: user. Block: no (confirm before implementation; planning can proceed with the same-vendor assumption and a named fallback).
 - **Risk:** Carries the first Primary Success Criterion, and the end-to-end test from shape-notes (sign in, add site and gear, ranked list, with a fixture forecast) belongs here because this is the flow it exercises. Blocked until the preset list is named; naming it is a short user decision, not research.
-- **Status:** blocked
+- **Status:** in-progress
 
 ### S-05: Seven-night planner and site switching
 
 - **Outcome:** user can see the next 7 nights for a selected site, with a go / marginal / no-go verdict on nights 1-3 and moon, darkness and cloud outlook without a verdict on nights 4-7, and can switch the selected site to see the same view for it, with all times in the site's timezone and correct across the 2026-10-25 daylight-saving transition.
 - **Change ID:** seven-night-site-planner
 - **PRD refs:** US-03, FR-011, FR-012; Business Logic invariant 5 (nights 4-7 carry no verdict); NFR daylight-saving correctness; Success Criteria Secondary (multi-site comparison)
-- **Prerequisites:** S-01, S-02
+- **Prerequisites:** S-01, S-02, F-03
 - **Parallel with:** S-03, S-04, S-06, S-08, S-10
 - **Blockers:** —
 - **Unknowns:** —
@@ -184,7 +200,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Outcome:** user can mark a ranked object as observed, confirming or editing the prefilled observing night, site and telescope and giving a 1-5 rating; later rankings mildly deprioritize objects rated 3 or above, never those rated 1-2, and a logged object that still ranks is tagged "seen N times - last [date]".
 - **Change ID:** log-observation-from-ranking
 - **PRD refs:** US-04, FR-016, FR-018; Business Logic invariant 4 (an entry rated 1-2 never deprioritizes)
-- **Prerequisites:** S-02
+- **Prerequisites:** S-02, F-03
 - **Parallel with:** S-03, S-04, S-05, S-08, S-10
 - **Blockers:** —
 - **Unknowns:**
@@ -209,7 +225,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Outcome:** a user who owns two or more telescopes can pick which one the Tonight ranking is for, and the ranking names it; a user can delete any site, telescope or eyepiece at any time, and Tonight then shows an empty state linking to add one (no site or no telescope) or a ranking without eyepiece recommendations (no eyepieces).
 - **Change ID:** telescope-selector-and-empty-states
 - **PRD refs:** FR-019 (multi-telescope case), FR-021
-- **Prerequisites:** S-01, S-02
+- **Prerequisites:** S-01, S-02, F-03
 - **Parallel with:** S-03, S-04, S-05, S-06, S-07, S-10
 - **Blockers:** —
 - **Unknowns:** —
@@ -221,23 +237,23 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Outcome:** user can reset a forgotten password through the auth provider's built-in flow, stays signed in across a rolling 30 days without re-authenticating, and after signing in is taken to the page they originally requested; sign-up, sign-in and sign-out keep working as shipped.
 - **Change ID:** account-reset-and-long-session
 - **PRD refs:** FR-001, FR-002, FR-003; NFR session longevity (rolling 30 days); Access Control ("returns the user to sign-in and continues to the requested page afterwards")
-- **Prerequisites:** —
-- **Parallel with:** F-01, F-02, S-01 through S-08, S-10
+- **Prerequisites:** F-03 (its reset and sign-in screens use the tokens and message catalogue)
+- **Parallel with:** S-03 through S-08, S-10
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** FR-001 and FR-002 are already present per Baseline; this slice hardens them and adds FR-003, which is cut-order #3 and already confirmed as available without extra email setup by tech-stack.md. Independent of the engine, so it can fill any idle agent slot.
-- **Status:** ready
+- **Status:** proposed
 
 ### S-10: Red night mode
 
 - **Outcome:** user can switch the interface to a red night mode that preserves dark adaptation, on top of the dark-by-default theme that S-02 ships.
 - **Change ID:** red-night-mode
 - **PRD refs:** FR-024; NFR dark by default
-- **Prerequisites:** S-02
+- **Prerequisites:** S-02, F-03
 - **Parallel with:** S-03 through S-09
 - **Blockers:** —
 - **Unknowns:** —
-- **Risk:** Cut-order #4, last by design. Only meaningful once there is a Tonight screen to look at outdoors.
+- **Risk:** Cut-order #4, last by design. Built as a third theme on F-03's tokens, so it shrinks to a palette and a switch option. Only meaningful once there is a Tonight screen to look at outdoors.
 - **Status:** proposed
 
 ## Backlog Handoff
@@ -246,16 +262,17 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | ---------- | ----------------------------------- | ------------------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------ |
 | F-01       | verified-ephemeris-core             | Load Messier catalogue and verify ephemeris against the reference  | yes                   | Run `/10x-plan verified-ephemeris-core`; unlocks the north star · GitHub #3 |
 | F-02       | ci-test-and-deploy-gate             | CI runs unit tests and deploys on merge                            | no                    | After F-01 lands · GitHub #6 |
+| F-03       | ui-foundation                       | UI foundation: theme tokens, light/dark switch, English/Polish catalogue | yes                   | Run `/10x-plan ui-foundation` after S-03 phase 1 lands; PRD v2 FR-025, FR-026 · GitHub #30 |
 | S-01       | sites-and-gear-management           | Manage observing sites, telescopes and eyepieces                   | yes                   | Run `/10x-plan sites-and-gear-management`; parallel with F-01 · GitHub #4 |
 | S-02       | tonight-verdict-and-ranking         | Tonight view: verdict, dark window and ranked Messier objects      | no                    | North star; after F-01 and S-01 · GitHub #7 |
 | S-04       | no-go-and-no-darkness-explanations  | No-go reasons, next clear night, no-darkness season, outage state  | no                    | After S-02 · GitHub #8 |
-| S-03       | first-run-onboarding                | Landing page and first-run onboarding with presets                 | no                    | Blocked on Open Roadmap Question 10 (preset list) · GitHub #9 |
-| S-05       | seven-night-site-planner            | Seven-night view with site switching                               | no                    | Cut-order #1; after S-02 · GitHub #10 |
-| S-06       | log-observation-from-ranking        | Log an observed object and deprioritize it in later rankings       | no                    | After S-02 · GitHub #11 |
+| S-03       | first-run-onboarding                | Landing page and first-run onboarding with presets                 | no                    | Planned; phase 1 now, phases 2-4 after F-03 · GitHub #9 |
+| S-05       | seven-night-site-planner            | Seven-night view with site switching                               | no                    | Cut-order #1; after F-03 · GitHub #10 |
+| S-06       | log-observation-from-ranking        | Log an observed object and deprioritize it in later rankings       | no                    | After F-03 · GitHub #11 |
 | S-07       | observation-log-management          | Edit, delete and manually add observation log entries              | no                    | Cut-order #2 (manual entry); after S-06 · GitHub #12 |
-| S-08       | telescope-selector-and-empty-states | Telescope selector and gear-deletion empty states on Tonight       | no                    | After S-02 · GitHub #13 |
-| S-09       | account-reset-and-long-session      | Password reset, 30-day session, redirect to requested page         | yes                   | Run `/10x-plan account-reset-and-long-session`; cut-order #3 (reset half) · GitHub #5 |
-| S-10       | red-night-mode                      | Red night mode toggle                                              | no                    | Cut-order #4; after S-02 · GitHub #14 |
+| S-08       | telescope-selector-and-empty-states | Telescope selector and gear-deletion empty states on Tonight       | no                    | After F-03 · GitHub #13 |
+| S-09       | account-reset-and-long-session      | Password reset, 30-day session, redirect to requested page         | no                    | After F-03; cut-order #3 (reset half) · GitHub #5 |
+| S-10       | red-night-mode                      | Red night mode toggle                                              | no                    | Cut-order #4; after F-03 · GitHub #14 |
 ## Open Roadmap Questions
 
 PRD Open Question 11 (database and authentication choice) is resolved by `context/foundation/tech-stack.md` and is not carried forward. Questions 1-9 are copied from the PRD and keep their candidate values; the PRD sets their resolution point at the end of the engine spike, which on this roadmap is the landing of S-02.
