@@ -1,7 +1,7 @@
 ---
 change_id: server-latency
 title: Cut server wait on signed-in pages and show a loader while /tonight loads
-status: implementing
+status: implemented
 created: 2026-09-26
 updated: 2026-09-26
 archived_at: null
