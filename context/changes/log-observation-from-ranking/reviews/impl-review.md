@@ -54,7 +54,7 @@
   - Tradeoff: The "seen" rule would then exist twice, in SQL and in `seenSummaries`, and it needs a migration plus a new isolation case.
   - Confidence: MED. There is more surface for a problem that is theoretical today.
   - Blind spot: How views interact with RLS (security_invoker) is untested here.
-- **Decision**: FIXED (Fix A) — listForRanking filters rating ≥ 3, orders by night desc then messier; DB test updated
+- **Decision**: FIXED (Fix A) — listForRanking filters rating ≥ 3, orders by night desc then messier; DB test updated · ACCEPTED-AS-RULE: Filter and order every per-user list query
 
 ### F2 — no-console privacy lint does not cover the new modules
 
@@ -64,7 +64,7 @@
 - **Location**: eslint.config.js:84
 - **Detail**: `gearConfig` enforces `no-console: error` on code that handles coordinates. The new `src/lib/observations/**`, `src/pages/api/log/**` and `src/pages/log/**` all handle full `SiteRecord`s (with coordinates) but are not listed, so the privacy rule rests on comments alone.
 - **Fix**: Add those three globs, plus `src/components/tonight/**`, to `gearConfig.files`.
-- **Decision**: FIXED — observations, api/log, log pages and components/tonight added to gearConfig
+- **Decision**: FIXED — observations, api/log, log pages and components/tonight added to gearConfig · ACCEPTED-AS-RULE: Put every module that touches site coordinates under the no-console lint
 
 ### F3 — Rating group: meaning and errors are not exposed to assistive tech
 
