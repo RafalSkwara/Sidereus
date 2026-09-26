@@ -291,8 +291,8 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Manual
 
-- [ ] 1.6 On `npm run dev`, sign-in, `/gear`, `/tonight` and sign-out behave as before and the top bar shows the signed-in state
-- [ ] 1.7 After deploy, traces show per-fetch spans for `/tonight` and a signed-in `/dashboard` makes no `/auth/v1/user` call
+- [x] 1.6 On `npm run dev`, sign-in, `/gear`, `/tonight` and sign-out behave as before and the top bar shows the signed-in state
+- [x] 1.7 After deploy, traces show per-fetch spans for `/tonight` and a signed-in `/dashboard` makes no `/auth/v1/user` call
 
 ### Phase 2: Forecast off the response path
 
@@ -305,22 +305,22 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Manual
 
-- [ ] 2.5 On `npm run dev`, `/tonight` renders a verdict and a reload within the hour serves the cached copy
+- [x] 2.5 On `npm run dev`, `/tonight` renders a verdict and a reload within the hour serves the cached copy
 
 ### Phase 3: Loading feedback
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Unit tests pass, including i18n parity and the no-hardcoded-colours check: `npm test`
-- [x] 3.4 Production build succeeds: `npm run build`
-- [ ] 3.5 CI's smoke and e2e jobs pass on the PR
+- [x] 3.1 Lint passes: `npm run lint` — 26b7c04
+- [x] 3.2 Type check passes: `npx astro check` — 26b7c04
+- [x] 3.3 Unit tests pass, including i18n parity and the no-hardcoded-colours check: `npm test` — 26b7c04
+- [x] 3.4 Production build succeeds: `npm run build` — 26b7c04
+- [x] 3.5 CI's smoke and e2e jobs pass on the PR — 26b7c04
 
 #### Manual
 
-- [ ] 3.6 On Slow 4G, `/tonight` shows the shell and skeleton at once and the content replaces it without a layout jump
+- [x] 3.6 On Slow 4G, `/tonight` shows the shell and skeleton at once and the content replaces it without a layout jump — 91dc69b
 - [ ] 3.7 The skeleton is static under reduced motion and the loading label is announced
-- [ ] 3.8 Tapping PL shows the spinner, disables both segments and reloads in Polish
-- [ ] 3.9 Signed-out `/tonight` still redirects and a user without gear still sees the setup prompt
-- [ ] 3.10 With the island request blocked, the slow-load hint and Reload link appear after about 10 s
+- [x] 3.8 Tapping PL shows the spinner, disables both segments and reloads in Polish
+- [x] 3.9 Signed-out `/tonight` still redirects and a user without gear still sees the setup prompt
+- [x] 3.10 With the island request blocked, the slow-load hint and Reload link appear after about 10 s
