@@ -426,10 +426,10 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Manual
 
-- [ ] 3.5 Against local Supabase, `/log/new?object=13&night=<tonight>&site=<id>&telescope=<id>` shows "Log M13 · …" with the night, site and telescope prefilled and no rating selected
-- [ ] 3.6 Submitting without a rating shows the rating error on the client, and a night in the future is rejected with a translated message
-- [ ] 3.7 A valid save lands on `/tonight?logged=13` and a row appears in `observations` with the site and telescope names snapshotted
-- [ ] 3.8 The form reads correctly in Polish and in the light theme, and works at phone width
+- [x] 3.5 Against local Supabase, `/log/new?object=13&night=<tonight>&site=<id>&telescope=<id>` shows "Log M13 · …" with the night, site and telescope prefilled and no rating selected — 430e0b6
+- [x] 3.6 Submitting without a rating shows the rating error on the client, and a night in the future is rejected with a translated message — 430e0b6
+- [x] 3.7 A valid save lands on `/tonight?logged=13` and a row appears in `observations` with the site and telescope names snapshotted — 430e0b6
+- [x] 3.8 The form reads correctly in Polish and in the light theme, and works at phone width — 430e0b6
 
 ### Phase 4: Tonight shows and feeds the log
 
@@ -442,7 +442,7 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Manual
 
-- [ ] 4.5 On a real Tonight with a ranking, "Mark observed" on a card opens the form prefilled with tonight's night, the current site and the current telescope
-- [ ] 4.6 After saving with rating 4, Tonight shows "M… logged." and the object has moved down (or out of the top 5) with a "Seen 1 time – last …" tag where it still shows
-- [ ] 4.7 Logging another object with rating 2 shows the notice but leaves its position and tags unchanged
-- [ ] 4.8 Tag, link and notice read well in Polish and in the light theme, and at phone width
+- [x] 4.5 On a real Tonight with a ranking, "Mark observed" on a card opens the form prefilled with tonight's night, the current site and the current telescope — 52cbc87
+- [x] 4.6 After saving with rating 4, Tonight shows "M… logged." and the object has moved down (or out of the top 5) with a "Seen 1 time – last …" tag where it still shows — 52cbc87
+- [x] 4.7 Logging another object with rating 2 shows the notice but leaves its position and tags unchanged — 52cbc87
+- [x] 4.8 Tag, link and notice read well in Polish and in the light theme, and at phone width — 52cbc87
