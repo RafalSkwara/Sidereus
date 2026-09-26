@@ -12,6 +12,7 @@ import {
 } from "@/lib/gear/store";
 import { presetForAfov } from "@/lib/gear/eyepiece-presets";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { formatLocaleTag } from "@/lib/tonight/format";
 
 const SITES_FAILED: MessageKey = "errors.load.sites";
 const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
@@ -19,6 +20,18 @@ const EYEPIECES_FAILED: MessageKey = "errors.load.eyepieces";
 
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
+// Stored gear values carry at most one decimal; coordinates are stored rounded to two. No grouping, so 1000 mm stays "1000".
+const decimal = new Intl.NumberFormat(formatLocaleTag(locale), { useGrouping: false, maximumFractionDigits: 1 });
+const coordinate = new Intl.NumberFormat(formatLocaleTag(locale), {
+  useGrouping: false,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const num = (n: number) => decimal.format(n);
+// Polish uses decimal commas, so "52,23, 21,01" would be ambiguous there.
+const coordinateSeparator = locale === "pl" ? "; " : ", ";
+const coordinates = (site: { latitudeDeg: number; longitudeDeg: number }) =>
+  `${coordinate.format(site.latitudeDeg)}${coordinateSeparator}${coordinate.format(site.longitudeDeg)}`;
 const t = m.gear;
 const translate = (key: string | null) => (key ? translateKey(m, key, "errors.generic") : null);
 // `?error=` carries a message key; anything else reads as the generic message.
@@ -55,7 +68,7 @@ if (supabase) {
 
 /** f/ratio = focal length ÷ aperture, one decimal, trailing ".0" dropped (650 / 130 → "5"). */
 function focalRatio(telescope: TelescopeRecord): string {
-  return (telescope.focalLengthMm / telescope.apertureMm).toFixed(1).replace(/\.0$/, "");
+  return num(telescope.focalLengthMm / telescope.apertureMm);
 }
 
 /** The eyepiece type for a stored AFOV: the preset's short name, or "Other". */
@@ -102,11 +115,9 @@ const primaryLink =
                 >
                   <span class="block font-semibold break-words text-heading">{site.name}</span>
                   <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span>
-                      {site.latitudeDeg.toFixed(2)}, {site.longitudeDeg.toFixed(2)}
-                    </span>
-                    <span>{t.sites.bortle({ bortle: String(site.bortle) })}</span>
-                    <span>{t.sites.minAltitude({ degrees: String(site.minAltitudeDeg) })}</span>
+                    <span>{coordinates(site)}</span>
+                    <span>{t.sites.bortle({ bortle: num(site.bortle) })}</span>
+                    <span>{t.sites.minAltitude({ degrees: num(site.minAltitudeDeg) })}</span>
                     <span class="break-all">
                       {site.timeZone} ({site.timeZoneSource === "manual" ? t.sites.zonePinned : t.sites.zoneAuto})
                     </span>
@@ -142,8 +153,8 @@ const primaryLink =
                 >
                   <span class="block font-semibold break-words text-heading">{telescope.name}</span>
                   <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span>{t.telescopes.aperture({ mm: String(telescope.apertureMm) })}</span>
-                    <span>{t.telescopes.focalLength({ mm: String(telescope.focalLengthMm) })}</span>
+                    <span>{t.telescopes.aperture({ mm: num(telescope.apertureMm) })}</span>
+                    <span>{t.telescopes.focalLength({ mm: num(telescope.focalLengthMm) })}</span>
                     <span>f/{focalRatio(telescope)}</span>
                   </span>
                 </a>
@@ -177,9 +188,9 @@ const primaryLink =
                 >
                   <span class="block font-semibold break-words text-heading">{eyepiece.name}</span>
                   <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span>{t.eyepieces.focalLength({ mm: String(eyepiece.focalLengthMm) })}</span>
+                    <span>{t.eyepieces.focalLength({ mm: num(eyepiece.focalLengthMm) })}</span>
                     <span>
-                      {t.eyepieces.afov({ degrees: String(eyepiece.afovDeg), type: eyepieceType(eyepiece.afovDeg) })}
+                      {t.eyepieces.afov({ degrees: num(eyepiece.afovDeg), type: eyepieceType(eyepiece.afovDeg) })}
                     </span>
                   </span>
                 </a>

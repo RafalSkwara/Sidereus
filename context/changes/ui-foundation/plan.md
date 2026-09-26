@@ -570,26 +570,26 @@ No database changes. The onboarding site name "Dom"/"Home" affects only new rows
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, with `format.test.ts` and `build.test.ts` English expectations unchanged and the new `i18n.test.ts` green
-- [x] 3.2 `npm run lint` and `npx astro check` pass, including `pl.ts satisfies Messages`
-- [x] 3.3 `npm run test:db` passes
-- [x] 3.4 `npm run build` succeeds
-- [x] 3.5 `npm run smoke` passes
+- [x] 3.1 `npm test` passes, with `format.test.ts` and `build.test.ts` English expectations unchanged and the new `i18n.test.ts` green — 2639aba
+- [x] 3.2 `npm run lint` and `npx astro check` pass, including `pl.ts satisfies Messages` — 2639aba
+- [x] 3.3 `npm run test:db` passes — 2639aba
+- [x] 3.4 `npm run build` succeeds — 2639aba
+- [x] 3.5 `npm run smoke` passes — 2639aba
 
 #### Manual
 
-- [x] 3.6 Every screen reads exactly as before in English (spot-check Tonight in go, no-go, no-darkness and outage states, plus form validation messages on both the client and the server path)
-- [x] 3.7 A failed sign-in and a duplicate sign-up show translated generic messages, and the URL carries only a key
+- [x] 3.6 Every screen reads exactly as before in English (spot-check Tonight in go, no-go, no-darkness and outage states, plus form validation messages on both the client and the server path) — 2639aba
+- [x] 3.7 A failed sign-in and a duplicate sign-up show translated generic messages, and the URL carries only a key — 2639aba
 
 ### Phase 4: Polish translation
 
 #### Automated
 
-- [ ] 4.1 `npm test` passes, including the Polish formatter tests, the no-inherited-English test and Messier-name coverage
-- [ ] 4.2 `npm run lint` and `npx astro check` pass
-- [ ] 4.3 `npm run build` succeeds and `npm run smoke` passes
+- [x] 4.1 `npm test` passes, including the Polish formatter tests, the no-inherited-English test and Messier-name coverage
+- [x] 4.2 `npm run lint` and `npx astro check` pass
+- [x] 4.3 `npm run build` succeeds and `npm run smoke` passes
 
 #### Manual
 
-- [ ] 4.4 The user (native Polish speaker) reviews Polish copy on landing, auth, `/gear` forms and errors, and Tonight in go, no-go, no-darkness and outage states, and accepts the wording
-- [ ] 4.5 A browser set to Polish with no cookie lands in Polish; switching to EN and back persists
+- [x] 4.4 The user (native Polish speaker) reviews Polish copy on landing, auth, `/gear` forms and errors, and Tonight in go, no-go, no-darkness and outage states, and accepts the wording
+- [x] 4.5 A browser set to Polish with no cookie lands in Polish; switching to EN and back persists
