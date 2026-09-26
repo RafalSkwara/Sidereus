@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { Verdict } from "@/lib/engine";
 
-import {
+import { createFormatter, type ReasonEntry } from "./format";
+
+const {
   clearedLine,
   compassPoint,
   darkReturnText,
@@ -16,8 +18,7 @@ import {
   noDarknessCauseText,
   reasonLine,
   verdictReasonText,
-  type ReasonEntry,
-} from "./format";
+} = createFormatter("en");
 
 describe("compassPoint", () => {
   it.each([
@@ -236,5 +237,129 @@ describe("darkReturnText", () => {
 
   it("says when it does not return within the search", () => {
     expect(darkReturnText(null, "Europe/Oslo")).toBe("It does not return within the next year");
+  });
+});
+
+describe("Polish formatting (pl-PL)", () => {
+  const pl = createFormatter("pl");
+  const zone = "Europe/Warsaw";
+
+  it("formats the night as a Polish calendar date", () => {
+    expect(pl.formatNightDate("2026-10-10")).toBe("sobota, 10 października 2026");
+  });
+
+  it("uses a 24-hour clock", () => {
+    expect(pl.formatTime(new Date("2026-10-10T20:45:00Z"), zone)).toBe("22:45");
+    expect(pl.formatTime(new Date("2026-10-10T22:05:00Z"), zone)).toBe("00:05");
+  });
+
+  it("uses a comma as the decimal separator, with no grouping", () => {
+    const start = new Date("2026-10-10T18:00:00Z");
+    const entry: ReasonEntry = {
+      object: { vMag: 3.4 },
+      score: {
+        window: {
+          start,
+          end: new Date(start.getTime() + 90 * 60_000),
+          peak: { time: start, altitudeDeg: 60, azimuthDeg: 180 },
+        },
+        components: { duration: 0.8, moon: 0.92, brightness: 0.7, sky: 1 },
+      },
+      leadComponent: "brightness",
+      secondComponent: "duration",
+    };
+    expect(pl.reasonLine(entry, { apertureMm: 101.6, bortle: 6 })).toBe(
+      "Jasny obiekt dla Twoich 101,6 mm · na niebie przez 1 godz. 30 min w oknie ciemności",
+    );
+    expect(
+      pl.reasonLine({ ...entry, leadComponent: "sky", secondComponent: "moon" }, { apertureMm: 1000, bortle: 6 }),
+    ).toBe("Poradzi sobie pod Twoim niebem (6 w skali Bortle'a) · 92% bez blasku Księżyca");
+  });
+
+  it.each([
+    [(5 * 60 + 10) * 60_000, "5 godz. 10 min"],
+    [3 * 3_600_000, "3 godz."],
+    [40 * 60_000, "40 min"],
+  ])("formats a duration of %s ms as %s", (ms, text) => {
+    expect(pl.formatDuration(ms)).toBe(text);
+  });
+
+  it.each([
+    [2, "2 dni"],
+    [5, "5 dni"],
+    [22, "22 dni"],
+  ])("puts an age of %i days in the Polish plural", (days, text) => {
+    expect(pl.formatAge(days * 24 * 3_600_000)).toBe(text);
+  });
+
+  it("reads short ages with abbreviated units", () => {
+    expect(pl.formatAge(30_000)).toBe("niecałą minutę");
+    expect(pl.forecastStatusText({ kind: "fresh", ageMs: 20 * 60_000 })).toBe("Prognoza zaktualizowana 20 min temu");
+    expect(pl.forecastStatusText({ kind: "fallback", ageMs: 3 * 24 * 3_600_000 })).toBe(
+      "Serwis pogodowy nie odpowiada — pokazujemy prognozę pobraną 3 dni temu",
+    );
+  });
+
+  it.each([
+    [0, "Dziś żaden obiekt nie jest wart uwagi"],
+    [1, "1 obiekt wart dziś uwagi"],
+    [2, "2 obiekty warte dziś uwagi"],
+    [5, "5 obiektów wartych dziś uwagi"],
+    [22, "22 obiekty warte dziś uwagi"],
+  ])("counts %i cleared object(s) in the Polish plural", (count, text) => {
+    expect(pl.clearedLine(count)).toBe(text);
+  });
+
+  it.each([
+    [0, "Pn"],
+    [90, "W"],
+    [202.5, "PdPdZ"],
+    [225, "PdZ"],
+    [270, "Z"],
+    [337.5, "PnPnZ"],
+  ])("names %s° with the Polish compass point %s", (azimuth, point) => {
+    expect(pl.compassPoint(azimuth)).toBe(point);
+  });
+
+  it("reads a direction as compass point and altitude", () => {
+    expect(pl.formatDirection({ azimuthDeg: 226, altitudeDeg: 44.6 })).toBe("PdZ, 45°");
+  });
+
+  it("puts the verdict reason and the next night into Polish", () => {
+    expect(pl.verdictReasonText({ level: "go", reason: { kind: "clear-run", runHours: 4, cloudPct: 12 } })).toBe(
+      "4 godz. z rzędu z zachmurzeniem najwyżej 12% w oknie ciemności",
+    );
+    expect(
+      pl.nextNightText({
+        kind: "found",
+        date: "2026-10-12",
+        verdict: { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 96 } },
+      }),
+    ).toBe(
+      "Następna noc warta uwagi: poniedziałek, 12 października 2026 — na granicy, niebo dość czyste, ale wilgotność sięga 96%, więc spodziewaj się rosy i zamglenia",
+    );
+    expect(pl.nextNightText({ kind: "none", lastJudgedDate: "2026-10-12" })).toBe(
+      "Brak pogodnej nocy w prognozie; ostatnia sprawdzona noc: poniedziałek, 12 października 2026",
+    );
+  });
+
+  it("explains a night without darkness with degree values", () => {
+    expect(pl.noDarknessCauseText({ latitudeDeg: 69.65, minSunAltitudeDeg: 3.1, thresholdDeg: -18, bortle: 2 })).toBe(
+      "Na 70° szerokości północnej o tej porze roku Słońce przez całą noc pozostaje nad horyzontem",
+    );
+    expect(pl.noDarknessCauseText({ latitudeDeg: 60.17, minSunAltitudeDeg: -6.4, thresholdDeg: -18, bortle: 3 })).toBe(
+      "Na 60° szerokości północnej o tej porze roku Słońce schodzi tylko 6° pod horyzont, a Twoje niebo (3 w skali Bortle'a) potrzebuje 18°",
+    );
+    expect(pl.noDarknessCauseText({ latitudeDeg: -77.85, minSunAltitudeDeg: -9.2, thresholdDeg: -12, bortle: 8 })).toBe(
+      "Na 78° szerokości południowej o tej porze roku Słońce schodzi tylko 9° pod horyzont, a Twoje niebo (8 w skali Bortle'a) potrzebuje 12°",
+    );
+  });
+
+  it("names the night the dark window returns, with its times", () => {
+    const window = { start: new Date("2026-08-21T20:30:00Z"), end: new Date("2026-08-22T00:15:00Z") };
+    expect(pl.darkReturnText({ date: "2026-08-21", window }, "Europe/Oslo")).toBe(
+      "Następne okno ciemności: piątek, 21 sierpnia 2026 (22:30–02:15)",
+    );
+    expect(pl.darkReturnText(null, "Europe/Oslo")).toBe("Okno ciemności nie wróci w ciągu najbliższego roku");
   });
 });

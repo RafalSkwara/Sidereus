@@ -1,12 +1,14 @@
 /**
  * The fixed apparent-field-of-view presets a user picks from when adding an eyepiece (FR-009).
- * Anything else is entered as `other` with an explicit AFOV.
+ * Anything else is entered as `other` with an explicit AFOV. Their names live in the message
+ * catalogue under `eyepiecePresets.<key>`: `short` for the gear list, `long` (with the AFOV hint)
+ * for the form.
  */
 
 export const EYEPIECE_PRESETS = {
-  plossl: { label: "Plössl (~50°)", afovDeg: 50 },
-  wide: { label: "Wide-field (~68°)", afovDeg: 68 },
-  ultrawide: { label: "Ultra-wide (~82°)", afovDeg: 82 },
+  plossl: { afovDeg: 50 },
+  wide: { afovDeg: 68 },
+  ultrawide: { afovDeg: 82 },
 } as const;
 
 export type EyepiecePresetKey = keyof typeof EYEPIECE_PRESETS;

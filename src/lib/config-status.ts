@@ -1,20 +1,22 @@
 import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
+import type { MessageKey } from "@/i18n";
 
+/** A missing piece of configuration, shown as a banner by the layout. Texts are message keys. */
 export interface ConfigStatus {
   name: string;
   configured: boolean;
-  message: string;
+  message: MessageKey;
   docsUrl?: string;
-  docsLabel?: string;
+  docsLabel?: MessageKey;
 }
 
 export const configStatuses: ConfigStatus[] = [
   {
     name: "Supabase",
     configured: Boolean(SUPABASE_URL && SUPABASE_KEY),
-    message: "Supabase nie jest skonfigurowany — funkcje uwierzytelniania są wyłączone.",
+    message: "config.supabase.message",
     docsUrl: "https://github.com/przeprogramowani/10x-astro-starter#supabase-configuration",
-    docsLabel: "Zobacz instrukcję konfiguracji",
+    docsLabel: "config.supabase.docsLabel",
   },
 ];
 

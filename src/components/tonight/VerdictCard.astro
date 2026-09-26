@@ -1,6 +1,8 @@
 ---
 import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
+import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { getMessages } from "@/i18n";
 
 interface Props {
   level: VerdictLevel;
@@ -15,48 +17,42 @@ interface Props {
 
 const { level, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
 
-const LABELS: Record<VerdictLevel, string> = { go: "Go", marginal: "Marginal", "no-go": "No-go" };
-const TONES: Record<VerdictLevel, string> = {
-  go: "border-emerald-300/30 bg-emerald-300/10",
-  marginal: "border-amber-300/30 bg-amber-300/10",
-  "no-go": "border-red-400/30 bg-red-900/20",
-};
-const DOTS: Record<VerdictLevel, string> = {
-  go: "bg-emerald-300",
-  marginal: "bg-amber-300",
-  "no-go": "bg-red-400",
-};
+const m = getMessages(Astro.locals.locale);
+const t = m.tonight.card;
 // A saved copy or no forecast at all stands out from the routine "Forecast updated … ago".
 const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
-  fresh: "text-slate-400/80",
-  fallback: "text-amber-200/90",
-  none: "text-amber-200/90",
+  fresh: "text-muted-foreground",
+  fallback: "font-semibold text-primary-strong",
+  none: "font-semibold text-primary-strong",
 };
 ---
 
-<section aria-labelledby="verdict-heading" class:list={["rounded-2xl border p-4 sm:p-6", TONES[level]]}>
-  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">Tonight's verdict</p>
-  <h2 id="verdict-heading" class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-3xl text-amber-50">
+<section aria-labelledby="verdict-heading" class:list={["rounded-2xl border p-4 sm:p-6", VERDICT_TONES[level].card]}>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+  <h2
+    id="verdict-heading"
+    class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-display text-3xl font-semibold text-heading"
+  >
     <span class="inline-flex items-center gap-2">
-      <span class:list={["size-2.5 rounded-full", DOTS[level]]} aria-hidden="true"></span>
-      {LABELS[level]}
+      <span class:list={["size-2.5 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
+      {m.verdict.level[level]}
     </span>
-    <span class="text-lg text-slate-200/90">— {text}</span>
+    <span class="text-lg font-normal text-foreground">— {text}</span>
   </h2>
-  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-slate-200/90">{explanation.nextText}</p>}
-  {explanation?.kind === "no-darkness" && <p class="mt-3 text-slate-200/90">{explanation.causeText}</p>}
-  <p class="mt-3 text-sm text-slate-300/80">
+  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-foreground">{explanation.nextText}</p>}
+  {explanation?.kind === "no-darkness" && <p class="mt-3 text-foreground">{explanation.causeText}</p>}
+  <p class="mt-3 text-sm text-foreground">
     {darkWindow.kind === "window" ? (
       <>
-        Dark from <span class="text-amber-100">{darkWindow.start}</span> to{" "}
-        <span class="text-amber-100">{darkWindow.end}</span>
+        {t.darkFrom} <span class="font-mono text-heading">{darkWindow.start}</span> {t.darkTo}{" "}
+        <span class="font-mono text-heading">{darkWindow.end}</span>
       </>
     ) : explanation?.kind === "no-darkness" ? (
       explanation.returnText
     ) : (
-      "No dark window tonight"
+      t.noDarkWindow
     )}
-    <span class="text-slate-400/80"> · times in {timeZone}</span>
+    <span class="text-muted-foreground">{t.timesIn({ zone: timeZone })}</span>
   </p>
   <p class:list={["mt-1 text-sm", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
 </section>

@@ -1,42 +1,41 @@
 ---
 import Topbar from "@/components/Topbar.astro";
+import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { getMessages } from "@/i18n";
 
-const { user } = Astro.locals;
+const { user, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.landing;
 
 const verdicts = [
-  { label: "Go", dot: "bg-emerald-300" },
-  { label: "Marginal", dot: "bg-amber-300" },
-  { label: "No-go", dot: "bg-rose-400" },
+  { label: m.verdict.level.go, dot: VERDICT_TONES.go.dot },
+  { label: m.verdict.level.marginal, dot: VERDICT_TONES.marginal.dot },
+  { label: m.verdict.level["no-go"], dot: VERDICT_TONES["no-go"].dot },
 ];
 ---
 
-<div class="bg-cosmic relative flex min-h-screen w-full flex-col overflow-hidden text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden bg-background text-foreground">
   <!-- Star field -->
   <div
     class="pointer-events-none absolute inset-0"
-    style="background-image: radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1.5px), radial-gradient(circle, rgba(255,255,255,0.25) 1px, transparent 1px), radial-gradient(circle, rgba(253,230,138,0.3) 1px, transparent 1px); background-size: 230px 230px, 130px 130px, 310px 310px; background-position: 0 0, 50px 80px, 140px 40px;"
+    style="background-image: radial-gradient(circle, var(--star) 1px, transparent 1.5px), radial-gradient(circle, color-mix(in srgb, var(--star) 50%, transparent) 1px, transparent 1px), radial-gradient(circle, var(--star-accent) 1px, transparent 1px); background-size: 230px 230px, 130px 130px, 310px 310px; background-position: 0 0, 50px 80px, 140px 40px;"
   ></div>
   <!-- Faint glow along the horizon -->
-  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-indigo-500/10 via-indigo-500/5 to-transparent"></div>
+  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface via-surface/40 to-transparent"></div>
 
   <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
     <Topbar />
   </div>
 
   <main class="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:py-24">
-    <p class="mb-4 text-xs tracking-[0.18em] text-amber-200/70 uppercase sm:tracking-[0.3em]">
-      Messier 1 – 110 · your sky, your kit
-    </p>
-    <h1 class="mb-6 font-serif text-5xl leading-tight text-amber-50 sm:text-7xl">Sidereus</h1>
-    <p class="mb-3 font-serif text-xl text-slate-100/90 italic sm:text-2xl">Is tonight worth setting up for?</p>
-    <p class="mb-8 max-w-xl text-base leading-relaxed text-slate-300/70 sm:text-lg">
-      A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces
-      you already own.
-    </p>
+    <p class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase sm:tracking-[0.3em]">{t.kicker}</p>
+    <h1 class="mb-6 font-display text-5xl leading-tight font-semibold text-heading sm:text-7xl">{m.common.appName}</h1>
+    <p class="mb-3 font-display text-xl text-heading italic sm:text-2xl">{t.tagline}</p>
+    <p class="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{t.lead}</p>
 
-    <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-slate-300/80" aria-label="Night verdicts">
+    <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground" aria-label={t.verdictsLabel}>
       {verdicts.map((v) => (
-        <li class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+        <li class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1">
           <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
           {v.label}
         </li>
@@ -47,30 +46,31 @@ const verdicts = [
       {user ? (
         <a
           href="/dashboard"
-          class="inline-flex items-center justify-center rounded-lg bg-amber-300 px-6 py-3 font-medium text-slate-950 transition-colors hover:bg-amber-200"
+          class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Go to dashboard
+          {t.goToDashboard}
         </a>
       ) : (
         <>
           <a
             href="/auth/signin"
-            class="inline-flex items-center justify-center rounded-lg bg-amber-300 px-6 py-3 font-medium text-slate-950 transition-colors hover:bg-amber-200"
+            class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Sign in
+            {t.signIn}
           </a>
           <a
             href="/auth/signup"
-            class="inline-flex items-center justify-center rounded-lg border border-amber-200/30 px-6 py-3 font-medium text-amber-50 transition-colors hover:bg-amber-200/10"
+            class="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 font-semibold text-heading transition-colors hover:bg-accent"
           >
-            Sign up
+            {t.signUp}
           </a>
         </>
       )}
     </div>
   </main>
 
-  <footer class="relative z-10 px-4 pb-6 text-center text-xs text-slate-400/60">
-    Named after Galileo's <em>Sidereus Nuncius</em>, 1610.
+  <footer class="relative z-10 px-4 pb-6 text-center text-xs text-faint">
+    {t.footerPrefix} <em>{t.footerWork}</em>
+    {t.footerSuffix}
   </footer>
 </div>

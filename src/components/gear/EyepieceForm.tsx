@@ -3,8 +3,10 @@ import { Eye, Save } from "lucide-react";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { getMessages, translateKey, type Messages } from "@/i18n";
+import type { Locale } from "@/lib/preferences";
 import { eyepieceInputSchema } from "@/lib/gear/schemas";
-import { AFOV_PRESET_OPTIONS, EYEPIECE_PRESETS, presetForAfov, type AfovPreset } from "@/lib/gear/eyepiece-presets";
+import { AFOV_PRESET_OPTIONS, presetForAfov, type AfovPreset } from "@/lib/gear/eyepiece-presets";
 import { cn } from "@/lib/utils";
 
 /** Stored values used to prefill the edit form. Only the AFOV is stored; the type is derived from it. */
@@ -17,7 +19,9 @@ export interface EyepieceFormValues {
 interface Props {
   action: string;
   initial?: EyepieceFormValues;
+  /** A message key from `?error=`; translated here, unknown values read as the generic message. */
   serverError?: string | null;
+  locale: Locale;
 }
 
 type FieldName = "name" | "focalLengthMm" | "afovPreset" | "afovDeg";
@@ -26,18 +30,20 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 const FIELD_NAMES: readonly string[] = ["name", "focalLengthMm", "afovPreset", "afovDeg"];
 
 const selectBase =
-  "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:ring-2 focus:outline-none transition-colors [&>option]:bg-slate-900";
+  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
 
-function presetLabel(option: AfovPreset): string {
-  return option === "other" ? "Other (enter the AFOV)" : EYEPIECE_PRESETS[option].label;
+function presetLabel(presets: Messages["eyepiecePresets"], option: AfovPreset): string {
+  return option === "other" ? presets.other : presets[option].long;
 }
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-300">{message}</p>;
+  return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
-export default function EyepieceForm({ action, initial, serverError }: Props) {
+export default function EyepieceForm({ action, initial, serverError, locale }: Props) {
+  const m = getMessages(locale);
+  const t = m.eyepieceForm;
   const initialPreset = initial ? presetForAfov(initial.afovDeg) : "";
   const [name, setName] = useState(initial?.name ?? "");
   const [focalLength, setFocalLength] = useState(initial ? String(initial.focalLengthMm) : "");
@@ -60,7 +66,7 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
       for (const issue of result.error.issues) {
         const field = issue.path[0];
         if (typeof field === "string" && FIELD_NAMES.includes(field)) {
-          next[field as FieldName] ??= issue.message;
+          next[field as FieldName] ??= translateKey(m, issue.message, "errors.checkFields");
         }
       }
     }
@@ -82,20 +88,20 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
     <form method="POST" action={action} className="space-y-4" onSubmit={handleSubmit} noValidate>
       <FormField
         id="name"
-        label="Name"
+        label={m.common.name}
         value={name}
         onChange={(v) => {
           setName(v);
           clearError("name");
         }}
-        placeholder="25 mm Plössl"
+        placeholder={t.namePlaceholder}
         error={errors.name}
         icon={<Eye className="size-4" />}
       />
 
       <FormField
         id="focalLengthMm"
-        label="Focal length (mm)"
+        label={m.common.focalLengthMm}
         type="number"
         step={0.1}
         min={2}
@@ -111,8 +117,8 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
       />
 
       <div>
-        <label htmlFor="afovPreset" className="mb-1 block text-sm text-blue-100/80">
-          Eyepiece type
+        <label htmlFor="afovPreset" className="text-heading mb-1 block text-sm font-semibold">
+          {t.type}
         </label>
         <select
           id="afovPreset"
@@ -125,31 +131,31 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
           }}
           className={cn(
             selectBase,
-            errors.afovPreset ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
+            errors.afovPreset
+              ? "border-destructive focus-visible:ring-destructive/20"
+              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
           )}
         >
           <option value="" disabled>
-            Choose a type
+            {t.chooseType}
           </option>
           {AFOV_PRESET_OPTIONS.map((option) => (
             <option key={option} value={option}>
-              {presetLabel(option)}
+              {presetLabel(m.eyepiecePresets, option)}
             </option>
           ))}
         </select>
         {errors.afovPreset ? (
           <FieldError message={errors.afovPreset} />
         ) : (
-          <p className="mt-1 text-xs text-blue-100/50">
-            The type sets the apparent field of view. Check the eyepiece barrel or its box if unsure.
-          </p>
+          <p className="text-muted-foreground mt-1 text-xs">{t.typeHint}</p>
         )}
       </div>
 
       {isOther ? (
         <FormField
           id="afovDeg"
-          label="Apparent field of view (°)"
+          label={t.afov}
           type="number"
           step={1}
           min={30}
@@ -165,10 +171,10 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
         />
       ) : null}
 
-      <ServerError message={serverError} />
+      <ServerError message={serverError ? translateKey(m, serverError, "errors.generic") : null} />
 
-      <SubmitButton pendingText="Saving..." icon={<Save className="size-4" />}>
-        Save eyepiece
+      <SubmitButton pendingText={m.common.saving} icon={<Save className="size-4" />}>
+        {t.submit}
       </SubmitButton>
     </form>
   );

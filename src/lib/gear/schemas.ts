@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { MessageKey } from "@/i18n";
 import { DEFAULT_MIN_ALTITUDE_DEG } from "@/lib/engine/parameters";
 import { roundCoordinate } from "./coordinates";
 import { AFOV_PRESET_OPTIONS, EYEPIECE_PRESETS } from "./eyepiece-presets";
@@ -9,11 +10,12 @@ import { isValidTimeZone } from "./zones";
  * API routes. Input is FormData-shaped (strings), coerced to typed values. Ranges match the CHECK
  * constraints in `supabase/migrations/20260924120000_sites_and_gear.sql`.
  *
- * Every error message is a static English string that never contains the submitted value: the
- * routes put messages into a redirect URL, and coordinates must not end up in URLs or logs.
+ * Every error message is a message key (`@/i18n`, e.g. "errors.site.latitudeRange"), never a
+ * sentence and never the submitted value: the routes put it into a redirect URL, coordinates must
+ * not end up in URLs or logs, and the islands and pages translate it for the viewer's locale.
  *
- * Island-safe: imports only zod, its gear siblings and `@/lib/engine/parameters` (never the engine
- * barrel, never the server-only `timezone.ts`).
+ * Island-safe: imports only zod, its gear siblings, `@/lib/engine/parameters` (never the engine
+ * barrel, never the server-only `timezone.ts`) and the catalogue's key type.
  */
 
 /** An empty form field counts as missing, not as 0 (which `Number("")` would give). */
@@ -21,7 +23,7 @@ function emptyToUndefined(value: unknown): unknown {
   return typeof value === "string" && value.trim() === "" ? undefined : value;
 }
 
-function boundedNumber(min: number, max: number, message: string, options: { integer?: boolean } = {}) {
+function boundedNumber(min: number, max: number, message: MessageKey, options: { integer?: boolean } = {}) {
   const base = z.coerce.number({ error: message });
   const checked = (options.integer ? base.int({ error: message }) : base)
     .min(min, { error: message })
@@ -30,10 +32,10 @@ function boundedNumber(min: number, max: number, message: string, options: { int
 }
 
 const nameField = z
-  .string({ error: "Enter a name." })
+  .string({ error: "errors.name.required" satisfies MessageKey })
   .trim()
-  .min(1, { error: "Enter a name." })
-  .max(60, { error: "Keep the name to 60 characters or fewer." });
+  .min(1, { error: "errors.name.required" satisfies MessageKey })
+  .max(60, { error: "errors.name.tooLong" satisfies MessageKey });
 
 // sites -----------------------------------------------------------------------------------------
 
@@ -42,23 +44,27 @@ export const TIME_ZONE_MODES = ["auto", "manual"] as const;
 export const siteInputSchema = z
   .object({
     name: nameField,
-    latitudeDeg: boundedNumber(-90, 90, "Enter a latitude between -90 and 90 degrees.").transform(roundCoordinate),
-    longitudeDeg: boundedNumber(-180, 180, "Enter a longitude between -180 and 180 degrees.").transform(
-      roundCoordinate,
-    ),
-    bortle: boundedNumber(1, 9, "Choose a Bortle class from 1 to 9.", { integer: true }),
-    minAltitudeDeg: boundedNumber(0, 60, "Enter a minimum altitude as a whole number from 0 to 60 degrees.", {
+    latitudeDeg: boundedNumber(-90, 90, "errors.site.latitudeRange").transform(roundCoordinate),
+    longitudeDeg: boundedNumber(-180, 180, "errors.site.longitudeRange").transform(roundCoordinate),
+    bortle: boundedNumber(1, 9, "errors.site.bortleRange", { integer: true }),
+    minAltitudeDeg: boundedNumber(0, 60, "errors.site.minAltitudeRange", {
       integer: true,
     }),
-    timeZoneMode: z.enum(TIME_ZONE_MODES, { error: "Choose how the time zone is set." }),
-    timeZone: z.preprocess(emptyToUndefined, z.string({ error: "Choose a valid time zone." }).trim().optional()),
+    timeZoneMode: z.enum(TIME_ZONE_MODES, { error: "errors.site.timeZoneMode" satisfies MessageKey }),
+    timeZone: z.preprocess(
+      emptyToUndefined,
+      z
+        .string({ error: "errors.site.timeZone" satisfies MessageKey })
+        .trim()
+        .optional(),
+    ),
   })
   .transform((site, ctx) => {
     if (site.timeZoneMode === "auto") {
       return { ...site, timeZone: undefined };
     }
     if (site.timeZone === undefined || !isValidTimeZone(site.timeZone)) {
-      ctx.addIssue({ code: "custom", path: ["timeZone"], message: "Choose a valid time zone, e.g. Europe/Warsaw." });
+      ctx.addIssue({ code: "custom", path: ["timeZone"], message: "errors.site.timeZoneExample" satisfies MessageKey });
       return z.NEVER;
     }
     return site;
@@ -76,22 +82,22 @@ export const SITE_FORM_DEFAULTS = {
 
 export const telescopeInputSchema = z.object({
   name: nameField,
-  apertureMm: boundedNumber(20, 1000, "Enter an aperture between 20 and 1000 mm."),
-  focalLengthMm: boundedNumber(100, 5000, "Enter a focal length between 100 and 5000 mm."),
+  apertureMm: boundedNumber(20, 1000, "errors.telescope.apertureRange"),
+  focalLengthMm: boundedNumber(100, 5000, "errors.telescope.focalLengthRange"),
 });
 
 export type TelescopeInput = z.output<typeof telescopeInputSchema>;
 
 // eyepieces -------------------------------------------------------------------------------------
 
-const AFOV_MESSAGE = "Enter an apparent field of view as a whole number from 30 to 120°.";
+const AFOV_MESSAGE: MessageKey = "errors.eyepiece.afovRange";
 const afovDegField = boundedNumber(30, 120, AFOV_MESSAGE, { integer: true });
 
 export const eyepieceInputSchema = z
   .object({
     name: nameField,
-    focalLengthMm: boundedNumber(2, 60, "Enter a focal length between 2 and 60 mm."),
-    afovPreset: z.enum(AFOV_PRESET_OPTIONS, { error: "Choose an eyepiece type." }),
+    focalLengthMm: boundedNumber(2, 60, "errors.eyepiece.focalLengthRange"),
+    afovPreset: z.enum(AFOV_PRESET_OPTIONS, { error: "errors.eyepiece.type" satisfies MessageKey }),
     // Only read for `other`; a stale value left in the form for a preset is ignored, not rejected.
     afovDeg: z.unknown().optional(),
   })

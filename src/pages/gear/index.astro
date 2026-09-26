@@ -10,17 +10,38 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
-import { EYEPIECE_PRESETS, presetForAfov } from "@/lib/gear/eyepiece-presets";
+import { presetForAfov } from "@/lib/gear/eyepiece-presets";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { formatLocaleTag } from "@/lib/tonight/format";
 
-const SITES_FAILED = "Could not load your sites. Please try again.";
-const TELESCOPES_FAILED = "Could not load your telescopes. Please try again.";
-const EYEPIECES_FAILED = "Could not load your eyepieces. Please try again.";
+const SITES_FAILED: MessageKey = "errors.load.sites";
+const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
+const EYEPIECES_FAILED: MessageKey = "errors.load.eyepieces";
 
-const error = Astro.url.searchParams.get("error");
-const { supabase } = Astro.locals;
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+// Stored gear values carry at most one decimal; coordinates are stored rounded to two. No grouping, so 1000 mm stays "1000".
+const decimal = new Intl.NumberFormat(formatLocaleTag(locale), { useGrouping: false, maximumFractionDigits: 1 });
+const coordinate = new Intl.NumberFormat(formatLocaleTag(locale), {
+  useGrouping: false,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const num = (n: number) => decimal.format(n);
+// Polish uses decimal commas, so "52,23, 21,01" would be ambiguous there.
+const coordinateSeparator = locale === "pl" ? "; " : ", ";
+const coordinates = (site: { latitudeDeg: number; longitudeDeg: number }) =>
+  `${coordinate.format(site.latitudeDeg)}${coordinateSeparator}${coordinate.format(site.longitudeDeg)}`;
+const t = m.gear;
+const translate = (key: string | null) => (key ? translateKey(m, key, "errors.generic") : null);
+// `?error=` carries a message key; anything else reads as the generic message.
+const error = translate(Astro.url.searchParams.get("error"));
 
 /** Loads one section; a failure only affects that section, never the whole hub. */
-async function load<T>(list: () => Promise<T[]>, failed: string): Promise<{ items: T[]; error: string | null }> {
+async function load<T>(
+  list: () => Promise<T[]>,
+  failed: MessageKey,
+): Promise<{ items: T[]; error: MessageKey | null }> {
   try {
     return { items: await list(), error: null };
   } catch {
@@ -31,9 +52,9 @@ async function load<T>(list: () => Promise<T[]>, failed: string): Promise<{ item
 let sites: SiteRecord[] = [];
 let telescopes: TelescopeRecord[] = [];
 let eyepieces: EyepieceRecord[] = [];
-let sitesError: string | null = null;
-let telescopesError: string | null = null;
-let eyepiecesError: string | null = null;
+let sitesError: MessageKey | null = null;
+let telescopesError: MessageKey | null = null;
+let eyepiecesError: MessageKey | null = null;
 if (supabase) {
   const [siteResult, telescopeResult, eyepieceResult] = await Promise.all([
     load(() => siteStore.list(supabase), SITES_FAILED),
@@ -47,22 +68,22 @@ if (supabase) {
 
 /** f/ratio = focal length ÷ aperture, one decimal, trailing ".0" dropped (650 / 130 → "5"). */
 function focalRatio(telescope: TelescopeRecord): string {
-  return (telescope.focalLengthMm / telescope.apertureMm).toFixed(1).replace(/\.0$/, "");
+  return num(telescope.focalLengthMm / telescope.apertureMm);
 }
 
-/** The eyepiece type for a stored AFOV: the preset name without its "(~50°)" hint, or "Other". */
+/** The eyepiece type for a stored AFOV: the preset's short name, or "Other". */
 function eyepieceType(afovDeg: number): string {
   const preset = presetForAfov(afovDeg);
-  return preset === "other" ? "Other" : EYEPIECE_PRESETS[preset].label.replace(/\s*\(.*\)$/, "");
+  return preset === "other" ? t.eyepieces.otherType : m.eyepiecePresets[preset].short;
 }
 
 const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200";
+  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
 
-<GearShell title="My gear">
-  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">Your sky, your kit</p>
-  <h1 class="mb-6 font-serif text-4xl text-amber-50 sm:text-5xl">My gear</h1>
+<GearShell title={t.title}>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+  <h1 class="mb-6 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
 
   <div class="mb-6 empty:hidden">
     <ServerError message={error} />
@@ -70,39 +91,35 @@ const primaryLink =
 
   {supabase ? (
     <div class="space-y-6">
-      <section aria-labelledby="sites-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="sites-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="sites-heading" class="font-serif text-2xl text-amber-50">
-            Sites
+          <h2 id="sites-heading" class="font-display text-2xl font-semibold text-heading">
+            {t.sites.heading}
           </h2>
           <a href="/gear/sites/new" class:list={[primaryLink]}>
-            Add site
+            {t.sites.add}
           </a>
         </div>
 
         {sitesError ? (
-          <ServerError message={sitesError} />
+          <ServerError message={translate(sitesError)} />
         ) : sites.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
-            No sites yet. Add the place you observe from, so tonight's verdict uses your sky.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.sites.empty}</p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {sites.map((site) => (
               <li>
                 <a
                   href={`/gear/sites/${site.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{site.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
-                    <span>
-                      {site.latitudeDeg.toFixed(2)}, {site.longitudeDeg.toFixed(2)}
-                    </span>
-                    <span>Bortle {site.bortle}</span>
-                    <span>Min {site.minAltitudeDeg}°</span>
+                  <span class="block font-semibold break-words text-heading">{site.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span>{coordinates(site)}</span>
+                    <span>{t.sites.bortle({ bortle: num(site.bortle) })}</span>
+                    <span>{t.sites.minAltitude({ degrees: num(site.minAltitudeDeg) })}</span>
                     <span class="break-all">
-                      {site.timeZone} ({site.timeZoneSource === "manual" ? "pinned" : "auto"})
+                      {site.timeZone} ({site.timeZoneSource === "manual" ? t.sites.zonePinned : t.sites.zoneAuto})
                     </span>
                   </span>
                 </a>
@@ -112,34 +129,32 @@ const primaryLink =
         )}
       </section>
 
-      <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="telescopes-heading" class="font-serif text-2xl text-amber-50">
-            Telescopes
+          <h2 id="telescopes-heading" class="font-display text-2xl font-semibold text-heading">
+            {t.telescopes.heading}
           </h2>
           <a href="/gear/telescopes/new" class:list={[primaryLink]}>
-            Add telescope
+            {t.telescopes.add}
           </a>
         </div>
 
         {telescopesError ? (
-          <ServerError message={telescopesError} />
+          <ServerError message={translate(telescopesError)} />
         ) : telescopes.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
-            No telescopes yet. Add yours, so the suggested magnifications fit your scope.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.telescopes.empty}</p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {telescopes.map((telescope) => (
               <li>
                 <a
                   href={`/gear/telescopes/${telescope.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{telescope.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
-                    <span>{telescope.apertureMm} mm aperture</span>
-                    <span>{telescope.focalLengthMm} mm focal length</span>
+                  <span class="block font-semibold break-words text-heading">{telescope.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span>{t.telescopes.aperture({ mm: num(telescope.apertureMm) })}</span>
+                    <span>{t.telescopes.focalLength({ mm: num(telescope.focalLengthMm) })}</span>
                     <span>f/{focalRatio(telescope)}</span>
                   </span>
                 </a>
@@ -149,35 +164,33 @@ const primaryLink =
         )}
       </section>
 
-      <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="eyepieces-heading" class="font-serif text-2xl text-amber-50">
-            Eyepieces
+          <h2 id="eyepieces-heading" class="font-display text-2xl font-semibold text-heading">
+            {t.eyepieces.heading}
           </h2>
           <a href="/gear/eyepieces/new" class:list={[primaryLink]}>
-            Add eyepiece
+            {t.eyepieces.add}
           </a>
         </div>
 
         {eyepiecesError ? (
-          <ServerError message={eyepiecesError} />
+          <ServerError message={translate(eyepiecesError)} />
         ) : eyepieces.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
-            No eyepieces yet. Add the ones in your case, so each object gets a pair you actually own.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.eyepieces.empty}</p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {eyepieces.map((eyepiece) => (
               <li>
                 <a
                   href={`/gear/eyepieces/${eyepiece.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{eyepiece.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
-                    <span>{eyepiece.focalLengthMm} mm</span>
+                  <span class="block font-semibold break-words text-heading">{eyepiece.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span>{t.eyepieces.focalLength({ mm: num(eyepiece.focalLengthMm) })}</span>
                     <span>
-                      {eyepiece.afovDeg}° AFOV · {eyepieceType(eyepiece.afovDeg)}
+                      {t.eyepieces.afov({ degrees: num(eyepiece.afovDeg), type: eyepieceType(eyepiece.afovDeg) })}
                     </span>
                   </span>
                 </a>

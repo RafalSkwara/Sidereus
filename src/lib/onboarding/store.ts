@@ -1,3 +1,4 @@
+import type { MessageKey } from "@/i18n";
 import { resolveTimeZone, type TimeZoneResolution } from "@/lib/gear/timezone";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { OnboardingInput } from "./schemas";
@@ -9,16 +10,21 @@ import type { OnboardingInput } from "./schemas";
  *
  * Server-only (imports `timezone.ts`). Follows `@/lib/gear/store.ts`'s privacy rules: database
  * error text can echo submitted values, coordinates included, so it never leaves this module.
- * Failures return a fixed, value-free message, reads throw a fixed-message `Error`, and this module
- * never logs.
+ * Failures return a fixed, value-free message key (`@/i18n`), reads throw an `Error` whose message is
+ * such a key, and this module never logs.
  */
 
 export type OnboardingResult =
-  { ok: true } | { ok: false; reason: "alreadyOnboarded" } | { ok: false; reason: "failed"; message: string };
+  { ok: true } | { ok: false; reason: "alreadyOnboarded" } | { ok: false; reason: "failed"; message: MessageKey };
 
-const SAVE_FAILED = "Could not save your setup. Please try again.";
-const OUT_OF_RANGE = "Some values are out of the allowed range.";
-const LOAD_FAILED = "Could not load your setup. Please try again.";
+export interface OnboardingOptions {
+  /** The site's name in the user's language (`onboarding.homeSiteName`, FR-004). */
+  siteName: string;
+}
+
+const SAVE_FAILED: MessageKey = "errors.save.setup";
+const OUT_OF_RANGE: MessageKey = "errors.outOfRange";
+const LOAD_FAILED: MessageKey = "errors.load.setup";
 
 /** Postgres `raise_exception`, raised by `complete_onboarding` with the message below. */
 const RAISE_EXCEPTION = "P0001";
@@ -26,13 +32,14 @@ const ALREADY_ONBOARDED = "already_onboarded";
 /** Postgres `check_violation`. */
 const CHECK_VIOLATION = "23514";
 
-function failed(message: string): OnboardingResult {
+function failed(message: MessageKey): OnboardingResult {
   return { ok: false, reason: "failed", message };
 }
 
 export async function completeOnboarding(
   client: TypedSupabaseClient,
   input: OnboardingInput,
+  { siteName }: OnboardingOptions,
 ): Promise<OnboardingResult> {
   const { site, telescope, eyepieces } = input;
   let zone: TimeZoneResolution;
@@ -43,7 +50,7 @@ export async function completeOnboarding(
   }
 
   const { error } = await client.rpc("complete_onboarding", {
-    site_name: site.name,
+    site_name: siteName,
     latitude_deg: site.latitudeDeg,
     longitude_deg: site.longitudeDeg,
     bortle: site.bortle,

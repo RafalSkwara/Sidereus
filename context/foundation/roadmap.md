@@ -43,7 +43,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------ | -------- |
 | F-01 | verified-ephemeris-core                 | (foundation) Messier catalogue loaded and moon, dark-window and altitude results verified against the planetarium reference under a fixture test harness | —             | NFR determinism, NFR ephemeris tolerance, Success Criteria Primary #2, Open Question 9 | done        |
 | F-02 | ci-test-and-deploy-gate                 | (foundation) every merge to the default branch runs the checks and unit tests, then deploys; a failing check blocks the deploy | F-01          | tech-stack.md `ci_default_flow`, shape-notes Forward: technical-roadmap  | done        |
-| F-03 | ui-foundation                           | (foundation) every screen draws its colours from shared theme tokens and its copy from an English/Polish message catalogue; the user can switch light/dark theme and language | —             | FR-025, FR-026, NFR dark default, NFR attribution | ready    |
+| F-03 | ui-foundation                           | (foundation) every screen draws its colours from shared theme tokens and its copy from an English/Polish message catalogue; the user can switch light/dark theme and language | —             | FR-025, FR-026, NFR dark default, NFR attribution | in-progress |
 | S-01 | sites-and-gear-management               | manage private observing sites, telescopes and eyepieces, with coordinates rounded and isolation verified outside the UI | —             | FR-007, FR-008, FR-009, NFR isolation, NFR coordinate privacy            | done        |
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | done        |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | done        |
@@ -120,7 +120,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Is the language carried in the URL or stored as a preference? — Owner: user. Block: no (decided in `/10x-plan ui-foundation`).
   - Visual direction for the design pass (palette, type, density) — Owner: user. Block: no (settled at the start of the change).
 - **Risk:** Added mid-milestone by the user (PRD v2) because every view built on hard-coded colours and English strings is rework later; placed right after S-04 and before S-03's UI so the largest remaining island is built once. Scope is capped at tokens, the two switches, the catalogue and retrofitting the screens that already exist, with no new product capability. Polish copy is cut-order #5 if time runs short.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Slices
 

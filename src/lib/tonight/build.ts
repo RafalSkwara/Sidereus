@@ -15,19 +15,9 @@ import {
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 
-import {
-  clearedLine,
-  darkReturnText,
-  forecastStatusText,
-  formatDirection,
-  formatNightDate,
-  formatTime,
-  nextNightText,
-  noDarknessCauseText,
-  reasonLine,
-  verdictReasonText,
-  type ForecastStatus,
-} from "./format";
+import type { Locale } from "@/lib/preferences";
+
+import { createFormatter, type ForecastStatus } from "./format";
 
 /**
  * Composes the Tonight view: the stored gear, the forecast and `now` in, a view model the page
@@ -62,6 +52,9 @@ export type TonightPair =
 export interface TonightEntry {
   /** "M31" */
   id: string;
+  /** 31: the key for a localised common name (`@/lib/catalogue/common-names`). */
+  messier: number;
+  /** The catalogue's (English) common name; the page localises it by `messier`. */
   commonName: string | null;
   /** IAU 3-letter abbreviation. */
   constellation: string;
@@ -149,8 +142,21 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
   return forecast.fallback ? { kind: "fallback", ageMs } : { kind: "fresh", ageMs };
 }
 
-export function buildTonight(input: TonightInput): TonightView {
+/** Every text field of the view is worded for `locale`; the rest of the view does not depend on it. */
+export function buildTonight(input: TonightInput, locale: Locale): TonightView {
   const { site, telescope, eyepieces, forecast, now, catalogue = MESSIER } = input;
+  const {
+    clearedLine,
+    darkReturnText,
+    forecastStatusText,
+    formatDirection,
+    formatNightDate,
+    formatTime,
+    nextNightText,
+    noDarknessCauseText,
+    reasonLine,
+    verdictReasonText,
+  } = createFormatter(locale);
   const { timeZone } = site;
   const engineSite = toEngineSite(site);
   const hourly = forecast?.forecast ?? null;
@@ -197,6 +203,7 @@ export function buildTonight(input: TonightInput): TonightView {
       clearedText: clearedLine(ranked.clearedCount),
       entries: ranked.entries.map((entry) => ({
         id: entry.object.id,
+        messier: entry.object.messier,
         commonName: entry.object.commonName,
         constellation: entry.object.constellation,
         windowStart: formatTime(entry.score.window.start, timeZone),

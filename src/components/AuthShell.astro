@@ -1,0 +1,28 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+
+interface Props {
+  /** Card heading; also the document title. */
+  title: string;
+  /** Centre the card's text (message pages such as confirm-email); forms stay left-aligned. */
+  centered?: boolean;
+}
+
+const { title, centered = false } = Astro.props;
+---
+
+<Layout title={title}>
+  <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
+    <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+      <Topbar />
+    </div>
+    <main class="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+      <div class:list={["w-full max-w-sm rounded-2xl border border-border bg-surface p-8", centered && "text-center"]}>
+        <slot name="icon" />
+        <h1 class="mb-6 text-center font-display text-3xl font-semibold text-heading">{title}</h1>
+        <slot />
+      </div>
+    </main>
+  </div>
+</Layout>

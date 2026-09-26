@@ -4,13 +4,15 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import TelescopeForm from "@/components/gear/TelescopeForm";
 import DeleteButton from "@/components/gear/DeleteButton";
 import { ServerError } from "@/components/forms/ServerError";
+import { getMessages } from "@/i18n";
 import { telescopeStore, type TelescopeRecord } from "@/lib/gear/store";
 
-const LOAD_FAILED = "Could not load the telescope. Please try again.";
-
 const id = Astro.params.id ?? "";
+// `?error=` carries a message key; the form translates it.
 const error = Astro.url.searchParams.get("error");
-const { supabase } = Astro.locals;
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.gear.telescopes;
 
 let telescope: TelescopeRecord | null = null;
 let loadError: string | null = null;
@@ -18,7 +20,7 @@ if (supabase) {
   try {
     telescope = await telescopeStore.get(supabase, id);
   } catch {
-    loadError = LOAD_FAILED;
+    loadError = m.errors.load.telescope;
   }
   if (!telescope && !loadError) {
     Astro.response.status = 404;
@@ -26,9 +28,9 @@ if (supabase) {
 }
 ---
 
-<GearShell title={telescope ? telescope.name : "Telescope"}>
-  <a href="/gear" class="mb-4 inline-block text-sm text-amber-200/80 hover:text-amber-50">
-    ← My gear
+<GearShell title={telescope ? telescope.name : t.fallbackTitle}>
+  <a href="/gear" class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
+    {m.gear.back}
   </a>
   {!supabase ? (
     <DatabaseMissing />
@@ -36,8 +38,8 @@ if (supabase) {
     <ServerError message={loadError} />
   ) : telescope ? (
     <>
-      <h1 class="mb-6 font-serif text-3xl break-words text-amber-50 sm:text-4xl">Edit telescope</h1>
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <h1 class="mb-6 font-display text-3xl font-semibold break-words text-heading sm:text-4xl">{t.editTitle}</h1>
+      <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <TelescopeForm
           action={`/api/gear/telescopes/${encodeURIComponent(telescope.id)}`}
           initial={{
@@ -46,24 +48,25 @@ if (supabase) {
             focalLengthMm: telescope.focalLengthMm,
           }}
           serverError={error}
+          locale={locale}
           client:load
         />
       </div>
       <div class="mt-6">
         <DeleteButton
           action={`/api/gear/telescopes/${encodeURIComponent(telescope.id)}/delete`}
-          label="Delete telescope"
-          confirmMessage="Delete this telescope? This cannot be undone."
+          label={t.delete}
+          confirmMessage={t.confirmDelete}
           client:load
         />
       </div>
     </>
   ) : (
-    <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-      <h1 class="font-serif text-3xl text-amber-50">Not found</h1>
-      <p class="mt-2 text-sm text-slate-300/80">This telescope does not exist, or it is not yours.</p>
-      <a href="/gear" class="mt-4 inline-block text-sm text-amber-200 hover:text-amber-50">
-        Back to My gear
+    <div class="rounded-2xl border border-border bg-surface p-6">
+      <h1 class="font-display text-3xl font-semibold text-heading">{m.gear.notFound}</h1>
+      <p class="mt-2 text-sm text-muted-foreground">{t.notFoundText}</p>
+      <a href="/gear" class="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+        {m.gear.backToGear}
       </a>
     </div>
   )}

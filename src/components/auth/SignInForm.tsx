@@ -4,12 +4,18 @@ import { FormField } from "@/components/forms/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ServerError } from "@/components/forms/ServerError";
+import { getMessages, translateKey } from "@/i18n";
+import type { Locale } from "@/lib/preferences";
 
 interface Props {
+  /** A message key from `?error=`; translated here, unknown values read as the generic auth message. */
   serverError?: string | null;
+  locale: Locale;
 }
 
-export default function SignInForm({ serverError }: Props) {
+export default function SignInForm({ serverError, locale }: Props) {
+  const m = getMessages(locale);
+  const v = m.auth.validation;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,12 +24,12 @@ export default function SignInForm({ serverError }: Props) {
   function validate() {
     const next: typeof errors = {};
     if (!email.trim()) {
-      next.email = "Email is required";
+      next.email = v.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = "Enter a valid email address";
+      next.email = v.emailInvalid;
     }
     if (!password) {
-      next.password = "Password is required";
+      next.password = v.passwordRequired;
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -44,27 +50,27 @@ export default function SignInForm({ serverError }: Props) {
       <FormField
         id="email"
         type="email"
-        label="Email"
+        label={m.auth.email}
         value={email}
         onChange={(v) => {
           setEmail(v);
           clearError("email");
         }}
-        placeholder="you@example.com"
+        placeholder={m.auth.emailPlaceholder}
         error={errors.email}
         icon={<Mail className="size-4" />}
       />
 
       <FormField
         id="password"
-        label="Password"
+        label={m.auth.password}
         type={showPassword ? "text" : "password"}
         value={password}
         onChange={(v) => {
           setPassword(v);
           clearError("password");
         }}
-        placeholder="Your password"
+        placeholder={m.auth.signIn.passwordPlaceholder}
         error={errors.password}
         icon={<Lock className="size-4" />}
         endContent={
@@ -73,14 +79,16 @@ export default function SignInForm({ serverError }: Props) {
             onToggle={() => {
               setShowPassword(!showPassword);
             }}
+            showLabel={m.auth.showPassword}
+            hideLabel={m.auth.hidePassword}
           />
         }
       />
 
-      <ServerError message={serverError} />
+      <ServerError message={serverError ? translateKey(m, serverError, "errors.auth.generic") : null} />
 
-      <SubmitButton pendingText="Signing in..." icon={<LogIn className="size-4" />}>
-        Sign in
+      <SubmitButton pendingText={m.auth.signIn.pending} icon={<LogIn className="size-4" />}>
+        {m.auth.signIn.submit}
       </SubmitButton>
     </form>
   );
