@@ -12,6 +12,16 @@ const verdicts = [
   { label: m.verdict.level.marginal, dot: VERDICT_TONES.marginal.dot },
   { label: m.verdict.level["no-go"], dot: VERDICT_TONES["no-go"].dot },
 ];
+
+const steps = [t.steps.where, t.steps.kit, t.steps.tonight];
+
+/** Intrinsic size of `public/landing/tonight.png` (captured by `tests/e2e/landing-screenshot.spec.ts`). */
+const SCREENSHOT = { width: 1280, height: 800 };
+
+const primaryCta =
+  "inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
+const secondaryCta =
+  "inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 font-semibold text-heading transition-colors hover:bg-accent";
 ---
 
 <div class="relative flex min-h-screen w-full flex-col overflow-hidden bg-background text-foreground">
@@ -42,31 +52,53 @@ const verdicts = [
       ))}
     </ul>
 
+    <section aria-labelledby="how-it-works" class="mb-10 w-full">
+      <h2 id="how-it-works" class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+        {t.howItWorks}
+      </h2>
+      <ol class="grid gap-3 text-left sm:grid-cols-3">
+        {steps.map((step, i) => (
+          <li class="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4">
+            <span
+              class="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border font-display font-semibold text-primary"
+              aria-hidden="true"
+            >
+              {i + 1}
+            </span>
+            <span class="text-sm leading-relaxed text-foreground">{step}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
     <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
       {user ? (
-        <a
-          href="/dashboard"
-          class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          {t.goToDashboard}
+        <a href="/tonight" class:list={[primaryCta]}>
+          {t.openTonight}
         </a>
       ) : (
         <>
-          <a
-            href="/auth/signin"
-            class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            {t.signIn}
+          <a href="/auth/signup" class:list={[primaryCta]}>
+            {t.getStarted}
           </a>
-          <a
-            href="/auth/signup"
-            class="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 font-semibold text-heading transition-colors hover:bg-accent"
-          >
-            {t.signUp}
+          <a href="/auth/signin" class:list={[secondaryCta]}>
+            {t.signIn}
           </a>
         </>
       )}
     </div>
+
+    <figure class="mt-12 w-full overflow-hidden rounded-2xl border border-border bg-surface sm:mt-16">
+      <img
+        src="/landing/tonight.png"
+        alt={t.screenshotAlt}
+        width={SCREENSHOT.width}
+        height={SCREENSHOT.height}
+        loading="lazy"
+        decoding="async"
+        class="block h-auto w-full"
+      />
+    </figure>
   </main>
 
   <footer class="relative z-10 px-4 pb-6 text-center text-xs text-faint">

@@ -626,24 +626,24 @@ The public landing page says what the product does and shows it. Every entry poi
 
 #### Automated
 
-- [x] 3.1 `npm run test:e2e` passes locally against a preview built with `FORECAST_BASE_URL` pointing at the fixture server
-- [x] 3.2 `npm test`, `npm run lint` and `npx astro check` pass, and Vitest does not pick up the Playwright specs
-- [ ] 3.3 CI's smoke job runs the Playwright spec and is green on the PR
+- [x] 3.1 `npm run test:e2e` passes locally against a preview built with `FORECAST_BASE_URL` pointing at the fixture server — 13b4d58
+- [x] 3.2 `npm test`, `npm run lint` and `npx astro check` pass, and Vitest does not pick up the Playwright specs — 13b4d58
+- [x] 3.3 CI's smoke job runs the Playwright spec and is green on the PR — 13b4d58
 
 #### Manual
 
-- [x] 3.4 Temporarily breaking the sign-up → `/onboarding` redirect makes the e2e spec fail (then revert)
+- [x] 3.4 Temporarily breaking the sign-up → `/onboarding` redirect makes the e2e spec fail (then revert) — 13b4d58
 
 ### Phase 4: Landing and entry points
 
 #### Automated
 
-- [ ] 4.1 `npm run lint`, `npx astro check` and `npm test` pass
-- [ ] 4.2 `npm run smoke` passes with the updated sign-in and dashboard expectations
-- [ ] 4.3 `npm run test:e2e` still passes
+- [x] 4.1 `npm run lint`, `npx astro check` and `npm test` pass
+- [x] 4.2 `npm run smoke` passes with the updated sign-in and dashboard expectations
+- [x] 4.3 `npm run test:e2e` still passes
 
 #### Manual
 
-- [ ] 4.4 The landing page reviewed signed out and signed in, at desktop and phone width: how-it-works strip, screenshot, CTAs
-- [ ] 4.5 Sign-in lands on `/tonight`, and `/dashboard` redirects to `/tonight`
-- [ ] 4.6 Roadmap Open Questions 10 and 11 read as answered with the shipped values
+- [x] 4.4 The landing page reviewed signed out and signed in, at desktop and phone width: how-it-works strip, screenshot, CTAs
+- [x] 4.5 Sign-in lands on `/tonight`, and `/dashboard` redirects to `/tonight`
+- [x] 4.6 Roadmap Open Questions 10 and 11 read as answered with the shipped values

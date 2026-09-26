@@ -91,7 +91,7 @@ const steps = [
   [
     "signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/tonight", exact: true },
   ],
   ["gear renders", () => request("/gear"), { status: 200 }],
   [
@@ -124,7 +124,7 @@ const steps = [
   ],
   // Renders even when the forecast is unreachable: the verdict falls back to "marginal — no weather data".
   ["tonight renders for signed-in user", () => request("/tonight"), { status: 200 }],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["dashboard redirects to tonight", () => request("/dashboard"), { status: 302, location: "/tonight", exact: true }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],

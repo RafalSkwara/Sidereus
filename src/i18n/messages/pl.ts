@@ -54,9 +54,17 @@ export const pl = {
     tagline: "Czy dziś warto rozstawiać teleskop?",
     lead: "Jasna ocena nocy i krótka, uzasadniona lista obiektów, na które warto skierować teleskop — z okularami, które już masz.",
     verdictsLabel: "Oceny nocy",
-    goToDashboard: "Przejdź do panelu",
+    howItWorks: "Jak to działa",
+    steps: {
+      where: "Powiedz nam, skąd obserwujesz",
+      kit: "Wybierz teleskop i okulary",
+      tonight: "Zobacz ocenę nocy i do pięciu celów na dziś",
+    },
+    getStarted: "Zacznij",
     signIn: "Zaloguj się",
-    signUp: "Załóż konto",
+    openTonight: "Przejdź do „Dziś w nocy”",
+    screenshotAlt:
+      "Widok „Dziś w nocy” w Sidereusie: ocena „Warto” z oknem ciemności, a pod nią uszeregowane obiekty Messiera, każdy z kierunkiem na niebie i podpowiedzią okularu.",
     footerPrefix: "Nazwa pochodzi od dzieła Galileusza",
     footerWork: "Sidereus Nuncius",
     footerSuffix: " z 1610 roku.",
@@ -112,13 +120,6 @@ export const pl = {
         link: "Wróć do logowania",
       },
     },
-  },
-
-  dashboard: {
-    title: "Panel",
-    welcome: "Witaj,",
-    note: "Ta strona jest dostępna tylko dla zalogowanych użytkowników.",
-    signOut: "Wyloguj się",
   },
 
   databaseMissing: {

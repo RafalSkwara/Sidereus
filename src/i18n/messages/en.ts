@@ -64,9 +64,17 @@ export const en = {
     tagline: "Is tonight worth setting up for?",
     lead: "A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces you already own.",
     verdictsLabel: "Night verdicts",
-    goToDashboard: "Go to dashboard",
+    howItWorks: "How it works",
+    steps: {
+      where: "Tell us where you observe",
+      kit: "Pick your telescope and eyepieces",
+      tonight: "Get tonight's verdict and up to five targets",
+    },
+    getStarted: "Get started",
     signIn: "Sign in",
-    signUp: "Sign up",
+    openTonight: "Open Tonight",
+    screenshotAlt:
+      "Sidereus Tonight view: a Go verdict with the night's dark window, then the ranked Messier objects, each with where to look and which eyepiece to use.",
     footerPrefix: "Named after Galileo's",
     footerWork: "Sidereus Nuncius",
     footerSuffix: ", 1610.",
@@ -120,13 +128,6 @@ export const en = {
         link: "Back to sign in",
       },
     },
-  },
-
-  dashboard: {
-    title: "Dashboard",
-    welcome: "Welcome,",
-    note: "This page is only for authenticated users.",
-    signOut: "Sign out",
   },
 
   databaseMissing: {
