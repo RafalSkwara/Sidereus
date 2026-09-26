@@ -8,10 +8,11 @@ interface Props {
 }
 
 const { title = "Sidereus" } = Astro.props;
+const { theme, locale } = Astro.locals;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale} data-theme={theme}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />

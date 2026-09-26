@@ -1,0 +1,355 @@
+---
+// Dev-only visual reference for the Observatory theme tokens (F-03). Not linked from anywhere and not gated:
+// it 404s outside `npm run dev`. Build it from token classes only, so it shows exactly what the tokens give.
+import Layout from "@/layouts/Layout.astro";
+import PreferenceSwitches from "@/components/PreferenceSwitches";
+import { Button } from "@/components/ui/button";
+
+const enabled = import.meta.env.DEV;
+if (!enabled) Astro.response.status = 404;
+
+const { theme, locale } = Astro.locals;
+
+const preferenceLabels = {
+  theme: "Theme",
+  dark: "Dark theme",
+  light: "Light theme",
+  language: "Language",
+  english: "English",
+  polish: "Polski",
+};
+
+const tokenGroups = [
+  {
+    title: "Surfaces",
+    tokens: [
+      { name: "background", swatch: "bg-background" },
+      { name: "surface", swatch: "bg-surface" },
+      { name: "card", swatch: "bg-card" },
+      { name: "muted", swatch: "bg-muted" },
+      { name: "secondary", swatch: "bg-secondary" },
+      { name: "accent", swatch: "bg-accent" },
+      { name: "border", swatch: "bg-border" },
+      { name: "input", swatch: "bg-input" },
+    ],
+  },
+  {
+    title: "Text",
+    tokens: [
+      { name: "heading", swatch: "bg-heading" },
+      { name: "foreground", swatch: "bg-foreground" },
+      { name: "muted-foreground", swatch: "bg-muted-foreground" },
+      { name: "faint", swatch: "bg-faint" },
+      { name: "accent-foreground", swatch: "bg-accent-foreground" },
+      { name: "secondary-foreground", swatch: "bg-secondary-foreground" },
+    ],
+  },
+  {
+    title: "Brand and focus",
+    tokens: [
+      { name: "primary", swatch: "bg-primary" },
+      { name: "primary-foreground", swatch: "bg-primary-foreground" },
+      { name: "primary-strong", swatch: "bg-primary-strong" },
+      { name: "ring", swatch: "bg-ring" },
+      { name: "selected", swatch: "bg-selected" },
+      { name: "selected-foreground", swatch: "bg-selected-foreground" },
+    ],
+  },
+  {
+    title: "Verdicts",
+    tokens: [
+      { name: "go", swatch: "bg-go" },
+      { name: "go-surface", swatch: "bg-go-surface" },
+      { name: "go-border", swatch: "bg-go-border" },
+      { name: "marginal", swatch: "bg-marginal" },
+      { name: "marginal-surface", swatch: "bg-marginal-surface" },
+      { name: "marginal-border", swatch: "bg-marginal-border" },
+      { name: "no-go", swatch: "bg-no-go" },
+      { name: "no-go-surface", swatch: "bg-no-go-surface" },
+      { name: "no-go-border", swatch: "bg-no-go-border" },
+    ],
+  },
+  {
+    title: "Status and sky",
+    tokens: [
+      { name: "destructive", swatch: "bg-destructive" },
+      { name: "warning", swatch: "bg-warning" },
+      { name: "success", swatch: "bg-success" },
+      { name: "star", swatch: "bg-star" },
+      { name: "star-accent", swatch: "bg-star-accent" },
+    ],
+  },
+];
+
+const verdicts = [
+  {
+    label: "Go",
+    dot: "bg-go",
+    card: "border-go-border bg-go-surface",
+    detail: "clear for 5 h 10 min of the dark window",
+  },
+  {
+    label: "Marginal",
+    dot: "bg-marginal",
+    card: "border-marginal-border bg-marginal-surface",
+    detail: "breaks in the cloud for 1 h 40 min",
+  },
+  {
+    label: "No-go",
+    dot: "bg-no-go",
+    card: "border-no-go-border bg-no-go-surface",
+    detail: "overcast for the whole dark window",
+  },
+];
+
+const inputClass =
+  "h-11 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20";
+---
+
+{enabled ? (
+  <Layout title="Design · Sidereus">
+    <div class="min-h-screen w-full bg-background text-foreground">
+      <div class="mx-auto flex w-full max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
+        <header class="flex flex-wrap items-center justify-between gap-4">
+          <span class="flex items-center gap-2.5">
+            <svg viewBox="0 0 24 24" class="size-[22px] text-primary" fill="currentColor" aria-hidden="true">
+              <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
+            </svg>
+            <span class="font-display text-2xl font-semibold text-heading">Sidereus</span>
+          </span>
+          <nav class="flex flex-wrap items-center justify-end gap-4 text-[15px]" aria-label="Sample navigation">
+            <span class="font-semibold text-heading">Tonight</span>
+            <span class="text-muted-foreground">My gear</span>
+            <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
+          </nav>
+        </header>
+
+        <section class="flex flex-col gap-1.5" aria-labelledby="design-title">
+          <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Design reference · dev only</p>
+          <h1 id="design-title" class="font-display text-[42px] leading-tight font-semibold text-heading">
+            Observatory tokens
+          </h1>
+          <p class="text-sm text-muted-foreground">
+            Every colour on this page comes from a theme token. Switch the theme above to review both sets.
+          </p>
+        </section>
+
+        <section class="flex flex-col gap-6" aria-labelledby="tokens-heading">
+          <h2 id="tokens-heading" class="font-display text-[22px] font-semibold text-heading">
+            Tokens
+          </h2>
+          {tokenGroups.map((group) => (
+            <div class="flex flex-col gap-3">
+              <h3 class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">{group.title}</h3>
+              <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {group.tokens.map((token) => (
+                  <li class="flex flex-col gap-1.5">
+                    <span class:list={["h-14 rounded-lg border border-border", token.swatch]} aria-hidden="true" />
+                    <span class="font-mono text-xs text-heading">--{token.name}</span>
+                    <span class="font-mono text-xs text-muted-foreground" data-token-value={token.name} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+
+        <section class="flex flex-col gap-5" aria-labelledby="type-heading">
+          <h2 id="type-heading" class="font-display text-[22px] font-semibold text-heading">
+            Type
+          </h2>
+          <div class="flex flex-col gap-4 rounded-[14px] border border-border bg-surface px-6 py-5">
+            <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+              Kicker · Tonight · Saturday 10 October
+            </p>
+            <p class="font-display text-[42px] leading-tight font-semibold text-heading">Display 42 · Home</p>
+            <p class="font-display text-[32px] font-semibold text-heading">Display 32 · Go</p>
+            <p class="font-display text-[22px] font-semibold text-heading">Display 22 · M31 · Andromeda Galaxy</p>
+            <p class="text-[15px] leading-relaxed text-foreground">
+              Body 15 · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
+              <span class="font-semibold text-primary-strong">25 mm Plössl</span> · detail with{" "}
+              <span class="font-semibold text-primary-strong">10 mm Plössl</span>.
+            </p>
+            <p class="text-sm text-muted-foreground">Muted 14 · 150 mm reflector · times in Europe/Warsaw</p>
+            <p class="text-[15px] text-foreground">
+              Mono · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
+              <span class="font-mono text-heading">05:18</span> · best{" "}
+              <span class="font-mono text-heading">23:40 · S, 78°</span>
+            </p>
+            <p class="text-xs text-faint">
+              Faint 12 · Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+            </p>
+            <p class="text-[15px] text-foreground">
+              Polish glyphs · Zażółć gęślą jaźń · <span class="font-display text-heading">Łabędź, Wężownik</span>
+            </p>
+          </div>
+        </section>
+
+        <section class="flex flex-col gap-5" aria-labelledby="verdicts-heading">
+          <h2 id="verdicts-heading" class="font-display text-[22px] font-semibold text-heading">
+            Verdicts
+          </h2>
+          <ul class="flex flex-wrap gap-2 text-sm text-muted-foreground" aria-label="Verdict chips">
+            {verdicts.map((v) => (
+              <li class="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
+                <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
+                {v.label}
+              </li>
+            ))}
+          </ul>
+          <div class="flex flex-col gap-4">
+            {verdicts.map((v) => (
+              <div class:list={["flex flex-col gap-2.5 rounded-[14px] border px-6 py-5", v.card]}>
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class:list={["size-3 rounded-full", v.dot]} aria-hidden="true" />
+                  <span class="font-display text-[32px] font-semibold text-heading">{v.label}</span>
+                  <span class="text-[15px] text-foreground">{v.detail}</span>
+                </div>
+                <p class="text-[15px] text-foreground">
+                  Dark from <span class="font-mono text-heading">19:42</span> to{" "}
+                  <span class="font-mono text-heading">05:18</span>
+                </p>
+                <p class="text-[13px] text-muted-foreground">Forecast updated 12 min ago</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section class="flex flex-col gap-5" aria-labelledby="card-heading">
+          <h2 id="card-heading" class="font-display text-[22px] font-semibold text-heading">
+            Card
+          </h2>
+          <article class="flex flex-col gap-2.5 rounded-[14px] border border-border bg-card px-[22px] py-5 text-card-foreground">
+            <div class="flex items-baseline justify-between gap-3">
+              <h3 class="font-display text-[22px] font-semibold text-heading">M31 · Andromeda Galaxy</h3>
+              <span class="text-[13px] text-muted-foreground">in Andromeda</span>
+            </div>
+            <p class="text-[15px] leading-normal">Up for 7 h 50 min of the dark window · 92% clear of moonlight</p>
+            <p class="flex flex-wrap gap-6 text-sm text-muted-foreground">
+              <span>
+                Window <span class="font-mono text-heading">19:50–04:40</span>
+              </span>
+              <span>
+                Best <span class="font-mono text-heading">23:40 · S, 78°</span>
+              </span>
+            </p>
+            <p class="text-sm">
+              Find with <span class="font-semibold text-primary-strong">25 mm Plössl</span> · detail with{" "}
+              <span class="font-semibold text-primary-strong">10 mm Plössl</span>
+            </p>
+          </article>
+        </section>
+
+        <section class="flex flex-col gap-5" aria-labelledby="buttons-heading">
+          <h2 id="buttons-heading" class="font-display text-[22px] font-semibold text-heading">
+            Buttons
+          </h2>
+          <div class="flex flex-wrap gap-3">
+            <a
+              href="#buttons-heading"
+              class="inline-flex h-11 items-center rounded-[10px] bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Plan the next 7 nights
+            </a>
+            <a
+              href="#buttons-heading"
+              class="inline-flex h-11 items-center rounded-[10px] border border-border px-5 text-[15px] font-semibold text-heading transition-colors hover:bg-accent"
+            >
+              Edit gear
+            </a>
+          </div>
+          <p class="text-sm text-muted-foreground">
+            shadcn <code class="font-mono">Button</code> variants, unchanged:
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <Button size="lg">Primary</Button>
+            <Button size="lg" variant="secondary">
+              Secondary
+            </Button>
+            <Button size="lg" variant="outline">
+              Outline
+            </Button>
+            <Button size="lg" variant="destructive">
+              Destructive
+            </Button>
+            <Button size="lg" variant="ghost">
+              Ghost
+            </Button>
+            <Button size="lg" variant="link">
+              Link
+            </Button>
+            <Button size="lg" disabled>
+              Disabled
+            </Button>
+          </div>
+        </section>
+
+        <section class="flex flex-col gap-5" aria-labelledby="forms-heading">
+          <h2 id="forms-heading" class="font-display text-[22px] font-semibold text-heading">
+            Form controls
+          </h2>
+          <div class="grid gap-5 sm:grid-cols-3">
+            <div class="flex flex-col gap-1.5">
+              <label for="design-default" class="text-sm font-semibold text-heading">
+                Default
+              </label>
+              <input id="design-default" class:list={[inputClass]} placeholder="Backyard" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="design-focus" class="text-sm font-semibold text-heading">
+                Focus
+              </label>
+              <input
+                id="design-focus"
+                class:list={[inputClass, "border-ring ring-[3px] ring-ring/50"]}
+                value="Dark-sky park"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="design-invalid" class="text-sm font-semibold text-heading">
+                Invalid
+              </label>
+              <input
+                id="design-invalid"
+                class:list={[inputClass]}
+                value="95.5"
+                aria-invalid="true"
+                aria-describedby="design-invalid-error"
+              />
+              <p id="design-invalid-error" class="text-sm text-destructive">
+                Latitude must be between −90 and 90.
+              </p>
+            </div>
+          </div>
+          <div
+            role="alert"
+            class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+          >
+            <strong class="font-semibold text-heading">Could not save the site.</strong> Please try again.
+          </div>
+        </section>
+
+        <footer class="border-t border-border pt-4 text-xs text-faint">
+          Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+        </footer>
+      </div>
+    </div>
+  </Layout>
+) : (
+  "Not found"
+)}
+
+<script>
+  // Print each token's resolved value next to its swatch, and refresh it when the theme flips.
+  function showTokenValues() {
+    const styles = getComputedStyle(document.documentElement);
+    document.querySelectorAll<HTMLElement>("[data-token-value]").forEach((el) => {
+      el.textContent = styles.getPropertyValue(`--${el.dataset.tokenValue ?? ""}`).trim();
+    });
+  }
+  showTokenValues();
+  new MutationObserver(showTokenValues).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+</script>

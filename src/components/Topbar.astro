@@ -1,5 +1,17 @@
 ---
-const { user } = Astro.locals;
+import PreferenceSwitches from "@/components/PreferenceSwitches";
+
+const { user, theme, locale } = Astro.locals;
+
+// English literals until the message catalogue lands (F-03 phase 3).
+const preferenceLabels = {
+  theme: "Theme",
+  dark: "Dark theme",
+  light: "Light theme",
+  language: "Language",
+  english: "English",
+  polish: "Polski",
+};
 ---
 
 <header class="flex items-center justify-between gap-4">
@@ -10,7 +22,7 @@ const { user } = Astro.locals;
     <span class="font-serif text-lg tracking-wide">Sidereus</span>
   </a>
 
-  <div class="flex items-center gap-3 text-sm">
+  <div class="flex flex-wrap items-center justify-end gap-3 text-sm">
     {user ? (
       <>
         <a href="/tonight" class="text-amber-200/90 transition-colors hover:text-amber-50">
@@ -28,12 +40,16 @@ const { user } = Astro.locals;
             Sign out
           </button>
         </form>
+        <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
       </>
     ) : (
-      <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300/80">
-        <span class="size-1.5 rounded-full bg-slate-400" aria-hidden="true"></span>
-        Not logged in
-      </span>
+      <>
+        <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300/80">
+          <span class="size-1.5 rounded-full bg-slate-400" aria-hidden="true"></span>
+          Not logged in
+        </span>
+        <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
+      </>
     )}
   </div>
 </header>
