@@ -16,5 +16,9 @@
     "enabled": true,
     // The Open-Meteo request's query string carries site coordinates; keep it out of logs and traces.
     "redact_query_string": true,
+    // Per-fetch spans (Supabase, KV, Open-Meteo) so a slow request can be pinned to one call.
+    "traces": { "enabled": true },
   },
+  // Lets Cloudflare run the Worker near Supabase when a request makes several round trips to it.
+  "placement": { "mode": "smart" },
 }
