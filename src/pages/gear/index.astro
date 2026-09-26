@@ -57,12 +57,12 @@ function eyepieceType(afovDeg: number): string {
 }
 
 const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200";
+  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
 
 <GearShell title="My gear">
-  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">Your sky, your kit</p>
-  <h1 class="mb-6 font-serif text-4xl text-amber-50 sm:text-5xl">My gear</h1>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">Your sky, your kit</p>
+  <h1 class="mb-6 font-display text-4xl font-semibold text-heading sm:text-5xl">My gear</h1>
 
   <div class="mb-6 empty:hidden">
     <ServerError message={error} />
@@ -70,9 +70,9 @@ const primaryLink =
 
   {supabase ? (
     <div class="space-y-6">
-      <section aria-labelledby="sites-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="sites-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="sites-heading" class="font-serif text-2xl text-amber-50">
+          <h2 id="sites-heading" class="font-display text-2xl font-semibold text-heading">
             Sites
           </h2>
           <a href="/gear/sites/new" class:list={[primaryLink]}>
@@ -83,19 +83,19 @@ const primaryLink =
         {sitesError ? (
           <ServerError message={sitesError} />
         ) : sites.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
+          <p class="text-sm text-muted-foreground">
             No sites yet. Add the place you observe from, so tonight's verdict uses your sky.
           </p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {sites.map((site) => (
               <li>
                 <a
                   href={`/gear/sites/${site.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{site.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
+                  <span class="block font-semibold break-words text-heading">{site.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span>
                       {site.latitudeDeg.toFixed(2)}, {site.longitudeDeg.toFixed(2)}
                     </span>
@@ -112,9 +112,9 @@ const primaryLink =
         )}
       </section>
 
-      <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="telescopes-heading" class="font-serif text-2xl text-amber-50">
+          <h2 id="telescopes-heading" class="font-display text-2xl font-semibold text-heading">
             Telescopes
           </h2>
           <a href="/gear/telescopes/new" class:list={[primaryLink]}>
@@ -125,19 +125,19 @@ const primaryLink =
         {telescopesError ? (
           <ServerError message={telescopesError} />
         ) : telescopes.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
+          <p class="text-sm text-muted-foreground">
             No telescopes yet. Add yours, so the suggested magnifications fit your scope.
           </p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {telescopes.map((telescope) => (
               <li>
                 <a
                   href={`/gear/telescopes/${telescope.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{telescope.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
+                  <span class="block font-semibold break-words text-heading">{telescope.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span>{telescope.apertureMm} mm aperture</span>
                     <span>{telescope.focalLengthMm} mm focal length</span>
                     <span>f/{focalRatio(telescope)}</span>
@@ -149,9 +149,9 @@ const primaryLink =
         )}
       </section>
 
-      <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="eyepieces-heading" class="font-serif text-2xl text-amber-50">
+          <h2 id="eyepieces-heading" class="font-display text-2xl font-semibold text-heading">
             Eyepieces
           </h2>
           <a href="/gear/eyepieces/new" class:list={[primaryLink]}>
@@ -162,19 +162,19 @@ const primaryLink =
         {eyepiecesError ? (
           <ServerError message={eyepiecesError} />
         ) : eyepieces.length === 0 ? (
-          <p class="text-sm text-slate-300/70">
+          <p class="text-sm text-muted-foreground">
             No eyepieces yet. Add the ones in your case, so each object gets a pair you actually own.
           </p>
         ) : (
-          <ul class="divide-y divide-white/10">
+          <ul class="divide-y divide-border">
             {eyepieces.map((eyepiece) => (
               <li>
                 <a
                   href={`/gear/eyepieces/${eyepiece.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-white/5"
+                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <span class="block font-medium break-words text-amber-50">{eyepiece.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-300/80">
+                  <span class="block font-semibold break-words text-heading">{eyepiece.name}</span>
+                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span>{eyepiece.focalLengthMm} mm</span>
                     <span>
                       {eyepiece.afovDeg}° AFOV · {eyepieceType(eyepiece.afovDeg)}

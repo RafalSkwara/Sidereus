@@ -8,12 +8,12 @@ const { supabase } = Astro.locals;
 ---
 
 <GearShell title="Add eyepiece">
-  <a href="/gear" class="mb-4 inline-block text-sm text-amber-200/80 hover:text-amber-50">
+  <a href="/gear" class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
     ← My gear
   </a>
-  <h1 class="mb-6 font-serif text-3xl text-amber-50 sm:text-4xl">Add eyepiece</h1>
+  <h1 class="mb-6 font-display text-3xl font-semibold text-heading sm:text-4xl">Add eyepiece</h1>
   {supabase ? (
-    <div class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
       <EyepieceForm action="/api/gear/eyepieces" serverError={error} client:load />
     </div>
   ) : (

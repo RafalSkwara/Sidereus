@@ -41,7 +41,7 @@ const BORTLE_LABELS: Record<number, string> = {
 };
 
 const selectBase =
-  "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:ring-2 focus:outline-none transition-colors [&>option]:bg-slate-900";
+  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
 
 /*
  * The browser's zone list is read after hydration only (the server snapshot is `null`), so the
@@ -58,7 +58,7 @@ function subscribeNever() {
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-300">{message}</p>;
+  return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
 export default function SiteForm({ action, initial, serverError }: Props) {
@@ -163,12 +163,12 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           error={errors.longitudeDeg}
         />
       </div>
-      <p className="-mt-2 text-xs text-blue-100/50">
+      <p className="text-muted-foreground -mt-2 text-xs">
         Coordinates are rounded to 2 decimals (about 1 km) when saved. North and east are positive.
       </p>
 
       <div>
-        <label htmlFor="bortle" className="mb-1 block text-sm text-blue-100/80">
+        <label htmlFor="bortle" className="text-heading mb-1 block text-sm font-semibold">
           Sky darkness (Bortle class)
         </label>
         <select
@@ -181,7 +181,9 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           }}
           className={cn(
             selectBase,
-            errors.bortle ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
+            errors.bortle
+              ? "border-destructive focus-visible:ring-destructive/20"
+              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
           )}
         >
           <option value="" disabled>
@@ -211,14 +213,14 @@ export default function SiteForm({ action, initial, serverError }: Props) {
         }}
         error={errors.minAltitudeDeg}
         hint={
-          <p className="mt-1 text-xs text-blue-100/50">
+          <p className="text-muted-foreground mt-1 text-xs">
             Objects lower than this, e.g. behind trees or roofs, are skipped.
           </p>
         }
       />
 
       <div>
-        <label htmlFor="timeZone" className="mb-1 block text-sm text-blue-100/80">
+        <label htmlFor="timeZone" className="text-heading mb-1 block text-sm font-semibold">
           Time zone
         </label>
         <input type="hidden" name="timeZoneMode" value={timeZoneMode} />
@@ -232,7 +234,9 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           }}
           className={cn(
             selectBase,
-            errors.timeZone ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
+            errors.timeZone
+              ? "border-destructive focus-visible:ring-destructive/20"
+              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
           )}
         >
           <option value="">{autoLabel}</option>

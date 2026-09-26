@@ -522,28 +522,28 @@ No database changes. The onboarding site name "Dom"/"Home" affects only new rows
 
 #### Automated
 
-- [x] 1.1 `npm test` passes, including `preferences.test.ts`
-- [x] 1.2 `npm run lint` and `npx astro check` pass
-- [x] 1.3 `npm run build` succeeds and the build output contains no `fonts.googleapis.com` reference
+- [x] 1.1 `npm test` passes, including `preferences.test.ts` — 25597da
+- [x] 1.2 `npm run lint` and `npx astro check` pass — 25597da
+- [x] 1.3 `npm run build` succeeds and the build output contains no `fonts.googleapis.com` reference — 25597da
 
 #### Manual
 
-- [x] 1.4 On `/design` in `npm run dev`, both themes match board A of the design canvas, and switching theme is instant with no flash on reload
-- [x] 1.5 The EN/PL switch persists across reloads, and a fresh browser profile with Polish as its first language gets `lang="pl"` on `<html>`
+- [x] 1.4 On `/design` in `npm run dev`, both themes match board A of the design canvas, and switching theme is instant with no flash on reload — 25597da
+- [x] 1.5 The EN/PL switch persists across reloads, and a fresh browser profile with Polish as its first language gets `lang="pl"` on `<html>` — 25597da
 
 ### Phase 2: Retrofit every screen to tokens
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes, including `no-hardcoded-colors.test.ts` with zero offenders
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.3 `npm run build` succeeds
-- [ ] 2.4 `npm run smoke` passes against a local preview with local Supabase
+- [x] 2.1 `npm test` passes, including `no-hardcoded-colors.test.ts` with zero offenders
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.3 `npm run build` succeeds
+- [x] 2.4 `npm run smoke` passes against a local preview with local Supabase
 
 #### Manual
 
-- [ ] 2.5 Landing, sign-in, sign-up, confirm-email, `/gear` (list, new and edit forms incl. validation errors) and Tonight (go, no-go, no-darkness and outage states) reviewed in both themes at desktop and phone width, and they match board A
-- [ ] 2.6 Text contrast looks readable in the light theme, especially muted text, kickers and verdict chips
+- [x] 2.5 Landing, sign-in, sign-up, confirm-email, `/gear` (list, new and edit forms incl. validation errors) and Tonight (go, no-go, no-darkness and outage states) reviewed in both themes at desktop and phone width, and they match board A
+- [x] 2.6 Text contrast looks readable in the light theme, especially muted text, kickers and verdict chips
 
 ### Phase 3: English catalogue and locale-aware formatting
 

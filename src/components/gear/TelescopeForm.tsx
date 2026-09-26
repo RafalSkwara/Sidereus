@@ -116,14 +116,14 @@ export default function TelescopeForm({ action, initial, serverError }: Props) {
       </div>
 
       <div>
-        <p className="mb-1 block text-sm text-blue-100/80">Focal ratio</p>
+        <p className="text-heading mb-1 block text-sm font-semibold">Focal ratio</p>
         <p
           aria-live="polite"
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white/80 tabular-nums"
+          className="border-border bg-background text-foreground w-full rounded-lg border px-3 py-2 font-mono tabular-nums"
         >
           {ratio ? `f/${ratio}` : "-"}
         </p>
-        <p className="mt-1 text-xs text-blue-100/50">
+        <p className="text-muted-foreground mt-1 text-xs">
           Focal length ÷ aperture, a quick check that both numbers are right. Not saved.
         </p>
       </div>

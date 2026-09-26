@@ -26,7 +26,7 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 const FIELD_NAMES: readonly string[] = ["name", "focalLengthMm", "afovPreset", "afovDeg"];
 
 const selectBase =
-  "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:ring-2 focus:outline-none transition-colors [&>option]:bg-slate-900";
+  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
 
 function presetLabel(option: AfovPreset): string {
   return option === "other" ? "Other (enter the AFOV)" : EYEPIECE_PRESETS[option].label;
@@ -34,7 +34,7 @@ function presetLabel(option: AfovPreset): string {
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-300">{message}</p>;
+  return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
 export default function EyepieceForm({ action, initial, serverError }: Props) {
@@ -111,7 +111,7 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
       />
 
       <div>
-        <label htmlFor="afovPreset" className="mb-1 block text-sm text-blue-100/80">
+        <label htmlFor="afovPreset" className="text-heading mb-1 block text-sm font-semibold">
           Eyepiece type
         </label>
         <select
@@ -125,7 +125,9 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
           }}
           className={cn(
             selectBase,
-            errors.afovPreset ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
+            errors.afovPreset
+              ? "border-destructive focus-visible:ring-destructive/20"
+              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
           )}
         >
           <option value="" disabled>
@@ -140,7 +142,7 @@ export default function EyepieceForm({ action, initial, serverError }: Props) {
         {errors.afovPreset ? (
           <FieldError message={errors.afovPreset} />
         ) : (
-          <p className="mt-1 text-xs text-blue-100/50">
+          <p className="text-muted-foreground mt-1 text-xs">
             The type sets the apparent field of view. Check the eyepiece barrel or its box if unsure.
           </p>
         )}

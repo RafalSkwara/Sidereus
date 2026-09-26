@@ -80,18 +80,18 @@ if (site && telescope) {
 }
 
 const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200";
-const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
+  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
+const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
 ---
 
 <GearShell title="Tonight">
-  <p class="mb-2 text-xs tracking-[0.18em] text-amber-200/70 uppercase">
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
     {view ? view.dateLabel : "Your sky, tonight"}
   </p>
-  <h1 class="mb-2 font-serif text-4xl text-amber-50 sm:text-5xl">Tonight</h1>
+  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">Tonight</h1>
   {site && telescope && (
-    <p class="mb-6 text-sm text-slate-300/80">
-      <a href="/gear" class="text-amber-200/90 transition-colors hover:text-amber-50">
+    <p class="mb-6 text-sm text-muted-foreground">
+      <a href="/gear" class="transition-colors hover:text-heading">
         {site.name} · {telescope.name}
       </a>
     </p>
@@ -104,7 +104,7 @@ const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
 
       {!sitesError && !site && (
         <div class:list={[promptCard]}>
-          <p class="mb-4 text-slate-200/90">Add an observing site to see tonight</p>
+          <p class="mb-4 text-foreground">Add an observing site to see tonight</p>
           <a href="/gear/sites/new" class:list={[primaryLink]}>
             Add site
           </a>
@@ -112,7 +112,7 @@ const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
       )}
       {!telescopesError && !telescope && (
         <div class:list={[promptCard]}>
-          <p class="mb-4 text-slate-200/90">Add a telescope to see tonight</p>
+          <p class="mb-4 text-foreground">Add a telescope to see tonight</p>
           <a href="/gear/telescopes/new" class:list={[primaryLink]}>
             Add telescope
           </a>
@@ -134,7 +134,7 @@ const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
 
           {view.ranking && (
             <section aria-labelledby="ranking-heading">
-              <h2 id="ranking-heading" class="mb-4 font-serif text-2xl text-amber-50">
+              <h2 id="ranking-heading" class="mb-4 font-display text-2xl font-semibold text-heading">
                 {view.ranking.clearedText}
               </h2>
               {eyepiecesError && (
@@ -158,7 +158,7 @@ const promptCard = "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6";
     <DatabaseMissing />
   )}
 
-  <div class="mt-10 border-t border-white/10 pt-4">
+  <div class="mt-10 border-t border-border pt-4">
     <Attribution />
   </div>
 </GearShell>

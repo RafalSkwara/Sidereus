@@ -81,6 +81,8 @@
   --accent: color-mix(in srgb, var(--surface), var(--foreground) 8%);
   --accent-foreground: var(--heading);
   --destructive: var(--no-go);
+  /* Text on a destructive fill: light on the dark theme's /60 tint (ui/button.tsx), paper on the light red. */
+  --destructive-foreground: var(--heading);
   --input: var(--border);
   --ring: var(--primary);
   --faint: color-mix(in srgb, var(--muted-foreground) 75%, var(--background));
@@ -102,6 +104,7 @@
 [data-theme="light"] {
   --selected: var(--heading);
   --selected-foreground: var(--background);
+  --destructive-foreground: var(--background);
 }
 
 @theme inline {
@@ -134,6 +137,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-warning: var(--warning);
@@ -151,14 +155,6 @@
   --color-no-go-border: var(--no-go-border);
   --color-star: var(--star);
   --color-star-accent: var(--star-accent);
-}
-
-/*
- * TEMPORARY (F-03 phase 1): existing shells still paint `bg-cosmic`. It now points at the token so
- * those screens keep rendering; phase 2 retrofits them to `bg-background` and deletes this utility.
- */
-@utility bg-cosmic {
-  background-color: var(--background);
 }
 
 @layer base {
