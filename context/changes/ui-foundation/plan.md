@@ -585,11 +585,11 @@ No database changes. The onboarding site name "Dom"/"Home" affects only new rows
 
 #### Automated
 
-- [x] 4.1 `npm test` passes, including the Polish formatter tests, the no-inherited-English test and Messier-name coverage
-- [x] 4.2 `npm run lint` and `npx astro check` pass
-- [x] 4.3 `npm run build` succeeds and `npm run smoke` passes
+- [x] 4.1 `npm test` passes, including the Polish formatter tests, the no-inherited-English test and Messier-name coverage — f24d893
+- [x] 4.2 `npm run lint` and `npx astro check` pass — f24d893
+- [x] 4.3 `npm run build` succeeds and `npm run smoke` passes — f24d893
 
 #### Manual
 
-- [x] 4.4 The user (native Polish speaker) reviews Polish copy on landing, auth, `/gear` forms and errors, and Tonight in go, no-go, no-darkness and outage states, and accepts the wording
-- [x] 4.5 A browser set to Polish with no cookie lands in Polish; switching to EN and back persists
+- [x] 4.4 The user (native Polish speaker) reviews Polish copy on landing, auth, `/gear` forms and errors, and Tonight in go, no-go, no-darkness and outage states, and accepts the wording — f24d893
+- [x] 4.5 A browser set to Polish with no cookie lands in Polish; switching to EN and back persists — f24d893
