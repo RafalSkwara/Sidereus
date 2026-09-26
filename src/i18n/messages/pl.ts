@@ -235,6 +235,61 @@ export const pl = {
   },
 
   onboarding: {
+    title: "Skonfiguruj Sidereus",
+    intro:
+      "Trzy szybkie wybory i ocena dzisiejszej nocy jest gotowa. Każdy z nich zmienisz później w zakładce Mój sprzęt.",
+    submit: "Pokaż mi dzisiejszą noc",
+    locationRequired: "Najpierw ustaw lokalizację powyżej.",
+    where: {
+      kicker: "1 · Miejsce",
+      heading: "Skąd obserwujesz?",
+      hint: "Twój dom albo miejsce, w którym zwykle rozstawiasz sprzęt. Zapisujemy je z dokładnością do ok. 1 km, nigdy dokładniej.",
+      useLocation: "Użyj mojej lokalizacji",
+      locating: "Szukam Twojej lokalizacji...",
+      locationDenied:
+        "Dostęp do lokalizacji jest zablokowany, więc wyszukaj miejsce. Możesz go później włączyć w ustawieniach przeglądarki.",
+      locationUnavailable: "Nie udało się ustalić Twojej lokalizacji. Wyszukaj miejsce.",
+      or: "albo",
+      searchLabel: "Wyszukaj miejscowość",
+      searchPlaceholder: "np. Toruń",
+      searching: "Szukam...",
+      noResults: "Nie znaleziono takiego miejsca. Sprawdź pisownię albo wpisz pobliską miejscowość.",
+      resultsLabel: "Pasujące miejsca",
+      resultsCount: {
+        one: (p) => `Znaleziono ${p.count} miejsce`,
+        few: (p) => `Znaleziono ${p.count} miejsca`,
+        many: (p) => `Znaleziono ${p.count} miejsc`,
+        other: (p) => `Znaleziono ${p.count} miejsca`,
+      },
+      searchFallback: "Zamiast tego możesz wpisać współrzędne poniżej.",
+      manualToggle: "Wpisz współrzędne ręcznie",
+      usingDevice: "Używam Twojej bieżącej lokalizacji (z dokładnością do ok. 1 km)",
+      usingPlace: (p) => `Używam lokalizacji: ${p.place} (z dokładnością do ok. 1 km)`,
+      usingCoordinates: "Używam wpisanych współrzędnych, zaokrąglonych do ok. 1 km",
+    },
+    sky: {
+      kicker: "2 · Niebo",
+      heading: "Jak ciemne jest Twoje niebo?",
+      hint: "Wybierz opis najbliższy pogodnej, bezksiężycowej nocy tam, gdzie obserwujesz.",
+    },
+    kit: {
+      kicker: "3 · Sprzęt",
+      heading: "Jaki masz sprzęt?",
+      telescope: "Teleskop",
+      telescopeHint:
+        "Wybierz najbliższy model, a potem popraw liczby, jeśli Twój się różni. Znajdziesz je na tubusie albo w instrukcji.",
+      eyepieces: "Okulary",
+      eyepiecesHint: "Zacznij od zestawu, a potem popraw, usuń albo dodaj okulary, żeby pasowały do tego, co masz.",
+      emptyKit: "Dodasz je później w zakładce Mój sprzęt",
+      noEyepieces: "Na razie bez okularów. Lista na dziś i tak zadziała, a okulary dodasz później.",
+      eyepieceLegend: (p) => `Okular ${p.number}`,
+      removeEyepiece: (p) => `Usuń okular ${p.number}`,
+      eyepieceLimit: "To już 10 okularów, więcej tutaj nie dodasz. Kolejne dodasz później w zakładce Mój sprzęt.",
+    },
+    credit: {
+      placeSearch: "Wyszukiwanie miejsc:",
+      locationData: "Dane o miejscach na podstawie",
+    },
     homeSiteName: "Dom",
     telescopes: {
       r102: "Refraktor 102 mm",
@@ -303,6 +358,8 @@ export const pl = {
     addSite: "Dodaj stanowisko",
     addTelescopePrompt: "Dodaj teleskop, żeby zobaczyć ocenę nocy",
     addTelescope: "Dodaj teleskop",
+    setupPrompt: "Ustaw swoje stanowisko i teleskop — zajmie to około minuty",
+    setup: "Skonfiguruj",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
     failed: "Nie udało się obliczyć dzisiejszego nieba. Spróbuj ponownie.",
 

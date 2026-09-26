@@ -2,7 +2,7 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
 
-const PROTECTED_ROUTES = ["/dashboard", "/gear", "/api/gear", "/tonight"];
+const PROTECTED_ROUTES = ["/dashboard", "/gear", "/api/gear", "/tonight", "/onboarding", "/api/onboarding"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // Preferences resolve for every request, with or without Supabase, so Layout can theme the first paint.

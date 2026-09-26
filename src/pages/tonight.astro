@@ -66,6 +66,9 @@ if (supabase) {
 // S-02 uses the oldest site and the oldest telescope (both lists are in `created_at` order).
 const site = sites.at(0);
 const telescope = telescopes.at(0);
+// No site and no telescope (e.g. onboarding abandoned): one route back to setup instead of two cards (FR-021
+// single-item empty states stay as they are).
+const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
 
 if (site && telescope) {
   const now = new Date();
@@ -107,7 +110,15 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
       {sitesError && <ServerError message={translate(sitesError)} />}
       {telescopesError && <ServerError message={translate(telescopesError)} />}
 
-      {!sitesError && !site && (
+      {needsSetup && (
+        <div class:list={[promptCard]}>
+          <p class="mb-4 text-foreground">{t.setupPrompt}</p>
+          <a href="/onboarding" class:list={[primaryLink]}>
+            {t.setup}
+          </a>
+        </div>
+      )}
+      {!needsSetup && !sitesError && !site && (
         <div class:list={[promptCard]}>
           <p class="mb-4 text-foreground">{t.addSitePrompt}</p>
           <a href="/gear/sites/new" class:list={[primaryLink]}>
@@ -115,7 +126,7 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
           </a>
         </div>
       )}
-      {!telescopesError && !telescope && (
+      {!needsSetup && !telescopesError && !telescope && (
         <div class:list={[promptCard]}>
           <p class="mb-4 text-foreground">{t.addTelescopePrompt}</p>
           <a href="/gear/telescopes/new" class:list={[primaryLink]}>

@@ -1,4 +1,4 @@
-// Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the gear routes and /tonight still work
+// Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, onboarding, the gear routes and /tonight still work
 // together. Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // It signs up a throwaway user and writes gear rows, so point it at local Supabase only (as CI does), never hosted.
 
@@ -12,6 +12,20 @@ const site = {
   bortle: "5",
   minAltitudeDeg: "20",
   timeZoneMode: "auto",
+};
+// The onboarding form's fields (`onboardingInputSchema`): the 150 mm reflector preset, the Supplied pair
+// kit and the "Suburb" sky scene (Bortle 6).
+const onboarding = {
+  latitudeDeg: "52.23",
+  longitudeDeg: "21.01",
+  bortle: "6",
+  telescopeName: "150 mm reflector",
+  apertureMm: "150",
+  focalLengthMm: "750",
+  eyepieces: JSON.stringify([
+    { name: "25 mm Plössl", focalLengthMm: "25", afovPreset: "plossl" },
+    { name: "10 mm Plössl", focalLengthMm: "10", afovPreset: "plossl" },
+  ]),
 };
 const jar = new Map();
 
@@ -51,7 +65,23 @@ const steps = [
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/auth/confirm-email" },
+    { status: 302, location: "/onboarding", exact: true },
+  ],
+  ["onboarding renders", () => request("/onboarding"), { status: 200 }],
+  [
+    "invalid onboarding returns with error",
+    () => request("/api/onboarding", { method: "POST", form: { ...onboarding, latitudeDeg: "95" } }),
+    { status: 302, location: "/onboarding?error=" },
+  ],
+  [
+    "onboarding saves and opens tonight",
+    () => request("/api/onboarding", { method: "POST", form: onboarding }),
+    { status: 302, location: "/tonight", exact: true },
+  ],
+  [
+    "onboarding redirects once set up",
+    () => request("/onboarding"),
+    { status: 302, location: "/tonight", exact: true },
   ],
   [
     "signin rejects wrong password",

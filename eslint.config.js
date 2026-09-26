@@ -67,6 +67,9 @@ const astroConfig = defineConfig({
     "astro/no-set-html-directive": "error",
     "astro/no-unused-css-selector": "warn",
     "astro/prefer-class-list-directive": "warn",
+    // The rule's return-statement check crashes on a top-level `return Astro.redirect(...)` in frontmatter
+    // (it expects every `return` inside a function); frontmatter has no function to return a callback from.
+    "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false, returns: false } }],
   },
 });
 
@@ -85,6 +88,10 @@ const gearConfig = defineConfig({
     "src/lib/forecast/**",
     "src/lib/tonight/**",
     "src/pages/tonight.astro",
+    "src/lib/onboarding/**",
+    "src/components/onboarding/**",
+    "src/pages/api/onboarding.ts",
+    "src/pages/onboarding.astro",
   ],
   rules: { "no-console": "error" },
 });

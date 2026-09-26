@@ -6,7 +6,15 @@ Roadmap slice S-03 (US-01, FR-001 entry, FR-004, FR-005, FR-006; NFR under-a-min
 
 This plan also answers the roadmap's Open Question 10 (which presets ship) and Open Question 11/12 (geocoding terms).
 
-**Sequencing note (2026-09-26, PRD v2):** Phase 1 (data layer, no UI) runs now. Phases 2-4 wait for F-03 `ui-foundation` (theme tokens, light/dark switch, English/Polish message catalogue) and will be amended before they start, so that every new colour uses a theme token and every new string uses a message key. That includes the preset names and sky-scene descriptions from Phase 1, which therefore carry stable ids that can serve as message keys.
+**Sequencing note (2026-09-26, PRD v2):** Phase 1 (data layer, no UI) ran first. Phases 2-4 wait for F-03 `ui-foundation` (theme tokens, light/dark switch, English/Polish message catalogue).
+
+**F-03 amendment (2026-09-26, after F-03 landed on `feat/f-03-ui-foundation`, PR #32):** phases 2-4 build on the F-03 conventions recorded in CLAUDE.md, and each affected change entry below carries an "F-03 amendment" line. In short:
+- every new colour comes from theme tokens (the guard test `src/styles/no-hardcoded-colors.test.ts` enforces this);
+- every new user-visible string is a key in `src/i18n/messages/en.ts` with a real Polish translation in `pl.ts` (the parity and no-inherited-English tests enforce this);
+- `?error=` carries catalogue keys (`issueKey` / shared keys from `src/lib/api-errors.ts`);
+- islands take `locale` as a prop.
+
+English strings quoted in this plan (for example "Show me tonight" and "Set up in about a minute") are the English source text for new keys. The top bar already carries the switches and a signed-out "Sign in" link (F-03).
 
 ## Current State Analysis
 
@@ -259,6 +267,12 @@ The gated `/onboarding` page and island, the POST route, the sign-up redirect, t
 - **Client validation:** `onboardingInputSchema.safeParse` runs before submit, and errors are shown inline.
 - **Imports:** island-safe modules only: `@/lib/onboarding/{presets,schemas,geocode}`, `@/lib/gear/{coordinates,eyepiece-presets}`, `@/lib/engine/parameters`. Never `timezone.ts` or any `store.ts`.
 - **Submit label:** "Show me tonight".
+- **F-03 amendment:**
+  - The island takes `locale: Locale` (from `Astro.locals.locale`) and reads every label, hint, button, placeholder and error through `getMessages(locale)`, adding new keys under `onboarding.*` in both `en.ts` and `pl.ts`.
+  - Preset, kit and scene names, titles and descriptions come from `messages.onboarding.{telescopes,eyepieceKits,scenes}`, keyed by the Phase 1 ids.
+  - `searchPlaces(q, fetch, locale, signal)` takes the locale, and its failure is the `GEOCODING_FAILED` key, which is translated.
+  - The prefilled telescope name comes from the chosen preset's localised name. Eyepiece names ("25 mm Plössl") stay data.
+  - Colours use tokens only, following `src/pages/design.astro`. Cards use `bg-surface border-border`, the selected state uses the `selected` tokens, and the primary button is the shadcn `Button` default.
 
 #### 2. Onboarding page
 
@@ -270,6 +284,7 @@ The gated `/onboarding` page and island, the POST route, the sign-up redirect, t
 - With `locals.supabase` null it renders `DatabaseMissing`.
 - If `hasAnyGear(supabase)` is true, `return Astro.redirect("/tonight")`.
 - Otherwise it renders inside `GearShell`, with the title "Set up Sidereus", a one-line intro, `<OnboardingWizard action="/api/onboarding" serverError={?error} client:load />`, and the credit "Place search: Open-Meteo Geocoding API · Location data based on GeoNames (CC BY 4.0)" with links, styled like `src/components/tonight/Attribution.astro`.
+- **F-03 amendment:** the page title, intro and credit line are catalogue keys (English and Polish), the page passes `locale={Astro.locals.locale}` to the island, and `?error=` is passed through raw for the island to translate.
 
 #### 3. Onboarding POST route
 
@@ -282,6 +297,9 @@ The gated `/onboarding` page and island, the POST route, the sign-up redirect, t
 - `ok` or `alreadyOnboarded` → `redirect("/tonight")`.
 - A failure → `redirect("/onboarding?error=<fixed message>")`.
 - No Supabase → "The database is not configured.".
+- **F-03 amendment:**
+  - Call `completeOnboarding(supabase, parsed.data, { siteName: getMessages(context.locals.locale).onboarding.homeSiteName })`, which gives "Home" in English and "Dom" in Polish.
+  - Failures redirect with keys only: `issueKey(parsed.error)` for validation, the store's key for DB failures, and `NOT_CONFIGURED` from `src/lib/api-errors.ts`.
 
 #### 4. Sign-up redirect
 
@@ -308,6 +326,7 @@ The gated `/onboarding` page and island, the POST route, the sign-up redirect, t
 **Contract**:
 - When neither list errored and both `site` and `telescope` are missing, render one prompt card: "Set up your site and telescope in about a minute", with a link "Set up" → `/onboarding`. Render it *instead of* the two single-item cards.
 - When only one of them is missing, keep the existing cards.
+- **F-03 amendment:** the card text and link label are new catalogue keys (English and Polish), styled with the existing prompt-card token classes in `tonight.astro`.
 
 #### 7. Lint scope
 
@@ -401,6 +420,9 @@ Playwright drives the real browser flow against a production preview. The foreca
   4. Expect `/tonight` with a "Go" verdict, at least one ranked object card, and an eyepiece line mentioning "25 mm".
 - (b) **Geolocation.** A context with the `geolocation` permission and Madrid coordinates: clicking "Use my location" shows the location-set state and enables submit.
 - (c) **Abandoned onboarding.** After sign-up, navigating straight to `/tonight` shows the "Set up" card linking to `/onboarding`.
+- **F-03 amendment:**
+  - Tests (a)-(c) set the `sidereus-lang=en` cookie so the English assertions are deterministic.
+  - Add test (d) **Polish browser**: a context with `locale: "pl-PL"` and no cookie signs up and lands on `/onboarding` rendered in Polish. Assert `<html lang="pl">` and that the submit button shows the Polish label from `pl.ts`.
 
 #### 4. CI wiring
 
@@ -452,6 +474,7 @@ The public landing page says what the product does and shows it. Every entry poi
   3. "Get tonight's verdict and up to five targets"
 - Add one `<img>` of `/landing/tonight.png` with meaningful `alt`, width and height, `loading="lazy"`, and a responsive width.
 - CTAs: signed out, "Get started" → `/auth/signup` (primary) and "Sign in" → `/auth/signin`. Signed in, "Open Tonight" → `/tonight`.
+- **F-03 amendment:** the how-it-works steps, CTA labels and image `alt` are catalogue keys (English and Polish), styled with tokens like the existing hero. The screenshot is captured in the dark theme and in English.
 
 #### 2. Screenshot capture
 
@@ -479,6 +502,7 @@ The public landing page says what the product does and shows it. Every entry poi
 **Intent**: Signed-out visitors get a way in from the header instead of a "Not logged in" pill.
 
 **Contract**: the signed-out branch renders a "Sign in" link to `/auth/signin` in the existing link style.
+- **F-03 amendment:** already delivered by F-03 phase 2. Verify it is present and change nothing.
 
 #### 5. Smoke expectations
 
@@ -586,17 +610,17 @@ The public landing page says what the product does and shows it. Every entry poi
 
 #### Automated
 
-- [ ] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [ ] 2.2 `npm run build` succeeds
-- [ ] 2.3 `npm run smoke` passes against a local preview with local Supabase, including the new onboarding steps
+- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
+- [x] 2.2 `npm run build` succeeds
+- [x] 2.3 `npm run smoke` passes against a local preview with local Supabase, including the new onboarding steps
 
 #### Manual
 
-- [ ] 2.4 A fresh sign-up lands on `/onboarding` and reaches a ranked Tonight in under a minute of interaction using place search (stopwatch, excluding sign-up typing)
-- [ ] 2.5 "Use my location" sets the site and shows only the rounded location; denying the permission leaves place search working
-- [ ] 2.6 With geocoding blocked in DevTools, the "Enter coordinates instead" fallback completes onboarding
-- [ ] 2.7 `/onboarding` after finishing redirects to `/tonight`, and a new account that skips onboarding sees the "Set up" card on Tonight
-- [ ] 2.8 No coordinates appear in any URL or in the dev-server log during onboarding
+- [x] 2.4 A fresh sign-up lands on `/onboarding` and reaches a ranked Tonight in under a minute of interaction using place search (stopwatch, excluding sign-up typing)
+- [x] 2.5 "Use my location" sets the site and shows only the rounded location; denying the permission leaves place search working
+- [x] 2.6 With geocoding blocked in DevTools, the "Enter coordinates instead" fallback completes onboarding
+- [x] 2.7 `/onboarding` after finishing redirects to `/tonight`, and a new account that skips onboarding sees the "Set up" card on Tonight
+- [x] 2.8 No coordinates appear in any URL or in the dev-server log during onboarding
 
 ### Phase 3: End-to-end test
 
