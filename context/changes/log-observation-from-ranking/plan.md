@@ -400,20 +400,20 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Automated
 
-- [x] 1.1 Migration applies to a fresh local stack: `npx supabase db reset`
-- [x] 1.2 Generated types are in sync with the migration: `npm run db:types` produces no diff
-- [x] 1.3 Schema unit tests pass (valid input, rating 0/6, bad date, missing site/telescope): `npm test`
-- [x] 1.4 Isolation suite passes, including cross-user reads and writes, the foreign-gear reference rejection and the site-deletion survival: `npm run test:db`
-- [x] 1.5 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 1.1 Migration applies to a fresh local stack: `npx supabase db reset` — 389dfe6
+- [x] 1.2 Generated types are in sync with the migration: `npm run db:types` produces no diff — 389dfe6
+- [x] 1.3 Schema unit tests pass (valid input, rating 0/6, bad date, missing site/telescope): `npm test` — 389dfe6
+- [x] 1.4 Isolation suite passes, including cross-user reads and writes, the foreign-gear reference rejection and the site-deletion survival: `npm run test:db` — 389dfe6
+- [x] 1.5 Type check and lint pass: `npx astro check && npm run lint` — 389dfe6
 
 ### Phase 2: Log penalty in the ranking engine
 
 #### Automated
 
-- [ ] 2.1 Engine unit tests pass, including the new log and ranking cases: `npm test`
-- [ ] 2.2 Purity guard still passes (no clock, env or I/O in `log.ts`): `npm test -- purity`
-- [ ] 2.3 Determinism test passes with a non-empty log: `npm test -- determinism`
-- [ ] 2.4 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Engine unit tests pass, including the new log and ranking cases: `npm test`
+- [x] 2.2 Purity guard still passes (no clock, env or I/O in `log.ts`): `npm test -- purity`
+- [x] 2.3 Determinism test passes with a non-empty log: `npm test -- determinism`
+- [x] 2.4 Type check and lint pass: `npx astro check && npm run lint`
 
 ### Phase 3: Mark-observed form and route
 

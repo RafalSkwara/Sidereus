@@ -1,10 +1,17 @@
 import type { MessierObject } from "@/lib/catalogue";
 
 import { pairEyepieces } from "./eyepieces";
+import type { SeenSummary } from "./log";
 import type { EyepieceOpticsInput, EyepiecePair, NoEyepieceFits, TelescopeOpticsInput } from "./eyepieces";
 import { moonTrack } from "./moon";
 import { objectTracks } from "./objects";
-import { DEFAULT_TRACK_STEP_MINUTES, MAX_RANKED_OBJECTS, MIN_OBJECT_SCORE, SCORE_WEIGHTS } from "./parameters";
+import {
+  DEFAULT_TRACK_STEP_MINUTES,
+  LOG_PENALTY,
+  MAX_RANKED_OBJECTS,
+  MIN_OBJECT_SCORE,
+  SCORE_WEIGHTS,
+} from "./parameters";
 import { SCORE_COMPONENTS, scoreObject } from "./score";
 import type { ObjectScore, ScoreComponent, ScoreComponents } from "./score";
 import type { DarkWindow, HorizontalPosition, Site } from "./types";
@@ -40,6 +47,11 @@ export interface RankInput<
   /** The user's eyepieces in `created_at` order (pairing ties go to the earlier one). */
   eyepieces: readonly E[];
   catalogue: readonly O[];
+  /**
+   * Objects already seen, by Messier number (`seenSummaries`); absent means an empty log. A seen object
+   * is ordered by its score less `LOG_PENALTY`, but still clears the bar on its own score (FR-018).
+   */
+  seen?: ReadonlyMap<number, SeenSummary>;
 }
 
 export interface RankedEntry<
@@ -54,6 +66,10 @@ export interface RankedEntry<
   pair: EyepiecePair<E> | NoEyepieceFits<E> | null;
   leadComponent: ScoreComponent;
   secondComponent: ScoreComponent;
+  /** The key the ranking is ordered by: `score.total`, less `LOG_PENALTY` for a seen object. */
+  rankScore: number;
+  /** `null` unless the log counts the object as seen. */
+  seen: SeenSummary | null;
 }
 
 export interface Ranking<
@@ -126,12 +142,12 @@ export function reasonComponents(listed: readonly ScoreComponents[]): ReasonComp
 export function rankObjects<O extends RankableObject, E extends EyepieceOpticsInput>(
   input: RankInput<O, E>,
 ): Ranking<O, E> {
-  const { site, bortle, minAltitudeDeg, darkWindow, telescope, eyepieces, catalogue } = input;
+  const { site, bortle, minAltitudeDeg, darkWindow, telescope, eyepieces, catalogue, seen } = input;
   const interval = { start: darkWindow.start, end: darkWindow.end };
   const tracks = objectTracks(site, interval, catalogue, DEFAULT_TRACK_STEP_MINUTES);
   const moon = moonTrack(site, interval, DEFAULT_TRACK_STEP_MINUTES);
 
-  const scored: { object: O; score: ObjectScore }[] = [];
+  const scored: { object: O; score: ObjectScore; seen: SeenSummary | null; rankScore: number }[] = [];
   catalogue.forEach((object, i) => {
     const score = scoreObject({
       object,
@@ -142,21 +158,30 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
       apertureMm: telescope.apertureMm,
     });
     if (score !== null) {
-      scored.push({ object, score });
+      const seenSummary = seen?.get(object.messier) ?? null;
+      scored.push({
+        object,
+        score,
+        seen: seenSummary,
+        rankScore: seenSummary === null ? score.total : score.total - LOG_PENALTY,
+      });
     }
   });
-  scored.sort((a, b) => b.score.total - a.score.total || a.object.messier - b.object.messier);
+  // The bar reads the object's own score; only the order feels the log.
+  scored.sort((a, b) => b.rankScore - a.rankScore || a.object.messier - b.object.messier);
 
   const cleared = scored.filter((s) => s.score.total >= MIN_OBJECT_SCORE);
   const listed = cleared.slice(0, MAX_RANKED_OBJECTS);
   const reasons = reasonComponents(listed.map((s) => s.score.components));
-  const entries = listed.map(({ object, score }, i): RankedEntry<O, E> => ({
+  const entries = listed.map(({ object, score, seen: seenSummary, rankScore }, i): RankedEntry<O, E> => ({
     object,
     score,
     peak: score.window.peak,
     pair: pairEyepieces(telescope, eyepieces, object.majorAxisArcmin),
     leadComponent: reasons[i].lead,
     secondComponent: reasons[i].second,
+    rankScore,
+    seen: seenSummary,
   }));
   return { clearedCount: cleared.length, entries, telescopeId: telescope.id };
 }

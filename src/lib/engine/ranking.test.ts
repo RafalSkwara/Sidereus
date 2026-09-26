@@ -4,7 +4,8 @@ import { MESSIER } from "@/lib/catalogue";
 
 import { WARSAW } from "./fixtures";
 import { observingNight } from "./night";
-import { MAX_RANKED_OBJECTS, MIN_OBJECT_SCORE, darknessThresholdDegForBortle } from "./parameters";
+import { seenSummaries } from "./log";
+import { LOG_PENALTY, MAX_RANKED_OBJECTS, MIN_OBJECT_SCORE, darknessThresholdDegForBortle } from "./parameters";
 import { rankObjects, reasonComponents } from "./ranking";
 import type { RankInput, RankableObject, Ranking } from "./ranking";
 import type { ScoreComponents } from "./score";
@@ -188,5 +189,61 @@ describe("reasonComponents", () => {
     expect(reasonComponents([c(0.5, 0.9, 1, 1)])).toEqual([{ lead: "moon", second: "brightness" }]);
     // Weighted: duration 0.35, moon 0.3, brightness 0.25, sky 0.1.
     expect(reasonComponents([c(1, 1, 1, 1)])).toEqual([{ lead: "duration", second: "moon" }]);
+  });
+});
+
+describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
+  // Brightness alone separates these: M1 scores 1.0, M2 (vMag 5) about 0.04 lower, M3 (vMag 11) about 0.23 lower.
+  const bright = synthetic(1, 89.9);
+  const close = synthetic(2, 89.9, { vMag: 5 });
+  const far = synthetic(3, 89.9, { vMag: 11 });
+  const seenM1 = new Map([[1, { count: 2, lastNight: "2026-09-12" }]]);
+
+  it("moves a seen object below an unseen one that scores within LOG_PENALTY of it", () => {
+    const unlogged = rank([bright, close]);
+    expect(unlogged.entries.map((e) => e.object.messier)).toEqual([1, 2]);
+    const gap = unlogged.entries[0].score.total - unlogged.entries[1].score.total;
+    expect(gap).toBeGreaterThan(0);
+    expect(gap).toBeLessThan(LOG_PENALTY);
+
+    const logged = rank([bright, close], { seen: seenM1 });
+    expect(logged.entries.map((e) => e.object.messier)).toEqual([2, 1]);
+    expect(logged.entries[1].rankScore).toBeCloseTo(logged.entries[1].score.total - LOG_PENALTY, 12);
+  });
+
+  it("keeps a seen object above an unseen one that scores more than LOG_PENALTY below it", () => {
+    const unlogged = rank([bright, far]);
+    expect(unlogged.entries[0].score.total - unlogged.entries[1].score.total).toBeGreaterThan(LOG_PENALTY);
+
+    expect(rank([bright, far], { seen: seenM1 }).entries.map((e) => e.object.messier)).toEqual([1, 3]);
+  });
+
+  it("lets a seen object that the penalty would pull below the bar still clear and count", () => {
+    // A low-interest, low-surface-brightness object: its total sits just above the bar.
+    const borderline = synthetic(40, 89.9, { vMag: 11, type: "double-star", surfaceBrightness: 22 });
+    const [unlogged] = rank([borderline]).entries;
+    expect(unlogged.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
+    expect(unlogged.score.total - LOG_PENALTY).toBeLessThan(MIN_OBJECT_SCORE);
+
+    const logged = rank([borderline], { seen: new Map([[40, { count: 1, lastNight: "2026-09-12" }]]) });
+    expect(logged.clearedCount).toBe(1);
+    expect(logged.entries.map((e) => e.object.messier)).toEqual([40]);
+  });
+
+  it("carries the seen summary on a seen entry and null on the others", () => {
+    const logged = rank([bright, far], { seen: seenM1 });
+    expect(logged.entries.map((e) => e.seen)).toEqual([{ count: 2, lastNight: "2026-09-12" }, null]);
+    expect(logged.entries[1].rankScore).toBe(logged.entries[1].score.total);
+  });
+
+  it("ranks a log of only 1-2 ratings exactly like an empty log (invariant 4)", () => {
+    const failedAttempts = seenSummaries(
+      [
+        { messier: 1, night: "2026-09-12", rating: 2 },
+        { messier: 2, night: "2026-09-13", rating: 1 },
+      ],
+      "2026-10-10",
+    );
+    expect(rank([bright, close, far], { seen: failedAttempts })).toEqual(rank([bright, close, far]));
   });
 });

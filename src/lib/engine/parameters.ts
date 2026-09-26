@@ -171,6 +171,18 @@ export const VERDICT_THRESHOLDS: Readonly<{
   humidityCapPct: 90,
 };
 
+// Observation log (S-06) -------------------------------------------------------------------------
+
+/**
+ * Candidate (PRD Open Question 6): subtracted from an already-seen object's score when ordering the
+ * ranking (FR-018). It moves the object down gently and never decides whether it clears
+ * `MIN_OBJECT_SCORE`, so a seen object is pushed down rather than removed.
+ */
+export const LOG_PENALTY = 0.15;
+
+/** PRD invariant 4: only entries rated at least this (of 5) count as seen; a 1-2 attempt never demotes. */
+export const LOG_PENALTY_MIN_RATING = 3;
+
 // Night outlook (S-04) ----------------------------------------------------------------------------
 
 /** FR-011, invariant 5: nights 1-3 (tonight and the next two) carry a verdict; later nights do not. */

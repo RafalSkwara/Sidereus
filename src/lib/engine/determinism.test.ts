@@ -9,8 +9,9 @@ import {
   objectTracks,
   observingNight,
   rankObjects,
+  seenSummaries,
 } from "./index";
-import type { HorizontalPosition, MoonState, Ranking, Site } from "./index";
+import type { HorizontalPosition, LogEntry, MoonState, Ranking, Site } from "./index";
 
 /**
  * The PRD's determinism NFR (identical inputs → identical verdict and ranking) and the ranking-time
@@ -104,7 +105,7 @@ describe("engine determinism and budget", () => {
 });
 
 /** The S-02 ranking for Warsaw on 2026-10-10: Bortle 6, a 150/750 telescope, 25 mm and 10 mm Plössls. */
-function fullRanking(): Ranking {
+function fullRanking(log: readonly LogEntry[] = []): Ranking {
   const bortle = 6;
   const night = observingNight("2026-10-10", WARSAW.timeZone);
   const dark = darkWindow(WARSAW, night, darknessThresholdDegForBortle(bortle));
@@ -122,6 +123,7 @@ function fullRanking(): Ranking {
       { id: "e10", focalLengthMm: 10, afovDeg: 50 },
     ],
     catalogue: MESSIER,
+    seen: seenSummaries(log, "2026-10-10"),
   });
 }
 
@@ -165,5 +167,24 @@ describe("ranking determinism and budget", () => {
       expect(first.ms).toBeLessThan(LOCAL_BUDGET_MS);
       expect(second.ms).toBeLessThan(LOCAL_BUDGET_MS);
     }
+  });
+});
+
+describe("ranking determinism with a non-empty observation log", () => {
+  it("yields deep-equal rankings for two identical runs, and the log does change the ranking", () => {
+    const unlogged = fullRanking();
+    const [first, second, third] = unlogged.entries.map((e) => e.object.messier);
+    const log: LogEntry[] = [
+      { messier: first, night: "2026-09-12", rating: 4 },
+      { messier: first, night: "2026-10-01", rating: 5 },
+      { messier: second, night: "2026-09-20", rating: 3 },
+      // Invariant 4: a failed attempt never demotes.
+      { messier: third, night: "2026-10-05", rating: 2 },
+    ];
+
+    const once = fullRanking(log);
+    expect(fullRanking(log)).toEqual(once);
+    expect(once.entries.map((e) => e.object.messier)).not.toEqual(unlogged.entries.map((e) => e.object.messier));
+    expect(once.clearedCount).toBe(unlogged.clearedCount);
   });
 });
