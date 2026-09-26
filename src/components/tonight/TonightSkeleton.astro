@@ -1,0 +1,59 @@
+---
+// Stand-in for TonightContent while its server island loads: same vertical rhythm as the kicker, heading, site
+// line, verdict card and object cards, so nothing jumps when the real content swaps in.
+import { getMessages } from "@/i18n";
+
+const t = getMessages(Astro.locals.locale).tonight;
+const bar = "rounded bg-muted motion-safe:animate-pulse";
+---
+
+<div role="status" aria-busy="true">
+  <div aria-hidden="true" class:list={[bar, "mb-2 h-4 w-44"]}></div>
+  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+  <span class="sr-only">{t.loading}</span>
+  <div aria-hidden="true">
+    <div class:list={[bar, "mb-6 h-5 w-52"]}></div>
+
+    <div class="mt-6 space-y-6">
+      <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-6">
+        <div class:list={[bar, "h-4 w-32"]}></div>
+        <div class:list={[bar, "h-8 w-3/4"]}></div>
+        <div class:list={[bar, "h-4 w-1/2"]}></div>
+      </div>
+
+      <div>
+        <div class:list={[bar, "mb-4 h-7 w-60"]}></div>
+        <div class="space-y-4">
+          {[1, 2, 3].map(() => (
+            <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <div class:list={[bar, "h-7 w-1/2"]} />
+              <div class:list={[bar, "h-4 w-2/3"]} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
+  <p class="slow-hint mt-6 text-sm text-muted-foreground">
+    {t.loadingSlow}
+    <a href="/tonight" class="font-semibold text-primary underline-offset-4 hover:underline">
+      {t.reload}
+    </a>
+  </p>
+</div>
+
+<style>
+  /* visibility (not opacity) keeps the hint out of the accessibility tree and unclickable until it shows. */
+  .slow-hint {
+    visibility: hidden;
+    animation: slow-hint-reveal 0s linear 10s forwards;
+  }
+
+  @keyframes slow-hint-reveal {
+    to {
+      visibility: visible;
+    }
+  }
+</style>

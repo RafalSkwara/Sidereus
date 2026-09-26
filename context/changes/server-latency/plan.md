@@ -298,10 +298,10 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Unit tests pass, including the new deferred-write and read-timeout cases: `npm test`
-- [x] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint` — afe1cb0
+- [x] 2.2 Type check passes: `npx astro check` — afe1cb0
+- [x] 2.3 Unit tests pass, including the new deferred-write and read-timeout cases: `npm test` — afe1cb0
+- [x] 2.4 Production build succeeds: `npm run build` — afe1cb0
 
 #### Manual
 
@@ -311,10 +311,10 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 Type check passes: `npx astro check`
-- [ ] 3.3 Unit tests pass, including i18n parity and the no-hardcoded-colours check: `npm test`
-- [ ] 3.4 Production build succeeds: `npm run build`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 Type check passes: `npx astro check`
+- [x] 3.3 Unit tests pass, including i18n parity and the no-hardcoded-colours check: `npm test`
+- [x] 3.4 Production build succeeds: `npm run build`
 - [ ] 3.5 CI's smoke and e2e jobs pass on the PR
 
 #### Manual
