@@ -1,13 +1,16 @@
 ---
 import Topbar from "@/components/Topbar.astro";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { getMessages } from "@/i18n";
 
-const { user } = Astro.locals;
+const { user, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.landing;
 
 const verdicts = [
-  { label: "Go", dot: VERDICT_TONES.go.dot },
-  { label: "Marginal", dot: VERDICT_TONES.marginal.dot },
-  { label: "No-go", dot: VERDICT_TONES["no-go"].dot },
+  { label: m.verdict.level.go, dot: VERDICT_TONES.go.dot },
+  { label: m.verdict.level.marginal, dot: VERDICT_TONES.marginal.dot },
+  { label: m.verdict.level["no-go"], dot: VERDICT_TONES["no-go"].dot },
 ];
 ---
 
@@ -25,17 +28,12 @@ const verdicts = [
   </div>
 
   <main class="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:py-24">
-    <p class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase sm:tracking-[0.3em]">
-      Messier 1 – 110 · your sky, your kit
-    </p>
-    <h1 class="mb-6 font-display text-5xl leading-tight font-semibold text-heading sm:text-7xl">Sidereus</h1>
-    <p class="mb-3 font-display text-xl text-heading italic sm:text-2xl">Is tonight worth setting up for?</p>
-    <p class="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-      A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces
-      you already own.
-    </p>
+    <p class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase sm:tracking-[0.3em]">{t.kicker}</p>
+    <h1 class="mb-6 font-display text-5xl leading-tight font-semibold text-heading sm:text-7xl">{m.common.appName}</h1>
+    <p class="mb-3 font-display text-xl text-heading italic sm:text-2xl">{t.tagline}</p>
+    <p class="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{t.lead}</p>
 
-    <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground" aria-label="Night verdicts">
+    <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground" aria-label={t.verdictsLabel}>
       {verdicts.map((v) => (
         <li class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1">
           <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
@@ -50,7 +48,7 @@ const verdicts = [
           href="/dashboard"
           class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Go to dashboard
+          {t.goToDashboard}
         </a>
       ) : (
         <>
@@ -58,13 +56,13 @@ const verdicts = [
             href="/auth/signin"
             class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Sign in
+            {t.signIn}
           </a>
           <a
             href="/auth/signup"
             class="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 font-semibold text-heading transition-colors hover:bg-accent"
           >
-            Sign up
+            {t.signUp}
           </a>
         </>
       )}
@@ -72,6 +70,7 @@ const verdicts = [
   </main>
 
   <footer class="relative z-10 px-4 pb-6 text-center text-xs text-faint">
-    Named after Galileo's <em>Sidereus Nuncius</em>, 1610.
+    {t.footerPrefix} <em>{t.footerWork}</em>
+    {t.footerSuffix}
   </footer>
 </div>

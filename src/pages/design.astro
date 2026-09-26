@@ -10,15 +10,6 @@ if (!enabled) Astro.response.status = 404;
 
 const { theme, locale } = Astro.locals;
 
-const preferenceLabels = {
-  theme: "Theme",
-  dark: "Dark theme",
-  light: "Light theme",
-  language: "Language",
-  english: "English",
-  polish: "Polski",
-};
-
 const tokenGroups = [
   {
     title: "Surfaces",
@@ -121,7 +112,7 @@ const inputClass =
           <nav class="flex flex-wrap items-center justify-end gap-4 text-[15px]" aria-label="Sample navigation">
             <span class="font-semibold text-heading">Tonight</span>
             <span class="text-muted-foreground">My gear</span>
-            <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
+            <PreferenceSwitches theme={theme} locale={locale} client:load />
           </nav>
         </header>
 

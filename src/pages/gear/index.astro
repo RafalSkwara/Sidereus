@@ -10,17 +10,25 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
-import { EYEPIECE_PRESETS, presetForAfov } from "@/lib/gear/eyepiece-presets";
+import { presetForAfov } from "@/lib/gear/eyepiece-presets";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
 
-const SITES_FAILED = "Could not load your sites. Please try again.";
-const TELESCOPES_FAILED = "Could not load your telescopes. Please try again.";
-const EYEPIECES_FAILED = "Could not load your eyepieces. Please try again.";
+const SITES_FAILED: MessageKey = "errors.load.sites";
+const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
+const EYEPIECES_FAILED: MessageKey = "errors.load.eyepieces";
 
-const error = Astro.url.searchParams.get("error");
-const { supabase } = Astro.locals;
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.gear;
+const translate = (key: string | null) => (key ? translateKey(m, key, "errors.generic") : null);
+// `?error=` carries a message key; anything else reads as the generic message.
+const error = translate(Astro.url.searchParams.get("error"));
 
 /** Loads one section; a failure only affects that section, never the whole hub. */
-async function load<T>(list: () => Promise<T[]>, failed: string): Promise<{ items: T[]; error: string | null }> {
+async function load<T>(
+  list: () => Promise<T[]>,
+  failed: MessageKey,
+): Promise<{ items: T[]; error: MessageKey | null }> {
   try {
     return { items: await list(), error: null };
   } catch {
@@ -31,9 +39,9 @@ async function load<T>(list: () => Promise<T[]>, failed: string): Promise<{ item
 let sites: SiteRecord[] = [];
 let telescopes: TelescopeRecord[] = [];
 let eyepieces: EyepieceRecord[] = [];
-let sitesError: string | null = null;
-let telescopesError: string | null = null;
-let eyepiecesError: string | null = null;
+let sitesError: MessageKey | null = null;
+let telescopesError: MessageKey | null = null;
+let eyepiecesError: MessageKey | null = null;
 if (supabase) {
   const [siteResult, telescopeResult, eyepieceResult] = await Promise.all([
     load(() => siteStore.list(supabase), SITES_FAILED),
@@ -50,19 +58,19 @@ function focalRatio(telescope: TelescopeRecord): string {
   return (telescope.focalLengthMm / telescope.apertureMm).toFixed(1).replace(/\.0$/, "");
 }
 
-/** The eyepiece type for a stored AFOV: the preset name without its "(~50°)" hint, or "Other". */
+/** The eyepiece type for a stored AFOV: the preset's short name, or "Other". */
 function eyepieceType(afovDeg: number): string {
   const preset = presetForAfov(afovDeg);
-  return preset === "other" ? "Other" : EYEPIECE_PRESETS[preset].label.replace(/\s*\(.*\)$/, "");
+  return preset === "other" ? t.eyepieces.otherType : m.eyepiecePresets[preset].short;
 }
 
 const primaryLink =
   "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
 
-<GearShell title="My gear">
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">Your sky, your kit</p>
-  <h1 class="mb-6 font-display text-4xl font-semibold text-heading sm:text-5xl">My gear</h1>
+<GearShell title={t.title}>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+  <h1 class="mb-6 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
 
   <div class="mb-6 empty:hidden">
     <ServerError message={error} />
@@ -73,19 +81,17 @@ const primaryLink =
       <section aria-labelledby="sites-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 id="sites-heading" class="font-display text-2xl font-semibold text-heading">
-            Sites
+            {t.sites.heading}
           </h2>
           <a href="/gear/sites/new" class:list={[primaryLink]}>
-            Add site
+            {t.sites.add}
           </a>
         </div>
 
         {sitesError ? (
-          <ServerError message={sitesError} />
+          <ServerError message={translate(sitesError)} />
         ) : sites.length === 0 ? (
-          <p class="text-sm text-muted-foreground">
-            No sites yet. Add the place you observe from, so tonight's verdict uses your sky.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.sites.empty}</p>
         ) : (
           <ul class="divide-y divide-border">
             {sites.map((site) => (
@@ -99,10 +105,10 @@ const primaryLink =
                     <span>
                       {site.latitudeDeg.toFixed(2)}, {site.longitudeDeg.toFixed(2)}
                     </span>
-                    <span>Bortle {site.bortle}</span>
-                    <span>Min {site.minAltitudeDeg}°</span>
+                    <span>{t.sites.bortle({ bortle: String(site.bortle) })}</span>
+                    <span>{t.sites.minAltitude({ degrees: String(site.minAltitudeDeg) })}</span>
                     <span class="break-all">
-                      {site.timeZone} ({site.timeZoneSource === "manual" ? "pinned" : "auto"})
+                      {site.timeZone} ({site.timeZoneSource === "manual" ? t.sites.zonePinned : t.sites.zoneAuto})
                     </span>
                   </span>
                 </a>
@@ -115,19 +121,17 @@ const primaryLink =
       <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 id="telescopes-heading" class="font-display text-2xl font-semibold text-heading">
-            Telescopes
+            {t.telescopes.heading}
           </h2>
           <a href="/gear/telescopes/new" class:list={[primaryLink]}>
-            Add telescope
+            {t.telescopes.add}
           </a>
         </div>
 
         {telescopesError ? (
-          <ServerError message={telescopesError} />
+          <ServerError message={translate(telescopesError)} />
         ) : telescopes.length === 0 ? (
-          <p class="text-sm text-muted-foreground">
-            No telescopes yet. Add yours, so the suggested magnifications fit your scope.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.telescopes.empty}</p>
         ) : (
           <ul class="divide-y divide-border">
             {telescopes.map((telescope) => (
@@ -138,8 +142,8 @@ const primaryLink =
                 >
                   <span class="block font-semibold break-words text-heading">{telescope.name}</span>
                   <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span>{telescope.apertureMm} mm aperture</span>
-                    <span>{telescope.focalLengthMm} mm focal length</span>
+                    <span>{t.telescopes.aperture({ mm: String(telescope.apertureMm) })}</span>
+                    <span>{t.telescopes.focalLength({ mm: String(telescope.focalLengthMm) })}</span>
                     <span>f/{focalRatio(telescope)}</span>
                   </span>
                 </a>
@@ -152,19 +156,17 @@ const primaryLink =
       <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 id="eyepieces-heading" class="font-display text-2xl font-semibold text-heading">
-            Eyepieces
+            {t.eyepieces.heading}
           </h2>
           <a href="/gear/eyepieces/new" class:list={[primaryLink]}>
-            Add eyepiece
+            {t.eyepieces.add}
           </a>
         </div>
 
         {eyepiecesError ? (
-          <ServerError message={eyepiecesError} />
+          <ServerError message={translate(eyepiecesError)} />
         ) : eyepieces.length === 0 ? (
-          <p class="text-sm text-muted-foreground">
-            No eyepieces yet. Add the ones in your case, so each object gets a pair you actually own.
-          </p>
+          <p class="text-sm text-muted-foreground">{t.eyepieces.empty}</p>
         ) : (
           <ul class="divide-y divide-border">
             {eyepieces.map((eyepiece) => (
@@ -175,9 +177,9 @@ const primaryLink =
                 >
                   <span class="block font-semibold break-words text-heading">{eyepiece.name}</span>
                   <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span>{eyepiece.focalLengthMm} mm</span>
+                    <span>{t.eyepieces.focalLength({ mm: String(eyepiece.focalLengthMm) })}</span>
                     <span>
-                      {eyepiece.afovDeg}° AFOV · {eyepieceType(eyepiece.afovDeg)}
+                      {t.eyepieces.afov({ degrees: String(eyepiece.afovDeg), type: eyepieceType(eyepiece.afovDeg) })}
                     </span>
                   </span>
                 </a>

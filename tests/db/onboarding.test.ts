@@ -6,6 +6,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
+import { getMessages, translateKey } from "@/i18n";
 import type { Database } from "@/lib/database.types";
 import { completeOnboarding } from "@/lib/onboarding/store";
 
@@ -167,7 +168,7 @@ describe("complete_onboarding", () => {
 
 describe("completeOnboarding (store)", () => {
   const input = {
-    site: { name: "Home", latitudeDeg: 40.42, longitudeDeg: -3.7, bortle: 5, minAltitudeDeg: 15 },
+    site: { latitudeDeg: 40.42, longitudeDeg: -3.7, bortle: 5, minAltitudeDeg: 15 },
     telescope: { name: "8-inch Dobsonian", apertureMm: 200, focalLengthMm: 1200 },
     eyepieces: [{ name: "25 mm Plössl", focalLengthMm: 25, afovPreset: "plossl" as const, afovDeg: 50 }],
   };
@@ -175,11 +176,14 @@ describe("completeOnboarding (store)", () => {
   it("saves with the looked-up zone, then maps a repeat to alreadyOnboarded", async () => {
     const e = await signUp("e");
 
-    expect(await completeOnboarding(e.client, input)).toEqual({ ok: true });
-    const site = await e.client.from("sites").select("time_zone, time_zone_source").single();
-    expect(site.data).toEqual({ time_zone: "Europe/Madrid", time_zone_source: "auto" });
+    expect(await completeOnboarding(e.client, input, { siteName: "Home" })).toEqual({ ok: true });
+    const site = await e.client.from("sites").select("name, time_zone, time_zone_source").single();
+    expect(site.data).toEqual({ name: "Home", time_zone: "Europe/Madrid", time_zone_source: "auto" });
 
-    expect(await completeOnboarding(e.client, input)).toEqual({ ok: false, reason: "alreadyOnboarded" });
+    expect(await completeOnboarding(e.client, input, { siteName: "Home" })).toEqual({
+      ok: false,
+      reason: "alreadyOnboarded",
+    });
     expect(await counts(e.client)).toEqual({ sites: 1, telescopes: 1, eyepieces: 1 });
   });
 
@@ -187,11 +191,12 @@ describe("completeOnboarding (store)", () => {
     const f = await signUp("f");
     const tooWide = { ...input, eyepieces: [{ ...input.eyepieces[0], afovPreset: "other" as const, afovDeg: 200 }] };
 
-    expect(await completeOnboarding(f.client, tooWide)).toEqual({
-      ok: false,
-      reason: "failed",
-      message: "Some values are out of the allowed range.",
-    });
+    const result = await completeOnboarding(f.client, tooWide, { siteName: "Home" });
+    expect(result).toEqual({ ok: false, reason: "failed", message: "errors.outOfRange" });
+    const message = result.ok || result.reason !== "failed" ? "" : result.message;
+    expect(translateKey(getMessages("en"), message, "errors.generic")).toBe(
+      "Some values are out of the allowed range.",
+    );
     expect(await counts(f.client)).toEqual({ sites: 0, telescopes: 0, eyepieces: 0 });
   });
 });

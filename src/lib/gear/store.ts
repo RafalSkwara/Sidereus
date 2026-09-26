@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
 import type { Site } from "@/lib/engine/types";
 import type { TypedSupabaseClient } from "@/lib/supabase";
@@ -10,14 +11,14 @@ import { resolveTimeZone, type TimeZoneMode, type TimeZoneResolution } from "./t
  * here, so pages and routes stay thin. It maps camelCase domain types to snake_case columns.
  *
  * Privacy rules (PRD NFR): database error text can echo submitted values, coordinates included, so
- * it never leaves this module. Writes return a fixed, value-free message; reads throw an `Error`
- * with a fixed message. This module never logs.
+ * it never leaves this module. Writes return a fixed, value-free message key (`@/i18n`); reads throw
+ * an `Error` whose message is such a key. This module never logs.
  *
  * Ownership is enforced by RLS: `user_id` defaults to `auth.uid()`, so writes never send it, and a
  * row owned by someone else behaves exactly like a missing one.
  */
 
-export type WriteResult = { ok: true } | { ok: false; message: string };
+export type WriteResult = { ok: true } | { ok: false; message: MessageKey };
 
 export interface SiteRecord {
   id: string;
@@ -47,7 +48,7 @@ export interface EyepieceRecord {
   createdAt: string;
 }
 
-const OUT_OF_RANGE = "Some values are out of the allowed range.";
+const OUT_OF_RANGE: MessageKey = "errors.outOfRange";
 
 /** Postgres `invalid_text_representation`: a malformed uuid in the id filter. Treated as "not found". */
 const INVALID_TEXT = "22P02";
@@ -55,13 +56,13 @@ const INVALID_TEXT = "22P02";
 const CHECK_VIOLATION = "23514";
 
 interface EntityMessages {
-  loadFailed: string;
-  saveFailed: string;
-  deleteFailed: string;
-  notFound: string;
+  loadFailed: MessageKey;
+  saveFailed: MessageKey;
+  deleteFailed: MessageKey;
+  notFound: MessageKey;
 }
 
-function writeFailure(error: PostgrestError, fallback: string, messages: EntityMessages): WriteResult {
+function writeFailure(error: PostgrestError, fallback: MessageKey, messages: EntityMessages): WriteResult {
   if (error.code === INVALID_TEXT) {
     return { ok: false, message: messages.notFound };
   }
@@ -74,7 +75,7 @@ function writeFailure(error: PostgrestError, fallback: string, messages: EntityM
 function affected(
   data: unknown[] | null,
   error: PostgrestError | null,
-  fallback: string,
+  fallback: MessageKey,
   messages: EntityMessages,
 ): WriteResult {
   if (error) {
@@ -91,10 +92,10 @@ function affected(
 type SiteRow = Tables<"sites">;
 
 const SITE_MESSAGES: EntityMessages = {
-  loadFailed: "Could not load your sites. Please try again.",
-  saveFailed: "Could not save the site. Please try again.",
-  deleteFailed: "Could not delete the site. Please try again.",
-  notFound: "Site not found.",
+  loadFailed: "errors.load.sites",
+  saveFailed: "errors.save.site",
+  deleteFailed: "errors.delete.site",
+  notFound: "errors.notFound.site",
 };
 
 function toSiteRecord(row: SiteRow): SiteRecord {
@@ -189,10 +190,10 @@ export const siteStore = {
 type TelescopeRow = Tables<"telescopes">;
 
 const TELESCOPE_MESSAGES: EntityMessages = {
-  loadFailed: "Could not load your telescopes. Please try again.",
-  saveFailed: "Could not save the telescope. Please try again.",
-  deleteFailed: "Could not delete the telescope. Please try again.",
-  notFound: "Telescope not found.",
+  loadFailed: "errors.load.telescopes",
+  saveFailed: "errors.save.telescope",
+  deleteFailed: "errors.delete.telescope",
+  notFound: "errors.notFound.telescope",
 };
 
 function toTelescopeRecord(row: TelescopeRow): TelescopeRecord {
@@ -250,10 +251,10 @@ export const telescopeStore = {
 type EyepieceRow = Tables<"eyepieces">;
 
 const EYEPIECE_MESSAGES: EntityMessages = {
-  loadFailed: "Could not load your eyepieces. Please try again.",
-  saveFailed: "Could not save the eyepiece. Please try again.",
-  deleteFailed: "Could not delete the eyepiece. Please try again.",
-  notFound: "Eyepiece not found.",
+  loadFailed: "errors.load.eyepieces",
+  saveFailed: "errors.save.eyepiece",
+  deleteFailed: "errors.delete.eyepiece",
+  notFound: "errors.notFound.eyepiece",
 };
 
 function toEyepieceRecord(row: EyepieceRow): EyepieceRecord {

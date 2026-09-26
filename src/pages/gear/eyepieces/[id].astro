@@ -4,13 +4,15 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import EyepieceForm from "@/components/gear/EyepieceForm";
 import DeleteButton from "@/components/gear/DeleteButton";
 import { ServerError } from "@/components/forms/ServerError";
+import { getMessages } from "@/i18n";
 import { eyepieceStore, type EyepieceRecord } from "@/lib/gear/store";
 
-const LOAD_FAILED = "Could not load the eyepiece. Please try again.";
-
 const id = Astro.params.id ?? "";
+// `?error=` carries a message key; the form translates it.
 const error = Astro.url.searchParams.get("error");
-const { supabase } = Astro.locals;
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.gear.eyepieces;
 
 let eyepiece: EyepieceRecord | null = null;
 let loadError: string | null = null;
@@ -18,7 +20,7 @@ if (supabase) {
   try {
     eyepiece = await eyepieceStore.get(supabase, id);
   } catch {
-    loadError = LOAD_FAILED;
+    loadError = m.errors.load.eyepiece;
   }
   if (!eyepiece && !loadError) {
     Astro.response.status = 404;
@@ -26,9 +28,9 @@ if (supabase) {
 }
 ---
 
-<GearShell title={eyepiece ? eyepiece.name : "Eyepiece"}>
+<GearShell title={eyepiece ? eyepiece.name : t.fallbackTitle}>
   <a href="/gear" class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
-    ← My gear
+    {m.gear.back}
   </a>
   {!supabase ? (
     <DatabaseMissing />
@@ -36,7 +38,7 @@ if (supabase) {
     <ServerError message={loadError} />
   ) : eyepiece ? (
     <>
-      <h1 class="mb-6 font-display text-3xl font-semibold break-words text-heading sm:text-4xl">Edit eyepiece</h1>
+      <h1 class="mb-6 font-display text-3xl font-semibold break-words text-heading sm:text-4xl">{t.editTitle}</h1>
       <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <EyepieceForm
           action={`/api/gear/eyepieces/${encodeURIComponent(eyepiece.id)}`}
@@ -46,24 +48,25 @@ if (supabase) {
             afovDeg: eyepiece.afovDeg,
           }}
           serverError={error}
+          locale={locale}
           client:load
         />
       </div>
       <div class="mt-6">
         <DeleteButton
           action={`/api/gear/eyepieces/${encodeURIComponent(eyepiece.id)}/delete`}
-          label="Delete eyepiece"
-          confirmMessage="Delete this eyepiece? This cannot be undone."
+          label={t.delete}
+          confirmMessage={t.confirmDelete}
           client:load
         />
       </div>
     </>
   ) : (
     <div class="rounded-2xl border border-border bg-surface p-6">
-      <h1 class="font-display text-3xl font-semibold text-heading">Not found</h1>
-      <p class="mt-2 text-sm text-muted-foreground">This eyepiece does not exist, or it is not yours.</p>
+      <h1 class="font-display text-3xl font-semibold text-heading">{m.gear.notFound}</h1>
+      <p class="mt-2 text-sm text-muted-foreground">{t.notFoundText}</p>
       <a href="/gear" class="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
-        Back to My gear
+        {m.gear.backToGear}
       </a>
     </div>
   )}

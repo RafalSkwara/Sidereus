@@ -3,12 +3,13 @@ import { Trash2 } from "lucide-react";
 
 interface Props {
   action: string;
-  label?: string;
+  /** Translated by the page, like `confirmMessage`. */
+  label: string;
   confirmMessage: string;
 }
 
 /** A native POST form to a delete route that asks for confirmation before submitting. */
-export default function DeleteButton({ action, label = "Delete", confirmMessage }: Props) {
+export default function DeleteButton({ action, label, confirmMessage }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!window.confirm(confirmMessage)) {
       e.preventDefault();

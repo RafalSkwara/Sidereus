@@ -3,6 +3,8 @@ import { MapPin, Save } from "lucide-react";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { getMessages, translateKey } from "@/i18n";
+import type { Locale } from "@/lib/preferences";
 import { SITE_FORM_DEFAULTS, siteInputSchema } from "@/lib/gear/schemas";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +22,9 @@ export interface SiteFormValues {
 interface Props {
   action: string;
   initial?: SiteFormValues;
+  /** A message key from `?error=`; translated here, unknown values read as the generic message. */
   serverError?: string | null;
+  locale: Locale;
 }
 
 type FieldName = "name" | "latitudeDeg" | "longitudeDeg" | "bortle" | "minAltitudeDeg" | "timeZone";
@@ -28,17 +32,7 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 
 const FIELD_NAMES: readonly string[] = ["name", "latitudeDeg", "longitudeDeg", "bortle", "minAltitudeDeg", "timeZone"];
 
-const BORTLE_LABELS: Record<number, string> = {
-  1: "Excellent dark site",
-  2: "Truly dark site",
-  3: "Rural sky",
-  4: "Rural to suburban",
-  5: "Suburban sky",
-  6: "Bright suburban sky",
-  7: "Suburban to city",
-  8: "City sky",
-  9: "Inner-city sky",
-};
+const BORTLE_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 const selectBase =
   "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
@@ -61,7 +55,9 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
-export default function SiteForm({ action, initial, serverError }: Props) {
+export default function SiteForm({ action, initial, serverError, locale }: Props) {
+  const m = getMessages(locale);
+  const t = m.siteForm;
   const [name, setName] = useState(initial?.name ?? "");
   const [latitude, setLatitude] = useState(initial ? String(initial.latitudeDeg) : "");
   const [longitude, setLongitude] = useState(initial ? String(initial.longitudeDeg) : "");
@@ -78,7 +74,7 @@ export default function SiteForm({ action, initial, serverError }: Props) {
   }
 
   const autoLabel =
-    initial?.timeZoneSource === "auto" ? `Automatic, currently ${initial.timeZone}` : "Automatic (from coordinates)";
+    initial?.timeZoneSource === "auto" ? t.autoCurrent({ zone: initial.timeZone }) : t.autoFromCoordinates;
   const timeZoneMode = zone === "" ? "auto" : "manual";
 
   function validate() {
@@ -96,7 +92,7 @@ export default function SiteForm({ action, initial, serverError }: Props) {
       for (const issue of result.error.issues) {
         const field = issue.path[0];
         if (typeof field === "string" && FIELD_NAMES.includes(field)) {
-          next[field as FieldName] ??= issue.message;
+          next[field as FieldName] ??= translateKey(m, issue.message, "errors.checkFields");
         }
       }
     }
@@ -118,13 +114,13 @@ export default function SiteForm({ action, initial, serverError }: Props) {
     <form method="POST" action={action} className="space-y-4" onSubmit={handleSubmit} noValidate>
       <FormField
         id="name"
-        label="Name"
+        label={m.common.name}
         value={name}
         onChange={(v) => {
           setName(v);
           clearError("name");
         }}
-        placeholder="Back garden"
+        placeholder={t.namePlaceholder}
         error={errors.name}
         icon={<MapPin className="size-4" />}
       />
@@ -132,7 +128,7 @@ export default function SiteForm({ action, initial, serverError }: Props) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           id="latitudeDeg"
-          label="Latitude (°)"
+          label={t.latitude}
           type="number"
           step={0.01}
           min={-90}
@@ -148,7 +144,7 @@ export default function SiteForm({ action, initial, serverError }: Props) {
         />
         <FormField
           id="longitudeDeg"
-          label="Longitude (°)"
+          label={t.longitude}
           type="number"
           step={0.01}
           min={-180}
@@ -163,13 +159,11 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           error={errors.longitudeDeg}
         />
       </div>
-      <p className="text-muted-foreground -mt-2 text-xs">
-        Coordinates are rounded to 2 decimals (about 1 km) when saved. North and east are positive.
-      </p>
+      <p className="text-muted-foreground -mt-2 text-xs">{t.coordinatesHint}</p>
 
       <div>
         <label htmlFor="bortle" className="text-heading mb-1 block text-sm font-semibold">
-          Sky darkness (Bortle class)
+          {t.bortle}
         </label>
         <select
           id="bortle"
@@ -187,11 +181,11 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           )}
         >
           <option value="" disabled>
-            Choose a class
+            {t.chooseBortle}
           </option>
-          {Object.entries(BORTLE_LABELS).map(([value, label]) => (
+          {BORTLE_CLASSES.map((value) => (
             <option key={value} value={value}>
-              {value} · {label}
+              {t.bortleOption({ value: String(value), label: t.bortleLabels[value] })}
             </option>
           ))}
         </select>
@@ -200,7 +194,7 @@ export default function SiteForm({ action, initial, serverError }: Props) {
 
       <FormField
         id="minAltitudeDeg"
-        label="Minimum altitude (°)"
+        label={t.minAltitude}
         type="number"
         step={1}
         min={0}
@@ -212,16 +206,12 @@ export default function SiteForm({ action, initial, serverError }: Props) {
           clearError("minAltitudeDeg");
         }}
         error={errors.minAltitudeDeg}
-        hint={
-          <p className="text-muted-foreground mt-1 text-xs">
-            Objects lower than this, e.g. behind trees or roofs, are skipped.
-          </p>
-        }
+        hint={<p className="text-muted-foreground mt-1 text-xs">{t.minAltitudeHint}</p>}
       />
 
       <div>
         <label htmlFor="timeZone" className="text-heading mb-1 block text-sm font-semibold">
-          Time zone
+          {t.timeZone}
         </label>
         <input type="hidden" name="timeZoneMode" value={timeZoneMode} />
         <select
@@ -249,10 +239,10 @@ export default function SiteForm({ action, initial, serverError }: Props) {
         <FieldError message={errors.timeZone} />
       </div>
 
-      <ServerError message={serverError} />
+      <ServerError message={serverError ? translateKey(m, serverError, "errors.generic") : null} />
 
-      <SubmitButton pendingText="Saving..." icon={<Save className="size-4" />}>
-        Save site
+      <SubmitButton pendingText={m.common.saving} icon={<Save className="size-4" />}>
+        {t.submit}
       </SubmitButton>
     </form>
   );

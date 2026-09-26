@@ -2,6 +2,7 @@
 import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { getMessages } from "@/i18n";
 
 interface Props {
   level: VerdictLevel;
@@ -16,7 +17,8 @@ interface Props {
 
 const { level, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
 
-const LABELS: Record<VerdictLevel, string> = { go: "Go", marginal: "Marginal", "no-go": "No-go" };
+const m = getMessages(Astro.locals.locale);
+const t = m.tonight.card;
 // A saved copy or no forecast at all stands out from the routine "Forecast updated … ago".
 const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
   fresh: "text-muted-foreground",
@@ -26,14 +28,14 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
 ---
 
 <section aria-labelledby="verdict-heading" class:list={["rounded-2xl border p-4 sm:p-6", VERDICT_TONES[level].card]}>
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">Tonight's verdict</p>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
   <h2
     id="verdict-heading"
     class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-display text-3xl font-semibold text-heading"
   >
     <span class="inline-flex items-center gap-2">
       <span class:list={["size-2.5 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
-      {LABELS[level]}
+      {m.verdict.level[level]}
     </span>
     <span class="text-lg font-normal text-foreground">— {text}</span>
   </h2>
@@ -42,15 +44,15 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
   <p class="mt-3 text-sm text-foreground">
     {darkWindow.kind === "window" ? (
       <>
-        Dark from <span class="font-mono text-heading">{darkWindow.start}</span> to{" "}
+        {t.darkFrom} <span class="font-mono text-heading">{darkWindow.start}</span> {t.darkTo}{" "}
         <span class="font-mono text-heading">{darkWindow.end}</span>
       </>
     ) : explanation?.kind === "no-darkness" ? (
       explanation.returnText
     ) : (
-      "No dark window tonight"
+      t.noDarkWindow
     )}
-    <span class="text-muted-foreground"> · times in {timeZone}</span>
+    <span class="text-muted-foreground">{t.timesIn({ zone: timeZone })}</span>
   </p>
   <p class:list={["mt-1 text-sm", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
 </section>

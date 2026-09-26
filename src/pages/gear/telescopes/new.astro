@@ -2,19 +2,23 @@
 import GearShell from "@/components/gear/GearShell.astro";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import TelescopeForm from "@/components/gear/TelescopeForm";
+import { getMessages } from "@/i18n";
 
+// `?error=` carries a message key; the form translates it.
 const error = Astro.url.searchParams.get("error");
-const { supabase } = Astro.locals;
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.gear.telescopes;
 ---
 
-<GearShell title="Add telescope">
+<GearShell title={t.newTitle}>
   <a href="/gear" class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
-    ← My gear
+    {m.gear.back}
   </a>
-  <h1 class="mb-6 font-display text-3xl font-semibold text-heading sm:text-4xl">Add telescope</h1>
+  <h1 class="mb-6 font-display text-3xl font-semibold text-heading sm:text-4xl">{t.newTitle}</h1>
   {supabase ? (
     <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-      <TelescopeForm action="/api/gear/telescopes" serverError={error} client:load />
+      <TelescopeForm action="/api/gear/telescopes" serverError={error} locale={locale} client:load />
     </div>
   ) : (
     <DatabaseMissing />

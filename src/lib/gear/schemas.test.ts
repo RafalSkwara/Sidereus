@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getMessages, translateKey } from "@/i18n";
 import { DEFAULT_MIN_ALTITUDE_DEG } from "@/lib/engine/parameters";
 import { eyepieceInputSchema, SITE_FORM_DEFAULTS, siteInputSchema, telescopeInputSchema } from "./schemas";
 
@@ -13,8 +14,9 @@ const warsaw = {
   timeZone: "",
 };
 
+/** The issues' messages as a viewer reads them: each key translated through the English catalogue. */
 function messages(result: { success: boolean; error?: { issues: { message: string }[] } }): string[] {
-  return result.error?.issues.map((issue) => issue.message) ?? [];
+  return result.error?.issues.map((issue) => translateKey(getMessages("en"), issue.message, "errors.generic")) ?? [];
 }
 
 describe("siteInputSchema", () => {
@@ -65,7 +67,10 @@ describe("siteInputSchema", () => {
     const result = siteInputSchema.safeParse({ ...warsaw, latitudeDeg: "91.2345", longitudeDeg: "-181.9876" });
     expect(result.success).toBe(false);
     const all = messages(result).join(" | ");
-    expect(messages(result)).toHaveLength(2);
+    expect(messages(result)).toEqual([
+      "Enter a latitude between -90 and 90 degrees.",
+      "Enter a longitude between -180 and 180 degrees.",
+    ]);
     expect(all).not.toContain("91.2345");
     expect(all).not.toContain("181.9876");
   });

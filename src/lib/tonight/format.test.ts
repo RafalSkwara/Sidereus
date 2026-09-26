@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { Verdict } from "@/lib/engine";
 
-import {
+import { createFormatter, type ReasonEntry } from "./format";
+
+const {
   clearedLine,
   compassPoint,
   darkReturnText,
@@ -16,8 +18,7 @@ import {
   noDarknessCauseText,
   reasonLine,
   verdictReasonText,
-  type ReasonEntry,
-} from "./format";
+} = createFormatter("en");
 
 describe("compassPoint", () => {
   it.each([

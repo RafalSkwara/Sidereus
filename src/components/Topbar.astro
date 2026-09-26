@@ -1,7 +1,9 @@
 ---
 import PreferenceSwitches from "@/components/PreferenceSwitches";
+import { getMessages } from "@/i18n";
 
 const { user, theme, locale } = Astro.locals;
+const m = getMessages(locale);
 const { pathname } = Astro.url;
 
 const navLink = "transition-colors hover:text-heading";
@@ -16,16 +18,6 @@ function navState(href: string) {
 const tonightLink = navState("/tonight");
 const gearLink = navState("/gear");
 const signinLink = navState("/auth/signin");
-
-// English literals until the message catalogue lands (F-03 phase 3).
-const preferenceLabels = {
-  theme: "Theme",
-  dark: "Dark theme",
-  light: "Light theme",
-  language: "Language",
-  english: "English",
-  polish: "Polski",
-};
 ---
 
 <header class="flex items-center justify-between gap-4">
@@ -33,35 +25,35 @@ const preferenceLabels = {
     <svg viewBox="0 0 24 24" class="size-[22px] text-primary" fill="currentColor" aria-hidden="true">
       <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
     </svg>
-    <span class="font-display text-2xl font-semibold text-heading">Sidereus</span>
+    <span class="font-display text-2xl font-semibold text-heading">{m.common.appName}</span>
   </a>
 
   <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-3 text-[15px]">
     {user ? (
       <>
         <a href="/tonight" class:list={tonightLink.class} aria-current={tonightLink["aria-current"]}>
-          Tonight
+          {m.nav.tonight}
         </a>
         <a href="/gear" class:list={gearLink.class} aria-current={gearLink["aria-current"]}>
-          My gear
+          {m.nav.myGear}
         </a>
         <span class="hidden items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm text-muted-foreground sm:inline-flex">
           <span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>
-          Welcome!
+          {m.nav.welcome}
         </span>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class="cursor-pointer text-muted-foreground transition-colors hover:text-heading">
-            Sign out
+            {m.nav.signOut}
           </button>
         </form>
-        <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
+        <PreferenceSwitches theme={theme} locale={locale} client:load />
       </>
     ) : (
       <>
         <a href="/auth/signin" class:list={signinLink.class} aria-current={signinLink["aria-current"]}>
-          Sign in
+          {m.nav.signIn}
         </a>
-        <PreferenceSwitches theme={theme} locale={locale} labels={preferenceLabels} client:load />
+        <PreferenceSwitches theme={theme} locale={locale} client:load />
       </>
     )}
   </div>

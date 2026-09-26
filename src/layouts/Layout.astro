@@ -1,14 +1,16 @@
 ---
 import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
+import { getMessages, translateKey } from "@/i18n";
 import { missingConfigs } from "@/lib/config-status";
 
 interface Props {
   title?: string;
 }
 
-const { title = "Sidereus" } = Astro.props;
 const { theme, locale } = Astro.locals;
+const m = getMessages(locale);
+const { title = m.common.appName } = Astro.props;
 ---
 
 <!doctype html>
@@ -22,12 +24,12 @@ const { theme, locale } = Astro.locals;
   <body>
     {missingConfigs.map((cfg) => (
       <Banner variant="error">
-        <strong>Uwaga:</strong> {cfg.message}
+        <strong>{m.config.warning}</strong> {translateKey(m, cfg.message, "errors.generic")}
         {cfg.docsUrl && (
           <>
             {" "}
             <a href={cfg.docsUrl} target="_blank" rel="noopener noreferrer">
-              {cfg.docsLabel ?? "Dokumentacja"}
+              {cfg.docsLabel ? translateKey(m, cfg.docsLabel, "config.docs") : m.config.docs}
             </a>
             .
           </>

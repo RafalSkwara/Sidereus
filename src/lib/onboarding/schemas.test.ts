@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getMessages, translateKey } from "@/i18n";
 import { DEFAULT_MIN_ALTITUDE_DEG } from "@/lib/engine/parameters";
 import { onboardingInputSchema } from "./schemas";
 
@@ -18,8 +19,9 @@ const form = {
   eyepieces: JSON.stringify(pair),
 };
 
+/** The issues' messages as a viewer reads them: each key translated through the English catalogue. */
 function messages(result: { success: boolean; error?: { issues: { message: string }[] } }): string[] {
-  return result.error?.issues.map((issue) => issue.message) ?? [];
+  return result.error?.issues.map((issue) => translateKey(getMessages("en"), issue.message, "errors.generic")) ?? [];
 }
 
 function eyepieceRows(count: number): string {
@@ -29,12 +31,11 @@ function eyepieceRows(count: number): string {
 }
 
 describe("onboardingInputSchema", () => {
-  it("accepts a full setup, fixes the site name and minimum altitude, and rounds the coordinates", () => {
+  it("accepts a full setup, fixes the minimum altitude, and rounds the coordinates", () => {
     const result = onboardingInputSchema.safeParse(form);
     expect(result.success).toBe(true);
     expect(result.data).toEqual({
       site: {
-        name: "Home",
         latitudeDeg: 52.23,
         longitudeDeg: 21.01,
         bortle: 6,
@@ -80,8 +81,9 @@ describe("onboardingInputSchema", () => {
     const result = onboardingInputSchema.safeParse({ ...form, latitudeDeg: "-91" });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
-      expect.objectContaining({ path: ["latitudeDeg"], message: "Enter a latitude between -90 and 90 degrees." }),
+      expect.objectContaining({ path: ["latitudeDeg"], message: "errors.site.latitudeRange" }),
     ]);
+    expect(messages(result)).toEqual(["Enter a latitude between -90 and 90 degrees."]);
   });
 
   it("rejects eleven eyepieces", () => {

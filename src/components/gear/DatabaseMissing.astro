@@ -1,12 +1,16 @@
 ---
 /** Shown instead of gear content when `locals.supabase` is null (Supabase env vars unset). */
+import { getMessages } from "@/i18n";
+
+const t = getMessages(Astro.locals.locale).databaseMissing;
 ---
 
 <div class="rounded-2xl border border-warning/40 bg-warning/10 p-6 text-sm text-foreground">
-  <p class="font-display text-lg font-semibold text-heading">Database not configured</p>
+  <p class="font-display text-lg font-semibold text-heading">{t.title}</p>
   <p class="mt-2 text-muted-foreground">
-    Sidereus cannot reach its database, so your sites and gear cannot be shown or saved. Set
-    <code class="font-mono text-heading">SUPABASE_URL</code> and{" "}
-    <code class="font-mono text-heading">SUPABASE_KEY</code> and restart the server.
+    {t.bodyPrefix}
+    <code class="font-mono text-heading">SUPABASE_URL</code>
+    {t.and} <code class="font-mono text-heading">SUPABASE_KEY</code>
+    {t.bodySuffix}
   </p>
 </div>

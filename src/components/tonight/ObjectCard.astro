@@ -1,4 +1,6 @@
 ---
+import { getMessages } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightEntry } from "@/lib/tonight/build";
 
 interface Props {
@@ -7,6 +9,9 @@ interface Props {
 }
 
 const { entry, rank } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).tonight.object;
+const commonName = localCommonName(entry.messier, entry.commonName, locale);
 ---
 
 <li class="rounded-2xl border border-border bg-surface p-4 sm:p-5">
@@ -14,20 +19,20 @@ const { entry, rank } = Astro.props;
     <h3 class="font-display text-2xl font-semibold text-heading">
       <span class="mr-2 font-mono text-sm font-normal text-muted-foreground">{rank}.</span>
       {entry.id}
-      {entry.commonName && <span class="text-lg text-foreground"> · {entry.commonName}</span>}
+      {commonName && <span class="text-lg text-foreground"> · {commonName}</span>}
     </h3>
-    <span class="text-sm text-muted-foreground">in {entry.constellation}</span>
+    <span class="text-sm text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</span>
   </div>
 
   <dl class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
     <div class="flex gap-2">
-      <dt class="text-muted-foreground">Window</dt>
+      <dt class="text-muted-foreground">{t.window}</dt>
       <dd class="font-mono text-heading">
         {entry.windowStart}–{entry.windowEnd}
       </dd>
     </div>
     <div class="flex gap-2">
-      <dt class="text-muted-foreground">Best</dt>
+      <dt class="text-muted-foreground">{t.best}</dt>
       <dd class="font-mono text-heading">
         {entry.bestTime}, {entry.bestDirection}
       </dd>
@@ -36,16 +41,14 @@ const { entry, rank } = Astro.props;
 
   {entry.pair?.kind === "pair" && (
     <p class="mt-2 text-sm text-foreground">
-      Find with <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span> (
-      {entry.pair.finding.magnification}×) · detail with{" "}
-      <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span> ({entry.pair.detail.magnification}
-      ×)
+      {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
+      {t.magnification({ magnification: String(entry.pair.finding.magnification) })} · {t.detailWith}{" "}
+      <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
+      {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
     </p>
   )}
   {entry.pair?.kind === "none-fit" && (
-    <p class="mt-2 text-sm text-foreground">
-      Larger than any field in your kit; use your widest ({entry.pair.widestName}) and sweep across it
-    </p>
+    <p class="mt-2 text-sm text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
   )}
 
   <p class="mt-2 text-sm text-foreground">{entry.reason}</p>

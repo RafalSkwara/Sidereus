@@ -1,20 +1,22 @@
 ---
 import AuthShell from "@/components/AuthShell.astro";
+import { getMessages } from "@/i18n";
 
-const { user } = Astro.locals;
+const { user, locale } = Astro.locals;
+const t = getMessages(locale).dashboard;
 ---
 
-<AuthShell title="Dashboard" centered>
+<AuthShell title={t.title} centered>
   <p class="break-words text-foreground">
-    Welcome, <span class="font-semibold text-heading">{user?.email}</span>
+    {t.welcome} <span class="font-semibold text-heading">{user?.email}</span>
   </p>
-  <p class="mt-2 text-sm text-muted-foreground">This page is only for authenticated users.</p>
+  <p class="mt-2 text-sm text-muted-foreground">{t.note}</p>
   <form method="POST" action="/api/auth/signout" class="mt-6">
     <button
       type="submit"
       class="cursor-pointer rounded-lg border border-border px-4 py-2 text-sm font-semibold text-heading transition-colors hover:bg-accent"
     >
-      Sign out
+      {t.signOut}
     </button>
   </form>
 </AuthShell>

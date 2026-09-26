@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getMessages } from "@/i18n";
 import { EYEPIECE_PRESETS } from "@/lib/gear/eyepiece-presets";
 import { eyepieceInputSchema, telescopeInputSchema } from "@/lib/gear/schemas";
 import {
@@ -9,6 +10,8 @@ import {
   SKY_SCENES,
   TELESCOPE_PRESETS,
 } from "./presets";
+
+const copy = getMessages("en").onboarding;
 
 function ids(items: readonly { id: string }[]): string[] {
   return items.map((item) => item.id);
@@ -25,15 +28,20 @@ describe("TELESCOPE_PRESETS", () => {
     ]);
   });
 
+  it("names every preset in the catalogue, and nothing else", () => {
+    expect(Object.keys(copy.telescopes)).toEqual(ids(TELESCOPE_PRESETS));
+  });
+
   it.each(TELESCOPE_PRESETS)("$id passes the telescope schema once stringified", (preset) => {
+    const name = copy.telescopes[preset.id];
     const result = telescopeInputSchema.safeParse({
-      name: preset.name,
+      name,
       apertureMm: String(preset.apertureMm),
       focalLengthMm: String(preset.focalLengthMm),
     });
     expect(result.success).toBe(true);
     expect(result.data).toEqual({
-      name: preset.name,
+      name,
       apertureMm: preset.apertureMm,
       focalLengthMm: preset.focalLengthMm,
     });
@@ -53,6 +61,10 @@ describe("EYEPIECE_KIT_PRESETS", () => {
       ["plossl-set", [32, 17, 13, 8, 6]],
       ["none", []],
     ]);
+  });
+
+  it("names every kit in the catalogue, and nothing else", () => {
+    expect(Object.keys(copy.eyepieceKits)).toEqual(ids(EYEPIECE_KIT_PRESETS));
   });
 
   const eyepieces = EYEPIECE_KIT_PRESETS.flatMap((kit) => kit.eyepieces.map((eyepiece) => ({ kit: kit.id, eyepiece })));
@@ -96,9 +108,10 @@ describe("SKY_SCENES", () => {
   });
 
   it("gives every scene a title and a one-sentence description", () => {
+    expect(Object.keys(copy.scenes)).toEqual(ids(SKY_SCENES));
     for (const scene of SKY_SCENES) {
-      expect(scene.title.trim()).not.toBe("");
-      expect(scene.description).toMatch(/^[A-Z][^.]*\.$/);
+      expect(copy.scenes[scene.id].title.trim()).not.toBe("");
+      expect(copy.scenes[scene.id].description).toMatch(/^[A-Z][^.]*\.$/);
     }
   });
 

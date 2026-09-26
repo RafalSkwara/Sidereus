@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { MessageKey } from "@/i18n";
 import { DEFAULT_MIN_ALTITUDE_DEG } from "@/lib/engine/parameters";
 import { eyepieceInputSchema, siteInputSchema, telescopeInputSchema } from "@/lib/gear/schemas";
 
@@ -6,25 +7,24 @@ import { eyepieceInputSchema, siteInputSchema, telescopeInputSchema } from "@/li
  * Validates one onboarding submit, both in the island (before submit) and again in the route. It
  * reuses the S-01 field rules from `@/lib/gear/schemas`: coordinate ranges and rounding, the Bortle
  * range, the telescope fields and the whole eyepiece schema. The site name and minimum altitude are
- * not form fields: FR-004 fixes them to "Home" and the PRD default.
+ * not form fields: FR-004 fixes the minimum altitude to the PRD default here, and the route passes
+ * the localised site name (`onboarding.homeSiteName`) to `completeOnboarding`.
  *
  * Input is FormData-shaped (strings). `eyepieces` is a JSON string holding an array of 0-10 objects
  * shaped like the `/gear` eyepiece form (`{ name, focalLengthMm, afovPreset, afovDeg? }`).
  *
- * Every error message is static and never contains a submitted value (the route puts messages into
- * a redirect URL, and coordinates must not end up in URLs or logs).
+ * Every error message is a message key (`@/i18n`) and never contains a submitted value (the route
+ * puts messages into a redirect URL, and coordinates must not end up in URLs or logs).
  *
- * Island-safe: imports only zod, `@/lib/gear/schemas` and `@/lib/engine/parameters` (never the
- * server-only `timezone.ts` or any `store.ts`).
+ * Island-safe: imports only zod, `@/lib/gear/schemas`, `@/lib/engine/parameters` and the
+ * catalogue's key type (never the server-only `timezone.ts` or any `store.ts`).
  */
-
-/** The name every onboarding site gets (FR-004); it can be renamed later in `/gear`. */
-export const ONBOARDING_SITE_NAME = "Home";
 
 export const MAX_ONBOARDING_EYEPIECES = 10;
 
-const EYEPIECES_MALFORMED = "Check your eyepieces.";
-const EYEPIECES_TOO_MANY = `Add at most ${MAX_ONBOARDING_EYEPIECES} eyepieces.`;
+const EYEPIECES_MALFORMED: MessageKey = "errors.onboarding.eyepiecesMalformed";
+/** Its English text names `MAX_ONBOARDING_EYEPIECES`; keep the two in step. */
+const EYEPIECES_TOO_MANY: MessageKey = "errors.onboarding.eyepiecesTooMany";
 
 // The site schema is an object piped into a transform; its `in` side holds the individual field rules.
 const siteFields = siteInputSchema.in.shape;
@@ -64,7 +64,6 @@ export const onboardingInputSchema = z
   })
   .transform((form) => ({
     site: {
-      name: ONBOARDING_SITE_NAME,
       latitudeDeg: form.latitudeDeg,
       longitudeDeg: form.longitudeDeg,
       bortle: form.bortle,

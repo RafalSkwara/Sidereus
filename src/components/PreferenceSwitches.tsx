@@ -1,20 +1,11 @@
 import { useState } from "react";
+import { getMessages } from "@/i18n";
 import { LOCALE_COOKIE, THEME_COOKIE, preferenceCookie, type Locale, type Theme } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
-
-export interface PreferenceSwitchesLabels {
-  theme: string;
-  dark: string;
-  light: string;
-  language: string;
-  english: string;
-  polish: string;
-}
 
 interface PreferenceSwitchesProps {
   theme: Theme;
   locale: Locale;
-  labels: PreferenceSwitchesLabels;
 }
 
 const groupClass = "flex gap-0.5 rounded-full border border-border p-0.5";
@@ -66,7 +57,8 @@ function SunIcon() {
  * Theme (moon/sun) and language (EN/PL) segmented controls. The server already rendered the
  * resolved theme on <html data-theme>; this island only mirrors a choice into the attribute and cookie.
  */
-export default function PreferenceSwitches({ theme: initialTheme, locale, labels }: PreferenceSwitchesProps) {
+export default function PreferenceSwitches({ theme: initialTheme, locale }: PreferenceSwitchesProps) {
+  const labels = getMessages(locale).preferences;
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   function chooseTheme(next: Theme) {

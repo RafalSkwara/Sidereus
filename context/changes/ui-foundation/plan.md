@@ -5,6 +5,7 @@
 Roadmap foundation F-03 (PRD v2: FR-025, FR-026; NFR dark by default; NFR attribution).
 
 Every screen gets its colours from semantic theme tokens in the chosen **Direction A · Observatory**:
+
 - Dark (default): navy with an amber accent.
 - Light: warm "daylight paper".
 - Type: Newsreader for headings, Public Sans for body text, IBM Plex Mono for times and numbers.
@@ -113,6 +114,7 @@ The Observatory token set in both themes, self-hosted fonts, server-resolved the
 **Intent**: Replace the unused stock shadcn palette with the Observatory palette as semantic tokens, dark by default and light under `[data-theme="light"]`, keeping the shadcn token names so `ui/button.tsx` works unchanged.
 
 **Contract**:
+
 - **Dark values, from board A:**
   - `--background #0b1020`, `--surface #141b30`, `--border #27304a`
   - `--foreground #d9deea`, `--muted-foreground #9ba4ba`, `--heading #fbf2dc`
@@ -122,7 +124,7 @@ The Observatory token set in both themes, self-hosted fonts, server-resolved the
   - `#f7f3ea`, `#fffdf7`, `#e2d9c6`, `#2a3040`, `#5b6273`, `#161b2b`
   - primary `#8f540a` / `#fffaf0`, `--primary-strong #7a4708`
   - `--go #1d7a54`, `--marginal #b87a12`, `--no-go #b3363a`
-- **Derived tokens:** shadcn aliases (`--card`, `--muted`, `--input`, `--ring`, `--destructive`, `--popover`, `--secondary`) plus `--faint`, `--warning`, `--success`. `--accent` / `--accent-foreground` keep shadcn's meaning as a *subtle hover surface* (a lightened `--surface`), never the brand amber, because `button.tsx:16,18` uses `hover:bg-accent` on the outline and ghost buttons.
+- **Derived tokens:** shadcn aliases (`--card`, `--muted`, `--input`, `--ring`, `--destructive`, `--popover`, `--secondary`) plus `--faint`, `--warning`, `--success`. `--accent` / `--accent-foreground` keep shadcn's meaning as a _subtle hover surface_ (a lightened `--surface`), never the brand amber, because `button.tsx:16,18` uses `hover:bg-accent` on the outline and ghost buttons.
 - **Verdict tints:** built with `color-mix()` from the verdict colours, one per verdict: `--go-surface` and `--go-border`, then the same two for marginal and no-go.
 - **Tailwind:** `@theme inline` exposes all of these as `--color-*`, plus `--font-display` (Newsreader), `--font-sans` (Public Sans) and `--font-mono` (IBM Plex Mono).
 - **Clean-up:** remove `bg-cosmic` and the `.dark` block; `body` uses `bg-background text-foreground font-sans`.
@@ -136,6 +138,7 @@ The Observatory token set in both themes, self-hosted fonts, server-resolved the
 **Intent**: Self-host the three families so there are no third-party font requests and they also render offline.
 
 **Contract**:
+
 - Add `@fontsource-variable/newsreader`, `@fontsource-variable/public-sans` and `@fontsource/ibm-plex-mono` (weight 500).
 - Import them from `global.css`.
 
@@ -146,6 +149,7 @@ The Observatory token set in both themes, self-hosted fonts, server-resolved the
 **Intent**: One pure, island-safe module decides theme and locale from cookies and headers, and the middleware stores the result for every request, including when Supabase is not configured.
 
 **Contract**:
+
 - **Constants:** `THEMES = ["dark", "light"] as const`, `LOCALES = ["en", "pl"] as const`, `THEME_COOKIE = "sidereus-theme"`, `LOCALE_COOKIE = "sidereus-lang"`, and a cookie max-age of 1 year.
 - **`resolveTheme(cookie?: string): Theme`:** invalid or missing → `"dark"`.
 - **`resolveLocale(cookie?: string, acceptLanguage?: string | null): Locale`:** a valid cookie wins; otherwise the first `Accept-Language` range whose primary subtag is `pl` or `en`, by q-value; otherwise `"en"`.
@@ -168,6 +172,7 @@ The Observatory token set in both themes, self-hosted fonts, server-resolved the
 **Intent**: The moon/sun and EN/PL segmented controls from board A, in the top bar for signed-in and signed-out users alike.
 
 **Contract**:
+
 - **Props:** `{ theme: Theme; locale: Locale; labels: {...} }`. In Phase 1 the labels are English literals passed from `Topbar`; Phase 3 moves them to the catalogue.
 - **Controls:** two `role="group"` segments of real `<button type="button" aria-pressed>` elements, each at least 44×40 px. The icons are inline stroke SVGs.
 - **Theme click:** sets `document.documentElement.dataset.theme` and writes the cookie (`path=/; max-age=31536000; SameSite=Lax`), with no reload.
@@ -210,6 +215,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 #### 1. Shells and shared components
 
 **File**:
+
 - `src/components/gear/GearShell.astro`, `src/components/Welcome.astro`, `src/components/Topbar.astro`
 - `src/components/Banner.astro`, `src/components/gear/DatabaseMissing.astro`
 - `src/components/forms/{FormField,SubmitButton,ServerError}.tsx`
@@ -217,6 +223,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 - `src/components/ui/button.tsx`
 
 **Intent**: Move the shared surfaces onto the colour roles of board A:
+
 - page: `bg-background`
 - card: `bg-surface border-border rounded-2xl`
 - heading: `font-display text-heading`
@@ -229,6 +236,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 - errors: `text-destructive` with a tinted surface
 
 **Contract**:
+
 - `SubmitButton` uses the shadcn `Button` default (primary) variant, with no colour overrides. `button.tsx`'s destructive `text-white` becomes `text-destructive-foreground`.
 - `Banner.astro`'s scoped hex CSS is replaced with token classes (info/warning/error map to `--accent`, `--warning` and `--destructive` tints).
 - Welcome's star field uses `--star` and `--star-accent`.
@@ -245,6 +253,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 #### 3. Gear and Tonight
 
 **File**:
+
 - `src/pages/gear/index.astro`, `src/pages/gear/{sites,telescopes,eyepieces}/{new,[id]}.astro`
 - `src/components/gear/{SiteForm,TelescopeForm,EyepieceForm}.tsx`
 - `src/pages/tonight.astro`
@@ -253,6 +262,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 **Intent**: Token swap without changing any layout.
 
 **Contract**:
+
 - Verdict colour maps (`VerdictCard.astro:19-34`, `Welcome.astro:6-10`) are unified on the `go` / `marginal` / `no-go` tokens and their surface and border tints, defined once in `src/components/tonight/verdict-tones.ts` (new) and imported by both.
 - Selects drop `[&>option]:bg-slate-900` in favour of `bg-surface`.
 
@@ -271,6 +281,7 @@ Replace every hard-coded colour in `src/` with tokens, restyle the starter-style
 **Intent**: Keep the retrofit from regressing: fail when any `.astro`/`.tsx`/`.ts` file under `src/` uses a Tailwind palette colour class or a colour literal outside `global.css`.
 
 **Contract**:
+
 - A Vitest test walks `src/` and matches:
   - `/\b(?:text|bg|border|ring|fill|stroke|from|via|to|decoration|placeholder|divide|outline|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black)(?:-\d{2,3})?(?:\/\d+)?\b/`
   - hex `#[0-9a-fA-F]{3,8}\b`
@@ -310,6 +321,7 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 **Intent**: A dependency-free, island-safe catalogue in which English is the source of truth and missing Polish keys fail type-checking.
 
 **Contract**:
+
 - `en.ts` exports a nested `as const` object of messages. Parameterised messages are functions of a typed params object, for example `tonight.verdict.clearRun: (p: { duration: string }) => string`.
 - `Messages` is derived from `typeof en` with literal strings widened to `string`. `pl.ts` is `satisfies Messages`, and in this phase it spreads `en`.
 - `getMessages(locale): Messages`.
@@ -327,6 +339,7 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 **Intent**: Every exported formatter takes the locale and messages, so English and Polish differ only in data. `TonightView` keeps its string shape, so the templates change minimally.
 
 **Contract**:
+
 - `createFormatter(locale: Locale)` returns the existing functions:
   - `formatTime`, `formatNightDate`, `formatDuration`, `formatDirection`
   - `reasonLine`, `verdictReasonText`, `clearedLine`, `formatAge`
@@ -344,6 +357,7 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 #### 3. Messages as keys in validation, stores and routes
 
 **File**:
+
 - `src/lib/gear/schemas.ts`, `src/lib/gear/store.ts`, `src/lib/gear/eyepiece-presets.ts`
 - `src/lib/onboarding/{schemas,store,presets,geocode}.ts`
 - `src/lib/config-status.ts`
@@ -353,6 +367,7 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 **Intent**: Every fixed message becomes a catalogue key, so `?error=` carries keys and islands translate zod issues on both the client and the server path.
 
 **Contract**:
+
 - Zod `message` values and store `message` values are key strings such as `"errors.site.latitudeRange"` and `"errors.save.site"`, with a matching leaf in `en.ts`.
 - `api-errors.ts` exports shared `NOT_CONFIGURED` / `CHECK_FIELDS` keys, replacing the 9 duplicates, and `authErrorKey(error)`. The latter maps Supabase auth `error.code` values (`invalid_credentials`, `user_already_exists`, `weak_password`, `email_address_invalid`, `over_request_rate_limit`, `over_email_send_rate_limit`) to keys; anything else → `"errors.auth.generic"`.
 - Eyepiece preset labels become two keys each (short name, AFOV hint), which removes the regex at `gear/index.astro:56`.
@@ -365,12 +380,14 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 #### 4. Templates and islands
 
 **File**:
+
 - every `.astro` page, layout and component, and every `.tsx` island that renders text (including `AuthShell.astro` and `PreferenceSwitches.tsx`)
 - `src/lib/catalogue/common-names.ts` (new)
 
 **Intent**: No user-visible literal remains in templates. Pages read `locals.locale`; islands receive `locale` as a prop and call `getMessages` themselves.
 
 **Contract**:
+
 - Pages translate `?error=` via `translateKey`, and islands translate `serverError` and zod `issue.message` the same way.
 - Page `<title>`s, `aria-label`s and placeholders use messages.
 - `src/lib/catalogue/common-names.ts` maps a Messier number to a localised common name for `pl`, falling back to the catalogue's English. The generated `messier.json` is never edited.
@@ -383,6 +400,7 @@ Move all user-facing copy and formatting onto a typed catalogue and a locale-awa
 **Intent**: Replace "All user-facing copy is English" and the Polish-starter-strings note with the new rules.
 
 **Contract**:
+
 - Copy goes through `src/i18n` keys, with `en` as the source and `pl` required.
 - `?error=` carries keys.
 - Colours come from tokens only (the guard test enforces it).
@@ -422,6 +440,7 @@ Fill the Polish catalogue, the Polish Messier common names and the Polish-specif
 **Intent**: Translate every message into natural, concise Polish for a beginner astronomer. Use informal second person ("ty"), which is standard for consumer apps.
 
 **Contract**:
+
 - Every leaf is overridden. None may be inherited from `en`; a test asserts that no `pl` string leaf equals its `en` counterpart, except an explicit allowlist of true invariants (brand names, units).
 - Polish plural forms (`one` / `few` / `many` / `other`) for counts and durations.
 - Compass points: Pn, PnPnW, PnW, WPnW, W, WPdW, PdW, PdPdW, Pd, PdPdZ, PdZ, ZPdZ, Z, ZPnZ, PnZ, PnPnZ.
@@ -434,6 +453,7 @@ Fill the Polish catalogue, the Polish Messier common names and the Polish-specif
 **Intent**: Give the 29 objects with English common names their established Polish names (for example M1 "Mgławica Krab", M31 "Galaktyka Andromedy", M45 "Plejady").
 
 **Contract**:
+
 - Every Messier number whose English `commonName` is set has a `pl` entry.
 - A test checks coverage against `MESSIER`.
 
@@ -444,6 +464,7 @@ Fill the Polish catalogue, the Polish Messier common names and the Polish-specif
 **Intent**: Pin the Polish output of the formatter for the cases where Polish differs structurally.
 
 **Contract**: tests cover:
+
 - `pl-PL` dates ("sobota, 10 października 2026")
 - 24 h times
 - a comma decimal separator
@@ -535,30 +556,30 @@ No database changes. The onboarding site name "Dom"/"Home" affects only new rows
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including `no-hardcoded-colors.test.ts` with zero offenders
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.3 `npm run build` succeeds
-- [x] 2.4 `npm run smoke` passes against a local preview with local Supabase
+- [x] 2.1 `npm test` passes, including `no-hardcoded-colors.test.ts` with zero offenders — cd32d1e
+- [x] 2.2 `npm run lint` and `npx astro check` pass — cd32d1e
+- [x] 2.3 `npm run build` succeeds — cd32d1e
+- [x] 2.4 `npm run smoke` passes against a local preview with local Supabase — cd32d1e
 
 #### Manual
 
-- [x] 2.5 Landing, sign-in, sign-up, confirm-email, `/gear` (list, new and edit forms incl. validation errors) and Tonight (go, no-go, no-darkness and outage states) reviewed in both themes at desktop and phone width, and they match board A
-- [x] 2.6 Text contrast looks readable in the light theme, especially muted text, kickers and verdict chips
+- [x] 2.5 Landing, sign-in, sign-up, confirm-email, `/gear` (list, new and edit forms incl. validation errors) and Tonight (go, no-go, no-darkness and outage states) reviewed in both themes at desktop and phone width, and they match board A — cd32d1e
+- [x] 2.6 Text contrast looks readable in the light theme, especially muted text, kickers and verdict chips — cd32d1e
 
 ### Phase 3: English catalogue and locale-aware formatting
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes, with `format.test.ts` and `build.test.ts` English expectations unchanged and the new `i18n.test.ts` green
-- [ ] 3.2 `npm run lint` and `npx astro check` pass, including `pl.ts satisfies Messages`
-- [ ] 3.3 `npm run test:db` passes
-- [ ] 3.4 `npm run build` succeeds
-- [ ] 3.5 `npm run smoke` passes
+- [x] 3.1 `npm test` passes, with `format.test.ts` and `build.test.ts` English expectations unchanged and the new `i18n.test.ts` green
+- [x] 3.2 `npm run lint` and `npx astro check` pass, including `pl.ts satisfies Messages`
+- [x] 3.3 `npm run test:db` passes
+- [x] 3.4 `npm run build` succeeds
+- [x] 3.5 `npm run smoke` passes
 
 #### Manual
 
-- [ ] 3.6 Every screen reads exactly as before in English (spot-check Tonight in go, no-go, no-darkness and outage states, plus form validation messages on both the client and the server path)
-- [ ] 3.7 A failed sign-in and a duplicate sign-up show translated generic messages, and the URL carries only a key
+- [x] 3.6 Every screen reads exactly as before in English (spot-check Tonight in go, no-go, no-darkness and outage states, plus form validation messages on both the client and the server path)
+- [x] 3.7 A failed sign-in and a duplicate sign-up show translated generic messages, and the URL carries only a key
 
 ### Phase 4: Polish translation
 
