@@ -1,10 +1,10 @@
 ---
 change_id: log-observation-from-ranking
 title: Log an observation from the ranking
-status: impl_reviewed
+status: archived
 created: 2026-09-26
 updated: 2026-09-26
-archived_at: null
+archived_at: 2026-09-26T19:22:10Z
 ---
 
 ## Notes
