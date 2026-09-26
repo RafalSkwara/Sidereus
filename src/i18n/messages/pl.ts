@@ -361,6 +361,9 @@ export const pl = {
     addTelescope: "Dodaj teleskop",
     setupPrompt: "Ustaw swoje stanowisko i teleskop — zajmie to około minuty",
     setup: "Skonfiguruj",
+    logged: (p) => `Zapisano obserwację ${p.object}.`,
+    logFailed:
+      "Nie udało się wczytać Twojego dziennika obserwacji, więc widziane obiekty nie są teraz przesuwane w dół.",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
     failed: "Nie udało się obliczyć dzisiejszego nieba. Spróbuj ponownie.",
     loading: "Wczytuję dzisiejsze niebo…",
@@ -384,6 +387,13 @@ export const pl = {
       magnification: (p) => `(${p.magnification}×)`,
       noneFit: (p) =>
         `Obiekt nie mieści się w polu widzenia żadnego z Twoich okularów; weź najszerszy (${p.name}) i przesuwaj teleskop po obiekcie`,
+      seen: {
+        one: (p) => `Widziany ${p.count} raz – ostatnio ${p.date}`,
+        few: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+        many: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+        other: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+      },
+      markObserved: "Zapisz obserwację",
     },
 
     time: {

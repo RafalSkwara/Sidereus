@@ -8,7 +8,9 @@ import {
   observingNight,
   observingNightDateFor,
   rankObjects,
+  seenSummaries,
   verdict,
+  type LogEntry,
   type RankedEntry,
   type Verdict,
 } from "@/lib/engine";
@@ -36,6 +38,8 @@ export interface TonightInput {
    */
   forecast: ForecastResult | null;
   now: Date;
+  /** The user's observation log (FR-018); absent means empty. Only what the ranking needs of each entry. */
+  log?: readonly LogEntry[];
   /** The objects to rank; the Messier catalogue unless a test narrows it. */
   catalogue?: readonly MessierObject[];
 }
@@ -68,6 +72,8 @@ export interface TonightEntry {
   /** `null` when the kit has no eyepieces: the page leaves the pair line out. */
   pair: TonightPair | null;
   reason: string;
+  /** "Seen 2 times – last 12 Sept 2026" when the log counts the object as seen (FR-018), else `null`. */
+  seenText: string | null;
 }
 
 export interface TonightRanking {
@@ -93,6 +99,9 @@ export type TonightExplanation =
   { kind: "weather-no-go"; nextText: string } | { kind: "no-darkness"; causeText: string; returnText: string };
 
 export interface TonightView {
+  /** The site and telescope the ranking is for; the log form is prefilled with them (FR-016). */
+  siteId: string;
+  telescopeId: string;
   siteName: string;
   telescopeName: string;
   /** Evening date of the observing night, `YYYY-MM-DD`, site-local. */
@@ -144,7 +153,7 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
 
 /** Every text field of the view is worded for `locale`; the rest of the view does not depend on it. */
 export function buildTonight(input: TonightInput, locale: Locale): TonightView {
-  const { site, telescope, eyepieces, forecast, now, catalogue = MESSIER } = input;
+  const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
     clearedLine,
     darkReturnText,
@@ -155,6 +164,7 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
     nextNightText,
     noDarknessCauseText,
     reasonLine,
+    seenLine,
     verdictReasonText,
   } = createFormatter(locale);
   const { timeZone } = site;
@@ -196,6 +206,7 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
       telescope,
       eyepieces,
       catalogue,
+      seen: seenSummaries(log, date),
     });
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
     ranking = {
@@ -212,11 +223,14 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
         bestDirection: formatDirection(entry.peak),
         pair: toPair(telescope, entry.pair),
         reason: reasonLine(entry, context),
+        seenText: entry.seen ? seenLine(entry.seen) : null,
       })),
     };
   }
 
   return {
+    siteId: site.id,
+    telescopeId: telescope.id,
     siteName: site.name,
     telescopeName: telescope.name,
     date,

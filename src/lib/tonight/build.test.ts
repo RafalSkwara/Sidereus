@@ -370,3 +370,60 @@ describe("buildTonight", () => {
     expect(rankingOf(view).entries.length).toBeGreaterThan(0);
   });
 });
+
+describe("buildTonight with an observation log (FR-018)", () => {
+  const input = {
+    site: WARSAW,
+    telescope: TELESCOPE,
+    eyepieces: EYEPIECES,
+    forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+    now: NOW,
+  };
+  const unlogged = rankingOf(buildTonight(input, "en"));
+  const top = unlogged.entries[0].messier;
+
+  it("exposes the site and telescope the ranking is for", () => {
+    const view = buildTonight(input, "en");
+    expect(view.siteId).toBe("site-1");
+    expect(view.telescopeId).toBe("scope-1");
+  });
+
+  it("tags nothing and changes nothing without a log", () => {
+    expect(unlogged.entries.every((entry) => entry.seenText === null)).toBe(true);
+  });
+
+  it("tags an object seen on a night rated 3 or above", () => {
+    const view = buildTonight(
+      {
+        ...input,
+        log: [
+          { messier: top, night: "2026-09-12", rating: 4 },
+          { messier: top, night: "2026-10-01", rating: 3 },
+        ],
+      },
+      "en",
+    );
+    const entry = rankingOf(view).entries.find((e) => e.messier === top);
+    // Pushed down, the object may leave the top five; where it still shows, it carries the tag.
+    if (entry) {
+      expect(entry.seenText).toBe("Seen 2 times – last 1 Oct 2026");
+    }
+    expect(rankingOf(view).entries.map((e) => e.messier)).not.toEqual(unlogged.entries.map((e) => e.messier));
+  });
+
+  it("leaves the ranking exactly as it was for a log of only 1-2 ratings (invariant 4)", () => {
+    const view = buildTonight(
+      {
+        ...input,
+        log: unlogged.entries.map((e, i) => ({ messier: e.messier, night: "2026-10-01", rating: (i % 2) + 1 })),
+      },
+      "en",
+    );
+    expect(rankingOf(view)).toEqual(unlogged);
+  });
+
+  it("ignores entries for nights after the ranked night", () => {
+    const view = buildTonight({ ...input, log: [{ messier: top, night: "2026-10-11", rating: 5 }] }, "en");
+    expect(rankingOf(view)).toEqual(unlogged);
+  });
+});

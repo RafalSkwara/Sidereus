@@ -363,3 +363,23 @@ describe("Polish formatting (pl-PL)", () => {
     expect(pl.darkReturnText(null, "Europe/Oslo")).toBe("Okno ciemności nie wróci w ciągu najbliższego roku");
   });
 });
+
+describe("seenLine (FR-018 tag)", () => {
+  const en = createFormatter("en");
+  const pl = createFormatter("pl");
+
+  it("names how many nights the object was seen and the latest, as a calendar date", () => {
+    expect(en.seenLine({ count: 1, lastNight: "2026-09-12" })).toBe("Seen 1 time – last 12 Sept 2026");
+    expect(en.seenLine({ count: 3, lastNight: "2026-09-12" })).toBe("Seen 3 times – last 12 Sept 2026");
+  });
+
+  it("uses the Polish plural forms", () => {
+    expect(pl.seenLine({ count: 1, lastNight: "2026-09-12" })).toBe("Widziany 1 raz – ostatnio 12 wrz 2026");
+    expect(pl.seenLine({ count: 3, lastNight: "2026-09-12" })).toBe("Widziany 3 razy – ostatnio 12 wrz 2026");
+    expect(pl.seenLine({ count: 5, lastNight: "2026-09-12" })).toBe("Widziany 5 razy – ostatnio 12 wrz 2026");
+  });
+
+  it("reads the night as a date, never shifted by a time zone", () => {
+    expect(en.seenLine({ count: 1, lastNight: "2026-12-31" })).toBe("Seen 1 time – last 31 Dec 2026");
+  });
+});

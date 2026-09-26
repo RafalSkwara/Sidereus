@@ -17,12 +17,15 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
+import type { LogEntry } from "@/lib/engine";
+import { observationStore } from "@/lib/observations/store";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
 
 // Fixed, value-free message keys: nothing about the site (coordinates included) ever reaches the page or a log.
 const SITES_FAILED: MessageKey = "errors.load.sites";
 const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
 const EYEPIECES_FAILED: MessageKey = "tonight.eyepiecesFailed";
+const LOG_FAILED: MessageKey = "tonight.logFailed";
 const TONIGHT_FAILED: MessageKey = "tonight.failed";
 
 const { user, locale } = Astro.locals;
@@ -51,18 +54,23 @@ let eyepieces: EyepieceRecord[] = [];
 let sitesError: MessageKey | null = null;
 let telescopesError: MessageKey | null = null;
 let eyepiecesError: MessageKey | null = null;
+// A log that fails to load ranks as an empty one, with a notice (never an error page).
+let log: LogEntry[] = [];
+let logError: MessageKey | null = null;
 let view: TonightView | null = null;
 let tonightError: MessageKey | null = null;
 
 if (supabase) {
-  const [siteResult, telescopeResult, eyepieceResult] = await Promise.all([
+  const [siteResult, telescopeResult, eyepieceResult, logResult] = await Promise.all([
     load(() => siteStore.list(supabase), SITES_FAILED),
     load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
     load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
+    load(() => observationStore.listForRanking(supabase), LOG_FAILED),
   ]);
   ({ items: sites, error: sitesError } = siteResult);
   ({ items: telescopes, error: telescopesError } = telescopeResult);
   ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
+  ({ items: log, error: logError } = logResult);
 }
 
 // S-02 uses the oldest site and the oldest telescope (both lists are in `created_at` order).
@@ -89,10 +97,21 @@ if (site && telescope) {
         Astro.locals.cfContext.waitUntil(task);
       },
     });
-    view = buildTonight({ site, telescope, eyepieces, forecast: result, now }, locale);
+    view = buildTonight({ site, telescope, eyepieces, forecast: result, now, log }, locale);
   } catch {
     tonightError = TONIGHT_FAILED;
   }
+}
+
+/** The log form for one ranked object, prefilled with the ranking's night, site and telescope (FR-016). */
+function logHref(tonight: TonightView, messier: number): string {
+  const query = new URLSearchParams({
+    object: String(messier),
+    night: tonight.date,
+    site: tonight.siteId,
+    telescope: tonight.telescopeId,
+  });
+  return `/log/new?${query.toString()}`;
 }
 
 const primaryLink =
@@ -166,10 +185,15 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
                   <ServerError message={translate(eyepiecesError)} />
                 </div>
               )}
+              {logError && (
+                <div class="mb-4">
+                  <ServerError message={translate(logError)} />
+                </div>
+              )}
               {view.ranking.entries.length > 0 && (
                 <ol class="space-y-4">
                   {view.ranking.entries.map((entry, i) => (
-                    <ObjectCard entry={entry} rank={i + 1} />
+                    <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.messier)} />
                   ))}
                 </ol>
               )}

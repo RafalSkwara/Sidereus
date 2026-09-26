@@ -4,13 +4,28 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
 import TonightContent from "@/components/tonight/TonightContent.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
+import { CircleCheck } from "lucide-react";
 import { getMessages } from "@/i18n";
+import { findMessier } from "@/lib/catalogue";
 
 const { supabase, locale } = Astro.locals;
 const t = getMessages(locale).tonight;
+// After a save, POST /api/log returns here with `?logged=<Messier number>`. Read in the shell: inside the
+// server island below, Astro.url is the island's own request and carries no page query.
+const loggedParam = Astro.url.searchParams.get("logged") ?? "";
+const logged = /^\d{1,3}$/.test(loggedParam) ? findMessier(Number(loggedParam)) : undefined;
 ---
 
 <GearShell title={t.title}>
+  {logged && (
+    <p
+      role="status"
+      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
+    >
+      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
+      {t.logged({ object: logged.id })}
+    </p>
+  )}
   {supabase ? (
     // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in.
     <TonightContent server:defer>

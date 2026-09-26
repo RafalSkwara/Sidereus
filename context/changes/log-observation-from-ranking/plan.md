@@ -419,10 +419,10 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test`
-- [x] 3.2 i18n parity test passes with the new `log.*` and error keys: `npm test -- i18n`
-- [x] 3.3 No hardcoded colours in the new components: `npm test -- no-hardcoded-colors`
-- [x] 3.4 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 3.1 Unit tests pass: `npm test` — 430e0b6
+- [x] 3.2 i18n parity test passes with the new `log.*` and error keys: `npm test -- i18n` — 430e0b6
+- [x] 3.3 No hardcoded colours in the new components: `npm test -- no-hardcoded-colors` — 430e0b6
+- [x] 3.4 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — 430e0b6
 
 #### Manual
 
@@ -435,10 +435,10 @@ The migration only adds a table, so it is safe for CI's `migrate` job to apply b
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass, including the new build and format cases: `npm test`
-- [ ] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [ ] 4.3 New Playwright spec passes against local Supabase and the forecast fixture: `npm run test:e2e -- observation-log`
-- [ ] 4.4 Existing e2e and smoke checks still pass: `npm run test:e2e && npm run smoke`
+- [x] 4.1 Unit tests pass, including the new build and format cases: `npm test`
+- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 4.3 New Playwright spec passes against local Supabase and the forecast fixture: `npm run test:e2e -- observation-log`
+- [x] 4.4 Existing e2e and smoke checks still pass: `npm run test:e2e && npm run smoke`
 
 #### Manual
 

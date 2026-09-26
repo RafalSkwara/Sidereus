@@ -19,6 +19,7 @@ export interface PluralForms<T = string> {
 }
 
 type Count = (p: { count: string }) => string;
+type Seen = (p: { count: string; date: string }) => string;
 
 export const en = {
   common: {
@@ -345,6 +346,8 @@ export const en = {
     addTelescope: "Add telescope",
     setupPrompt: "Set up your site and telescope in about a minute",
     setup: "Set up",
+    logged: (p: { object: string }) => `${p.object} logged.`,
+    logFailed: "Could not load your observation log, so objects you have seen are not moved down right now.",
     eyepiecesFailed: "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.",
     failed: "Could not work out tonight's sky. Please try again.",
     loading: "Loading tonight's sky…",
@@ -368,6 +371,11 @@ export const en = {
       magnification: (p: { magnification: string }) => `(${p.magnification}×)`,
       noneFit: (p: { name: string }) =>
         `Larger than any field in your kit; use your widest (${p.name}) and sweep across it`,
+      seen: {
+        one: (p) => `Seen ${p.count} time – last ${p.date}`,
+        other: (p) => `Seen ${p.count} times – last ${p.date}`,
+      } as PluralForms<Seen>,
+      markObserved: "Mark observed",
     },
 
     time: {

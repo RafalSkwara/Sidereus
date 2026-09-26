@@ -1,5 +1,13 @@
 import { getMessages, plural } from "@/i18n";
-import type { HorizontalPosition, Interval, NextNight, ObjectScore, ScoreComponent, Verdict } from "@/lib/engine";
+import type {
+  HorizontalPosition,
+  Interval,
+  NextNight,
+  ObjectScore,
+  ScoreComponent,
+  SeenSummary,
+  Verdict,
+} from "@/lib/engine";
 import type { Locale } from "@/lib/preferences";
 
 /**
@@ -64,6 +72,12 @@ export function createFormatter(locale: Locale) {
     weekday: "long",
     day: "numeric",
     month: "long",
+    year: "numeric",
+  });
+  const shortDateFormat = new Intl.DateTimeFormat(tag, {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
     year: "numeric",
   });
   const timeFormats = new Map<string, Intl.DateTimeFormat>();
@@ -180,6 +194,15 @@ export function createFormatter(locale: Locale) {
   }
 
   /**
+   * The tag on a ranked object the log counts as seen (FR-018): "Seen 3 times – last 12 Sept 2026".
+   * `lastNight` is a calendar date (`YYYY-MM-DD`), read in UTC so no time zone shifts it.
+   */
+  function seenLine(seen: SeenSummary): string {
+    const date = shortDateFormat.format(new Date(`${seen.lastNight}T00:00:00Z`));
+    return plural(locale, seen.count, m.tonight.object.seen)({ count: num(seen.count), date });
+  }
+
+  /**
    * How old something is, for "… ago": "less than a minute" under a minute (a negative age, from a
    * clock skew, reads the same), then whole minutes, whole hours under 48 h, and whole days. Every
    * unit is truncated, so an age never reads older than it is.
@@ -270,6 +293,7 @@ export function createFormatter(locale: Locale) {
     reasonLine,
     verdictReasonText,
     clearedLine,
+    seenLine,
     formatAge,
     forecastStatusText,
     nextNightText,
