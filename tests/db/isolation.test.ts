@@ -76,6 +76,21 @@ const TABLES = [
     valid: { name: "Plossl 25", focal_length_mm: 25, afov_deg: 52 },
     change: { name: "Changed eyepiece" },
   } satisfies TableCase<"eyepieces">,
+  {
+    // Gear references are nullable (an entry outlives its site and telescope), so the row needs no gear of
+    // A's; the referenced-gear guard has its own suite in observations.test.ts.
+    table: "observations",
+    valid: {
+      messier: 13,
+      night: "2026-09-26",
+      rating: 4,
+      site_id: null,
+      telescope_id: null,
+      site_name: "Home",
+      telescope_name: "Dobsonian 8in",
+    },
+    change: { rating: 2 },
+  } satisfies TableCase<"observations">,
 ] as const;
 
 let a: { client: Client; userId: string };
@@ -113,9 +128,10 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
 
     expect(await readAsA(id)).toHaveLength(1);
 
-    const updated = await from(a.client).update(patch).eq("id", id).select("id, name");
+    const updated = await from(a.client).update(patch).eq("id", id).select("*");
     expect(updated.error).toBeNull();
-    expect(updated.data).toEqual([{ id, name: patch.name }]);
+    expect(updated.data).toHaveLength(1);
+    expect(updated.data?.[0]).toMatchObject({ id, ...patch });
 
     const deleted = await from(a.client).delete().eq("id", id).select("id");
     expect(deleted.error).toBeNull();

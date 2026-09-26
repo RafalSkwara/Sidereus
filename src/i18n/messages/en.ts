@@ -19,6 +19,7 @@ export interface PluralForms<T = string> {
 }
 
 type Count = (p: { count: string }) => string;
+type Seen = (p: { count: string; date: string }) => string;
 
 export const en = {
   common: {
@@ -345,6 +346,8 @@ export const en = {
     addTelescope: "Add telescope",
     setupPrompt: "Set up your site and telescope in about a minute",
     setup: "Set up",
+    logged: (p: { object: string }) => `${p.object} logged.`,
+    logFailed: "Could not load your observation log, so objects you have seen are not moved down right now.",
     eyepiecesFailed: "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.",
     failed: "Could not work out tonight's sky. Please try again.",
     loading: "Loading tonight's sky…",
@@ -368,6 +371,11 @@ export const en = {
       magnification: (p: { magnification: string }) => `(${p.magnification}×)`,
       noneFit: (p: { name: string }) =>
         `Larger than any field in your kit; use your widest (${p.name}) and sweep across it`,
+      seen: {
+        one: (p) => `Seen ${p.count} time – last ${p.date}`,
+        other: (p) => `Seen ${p.count} times – last ${p.date}`,
+      } as PluralForms<Seen>,
+      markObserved: "Mark observed",
     },
 
     time: {
@@ -468,6 +476,25 @@ export const en = {
     },
   },
 
+  log: {
+    kicker: "Observation log",
+    title: (p: { object: string }) => `Log ${p.object}`,
+    intro: "Confirm the night, site and telescope, then rate how it went.",
+    night: "Observing night",
+    nightHint: "The evening the night began, even if you looked after midnight.",
+    site: "Site",
+    telescope: "Telescope",
+    rating: "How did it go?",
+    ratingLow: "1 · Couldn't make it out",
+    ratingHigh: "5 · Superb",
+    ratingHint: "A rating of 1-2 keeps the object where it is; 3-5 moves it down gently in later rankings.",
+    submit: "Save observation",
+    back: "← Tonight",
+    objectNotFound: "That object is not in the Messier catalogue.",
+    needsGear: "Add a site and a telescope before logging an observation.",
+    addGear: "Go to my gear",
+  },
+
   /**
    * Every value a route may put into `?error=`, a zod issue may carry, or a store may return. Fixed
    * strings only: none of them may ever contain a submitted value.
@@ -503,6 +530,16 @@ export const en = {
       eyepiecesMalformed: "Check your eyepieces.",
       eyepiecesTooMany: "Add at most 10 eyepieces.",
     },
+    observation: {
+      objectInvalid: "Choose a Messier object from M1 to M110.",
+      nightInvalid: "Enter the observing night as a date.",
+      nightInFuture: "The observing night cannot be later than tonight.",
+      nightTooEarly: "Enter an observing night from 1900 onwards.",
+      ratingRequired: "Rate how it went, from 1 to 5.",
+      siteRequired: "Choose the site you observed from.",
+      telescopeRequired: "Choose the telescope you used.",
+      gearNotFound: "That site or telescope no longer exists.",
+    },
     load: {
       sites: "Could not load your sites. Please try again.",
       telescopes: "Could not load your telescopes. Please try again.",
@@ -511,12 +548,14 @@ export const en = {
       telescope: "Could not load the telescope. Please try again.",
       eyepiece: "Could not load the eyepiece. Please try again.",
       setup: "Could not load your setup. Please try again.",
+      observations: "Could not load your observation log. Please try again.",
     },
     save: {
       site: "Could not save the site. Please try again.",
       telescope: "Could not save the telescope. Please try again.",
       eyepiece: "Could not save the eyepiece. Please try again.",
       setup: "Could not save your setup. Please try again.",
+      observation: "Could not save the observation. Please try again.",
     },
     delete: {
       site: "Could not delete the site. Please try again.",

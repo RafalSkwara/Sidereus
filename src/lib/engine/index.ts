@@ -23,6 +23,8 @@ export type {
 } from "./eyepieces";
 export { rankObjects, reasonComponents } from "./ranking";
 export type { RankInput, RankTelescope, RankableObject, RankedEntry, Ranking, ReasonComponents } from "./ranking";
+export { seenSummaries } from "./log";
+export type { LogEntry, SeenSummary } from "./log";
 export { verdict } from "./verdict";
 export { darkWindowReturn, nextNightNotNoGo } from "./outlook";
 export type { NextNight, NextNightInput } from "./outlook";

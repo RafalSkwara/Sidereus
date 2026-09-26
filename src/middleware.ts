@@ -2,7 +2,16 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient, type SessionUser, type TypedSupabaseClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
 
-const PROTECTED_ROUTES = ["/dashboard", "/gear", "/api/gear", "/tonight", "/onboarding", "/api/onboarding"];
+const PROTECTED_ROUTES = [
+  "/dashboard",
+  "/gear",
+  "/api/gear",
+  "/tonight",
+  "/onboarding",
+  "/api/onboarding",
+  "/log/",
+  "/api/log",
+];
 
 /**
  * Verifies the access token locally (asymmetric signing keys, cached per isolate) instead of asking

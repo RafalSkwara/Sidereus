@@ -361,6 +361,9 @@ export const pl = {
     addTelescope: "Dodaj teleskop",
     setupPrompt: "Ustaw swoje stanowisko i teleskop — zajmie to około minuty",
     setup: "Skonfiguruj",
+    logged: (p) => `Zapisano obserwację ${p.object}.`,
+    logFailed:
+      "Nie udało się wczytać Twojego dziennika obserwacji, więc widziane obiekty nie są teraz przesuwane w dół.",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
     failed: "Nie udało się obliczyć dzisiejszego nieba. Spróbuj ponownie.",
     loading: "Wczytuję dzisiejsze niebo…",
@@ -384,6 +387,13 @@ export const pl = {
       magnification: (p) => `(${p.magnification}×)`,
       noneFit: (p) =>
         `Obiekt nie mieści się w polu widzenia żadnego z Twoich okularów; weź najszerszy (${p.name}) i przesuwaj teleskop po obiekcie`,
+      seen: {
+        one: (p) => `Widziany ${p.count} raz – ostatnio ${p.date}`,
+        few: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+        many: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+        other: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
+      },
+      markObserved: "Zapisz obserwację",
     },
 
     time: {
@@ -482,6 +492,25 @@ export const pl = {
     },
   },
 
+  log: {
+    kicker: "Dziennik obserwacji",
+    title: (p) => `Zapisz ${p.object}`,
+    intro: "Potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+    night: "Noc obserwacji",
+    nightHint: "Data wieczoru, w którym zaczęła się noc — także gdy obserwacja była po północy.",
+    site: "Stanowisko",
+    telescope: "Teleskop",
+    rating: "Jak poszło?",
+    ratingLow: "1 · Nie udało się dostrzec",
+    ratingHigh: "5 · Znakomicie",
+    ratingHint: "Ocena 1–2 zostawia obiekt na swoim miejscu; 3–5 lekko obniża go w kolejnych rankingach.",
+    submit: "Zapisz obserwację",
+    back: "← Dziś w nocy",
+    objectNotFound: "Tego obiektu nie ma w katalogu Messiera.",
+    needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
+    addGear: "Przejdź do sprzętu",
+  },
+
   errors: {
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
     notConfigured: "Baza danych nie jest skonfigurowana.",
@@ -513,6 +542,16 @@ export const pl = {
       eyepiecesMalformed: "Sprawdź swoje okulary.",
       eyepiecesTooMany: "Dodaj najwyżej 10 okularów.",
     },
+    observation: {
+      objectInvalid: "Wybierz obiekt Messiera od M1 do M110.",
+      nightInvalid: "Podaj noc obserwacji jako datę.",
+      nightInFuture: "Noc obserwacji nie może być późniejsza niż dzisiejsza.",
+      nightTooEarly: "Podaj noc obserwacji od 1900 roku.",
+      ratingRequired: "Oceń, jak poszło, w skali od 1 do 5.",
+      siteRequired: "Wybierz miejsce obserwacji.",
+      telescopeRequired: "Wybierz użyty teleskop.",
+      gearNotFound: "To miejsce lub teleskop już nie istnieje.",
+    },
     load: {
       sites: "Nie udało się wczytać Twoich stanowisk. Spróbuj ponownie.",
       telescopes: "Nie udało się wczytać Twoich teleskopów. Spróbuj ponownie.",
@@ -521,12 +560,14 @@ export const pl = {
       telescope: "Nie udało się wczytać teleskopu. Spróbuj ponownie.",
       eyepiece: "Nie udało się wczytać okularu. Spróbuj ponownie.",
       setup: "Nie udało się wczytać Twojego sprzętu. Spróbuj ponownie.",
+      observations: "Nie udało się wczytać Twojego dziennika obserwacji. Spróbuj ponownie.",
     },
     save: {
       site: "Nie udało się zapisać stanowiska. Spróbuj ponownie.",
       telescope: "Nie udało się zapisać teleskopu. Spróbuj ponownie.",
       eyepiece: "Nie udało się zapisać okularu. Spróbuj ponownie.",
       setup: "Nie udało się zapisać Twojego sprzętu. Spróbuj ponownie.",
+      observation: "Nie udało się zapisać obserwacji. Spróbuj ponownie.",
     },
     delete: {
       site: "Nie udało się usunąć stanowiska. Spróbuj ponownie.",
