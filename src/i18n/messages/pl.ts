@@ -513,6 +513,15 @@ export const pl = {
       eyepiecesMalformed: "Sprawdź swoje okulary.",
       eyepiecesTooMany: "Dodaj najwyżej 10 okularów.",
     },
+    observation: {
+      objectInvalid: "Wybierz obiekt Messiera od M1 do M110.",
+      nightInvalid: "Podaj noc obserwacji jako datę.",
+      nightInFuture: "Noc obserwacji nie może być późniejsza niż dzisiejsza.",
+      ratingRequired: "Oceń, jak poszło, w skali od 1 do 5.",
+      siteRequired: "Wybierz miejsce obserwacji.",
+      telescopeRequired: "Wybierz użyty teleskop.",
+      gearNotFound: "To miejsce lub teleskop już nie istnieje.",
+    },
     load: {
       sites: "Nie udało się wczytać Twoich stanowisk. Spróbuj ponownie.",
       telescopes: "Nie udało się wczytać Twoich teleskopów. Spróbuj ponownie.",
@@ -521,12 +530,14 @@ export const pl = {
       telescope: "Nie udało się wczytać teleskopu. Spróbuj ponownie.",
       eyepiece: "Nie udało się wczytać okularu. Spróbuj ponownie.",
       setup: "Nie udało się wczytać Twojego sprzętu. Spróbuj ponownie.",
+      observations: "Nie udało się wczytać Twojego dziennika obserwacji. Spróbuj ponownie.",
     },
     save: {
       site: "Nie udało się zapisać stanowiska. Spróbuj ponownie.",
       telescope: "Nie udało się zapisać teleskopu. Spróbuj ponownie.",
       eyepiece: "Nie udało się zapisać okularu. Spróbuj ponownie.",
       setup: "Nie udało się zapisać Twojego sprzętu. Spróbuj ponownie.",
+      observation: "Nie udało się zapisać obserwacji. Spróbuj ponownie.",
     },
     delete: {
       site: "Nie udało się usunąć stanowiska. Spróbuj ponownie.",

@@ -55,6 +55,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      observations: {
+        Row: {
+          created_at: string;
+          id: string;
+          messier: number;
+          night: string;
+          rating: number;
+          site_id: string | null;
+          site_name: string;
+          telescope_id: string | null;
+          telescope_name: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          messier: number;
+          night: string;
+          rating: number;
+          site_id?: string | null;
+          site_name: string;
+          telescope_id?: string | null;
+          telescope_name: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          messier?: number;
+          night?: string;
+          rating?: number;
+          site_id?: string | null;
+          site_name?: string;
+          telescope_id?: string | null;
+          telescope_name?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "observations_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "observations_telescope_id_fkey";
+            columns: ["telescope_id"];
+            isOneToOne: false;
+            referencedRelation: "telescopes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sites: {
         Row: {
           bortle: number;

@@ -503,6 +503,15 @@ export const en = {
       eyepiecesMalformed: "Check your eyepieces.",
       eyepiecesTooMany: "Add at most 10 eyepieces.",
     },
+    observation: {
+      objectInvalid: "Choose a Messier object from M1 to M110.",
+      nightInvalid: "Enter the observing night as a date.",
+      nightInFuture: "The observing night cannot be later than tonight.",
+      ratingRequired: "Rate how it went, from 1 to 5.",
+      siteRequired: "Choose the site you observed from.",
+      telescopeRequired: "Choose the telescope you used.",
+      gearNotFound: "That site or telescope no longer exists.",
+    },
     load: {
       sites: "Could not load your sites. Please try again.",
       telescopes: "Could not load your telescopes. Please try again.",
@@ -511,12 +520,14 @@ export const en = {
       telescope: "Could not load the telescope. Please try again.",
       eyepiece: "Could not load the eyepiece. Please try again.",
       setup: "Could not load your setup. Please try again.",
+      observations: "Could not load your observation log. Please try again.",
     },
     save: {
       site: "Could not save the site. Please try again.",
       telescope: "Could not save the telescope. Please try again.",
       eyepiece: "Could not save the eyepiece. Please try again.",
       setup: "Could not save your setup. Please try again.",
+      observation: "Could not save the observation. Please try again.",
     },
     delete: {
       site: "Could not delete the site. Please try again.",
