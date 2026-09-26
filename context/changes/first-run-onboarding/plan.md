@@ -573,9 +573,9 @@ The public landing page says what the product does and shows it. Every entry poi
 #### Automated
 
 - [x] 1.1 `npm test` passes, including the new presets, onboarding schema and geocoding tests — abd7acd
-- [x] 1.2 `npx supabase db reset` applies the new migration cleanly on local Supabase
-- [x] 1.3 `npm run db:types` output includes `complete_onboarding` and leaves no further diff
-- [x] 1.4 `npm run test:db` passes, including the new `complete_onboarding` suite
+- [x] 1.2 `npx supabase db reset` applies the new migration cleanly on local Supabase — abd7acd
+- [x] 1.3 `npm run db:types` output includes `complete_onboarding` and leaves no further diff — abd7acd
+- [x] 1.4 `npm run test:db` passes, including the new `complete_onboarding` suite — abd7acd
 - [x] 1.5 `npm run lint` and `npx astro check` pass — abd7acd
 
 #### Manual
