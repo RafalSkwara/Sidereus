@@ -103,7 +103,8 @@ test("marking a ranked object observed saves it and tags it on Tonight", async (
     has: page.getByRole("heading", { name: new RegExp(`\\b${id}\\b`) }),
   });
   if ((await loggedCard.count()) > 0) {
-    await expect(loggedCard).toContainText(/Seen 1 time – last /);
+    // The tag's wording up to the date, taken from the catalogue.
+    await expect(loggedCard).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));
   }
 });
 

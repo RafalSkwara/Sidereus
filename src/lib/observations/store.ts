@@ -1,5 +1,5 @@
 import type { MessageKey } from "@/i18n";
-import { observingNightDateFor, type LogEntry } from "@/lib/engine";
+import { LOG_PENALTY_MIN_RATING, observingNightDateFor, type LogEntry } from "@/lib/engine";
 import { siteStore, telescopeStore, type WriteResult } from "@/lib/gear/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { ObservationInput } from "./schemas";
@@ -54,9 +54,19 @@ export const observationStore = {
     return error ? { ok: false, message: SAVE_FAILED } : { ok: true };
   },
 
-  /** Every entry of the caller, reduced to what the ranking needs. */
+  /**
+   * The caller's entries that can count as seen (rated `LOG_PENALTY_MIN_RATING` or above; lower ones
+   * never affect the ranking), newest night first, reduced to what the ranking needs. The order makes
+   * any cut by PostgREST's `max_rows` deterministic: it drops only the oldest nights, which can
+   * undercount "seen N times" but never removes an object's penalty.
+   */
   async listForRanking(client: TypedSupabaseClient): Promise<LogEntry[]> {
-    const { data, error } = await client.from("observations").select("messier, night, rating");
+    const { data, error } = await client
+      .from("observations")
+      .select("messier, night, rating")
+      .gte("rating", LOG_PENALTY_MIN_RATING)
+      .order("night", { ascending: false })
+      .order("messier", { ascending: true });
     if (error) {
       throw new Error(LOAD_FAILED);
     }

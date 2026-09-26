@@ -123,6 +123,18 @@ describe("observations reference only the caller's gear", () => {
     const { error } = await b.client.from("observations").update({ site_id: gearA.siteId }).eq("id", own.data.id);
     expect(error).not.toBeNull();
   });
+
+  it("another user cannot repoint its own entry at the first user's telescope", async () => {
+    const own = await b.client.from("observations").insert(entry(gearB)).select("id").single();
+    expect(own.error).toBeNull();
+    if (!own.data) throw new Error("B could not insert");
+
+    const { error } = await b.client
+      .from("observations")
+      .update({ telescope_id: gearA.telescopeId })
+      .eq("id", own.data.id);
+    expect(error).not.toBeNull();
+  });
 });
 
 describe("an entry outlives its gear", () => {
@@ -203,19 +215,17 @@ describe("observationStore", () => {
     expect(result).toEqual({ ok: false, message: "errors.observation.gearNotFound" });
   });
 
-  it("lists only the caller's entries, as the ranking needs them", async () => {
+  it("lists only the caller's entries that can count as seen, newest night first", async () => {
     const fresh = await signUp("list");
     const gear = await addGear(fresh.client);
     await observationStore.create(fresh.client, { messier: 42, night: "2026-09-20", rating: 2, ...gear }, NOW);
     await observationStore.create(fresh.client, { messier: 13, night: "2026-09-25", rating: 4, ...gear }, NOW);
+    await observationStore.create(fresh.client, { messier: 31, night: "2026-09-22", rating: 3, ...gear }, NOW);
 
-    const entries = await observationStore.listForRanking(fresh.client);
-    expect(entries).toHaveLength(2);
-    expect(entries).toEqual(
-      expect.arrayContaining([
-        { messier: 42, night: "2026-09-20", rating: 2 },
-        { messier: 13, night: "2026-09-25", rating: 4 },
-      ]),
-    );
+    // The rating-2 entry can never count as seen, so it is not fetched.
+    expect(await observationStore.listForRanking(fresh.client)).toEqual([
+      { messier: 13, night: "2026-09-25", rating: 4 },
+      { messier: 31, night: "2026-09-22", rating: 3 },
+    ]);
   });
 });

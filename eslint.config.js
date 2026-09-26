@@ -92,6 +92,10 @@ const gearConfig = defineConfig({
     "src/components/onboarding/**",
     "src/pages/api/onboarding.ts",
     "src/pages/onboarding.astro",
+    "src/lib/observations/**",
+    "src/pages/api/log/**",
+    "src/pages/log/**",
+    "src/components/tonight/**",
   ],
   rules: { "no-console": "error" },
 });

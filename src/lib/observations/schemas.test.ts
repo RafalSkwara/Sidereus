@@ -37,6 +37,7 @@ describe("observationInputSchema", () => {
     ["a night in the wrong format", { night: "26.09.2026" }],
     ["a night that is not a calendar date", { night: "2026-02-30" }],
     ["an empty night", { night: "" }],
+    ["a night before 1900", { night: "0026-09-26" }],
     ["a missing site", { siteId: "" }],
     ["a site that is not a uuid", { siteId: "home" }],
     ["a missing telescope", { telescopeId: "" }],

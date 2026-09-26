@@ -476,10 +476,6 @@ export const en = {
     },
   },
 
-  /**
-   * Every value a route may put into `?error=`, a zod issue may carry, or a store may return. Fixed
-   * strings only: none of them may ever contain a submitted value.
-   */
   log: {
     kicker: "Observation log",
     title: (p: { object: string }) => `Log ${p.object}`,
@@ -499,6 +495,10 @@ export const en = {
     addGear: "Go to my gear",
   },
 
+  /**
+   * Every value a route may put into `?error=`, a zod issue may carry, or a store may return. Fixed
+   * strings only: none of them may ever contain a submitted value.
+   */
   errors: {
     generic: "Something went wrong. Please try again.",
     notConfigured: "The database is not configured.",
@@ -534,6 +534,7 @@ export const en = {
       objectInvalid: "Choose a Messier object from M1 to M110.",
       nightInvalid: "Enter the observing night as a date.",
       nightInFuture: "The observing night cannot be later than tonight.",
+      nightTooEarly: "Enter an observing night from 1900 onwards.",
       ratingRequired: "Rate how it went, from 1 to 5.",
       siteRequired: "Choose the site you observed from.",
       telescopeRequired: "Choose the telescope you used.",

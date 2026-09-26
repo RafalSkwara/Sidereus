@@ -44,6 +44,9 @@ export function isCalendarDate(value: string): boolean {
 
 const NIGHT_INVALID: MessageKey = "errors.observation.nightInvalid";
 
+/** The earliest observing night the log accepts, so a mistyped year cannot count as "seen". */
+export const MIN_NIGHT = "1900-01-01";
+
 function gearId(message: MessageKey) {
   return z.preprocess(emptyToUndefined, z.uuid({ error: message }));
 }
@@ -52,7 +55,11 @@ export const observationInputSchema = z.object({
   messier: boundedInteger(1, 110, "errors.observation.objectInvalid"),
   night: z.preprocess(
     emptyToUndefined,
-    z.string({ error: NIGHT_INVALID }).refine(isCalendarDate, { error: NIGHT_INVALID }),
+    z
+      .string({ error: NIGHT_INVALID })
+      .refine(isCalendarDate, { error: NIGHT_INVALID })
+      // ISO dates compare correctly as strings.
+      .refine((night) => night >= MIN_NIGHT, { error: "errors.observation.nightTooEarly" satisfies MessageKey }),
   ),
   rating: boundedInteger(1, 5, "errors.observation.ratingRequired"),
   siteId: gearId("errors.observation.siteRequired"),

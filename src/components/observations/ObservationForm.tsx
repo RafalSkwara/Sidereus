@@ -5,7 +5,7 @@ import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
-import { observationInputSchema } from "@/lib/observations/schemas";
+import { MIN_NIGHT, observationInputSchema } from "@/lib/observations/schemas";
 import { cn } from "@/lib/utils";
 
 interface GearOption {
@@ -45,9 +45,13 @@ const ratingOption = cn(
   "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50",
 );
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ id, message }: { id?: string; message?: string }) {
   if (!message) return null;
-  return <p className="text-destructive mt-1 text-xs">{message}</p>;
+  return (
+    <p id={id} role="alert" className="text-destructive mt-1 text-xs">
+      {message}
+    </p>
+  );
 }
 
 function fieldBorder(error?: string): string {
@@ -107,6 +111,7 @@ export default function ObservationForm({
         id="night"
         label={t.night}
         type="date"
+        min={MIN_NIGHT}
         max={maxNight}
         value={night}
         onChange={(v) => {
@@ -165,7 +170,7 @@ export default function ObservationForm({
         </div>
       </div>
 
-      <fieldset aria-describedby="rating-hint">
+      <fieldset aria-describedby={cn("rating-low rating-high rating-hint", errors.rating && "rating-error")}>
         <legend className="text-heading mb-2 block text-sm font-semibold">{t.rating}</legend>
         <div className="flex gap-2">
           {RATINGS.map((value) => (
@@ -175,6 +180,7 @@ export default function ObservationForm({
                 name="rating"
                 value={value}
                 checked={rating === String(value)}
+                aria-invalid={errors.rating ? true : undefined}
                 onChange={() => {
                   setRating(String(value));
                   clearError("rating");
@@ -186,10 +192,12 @@ export default function ObservationForm({
           ))}
         </div>
         <div className="text-muted-foreground mt-1 flex justify-between gap-4 text-xs">
-          <span>{t.ratingLow}</span>
-          <span className="text-right">{t.ratingHigh}</span>
+          <span id="rating-low">{t.ratingLow}</span>
+          <span id="rating-high" className="text-right">
+            {t.ratingHigh}
+          </span>
         </div>
-        <FieldError message={errors.rating} />
+        <FieldError id="rating-error" message={errors.rating} />
         <p id="rating-hint" className="text-muted-foreground mt-2 text-xs">
           {t.ratingHint}
         </p>

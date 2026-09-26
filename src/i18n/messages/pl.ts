@@ -546,6 +546,7 @@ export const pl = {
       objectInvalid: "Wybierz obiekt Messiera od M1 do M110.",
       nightInvalid: "Podaj noc obserwacji jako datę.",
       nightInFuture: "Noc obserwacji nie może być późniejsza niż dzisiejsza.",
+      nightTooEarly: "Podaj noc obserwacji od 1900 roku.",
       ratingRequired: "Oceń, jak poszło, w skali od 1 do 5.",
       siteRequired: "Wybierz miejsce obserwacji.",
       telescopeRequired: "Wybierz użyty teleskop.",
