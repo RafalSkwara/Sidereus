@@ -319,7 +319,7 @@ None. No schema or data changes. Deploy goes through CI on merge. A preview vers
 
 #### Manual
 
-- [x] 3.6 On Slow 4G, `/tonight` shows the shell and skeleton at once and the content replaces it without a layout jump
+- [x] 3.6 On Slow 4G, `/tonight` shows the shell and skeleton at once and the content replaces it without a layout jump — 91dc69b
 - [ ] 3.7 The skeleton is static under reduced motion and the loading label is announced
 - [x] 3.8 Tapping PL shows the spinner, disables both segments and reloads in Polish
 - [x] 3.9 Signed-out `/tonight` still redirects and a user without gear still sees the setup prompt
