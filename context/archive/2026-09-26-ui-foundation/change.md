@@ -1,10 +1,10 @@
 ---
 change_id: ui-foundation
 title: Theme tokens, light/dark switch and English/Polish catalogue
-status: implemented
+status: archived
 created: 2026-09-26
 updated: 2026-09-26
-archived_at: null
+archived_at: 2026-09-26T12:41:54Z
 ---
 
 ## Notes
