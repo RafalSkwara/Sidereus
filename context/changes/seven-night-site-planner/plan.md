@@ -405,15 +405,15 @@ No database change. Forecast entries cached before the deploy only reach night 3
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Lint passes: `npm run lint`
-- [x] 3.4 E2E specs pass against the preview with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
-- [x] 3.5 Smoke test passes against local Supabase: `npm run smoke`
+- [x] 3.1 Unit tests pass: `npm test` — df25c24
+- [x] 3.2 Type check passes: `npx astro check` — df25c24
+- [x] 3.3 Lint passes: `npm run lint` — df25c24
+- [x] 3.4 E2E specs pass against the preview with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e` — df25c24
+- [x] 3.5 Smoke test passes against local Supabase: `npm run smoke` — df25c24
 
 #### Manual
 
-- [x] 3.6 With two sites in different time zones, switching by pill changes the verdict, ranking, strip and "times in" zone together, and "Mark observed" prefills the selected site
-- [x] 3.7 With four sites the dropdown switches on change (JS) and via "Show" (JS disabled)
-- [x] 3.8 Deleting the selected site and reopening Tonight falls back to the oldest site silently
-- [x] 3.9 On the preview build, `buildTonight` for one Warsaw site takes at most ~10 ms more than before the change (timed locally before/after; production CPU is a post-merge check, see Performance Considerations)
+- [x] 3.6 With two sites in different time zones, switching by pill changes the verdict, ranking, strip and "times in" zone together, and "Mark observed" prefills the selected site — df25c24
+- [x] 3.7 With four sites the dropdown switches on change (JS) and via "Show" (JS disabled) — df25c24
+- [x] 3.8 Deleting the selected site and reopening Tonight falls back to the oldest site silently — df25c24
+- [x] 3.9 On the preview build, `buildTonight` for one Warsaw site takes at most ~10 ms more than before the change (timed locally before/after; production CPU is a post-merge check, see Performance Considerations) — df25c24
