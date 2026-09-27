@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { DarkWindow, ForecastHour, HourlyForecast } from "./types";
-import { verdict } from "./verdict";
+import { cloudOutlook, verdict } from "./verdict";
 
 const HOUR_MS = 3_600_000;
 const BASE = Date.UTC(2026, 9, 10, 18, 0, 0); // 2026-10-10 18:00 UTC
@@ -187,5 +187,52 @@ describe("verdict", () => {
     const none: DarkWindow = { kind: "none", thresholdDeg: -18, minSunAltitudeDeg: -12.3, at: at(5) };
     expect(verdict(none, forecast([0, 0, 0, 0, 0, 0]))).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
     expect(verdict(none, null)).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
+  });
+});
+
+describe("cloudOutlook", () => {
+  const eightHours = window(0, 8);
+
+  it("is the mean and the minimum of the window's hours", () => {
+    expect(cloudOutlook(eightHours, forecast([0, 0, 100, 100, 0, 0, 100, 100]))).toEqual({
+      meanCloudPct: 50,
+      minCloudPct: 0,
+    });
+  });
+
+  it("ignores forecast hours outside the dark window", () => {
+    expect(cloudOutlook(window(2, 4), forecast([0, 0, 40, 60, 0, 0]))).toEqual({ meanCloudPct: 50, minCloudPct: 40 });
+  });
+
+  it("counts every hour the window touches, as the verdict does", () => {
+    const straddling = windowBetween(new Date(BASE + 40 * 60_000), new Date(BASE + 80 * 60_000));
+    expect(cloudOutlook(straddling, forecast([20, 60]))).toEqual({ meanCloudPct: 40, minCloudPct: 20 });
+  });
+
+  it("skips hours missing inside the series rather than counting them clear or cloudy", () => {
+    expect(cloudOutlook(window(0, 4), forecast([80, null, null, 40]))).toEqual({ meanCloudPct: 60, minCloudPct: 40 });
+  });
+
+  it("is null when the series spans the window but has none of its hours", () => {
+    expect(cloudOutlook(window(1, 3), forecast([0, null, null, 0]))).toBeNull();
+  });
+
+  it("is null when there is no dark window, whatever the weather", () => {
+    const none: DarkWindow = { kind: "none", thresholdDeg: -18, minSunAltitudeDeg: -12.3, at: at(5) };
+    expect(cloudOutlook(none, forecast([0, 0, 0, 0, 0, 0]))).toBeNull();
+  });
+
+  it("is null when the forecast is null or empty", () => {
+    expect(cloudOutlook(eightHours, null)).toBeNull();
+    expect(cloudOutlook(eightHours, { hours: [] })).toBeNull();
+  });
+
+  it("is null when the series does not span the window, exactly when the verdict has no weather data", () => {
+    const endsEarly = forecast([10, 10, 10, 10]);
+    const startsLate = forecast([10, 10, 10, 10, 10, 10, 10], 60, 2);
+    expect(cloudOutlook(eightHours, endsEarly)).toBeNull();
+    expect(cloudOutlook(eightHours, startsLate)).toBeNull();
+    expect(verdict(eightHours, endsEarly).reason.kind).toBe("no-weather-data");
+    expect(verdict(eightHours, startsLate).reason.kind).toBe("no-weather-data");
   });
 });

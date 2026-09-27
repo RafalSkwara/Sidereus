@@ -1,13 +1,16 @@
+import { moonFreeMinutes, moonState } from "./moon";
 import { addDays, observingNight } from "./night";
-import { DARK_RETURN_MAX_NIGHTS, DARK_RETURN_STRIDE_NIGHTS, VERDICT_NIGHTS } from "./parameters";
+import { DARK_RETURN_MAX_NIGHTS, DARK_RETURN_STRIDE_NIGHTS, OUTLOOK_NIGHTS, VERDICT_NIGHTS } from "./parameters";
 import { darkWindow } from "./sun";
-import type { DarkWindow, HourlyForecast, Site, Verdict } from "./types";
-import { verdict } from "./verdict";
+import type { DarkWindow, HourlyForecast, Interval, Site, Verdict } from "./types";
+import { cloudOutlook, verdict } from "./verdict";
+import type { CloudOutlook } from "./verdict";
 
 /**
- * Forward searches from one observing night, so a no-go or no-darkness night can say what comes
- * next: the next night within the verdict horizon that is not a no-go (FR-020), and the night the
- * dark window returns (FR-023). Pure: the forecast is passed in, as for `verdict`.
+ * Forward looks from one observing night: the seven-night strip (FR-011), and, so a no-go or
+ * no-darkness night can say what comes next, the next night within the verdict horizon that is not
+ * a no-go (FR-020) and the night the dark window returns (FR-023). Pure: the forecast is passed in,
+ * as for `verdict`.
  */
 
 type Window = Extract<DarkWindow, { kind: "window" }>;
@@ -23,7 +26,10 @@ export type NextNight =
 export interface NextNightInput {
   site: Site;
   thresholdDeg: number;
-  /** The night being explained, `YYYY-MM-DD`; the search starts on the night after it. */
+  /**
+   * The night being explained, `YYYY-MM-DD`. `nextNightNotNoGo` starts on the night after it;
+   * `sevenNightOutlook` starts on it (night 1).
+   */
   date: string;
   forecast: HourlyForecast | null;
   /** The forecast is a saved copy served because the refresh failed (caps a go at marginal). */
@@ -96,4 +102,62 @@ export function darkWindowReturn(
     checked = probe;
   }
   return null;
+}
+
+/**
+ * One night of the seven-night strip. Nights 1..`VERDICT_NIGHTS` carry a verdict and later nights
+ * only a cloud outlook, so invariant 5 (no verdict past the horizon) is held by the type.
+ */
+export type OutlookNight = {
+  /** 1-based position; night 1 is the input `date`. */
+  index: number;
+  /** Evening date, site-local, `YYYY-MM-DD`. */
+  date: string;
+  darkWindow: DarkWindow;
+  moon: {
+    /** At the dark window's midpoint, or the observing night's midpoint without one. */
+    illuminatedFraction: number;
+    /** Whole minutes of the dark window with the Moon below the horizon; `null` without a dark window. */
+    moonFreeMinutes: number | null;
+  };
+} & (
+  | { kind: "verdict"; verdict: Verdict }
+  /** `null` without a dark window or without forecast hours spanning it (tell them apart by `darkWindow.kind`). */
+  | { kind: "outlook"; cloud: CloudOutlook | null }
+);
+
+function midpoint(interval: Interval): Date {
+  const startMs = interval.start.getTime();
+  return new Date(startMs + (interval.end.getTime() - startMs) / 2);
+}
+
+/**
+ * The `OUTLOOK_NIGHTS` nights from `date` (night 1) onward, each with its dark window and moon.
+ * Nights 1..`VERDICT_NIGHTS` are judged by `verdict` with the given forecast and fallback flag,
+ * exactly as Tonight judges night 1; later nights get `cloudOutlook` over the same forecast and
+ * never a verdict, however clear. Night dates step by calendar day, so a 25-hour DST night is one
+ * night, never a gap or a repeat.
+ */
+export function sevenNightOutlook({ site, thresholdDeg, date, forecast, fallback }: NextNightInput): OutlookNight[] {
+  const nights: OutlookNight[] = [];
+  for (let index = 1; index <= OUTLOOK_NIGHTS; index++) {
+    const nightDate = addDays(date, index - 1);
+    const night = observingNight(nightDate, site.timeZone);
+    const window = darkWindow(site, night, thresholdDeg);
+    const base = {
+      index,
+      date: nightDate,
+      darkWindow: window,
+      moon: {
+        illuminatedFraction: moonState(site, midpoint(window.kind === "window" ? window : night)).illuminatedFraction,
+        moonFreeMinutes: window.kind === "window" ? moonFreeMinutes(site, window) : null,
+      },
+    };
+    nights.push(
+      index <= VERDICT_NIGHTS
+        ? { ...base, kind: "verdict", verdict: verdict(window, forecast, { fallback }) }
+        : { ...base, kind: "outlook", cloud: cloudOutlook(window, forecast) },
+    );
+  }
+  return nights;
 }
