@@ -217,11 +217,11 @@ None: no schema change. Existing users without the cookie get the oldest telesco
 
 #### Automated
 
-- [x] 1.1 Unit tests for `chooseTelescope`, `isTelescopeId` and `selectorKind` pass (requested found; requested missing or undefined → oldest; empty list → undefined; non-UUID rejected; counts 0, 1, 2, 3, 4): `npm test`
-- [x] 1.2 i18n parity test passes with the new keys: `npm test`
-- [x] 1.3 Type check passes: `npx astro sync && npx astro check`
-- [x] 1.4 Lint passes, including the no-hardcoded-colours test: `npm run lint && npm test`
-- [x] 1.5 Production build succeeds: `npm run build`
+- [x] 1.1 Unit tests for `chooseTelescope`, `isTelescopeId` and `selectorKind` pass (requested found; requested missing or undefined → oldest; empty list → undefined; non-UUID rejected; counts 0, 1, 2, 3, 4): `npm test` — 916f6df
+- [x] 1.2 i18n parity test passes with the new keys: `npm test` — 916f6df
+- [x] 1.3 Type check passes: `npx astro sync && npx astro check` — 916f6df
+- [x] 1.4 Lint passes, including the no-hardcoded-colours test: `npm run lint && npm test` — 916f6df
+- [x] 1.5 Production build succeeds: `npm run build` — 916f6df
 
 #### Manual
 
@@ -234,9 +234,9 @@ None: no schema change. Existing users without the cookie get the oldest telesco
 
 #### Automated
 
-- [ ] 2.1 Unit, parity and colour tests pass: `npm test`
-- [ ] 2.2 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
-- [ ] 2.3 All e2e specs pass against a production preview on local Supabase with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 2.1 Unit, parity and colour tests pass: `npm test`
+- [x] 2.2 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
+- [x] 2.3 All e2e specs pass against a production preview on local Supabase with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
 - [ ] 2.4 CI (`ci` and `smoke` jobs) is green on the PR
 
 #### Manual

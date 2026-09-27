@@ -205,6 +205,17 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
                   <ServerError message={translate(eyepiecesError)} />
                 </div>
               )}
+              {!view.hasEyepieces && !eyepiecesError && (
+                <p class="mb-4 text-sm text-muted-foreground">
+                  {t.noEyepiecesPrompt}{" "}
+                  <a
+                    href="/gear/eyepieces/new"
+                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                  >
+                    {t.addEyepieces}
+                  </a>
+                </p>
+              )}
               {logError && (
                 <div class="mb-4">
                   <ServerError message={translate(logError)} />

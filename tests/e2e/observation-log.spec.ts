@@ -1,8 +1,9 @@
-import { randomUUID } from "node:crypto";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
+
+import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * Mark observed from the ranking, end to end (S-06, FR-016 / FR-018), from the same setup as
@@ -13,58 +14,14 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
  * The spec therefore never asserts a position: the order rule is pinned by the engine's unit tests.
  */
 
-const MADRID_RESULT = {
-  id: 3117735,
-  name: "Madrid",
-  latitude: 40.4168,
-  longitude: -3.7038,
-  admin1: "Madrid",
-  country: "Spain",
-};
-const MADRID_LABEL = "Madrid, Madrid, Spain";
-
-const PASSWORD = "E2e-Test-Passw0rd!";
-
-const SIGNUP_FORM = 'form[action="/api/auth/signup"]';
-const ONBOARDING_FORM = 'form[action="/api/onboarding"]';
 const LOG_FORM = 'form[action="/api/log"]';
-
-/** Waits until the React island holding `formSelector` has hydrated (Astro drops its `ssr` attribute then). */
-async function waitForHydration(page: Page, formSelector: string) {
-  await expect(page.locator(`astro-island[ssr]:has(${formSelector})`)).toHaveCount(0);
-}
-
-/** Signs up a fresh user and completes onboarding in Madrid with the default kit, landing on Tonight. */
-async function onboardInMadrid(page: Page) {
-  await page.route("https://geocoding-api.open-meteo.com/**", (route) =>
-    route.fulfill({ json: { results: [MADRID_RESULT] }, headers: { "Access-Control-Allow-Origin": "*" } }),
-  );
-
-  await page.goto("/auth/signup");
-  await waitForHydration(page, SIGNUP_FORM);
-  const signup = page.locator(SIGNUP_FORM);
-  await signup.locator("#email").fill(`e2e-log-${randomUUID()}@example.com`);
-  await signup.locator("#password").fill(PASSWORD);
-  await signup.locator("#confirmPassword").fill(PASSWORD);
-  await signup.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/onboarding$/);
-  await waitForHydration(page, ONBOARDING_FORM);
-
-  await page.locator("#place-search").fill("Madrid");
-  await page
-    .getByRole("list", { name: en.onboarding.where.resultsLabel })
-    .getByRole("button", { name: MADRID_LABEL })
-    .click();
-  await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();
-  await expect(page).toHaveURL(/\/tonight$/);
-}
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
 
 test("marking a ranked object observed saves it and tags it on Tonight", async ({ page }) => {
-  await onboardInMadrid(page);
+  await onboardInMadrid(page, "e2e-log");
 
   const ranking = page.locator('section[aria-labelledby="ranking-heading"]');
   const firstCard = ranking.locator("ol > li").first();
@@ -109,7 +66,7 @@ test("marking a ranked object observed saves it and tags it on Tonight", async (
 });
 
 test("the log form turns away an object outside the Messier catalogue", async ({ page }) => {
-  await onboardInMadrid(page);
+  await onboardInMadrid(page, "e2e-log");
 
   await page.goto("/log/new?object=111");
 

@@ -349,6 +349,9 @@ export const en = {
     logged: (p: { object: string }) => `${p.object} logged.`,
     logFailed: "Could not load your observation log, so objects you have seen are not moved down right now.",
     eyepiecesFailed: "Could not load your eyepieces, so tonight's objects are shown without eyepiece suggestions.",
+    /** FR-021: the kit has no eyepieces, so the ranking shows without pairs. */
+    noEyepiecesPrompt: "Add eyepieces to get a finding and detail pair for each object.",
+    addEyepieces: "Add eyepieces",
     failed: "Could not work out tonight's sky. Please try again.",
     loading: "Loading tonight's sky…",
     loadingSlow: "This is taking longer than usual.",
