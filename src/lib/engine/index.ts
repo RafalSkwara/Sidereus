@@ -6,7 +6,7 @@
 export type * from "./types";
 export * from "./parameters";
 export { observingNight, observingNightDateFor } from "./night";
-export { darkWindow, sunAltitudeDeg, sunEvents } from "./sun";
+export { darkWindow, sunAltitudeDeg, sunEvents, tonightDateFor } from "./sun";
 export { moonSeparationDeg, moonState, moonTrack } from "./moon";
 export type { MoonState } from "./moon";
 export { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects";

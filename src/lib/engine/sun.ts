@@ -1,5 +1,6 @@
 import { Body, Equator, Horizon, Observer, SearchAltitude, SearchHourAngle, SearchRiseSet } from "astronomy-engine";
 
+import { addDays, observingNight, observingNightDateFor } from "./night";
 import type { DarkWindow, ObservingNight, Site } from "./types";
 
 /**
@@ -87,6 +88,18 @@ export function darkWindow(site: Site, night: ObservingNight, thresholdDeg: numb
   }
 
   return { kind: "window", thresholdDeg, start, end, clampedToNightStart, clampedToNightEnd };
+}
+
+/**
+ * The evening date (`YYYY-MM-DD`, site-local) of the night "tonight" means at `instant`: the night in
+ * progress (noon to noon, `observingNightDateFor`) until its dark window has ended, then the coming
+ * evening. So at 01:30 tonight is still the night being observed, and at 09:00 it is the evening ahead
+ * rather than a night that is over. A night without a dark window keeps the noon rule.
+ */
+export function tonightDateFor(site: Site, instant: Date, thresholdDeg: number): string {
+  const date = observingNightDateFor(instant, site.timeZone);
+  const window = darkWindow(site, observingNight(date, site.timeZone), thresholdDeg);
+  return window.kind === "window" && instant.getTime() >= window.end.getTime() ? addDays(date, 1) : date;
 }
 
 const BISECTION_TOLERANCE_MS = 1_000;

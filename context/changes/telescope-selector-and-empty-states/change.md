@@ -1,7 +1,7 @@
 ---
 change_id: telescope-selector-and-empty-states
 title: Telescope selector and empty states
-status: implementing
+status: impl_reviewed
 created: 2026-09-27
 updated: 2026-09-27
 archived_at: null

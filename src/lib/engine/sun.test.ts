@@ -3,7 +3,7 @@ import { describe, expect, it, test } from "vitest";
 import { FIXTURES, TROMSO, WARSAW, fixtureTimeMs, minutesBetween, siteOf } from "./fixtures";
 import { observingNight } from "./night";
 import { TIME_TOLERANCE_MINUTES, darknessThresholdDegForBortle } from "./parameters";
-import { darkWindow, sunAltitudeDeg, sunEvents } from "./sun";
+import { darkWindow, sunAltitudeDeg, sunEvents, tonightDateFor } from "./sun";
 import type { Site } from "./types";
 
 describe("darkWindow (synthetic)", () => {
@@ -176,4 +176,35 @@ describe("sun events vs Stellarium fixtures", () => {
       expect(minutesBetween(dw.end, fixtureTimeMs(sun.darkEnd.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
     });
   }
+});
+
+describe("tonightDateFor", () => {
+  const threshold = -18;
+  const octoberWindow = darkWindow(WARSAW, observingNight("2026-10-10", WARSAW.timeZone), threshold);
+  if (octoberWindow.kind !== "window") {
+    throw new Error("expected a dark window on an October night in Warsaw");
+  }
+  const darkEnd = octoberWindow.end.getTime();
+
+  it("is the evening date before the dark window, the same afternoon", () => {
+    // 15:00 CEST on 10 October.
+    expect(tonightDateFor(WARSAW, new Date("2026-10-10T13:00:00Z"), threshold)).toBe("2026-10-10");
+  });
+
+  it("stays on the night in progress after midnight, while it is still dark", () => {
+    // 01:30 CEST on 11 October.
+    expect(tonightDateFor(WARSAW, new Date("2026-10-10T23:30:00Z"), threshold)).toBe("2026-10-10");
+    expect(tonightDateFor(WARSAW, new Date(darkEnd - 60_000), threshold)).toBe("2026-10-10");
+  });
+
+  it("moves to the coming evening once the dark window has ended, before local noon", () => {
+    expect(tonightDateFor(WARSAW, new Date(darkEnd), threshold)).toBe("2026-10-11");
+    // 09:00 CEST on 11 October: the noon rule alone would still say 10 October.
+    expect(tonightDateFor(WARSAW, new Date("2026-10-11T07:00:00Z"), threshold)).toBe("2026-10-11");
+  });
+
+  it("keeps the noon rule on a night without a dark window", () => {
+    // Tromsø at midsummer never reaches -18°: 09:00 CEST on 22 June still belongs to 21 June's night.
+    expect(tonightDateFor(TROMSO, new Date("2026-06-22T07:00:00Z"), threshold)).toBe("2026-06-21");
+  });
 });
