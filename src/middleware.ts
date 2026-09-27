@@ -1,17 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { createClient, type SessionUser, type TypedSupabaseClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
-
-const PROTECTED_ROUTES = [
-  "/dashboard",
-  "/gear",
-  "/api/gear",
-  "/tonight",
-  "/onboarding",
-  "/api/onboarding",
-  "/log/",
-  "/api/log",
-];
+import { isProtectedPath } from "@/lib/protected-routes";
 
 /**
  * Verifies the access token locally (asymmetric signing keys, cached per isolate) instead of asking
@@ -43,7 +33,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.user = supabase ? await sessionUser(supabase) : null;
 
-  if (PROTECTED_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
+  if (isProtectedPath(context.url.pathname)) {
     if (!context.locals.user) {
       return context.redirect("/auth/signin");
     }

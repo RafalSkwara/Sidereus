@@ -1,12 +1,13 @@
 import type { APIRoute } from "astro";
 import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
-import { formRedirect } from "@/lib/observations/redirect";
-import { observationInputSchema } from "@/lib/observations/schemas";
+import { formRedirect, logNotice } from "@/lib/observations/redirect";
+import { observationInputSchema, returnTargetSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 
 /*
- * Saves one observation log entry (roadmap S-06) and returns to Tonight, which confirms it. Every
+ * Saves one observation log entry (roadmap S-06) and returns to Tonight, which confirms it; a manual entry from
+ * the log (`from=log`, S-07) returns to the log instead. Every
  * `?error=` value is a fixed message key, and the prefill carried back is filtered by `formRedirect`,
  * so no typed value (and never a coordinate) reaches the URL. Nothing is logged.
  */
@@ -28,5 +29,6 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(result.message);
   }
-  return context.redirect(`/tonight?logged=${parsed.data.messier}`);
+  const manual = returnTargetSchema.safeParse(raw.from).data === "log";
+  return context.redirect(manual ? logNotice("saved", parsed.data.messier) : `/tonight?logged=${parsed.data.messier}`);
 };

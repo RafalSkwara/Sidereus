@@ -8,24 +8,29 @@ import { findMessier } from "@/lib/catalogue";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { observingNightDateFor } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
-import { isCalendarDate } from "@/lib/observations/schemas";
+import { messierOptions } from "@/lib/observations/messier-options";
+import { LOG_LIST } from "@/lib/observations/redirect";
+import { isCalendarDate, returnTargetSchema } from "@/lib/observations/schemas";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 
 // Mark observed (roadmap S-06, FR-016). Tonight links here with the ranking's object, night, site and
 // telescope; `POST /api/log` sends a failed save back with the same prefill and a `?error=` message key.
+// With `?from=log` it is the log's manual entry instead (S-07, FR-022): any object, chosen in a picker, and the
+// save returns to the log; `?object=` then only preselects the picker.
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.log;
 const params = Astro.url.searchParams;
 const error = params.get("error");
 
+const manual = returnTargetSchema.safeParse(params.get("from") ?? undefined).data === "log";
 const objectParam = params.get("object") ?? "";
 const object = /^\d{1,3}$/.test(objectParam) ? findMessier(Number(objectParam)) : undefined;
 
 let sites: SiteRecord[] = [];
 let telescopes: TelescopeRecord[] = [];
 let loadError: MessageKey | null = null;
-if (supabase && object) {
+if (supabase && (object || manual)) {
   try {
     [sites, telescopes] = await Promise.all([siteStore.list(supabase), telescopeStore.list(supabase)]);
   } catch {
@@ -45,15 +50,19 @@ const maxNight = sites.map((s) => tonightDateForSite(s, now)).reduce((a, b) => (
 const nightParam = params.get("night") ?? "";
 const night = isCalendarDate(nightParam) ? nightParam : site ? observingNightDateFor(now, site.timeZone) : "";
 
-const commonName = object ? localCommonName(object.messier, object.commonName, locale) : null;
-const title = object ? t.title({ object: object.id }) : t.kicker;
+const commonName = object && !manual ? localCommonName(object.messier, object.commonName, locale) : null;
+const title = manual ? t.manualTitle : object ? t.title({ object: object.id }) : t.kicker;
+const options = manual ? messierOptions(locale) : [];
 const primaryLink =
   "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
 
 <GearShell title={title}>
-  <a href="/tonight" class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
-    {t.back}
+  <a
+    href={manual ? LOG_LIST : "/tonight"}
+    class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading"
+  >
+    {manual ? t.backToLog : t.back}
   </a>
   <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
   <h1 class="mb-2 font-display text-3xl font-semibold text-heading sm:text-4xl">
@@ -63,7 +72,7 @@ const primaryLink =
 
   {!supabase ? (
     <DatabaseMissing />
-  ) : !object ? (
+  ) : !object && !manual ? (
     <p class="mt-6 text-foreground">{t.objectNotFound}</p>
   ) : loadError ? (
     <div class="mt-6">
@@ -78,12 +87,13 @@ const primaryLink =
     </div>
   ) : (
     <>
-      <p class="mb-6 text-sm text-muted-foreground">{t.intro}</p>
+      <p class="mb-6 text-sm text-muted-foreground">{manual ? t.manualIntro : t.intro}</p>
       <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <ObservationForm
           action="/api/log"
-          messier={object.messier}
-          initial={{ night, siteId: site.id, telescopeId: telescope.id }}
+          mode={manual ? "manual" : "ranking"}
+          initial={{ messier: object?.messier, night, siteId: site.id, telescopeId: telescope.id }}
+          messierOptions={options}
           sites={sites.map(({ id, name }) => ({ id, name }))}
           telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
           maxNight={maxNight}

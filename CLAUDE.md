@@ -56,7 +56,7 @@ Env: `SUPABASE_URL`, `SUPABASE_KEY` in `.env` (Node/astro CLI) **and** `.dev.var
 
 Stack and versions: `@README.md`. `output: "server"` — every page and route is SSR by default; no `prerender` flags needed. React islands only where there is client state (forms use `client:load`). shadcn/ui aliases are in `components.json`.
 
-**Request flow**: `@src/middleware.ts` runs on every request, builds a cookie-backed Supabase SSR client, resolves the user into `Astro.locals.user` (typed in `src/env.d.ts`), and redirects unauthenticated requests on `PROTECTED_ROUTES` (prefix match) to `/auth/signin`. Add new gated paths to that array. The PRD requires the post-login redirect to continue to the originally requested page; the middleware does not do this yet.
+**Request flow**: `@src/middleware.ts` runs on every request, builds a cookie-backed Supabase SSR client, resolves the user into `Astro.locals.user` (typed in `src/env.d.ts`), and redirects unauthenticated requests on a gated path to `/auth/signin`. Gated paths are the `PROTECTED_ROUTES` array in `@src/lib/protected-routes.ts`, matched on whole path segments (`/log` covers `/log/new`, never `/login`); add new ones there. The PRD requires the post-login redirect to continue to the originally requested page; the middleware does not do this yet.
 
 **Auth surfaces**: pages under `src/pages/auth/`, POST handlers under `src/pages/api/auth/`, React forms under `src/components/auth/`. Forms do client-side validation only and submit as plain HTML POSTs; the server is the source of truth.
 

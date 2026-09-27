@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formRedirect } from "./redirect";
+import { editRedirect, formRedirect, logNotice, parseLogPage } from "./redirect";
 
 const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
 const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
@@ -41,5 +41,57 @@ describe("formRedirect", () => {
 
   it("ignores non-string form values", () => {
     expect(params(formRedirect({ messier: 13, siteId: null }, "errors.generic"))).toEqual({ error: "errors.generic" });
+  });
+});
+
+describe("formRedirect for manual entry", () => {
+  it("carries the log return target so the form comes back in manual mode", () => {
+    expect(params(formRedirect({ messier: "31", from: "log" }, "errors.observation.ratingRequired"))).toEqual({
+      object: "31",
+      from: "log",
+      error: "errors.observation.ratingRequired",
+    });
+  });
+
+  it("drops any other return target", () => {
+    expect(params(formRedirect({ from: "https://evil.test" }, "errors.generic"))).toEqual({ error: "errors.generic" });
+  });
+});
+
+describe("editRedirect", () => {
+  it("returns to the entry's page with only the error key", () => {
+    expect(editRedirect("7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d", "errors.observation.nightInFuture")).toBe(
+      "/log/7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d?error=errors.observation.nightInFuture",
+    );
+  });
+
+  it("encodes a hostile id so it stays one path segment", () => {
+    expect(editRedirect("../gear?x=1", "errors.generic")).toBe("/log/..%2Fgear%3Fx%3D1?error=errors.generic");
+  });
+});
+
+describe("logNotice", () => {
+  it.each([
+    ["saved", "/log?saved=31"],
+    ["updated", "/log?updated=31"],
+    ["deleted", "/log?deleted=31"],
+  ] as const)("names the object for a %s notice", (kind, url) => {
+    expect(logNotice(kind, 31)).toBe(url);
+  });
+});
+
+describe("parseLogPage", () => {
+  it.each([
+    [null, 1],
+    ["", 1],
+    ["1", 1],
+    ["3", 3],
+    ["0", 1],
+    ["-2", 1],
+    ["2.5", 1],
+    ["abc", 1],
+    ["9999999", 1],
+  ])("reads %j as page %i", (param, page) => {
+    expect(parseLogPage(param)).toBe(page);
   });
 });

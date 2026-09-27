@@ -240,3 +240,192 @@ describe("observationStore", () => {
     ]);
   });
 });
+
+describe("observationStore edits and deletions (S-07)", () => {
+  async function created(client: Client, gear: Gear, messier = 13, rating = 4, night = "2026-09-25"): Promise<string> {
+    expect(await observationStore.create(client, { messier, night, rating, ...gear }, NOW)).toEqual({ ok: true });
+    const { data } = await client
+      .from("observations")
+      .select("id")
+      .eq("messier", messier)
+      .eq("night", night)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (!data) throw new Error("entry not found after create");
+    return data.id;
+  }
+
+  it("edits the object, night, rating and gear, snapshotting the new gear's names", async () => {
+    const user = await signUp("edit");
+    const home = await addGear(user.client, "Home", "Dobsonian 8in");
+    const cabin = await addGear(user.client, "Cabin", "Travel refractor");
+    const id = await created(user.client, home);
+
+    expect(
+      await observationStore.update(
+        user.client,
+        id,
+        { messier: 31, night: "2026-09-24", rating: 5, siteId: cabin.siteId, telescopeId: cabin.telescopeId },
+        NOW,
+      ),
+    ).toEqual({ ok: true });
+    expect(await observationStore.get(user.client, id)).toMatchObject({
+      messier: 31,
+      night: "2026-09-24",
+      rating: 5,
+      siteId: cabin.siteId,
+      telescopeId: cabin.telescopeId,
+      siteName: "Cabin",
+      telescopeName: "Travel refractor",
+    });
+  });
+
+  it("cannot read, edit or delete another user's entry: it reads as not found", async () => {
+    const id = await created(a.client, gearA, 92);
+
+    expect(await observationStore.get(b.client, id)).toBeNull();
+    expect(
+      await observationStore.update(b.client, id, { messier: 92, night: "2026-09-25", rating: 1, ...gearB }, NOW),
+    ).toEqual({ ok: false, message: "errors.notFound.observation" });
+    expect(await observationStore.remove(b.client, id)).toEqual({ ok: false, message: "errors.notFound.observation" });
+    expect(await observationStore.get(a.client, id)).toMatchObject({ messier: 92, rating: 4 });
+  });
+
+  it("treats a malformed id as not found", async () => {
+    expect(await observationStore.get(a.client, "not-a-uuid")).toBeNull();
+    expect(await observationStore.remove(a.client, "not-a-uuid")).toEqual({
+      ok: false,
+      message: "errors.notFound.observation",
+    });
+    expect(
+      await observationStore.update(
+        a.client,
+        "not-a-uuid",
+        { messier: 13, night: "2026-09-25", rating: 4, ...gearA },
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.notFound.observation" });
+  });
+
+  it("keeps a deleted site and telescope on edit, with their name snapshots", async () => {
+    const user = await signUp("orphan");
+    await addGear(user.client, "Home", "Dobsonian 8in");
+    const cabin = await addGear(user.client, "Cabin", "Travel refractor");
+    const id = await created(user.client, cabin);
+    await user.client.from("sites").delete().eq("id", cabin.siteId);
+    await user.client.from("telescopes").delete().eq("id", cabin.telescopeId);
+
+    expect(
+      await observationStore.update(
+        user.client,
+        id,
+        { messier: 13, night: "2026-09-25", rating: 2, siteId: null, telescopeId: null },
+        NOW,
+      ),
+    ).toEqual({ ok: true });
+    expect(await observationStore.get(user.client, id)).toMatchObject({
+      rating: 2,
+      siteId: null,
+      telescopeId: null,
+      siteName: "Cabin",
+      telescopeName: "Travel refractor",
+    });
+  });
+
+  it("never detaches live gear: keeping a site or telescope needs it to be deleted already", async () => {
+    const user = await signUp("detach");
+    const home = await addGear(user.client);
+    const id = await created(user.client, home);
+
+    expect(
+      await observationStore.update(
+        user.client,
+        id,
+        { messier: 13, night: "2026-09-25", rating: 4, siteId: null, telescopeId: home.telescopeId },
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.observation.siteRequired" });
+    expect(
+      await observationStore.update(
+        user.client,
+        id,
+        { messier: 13, night: "2026-09-25", rating: 4, siteId: home.siteId, telescopeId: null },
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.observation.telescopeRequired" });
+    expect(await observationStore.get(user.client, id)).toMatchObject({ siteId: home.siteId });
+  });
+
+  it("refuses to point an entry at another user's gear", async () => {
+    const id = await created(a.client, gearA, 27);
+    expect(
+      await observationStore.update(
+        a.client,
+        id,
+        { messier: 27, night: "2026-09-25", rating: 4, siteId: gearB.siteId, telescopeId: gearA.telescopeId },
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.observation.gearNotFound" });
+  });
+
+  it("refuses a future night: against the live site, or the latest night of any site for a deleted one", async () => {
+    const user = await signUp("future");
+    await addGear(user.client);
+    const cabin = await addGear(user.client, "Cabin", "Travel refractor");
+    const id = await created(user.client, cabin);
+
+    expect(
+      await observationStore.update(user.client, id, { messier: 13, night: "2026-09-27", rating: 4, ...cabin }, NOW),
+    ).toEqual({ ok: false, message: "errors.observation.nightInFuture" });
+
+    await user.client.from("sites").delete().eq("id", cabin.siteId);
+    const kept = { siteId: null, telescopeId: cabin.telescopeId };
+    // The remaining Warsaw site is on the night of the 26th at NOW.
+    expect(
+      await observationStore.update(user.client, id, { messier: 13, night: "2026-09-27", rating: 4, ...kept }, NOW),
+    ).toEqual({ ok: false, message: "errors.observation.nightInFuture" });
+    expect(
+      await observationStore.update(user.client, id, { messier: 13, night: "2026-09-26", rating: 4, ...kept }, NOW),
+    ).toEqual({ ok: true });
+  });
+
+  it("feeds the ranking honestly: a rating lowered to 2 or a deleted entry no longer counts as seen", async () => {
+    const user = await signUp("ranking");
+    const gear = await addGear(user.client);
+    const m13 = await created(user.client, gear, 13, 4, "2026-09-24");
+    const m31 = await created(user.client, gear, 31, 5, "2026-09-25");
+    expect((await observationStore.listForRanking(user.client)).map((e) => e.messier)).toEqual([31, 13]);
+
+    expect(
+      await observationStore.update(user.client, m13, { messier: 13, night: "2026-09-24", rating: 2, ...gear }, NOW),
+    ).toEqual({ ok: true });
+    expect(await observationStore.remove(user.client, m31)).toEqual({ ok: true, messier: 31 });
+    expect(await observationStore.listForRanking(user.client)).toEqual([]);
+    expect(await observationStore.get(user.client, m31)).toBeNull();
+  });
+
+  it("lists the log newest night first, newest entry first within a night, 50 per page", async () => {
+    const user = await signUp("pages");
+    const gear = await addGear(user.client);
+    // 51 entries: M1..M51, one per night from 2026-07-20 onwards (M51 newest), plus a second, later entry on M51's night.
+    const rows = Array.from({ length: 51 }, (_, i) => ({
+      ...entry(gear),
+      messier: i + 1,
+      night: new Date(Date.UTC(2026, 6, 20 + i)).toISOString().slice(0, 10),
+    }));
+    expect((await user.client.from("observations").insert(rows)).error).toBeNull();
+    const later = await created(user.client, gear, 110, 3, rows[50].night);
+
+    const first = await observationStore.list(user.client, { page: 1 });
+    expect(first.entries).toHaveLength(50);
+    expect(first.hasOlder).toBe(true);
+    expect(first.entries[0]).toMatchObject({ id: later, messier: 110 });
+    expect(first.entries.slice(1, 4).map((e) => e.messier)).toEqual([51, 50, 49]);
+
+    const second = await observationStore.list(user.client, { page: 2 });
+    expect(second.entries.map((e) => e.messier)).toEqual([2, 1]);
+    expect(second.hasOlder).toBe(false);
+    expect((await observationStore.list(user.client, { page: 3 })).entries).toEqual([]);
+  });
+});
