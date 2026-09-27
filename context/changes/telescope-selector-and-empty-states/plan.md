@@ -234,10 +234,10 @@ None: no schema change. Existing users without the cookie get the oldest telesco
 
 #### Automated
 
-- [x] 2.1 Unit, parity and colour tests pass: `npm test`
-- [x] 2.2 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
-- [x] 2.3 All e2e specs pass against a production preview on local Supabase with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
-- [ ] 2.4 CI (`ci` and `smoke` jobs) is green on the PR
+- [x] 2.1 Unit, parity and colour tests pass: `npm test` — ab7a6da
+- [x] 2.2 Type check and lint pass: `npx astro sync && npx astro check && npm run lint` — ab7a6da
+- [x] 2.3 All e2e specs pass against a production preview on local Supabase with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e` — ab7a6da
+- [x] 2.4 CI (`ci` and `smoke` jobs) is green on the PR — ab7a6da
 
 #### Manual
 
