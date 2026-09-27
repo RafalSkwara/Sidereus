@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
+import { createFormatter } from "@/lib/tonight/format";
 
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
@@ -86,15 +87,27 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await picker.press("Enter");
   await expect(picker).toHaveValue(/^M31 · /);
   await rate(manual, 4);
+  const night = await manual.locator("#night").inputValue();
   await manual.locator('button[type="submit"]').click();
 
   await expect(page).toHaveURL(/\/log\?saved=31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.saved({ object: "M31" }));
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
+  // It sits under the heading of the night it was logged for.
+  await expect(page.locator("main section").filter({ hasText: "M31" }).getByRole("heading", { level: 2 })).toHaveText(
+    createFormatter("en").formatNightDate(night),
+  );
 
-  // Edit: the form comes prefilled with the saved rating; lower it to 2.
+  // The edit form comes prefilled. Enter in the object field submits it as it is: focusing the picker highlights
+  // no option, so the object cannot be swapped by accident.
   let form = await openEntry(page, "M31");
   await expect(form.getByRole("radio", { name: "4", exact: true })).toBeChecked();
+  await form.getByRole("combobox", { name: t.picker.label }).press("Enter");
+  await expect(page).toHaveURL(/\/log\?updated=31$/);
+  await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
+
+  // Lower the rating to 2.
+  form = await openEntry(page, "M31");
   await rate(form, 2);
   await form.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/log\?updated=31$/);
