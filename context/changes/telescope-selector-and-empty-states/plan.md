@@ -230,10 +230,10 @@ Impl review F1 (2026-09-27, found in manual verification): before local noon, To
 
 #### Manual
 
-- [ ] 1.6 With two telescopes, `/tonight` shows two pills with the oldest active; clicking the other re-ranks and the heading says "For your <name>"
-- [ ] 1.7 Reloading plain `/tonight` keeps the last pick; `/tonight?telescope=<random uuid>` falls back to the oldest with no error
-- [ ] 1.8 With four telescopes the dropdown appears and switching submits on change; with JS disabled the "Show" button works
-- [ ] 1.9 With one telescope nothing changes versus today; pills read well in dark and light themes, EN and PL
+- [x] 1.6 With two telescopes, `/tonight` shows two pills with the oldest active; clicking the other re-ranks and the heading says "For your <name>" — 916f6df
+- [x] 1.7 Reloading plain `/tonight` keeps the last pick; `/tonight?telescope=<random uuid>` falls back to the oldest with no error — 916f6df
+- [x] 1.8 With four telescopes the dropdown appears and switching submits on change; with JS disabled the "Show" button works — 916f6df
+- [x] 1.9 With one telescope nothing changes versus today; pills read well in dark and light themes, EN and PL — 916f6df
 
 ### Phase 2: No-eyepieces notice and deletion coverage
 
@@ -246,5 +246,5 @@ Impl review F1 (2026-09-27, found in manual verification): before local noon, To
 
 #### Manual
 
-- [ ] 2.5 After deleting all eyepieces, Tonight shows the ranking without pairs and the notice links to the add-eyepiece form; after adding one, the pairs return and the notice is gone
-- [ ] 2.6 Deleting the last telescope, then the site, shows the matching empty states; nothing errors
+- [x] 2.5 After deleting all eyepieces, Tonight shows the ranking without pairs and the notice links to the add-eyepiece form; after adding one, the pairs return and the notice is gone — ab7a6da
+- [x] 2.6 Deleting the last telescope, then the site, shows the matching empty states; nothing errors — ab7a6da
