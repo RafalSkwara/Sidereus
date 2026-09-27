@@ -67,3 +67,24 @@ export const observationInputSchema = z.object({
 });
 
 export type ObservationInput = z.infer<typeof observationInputSchema>;
+
+/** An empty gear field on edit means "keep the deleted site or telescope" (FR-021); the store checks it was one. */
+function keptGearId(message: MessageKey) {
+  return z.preprocess((value) => emptyToUndefined(value) ?? null, z.uuid({ error: message }).nullable());
+}
+
+/**
+ * An edited entry (roadmap S-07, FR-017): the same fields, except that the site or telescope may be `null`
+ * when the entry's own gear has been deleted since. Creating an entry always needs live gear.
+ */
+export const observationUpdateSchema = observationInputSchema.extend({
+  siteId: keptGearId("errors.observation.siteRequired"),
+  telescopeId: keptGearId("errors.observation.telescopeRequired"),
+});
+
+export type ObservationUpdateInput = z.infer<typeof observationUpdateSchema>;
+
+/** Where `/log/new` returns after a save: absent → Tonight (the ranking flow), `log` → the log (manual entry). */
+export const returnTargetSchema = z.enum(["log"]).optional();
+
+export type ReturnTarget = z.infer<typeof returnTargetSchema>;

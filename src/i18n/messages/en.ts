@@ -570,11 +570,13 @@ export const en = {
       site: "Could not delete the site. Please try again.",
       telescope: "Could not delete the telescope. Please try again.",
       eyepiece: "Could not delete the eyepiece. Please try again.",
+      observation: "Could not delete the observation. Please try again.",
     },
     notFound: {
       site: "Site not found.",
       telescope: "Telescope not found.",
       eyepiece: "Eyepiece not found.",
+      observation: "Observation not found.",
     },
     geocoding: {
       failed: "Place search is unavailable right now.",

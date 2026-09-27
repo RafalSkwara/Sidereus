@@ -580,11 +580,13 @@ export const pl = {
       site: "Nie udało się usunąć stanowiska. Spróbuj ponownie.",
       telescope: "Nie udało się usunąć teleskopu. Spróbuj ponownie.",
       eyepiece: "Nie udało się usunąć okularu. Spróbuj ponownie.",
+      observation: "Nie udało się usunąć obserwacji. Spróbuj ponownie.",
     },
     notFound: {
       site: "Nie znaleziono stanowiska.",
       telescope: "Nie znaleziono teleskopu.",
       eyepiece: "Nie znaleziono okularu.",
+      observation: "Nie znaleziono obserwacji.",
     },
     geocoding: {
       failed: "Wyszukiwanie miejsc jest teraz niedostępne.",

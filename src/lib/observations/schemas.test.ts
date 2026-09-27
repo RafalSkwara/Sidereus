@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getMessages, translateKey } from "@/i18n";
-import { observationInputSchema } from "./schemas";
+import { observationInputSchema, observationUpdateSchema, returnTargetSchema } from "./schemas";
 
 /** FormData-shaped input: every value is a string, as a plain HTML POST delivers it. */
 const m13 = {
@@ -57,5 +57,43 @@ describe("observationInputSchema", () => {
     expect(messages(result).sort()).toEqual(
       [en.objectInvalid, en.nightInvalid, en.ratingRequired, en.siteRequired, en.telescopeRequired].sort(),
     );
+  });
+});
+
+describe("observationUpdateSchema", () => {
+  it("accepts live gear like the create schema", () => {
+    expect(observationUpdateSchema.parse(m13)).toEqual(observationInputSchema.parse(m13));
+  });
+
+  it("reads an empty site or telescope as keeping the deleted one", () => {
+    expect(observationUpdateSchema.parse({ ...m13, siteId: "", telescopeId: "  " })).toMatchObject({
+      siteId: null,
+      telescopeId: null,
+    });
+    expect(observationUpdateSchema.parse({ messier: "13", night: "2026-09-26", rating: "4" })).toMatchObject({
+      siteId: null,
+      telescopeId: null,
+    });
+  });
+
+  it.each([
+    ["a site that is not a uuid", { siteId: "home" }],
+    ["a telescope that is not a uuid", { telescopeId: "52.23,21.01" }],
+    ["a missing rating", { rating: "" }],
+  ])("still rejects %s", (_label, override) => {
+    expect(observationUpdateSchema.safeParse({ ...m13, ...override }).success).toBe(false);
+  });
+
+  it("keeps create strict: an empty site is still an error there", () => {
+    expect(observationInputSchema.safeParse({ ...m13, siteId: "" }).success).toBe(false);
+  });
+});
+
+describe("returnTargetSchema", () => {
+  it("accepts only the log, or nothing", () => {
+    expect(returnTargetSchema.safeParse("log").success).toBe(true);
+    expect(returnTargetSchema.safeParse(undefined).success).toBe(true);
+    expect(returnTargetSchema.safeParse("https://evil.test").success).toBe(false);
+    expect(returnTargetSchema.safeParse("tonight").success).toBe(false);
   });
 });
