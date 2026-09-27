@@ -80,7 +80,7 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   // One telescope: no selector, no "For your …" line.
   await expect(ranking(page).locator("ol > li").first()).toBeVisible();
   await expect(pills(page)).toHaveCount(0);
-  await expect(page.locator("form[data-telescope-select]")).toHaveCount(0);
+  await expect(page.locator('form[data-gear-select="telescope"]')).toHaveCount(0);
   const onboarded = (await page.locator("main").getByRole("link", { name: /·/ }).textContent())?.split("·")[1]?.trim();
   if (!onboarded) throw new Error("no telescope named under the Tonight title");
 
@@ -106,7 +106,9 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await expect(pills(page)).toHaveCount(0);
   const select = page.getByLabel(t.selector.label);
   await expect(select.locator("option")).toHaveCount(4);
-  await expect(page.locator("form[data-telescope-select]").getByRole("button", { name: t.selector.show })).toBeHidden();
+  await expect(
+    page.locator('form[data-gear-select="telescope"]').getByRole("button", { name: t.selector.show }),
+  ).toBeHidden();
   await select.selectOption({ label: "Third Scope" });
   await expect(page).toHaveURL(/\/tonight\?telescope=[0-9a-f-]{36}$/);
   await expect(ranking(page)).toContainText(t.rankingFor({ telescope: "Third Scope" }));

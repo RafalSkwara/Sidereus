@@ -357,6 +357,11 @@ export const en = {
     loading: "Loading tonight's sky…",
     loadingSlow: "This is taking longer than usual.",
     reload: "Reload",
+    /** FR-012: shown only to users who own two or more sites; the label must differ from `selector.label`. */
+    siteSelector: {
+      label: "Site",
+      show: "Show",
+    },
     /** FR-019: shown only to users who own two or more telescopes. */
     selector: {
       label: "Telescope",

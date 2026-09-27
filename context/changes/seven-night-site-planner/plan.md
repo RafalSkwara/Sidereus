@@ -390,30 +390,30 @@ No database change. Forecast entries cached before the deploy only reach night 3
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including i18n parity and no-hardcoded-colors: `npm test`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass, including i18n parity and no-hardcoded-colors: `npm test` — fc3d64b
+- [x] 2.2 Type check passes: `npx astro check` — fc3d64b
+- [x] 2.3 Lint passes: `npm run lint` — fc3d64b
+- [x] 2.4 Production build succeeds: `npm run build` — fc3d64b
 
 #### Manual
 
-- [x] 2.5 On `npm run dev`, Tonight shows the strip after the ranking with seven nights, nights 1-3 with verdict chips matching the verdict card for night 1, nights 4-7 under "Outlook — no verdict" with cloud percentages and no verdict colour
-- [x] 2.6 The strip reads well at 375 px width (no horizontal page scroll) and in light and dark themes, in English and Polish
-- [x] 2.7 With `FORECAST_BASE_URL` pointing at an unreachable host (and no cache), nights 1-3 read marginal/no weather data and nights 4-7 read "No cloud outlook yet", with moon and darkness still shown
+- [x] 2.5 On `npm run dev`, Tonight shows the strip after the ranking with seven nights, nights 1-3 with verdict chips matching the verdict card for night 1, nights 4-7 under "Outlook — no verdict" with cloud percentages and no verdict colour — fc3d64b
+- [x] 2.6 The strip reads well at 375 px width (no horizontal page scroll) and in light and dark themes, in English and Polish — fc3d64b
+- [x] 2.7 With `FORECAST_BASE_URL` pointing at an unreachable host (and no cache), nights 1-3 read marginal/no weather data and nights 4-7 read "No cloud outlook yet", with moon and darkness still shown — fc3d64b
 
 ### Phase 3: Site switching
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test`
-- [ ] 3.2 Type check passes: `npx astro check`
-- [ ] 3.3 Lint passes: `npm run lint`
-- [ ] 3.4 E2E specs pass against the preview with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
-- [ ] 3.5 Smoke test passes against local Supabase: `npm run smoke`
+- [x] 3.1 Unit tests pass: `npm test`
+- [x] 3.2 Type check passes: `npx astro check`
+- [x] 3.3 Lint passes: `npm run lint`
+- [x] 3.4 E2E specs pass against the preview with the forecast fixture: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 3.5 Smoke test passes against local Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 With two sites in different time zones, switching by pill changes the verdict, ranking, strip and "times in" zone together, and "Mark observed" prefills the selected site
-- [ ] 3.7 With four sites the dropdown switches on change (JS) and via "Show" (JS disabled)
-- [ ] 3.8 Deleting the selected site and reopening Tonight falls back to the oldest site silently
-- [ ] 3.9 On the preview build, `buildTonight` for one Warsaw site takes at most ~10 ms more than before the change (timed locally before/after; production CPU is a post-merge check, see Performance Considerations)
+- [x] 3.6 With two sites in different time zones, switching by pill changes the verdict, ranking, strip and "times in" zone together, and "Mark observed" prefills the selected site
+- [x] 3.7 With four sites the dropdown switches on change (JS) and via "Show" (JS disabled)
+- [x] 3.8 Deleting the selected site and reopening Tonight falls back to the oldest site silently
+- [x] 3.9 On the preview build, `buildTonight` for one Warsaw site takes at most ~10 ms more than before the change (timed locally before/after; production CPU is a post-merge check, see Performance Considerations)

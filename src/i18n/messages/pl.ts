@@ -372,6 +372,10 @@ export const pl = {
     loading: "Wczytuję dzisiejsze niebo…",
     loadingSlow: "To trwa dłużej niż zwykle.",
     reload: "Odśwież",
+    siteSelector: {
+      label: "Stanowisko",
+      show: "Pokaż",
+    },
     selector: {
       label: "Teleskop",
       show: "Pokaż",
