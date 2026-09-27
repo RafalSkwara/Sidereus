@@ -539,6 +539,8 @@ export const pl = {
       add: "Dodaj wpis",
       empty: "Dziennik jest pusty. Oznacz obiekt jako zaobserwowany w widoku Dziś w nocy albo dodaj wpis ręcznie.",
       toTonight: "Przejdź do Dziś w nocy",
+      pageEmpty: "Na tej stronie nie ma wpisów.",
+      toNewest: "Przejdź do najnowszych wpisów",
       edit: "Edytuj",
       rated: (p) => `Ocena ${p.rating} z 5`,
       deletedGear: (p) => `${p.name} (usunięte)`,

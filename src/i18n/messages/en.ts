@@ -525,6 +525,8 @@ export const en = {
       add: "Add entry",
       empty: "Nothing logged yet. Mark an object observed on Tonight, or add an entry by hand.",
       toTonight: "Go to Tonight",
+      pageEmpty: "No entries on this page.",
+      toNewest: "Go to the newest entries",
       edit: "Edit",
       rated: (p: { rating: string }) => `Rated ${p.rating} of 5`,
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,

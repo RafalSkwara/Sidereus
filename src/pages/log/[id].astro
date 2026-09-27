@@ -26,14 +26,18 @@ let sites: SiteRecord[] = [];
 let telescopes: TelescopeRecord[] = [];
 let loadError: MessageKey | null = null;
 if (supabase) {
-  try {
-    [entry, sites, telescopes] = await Promise.all([
-      observationStore.get(supabase, id),
-      siteStore.list(supabase),
-      telescopeStore.list(supabase),
-    ]);
-  } catch {
+  // Loaded together, worded apart: a failed gear read is a setup problem, not a log one (as on /log/new).
+  const [entryResult, gearResult] = await Promise.allSettled([
+    observationStore.get(supabase, id),
+    Promise.all([siteStore.list(supabase), telescopeStore.list(supabase)]),
+  ]);
+  if (entryResult.status === "rejected") {
     loadError = "errors.load.observations";
+  } else if (gearResult.status === "rejected") {
+    loadError = "errors.load.setup";
+  } else {
+    entry = entryResult.value;
+    [sites, telescopes] = gearResult.value;
   }
   if (!entry && !loadError) {
     Astro.response.status = 404;

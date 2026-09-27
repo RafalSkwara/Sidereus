@@ -93,6 +93,14 @@ const pageLink =
     <DatabaseMissing />
   ) : loadError ? (
     <ServerError message={translateKey(m, loadError, "errors.generic")} />
+  ) : nights.length === 0 && page > 1 ? (
+    // Past the last page (a stale or edited link): the log is not empty, so say so and lead back to its start.
+    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+      <p class="mb-4 text-foreground">{t.pageEmpty}</p>
+      <a href={LOG_LIST} class:list={[primaryLink]}>
+        {t.toNewest}
+      </a>
+    </div>
   ) : nights.length === 0 ? (
     <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
       <p class="mb-4 text-foreground">{t.empty}</p>
