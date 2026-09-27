@@ -32,6 +32,7 @@ export const en = {
 
   nav: {
     tonight: "Tonight",
+    log: "Log",
     myGear: "My gear",
     welcome: "Welcome!",
     signIn: "Sign in",
@@ -502,6 +503,22 @@ export const en = {
     objectNotFound: "That object is not in the Messier catalogue.",
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",
+    list: {
+      title: "Observation log",
+      intro: "Everything you have observed, newest night first. Open an entry to fix or delete it.",
+      add: "Add entry",
+      empty: "Nothing logged yet. Mark an object observed on Tonight, or add an entry by hand.",
+      toTonight: "Go to Tonight",
+      edit: "Edit",
+      rated: (p: { rating: string }) => `Rated ${p.rating} of 5`,
+      deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
+      pages: "Log pages",
+      newer: "← Newer",
+      older: "Older →",
+      saved: (p: { object: string }) => `${p.object} logged.`,
+      updated: (p: { object: string }) => `${p.object} updated.`,
+      deleted: (p: { object: string }) => `${p.object} deleted from the log.`,
+    },
   },
 
   /**

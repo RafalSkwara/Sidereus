@@ -16,6 +16,7 @@ function navState(href: string) {
   };
 }
 const tonightLink = navState("/tonight");
+const logLink = navState("/log");
 const gearLink = navState("/gear");
 const signinLink = navState("/auth/signin");
 ---
@@ -33,6 +34,9 @@ const signinLink = navState("/auth/signin");
       <>
         <a href="/tonight" class:list={tonightLink.class} aria-current={tonightLink["aria-current"]}>
           {m.nav.tonight}
+        </a>
+        <a href="/log" class:list={logLink.class} aria-current={logLink["aria-current"]}>
+          {m.nav.log}
         </a>
         <a href="/gear" class:list={gearLink.class} aria-current={gearLink["aria-current"]}>
           {m.nav.myGear}

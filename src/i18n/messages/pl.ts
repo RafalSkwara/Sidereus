@@ -21,6 +21,7 @@ export const pl = {
 
   nav: {
     tonight: "Dziś w nocy",
+    log: "Dziennik",
     myGear: "Mój sprzęt",
     welcome: "Witaj!",
     signIn: "Zaloguj się",
@@ -516,6 +517,22 @@ export const pl = {
     objectNotFound: "Tego obiektu nie ma w katalogu Messiera.",
     needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
     addGear: "Przejdź do sprzętu",
+    list: {
+      title: "Dziennik obserwacji",
+      intro: "Wszystko, co udało Ci się zaobserwować, od najnowszej nocy. Otwórz wpis, aby go poprawić lub usunąć.",
+      add: "Dodaj wpis",
+      empty: "Dziennik jest pusty. Oznacz obiekt jako zaobserwowany w widoku Dziś w nocy albo dodaj wpis ręcznie.",
+      toTonight: "Przejdź do Dziś w nocy",
+      edit: "Edytuj",
+      rated: (p) => `Ocena ${p.rating} z 5`,
+      deletedGear: (p) => `${p.name} (usunięte)`,
+      pages: "Strony dziennika",
+      newer: "← Nowsze",
+      older: "Starsze →",
+      saved: (p) => `Zapisano obserwację ${p.object}.`,
+      updated: (p) => `Zaktualizowano obserwację ${p.object}.`,
+      deleted: (p) => `Usunięto obserwację ${p.object} z dziennika.`,
+    },
   },
 
   errors: {

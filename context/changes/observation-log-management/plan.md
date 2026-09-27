@@ -342,25 +342,25 @@ None: the S-06 schema already supports every operation. Hosted Supabase needs no
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test`
-- [x] 1.2 DB suite passes against local Supabase: `npm run test:db`
-- [x] 1.3 Type check passes: `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm test` — ac96823
+- [x] 1.2 DB suite passes against local Supabase: `npm run test:db` — ac96823
+- [x] 1.3 Type check passes: `npx astro check` — ac96823
+- [x] 1.4 Lint passes: `npm run lint` — ac96823
 
 ### Phase 2: Log page, navigation and protection
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including `protected-routes.test.ts` and the i18n parity test: `npm test`
-- [ ] 2.2 No hardcoded colours: `npm test -- src/styles/no-hardcoded-colors.test.ts`
-- [ ] 2.3 Type check and lint pass: `npx astro check && npm run lint`
-- [ ] 2.4 Build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass, including `protected-routes.test.ts` and the i18n parity test: `npm test`
+- [x] 2.2 No hardcoded colours: `npm test -- src/styles/no-hardcoded-colors.test.ts`
+- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.4 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 Signed out, `/log` redirects to sign-in
-- [ ] 2.6 With S-06 entries on local Supabase, `/log` groups them by night in EN and PL, light and dark theme, and on a phone-width viewport
-- [ ] 2.7 After deleting the telescope an entry used (via `/gear`), the entry still shows with "(deleted)"
+- [x] 2.5 Signed out, `/log` redirects to sign-in
+- [x] 2.6 With S-06 entries on local Supabase, `/log` groups them by night in EN and PL, light and dark theme, and on a phone-width viewport
+- [x] 2.7 After deleting the telescope an entry used (via `/gear`), the entry still shows with "(deleted)"
 
 ### Phase 3: Manual entry with object picker
 
