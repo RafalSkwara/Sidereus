@@ -369,6 +369,11 @@ export const pl = {
     loading: "Wczytuję dzisiejsze niebo…",
     loadingSlow: "To trwa dłużej niż zwykle.",
     reload: "Odśwież",
+    selector: {
+      label: "Teleskop",
+      show: "Pokaż",
+    },
+    rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {
       kicker: "Ocena nocy",

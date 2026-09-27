@@ -353,6 +353,12 @@ export const en = {
     loading: "Loading tonight's sky…",
     loadingSlow: "This is taking longer than usual.",
     reload: "Reload",
+    /** FR-019: shown only to users who own two or more telescopes. */
+    selector: {
+      label: "Telescope",
+      show: "Show",
+    },
+    rankingFor: (p: { telescope: string }) => `For your ${p.telescope}`,
 
     card: {
       kicker: "Tonight's verdict",
