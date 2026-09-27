@@ -5,6 +5,7 @@ import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { ServerError } from "@/components/forms/ServerError";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
+import TelescopeSelector from "@/components/tonight/TelescopeSelector.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
@@ -20,6 +21,12 @@ import {
 import type { LogEntry } from "@/lib/engine";
 import { observationStore } from "@/lib/observations/store";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
+import { chooseTelescope, selectorKind } from "@/lib/tonight/telescope-choice";
+
+interface Props {
+  /** The telescope picked on the page (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+}
 
 // Fixed, value-free message keys: nothing about the site (coordinates included) ever reaches the page or a log.
 const SITES_FAILED: MessageKey = "errors.load.sites";
@@ -29,6 +36,7 @@ const LOG_FAILED: MessageKey = "tonight.logFailed";
 const TONIGHT_FAILED: MessageKey = "tonight.failed";
 
 const { user, locale } = Astro.locals;
+const { telescopeId } = Astro.props;
 // The island route (/_server-islands/...) sits outside PROTECTED_ROUTES, so it guards itself: signed out, it
 // renders nothing and loads nothing.
 const supabase = user ? Astro.locals.supabase : null;
@@ -73,9 +81,12 @@ if (supabase) {
   ({ items: log, error: logError } = logResult);
 }
 
-// S-02 uses the oldest site and the oldest telescope (both lists are in `created_at` order).
+// The oldest site (S-05 adds switching). The telescope is the one picked on the page when the user owns it,
+// else the oldest (FR-019); both lists are in `created_at` order.
 const site = sites.at(0);
-const telescope = telescopes.at(0);
+const telescope = chooseTelescope(telescopes, telescopeId);
+// FR-019: the selector, and naming the telescope on the ranking, only matter with two or more.
+const multipleTelescopes = selectorKind(telescopes.length) !== "none";
 // No site and no telescope (e.g. onboarding abandoned): one route back to setup instead of two cards (FR-021
 // single-item empty states stay as they are).
 const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
@@ -128,9 +139,12 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
     {site && telescope && (
       <p class="mb-6 text-sm text-muted-foreground">
         <a href="/gear" class="transition-colors hover:text-heading">
-          {site.name} · {telescope.name}
+          {multipleTelescopes ? site.name : `${site.name} · ${telescope.name}`}
         </a>
       </p>
+    )}
+    {site && telescope && multipleTelescopes && (
+      <TelescopeSelector telescopes={telescopes.map(({ id, name }) => ({ id, name }))} activeId={telescope.id} />
     )}
 
     <div class="mt-6 space-y-6">
@@ -177,13 +191,30 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
 
           {view.ranking && (
             <section aria-labelledby="ranking-heading">
-              <h2 id="ranking-heading" class="mb-4 font-display text-2xl font-semibold text-heading">
+              <h2
+                id="ranking-heading"
+                class:list={["font-display text-2xl font-semibold text-heading", multipleTelescopes ? "mb-1" : "mb-4"]}
+              >
                 {view.ranking.clearedText}
               </h2>
+              {multipleTelescopes && (
+                <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+              )}
               {eyepiecesError && (
                 <div class="mb-4">
                   <ServerError message={translate(eyepiecesError)} />
                 </div>
+              )}
+              {!view.hasEyepieces && !eyepiecesError && (
+                <p class="mb-4 text-sm text-muted-foreground">
+                  {t.noEyepiecesPrompt}{" "}
+                  <a
+                    href="/gear/eyepieces/new"
+                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                  >
+                    {t.addEyepieces}
+                  </a>
+                </p>
               )}
               {logError && (
                 <div class="mb-4">

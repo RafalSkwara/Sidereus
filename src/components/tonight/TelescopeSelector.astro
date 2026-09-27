@@ -1,0 +1,85 @@
+---
+// FR-019: which telescope the Tonight ranking is for, shown only to users who own two or more. Plain links
+// (pills) or a plain GET form (dropdown), so both work without JavaScript; `/tonight?telescope=<id>`
+// remembers the pick (see pages/tonight.astro).
+import { getMessages } from "@/i18n";
+import { selectorKind } from "@/lib/tonight/telescope-choice";
+
+interface Props {
+  /** In `created_at` order. */
+  telescopes: { id: string; name: string }[];
+  activeId: string;
+}
+
+const { telescopes, activeId } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight.selector;
+const kind = selectorKind(telescopes.length);
+
+const pillBase =
+  "inline-flex max-w-full items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors";
+---
+
+{kind === "pills" && (
+  <nav aria-label={t.label} class="mb-6">
+    <ul class="flex flex-wrap gap-2">
+      {telescopes.map((telescope) => {
+        const active = telescope.id === activeId;
+        return (
+          <li class="min-w-0">
+            <a
+              href={`/tonight?telescope=${encodeURIComponent(telescope.id)}`}
+              aria-current={active ? "page" : undefined}
+              title={telescope.name}
+              class:list={[
+                pillBase,
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-surface text-foreground hover:text-heading",
+              ]}
+            >
+              <span class="truncate">{telescope.name}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}
+
+{kind === "dropdown" && (
+  <form method="get" action="/tonight" class="mb-6 flex flex-wrap items-center gap-2" data-telescope-select>
+    <label for="telescope-select" class="text-sm text-muted-foreground">
+      {t.label}
+    </label>
+    <select
+      id="telescope-select"
+      name="telescope"
+      class="max-w-full rounded-lg border border-input bg-surface px-3 py-1.5 text-sm text-foreground outline-none transition-shadow focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+    >
+      {telescopes.map((telescope) => (
+        <option value={telescope.id} selected={telescope.id === activeId}>
+          {telescope.name}
+        </option>
+      ))}
+    </select>
+    <button
+      type="submit"
+      class="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:text-heading"
+    >
+      {t.show}
+    </button>
+  </form>
+)}
+
+<script>
+  // Progressive enhancement: switch as soon as a telescope is picked. Without it, the Show button submits.
+  function enhance(form: HTMLFormElement) {
+    if (form.dataset.enhanced) return;
+    form.dataset.enhanced = "true";
+    form.querySelector("button[type=submit]")?.setAttribute("hidden", "");
+    form.querySelector("select")?.addEventListener("change", () => {
+      form.requestSubmit();
+    });
+  }
+  document.querySelectorAll<HTMLFormElement>("form[data-telescope-select]").forEach(enhance);
+</script>

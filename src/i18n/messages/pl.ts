@@ -365,10 +365,17 @@ export const pl = {
     logFailed:
       "Nie udało się wczytać Twojego dziennika obserwacji, więc widziane obiekty nie są teraz przesuwane w dół.",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
+    noEyepiecesPrompt: "Dodaj okulary, a przy każdym obiekcie pokażemy parę do szukania i do szczegółów.",
+    addEyepieces: "Dodaj okulary",
     failed: "Nie udało się obliczyć dzisiejszego nieba. Spróbuj ponownie.",
     loading: "Wczytuję dzisiejsze niebo…",
     loadingSlow: "To trwa dłużej niż zwykle.",
     reload: "Odśwież",
+    selector: {
+      label: "Teleskop",
+      show: "Pokaż",
+    },
+    rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {
       kicker: "Ocena nocy",

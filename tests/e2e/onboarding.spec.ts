@@ -1,9 +1,10 @@
-import { randomUUID } from "node:crypto";
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
+
+import { MADRID_LABEL, MADRID_RESULT, ONBOARDING_FORM, signUp, stubPlaceSearch } from "./helpers";
 
 /*
  * First-run onboarding end to end (S-03). Runs against a production preview backed by local Supabase
@@ -13,42 +14,7 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
  */
 
 // Madrid: at about 40°N there is a dark window in every season.
-const MADRID = { latitude: 40.4168, longitude: -3.7038 };
-const MADRID_RESULT = {
-  id: 3117735,
-  name: "Madrid",
-  latitude: MADRID.latitude,
-  longitude: MADRID.longitude,
-  admin1: "Madrid",
-  country: "Spain",
-};
-const MADRID_LABEL = "Madrid, Madrid, Spain";
-
-const PASSWORD = "E2e-Test-Passw0rd!";
-
-const SIGNUP_FORM = 'form[action="/api/auth/signup"]';
-const ONBOARDING_FORM = 'form[action="/api/onboarding"]';
-
-/**
- * Waits until the React island holding `formSelector` has hydrated (Astro drops the island's `ssr`
- * attribute then). Typing into the server-rendered markup before that is lost to the controlled inputs.
- */
-async function waitForHydration(page: Page, formSelector: string) {
-  await expect(page.locator(`astro-island[ssr]:has(${formSelector})`)).toHaveCount(0);
-}
-
-async function signUp(page: Page) {
-  const email = `e2e-${randomUUID()}@example.com`;
-  await page.goto("/auth/signup");
-  await waitForHydration(page, SIGNUP_FORM);
-  const form = page.locator(SIGNUP_FORM);
-  await form.locator("#email").fill(email);
-  await form.locator("#password").fill(PASSWORD);
-  await form.locator("#confirmPassword").fill(PASSWORD);
-  await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/onboarding$/);
-  await waitForHydration(page, ONBOARDING_FORM);
-}
+const MADRID = { latitude: MADRID_RESULT.latitude, longitude: MADRID_RESULT.longitude };
 
 /** The onboarding form's own submit button: the top bar has a sign-out submit button too. */
 function onboardingSubmit(page: Page) {
@@ -65,14 +31,9 @@ test.describe("onboarding in English", () => {
   });
 
   test("place search leads to a ranked Tonight", async ({ page }) => {
-    await page.route("https://geocoding-api.open-meteo.com/**", (route) =>
-      route.fulfill({
-        json: { results: [MADRID_RESULT] },
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }),
-    );
+    await stubPlaceSearch(page);
 
-    await signUp(page);
+    await signUp(page, "e2e");
 
     await page.locator("#place-search").fill("Madrid");
     const results = page.getByRole("list", { name: en.onboarding.where.resultsLabel });
@@ -97,7 +58,7 @@ test.describe("onboarding in English", () => {
     test.use({ geolocation: MADRID, permissions: ["geolocation"] });
 
     test("'Use my location' sets the location and enables submit", async ({ page }) => {
-      await signUp(page);
+      await signUp(page, "e2e");
       await expect(onboardingSubmit(page)).toBeDisabled();
 
       await page.getByRole("button", { name: en.onboarding.where.useLocation }).click();
@@ -108,7 +69,7 @@ test.describe("onboarding in English", () => {
   });
 
   test("abandoned onboarding: Tonight offers the way back to setup", async ({ page }) => {
-    await signUp(page);
+    await signUp(page, "e2e");
 
     await page.goto("/tonight");
 
@@ -124,7 +85,7 @@ test.describe("onboarding in a Polish browser", () => {
   test.use({ locale: "pl-PL" });
 
   test("renders in Polish without a language cookie", async ({ page }) => {
-    await signUp(page);
+    await signUp(page, "e2e");
 
     await expect(page.locator("html")).toHaveAttribute("lang", "pl");
     await expect(onboardingSubmit(page)).toHaveText(pl.onboarding.submit);

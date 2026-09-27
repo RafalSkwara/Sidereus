@@ -3,7 +3,7 @@ project: Sidereus
 version: 1
 status: draft
 created: 2026-09-22
-updated: 2026-09-26
+updated: 2026-09-27
 prd_version: 2
 main_goal: speed
 top_blocker: time
@@ -51,7 +51,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | proposed |
-| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | proposed |
+| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | in-progress |
 | S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
 | S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | proposed |
 
@@ -230,7 +230,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Small by design. The deletion and empty-state rules superseded an earlier decision to guard the last eyepiece, so they need to be planned explicitly rather than inherited from S-01's forms.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-09: Password reset, long session and redirect continue
 
