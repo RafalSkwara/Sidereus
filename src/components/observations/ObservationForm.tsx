@@ -5,19 +5,32 @@ import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import type { MessierOption } from "@/lib/observations/messier-search";
 import { MIN_NIGHT, observationInputSchema } from "@/lib/observations/schemas";
 import { cn } from "@/lib/utils";
+import { MessierPicker } from "./MessierPicker";
 
 interface GearOption {
   id: string;
   name: string;
 }
 
+/**
+ * `ranking`: the object is fixed by Tonight's "Mark observed" (S-06). `manual`: any object, chosen in the picker,
+ * and the save returns to the log (S-07, FR-022).
+ */
+export type ObservationFormMode = "ranking" | "manual";
+
 interface Props {
   action: string;
-  messier: number;
-  /** Prefill from the ranking: its night, site and telescope (FR-016). The rating always starts empty. */
-  initial: { night: string; siteId: string; telescopeId: string };
+  mode: ObservationFormMode;
+  /**
+   * The prefill: from the ranking its object, night, site and telescope (FR-016); for manual entry an optional
+   * object and the likeliest night. The rating always starts empty.
+   */
+  initial: { messier?: number; night: string; siteId: string; telescopeId: string };
+  /** Every Messier object for the picker; required in `manual` mode. */
+  messierOptions?: readonly MessierOption[];
   sites: readonly GearOption[];
   telescopes: readonly GearOption[];
   /**
@@ -30,10 +43,10 @@ interface Props {
   locale: Locale;
 }
 
-type FieldName = "night" | "rating" | "siteId" | "telescopeId";
+type FieldName = "messier" | "night" | "rating" | "siteId" | "telescopeId";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
-const FIELD_NAMES: readonly string[] = ["night", "rating", "siteId", "telescopeId"];
+const FIELD_NAMES: readonly string[] = ["messier", "night", "rating", "siteId", "telescopeId"];
 const RATINGS = [1, 2, 3, 4, 5] as const;
 
 const selectBase =
@@ -62,8 +75,9 @@ function fieldBorder(error?: string): string {
 
 export default function ObservationForm({
   action,
-  messier,
+  mode,
   initial,
+  messierOptions = [],
   sites,
   telescopes,
   maxNight,
@@ -72,6 +86,7 @@ export default function ObservationForm({
 }: Props) {
   const m = getMessages(locale);
   const t = m.log;
+  const [messier, setMessier] = useState(initial.messier === undefined ? "" : String(initial.messier));
   const [night, setNight] = useState(initial.night);
   const [siteId, setSiteId] = useState(initial.siteId);
   const [telescopeId, setTelescopeId] = useState(initial.telescopeId);
@@ -79,7 +94,7 @@ export default function ObservationForm({
   const [errors, setErrors] = useState<FieldErrors>({});
 
   function validate() {
-    const result = observationInputSchema.safeParse({ messier: String(messier), night, rating, siteId, telescopeId });
+    const result = observationInputSchema.safeParse({ messier, night, rating, siteId, telescopeId });
     const next: FieldErrors = {};
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -105,7 +120,26 @@ export default function ObservationForm({
 
   return (
     <form method="POST" action={action} className="space-y-5" onSubmit={handleSubmit} noValidate>
-      <input type="hidden" name="messier" value={messier} />
+      {mode === "ranking" ? (
+        <input type="hidden" name="messier" value={messier} />
+      ) : (
+        <>
+          <input type="hidden" name="from" value="log" />
+          <MessierPicker
+            id="messier"
+            options={messierOptions}
+            initial={initial.messier}
+            label={t.picker.label}
+            placeholder={t.picker.placeholder}
+            noMatch={t.picker.noMatch}
+            error={errors.messier}
+            onChange={(value) => {
+              setMessier(value === null ? "" : String(value));
+              clearError("messier");
+            }}
+          />
+        </>
+      )}
 
       <FormField
         id="night"

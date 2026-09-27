@@ -503,6 +503,14 @@ export const en = {
     objectNotFound: "That object is not in the Messier catalogue.",
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",
+    manualTitle: "Add an observation",
+    manualIntro: "Pick any Messier object, then confirm the night, site and telescope and rate how it went.",
+    backToLog: "← Log",
+    picker: {
+      label: "Object",
+      placeholder: "Number or name, e.g. 31 or Andromeda",
+      noMatch: "No Messier object matches.",
+    },
     list: {
       title: "Observation log",
       intro: "Everything you have observed, newest night first. Open an entry to fix or delete it.",

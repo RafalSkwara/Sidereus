@@ -351,30 +351,30 @@ None: the S-06 schema already supports every operation. Hosted Supabase needs no
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including `protected-routes.test.ts` and the i18n parity test: `npm test`
-- [x] 2.2 No hardcoded colours: `npm test -- src/styles/no-hardcoded-colors.test.ts`
-- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint`
-- [x] 2.4 Build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass, including `protected-routes.test.ts` and the i18n parity test: `npm test` — 31e2c38
+- [x] 2.2 No hardcoded colours: `npm test -- src/styles/no-hardcoded-colors.test.ts` — 31e2c38
+- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint` — 31e2c38
+- [x] 2.4 Build succeeds: `npm run build` — 31e2c38
 
 #### Manual
 
-- [x] 2.5 Signed out, `/log` redirects to sign-in
-- [x] 2.6 With S-06 entries on local Supabase, `/log` groups them by night in EN and PL, light and dark theme, and on a phone-width viewport
-- [x] 2.7 After deleting the telescope an entry used (via `/gear`), the entry still shows with "(deleted)"
+- [x] 2.5 Signed out, `/log` redirects to sign-in — 31e2c38
+- [x] 2.6 With S-06 entries on local Supabase, `/log` groups them by night in EN and PL, light and dark theme, and on a phone-width viewport — 31e2c38
+- [x] 2.7 After deleting the telescope an entry used (via `/gear`), the entry still shows with "(deleted)" — 31e2c38
 
 ### Phase 3: Manual entry with object picker
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including `messier-search.test.ts` and `redirect.test.ts`: `npm test`
-- [ ] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 3.1 Unit tests pass, including `messier-search.test.ts` and `redirect.test.ts`: `npm test`
+- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
 
 #### Manual
 
-- [ ] 3.3 From `/log`, Add entry → type `31` → choose M31 → save lands on `/log` with "M31 logged." and the entry under its night
-- [ ] 3.4 Typing `mglawica` in PL finds "Mgławica …" objects; keyboard-only selection works; a screen reader announces the options
-- [ ] 3.5 A failed save (e.g. no rating via disabled JS) returns to the manual form with the picker still shown and prefilled
-- [ ] 3.6 Mark observed from Tonight still returns to Tonight
+- [x] 3.3 From `/log`, Add entry → type `31` → choose M31 → save lands on `/log` with "M31 logged." and the entry under its night
+- [x] 3.4 Typing `mglawica` in PL finds "Mgławica …" objects; keyboard-only selection works; a screen reader announces the options
+- [x] 3.5 A failed save (e.g. no rating via disabled JS) returns to the manual form with the picker still shown and prefilled
+- [x] 3.6 Mark observed from Tonight still returns to Tonight
 
 ### Phase 4: Edit and delete
 

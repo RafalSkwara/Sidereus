@@ -517,6 +517,14 @@ export const pl = {
     objectNotFound: "Tego obiektu nie ma w katalogu Messiera.",
     needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
     addGear: "Przejdź do sprzętu",
+    manualTitle: "Dodaj obserwację",
+    manualIntro: "Wybierz dowolny obiekt Messiera, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+    backToLog: "← Dziennik",
+    picker: {
+      label: "Obiekt",
+      placeholder: "Numer lub nazwa, np. 31 albo Andromeda",
+      noMatch: "Żaden obiekt Messiera nie pasuje.",
+    },
     list: {
       title: "Dziennik obserwacji",
       intro: "Wszystko, co udało Ci się zaobserwować, od najnowszej nocy. Otwórz wpis, aby go poprawić lub usunąć.",
