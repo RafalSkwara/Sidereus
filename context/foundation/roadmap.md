@@ -51,7 +51,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | proposed |
-| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | in-progress |
+| S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
 | S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
 | S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | proposed |
 
@@ -230,7 +230,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Small by design. The deletion and empty-state rules superseded an earlier decision to guard the last eyepiece, so they need to be planned explicitly rather than inherited from S-01's forms.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-09: Password reset, long session and redirect continue
 
@@ -334,3 +334,4 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 - **F-03: (foundation) every screen takes its colours from shared theme tokens and its user-facing copy (including verdict reasons, object explanations and error messages) from a message catalogue in English and Polish, with locale-aware dates and times; the user can switch between the dark theme (default) and a light theme, and between English and Polish, and the choice is remembered on the device. A short design pass settles the tokens and the look of the key screens first.** — Archived 2026-09-26 → `context/archive/2026-09-26-ui-foundation/`. Lesson: —.
 - **S-03: a visitor can read what the product does on the public landing page, sign up, and be walked through setting a home site (browser geolocation or place-name search, coordinates rounded to about 1 km, site named "Home" with the default minimum altitude), picking sky quality from a plain-language Bortle picker, and accepting an editable telescope and eyepiece-kit preset, arriving at Tonight in under a minute of interaction without looking up a single number.** — Archived 2026-09-26 → `context/archive/2026-09-26-first-run-onboarding/`. Lesson: —.
 - **S-06: user can mark a ranked object as observed, confirming or editing the prefilled observing night, site and telescope and giving a 1-5 rating; later rankings mildly deprioritize objects rated 3 or above, never those rated 1-2, and a logged object that still ranks is tagged "seen N times - last [date]".** — Archived 2026-09-26 → `context/archive/2026-09-26-log-observation-from-ranking/`. Lesson: —.
+- **S-08: a user who owns two or more telescopes can pick which one the Tonight ranking is for, and the ranking names it; a user can delete any site, telescope or eyepiece at any time, and Tonight then shows an empty state linking to add one (no site or no telescope) or a ranking without eyepiece recommendations (no eyepieces).** — Archived 2026-09-27 → `context/archive/2026-09-27-telescope-selector-and-empty-states/`. Lesson: —.
