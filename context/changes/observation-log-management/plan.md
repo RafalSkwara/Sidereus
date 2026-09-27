@@ -366,29 +366,29 @@ None: the S-06 schema already supports every operation. Hosted Supabase needs no
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including `messier-search.test.ts` and `redirect.test.ts`: `npm test`
-- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 3.1 Unit tests pass, including `messier-search.test.ts` and `redirect.test.ts`: `npm test` — 865bbd0
+- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — 865bbd0
 
 #### Manual
 
-- [x] 3.3 From `/log`, Add entry → type `31` → choose M31 → save lands on `/log` with "M31 logged." and the entry under its night
-- [x] 3.4 Typing `mglawica` in PL finds "Mgławica …" objects; keyboard-only selection works; a screen reader announces the options
-- [x] 3.5 A failed save (e.g. no rating via disabled JS) returns to the manual form with the picker still shown and prefilled
-- [x] 3.6 Mark observed from Tonight still returns to Tonight
+- [x] 3.3 From `/log`, Add entry → type `31` → choose M31 → save lands on `/log` with "M31 logged." and the entry under its night — 865bbd0
+- [x] 3.4 Typing `mglawica` in PL finds "Mgławica …" objects; keyboard-only selection works; a screen reader announces the options — 865bbd0
+- [x] 3.5 A failed save (e.g. no rating via disabled JS) returns to the manual form with the picker still shown and prefilled — 865bbd0
+- [x] 3.6 Mark observed from Tonight still returns to Tonight — 865bbd0
 
 ### Phase 4: Edit and delete
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass: `npm test`
-- [ ] 4.2 DB suite passes: `npm run test:db`
-- [ ] 4.3 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [ ] 4.4 E2E passes against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 4.1 Unit tests pass: `npm test`
+- [x] 4.2 DB suite passes: `npm run test:db`
+- [x] 4.3 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 4.4 E2E passes against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
 - [ ] 4.5 CI green on the PR (ci, smoke, e2e jobs)
 
 #### Manual
 
-- [ ] 4.6 Editing an entry's rating from 4 to 2 removes the object's "Seen" tag on Tonight at the next load; deleting its only 3+ entry does too
-- [ ] 4.7 An entry whose site was deleted opens, shows "(deleted)" and saves; switching it to a live site re-snapshots the name
-- [ ] 4.8 Delete asks for confirmation and cancelling keeps the entry
-- [ ] 4.9 EN + PL, light and dark, phone width look right on `/log/<id>`
+- [x] 4.6 Editing an entry's rating from 4 to 2 removes the object's "Seen" tag on Tonight at the next load; deleting its only 3+ entry does too
+- [x] 4.7 An entry whose site was deleted opens, shows "(deleted)" and saves; switching it to a live site re-snapshots the name
+- [x] 4.8 Delete asks for confirmation and cancelling keeps the entry
+- [x] 4.9 EN + PL, light and dark, phone width look right on `/log/<id>`

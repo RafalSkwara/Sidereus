@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import type { MessierOption } from "@/lib/observations/messier-search";
-import { MIN_NIGHT, observationInputSchema } from "@/lib/observations/schemas";
+import { MIN_NIGHT, observationInputSchema, observationUpdateSchema } from "@/lib/observations/schemas";
 import { cn } from "@/lib/utils";
 import { MessierPicker } from "./MessierPicker";
 
@@ -17,9 +17,9 @@ interface GearOption {
 
 /**
  * `ranking`: the object is fixed by Tonight's "Mark observed" (S-06). `manual`: any object, chosen in the picker,
- * and the save returns to the log (S-07, FR-022).
+ * and the save returns to the log (S-07, FR-022). `edit`: an existing entry, every field editable (S-07, FR-017).
  */
-export type ObservationFormMode = "ranking" | "manual";
+export type ObservationFormMode = "ranking" | "manual" | "edit";
 
 interface Props {
   action: string;
@@ -28,9 +28,15 @@ interface Props {
    * The prefill: from the ranking its object, night, site and telescope (FR-016); for manual entry an optional
    * object and the likeliest night. The rating always starts empty.
    */
-  initial: { messier?: number; night: string; siteId: string; telescopeId: string };
-  /** Every Messier object for the picker; required in `manual` mode. */
+  initial: { messier?: number; night: string; siteId: string; telescopeId: string; rating?: number };
+  /** Every Messier object for the picker; required in `manual` and `edit` modes. */
   messierOptions?: readonly MessierOption[];
+  /**
+   * `edit` only: the name snapshot of the entry's site or telescope when that gear has been deleted since (FR-021).
+   * The select then offers it as an empty value, meaning "keep it", and `initial` selects it with an empty id.
+   */
+  deletedSite?: string;
+  deletedTelescope?: string;
   sites: readonly GearOption[];
   telescopes: readonly GearOption[];
   /**
@@ -78,6 +84,8 @@ export default function ObservationForm({
   mode,
   initial,
   messierOptions = [],
+  deletedSite,
+  deletedTelescope,
   sites,
   telescopes,
   maxNight,
@@ -90,11 +98,12 @@ export default function ObservationForm({
   const [night, setNight] = useState(initial.night);
   const [siteId, setSiteId] = useState(initial.siteId);
   const [telescopeId, setTelescopeId] = useState(initial.telescopeId);
-  const [rating, setRating] = useState("");
+  const [rating, setRating] = useState(initial.rating === undefined ? "" : String(initial.rating));
   const [errors, setErrors] = useState<FieldErrors>({});
 
   function validate() {
-    const result = observationInputSchema.safeParse({ messier, night, rating, siteId, telescopeId });
+    const schema = mode === "edit" ? observationUpdateSchema : observationInputSchema;
+    const result = schema.safeParse({ messier, night, rating, siteId, telescopeId });
     const next: FieldErrors = {};
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -124,7 +133,7 @@ export default function ObservationForm({
         <input type="hidden" name="messier" value={messier} />
       ) : (
         <>
-          <input type="hidden" name="from" value="log" />
+          {mode === "manual" && <input type="hidden" name="from" value="log" />}
           <MessierPicker
             id="messier"
             options={messierOptions}
@@ -172,6 +181,7 @@ export default function ObservationForm({
             }}
             className={cn(selectBase, fieldBorder(errors.siteId))}
           >
+            {deletedSite !== undefined && <option value="">{t.list.deletedGear({ name: deletedSite })}</option>}
             {sites.map((site) => (
               <option key={site.id} value={site.id}>
                 {site.name}
@@ -194,6 +204,9 @@ export default function ObservationForm({
             }}
             className={cn(selectBase, fieldBorder(errors.telescopeId))}
           >
+            {deletedTelescope !== undefined && (
+              <option value="">{t.list.deletedGear({ name: deletedTelescope })}</option>
+            )}
             {telescopes.map((telescope) => (
               <option key={telescope.id} value={telescope.id}>
                 {telescope.name}
@@ -240,7 +253,7 @@ export default function ObservationForm({
       <ServerError message={serverError ? translateKey(m, serverError, "errors.generic") : null} />
 
       <SubmitButton pendingText={m.common.saving} icon={<Save className="size-4" />}>
-        {t.submit}
+        {mode === "edit" ? t.saveChanges : t.submit}
       </SubmitButton>
     </form>
   );

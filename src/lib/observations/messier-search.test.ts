@@ -1,19 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { MESSIER } from "@/lib/catalogue";
-import { localCommonName } from "@/lib/catalogue/common-names";
-import { filterMessier, normalizeQuery, type MessierOption } from "./messier-search";
+import { messierOptions } from "./messier-options";
+import { filterMessier, normalizeQuery } from "./messier-search";
 
 /** The options as the Polish log page builds them. */
-const OPTIONS: MessierOption[] = MESSIER.map((object) => {
-  const local = localCommonName(object.messier, object.commonName, "pl");
-  return {
-    messier: object.messier,
-    id: object.id,
-    label: local ? `${object.id} · ${local}` : object.id,
-    detail: `${object.designation} · ${object.constellation}`,
-    names: [local, object.commonName, object.designation].filter((n): n is string => n !== null),
-  };
-});
+const OPTIONS = messierOptions("pl");
 
 const ids = (query: string) => filterMessier(OPTIONS, query).map((o) => o.id);
 

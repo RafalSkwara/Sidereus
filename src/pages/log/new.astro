@@ -4,11 +4,11 @@ import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { findMessier, MESSIER } from "@/lib/catalogue";
+import { findMessier } from "@/lib/catalogue";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { observingNightDateFor } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
-import type { MessierOption } from "@/lib/observations/messier-search";
+import { messierOptions } from "@/lib/observations/messier-options";
 import { LOG_LIST } from "@/lib/observations/redirect";
 import { isCalendarDate, returnTargetSchema } from "@/lib/observations/schemas";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
@@ -52,18 +52,7 @@ const night = isCalendarDate(nightParam) ? nightParam : site ? observingNightDat
 
 const commonName = object && !manual ? localCommonName(object.messier, object.commonName, locale) : null;
 const title = manual ? t.manualTitle : object ? t.title({ object: object.id }) : t.kicker;
-const messierOptions: MessierOption[] = manual
-  ? MESSIER.map((o) => {
-      const local = localCommonName(o.messier, o.commonName, locale);
-      return {
-        messier: o.messier,
-        id: o.id,
-        label: local ? `${o.id} · ${local}` : o.id,
-        detail: `${o.designation} · ${o.constellation}`,
-        names: [local, o.commonName, o.designation].filter((name): name is string => name !== null),
-      };
-    })
-  : [];
+const options = manual ? messierOptions(locale) : [];
 const primaryLink =
   "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
@@ -104,7 +93,7 @@ const primaryLink =
           action="/api/log"
           mode={manual ? "manual" : "ranking"}
           initial={{ messier: object?.messier, night, siteId: site.id, telescopeId: telescope.id }}
-          messierOptions={messierOptions}
+          messierOptions={options}
           sites={sites.map(({ id, name }) => ({ id, name }))}
           telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
           maxNight={maxNight}

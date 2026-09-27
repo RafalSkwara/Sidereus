@@ -1,0 +1,106 @@
+---
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import DeleteButton from "@/components/gear/DeleteButton";
+import GearShell from "@/components/gear/GearShell.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import ObservationForm from "@/components/observations/ObservationForm";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { findMessier } from "@/lib/catalogue";
+import { localCommonName } from "@/lib/catalogue/common-names";
+import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import { messierOptions } from "@/lib/observations/messier-options";
+import { LOG_LIST } from "@/lib/observations/redirect";
+import { latestNightBound, observationStore, type ObservationRecord } from "@/lib/observations/store";
+
+// One log entry (roadmap S-07, FR-017): the form to edit every field and a delete button. An entry whose site or
+// telescope was deleted since keeps it as a "(deleted)" option (FR-021). `POST /api/log/<id>` sends a failed
+// save back here with `?error=<message key>`.
+const id = Astro.params.id ?? "";
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.log;
+const error = Astro.url.searchParams.get("error");
+
+let entry: ObservationRecord | null = null;
+let sites: SiteRecord[] = [];
+let telescopes: TelescopeRecord[] = [];
+let loadError: MessageKey | null = null;
+if (supabase) {
+  try {
+    [entry, sites, telescopes] = await Promise.all([
+      observationStore.get(supabase, id),
+      siteStore.list(supabase),
+      telescopeStore.list(supabase),
+    ]);
+  } catch {
+    loadError = "errors.load.observations";
+  }
+  if (!entry && !loadError) {
+    Astro.response.status = 404;
+  }
+}
+
+const object = entry ? findMessier(entry.messier) : undefined;
+const objectId = object?.id ?? (entry ? `M${entry.messier}` : "");
+const commonName = object ? localCommonName(object.messier, object.commonName, locale) : null;
+// Only a hint for the date picker; the store checks the chosen site's own night.
+const maxNight = latestNightBound(sites, new Date());
+---
+
+<GearShell title={entry ? t.editTitle({ object: objectId }) : t.notFound}>
+  <a href={LOG_LIST} class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
+    {t.backToLog}
+  </a>
+  {!supabase ? (
+    <DatabaseMissing />
+  ) : loadError ? (
+    <ServerError message={translateKey(m, loadError, "errors.generic")} />
+  ) : entry ? (
+    <>
+      <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+      <h1 class="mb-2 font-display text-3xl font-semibold text-heading sm:text-4xl">
+        {t.editTitle({ object: objectId })}
+        {commonName && <span class="text-2xl text-foreground sm:text-3xl"> · {commonName}</span>}
+      </h1>
+      <p class="mb-6 text-sm text-muted-foreground">{t.editIntro}</p>
+      <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+        <ObservationForm
+          action={`/api/log/${encodeURIComponent(entry.id)}`}
+          mode="edit"
+          initial={{
+            messier: entry.messier,
+            night: entry.night,
+            siteId: entry.siteId ?? "",
+            telescopeId: entry.telescopeId ?? "",
+            rating: entry.rating,
+          }}
+          messierOptions={messierOptions(locale)}
+          sites={sites.map(({ id, name }) => ({ id, name }))}
+          telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
+          deletedSite={entry.siteId ? undefined : entry.siteName}
+          deletedTelescope={entry.telescopeId ? undefined : entry.telescopeName}
+          maxNight={maxNight}
+          serverError={error}
+          locale={locale}
+          client:load
+        />
+      </div>
+      <div class="mt-6">
+        <DeleteButton
+          action={`/api/log/${encodeURIComponent(entry.id)}/delete`}
+          label={t.delete}
+          confirmMessage={t.confirmDelete({ object: objectId })}
+          client:load
+        />
+      </div>
+    </>
+  ) : (
+    <div class="rounded-2xl border border-border bg-surface p-6">
+      <h1 class="font-display text-3xl font-semibold text-heading">{t.notFound}</h1>
+      <p class="mt-2 text-sm text-muted-foreground">{t.notFoundText}</p>
+      <a href={LOG_LIST} class="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+        {t.backToLogLink}
+      </a>
+    </div>
+  )}
+</GearShell>

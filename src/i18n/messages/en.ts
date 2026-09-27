@@ -506,9 +506,17 @@ export const en = {
     manualTitle: "Add an observation",
     manualIntro: "Pick any Messier object, then confirm the night, site and telescope and rate how it went.",
     backToLog: "← Log",
+    editTitle: (p: { object: string }) => `Edit ${p.object}`,
+    editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
+    saveChanges: "Save changes",
+    delete: "Delete entry",
+    confirmDelete: (p: { object: string }) => `Delete this ${p.object} entry from your log? This cannot be undone.`,
+    notFound: "Entry not found",
+    notFoundText: "It may have been deleted already.",
+    backToLogLink: "Back to the log",
     picker: {
       label: "Object",
-      placeholder: "Number or name, e.g. 31 or Andromeda",
+      placeholder: "e.g. 31 or Andromeda",
       noMatch: "No Messier object matches.",
     },
     list: {

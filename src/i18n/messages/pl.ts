@@ -520,9 +520,17 @@ export const pl = {
     manualTitle: "Dodaj obserwację",
     manualIntro: "Wybierz dowolny obiekt Messiera, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     backToLog: "← Dziennik",
+    editTitle: (p) => `Edytuj ${p.object}`,
+    editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
+    saveChanges: "Zapisz zmiany",
+    delete: "Usuń wpis",
+    confirmDelete: (p) => `Usunąć ten wpis ${p.object} z dziennika? Tej operacji nie można cofnąć.`,
+    notFound: "Nie znaleziono wpisu",
+    notFoundText: "Mógł już zostać usunięty.",
+    backToLogLink: "Wróć do dziennika",
     picker: {
       label: "Obiekt",
-      placeholder: "Numer lub nazwa, np. 31 albo Andromeda",
+      placeholder: "np. 31 albo Andromeda",
       noMatch: "Żaden obiekt Messiera nie pasuje.",
     },
     list: {
