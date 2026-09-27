@@ -1,5 +1,7 @@
 import { getMessages, plural } from "@/i18n";
 import type {
+  CloudOutlook,
+  DarkWindow,
   HorizontalPosition,
   Interval,
   NextNight,
@@ -74,6 +76,12 @@ export function createFormatter(locale: Locale) {
     month: "long",
     year: "numeric",
   });
+  const shortNightDateFormat = new Intl.DateTimeFormat(tag, {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
   const shortDateFormat = new Intl.DateTimeFormat(tag, {
     timeZone: "UTC",
     day: "numeric",
@@ -101,6 +109,12 @@ export function createFormatter(locale: Locale) {
   function formatNightDate(date: string): string {
     const [year, month, day] = date.split("-").map(Number);
     return nightDateFormat.format(new Date(Date.UTC(year, month - 1, day)));
+  }
+
+  /** The evening date `YYYY-MM-DD` as "Sat 24 Oct", for the seven-night strip. A calendar date, like `formatNightDate`. */
+  function formatShortNightDate(date: string): string {
+    const [year, month, day] = date.split("-").map(Number);
+    return shortNightDateFormat.format(new Date(Date.UTC(year, month - 1, day)));
   }
 
   /** A duration as "5 h 10 min", "5 h" or "40 min", rounded to the minute. */
@@ -284,9 +298,70 @@ export function createFormatter(locale: Locale) {
     });
   }
 
+  /**
+   * A night's dark window as "19:05–04:40" on the wall clock of `timeZone`, or the no-darkness
+   * wording. Each end is formatted at its own instant, so across a DST change the span reads as the
+   * clock does (the night of 24-25 Oct 2026 in Warsaw starts in CEST and ends in CET).
+   */
+  function darkSpanText(window: DarkWindow, timeZone: string): string {
+    if (window.kind === "none") {
+      return m.tonight.nights.noDarkness;
+    }
+    return `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`;
+  }
+
+  /**
+   * The strip's moon line: illumination in whole percent, then how much of the dark window the Moon
+   * is below the horizon ("Moon 62% · 3 h 10 min moon-free"), with its own wording when that is none
+   * or all of it. Without a dark window (`moonFreeMinutes` null) only the illumination.
+   */
+  function moonLine(
+    moon: { illuminatedFraction: number; moonFreeMinutes: number | null },
+    darkWindow: DarkWindow,
+  ): string {
+    const text = m.tonight.nights;
+    const phase = text.moon({ percent: num(Math.round(moon.illuminatedFraction * 100)) });
+    if (moon.moonFreeMinutes === null || darkWindow.kind === "none") {
+      return phase;
+    }
+    // `moonFreeMinutes` counts whole minutes, so a moonless window equals the window's whole minutes.
+    const darkMinutes = Math.floor((darkWindow.end.getTime() - darkWindow.start.getTime()) / MINUTE_MS);
+    if (moon.moonFreeMinutes <= 0) {
+      return text.moonAllNight({ moon: phase });
+    }
+    if (moon.moonFreeMinutes >= darkMinutes) {
+      return text.moonNone({ moon: phase });
+    }
+    return text.moonFree({ moon: phase, duration: formatDuration(moon.moonFreeMinutes * MINUTE_MS) });
+  }
+
+  /** A cloud percentage rounded to the nearest 10%, as the strip shows it: 34 → "30", 35 → "40". */
+  function roundedCloud(pct: number): string {
+    return num(Math.round(pct / 10) * 10);
+  }
+
+  /**
+   * The cloud outlook for a night past the verdict horizon: "Cloud ~50%, down to 0%" (mean and the
+   * clearest hour), only "Cloud ~40%" when both round alike, or "No cloud outlook yet" without
+   * forecast hours spanning the dark window. Call it only for a night with a dark window.
+   */
+  function cloudOutlookText(cloud: CloudOutlook | null): string {
+    const text = m.tonight.nights;
+    if (cloud === null) {
+      return text.noCloud;
+    }
+    const mean = roundedCloud(cloud.meanCloudPct);
+    const min = roundedCloud(cloud.minCloudPct);
+    return mean === min ? text.cloud({ mean }) : text.cloudRange({ mean, min });
+  }
+
   return {
     formatTime,
     formatNightDate,
+    formatShortNightDate,
+    darkSpanText,
+    moonLine,
+    cloudOutlookText,
     formatDuration,
     compassPoint,
     formatDirection,

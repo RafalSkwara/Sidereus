@@ -4,6 +4,7 @@
 import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { ServerError } from "@/components/forms/ServerError";
+import NightStrip from "@/components/tonight/NightStrip.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import TelescopeSelector from "@/components/tonight/TelescopeSelector.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
@@ -187,6 +188,7 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             timeZone={view.timeZone}
             forecastStatus={view.forecastStatus}
             explanation={view.explanation}
+            nightsLink={view.ranking !== null}
           />
 
           {view.ranking && (
@@ -230,6 +232,8 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
               )}
             </section>
           )}
+
+          <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
         </>
       )}
     </div>

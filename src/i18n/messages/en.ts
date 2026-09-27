@@ -372,6 +372,25 @@ export const en = {
       timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
     },
 
+    /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
+    nights: {
+      heading: (p: { site: string }) => `Next 7 nights at ${p.site}`,
+      jumpLink: "Next 7 nights ↓",
+      timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
+      verdictLabel: "Verdict",
+      outlookLabel: "Outlook — no verdict",
+      noDarkness: "No darkness",
+      moon: (p: { percent: string }) => `Moon ${p.percent}%`,
+      moonFree: (p: { moon: string; duration: string }) => `${p.moon} · ${p.duration} moon-free`,
+      /** The Moon is up for the whole dark window (0 min moon-free). */
+      moonAllNight: (p: { moon: string }) => `${p.moon} · up the whole dark window`,
+      /** The Moon stays below the horizon for the whole dark window. */
+      moonNone: (p: { moon: string }) => `${p.moon} · below the horizon all night`,
+      cloud: (p: { mean: string }) => `Cloud ~${p.mean}%`,
+      cloudRange: (p: { mean: string; min: string }) => `Cloud ~${p.mean}%, down to ${p.min}%`,
+      noCloud: "No cloud outlook yet",
+    },
+
     object: {
       inConstellation: (p: { constellation: string }) => `in ${p.constellation}`,
       window: "Window",

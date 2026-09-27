@@ -386,6 +386,22 @@ export const pl = {
       timesIn: (p) => ` · czas w strefie ${p.zone}`,
     },
 
+    nights: {
+      heading: (p) => `Najbliższe 7 nocy: ${p.site}`,
+      jumpLink: "Najbliższe 7 nocy ↓",
+      timesIn: (p) => `Czas w strefie ${p.zone}`,
+      verdictLabel: "Ocena",
+      outlookLabel: "Prognoza — bez oceny",
+      noDarkness: "Brak ciemności",
+      moon: (p) => `Księżyc ${p.percent}%`,
+      moonFree: (p) => `${p.moon} · ${p.duration} pod horyzontem`,
+      moonAllNight: (p) => `${p.moon} · nad horyzontem przez całe okno ciemności`,
+      moonNone: (p) => `${p.moon} · pod horyzontem przez całą noc`,
+      cloud: (p) => `Zachmurzenie ~${p.mean}%`,
+      cloudRange: (p) => `Zachmurzenie ~${p.mean}%, chwilami ${p.min}%`,
+      noCloud: "Brak jeszcze prognozy zachmurzenia",
+    },
+
     object: {
       inConstellation: (p) => `gwiazdozbiór ${p.constellation}`,
       window: "Widoczność",

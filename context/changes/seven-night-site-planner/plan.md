@@ -378,28 +378,28 @@ No database change. Forecast entries cached before the deploy only reach night 3
 
 #### Automated
 
-- [x] 1.1 Engine and forecast unit tests pass: `npm test`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Engine and forecast unit tests pass: `npm test` — 938c2fb
+- [x] 1.2 Type check passes: `npx astro check` — 938c2fb
+- [x] 1.3 Lint passes: `npm run lint` — 938c2fb
 
 #### Manual
 
-- [x] 1.4 For one Warsaw night, `moonFreeMinutes` and the dark window match Stellarium's moonrise/moonset and twilight times within 5 minutes
+- [x] 1.4 For one Warsaw night, `moonFreeMinutes` and the dark window match Stellarium's moonrise/moonset and twilight times within 5 minutes — 938c2fb
 
 ### Phase 2: Seven-night strip on Tonight
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including i18n parity and no-hardcoded-colors: `npm test`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Production build succeeds: `npm run build`
+- [x] 2.1 Unit tests pass, including i18n parity and no-hardcoded-colors: `npm test`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.5 On `npm run dev`, Tonight shows the strip after the ranking with seven nights, nights 1-3 with verdict chips matching the verdict card for night 1, nights 4-7 under "Outlook — no verdict" with cloud percentages and no verdict colour
-- [ ] 2.6 The strip reads well at 375 px width (no horizontal page scroll) and in light and dark themes, in English and Polish
-- [ ] 2.7 With `FORECAST_BASE_URL` pointing at an unreachable host (and no cache), nights 1-3 read marginal/no weather data and nights 4-7 read "No cloud outlook yet", with moon and darkness still shown
+- [x] 2.5 On `npm run dev`, Tonight shows the strip after the ranking with seven nights, nights 1-3 with verdict chips matching the verdict card for night 1, nights 4-7 under "Outlook — no verdict" with cloud percentages and no verdict colour
+- [x] 2.6 The strip reads well at 375 px width (no horizontal page scroll) and in light and dark themes, in English and Polish
+- [x] 2.7 With `FORECAST_BASE_URL` pointing at an unreachable host (and no cache), nights 1-3 read marginal/no weather data and nights 4-7 read "No cloud outlook yet", with moon and darkness still shown
 
 ### Phase 3: Site switching
 

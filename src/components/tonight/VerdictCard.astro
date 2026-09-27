@@ -13,9 +13,14 @@ interface Props {
   forecastStatus: TonightForecastStatus;
   /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
   explanation: TonightExplanation | null;
+  /**
+   * Show a "Next 7 nights ↓" link to the strip (`#nights`): only when a ranking sits between the card and the
+   * strip, so the week stays one tap away on a phone.
+   */
+  nightsLink?: boolean;
 }
 
-const { level, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
+const { level, text, darkWindow, timeZone, forecastStatus, explanation, nightsLink = false } = Astro.props;
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
@@ -55,4 +60,14 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
     <span class="text-muted-foreground">{t.timesIn({ zone: timeZone })}</span>
   </p>
   <p class:list={["mt-1 text-sm", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
+  {nightsLink && (
+    <p class="mt-2">
+      <a
+        href="#nights"
+        class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong underline-offset-4 transition-colors hover:underline"
+      >
+        {m.tonight.nights.jumpLink}
+      </a>
+    </p>
+  )}
 </section>

@@ -1,18 +1,17 @@
 import { MESSIER, type MessierObject } from "@/lib/catalogue";
 import {
   darknessThresholdDegForBortle,
-  darkWindow,
   darkWindowReturn,
   eyepieceOptics,
   nextNightNotNoGo,
-  observingNight,
   rankObjects,
   seenSummaries,
+  sevenNightOutlook,
   tonightDateFor,
-  verdict,
   type LogEntry,
   type RankedEntry,
   type Verdict,
+  type VerdictLevel,
 } from "@/lib/engine";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
@@ -98,6 +97,29 @@ export interface TonightForecastStatus {
 export type TonightExplanation =
   { kind: "weather-no-go"; nextText: string } | { kind: "no-darkness"; causeText: string; returnText: string };
 
+/**
+ * One night of the seven-night strip (FR-011), worded for the page. Nights 1-3 carry the verdict,
+ * nights 4-7 only a cloud outlook, never a level (invariant 5).
+ *
+ * - `reasonText` is `verdictReasonText(verdict)`, so a no-weather-data marginal is told apart from a
+ *   forecast one; `null` on a no-darkness night, where `darkText` already says so (the card's
+ *   wording names "tonight", which would misread on nights 2-3).
+ * - `cloudText` is `null` on a night without a dark window: there is nothing to judge the cloud
+ *   against.
+ */
+export type TonightNight = {
+  /** Evening date, site-local, `YYYY-MM-DD`. */
+  date: string;
+  /** "Sat 24 Oct" / "sob., 24 paź" */
+  label: string;
+  /** "19:05–04:40" in the site's time zone, or the no-darkness wording. */
+  darkText: string;
+  /** "Moon 62% · 3 h 10 min moon-free" */
+  moonText: string;
+} & (
+  { kind: "verdict"; level: VerdictLevel; reasonText: string | null } | { kind: "outlook"; cloudText: string | null }
+);
+
 export interface TonightView {
   /** The site and telescope the ranking is for; the log form is prefilled with them (FR-016). */
   siteId: string;
@@ -120,6 +142,8 @@ export interface TonightView {
   forecastStatus: TonightForecastStatus;
   /** Set on a weather no-go or a no-darkness night, `null` otherwise. */
   explanation: TonightExplanation | null;
+  /** The seven-night strip from tonight (night 1, the night `verdict` and `darkWindow` describe) onward. */
+  nights: TonightNight[];
 }
 
 function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): EyepieceLine {
@@ -156,11 +180,15 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
     clearedLine,
+    cloudOutlookText,
     darkReturnText,
+    darkSpanText,
     forecastStatusText,
     formatDirection,
     formatNightDate,
+    formatShortNightDate,
     formatTime,
+    moonLine,
     nextNightText,
     noDarknessCauseText,
     reasonLine,
@@ -175,8 +203,33 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
   const thresholdDeg = darknessThresholdDegForBortle(site.bortle);
   // Once last night's darkness is over, "tonight" is the evening ahead (see `tonightDateFor`).
   const date = tonightDateFor(engineSite, now, thresholdDeg);
-  const window = darkWindow(engineSite, observingNight(date, timeZone), thresholdDeg);
-  const tonight = verdict(window, hourly, { fallback });
+  // One computation for the strip and the verdict card: night 1 of the outlook is tonight, so the two
+  // can never disagree on the same screen.
+  const outlook = sevenNightOutlook({ site: engineSite, thresholdDeg, date, forecast: hourly, fallback });
+  const first = outlook.at(0);
+  if (first?.kind !== "verdict") {
+    throw new Error("The outlook's first night carries no verdict");
+  }
+  const window = first.darkWindow;
+  const tonight = first.verdict;
+
+  const nights = outlook.map((night): TonightNight => {
+    const base = {
+      date: night.date,
+      label: formatShortNightDate(night.date),
+      darkText: darkSpanText(night.darkWindow, timeZone),
+      moonText: moonLine(night.moon, night.darkWindow),
+    };
+    if (night.kind === "verdict") {
+      const reasonText = night.verdict.reason.kind === "no-darkness" ? null : verdictReasonText(night.verdict);
+      return { ...base, kind: "verdict", level: night.verdict.level, reasonText };
+    }
+    return {
+      ...base,
+      kind: "outlook",
+      cloudText: night.darkWindow.kind === "window" ? cloudOutlookText(night.cloud) : null,
+    };
+  });
 
   let explanation: TonightExplanation | null = null;
   if (tonight.reason.kind === "cloudy") {
@@ -247,5 +300,6 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
     hasEyepieces: eyepieces.length > 0,
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },
     explanation,
+    nights,
   };
 }

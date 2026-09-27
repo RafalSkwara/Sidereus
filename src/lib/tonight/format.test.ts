@@ -1,19 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import type { Verdict } from "@/lib/engine";
+import type { DarkWindow, Verdict } from "@/lib/engine";
 
 import { createFormatter, type ReasonEntry } from "./format";
 
 const {
   clearedLine,
+  cloudOutlookText,
   compassPoint,
   darkReturnText,
+  darkSpanText,
   forecastStatusText,
   formatAge,
   formatDirection,
   formatDuration,
   formatNightDate,
+  formatShortNightDate,
   formatTime,
+  moonLine,
   nextNightText,
   noDarknessCauseText,
   reasonLine,
@@ -240,6 +244,98 @@ describe("darkReturnText", () => {
   });
 });
 
+/** A dark window from `start` to `end` (ISO instants). */
+function windowOf(start: string, end: string): DarkWindow {
+  return {
+    kind: "window",
+    thresholdDeg: -18,
+    start: new Date(start),
+    end: new Date(end),
+    clampedToNightStart: false,
+    clampedToNightEnd: false,
+  };
+}
+
+const NO_WINDOW: DarkWindow = {
+  kind: "none",
+  thresholdDeg: -18,
+  minSunAltitudeDeg: 3.1,
+  at: new Date("2026-06-21T23:00Z"),
+};
+
+describe("formatShortNightDate", () => {
+  it("reads the evening date as short weekday, day and month, never shifted by a zone", () => {
+    expect(formatShortNightDate("2026-10-24")).toBe("Sat 24 Oct");
+    expect(formatShortNightDate("2026-12-31")).toBe("Thu 31 Dec");
+  });
+});
+
+describe("darkSpanText", () => {
+  it("formats both ends on the site's wall clock", () => {
+    expect(darkSpanText(windowOf("2026-10-10T17:05:00Z", "2026-10-11T02:40:00Z"), "Europe/Warsaw")).toBe("19:05–04:40");
+  });
+
+  it("formats each end at its own offset across the DST change", () => {
+    // Night of 24-25 Oct 2026 in Warsaw: starts in CEST (UTC+2), ends in CET (UTC+1).
+    expect(darkSpanText(windowOf("2026-10-24T17:00:00Z", "2026-10-25T03:00:00Z"), "Europe/Warsaw")).toBe("19:00–04:00");
+  });
+
+  it("reads a night without a dark window as no darkness", () => {
+    expect(darkSpanText(NO_WINDOW, "Europe/Oslo")).toBe("No darkness");
+  });
+});
+
+describe("moonLine", () => {
+  // A 5 h dark window.
+  const window = windowOf("2026-10-10T18:00:00Z", "2026-10-10T23:00:00Z");
+
+  it("names the illumination and the moon-free part of the dark window", () => {
+    expect(moonLine({ illuminatedFraction: 0.624, moonFreeMinutes: 190 }, window)).toBe(
+      "Moon 62% · 3 h 10 min moon-free",
+    );
+  });
+
+  it("says when the Moon is up for the whole dark window", () => {
+    expect(moonLine({ illuminatedFraction: 0.985, moonFreeMinutes: 0 }, window)).toBe(
+      "Moon 99% · up the whole dark window",
+    );
+  });
+
+  it("says when the Moon stays below the horizon for the whole dark window", () => {
+    expect(moonLine({ illuminatedFraction: 0.004, moonFreeMinutes: 300 }, window)).toBe(
+      "Moon 0% · below the horizon all night",
+    );
+  });
+
+  it("shows only the illumination without a dark window", () => {
+    expect(moonLine({ illuminatedFraction: 0.5, moonFreeMinutes: null }, NO_WINDOW)).toBe("Moon 50%");
+  });
+});
+
+describe("cloudOutlookText", () => {
+  it.each([
+    [34, "Cloud ~30%"],
+    [35, "Cloud ~40%"],
+    [0, "Cloud ~0%"],
+    [100, "Cloud ~100%"],
+  ])("rounds a uniform %s to the nearest ten: %s", (pct, text) => {
+    expect(cloudOutlookText({ meanCloudPct: pct, minCloudPct: pct })).toBe(text);
+  });
+
+  it("adds the clearest hour when it rounds differently from the mean", () => {
+    expect(cloudOutlookText({ meanCloudPct: 50, minCloudPct: 0 })).toBe("Cloud ~50%, down to 0%");
+    expect(cloudOutlookText({ meanCloudPct: 47.5, minCloudPct: 14 })).toBe("Cloud ~50%, down to 10%");
+  });
+
+  it("gives only the mean when both round to the same value", () => {
+    expect(cloudOutlookText({ meanCloudPct: 42, minCloudPct: 38 })).toBe("Cloud ~40%");
+  });
+
+  it("says there is no outlook yet without forecast hours", () => {
+    expect(cloudOutlookText(null)).toBe("No cloud outlook yet");
+  });
+});
+
 describe("Polish formatting (pl-PL)", () => {
   const pl = createFormatter("pl");
   const zone = "Europe/Warsaw";
@@ -353,6 +449,24 @@ describe("Polish formatting (pl-PL)", () => {
     expect(pl.noDarknessCauseText({ latitudeDeg: -77.85, minSunAltitudeDeg: -9.2, thresholdDeg: -12, bortle: 8 })).toBe(
       "Na 78° szerokości południowej o tej porze roku Słońce schodzi tylko 9° pod horyzont, a Twoje niebo (8 w skali Bortle'a) potrzebuje 12°",
     );
+  });
+
+  it("words the seven-night strip in Polish", () => {
+    const window = windowOf("2026-10-10T18:00:00Z", "2026-10-10T23:00:00Z");
+    expect(pl.formatShortNightDate("2026-10-24")).toBe("sob., 24 paź");
+    expect(pl.darkSpanText(NO_WINDOW, zone)).toBe("Brak ciemności");
+    expect(pl.moonLine({ illuminatedFraction: 0.624, moonFreeMinutes: 190 }, window)).toBe(
+      "Księżyc 62% · 3 godz. 10 min pod horyzontem",
+    );
+    expect(pl.moonLine({ illuminatedFraction: 0.985, moonFreeMinutes: 0 }, window)).toBe(
+      "Księżyc 99% · nad horyzontem przez całe okno ciemności",
+    );
+    expect(pl.moonLine({ illuminatedFraction: 0.004, moonFreeMinutes: 300 }, window)).toBe(
+      "Księżyc 0% · pod horyzontem przez całą noc",
+    );
+    expect(pl.cloudOutlookText({ meanCloudPct: 50, minCloudPct: 0 })).toBe("Zachmurzenie ~50%, chwilami 0%");
+    expect(pl.cloudOutlookText({ meanCloudPct: 42, minCloudPct: 38 })).toBe("Zachmurzenie ~40%");
+    expect(pl.cloudOutlookText(null)).toBe("Brak jeszcze prognozy zachmurzenia");
   });
 
   it("names the night the dark window returns, with its times", () => {
