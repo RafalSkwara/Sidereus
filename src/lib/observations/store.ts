@@ -1,6 +1,7 @@
 import type { MessageKey } from "@/i18n";
-import { LOG_PENALTY_MIN_RATING, observingNightDateFor, type LogEntry } from "@/lib/engine";
+import { LOG_PENALTY_MIN_RATING, type LogEntry } from "@/lib/engine";
 import { siteStore, telescopeStore, type WriteResult } from "@/lib/gear/store";
+import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { ObservationInput } from "./schemas";
 
@@ -21,8 +22,9 @@ const NIGHT_IN_FUTURE: MessageKey = "errors.observation.nightInFuture";
 
 export const observationStore = {
   /**
-   * Saves one entry. `now` decides the latest night allowed: the chosen site's current observing night
-   * (local noon to noon), so an entry made after midnight still belongs to the evening before.
+   * Saves one entry. `now` decides the latest night allowed: the night Tonight shows for the chosen site
+   * (`tonightDateForSite`), so an entry made after midnight still belongs to the evening before, and one made
+   * from the morning's ranking (already the evening ahead) is accepted.
    */
   async create(client: TypedSupabaseClient, input: ObservationInput, now: Date): Promise<WriteResult> {
     let site;
@@ -39,7 +41,7 @@ export const observationStore = {
       return { ok: false, message: GEAR_NOT_FOUND };
     }
     // ISO dates compare correctly as strings.
-    if (input.night > observingNightDateFor(now, site.timeZone)) {
+    if (input.night > tonightDateForSite(site, now)) {
       return { ok: false, message: NIGHT_IN_FUTURE };
     }
     const { error } = await client.from("observations").insert({

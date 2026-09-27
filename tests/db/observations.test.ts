@@ -206,6 +206,17 @@ describe("observationStore", () => {
     expect(result).toEqual({ ok: true });
   });
 
+  it("accepts the evening ahead once last night's darkness is over, as Tonight shows it", async () => {
+    // 09:00 in Warsaw on 27 September: Tonight already shows the night of the 27th, so its prefill is allowed.
+    const morning = new Date("2026-09-27T07:00:00Z");
+    expect(
+      await observationStore.create(a.client, { messier: 13, night: "2026-09-27", rating: 2, ...gearA }, morning),
+    ).toEqual({ ok: true });
+    expect(
+      await observationStore.create(a.client, { messier: 13, night: "2026-09-28", rating: 2, ...gearA }, morning),
+    ).toEqual({ ok: false, message: "errors.observation.nightInFuture" });
+  });
+
   it("refuses gear the caller does not own", async () => {
     const result = await observationStore.create(
       b.client,

@@ -112,6 +112,7 @@ Choose, remember and name the telescope the ranking is for.
 - With two telescopes, `/tonight` shows two pills with the oldest active; clicking the other re-ranks and the heading says "For your <name>"
 - Reloading plain `/tonight` keeps the last pick; `/tonight?telescope=<random uuid>` falls back to the oldest with no error
 - With four telescopes the dropdown appears and switching submits on change; with JS disabled the "Show" button works
+  (Impl review F2: with JS off the `TonightContent` server island never loads, so the no-JS half is unreachable; the button only covers a failed enhancement script. The scripted path is covered by the e2e spec.)
 - With one telescope nothing changes versus today; pills read well in dark and light themes, EN and PL
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -200,6 +201,10 @@ None: no new queries. The island already loads all telescopes; the choice is an 
 ## Migration Notes
 
 None: no schema change. Existing users without the cookie get the oldest telescope, as today.
+
+## Review Addendum
+
+Impl review F1 (2026-09-27, found in manual verification): before local noon, Tonight showed the night that had just ended, because of S-02's noon-to-noon rule. Fixed in this change at the user's choice. The new pure engine function `tonightDateFor(site, instant, thresholdDeg)` (`src/lib/engine/sun.ts`) returns the night in progress until its dark window has ended, then the coming evening; nights without a dark window keep the noon rule. `src/lib/tonight/tonight-date.ts` (`tonightDateForSite`) applies it to site records. Tonight (`buildTonight`), the log form's latest night (`pages/log/new.astro`) and the store's future-night check (`observationStore.create`) all use it. A log entry opened without a prefill still defaults to the noon-rule night, the one most likely being logged. Tests: `sun.test.ts` (`tonightDateFor`), `build.test.ts` (morning case), `tests/db/observations.test.ts` (evening ahead accepted in the morning).
 
 ## References
 

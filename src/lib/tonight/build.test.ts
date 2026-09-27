@@ -247,6 +247,22 @@ describe("buildTonight", () => {
     expect(view.date).toBe("2026-10-10");
   });
 
+  it("shows the evening ahead once last night's dark window is over, before local noon", () => {
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: null,
+        // 09:00 CEST on Sunday 11 October: the night of the 10th ended at dawn.
+        now: new Date("2026-10-11T07:00:00Z"),
+      },
+      "en",
+    );
+    expect(view.date).toBe("2026-10-11");
+    expect(view.dateLabel).toBe("Sunday, 11 October 2026");
+  });
+
   it("is deterministic for identical inputs", () => {
     const input = {
       site: WARSAW,

@@ -6,9 +6,9 @@ import {
   eyepieceOptics,
   nextNightNotNoGo,
   observingNight,
-  observingNightDateFor,
   rankObjects,
   seenSummaries,
+  tonightDateFor,
   verdict,
   type LogEntry,
   type RankedEntry,
@@ -172,8 +172,9 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
   const hourly = forecast?.forecast ?? null;
   const fallback = forecast?.fallback ?? false;
 
-  const date = observingNightDateFor(now, timeZone);
   const thresholdDeg = darknessThresholdDegForBortle(site.bortle);
+  // Once last night's darkness is over, "tonight" is the evening ahead (see `tonightDateFor`).
+  const date = tonightDateFor(engineSite, now, thresholdDeg);
   const window = darkWindow(engineSite, observingNight(date, timeZone), thresholdDeg);
   const tonight = verdict(window, hourly, { fallback });
 
