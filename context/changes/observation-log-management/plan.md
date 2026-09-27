@@ -380,15 +380,15 @@ None: the S-06 schema already supports every operation. Hosted Supabase needs no
 
 #### Automated
 
-- [x] 4.1 Unit tests pass: `npm test`
-- [x] 4.2 DB suite passes: `npm run test:db`
-- [x] 4.3 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [x] 4.4 E2E passes against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
-- [ ] 4.5 CI green on the PR (ci, smoke, e2e jobs)
+- [x] 4.1 Unit tests pass: `npm test` — 7e851d0
+- [x] 4.2 DB suite passes: `npm run test:db` — 7e851d0
+- [x] 4.3 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — 7e851d0
+- [x] 4.4 E2E passes against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e` — 7e851d0
+- [x] 4.5 CI green on the PR (ci, smoke, e2e jobs) — 7e851d0
 
 #### Manual
 
-- [x] 4.6 Editing an entry's rating from 4 to 2 removes the object's "Seen" tag on Tonight at the next load; deleting its only 3+ entry does too
-- [x] 4.7 An entry whose site was deleted opens, shows "(deleted)" and saves; switching it to a live site re-snapshots the name
-- [x] 4.8 Delete asks for confirmation and cancelling keeps the entry
-- [x] 4.9 EN + PL, light and dark, phone width look right on `/log/<id>`
+- [x] 4.6 Editing an entry's rating from 4 to 2 removes the object's "Seen" tag on Tonight at the next load; deleting its only 3+ entry does too — 7e851d0
+- [x] 4.7 An entry whose site was deleted opens, shows "(deleted)" and saves; switching it to a live site re-snapshots the name — 7e851d0
+- [x] 4.8 Delete asks for confirmation and cancelling keeps the entry — 7e851d0
+- [x] 4.9 EN + PL, light and dark, phone width look right on `/log/<id>` — 7e851d0

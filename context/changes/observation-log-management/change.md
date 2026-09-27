@@ -1,7 +1,7 @@
 ---
 change_id: observation-log-management
 title: Observation log management and manual entry
-status: implementing
+status: implemented
 created: 2026-09-27
 updated: 2026-09-27
 archived_at: null
