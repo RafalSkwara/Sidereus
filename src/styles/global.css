@@ -140,7 +140,8 @@
 
 /*
  * Red night mode, for what the tokens cannot reach: raster images go through the red-only filter in
- * Layout.astro; selection, scrollbars, autofill and the focused date segment are re-coloured from tokens.
+ * Layout.astro; selection, scrollbars and autofill are re-coloured from tokens, and the focused date segment
+ * loses its system-blue highlight.
  * Native input icons live in the browser's shadow DOM, where `url(#red-only)` does not resolve, so they are
  * hidden instead: the date field keeps its own token-coloured icon (and the invisible picker button still
  * works), and numbers are typed or stepped with the arrow keys.
