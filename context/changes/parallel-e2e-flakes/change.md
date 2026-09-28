@@ -1,7 +1,7 @@
 ---
 change_id: parallel-e2e-flakes
 title: Make the e2e suite reliable under parallel workers
-status: implementing
+status: impl_reviewed
 created: 2026-09-28
 updated: 2026-09-28
 archived_at: null

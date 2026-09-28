@@ -81,11 +81,11 @@ Delegated decisions (agent, open to challenge in review):
 
 #### Automated
 
-- [x] 1.1 Type check passes
-- [x] 1.2 Lint passes
-- [x] 1.3 Parallel stress run passes twice with 0 failures
-- [x] 1.4 Serial suite still passes
+- [x] 1.1 Type check passes — 9bfb48f
+- [x] 1.2 Lint passes — 9bfb48f
+- [x] 1.3 Parallel stress run passes twice with 0 failures — 9bfb48f
+- [x] 1.4 Serial suite still passes — 9bfb48f
 
 #### Manual
 
-- [x] 1.5 Deliberate break brings the failures back
+- [x] 1.5 Deliberate break brings the failures back — 9bfb48f
