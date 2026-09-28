@@ -65,8 +65,28 @@ function SunIcon() {
   );
 }
 
+/** An eye: red night mode protects the observer's dark-adapted eyes. */
+function RedEyeIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 /**
- * Theme (moon/sun) and language (EN/PL) segmented controls. The server already rendered the
+ * Theme (moon/sun/red eye) and language (EN/PL) segmented controls. The server already rendered the
  * resolved theme on <html data-theme>; this island only mirrors a choice into the attribute and cookie.
  */
 export default function PreferenceSwitches({ theme: initialTheme, locale }: PreferenceSwitchesProps) {
@@ -88,7 +108,7 @@ export default function PreferenceSwitches({ theme: initialTheme, locale }: Pref
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       <div role="group" aria-label={labels.theme} className={groupClass}>
         <button
           type="button"
@@ -111,6 +131,17 @@ export default function PreferenceSwitches({ theme: initialTheme, locale }: Pref
           }}
         >
           <SunIcon />
+        </button>
+        <button
+          type="button"
+          aria-label={labels.red}
+          aria-pressed={theme === "red"}
+          className={segmentClass}
+          onClick={() => {
+            chooseTheme("red");
+          }}
+        >
+          <RedEyeIcon />
         </button>
       </div>
       <div role="group" aria-label={labels.language} aria-busy={pendingLocale !== null} className={groupClass}>

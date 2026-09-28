@@ -32,6 +32,7 @@ export const pl = {
     theme: "Motyw",
     dark: "Ciemny motyw",
     light: "Jasny motyw",
+    red: "Czerwony tryb nocny",
     language: "Język",
     english: "English",
     polish: "Polski",

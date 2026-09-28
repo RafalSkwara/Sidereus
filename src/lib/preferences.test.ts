@@ -5,13 +5,15 @@ describe("resolveTheme", () => {
   it("returns a valid cookie value", () => {
     expect(resolveTheme("light")).toBe("light");
     expect(resolveTheme("dark")).toBe("dark");
+    expect(resolveTheme("red")).toBe("red");
   });
 
   it("defaults to dark when the cookie is missing or invalid", () => {
     expect(resolveTheme()).toBe("dark");
     expect(resolveTheme("")).toBe("dark");
-    expect(resolveTheme("red")).toBe("dark");
     expect(resolveTheme("LIGHT")).toBe("dark");
+    expect(resolveTheme("RED")).toBe("dark");
+    expect(resolveTheme("sepia")).toBe("dark");
   });
 });
 

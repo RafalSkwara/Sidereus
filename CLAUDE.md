@@ -66,7 +66,7 @@ Stack and versions: `@README.md`. `output: "server"` — every page and route is
 
 **Catalogue** (`@src/lib/catalogue/`): `MESSIER` (110 validated objects, NGC 5866 listed as M102) and `findMessier(n)`. Data files are CC BY-SA 4.0 derived works (see `LICENSE-DATA.md` there).
 
-**Layout**: `@src/layouts/Layout.astro` wraps every page, renders `<html lang data-theme>` from `Astro.locals.locale`/`theme` (resolved by the middleware from the `sidereus-lang`/`sidereus-theme` cookies, see `@src/lib/preferences.ts`) and renders config-status banners.
+**Layout**: `@src/layouts/Layout.astro` wraps every page, renders `<html lang data-theme>` (`dark` default, `light`, `red` night mode) from `Astro.locals.locale`/`theme` (resolved by the middleware from the `sidereus-lang`/`sidereus-theme` cookies, see `@src/lib/preferences.ts`) and renders config-status banners.
 
 **Copy and formatting** (`@src/i18n/`): every user-facing string is a key in the typed catalogue. `messages/en.ts` is the source; `messages/pl.ts` must have the same keys (`satisfies Messages`, plus a parity test in `i18n.test.ts`). Parameterised messages are functions of a params object whose numbers arrive pre-formatted; plurals go through `plural(locale, n, forms)`. Tonight wording and dates/times/numbers come from `createFormatter(locale)` in `src/lib/tonight/format.ts` (`en-GB` / `pl-PL`, always in the site's time zone); the engine and the locale-fixed formatters in `night.ts`/`zones.ts` stay locale-free. Localised Messier common names live in `src/lib/catalogue/common-names.ts`, never in the generated JSON.
 
@@ -75,7 +75,7 @@ Stack and versions: `@README.md`. `output: "server"` — every page and route is
 - Import via the `@/*` alias (→ `src/*`). Merge Tailwind classes with `cn()` from `@/lib/utils`, never string concatenation.
 - No user-visible literal in templates, islands, schemas or stores: add a key to `src/i18n/messages/en.ts` (and `pl.ts`) and read it via `getMessages(locale)`. Zod and store messages are keys; islands translate them with `translateKey`.
 - Theme and locale come from `Astro.locals.theme` / `Astro.locals.locale` (never client state or `localStorage`); islands get them as props.
-- Colours come from the theme tokens in `src/styles/global.css` only (`bg-surface`, `text-heading`, `text-no-go`, …); `src/styles/no-hardcoded-colors.test.ts` fails on palette classes, hex or `rgb()` anywhere else.
+- Colours come from the theme tokens in `src/styles/global.css` only (`bg-surface`, `text-heading`, `text-no-go`, …); `src/styles/no-hardcoded-colors.test.ts` fails on palette classes, hex or `rgb()` anywhere else. A new base token needs a value in every theme block, and the red one must have zero green and blue (`src/styles/red-theme.test.ts`).
 - shadcn components go in `src/components/ui/` via `npx shadcn@latest add <name>`. Hooks alias resolves to `src/hooks/` (per `components.json`).
 - Business logic and services in `src/lib/`. The PRD's scoring engine must be pure and deterministic (identical inputs → identical verdict and ranking), so keep it free of I/O.
 - Database changes as Supabase migrations in `supabase/migrations/` named `YYYYMMDDHHmmss_short_description.sql`, RLS enabled with per-operation policies. Per-user isolation is a PRD non-functional requirement and must be testable outside the UI.

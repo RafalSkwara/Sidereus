@@ -11,7 +11,8 @@
 
 /*
  * Observatory palette (design board "A · Observatory").
- * Dark is the default; light ("daylight paper") is opt-in via data-theme="light".
+ * Dark is the default; light ("daylight paper") is opt-in via data-theme="light", and red night mode
+ * (S-10, FR-024) via data-theme="red".
  * shadcn token names are kept, so src/components/ui works unchanged:
  * --primary is the brand amber (call to action), --accent is shadcn's subtle hover surface.
  */
@@ -66,6 +67,36 @@
 }
 
 /*
+ * Red night mode: only long-wavelength light keeps the observer's dark adaptation, so every colour here
+ * has zero green and zero blue (src/styles/red-theme.test.ts). Verdicts differ by brightness only; their
+ * text labels carry the meaning.
+ */
+[data-theme="red"] {
+  color-scheme: dark;
+
+  --background: #0a0000;
+  --surface: #170000;
+  --border: #3d0000;
+  --foreground: #f20000;
+  --muted-foreground: #bb0000;
+  --heading: #ff0000;
+
+  --primary: #ff0000;
+  --primary-foreground: #000000;
+  --primary-strong: #cc0000;
+
+  --go: #ff0000;
+  --marginal: #d60000;
+  --no-go: #bb0000;
+
+  --verdict-surface-alpha: 10%;
+  --verdict-border-alpha: 35%;
+
+  --star: rgb(255 0 0 / 0.35);
+  --star-accent: rgb(255 0 0 / 0.2);
+}
+
+/*
  * Derived tokens. Declared on every theme scope so they recompute from that scope's base values
  * (a nested [data-theme] block gets its own derived colours, not the root's inherited ones).
  */
@@ -105,6 +136,56 @@
   --selected: var(--heading);
   --selected-foreground: var(--background);
   --destructive-foreground: var(--background);
+}
+
+/*
+ * Red night mode, for what the tokens cannot reach: raster images go through the red-only filter in
+ * Layout.astro; selection, scrollbars and autofill are re-coloured from tokens, and the focused date segment
+ * loses its system-blue highlight.
+ * Native input icons live in the browser's shadow DOM, where `url(#red-only)` does not resolve, so they are
+ * hidden instead: the date field keeps its own token-coloured icon (and the invisible picker button still
+ * works), and numbers are typed or stepped with the arrow keys.
+ */
+[data-theme="red"] img {
+  filter: url(#red-only);
+}
+
+[data-theme="red"] ::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+[data-theme="red"] input[type="number"] {
+  appearance: textfield;
+}
+
+[data-theme="red"] ::-webkit-inner-spin-button,
+[data-theme="red"] ::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Chrome paints the active date segment in the system highlight blue, and author CSS cannot target that one
+   segment (`::…-field:focus` never matches), so in red mode no segment is highlighted; the field's focus ring
+   still shows focus. */
+[data-theme="red"] input:focus::-webkit-datetime-edit-day-field,
+[data-theme="red"] input:focus::-webkit-datetime-edit-month-field,
+[data-theme="red"] input:focus::-webkit-datetime-edit-year-field {
+  background: transparent;
+  color: inherit;
+}
+
+[data-theme="red"] {
+  scrollbar-color: var(--border) var(--background);
+}
+
+[data-theme="red"] ::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+[data-theme="red"] input:-webkit-autofill {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
 }
 
 @theme inline {

@@ -53,7 +53,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
 | S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
-| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | proposed |
+| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | in-progress |
 
 ## Streams
 
@@ -254,7 +254,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Cut-order #4, last by design. Built as a third theme on F-03's tokens, so it shrinks to a palette and a switch option. Only meaningful once there is a Tonight screen to look at outdoors.
-- **Status:** proposed
+- **Status:** in-progress
 
 ## Backlog Handoff
 

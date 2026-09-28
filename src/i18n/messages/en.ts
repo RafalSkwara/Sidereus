@@ -43,6 +43,7 @@ export const en = {
     theme: "Theme",
     dark: "Dark theme",
     light: "Light theme",
+    red: "Red night mode",
     language: "Language",
     english: "English",
     polish: "Polski",
