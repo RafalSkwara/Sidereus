@@ -52,7 +52,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
-| S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
+| S-09 | account-reset-and-long-session          | stay signed in for a rolling 30 days, and continue to the requested page after sign-in (reset parked)                   | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | in-progress |
 | S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | done |
 
 ## Streams
@@ -74,7 +74,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Frontend:** present — SSR web framework with island components and a UI kit per tech-stack.md; only the starter's landing, dashboard and auth pages exist (`src/pages/`, `src/components/`). No product screens.
 - **Backend / API:** present — server-rendered routes and API handlers for sign-up, sign-in and sign-out (`src/pages/api/auth/`). No product routes.
 - **Data:** partial — the database client is wired and returns `null` when unconfigured (`src/lib/supabase.ts`); local config only, no migrations and no product tables (`supabase/`).
-- **Auth:** present — email + password sign-up, sign-in, sign-out, and route gating by prefix in `src/middleware.ts`. Missing: password reset, the 30-day rolling session, and continuing to the originally requested page after sign-in (all covered by S-09).
+- **Auth:** present — email + password sign-up, sign-in, sign-out, and route gating by prefix in `src/middleware.ts`. Missing: password reset, the 30-day rolling session, and continuing to the originally requested page after sign-in (all covered by S-09; reset later parked, see Parked).
 - **Deploy / infra:** present — live on the chosen edge runtime with secrets wired (see `context/deployment/deploy-plan.md`); CI runs lint, type-check, build and smoke on the default branch. Missing: deploy job on merge, unit test runner, forecast cache (covered by F-02, F-01 and S-02 respectively).
 - **Observability:** partial — platform request logs are enabled and tailable (`wrangler.jsonc`); no structured application logging or error tracking. No PRD requirement forces more at MVP; the coordinate-privacy NFR (never log coordinates) applies to whatever logging each slice adds.
 
@@ -232,17 +232,17 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** Small by design. The deletion and empty-state rules superseded an earlier decision to guard the last eyepiece, so they need to be planned explicitly rather than inherited from S-01's forms.
 - **Status:** done
 
-### S-09: Password reset, long session and redirect continue
+### S-09: Long session and redirect continue (password reset parked)
 
-- **Outcome:** user can reset a forgotten password through the auth provider's built-in flow, stays signed in across a rolling 30 days without re-authenticating, and after signing in is taken to the page they originally requested; sign-up, sign-in and sign-out keep working as shipped.
+- **Outcome:** user stays signed in across a rolling 30 days without re-authenticating, and after signing in is taken to the page they originally requested; sign-up, sign-in and sign-out keep working as shipped. (Password reset was cut 2026-09-28, see Parked.)
 - **Change ID:** account-reset-and-long-session
 - **PRD refs:** FR-001, FR-002, FR-003; NFR session longevity (rolling 30 days); Access Control ("returns the user to sign-in and continues to the requested page afterwards")
-- **Prerequisites:** F-03 (its reset and sign-in screens use the tokens and message catalogue)
+- **Prerequisites:** F-03 (its sign-in screen uses the tokens and message catalogue)
 - **Parallel with:** S-03 through S-08, S-10
 - **Blockers:** —
 - **Unknowns:** —
-- **Risk:** FR-001 and FR-002 are already present per Baseline; this slice hardens them and adds FR-003, which is cut-order #3 and already confirmed as available without extra email setup by tech-stack.md. Independent of the engine, so it can fill any idle agent slot.
-- **Status:** proposed
+- **Risk:** FR-001 and FR-002 are already present per Baseline; this slice hardens them. FR-003 (cut-order #3) was cut on 2026-09-28: tech-stack.md had it as available without extra email setup, but Supabase's built-in email reaches only the project's team (see Parked). Independent of the engine, so it can fill any idle agent slot.
+- **Status:** in-progress
 
 ### S-10: Red night mode
 
@@ -271,7 +271,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-06       | log-observation-from-ranking        | Log an observed object and deprioritize it in later rankings       | no                    | After F-03 · GitHub #11 |
 | S-07       | observation-log-management          | Edit, delete and manually add observation log entries              | no                    | Cut-order #2 (manual entry); after S-06 · GitHub #12 |
 | S-08       | telescope-selector-and-empty-states | Telescope selector and gear-deletion empty states on Tonight       | no                    | After F-03 · GitHub #13 |
-| S-09       | account-reset-and-long-session      | Password reset, 30-day session, redirect to requested page         | no                    | After F-03; cut-order #3 (reset half) · GitHub #5 |
+| S-09       | account-reset-and-long-session      | 30-day session, redirect to requested page (reset parked)          | no                    | After F-03; cut-order #3 applied (reset parked) · GitHub #5 |
 | S-10       | red-night-mode                      | Red night mode toggle                                              | no                    | Cut-order #4; after F-03 · GitHub #14 |
 ## Open Roadmap Questions
 
@@ -317,6 +317,7 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 - **Preview environments with a separate non-production database** — Why parked: infrastructure.md Risk Register flags previews pointing at production data; with `main_goal: speed` and no external testers yet, F-02 ships main-branch deploys only. Revisit before sharing any preview URL.
 - **Custom domain** — Why parked: deploy-plan.md records the user will add it later; the live URL works for the MVP.
 - **Forecast caching by grid cell shared between nearby users** — Why parked: shape-notes scale note; only needed at 1k-10k users, which is beyond `target_scale`.
+- **Password reset (FR-003)** — Why parked: cut-order #3 applied 2026-09-28 (S-09). The PRD kept it only if the auth provider sent email with no extra setup, and Supabase's built-in email reaches only the project's team (2 messages an hour; https://supabase.com/docs/guides/auth/auth-smtp). Reviving it needs a custom SMTP sender, the reset redirect URL in the hosted project's allowlist, and request/set-new-password screens on the F-03 tokens and message catalogue.
 
 ## Milestone History
 

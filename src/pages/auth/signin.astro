@@ -2,15 +2,18 @@
 import AuthShell from "@/components/AuthShell.astro";
 import SignInForm from "@/components/auth/SignInForm";
 import { getMessages } from "@/i18n";
+import { safeNextPath } from "@/lib/auth-redirect";
 
-// `?error=` carries a message key; the form translates it.
+// `?error=` carries a message key; the form translates it. `?next=` is the page the user asked for (S-09).
 const error = Astro.url.searchParams.get("error");
+const next = safeNextPath(Astro.url.searchParams.get("next"));
 const { locale } = Astro.locals;
 const t = getMessages(locale).auth.signIn;
 ---
 
 <AuthShell title={t.title}>
-  <SignInForm serverError={error} locale={locale} client:load />
+  {next && <p class="mb-4 text-sm text-muted-foreground">{t.continueNote}</p>}
+  <SignInForm serverError={error} locale={locale} next={next} client:load />
   <p class="mt-4 text-center text-sm text-muted-foreground">
     {t.noAccount}{" "}
     <a href="/auth/signup" class="font-semibold text-primary hover:underline">

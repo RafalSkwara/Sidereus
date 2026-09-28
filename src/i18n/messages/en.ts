@@ -96,6 +96,7 @@ export const en = {
       pending: "Signing in...",
       noAccount: "Don't have an account?",
       signUpLink: "Sign up",
+      continueNote: "Sign in to continue.",
     },
     signUp: {
       title: "Sign up",
