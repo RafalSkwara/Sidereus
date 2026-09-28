@@ -1,7 +1,7 @@
 ---
 change_id: account-reset-and-long-session
 title: Password reset, rolling 30-day session and redirect continue after sign-in
-status: implemented
+status: impl_reviewed
 created: 2026-09-28
 updated: 2026-09-28
 archived_at: null
