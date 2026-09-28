@@ -85,6 +85,7 @@ export const pl = {
       pending: "Logowanie...",
       noAccount: "Nie masz konta?",
       signUpLink: "Załóż konto",
+      continueNote: "Zaloguj się, aby kontynuować.",
     },
     signUp: {
       title: "Rejestracja",

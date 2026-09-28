@@ -61,7 +61,11 @@ async function request(path, { method = "GET", form } = {}) {
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
-  ["tonight redirects anonymous user", () => request("/tonight"), { status: 302, location: "/auth/signin" }],
+  [
+    "tonight redirects anonymous user, remembering the page",
+    () => request("/tonight"),
+    { status: 302, location: "/auth/signin?next=%2Ftonight", exact: true },
+  ],
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -89,8 +93,23 @@ const steps = [
     { status: 302, location: "/auth/signin?error=" },
   ],
   [
+    "signin rejects wrong password, keeping the page to continue to",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong", next: "/gear" } }),
+    { status: 302, location: "/auth/signin?error=errors.auth.invalidCredentials&next=%2Fgear", exact: true },
+  ],
+  [
     "signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/tonight", exact: true },
+  ],
+  [
+    "signin continues to the requested page",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "/gear" } }),
+    { status: 302, location: "/gear", exact: true },
+  ],
+  [
+    "signin ignores an off-site next",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "//evil.example" } }),
     { status: 302, location: "/tonight", exact: true },
   ],
   ["gear renders", () => request("/gear"), { status: 200 }],

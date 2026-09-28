@@ -37,22 +37,25 @@ export async function stubPlaceSearch(page: Page) {
 }
 
 /** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`) and lands on /onboarding. */
-export async function signUp(page: Page, emailPrefix: string) {
+/** Signs up a fresh user and returns their email. */
+export async function signUp(page: Page, emailPrefix: string): Promise<string> {
+  const email = `${emailPrefix}-${randomUUID()}@example.com`;
   await page.goto("/auth/signup");
   await waitForHydration(page, SIGNUP_FORM);
   const signup = page.locator(SIGNUP_FORM);
-  await signup.locator("#email").fill(`${emailPrefix}-${randomUUID()}@example.com`);
+  await signup.locator("#email").fill(email);
   await signup.locator("#password").fill(PASSWORD);
   await signup.locator("#confirmPassword").fill(PASSWORD);
   await signup.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await waitForHydration(page, ONBOARDING_FORM);
+  return email;
 }
 
-/** Signs up a fresh user and completes onboarding in Madrid with the default kit, landing on Tonight. */
-export async function onboardInMadrid(page: Page, emailPrefix: string) {
+/** Signs up a fresh user and completes onboarding in Madrid with the default kit, landing on Tonight; returns the email. */
+export async function onboardInMadrid(page: Page, emailPrefix: string): Promise<string> {
   await stubPlaceSearch(page);
-  await signUp(page, emailPrefix);
+  const email = await signUp(page, emailPrefix);
 
   await page.locator("#place-search").fill("Madrid");
   await page
@@ -61,4 +64,5 @@ export async function onboardInMadrid(page: Page, emailPrefix: string) {
     .click();
   await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();
   await expect(page).toHaveURL(/\/tonight$/);
+  return email;
 }

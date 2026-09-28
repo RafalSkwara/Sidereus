@@ -11,9 +11,11 @@ interface Props {
   /** A message key from `?error=`; translated here, unknown values read as the generic auth message. */
   serverError?: string | null;
   locale: Locale;
+  /** The page to continue to after sign-in (already checked by `safeNextPath`), posted back as `next`. */
+  next?: string | null;
 }
 
-export default function SignInForm({ serverError, locale }: Props) {
+export default function SignInForm({ serverError, locale, next }: Props) {
   const m = getMessages(locale);
   const v = m.auth.validation;
   const [email, setEmail] = useState("");
@@ -47,6 +49,7 @@ export default function SignInForm({ serverError, locale }: Props) {
 
   return (
     <form method="POST" action="/api/auth/signin" className="space-y-4" onSubmit={handleSubmit} noValidate>
+      {next && <input type="hidden" name="next" value={next} />}
       <FormField
         id="email"
         type="email"

@@ -1,6 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { createClient, type SessionUser, type TypedSupabaseClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
+import { signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 
 /**
@@ -35,7 +36,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (isProtectedPath(context.url.pathname)) {
     if (!context.locals.user) {
-      return context.redirect("/auth/signin");
+      // A page visit continues there after sign-in; gated API routes are POST targets, so they get plain sign-in.
+      const { pathname, search } = context.url;
+      const isPageVisit = context.request.method === "GET" && !pathname.startsWith("/api/");
+      return context.redirect(signInUrl(isPageVisit ? pathname + search : null));
     }
   }
 
