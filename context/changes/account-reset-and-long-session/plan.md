@@ -241,15 +241,15 @@ Existing sessions keep their 400-day cookie until the next token refresh re-writ
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including `session-cookie.test.ts`
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 Production build succeeds
-- [x] 2.5 Smoke test passes, including the `Max-Age=2592000` assertion
-- [x] 2.6 Full e2e suite passes
+- [x] 2.1 Unit tests pass, including `session-cookie.test.ts` — 3646632
+- [x] 2.2 Type check passes — 3646632
+- [x] 2.3 Lint passes — 3646632
+- [x] 2.4 Production build succeeds — 3646632
+- [x] 2.5 Smoke test passes, including the `Max-Age=2592000` assertion — 3646632
+- [x] 2.6 Full e2e suite passes — 3646632
 
 #### Manual
 
-- [x] 2.7 Auth cookie expires 30 days out after sign-in, and sign-out removes it
-- [x] 2.8 Simulated idle expiry leads to sign-in with the note and back to `/tonight`
-- [x] 2.9 PRD, roadmap and tech-stack no longer promise password reset in M-1
+- [x] 2.7 Auth cookie expires 30 days out after sign-in, and sign-out removes it — 3646632
+- [x] 2.8 Simulated idle expiry leads to sign-in with the note and back to `/tonight` — 3646632
+- [x] 2.9 PRD, roadmap and tech-stack no longer promise password reset in M-1 — 3646632
