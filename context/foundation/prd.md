@@ -165,6 +165,10 @@ not yet observing, building toward their own first sessions.
   > that cutting verification removed." Resolution: stands. Already conditional
   > on the auth provider shipping it with no extra setup, and in the cut order
   > (position 3).
+  > Resolution 2026-09-28 (S-09, user): cut to Parked. The condition failed:
+  > Supabase's built-in email only delivers to the project's team members and
+  > allows 2 messages an hour, so reset for real users needs custom SMTP and a
+  > redirect-URL allowlist in the hosted dashboard. Cut-order #3 applied.
 
 ### Onboarding
 - FR-004: New user can set a home observing site using browser geolocation or place-name search; stored coordinates are rounded to approximately 1 km. The site is created with the default name "Home" and a default minimum altitude, both editable via FR-007. Priority: must-have
@@ -334,7 +338,7 @@ checkpoint if the engine spike is not producing a sane top 5.
    stays multi-site regardless; only the UI is cut.
 2. FR-022 - manual log entry. Marking from the ranking (FR-016) survives.
 3. FR-003 - password reset, included only if the auth provider sends email with
-   no extra setup.
+   no extra setup. Applied 2026-09-28: the condition failed (see FR-003).
 4. FR-024 - red night mode. Dark theme by default (an NFR) survives; the red
    filter is the cut.
 5. FR-026 Polish copy - added 2026-09-26 (v2). The language switch and message
@@ -351,7 +355,8 @@ checkpoint if the engine spike is not producing a sane top 5.
 - All times are shown in the selected site's timezone and remain correct across
   daylight-saving transitions, including the 25-hour night of 25 October 2026.
 - A signed-in session survives a rolling 30 days without re-authentication, so a
-  session never expires on someone standing in a dark field.
+  session never expires on someone standing in a dark field. It ends after 30
+  days without use (S-09).
 - From the start of onboarding to the first ranked list takes under a minute of
   interaction, measured excluding sign-up form typing.
 - A site's coordinates are rounded to approximately 1 km at capture, are never
@@ -428,10 +433,10 @@ screenshots. Every product route is gated; an unauthenticated request to a gated
 route returns the user to sign-in and continues to the requested page afterwards.
 
 Sign-up and sign-in are email + password for the MVP. Email verification is
-disabled in the MVP: sign-up leads straight into onboarding. Password reset uses
-the auth provider's built-in flow rather than a hand-built screen, and is kept
-only if the provider ships it without extra email setup (FR-003). The concrete
-mechanism is decided at stack selection. Email verification and OAuth are
+disabled in the MVP: sign-up leads straight into onboarding. Password reset is
+not in the MVP: it was kept only if the provider shipped it without extra email
+setup (FR-003), and Supabase's built-in email reaches only the project's team,
+so it is parked. The concrete mechanism is decided at stack selection. Email verification and OAuth are
 post-MVP.
 
 Immediately after sign-up, onboarding uses equipment presets and a Bortle picker
@@ -510,6 +515,7 @@ milestone, approximately 2026-09-30.
     claim in Success Criteria.
 11. **Database and authentication choice** - deferred to stack selection. The
     auth provider must ship password reset without extra email setup, or FR-003
-    is cut.
+    is cut. Answered 2026-09-28: Supabase does not (built-in email reaches only
+    the project's team), so FR-003 is cut.
 12. **Geocoding terms** - confirm the geocoding endpoint's
     non-commercial fair-use terms before FR-004 depends on it.

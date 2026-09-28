@@ -224,32 +224,32 @@ Existing sessions keep their 400-day cookie until the next token refresh re-writ
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including `auth-redirect.test.ts`
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
-- [x] 1.4 Production build succeeds
-- [x] 1.5 Smoke test passes against a local preview on local Supabase
-- [x] 1.6 The sign-in-continue e2e spec passes
+- [x] 1.1 Unit tests pass, including `auth-redirect.test.ts` — 00c51aa
+- [x] 1.2 Type check passes — 00c51aa
+- [x] 1.3 Lint passes — 00c51aa
+- [x] 1.4 Production build succeeds — 00c51aa
+- [x] 1.5 Smoke test passes against a local preview on local Supabase — 00c51aa
+- [x] 1.6 The sign-in-continue e2e spec passes — 00c51aa
 
 #### Manual
 
-- [x] 1.7 Signed-out deep link to the log form → note (EN/PL) → wrong then right password → prefilled form
-- [x] 1.8 Direct sign-in shows no note and lands on `/tonight`
-- [x] 1.9 Unsafe `next` values show no note and land on `/tonight`
+- [x] 1.7 Signed-out deep link to the log form → note (EN/PL) → wrong then right password → prefilled form — 00c51aa
+- [x] 1.8 Direct sign-in shows no note and lands on `/tonight` — 00c51aa
+- [x] 1.9 Unsafe `next` values show no note and land on `/tonight` — 00c51aa
 
 ### Phase 2: 30-day idle session and document corrections
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including `session-cookie.test.ts`
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Production build succeeds
-- [ ] 2.5 Smoke test passes, including the `Max-Age=2592000` assertion
-- [ ] 2.6 Full e2e suite passes
+- [x] 2.1 Unit tests pass, including `session-cookie.test.ts`
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Production build succeeds
+- [x] 2.5 Smoke test passes, including the `Max-Age=2592000` assertion
+- [x] 2.6 Full e2e suite passes
 
 #### Manual
 
-- [ ] 2.7 Auth cookie expires 30 days out after sign-in, and sign-out removes it
-- [ ] 2.8 Simulated idle expiry leads to sign-in with the note and back to `/tonight`
-- [ ] 2.9 PRD, roadmap and tech-stack no longer promise password reset in M-1
+- [x] 2.7 Auth cookie expires 30 days out after sign-in, and sign-out removes it
+- [x] 2.8 Simulated idle expiry leads to sign-in with the note and back to `/tonight`
+- [x] 2.9 PRD, roadmap and tech-stack no longer promise password reset in M-1

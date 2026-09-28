@@ -25,9 +25,12 @@ A solo, after-hours build with a hard six-week deadline needs a starter that
 settles UI, data, auth and deploy in one move, and 10x Astro Starter is the
 recommended default for a JavaScript web-app. It clears all four agent-friendly
 gates and its scaffolding confidence is first-class. Supabase covers the PRD's
-only technology-forcing feature, email-and-password accounts with password
-reset, without extra email setup, which is the exact condition the PRD placed on
-FR-003; Postgres row-level security maps directly onto the per-user data
+only technology-forcing feature, email-and-password accounts. (Correction
+2026-09-28: password reset is *not* covered without extra email setup, the
+condition the PRD placed on FR-003. Supabase's built-in email "will refuse to
+deliver messages to addresses that are not part of the project's team" and
+sends 2 an hour, https://supabase.com/docs/guides/auth/auth-smtp, so FR-003 is
+parked.) Postgres row-level security maps directly onto the per-user data
 isolation requirement. The pure scoring engine, forecast and geocoding calls,
 and the coordinate-to-timezone lookup are all short-lived and fit the Cloudflare
 edge runtime, with KV available for the hourly per-site forecast cache the

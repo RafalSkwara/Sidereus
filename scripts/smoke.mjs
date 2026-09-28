@@ -27,7 +27,20 @@ const onboarding = {
     { name: "10 mm Plössl", focalLengthMm: "10", afovPreset: "plossl" },
   ]),
 };
+// PRD NFR session longevity (S-09): the auth cookie lives 30 days from the last refresh (src/lib/session-cookie.ts).
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const jar = new Map();
+
+/**
+ * Max-Age of every Supabase auth cookie a response writes (`sb-<ref>-auth-token`, possibly chunked `.0`, `.1`),
+ * leaving out removals (Max-Age=0) of chunks that are no longer needed.
+ */
+function authCookieMaxAges(setCookies) {
+  return setCookies
+    .filter((raw) => /^sb-[^=]*-auth-token(\.\d+)?=/.test(raw))
+    .map((raw) => Number(/;\s*max-age=(\d+)/i.exec(raw)?.[1] ?? NaN))
+    .filter((maxAge) => maxAge !== 0);
+}
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -55,7 +68,11 @@ async function request(path, { method = "GET", form } = {}) {
     body: form ? new URLSearchParams(form).toString() : undefined,
   });
   storeCookies(response);
-  return { status: response.status, location: response.headers.get("location") ?? "" };
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    setCookies: response.headers.getSetCookie(),
+  };
 }
 
 const steps = [
@@ -98,9 +115,9 @@ const steps = [
     { status: 302, location: "/auth/signin?error=errors.auth.invalidCredentials&next=%2Fgear", exact: true },
   ],
   [
-    "signin accepts correct password",
+    "signin accepts correct password, with a 30-day session cookie",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/tonight", exact: true },
+    { status: 302, location: "/tonight", exact: true, sessionMaxAge: SESSION_MAX_AGE_SECONDS },
   ],
   [
     "signin continues to the requested page",
@@ -153,11 +170,15 @@ const steps = [
 let failed = 0;
 for (const [name, run, expected] of steps) {
   const actual = await run();
+  const maxAges = expected.sessionMaxAge === undefined ? [] : authCookieMaxAges(actual.setCookies);
   const ok =
     actual.status === expected.status &&
     (expected.location === undefined ||
-      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location)));
-  console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
+      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expected.sessionMaxAge === undefined ||
+      (maxAges.length > 0 && maxAges.every((maxAge) => maxAge === expected.sessionMaxAge)));
+  const cookieNote = expected.sessionMaxAge === undefined ? "" : `  auth cookie max-age ${maxAges.join(",") || "none"}`;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}${cookieNote}`);
   if (!ok) {
     failed++;
     console.log(`      expected ${expected.status} ${expected.location ?? ""}`);

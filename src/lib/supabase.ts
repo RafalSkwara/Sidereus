@@ -4,6 +4,7 @@ import type { AstroCookies } from "astro";
 import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
 import type { Database } from "@/lib/database.types";
 import { withTimeout } from "@/lib/fetch-timeout";
+import { withSessionMaxAge } from "@/lib/session-cookie";
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
@@ -32,7 +33,8 @@ export function createClient(requestHeaders: Headers, cookies: AstroCookies): Ty
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          cookies.set(name, value, options);
+          // Our 30-day idle lifetime: @supabase/ssr ignores cookieOptions.maxAge and writes 400 days itself.
+          cookies.set(name, value, withSessionMaxAge(options));
         });
       },
     },
