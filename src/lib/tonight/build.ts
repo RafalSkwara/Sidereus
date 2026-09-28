@@ -3,7 +3,7 @@ import {
   darknessThresholdDegForBortle,
   darkWindowReturn,
   eyepieceOptics,
-  nextNightNotNoGo,
+  nextNightInOutlook,
   rankObjects,
   seenSummaries,
   sevenNightOutlook,
@@ -233,7 +233,8 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
 
   let explanation: TonightExplanation | null = null;
   if (tonight.reason.kind === "cloudy") {
-    const next = nextNightNotNoGo({ site: engineSite, thresholdDeg, date, forecast: hourly, fallback });
+    // Read off the outlook: nights 2-3 are already judged there, so they are not judged twice.
+    const next = nextNightInOutlook(outlook);
     explanation = { kind: "weather-no-go", nextText: nextNightText(next) };
   } else if (tonight.reason.kind === "no-darkness" && window.kind === "none") {
     explanation = {

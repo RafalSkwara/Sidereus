@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { TROMSO, WARSAW } from "./fixtures";
 import { moonFreeMinutes, moonState } from "./moon";
 import { addDays, observingNight } from "./night";
-import { darkWindowReturn, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
+import { darkWindowReturn, nextNightInOutlook, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
 import { DARK_RETURN_MAX_NIGHTS, OUTLOOK_NIGHTS, VERDICT_NIGHTS } from "./parameters";
 import { darkWindow } from "./sun";
 import type { DarkWindow, ForecastHour, HourlyForecast, Site } from "./types";
@@ -92,6 +92,22 @@ describe("nextNightNotNoGo", () => {
   it("counts nights without darkness as no-go", () => {
     const summer = { site: TROMSO, thresholdDeg: -18, date: "2026-06-21", forecast: null, fallback: false };
     expect(nextNightNotNoGo(summer)).toEqual({ kind: "none", lastJudgedDate: "2026-06-23" });
+  });
+
+  it("reads the same next night off the seven-night outlook (nextNightInOutlook)", () => {
+    const scenarios = [
+      input(series(50, 0)),
+      input(series(100, 10)),
+      input(series(100, 90)),
+      input(series(10, 10, night2.start.getTime() + 2 * HOUR_MS)),
+      input(null),
+      input(series(100, 10, night3.start.getTime() + 2 * HOUR_MS)),
+      input(series(10, 10), true),
+      { site: TROMSO, thresholdDeg: -18, date: "2026-06-21", forecast: null, fallback: false },
+    ];
+    for (const scenario of scenarios) {
+      expect(nextNightInOutlook(sevenNightOutlook(scenario))).toEqual(nextNightNotNoGo(scenario));
+    }
   });
 });
 

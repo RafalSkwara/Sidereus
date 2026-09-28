@@ -1,7 +1,9 @@
 ---
 // FR-012 / FR-019: which site or telescope Tonight is for, shown only to users who own two or more. Plain links
-// (pills) or a plain GET form (dropdown), so both work without JavaScript; `/tonight?<param>=<id>` remembers the
-// pick (see pages/tonight.astro). Only ids go into the links, never a site's coordinates.
+// (pills) or a plain GET form (dropdown) that need no script of their own (the one below only submits on change);
+// `/tonight?<param>=<id>` remembers the pick (see pages/tonight.astro). They render inside the TonightContent server
+// island, which the browser fetches with JavaScript, so Tonight as a whole still needs JS. Only ids go into the
+// links, never a site's coordinates.
 import { selectorKind } from "@/lib/tonight/gear-choice";
 
 interface Props {

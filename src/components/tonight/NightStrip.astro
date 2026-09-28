@@ -34,7 +34,7 @@ const groupLabel = "px-4 pb-1 text-xs font-semibold tracking-[0.18em] uppercase 
 
 <section id="nights" aria-labelledby="nights-heading" class="scroll-mt-6">
   <h2 id="nights-heading" class="mb-1 font-display text-2xl font-semibold text-heading">
-    {t.heading({ site: siteName })}
+    {t.heading({ count: String(nights.length), site: siteName })}
   </h2>
   <p class="mb-4 text-sm text-muted-foreground">{t.timesIn({ zone: timeZone })}</p>
 

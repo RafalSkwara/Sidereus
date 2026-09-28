@@ -27,5 +27,5 @@ export { seenSummaries } from "./log";
 export type { LogEntry, SeenSummary } from "./log";
 export { cloudOutlook, verdict } from "./verdict";
 export type { CloudOutlook } from "./verdict";
-export { darkWindowReturn, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
+export { darkWindowReturn, nextNightInOutlook, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
 export type { NextNight, NextNightInput, OutlookNight } from "./outlook";

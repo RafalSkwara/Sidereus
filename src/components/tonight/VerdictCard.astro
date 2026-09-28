@@ -3,6 +3,7 @@ import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 interface Props {
   level: VerdictLevel;
@@ -66,7 +67,7 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
         href="#nights"
         class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong underline-offset-4 transition-colors hover:underline"
       >
-        {m.tonight.nights.jumpLink}
+        {m.tonight.nights.jumpLink({ count: String(OUTLOOK_NIGHTS) })}
       </a>
     </p>
   )}

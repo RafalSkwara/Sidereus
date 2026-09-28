@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import { onboardInMadrid, waitForHydration } from "./helpers";
@@ -35,7 +36,9 @@ async function openTonight(page: Page, query = "") {
 }
 
 async function expectStripFor(page: Page, site: string, zone: string) {
-  await expect(strip(page).getByRole("heading", { level: 2, name: t.nights.heading({ site }) })).toBeVisible();
+  await expect(
+    strip(page).getByRole("heading", { level: 2, name: t.nights.heading({ count: String(OUTLOOK_NIGHTS), site }) }),
+  ).toBeVisible();
   await expect(strip(page).getByText(t.nights.timesIn({ zone }), { exact: true })).toBeVisible();
 }
 

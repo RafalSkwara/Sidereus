@@ -59,6 +59,30 @@ export function nextNightNotNoGo({ site, thresholdDeg, date, forecast, fallback 
 }
 
 /**
+ * `nextNightNotNoGo` read off an outlook that is already computed, so a weather no-go's "next night"
+ * and the strip's verdict chips come from one value and nights 2-3 are not judged twice. Walks the
+ * verdict nights after night 1 with the same rules: stop at the first night without weather data,
+ * return the first night that is not a no-go. Outlook nights (past the verdict horizon) are never
+ * considered (invariant 5).
+ */
+export function nextNightInOutlook(nights: readonly OutlookNight[]): NextNight {
+  let lastJudgedDate: string | null = null;
+  for (const night of nights.slice(1)) {
+    if (night.kind !== "verdict") {
+      break;
+    }
+    if (night.verdict.reason.kind === "no-weather-data") {
+      return { kind: "none", lastJudgedDate };
+    }
+    if (night.verdict.level !== "no-go") {
+      return { kind: "found", date: night.date, verdict: night.verdict };
+    }
+    lastJudgedDate = night.date;
+  }
+  return { kind: "none", lastJudgedDate };
+}
+
+/**
  * The first night after `date` with a dark window, looking up to `DARK_RETURN_MAX_NIGHTS` nights
  * ahead, or null when none has one.
  *
