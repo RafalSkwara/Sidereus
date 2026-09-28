@@ -53,7 +53,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
 | S-09 | account-reset-and-long-session          | reset a forgotten password, stay signed in for a rolling 30 days, and continue to the requested page after sign-in       | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | proposed |
-| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | in-progress |
+| S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | done |
 
 ## Streams
 
@@ -254,7 +254,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Cut-order #4, last by design. Built as a third theme on F-03's tokens, so it shrinks to a palette and a switch option. Only meaningful once there is a Tonight screen to look at outdoors.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -337,3 +337,4 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 - **S-08: a user who owns two or more telescopes can pick which one the Tonight ranking is for, and the ranking names it; a user can delete any site, telescope or eyepiece at any time, and Tonight then shows an empty state linking to add one (no site or no telescope) or a ranking without eyepiece recommendations (no eyepieces).** — Archived 2026-09-27 → `context/archive/2026-09-27-telescope-selector-and-empty-states/`. Lesson: —.
 - **S-05: user can see the next 7 nights for a selected site, with a go / marginal / no-go verdict on nights 1-3 and moon, darkness and cloud outlook without a verdict on nights 4-7, and can switch the selected site to see the same view for it, with all times in the site's timezone and correct across the 2026-10-25 daylight-saving transition.** — Archived 2026-09-28 → `context/archive/2026-09-27-seven-night-site-planner/`. Lesson: "Tonight's content needs JavaScript: never plan no-JS behaviour inside the server island" (`context/foundation/lessons.md`).
 - **S-07: user can view, edit and delete their observation log entries, add an entry manually for any Messier object rather than only from the ranking, and read entries whose site or telescope has since been deleted.** — Archived 2026-09-27 → `context/archive/2026-09-27-observation-log-management/`. Lesson: —.
+- **S-10: user can switch the interface to a red night mode that preserves dark adaptation, on top of the dark-by-default theme that S-02 ships.** — Archived 2026-09-28 → `context/archive/2026-09-28-red-night-mode/`. Lesson: —.
