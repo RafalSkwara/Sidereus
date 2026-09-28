@@ -9,7 +9,7 @@ main_goal: speed
 top_blocker: time
 milestone_id: mvp-night-decision
 milestone_seq: 1
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: Sidereus
@@ -20,7 +20,7 @@ milestone_status: open
 
 ## Milestone
 
-**M-1: MVP night decision** — Status: open
+**M-1: MVP night decision** — Status: done
 
 - **Intent:** A signed-in beginner gets, from their own site and kit, an honest verdict on whether tonight is worth setting up for and a ranked, explained shortlist of Messier objects to point at, with the supporting flows (onboarding, multi-night planning, observation log, account hardening) that PRD v1 declares as must-have.
 - **Source materials:** `context/foundation/prd.md` (v2; FR-025 and FR-026 added 2026-09-26)
@@ -322,6 +322,8 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 ## Milestone History
 
 (Append-only. Carried forward verbatim into each successor milestone's roadmap; empty on the very first milestone.)
+
+- **M-1: MVP night decision** (`mvp-night-decision`) — closed 2026-09-28. All 3 foundations and 10 slices shipped and deployed: a signed-in beginner gets tonight's go / marginal / no-go verdict and a ranked, explained Messier shortlist from their own site and kit, with onboarding, a seven-night planner, an observation log, light/dark/red themes, EN/PL, a 30-day session and continue-after-sign-in; password reset (FR-003) parked by cut-order #3.
 
 ## Done
 
