@@ -1,7 +1,7 @@
 ---
 change_id: red-night-mode
 title: Red night mode as a third theme that preserves dark adaptation
-status: implementing
+status: implemented
 created: 2026-09-28
 updated: 2026-09-28
 archived_at: null

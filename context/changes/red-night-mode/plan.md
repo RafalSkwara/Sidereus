@@ -250,15 +250,15 @@ None. No database change. Existing `sidereus-theme` cookies (`dark`/`light`) sta
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including i18n parity for the new key and the colour guards
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 Production build succeeds
-- [x] 2.5 The red-night-mode e2e spec passes against a local production preview
-- [x] 2.6 Full e2e suite still passes
+- [x] 2.1 Unit tests pass, including i18n parity for the new key and the colour guards — 0436e82
+- [x] 2.2 Type check passes — 0436e82
+- [x] 2.3 Lint passes — 0436e82
+- [x] 2.4 Production build succeeds — 0436e82
+- [x] 2.5 The red-night-mode e2e spec passes against a local production preview — 0436e82
+- [x] 2.6 Full e2e suite still passes — 0436e82
 
 #### Manual
 
-- [x] 2.7 Three-segment switch fits the top bar at 390 px, signed in and out, EN and PL
-- [x] 2.8 Pixel audit: no green or blue channel above 8 in red-mode screenshots of every page, landing also in WebKit
-- [x] 2.9 Dark and light still look as before on Tonight and landing
+- [x] 2.7 Three-segment switch fits the top bar at 390 px, signed in and out, EN and PL — 0436e82
+- [x] 2.8 Pixel audit: no green or blue channel above 8 in red-mode screenshots of every page, landing also in WebKit — 0436e82
+- [x] 2.9 Dark and light still look as before on Tonight and landing — 0436e82
