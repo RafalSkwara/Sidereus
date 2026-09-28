@@ -5,6 +5,8 @@ import {
   GeoVector,
   Horizon,
   Illumination,
+  InverseRefraction,
+  SearchAltitude,
   Spherical,
   VectorFromSphere,
 } from "astronomy-engine";
@@ -60,6 +62,54 @@ export function moonSeparationDeg(time: Date, target: EquatorialJ2000): number {
   const moon = GeoVector(Body.Moon, time, true);
   const targetVector = VectorFromSphere(new Spherical(target.decDeg, target.raHours * 15, 1), time);
   return AngleBetween(moon, targetVector);
+}
+
+const DAY_MS = 86_400_000;
+const MINUTE_MS = 60_000;
+
+/**
+ * Whole minutes of `[interval.start, interval.end)` during which the Moon is below the horizon,
+ * in the `moonState` sense: its apparent (refracted) centre altitude is below 0°.
+ *
+ * The state at the start comes from `moonState`; each later change is the next horizon crossing
+ * from `SearchAltitude` on the Moon's centre at the geometric altitude that refracts to 0°. Rise/set
+ * searches are not used because they time the upper limb against a fixed refraction, which differs
+ * from `moonState` by about 0.25° of altitude (minutes of time, more at high latitude), and a
+ * dense track is not used because a handful of crossings per window is far cheaper. A `null`
+ * search result means no crossing before the interval ends.
+ */
+export function moonFreeMinutes(site: Site, interval: Interval): number {
+  const startMs = interval.start.getTime();
+  const endMs = interval.end.getTime();
+  if (!(endMs > startMs)) {
+    return 0;
+  }
+  const observer = observerFor(site);
+  const horizonDeg = InverseRefraction("normal", 0);
+
+  let below = moonState(site, interval.start).altitudeDeg < 0;
+  let cursorMs = startMs;
+  let freeMs = 0;
+  while (cursorMs < endMs) {
+    const crossing = SearchAltitude(
+      Body.Moon,
+      observer,
+      below ? 1 : -1,
+      new Date(cursorMs),
+      (endMs - cursorMs) / DAY_MS,
+      horizonDeg,
+    );
+    const nextMs = crossing === null ? endMs : Math.min(Math.max(crossing.date.getTime(), cursorMs), endMs);
+    if (below) {
+      freeMs += nextMs - cursorMs;
+    }
+    if (crossing === null || nextMs >= endMs) {
+      break;
+    }
+    cursorMs = nextMs;
+    below = !below;
+  }
+  return Math.floor(freeMs / MINUTE_MS);
 }
 
 /** `moonState` sampled across `interval` every `stepMinutes`, inclusive of both ends. */

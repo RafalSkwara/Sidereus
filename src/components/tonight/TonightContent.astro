@@ -4,8 +4,9 @@
 import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { ServerError } from "@/components/forms/ServerError";
+import NightStrip from "@/components/tonight/NightStrip.astro";
+import GearSelector from "@/components/tonight/GearSelector.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
-import TelescopeSelector from "@/components/tonight/TelescopeSelector.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
@@ -21,9 +22,11 @@ import {
 import type { LogEntry } from "@/lib/engine";
 import { observationStore } from "@/lib/observations/store";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
-import { chooseTelescope, selectorKind } from "@/lib/tonight/telescope-choice";
+import { chooseOwned, selectorKind } from "@/lib/tonight/gear-choice";
 
 interface Props {
+  /** The site picked on the page (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
   /** The telescope picked on the page (`?telescope=` or the remembered cookie); resolved against the user's own. */
   telescopeId?: string;
 }
@@ -36,7 +39,7 @@ const LOG_FAILED: MessageKey = "tonight.logFailed";
 const TONIGHT_FAILED: MessageKey = "tonight.failed";
 
 const { user, locale } = Astro.locals;
-const { telescopeId } = Astro.props;
+const { siteId, telescopeId } = Astro.props;
 // The island route (/_server-islands/...) sits outside PROTECTED_ROUTES, so it guards itself: signed out, it
 // renders nothing and loads nothing.
 const supabase = user ? Astro.locals.supabase : null;
@@ -81,12 +84,18 @@ if (supabase) {
   ({ items: log, error: logError } = logResult);
 }
 
-// The oldest site (S-05 adds switching). The telescope is the one picked on the page when the user owns it,
-// else the oldest (FR-019); both lists are in `created_at` order.
-const site = sites.at(0);
-const telescope = chooseTelescope(telescopes, telescopeId);
-// FR-019: the selector, and naming the telescope on the ranking, only matter with two or more.
+// The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
+// FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
+// prefill all follow the chosen site.
+const site = chooseOwned(sites, siteId);
+const telescope = chooseOwned(telescopes, telescopeId);
+// FR-012 / FR-019: a selector, and naming the telescope on the ranking, only matter with two or more.
+const multipleSites = selectorKind(sites.length) !== "none";
 const multipleTelescopes = selectorKind(telescopes.length) !== "none";
+// The line under the title names only what no selector already shows; with both selectors it is omitted.
+const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
+  .filter((name): name is string => Boolean(name))
+  .join(" · ");
 // No site and no telescope (e.g. onboarding abandoned): one route back to setup instead of two cards (FR-021
 // single-item empty states stay as they are).
 const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
@@ -136,15 +145,30 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
       {view ? view.dateLabel : t.kicker}
     </p>
     <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-    {site && telescope && (
+    {site && telescope && gearLine && (
       <p class="mb-6 text-sm text-muted-foreground">
         <a href="/gear" class="transition-colors hover:text-heading">
-          {multipleTelescopes ? site.name : `${site.name} · ${telescope.name}`}
+          {gearLine}
         </a>
       </p>
     )}
+    {site && telescope && multipleSites && (
+      <GearSelector
+        items={sites.map(({ id, name }) => ({ id, name }))}
+        activeId={site.id}
+        param="site"
+        label={t.siteSelector.label}
+        show={t.siteSelector.show}
+      />
+    )}
     {site && telescope && multipleTelescopes && (
-      <TelescopeSelector telescopes={telescopes.map(({ id, name }) => ({ id, name }))} activeId={telescope.id} />
+      <GearSelector
+        items={telescopes.map(({ id, name }) => ({ id, name }))}
+        activeId={telescope.id}
+        param="telescope"
+        label={t.selector.label}
+        show={t.selector.show}
+      />
     )}
 
     <div class="mt-6 space-y-6">
@@ -187,6 +211,7 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             timeZone={view.timeZone}
             forecastStatus={view.forecastStatus}
             explanation={view.explanation}
+            nightsLink={view.ranking !== null}
           />
 
           {view.ranking && (
@@ -230,6 +255,8 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
               )}
             </section>
           )}
+
+          <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
         </>
       )}
     </div>

@@ -8,7 +8,7 @@ import { CircleCheck } from "lucide-react";
 import { getMessages } from "@/i18n";
 import { findMessier } from "@/lib/catalogue";
 import { PREFERENCE_COOKIE_MAX_AGE } from "@/lib/preferences";
-import { isTelescopeId, TELESCOPE_COOKIE } from "@/lib/tonight/telescope-choice";
+import { isGearId, SITE_COOKIE, TELESCOPE_COOKIE } from "@/lib/tonight/gear-choice";
 
 const { supabase, locale } = Astro.locals;
 const t = getMessages(locale).tonight;
@@ -17,26 +17,28 @@ const t = getMessages(locale).tonight;
 const loggedParam = Astro.url.searchParams.get("logged") ?? "";
 const logged = /^\d{1,3}$/.test(loggedParam) ? findMessier(Number(loggedParam)) : undefined;
 
-// FR-019: a telescope picked in the selector (`?telescope=<id>`) is remembered on this device, so plain /tonight
-// (the post-log redirect included) keeps it. Only the shape is checked here; the island resolves the id
-// against the user's own telescopes and falls back to the oldest. Set here, not in the island: the island's
-// request carries no page query, so the requested id reaches it as a prop.
-const telescopeParam = Astro.url.searchParams.get("telescope");
-if (isTelescopeId(telescopeParam)) {
-  Astro.cookies.set(TELESCOPE_COOKIE, telescopeParam, {
-    path: "/",
-    maxAge: PREFERENCE_COOKIE_MAX_AGE,
-    sameSite: "lax",
-    httpOnly: true,
-    secure: Astro.url.protocol === "https:",
-  });
+// FR-012 / FR-019: a site or telescope picked in a selector (`?site=<id>`, `?telescope=<id>`) is remembered on
+// this device, so plain /tonight (the post-log redirect included) keeps it. Only the shape is checked here; the
+// island resolves each id against the user's own sites and telescopes and falls back to the oldest. Set here, not
+// in the island: the island's request carries no page query, so the requested ids reach it as props. Only ids
+// travel (island props are serialised into its URL), never a site's coordinates.
+function requestedGear(param: string, cookie: string): string | undefined {
+  const value = Astro.url.searchParams.get(param);
+  if (isGearId(value)) {
+    Astro.cookies.set(cookie, value, {
+      path: "/",
+      maxAge: PREFERENCE_COOKIE_MAX_AGE,
+      sameSite: "lax",
+      httpOnly: true,
+      secure: Astro.url.protocol === "https:",
+    });
+    return value;
+  }
+  const remembered = Astro.cookies.get(cookie)?.value;
+  return isGearId(remembered) ? remembered : undefined;
 }
-const telescopeCookie = Astro.cookies.get(TELESCOPE_COOKIE)?.value;
-const requestedTelescope = isTelescopeId(telescopeParam)
-  ? telescopeParam
-  : isTelescopeId(telescopeCookie)
-    ? telescopeCookie
-    : undefined;
+const requestedSite = requestedGear("site", SITE_COOKIE);
+const requestedTelescope = requestedGear("telescope", TELESCOPE_COOKIE);
 ---
 
 <GearShell title={t.title}>
@@ -51,7 +53,7 @@ const requestedTelescope = isTelescopeId(telescopeParam)
   )}
   {supabase ? (
     // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in.
-    <TonightContent server:defer telescopeId={requestedTelescope}>
+    <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope}>
       <TonightSkeleton slot="fallback" />
     </TonightContent>
   ) : (

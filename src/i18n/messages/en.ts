@@ -357,6 +357,11 @@ export const en = {
     loading: "Loading tonight's sky…",
     loadingSlow: "This is taking longer than usual.",
     reload: "Reload",
+    /** FR-012: shown only to users who own two or more sites; the label must differ from `selector.label`. */
+    siteSelector: {
+      label: "Site",
+      show: "Show",
+    },
     /** FR-019: shown only to users who own two or more telescopes. */
     selector: {
       label: "Telescope",
@@ -370,6 +375,26 @@ export const en = {
       darkTo: "to",
       noDarkWindow: "No dark window tonight",
       timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
+    },
+
+    /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
+    nights: {
+      /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
+      heading: (p: { count: string; site: string }) => `Next ${p.count} nights at ${p.site}`,
+      jumpLink: (p: { count: string }) => `Next ${p.count} nights ↓`,
+      timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
+      verdictLabel: "Verdict",
+      outlookLabel: "Outlook — no verdict",
+      noDarkness: "No darkness",
+      moon: (p: { percent: string }) => `Moon ${p.percent}%`,
+      moonFree: (p: { moon: string; duration: string }) => `${p.moon} · ${p.duration} moon-free`,
+      /** The Moon is up for the whole dark window (0 min moon-free). */
+      moonAllNight: (p: { moon: string }) => `${p.moon} · up the whole dark window`,
+      /** The Moon stays below the horizon for the whole dark window. */
+      moonNone: (p: { moon: string }) => `${p.moon} · below the horizon all night`,
+      cloud: (p: { mean: string }) => `Cloud ~${p.mean}%`,
+      cloudRange: (p: { mean: string; min: string }) => `Cloud ~${p.mean}%, down to ${p.min}%`,
+      noCloud: "No cloud outlook yet",
     },
 
     object: {

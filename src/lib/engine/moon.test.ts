@@ -1,11 +1,12 @@
 import { Body, EquatorFromVector, GeoVector } from "astronomy-engine";
 import { describe, expect, it, test } from "vitest";
 
-import { FIXTURES, WARSAW, circularDeltaDeg, fixtureTimeMs, messierTarget, siteOf } from "./fixtures";
-import { moonSeparationDeg, moonState, moonTrack } from "./moon";
+import { FIXTURES, TROMSO, WARSAW, circularDeltaDeg, fixtureTimeMs, messierTarget, siteOf } from "./fixtures";
+import { moonFreeMinutes, moonSeparationDeg, moonState, moonTrack } from "./moon";
 import { observingNight } from "./night";
-import { ALTITUDE_TOLERANCE_DEG } from "./parameters";
-import type { EquatorialJ2000 } from "./types";
+import { ALTITUDE_TOLERANCE_DEG, TIME_TOLERANCE_MINUTES } from "./parameters";
+import { darkWindow } from "./sun";
+import type { EquatorialJ2000, Interval, Site } from "./types";
 
 const ILLUMINATION_TOLERANCE = 0.02;
 
@@ -92,6 +93,74 @@ describe("moonSeparationDeg (synthetic)", () => {
   it("is deterministic", () => {
     const m31 = messierTarget("M31");
     expect(moonSeparationDeg(time, m31)).toBe(moonSeparationDeg(time, m31));
+  });
+});
+
+describe("moonFreeMinutes (synthetic)", () => {
+  const MINUTE_MS = 60_000;
+
+  function windowOf(site: Site, date: string): Interval {
+    const window = darkWindow(site, observingNight(date, site.timeZone), -18);
+    if (window.kind !== "window") {
+      throw new Error(`expected a dark window on ${date}`);
+    }
+    return window;
+  }
+
+  /** Oracle: `moonState` every minute across `[start, end)`; each sample below 0° is one moon-free minute. */
+  function sampled(site: Site, interval: Interval): { freeMinutes: number; changes: number } {
+    let freeMinutes = 0;
+    let changes = 0;
+    let previous: boolean | null = null;
+    for (let t = interval.start.getTime(); t < interval.end.getTime(); t += MINUTE_MS) {
+      const below = moonState(site, new Date(t)).altitudeDeg < 0;
+      if (below) {
+        freeMinutes++;
+      }
+      if (previous !== null && below !== previous) {
+        changes++;
+      }
+      previous = below;
+    }
+    return { freeMinutes, changes };
+  }
+
+  const windowMinutes = (interval: Interval): number => (interval.end.getTime() - interval.start.getTime()) / MINUTE_MS;
+
+  // 2026-10-10 new moon (Moon down all night), 2026-10-25 full moon (up all night), 2026-11-01 waning
+  // with moonrise ~20:58 UTC inside the window, 2026-10-19 waxing with moonset ~21:45 UTC inside it,
+  // and a Tromsø night with moonset inside it, where the limb-vs-centre difference is largest.
+  const cases: { name: string; site: Site; date: string; crossings: number }[] = [
+    { name: "Warsaw near new moon", site: WARSAW, date: "2026-10-10", crossings: 0 },
+    { name: "Warsaw near full moon", site: WARSAW, date: "2026-10-25", crossings: 0 },
+    { name: "Warsaw with moonrise inside the window", site: WARSAW, date: "2026-11-01", crossings: 1 },
+    { name: "Warsaw with moonset inside the window", site: WARSAW, date: "2026-10-19", crossings: 1 },
+    { name: "Tromsø with moonset inside the window", site: TROMSO, date: "2026-10-20", crossings: 1 },
+  ];
+
+  for (const { name, site, date, crossings } of cases) {
+    it(`${name} (${date}): within ${TIME_TOLERANCE_MINUTES} min of a 1-minute moonState sampling`, () => {
+      const window = windowOf(site, date);
+      const oracle = sampled(site, window);
+      expect(oracle.changes).toBe(crossings);
+      const free = moonFreeMinutes(site, window);
+      expect(Number.isInteger(free)).toBe(true);
+      expect(Math.abs(free - oracle.freeMinutes)).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
+      expect(free).toBeGreaterThanOrEqual(0);
+      expect(free).toBeLessThanOrEqual(windowMinutes(window));
+    });
+  }
+
+  it("is the whole window near new moon and zero near full moon", () => {
+    const newMoon = windowOf(WARSAW, "2026-10-10");
+    expect(moonFreeMinutes(WARSAW, newMoon)).toBe(Math.floor(windowMinutes(newMoon)));
+    expect(moonFreeMinutes(WARSAW, windowOf(WARSAW, "2026-10-25"))).toBe(0);
+  });
+
+  it("is zero for an empty interval and deterministic", () => {
+    const window = windowOf(WARSAW, "2026-11-01");
+    expect(moonFreeMinutes(WARSAW, { start: window.start, end: window.start })).toBe(0);
+    expect(moonFreeMinutes(WARSAW, window)).toBe(moonFreeMinutes(WARSAW, window));
   });
 });
 

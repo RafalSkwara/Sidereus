@@ -10,6 +10,7 @@ import {
   observingNight,
   rankObjects,
   seenSummaries,
+  sevenNightOutlook,
 } from "./index";
 import type { HorizontalPosition, LogEntry, MoonState, Ranking, Site } from "./index";
 
@@ -186,5 +187,21 @@ describe("ranking determinism with a non-empty observation log", () => {
     expect(fullRanking(log)).toEqual(once);
     expect(once.entries.map((e) => e.object.messier)).not.toEqual(unlogged.entries.map((e) => e.object.messier));
     expect(once.clearedCount).toBe(unlogged.clearedCount);
+  });
+});
+
+describe("seven-night outlook determinism", () => {
+  it("yields deep-equal outlooks for two identical inputs", () => {
+    const hours = Array.from({ length: 9 * 24 }, (_, i) => ({
+      start: new Date(Date.UTC(2026, 9, 20) + i * 3_600_000),
+      cloudCoverPct: (i * 37) % 101,
+      humidityPct: 60 + (i % 30),
+    }));
+    const input = { site: WARSAW, thresholdDeg: -18, date: "2026-10-21", forecast: { hours }, fallback: false };
+    const once = sevenNightOutlook(input);
+    expect(sevenNightOutlook(input)).toEqual(once);
+    const asNumbers = (value: unknown): string =>
+      JSON.stringify(value, (_key, v: unknown) => (v instanceof Date ? v.getTime() : v));
+    expect(asNumbers(sevenNightOutlook(input))).toBe(asNumbers(once));
   });
 });

@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { findMessier, MESSIER } from "@/lib/catalogue";
-import { MAX_RANKED_OBJECTS, type HourlyForecast } from "@/lib/engine";
+import {
+  darknessThresholdDegForBortle,
+  darkWindow,
+  MAX_RANKED_OBJECTS,
+  observingNight,
+  type HourlyForecast,
+} from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
-import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
+import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 
-import { buildTonight, type TonightRanking, type TonightView } from "./build";
+import { buildTonight, type TonightNight, type TonightRanking, type TonightView } from "./build";
 
 const WARSAW: SiteRecord = {
   id: "site-1",
@@ -441,5 +447,181 @@ describe("buildTonight with an observation log (FR-018)", () => {
   it("ignores entries for nights after the ranked night", () => {
     const view = buildTonight({ ...input, log: [{ messier: top, night: "2026-10-11", rating: 5 }] }, "en");
     expect(rankingOf(view)).toEqual(unlogged);
+  });
+});
+
+describe("buildTonight's seven-night strip (FR-011)", () => {
+  const MINUTE_MS = 60_000;
+  /** Eight days of hourly forecast from the night of 10 Oct, every hour at `cloudPct`. */
+  const weekForecast = (cloudPct: number) => hourlyForecast("2026-10-10T00:00:00Z", 8 * 24 + 12, () => cloudPct);
+  const build = (forecast: ForecastResult | null, overrides: Partial<Parameters<typeof buildTonight>[0]> = {}) =>
+    buildTonight({ site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW, ...overrides }, "en");
+
+  function verdictNight(night: TonightNight): Extract<TonightNight, { kind: "verdict" }> {
+    if (night.kind !== "verdict") {
+      throw new Error(`expected a verdict on ${night.date}`);
+    }
+    return night;
+  }
+
+  function outlookNight(night: TonightNight): Extract<TonightNight, { kind: "outlook" }> {
+    if (night.kind !== "outlook") {
+      throw new Error(`expected an outlook on ${night.date}`);
+    }
+    return night;
+  }
+
+  /** `HH:mm` of the UTC wall clock `offsetHours` ahead of `instant`. */
+  function utcWallTime(instant: Date, offsetHours: number): string {
+    return new Date(instant.getTime() + offsetHours * 3_600_000).toISOString().slice(11, 16);
+  }
+
+  it("lists seven consecutive nights from tonight, verdicts on 1-3 and outlooks on 4-7", () => {
+    const view = build(result(weekForecast(50)));
+    expect(view.nights.map((night) => night.date)).toEqual([
+      "2026-10-10",
+      "2026-10-11",
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+      "2026-10-16",
+    ]);
+    expect(view.nights.map((night) => night.label)).toEqual([
+      "Sat 10 Oct",
+      "Sun 11 Oct",
+      "Mon 12 Oct",
+      "Tue 13 Oct",
+      "Wed 14 Oct",
+      "Thu 15 Oct",
+      "Fri 16 Oct",
+    ]);
+    expect(view.nights.map((night) => night.kind)).toEqual([
+      "verdict",
+      "verdict",
+      "verdict",
+      "outlook",
+      "outlook",
+      "outlook",
+      "outlook",
+    ]);
+    for (const night of view.nights.slice(3)) {
+      expect(night).not.toHaveProperty("level");
+      expect(night).not.toHaveProperty("reasonText");
+      expect(outlookNight(night).cloudText).toBe("Cloud ~50%");
+    }
+    for (const night of view.nights) {
+      expect(night.darkText).toMatch(/^\d{2}:\d{2}–\d{2}:\d{2}$/);
+      expect(night.moonText).toMatch(/^Moon \d{1,3}% · /);
+    }
+  });
+
+  it.each<[string, ForecastResult | null]>([
+    ["a go night", result(weekForecast(5))],
+    ["a weather no-go", result(weekForecast(100))],
+    ["no forecast", null],
+    ["a saved copy", result(weekForecast(5), true)],
+  ])("makes night 1 the verdict card's night on %s", (_label, forecast) => {
+    const view = build(forecast);
+    const first = verdictNight(view.nights[0]);
+    expect(first.date).toBe(view.date);
+    expect(first.level).toBe(view.verdict.level);
+    expect(first.reasonText).toBe(view.verdictText);
+    expect(view.darkWindow.kind).toBe("window");
+    if (view.darkWindow.kind === "window") {
+      expect(first.darkText).toBe(`${view.darkWindow.start}–${view.darkWindow.end}`);
+    }
+  });
+
+  it("reads night 2 as marginal with no weather data when the forecast stops after night 1", () => {
+    // The series ends at 11:00 UTC on 11 Oct: after night 1's dark window, before night 2's.
+    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 36, () => 5)));
+    expect(verdictNight(view.nights[0]).level).toBe("go");
+    expect(verdictNight(view.nights[1])).toMatchObject({ level: "marginal", reasonText: "no weather data" });
+  });
+
+  it("reads nights 4-7 as having no cloud outlook yet when the forecast covers only nights 1-3", () => {
+    // The series ends at 23:00 UTC on 13 Oct: after night 3's dark window, inside night 4's.
+    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 96, () => 20)));
+    expect(view.nights.slice(0, 3).map((night) => verdictNight(night).reasonText)).not.toContain("no weather data");
+    for (const night of view.nights.slice(3)) {
+      expect(outlookNight(night).cloudText).toBe("No cloud outlook yet");
+      expect(night.darkText).toMatch(/^\d{2}:\d{2}–\d{2}:\d{2}$/);
+    }
+  });
+
+  it("formats every night in the site's zone across the 2026-10-25 DST change", () => {
+    const view = build(null, { now: new Date("2026-10-21T18:00:00Z") });
+    expect(view.nights.map((night) => night.label)).toEqual([
+      "Wed 21 Oct",
+      "Thu 22 Oct",
+      "Fri 23 Oct",
+      "Sat 24 Oct",
+      "Sun 25 Oct",
+      "Mon 26 Oct",
+      "Tue 27 Oct",
+    ]);
+
+    const night = view.nights.find((n) => n.date === "2026-10-24");
+    const window = darkWindow(
+      toEngineSite(WARSAW),
+      observingNight("2026-10-24", WARSAW.timeZone),
+      darknessThresholdDegForBortle(WARSAW.bortle),
+    );
+    if (night === undefined || window.kind !== "window") {
+      throw new Error("expected the night of 24 Oct with a dark window");
+    }
+    // Dark from CEST (UTC+2) evening to CET (UTC+1) morning.
+    const [start, end] = night.darkText.split("–");
+    expect(start).toBe(utcWallTime(window.start, 2));
+    expect(end).toBe(utcWallTime(window.end, 1));
+    // The clock falls back an hour inside the window, so the real duration is one hour longer than the wall-clock span.
+    const minutesOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+    const wallMinutes = (minutesOf(end) - minutesOf(start) + 24 * 60) % (24 * 60);
+    const realMinutes = Math.floor(window.end.getTime() / MINUTE_MS) - Math.floor(window.start.getTime() / MINUTE_MS);
+    expect(realMinutes - wallMinutes).toBe(60);
+  });
+
+  it("reads no darkness on every night at Tromsø around the solstice", () => {
+    const view = build(result(uniformForecast("2026-06-21T00:00:00Z", 0)), {
+      site: TROMSO_SITE,
+      now: new Date("2026-06-21T20:00:00Z"),
+    });
+    expect(view.nights).toHaveLength(7);
+    for (const night of view.nights) {
+      expect(night.darkText).toBe("No darkness");
+      expect(night.moonText).toMatch(/^Moon \d{1,3}%$/);
+    }
+    for (const night of view.nights.slice(0, 3)) {
+      expect(verdictNight(night)).toMatchObject({
+        level: "no-go",
+        // The dark-window column already says "No darkness"; the card's "…tonight" wording would misread here.
+        reasonText: null,
+      });
+    }
+    for (const night of view.nights.slice(3)) {
+      expect(outlookNight(night).cloudText).toBeNull();
+    }
+  });
+
+  it("words the strip in Polish", () => {
+    const view = buildTonight(
+      { site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast: result(weekForecast(50)), now: NOW },
+      "pl",
+    );
+    expect(view.nights.map((night) => night.label)).toEqual([
+      "sob., 10 paź",
+      "niedz., 11 paź",
+      "pon., 12 paź",
+      "wt., 13 paź",
+      "śr., 14 paź",
+      "czw., 15 paź",
+      "pt., 16 paź",
+    ]);
+    expect(outlookNight(view.nights[3]).cloudText).toBe("Zachmurzenie ~50%");
+    for (const night of view.nights) {
+      expect(night.moonText).toMatch(/^Księżyc \d{1,3}% · /);
+    }
+    expect(verdictNight(view.nights[0]).reasonText).toBe(view.verdictText);
   });
 });

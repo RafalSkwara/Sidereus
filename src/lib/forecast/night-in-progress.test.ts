@@ -43,9 +43,9 @@ describe("the night in progress after UTC midnight", () => {
   });
 
   it("judges the verdict on the evening hours that a past_days=1 response carries", async () => {
-    // past_days=1 + forecast_days=4: five days of hours from 00:00 UTC yesterday.
+    // past_days=1 + forecast_days=8: nine days of hours from 00:00 UTC yesterday.
     const seriesStart = new Date("2026-11-10T00:00:00Z");
-    const hours = 5 * HOURS_PER_DAY;
+    const hours = 9 * HOURS_PER_DAY;
     const fake = fakeFetch(() =>
       jsonResponse(openMeteoBody(seriesStart.getTime() / 1000, cloudFrom(seriesStart, hours))),
     );
@@ -58,9 +58,9 @@ describe("the night in progress after UTC midnight", () => {
   });
 
   it("would have no weather data for the night if the series started at 00:00 UTC today", async () => {
-    // forecast_days=4 alone: four days of hours from 00:00 UTC today, missing the evening.
+    // forecast_days=8 alone: eight days of hours from 00:00 UTC today, missing the evening.
     const seriesStart = new Date("2026-11-11T00:00:00Z");
-    const hours = 4 * HOURS_PER_DAY;
+    const hours = 8 * HOURS_PER_DAY;
     const fake = fakeFetch(() =>
       jsonResponse(openMeteoBody(seriesStart.getTime() / 1000, cloudFrom(seriesStart, hours))),
     );

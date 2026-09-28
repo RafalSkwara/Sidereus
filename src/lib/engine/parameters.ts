@@ -188,6 +188,12 @@ export const LOG_PENALTY_MIN_RATING = 3;
 /** FR-011, invariant 5: nights 1-3 (tonight and the next two) carry a verdict; later nights do not. */
 export const VERDICT_NIGHTS = 3;
 
+/**
+ * FR-011: the seven-night strip, tonight and the six nights after it. Nights 1..`VERDICT_NIGHTS`
+ * carry a verdict; the rest carry a cloud outlook and never a verdict (invariant 5).
+ */
+export const OUTLOOK_NIGHTS = 7;
+
 /** How far ahead, in nights, the search for the dark window's return looks (a full year and a day). */
 export const DARK_RETURN_MAX_NIGHTS = 366;
 

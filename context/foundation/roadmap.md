@@ -48,7 +48,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | done        |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | done        |
 | S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02, F-03 | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | done |
-| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | proposed |
+| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | in-progress |
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
@@ -193,7 +193,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Cut-order #1. Sequenced after the north star so it drops cleanly if the cut checkpoint fires; the data model is already multi-site from S-01, so only this view is at stake.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-06: Log an observation from the ranking
 

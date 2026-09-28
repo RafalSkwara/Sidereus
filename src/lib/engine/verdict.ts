@@ -114,3 +114,38 @@ export function verdict(
   const minCloudPct = present.length === 0 ? null : Math.min(...present.map((hour) => hour.cloudCoverPct));
   return { level: "no-go", reason: { kind: "cloudy", bestRunHours: marginalRun.hours, minCloudPct } };
 }
+
+/** Cloud numbers for a night past the verdict horizon: never a verdict, only what the forecast says. */
+export interface CloudOutlook {
+  /** Mean cloud cover over the dark window's forecast hours, 0-100. */
+  meanCloudPct: number;
+  /** The clearest of those hours, 0-100, so a clear spell is not averaged away. */
+  minCloudPct: number;
+}
+
+/**
+ * The cloud outlook for one dark window, over the same whole UTC hours the verdict judges and with
+ * the same rule that a series not spanning them is no data. Hours missing inside the series are
+ * skipped (counted neither clear nor cloudy). `null` when there is no dark window, no forecast, a
+ * series that does not span the window, or no present hour; callers tell "no darkness" from "no
+ * data" by the window's `kind`.
+ */
+export function cloudOutlook(darkWindow: DarkWindow, forecast: HourlyForecast | null): CloudOutlook | null {
+  if (darkWindow.kind === "none" || forecast === null) {
+    return null;
+  }
+  const slotStarts = overlappingSlotStarts(darkWindow.start, darkWindow.end);
+  if (!seriesSpans(slotStarts, forecast)) {
+    return null;
+  }
+  const byStart = new Map(forecast.hours.map((hour) => [hour.start.getTime(), hour]));
+  const clouds = slotStarts.flatMap((start) => {
+    const hour = byStart.get(start);
+    return hour === undefined ? [] : [hour.cloudCoverPct];
+  });
+  if (clouds.length === 0) {
+    return null;
+  }
+  const meanCloudPct = clouds.reduce((sum, cloud) => sum + cloud, 0) / clouds.length;
+  return { meanCloudPct, minCloudPct: Math.min(...clouds) };
+}
