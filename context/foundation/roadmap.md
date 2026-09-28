@@ -52,7 +52,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
-| S-09 | account-reset-and-long-session          | stay signed in for a rolling 30 days, and continue to the requested page after sign-in (reset parked)                   | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | in-progress |
+| S-09 | account-reset-and-long-session          | stay signed in for a rolling 30 days, and continue to the requested page after sign-in (reset parked)                   | F-03          | FR-001, FR-002, FR-003, NFR session longevity, Access Control            | done |
 | S-10 | red-night-mode                          | switch the interface to a red night mode that preserves dark adaptation                                                  | S-02, F-03    | FR-024, NFR dark default                                                 | done |
 
 ## Streams
@@ -242,7 +242,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** FR-001 and FR-002 are already present per Baseline; this slice hardens them. FR-003 (cut-order #3) was cut on 2026-09-28: tech-stack.md had it as available without extra email setup, but Supabase's built-in email reaches only the project's team (see Parked). Independent of the engine, so it can fill any idle agent slot.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-10: Red night mode
 
@@ -339,3 +339,4 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 - **S-05: user can see the next 7 nights for a selected site, with a go / marginal / no-go verdict on nights 1-3 and moon, darkness and cloud outlook without a verdict on nights 4-7, and can switch the selected site to see the same view for it, with all times in the site's timezone and correct across the 2026-10-25 daylight-saving transition.** — Archived 2026-09-28 → `context/archive/2026-09-27-seven-night-site-planner/`. Lesson: "Tonight's content needs JavaScript: never plan no-JS behaviour inside the server island" (`context/foundation/lessons.md`).
 - **S-07: user can view, edit and delete their observation log entries, add an entry manually for any Messier object rather than only from the ranking, and read entries whose site or telescope has since been deleted.** — Archived 2026-09-27 → `context/archive/2026-09-27-observation-log-management/`. Lesson: —.
 - **S-10: user can switch the interface to a red night mode that preserves dark adaptation, on top of the dark-by-default theme that S-02 ships.** — Archived 2026-09-28 → `context/archive/2026-09-28-red-night-mode/`. Lesson: —.
+- **S-09: user stays signed in across a rolling 30 days without re-authenticating, and after signing in is taken to the page they originally requested; sign-up, sign-in and sign-out keep working as shipped. (Password reset was cut 2026-09-28, see Parked.)** — Archived 2026-09-28 → `context/archive/2026-09-28-account-reset-and-long-session/`. Lesson: —.
