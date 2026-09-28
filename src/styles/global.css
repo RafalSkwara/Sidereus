@@ -138,6 +138,55 @@
   --destructive-foreground: var(--background);
 }
 
+/*
+ * Red night mode, for what the tokens cannot reach: raster images go through the red-only filter in
+ * Layout.astro; selection, scrollbars, autofill and the focused date segment are re-coloured from tokens.
+ * Native input icons live in the browser's shadow DOM, where `url(#red-only)` does not resolve, so they are
+ * hidden instead: the date field keeps its own token-coloured icon (and the invisible picker button still
+ * works), and numbers are typed or stepped with the arrow keys.
+ */
+[data-theme="red"] img {
+  filter: url(#red-only);
+}
+
+[data-theme="red"] ::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+[data-theme="red"] input[type="number"] {
+  appearance: textfield;
+}
+
+[data-theme="red"] ::-webkit-inner-spin-button,
+[data-theme="red"] ::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Chrome paints the active date segment in the system highlight blue, and author CSS cannot target that one
+   segment (`::…-field:focus` never matches), so in red mode no segment is highlighted; the field's focus ring
+   still shows focus. */
+[data-theme="red"] input:focus::-webkit-datetime-edit-day-field,
+[data-theme="red"] input:focus::-webkit-datetime-edit-month-field,
+[data-theme="red"] input:focus::-webkit-datetime-edit-year-field {
+  background: transparent;
+  color: inherit;
+}
+
+[data-theme="red"] {
+  scrollbar-color: var(--border) var(--background);
+}
+
+[data-theme="red"] ::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+[data-theme="red"] input:-webkit-autofill {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

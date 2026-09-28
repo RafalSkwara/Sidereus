@@ -237,28 +237,28 @@ None. No database change. Existing `sidereus-theme` cookies (`dark`/`light`) sta
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the new palette guard and the updated `resolveTheme` cases
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
+- [x] 1.1 Unit tests pass, including the new palette guard and the updated `resolveTheme` cases — db48420
+- [x] 1.2 Type check passes — db48420
+- [x] 1.3 Lint passes — db48420
 
 #### Manual
 
-- [x] 1.4 Red cookie renders near-black and red on landing, sign-in, Tonight, log and gear (390/1280 px, EN/PL)
-- [x] 1.5 Dark and light render exactly as before
+- [x] 1.4 Red cookie renders near-black and red on landing, sign-in, Tonight, log and gear (390/1280 px, EN/PL) — db48420
+- [x] 1.5 Dark and light render exactly as before — db48420
 
 ### Phase 2: Switch segment, edge surfaces and verification
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including i18n parity for the new key and the colour guards
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Production build succeeds
-- [ ] 2.5 The red-night-mode e2e spec passes against a local production preview
-- [ ] 2.6 Full e2e suite still passes
+- [x] 2.1 Unit tests pass, including i18n parity for the new key and the colour guards
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Production build succeeds
+- [x] 2.5 The red-night-mode e2e spec passes against a local production preview
+- [x] 2.6 Full e2e suite still passes
 
 #### Manual
 
-- [ ] 2.7 Three-segment switch fits the top bar at 390 px, signed in and out, EN and PL
-- [ ] 2.8 Pixel audit: no green or blue channel above 8 in red-mode screenshots of every page, landing also in WebKit
-- [ ] 2.9 Dark and light still look as before on Tonight and landing
+- [x] 2.7 Three-segment switch fits the top bar at 390 px, signed in and out, EN and PL
+- [x] 2.8 Pixel audit: no green or blue channel above 8 in red-mode screenshots of every page, landing also in WebKit
+- [x] 2.9 Dark and light still look as before on Tonight and landing
