@@ -1,10 +1,10 @@
 ---
 change_id: seven-night-site-planner
 title: Seven night site planner
-status: impl_reviewed
+status: archived
 created: 2026-09-27
 updated: 2026-09-28
-archived_at: null
+archived_at: 2026-09-28T05:37:52Z
 ---
 
 ## Notes
