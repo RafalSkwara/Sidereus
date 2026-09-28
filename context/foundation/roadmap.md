@@ -3,7 +3,7 @@ project: Sidereus
 version: 1
 status: draft
 created: 2026-09-22
-updated: 2026-09-27
+updated: 2026-09-28
 prd_version: 2
 main_goal: speed
 top_blocker: time
@@ -48,7 +48,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-02 | tonight-verdict-and-ranking             | see tonight's verdict, dark window and up to five ranked Messier objects with eyepiece pair and reason for their site and telescope | F-01, S-01    | FR-010, FR-013, FR-014, FR-015, FR-019, NFR determinism, NFR fair-use, NFR performance, NFR dark default, NFR attribution | done        |
 | S-04 | no-go-and-no-darkness-explanations      | on a no-go or no-darkness night see why and when to try next; forecast outage degrades instead of erroring               | S-02, F-01    | US-02, FR-020, FR-023, NFR outage                                        | done        |
 | S-03 | first-run-onboarding                    | go from the public landing page through sign-up, location, sky picker and gear presets to Tonight in under a minute      | S-01, S-02, F-03 | US-01, FR-001, FR-004, FR-005, FR-006, NFR under-a-minute, Access Control | done |
-| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | in-progress |
+| S-05 | seven-night-site-planner                | see the next 7 nights for a site (verdict on 1-3, moon/darkness/cloud outlook on 4-7) and switch sites                   | S-01, S-02, F-03 | US-03, FR-011, FR-012, NFR daylight-saving, Success Criteria Secondary   | done |
 | S-06 | log-observation-from-ranking            | mark a ranked object observed with night and rating, and see it mildly deprioritized and tagged in later rankings        | S-02, F-03    | US-04, FR-016, FR-018                                                    | done |
 | S-07 | observation-log-management              | view, edit and delete log entries, add one manually for any Messier object, and read entries whose gear was deleted      | S-06          | FR-017, FR-022, FR-021                                                   | done |
 | S-08 | telescope-selector-and-empty-states     | pick the telescope the ranking is for when owning several; delete any gear and get honest empty states on Tonight        | S-01, S-02, F-03 | FR-019, FR-021                                                           | done |
@@ -193,7 +193,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Cut-order #1. Sequenced after the north star so it drops cleanly if the cut checkpoint fires; the data model is already multi-site from S-01, so only this view is at stake.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-06: Log an observation from the ranking
 
@@ -335,4 +335,5 @@ PRD Open Question 11 (database and authentication choice) is resolved by `contex
 - **S-03: a visitor can read what the product does on the public landing page, sign up, and be walked through setting a home site (browser geolocation or place-name search, coordinates rounded to about 1 km, site named "Home" with the default minimum altitude), picking sky quality from a plain-language Bortle picker, and accepting an editable telescope and eyepiece-kit preset, arriving at Tonight in under a minute of interaction without looking up a single number.** — Archived 2026-09-26 → `context/archive/2026-09-26-first-run-onboarding/`. Lesson: —.
 - **S-06: user can mark a ranked object as observed, confirming or editing the prefilled observing night, site and telescope and giving a 1-5 rating; later rankings mildly deprioritize objects rated 3 or above, never those rated 1-2, and a logged object that still ranks is tagged "seen N times - last [date]".** — Archived 2026-09-26 → `context/archive/2026-09-26-log-observation-from-ranking/`. Lesson: —.
 - **S-08: a user who owns two or more telescopes can pick which one the Tonight ranking is for, and the ranking names it; a user can delete any site, telescope or eyepiece at any time, and Tonight then shows an empty state linking to add one (no site or no telescope) or a ranking without eyepiece recommendations (no eyepieces).** — Archived 2026-09-27 → `context/archive/2026-09-27-telescope-selector-and-empty-states/`. Lesson: —.
+- **S-05: user can see the next 7 nights for a selected site, with a go / marginal / no-go verdict on nights 1-3 and moon, darkness and cloud outlook without a verdict on nights 4-7, and can switch the selected site to see the same view for it, with all times in the site's timezone and correct across the 2026-10-25 daylight-saving transition.** — Archived 2026-09-28 → `context/archive/2026-09-27-seven-night-site-planner/`. Lesson: "Tonight's content needs JavaScript: never plan no-JS behaviour inside the server island" (`context/foundation/lessons.md`).
 - **S-07: user can view, edit and delete their observation log entries, add an entry manually for any Messier object rather than only from the ranking, and read entries whose site or telescope has since been deleted.** — Archived 2026-09-27 → `context/archive/2026-09-27-observation-log-management/`. Lesson: —.
