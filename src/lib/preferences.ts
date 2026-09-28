@@ -2,7 +2,7 @@
 // Pure and island-safe: no astro:* or server-only imports, so the middleware and the
 // PreferenceSwitches island share the same names and rules.
 
-export const THEMES = ["dark", "light"] as const;
+export const THEMES = ["dark", "light", "red"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const LOCALES = ["en", "pl"] as const;
@@ -25,7 +25,7 @@ export function isLocale(value: unknown): value is Locale {
   return (LOCALES as readonly unknown[]).includes(value);
 }
 
-/** Dark is the default (PRD NFR); light is opt-in and never follows the OS setting. */
+/** Dark is the default (PRD NFR); light and red night mode (FR-024) are opt-in and never follow the OS setting. */
 export function resolveTheme(cookie?: string): Theme {
   return isTheme(cookie) ? cookie : DEFAULT_THEME;
 }

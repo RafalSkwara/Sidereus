@@ -11,7 +11,8 @@
 
 /*
  * Observatory palette (design board "A · Observatory").
- * Dark is the default; light ("daylight paper") is opt-in via data-theme="light".
+ * Dark is the default; light ("daylight paper") is opt-in via data-theme="light", and red night mode
+ * (S-10, FR-024) via data-theme="red".
  * shadcn token names are kept, so src/components/ui works unchanged:
  * --primary is the brand amber (call to action), --accent is shadcn's subtle hover surface.
  */
@@ -63,6 +64,36 @@
 
   --star: rgb(22 27 43 / 0.16);
   --star-accent: rgb(143 84 10 / 0.14);
+}
+
+/*
+ * Red night mode: only long-wavelength light keeps the observer's dark adaptation, so every colour here
+ * has zero green and zero blue (src/styles/red-theme.test.ts). Verdicts differ by brightness only; their
+ * text labels carry the meaning.
+ */
+[data-theme="red"] {
+  color-scheme: dark;
+
+  --background: #0a0000;
+  --surface: #170000;
+  --border: #3d0000;
+  --foreground: #f20000;
+  --muted-foreground: #bb0000;
+  --heading: #ff0000;
+
+  --primary: #ff0000;
+  --primary-foreground: #000000;
+  --primary-strong: #cc0000;
+
+  --go: #ff0000;
+  --marginal: #d60000;
+  --no-go: #bb0000;
+
+  --verdict-surface-alpha: 10%;
+  --verdict-border-alpha: 35%;
+
+  --star: rgb(255 0 0 / 0.35);
+  --star-accent: rgb(255 0 0 / 0.2);
 }
 
 /*
