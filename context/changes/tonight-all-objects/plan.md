@@ -277,13 +277,13 @@ None. No database change.
 
 #### Automated
 
-- [x] 3.1 Unit tests pass
-- [x] 3.2 Type check passes
-- [x] 3.3 Lint passes
-- [x] 3.4 Production build succeeds
-- [x] 3.5 Full e2e suite passes in parallel
+- [x] 3.1 Unit tests pass — f89f3b8
+- [x] 3.2 Type check passes — f89f3b8
+- [x] 3.3 Lint passes — f89f3b8
+- [x] 3.4 Production build succeeds — f89f3b8
+- [x] 3.5 Full e2e suite passes in parallel — f89f3b8
 
 #### Manual
 
-- [x] 3.6 Screenshot matrix: no overflow, red audit passes
+- [x] 3.6 Screenshot matrix: no overflow, red audit passes — f89f3b8
 - [ ] 3.7 The user reviews the page
