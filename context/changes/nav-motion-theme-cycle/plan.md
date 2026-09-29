@@ -191,28 +191,28 @@ The obsolete `sidereus-theme-return` cookie may linger in browsers that used the
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including `nextTheme` and i18n parity
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
-- [x] 1.4 Production build succeeds
-- [x] 1.5 `red-night-mode` e2e passes on a local preview
+- [x] 1.1 Unit tests pass, including `nextTheme` and i18n parity — dfbb2cb
+- [x] 1.2 Type check passes — dfbb2cb
+- [x] 1.3 Lint passes — dfbb2cb
+- [x] 1.4 Production build succeeds — dfbb2cb
+- [x] 1.5 `red-night-mode` e2e passes on a local preview — dfbb2cb
 
 #### Manual
 
-- [x] 1.6 Button icon and accessible name match the current theme in all themes and languages
+- [x] 1.6 Button icon and accessible name match the current theme in all themes and languages — dfbb2cb
 
 ### Phase 2: Sliding indicator and press feedback
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Production build succeeds
-- [ ] 2.5 Full e2e suite passes in parallel
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Production build succeeds
+- [x] 2.5 Full e2e suite passes in parallel
 
 #### Manual
 
-- [ ] 2.6 Mid-transition frames show the indicator between positions (desktop pill, phone tab bar with icon bounce)
-- [ ] 2.7 Reduced motion shows no intermediate frame; WebKit switches pages correctly
+- [x] 2.6 Mid-transition frames show the indicator between positions (desktop pill, phone tab bar with icon bounce)
+- [x] 2.7 Reduced motion shows no intermediate frame; WebKit switches pages correctly
 - [ ] 2.8 The user reviews the motion
