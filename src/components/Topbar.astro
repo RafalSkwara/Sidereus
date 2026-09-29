@@ -1,64 +1,60 @@
 ---
-import PreferenceSwitches from "@/components/PreferenceSwitches";
+import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
+import { RETURN_THEME_COOKIE, resolveReturnTheme } from "@/lib/preferences";
 
 const { user, theme, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
+const returnTheme = resolveReturnTheme(Astro.cookies.get(RETURN_THEME_COOKIE)?.value);
 
-const navLink = "transition-colors hover:text-heading";
-/** The link for the page being shown reads as the current one: heading ink, semibold (board A). */
+const navLink = "border-b-2 py-1.5 transition-colors hover:text-heading";
+/** The link for the page being shown reads as the current one: heading ink, semibold, amber underline (board A). */
 function navState(href: string) {
   const current = pathname === href || pathname.startsWith(`${href}/`);
   return {
-    class: current ? [navLink, "font-semibold text-heading"] : [navLink, "text-muted-foreground"],
+    class: current
+      ? [navLink, "border-primary font-semibold text-heading"]
+      : [navLink, "border-transparent text-muted-foreground"],
     "aria-current": current ? ("page" as const) : undefined,
   };
 }
-const tonightLink = navState("/tonight");
-const logLink = navState("/log");
-const gearLink = navState("/gear");
+const links = [
+  { href: "/tonight", label: m.nav.tonight },
+  { href: "/log", label: m.nav.log },
+  { href: "/gear", label: m.nav.myGear },
+].map((link) => ({ ...link, ...navState(link.href) }));
 const signinLink = navState("/auth/signin");
 ---
 
-<header class="flex items-center justify-between gap-4">
-  <a href="/" class="flex items-center gap-2.5 transition-opacity hover:opacity-90">
+<!--
+  One row at every width (top-nav-redesign). From `sm` the destinations sit inline here; on phones the tab
+  bar (TabBar.astro, rendered by each shell) carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
+-->
+<header class="flex h-16 items-center gap-4">
+  <a href="/" class="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90">
     <svg viewBox="0 0 24 24" class="size-[22px] text-primary" fill="currentColor" aria-hidden="true">
       <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
     </svg>
     <span class="font-display text-2xl font-semibold text-heading">{m.common.appName}</span>
   </a>
 
-  <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-3 text-[15px]">
-    {user ? (
-      <>
-        <a href="/tonight" class:list={tonightLink.class} aria-current={tonightLink["aria-current"]}>
-          {m.nav.tonight}
+  {user && (
+    <nav aria-label={m.nav.primary} class="mx-auto hidden items-center gap-6 text-[15px] sm:flex">
+      {links.map((link) => (
+        <a href={link.href} class:list={link.class} aria-current={link["aria-current"]}>
+          {link.label}
         </a>
-        <a href="/log" class:list={logLink.class} aria-current={logLink["aria-current"]}>
-          {m.nav.log}
-        </a>
-        <a href="/gear" class:list={gearLink.class} aria-current={gearLink["aria-current"]}>
-          {m.nav.myGear}
-        </a>
-        <span class="hidden items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm text-muted-foreground sm:inline-flex">
-          <span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>
-          {m.nav.welcome}
-        </span>
-        <form method="POST" action="/api/auth/signout">
-          <button type="submit" class="cursor-pointer text-muted-foreground transition-colors hover:text-heading">
-            {m.nav.signOut}
-          </button>
-        </form>
-        <PreferenceSwitches theme={theme} locale={locale} client:load />
-      </>
-    ) : (
-      <>
-        <a href="/auth/signin" class:list={signinLink.class} aria-current={signinLink["aria-current"]}>
-          {m.nav.signIn}
-        </a>
-        <PreferenceSwitches theme={theme} locale={locale} client:load />
-      </>
+      ))}
+    </nav>
+  )}
+
+  <div class="ml-auto flex items-center gap-3 text-[15px]">
+    {!user && (
+      <a href="/auth/signin" class:list={signinLink.class} aria-current={signinLink["aria-current"]}>
+        {m.nav.signIn}
+      </a>
     )}
+    <TopbarControls theme={theme} returnTheme={returnTheme} locale={locale} email={user?.email ?? null} client:load />
   </div>
 </header>

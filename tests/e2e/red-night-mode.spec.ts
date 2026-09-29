@@ -1,28 +1,30 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { THEME_COOKIE } from "@/lib/preferences";
+import { RETURN_THEME_COOKIE, THEME_COOKIE } from "@/lib/preferences";
 import { waitForHydration } from "./helpers";
 
 /*
- * Red night mode (S-10, FR-024): the third theme segment turns the page red at once, is remembered across
- * reloads, and emits no green or blue. Runs on the public landing page, so it signs up nobody.
+ * Red night mode (S-10, FR-024) from the top bar (top-nav-redesign): the eye button turns the page red at once,
+ * red is remembered across reloads and emits no green or blue, and the eye turns it off again back to whichever
+ * day theme was in use. Runs on the public landing page, so it signs up nobody.
  */
 
 const theme = (page: Page) => page.evaluate(() => document.documentElement.dataset.theme);
+const cookie = async (page: Page, name: string) => (await page.context().cookies()).find((c) => c.name === name)?.value;
 
-test("red night mode is chosen from the top bar, survives a reload and switches back", async ({ page, context }) => {
+test("the eye turns red night mode on and off, back to the theme in use before", async ({ page }) => {
   await page.goto("/");
-  // The switch is a React island: wait until React has hydrated the theme group.
-  await waitForHydration(page, `[role="group"][aria-label="${en.preferences.theme}"]`);
+  // The controls are a React island: wait until React has hydrated the settings button.
+  await waitForHydration(page, `button[aria-label="${en.nav.settings}"]`);
 
-  const redSegment = page.getByRole("button", { name: en.preferences.red });
-  await redSegment.click();
-
+  // The eye comes first in the header; the settings panel's Red segment only exists while the panel is open.
+  const eye = page.getByRole("button", { name: en.preferences.red }).first();
+  await eye.click();
   expect(await theme(page)).toBe("red");
-  await expect(redSegment).toHaveAttribute("aria-pressed", "true");
-  const cookie = (await context.cookies()).find((c) => c.name === THEME_COOKIE);
-  expect(cookie?.value).toBe("red");
+  await expect(eye).toHaveAttribute("aria-pressed", "true");
+  expect(await cookie(page, THEME_COOKIE)).toBe("red");
+  expect(await cookie(page, RETURN_THEME_COOKIE)).toBe("dark");
 
   await page.reload();
   expect(await theme(page)).toBe("red");
@@ -38,6 +40,23 @@ test("red night mode is chosen from the top bar, survives a reload and switches 
     .evaluate((img) => getComputedStyle(img).filter);
   expect(imageFilter).toContain("red-only");
 
-  await page.getByRole("button", { name: en.preferences.dark }).click();
+  await waitForHydration(page, `button[aria-label="${en.nav.settings}"]`);
+  await eye.click();
   expect(await theme(page)).toBe("dark");
+
+  // Choose light in settings: the eye now returns to light.
+  const settings = page.getByRole("button", { name: en.nav.settings });
+  await settings.click();
+  const panel = page.getByRole("dialog", { name: en.nav.settings });
+  await expect(panel).toBeVisible();
+  await panel.getByRole("button", { name: en.preferences.light }).click();
+  expect(await theme(page)).toBe("light");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(settings).toBeFocused();
+
+  await eye.click();
+  expect(await theme(page)).toBe("red");
+  await eye.click();
+  expect(await theme(page)).toBe("light");
 });
