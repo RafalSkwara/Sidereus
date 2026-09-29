@@ -249,29 +249,29 @@ None. No database change.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the new ranking and all-objects tests
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
-- [x] 1.4 Production build succeeds
-- [x] 1.5 The existing Tonight e2e specs still pass on a local preview
+- [x] 1.1 Unit tests pass, including the new ranking and all-objects tests — 08f01a8
+- [x] 1.2 Type check passes — 08f01a8
+- [x] 1.3 Lint passes — 08f01a8
+- [x] 1.4 Production build succeeds — 08f01a8
+- [x] 1.5 The existing Tonight e2e specs still pass on a local preview — 08f01a8
 
 #### Manual
 
-- [x] 1.6 Tonight renders the same top 5 before and after
+- [x] 1.6 Tonight renders the same top 5 before and after — 08f01a8
 
 ### Phase 2: The all-objects page
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass (i18n parity)
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Production build succeeds
+- [x] 2.1 Unit tests pass (i18n parity)
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Production build succeeds
 
 #### Manual
 
-- [ ] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works
-- [ ] 2.6 A no-go night shows the explanation and the back link
+- [x] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works
+- [x] 2.6 A no-go night shows the explanation and the back link
 
 ### Phase 3: Links from Tonight and verification
 

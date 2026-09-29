@@ -1,0 +1,57 @@
+---
+// One object on the all-objects page (tonight-all-objects): a compact line that expands into the same details as
+// Tonight's card. Native <details>, so opening a row needs no script of its own.
+import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
+import { getMessages } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
+import type { TonightEntry } from "@/lib/tonight/build";
+
+interface Props {
+  entry: TonightEntry;
+  logHref: string;
+}
+
+const { entry, logHref } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).tonight.object;
+const commonName = localCommonName(entry.messier, entry.commonName, locale);
+---
+
+<li data-best-at={entry.bestAt} class="rounded-xl border border-border bg-surface">
+  <details class="group">
+    <summary
+      class:list={[
+        "flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-xl px-4 py-2.5 [&::-webkit-details-marker]:hidden",
+        "transition-colors hover:bg-accent",
+        "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+      ]}
+    >
+      <span class="w-7 shrink-0 text-right font-mono text-sm text-muted-foreground">{entry.rank}.</span>
+      <span class="min-w-0 flex-1">
+        <span class="font-display text-lg font-semibold text-heading">{entry.id}</span>
+        {commonName && <span class="text-sm text-foreground"> · {commonName}</span>}
+        {entry.seenText && <span class="block text-xs text-muted-foreground">{entry.seenText}</span>}
+      </span>
+      <span class="shrink-0 text-right font-mono text-sm text-heading">
+        {entry.bestTime}
+        <span class="block text-xs text-muted-foreground">{entry.bestDirection}</span>
+      </span>
+      <svg
+        viewBox="0 0 24 24"
+        class="size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m6 9 6 6 6-6"></path>
+      </svg>
+    </summary>
+    <div class="px-4 pb-4">
+      <p class="text-sm text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</p>
+      <ObjectDetails entry={entry} logHref={logHref} />
+    </div>
+  </details>
+</li>

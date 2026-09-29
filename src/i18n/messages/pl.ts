@@ -474,6 +474,30 @@ export const pl = {
       noDarkness: "dziś w nocy nie robi się wystarczająco ciemno",
     },
 
+    all: {
+      title: "Wszystkie obiekty",
+      heading: {
+        one: (p) => `${p.count} obiekt wart dziś uwagi`,
+        few: (p) => `Wszystkie ${p.count} obiekty warte dziś uwagi`,
+        many: (p) => `Wszystkie ${p.count} obiektów wartych dziś uwagi`,
+        other: (p) => `Wszystkie ${p.count} obiektu wartego dziś uwagi`,
+      },
+      back: "Dziś w nocy",
+      sortLabel: "Kolejność",
+      byRank: "Według oceny",
+      byTime: "Według najlepszej pory",
+      sortHintRank: "Najlepsze najpierw, jak w widoku Dziś w nocy. Otwórz wiersz, aby zobaczyć szczegóły.",
+      sortHintTime: "W kolejności, w jakiej są dziś najlepiej widoczne. Otwórz wiersz, aby zobaczyć szczegóły.",
+      seeAll: "Zobacz wszystkie",
+      seeAllCount: {
+        one: (p) => `Zobacz ${p.count} obiekt`,
+        few: (p) => `Zobacz wszystkie ${p.count} obiekty`,
+        many: (p) => `Zobacz wszystkie ${p.count} obiektów`,
+        other: (p) => `Zobacz wszystkie ${p.count} obiektu`,
+      },
+      empty: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma czego wyświetlić.",
+    },
+
     cleared: {
       none: "Dziś żaden obiekt nie jest wart uwagi",
       count: {
