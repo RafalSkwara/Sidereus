@@ -52,6 +52,12 @@ export interface RankInput<
    * is ordered by its score less `LOG_PENALTY`, but still clears the bar on its own score (FR-018).
    */
   seen?: ReadonlyMap<number, SeenSummary>;
+  /**
+   * How many cleared objects get full entries (eyepiece pair, reasons); `clearedCount` always counts them all.
+   * Defaults to `MAX_RANKED_OBJECTS` (Tonight's top five); `Infinity` lists every cleared object
+   * (tonight-all-objects). Reasons compare each entry against the entries listed.
+   */
+  limit?: number;
 }
 
 export interface RankedEntry<
@@ -78,7 +84,7 @@ export interface Ranking<
 > {
   /** How many objects cleared `MIN_OBJECT_SCORE`, including those beyond the listed ones. */
   clearedCount: number;
-  /** The first `MAX_RANKED_OBJECTS` cleared objects, best first. */
+  /** The first `limit` cleared objects (default `MAX_RANKED_OBJECTS`), best first. */
   entries: RankedEntry<O, E>[];
   telescopeId: string;
 }
@@ -143,6 +149,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
   input: RankInput<O, E>,
 ): Ranking<O, E> {
   const { site, bortle, minAltitudeDeg, darkWindow, telescope, eyepieces, catalogue, seen } = input;
+  const limit = input.limit ?? MAX_RANKED_OBJECTS;
   const interval = { start: darkWindow.start, end: darkWindow.end };
   const tracks = objectTracks(site, interval, catalogue, DEFAULT_TRACK_STEP_MINUTES);
   const moon = moonTrack(site, interval, DEFAULT_TRACK_STEP_MINUTES);
@@ -171,7 +178,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
   scored.sort((a, b) => b.rankScore - a.rankScore || a.object.messier - b.object.messier);
 
   const cleared = scored.filter((s) => s.score.total >= MIN_OBJECT_SCORE);
-  const listed = cleared.slice(0, MAX_RANKED_OBJECTS);
+  const listed = cleared.slice(0, limit);
   const reasons = reasonComponents(listed.map((s) => s.score.components));
   const entries = listed.map(({ object, score, seen: seenSummary, rankScore }, i): RankedEntry<O, E> => ({
     object,
