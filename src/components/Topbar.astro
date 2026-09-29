@@ -3,12 +3,10 @@ import NavIcon from "@/components/NavIcon.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
 import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
-import { RETURN_THEME_COOKIE, resolveReturnTheme } from "@/lib/preferences";
 
 const { user, theme, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
-const returnTheme = resolveReturnTheme(Astro.cookies.get(RETURN_THEME_COOKIE)?.value);
 const links = NAV_ITEMS.map((item) => ({
   ...item,
   text: m.nav[item.label],
@@ -39,10 +37,11 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
             aria-current={link.current ? "page" : undefined}
             class:list={[
               "group inline-flex h-[34px] items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold",
-              "transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none",
+              "transition-[background-color,color,scale] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none",
               "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+              // The current segment is the indicator that glides to the next page's segment (global.css).
               link.current
-                ? "bg-selected text-selected-foreground"
+                ? "bg-selected text-selected-foreground [view-transition-name:nav-current]"
                 : "text-muted-foreground hover:bg-accent hover:text-heading",
             ]}
           >
@@ -70,6 +69,6 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
         {m.nav.signIn}
       </a>
     )}
-    <TopbarControls theme={theme} returnTheme={returnTheme} locale={locale} email={user?.email ?? null} client:load />
+    <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} client:load />
   </div>
 </header>

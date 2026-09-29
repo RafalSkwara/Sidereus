@@ -32,12 +32,29 @@ const tabs = NAV_ITEMS.map((item) => ({
               href={tab.href}
               aria-current={tab.current ? "page" : undefined}
               class:list={[
-                "flex h-full flex-col items-center justify-center gap-1 text-xs transition-colors",
+                "relative flex h-full flex-col items-center justify-center gap-1 text-xs",
+                "transition-[color,scale] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none",
                 "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
                 tab.current ? "font-semibold text-heading" : "text-muted-foreground hover:text-heading",
               ]}
             >
-              <NavIcon name={tab.icon} class:list={["size-5", tab.current && "text-primary"]} />
+              {/* The current tab's top bar glides to the next page's tab; its icon bounces in (global.css). */}
+              {tab.current && (
+                <span
+                  class="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary [view-transition-name:tab-current]"
+                  aria-hidden="true"
+                ></span>
+              )}
+              <span
+                class="inline-flex"
+                style={
+                  tab.current
+                    ? `view-transition-name: tab-icon-${tab.icon}; view-transition-class: tab-icon`
+                    : undefined
+                }
+              >
+                <NavIcon name={tab.icon} class:list={["size-5", tab.current && "text-primary"]} />
+              </span>
               {tab.text}
             </a>
           </li>

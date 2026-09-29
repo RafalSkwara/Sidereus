@@ -49,6 +49,8 @@ export const en = {
     darkShort: "Dark",
     lightShort: "Light",
     redShort: "Red",
+    /** Theme button: the current theme and the one a tap switches to (short names). */
+    cycle: (p: { current: string; next: string }) => `Theme: ${p.current}. Switch to ${p.next}.`,
     language: "Language",
     english: "English",
     polish: "Polski",

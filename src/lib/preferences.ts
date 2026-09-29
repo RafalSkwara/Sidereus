@@ -9,8 +9,6 @@ export const LOCALES = ["en", "pl"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const THEME_COOKIE = "sidereus-theme";
-/** The day theme to go back to when red night mode is switched off (top-bar eye button). */
-export const RETURN_THEME_COOKIE = "sidereus-theme-return";
 export const LOCALE_COOKIE = "sidereus-lang";
 
 /** One year, in seconds. */
@@ -32,12 +30,9 @@ export function resolveTheme(cookie?: string): Theme {
   return isTheme(cookie) ? cookie : DEFAULT_THEME;
 }
 
-/** The themes red night mode returns to. */
-export type ReturnTheme = Exclude<Theme, "red">;
-
-/** Light only when remembered as light; anything else, red included, returns to the dark default. */
-export function resolveReturnTheme(cookie?: string): ReturnTheme {
-  return cookie === "light" ? "light" : "dark";
+/** The top-bar theme button's next theme: dark → light → red → dark, the order of `THEMES`. */
+export function nextTheme(theme: Theme): Theme {
+  return THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length] ?? DEFAULT_THEME;
 }
 
 /**
@@ -69,9 +64,6 @@ export function resolveLocale(cookie?: string, acceptLanguage?: string | null): 
 }
 
 /** `document.cookie` assignment string for a preference cookie. */
-export function preferenceCookie(
-  name: typeof THEME_COOKIE | typeof RETURN_THEME_COOKIE | typeof LOCALE_COOKIE,
-  value: string,
-): string {
+export function preferenceCookie(name: typeof THEME_COOKIE | typeof LOCALE_COOKIE, value: string): string {
   return `${name}=${encodeURIComponent(value)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE}; SameSite=Lax`;
 }
