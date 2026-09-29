@@ -322,20 +322,20 @@ Existing theme cookies keep working. The new return cookie defaults to dark when
 
 - [x] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar — eac222c
 - [x] 2.7 Red-mode pixel audit passes, sheet open included — eac222c
-- [x] 2.8 User reviews the before/after top bars on the PR
+- [x] 2.8 User reviews the before/after top bars on the PR — 04ee9b2
 
 ### Phase 3: Wide-screen navigation polish (from the user's review)
 
 #### Automated
 
-- [x] 3.1 Unit tests pass
-- [x] 3.2 Type check passes
-- [x] 3.3 Lint passes
-- [x] 3.4 Production build succeeds
-- [x] 3.5 Full e2e suite passes in parallel
+- [x] 3.1 Unit tests pass — 04ee9b2
+- [x] 3.2 Type check passes — 04ee9b2
+- [x] 3.3 Lint passes — 04ee9b2
+- [x] 3.4 Production build succeeds — 04ee9b2
+- [x] 3.5 Full e2e suite passes in parallel — 04ee9b2
 
 #### Manual
 
-- [x] 3.6 Pill right-aligned, button height, no overflow at 768/1024/1280 across languages and themes; tabs below 768
-- [x] 3.7 Hover animates in about 150 ms and respects reduced motion
+- [x] 3.6 Pill right-aligned, button height, no overflow at 768/1024/1280 across languages and themes; tabs below 768 — 04ee9b2
+- [x] 3.7 Hover animates in about 150 ms and respects reduced motion — 04ee9b2
 - [ ] 3.8 The user reviews the updated bar
