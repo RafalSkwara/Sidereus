@@ -1,7 +1,7 @@
 ---
 change_id: top-nav-redesign
 title: Rethink the top navigation so it fits on one line and works on mobile
-status: implementing
+status: impl_reviewed
 created: 2026-09-29
 updated: 2026-09-29
 archived_at: null

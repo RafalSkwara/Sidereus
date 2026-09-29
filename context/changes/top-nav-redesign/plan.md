@@ -262,14 +262,14 @@ Existing theme cookies keep working. The new return cookie defaults to dark when
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 Production build succeeds
-- [x] 2.5 Full e2e suite passes in parallel
+- [x] 2.1 Unit tests pass — eac222c
+- [x] 2.2 Type check passes — eac222c
+- [x] 2.3 Lint passes — eac222c
+- [x] 2.4 Production build succeeds — eac222c
+- [x] 2.5 Full e2e suite passes in parallel — eac222c
 
 #### Manual
 
-- [x] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar
-- [x] 2.7 Red-mode pixel audit passes, sheet open included
+- [x] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar — eac222c
+- [x] 2.7 Red-mode pixel audit passes, sheet open included — eac222c
 - [ ] 2.8 User reviews the before/after top bars on the PR
