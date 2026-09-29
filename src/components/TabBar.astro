@@ -1,27 +1,29 @@
 ---
+import NavIcon from "@/components/NavIcon.astro";
 import { getMessages } from "@/i18n";
+import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
 
-// Phone navigation (top-nav-redesign, board direction A): below `sm` the three destinations sit in a bottom tab
-// bar, in thumb reach at the telescope; from `sm` the top bar's inline links take over. Signed in only, and not
-// during onboarding, where there is one way forward. The in-flow spacer keeps page content clear of the fixed bar.
+// Phone and small-tablet navigation (top-nav-redesign, board direction A): below `md` the three destinations sit in
+// a bottom tab bar, in thumb reach at the telescope; from `md` the top bar's segmented pill takes over. Signed in
+// only, and not during onboarding, where there is one way forward. The in-flow spacer keeps page content clear of
+// the fixed bar.
 const { user, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
-const show = user !== null && !(pathname === "/onboarding" || pathname.startsWith("/onboarding/"));
-
-const tabs = [
-  { href: "/tonight", label: m.nav.tonight, icon: "tonight" },
-  { href: "/log", label: m.nav.log, icon: "log" },
-  { href: "/gear", label: m.nav.myGear, icon: "gear" },
-].map((tab) => ({ ...tab, current: pathname === tab.href || pathname.startsWith(`${tab.href}/`) }));
+const show = user !== null && !isCurrentPage(pathname, "/onboarding");
+const tabs = NAV_ITEMS.map((item) => ({
+  ...item,
+  text: m.nav[item.label],
+  current: isCurrentPage(pathname, item.href),
+}));
 ---
 
 {show && (
   <>
-    <div class="h-[calc(4rem+env(safe-area-inset-bottom))] sm:hidden" aria-hidden="true"></div>
+    <div class="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true"></div>
     <nav
       aria-label={m.nav.primary}
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul class="mx-auto grid h-16 max-w-md grid-cols-3">
         {tabs.map((tab) => (
@@ -35,36 +37,8 @@ const tabs = [
                 tab.current ? "font-semibold text-heading" : "text-muted-foreground hover:text-heading",
               ]}
             >
-              <svg
-                viewBox="0 0 24 24"
-                class:list={["size-5", tab.current && "text-primary"]}
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                {tab.icon === "tonight" && (
-                  <>
-                    <path d="M17 14.5A6.5 6.5 0 1 1 9.5 7a5 5 0 0 0 7.5 7.5Z" />
-                    <path d="M18 3v3M16.5 4.5h3" />
-                  </>
-                )}
-                {tab.icon === "log" && (
-                  <>
-                    <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z" />
-                    <path d="M9 9h6M9 13h4" />
-                  </>
-                )}
-                {tab.icon === "gear" && (
-                  <>
-                    <path d="m4 11 12-6 2 4-12 6Z" />
-                    <path d="m18 9 2-1M10 14l-3 7M11 14l3 7" />
-                  </>
-                )}
-              </svg>
-              {tab.label}
+              <NavIcon name={tab.icon} class:list={["size-5", tab.current && "text-primary"]} />
+              {tab.text}
             </a>
           </li>
         ))}

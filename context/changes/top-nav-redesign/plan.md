@@ -205,6 +205,56 @@ Below `sm` the destinations move to a bottom tab bar, and the whole layout is ve
 
 ---
 
+## Phase 3: Wide-screen navigation polish (from the user's review)
+
+### Overview
+
+The user's review of the built bar (row 2.8, 2026-09-29): the inline Tonight / Log / My gear links "look like they have been thrown there randomly", read as plain links (too weak for their role), and should sit on the right next to the eye and settings buttons, with a short hover animation. User's pick: a **segmented pill**.
+
+### Changes Required:
+
+#### 1. Shared navigation icons
+
+**File**: `src/components/NavIcon.astro` (new), `src/components/TabBar.astro`
+
+**Intent**: The pill and the phone tab bar use the same three icons, so they live in one component instead of being duplicated.
+
+**Contract**: `<NavIcon name="tonight" | "log" | "gear" class? />` renders the inline SVG (`currentColor`, `aria-hidden`); `TabBar.astro` uses it.
+
+#### 2. Segmented pill, right-aligned
+
+**File**: `src/components/Topbar.astro`
+
+**Intent**: The destinations become one rounded, bordered group of icon + label segments, placed in the right-hand cluster just before the eye and settings buttons. The current page is a filled segment (`bg-selected`/`text-selected-foreground`, like the theme control). On hover the other segments get a soft tint fade (`hover:bg-accent`, `hover:text-heading`) and their icon lifts 1 px, in 150 ms, with none of it under `prefers-reduced-motion`. The group is exactly as tall as the 40 px round buttons.
+
+**Contract**: `<nav aria-label={m.nav.primary}>` stays; `aria-current="page"` stays on the current segment; brand on the left, then `ml-auto` cluster `[pill][eye][settings]`.
+
+#### 3. Breakpoint
+
+**File**: `src/components/Topbar.astro`, `src/components/TabBar.astro`, `CLAUDE.md`
+
+**Intent**: With icons and labels, the Polish row needs about 620 px, which doesn't fit at 640 px. So the pill shows from `md` (768 px), and the tab bar covers everything below. The settings sheet/panel switch stays at `sm`.
+
+**Contract**: pill `hidden md:flex`; tab bar and its spacer `md:hidden`; CLAUDE.md's navigation note says `md`.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Unit tests pass: `npm test`
+- Type check passes: `npx astro sync && npx astro check`
+- Lint passes: `npm run lint`
+- Production build succeeds: `npm run build`
+- Full e2e suite passes in parallel: `BASE_URL=http://localhost:4321 npx playwright test --workers 5`
+
+#### Manual Verification:
+
+- At 768, 1024 and 1280 px, EN and PL, dark/light/red: the pill is right-aligned next to the eye and settings, the same height as them, no overflow, current page filled. At 390 and 767 px: tab bar, no pill.
+- Hover animates in about 150 ms (tint + icon lift) and is off with reduced motion.
+- The user reviews the updated bar.
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:
@@ -272,4 +322,20 @@ Existing theme cookies keep working. The new return cookie defaults to dark when
 
 - [x] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar — eac222c
 - [x] 2.7 Red-mode pixel audit passes, sheet open included — eac222c
-- [ ] 2.8 User reviews the before/after top bars on the PR
+- [x] 2.8 User reviews the before/after top bars on the PR — 04ee9b2
+
+### Phase 3: Wide-screen navigation polish (from the user's review)
+
+#### Automated
+
+- [x] 3.1 Unit tests pass — 04ee9b2
+- [x] 3.2 Type check passes — 04ee9b2
+- [x] 3.3 Lint passes — 04ee9b2
+- [x] 3.4 Production build succeeds — 04ee9b2
+- [x] 3.5 Full e2e suite passes in parallel — 04ee9b2
+
+#### Manual
+
+- [x] 3.6 Pill right-aligned, button height, no overflow at 768/1024/1280 across languages and themes; tabs below 768 — 04ee9b2
+- [x] 3.7 Hover animates in about 150 ms and respects reduced motion — 04ee9b2
+- [ ] 3.8 The user reviews the updated bar
