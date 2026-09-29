@@ -3,12 +3,10 @@ import NavIcon from "@/components/NavIcon.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
 import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
-import { RETURN_THEME_COOKIE, resolveReturnTheme } from "@/lib/preferences";
 
 const { user, theme, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
-const returnTheme = resolveReturnTheme(Astro.cookies.get(RETURN_THEME_COOKIE)?.value);
 const links = NAV_ITEMS.map((item) => ({
   ...item,
   text: m.nav[item.label],
@@ -70,6 +68,6 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
         {m.nav.signIn}
       </a>
     )}
-    <TopbarControls theme={theme} returnTheme={returnTheme} locale={locale} email={user?.email ?? null} client:load />
+    <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} client:load />
   </div>
 </header>

@@ -1,20 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { getMessages } from "@/i18n";
-import {
-  LOCALE_COOKIE,
-  RETURN_THEME_COOKIE,
-  THEME_COOKIE,
-  preferenceCookie,
-  type Locale,
-  type ReturnTheme,
-  type Theme,
-} from "@/lib/preferences";
+import { LOCALE_COOKIE, THEME_COOKIE, nextTheme, preferenceCookie, type Locale, type Theme } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 interface TopbarControlsProps {
   theme: Theme;
-  /** The day theme the eye button returns to when red night mode is switched off. */
-  returnTheme: ReturnTheme;
   locale: Locale;
   /** The signed-in user's email, or `null` when signed out (no account section, no sign-out). */
   email: string | null;
@@ -101,36 +91,20 @@ function reloadInLocale(next: Locale) {
 }
 
 /**
- * The stateful end of the top bar: the one-tap red-mode eye and the settings popover (who is signed in, theme,
- * language, sign out). One island, so the eye and the theme control never disagree. The server already rendered
+ * The stateful end of the top bar: the theme button (cycles dark → light → red, shows the current theme) and the
+ * settings popover (who is signed in, theme, language, sign out). One island, so the button and the settings theme
+ * control never disagree. The server already rendered
  * the resolved theme on <html data-theme>; this island mirrors choices into the attribute and the cookies.
  */
-export default function TopbarControls({
-  theme: initialTheme,
-  returnTheme: initialReturnTheme,
-  locale,
-  email,
-}: TopbarControlsProps) {
+export default function TopbarControls({ theme: initialTheme, locale, email }: TopbarControlsProps) {
   const m = getMessages(locale);
   const p = m.preferences;
   const [theme, setTheme] = useState<Theme>(initialTheme);
-  const [returnTheme, setReturnTheme] = useState<ReturnTheme>(initialReturnTheme);
   // Set once a language is picked: the reload can take a moment, so the tap is acknowledged at once.
   const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
 
-  function rememberReturnTheme(next: ReturnTheme) {
-    document.cookie = preferenceCookie(RETURN_THEME_COOKIE, next);
-    setReturnTheme(next);
-  }
-
   function chooseTheme(next: Theme) {
     if (next === theme) return;
-    // Red remembers the day theme it replaced; choosing a day theme makes it the one red returns to.
-    if (next === "red") {
-      if (theme !== "red") rememberReturnTheme(theme);
-    } else {
-      rememberReturnTheme(next);
-    }
     document.documentElement.dataset.theme = next;
     document.cookie = preferenceCookie(THEME_COOKIE, next);
     setTheme(next);
@@ -147,6 +121,8 @@ export default function TopbarControls({
     { value: "light", label: p.light, short: p.lightShort, icon: <SunIcon /> },
     { value: "red", label: p.red, short: p.redShort, icon: <RedEyeIcon /> },
   ];
+  const current = themeSegments.find((segment) => segment.value === theme) ?? themeSegments[0];
+  const upcoming = themeSegments.find((segment) => segment.value === nextTheme(theme)) ?? themeSegments[0];
   const localeSegments: { value: Locale; text: string }[] = [
     { value: "en", text: p.english },
     { value: "pl", text: p.polish },
@@ -156,14 +132,14 @@ export default function TopbarControls({
     <div className="flex items-center gap-2">
       <button
         type="button"
-        aria-label={p.red}
-        aria-pressed={theme === "red"}
+        aria-label={p.cycle({ current: current.short, next: upcoming.short })}
+        title={p.cycle({ current: current.short, next: upcoming.short })}
         className={iconButton}
         onClick={() => {
-          chooseTheme(theme === "red" ? returnTheme : "red");
+          chooseTheme(nextTheme(theme));
         }}
       >
-        <RedEyeIcon />
+        {current.icon}
       </button>
       <button
         type="button"

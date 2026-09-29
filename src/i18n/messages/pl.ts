@@ -38,6 +38,8 @@ export const pl = {
     darkShort: "Ciemny",
     lightShort: "Jasny",
     redShort: "Czerwony",
+    cycle: (p: { current: string; next: string }) =>
+      `Motyw: ${p.current.toLocaleLowerCase("pl")}. Przełącz na ${p.next.toLocaleLowerCase("pl")}.`,
     language: "Język",
     english: "English",
     polish: "Polski",
