@@ -43,6 +43,12 @@ export async function waitForHydration(page: Page, selector: string) {
     .toBe(true);
 }
 
+/** Signs out through the top bar's settings popover (Sign out is no longer in the bar itself). */
+export async function signOut(page: Page) {
+  await page.getByRole("button", { name: en.nav.settings }).click();
+  await page.getByRole("button", { name: en.nav.signOut }).click();
+}
+
 /** Answers Open-Meteo's place search with Madrid. */
 export async function stubPlaceSearch(page: Page) {
   await page.route("https://geocoding-api.open-meteo.com/**", (route) =>

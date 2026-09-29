@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { LOCALE_COOKIE, THEME_COOKIE, preferenceCookie, resolveLocale, resolveTheme } from "./preferences";
+import {
+  LOCALE_COOKIE,
+  RETURN_THEME_COOKIE,
+  THEME_COOKIE,
+  preferenceCookie,
+  resolveLocale,
+  resolveReturnTheme,
+  resolveTheme,
+} from "./preferences";
 
 describe("resolveTheme", () => {
   it("returns a valid cookie value", () => {
@@ -14,6 +22,23 @@ describe("resolveTheme", () => {
     expect(resolveTheme("LIGHT")).toBe("dark");
     expect(resolveTheme("RED")).toBe("dark");
     expect(resolveTheme("sepia")).toBe("dark");
+  });
+});
+
+describe("resolveReturnTheme", () => {
+  it("returns to the day theme the user had before red mode", () => {
+    expect(resolveReturnTheme("light")).toBe("light");
+    expect(resolveReturnTheme("dark")).toBe("dark");
+  });
+
+  it("never returns to red, and defaults to dark", () => {
+    expect(resolveReturnTheme("red")).toBe("dark");
+    expect(resolveReturnTheme()).toBe("dark");
+    expect(resolveReturnTheme("LIGHT")).toBe("dark");
+  });
+
+  it("is remembered in its own device cookie", () => {
+    expect(preferenceCookie(RETURN_THEME_COOKIE, "light")).toContain("sidereus-theme-return=light");
   });
 });
 

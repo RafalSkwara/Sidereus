@@ -2,7 +2,7 @@
 // Dev-only visual reference for the Observatory theme tokens (F-03). Not linked from anywhere and not gated:
 // it 404s outside `npm run dev`. Build it from token classes only, so it shows exactly what the tokens give.
 import Layout from "@/layouts/Layout.astro";
-import PreferenceSwitches from "@/components/PreferenceSwitches";
+import TopbarControls from "@/components/TopbarControls";
 import { Button } from "@/components/ui/button";
 
 const enabled = import.meta.env.DEV;
@@ -112,7 +112,7 @@ const inputClass =
           <nav class="flex flex-wrap items-center justify-end gap-4 text-[15px]" aria-label="Sample navigation">
             <span class="font-semibold text-heading">Tonight</span>
             <span class="text-muted-foreground">My gear</span>
-            <PreferenceSwitches theme={theme} locale={locale} client:load />
+            <TopbarControls theme={theme} returnTheme="dark" locale={locale} email={null} client:load />
           </nav>
         </header>
 

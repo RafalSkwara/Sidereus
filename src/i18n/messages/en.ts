@@ -34,9 +34,11 @@ export const en = {
     tonight: "Tonight",
     log: "Log",
     myGear: "My gear",
-    welcome: "Welcome!",
     signIn: "Sign in",
     signOut: "Sign out",
+    settings: "Settings",
+    primary: "Main",
+    signedInAs: "Signed in as",
   },
 
   preferences: {
@@ -44,6 +46,9 @@ export const en = {
     dark: "Dark theme",
     light: "Light theme",
     red: "Red night mode",
+    darkShort: "Dark",
+    lightShort: "Light",
+    redShort: "Red",
     language: "Language",
     english: "English",
     polish: "Polski",

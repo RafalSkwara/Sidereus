@@ -23,9 +23,11 @@ export const pl = {
     tonight: "Dziś w nocy",
     log: "Dziennik",
     myGear: "Mój sprzęt",
-    welcome: "Witaj!",
     signIn: "Zaloguj się",
     signOut: "Wyloguj się",
+    settings: "Ustawienia",
+    primary: "Główna nawigacja",
+    signedInAs: "Zalogowano jako",
   },
 
   preferences: {
@@ -33,6 +35,9 @@ export const pl = {
     dark: "Ciemny motyw",
     light: "Jasny motyw",
     red: "Czerwony tryb nocny",
+    darkShort: "Ciemny",
+    lightShort: "Jasny",
+    redShort: "Czerwony",
     language: "Język",
     english: "English",
     polish: "Polski",
