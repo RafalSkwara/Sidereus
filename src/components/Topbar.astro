@@ -28,8 +28,8 @@ const signinLink = navState("/auth/signin");
 ---
 
 <!--
-  One row at every width (top-nav-redesign). Destinations sit inline here; on phones the tab bar
-  (TabBar.astro) carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
+  One row at every width (top-nav-redesign). From `sm` the destinations sit inline here; on phones the tab
+  bar (TabBar.astro, rendered by each shell) carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
 -->
 <header class="flex h-16 items-center gap-4">
   <a href="/" class="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90">
@@ -40,7 +40,7 @@ const signinLink = navState("/auth/signin");
   </a>
 
   {user && (
-    <nav aria-label={m.nav.primary} class="mx-auto flex items-center gap-6 text-[15px]">
+    <nav aria-label={m.nav.primary} class="mx-auto hidden items-center gap-6 text-[15px] sm:flex">
       {links.map((link) => (
         <a href={link.href} class:list={link.class} aria-current={link["aria-current"]}>
           {link.label}

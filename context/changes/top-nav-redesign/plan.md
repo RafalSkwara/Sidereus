@@ -247,29 +247,29 @@ Existing theme cookies keep working. The new return cookie defaults to dark when
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including `resolveReturnTheme` and i18n parity
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
-- [x] 1.4 Production build succeeds
-- [x] 1.5 Updated e2e specs pass on a local preview
+- [x] 1.1 Unit tests pass, including `resolveReturnTheme` and i18n parity — 1260402
+- [x] 1.2 Type check passes — 1260402
+- [x] 1.3 Lint passes — 1260402
+- [x] 1.4 Production build succeeds — 1260402
+- [x] 1.5 Updated e2e specs pass on a local preview — 1260402
 
 #### Manual
 
-- [x] 1.6 One-row bar at 1280/768, settings panel opens and closes with focus return
-- [x] 1.7 Sign out works from the popover with JavaScript disabled
+- [x] 1.6 One-row bar at 1280/768, settings panel opens and closes with focus return — 1260402
+- [x] 1.7 Sign out works from the popover with JavaScript disabled — 1260402
 
 ### Phase 2: Phone tab bar and verification
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Production build succeeds
-- [ ] 2.5 Full e2e suite passes in parallel
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Production build succeeds
+- [x] 2.5 Full e2e suite passes in parallel
 
 #### Manual
 
-- [ ] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar
-- [ ] 2.7 Red-mode pixel audit passes, sheet open included
+- [x] 2.6 Width × language × theme screenshots: header ≤ 64 px, no overflow, content clear of the tab bar
+- [x] 2.7 Red-mode pixel audit passes, sheet open included
 - [ ] 2.8 User reviews the before/after top bars on the PR
