@@ -249,41 +249,41 @@ None. No database change.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the new ranking and all-objects tests — 08f01a8
-- [x] 1.2 Type check passes — 08f01a8
-- [x] 1.3 Lint passes — 08f01a8
-- [x] 1.4 Production build succeeds — 08f01a8
-- [x] 1.5 The existing Tonight e2e specs still pass on a local preview — 08f01a8
+- [x] 1.1 Unit tests pass, including the new ranking and all-objects tests — b5733ce
+- [x] 1.2 Type check passes — b5733ce
+- [x] 1.3 Lint passes — b5733ce
+- [x] 1.4 Production build succeeds — b5733ce
+- [x] 1.5 The existing Tonight e2e specs still pass on a local preview — b5733ce
 
 #### Manual
 
-- [x] 1.6 Tonight renders the same top 5 before and after — 08f01a8
+- [x] 1.6 Tonight renders the same top 5 before and after — b5733ce
 
 ### Phase 2: The all-objects page
 
 #### Automated
 
-- [x] 2.1 Unit tests pass (i18n parity) — 05ec751
-- [x] 2.2 Type check passes — 05ec751
-- [x] 2.3 Lint passes — 05ec751
-- [x] 2.4 Production build succeeds — 05ec751
+- [x] 2.1 Unit tests pass (i18n parity) — cb76d9c
+- [x] 2.2 Type check passes — cb76d9c
+- [x] 2.3 Lint passes — cb76d9c
+- [x] 2.4 Production build succeeds — cb76d9c
 
 #### Manual
 
-- [x] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works — 05ec751
-- [x] 2.6 A no-go night shows the explanation and the back link — 05ec751
+- [x] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works — cb76d9c
+- [x] 2.6 A no-go night shows the explanation and the back link — cb76d9c
 
 ### Phase 3: Links from Tonight and verification
 
 #### Automated
 
-- [x] 3.1 Unit tests pass — f89f3b8
-- [x] 3.2 Type check passes — f89f3b8
-- [x] 3.3 Lint passes — f89f3b8
-- [x] 3.4 Production build succeeds — f89f3b8
-- [x] 3.5 Full e2e suite passes in parallel — f89f3b8
+- [x] 3.1 Unit tests pass — 0dc1a00
+- [x] 3.2 Type check passes — 0dc1a00
+- [x] 3.3 Lint passes — 0dc1a00
+- [x] 3.4 Production build succeeds — 0dc1a00
+- [x] 3.5 Full e2e suite passes in parallel — 0dc1a00
 
 #### Manual
 
-- [x] 3.6 Screenshot matrix: no overflow, red audit passes — f89f3b8
+- [x] 3.6 Screenshot matrix: no overflow, red audit passes — 0dc1a00
 - [ ] 3.7 The user reviews the page
