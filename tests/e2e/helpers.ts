@@ -24,9 +24,23 @@ export const PASSWORD = "E2e-Test-Passw0rd!";
 export const SIGNUP_FORM = 'form[action="/api/auth/signup"]';
 export const ONBOARDING_FORM = 'form[action="/api/onboarding"]';
 
-/** Waits until the React island holding `formSelector` has hydrated (Astro drops its `ssr` attribute then). */
-export async function waitForHydration(page: Page, formSelector: string) {
-  await expect(page.locator(`astro-island[ssr]:has(${formSelector})`)).toHaveCount(0);
+/**
+ * Waits until React has hydrated the element matching `selector` inside an island, so typing and clicks reach
+ * its handlers. Astro drops the island's `ssr` attribute as soon as it *starts* React's concurrent hydration, so
+ * that alone leaves a window where input is silently lost (the parallel-load flakes of #45). React marks every
+ * element it has hydrated with an own `__reactProps$<key>` property, bottom-up, so seeing it on the target means
+ * the target and everything inside it are live.
+ */
+export async function waitForHydration(page: Page, selector: string) {
+  await expect(page.locator(`astro-island[ssr]:has(${selector})`)).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((element) => Object.keys(element).some((key) => key.startsWith("__reactProps$"))),
+    )
+    .toBe(true);
 }
 
 /** Answers Open-Meteo's place search with Madrid. */
@@ -36,8 +50,7 @@ export async function stubPlaceSearch(page: Page) {
   );
 }
 
-/** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`) and lands on /onboarding. */
-/** Signs up a fresh user and returns their email. */
+/** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`), lands on /onboarding and returns the email. */
 export async function signUp(page: Page, emailPrefix: string): Promise<string> {
   const email = `${emailPrefix}-${randomUUID()}@example.com`;
   await page.goto("/auth/signup");

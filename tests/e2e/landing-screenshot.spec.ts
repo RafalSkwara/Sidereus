@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
+import { waitForHydration } from "./helpers";
 
 /*
  * Captures the landing page's Tonight screenshot (`public/landing/tonight.png`, shown by
@@ -32,11 +33,6 @@ const MADRID_LABEL = "Madrid, Madrid, Spain";
 const PASSWORD = "E2e-Test-Passw0rd!";
 const SIGNUP_FORM = 'form[action="/api/auth/signup"]';
 const ONBOARDING_FORM = 'form[action="/api/onboarding"]';
-
-/** Waits until the React island holding `formSelector` has hydrated (Astro then drops its `ssr` attribute). */
-async function waitForHydration(page: Page, formSelector: string) {
-  await expect(page.locator(`astro-island[ssr]:has(${formSelector})`)).toHaveCount(0);
-}
 
 test.describe("landing screenshot", () => {
   test.skip(process.env.CAPTURE_LANDING !== "1", "captures public/landing/tonight.png only with CAPTURE_LANDING=1");

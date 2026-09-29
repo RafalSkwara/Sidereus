@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { THEME_COOKIE } from "@/lib/preferences";
+import { waitForHydration } from "./helpers";
 
 /*
  * Red night mode (S-10, FR-024): the third theme segment turns the page red at once, is remembered across
@@ -12,8 +13,8 @@ const theme = (page: Page) => page.evaluate(() => document.documentElement.datas
 
 test("red night mode is chosen from the top bar, survives a reload and switches back", async ({ page, context }) => {
   await page.goto("/");
-  // The switch is a React island: wait until it has hydrated (Astro then drops its `ssr` attribute).
-  await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
+  // The switch is a React island: wait until React has hydrated the theme group.
+  await waitForHydration(page, `[role="group"][aria-label="${en.preferences.theme}"]`);
 
   const redSegment = page.getByRole("button", { name: en.preferences.red });
   await redSegment.click();
