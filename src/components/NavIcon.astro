@@ -1,0 +1,39 @@
+---
+// The three destination icons, shared by the wide-screen pill (Topbar.astro) and the phone tab bar (TabBar.astro).
+interface Props {
+  name: "tonight" | "log" | "gear";
+  class?: string;
+}
+
+const { name: icon, class: className } = Astro.props;
+---
+
+<svg
+  viewBox="0 0 24 24"
+  class:list={["shrink-0", className]}
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  {icon === "tonight" && (
+    <>
+      <path d="M17 14.5A6.5 6.5 0 1 1 9.5 7a5 5 0 0 0 7.5 7.5Z" />
+      <path d="M18 3v3M16.5 4.5h3" />
+    </>
+  )}
+  {icon === "log" && (
+    <>
+      <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z" />
+      <path d="M9 9h6M9 13h4" />
+    </>
+  )}
+  {icon === "gear" && (
+    <>
+      <path d="m4 11 12-6 2 4-12 6Z" />
+      <path d="m18 9 2-1M10 14l-3 7M11 14l3 7" />
+    </>
+  )}
+</svg>

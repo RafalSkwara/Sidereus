@@ -1,7 +1,7 @@
 ---
 change_id: top-nav-redesign
 title: Rethink the top navigation so it fits on one line and works on mobile
-status: impl_reviewed
+status: implementing
 created: 2026-09-29
 updated: 2026-09-29
 archived_at: null
@@ -17,3 +17,7 @@ Rethink the top navigation: too many items (Tonight, Log, My gear, welcome pill,
 - **Reframed problem:** not width but missing hierarchy. Three kinds of item get equal weight: destinations used every visit (3), account items (a decorative pill + rarely used Sign out), and preferences set once (5 buttons), with one exception: red mode, which is wanted in one tap outdoors.
 - **Direction board:** https://claude.ai/artifact/VBMVqSE9846VQhhUjtjKTv (A bottom tabs + settings tray, recommended; B tabs under the header; C one menu button). Common to all: drop the Welcome pill; language and Sign out move into settings; signed-out bar = name + Sign in + settings.
 - Top bar renders from `AuthShell.astro`, `Welcome.astro`, `gear/GearShell.astro` (Tonight, Log and Gear render through GearShell).
+
+### User review of PR #58 (2026-09-29) → phase 3
+
+The inline links "look like they have been thrown there randomly", are too weak as plain links, and should gravitate right towards the eye and settings buttons, with a short hover animation. User picked a segmented pill (icon + label, current page filled). Planned as phase 3 in the same change.

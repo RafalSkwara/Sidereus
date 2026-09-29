@@ -1,35 +1,26 @@
 ---
+import NavIcon from "@/components/NavIcon.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
+import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
 import { RETURN_THEME_COOKIE, resolveReturnTheme } from "@/lib/preferences";
 
 const { user, theme, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
 const returnTheme = resolveReturnTheme(Astro.cookies.get(RETURN_THEME_COOKIE)?.value);
-
-const navLink = "border-b-2 py-1.5 transition-colors hover:text-heading";
-/** The link for the page being shown reads as the current one: heading ink, semibold, amber underline (board A). */
-function navState(href: string) {
-  const current = pathname === href || pathname.startsWith(`${href}/`);
-  return {
-    class: current
-      ? [navLink, "border-primary font-semibold text-heading"]
-      : [navLink, "border-transparent text-muted-foreground"],
-    "aria-current": current ? ("page" as const) : undefined,
-  };
-}
-const links = [
-  { href: "/tonight", label: m.nav.tonight },
-  { href: "/log", label: m.nav.log },
-  { href: "/gear", label: m.nav.myGear },
-].map((link) => ({ ...link, ...navState(link.href) }));
-const signinLink = navState("/auth/signin");
+const links = NAV_ITEMS.map((item) => ({
+  ...item,
+  text: m.nav[item.label],
+  current: isCurrentPage(pathname, item.href),
+}));
+const onSignin = isCurrentPage(pathname, "/auth/signin");
 ---
 
 <!--
-  One row at every width (top-nav-redesign). From `sm` the destinations sit inline here; on phones the tab
-  bar (TabBar.astro, rendered by each shell) carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
+  One row at every width (top-nav-redesign). From `md` the destinations are a segmented pill in the right-hand
+  cluster, next to the eye and settings buttons; below `md` the tab bar (TabBar.astro, rendered by each shell)
+  carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
 -->
 <header class="flex h-16 items-center gap-4">
   <a href="/" class="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90">
@@ -39,19 +30,43 @@ const signinLink = navState("/auth/signin");
     <span class="font-display text-2xl font-semibold text-heading">{m.common.appName}</span>
   </a>
 
-  {user && (
-    <nav aria-label={m.nav.primary} class="mx-auto hidden items-center gap-6 text-[15px] sm:flex">
-      {links.map((link) => (
-        <a href={link.href} class:list={link.class} aria-current={link["aria-current"]}>
-          {link.label}
-        </a>
-      ))}
-    </nav>
-  )}
-
-  <div class="ml-auto flex items-center gap-3 text-[15px]">
+  <div class="ml-auto flex items-center gap-3">
+    {user && (
+      <nav aria-label={m.nav.primary} class="hidden gap-0.5 rounded-full border border-border p-0.5 md:flex">
+        {links.map((link) => (
+          <a
+            href={link.href}
+            aria-current={link.current ? "page" : undefined}
+            class:list={[
+              "group inline-flex h-[34px] items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold",
+              "transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none",
+              "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+              link.current
+                ? "bg-selected text-selected-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-heading",
+            ]}
+          >
+            <NavIcon
+              name={link.icon}
+              class:list={[
+                "size-4 transition-transform duration-150 ease-out motion-reduce:transition-none",
+                !link.current && "group-hover:-translate-y-px",
+              ]}
+            />
+            {link.text}
+          </a>
+        ))}
+      </nav>
+    )}
     {!user && (
-      <a href="/auth/signin" class:list={signinLink.class} aria-current={signinLink["aria-current"]}>
+      <a
+        href="/auth/signin"
+        aria-current={onSignin ? "page" : undefined}
+        class:list={[
+          "text-[15px] transition-colors hover:text-heading",
+          onSignin ? "font-semibold text-heading" : "text-muted-foreground",
+        ]}
+      >
         {m.nav.signIn}
       </a>
     )}
