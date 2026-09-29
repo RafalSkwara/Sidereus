@@ -140,4 +140,5 @@ jobs:
             sleep 3
           done
           test "$(curl -s -o /dev/null -w '%{http_code}' "$LIVE_URL/")" = "200"
-          test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$LIVE_URL/tonight")" = "302 $LIVE_URL/auth/signin"
+          # A gated page redirects to sign-in and remembers where to continue (S-09).
+          test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$LIVE_URL/tonight")" = "302 $LIVE_URL/auth/signin?next=%2Ftonight"
