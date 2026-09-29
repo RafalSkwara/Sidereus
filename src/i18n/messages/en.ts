@@ -465,6 +465,26 @@ export const en = {
       noDarkness: "the sky never gets dark enough tonight",
     },
 
+    all: {
+      title: "All objects",
+      heading: {
+        one: (p) => `The ${p.count} object that cleared the bar`,
+        other: (p) => `All ${p.count} objects that cleared the bar`,
+      } as PluralForms<Count>,
+      back: "Tonight",
+      sortLabel: "Order",
+      byRank: "By rank",
+      byTime: "By best time",
+      sortHintRank: "Best first, as on Tonight. Open a row for its details.",
+      sortHintTime: "In the order they are best placed tonight. Open a row for its details.",
+      seeAll: "See all",
+      seeAllCount: {
+        one: (p) => `See the ${p.count} object`,
+        other: (p) => `See all ${p.count} objects`,
+      } as PluralForms<Count>,
+      empty: "No object cleared the bar tonight, so there is nothing to list.",
+    },
+
     cleared: {
       none: "No object cleared the bar tonight",
       count: {

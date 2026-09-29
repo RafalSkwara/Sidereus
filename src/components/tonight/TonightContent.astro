@@ -8,21 +8,9 @@ import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
-import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
-import { getForecast } from "@/lib/forecast/service";
-import {
-  eyepieceStore,
-  siteStore,
-  telescopeStore,
-  type EyepieceRecord,
-  type SiteRecord,
-  type TelescopeRecord,
-} from "@/lib/gear/store";
-import type { LogEntry } from "@/lib/engine";
-import { observationStore } from "@/lib/observations/store";
-import { buildTonight, type TonightView } from "@/lib/tonight/build";
-import { chooseOwned, selectorKind } from "@/lib/tonight/gear-choice";
+import { loadTonight, logHref } from "@/lib/tonight/load";
 
 interface Props {
   /** The site picked on the page (`?site=` or the remembered cookie); resolved against the user's own. */
@@ -30,13 +18,6 @@ interface Props {
   /** The telescope picked on the page (`?telescope=` or the remembered cookie); resolved against the user's own. */
   telescopeId?: string;
 }
-
-// Fixed, value-free message keys: nothing about the site (coordinates included) ever reaches the page or a log.
-const SITES_FAILED: MessageKey = "errors.load.sites";
-const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
-const EYEPIECES_FAILED: MessageKey = "tonight.eyepiecesFailed";
-const LOG_FAILED: MessageKey = "tonight.logFailed";
-const TONIGHT_FAILED: MessageKey = "tonight.failed";
 
 const { user, locale } = Astro.locals;
 const { siteId, telescopeId } = Astro.props;
@@ -47,92 +28,39 @@ const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
 
-/** Loads one list; a failure only affects what depends on it, never the whole page. */
-async function load<T>(
-  list: () => Promise<T[]>,
-  failed: MessageKey,
-): Promise<{ items: T[]; error: MessageKey | null }> {
-  try {
-    return { items: await list(), error: null };
-  } catch {
-    return { items: [], error: failed };
-  }
-}
-
-let sites: SiteRecord[] = [];
-let telescopes: TelescopeRecord[] = [];
-let eyepieces: EyepieceRecord[] = [];
-let sitesError: MessageKey | null = null;
-let telescopesError: MessageKey | null = null;
-let eyepiecesError: MessageKey | null = null;
-// A log that fails to load ranks as an empty one, with a notice (never an error page).
-let log: LogEntry[] = [];
-let logError: MessageKey | null = null;
-let view: TonightView | null = null;
-let tonightError: MessageKey | null = null;
-
-if (supabase) {
-  const [siteResult, telescopeResult, eyepieceResult, logResult] = await Promise.all([
-    load(() => siteStore.list(supabase), SITES_FAILED),
-    load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
-    load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
-    load(() => observationStore.listForRanking(supabase), LOG_FAILED),
-  ]);
-  ({ items: sites, error: sitesError } = siteResult);
-  ({ items: telescopes, error: telescopesError } = telescopeResult);
-  ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
-  ({ items: log, error: logError } = logResult);
-}
-
-// The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
-// FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
-// prefill all follow the chosen site.
-const site = chooseOwned(sites, siteId);
-const telescope = chooseOwned(telescopes, telescopeId);
-// FR-012 / FR-019: a selector, and naming the telescope on the ranking, only matter with two or more.
-const multipleSites = selectorKind(sites.length) !== "none";
-const multipleTelescopes = selectorKind(telescopes.length) !== "none";
+const {
+  sites,
+  telescopes,
+  sitesError,
+  telescopesError,
+  eyepiecesError,
+  logError,
+  site,
+  telescope,
+  multipleSites,
+  multipleTelescopes,
+  needsSetup,
+  view,
+  tonightError,
+} = await loadTonight({
+  supabase,
+  locale,
+  siteId,
+  telescopeId,
+  now: new Date(),
+  cache: kvForecastCache(),
+  forecastBaseUrl: FORECAST_BASE_URL,
+  // The KV write runs after the response is sent.
+  defer: (task) => {
+    Astro.locals.cfContext.waitUntil(task);
+  },
+});
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
+// More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
+const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
   .join(" · ");
-// No site and no telescope (e.g. onboarding abandoned): one route back to setup instead of two cards (FR-021
-// single-item empty states stay as they are).
-const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
-
-if (site && telescope) {
-  const now = new Date();
-  try {
-    // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
-    // a saved copy served in an outage comes back flagged `fallback`, and buildTonight caps it at marginal.
-    const result = await getForecast({
-      fetchFn: globalThis.fetch.bind(globalThis),
-      cache: kvForecastCache(),
-      siteId: site.id,
-      coords: { latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg },
-      now,
-      ...(FORECAST_BASE_URL ? { baseUrl: FORECAST_BASE_URL } : {}),
-      // The KV write runs after the response is sent.
-      defer: (task) => {
-        Astro.locals.cfContext.waitUntil(task);
-      },
-    });
-    view = buildTonight({ site, telescope, eyepieces, forecast: result, now, log }, locale);
-  } catch {
-    tonightError = TONIGHT_FAILED;
-  }
-}
-
-/** The log form for one ranked object, prefilled with the ranking's night, site and telescope (FR-016). */
-function logHref(tonight: TonightView, messier: number): string {
-  const query = new URLSearchParams({
-    object: String(messier),
-    night: tonight.date,
-    site: tonight.siteId,
-    telescope: tonight.telescopeId,
-  });
-  return `/log/new?${query.toString()}`;
-}
 
 const primaryLink =
   "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
@@ -216,12 +144,25 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
 
           {view.ranking && (
             <section aria-labelledby="ranking-heading">
-              <h2
-                id="ranking-heading"
-                class:list={["font-display text-2xl font-semibold text-heading", multipleTelescopes ? "mb-1" : "mb-4"]}
+              <div
+                class:list={[
+                  "flex flex-wrap items-baseline justify-between gap-x-4",
+                  multipleTelescopes ? "mb-1" : "mb-4",
+                ]}
               >
-                {view.ranking.clearedText}
-              </h2>
+                <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
+                  {view.ranking.clearedText}
+                </h2>
+                {hasMore && (
+                  <a
+                    href="/tonight/all"
+                    class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
+                  >
+                    {t.all.seeAll}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                )}
+              </div>
               {multipleTelescopes && (
                 <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
               )}
@@ -252,6 +193,21 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
                     <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.messier)} />
                   ))}
                 </ol>
+              )}
+              {hasMore && (
+                <a
+                  href="/tonight/all"
+                  class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
+                >
+                  {plural(
+                    locale,
+                    view.ranking.clearedCount,
+                    t.all.seeAllCount,
+                  )({
+                    count: String(view.ranking.clearedCount),
+                  })}
+                  <span aria-hidden="true">→</span>
+                </a>
               )}
             </section>
           )}

@@ -139,6 +139,30 @@ describe("rankObjects (full catalogue, Warsaw 2026-10-10)", () => {
   });
 });
 
+describe("rankObjects with a limit (tonight-all-objects, Warsaw 2026-10-10)", () => {
+  it("lists every cleared object with limit Infinity, in the same order as the default top five", () => {
+    const top = rank(MESSIER);
+    const all = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
+    expect(all.clearedCount).toBe(top.clearedCount);
+    expect(all.entries).toHaveLength(all.clearedCount);
+    expect(all.clearedCount).toBeGreaterThan(MAX_RANKED_OBJECTS);
+    expect(all.entries.slice(0, top.entries.length).map((e) => e.object.messier)).toEqual(
+      top.entries.map((e) => e.object.messier),
+    );
+    for (let i = 1; i < all.entries.length; i++) {
+      expect(all.entries[i - 1].rankScore).toBeGreaterThanOrEqual(all.entries[i].rankScore);
+    }
+  });
+
+  it("gives the same full list for the same input", () => {
+    const first = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
+    const second = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
+    expect(second.entries.map((e) => [e.object.messier, e.leadComponent, e.secondComponent])).toEqual(
+      first.entries.map((e) => [e.object.messier, e.leadComponent, e.secondComponent]),
+    );
+  });
+});
+
 describe("reasonComponents", () => {
   const c = (duration: number, moon: number, brightness: number, sky: number): ScoreComponents => ({
     duration,

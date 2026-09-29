@@ -53,6 +53,8 @@ export type TonightPair =
   { kind: "pair"; finding: EyepieceLine; detail: EyepieceLine } | { kind: "none-fit"; widestName: string };
 
 export interface TonightEntry {
+  /** 1-based place in the ranking; kept when the all-objects page orders by best time. */
+  rank: number;
   /** "M31" */
   id: string;
   /** 31: the key for a localised common name (`@/lib/catalogue/common-names`). */
@@ -66,6 +68,8 @@ export interface TonightEntry {
   windowEnd: string;
   /** Peak time, `HH:mm` in the site's time zone. */
   bestTime: string;
+  /** Peak instant (epoch ms), for ordering by best time across midnight. */
+  bestAt: number;
   /** Direction at the peak, "SW, 45°". */
   bestDirection: string;
   /** `null` when the kit has no eyepieces: the page leaves the pair line out. */
@@ -176,7 +180,11 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
 }
 
 /** Every text field of the view is worded for `locale`; the rest of the view does not depend on it. */
-export function buildTonight(input: TonightInput, locale: Locale): TonightView {
+/**
+ * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
+ * all-objects page).
+ */
+export function buildTonight(input: TonightInput, locale: Locale, options: { limit?: number } = {}): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
     clearedLine,
@@ -262,12 +270,14 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
       eyepieces,
       catalogue,
       seen: seenSummaries(log, date),
+      limit: options.limit,
     });
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
     ranking = {
       clearedCount: ranked.clearedCount,
       clearedText: clearedLine(ranked.clearedCount),
-      entries: ranked.entries.map((entry) => ({
+      entries: ranked.entries.map((entry, i) => ({
+        rank: i + 1,
         id: entry.object.id,
         messier: entry.object.messier,
         commonName: entry.object.commonName,
@@ -275,6 +285,7 @@ export function buildTonight(input: TonightInput, locale: Locale): TonightView {
         windowStart: formatTime(entry.score.window.start, timeZone),
         windowEnd: formatTime(entry.score.window.end, timeZone),
         bestTime: formatTime(entry.peak.time, timeZone),
+        bestAt: entry.peak.time.getTime(),
         bestDirection: formatDirection(entry.peak),
         pair: toPair(telescope, entry.pair),
         reason: reasonLine(entry, context),

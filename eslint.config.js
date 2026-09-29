@@ -88,6 +88,7 @@ const gearConfig = defineConfig({
     "src/lib/forecast/**",
     "src/lib/tonight/**",
     "src/pages/tonight.astro",
+    "src/pages/tonight/**",
     "src/lib/onboarding/**",
     "src/components/onboarding/**",
     "src/pages/api/onboarding.ts",
