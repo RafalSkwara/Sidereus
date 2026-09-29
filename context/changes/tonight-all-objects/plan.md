@@ -286,4 +286,4 @@ None. No database change.
 #### Manual
 
 - [x] 3.6 Screenshot matrix: no overflow, red audit passes — 0dc1a00
-- [ ] 3.7 The user reviews the page
+- [x] 3.7 The user reviews the page — fd6631e

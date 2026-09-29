@@ -215,4 +215,4 @@ The obsolete `sidereus-theme-return` cookie may linger in browsers that used the
 
 - [x] 2.6 Mid-transition frames show the indicator between positions (desktop pill, phone tab bar with icon bounce) — 8c19608
 - [x] 2.7 Reduced motion shows no intermediate frame; WebKit switches pages correctly — 8c19608
-- [ ] 2.8 The user reviews the motion
+- [x] 2.8 The user reviews the motion — c0aa0b5
