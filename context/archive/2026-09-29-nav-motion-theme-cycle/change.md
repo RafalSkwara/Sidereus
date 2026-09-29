@@ -1,10 +1,10 @@
 ---
 change_id: nav-motion-theme-cycle
 title: Sliding navigation indicator and a theme-cycling eye button
-status: impl_reviewed
+status: archived
 created: 2026-09-29
 updated: 2026-09-29
-archived_at: null
+archived_at: 2026-09-29T14:07:45Z
 ---
 
 ## Notes
