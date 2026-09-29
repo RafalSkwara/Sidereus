@@ -205,14 +205,14 @@ The obsolete `sidereus-theme-return` cookie may linger in browsers that used the
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 Production build succeeds
-- [x] 2.5 Full e2e suite passes in parallel
+- [x] 2.1 Unit tests pass — 8c19608
+- [x] 2.2 Type check passes — 8c19608
+- [x] 2.3 Lint passes — 8c19608
+- [x] 2.4 Production build succeeds — 8c19608
+- [x] 2.5 Full e2e suite passes in parallel — 8c19608
 
 #### Manual
 
-- [x] 2.6 Mid-transition frames show the indicator between positions (desktop pill, phone tab bar with icon bounce)
-- [x] 2.7 Reduced motion shows no intermediate frame; WebKit switches pages correctly
+- [x] 2.6 Mid-transition frames show the indicator between positions (desktop pill, phone tab bar with icon bounce) — 8c19608
+- [x] 2.7 Reduced motion shows no intermediate frame; WebKit switches pages correctly — 8c19608
 - [ ] 2.8 The user reviews the motion
