@@ -263,27 +263,27 @@ None. No database change.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass (i18n parity)
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 Production build succeeds
+- [x] 2.1 Unit tests pass (i18n parity) — 05ec751
+- [x] 2.2 Type check passes — 05ec751
+- [x] 2.3 Lint passes — 05ec751
+- [x] 2.4 Production build succeeds — 05ec751
 
 #### Manual
 
-- [x] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works
-- [x] 2.6 A no-go night shows the explanation and the back link
+- [x] 2.5 The page lists every cleared object, sorts by time across midnight, rows expand, Mark observed works — 05ec751
+- [x] 2.6 A no-go night shows the explanation and the back link — 05ec751
 
 ### Phase 3: Links from Tonight and verification
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass
-- [ ] 3.2 Type check passes
-- [ ] 3.3 Lint passes
-- [ ] 3.4 Production build succeeds
-- [ ] 3.5 Full e2e suite passes in parallel
+- [x] 3.1 Unit tests pass
+- [x] 3.2 Type check passes
+- [x] 3.3 Lint passes
+- [x] 3.4 Production build succeeds
+- [x] 3.5 Full e2e suite passes in parallel
 
 #### Manual
 
-- [ ] 3.6 Screenshot matrix: no overflow, red audit passes
+- [x] 3.6 Screenshot matrix: no overflow, red audit passes
 - [ ] 3.7 The user reviews the page

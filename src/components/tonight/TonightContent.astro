@@ -8,7 +8,7 @@ import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
-import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { loadTonight, logHref } from "@/lib/tonight/load";
 
@@ -56,6 +56,8 @@ const {
   },
 });
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
+// More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
+const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
   .join(" · ");
@@ -142,12 +144,25 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
 
           {view.ranking && (
             <section aria-labelledby="ranking-heading">
-              <h2
-                id="ranking-heading"
-                class:list={["font-display text-2xl font-semibold text-heading", multipleTelescopes ? "mb-1" : "mb-4"]}
+              <div
+                class:list={[
+                  "flex flex-wrap items-baseline justify-between gap-x-4",
+                  multipleTelescopes ? "mb-1" : "mb-4",
+                ]}
               >
-                {view.ranking.clearedText}
-              </h2>
+                <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
+                  {view.ranking.clearedText}
+                </h2>
+                {hasMore && (
+                  <a
+                    href="/tonight/all"
+                    class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
+                  >
+                    {t.all.seeAll}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                )}
+              </div>
               {multipleTelescopes && (
                 <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
               )}
@@ -178,6 +193,21 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
                     <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.messier)} />
                   ))}
                 </ol>
+              )}
+              {hasMore && (
+                <a
+                  href="/tonight/all"
+                  class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
+                >
+                  {plural(
+                    locale,
+                    view.ranking.clearedCount,
+                    t.all.seeAllCount,
+                  )({
+                    count: String(view.ranking.clearedCount),
+                  })}
+                  <span aria-hidden="true">→</span>
+                </a>
               )}
             </section>
           )}
