@@ -543,4 +543,4 @@ The migration is additive and backward-compatible with the running old app, thro
 - [x] 3.7 On the dev server, Tonight shows "Planets tonight" above the top five, with sensible facts, eyepiece, reason and note for each planet, in EN and PL and in dark, light and red themes — 31f6381
 - [x] 3.8 With a forecast that is clear only in twilight (fixture or `FORECAST_BASE_URL` override), the section still shows under a no-go verdict with its weather line — 31f6381
 - [x] 3.9 "Mark observed" on a planet lands in the log, the Tonight notice names it, and the card then shows the "Seen" tag — 31f6381
-- [ ] 3.10 `/tonight` CPU time re-measured against the Free-plan trigger and the figure recorded on GitHub #22
+- [x] 3.10 `/tonight` CPU time re-measured against the Free-plan trigger and the figure recorded on GitHub #22
