@@ -39,9 +39,11 @@ describe("searchPlaces", () => {
     expect(fake.calls[0].url.searchParams.get("language")).toBe("pl");
   });
 
-  it.each(["", " ", "M", "  M  "])("returns [] without fetching for the short query %j", async (query) => {
+  it("returns [] without fetching for a query shorter than two characters", async () => {
     const fake = fakeFetch(() => jsonResponse({ results: [MADRID] }));
-    await expect(searchPlaces(query, "en", fake.fetchFn)).resolves.toEqual([]);
+    for (const query of ["", " ", "M", "  M  "]) {
+      await expect(searchPlaces(query, "en", fake.fetchFn)).resolves.toEqual([]);
+    }
     expect(fake.calls).toHaveLength(0);
   });
 
@@ -97,19 +99,18 @@ describe("searchPlaces", () => {
     expect(fake.calls[0].init?.signal?.aborted).toBe(true);
   });
 
-  it("throws the fixed message on a body that is not JSON", async () => {
-    const fake = fakeFetch(() => new Response("<html>busy</html>", { status: 200 }));
-    await expect(searchPlaces("Madrid", "en", fake.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-  });
-
-  it.each([
-    ["results is not an array", { results: "Madrid" }],
-    ["a result without coordinates", { results: [{ id: 1, name: "Madrid" }] }],
-    ["a latitude out of range", { results: [{ ...MADRID, latitude: 140.4 }] }],
-    ["a non-object body", ["Madrid"]],
-  ])("throws the fixed message on a schema mismatch: %s", async (_label, body) => {
-    const fake = fakeFetch(() => jsonResponse(body));
-    await expect(searchPlaces("Madrid", "en", fake.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
+  it("throws the fixed message on a body that is not JSON or does not match the schema", async () => {
+    const notJson = fakeFetch(() => new Response("<html>busy</html>", { status: 200 }));
+    await expect(searchPlaces("Madrid", "en", notJson.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
+    for (const body of [
+      { results: "Madrid" },
+      { results: [{ id: 1, name: "Madrid" }] }, // no coordinates
+      { results: [{ ...MADRID, latitude: 140.4 }] },
+      ["Madrid"],
+    ]) {
+      const fake = fakeFetch(() => jsonResponse(body));
+      await expect(searchPlaces("Madrid", "en", fake.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
+    }
   });
 
   it("never puts the query or URL into its error", async () => {

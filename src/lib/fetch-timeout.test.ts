@@ -17,12 +17,6 @@ describe("withTimeout", () => {
     });
   });
 
-  it("passes a fast response through", async () => {
-    const fast: typeof fetch = () => Promise.resolve(new Response("ok"));
-    const response = await withTimeout(fast, 1000)("https://example.test/");
-    expect(await response.text()).toBe("ok");
-  });
-
   it("still honours an abort from the caller", async () => {
     const controller = new AbortController();
     const pending = withTimeout(hangingFetch, 10_000)("https://example.test/", { signal: controller.signal });

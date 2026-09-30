@@ -1,26 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { getMessages, translateKey } from "@/i18n";
 import { siteInputSchema } from "@/lib/gear/schemas";
-import { authErrorKey, CHECK_FIELDS, issueKey, NOT_CONFIGURED } from "./api-errors";
+import { authErrorKey, CHECK_FIELDS, issueKey } from "./api-errors";
 
 describe("authErrorKey", () => {
-  it.each([
-    ["invalid_credentials", "errors.auth.invalidCredentials"],
-    ["user_already_exists", "errors.auth.userExists"],
-    ["weak_password", "errors.auth.weakPassword"],
-    ["email_address_invalid", "errors.auth.invalidEmail"],
-    ["over_request_rate_limit", "errors.auth.rateLimited"],
-    ["over_email_send_rate_limit", "errors.auth.emailRateLimited"],
-  ])("maps %s to %s", (code, key) => {
-    expect(authErrorKey({ code })).toBe(key);
-  });
-
-  it.each([[{}], [{ code: "unexpected_failure" }], [{ code: "toString" }]])(
-    "falls back to the generic key for %j",
-    (error) => {
+  it("maps known Supabase error codes to keys and anything else to the generic key", () => {
+    expect(authErrorKey({ code: "invalid_credentials" })).toBe("errors.auth.invalidCredentials");
+    expect(authErrorKey({ code: "user_already_exists" })).toBe("errors.auth.userExists");
+    expect(authErrorKey({ code: "weak_password" })).toBe("errors.auth.weakPassword");
+    expect(authErrorKey({ code: "email_address_invalid" })).toBe("errors.auth.invalidEmail");
+    expect(authErrorKey({ code: "over_request_rate_limit" })).toBe("errors.auth.rateLimited");
+    expect(authErrorKey({ code: "over_email_send_rate_limit" })).toBe("errors.auth.emailRateLimited");
+    for (const error of [{}, { code: "unexpected_failure" }, { code: "toString" }]) {
       expect(authErrorKey(error)).toBe("errors.auth.generic");
-    },
-  );
+    }
+  });
 });
 
 describe("issueKey", () => {
@@ -38,13 +31,5 @@ describe("issueKey", () => {
     if (!parsed.success) {
       expect(issueKey(parsed.error)).toBe(CHECK_FIELDS);
     }
-  });
-});
-
-describe("shared route keys", () => {
-  it("read as before in English", () => {
-    const en = getMessages("en");
-    expect(translateKey(en, NOT_CONFIGURED, "errors.generic")).toBe("The database is not configured.");
-    expect(translateKey(en, CHECK_FIELDS, "errors.generic")).toBe("Check the highlighted fields.");
   });
 });

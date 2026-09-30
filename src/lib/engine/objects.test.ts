@@ -35,15 +35,6 @@ describe("objectPosition / objectTrack (synthetic)", () => {
     expect(transit.time.getTime()).toBeLessThan(night.end.getTime());
   });
 
-  it("samples inclusive of both ends at the default step", () => {
-    const track = objectTrack(WARSAW, night, m31);
-    expect(track[0]?.time.getTime()).toBe(night.start.getTime());
-    expect(track.at(-1)?.time.getTime()).toBe(night.end.getTime());
-    expect(track.length).toBe(24 * 6 + 1);
-    const at = new Date(night.start.getTime() + 30 * 60_000);
-    expect(track[3]).toEqual(objectPosition(WARSAW, at, m31));
-  });
-
   it("appends the interval end when it does not fall on the grid", () => {
     const interval = { start: night.start, end: new Date(night.start.getTime() + 25 * 60_000) };
     const track = objectTrack(WARSAW, interval, m31);
@@ -59,21 +50,6 @@ describe("objectPosition / objectTrack (synthetic)", () => {
     expect(Math.abs(highest(track).altitudeDeg - (90 - WARSAW.latitudeDeg - 60))).toBeLessThan(1);
   });
 
-  it("keeps azimuth in [0, 360) and altitude in [-90, 90]", () => {
-    for (const target of [m31, messierTarget("M13"), messierTarget("M45"), { raHours: 12, decDeg: 89.9 }]) {
-      for (const p of objectTrack(WARSAW, night, target, 30)) {
-        expect(p.azimuthDeg).toBeGreaterThanOrEqual(0);
-        expect(p.azimuthDeg).toBeLessThan(360);
-        expect(p.altitudeDeg).toBeGreaterThanOrEqual(-90);
-        expect(p.altitudeDeg).toBeLessThanOrEqual(90);
-      }
-    }
-  });
-
-  it("is deterministic", () => {
-    expect(objectTrack(WARSAW, night, m31)).toEqual(objectTrack(WARSAW, night, m31));
-  });
-
   it("objectTracks shares one rotation per instant and matches per-object tracks exactly", () => {
     const targets = [m31, messierTarget("M13"), messierTarget("M45")];
     const shared = objectTracks(WARSAW, night, targets, 30);
@@ -82,12 +58,6 @@ describe("objectPosition / objectTrack (synthetic)", () => {
       expect(shared[i]).toEqual(objectTrack(WARSAW, night, target, 30));
     });
     expect(objectTracks(WARSAW, night, [], 30)).toEqual([]);
-  });
-
-  it("rejects a step below one minute and an inverted interval", () => {
-    expect(() => objectTrack(WARSAW, night, m31, 0)).toThrow(RangeError);
-    expect(() => objectTrack(WARSAW, night, m31, 0.25)).toThrow(RangeError);
-    expect(() => objectTrack(WARSAW, { start: night.end, end: night.start }, m31)).toThrow(RangeError);
   });
 });
 

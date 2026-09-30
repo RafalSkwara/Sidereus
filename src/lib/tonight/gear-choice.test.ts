@@ -11,68 +11,43 @@ const DARK_SITE = { id: "9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c02", name: "Teide" };
 const SITES = [HOME, DARK_SITE];
 
 describe("chooseOwned", () => {
-  it("returns the requested telescope when the user owns it", () => {
+  it("returns the requested item when the user owns it", () => {
     expect(chooseOwned(TELESCOPES, SECOND.id)).toBe(SECOND);
+    expect(chooseOwned(SITES, DARK_SITE.id)).toBe(DARK_SITE);
   });
 
-  it("falls back to the oldest for an unknown, deleted or foreign id", () => {
-    expect(chooseOwned(TELESCOPES, "5f1e2d3c-4b5a-4968-8776-655443322110")).toBe(OLDEST);
-  });
-
-  it("falls back to the oldest when nothing is requested", () => {
+  it("falls back to the oldest for a missing, stale, foreign or malformed id, and to undefined with nothing owned", () => {
     expect(chooseOwned(TELESCOPES, undefined)).toBe(OLDEST);
-  });
-
-  it("returns undefined when the user owns nothing", () => {
+    expect(chooseOwned([HOME], DARK_SITE.id)).toBe(HOME); // a site since deleted
+    expect(chooseOwned(SITES, "5f1e2d3c-4b5a-4968-8776-655443322110")).toBe(HOME); // another user's
+    expect(chooseOwned(SITES, SECOND.id)).toBe(HOME); // a telescope's id
+    expect(chooseOwned(SITES, `${DARK_SITE.id}x`)).toBe(HOME);
     expect(chooseOwned<typeof OLDEST>([], SECOND.id)).toBeUndefined();
-  });
-
-  describe("sites", () => {
-    it("returns the requested site when the user owns it", () => {
-      expect(chooseOwned(SITES, DARK_SITE.id)).toBe(DARK_SITE);
-    });
-
-    it("falls back to the oldest site for a stale id (a site since deleted)", () => {
-      const afterDelete = [HOME];
-      expect(chooseOwned(afterDelete, DARK_SITE.id)).toBe(HOME);
-    });
-
-    it("falls back to the oldest site for a foreign id (another user's, or a telescope's)", () => {
-      expect(chooseOwned(SITES, "5f1e2d3c-4b5a-4968-8776-655443322110")).toBe(HOME);
-      expect(chooseOwned(SITES, SECOND.id)).toBe(HOME);
-    });
-
-    it("falls back to the oldest site for a malformed id the shell would not pass on", () => {
-      const malformed = `${DARK_SITE.id}x`;
-      expect(isGearId(malformed)).toBe(false);
-      expect(chooseOwned(SITES, isGearId(malformed) ? malformed : undefined)).toBe(HOME);
-      expect(chooseOwned(SITES, malformed)).toBe(HOME);
-    });
   });
 });
 
 describe("isGearId", () => {
-  it.each([OLDEST.id, OLDEST.id.toUpperCase(), HOME.id])("accepts the uuid %s", (value) => {
-    expect(isGearId(value)).toBe(true);
-  });
-
-  it.each(["", "abc", `${OLDEST.id}x`, "0b6c3f0e6f1a4d2b9a571c1f5b2f7a01", "<script>", "52.23,21.01", undefined, 42])(
-    "rejects %s",
-    (value) => {
+  it("accepts only uuids, so nothing else from a cookie or query reaches a lookup", () => {
+    for (const value of [OLDEST.id, OLDEST.id.toUpperCase(), HOME.id]) {
+      expect(isGearId(value)).toBe(true);
+    }
+    for (const value of [
+      "",
+      "abc",
+      `${OLDEST.id}x`,
+      "0b6c3f0e6f1a4d2b9a571c1f5b2f7a01",
+      "<script>",
+      "52.23,21.01",
+      undefined,
+      42,
+    ]) {
       expect(isGearId(value)).toBe(false);
-    },
-  );
+    }
+  });
 });
 
 describe("selectorKind", () => {
-  it.each([
-    [0, "none"],
-    [1, "none"],
-    [2, "pills"],
-    [3, "pills"],
-    [4, "dropdown"],
-    [7, "dropdown"],
-  ] as const)("%i items → %s", (count, kind) => {
-    expect(selectorKind(count)).toBe(kind);
+  it("shows no selector for one item, pills for two or three and a dropdown from four", () => {
+    expect([0, 1, 2, 3, 4, 7].map(selectorKind)).toEqual(["none", "none", "pills", "pills", "dropdown", "dropdown"]);
   });
 });

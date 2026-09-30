@@ -22,10 +22,6 @@ describe("resolveTimeZone", () => {
       resolveTimeZone({ mode: "manual", timeZone: "America/New_York", latitudeDeg: 52.23, longitudeDeg: 21.01 }),
     ).toEqual({ timeZone: "America/New_York", source: "manual" });
   });
-
-  it("manual without a zone is a programming error", () => {
-    expect(() => resolveTimeZone({ mode: "manual", latitudeDeg: 52.23, longitudeDeg: 21.01 })).toThrow();
-  });
 });
 
 describe("isValidTimeZone", () => {

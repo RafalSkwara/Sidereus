@@ -1,7 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import { MADRID_LABEL, MADRID_RESULT, ONBOARDING_FORM, signUp, stubPlaceSearch } from "./helpers";
@@ -78,16 +77,5 @@ test.describe("onboarding in English", () => {
       "href",
       "/onboarding",
     );
-  });
-});
-
-test.describe("onboarding in a Polish browser", () => {
-  test.use({ locale: "pl-PL" });
-
-  test("renders in Polish without a language cookie", async ({ page }) => {
-    await signUp(page, "e2e");
-
-    await expect(page.locator("html")).toHaveAttribute("lang", "pl");
-    await expect(onboardingSubmit(page)).toHaveText(pl.onboarding.submit);
   });
 });

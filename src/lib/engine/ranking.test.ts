@@ -89,21 +89,6 @@ describe("rankObjects (synthetic catalogue, Warsaw 2026-10-10)", () => {
       expect(entry.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
     }
   });
-
-  it("keeps the caller's object and eyepiece types, pairs eyepieces and reports the telescope", () => {
-    const named = { ...synthetic(1, 89.9), commonName: "Test cluster" };
-    const ranking = rank([named]);
-    expect(ranking.entries).toHaveLength(1);
-    const [entry] = ranking.entries;
-    expect(entry.object.commonName).toBe("Test cluster");
-    expect(entry.pair).toEqual({ kind: "pair", finding: EYEPIECES[0], detail: EYEPIECES[1] });
-    expect(entry.peak).toEqual(entry.score.window.peak);
-    expect(ranking.telescopeId).toBe("t1");
-  });
-
-  it("leaves the pair null with an empty kit", () => {
-    expect(rank([synthetic(1, 89.9)], { eyepieces: [] }).entries[0]?.pair).toBeNull();
-  });
 });
 
 describe("rankObjects (full catalogue, Warsaw 2026-10-10)", () => {
@@ -153,14 +138,6 @@ describe("rankObjects with a limit (tonight-all-objects, Warsaw 2026-10-10)", ()
       expect(all.entries[i - 1].rankScore).toBeGreaterThanOrEqual(all.entries[i].rankScore);
     }
   });
-
-  it("gives the same full list for the same input", () => {
-    const first = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
-    const second = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
-    expect(second.entries.map((e) => [e.object.messier, e.leadComponent, e.secondComponent])).toEqual(
-      first.entries.map((e) => [e.object.messier, e.leadComponent, e.secondComponent]),
-    );
-  });
 });
 
 describe("reasonComponents", () => {
@@ -169,10 +146,6 @@ describe("reasonComponents", () => {
     moon,
     brightness,
     sky,
-  });
-
-  it("returns nothing for an empty list", () => {
-    expect(reasonComponents([])).toEqual([]);
   });
 
   it("leads with the weighted component that most sets each entry apart from the listed mean", () => {

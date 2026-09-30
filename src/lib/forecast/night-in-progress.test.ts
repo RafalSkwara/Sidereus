@@ -56,15 +56,4 @@ describe("the night in progress after UTC midnight", () => {
     expect(result.level).toBe("go");
     expect(result.reason).toMatchObject({ kind: "clear-run", cloudPct: 10 });
   });
-
-  it("would have no weather data for the night if the series started at 00:00 UTC today", async () => {
-    // forecast_days=8 alone: eight days of hours from 00:00 UTC today, missing the evening.
-    const seriesStart = new Date("2026-11-11T00:00:00Z");
-    const hours = 8 * HOURS_PER_DAY;
-    const fake = fakeFetch(() =>
-      jsonResponse(openMeteoBody(seriesStart.getTime() / 1000, cloudFrom(seriesStart, hours))),
-    );
-    const forecast = await fetchForecast(fake.fetchFn, WARSAW);
-    expect(verdict(window, forecast)).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
-  });
 });

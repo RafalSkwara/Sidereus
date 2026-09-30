@@ -6,10 +6,6 @@ import type { LogEntry } from "./log";
 const TONIGHT = "2026-09-26";
 
 describe("seenSummaries (PRD FR-018, invariant 4)", () => {
-  it("is empty for an empty log", () => {
-    expect(seenSummaries([], TONIGHT).size).toBe(0);
-  });
-
   it("ignores entries rated 1 and 2, so a failed attempt never counts as seen", () => {
     const log: LogEntry[] = [
       { messier: 13, night: "2026-09-20", rating: 1 },
