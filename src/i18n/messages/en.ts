@@ -429,8 +429,16 @@ export const en = {
     planets: {
       heading: "Planets tonight",
       window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
-      none: "No planet rises above your minimum altitude between dusk and dawn tonight.",
-      /** Shown only when the verdict card does not already cover the planet window (a no-go or no dark window). */
+      /** No planet is listed: none clears the minimum altitude, or the ones that do are gated out by aperture. */
+      none: "No planet is well placed for your telescope between dusk and dawn tonight.",
+      /** No planet is listed on a night whose planets are limited to the clear hours (a no-go or no dark window). */
+      noneInClearHours: "No planet is well placed for your telescope in tonight's clear hours.",
+      /** The "Mark observed" link's accessible name; the colon keeps the planet name in its base form. */
+      markObserved: (p: { planet: string }) => `Mark observed: ${p.planet}`,
+      /**
+       * Shown only when the verdict card does not already cover the planet window: a no-go, no dark window, or a
+       * planet verdict whose level differs from the card's.
+       */
       weather: {
         line: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
         clearRun: (p: { hours: string; cloud: string }) =>
@@ -440,6 +448,15 @@ export const en = {
         fallbackCap: (p: { hours: string; cloud: string }) =>
           `the last saved forecast showed ${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn, but it could not be refreshed`,
         noWeatherData: "no weather data",
+        /**
+         * On a no-go or no-darkness night the planets are limited to the planet window's clear hours, named here
+         * as "19:00–20:00 and 05:00–06:00" (a locale-formatted list).
+         */
+        clearHours: (p: { hours: string }) => `clear ${p.hours}`,
+        clearHoursHumid: (p: { hours: string; humidity: string }) =>
+          `clear ${p.hours}, but humidity reaches ${p.humidity}%, so expect dew and haze`,
+        clearHoursFallback: (p: { hours: string }) =>
+          `clear ${p.hours} in the last saved forecast, which could not be refreshed`,
       },
       magnitude: (p: { mag: string }) => `mag ${p.mag}`,
       size: (p: { arcsec: string }) => `${p.arcsec}″`,

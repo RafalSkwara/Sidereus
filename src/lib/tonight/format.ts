@@ -114,6 +114,8 @@ export function createFormatter(locale: Locale) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+  // "19:00–20:00 and 05:00–06:00" / "19:00–20:00 i 05:00–06:00".
+  const listFormat = new Intl.ListFormat(tag, { type: "conjunction" });
 
   /** A number in the locale's notation; `-0` reads as "0". */
   function num(n: number): string {
@@ -424,23 +426,46 @@ export function createFormatter(locale: Locale) {
   }
 
   /**
-   * The planet window's own weather, for when the verdict card does not cover it (a no-go or no dark window):
-   * "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and dawn". `buildTonight` calls it
-   * only for a go or marginal planet window; the no-go reasons fall back to the verdict card's wording.
+   * The planet window's own weather, for when the verdict card does not cover it (a no-go, no dark window, or a
+   * planet verdict of another level): "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and
+   * dawn". With `clear` (the planets are limited to the planet window's clear hours) the clear hours are named
+   * instead of the run, in the site's time zone: "For planets: marginal — clear 19:00–20:00 and 05:00–06:00".
+   * `buildTonight` calls it only for a go or marginal planet window; the no-go reasons fall back to the verdict
+   * card's wording.
    */
-  function planetWeatherText(planetVerdict: Verdict): string {
+  function planetWeatherText(
+    planetVerdict: Verdict,
+    clear: { intervals: readonly Interval[]; timeZone: string } | null = null,
+  ): string {
     const text = m.tonight.planets.weather;
     const reason = planetVerdict.reason;
+    const hours =
+      clear === null
+        ? null
+        : listFormat.format(
+            clear.intervals.map(
+              (interval) => `${formatTime(interval.start, clear.timeZone)}–${formatTime(interval.end, clear.timeZone)}`,
+            ),
+          );
     let phrase: string;
     switch (reason.kind) {
       case "clear-run":
-        phrase = text.clearRun({ hours: num(reason.runHours), cloud: num(reason.cloudPct) });
+        phrase =
+          hours === null
+            ? text.clearRun({ hours: num(reason.runHours), cloud: num(reason.cloudPct) })
+            : text.clearHours({ hours });
         break;
       case "humidity-cap":
-        phrase = text.humidityCap({ humidity: num(reason.maxHumidityPct) });
+        phrase =
+          hours === null
+            ? text.humidityCap({ humidity: num(reason.maxHumidityPct) })
+            : text.clearHoursHumid({ hours, humidity: num(reason.maxHumidityPct) });
         break;
       case "fallback-cap":
-        phrase = text.fallbackCap({ hours: num(reason.runHours), cloud: num(reason.cloudPct) });
+        phrase =
+          hours === null
+            ? text.fallbackCap({ hours: num(reason.runHours), cloud: num(reason.cloudPct) })
+            : text.clearHoursFallback({ hours });
         break;
       case "no-weather-data":
         phrase = text.noWeatherData;

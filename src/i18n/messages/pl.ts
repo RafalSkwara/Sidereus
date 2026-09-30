@@ -434,11 +434,14 @@ export const pl = {
       markObserved: "Zapisz obserwację",
     },
 
-    // Planet names never follow a preposition here, so nothing needs a grammatical case.
+    // Planet names stay in the nominative: where one follows other words (the "Mark observed" link name), a colon
+    // separates them, as in `logged`, so no grammatical case is needed.
     planets: {
       heading: "Planety dziś w nocy",
       window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
-      none: "Dziś między zmierzchem a świtem żadna planeta nie wznosi się ponad Twoją minimalną wysokość.",
+      none: "Dziś między zmierzchem a świtem żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
+      noneInClearHours: "W pogodnych godzinach tej nocy żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
+      markObserved: (p) => `Zapisz obserwację: ${p.planet}`,
       weather: {
         line: (p) => `Dla planet: ${p.level} — ${p.reason}`,
         clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
@@ -447,6 +450,11 @@ export const pl = {
         fallbackCap: (p) =>
           `ostatnia zapisana prognoza pokazywała ${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem, ale nie udało się jej odświeżyć`,
         noWeatherData: "brak danych pogodowych",
+        clearHours: (p) => `pogodnie w godz. ${p.hours}`,
+        clearHoursHumid: (p) =>
+          `pogodnie w godz. ${p.hours}, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
+        clearHoursFallback: (p) =>
+          `pogodnie w godz. ${p.hours} według ostatniej zapisanej prognozy, której nie udało się odświeżyć`,
       },
       magnitude: (p) => `jasność ${p.mag} mag`,
       size: (p) => `${p.arcsec}″`,
@@ -471,14 +479,15 @@ export const pl = {
         },
       },
       note: {
-        mercury: "Mała, jasna kropka nisko w zmierzchu; przy większym powiększeniu możesz dostrzec fazę.",
+        mercury:
+          "Mała, jasna kropka nisko nad horyzontem o zmierzchu lub o świcie; przy większym powiększeniu możesz dostrzec fazę.",
         venus: "Oślepiająco jasna i bez szczegółów, ale jej fazę łatwo zobaczyć — wygląda jak maleńki Księżyc.",
         mars: "Mała pomarańczowa tarcza; szczegóły powierzchni wymagają spokojnego powietrza i cierpliwości, a często nie widać ich wcale.",
-        jupiter: "Jasna tarcza z dwoma ciemnymi pasami chmur i do czterech księżyców ustawionych w linii obok.",
+        jupiter: "Jasna tarcza z dwoma ciemnymi pasami chmur i nawet czterema księżycami ustawionymi w linii obok.",
         saturn:
           "Pierścienie widać wyraźnie już przy niewielkim powiększeniu; największy księżyc, Tytan, wygląda jak gwiazda tuż obok.",
         uranus:
-          "Maleńka niebieskozielona tarcza: przy dużym powiększeniu widać, że to nie gwiazda, ale bez żadnych szczegółów.",
+          "Maleńka niebieskozielona tarcza: przy dużym powiększeniu widać, że to nie gwiazda, ale nie widać na niej żadnych szczegółów.",
         neptune: "Maleńka niebieskoszara kropka, trudna do odróżnienia od gwiazdy; samo odnalezienie jej to sukces.",
       },
     },

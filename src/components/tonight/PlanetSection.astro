@@ -29,6 +29,8 @@ const t = getMessages(Astro.locals.locale).tonight.planets;
       ))}
     </ol>
   ) : (
-    <p class="mt-4 rounded-2xl border border-border bg-surface p-4 text-sm text-foreground sm:p-5">{t.none}</p>
+    <p class="mt-4 rounded-2xl border border-border bg-surface p-4 text-sm text-foreground sm:p-5">
+      {planets.noneText}
+    </p>
   )}
 </section>

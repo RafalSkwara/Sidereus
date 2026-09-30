@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { DarkWindow, ForecastHour, HourlyForecast } from "./types";
-import { cloudOutlook, verdict } from "./verdict";
+import { clearIntervals, cloudOutlook, verdict } from "./verdict";
 
 const HOUR_MS = 3_600_000;
 const BASE = Date.UTC(2026, 9, 10, 18, 0, 0); // 2026-10-10 18:00 UTC
@@ -229,5 +229,42 @@ describe("cloudOutlook", () => {
     expect(cloudOutlook(eightHours, startsLate)).toBeNull();
     expect(verdict(eightHours, endsEarly).reason.kind).toBe("no-weather-data");
     expect(verdict(eightHours, startsLate).reason.kind).toBe("no-weather-data");
+  });
+});
+
+describe("clearIntervals", () => {
+  const sixHours = window(0, 6);
+
+  it("merges consecutive hours strictly below the cloud threshold into stretches, in order", () => {
+    expect(clearIntervals(sixHours, forecast([10, 64, 65, 100, 5, 5]), 65)).toEqual([
+      { start: at(0), end: at(2) },
+      { start: at(4), end: at(6) },
+    ]);
+  });
+
+  it("clips the first and last stretch to the window", () => {
+    const partial = windowBetween(new Date(BASE + 0.5 * HOUR_MS), new Date(BASE + 2.25 * HOUR_MS));
+    expect(clearIntervals(partial, forecast([10, 100, 10]), 65)).toEqual([
+      { start: partial.start, end: at(1) },
+      { start: at(2), end: partial.end },
+    ]);
+  });
+
+  it("breaks a stretch at an hour missing from the forecast", () => {
+    expect(clearIntervals(sixHours, forecast([10, 10, null, 10, 100, 100]), 65)).toEqual([
+      { start: at(0), end: at(2) },
+      { start: at(3), end: at(4) },
+    ]);
+  });
+
+  it("ignores forecast hours outside the window", () => {
+    expect(clearIntervals(window(2, 4), forecast([0, 0, 100, 0, 0, 0]), 65)).toEqual([{ start: at(3), end: at(4) }]);
+  });
+
+  it("is empty when no hour is clear, and null without weather data, as the verdict reads it", () => {
+    expect(clearIntervals(sixHours, forecast([100, 100, 100, 100, 100, 100]), 65)).toEqual([]);
+    expect(clearIntervals(sixHours, null, 65)).toBeNull();
+    expect(clearIntervals(sixHours, forecast([10, 10, 10, 10]), 65)).toBeNull();
+    expect(verdict(sixHours, forecast([10, 10, 10, 10])).reason.kind).toBe("no-weather-data");
   });
 });

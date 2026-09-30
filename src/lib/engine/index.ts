@@ -29,7 +29,7 @@ export { rankPlanets } from "./planet-ranking";
 export type { PlanetEntry, PlanetPlacement, PlanetRankInput, PlanetScore, PlanetTiming } from "./planet-ranking";
 export { seenSummaries } from "./log";
 export type { LogEntry, SeenSummary } from "./log";
-export { cloudOutlook, verdict } from "./verdict";
+export { clearIntervals, cloudOutlook, verdict } from "./verdict";
 export type { CloudOutlook } from "./verdict";
 export { darkWindowReturn, nextNightInOutlook, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
 export type { NextNight, NextNightInput, OutlookNight } from "./outlook";
