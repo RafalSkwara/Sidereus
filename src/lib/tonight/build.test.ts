@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
@@ -12,12 +12,35 @@ import {
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
   type HourlyForecast,
+  type Interval,
 } from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 
 import { buildTonight, type TonightNight, type TonightPlanets, type TonightRanking, type TonightView } from "./build";
+import { logHref } from "./load";
+import { tonightDateForSite } from "./tonight-date";
+
+/** Lets a test make the planet ranking throw; `false` (the default) leaves the engine untouched. */
+const planetRanking = vi.hoisted(() => ({ throws: false }));
+
+vi.mock("@/lib/engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/engine")>();
+  return {
+    ...actual,
+    rankPlanets: (...args: Parameters<typeof actual.rankPlanets>) => {
+      if (planetRanking.throws) {
+        throw new Error("planet ranking failed");
+      }
+      return actual.rankPlanets(...args);
+    },
+  };
+});
+
+afterEach(() => {
+  planetRanking.throws = false;
+});
 
 const WARSAW: SiteRecord = {
   id: "site-1",
@@ -539,6 +562,15 @@ describe("buildTonight's planets (M-2 S-01)", () => {
   const engineSite = toEngineSite(WARSAW);
   const night = observingNight("2026-10-10", WARSAW.timeZone);
   const dark = darkWindow(engineSite, night, darknessThresholdDegForBortle(WARSAW.bortle));
+  const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
+  if (dark.kind !== "window" || civil.kind !== "window") {
+    throw new Error("expected a dark window and a planet window on 2026-10-10 in Warsaw");
+  }
+  /** Whether a forecast hour starting at `start` overlaps the dark window. */
+  const overlapsDark = (start: Date) =>
+    start.getTime() < dark.end.getTime() && start.getTime() + HOUR_MS > dark.start.getTime();
+  /** `HH:mm` in Warsaw on 2026-10-10/11 (CEST, UTC+2). */
+  const hhmm = (instant: Date) => utcWallTime(instant, 2);
 
   function planetsOf(view: TonightView): TonightPlanets {
     if (view.planets === null) {
@@ -549,15 +581,11 @@ describe("buildTonight's planets (M-2 S-01)", () => {
 
   it("lists the planets on a go night with facts, the detail eyepiece, a reason and a note", () => {
     const planets = planetsOf(buildTonight(input, "en"));
-    const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
-    if (civil.kind !== "window") {
-      throw new Error("expected a planet window");
-    }
-    const hhmm = (instant: Date) => utcWallTime(instant, 2);
     expect(planets.windowText).toBe(`From civil dusk to dawn, ${hhmm(civil.start)}–${hhmm(civil.end)}`);
     // The verdict card already speaks for the planet window on a go night.
     expect(planets.weatherText).toBeNull();
     expect(planets.entries.length).toBeGreaterThan(0);
+    expect(planets.noneText).toBeNull();
     for (const entry of planets.entries) {
       expect(PLANET_KEYS).toContain(entry.key);
       expect(entry.name).toBe(en.targets.planet[entry.key]);
@@ -587,22 +615,93 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(saturn?.ringText).toMatch(/^pierścienie nachylone o \d+°$/);
   });
 
-  it("lists the planets on a cloudy no-go night whose twilight is clear, with the planet weather line", () => {
-    if (dark.kind !== "window") {
-      throw new Error("expected a dark window");
-    }
+  it("lists only the planets up in the clear twilight hours of a cloudy no-go night, and names those hours", () => {
     // Every forecast hour that overlaps the dark window is overcast; the twilight hours either side are clear.
-    const forecast = hourlyForecast("2026-10-10T00:00:00Z", 48, (start) =>
-      start.getTime() < dark.end.getTime() && start.getTime() + HOUR_MS > dark.start.getTime() ? 100 : 5,
-    );
+    const forecast = hourlyForecast("2026-10-10T00:00:00Z", 48, (start) => (overlapsDark(start) ? 100 : 5));
     const view = buildTonight({ ...input, forecast: result(forecast) }, "en");
     expect(view.verdict.level).toBe("no-go");
     expect(view.ranking).toBeNull();
     const planets = planetsOf(view);
-    expect(planets.weatherText).toBe(
-      "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and dawn",
-    );
+
+    // Clear from civil dusk to the hour the dark window starts in, and from the hour after it ends to civil dawn.
+    const clear: Interval[] = [
+      { start: civil.start, end: new Date(Math.floor(dark.start.getTime() / HOUR_MS) * HOUR_MS) },
+      { start: new Date(Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS), end: civil.end },
+    ];
+    const [evening, morning] = clear.map((interval) => `${hhmm(interval.start)}–${hhmm(interval.end)}`);
+    expect(planets.weatherText).toBe(`For planets: marginal — clear ${evening} and ${morning}`);
+
     expect(planets.entries.length).toBeGreaterThan(0);
+    for (const entry of planets.entries) {
+      const inClearHours = clear.some(
+        (interval) => interval.start.getTime() <= entry.bestAt && entry.bestAt <= interval.end.getTime(),
+      );
+      expect(inClearHours, `${entry.key} at ${entry.bestTime}`).toBe(true);
+    }
+    // Saturn and Neptune are up only in the overcast dark hours (on a go night they peak around midnight).
+    const keys = planets.entries.map((entry) => entry.key);
+    expect(keys).not.toContain("saturn");
+    expect(keys).not.toContain("neptune");
+    expect(planetsOf(buildTonight(input, "en")).entries.map((entry) => entry.key)).toEqual(
+      expect.arrayContaining(["saturn", "neptune"]),
+    );
+  });
+
+  it("says no planet is up in the clear hours when the only clear spell has none", () => {
+    // Only the evening twilight before the dark window is clear: Saturn and Neptune are still too low then.
+    const forecast = hourlyForecast("2026-10-10T00:00:00Z", 48, (start) =>
+      overlapsDark(start) || start.getTime() >= dark.end.getTime() ? 100 : 5,
+    );
+    const planets = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "en"));
+    expect(planets.weatherText).toMatch(/^For planets: marginal — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.entries).toEqual([]);
+    expect(planets.noneText).toBe(en.tonight.planets.noneInClearHours);
+
+    const polish = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "pl"));
+    expect(polish.weatherText).toMatch(/^Dla planet: na granicy — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(polish.noneText).toBe(pl.tonight.planets.noneInClearHours);
+  });
+
+  it("says no planet is well placed on a go night when none clears the site's minimum altitude", () => {
+    // Nothing reaches 70° from Warsaw on 10 October.
+    const view = buildTonight({ ...input, site: { ...WARSAW, minAltitudeDeg: 70 } }, "en");
+    expect(view.verdict.level).toBe("go");
+    const planets = planetsOf(view);
+    expect(planets.entries).toEqual([]);
+    expect(planets.noneText).toBe(en.tonight.planets.none);
+    expect(planets.noneText).toBe("No planet is well placed for your telescope between dusk and dawn tonight.");
+  });
+
+  it("gives the planet weather line when the planet verdict differs from a go on the card", () => {
+    // 95% humidity only in the evening civil twilight, before any hour that overlaps the dark window.
+    const humid = uniformForecast("2026-10-10T00:00:00Z", 5);
+    humid.hours = humid.hours.map((hour) =>
+      hour.start.getTime() + HOUR_MS > civil.start.getTime() &&
+      hour.start.getTime() < dark.start.getTime() &&
+      !overlapsDark(hour.start)
+        ? { ...hour, humidityPct: 95 }
+        : hour,
+    );
+    const view = buildTonight({ ...input, forecast: result(humid) }, "en");
+    expect(view.verdict.level).toBe("go");
+    const planets = planetsOf(view);
+    expect(planets.weatherText).toBe(
+      "For planets: marginal — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
+    );
+    // On a go night the planets are ranked over the whole planet window, as before.
+    expect(planets.entries.map((entry) => entry.key)).toEqual(
+      planetsOf(buildTonight(input, "en")).entries.map((entry) => entry.key),
+    );
+  });
+
+  it("keeps the verdict, ranking and strip when working out the planets fails", () => {
+    const working = buildTonight(input, "en");
+    planetRanking.throws = true;
+    const view = buildTonight(input, "en");
+    expect(view.planets).toBeNull();
+    expect(view.verdict).toEqual(working.verdict);
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.nights).toEqual(working.nights);
   });
 
   it("lists the planets on a no-darkness night whose planet window passes", () => {
@@ -620,9 +719,8 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
     expect(view.ranking).toBeNull();
     const planets = planetsOf(view);
-    expect(planets.weatherText).toMatch(
-      /^For planets: go — \d+ h in a row with at most 5% cloud between dusk and dawn$/,
-    );
+    // Every hour of the planet window is clear, so the clear hours are the whole window.
+    expect(planets.weatherText).toMatch(/^For planets: go — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries.length).toBeGreaterThan(0);
   });
 
@@ -670,5 +768,53 @@ describe("buildTonight's planets (M-2 S-01)", () => {
   it("leaves the planet detail eyepiece out when the kit has none", () => {
     const planets = planetsOf(buildTonight({ ...input, eyepieces: [] }, "en"));
     expect(planets.entries.every((entry) => entry.eyepiece === null)).toBe(true);
+  });
+});
+
+describe("buildTonight between the dark window's end and civil dawn", () => {
+  // 05:45 CEST on 11 October: the Bortle 6 dark window (sun below −15°) is over, civil dawn (−6°) is not.
+  const now = new Date("2026-10-11T03:45:00Z");
+  const engineSite = toEngineSite(WARSAW);
+  const night = observingNight("2026-10-10", WARSAW.timeZone);
+
+  it("still shows the night in progress, and a planet's log link carries that night", () => {
+    const dark = darkWindow(engineSite, night, darknessThresholdDegForBortle(WARSAW.bortle));
+    const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    if (dark.kind !== "window" || civil.kind !== "window") {
+      throw new Error("expected a dark window and a planet window on 2026-10-10 in Warsaw");
+    }
+    expect(now.getTime()).toBeGreaterThan(dark.end.getTime());
+    expect(now.getTime()).toBeLessThan(civil.end.getTime());
+
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now,
+      },
+      "en",
+    );
+    expect(view.date).toBe("2026-10-10");
+    expect(tonightDateForSite(WARSAW, now)).toBe("2026-10-10");
+    // The verdict card and night 1 of the strip are the night being observed, dark window already over.
+    expect(view.nights[0].date).toBe("2026-10-10");
+    expect(view.darkWindow).toEqual({
+      kind: "window",
+      start: utcWallTime(dark.start, 2),
+      end: utcWallTime(dark.end, 2),
+    });
+
+    const jupiter = view.planets?.entries.find((entry) => entry.key === "jupiter");
+    expect(jupiter?.reason).toMatch(/best before dawn$/);
+    const query = new URL(logHref(view, "jupiter"), "http://localhost").searchParams;
+    expect(query.get("object")).toBe("jupiter");
+    expect(query.get("night")).toBe("2026-10-10");
+  });
+
+  it("moves to the evening ahead once civil dawn has passed", () => {
+    // 07:00 CEST on 11 October, after civil dawn.
+    expect(tonightDateForSite(WARSAW, new Date("2026-10-11T05:00:00Z"))).toBe("2026-10-11");
   });
 });

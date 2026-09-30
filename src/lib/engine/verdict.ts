@@ -1,5 +1,5 @@
 import { VERDICT_THRESHOLDS } from "./parameters";
-import type { DarkWindow, ForecastHour, HourlyForecast, Verdict } from "./types";
+import type { DarkWindow, ForecastHour, HourlyForecast, Interval, Verdict } from "./types";
 
 /**
  * The go / marginal / no-go verdict for one dark window (PRD Open Question 2). Pure: the forecast
@@ -113,6 +113,41 @@ export function verdict(
 
   const minCloudPct = present.length === 0 ? null : Math.min(...present.map((hour) => hour.cloudCoverPct));
   return { level: "no-go", reason: { kind: "cloudy", bestRunHours: marginalRun.hours, minCloudPct } };
+}
+
+/**
+ * The clear stretches of `window`, in order: the whole UTC forecast hours overlapping it with cloud cover
+ * strictly below `cloudPct` (the test `longestRun` applies), consecutive hours merged, and each stretch
+ * clipped to the window. A missing hour inside the series is not clear, as in the verdict. `null` when
+ * there is no forecast or its series does not span the window (no weather data, never "nothing clear");
+ * an empty list when the forecast covers the window and no hour is clear.
+ */
+export function clearIntervals(window: Interval, forecast: HourlyForecast | null, cloudPct: number): Interval[] | null {
+  if (forecast === null) {
+    return null;
+  }
+  const slotStarts = overlappingSlotStarts(window.start, window.end);
+  if (!seriesSpans(slotStarts, forecast)) {
+    return null;
+  }
+  const byStart = new Map(forecast.hours.map((hour) => [hour.start.getTime(), hour]));
+  // Runs of consecutive clear slots, as [first slot start, last slot end) in ms.
+  const runs: { start: number; end: number }[] = [];
+  let previousClear = false;
+  for (const start of slotStarts) {
+    const hour = byStart.get(start);
+    const clear = hour !== undefined && hour.cloudCoverPct < cloudPct;
+    if (clear && previousClear) {
+      runs[runs.length - 1].end = start + HOUR_MS;
+    } else if (clear) {
+      runs.push({ start, end: start + HOUR_MS });
+    }
+    previousClear = clear;
+  }
+  return runs.map((run) => ({
+    start: new Date(Math.max(run.start, window.start.getTime())),
+    end: new Date(Math.min(run.end, window.end.getTime())),
+  }));
 }
 
 /** Cloud numbers for a night past the verdict horizon: never a verdict, only what the forecast says. */

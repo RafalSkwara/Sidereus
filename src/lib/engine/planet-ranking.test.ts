@@ -208,4 +208,52 @@ describe("rankPlanets (Warsaw 2026-10-10)", () => {
       expect(entry.seen).toEqual(entry.key === "jupiter" ? { count: 2, lastNight: "2026-10-01" } : null);
     }
   });
+
+  describe("with visible intervals", () => {
+    // 18:00-19:00 and 04:30-06:30 local: the evening and morning twilight, but not the middle of the night.
+    const evening = { start: new Date("2026-10-10T18:00:00+02:00"), end: new Date("2026-10-10T19:00:00+02:00") };
+    const morning = { start: new Date("2026-10-11T04:30:00+02:00"), end: new Date("2026-10-11T06:30:00+02:00") };
+    const inside = (time: Date, intervals: readonly { start: Date; end: Date }[]) =>
+      intervals.some((i) => i.start.getTime() <= time.getTime() && time.getTime() <= i.end.getTime());
+
+    it("takes each planet's best window, peak and facts from the visible samples only", () => {
+      const intervals = [evening, morning];
+      const masked = rank({ visibleIntervals: intervals });
+      expect(masked.length).toBeGreaterThan(0);
+      for (const entry of masked) {
+        expect(inside(entry.window.start, intervals)).toBe(true);
+        expect(inside(entry.window.end, intervals)).toBe(true);
+        expect(inside(entry.peak.time, intervals)).toBe(true);
+        expect(entry.peak.altitudeDeg).toBeGreaterThanOrEqual(15);
+      }
+      // Jupiter climbs until dawn, so its morning peak is the same; Uranus's midnight peak is not visible.
+      const jupiter = entryFor(masked, "jupiter");
+      expect(jupiter.peak.time).toEqual(entryFor(rank(), "jupiter").peak.time);
+      const uranus = entryFor(masked, "uranus");
+      expect(uranus.peak.altitudeDeg).toBeLessThan(entryFor(rank(), "uranus").peak.altitudeDeg);
+      expect(uranus.facts).not.toEqual(entryFor(rank(), "uranus").facts);
+    });
+
+    it("leaves out a planet never above the minimum altitude inside them", () => {
+      // Saturn and Neptune are still low in the evening twilight and set before the morning one.
+      const keys = keysOf(rank({ visibleIntervals: [evening, morning] }));
+      expect(keysOf(rank())).toEqual(expect.arrayContaining(["saturn", "neptune"]));
+      expect(keys).not.toContain("saturn");
+      expect(keys).not.toContain("neptune");
+      expect(rank({ visibleIntervals: [] })).toEqual([]);
+    });
+
+    it("keeps the timing thirds relative to the whole planet window", () => {
+      // Saturn peaks in the middle of the night; visible only in the evening twilight, its (low) peak falls in the
+      // first third of the whole window, not in the middle of the one-hour interval.
+      expect(entryFor(rank(), "saturn").timing).toBe("night");
+      const eveningOnly = rank({ visibleIntervals: [evening], minAltitudeDeg: 0 });
+      expect(entryFor(eveningOnly, "saturn").timing).toBe("evening");
+      for (const entry of eveningOnly) {
+        expect(entry.timing).toBe("evening");
+      }
+      // The same interval as a whole planet window would put every peak in its own thirds.
+      expect(rank({ visibleIntervals: [civilWindow()] })).toEqual(rank());
+    });
+  });
 });

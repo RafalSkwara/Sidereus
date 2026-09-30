@@ -1,6 +1,7 @@
 import { getMessages } from "@/i18n";
 import { MESSIER, type MessierObject } from "@/lib/catalogue";
 import {
+  clearIntervals,
   darknessThresholdDegForBortle,
   darkWindow,
   darkWindowReturn,
@@ -12,8 +13,10 @@ import {
   rankPlanets,
   seenSummaries,
   sevenNightOutlook,
+  TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG,
   tonightDateFor,
   verdict,
+  VERDICT_THRESHOLDS,
   type LogEntry,
   type PlanetKey,
   type RankedEntry,
@@ -120,17 +123,21 @@ export interface TonightPlanetEntry {
 
 /**
  * The "Planets tonight" section: planets that clear the site's minimum altitude between civil dusk and civil
- * dawn, best-placed first. `entries` is empty when none does.
+ * dawn, best-placed first. On a no-go night or a night without a dark window only the planet window's clear
+ * hours count (see `buildTonight`). `entries` is empty when no planet qualifies.
  */
 export interface TonightPlanets {
   /** "From civil dusk to dawn, 19:32–06:51" */
   windowText: string;
   /**
    * The planet window's own weather, set only when the verdict card doesn't already speak for it: on a no-go
-   * night or a night without a dark window. `null` otherwise.
+   * night, a night without a dark window, or when the planet verdict's level differs from the card's. It names
+   * the clear hours when the planets are limited to them. `null` otherwise.
    */
   weatherText: string | null;
   entries: TonightPlanetEntry[];
+  /** Why the list is empty, worded for a cloud-limited night where that applies; `null` when `entries` has any. */
+  noneText: string | null;
 }
 
 export interface TonightRanking {
@@ -205,6 +212,7 @@ export interface TonightView {
   /**
    * M-2 S-01: set when the planet window (sun below `PLANET_WINDOW_SUN_ALTITUDE_DEG`) exists and its own weather
    * is go or marginal, whatever the dark-window verdict says; `null` otherwise, and the verdict card explains why.
+   * Also `null` when working out the planets fails, so that never takes the rest of the view down.
    */
   planets: TonightPlanets | null;
 }
@@ -273,8 +281,9 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   const fallback = forecast?.fallback ?? false;
 
   const thresholdDeg = darknessThresholdDegForBortle(site.bortle);
-  // Once last night's darkness is over, "tonight" is the evening ahead (see `tonightDateFor`).
-  const date = tonightDateFor(engineSite, now, thresholdDeg);
+  // Once civil dawn has passed, "tonight" is the evening ahead (see `tonightDateFor`). Until then the night in
+  // progress stays on screen, dark window and ranking included, so morning planets and their log date belong to it.
+  const date = tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG);
   // One computation for the strip and the verdict card: night 1 of the outlook is tonight, so the two
   // can never disagree on the same screen.
   const outlook = sevenNightOutlook({ site: engineSite, thresholdDeg, date, forecast: hourly, fallback });
@@ -363,37 +372,55 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
 
   // Planets (M-2 S-01): their own window, civil dusk to civil dawn, and that window's own weather, independent of
   // the dark-window verdict, so a planet can show on a cloudy-at-night or a no-darkness night. Ranked once per build.
+  // A failure here only drops the section (`null`), never the verdict, ranking and strip; nothing is logged.
   let planets: TonightPlanets | null = null;
-  const planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
-  const planetVerdict = verdict(planetWindow, hourly, { fallback });
-  if (planetWindow.kind === "window" && (planetVerdict.level === "go" || planetVerdict.level === "marginal")) {
-    const ranked = rankPlanets({
-      site: engineSite,
-      minAltitudeDeg: site.minAltitudeDeg,
-      planetWindow,
-      telescope,
-      eyepieces,
-      seen,
-    });
-    planets = {
-      windowText: planetWindowText(planetWindow, timeZone),
-      // The verdict card already speaks for the planet window on a go or marginal night with a dark window.
-      weatherText: tonight.level === "no-go" || window.kind === "none" ? planetWeatherText(planetVerdict) : null,
-      entries: ranked.map((entry) => ({
-        key: entry.key,
-        name: messages.targets.planet[entry.key],
-        windowStart: formatTime(entry.window.start, timeZone),
-        windowEnd: formatTime(entry.window.end, timeZone),
-        bestTime: formatTime(entry.peak.time, timeZone),
-        bestAt: entry.peak.time.getTime(),
-        bestDirection: formatDirection(entry.peak),
-        ...planetFactsText(entry.key, entry.facts),
-        eyepiece: entry.eyepiece ? eyepieceLine(telescope, entry.eyepiece) : null,
-        reason: planetReasonLine(entry, timeZone),
-        note: messages.tonight.planets.note[entry.key],
-        seenText: entry.seen ? seenLine(entry.seen) : null,
-      })),
-    };
+  try {
+    const planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    const planetVerdict = verdict(planetWindow, hourly, { fallback });
+    if (planetWindow.kind === "window" && (planetVerdict.level === "go" || planetVerdict.level === "marginal")) {
+      // Where the verdict card doesn't pass the night (a no-go or no dark window), the planet window can pass on a
+      // single clear twilight hour, so only its clear hours count: each planet's best window, peak and facts come
+      // from them, and a planet up only under cloud is left out. On a go or marginal night the planets are ranked
+      // over the whole planet window, as the deep-sky ranking is over the whole dark window. `null` without
+      // forecast hours to judge by (no weather data): the whole planet window counts.
+      const cardPasses = (tonight.level === "go" || tonight.level === "marginal") && window.kind === "window";
+      const clear = cardPasses ? null : clearIntervals(planetWindow, hourly, VERDICT_THRESHOLDS.marginalCloudPct);
+      const ranked = rankPlanets({
+        site: engineSite,
+        minAltitudeDeg: site.minAltitudeDeg,
+        planetWindow,
+        telescope,
+        eyepieces,
+        seen,
+        ...(clear === null ? {} : { visibleIntervals: clear }),
+      });
+      const planetNone = clear === null ? messages.tonight.planets.none : messages.tonight.planets.noneInClearHours;
+      planets = {
+        windowText: planetWindowText(planetWindow, timeZone),
+        // The verdict card already speaks for the planet window when it passes the night at the same level.
+        weatherText:
+          !cardPasses || planetVerdict.level !== tonight.level
+            ? planetWeatherText(planetVerdict, clear === null ? null : { intervals: clear, timeZone })
+            : null,
+        entries: ranked.map((entry) => ({
+          key: entry.key,
+          name: messages.targets.planet[entry.key],
+          windowStart: formatTime(entry.window.start, timeZone),
+          windowEnd: formatTime(entry.window.end, timeZone),
+          bestTime: formatTime(entry.peak.time, timeZone),
+          bestAt: entry.peak.time.getTime(),
+          bestDirection: formatDirection(entry.peak),
+          ...planetFactsText(entry.key, entry.facts),
+          eyepiece: entry.eyepiece ? eyepieceLine(telescope, entry.eyepiece) : null,
+          reason: planetReasonLine(entry, timeZone),
+          note: messages.tonight.planets.note[entry.key],
+          seenText: entry.seen ? seenLine(entry.seen) : null,
+        })),
+        noneText: ranked.length === 0 ? planetNone : null,
+      };
+    }
+  } catch {
+    planets = null;
   }
 
   return {

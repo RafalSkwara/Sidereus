@@ -13,7 +13,7 @@ import {
 } from "./parameters";
 import { PLANET_KEYS, isIceGiant, planetFacts, planetTracks } from "./planets";
 import type { PlanetFacts, PlanetKey } from "./planets";
-import type { DarkWindow, HorizontalPosition, Site } from "./types";
+import type { DarkWindow, HorizontalPosition, Interval, Site } from "./types";
 
 /**
  * Which planets are worth a look tonight and in what order (M-2 S-01). Pure and deterministic:
@@ -34,6 +34,13 @@ export interface PlanetRankInput<E extends EyepieceOpticsInput = EyepieceOpticsI
   eyepieces: readonly E[];
   /** Targets already seen, by target key (`seenSummaries`); absent means an empty log. */
   seen?: ReadonlyMap<string, SeenSummary>;
+  /**
+   * When given, a planet counts as up only at samples inside one of these intervals (both ends included), e.g.
+   * the planet window's clear hours (`clearIntervals`): the best window, peak, score, placement and facts come
+   * from those samples alone, and a planet never above the minimum altitude inside them is left out. The timing
+   * thirds stay relative to the whole planet window. Absent means the whole planet window counts.
+   */
+  visibleIntervals?: readonly Interval[];
 }
 
 export interface PlanetScore {
@@ -53,7 +60,7 @@ export type PlanetTiming = "evening" | "night" | "morning";
 
 export interface PlanetEntry<E extends EyepieceOpticsInput = EyepieceOpticsInput> {
   key: PlanetKey;
-  /** The longest stretch at or above the site's minimum altitude within the planet window. */
+  /** The longest stretch at or above the site's minimum altitude within the planet window (and `visibleIntervals`). */
   window: BestWindow;
   /** Where the planet is at the highest sample of `window`. */
   peak: HorizontalPosition;
@@ -100,12 +107,24 @@ function timingOf(peak: Date, window: { start: Date; end: Date }): PlanetTiming 
 }
 
 /**
+ * `track` with every sample outside `intervals` pushed below any horizon, so `bestWindow` neither counts it nor
+ * picks it as the peak. The samples stay on the shared grid.
+ */
+function maskedTrack(track: readonly HorizontalPosition[], intervals: readonly Interval[]): HorizontalPosition[] {
+  return track.map((position) => {
+    const t = position.time.getTime();
+    const visible = intervals.some((interval) => interval.start.getTime() <= t && t <= interval.end.getTime());
+    return visible ? position : { ...position, altitudeDeg: Number.NEGATIVE_INFINITY };
+  });
+}
+
+/**
  * The planets that clear the site's minimum altitude during the planet window, best first. Uranus and
  * Neptune are left out below `ICE_GIANT_MIN_APERTURE_MM`. Ordered by `score.total` descending; ties
  * follow solar order.
  */
 export function rankPlanets<E extends EyepieceOpticsInput>(input: PlanetRankInput<E>): PlanetEntry<E>[] {
-  const { site, minAltitudeDeg, planetWindow, telescope, eyepieces, seen } = input;
+  const { site, minAltitudeDeg, planetWindow, telescope, eyepieces, seen, visibleIntervals } = input;
   const keys = PLANET_KEYS.filter((key) => !isIceGiant(key) || telescope.apertureMm >= ICE_GIANT_MIN_APERTURE_MM);
   const interval = { start: planetWindow.start, end: planetWindow.end };
   const tracks = planetTracks(site, interval, keys, DEFAULT_TRACK_STEP_MINUTES);
@@ -114,7 +133,8 @@ export function rankPlanets<E extends EyepieceOpticsInput>(input: PlanetRankInpu
 
   const entries: PlanetEntry<E>[] = [];
   keys.forEach((key, i) => {
-    const window = bestWindow(tracks[i], minAltitudeDeg);
+    const track = visibleIntervals === undefined ? tracks[i] : maskedTrack(tracks[i], visibleIntervals);
+    const window = bestWindow(track, minAltitudeDeg);
     if (window === null) {
       return;
     }

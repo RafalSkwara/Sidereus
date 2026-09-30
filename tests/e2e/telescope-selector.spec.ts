@@ -121,7 +121,8 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await expect(ranking(page).locator("ol > li").first()).toBeVisible();
   await expect(page.getByText(t.failed)).toHaveCount(0);
 
-  // No eyepieces: the ranking still shows, without pairs, and says how to get them back.
+  // No eyepieces: the ranking still shows, without pairs, and the page says how to get them back, once, above the
+  // planets and the ranking (the notice speaks for both).
   for (const eyepiece of await eyepieceNames(page)) {
     await deleteGear(page, eyepiece);
   }
@@ -129,8 +130,9 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await expect(ranking(page).locator("ol > li").first()).toBeVisible();
   await expect(ranking(page)).not.toContainText(t.object.findWith);
   await expect(ranking(page)).not.toContainText(t.object.noneFit({ name: "" }).split("(")[0] ?? "");
-  await expect(ranking(page).getByText(t.noEyepiecesPrompt)).toBeVisible();
-  await expect(ranking(page).getByRole("link", { name: t.addEyepieces })).toHaveAttribute(
+  await expect(page.locator("main").getByText(t.noEyepiecesPrompt)).toHaveCount(1);
+  await expect(page.locator("main").getByText(t.noEyepiecesPrompt)).toBeVisible();
+  await expect(page.locator("main").getByRole("link", { name: t.addEyepieces })).toHaveAttribute(
     "href",
     "/gear/eyepieces/new",
   );

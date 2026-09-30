@@ -44,7 +44,7 @@ const site = sites.find((s) => s.id === params.get("site")) ?? sites.at(0);
 const telescope = telescopes.find((s) => s.id === params.get("telescope")) ?? telescopes.at(0);
 
 const now = new Date();
-// The latest night matches what Tonight shows (the evening ahead once last night's darkness is over), so its
+// The latest night matches what Tonight shows (the evening ahead once civil dawn has passed), so its
 // "Mark observed" prefill is always accepted; ISO dates compare correctly as strings. Without a prefill the form
 // defaults to the night in progress or just ended (noon to noon), the one most likely being logged.
 const maxNight = sites.map((s) => tonightDateForSite(s, now)).reduce((a, b) => (b > a ? b : a), "");

@@ -59,6 +59,11 @@ const {
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
 // More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
 const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
+// The log, eyepiece and no-eyepieces notices speak for the planets and the ranking alike, so they show once, above
+// both, whenever either is shown (also on a planet-only night).
+const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
+const showSections = view !== null && (view.planets !== null || view.ranking !== null);
+const showNotices = showSections && (eyepiecesError !== null || noEyepieces || logError !== null);
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
   .join(" · ");
@@ -143,6 +148,24 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             nightsLink={view.ranking !== null || view.planets !== null}
           />
 
+          {showNotices && (
+            <div class="space-y-4">
+              {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
+              {noEyepieces && (
+                <p class="text-sm text-muted-foreground">
+                  {t.noEyepiecesPrompt}{" "}
+                  <a
+                    href="/gear/eyepieces/new"
+                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                  >
+                    {t.addEyepieces}
+                  </a>
+                </p>
+              )}
+              {logError && <ServerError message={translate(logError)} />}
+            </div>
+          )}
+
           {view.planets && <PlanetSection planets={view.planets} logHref={(key: string) => logHref(view, key)} />}
 
           {view.ranking && (
@@ -168,27 +191,6 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
               </div>
               {multipleTelescopes && (
                 <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
-              )}
-              {eyepiecesError && (
-                <div class="mb-4">
-                  <ServerError message={translate(eyepiecesError)} />
-                </div>
-              )}
-              {!view.hasEyepieces && !eyepiecesError && (
-                <p class="mb-4 text-sm text-muted-foreground">
-                  {t.noEyepiecesPrompt}{" "}
-                  <a
-                    href="/gear/eyepieces/new"
-                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                  >
-                    {t.addEyepieces}
-                  </a>
-                </p>
-              )}
-              {logError && (
-                <div class="mb-4">
-                  <ServerError message={translate(logError)} />
-                </div>
               )}
               {view.ranking.entries.length > 0 && (
                 <ol class="space-y-4">

@@ -214,6 +214,14 @@ export const DARK_RETURN_STRIDE_NIGHTS = 7;
 export const PLANET_WINDOW_SUN_ALTITUDE_DEG = -6;
 
 /**
+ * Candidate (planets-on-tonight review, 2026-09-30): "tonight" rolls over to the evening ahead once the sun
+ * rises back above this altitude (`tonightDateFor`), so the night in progress stays "tonight" until civil dawn.
+ * Morning-twilight planets, and the log date "Mark observed" prefills, then belong to the night being observed
+ * rather than the next one. It matches `PLANET_WINDOW_SUN_ALTITUDE_DEG`, where the planet window ends.
+ */
+export const TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG = -6;
+
+/**
  * Candidate (S-01 planning, M-2, 2026-09-30): Uranus and Neptune are listed only for a telescope with
  * at least this aperture, mm; below it they are little more than faint dots.
  */

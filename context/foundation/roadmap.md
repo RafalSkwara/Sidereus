@@ -49,7 +49,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 
 | ID   | Change ID                        | Outcome (user can …)                                                                                                            | Prerequisites | PRD refs       | Status   |
 | ---- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- | -------- |
-| S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | in-progress |
+| S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | done |
 | S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | proposed |
 | S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | proposed |
 | S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
@@ -103,7 +103,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What makes a planet worth recommending on a given night? Candidates: altitude (seeing worsens near the horizon), apparent size, and elongation from the Sun for Mercury and Venus; moonlight and Bortle class do not penalise them. — Owner: user. Block: no.
   - Log shape: observations currently accept Messier numbers only. Candidate: one generic target identity (kind + key) used by the ranking, the log and the "seen N times" tag; existing entries migrate as the Messier kind. — Owner: team. Block: no.
 - **Risk:** Sequenced first because it breaks the most M-1 assumptions (moving targets, twilight window, magnification instead of field of view, the log's identity), and the three sibling slices reuse whatever it settles. It adds per-request ephemeris work to Tonight, so it should re-measure the CPU figure tracked in #22. With no observing experience to check against, planet positions should be verified against Stellarium fixtures (the pattern in #19).
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: The Moon as a target
 
@@ -267,3 +267,5 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 ## Done
 
 (`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's entries live in git history and in `context/archive/`.)
+
+- **S-01: user can see the planets that are above the site's minimum altitude tonight on Tonight — each with its best time, altitude and compass direction then, constellation, a detail eyepiece from their own kit and a one-line reason — and can mark one as observed so the log records it.** — Archived 2026-09-30 → `context/archive/2026-09-30-planets-on-tonight/`. Lesson: —.

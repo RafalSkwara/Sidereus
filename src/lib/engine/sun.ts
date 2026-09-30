@@ -92,9 +92,11 @@ export function darkWindow(site: Site, night: ObservingNight, thresholdDeg: numb
 
 /**
  * The evening date (`YYYY-MM-DD`, site-local) of the night "tonight" means at `instant`: the night in
- * progress (noon to noon, `observingNightDateFor`) until its dark window has ended, then the coming
- * evening. So at 01:30 tonight is still the night being observed, and at 09:00 it is the evening ahead
- * rather than a night that is over. A night without a dark window keeps the noon rule.
+ * progress (noon to noon, `observingNightDateFor`) until the sun has risen back above `thresholdDeg`
+ * (the end of that night's `darkWindow` at `thresholdDeg`), then the coming evening. So at 01:30 tonight
+ * is still the night being observed, and at 09:00 it is the evening ahead rather than a night that is
+ * over. A night on which the sun never gets below `thresholdDeg` keeps the noon rule. Tonight and the log
+ * pass `TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG` (civil dawn), not the Bortle darkness threshold.
  */
 export function tonightDateFor(site: Site, instant: Date, thresholdDeg: number): string {
   const date = observingNightDateFor(instant, site.timeZone);
