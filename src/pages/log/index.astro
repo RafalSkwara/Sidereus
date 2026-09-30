@@ -4,15 +4,14 @@ import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import { CircleCheck } from "lucide-react";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { findMessier } from "@/lib/catalogue";
-import { localCommonName } from "@/lib/catalogue/common-names";
-import { LOG_LIST, parseLogPage, type LogNotice } from "@/lib/observations/redirect";
+import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
+import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
 
 // The observation log (roadmap S-07, FR-017 / FR-021): the user's entries grouped by observing night, newest first,
-// one page at a time. Writes elsewhere come back here with `?saved=`, `?updated=` or `?deleted=<Messier number>`;
-// a failed delete with `?error=<message key>`.
+// one page at a time. Writes elsewhere come back here with `?saved=`, `?updated=` or `?deleted=<target key>` (a bare
+// Messier number from an older link still reads); a failed delete with `?error=<message key>`.
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.log.list;
@@ -20,16 +19,8 @@ const params = Astro.url.searchParams;
 const page = parseLogPage(params.get("page"));
 const error = params.get("error");
 
-const NOTICES: readonly LogNotice[] = ["saved", "updated", "deleted"];
-let notice: string | null = null;
-for (const kind of NOTICES) {
-  const value = params.get(kind) ?? "";
-  const object = /^\d{1,3}$/.test(value) ? findMessier(Number(value)) : undefined;
-  if (object) {
-    notice = t[kind]({ object: object.id });
-    break;
-  }
-}
+const logNotice = readLogNotice(params);
+const notice = logNotice ? t[logNotice.kind]({ object: targetLabel(logNotice.target, locale).id }) : null;
 
 let entries: ObservationRecord[] = [];
 let hasOlder = false;
@@ -126,9 +117,7 @@ const pageLink =
             </h2>
             <ul class="divide-y divide-border">
               {group.entries.map((entry) => {
-                const object = findMessier(entry.messier);
-                const id = object?.id ?? `M${entry.messier}`;
-                const commonName = object ? localCommonName(object.messier, object.commonName, locale) : null;
+                const { id, name: commonName } = targetLabel(entry.target, locale);
                 return (
                   <li>
                     <a

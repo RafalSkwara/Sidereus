@@ -146,10 +146,13 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
   };
 }
 
-/** The log form for one ranked object, prefilled with the ranking's night, site and telescope (FR-016). */
-export function logHref(tonight: TonightView, messier: number): string {
+/**
+ * The log form for one ranked object, by its target key ("M31"), prefilled with the ranking's night, site and
+ * telescope (FR-016).
+ */
+export function logHref(tonight: TonightView, target: string): string {
   const query = new URLSearchParams({
-    object: String(messier),
+    object: target,
     night: tonight.date,
     site: tonight.siteId,
     telescope: tonight.telescopeId,

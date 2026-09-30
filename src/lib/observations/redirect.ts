@@ -1,4 +1,5 @@
 import type { MessageKey } from "@/i18n";
+import { parseTargetParam, type TargetKey } from "@/lib/targets";
 import { observationInputSchema, returnTargetSchema } from "./schemas";
 
 /** The log form's path; `POST /api/log` sends the user back here on failure. */
@@ -7,11 +8,11 @@ export const LOG_FORM = "/log/new";
 /** The log list (roadmap S-07). */
 export const LOG_LIST = "/log";
 
-const { messier, night, siteId, telescopeId } = observationInputSchema.shape;
+const { target, night, siteId, telescopeId } = observationInputSchema.shape;
 
 /** Form field → query parameter of the form page, with the schema field that must accept the value. */
 const PREFILL = [
-  ["messier", "object", messier],
+  ["target", "object", target],
   ["night", "night", night],
   ["siteId", "site", siteId],
   ["telescopeId", "telescope", telescopeId],
@@ -19,7 +20,7 @@ const PREFILL = [
 
 /**
  * Where a failed save goes: back to the form with its prefill and a fixed message key. Each value is
- * carried only when it parses on its own as a Messier number, a calendar date or a uuid, so nothing
+ * carried only when it parses on its own as a target key, a calendar date or a uuid, so nothing
  * typed by hand (and never a coordinate) ends up in the URL. The rating is never carried.
  */
 export function formRedirect(raw: Record<string, unknown>, error: MessageKey): string {
@@ -46,9 +47,25 @@ export function editRedirect(id: string, error: MessageKey): string {
 
 export type LogNotice = "saved" | "updated" | "deleted";
 
-/** The log after a successful write, naming the object the notice is about by its Messier number only. */
-export function logNotice(kind: LogNotice, messier: number): string {
-  return `${LOG_LIST}?${kind}=${messier}`;
+const LOG_NOTICES: readonly LogNotice[] = ["saved", "updated", "deleted"];
+
+/** The log after a successful write, naming the object the notice is about by its target key only. */
+export function logNotice(kind: LogNotice, target: TargetKey): string {
+  return `${LOG_LIST}?${new URLSearchParams({ [kind]: target }).toString()}`;
+}
+
+/**
+ * The notice the log shows for its query (`logNotice`), or `null`. A bare Messier number, as links from before
+ * target keys carry it, reads as that object's key.
+ */
+export function readLogNotice(params: URLSearchParams): { kind: LogNotice; target: TargetKey } | null {
+  for (const kind of LOG_NOTICES) {
+    const target = parseTargetParam(params.get(kind));
+    if (target) {
+      return { kind, target };
+    }
+  }
+  return null;
 }
 
 /** The log page number from `?page=`: a positive integer, anything else (missing, junk, 0) reads as the first page. */

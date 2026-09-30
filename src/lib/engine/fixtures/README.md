@@ -92,3 +92,29 @@ Skip fixtures whose `moon.status` is `not-applicable`.
 - `pending` — placeholders; tests register a todo.
 - `captured` — real values; tests assert them.
 - `not-applicable` — the section does not apply to this fixture (a `reason` is recorded); tests skip it.
+
+## Skyfield planet reference (`skyfield/`)
+
+`skyfield/planets-warsaw-2026-10-10.json` is generated, not hand-read. It holds each planet's apparent
+(refracted) altitude and azimuth and its apparent equatorial diameter for the Warsaw reference point
+(52.23 N 21.01 E, 110 m) at every whole hour inside the civil window (sun below −6°) of the night
+2026-10-10, computed with Skyfield and the JPL DE421 ephemeris. It is an independent cross-check of
+`planets.ts`, which uses astronomy-engine. `provenance` records the Skyfield version, the ephemeris,
+the refraction settings (10 °C, 1010 mbar) and the generation date.
+
+`planets.test.ts` asserts every sample above 5° within 0.05° in altitude and azimuth (refraction
+models differ near the horizon, so lower samples are not compared). That is far tighter than
+`ALTITUDE_TOLERANCE_DEG` (1°, sized for hand-read Stellarium values): the libraries agree to ~0.005°,
+and a 1° tolerance could not tell a refracted position from an unrefracted one. Every diameter is checked within 1″, or 2% where that is tighter.
+
+To regenerate, never install Skyfield in the repo; use a throwaway virtualenv and a local copy of
+`de421.bsp` (https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de421.bsp):
+
+```bash
+python3 -m venv /tmp/skyfield-venv
+/tmp/skyfield-venv/bin/pip install skyfield
+/tmp/skyfield-venv/bin/python scripts/planet-reference.py /path/to/de421.bsp \
+  src/lib/engine/fixtures/skyfield/planets-warsaw-2026-10-10.json
+```
+
+The planet radii in the script must match `planets.ts`. Review the diff before committing.

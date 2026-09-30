@@ -59,11 +59,12 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
-          messier: number;
+          messier: number | null;
           night: string;
           rating: number;
           site_id: string | null;
           site_name: string;
+          target: string;
           telescope_id: string | null;
           telescope_name: string;
           user_id: string;
@@ -71,11 +72,12 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
-          messier: number;
+          messier?: number | null;
           night: string;
           rating: number;
           site_id?: string | null;
           site_name: string;
+          target: string;
           telescope_id?: string | null;
           telescope_name: string;
           user_id?: string;
@@ -83,11 +85,12 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
-          messier?: number;
+          messier?: number | null;
           night?: string;
           rating?: number;
           site_id?: string | null;
           site_name?: string;
+          target?: string;
           telescope_id?: string | null;
           telescope_name?: string;
           user_id?: string;

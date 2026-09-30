@@ -49,15 +49,15 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 
 | ID   | Change ID                        | Outcome (user can …)                                                                                                            | Prerequisites | PRD refs       | Status   |
 | ---- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- | -------- |
-| S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | ready · GitHub #65 |
-| S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | proposed · GitHub #66 |
-| S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | proposed · GitHub #67 |
-| S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked · GitHub #68 |
-| S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready · GitHub #69 |
-| S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed · GitHub #70 |
-| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | ready · GitHub #71 |
-| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready · GitHub #72 |
-| S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked · GitHub #73 |
+| S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | in-progress |
+| S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | proposed |
+| S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | proposed |
+| S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
+| S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
+| S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
+| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | ready |
+| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready |
+| S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
 ## Streams
 
@@ -103,7 +103,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What makes a planet worth recommending on a given night? Candidates: altitude (seeing worsens near the horizon), apparent size, and elongation from the Sun for Mercury and Venus; moonlight and Bortle class do not penalise them. — Owner: user. Block: no.
   - Log shape: observations currently accept Messier numbers only. Candidate: one generic target identity (kind + key) used by the ranking, the log and the "seen N times" tag; existing entries migrate as the Messier kind. — Owner: team. Block: no.
 - **Risk:** Sequenced first because it breaks the most M-1 assumptions (moving targets, twilight window, magnification instead of field of view, the log's identity), and the three sibling slices reuse whatever it settles. It adds per-request ephemeris work to Tonight, so it should re-measure the CPU figure tracked in #22. With no observing experience to check against, planet positions should be verified against Stellarium fixtures (the pattern in #19).
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-02: The Moon as a target
 

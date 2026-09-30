@@ -371,7 +371,7 @@ export const pl = {
     addTelescope: "Dodaj teleskop",
     setupPrompt: "Ustaw swoje stanowisko i teleskop — zajmie to około minuty",
     setup: "Skonfiguruj",
-    logged: (p) => `Zapisano obserwację ${p.object}.`,
+    logged: (p) => `Zapisano obserwację: ${p.object}.`,
     logFailed:
       "Nie udało się wczytać Twojego dziennika obserwacji, więc widziane obiekty nie są teraz przesuwane w dół.",
     eyepiecesFailed: "Nie udało się wczytać Twoich okularów, więc obiekty na dziś pokazujemy bez propozycji okularów.",
@@ -432,6 +432,55 @@ export const pl = {
         other: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
       },
       markObserved: "Zapisz obserwację",
+    },
+
+    // Planet names never follow a preposition here, so nothing needs a grammatical case.
+    planets: {
+      heading: "Planety dziś w nocy",
+      window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
+      none: "Dziś między zmierzchem a świtem żadna planeta nie wznosi się ponad Twoją minimalną wysokość.",
+      weather: {
+        line: (p) => `Dla planet: ${p.level} — ${p.reason}`,
+        clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
+        humidityCap: (p) =>
+          `między zmierzchem a świtem niebo dość czyste, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
+        fallbackCap: (p) =>
+          `ostatnia zapisana prognoza pokazywała ${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem, ale nie udało się jej odświeżyć`,
+        noWeatherData: "brak danych pogodowych",
+      },
+      magnitude: (p) => `jasność ${p.mag} mag`,
+      size: (p) => `${p.arcsec}″`,
+      phase: (p) => `faza ${p.percent}%`,
+      rings: (p) => `pierścienie nachylone o ${p.degrees}°`,
+      detailWith: "Do szczegółów:",
+      reason: {
+        high: {
+          evening: (p) => `Wysoko około ${p.time} — najlepiej wieczorem`,
+          night: (p) => `Wysoko około ${p.time} — najlepiej w środku nocy`,
+          morning: (p) => `Wysoko około ${p.time} — najlepiej przed świtem`,
+        },
+        well: {
+          evening: (p) => `Dość wysoko około ${p.time} — najlepiej wieczorem`,
+          night: (p) => `Dość wysoko około ${p.time} — najlepiej w środku nocy`,
+          morning: (p) => `Dość wysoko około ${p.time} — najlepiej przed świtem`,
+        },
+        low: {
+          evening: (p) => `Nisko około ${p.time} — patrz zaraz po zmierzchu, przy odsłoniętym horyzoncie`,
+          night: (p) => `Nisko około ${p.time} — potrzebujesz odsłoniętego horyzontu`,
+          morning: (p) => `Nisko około ${p.time} — patrz tuż przed świtem, przy odsłoniętym horyzoncie`,
+        },
+      },
+      note: {
+        mercury: "Mała, jasna kropka nisko w zmierzchu; przy większym powiększeniu możesz dostrzec fazę.",
+        venus: "Oślepiająco jasna i bez szczegółów, ale jej fazę łatwo zobaczyć — wygląda jak maleńki Księżyc.",
+        mars: "Mała pomarańczowa tarcza; szczegóły powierzchni wymagają spokojnego powietrza i cierpliwości, a często nie widać ich wcale.",
+        jupiter: "Jasna tarcza z dwoma ciemnymi pasami chmur i do czterech księżyców ustawionych w linii obok.",
+        saturn:
+          "Pierścienie widać wyraźnie już przy niewielkim powiększeniu; największy księżyc, Tytan, wygląda jak gwiazda tuż obok.",
+        uranus:
+          "Maleńka niebieskozielona tarcza: przy dużym powiększeniu widać, że to nie gwiazda, ale bez żadnych szczegółów.",
+        neptune: "Maleńka niebieskoszara kropka, trudna do odróżnienia od gwiazdy; samo odnalezienie jej to sukces.",
+      },
     },
 
     time: {
@@ -554,9 +603,22 @@ export const pl = {
     },
   },
 
+  targets: {
+    planet: {
+      mercury: "Merkury",
+      venus: "Wenus",
+      mars: "Mars",
+      jupiter: "Jowisz",
+      saturn: "Saturn",
+      uranus: "Uran",
+      neptune: "Neptun",
+    },
+    planetDetail: "Planeta",
+  },
+
   log: {
     kicker: "Dziennik obserwacji",
-    title: (p) => `Zapisz ${p.object}`,
+    title: (p) => `Nowy wpis: ${p.object}`,
     intro: "Potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     night: "Noc obserwacji",
     nightHint: "Data wieczoru, w którym zaczęła się noc — także gdy obserwacja była po północy.",
@@ -568,24 +630,25 @@ export const pl = {
     ratingHint: "Ocena 1–2 zostawia obiekt na swoim miejscu; 3–5 lekko obniża go w kolejnych rankingach.",
     submit: "Zapisz obserwację",
     back: "← Dziś w nocy",
-    objectNotFound: "Tego obiektu nie ma w katalogu Messiera.",
+    objectNotFound: "Sidereus nie zna tego obiektu.",
     needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
     addGear: "Przejdź do sprzętu",
     manualTitle: "Dodaj obserwację",
-    manualIntro: "Wybierz dowolny obiekt Messiera, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+    manualIntro:
+      "Wybierz obiekt Messiera albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     backToLog: "← Dziennik",
-    editTitle: (p) => `Edytuj ${p.object}`,
+    editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
     saveChanges: "Zapisz zmiany",
     delete: "Usuń wpis",
-    confirmDelete: (p) => `Usunąć ten wpis ${p.object} z dziennika? Tej operacji nie można cofnąć.`,
+    confirmDelete: (p) => `Usunąć wpis „${p.object}” z dziennika? Tej operacji nie można cofnąć.`,
     notFound: "Nie znaleziono wpisu",
     notFoundText: "Mógł już zostać usunięty.",
     backToLogLink: "Wróć do dziennika",
     picker: {
       label: "Obiekt",
-      placeholder: "np. 31 albo Andromeda",
-      noMatch: "Żaden obiekt Messiera nie pasuje.",
+      placeholder: "np. 31, Andromeda albo Jowisz",
+      noMatch: "Żaden obiekt nie pasuje.",
     },
     list: {
       title: "Dziennik obserwacji",
@@ -601,9 +664,9 @@ export const pl = {
       pages: "Strony dziennika",
       newer: "← Nowsze",
       older: "Starsze →",
-      saved: (p) => `Zapisano obserwację ${p.object}.`,
-      updated: (p) => `Zaktualizowano obserwację ${p.object}.`,
-      deleted: (p) => `Usunięto obserwację ${p.object} z dziennika.`,
+      saved: (p) => `Zapisano obserwację: ${p.object}.`,
+      updated: (p) => `Zaktualizowano obserwację: ${p.object}.`,
+      deleted: (p) => `Usunięto z dziennika obserwację: ${p.object}.`,
     },
   },
 

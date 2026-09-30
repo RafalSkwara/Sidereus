@@ -5,10 +5,11 @@ import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
-import type { MessierOption } from "@/lib/observations/messier-search";
+import type { TargetOption } from "@/lib/observations/target-search";
 import { MIN_NIGHT, observationInputSchema, observationUpdateSchema } from "@/lib/observations/schemas";
+import type { TargetKey } from "@/lib/targets";
 import { cn } from "@/lib/utils";
-import { MessierPicker } from "./MessierPicker";
+import { TargetPicker } from "./TargetPicker";
 
 interface GearOption {
   id: string;
@@ -28,9 +29,9 @@ interface Props {
    * The prefill: from the ranking its object, night, site and telescope (FR-016); for manual entry an optional
    * object and the likeliest night. The rating always starts empty.
    */
-  initial: { messier?: number; night: string; siteId: string; telescopeId: string; rating?: number };
-  /** Every Messier object for the picker; required in `manual` and `edit` modes. */
-  messierOptions?: readonly MessierOption[];
+  initial: { target?: TargetKey; night: string; siteId: string; telescopeId: string; rating?: number };
+  /** Every target (Messier objects, then planets) for the picker; required in `manual` and `edit` modes. */
+  targetOptions?: readonly TargetOption[];
   /**
    * `edit` only: the name snapshot of the entry's site or telescope when that gear has been deleted since (FR-021).
    * The select then offers it as an empty value, meaning "keep it", and `initial` selects it with an empty id.
@@ -49,10 +50,10 @@ interface Props {
   locale: Locale;
 }
 
-type FieldName = "messier" | "night" | "rating" | "siteId" | "telescopeId";
+type FieldName = "target" | "night" | "rating" | "siteId" | "telescopeId";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
-const FIELD_NAMES: readonly string[] = ["messier", "night", "rating", "siteId", "telescopeId"];
+const FIELD_NAMES: readonly string[] = ["target", "night", "rating", "siteId", "telescopeId"];
 const RATINGS = [1, 2, 3, 4, 5] as const;
 
 const selectBase =
@@ -83,7 +84,7 @@ export default function ObservationForm({
   action,
   mode,
   initial,
-  messierOptions = [],
+  targetOptions = [],
   deletedSite,
   deletedTelescope,
   sites,
@@ -94,7 +95,7 @@ export default function ObservationForm({
 }: Props) {
   const m = getMessages(locale);
   const t = m.log;
-  const [messier, setMessier] = useState(initial.messier === undefined ? "" : String(initial.messier));
+  const [target, setTarget] = useState<string>(initial.target ?? "");
   const [night, setNight] = useState(initial.night);
   const [siteId, setSiteId] = useState(initial.siteId);
   const [telescopeId, setTelescopeId] = useState(initial.telescopeId);
@@ -103,7 +104,7 @@ export default function ObservationForm({
 
   function validate() {
     const schema = mode === "edit" ? observationUpdateSchema : observationInputSchema;
-    const result = schema.safeParse({ messier, night, rating, siteId, telescopeId });
+    const result = schema.safeParse({ target, night, rating, siteId, telescopeId });
     const next: FieldErrors = {};
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -130,21 +131,21 @@ export default function ObservationForm({
   return (
     <form method="POST" action={action} className="space-y-5" onSubmit={handleSubmit} noValidate>
       {mode === "ranking" ? (
-        <input type="hidden" name="messier" value={messier} />
+        <input type="hidden" name="target" value={target} />
       ) : (
         <>
           {mode === "manual" && <input type="hidden" name="from" value="log" />}
-          <MessierPicker
-            id="messier"
-            options={messierOptions}
-            initial={initial.messier}
+          <TargetPicker
+            id="target"
+            options={targetOptions}
+            initial={initial.target}
             label={t.picker.label}
             placeholder={t.picker.placeholder}
             noMatch={t.picker.noMatch}
-            error={errors.messier}
+            error={errors.target}
             onChange={(value) => {
-              setMessier(value === null ? "" : String(value));
-              clearError("messier");
+              setTarget(value ?? "");
+              clearError("target");
             }}
           />
         </>

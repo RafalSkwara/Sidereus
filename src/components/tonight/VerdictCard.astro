@@ -15,8 +15,8 @@ interface Props {
   /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
   explanation: TonightExplanation | null;
   /**
-   * Show a "Next 7 nights ↓" link to the strip (`#nights`): only when a ranking sits between the card and the
-   * strip, so the week stays one tap away on a phone.
+   * Show a "Next 7 nights ↓" link to the strip (`#nights`): only when a ranking or the planets sit between the
+   * card and the strip, so the week stays one tap away on a phone.
    */
   nightsLink?: boolean;
 }

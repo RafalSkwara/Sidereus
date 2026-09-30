@@ -8,11 +8,13 @@ import {
   moonTrack,
   objectTracks,
   observingNight,
+  PLANET_WINDOW_SUN_ALTITUDE_DEG,
   rankObjects,
+  rankPlanets,
   seenSummaries,
   sevenNightOutlook,
 } from "./index";
-import type { HorizontalPosition, LogEntry, MoonState, Ranking, Site } from "./index";
+import type { HorizontalPosition, LogEntry, MoonState, PlanetEntry, Ranking, Site } from "./index";
 
 /**
  * The PRD's determinism NFR (identical inputs → identical verdict and ranking) and the ranking-time
@@ -159,13 +161,13 @@ describe("ranking determinism and budget", () => {
 describe("ranking determinism with a non-empty observation log", () => {
   it("yields deep-equal rankings for two identical runs, and the log does change the ranking", () => {
     const unlogged = fullRanking();
-    const [first, second, third] = unlogged.entries.map((e) => e.object.messier);
+    const [first, second, third] = unlogged.entries.map((e) => e.object.id);
     const log: LogEntry[] = [
-      { messier: first, night: "2026-09-12", rating: 4 },
-      { messier: first, night: "2026-10-01", rating: 5 },
-      { messier: second, night: "2026-09-20", rating: 3 },
+      { target: first, night: "2026-09-12", rating: 4 },
+      { target: first, night: "2026-10-01", rating: 5 },
+      { target: second, night: "2026-09-20", rating: 3 },
       // Invariant 4: a failed attempt never demotes.
-      { messier: third, night: "2026-10-05", rating: 2 },
+      { target: third, night: "2026-10-05", rating: 2 },
     ];
 
     const once = fullRanking(log);
@@ -188,5 +190,36 @@ describe("seven-night outlook determinism", () => {
     const asNumbers = (value: unknown): string =>
       JSON.stringify(value, (_key, v: unknown) => (v instanceof Date ? v.getTime() : v));
     expect(asNumbers(sevenNightOutlook(input))).toBe(asNumbers(once));
+  });
+});
+
+describe("planet ranking determinism", () => {
+  /** The planets for Warsaw on 2026-10-10 over the civil window, with a 150/750 telescope and a small log. */
+  function planets(): PlanetEntry[] {
+    const night = observingNight("2026-10-10", WARSAW.timeZone);
+    const civil = darkWindow(WARSAW, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    if (civil.kind !== "window") {
+      throw new Error("expected a civil window on 2026-10-10 in Warsaw");
+    }
+    return rankPlanets({
+      site: WARSAW,
+      minAltitudeDeg: 15,
+      planetWindow: civil,
+      telescope: { apertureMm: 150, focalLengthMm: 750 },
+      eyepieces: [
+        { id: "e25", focalLengthMm: 25, afovDeg: 50 },
+        { id: "e10", focalLengthMm: 10, afovDeg: 50 },
+      ],
+      seen: seenSummaries([{ target: "saturn", night: "2026-10-01", rating: 4 }], "2026-10-10"),
+    });
+  }
+
+  it("yields deep-equal planet lists for two identical inputs", () => {
+    const once = planets();
+    expect(once.length).toBeGreaterThan(0);
+    expect(planets()).toEqual(once);
+    const asNumbers = (value: unknown): string =>
+      JSON.stringify(value, (_key, v: unknown) => (v instanceof Date ? v.getTime() : v));
+    expect(asNumbers(planets())).toBe(asNumbers(once));
   });
 });

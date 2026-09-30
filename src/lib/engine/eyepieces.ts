@@ -1,4 +1,10 @@
-import { EXIT_PUPIL_CEILING_MM, EXIT_PUPIL_FLOOR_MM, FOV_FIT_FRACTION } from "./parameters";
+import {
+  EXIT_PUPIL_CEILING_MM,
+  EXIT_PUPIL_FLOOR_MM,
+  FOV_FIT_FRACTION,
+  MAX_MAGNIFICATION,
+  MAX_MAGNIFICATION_PER_MM,
+} from "./parameters";
 
 /**
  * Eyepiece optics and the finding/detail pairing (FR-014) over the user's own kit. Pure. Inputs are
@@ -66,6 +72,7 @@ function maxBy<E>(candidates: readonly Candidate<E>[], key: (c: Candidate<E>) =>
 }
 
 const trueField = <E>(c: Candidate<E>): number => c.optics.trueFovDeg;
+const magnificationOf = <E>(c: Candidate<E>): number => c.optics.magnification;
 
 /**
  * Pairs a finding and a detail eyepiece for an object of the given major axis (arcminutes; `null`
@@ -109,7 +116,28 @@ export function pairEyepieces<E extends EyepieceOpticsInput>(
   const detail =
     maxBy(
       eligible.filter((c) => c.optics.exitPupilMm >= EXIT_PUPIL_FLOOR_MM),
-      (c) => c.optics.magnification,
+      magnificationOf,
     ) ?? finding;
   return { kind: "pair", finding: finding.eyepiece, detail: detail.eyepiece };
+}
+
+/**
+ * The eyepiece for planetary detail (M-2 S-01): the one with the highest magnification that keeps the
+ * exit pupil at or above `EXIT_PUPIL_FLOOR_MM` and stays within the useful ceiling,
+ * min(`MAX_MAGNIFICATION_PER_MM` × aperture, `MAX_MAGNIFICATION`). When every eyepiece breaks those
+ * limits, the lowest-magnification one. `null` for an empty kit; ties go to the earlier eyepiece in
+ * `eyepieces` (callers pass `created_at` order).
+ */
+export function planetEyepiece<E extends EyepieceOpticsInput>(
+  telescope: TelescopeOpticsInput,
+  eyepieces: readonly E[],
+): E | null {
+  const candidates = eyepieces.map((eyepiece) => ({ eyepiece, optics: eyepieceOptics(telescope, eyepiece) }));
+  const ceiling = Math.min(MAX_MAGNIFICATION_PER_MM * telescope.apertureMm, MAX_MAGNIFICATION);
+  const detail = maxBy(
+    candidates.filter((c) => c.optics.exitPupilMm >= EXIT_PUPIL_FLOOR_MM && c.optics.magnification <= ceiling),
+    magnificationOf,
+  );
+  const fallback = maxBy(candidates, (c) => -c.optics.magnification);
+  return (detail ?? fallback)?.eyepiece ?? null;
 }

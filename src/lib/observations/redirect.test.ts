@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editRedirect, formRedirect, parseLogPage } from "./redirect";
+import { editRedirect, formRedirect, logNotice, parseLogPage, readLogNotice } from "./redirect";
 
 const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
 const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
@@ -13,11 +13,11 @@ function params(url: string): Record<string, string> {
 describe("formRedirect", () => {
   it("returns to the form with every valid prefill value and the error key", () => {
     const url = formRedirect(
-      { messier: "13", night: "2026-09-26", rating: "7", siteId: SITE, telescopeId: TELESCOPE },
+      { target: "M13", night: "2026-09-26", rating: "7", siteId: SITE, telescopeId: TELESCOPE },
       "errors.observation.ratingRequired",
     );
     expect(params(url)).toEqual({
-      object: "13",
+      object: "M13",
       night: "2026-09-26",
       site: SITE,
       telescope: TELESCOPE,
@@ -25,29 +25,36 @@ describe("formRedirect", () => {
     });
   });
 
-  it("drops any value that is not a Messier number, uuid or calendar date, so free text never reaches the URL", () => {
+  it("carries a planet key", () => {
+    expect(params(formRedirect({ target: "jupiter" }, "errors.generic"))).toEqual({
+      object: "jupiter",
+      error: "errors.generic",
+    });
+  });
+
+  it("drops any value that is not a target key, uuid or calendar date, so free text never reaches the URL", () => {
     const url = formRedirect(
-      { messier: "M13 at 52.23N", night: "tomorrow", siteId: "52.23,21.01", telescopeId: "<script>" },
+      { target: "M13 at 52.23N", night: "tomorrow", siteId: "52.23,21.01", telescopeId: "<script>" },
       "errors.observation.objectInvalid",
     );
     expect(params(url)).toEqual({ error: "errors.observation.objectInvalid" });
   });
 
   it("drops an out-of-range object and a non-calendar night", () => {
-    expect(params(formRedirect({ messier: "111", night: "2026-02-30" }, "errors.generic"))).toEqual({
+    expect(params(formRedirect({ target: "M111", night: "2026-02-30" }, "errors.generic"))).toEqual({
       error: "errors.generic",
     });
   });
 
   it("ignores non-string form values", () => {
-    expect(params(formRedirect({ messier: 13, siteId: null }, "errors.generic"))).toEqual({ error: "errors.generic" });
+    expect(params(formRedirect({ target: 13, siteId: null }, "errors.generic"))).toEqual({ error: "errors.generic" });
   });
 });
 
 describe("formRedirect for manual entry", () => {
   it("carries the log return target so the form comes back in manual mode", () => {
-    expect(params(formRedirect({ messier: "31", from: "log" }, "errors.observation.ratingRequired"))).toEqual({
-      object: "31",
+    expect(params(formRedirect({ target: "M31", from: "log" }, "errors.observation.ratingRequired"))).toEqual({
+      object: "M31",
       from: "log",
       error: "errors.observation.ratingRequired",
     });
@@ -67,6 +74,29 @@ describe("editRedirect", () => {
 
   it("encodes a hostile id so it stays one path segment", () => {
     expect(editRedirect("../gear?x=1", "errors.generic")).toBe("/log/..%2Fgear%3Fx%3D1?error=errors.generic");
+  });
+});
+
+describe("logNotice and readLogNotice", () => {
+  it("name the object by its target key", () => {
+    expect(logNotice("saved", "M31")).toBe("/log?saved=M31");
+    expect(logNotice("deleted", "jupiter")).toBe("/log?deleted=jupiter");
+    expect(readLogNotice(new URL(logNotice("updated", "M31"), "https://sidereus.test").searchParams)).toEqual({
+      kind: "updated",
+      target: "M31",
+    });
+    expect(readLogNotice(new URLSearchParams({ deleted: "jupiter" }))).toEqual({ kind: "deleted", target: "jupiter" });
+  });
+
+  it("reads the bare Messier number of an older link as its key", () => {
+    expect(readLogNotice(new URLSearchParams({ saved: "31" }))).toEqual({ kind: "saved", target: "M31" });
+  });
+
+  it("ignores anything that is not a target", () => {
+    for (const value of ["", "111", "M111", "Jupiter", "52.23,21.01"]) {
+      expect(readLogNotice(new URLSearchParams({ saved: value }))).toBeNull();
+    }
+    expect(readLogNotice(new URLSearchParams({ page: "2" }))).toBeNull();
   });
 });
 

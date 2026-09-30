@@ -422,6 +422,63 @@ export const en = {
       markObserved: "Mark observed",
     },
 
+    /**
+     * M-2 S-01: the "Planets tonight" section. The planet window runs from civil dusk to civil dawn (sun below
+     * `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark window".
+     */
+    planets: {
+      heading: "Planets tonight",
+      window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
+      none: "No planet rises above your minimum altitude between dusk and dawn tonight.",
+      /** Shown only when the verdict card does not already cover the planet window (a no-go or no dark window). */
+      weather: {
+        line: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
+        clearRun: (p: { hours: string; cloud: string }) =>
+          `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
+        humidityCap: (p: { humidity: string }) =>
+          `clear enough between dusk and dawn, but humidity reaches ${p.humidity}%, so expect dew and haze`,
+        fallbackCap: (p: { hours: string; cloud: string }) =>
+          `the last saved forecast showed ${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn, but it could not be refreshed`,
+        noWeatherData: "no weather data",
+      },
+      magnitude: (p: { mag: string }) => `mag ${p.mag}`,
+      size: (p: { arcsec: string }) => `${p.arcsec}″`,
+      /** Mercury and Venus only. */
+      phase: (p: { percent: string }) => `${p.percent}% lit`,
+      /** Saturn only. */
+      rings: (p: { degrees: string }) => `rings tilted ${p.degrees}°`,
+      detailWith: "Detail with",
+      /** By placement (peak altitude) × timing (which third of the planet window holds the peak). */
+      reason: {
+        high: {
+          evening: (p: { time: string }) => `High around ${p.time} — best early in the night`,
+          night: (p: { time: string }) => `High around ${p.time} — best in the middle of the night`,
+          morning: (p: { time: string }) => `High around ${p.time} — best before dawn`,
+        },
+        well: {
+          evening: (p: { time: string }) => `Well up around ${p.time} — best early in the night`,
+          night: (p: { time: string }) => `Well up around ${p.time} — best in the middle of the night`,
+          morning: (p: { time: string }) => `Well up around ${p.time} — best before dawn`,
+        },
+        low: {
+          evening: (p: { time: string }) => `Low around ${p.time} — look soon after dusk, with a clear view low down`,
+          night: (p: { time: string }) => `Low around ${p.time} — you need a clear view low down`,
+          morning: (p: { time: string }) =>
+            `Low around ${p.time} — look shortly before dawn, with a clear view low down`,
+        },
+      },
+      /** What a 100-200 mm telescope shows a beginner; deliberately modest. */
+      note: {
+        mercury: "A small, bright dot low in the twilight; at higher power you may just make out its phase.",
+        venus: "Dazzling and featureless, but its phase is easy to see, like a tiny Moon.",
+        mars: "A small orange disc; surface markings need steady air and patience, and often don't show at all.",
+        jupiter: "A bright disc crossed by two dark cloud belts, with up to four moons strung out in a line beside it.",
+        saturn: "The rings show clearly even at modest power; its largest moon, Titan, looks like a star close by.",
+        uranus: "A tiny blue-green disc: at high power it is clearly not a star, but it shows no detail.",
+        neptune: "A tiny blue-grey dot that is hard to tell from a star; finding it is the achievement.",
+      },
+    },
+
     time: {
       hours: (p: { hours: string }) => `${p.hours} h`,
       minutes: (p: { minutes: string }) => `${p.minutes} min`,
@@ -540,6 +597,21 @@ export const en = {
     },
   },
 
+  /** How the log names a target that is not a Messier object (M-2 S-01): by its localised name. */
+  targets: {
+    planet: {
+      mercury: "Mercury",
+      venus: "Venus",
+      mars: "Mars",
+      jupiter: "Jupiter",
+      saturn: "Saturn",
+      uranus: "Uranus",
+      neptune: "Neptune",
+    },
+    /** The picker's secondary line for a planet. */
+    planetDetail: "Planet",
+  },
+
   log: {
     kicker: "Observation log",
     title: (p: { object: string }) => `Log ${p.object}`,
@@ -554,11 +626,11 @@ export const en = {
     ratingHint: "A rating of 1-2 keeps the object where it is; 3-5 moves it down gently in later rankings.",
     submit: "Save observation",
     back: "← Tonight",
-    objectNotFound: "That object is not in the Messier catalogue.",
+    objectNotFound: "Sidereus doesn't know that object.",
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",
     manualTitle: "Add an observation",
-    manualIntro: "Pick any Messier object, then confirm the night, site and telescope and rate how it went.",
+    manualIntro: "Pick a Messier object or a planet, then confirm the night, site and telescope and rate how it went.",
     backToLog: "← Log",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
@@ -570,8 +642,8 @@ export const en = {
     backToLogLink: "Back to the log",
     picker: {
       label: "Object",
-      placeholder: "e.g. 31 or Andromeda",
-      noMatch: "No Messier object matches.",
+      placeholder: "e.g. 31, Andromeda or Jupiter",
+      noMatch: "No object matches.",
     },
     list: {
       title: "Observation log",

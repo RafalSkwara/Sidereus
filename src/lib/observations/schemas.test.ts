@@ -4,7 +4,7 @@ import { observationInputSchema, observationUpdateSchema, returnTargetSchema } f
 
 /** FormData-shaped input: every value is a string, as a plain HTML POST delivers it. */
 const m13 = {
-  messier: "13",
+  target: "M13",
   night: "2026-09-26",
   rating: "4",
   siteId: "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c",
@@ -19,7 +19,7 @@ function messages(result: { success: boolean; error?: { issues: { message: strin
 describe("observationInputSchema", () => {
   it("accepts an M13 entry and coerces the numbers", () => {
     expect(observationInputSchema.parse(m13)).toEqual({
-      messier: 13,
+      target: "M13",
       night: "2026-09-26",
       rating: 4,
       siteId: m13.siteId,
@@ -27,10 +27,18 @@ describe("observationInputSchema", () => {
     });
   });
 
+  it("accepts a planet by its key", () => {
+    expect(observationInputSchema.parse({ ...m13, target: "jupiter" })).toMatchObject({ target: "jupiter" });
+  });
+
   it.each([
-    ["M0", { messier: "0" }],
-    ["M111", { messier: "111" }],
-    ["a fractional object", { messier: "13.5" }],
+    ["M0", { target: "M0" }],
+    ["M111", { target: "M111" }],
+    ["a bare Messier number (the form posts keys)", { target: "13" }],
+    ["a lower-case Messier key", { target: "m13" }],
+    ["a capitalised planet name", { target: "Jupiter" }],
+    ["a target outside the grammar", { target: "pluto" }],
+    ["a missing object", { target: "" }],
     ["a missing rating", { rating: "" }],
     ["rating 0", { rating: "0" }],
     ["rating 6", { rating: "6" }],
@@ -47,7 +55,7 @@ describe("observationInputSchema", () => {
 
   it("words every rejection from the catalogue, never a submitted value", () => {
     const result = observationInputSchema.safeParse({
-      messier: "999",
+      target: "M999",
       night: "2026-02-30",
       rating: "7",
       siteId: "",
@@ -70,7 +78,7 @@ describe("observationUpdateSchema", () => {
       siteId: null,
       telescopeId: null,
     });
-    expect(observationUpdateSchema.parse({ messier: "13", night: "2026-09-26", rating: "4" })).toMatchObject({
+    expect(observationUpdateSchema.parse({ target: "M13", night: "2026-09-26", rating: "4" })).toMatchObject({
       siteId: null,
       telescopeId: null,
     });

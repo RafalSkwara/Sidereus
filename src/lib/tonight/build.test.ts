@@ -1,18 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import { findMessier, MESSIER } from "@/lib/catalogue";
+import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
 import {
   darknessThresholdDegForBortle,
   darkWindow,
+  ICE_GIANT_MIN_APERTURE_MM,
   MAX_RANKED_OBJECTS,
   observingNight,
+  PLANET_KEYS,
+  PLANET_WINDOW_SUN_ALTITUDE_DEG,
   type HourlyForecast,
 } from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 
-import { buildTonight, type TonightNight, type TonightRanking, type TonightView } from "./build";
+import { buildTonight, type TonightNight, type TonightPlanets, type TonightRanking, type TonightView } from "./build";
 
 const WARSAW: SiteRecord = {
   id: "site-1",
@@ -65,6 +70,11 @@ const EYEPIECES: EyepieceRecord[] = [
 const NOW = new Date("2026-10-10T18:00:00Z");
 
 const HOUR_MS = 3_600_000;
+
+/** `HH:mm` of the UTC wall clock `offsetHours` ahead of `instant`. */
+function utcWallTime(instant: Date, offsetHours: number): string {
+  return new Date(instant.getTime() + offsetHours * HOUR_MS).toISOString().slice(11, 16);
+}
 
 /** Hourly forecast from `fromUtc` for `hours` hours, each hour's cloud cover given by `cloudPct`. */
 function hourlyForecast(fromUtc: string, hours: number, cloudPct: (start: Date) => number): HourlyForecast {
@@ -325,7 +335,8 @@ describe("buildTonight with an observation log (FR-018)", () => {
     now: NOW,
   };
   const unlogged = rankingOf(buildTonight(input, "en"));
-  const top = unlogged.entries[0].messier;
+  // The log keys an object by its target key, the catalogue id ("M31").
+  const top = unlogged.entries[0].id;
 
   it("tags nothing and changes nothing without a log", () => {
     expect(unlogged.entries.every((entry) => entry.seenText === null)).toBe(true);
@@ -336,25 +347,25 @@ describe("buildTonight with an observation log (FR-018)", () => {
       {
         ...input,
         log: [
-          { messier: top, night: "2026-09-12", rating: 4 },
-          { messier: top, night: "2026-10-01", rating: 3 },
+          { target: top, night: "2026-09-12", rating: 4 },
+          { target: top, night: "2026-10-01", rating: 3 },
         ],
       },
       "en",
     );
-    const entry = rankingOf(view).entries.find((e) => e.messier === top);
+    const entry = rankingOf(view).entries.find((e) => e.id === top);
     // Pushed down, the object may leave the top five; where it still shows, it carries the tag.
     if (entry) {
       expect(entry.seenText).toBe("Seen 2 times – last 1 Oct 2026");
     }
-    expect(rankingOf(view).entries.map((e) => e.messier)).not.toEqual(unlogged.entries.map((e) => e.messier));
+    expect(rankingOf(view).entries.map((e) => e.id)).not.toEqual(unlogged.entries.map((e) => e.id));
   });
 
   it("leaves the ranking exactly as it was for a log of only 1-2 ratings (invariant 4)", () => {
     const view = buildTonight(
       {
         ...input,
-        log: unlogged.entries.map((e, i) => ({ messier: e.messier, night: "2026-10-01", rating: (i % 2) + 1 })),
+        log: unlogged.entries.map((e, i) => ({ target: e.id, night: "2026-10-01", rating: (i % 2) + 1 })),
       },
       "en",
     );
@@ -362,7 +373,7 @@ describe("buildTonight with an observation log (FR-018)", () => {
   });
 
   it("ignores entries for nights after the ranked night", () => {
-    const view = buildTonight({ ...input, log: [{ messier: top, night: "2026-10-11", rating: 5 }] }, "en");
+    const view = buildTonight({ ...input, log: [{ target: top, night: "2026-10-11", rating: 5 }] }, "en");
     expect(rankingOf(view)).toEqual(unlogged);
   });
 });
@@ -386,11 +397,6 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
       throw new Error(`expected an outlook on ${night.date}`);
     }
     return night;
-  }
-
-  /** `HH:mm` of the UTC wall clock `offsetHours` ahead of `instant`. */
-  function utcWallTime(instant: Date, offsetHours: number): string {
-    return new Date(instant.getTime() + offsetHours * 3_600_000).toISOString().slice(11, 16);
   }
 
   it("lists seven consecutive nights from tonight, verdicts on 1-3 and outlooks on 4-7", () => {
@@ -519,5 +525,150 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     for (const night of view.nights.slice(3)) {
       expect(outlookNight(night).cloudText).toBeNull();
     }
+  });
+});
+
+describe("buildTonight's planets (M-2 S-01)", () => {
+  const input = {
+    site: WARSAW,
+    telescope: TELESCOPE,
+    eyepieces: EYEPIECES,
+    forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+    now: NOW,
+  };
+  const engineSite = toEngineSite(WARSAW);
+  const night = observingNight("2026-10-10", WARSAW.timeZone);
+  const dark = darkWindow(engineSite, night, darknessThresholdDegForBortle(WARSAW.bortle));
+
+  function planetsOf(view: TonightView): TonightPlanets {
+    if (view.planets === null) {
+      throw new Error("expected planets");
+    }
+    return view.planets;
+  }
+
+  it("lists the planets on a go night with facts, the detail eyepiece, a reason and a note", () => {
+    const planets = planetsOf(buildTonight(input, "en"));
+    const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    if (civil.kind !== "window") {
+      throw new Error("expected a planet window");
+    }
+    const hhmm = (instant: Date) => utcWallTime(instant, 2);
+    expect(planets.windowText).toBe(`From civil dusk to dawn, ${hhmm(civil.start)}–${hhmm(civil.end)}`);
+    // The verdict card already speaks for the planet window on a go night.
+    expect(planets.weatherText).toBeNull();
+    expect(planets.entries.length).toBeGreaterThan(0);
+    for (const entry of planets.entries) {
+      expect(PLANET_KEYS).toContain(entry.key);
+      expect(entry.name).toBe(en.targets.planet[entry.key]);
+      expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
+      expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
+      expect(entry.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
+      expect(entry.magnitudeText).toMatch(/^mag −?\d+\.\d$/);
+      expect(entry.sizeText).toMatch(/^\d+(\.\d)?″$/);
+      expect(entry.phaseText === null).toBe(entry.key !== "mercury" && entry.key !== "venus");
+      expect(entry.ringText === null).toBe(entry.key !== "saturn");
+      // The 10 mm is the most magnification the 150 mm takes within the limits (75×).
+      expect(entry.eyepiece).toEqual({ name: "10 mm Plössl", magnification: 75 });
+      expect(entry.reason).toMatch(/^(High|Well up|Low) around \d{2}:\d{2} — /);
+      expect(entry.note).toBe(en.tonight.planets.note[entry.key]);
+      expect(entry.seenText).toBeNull();
+    }
+    const saturn = planets.entries.find((entry) => entry.key === "saturn");
+    expect(saturn?.ringText).toMatch(/^rings tilted \d+°$/);
+  });
+
+  it("words the planets in Polish with the locale's decimal comma", () => {
+    const planets = planetsOf(buildTonight(input, "pl"));
+    const saturn = planets.entries.find((entry) => entry.key === "saturn");
+    expect(planets.windowText).toMatch(/^Od zmierzchu cywilnego do świtu, \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(saturn).toMatchObject({ name: "Saturn", note: pl.tonight.planets.note.saturn });
+    expect(saturn?.magnitudeText).toMatch(/^jasność −?\d+,\d mag$/);
+    expect(saturn?.ringText).toMatch(/^pierścienie nachylone o \d+°$/);
+  });
+
+  it("lists the planets on a cloudy no-go night whose twilight is clear, with the planet weather line", () => {
+    if (dark.kind !== "window") {
+      throw new Error("expected a dark window");
+    }
+    // Every forecast hour that overlaps the dark window is overcast; the twilight hours either side are clear.
+    const forecast = hourlyForecast("2026-10-10T00:00:00Z", 48, (start) =>
+      start.getTime() < dark.end.getTime() && start.getTime() + HOUR_MS > dark.start.getTime() ? 100 : 5,
+    );
+    const view = buildTonight({ ...input, forecast: result(forecast) }, "en");
+    expect(view.verdict.level).toBe("no-go");
+    expect(view.ranking).toBeNull();
+    const planets = planetsOf(view);
+    expect(planets.weatherText).toBe(
+      "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and dawn",
+    );
+    expect(planets.entries.length).toBeGreaterThan(0);
+  });
+
+  it("lists the planets on a no-darkness night whose planet window passes", () => {
+    // Warsaw at the solstice under a Bortle 3 sky: the sun never reaches −18°, but it does pass −6°.
+    const view = buildTonight(
+      {
+        ...input,
+        site: { ...WARSAW, bortle: 3 },
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 5)),
+        now: new Date("2026-06-21T19:00:00Z"),
+      },
+      "en",
+    );
+    expect(view.darkWindow).toEqual({ kind: "none" });
+    expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
+    expect(view.ranking).toBeNull();
+    const planets = planetsOf(view);
+    expect(planets.weatherText).toMatch(
+      /^For planets: go — \d+ h in a row with at most 5% cloud between dusk and dawn$/,
+    );
+    expect(planets.entries.length).toBeGreaterThan(0);
+  });
+
+  it("has no planets when the planet window is clouded out", () => {
+    const view = buildTonight({ ...input, forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "en");
+    expect(view.planets).toBeNull();
+  });
+
+  it("has no planets when the sun never gets 6° below the horizon", () => {
+    const view = buildTonight(
+      {
+        ...input,
+        site: TROMSO_SITE,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T20:00:00Z"),
+      },
+      "en",
+    );
+    expect(view.planets).toBeNull();
+  });
+
+  it("lists Uranus and Neptune only with an aperture of at least 130 mm", () => {
+    const keysWith = (apertureMm: number) =>
+      planetsOf(buildTonight({ ...input, telescope: { ...TELESCOPE, apertureMm } }, "en")).entries.map(
+        (entry) => entry.key,
+      );
+    expect(keysWith(ICE_GIANT_MIN_APERTURE_MM)).toEqual(expect.arrayContaining(["uranus", "neptune"]));
+    const small = keysWith(ICE_GIANT_MIN_APERTURE_MM - 1);
+    expect(small.length).toBeGreaterThan(0);
+    expect(small).not.toContain("uranus");
+    expect(small).not.toContain("neptune");
+  });
+
+  it("tags a logged planet as seen without reordering the planets", () => {
+    const unlogged = planetsOf(buildTonight(input, "en"));
+    const view = buildTonight({ ...input, log: [{ target: "saturn", night: "2026-10-01", rating: 4 }] }, "en");
+    const planets = planetsOf(view);
+    expect(planets.entries.map((entry) => entry.key)).toEqual(unlogged.entries.map((entry) => entry.key));
+    expect(planets.entries.find((entry) => entry.key === "saturn")?.seenText).toBe("Seen 1 time – last 1 Oct 2026");
+    expect(planets.entries.filter((entry) => entry.key !== "saturn").every((entry) => entry.seenText === null)).toBe(
+      true,
+    );
+  });
+
+  it("leaves the planet detail eyepiece out when the kit has none", () => {
+    const planets = planetsOf(buildTonight({ ...input, eyepieces: [] }, "en"));
+    expect(planets.entries.every((entry) => entry.eyepiece === null)).toBe(true);
   });
 });

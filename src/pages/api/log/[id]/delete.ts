@@ -21,5 +21,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(result.message);
   }
-  return context.redirect(logNotice("deleted", result.messier));
+  return context.redirect(logNotice("deleted", result.target));
 };

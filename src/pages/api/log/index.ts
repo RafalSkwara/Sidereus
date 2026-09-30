@@ -30,5 +30,8 @@ export const POST: APIRoute = async (context) => {
     return fail(result.message);
   }
   const manual = returnTargetSchema.safeParse(raw.from).data === "log";
-  return context.redirect(manual ? logNotice("saved", parsed.data.messier) : `/tonight?logged=${parsed.data.messier}`);
+  const { target } = parsed.data;
+  return context.redirect(
+    manual ? logNotice("saved", target) : `/tonight?${new URLSearchParams({ logged: target }).toString()}`,
+  );
 };

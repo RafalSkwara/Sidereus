@@ -1,12 +1,15 @@
 import { findMessier } from "@/lib/catalogue";
 
+import { PLANET_KEYS } from "../planets";
+import type { PlanetKey } from "../planets";
 import type { EquatorialJ2000, Site } from "../types";
+import skyfieldPlanetsWarsaw20261010 from "./skyfield/planets-warsaw-2026-10-10.json";
 import tromso20260621 from "./stellarium/tromso-2026-06-21.json";
 import warsaw20261010 from "./stellarium/warsaw-2026-10-10.json";
 import warsaw20261024 from "./stellarium/warsaw-2026-10-24.json";
 
 /**
- * TEST-ONLY. Typed access to the hand-read Stellarium fixtures.
+ * TEST-ONLY. Typed access to the hand-read Stellarium fixtures and the generated Skyfield reference.
  *
  * This file lives under the engine directory for locality but is not part of the engine: it is
  * excluded from the purity guard and must never be imported by production code. Fixtures are
@@ -233,6 +236,65 @@ export const FIXTURES: readonly StellariumFixture[] = [
   parseFixture(tromso20260621, "tromso-2026-06-21"),
 ];
 
+export interface PlanetReferenceSample {
+  /** ISO 8601 with offset. */
+  time: string;
+  planet: PlanetKey;
+  /** Apparent (refracted) altitude. */
+  altitudeDeg: number;
+  azimuthDeg: number;
+  apparentDiameterArcsec: number;
+}
+
+export interface PlanetReference {
+  name: string;
+  site: FixtureSite;
+  night: string;
+  samples: PlanetReferenceSample[];
+}
+
+function planetKey(o: Record<string, unknown>, name: string): PlanetKey {
+  const v = o.planet;
+  const key = PLANET_KEYS.find((k) => k === v);
+  if (key === undefined) {
+    fail(name, `planet must be one of ${PLANET_KEYS.join(", ")}`);
+  }
+  return key;
+}
+
+/** Validates a Skyfield planet reference (`scripts/planet-reference.py`, see the README). */
+export function parsePlanetReference(raw: unknown, name: string): PlanetReference {
+  const o = asRecord(raw, name, "reference");
+  asRecord(o.provenance, name, "provenance");
+  const site = asRecord(o.site, name, "site");
+  const samples = samplesOf(o, name, "reference").map((m) => ({
+    time: iso(m, "time", name),
+    planet: planetKey(m, name),
+    altitudeDeg: num(m, "altitudeDeg", name),
+    azimuthDeg: num(m, "azimuthDeg", name),
+    apparentDiameterArcsec: num(m, "apparentDiameterArcsec", name),
+  }));
+  if (samples.length === 0) {
+    fail(name, "samples must not be empty");
+  }
+  return {
+    name,
+    site: {
+      name: str(site, "name", name),
+      latitudeDeg: num(site, "latitudeDeg", name),
+      longitudeDeg: num(site, "longitudeDeg", name),
+      elevationM: num(site, "elevationM", name),
+      timeZone: str(site, "timeZone", name),
+    },
+    night: str(o, "night", name),
+    samples,
+  };
+}
+
+export const PLANET_REFERENCES: readonly PlanetReference[] = [
+  parsePlanetReference(skyfieldPlanetsWarsaw20261010, "planets-warsaw-2026-10-10"),
+];
+
 /** Synthetic-test sites shared across the engine tests (public reference points, not anyone's home). */
 export const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110, timeZone: "Europe/Warsaw" };
 export const TROMSO: Site = { latitudeDeg: 69.65, longitudeDeg: 18.96, elevationM: 10, timeZone: "Europe/Oslo" };
@@ -247,7 +309,7 @@ export function messierTarget(id: string): EquatorialJ2000 {
 }
 
 /** The engine `Site` for a fixture (shared by every fixture-driven test). */
-export function siteOf(fixture: StellariumFixture): Site {
+export function siteOf(fixture: { site: FixtureSite }): Site {
   return {
     latitudeDeg: fixture.site.latitudeDeg,
     longitudeDeg: fixture.site.longitudeDeg,

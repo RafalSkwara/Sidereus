@@ -1,21 +1,27 @@
+import { getMessages } from "@/i18n";
 import { MESSIER, type MessierObject } from "@/lib/catalogue";
 import {
   darknessThresholdDegForBortle,
+  darkWindow,
   darkWindowReturn,
   eyepieceOptics,
   nextNightInOutlook,
+  observingNight,
+  PLANET_WINDOW_SUN_ALTITUDE_DEG,
   rankObjects,
+  rankPlanets,
   seenSummaries,
   sevenNightOutlook,
   tonightDateFor,
+  verdict,
   type LogEntry,
+  type PlanetKey,
   type RankedEntry,
   type Verdict,
   type VerdictLevel,
 } from "@/lib/engine";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
-
 import type { Locale } from "@/lib/preferences";
 
 import { createFormatter, type ForecastStatus } from "./format";
@@ -55,7 +61,7 @@ export type TonightPair =
 export interface TonightEntry {
   /** 1-based place in the ranking; kept when the all-objects page orders by best time. */
   rank: number;
-  /** "M31" */
+  /** "M31": the catalogue id, which is also the object's target key in the log. */
   id: string;
   /** 31: the key for a localised common name (`@/lib/catalogue/common-names`). */
   messier: number;
@@ -77,6 +83,54 @@ export interface TonightEntry {
   reason: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the object as seen (FR-018), else `null`. */
   seenText: string | null;
+}
+
+/** One planet of the "Planets tonight" section (M-2 S-01). */
+export interface TonightPlanetEntry {
+  /** "jupiter": the planet's target key in the log. */
+  key: PlanetKey;
+  /** The localised planet name, "Jupiter" / "Jowisz". */
+  name: string;
+  /** Best window within the planet window, `HH:mm` in the site's time zone. */
+  windowStart: string;
+  windowEnd: string;
+  /** Peak time, `HH:mm` in the site's time zone. */
+  bestTime: string;
+  /** Peak instant (epoch ms). */
+  bestAt: number;
+  /** Direction at the peak, "SW, 45°". */
+  bestDirection: string;
+  /** "mag −2.4" */
+  magnitudeText: string;
+  /** "44″" */
+  sizeText: string;
+  /** "62% lit", Mercury and Venus only. */
+  phaseText: string | null;
+  /** "rings tilted 4°", Saturn only. */
+  ringText: string | null;
+  /** The detail eyepiece; `null` when the kit has no eyepieces. */
+  eyepiece: EyepieceLine | null;
+  /** Placement × timing, with a warning when the planet stays low. */
+  reason: string;
+  /** The fixed "what you'll see" note. */
+  note: string;
+  /** "Seen 2 times – last 12 Sept 2026" when the log counts the planet as seen, else `null`. It never reorders. */
+  seenText: string | null;
+}
+
+/**
+ * The "Planets tonight" section: planets that clear the site's minimum altitude between civil dusk and civil
+ * dawn, best-placed first. `entries` is empty when none does.
+ */
+export interface TonightPlanets {
+  /** "From civil dusk to dawn, 19:32–06:51" */
+  windowText: string;
+  /**
+   * The planet window's own weather, set only when the verdict card doesn't already speak for it: on a no-go
+   * night or a night without a dark window. `null` otherwise.
+   */
+  weatherText: string | null;
+  entries: TonightPlanetEntry[];
 }
 
 export interface TonightRanking {
@@ -148,6 +202,11 @@ export interface TonightView {
   explanation: TonightExplanation | null;
   /** The seven-night strip from tonight (night 1, the night `verdict` and `darkWindow` describe) onward. */
   nights: TonightNight[];
+  /**
+   * M-2 S-01: set when the planet window (sun below `PLANET_WINDOW_SUN_ALTITUDE_DEG`) exists and its own weather
+   * is go or marginal, whatever the dark-window verdict says; `null` otherwise, and the verdict card explains why.
+   */
+  planets: TonightPlanets | null;
 }
 
 function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): EyepieceLine {
@@ -199,10 +258,15 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     moonLine,
     nextNightText,
     noDarknessCauseText,
+    planetFactsText,
+    planetReasonLine,
+    planetWeatherText,
+    planetWindowText,
     reasonLine,
     seenLine,
     verdictReasonText,
   } = createFormatter(locale);
+  const messages = getMessages(locale);
   const { timeZone } = site;
   const engineSite = toEngineSite(site);
   const hourly = forecast?.forecast ?? null;
@@ -258,6 +322,8 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   }
 
   const status = forecastStatusOf(forecast, now);
+  // Keyed by target key: a Messier object's catalogue id ("M31") or a planet key ("jupiter").
+  const seen = seenSummaries(log, date);
 
   let ranking: TonightRanking | null = null;
   if ((tonight.level === "go" || tonight.level === "marginal") && window.kind === "window") {
@@ -269,7 +335,8 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       telescope,
       eyepieces,
       catalogue,
-      seen: seenSummaries(log, date),
+      // The ranking looks up `object.id`, which is the Messier object's target key.
+      seen,
       limit: options.limit,
     });
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
@@ -294,6 +361,41 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     };
   }
 
+  // Planets (M-2 S-01): their own window, civil dusk to civil dawn, and that window's own weather, independent of
+  // the dark-window verdict, so a planet can show on a cloudy-at-night or a no-darkness night. Ranked once per build.
+  let planets: TonightPlanets | null = null;
+  const planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
+  const planetVerdict = verdict(planetWindow, hourly, { fallback });
+  if (planetWindow.kind === "window" && (planetVerdict.level === "go" || planetVerdict.level === "marginal")) {
+    const ranked = rankPlanets({
+      site: engineSite,
+      minAltitudeDeg: site.minAltitudeDeg,
+      planetWindow,
+      telescope,
+      eyepieces,
+      seen,
+    });
+    planets = {
+      windowText: planetWindowText(planetWindow, timeZone),
+      // The verdict card already speaks for the planet window on a go or marginal night with a dark window.
+      weatherText: tonight.level === "no-go" || window.kind === "none" ? planetWeatherText(planetVerdict) : null,
+      entries: ranked.map((entry) => ({
+        key: entry.key,
+        name: messages.targets.planet[entry.key],
+        windowStart: formatTime(entry.window.start, timeZone),
+        windowEnd: formatTime(entry.window.end, timeZone),
+        bestTime: formatTime(entry.peak.time, timeZone),
+        bestAt: entry.peak.time.getTime(),
+        bestDirection: formatDirection(entry.peak),
+        ...planetFactsText(entry.key, entry.facts),
+        eyepiece: entry.eyepiece ? eyepieceLine(telescope, entry.eyepiece) : null,
+        reason: planetReasonLine(entry, timeZone),
+        note: messages.tonight.planets.note[entry.key],
+        seenText: entry.seen ? seenLine(entry.seen) : null,
+      })),
+    };
+  }
+
   return {
     siteId: site.id,
     telescopeId: telescope.id,
@@ -313,5 +415,6 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },
     explanation,
     nights,
+    planets,
   };
 }

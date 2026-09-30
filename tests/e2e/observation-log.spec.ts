@@ -29,12 +29,11 @@ test("marking a ranked object observed saves it and tags it on Tonight", async (
   const heading = (await firstCard.getByRole("heading").textContent()) ?? "";
   const id = /\bM\d{1,3}\b/.exec(heading)?.[0];
   if (!id) throw new Error(`no Messier id in the first card's heading: ${heading}`);
-  const messier = id.slice(1);
 
   await firstCard.getByRole("link", { name: en.tonight.object.markObserved }).click();
 
-  // The form arrives prefilled from the ranking, with the rating left to the user.
-  await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${messier}&night=\\d{4}-\\d{2}-\\d{2}&site=`));
+  // The form arrives prefilled from the ranking (the object by its target key, "M31"), with the rating left to the user.
+  await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${id}&night=\\d{4}-\\d{2}-\\d{2}&site=`));
   await expect(page.getByRole("heading", { level: 1 })).toContainText(en.log.title({ object: id }));
   await waitForHydration(page, LOG_FORM);
   const form = page.locator(LOG_FORM);
@@ -51,7 +50,7 @@ test("marking a ranked object observed saves it and tags it on Tonight", async (
   await expect(form.getByRole("radio", { name: "4", exact: true })).toBeChecked();
   await form.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(new RegExp(`/tonight\\?logged=${messier}$`));
+  await expect(page).toHaveURL(new RegExp(`/tonight\\?logged=${id}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: id }) })).toBeVisible();
 
   // Rated 4, the object is pushed down: it either left the top five or carries the "seen" tag.

@@ -7,8 +7,8 @@ import { LOG_PENALTY_MIN_RATING } from "./parameters";
 
 /** One log entry, reduced to what the ranking needs. */
 export interface LogEntry {
-  /** Messier number, 1-110. */
-  messier: number;
+  /** Target key: a Messier catalogue id (`"M31"`) or a planet key (`"jupiter"`). */
+  target: string;
   /** Evening date of the observing night, `YYYY-MM-DD`. */
   night: string;
   /** How well it went, 1-5. */
@@ -24,26 +24,26 @@ export interface SeenSummary {
 }
 
 /**
- * The objects the log counts as seen by the ranked night `onOrBefore` (`YYYY-MM-DD`), keyed by Messier
- * number. Only entries rated `LOG_PENALTY_MIN_RATING` or above count (invariant 4), each night once,
+ * The objects the log counts as seen by the ranked night `onOrBefore` (`YYYY-MM-DD`), keyed by target
+ * key. Only entries rated `LOG_PENALTY_MIN_RATING` or above count (invariant 4), each night once,
  * so a duplicate entry never inflates the count; nights after `onOrBefore` are ignored. Objects with
  * no such entry are absent.
  */
-export function seenSummaries(entries: readonly LogEntry[], onOrBefore: string): ReadonlyMap<number, SeenSummary> {
-  const nights = new Map<number, Set<string>>();
-  for (const { messier, night, rating } of entries) {
+export function seenSummaries(entries: readonly LogEntry[], onOrBefore: string): ReadonlyMap<string, SeenSummary> {
+  const nights = new Map<string, Set<string>>();
+  for (const { target, night, rating } of entries) {
     // ISO dates compare correctly as strings.
     if (rating < LOG_PENALTY_MIN_RATING || night > onOrBefore) {
       continue;
     }
-    const seen = nights.get(messier) ?? new Set<string>();
+    const seen = nights.get(target) ?? new Set<string>();
     seen.add(night);
-    nights.set(messier, seen);
+    nights.set(target, seen);
   }
-  const summaries = new Map<number, SeenSummary>();
-  for (const [messier, seen] of nights) {
+  const summaries = new Map<string, SeenSummary>();
+  for (const [target, seen] of nights) {
     const sorted = [...seen].sort();
-    summaries.set(messier, { count: sorted.length, lastNight: sorted[sorted.length - 1] });
+    summaries.set(target, { count: sorted.length, lastNight: sorted[sorted.length - 1] });
   }
   return summaries;
 }
