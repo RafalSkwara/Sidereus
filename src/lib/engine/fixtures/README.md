@@ -102,9 +102,10 @@ Skip fixtures whose `moon.status` is `not-applicable`.
 `planets.ts`, which uses astronomy-engine. `provenance` records the Skyfield version, the ephemeris,
 the refraction settings (10 °C, 1010 mbar) and the generation date.
 
-`planets.test.ts` asserts every sample above 5° within `ALTITUDE_TOLERANCE_DEG` in altitude and
-azimuth (refraction models differ near the horizon, so lower samples are not compared) and every
-diameter within 1″, or 2% where that is tighter.
+`planets.test.ts` asserts every sample above 5° within 0.05° in altitude and azimuth (refraction
+models differ near the horizon, so lower samples are not compared). That is far tighter than
+`ALTITUDE_TOLERANCE_DEG` (1°, sized for hand-read Stellarium values): the libraries agree to ~0.005°,
+and a 1° tolerance could not tell a refracted position from an unrefracted one. Every diameter is checked within 1″, or 2% where that is tighter.
 
 To regenerate, never install Skyfield in the repo; use a throwaway virtualenv and a local copy of
 `de421.bsp` (https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de421.bsp):

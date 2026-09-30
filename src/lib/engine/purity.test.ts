@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 /**
  * Purity guard: the engine must not read the clock, the environment or the network, or touch the
  * filesystem. Identical inputs must give identical outputs (PRD determinism NFR), and the code
- * must run unchanged on the edge runtime.
+ * must run unchanged on the edge runtime. It must not log either: engine functions take a `Site`,
+ * and coordinates never reach logs (the engine is outside eslint's `gearConfig.files` no-console rule).
  *
  * Scans every source file under src/lib/engine/, excluding test files and the test-only fixtures
  * directory (which legitimately use fs and the clock).
@@ -28,6 +29,7 @@ const FORBIDDEN: { name: string; pattern: RegExp }[] = [
     pattern: /Intl\.DateTimeFormat\(\s*\)|Intl\.DateTimeFormat\(\s*["'][^"']*["']\s*\)/,
   },
   { name: "toLocale* (process locale/zone)", pattern: /\.toLocale(Date|Time)?String\(/ },
+  { name: "console.* (coordinates never reach logs)", pattern: /\bconsole\./ },
 ];
 
 function engineSourceFiles(dir: string): string[] {
@@ -50,7 +52,7 @@ function engineSourceFiles(dir: string): string[] {
 }
 
 describe("engine purity guard", () => {
-  it("finds no clock, env, network or filesystem access in any engine source", () => {
+  it("finds no clock, env, network, filesystem or console access in any engine source", () => {
     const files = engineSourceFiles(ENGINE_DIR);
     expect(files.some((f) => f.endsWith("sun.ts"))).toBe(true);
     const offenders = files.flatMap((file) => {

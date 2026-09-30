@@ -481,8 +481,8 @@ Planet tracks add ≲700 `Equator` evaluations per Tonight render. Compute them 
 The migration is additive and backward-compatible with the running old app, through the trigger.
 
 - **Rollback of the app:** safe. The old app reads `messier`, which the trigger keeps filled for Messier entries.
-- **Planet rows:** have `messier` null, and an old app would show them as unknown.
-- **Contract step:** dropping `messier` and the trigger is a later change, once S-02/S-03 settle the full key grammar.
+- **Planet rows:** have `messier` null. After a code-only rollback (`wrangler rollback`) the old app renders them as "Mnull", and its edit form shows "null" and fails validation. No data is lost, and the forward path is safe (impl review F3).
+- **Contract step:** dropping `messier` and the trigger is a later change, once S-02/S-03 settle the full key grammar and no rollback to the pre-target app is possible any more.
 
 ## References
 
@@ -512,20 +512,20 @@ The migration is additive and backward-compatible with the running old app, thro
 
 #### Automated
 
-- [x] 2.1 Migration applies cleanly to local Supabase: `npx supabase db reset`
-- [x] 2.2 Generated types are current: `npm run db:types` produces no diff
-- [x] 2.3 Database suite passes, including trigger-sync and isolation cases: `npm run test:db`
-- [x] 2.4 Unit tests pass: `npm test`
-- [x] 2.5 Type check passes: `npx astro check`
-- [x] 2.6 Lint passes: `npm run lint`
-- [x] 2.7 Observation-log e2e specs pass: `npx playwright test observation-log`
-- [x] 2.8 Smoke passes against local Supabase: `npm run smoke`
+- [x] 2.1 Migration applies cleanly to local Supabase: `npx supabase db reset` — 4cfdc3f
+- [x] 2.2 Generated types are current: `npm run db:types` produces no diff — 4cfdc3f
+- [x] 2.3 Database suite passes, including trigger-sync and isolation cases: `npm run test:db` — 4cfdc3f
+- [x] 2.4 Unit tests pass: `npm test` — 4cfdc3f
+- [x] 2.5 Type check passes: `npx astro check` — 4cfdc3f
+- [x] 2.6 Lint passes: `npm run lint` — 4cfdc3f
+- [x] 2.7 Observation-log e2e specs pass: `npx playwright test observation-log` — 4cfdc3f
+- [x] 2.8 Smoke passes against local Supabase: `npm run smoke` — 4cfdc3f
 
 #### Manual
 
-- [x] 2.9 On the dev server against local Supabase, logging, editing and deleting a Messier entry looks and behaves exactly as before (notices name the object)
-- [x] 2.10 The manual-entry picker finds "Jowisz" / "Jupiter" and saves a Jupiter entry that the log lists by name
-- [x] 2.11 An old-style link `/log/new?object=31` still opens the form for M31
+- [x] 2.9 On the dev server against local Supabase, logging, editing and deleting a Messier entry looks and behaves exactly as before (notices name the object) — 4cfdc3f
+- [x] 2.10 The manual-entry picker finds "Jowisz" / "Jupiter" and saves a Jupiter entry that the log lists by name — 4cfdc3f
+- [x] 2.11 An old-style link `/log/new?object=31` still opens the form for M31 — 4cfdc3f
 
 ### Phase 3: Planets on Tonight
 

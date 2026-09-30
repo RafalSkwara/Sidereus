@@ -336,14 +336,19 @@ describe("observationStore", () => {
     await observationStore.create(fresh.client, { target: "jupiter", night: "2026-09-25", rating: 5, ...gear }, NOW);
     await observationStore.create(fresh.client, { target: "M2", night: "2026-09-25", rating: 3, ...gear }, NOW);
 
-    // The rating-2 entry can never count as seen, so it is not fetched. Within a night, by target key in the
-    // database's collation (en_US: case-insensitive first, so "jupiter" < "M13" < "M2").
-    expect(await observationStore.listForRanking(fresh.client)).toEqual([
-      { target: "jupiter", night: "2026-09-25", rating: 5 },
-      { target: "M13", night: "2026-09-25", rating: 4 },
-      { target: "M2", night: "2026-09-25", rating: 3 },
-      { target: "M31", night: "2026-09-22", rating: 3 },
-    ]);
+    // The rating-2 entry can never count as seen, so it is not fetched. Newest night first; within a night the
+    // order is by target key in the database's collation (en_US and C disagree on "jupiter" vs "M13"), which is
+    // deterministic per database, so it is compared as a set here.
+    const entries = await observationStore.listForRanking(fresh.client);
+    expect(entries.map((entry) => entry.night)).toEqual(["2026-09-25", "2026-09-25", "2026-09-25", "2026-09-22"]);
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        { target: "jupiter", night: "2026-09-25", rating: 5 },
+        { target: "M13", night: "2026-09-25", rating: 4 },
+        { target: "M2", night: "2026-09-25", rating: 3 },
+        { target: "M31", night: "2026-09-22", rating: 3 },
+      ]),
+    );
   });
 });
 
