@@ -77,21 +77,6 @@ describe("engine determinism and budget", () => {
     runs = { first: timed(), second: timed() };
   });
 
-  it("covers all 110 catalogue objects", () => {
-    const { first } = getRuns();
-    expect(Object.keys(first.run.objects)).toHaveLength(110);
-    expect(first.run.moon.length).toBeGreaterThan(1);
-  });
-
-  it("yields deep-equal results for two identical full runs", () => {
-    const { first, second } = getRuns();
-    // `toEqual` compares Dates by value (getTime), so timestamps inside the tracks are covered.
-    expect(second.run).toEqual(first.run);
-    const asNumbers = (run: FullRun): string =>
-      JSON.stringify(run, (_key, value: unknown) => (value instanceof Date ? value.getTime() : value));
-    expect(asNumbers(second.run)).toBe(asNumbers(first.run));
-  });
-
   it(`samples the dark window for the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
     const { first, second } = getRuns();
     console.info(

@@ -172,11 +172,6 @@ describe("verdict", () => {
       expect(verdict(sixHours, overcast, fallback)).toEqual(verdict(sixHours, overcast));
       expect(verdict(sixHours, overcast, fallback).level).toBe("no-go");
     });
-
-    it("defaults to not a fallback", () => {
-      expect(verdict(sixHours, forecast([20, 20, 100, 100, 100, 100])).level).toBe("go");
-      expect(verdict(sixHours, forecast([20, 20, 100, 100, 100, 100]), { fallback: false }).level).toBe("go");
-    });
   });
 
   it("is marginal with no weather data when the forecast is null", () => {

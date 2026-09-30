@@ -20,11 +20,10 @@ describe("filterMessier", () => {
     expect(ids("")[0]).toBe("M1");
   });
 
-  it.each(["31", "m31", "M31", "M 31"])("finds M31 first for %j", (query) => {
-    expect(ids(query)[0]).toBe("M31");
-  });
-
-  it("puts the exact number first, then the numbers it starts", () => {
+  it("finds a number however it is typed, exact match first, then the numbers it starts", () => {
+    for (const query of ["31", "m31", "M31", "M 31"]) {
+      expect(ids(query)[0]).toBe("M31");
+    }
     expect(ids("3")).toEqual(["M3", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39"]);
     expect(ids("110")).toEqual(["M110"]);
     expect(ids("111")).toEqual([]);
@@ -46,9 +45,6 @@ describe("filterMessier", () => {
   it("ranks names that start with the query before names that merely contain it", () => {
     // "Plejady" starts with "ple"; no other object's name does.
     expect(ids("ple")[0]).toBe("M45");
-  });
-
-  it("finds nothing for a query no object matches", () => {
     expect(ids("jupiter")).toEqual([]);
   });
 });

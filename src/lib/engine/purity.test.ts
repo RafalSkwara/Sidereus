@@ -50,18 +50,15 @@ function engineSourceFiles(dir: string): string[] {
 }
 
 describe("engine purity guard", () => {
-  const files = engineSourceFiles(ENGINE_DIR);
-
-  it("scans the engine sources", () => {
-    expect(files.length).toBeGreaterThan(0);
+  it("finds no clock, env, network or filesystem access in any engine source", () => {
+    const files = engineSourceFiles(ENGINE_DIR);
     expect(files.some((f) => f.endsWith("sun.ts"))).toBe(true);
-  });
-
-  for (const file of files) {
-    it(`${relative(ENGINE_DIR, file)} has no clock, env, network or filesystem access`, () => {
+    const offenders = files.flatMap((file) => {
       const source = readFileSync(file, "utf8");
-      const hits = FORBIDDEN.filter(({ pattern }) => pattern.test(source)).map(({ name }) => name);
-      expect(hits).toEqual([]);
+      return FORBIDDEN.filter(({ pattern }) => pattern.test(source)).map(
+        ({ name }) => `${relative(ENGINE_DIR, file)}: ${name}`,
+      );
     });
-  }
+    expect(offenders).toEqual([]);
+  });
 });

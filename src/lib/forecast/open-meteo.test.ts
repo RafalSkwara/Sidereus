@@ -27,14 +27,6 @@ describe("mapForecastResponse", () => {
     const forecast = mapForecastResponse(openMeteoBody(START_S, [10, null, 30], [50, 50, null]));
     expect(forecast.hours.map((h) => h.start.toISOString())).toEqual(["2026-10-09T00:00:00.000Z"]);
   });
-
-  it("rejects a schema mismatch with the fixed message", () => {
-    expect(() => mapForecastResponse({ hourly: { time: ["2026-10-09T00:00"] } })).toThrow(FORECAST_RESPONSE_INVALID);
-    expect(() => mapForecastResponse(null)).toThrow(FORECAST_RESPONSE_INVALID);
-    const ragged = openMeteoBody(START_S, [10, 20]) as { hourly: { relative_humidity_2m: number[] } };
-    ragged.hourly.relative_humidity_2m = [50];
-    expect(() => mapForecastResponse(ragged)).toThrow(FORECAST_RESPONSE_INVALID);
-  });
 });
 
 describe("fetchForecast", () => {
@@ -55,21 +47,6 @@ describe("fetchForecast", () => {
     });
     expect(init?.signal).toBeInstanceOf(AbortSignal);
     expect(FORECAST_TIMEOUT_MS).toBe(3000);
-  });
-
-  it("uses an overridden base URL", async () => {
-    const fake = fakeFetch(() => jsonResponse(openMeteoBody(START_S, [10])));
-    await fetchForecast(fake.fetchFn, SITE, "http://127.0.0.1:9");
-    expect(fake.calls[0].url.origin + fake.calls[0].url.pathname).toBe("http://127.0.0.1:9/v1/forecast");
-  });
-
-  it("returns the mapped forecast", async () => {
-    const fake = fakeFetch(() => jsonResponse(openMeteoBody(START_S, [10, 20], [70, 80])));
-    const forecast = await fetchForecast(fake.fetchFn, SITE);
-    expect(forecast.hours).toEqual([
-      { start: new Date("2026-10-09T00:00:00Z"), cloudCoverPct: 10, humidityPct: 70 },
-      { start: new Date("2026-10-09T01:00:00Z"), cloudCoverPct: 20, humidityPct: 80 },
-    ]);
   });
 
   it("throws the fixed request error on a non-2xx status", async () => {

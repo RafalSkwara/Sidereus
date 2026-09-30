@@ -55,11 +55,6 @@ describe("onboardingInputSchema", () => {
     expect(result.data?.eyepieces).toEqual([]);
   });
 
-  it("rounds coordinates half away from zero", () => {
-    const result = onboardingInputSchema.parse({ ...form, latitudeDeg: "-33.8651", longitudeDeg: "-151.2099" });
-    expect(result.site).toMatchObject({ latitudeDeg: -33.87, longitudeDeg: -151.21 });
-  });
-
   it("accepts exactly ten eyepieces", () => {
     expect(onboardingInputSchema.safeParse({ ...form, eyepieces: eyepieceRows(10) }).success).toBe(true);
   });

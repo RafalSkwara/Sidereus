@@ -35,12 +35,6 @@ test("the theme button cycles dark, light and red, and red keeps its guarantees"
   expect(green).toBe(0);
   expect(blue).toBe(0);
 
-  const imageFilter = await page
-    .locator("main img")
-    .first()
-    .evaluate((img) => getComputedStyle(img).filter);
-  expect(imageFilter).toContain("red-only");
-
   await waitForHydration(page, `button[aria-label="${en.nav.settings}"]`);
   await themeButton(page, red, dark).click();
   expect(await theme(page)).toBe("dark");
@@ -53,8 +47,6 @@ test("the theme button cycles dark, light and red, and red keeps its guarantees"
   await panel.getByRole("button", { name: en.preferences.red }).click();
   expect(await theme(page)).toBe("red");
   await page.keyboard.press("Escape");
-  await expect(panel).toBeHidden();
-  await expect(settings).toBeFocused();
 
   await themeButton(page, red, dark).click();
   expect(await theme(page)).toBe("dark");

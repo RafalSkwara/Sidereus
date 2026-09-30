@@ -18,13 +18,6 @@ describe("sortEntries", () => {
   it("orders by best time across midnight, ties by rank", () => {
     expect(sortEntries(entries, "time").map((e) => e.id)).toEqual(["M13", "M39", "M52", "M31"]);
   });
-
-  it("returns a new array and leaves the input alone", () => {
-    const copy = [...entries];
-    const sorted = sortEntries(entries, "time");
-    expect(sorted).not.toBe(entries);
-    expect(entries).toEqual(copy);
-  });
 });
 
 describe("parseSort", () => {

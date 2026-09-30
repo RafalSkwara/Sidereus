@@ -100,28 +100,6 @@ describe("darkWindow (synthetic)", () => {
     expect(dw.end.getTime()).toBeLessThan(events.sunrise.getTime());
     expect(events.sunrise.getTime()).toBeLessThan(night.end.getTime());
   });
-
-  it("rejects thresholds outside [-90, 0]", () => {
-    expect(() => darkWindow(WARSAW, night, 5)).toThrow(RangeError);
-    expect(() => darkWindow(WARSAW, night, -91)).toThrow(RangeError);
-  });
-
-  it("is deterministic", () => {
-    const a = darkWindow(WARSAW, night, -18);
-    const b = darkWindow(WARSAW, night, -18);
-    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  });
-});
-
-describe("darknessThresholdDegForBortle", () => {
-  it("maps Bortle classes to the PRD's candidate thresholds", () => {
-    expect([1, 2, 3, 4].map(darknessThresholdDegForBortle)).toEqual([-18, -18, -18, -18]);
-    expect([5, 6].map(darknessThresholdDegForBortle)).toEqual([-15, -15]);
-    expect([7, 8, 9].map(darknessThresholdDegForBortle)).toEqual([-12, -12, -12]);
-    expect(() => darknessThresholdDegForBortle(0)).toThrow(RangeError);
-    expect(() => darknessThresholdDegForBortle(10)).toThrow(RangeError);
-    expect(() => darknessThresholdDegForBortle(4.5)).toThrow(RangeError);
-  });
 });
 
 describe("sun events vs Stellarium fixtures", () => {

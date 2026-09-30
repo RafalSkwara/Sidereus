@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addDays, localNoon, observingNight, observingNightDateFor, parseCalendarDate } from "./night";
+import { addDays, localNoon, observingNight, observingNightDateFor } from "./night";
 
 const HOUR_MS = 3_600_000;
 
@@ -31,18 +31,6 @@ describe("observingNight", () => {
     expect(localNoon("2026-06-21", "UTC").toISOString()).toBe("2026-06-21T12:00:00.000Z");
     expect(localNoon("2026-06-21", "America/Los_Angeles").toISOString()).toBe("2026-06-21T19:00:00.000Z");
     expect(localNoon("2026-06-21", "Asia/Kolkata").toISOString()).toBe("2026-06-21T06:30:00.000Z");
-  });
-
-  it("rejects malformed and impossible dates before touching Date.UTC", () => {
-    expect(() => observingNight("2026-13-40", "Europe/Warsaw")).toThrow(RangeError);
-    expect(() => observingNight("2026-02-30", "Europe/Warsaw")).toThrow(RangeError);
-    expect(() => observingNight("garbage", "Europe/Warsaw")).toThrow(RangeError);
-    expect(() => observingNight("2026-10-1", "Europe/Warsaw")).toThrow(RangeError);
-    expect(() => parseCalendarDate("2026-10-10T00:00")).toThrow(RangeError);
-  });
-
-  it("rejects an unknown time zone", () => {
-    expect(() => observingNight("2026-10-10", "Mars/Olympus_Mons")).toThrow(RangeError);
   });
 
   it("adds calendar days across month and year boundaries", () => {

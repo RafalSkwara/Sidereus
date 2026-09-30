@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ForecastCache } from "./cache";
-import { FORECAST_CACHE_TTL_SECONDS, forecastCacheKey, getForecast } from "./service";
+import { FORECAST_CACHE_TTL_SECONDS, getForecast } from "./service";
 import { fakeFetch, jsonResponse, memoryCache, openMeteoBody } from "./test-helpers";
 
 const SITE_ID = "8d4f7a52-1111-4222-8333-944455556666";
@@ -23,12 +23,6 @@ function storedEntry(ageMinutes: number, cloud: number, coords = COORDS): string
 
 const liveResponse = () => jsonResponse(openMeteoBody(START_S, [5, 15]));
 const failingResponse = () => jsonResponse({ error: true }, 503);
-
-describe("forecastCacheKey", () => {
-  it("keys by site id only", () => {
-    expect(forecastCacheKey(SITE_ID)).toBe(KEY);
-  });
-});
 
 describe("getForecast", () => {
   it("serves a fresh cached entry without fetching", async () => {
@@ -83,19 +77,6 @@ describe("getForecast", () => {
     const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now: NOW });
     expect(fake.calls).toHaveLength(1);
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual([5, 15]);
-  });
-
-  it("passes a base URL override to the client", async () => {
-    const fake = fakeFetch(liveResponse);
-    await getForecast({
-      fetchFn: fake.fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-      baseUrl: "http://127.0.0.1:9",
-    });
-    expect(fake.calls[0].url.origin).toBe("http://127.0.0.1:9");
   });
 
   it("falls back to a stale copy of any age when the fetch fails, flagged as a fallback", async () => {

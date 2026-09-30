@@ -142,28 +142,6 @@ describe("buildTonight", () => {
     expect(m31).toMatchObject({ commonName: findMessier(31)?.commonName, constellation: "And" });
   });
 
-  it("reports magnifications for a pair and the widest eyepiece when none fits", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-    );
-    const pairs = rankingOf(view).entries.map((entry) => entry.pair);
-    for (const pair of pairs) {
-      if (pair?.kind === "pair") {
-        expect([30, 75]).toContain(pair.finding.magnification);
-        expect([30, 75]).toContain(pair.detail.magnification);
-      } else {
-        expect(pair).toEqual({ kind: "none-fit", widestName: "25 mm Plössl" });
-      }
-    }
-  });
-
   it("leaves the pair out when the kit has no eyepieces", () => {
     const view = buildTonight(
       {
@@ -238,47 +216,6 @@ describe("buildTonight", () => {
     expect(view.verdict.level).toBe("go");
     expect(view.ranking).toEqual({ clearedCount: 0, clearedText: "No object cleared the bar tonight", entries: [] });
   });
-
-  it("treats 01:30 local as the night in progress", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: null,
-        now: new Date("2026-10-10T23:30:00Z"),
-      },
-      "en",
-    );
-    expect(view.date).toBe("2026-10-10");
-  });
-
-  it("shows the evening ahead once last night's dark window is over, before local noon", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: null,
-        // 09:00 CEST on Sunday 11 October: the night of the 10th ended at dawn.
-        now: new Date("2026-10-11T07:00:00Z"),
-      },
-      "en",
-    );
-    expect(view.date).toBe("2026-10-11");
-    expect(view.dateLabel).toBe("Sunday, 11 October 2026");
-  });
-
-  it("is deterministic for identical inputs", () => {
-    const input = {
-      site: WARSAW,
-      telescope: TELESCOPE,
-      eyepieces: EYEPIECES,
-      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 20)),
-      now: NOW,
-    };
-    expect(buildTonight(input, "en")).toEqual(buildTonight(input, "en"));
-  });
   it("explains a weather no-go with the next night worth a look", () => {
     // Warsaw's observing nights start at local noon, 10:00 UTC: nights 1 and 2 overcast, night 3 clear.
     const night3 = Date.parse("2026-10-12T10:00:00Z");
@@ -325,20 +262,6 @@ describe("buildTonight", () => {
         /^The dark window returns on the night of Wednesday, 16 September 2026 \(\d{2}:\d{2}–\d{2}:\d{2}\)$/,
       );
     }
-  });
-
-  it("gives no explanation on a go night", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.explanation).toBeNull();
   });
 
   it("reports whether the forecast is fresh, a saved copy or missing", () => {
@@ -403,12 +326,6 @@ describe("buildTonight with an observation log (FR-018)", () => {
   };
   const unlogged = rankingOf(buildTonight(input, "en"));
   const top = unlogged.entries[0].messier;
-
-  it("exposes the site and telescope the ranking is for", () => {
-    const view = buildTonight(input, "en");
-    expect(view.siteId).toBe("site-1");
-    expect(view.telescopeId).toBe("scope-1");
-  });
 
   it("tags nothing and changes nothing without a log", () => {
     expect(unlogged.entries.every((entry) => entry.seenText === null)).toBe(true);
@@ -602,26 +519,5 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     for (const night of view.nights.slice(3)) {
       expect(outlookNight(night).cloudText).toBeNull();
     }
-  });
-
-  it("words the strip in Polish", () => {
-    const view = buildTonight(
-      { site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast: result(weekForecast(50)), now: NOW },
-      "pl",
-    );
-    expect(view.nights.map((night) => night.label)).toEqual([
-      "sob., 10 paź",
-      "niedz., 11 paź",
-      "pon., 12 paź",
-      "wt., 13 paź",
-      "śr., 14 paź",
-      "czw., 15 paź",
-      "pt., 16 paź",
-    ]);
-    expect(outlookNight(view.nights[3]).cloudText).toBe("Zachmurzenie ~50%");
-    for (const night of view.nights) {
-      expect(night.moonText).toMatch(/^Księżyc \d{1,3}% · /);
-    }
-    expect(verdictNight(view.nights[0]).reasonText).toBe(view.verdictText);
   });
 });

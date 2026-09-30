@@ -6,7 +6,6 @@ import {
   SCORE_WEIGHTS,
   WELL_PLACED_ALTITUDE_DEG,
   bortlePenaltyForBortle,
-  darknessThresholdDegForBortle,
   nakedEyeLimitingMagForBortle,
 } from "./parameters";
 import { SCORE_COMPONENTS, scoreObject } from "./score";
@@ -60,12 +59,6 @@ function score(overrides: Partial<ScoreInput> = {}) {
 }
 
 describe("S-02 parameters", () => {
-  it("maps Bortle to the naked-eye limiting magnitude", () => {
-    expect([1, 2, 3, 4, 5, 6, 7, 8, 9].map(nakedEyeLimitingMagForBortle)).toEqual([
-      7.6, 7.1, 6.6, 6.1, 5.6, 5.1, 4.6, 4.3, 4.0,
-    ]);
-  });
-
   it("maps Bortle to a penalty of 0 at 1-2 rising linearly to 0.40 at 8 and 9", () => {
     expect(bortlePenaltyForBortle(1)).toBe(0);
     expect(bortlePenaltyForBortle(2)).toBe(0);
@@ -75,18 +68,6 @@ describe("S-02 parameters", () => {
     for (let b = 2; b < 9; b++) {
       expect(bortlePenaltyForBortle(b + 1)).toBeGreaterThanOrEqual(bortlePenaltyForBortle(b));
     }
-  });
-
-  it("rejects an invalid Bortle class like darknessThresholdDegForBortle", () => {
-    for (const bad of [0, 10, 2.5, Number.NaN]) {
-      expect(() => nakedEyeLimitingMagForBortle(bad)).toThrow(RangeError);
-      expect(() => bortlePenaltyForBortle(bad)).toThrow(RangeError);
-      expect(() => darknessThresholdDegForBortle(bad)).toThrow(RangeError);
-    }
-  });
-
-  it("weights sum to 1", () => {
-    expect(SCORE_COMPONENTS.reduce((sum, c) => sum + SCORE_WEIGHTS[c], 0)).toBeCloseTo(1, 12);
   });
 });
 

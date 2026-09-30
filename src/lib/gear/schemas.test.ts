@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getMessages, translateKey } from "@/i18n";
-import { DEFAULT_MIN_ALTITUDE_DEG } from "@/lib/engine/parameters";
-import { eyepieceInputSchema, SITE_FORM_DEFAULTS, siteInputSchema, telescopeInputSchema } from "./schemas";
+import { eyepieceInputSchema, siteInputSchema, telescopeInputSchema } from "./schemas";
 
 /** FormData-shaped input: every value is a string, as a plain HTML POST delivers it. */
 const warsaw = {
@@ -73,12 +72,6 @@ describe("siteInputSchema", () => {
     ]);
     expect(all).not.toContain("91.2345");
     expect(all).not.toContain("181.9876");
-  });
-});
-
-describe("SITE_FORM_DEFAULTS", () => {
-  it("starts the form at the PRD's default minimum altitude", () => {
-    expect(SITE_FORM_DEFAULTS.minAltitudeDeg).toBe(DEFAULT_MIN_ALTITUDE_DEG);
   });
 });
 

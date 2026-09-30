@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editRedirect, formRedirect, logNotice, parseLogPage } from "./redirect";
+import { editRedirect, formRedirect, parseLogPage } from "./redirect";
 
 const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
 const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
@@ -70,28 +70,11 @@ describe("editRedirect", () => {
   });
 });
 
-describe("logNotice", () => {
-  it.each([
-    ["saved", "/log?saved=31"],
-    ["updated", "/log?updated=31"],
-    ["deleted", "/log?deleted=31"],
-  ] as const)("names the object for a %s notice", (kind, url) => {
-    expect(logNotice(kind, 31)).toBe(url);
-  });
-});
-
 describe("parseLogPage", () => {
-  it.each([
-    [null, 1],
-    ["", 1],
-    ["1", 1],
-    ["3", 3],
-    ["0", 1],
-    ["-2", 1],
-    ["2.5", 1],
-    ["abc", 1],
-    ["9999999", 1],
-  ])("reads %j as page %i", (param, page) => {
-    expect(parseLogPage(param)).toBe(page);
+  it("reads a positive integer as the page and anything else as page 1", () => {
+    expect(parseLogPage("3")).toBe(3);
+    for (const param of [null, "", "1", "0", "-2", "2.5", "abc", "9999999"]) {
+      expect(parseLogPage(param)).toBe(1);
+    }
   });
 });
