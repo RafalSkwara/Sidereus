@@ -1,10 +1,10 @@
 ---
 change_id: tonight-all-objects
 title: A page listing every object that cleared tonight's bar
-status: impl_reviewed
+status: archived
 created: 2026-09-29
 updated: 2026-09-29
-archived_at: null
+archived_at: 2026-09-29T14:07:45Z
 ---
 
 ## Notes

@@ -338,4 +338,4 @@ Existing theme cookies keep working. The new return cookie defaults to dark when
 
 - [x] 3.6 Pill right-aligned, button height, no overflow at 768/1024/1280 across languages and themes; tabs below 768 — 04ee9b2
 - [x] 3.7 Hover animates in about 150 ms and respects reduced motion — 04ee9b2
-- [ ] 3.8 The user reviews the updated bar
+- [x] 3.8 The user reviews the updated bar — 230efa2
