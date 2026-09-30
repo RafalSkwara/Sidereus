@@ -434,6 +434,55 @@ export const pl = {
       markObserved: "Zapisz obserwację",
     },
 
+    // Planet names never follow a preposition here, so nothing needs a grammatical case.
+    planets: {
+      heading: "Planety dziś w nocy",
+      window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
+      none: "Dziś między zmierzchem a świtem żadna planeta nie wznosi się ponad Twoją minimalną wysokość.",
+      weather: {
+        line: (p) => `Dla planet: ${p.level} — ${p.reason}`,
+        clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
+        humidityCap: (p) =>
+          `między zmierzchem a świtem niebo dość czyste, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
+        fallbackCap: (p) =>
+          `ostatnia zapisana prognoza pokazywała ${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem, ale nie udało się jej odświeżyć`,
+        noWeatherData: "brak danych pogodowych",
+      },
+      magnitude: (p) => `jasność ${p.mag} mag`,
+      size: (p) => `${p.arcsec}″`,
+      phase: (p) => `faza ${p.percent}%`,
+      rings: (p) => `pierścienie nachylone o ${p.degrees}°`,
+      detailWith: "Do szczegółów:",
+      reason: {
+        high: {
+          evening: (p) => `Wysoko około ${p.time} — najlepiej wieczorem`,
+          night: (p) => `Wysoko około ${p.time} — najlepiej w środku nocy`,
+          morning: (p) => `Wysoko około ${p.time} — najlepiej przed świtem`,
+        },
+        well: {
+          evening: (p) => `Dość wysoko około ${p.time} — najlepiej wieczorem`,
+          night: (p) => `Dość wysoko około ${p.time} — najlepiej w środku nocy`,
+          morning: (p) => `Dość wysoko około ${p.time} — najlepiej przed świtem`,
+        },
+        low: {
+          evening: (p) => `Nisko około ${p.time} — patrz zaraz po zmierzchu, przy odsłoniętym horyzoncie`,
+          night: (p) => `Nisko około ${p.time} — potrzebujesz odsłoniętego horyzontu`,
+          morning: (p) => `Nisko około ${p.time} — patrz tuż przed świtem, przy odsłoniętym horyzoncie`,
+        },
+      },
+      note: {
+        mercury: "Mała, jasna kropka nisko w zmierzchu; przy większym powiększeniu możesz dostrzec fazę.",
+        venus: "Oślepiająco jasna i bez szczegółów, ale jej fazę łatwo zobaczyć — wygląda jak maleńki Księżyc.",
+        mars: "Mała pomarańczowa tarcza; szczegóły powierzchni wymagają spokojnego powietrza i cierpliwości, a często nie widać ich wcale.",
+        jupiter: "Jasna tarcza z dwoma ciemnymi pasami chmur i do czterech księżyców ustawionych w linii obok.",
+        saturn:
+          "Pierścienie widać wyraźnie już przy niewielkim powiększeniu; największy księżyc, Tytan, wygląda jak gwiazda tuż obok.",
+        uranus:
+          "Maleńka niebieskozielona tarcza: przy dużym powiększeniu widać, że to nie gwiazda, ale bez żadnych szczegółów.",
+        neptune: "Maleńka niebieskoszara kropka, trudna do odróżnienia od gwiazdy; samo odnalezienie jej to sukces.",
+      },
+    },
+
     time: {
       hours: (p) => `${p.hours} godz.`,
       minutes: (p) => `${p.minutes} min`,

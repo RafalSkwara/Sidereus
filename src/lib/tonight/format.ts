@@ -6,6 +6,10 @@ import type {
   Interval,
   NextNight,
   ObjectScore,
+  PlanetFacts,
+  PlanetKey,
+  PlanetPlacement,
+  PlanetTiming,
   ScoreComponent,
   SeenSummary,
   Verdict,
@@ -51,6 +55,21 @@ export interface NoDarknessCause {
   bortle: number;
 }
 
+/** What the planet reason line needs about a ranked planet. The engine's `PlanetEntry` is assignable to it. */
+export interface PlanetReasonEntry {
+  placement: PlanetPlacement;
+  timing: PlanetTiming;
+  peak: Pick<HorizontalPosition, "time">;
+}
+
+/** A planet's facts worded for its card; `phaseText` is set for Mercury and Venus, `ringText` for Saturn. */
+export interface PlanetFactsText {
+  magnitudeText: string;
+  sizeText: string;
+  phaseText: string | null;
+  ringText: string | null;
+}
+
 /** The first night after tonight with a dark window, as `darkWindowReturn` finds it, or null. */
 export type DarkReturn = { date: string; window: Interval } | null;
 
@@ -89,6 +108,12 @@ export function createFormatter(locale: Locale) {
     year: "numeric",
   });
   const timeFormats = new Map<string, Intl.DateTimeFormat>();
+  // Magnitudes always carry one decimal ("mag 0.0", "mag −2.4").
+  const magnitudeFormat = new Intl.NumberFormat(tag, {
+    useGrouping: false,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 
   /** A number in the locale's notation; `-0` reads as "0". */
   function num(n: number): string {
@@ -355,6 +380,79 @@ export function createFormatter(locale: Locale) {
     return mean === min ? text.cloud({ mean }) : text.cloudRange({ mean, min });
   }
 
+  /**
+   * A planet's magnitude, apparent size, phase (Mercury and Venus) and ring tilt (Saturn), each worded on its
+   * own: "mag −2.4", "44″", "62% lit", "rings tilted 4°". The magnitude takes a true minus sign; a size under
+   * 10″ keeps one decimal (Uranus, Neptune), a larger one is whole.
+   */
+  function planetFactsText(key: PlanetKey, facts: PlanetFacts): PlanetFactsText {
+    const text = m.tonight.planets;
+    const mag = Math.round(facts.magnitude * 10) / 10;
+    const diameter = facts.apparentDiameterArcsec;
+    const arcsec = diameter < 10 ? Math.round(diameter * 10) / 10 : Math.round(diameter);
+    return {
+      magnitudeText: text.magnitude({ mag: magnitudeFormat.format(mag === 0 ? 0 : mag).replace("-", "\u2212") }),
+      sizeText: text.size({ arcsec: num(arcsec) }),
+      phaseText:
+        key === "mercury" || key === "venus"
+          ? text.phase({ percent: num(Math.round(facts.phaseFraction * 100)) })
+          : null,
+      ringText:
+        facts.ringTiltDeg === null ? null : text.rings({ degrees: num(Math.round(Math.abs(facts.ringTiltDeg))) }),
+    };
+  }
+
+  /**
+   * Why and when to look at a planet, by its placement and the third of the planet window that holds its peak:
+   * "High around 22:10 — best in the middle of the night". Low placements carry the warning that a clear view low
+   * down is needed. No direction here: the card's best line already gives the 16-point direction, and an 8-wind
+   * phrase beside it could disagree (ESE vs "east").
+   */
+  function planetReasonLine(entry: PlanetReasonEntry, timeZone: string): string {
+    return m.tonight.planets.reason[entry.placement][entry.timing]({ time: formatTime(entry.peak.time, timeZone) });
+  }
+
+  /**
+   * The planet window, civil dusk to civil dawn, as "From civil dusk to dawn, 19:32–06:51". Each end is
+   * formatted at its own instant, as in `darkSpanText`.
+   */
+  function planetWindowText(window: Interval, timeZone: string): string {
+    return m.tonight.planets.window({
+      start: formatTime(window.start, timeZone),
+      end: formatTime(window.end, timeZone),
+    });
+  }
+
+  /**
+   * The planet window's own weather, for when the verdict card does not cover it (a no-go or no dark window):
+   * "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and dawn". `buildTonight` calls it
+   * only for a go or marginal planet window; the no-go reasons fall back to the verdict card's wording.
+   */
+  function planetWeatherText(planetVerdict: Verdict): string {
+    const text = m.tonight.planets.weather;
+    const reason = planetVerdict.reason;
+    let phrase: string;
+    switch (reason.kind) {
+      case "clear-run":
+        phrase = text.clearRun({ hours: num(reason.runHours), cloud: num(reason.cloudPct) });
+        break;
+      case "humidity-cap":
+        phrase = text.humidityCap({ humidity: num(reason.maxHumidityPct) });
+        break;
+      case "fallback-cap":
+        phrase = text.fallbackCap({ hours: num(reason.runHours), cloud: num(reason.cloudPct) });
+        break;
+      case "no-weather-data":
+        phrase = text.noWeatherData;
+        break;
+      case "cloudy":
+      case "no-darkness":
+        phrase = verdictReasonText(planetVerdict);
+        break;
+    }
+    return text.line({ level: m.tonight.nextNight.level[planetVerdict.level], reason: phrase });
+  }
+
   return {
     formatTime,
     formatNightDate,
@@ -374,6 +472,10 @@ export function createFormatter(locale: Locale) {
     nextNightText,
     noDarknessCauseText,
     darkReturnText,
+    planetFactsText,
+    planetReasonLine,
+    planetWindowText,
+    planetWeatherText,
   };
 }
 

@@ -40,7 +40,8 @@ test("Tonight links to every cleared object, which can be ordered by best time a
   expect(bestAt).toEqual([...bestAt].sort((a, b) => a - b));
 
   const third = page.locator("li[data-best-at]").nth(2);
-  const object = (await third.getAttribute("data-object"))?.slice(1);
+  // The log link carries the target key ("M31"), the same as the row's `data-object`.
+  const object = await third.getAttribute("data-object");
   await third.locator("summary").click();
   await third.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
   await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${object}&`));

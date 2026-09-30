@@ -422,6 +422,63 @@ export const en = {
       markObserved: "Mark observed",
     },
 
+    /**
+     * M-2 S-01: the "Planets tonight" section. The planet window runs from civil dusk to civil dawn (sun below
+     * `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark window".
+     */
+    planets: {
+      heading: "Planets tonight",
+      window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
+      none: "No planet rises above your minimum altitude between dusk and dawn tonight.",
+      /** Shown only when the verdict card does not already cover the planet window (a no-go or no dark window). */
+      weather: {
+        line: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
+        clearRun: (p: { hours: string; cloud: string }) =>
+          `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
+        humidityCap: (p: { humidity: string }) =>
+          `clear enough between dusk and dawn, but humidity reaches ${p.humidity}%, so expect dew and haze`,
+        fallbackCap: (p: { hours: string; cloud: string }) =>
+          `the last saved forecast showed ${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn, but it could not be refreshed`,
+        noWeatherData: "no weather data",
+      },
+      magnitude: (p: { mag: string }) => `mag ${p.mag}`,
+      size: (p: { arcsec: string }) => `${p.arcsec}″`,
+      /** Mercury and Venus only. */
+      phase: (p: { percent: string }) => `${p.percent}% lit`,
+      /** Saturn only. */
+      rings: (p: { degrees: string }) => `rings tilted ${p.degrees}°`,
+      detailWith: "Detail with",
+      /** By placement (peak altitude) × timing (which third of the planet window holds the peak). */
+      reason: {
+        high: {
+          evening: (p: { time: string }) => `High around ${p.time} — best early in the night`,
+          night: (p: { time: string }) => `High around ${p.time} — best in the middle of the night`,
+          morning: (p: { time: string }) => `High around ${p.time} — best before dawn`,
+        },
+        well: {
+          evening: (p: { time: string }) => `Well up around ${p.time} — best early in the night`,
+          night: (p: { time: string }) => `Well up around ${p.time} — best in the middle of the night`,
+          morning: (p: { time: string }) => `Well up around ${p.time} — best before dawn`,
+        },
+        low: {
+          evening: (p: { time: string }) => `Low around ${p.time} — look soon after dusk, with a clear view low down`,
+          night: (p: { time: string }) => `Low around ${p.time} — you need a clear view low down`,
+          morning: (p: { time: string }) =>
+            `Low around ${p.time} — look shortly before dawn, with a clear view low down`,
+        },
+      },
+      /** What a 100-200 mm telescope shows a beginner; deliberately modest. */
+      note: {
+        mercury: "A small, bright dot low in the twilight; at higher power you may just make out its phase.",
+        venus: "Dazzling and featureless, but its phase is easy to see, like a tiny Moon.",
+        mars: "A small orange disc; surface markings need steady air and patience, and often don't show at all.",
+        jupiter: "A bright disc crossed by two dark cloud belts, with up to four moons strung out in a line beside it.",
+        saturn: "The rings show clearly even at modest power; its largest moon, Titan, looks like a star close by.",
+        uranus: "A tiny blue-green disc: at high power it is clearly not a star, but it shows no detail.",
+        neptune: "A tiny blue-grey dot that is hard to tell from a star; finding it is the achievement.",
+      },
+    },
+
     time: {
       hours: (p: { hours: string }) => `${p.hours} h`,
       minutes: (p: { minutes: string }) => `${p.minutes} min`,
