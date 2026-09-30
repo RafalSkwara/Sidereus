@@ -81,7 +81,7 @@ const TABLES = [
     // A's; the referenced-gear guard has its own suite in observations.test.ts.
     table: "observations",
     valid: {
-      messier: 13,
+      target: "M13",
       night: "2026-09-26",
       rating: 4,
       site_id: null,
@@ -89,7 +89,8 @@ const TABLES = [
       site_name: "Home",
       telescope_name: "Dobsonian 8in",
     },
-    change: { rating: 2 },
+    // Changing the target also exercises the target/messier sync trigger under RLS.
+    change: { target: "jupiter", rating: 2 },
   } satisfies TableCase<"observations">,
 ] as const;
 

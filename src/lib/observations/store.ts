@@ -1,7 +1,8 @@
 import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
-import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
+import { LOG_PENALTY_MIN_RATING, type LogEntry } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type WriteResult } from "@/lib/gear/store";
+import type { TargetKey } from "@/lib/targets";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { ObservationInput, ObservationUpdateInput } from "./schemas";
@@ -28,23 +29,18 @@ const DELETE_FAILED: MessageKey = "errors.delete.observation";
 /** Postgres `invalid_text_representation`: a malformed uuid in the id filter. Treated as "not found". */
 const INVALID_TEXT = "22P02";
 
-/**
- * A log entry as the ranking reads it (`listForRanking`). Still keyed by Messier number: Tonight maps it
- * to the engine's target-keyed `LogEntry` until the log itself stores target keys.
- */
-export interface RankingLogEntry {
-  messier: number;
-  night: string;
-  rating: number;
-}
-
 /** Entries per page of the log (S-07). Far below PostgREST's `max_rows`, so no page is ever cut short. */
 export const LOG_PAGE_SIZE = 50;
 
-/** One log entry as the log pages show it. A `null` gear id means that site or telescope has been deleted. */
+/**
+ * One log entry as the log pages show it. A `null` gear id means that site or telescope has been deleted.
+ *
+ * Only `target` is read and written here. The table still has `messier`, filled from a Messier target by a
+ * trigger for the app version deployed before target keys; a later migration drops it.
+ */
 export interface ObservationRecord {
   id: string;
-  messier: number;
+  target: TargetKey;
   night: string;
   rating: number;
   siteId: string | null;
@@ -54,12 +50,17 @@ export interface ObservationRecord {
   createdAt: string;
 }
 
-export type DeleteResult = { ok: true; messier: number } | { ok: false; message: MessageKey };
+export type DeleteResult = { ok: true; target: TargetKey } | { ok: false; message: MessageKey };
+
+/** The column's check constraint is the target key grammar, so a stored value is always a key. */
+function asTargetKey(value: string): TargetKey {
+  return value as TargetKey;
+}
 
 function toObservationRecord(row: Tables<"observations">): ObservationRecord {
   return {
     id: row.id,
-    messier: row.messier,
+    target: asTargetKey(row.target),
     night: row.night,
     rating: row.rating,
     siteId: row.site_id,
@@ -116,7 +117,7 @@ export const observationStore = {
       return { ok: false, message: NIGHT_IN_FUTURE };
     }
     const { error } = await client.from("observations").insert({
-      messier: input.messier,
+      target: input.target,
       night: input.night,
       rating: input.rating,
       site_id: site.id,
@@ -212,7 +213,7 @@ export const observationStore = {
     const { data, error } = await client
       .from("observations")
       .update({
-        messier: input.messier,
+        target: input.target,
         night: input.night,
         rating: input.rating,
         site_id: site?.id ?? null,
@@ -228,29 +229,29 @@ export const observationStore = {
     return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND };
   },
 
-  /** Deletes one entry and names its object for the log's notice. Another user's entry reads as not found. */
+  /** Deletes one entry and names its target for the log's notice. Another user's entry reads as not found. */
   async remove(client: TypedSupabaseClient, id: string): Promise<DeleteResult> {
-    const { data, error } = await client.from("observations").delete().eq("id", id).select("messier");
+    const { data, error } = await client.from("observations").delete().eq("id", id).select("target");
     if (error) {
       return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : DELETE_FAILED };
     }
     const deleted = data.at(0);
-    return deleted ? { ok: true, messier: deleted.messier } : { ok: false, message: NOT_FOUND };
+    return deleted ? { ok: true, target: asTargetKey(deleted.target) } : { ok: false, message: NOT_FOUND };
   },
 
   /**
    * The caller's entries that can count as seen (rated `LOG_PENALTY_MIN_RATING` or above; lower ones
-   * never affect the ranking), newest night first, reduced to what the ranking needs. The order makes
-   * any cut by PostgREST's `max_rows` deterministic: it drops only the oldest nights, which can
-   * undercount "seen N times" but never removes an object's penalty.
+   * never affect the ranking), newest night first, then by target key, reduced to the engine's `LogEntry`.
+   * The order makes any cut by PostgREST's `max_rows` deterministic: it drops only the oldest nights, which
+   * can undercount "seen N times" but never removes an object's penalty.
    */
-  async listForRanking(client: TypedSupabaseClient): Promise<RankingLogEntry[]> {
+  async listForRanking(client: TypedSupabaseClient): Promise<LogEntry[]> {
     const { data, error } = await client
       .from("observations")
-      .select("messier, night, rating")
+      .select("target, night, rating")
       .gte("rating", LOG_PENALTY_MIN_RATING)
       .order("night", { ascending: false })
-      .order("messier", { ascending: true });
+      .order("target", { ascending: true });
     if (error) {
       throw new Error(LOAD_FAILED);
     }

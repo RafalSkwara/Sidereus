@@ -5,12 +5,11 @@ import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { findMessier } from "@/lib/catalogue";
-import { localCommonName } from "@/lib/catalogue/common-names";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
-import { messierOptions } from "@/lib/observations/messier-options";
 import { LOG_LIST } from "@/lib/observations/redirect";
 import { latestNightBound, observationStore, type ObservationRecord } from "@/lib/observations/store";
+import { targetOptions } from "@/lib/observations/target-options";
+import { targetLabel } from "@/lib/targets/labels";
 
 // One log entry (roadmap S-07, FR-017): the form to edit every field and a delete button. An entry whose site or
 // telescope was deleted since keeps it as a "(deleted)" option (FR-021). `POST /api/log/<id>` sends a failed
@@ -44,9 +43,9 @@ if (supabase) {
   }
 }
 
-const object = entry ? findMessier(entry.messier) : undefined;
-const objectId = object?.id ?? (entry ? `M${entry.messier}` : "");
-const commonName = object ? localCommonName(object.messier, object.commonName, locale) : null;
+const label = entry ? targetLabel(entry.target, locale) : null;
+const objectId = label?.id ?? "";
+const commonName = label?.name ?? null;
 // Only a hint for the date picker; the store checks the chosen site's own night.
 const maxNight = latestNightBound(sites, new Date());
 ---
@@ -72,13 +71,13 @@ const maxNight = latestNightBound(sites, new Date());
           action={`/api/log/${encodeURIComponent(entry.id)}`}
           mode="edit"
           initial={{
-            messier: entry.messier,
+            target: entry.target,
             night: entry.night,
             siteId: entry.siteId ?? "",
             telescopeId: entry.telescopeId ?? "",
             rating: entry.rating,
           }}
-          messierOptions={messierOptions(locale)}
+          targetOptions={targetOptions(locale)}
           sites={sites.map(({ id, name }) => ({ id, name }))}
           telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
           deletedSite={entry.siteId ? undefined : entry.siteName}

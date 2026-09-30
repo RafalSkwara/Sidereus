@@ -499,33 +499,33 @@ The migration is additive and backward-compatible with the running old app, thro
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the Skyfield planet reference: `npm test`
-- [x] 1.2 Engine purity guard still passes with the new files: `npm test -- purity`
-- [x] 1.3 Type check passes: `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass, including the Skyfield planet reference: `npm test` — e67723a
+- [x] 1.2 Engine purity guard still passes with the new files: `npm test -- purity` — e67723a
+- [x] 1.3 Type check passes: `npx astro check` — e67723a
+- [x] 1.4 Lint passes: `npm run lint` — e67723a
 
 #### Manual
 
-- [x] 1.5 On the Warsaw 2026-10-10 fixture night, the listed planets and their order look sensible against a planetarium view (Stellarium or Stellarium Web): Saturn and the evening planets well placed, anything low flagged low
+- [x] 1.5 On the Warsaw 2026-10-10 fixture night, the listed planets and their order look sensible against a planetarium view (Stellarium or Stellarium Web): Saturn and the evening planets well placed, anything low flagged low — e67723a
 
 ### Phase 2: Target identity in the observation log
 
 #### Automated
 
-- [ ] 2.1 Migration applies cleanly to local Supabase: `npx supabase db reset`
-- [ ] 2.2 Generated types are current: `npm run db:types` produces no diff
-- [ ] 2.3 Database suite passes, including trigger-sync and isolation cases: `npm run test:db`
-- [ ] 2.4 Unit tests pass: `npm test`
-- [ ] 2.5 Type check passes: `npx astro check`
-- [ ] 2.6 Lint passes: `npm run lint`
-- [ ] 2.7 Observation-log e2e specs pass: `npx playwright test observation-log`
-- [ ] 2.8 Smoke passes against local Supabase: `npm run smoke`
+- [x] 2.1 Migration applies cleanly to local Supabase: `npx supabase db reset`
+- [x] 2.2 Generated types are current: `npm run db:types` produces no diff
+- [x] 2.3 Database suite passes, including trigger-sync and isolation cases: `npm run test:db`
+- [x] 2.4 Unit tests pass: `npm test`
+- [x] 2.5 Type check passes: `npx astro check`
+- [x] 2.6 Lint passes: `npm run lint`
+- [x] 2.7 Observation-log e2e specs pass: `npx playwright test observation-log`
+- [x] 2.8 Smoke passes against local Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.9 On the dev server against local Supabase, logging, editing and deleting a Messier entry looks and behaves exactly as before (notices name the object)
-- [ ] 2.10 The manual-entry picker finds "Jowisz" / "Jupiter" and saves a Jupiter entry that the log lists by name
-- [ ] 2.11 An old-style link `/log/new?object=31` still opens the form for M31
+- [x] 2.9 On the dev server against local Supabase, logging, editing and deleting a Messier entry looks and behaves exactly as before (notices name the object)
+- [x] 2.10 The manual-entry picker finds "Jowisz" / "Jupiter" and saves a Jupiter entry that the log lists by name
+- [x] 2.11 An old-style link `/log/new?object=31` still opens the form for M31
 
 ### Phase 3: Planets on Tonight
 

@@ -28,5 +28,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(result.message);
   }
-  return context.redirect(logNotice("updated", parsed.data.messier));
+  return context.redirect(logNotice("updated", parsed.data.target));
 };

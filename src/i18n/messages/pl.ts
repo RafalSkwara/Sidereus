@@ -554,6 +554,19 @@ export const pl = {
     },
   },
 
+  targets: {
+    planet: {
+      mercury: "Merkury",
+      venus: "Wenus",
+      mars: "Mars",
+      jupiter: "Jowisz",
+      saturn: "Saturn",
+      uranus: "Uran",
+      neptune: "Neptun",
+    },
+    planetDetail: "Planeta",
+  },
+
   log: {
     kicker: "Dziennik obserwacji",
     title: (p) => `Zapisz ${p.object}`,

@@ -325,7 +325,8 @@ describe("buildTonight with an observation log (FR-018)", () => {
     now: NOW,
   };
   const unlogged = rankingOf(buildTonight(input, "en"));
-  const top = unlogged.entries[0].messier;
+  // The log keys an object by its target key, the catalogue id ("M31").
+  const top = unlogged.entries[0].id;
 
   it("tags nothing and changes nothing without a log", () => {
     expect(unlogged.entries.every((entry) => entry.seenText === null)).toBe(true);
@@ -336,25 +337,25 @@ describe("buildTonight with an observation log (FR-018)", () => {
       {
         ...input,
         log: [
-          { messier: top, night: "2026-09-12", rating: 4 },
-          { messier: top, night: "2026-10-01", rating: 3 },
+          { target: top, night: "2026-09-12", rating: 4 },
+          { target: top, night: "2026-10-01", rating: 3 },
         ],
       },
       "en",
     );
-    const entry = rankingOf(view).entries.find((e) => e.messier === top);
+    const entry = rankingOf(view).entries.find((e) => e.id === top);
     // Pushed down, the object may leave the top five; where it still shows, it carries the tag.
     if (entry) {
       expect(entry.seenText).toBe("Seen 2 times – last 1 Oct 2026");
     }
-    expect(rankingOf(view).entries.map((e) => e.messier)).not.toEqual(unlogged.entries.map((e) => e.messier));
+    expect(rankingOf(view).entries.map((e) => e.id)).not.toEqual(unlogged.entries.map((e) => e.id));
   });
 
   it("leaves the ranking exactly as it was for a log of only 1-2 ratings (invariant 4)", () => {
     const view = buildTonight(
       {
         ...input,
-        log: unlogged.entries.map((e, i) => ({ messier: e.messier, night: "2026-10-01", rating: (i % 2) + 1 })),
+        log: unlogged.entries.map((e, i) => ({ target: e.id, night: "2026-10-01", rating: (i % 2) + 1 })),
       },
       "en",
     );
@@ -362,7 +363,7 @@ describe("buildTonight with an observation log (FR-018)", () => {
   });
 
   it("ignores entries for nights after the ranked night", () => {
-    const view = buildTonight({ ...input, log: [{ messier: top, night: "2026-10-11", rating: 5 }] }, "en");
+    const view = buildTonight({ ...input, log: [{ target: top, night: "2026-10-11", rating: 5 }] }, "en");
     expect(rankingOf(view)).toEqual(unlogged);
   });
 });

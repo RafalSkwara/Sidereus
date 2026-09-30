@@ -39,7 +39,7 @@ const { view, tonightError, sitesError, telescopesError, needsSetup } = await lo
   limit: Number.POSITIVE_INFINITY,
 });
 const rows = view?.ranking
-  ? sortEntries(view.ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.messier) }))
+  ? sortEntries(view.ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.id) }))
   : [];
 const failure = tonightError ?? sitesError ?? telescopesError ?? (needsSetup ? "errors.load.setup" : null);
 

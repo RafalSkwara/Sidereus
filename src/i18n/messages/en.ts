@@ -540,6 +540,21 @@ export const en = {
     },
   },
 
+  /** How the log names a target that is not a Messier object (M-2 S-01): by its localised name. */
+  targets: {
+    planet: {
+      mercury: "Mercury",
+      venus: "Venus",
+      mars: "Mars",
+      jupiter: "Jupiter",
+      saturn: "Saturn",
+      uranus: "Uranus",
+      neptune: "Neptune",
+    },
+    /** The picker's secondary line for a planet. */
+    planetDetail: "Planet",
+  },
+
   log: {
     kicker: "Observation log",
     title: (p: { object: string }) => `Log ${p.object}`,

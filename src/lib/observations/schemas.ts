@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { MessageKey } from "@/i18n";
+import { isTargetKey, type TargetKey } from "@/lib/targets";
 
 /**
  * One definition of a valid observation log entry (roadmap S-06, PRD FR-016), shared by the log form
@@ -10,7 +11,7 @@ import type { MessageKey } from "@/i18n";
  * the route puts it into a redirect URL. Whether the night lies in the future depends on the chosen
  * site's time zone, so the store checks that, not this schema.
  *
- * Island-safe: imports only zod and the catalogue's key type.
+ * Island-safe: imports only zod, the catalogue's key type and the target key grammar (`@/lib/targets`).
  */
 
 /** An empty form field counts as missing, not as 0 (which `Number("")` would give). */
@@ -51,8 +52,11 @@ function gearId(message: MessageKey) {
   return z.preprocess(emptyToUndefined, z.uuid({ error: message }));
 }
 
+const OBJECT_INVALID: MessageKey = "errors.observation.objectInvalid";
+
 export const observationInputSchema = z.object({
-  messier: boundedInteger(1, 110, "errors.observation.objectInvalid"),
+  /** The target key (`@/lib/targets`): "M31" or "jupiter". */
+  target: z.preprocess(emptyToUndefined, z.custom<TargetKey>(isTargetKey, { error: OBJECT_INVALID })),
   night: z.preprocess(
     emptyToUndefined,
     z
