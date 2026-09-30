@@ -203,3 +203,47 @@ export const DARK_RETURN_MAX_NIGHTS = 366;
  * back through the last step finds the same first night as checking every night.
  */
 export const DARK_RETURN_STRIDE_NIGHTS = 7;
+
+// Planets (M-2 S-01) -----------------------------------------------------------------------------
+
+/**
+ * Candidate (S-01 planning, M-2, 2026-09-30): the planet window is the part of the night with the sun
+ * below this altitude (civil dusk to civil dawn). Planets are bright enough for twilight, so they use
+ * neither the Bortle darkness threshold nor the dark window.
+ */
+export const PLANET_WINDOW_SUN_ALTITUDE_DEG = -6;
+
+/**
+ * Candidate (S-01 planning, M-2, 2026-09-30): Uranus and Neptune are listed only for a telescope with
+ * at least this aperture, mm; below it they are little more than faint dots.
+ */
+export const ICE_GIANT_MIN_APERTURE_MM = 130;
+
+/**
+ * Candidate (S-01 planning, M-2, 2026-09-30): weights of the two planet-score components. Placement is
+ * how far the peak altitude sits between the site's minimum altitude (0) and `WELL_PLACED_ALTITUDE_DEG`
+ * (1); size is the apparent diameter over `PLANET_SIZE_REFERENCE_ARCSEC`, capped at 1. They sum to 1,
+ * so the total stays on a 0-1 scale. The score only orders the planets; there is no bar.
+ */
+export const PLANET_SCORE_WEIGHTS: Readonly<{ placement: number; size: number }> = {
+  placement: 0.6,
+  size: 0.4,
+};
+
+/**
+ * Candidate (S-01 planning, M-2, 2026-09-30): apparent diameter, arcseconds, at which a planet's size
+ * component reaches 1.
+ */
+export const PLANET_SIZE_REFERENCE_ARCSEC = 30;
+
+/** Candidate (S-01 planning, M-2, 2026-09-30): a planet whose peak altitude is below this, degrees, is flagged low. */
+export const PLANET_LOW_ALTITUDE_DEG = 20;
+
+/**
+ * Candidate (S-01 planning, M-2, 2026-09-30): the useful magnification ceiling is
+ * min(`MAX_MAGNIFICATION_PER_MM` × aperture mm, `MAX_MAGNIFICATION`); the planet eyepiece stays at or below it.
+ */
+export const MAX_MAGNIFICATION_PER_MM = 2;
+
+/** Candidate (S-01 planning, M-2, 2026-09-30): absolute magnification ceiling for the planet eyepiece. */
+export const MAX_MAGNIFICATION = 250;

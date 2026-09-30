@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { findMessier } from "@/lib/catalogue";
 
-import { eyepieceOptics, pairEyepieces } from "./eyepieces";
+import { eyepieceOptics, pairEyepieces, planetEyepiece } from "./eyepieces";
 import { FOV_FIT_FRACTION } from "./parameters";
 
 /** Shaped like the gear store's `EyepieceRecord`, to prove it passes through unchanged. */
@@ -117,5 +117,45 @@ describe("pairEyepieces", () => {
     expect(pairEyepieces(NEWTONIAN, [first, second], 10)).toEqual({ kind: "pair", finding: first, detail: first });
     expect(pairEyepieces(NEWTONIAN, [second, first], 10)).toEqual({ kind: "pair", finding: second, detail: second });
     expect(pairEyepieces(NEWTONIAN, [first, second], 1000)).toEqual({ kind: "none-fit", widest: first });
+  });
+});
+
+describe("planetEyepiece", () => {
+  it("picks the highest magnification that keeps the exit pupil at or above the floor", () => {
+    // On 150/750: 6 mm is 125× (1.2 mm), 4 mm 187.5× (0.8 mm), 3 mm 250× (0.6 mm, below the floor).
+    const six = eyepiece("e6", 6);
+    const four = eyepiece("e4", 4);
+    const three = eyepiece("e3", 3);
+    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, six, three, four, PLOSSL_10])).toBe(four);
+    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, PLOSSL_10])).toBe(PLOSSL_10);
+  });
+
+  it("stays at or below the magnification ceiling even when the exit pupil would allow more", () => {
+    // On 300/1500 the ceiling is 250×: 6 mm is exactly 250×, 5 mm 300× with a 1 mm exit pupil.
+    const dobsonian = { apertureMm: 300, focalLengthMm: 1500 };
+    const six = eyepiece("e6", 6);
+    const five = eyepiece("e5", 5);
+    expect(planetEyepiece(dobsonian, [five, six])).toBe(six);
+    expect(planetEyepiece(dobsonian, [five, PLOSSL_25])).toBe(PLOSSL_25);
+  });
+
+  it("falls back to the lowest magnification when every eyepiece breaks the limits", () => {
+    const three = eyepiece("e3", 3);
+    const two = eyepiece("e2", 2);
+    expect(planetEyepiece(NEWTONIAN, [two, three])).toBe(three);
+  });
+
+  it("returns null for an empty kit", () => {
+    expect(planetEyepiece(NEWTONIAN, [])).toBeNull();
+  });
+
+  it("breaks ties by the order the kit is given in", () => {
+    const first = eyepiece("a", 10);
+    const second = eyepiece("b", 10);
+    expect(planetEyepiece(NEWTONIAN, [first, second])).toBe(first);
+    expect(planetEyepiece(NEWTONIAN, [second, first])).toBe(second);
+    const tinyFirst = eyepiece("c", 2);
+    const tinySecond = eyepiece("d", 2);
+    expect(planetEyepiece(NEWTONIAN, [tinyFirst, tinySecond])).toBe(tinyFirst);
   });
 });

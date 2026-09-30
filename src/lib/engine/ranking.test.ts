@@ -30,6 +30,7 @@ function warsawDarkWindow(): Extract<DarkWindow, { kind: "window" }> {
 /** A bright, compact cluster at the given declination: it scores near 1 whenever it is up. */
 function synthetic(messier: number, decDeg: number, overrides: Partial<RankableObject> = {}): RankableObject {
   return {
+    id: `M${messier}`,
     messier,
     raHours: 0,
     decDeg,
@@ -194,7 +195,7 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
   const bright = synthetic(1, 89.9);
   const close = synthetic(2, 89.9, { vMag: 5 });
   const far = synthetic(3, 89.9, { vMag: 11 });
-  const seenM1 = new Map([[1, { count: 2, lastNight: "2026-09-12" }]]);
+  const seenM1 = new Map([["M1", { count: 2, lastNight: "2026-09-12" }]]);
 
   it("moves a seen object below an unseen one that scores within LOG_PENALTY of it", () => {
     const unlogged = rank([bright, close]);
@@ -222,7 +223,7 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
     expect(unlogged.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
     expect(unlogged.score.total - LOG_PENALTY).toBeLessThan(MIN_OBJECT_SCORE);
 
-    const logged = rank([borderline], { seen: new Map([[40, { count: 1, lastNight: "2026-09-12" }]]) });
+    const logged = rank([borderline], { seen: new Map([["M40", { count: 1, lastNight: "2026-09-12" }]]) });
     expect(logged.clearedCount).toBe(1);
     expect(logged.entries.map((e) => e.object.messier)).toEqual([40]);
   });
@@ -236,8 +237,8 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
   it("ranks a log of only 1-2 ratings exactly like an empty log (invariant 4)", () => {
     const failedAttempts = seenSummaries(
       [
-        { messier: 1, night: "2026-09-12", rating: 2 },
-        { messier: 2, night: "2026-09-13", rating: 1 },
+        { target: "M1", night: "2026-09-12", rating: 2 },
+        { target: "M2", night: "2026-09-13", rating: 1 },
       ],
       "2026-10-10",
     );

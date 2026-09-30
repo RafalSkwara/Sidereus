@@ -1,6 +1,6 @@
 import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
-import { LOG_PENALTY_MIN_RATING, type LogEntry } from "@/lib/engine";
+import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type WriteResult } from "@/lib/gear/store";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import type { TypedSupabaseClient } from "@/lib/supabase";
@@ -27,6 +27,16 @@ const DELETE_FAILED: MessageKey = "errors.delete.observation";
 
 /** Postgres `invalid_text_representation`: a malformed uuid in the id filter. Treated as "not found". */
 const INVALID_TEXT = "22P02";
+
+/**
+ * A log entry as the ranking reads it (`listForRanking`). Still keyed by Messier number: Tonight maps it
+ * to the engine's target-keyed `LogEntry` until the log itself stores target keys.
+ */
+export interface RankingLogEntry {
+  messier: number;
+  night: string;
+  rating: number;
+}
 
 /** Entries per page of the log (S-07). Far below PostgREST's `max_rows`, so no page is ever cut short. */
 export const LOG_PAGE_SIZE = 50;
@@ -234,7 +244,7 @@ export const observationStore = {
    * any cut by PostgREST's `max_rows` deterministic: it drops only the oldest nights, which can
    * undercount "seen N times" but never removes an object's penalty.
    */
-  async listForRanking(client: TypedSupabaseClient): Promise<LogEntry[]> {
+  async listForRanking(client: TypedSupabaseClient): Promise<RankingLogEntry[]> {
     const { data, error } = await client
       .from("observations")
       .select("messier, night, rating")

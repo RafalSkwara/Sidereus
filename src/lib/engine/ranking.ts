@@ -24,10 +24,13 @@ import type { DarkWindow, HorizontalPosition, Site } from "./types";
  * the same grid) and every score reads those arrays; nothing here samples an object on its own.
  */
 
-/** What the ranking needs about a catalogue object. `MessierObject` is assignable to it. */
+/**
+ * What the ranking needs about a catalogue object. `MessierObject` is assignable to it. `id` (`"M31"`)
+ * is the object's target key in the log; `messier` breaks ties in the order.
+ */
 export type RankableObject = Pick<
   MessierObject,
-  "messier" | "raHours" | "decDeg" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin"
+  "id" | "messier" | "raHours" | "decDeg" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin"
 >;
 
 /** A telescope as the ranking needs it. The gear store's `TelescopeRecord` is assignable to it. */
@@ -48,10 +51,11 @@ export interface RankInput<
   eyepieces: readonly E[];
   catalogue: readonly O[];
   /**
-   * Objects already seen, by Messier number (`seenSummaries`); absent means an empty log. A seen object
-   * is ordered by its score less `LOG_PENALTY`, but still clears the bar on its own score (FR-018).
+   * Objects already seen, by target key (`seenSummaries`, looked up by `object.id`); absent means an
+   * empty log. A seen object is ordered by its score less `LOG_PENALTY`, but still clears the bar on
+   * its own score (FR-018).
    */
-  seen?: ReadonlyMap<number, SeenSummary>;
+  seen?: ReadonlyMap<string, SeenSummary>;
   /**
    * How many cleared objects get full entries (eyepiece pair, reasons); `clearedCount` always counts them all.
    * Defaults to `MAX_RANKED_OBJECTS` (Tonight's top five); `Infinity` lists every cleared object
@@ -165,7 +169,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
       apertureMm: telescope.apertureMm,
     });
     if (score !== null) {
-      const seenSummary = seen?.get(object.messier) ?? null;
+      const seenSummary = seen?.get(object.id) ?? null;
       scored.push({
         object,
         score,

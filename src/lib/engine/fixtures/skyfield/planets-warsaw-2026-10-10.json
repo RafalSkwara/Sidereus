@@ -1,0 +1,613 @@
+{
+  "provenance": {
+    "tool": "Skyfield",
+    "version": "1.55",
+    "ephemeris": "JPL DE421 (de421.bsp)",
+    "refraction": "Skyfield altaz, 10 C, 1010 mbar",
+    "diameter": "2 atan(equatorial radius / geocentric light-time distance)",
+    "script": "scripts/planet-reference.py",
+    "generatedAt": "2026-09-30",
+    "civilWindow": {
+      "start": "2026-10-10T18:26:52+02:00",
+      "end": "2026-10-11T06:19:46+02:00"
+    }
+  },
+  "site": {
+    "name": "Warsaw centre",
+    "latitudeDeg": 52.23,
+    "longitudeDeg": 21.01,
+    "elevationM": 110,
+    "timeZone": "Europe/Warsaw"
+  },
+  "night": "2026-10-10",
+  "samples": [
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -6.2433,
+      "azimuthDeg": 248.208,
+      "apparentDiameterArcsec": 6.523
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -12.3863,
+      "azimuthDeg": 251.3793,
+      "apparentDiameterArcsec": 55.324
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -17.0383,
+      "azimuthDeg": 345.5751,
+      "apparentDiameterArcsec": 5.865
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -18.3703,
+      "azimuthDeg": 330.9196,
+      "apparentDiameterArcsec": 33.984
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 10.2246,
+      "azimuthDeg": 100.3187,
+      "apparentDiameterArcsec": 19.691
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": -3.9586,
+      "azimuthDeg": 47.4033,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-10T19:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 13.3321,
+      "azimuthDeg": 108.1875,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -15.0686,
+      "azimuthDeg": 259.5993,
+      "apparentDiameterArcsec": 6.527
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -21.3528,
+      "azimuthDeg": 262.6794,
+      "apparentDiameterArcsec": 55.353
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -18.1697,
+      "azimuthDeg": 0.3682,
+      "apparentDiameterArcsec": 5.866
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -21.7578,
+      "azimuthDeg": 345.9583,
+      "apparentDiameterArcsec": 33.987
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 18.9984,
+      "azimuthDeg": 112.9211,
+      "apparentDiameterArcsec": 19.691
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 3.637,
+      "azimuthDeg": 59.3449,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-10T20:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 21.6603,
+      "azimuthDeg": 121.3162,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -24.2221,
+      "azimuthDeg": 271.2063,
+      "apparentDiameterArcsec": 6.531
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -30.5501,
+      "azimuthDeg": 274.4967,
+      "apparentDiameterArcsec": 55.382
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -16.9326,
+      "azimuthDeg": 15.1481,
+      "apparentDiameterArcsec": 5.867
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -22.7573,
+      "azimuthDeg": 1.6165,
+      "apparentDiameterArcsec": 33.991
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 26.9651,
+      "azimuthDeg": 126.7815,
+      "apparentDiameterArcsec": 19.691
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 11.8451,
+      "azimuthDeg": 70.7424,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-10T21:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 28.841,
+      "azimuthDeg": 135.942,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -33.3276,
+      "azimuthDeg": 283.7313,
+      "apparentDiameterArcsec": 6.536
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -39.5796,
+      "azimuthDeg": 287.6691,
+      "apparentDiameterArcsec": 55.411
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -13.4537,
+      "azimuthDeg": 29.3579,
+      "apparentDiameterArcsec": 5.868
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -21.2529,
+      "azimuthDeg": 17.1998,
+      "apparentDiameterArcsec": 33.994
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 33.5132,
+      "azimuthDeg": 142.4707,
+      "apparentDiameterArcsec": 19.691
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 20.7512,
+      "azimuthDeg": 82.0266,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-10T22:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 34.2276,
+      "azimuthDeg": 152.4409,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -41.9102,
+      "azimuthDeg": 298.13,
+      "apparentDiameterArcsec": 6.54
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -47.8881,
+      "azimuthDeg": 303.4013,
+      "apparentDiameterArcsec": 55.44
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -8.0523,
+      "azimuthDeg": 42.6691,
+      "apparentDiameterArcsec": 5.87
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -17.4169,
+      "azimuthDeg": 32.0487,
+      "apparentDiameterArcsec": 33.997
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 37.933,
+      "azimuthDeg": 160.2031,
+      "apparentDiameterArcsec": 19.69
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 29.927,
+      "azimuthDeg": 93.7835,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-10T23:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 37.1471,
+      "azimuthDeg": 170.6338,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -49.2739,
+      "azimuthDeg": 315.6315,
+      "apparentDiameterArcsec": 6.545
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -54.6037,
+      "azimuthDeg": 323.216,
+      "apparentDiameterArcsec": 55.469
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": -1.1358,
+      "azimuthDeg": 55.0539,
+      "apparentDiameterArcsec": 5.871
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -11.6344,
+      "azimuthDeg": 45.816,
+      "apparentDiameterArcsec": 34.0
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 39.5657,
+      "azimuthDeg": 179.4014,
+      "apparentDiameterArcsec": 19.69
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 38.9679,
+      "azimuthDeg": 106.8298,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-11T00:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 37.1336,
+      "azimuthDeg": 189.5291,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -54.3841,
+      "azimuthDeg": 337.2567,
+      "apparentDiameterArcsec": 6.549
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -58.4408,
+      "azimuthDeg": 347.8623,
+      "apparentDiameterArcsec": 55.498
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 7.0095,
+      "azimuthDeg": 66.728,
+      "apparentDiameterArcsec": 5.872
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": -4.3703,
+      "azimuthDeg": 58.5212,
+      "apparentDiameterArcsec": 34.003
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 38.1167,
+      "azimuthDeg": 198.6487,
+      "apparentDiameterArcsec": 19.69
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 47.3327,
+      "azimuthDeg": 122.3388,
+      "apparentDiameterArcsec": 3.758
+    },
+    {
+      "time": "2026-10-11T01:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 34.1893,
+      "azimuthDeg": 207.71,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -56.0515,
+      "azimuthDeg": 2.1811,
+      "apparentDiameterArcsec": 6.553
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -58.2225,
+      "azimuthDeg": 14.7764,
+      "apparentDiameterArcsec": 55.527
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 15.6926,
+      "azimuthDeg": 78.0733,
+      "apparentDiameterArcsec": 5.873
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": 4.118,
+      "azimuthDeg": 70.4476,
+      "apparentDiameterArcsec": 34.006
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 33.8487,
+      "azimuthDeg": 216.4962,
+      "apparentDiameterArcsec": 19.69
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 54.1768,
+      "azimuthDeg": 141.8175,
+      "apparentDiameterArcsec": 3.759
+    },
+    {
+      "time": "2026-10-11T02:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 28.7834,
+      "azimuthDeg": 224.1918,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -53.7582,
+      "azimuthDeg": 26.756,
+      "apparentDiameterArcsec": 6.558
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -54.0273,
+      "azimuthDeg": 38.976,
+      "apparentDiameterArcsec": 55.556
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 24.795,
+      "azimuthDeg": 89.6097,
+      "apparentDiameterArcsec": 5.874
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": 12.9245,
+      "azimuthDeg": 82.0356,
+      "apparentDiameterArcsec": 34.01
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 27.4083,
+      "azimuthDeg": 232.3087,
+      "apparentDiameterArcsec": 19.69
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 58.2411,
+      "azimuthDeg": 166.128,
+      "apparentDiameterArcsec": 3.759
+    },
+    {
+      "time": "2026-10-11T03:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 21.5895,
+      "azimuthDeg": 238.8018,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -48.2018,
+      "azimuthDeg": 47.6871,
+      "apparentDiameterArcsec": 6.562
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -47.095,
+      "azimuthDeg": 58.3113,
+      "apparentDiameterArcsec": 55.585
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 33.9142,
+      "azimuthDeg": 102.0339,
+      "apparentDiameterArcsec": 5.875
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": 22.0792,
+      "azimuthDeg": 93.8427,
+      "apparentDiameterArcsec": 34.013
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 19.5083,
+      "azimuthDeg": 246.2648,
+      "apparentDiameterArcsec": 19.689
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 58.3125,
+      "azimuthDeg": 192.9893,
+      "apparentDiameterArcsec": 3.759
+    },
+    {
+      "time": "2026-10-11T04:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 13.2533,
+      "azimuthDeg": 251.9193,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -40.5886,
+      "azimuthDeg": 64.5956,
+      "apparentDiameterArcsec": 6.567
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -38.6767,
+      "azimuthDeg": 73.7158,
+      "apparentDiameterArcsec": 55.614
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 42.5794,
+      "azimuthDeg": 116.3145,
+      "apparentDiameterArcsec": 5.876
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": 31.1118,
+      "azimuthDeg": 106.5701,
+      "apparentDiameterArcsec": 34.016
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 10.7663,
+      "azimuthDeg": 258.9243,
+      "apparentDiameterArcsec": 19.689
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 54.3652,
+      "azimuthDeg": 217.4459,
+      "apparentDiameterArcsec": 3.759
+    },
+    {
+      "time": "2026-10-11T05:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": 4.37,
+      "azimuthDeg": 264.1272,
+      "apparentDiameterArcsec": 2.362
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "mercury",
+      "altitudeDeg": -31.8967,
+      "azimuthDeg": 78.6155,
+      "apparentDiameterArcsec": 6.571
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "venus",
+      "altitudeDeg": -29.6035,
+      "azimuthDeg": 86.7014,
+      "apparentDiameterArcsec": 55.642
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "mars",
+      "altitudeDeg": 50.1029,
+      "azimuthDeg": 133.7487,
+      "apparentDiameterArcsec": 5.877
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "jupiter",
+      "altitudeDeg": 39.5154,
+      "azimuthDeg": 121.1173,
+      "apparentDiameterArcsec": 34.019
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "saturn",
+      "altitudeDeg": 1.8365,
+      "azimuthDeg": 270.9282,
+      "apparentDiameterArcsec": 19.689
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "uranus",
+      "altitudeDeg": 47.5915,
+      "azimuthDeg": 237.0817,
+      "apparentDiameterArcsec": 3.759
+    },
+    {
+      "time": "2026-10-11T06:00:00+02:00",
+      "planet": "neptune",
+      "altitudeDeg": -5.0098,
+      "azimuthDeg": 276.0431,
+      "apparentDiameterArcsec": 2.362
+    }
+  ]
+}

@@ -13,7 +13,7 @@ export { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects
 export type { BestWindow } from "./objects";
 export { SCORE_COMPONENTS, scoreObject } from "./score";
 export type { ObjectScore, ScoreComponent, ScoreComponents, ScoreInput, ScoredObject } from "./score";
-export { eyepieceOptics, pairEyepieces } from "./eyepieces";
+export { eyepieceOptics, pairEyepieces, planetEyepiece } from "./eyepieces";
 export type {
   EyepieceOptics,
   EyepieceOpticsInput,
@@ -23,6 +23,10 @@ export type {
 } from "./eyepieces";
 export { rankObjects, reasonComponents } from "./ranking";
 export type { RankInput, RankTelescope, RankableObject, RankedEntry, Ranking, ReasonComponents } from "./ranking";
+export { PLANET_KEYS, planetFacts, planetTracks } from "./planets";
+export type { PlanetFacts, PlanetKey } from "./planets";
+export { rankPlanets } from "./planet-ranking";
+export type { PlanetEntry, PlanetPlacement, PlanetRankInput, PlanetScore, PlanetTiming } from "./planet-ranking";
 export { seenSummaries } from "./log";
 export type { LogEntry, SeenSummary } from "./log";
 export { cloudOutlook, verdict } from "./verdict";

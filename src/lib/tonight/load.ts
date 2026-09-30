@@ -4,7 +4,6 @@
 // Framework-free: the Worker's KV cache, the forecast base URL and `waitUntil` come in from the island.
 
 import type { MessageKey } from "@/i18n";
-import type { LogEntry } from "@/lib/engine";
 import type { ForecastCache } from "@/lib/forecast/cache";
 import { getForecast } from "@/lib/forecast/service";
 import {
@@ -15,7 +14,7 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
-import { observationStore } from "@/lib/observations/store";
+import { observationStore, type RankingLogEntry } from "@/lib/observations/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { Locale } from "@/lib/preferences";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
@@ -81,7 +80,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
   let sites: SiteRecord[] = [];
   let telescopes: TelescopeRecord[] = [];
   let eyepieces: EyepieceRecord[] = [];
-  let log: LogEntry[] = [];
+  let log: RankingLogEntry[] = [];
   let sitesError: MessageKey | null = null;
   let telescopesError: MessageKey | null = null;
   let eyepiecesError: MessageKey | null = null;

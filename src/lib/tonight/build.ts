@@ -8,13 +8,13 @@ import {
   seenSummaries,
   sevenNightOutlook,
   tonightDateFor,
-  type LogEntry,
   type RankedEntry,
   type Verdict,
   type VerdictLevel,
 } from "@/lib/engine";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import type { RankingLogEntry } from "@/lib/observations/store";
 
 import type { Locale } from "@/lib/preferences";
 
@@ -38,7 +38,7 @@ export interface TonightInput {
   forecast: ForecastResult | null;
   now: Date;
   /** The user's observation log (FR-018); absent means empty. Only what the ranking needs of each entry. */
-  log?: readonly LogEntry[];
+  log?: readonly RankingLogEntry[];
   /** The objects to rank; the Messier catalogue unless a test narrows it. */
   catalogue?: readonly MessierObject[];
 }
@@ -269,7 +269,11 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       telescope,
       eyepieces,
       catalogue,
-      seen: seenSummaries(log, date),
+      // The log is still keyed by Messier number; the engine keys it by target (the catalogue id, "M31").
+      seen: seenSummaries(
+        log.map(({ messier, night, rating }) => ({ target: `M${messier}`, night, rating })),
+        date,
+      ),
       limit: options.limit,
     });
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
