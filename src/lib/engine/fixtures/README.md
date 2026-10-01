@@ -8,10 +8,10 @@ illuminated fraction). One JSON file per (site, night) under `stellarium/`. A fi
 
 ## Fixtures
 
-| File                     | Site                                  | Night      | Why                                                                                    |
-| ------------------------ | ------------------------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `warsaw-2026-10-10.json` | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-10 | Ordinary autumn night at the PRD's 52° N. New moon: `moon` section is not applicable.  |
-| `warsaw-2026-10-24.json` | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-24 | Spans the 2026-10-25 DST change (25-hour night). Waxing gibbous moon, up all night.     |
+| File                     | Site                                  | Night      | Why                                                                                   |
+| ------------------------ | ------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| `warsaw-2026-10-10.json` | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-10 | Ordinary autumn night at the PRD's 52° N. New moon: `moon` section is not applicable. |
+| `warsaw-2026-10-24.json` | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-24 | Spans the 2026-10-25 DST change (25-hour night). Waxing gibbous moon, up all night.   |
 | `tromso-2026-06-21.json` | Tromsø, 69.65 N 18.96 E, 10 m         | 2026-06-21 | Midnight sun: no sunset, no sunrise, no dark window at any threshold (FR-023 case).   |
 
 The coordinates are public reference points, not anyone's home.
@@ -29,13 +29,13 @@ The coordinates are public reference points, not anyone's home.
 
 1. **Location** — press `F6`. In the bottom half of the window, type the fixture's latitude,
    longitude and altitude exactly as in the JSON `site` block (e.g. `52.23` N, `21.01` E, `110 m`),
-   type the fixture's name in the *Name/City* field, and tick **Use custom time zone** (or open the
-   *Time zone* combo) and pick the fixture's `site.timeZone` (`Europe/Warsaw` / `Europe/Oslo`).
-   Do **not** pick a city preset. Click *Add to list* if you want to reuse it.
-2. **Info panel** — press `F2` → *Information* tab. Make sure these are ticked: **Azimuth/Altitude**,
-   **Rise, transit and set** (some versions label it *RTS*), **Illumination** (for the Moon) and
-   **Local time**. Choose *Decimal degrees* if offered; otherwise convert as above.
-3. **Atmosphere on** — press `A` until the sky has an atmosphere. Stellarium then shows *apparent*
+   type the fixture's name in the _Name/City_ field, and tick **Use custom time zone** (or open the
+   _Time zone_ combo) and pick the fixture's `site.timeZone` (`Europe/Warsaw` / `Europe/Oslo`).
+   Do **not** pick a city preset. Click _Add to list_ if you want to reuse it.
+2. **Info panel** — press `F2` → _Information_ tab. Make sure these are ticked: **Azimuth/Altitude**,
+   **Rise, transit and set** (some versions label it _RTS_), **Illumination** (for the Moon) and
+   **Local time**. Choose _Decimal degrees_ if offered; otherwise convert as above.
+3. **Atmosphere on** — press `A` until the sky has an atmosphere. Stellarium then shows _apparent_
    altitudes (with refraction), which is what the fixtures record.
 4. **Date and time** — press `F5`. The dialog shows the local date and time in the zone from step 1;
    click a field and type. Speed keys: `L` faster, `J` slower, `K` normal speed, `7` stop, `8` now.
@@ -46,11 +46,11 @@ The coordinates are public reference points, not anyone's home.
 
 1. Select the Sun: press `F3`, type `Sun`, `Enter`. The info panel (top-left) now shows the Sun's
    lines, including **Rise / Transit / Set** for the current local date and **Az./Alt.**
-2. **Sunset**: set the date (`F5`) to the fixture's evening date, any afternoon time. Read the *Set*
-   value from the info panel → `sunset`. **Sunrise**: set the date to the *next* morning and read
-   *Rise* → `sunrise`. (These come from the info panel; the *RTS* tab in the Astronomical Calculations
-   window `F10` does the same but only after you select an object, set the *from/to* dates and press
-   *Calculate*.)
+2. **Sunset**: set the date (`F5`) to the fixture's evening date, any afternoon time. Read the _Set_
+   value from the info panel → `sunset`. **Sunrise**: set the date to the _next_ morning and read
+   _Rise_ → `sunrise`. (These come from the info panel; the _RTS_ tab in the Astronomical Calculations
+   window `F10` does the same but only after you select an object, set the _from/to_ dates and press
+   _Calculate_.)
 3. **Dark start** (`darkStart.time`): set the time to about 90 minutes after sunset. Watch the
    Sun's **Alt.** value in the info panel while stepping the minute field forward until it reads
    `-18°00'` (±30″ is fine). Write that minute. If you overshoot, step back.
@@ -83,7 +83,7 @@ Skip fixtures whose `moon.status` is `not-applicable`.
 
 1. Fill `source.version` (Help → About), `source.capturedBy` (initials are fine) and
    `source.capturedAt` (`YYYY-MM-DD`).
-2. Run `npm test`. The fixture assertions turn from *todo* into real checks. A deviation beyond the
+2. Run `npm test`. The fixture assertions turn from _todo_ into real checks. A deviation beyond the
    tolerance is a real finding (engine bug, protocol slip, or a tolerance that needs revisiting via
    PRD Open Question 9), not something to paper over.
 
@@ -93,7 +93,14 @@ Skip fixtures whose `moon.status` is `not-applicable`.
 - `captured` — real values; tests assert them.
 - `not-applicable` — the section does not apply to this fixture (a `reason` is recorded); tests skip it.
 
-## Skyfield planet reference (`skyfield/`)
+## Skyfield references (`skyfield/`)
+
+| File                                      | Generator                     | Site                                  | Night      | What                                                                     |
+| ----------------------------------------- | ----------------------------- | ------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| `skyfield/planets-warsaw-2026-10-10.json` | `scripts/planet-reference.py` | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-10 | Each planet's apparent alt/az and apparent diameter, hourly (new moon).  |
+| `skyfield/moon-warsaw-2026-10-24.json`    | `scripts/moon-reference.py`   | Warsaw centre, 52.23 N 21.01 E, 110 m | 2026-10-24 | The Moon's apparent alt/az, illuminated fraction and elongation, hourly. |
+
+### Planets
 
 `skyfield/planets-warsaw-2026-10-10.json` is generated, not hand-read. It holds each planet's apparent
 (refracted) altitude and azimuth and its apparent equatorial diameter for the Warsaw reference point
@@ -118,3 +125,22 @@ python3 -m venv /tmp/skyfield-venv
 ```
 
 The planet radii in the script must match `planets.ts`. Review the diff before committing.
+
+### Moon
+
+`skyfield/moon-warsaw-2026-10-24.json` is generated the same way by `scripts/moon-reference.py`. It holds the
+Moon's topocentric apparent (refracted) altitude and azimuth (the same site and atmosphere as the planet
+reference), its geocentric illuminated fraction (`almanac.fraction_illuminated`) and the geocentric Sun–Moon
+ecliptic-longitude difference (`almanac.moon_phase`, 0 new, 180 full) at every whole hour inside the civil
+window of the night 2026-10-24, a waxing gibbous Moon two nights before full, across the DST change.
+It cross-checks `moonState` and `moonElongationDeg` in `moon.ts`.
+
+`moon.test.ts` asserts every sample above 5° within 0.2° in altitude and azimuth, and every sample's
+illuminated fraction within 0.005 (half a percentage point) and elongation within 0.3°. These are the plan's
+tolerances; the two libraries agreed to about 0.003° in position, 0.00003 in illumination and 0.004° in
+elongation when the fixture was generated (2026-10-01), so a failure is a real regression, not noise.
+
+```bash
+/tmp/skyfield-venv/bin/python scripts/moon-reference.py /path/to/de421.bsp \
+  src/lib/engine/fixtures/skyfield/moon-warsaw-2026-10-24.json
+```

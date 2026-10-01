@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-01
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -50,7 +50,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ID   | Change ID                        | Outcome (user can …)                                                                                                            | Prerequisites | PRD refs       | Status   |
 | ---- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- | -------- |
 | S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | done |
-| S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | proposed |
+| S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | in-progress |
 | S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | proposed |
 | S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
@@ -117,7 +117,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What counts as "a Moon night"? Candidate: illumination above 70% and the Moon up for most of the dark window. — Owner: user. Block: no.
   - How specific are the phase notes? Candidate: a short fixed set per phase band (crescent, quarter, gibbous, full) naming 2–3 well-known features, no feature-by-feature terminator prediction. — Owner: user. Block: no.
 - **Risk:** Mostly copy and judgment rather than maths (the engine already has phase and position), so the risk is advice that sounds confident but is wrong; keep the notes coarse and cite the phase they apply to.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-03: Deep-sky objects beyond Messier
 

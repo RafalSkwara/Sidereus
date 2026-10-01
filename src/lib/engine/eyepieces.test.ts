@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { findMessier } from "@/lib/catalogue";
 
-import { eyepieceOptics, pairEyepieces, planetEyepiece } from "./eyepieces";
-import { FOV_FIT_FRACTION } from "./parameters";
+import { eyepieceOptics, pairEyepieces, planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
+import { FOV_FIT_FRACTION, MOON_WHOLE_DISC_FIELD_DEG } from "./parameters";
 
 /** Shaped like the gear store's `EyepieceRecord`, to prove it passes through unchanged. */
 function eyepiece(id: string, focalLengthMm: number, afovDeg = 50) {
@@ -157,5 +157,55 @@ describe("planetEyepiece", () => {
     const tinyFirst = eyepiece("c", 2);
     const tinySecond = eyepiece("d", 2);
     expect(planetEyepiece(NEWTONIAN, [tinyFirst, tinySecond])).toBe(tinyFirst);
+  });
+});
+
+describe("wholeDiscEyepiece", () => {
+  it("picks the highest magnification whose true field still shows the whole disc", () => {
+    // On 150/750: 25 mm 50° is 30× with a 1.67° field; 10 mm 50° is 75× with 0.67°, below the 0.7° bar.
+    expect(eyepieceOptics(NEWTONIAN, PLOSSL_10).trueFovDeg).toBeLessThan(MOON_WHOLE_DISC_FIELD_DEG);
+    expect(wholeDiscEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25])).toEqual({
+      eyepiece: PLOSSL_25,
+      optics: eyepieceOptics(NEWTONIAN, PLOSSL_25),
+      fits: true,
+    });
+    // A wide 10 mm (82°, 1.09° field) frames the disc at 75×, so it beats the 25 mm.
+    const wide10 = eyepiece("w10", 10, 82);
+    expect(wholeDiscEyepiece(NEWTONIAN, [PLOSSL_25, wide10, PLOSSL_10])).toMatchObject({
+      eyepiece: wide10,
+      fits: true,
+    });
+  });
+
+  it("counts a field exactly at the bar as showing the whole disc", () => {
+    // 750 / 15 = 50×, so a 35° field gives exactly 0.7°.
+    const edge = eyepiece("edge", 15, MOON_WHOLE_DISC_FIELD_DEG * 50);
+    expect(wholeDiscEyepiece(NEWTONIAN, [PLOSSL_25, edge])).toMatchObject({ eyepiece: edge, fits: true });
+  });
+
+  it("falls back to the widest field, marked as not fitting, when nothing shows the whole disc", () => {
+    const six = eyepiece("e6", 6);
+    expect(wholeDiscEyepiece(NEWTONIAN, [six, PLOSSL_10])).toEqual({
+      eyepiece: PLOSSL_10,
+      optics: eyepieceOptics(NEWTONIAN, PLOSSL_10),
+      fits: false,
+    });
+  });
+
+  it("returns null for an empty kit", () => {
+    expect(wholeDiscEyepiece(NEWTONIAN, [])).toBeNull();
+  });
+
+  it("breaks ties by the order the kit is given in", () => {
+    const first = eyepiece("a", 25);
+    const second = eyepiece("b", 25);
+    expect(wholeDiscEyepiece(NEWTONIAN, [first, second])?.eyepiece).toBe(first);
+    expect(wholeDiscEyepiece(NEWTONIAN, [second, first])?.eyepiece).toBe(second);
+    const narrowFirst = eyepiece("c", 10);
+    const narrowSecond = eyepiece("d", 10);
+    expect(wholeDiscEyepiece(NEWTONIAN, [narrowFirst, narrowSecond])).toMatchObject({
+      eyepiece: narrowFirst,
+      fits: false,
+    });
   });
 });
