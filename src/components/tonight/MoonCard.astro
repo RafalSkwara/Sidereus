@@ -1,0 +1,65 @@
+---
+// The Moon, first in the "Solar system tonight" section (M-2 S-02): PlanetCard's card, tokens and details layout,
+// with the phase, a whole-disc and a detail eyepiece, and the phase band's fixed note. A standalone article, outside
+// the planet list.
+import TargetDetails from "@/components/tonight/TargetDetails.astro";
+import { getMessages } from "@/i18n";
+import type { TonightMoonEntry } from "@/lib/tonight/build";
+
+interface Props {
+  entry: TonightMoonEntry;
+  /** The log form for the Moon, prefilled with tonight's night, site and telescope (FR-016). */
+  logHref: string;
+}
+
+const { entry, logHref } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight;
+---
+
+<article aria-labelledby="moon-heading" class="mt-4 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    <h3 id="moon-heading" class="font-display text-2xl font-semibold text-heading">
+      {entry.name}
+    </h3>
+    <span class="font-mono text-sm text-muted-foreground">{entry.phaseText}</span>
+  </div>
+  {entry.seenText && (
+    <p class="mt-2">
+      <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+        {entry.seenText}
+      </span>
+    </p>
+  )}
+
+  <TargetDetails
+    windowStart={entry.windowStart}
+    windowEnd={entry.windowEnd}
+    bestTime={entry.bestTime}
+    bestDirection={entry.bestDirection}
+    logHref={logHref}
+    ariaLabel={t.moon.markObserved({ name: entry.name })}
+  >
+    {entry.wholeDisc && (
+      <p class="mt-2 text-sm text-foreground">
+        {entry.wholeDiscFits ? (
+          <>
+            {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{entry.wholeDisc.name}</span>{" "}
+            {t.object.magnification({ magnification: String(entry.wholeDisc.magnification) })}
+          </>
+        ) : (
+          t.moon.partDisc({ name: entry.wholeDisc.name })
+        )}
+        {entry.detail && (
+          <>
+            {" "}
+            · {t.moon.detailWith} <span class="font-semibold text-primary-strong">{entry.detail.name}</span>{" "}
+            {t.object.magnification({ magnification: String(entry.detail.magnification) })}
+          </>
+        )}
+      </p>
+    )}
+
+    <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
+    <p class="mt-2 text-sm text-muted-foreground">{entry.note}</p>
+  </TargetDetails>
+</article>

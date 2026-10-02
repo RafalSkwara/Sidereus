@@ -384,6 +384,14 @@ export const en = {
       darkTo: "to",
       noDarkWindow: "No dark window tonight",
       timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
+      /**
+       * M-2 S-02: on a go or marginal night with a dark window, when the Moon is at least half lit and up for most
+       * of the dark window (`isBrightMoon`). Always shown with the line.
+       */
+      brightMoon: (p: { percent: string }) =>
+        `Bright Moon (${p.percent}% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.`,
+      /** Follows `brightMoon` only when the "Solar system tonight" section shows the Moon or a planet. */
+      brightMoonPointer: "The Moon and planets below are better bets tonight.",
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
@@ -423,16 +431,19 @@ export const en = {
     },
 
     /**
-     * M-2 S-01: the "Planets tonight" section. The planet window runs from civil dusk to civil dawn (sun below
-     * `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark window".
+     * M-2 S-01: the "Solar system tonight" section (the Moon since S-02, then the planets). The planet window runs
+     * from civil dusk to civil dawn (sun below `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark
+     * window".
      */
     planets: {
-      heading: "Planets tonight",
+      heading: "Solar system tonight",
+      /** The planet list's accessible name, telling it apart from the Moon card above it. */
+      listLabel: "Planets",
       window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
-      /** No planet is listed: none clears the minimum altitude, or the ones that do are gated out by aperture. */
-      none: "No planet is well placed for your telescope between dusk and dawn tonight.",
-      /** No planet is listed on a night whose planets are limited to the clear hours (a no-go or no dark window). */
-      noneInClearHours: "No planet is well placed for your telescope in tonight's clear hours.",
+      /** Neither the Moon nor a planet is listed (too low, too thin a crescent, or gated out by aperture). */
+      none: "Neither the Moon nor any planet is well placed between dusk and dawn tonight.",
+      /** The same, on a night whose Moon and planets are limited to the clear hours (a no-go or no dark window). */
+      noneInClearHours: "Neither the Moon nor any planet is well placed in tonight's clear hours.",
       /** The "Mark observed" link's accessible name; the colon keeps the planet name in its base form. */
       markObserved: (p: { planet: string }) => `Mark observed: ${p.planet}`,
       /**
@@ -440,7 +451,7 @@ export const en = {
        * planet verdict whose level differs from the card's.
        */
       weather: {
-        line: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
+        line: (p: { level: string; reason: string }) => `For the Moon and planets: ${p.level} — ${p.reason}`,
         clearRun: (p: { hours: string; cloud: string }) =>
           `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
         humidityCap: (p: { humidity: string }) =>
@@ -493,6 +504,62 @@ export const en = {
         saturn: "The rings show clearly even at modest power; its largest moon, Titan, looks like a star close by.",
         uranus: "A tiny blue-green disc: at high power it is clearly not a star, but it shows no detail.",
         neptune: "A tiny blue-grey dot that is hard to tell from a star; finding it is the achievement.",
+      },
+    },
+
+    /** M-2 S-02: the Moon card, first in the "Solar system tonight" section. */
+    moon: {
+      /** By elongation band (`MOON_PHASE_BANDS`), so waxing and waning differ. */
+      phase: {
+        "waxing-crescent": "Waxing crescent",
+        "first-quarter": "First quarter",
+        "waxing-gibbous": "Waxing gibbous",
+        full: "Full Moon",
+        "waning-gibbous": "Waning gibbous",
+        "last-quarter": "Last quarter",
+        "waning-crescent": "Waning crescent",
+      },
+      lit: (p: { percent: string }) => `${p.percent}% lit`,
+      /** "Waxing gibbous · 78% lit" */
+      phaseLine: (p: { phase: string; lit: string }) => `${p.phase} · ${p.lit}`,
+      wholeDiscWith: "Whole disc with",
+      detailWith: "detail with",
+      /** No eyepiece's true field reaches `MOON_WHOLE_DISC_FIELD_DEG`; `name` is the widest. */
+      partDisc: (p: { name: string }) =>
+        `No eyepiece in your kit fits the whole disc; your widest (${p.name}) shows part of it`,
+      /** The highest point of the Moon's best window, then the third of the window that holds it. */
+      reason: {
+        line: (p: { altitude: string; time: string; timing: string }) =>
+          `Highest ${p.altitude}° at ${p.time} — ${p.timing}`,
+        /** Below `MOON_LOW_ALTITUDE_DEG` at its highest. */
+        low: (p: { altitude: string; time: string; timing: string }) =>
+          `Highest only ${p.altitude}° at ${p.time} — ${p.timing}; this low, the view may shimmer`,
+        timing: {
+          evening: "best early in the night",
+          night: "best in the middle of the night",
+          morning: "best before dawn",
+        },
+      },
+      /** The "Mark observed" link's accessible name; the colon keeps the name in its base form. */
+      markObserved: (p: { name: string }) => `Mark observed: ${p.name}`,
+      /**
+       * One fixed note per phase band (research §4: RASC, Sky at Night). Hedged on purpose: libration moves the
+       * shadow line (the terminator) by about half a day, so a feature is named as "near" it, never promised.
+       */
+      note: {
+        "waxing-crescent":
+          "A thin crescent in the evening west. Near the shadow line look for Mare Crisium and the crater chain from Langrenus to Petavius; the dark part of the disc may glow faintly with earthshine.",
+        "first-quarter":
+          "Half lit, with the strongest relief of the month: near the shadow line look for the Apennine and Alps mountains and the craters Plato and Archimedes.",
+        "waxing-gibbous":
+          "Most of the disc is lit. Near the shadow line look for the crater Copernicus, the bay of Sinus Iridum with its curved mountain rim, and later in this phase bright Aristarchus.",
+        full: "Few shadows, so craters look flat; look instead for the bright rays of Tycho and Copernicus and the brilliant crater Aristarchus. If the glare tires your eye, a Moon filter or low power makes it more comfortable.",
+        "waning-gibbous":
+          "Rising later each evening; the shadow line is now where the Sun is setting on the Moon. Near it look around this phase for the craters Langrenus and Petavius, and a little later Theophilus.",
+        "last-quarter":
+          "Half lit and best before dawn: the shadow line brings out the craters Plato and Copernicus and the long shadows of the Apennines.",
+        "waning-crescent":
+          "A pre-dawn crescent low in the east. Near the shadow line look for bright Aristarchus and dark Grimaldi; the rest of the disc may glow faintly with earthshine.",
       },
     },
 

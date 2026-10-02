@@ -1,6 +1,7 @@
 ---
-// One planet of the "Planets tonight" section (M-2 S-01): the same card, tokens and details layout as the deep-sky
-// ObjectCard, with the planet's facts, one detail eyepiece and a fixed "what you'll see" note.
+// One planet of the "Solar system tonight" section (M-2 S-01): the same card, tokens and details layout as the
+// deep-sky ObjectCard, with the planet's facts, one detail eyepiece and a fixed "what you'll see" note.
+import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
 import type { TonightPlanetEntry } from "@/lib/tonight/build";
 
@@ -30,38 +31,22 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
     </p>
   )}
 
-  <dl class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-    <div class="flex gap-2">
-      <dt class="text-muted-foreground">{t.object.window}</dt>
-      <dd class="font-mono text-heading">
-        {entry.windowStart}–{entry.windowEnd}
-      </dd>
-    </div>
-    <div class="flex gap-2">
-      <dt class="text-muted-foreground">{t.object.best}</dt>
-      <dd class="font-mono text-heading">
-        {entry.bestTime}, {entry.bestDirection}
-      </dd>
-    </div>
-  </dl>
+  <TargetDetails
+    windowStart={entry.windowStart}
+    windowEnd={entry.windowEnd}
+    bestTime={entry.bestTime}
+    bestDirection={entry.bestDirection}
+    logHref={logHref}
+    ariaLabel={t.planets.markObserved({ planet: entry.name })}
+  >
+    {entry.eyepiece && (
+      <p class="mt-2 text-sm text-foreground">
+        {t.planets.detailWith} <span class="font-semibold text-primary-strong">{entry.eyepiece.name}</span>{" "}
+        {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
+      </p>
+    )}
 
-  {entry.eyepiece && (
-    <p class="mt-2 text-sm text-foreground">
-      {t.planets.detailWith} <span class="font-semibold text-primary-strong">{entry.eyepiece.name}</span>{" "}
-      {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
-    </p>
-  )}
-
-  <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
-  <p class="mt-2 text-sm text-muted-foreground">{entry.note}</p>
-
-  <div class="mt-3 border-t border-border pt-3">
-    <a
-      href={logHref}
-      aria-label={t.planets.markObserved({ planet: entry.name })}
-      class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
-    >
-      {t.object.markObserved}
-    </a>
-  </div>
+    <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
+    <p class="mt-2 text-sm text-muted-foreground">{entry.note}</p>
+  </TargetDetails>
 </li>

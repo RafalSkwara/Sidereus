@@ -4,6 +4,8 @@ import type {
   DarkWindow,
   HorizontalPosition,
   Interval,
+  MoonPhaseBand,
+  MoonPlacement,
   NextNight,
   ObjectScore,
   PlanetFacts,
@@ -60,6 +62,13 @@ export interface PlanetReasonEntry {
   placement: PlanetPlacement;
   timing: PlanetTiming;
   peak: Pick<HorizontalPosition, "time">;
+}
+
+/** What the Moon's reason line needs. The engine's `MoonTargetEntry` is assignable to it. */
+export interface MoonReasonEntry {
+  placement: MoonPlacement;
+  timing: PlanetTiming;
+  peak: Pick<HorizontalPosition, "time" | "altitudeDeg">;
 }
 
 /** A planet's facts worded for its card; `phaseText` is set for Mercury and Venus, `ringText` for Saturn. */
@@ -427,9 +436,10 @@ export function createFormatter(locale: Locale) {
 
   /**
    * The planet window's own weather, for when the verdict card does not cover it (a no-go, no dark window, or a
-   * planet verdict of another level): "For planets: marginal — 1 h in a row with at most 5% cloud between dusk and
-   * dawn". With `clear` (the planets are limited to the planet window's clear hours) the clear hours are named
-   * instead of the run, in the site's time zone: "For planets: marginal — clear 19:00–20:00 and 05:00–06:00".
+   * planet verdict of another level): "For the Moon and planets: marginal — 1 h in a row with at most 5% cloud
+   * between dusk and dawn". With `clear` (the Moon and planets are limited to the planet window's clear hours) the
+   * clear hours are named instead of the run, in the site's time zone: "For the Moon and planets: marginal — clear
+   * 19:00–20:00 and 05:00–06:00".
    * `buildTonight` calls it only for a go or marginal planet window; the no-go reasons fall back to the verdict
    * card's wording.
    */
@@ -478,6 +488,37 @@ export function createFormatter(locale: Locale) {
     return text.line({ level: m.tonight.nextNight.level[planetVerdict.level], reason: phrase });
   }
 
+  /** The Moon's phase band and illumination: "Waxing gibbous · 78% lit". `fraction` is [0, 1], shown in whole percent. */
+  function moonPhaseText(band: MoonPhaseBand, fraction: number): string {
+    const text = m.tonight.moon;
+    return text.phaseLine({ phase: text.phase[band], lit: text.lit({ percent: num(Math.round(fraction * 100)) }) });
+  }
+
+  /**
+   * When to look at the Moon: its highest point in the best window and the third of the window that holds it,
+   * "Highest 42° at 23:10 — best in the middle of the night", with the low wording below `MOON_LOW_ALTITUDE_DEG`
+   * (the engine's "low" placement). No direction, as for planets: the card's best line already gives it.
+   */
+  function moonReasonLine(entry: MoonReasonEntry, timeZone: string): string {
+    const text = m.tonight.moon.reason;
+    const params = {
+      altitude: num(Math.round(entry.peak.altitudeDeg)),
+      time: formatTime(entry.peak.time, timeZone),
+      timing: text.timing[entry.timing],
+    };
+    return entry.placement === "low" ? text.low(params) : text.line(params);
+  }
+
+  /**
+   * The verdict card's bright-Moon line (`isBrightMoon`), with the Moon's illumination in whole percent; `pointer`
+   * adds the sentence that sends the reader to the Moon and planets, only when the section shows one of them.
+   */
+  function brightMoonLine(fraction: number, { pointer }: { pointer: boolean }): string {
+    const text = m.tonight.card;
+    const line = text.brightMoon({ percent: num(Math.round(fraction * 100)) });
+    return pointer ? `${line} ${text.brightMoonPointer}` : line;
+  }
+
   return {
     formatTime,
     formatNightDate,
@@ -501,6 +542,9 @@ export function createFormatter(locale: Locale) {
     planetReasonLine,
     planetWindowText,
     planetWeatherText,
+    moonPhaseText,
+    moonReasonLine,
+    brightMoonLine,
   };
 }
 

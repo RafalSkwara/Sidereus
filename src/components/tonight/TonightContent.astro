@@ -7,7 +7,7 @@ import { ServerError } from "@/components/forms/ServerError";
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
-import PlanetSection from "@/components/tonight/PlanetSection.astro";
+import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
@@ -59,10 +59,10 @@ const {
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
 // More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
 const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
-// The log, eyepiece and no-eyepieces notices speak for the planets and the ranking alike, so they show once, above
-// both, whenever either is shown (also on a planet-only night).
+// The log, eyepiece and no-eyepieces notices speak for the solar system and the ranking alike, so they show once,
+// above both, whenever either is shown (also on a night with only the Moon and planets).
 const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
-const showSections = view !== null && (view.planets !== null || view.ranking !== null);
+const showSections = view !== null && (view.solarSystem !== null || view.ranking !== null);
 const showNotices = showSections && (eyepiecesError !== null || noEyepieces || logError !== null);
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
@@ -145,7 +145,8 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             timeZone={view.timeZone}
             forecastStatus={view.forecastStatus}
             explanation={view.explanation}
-            nightsLink={view.ranking !== null || view.planets !== null}
+            nightsLink={view.ranking !== null || view.solarSystem !== null}
+            moonNote={view.brightMoonText}
           />
 
           {showNotices && (
@@ -166,7 +167,9 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             </div>
           )}
 
-          {view.planets && <PlanetSection planets={view.planets} logHref={(key: string) => logHref(view, key)} />}
+          {view.solarSystem && (
+            <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
+          )}
 
           {view.ranking && (
             <section aria-labelledby="ranking-heading">

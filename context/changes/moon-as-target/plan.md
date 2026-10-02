@@ -540,27 +540,27 @@ The migration is additive (it only widens a CHECK). The app deployed before it n
 
 #### Automated
 
-- [x] 2.1 Migration applies on local Supabase: `npx supabase db reset`
-- [x] 2.2 DB isolation and target tests pass: `npm run test:db`
-- [x] 2.3 Generated types show no drift: `npm run db:types` then `git diff --exit-code src/lib/database.types.ts`
-- [x] 2.4 Unit tests pass: `npm test`
-- [x] 2.5 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Migration applies on local Supabase: `npx supabase db reset` — 4d31bc3
+- [x] 2.2 DB isolation and target tests pass: `npm run test:db` — 4d31bc3
+- [x] 2.3 Generated types show no drift: `npm run db:types` then `git diff --exit-code src/lib/database.types.ts` — 4d31bc3
+- [x] 2.4 Unit tests pass: `npm test` — 4d31bc3
+- [x] 2.5 Type check and lint pass: `npx astro check && npm run lint` — 4d31bc3
 
 #### Manual
 
-- [x] 2.6 On the local dev server against local Supabase, the manual log picker finds "Moon" / "Księżyc" by name, an entry saves, and it shows in the log by name in EN and PL
+- [x] 2.6 On the local dev server against local Supabase, the manual log picker finds "Moon" / "Księżyc" by name, an entry saves, and it shows in the log by name in EN and PL — 4d31bc3
 
 ### Phase 3: The Moon on Tonight
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test` (build, format, i18n parity, no-hardcoded-colors, red-theme)
-- [ ] 3.2 Type check and lint pass: `npx astro check && npm run lint`
-- [ ] 3.3 Production build succeeds: `npm run build`
-- [ ] 3.4 E2E specs pass locally against local Supabase (moon-as-target, planets-on-tonight, existing Tonight specs)
+- [x] 3.1 Unit tests pass: `npm test` (build, format, i18n parity, no-hardcoded-colors, red-theme)
+- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 3.3 Production build succeeds: `npm run build`
+- [x] 3.4 E2E specs pass locally against local Supabase (moon-as-target, planets-on-tonight, existing Tonight specs)
 
 #### Manual
 
-- [ ] 3.5 Playwright screenshots of Tonight with a Moon card on the local preview: EN and PL, dark, light and red, at phone width (about 390 px) and desktop; the Moon card reads first in "Solar system tonight", eyepieces and note are legible, red mode has no non-red colour
-- [ ] 3.6 On a pinned bright-Moon night (stubbed forecast, local preview), the verdict card shows the bright-Moon line and the deep-sky ranking is unchanged; on a new-moon night it is absent
-- [ ] 3.7 Mark observed on the Moon from Tonight lands in the log as "Moon" / "Księżyc" and Tonight shows the seen pill
+- [x] 3.5 Playwright screenshots of Tonight with a Moon card on the local preview: EN and PL, dark, light and red, at phone width (about 390 px) and desktop; the Moon card reads first in "Solar system tonight", eyepieces and note are legible, red mode has no non-red colour
+- [x] 3.6 On a pinned bright-Moon night (stubbed forecast, local preview), the verdict card shows the bright-Moon line and the deep-sky ranking is unchanged; on a new-moon night it is absent
+- [x] 3.7 Mark observed on the Moon from Tonight lands in the log as "Moon" / "Księżyc" and Tonight shows the seen pill

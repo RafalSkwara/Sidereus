@@ -6,6 +6,8 @@ import {
   darkWindow,
   darkWindowReturn,
   eyepieceOptics,
+  isBrightMoon,
+  moonTarget,
   nextNightInOutlook,
   observingNight,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
@@ -18,6 +20,7 @@ import {
   verdict,
   VERDICT_THRESHOLDS,
   type LogEntry,
+  type MoonPhaseBand,
   type PlanetKey,
   type RankedEntry,
   type Verdict,
@@ -26,6 +29,7 @@ import {
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 import type { Locale } from "@/lib/preferences";
+import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
 import { createFormatter, type ForecastStatus } from "./format";
 
@@ -88,7 +92,40 @@ export interface TonightEntry {
   seenText: string | null;
 }
 
-/** One planet of the "Planets tonight" section (M-2 S-01). */
+/** The Moon, first in the "Solar system tonight" section (M-2 S-02). */
+export interface TonightMoonEntry {
+  /** The Moon's target key in the log. */
+  key: MoonKey;
+  /** The localised name, "Moon" / "Księżyc". */
+  name: string;
+  /** Best window within the planet window, `HH:mm` in the site's time zone. */
+  windowStart: string;
+  windowEnd: string;
+  /** Peak time, `HH:mm` in the site's time zone. */
+  bestTime: string;
+  /** Peak instant (epoch ms). */
+  bestAt: number;
+  /** Direction at the peak, "SE, 42°". */
+  bestDirection: string;
+  /** The phase band at the peak, which keys `note`. */
+  band: MoonPhaseBand;
+  /** "Waxing gibbous · 78% lit" */
+  phaseText: string;
+  /** The eyepiece that frames the whole disc, or the widest when none does (`wholeDiscFits`); `null` for an empty kit. */
+  wholeDisc: EyepieceLine | null;
+  /** False when no eyepiece frames the whole disc: `wholeDisc` is then the widest, showing part of it. */
+  wholeDiscFits: boolean;
+  /** The detail eyepiece; `null` for an empty kit or when it would be the whole-disc eyepiece or weaker. */
+  detail: EyepieceLine | null;
+  /** Highest point and timing, with a warning when the Moon stays low. */
+  reason: string;
+  /** The phase band's fixed note: what is worth looking at near the shadow line. */
+  note: string;
+  /** "Seen 2 times – last 12 Sept 2026" when the log counts the Moon as seen, else `null`. */
+  seenText: string | null;
+}
+
+/** One planet of the "Solar system tonight" section (M-2 S-01). */
 export interface TonightPlanetEntry {
   /** "jupiter": the planet's target key in the log. */
   key: PlanetKey;
@@ -122,11 +159,11 @@ export interface TonightPlanetEntry {
 }
 
 /**
- * The "Planets tonight" section: planets that clear the site's minimum altitude between civil dusk and civil
- * dawn, best-placed first. On a no-go night or a night without a dark window only the planet window's clear
- * hours count (see `buildTonight`). `entries` is empty when no planet qualifies.
+ * The "Solar system tonight" section: the Moon, then the planets that clear the site's minimum altitude between
+ * civil dusk and civil dawn, best-placed first. On a no-go night or a night without a dark window only the planet
+ * window's clear hours count (see `buildTonight`). `entries` is empty when no planet qualifies.
  */
-export interface TonightPlanets {
+export interface TonightSolarSystem {
   /** "From civil dusk to dawn, 19:32–06:51" */
   windowText: string;
   /**
@@ -135,8 +172,17 @@ export interface TonightPlanets {
    * the clear hours when the planets are limited to them. `null` otherwise.
    */
   weatherText: string | null;
+  /**
+   * `null` when the Moon does not clear the site's minimum altitude in the (clear-hours) window, is lit less than
+   * `MOON_MIN_ILLUMINATION`, or working it out fails (that drops only the Moon, never the planets).
+   */
+  moon: TonightMoonEntry | null;
+  /** The planets. */
   entries: TonightPlanetEntry[];
-  /** Why the list is empty, worded for a cloud-limited night where that applies; `null` when `entries` has any. */
+  /**
+   * Why the section is empty, worded for a cloud-limited night where that applies; set only when there is neither
+   * a Moon entry nor a planet.
+   */
   noneText: string | null;
 }
 
@@ -214,7 +260,13 @@ export interface TonightView {
    * is go or marginal, whatever the dark-window verdict says; `null` otherwise, and the verdict card explains why.
    * Also `null` when working out the planets fails, so that never takes the rest of the view down.
    */
-  planets: TonightPlanets | null;
+  solarSystem: TonightSolarSystem | null;
+  /**
+   * M-2 S-02: the verdict card's bright-Moon line, set only on a go or marginal night with a dark window when
+   * `isBrightMoon` holds for night 1 of the outlook (the strip's own Moon values). It points at the Moon and planets
+   * only when `solarSystem` shows one of them. `null` otherwise, or when working it out fails.
+   */
+  brightMoonText: string | null;
 }
 
 function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): EyepieceLine {
@@ -254,6 +306,7 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
 export function buildTonight(input: TonightInput, locale: Locale, options: { limit?: number } = {}): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
+    brightMoonLine,
     clearedLine,
     cloudOutlookText,
     darkReturnText,
@@ -264,6 +317,8 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     formatShortNightDate,
     formatTime,
     moonLine,
+    moonPhaseText,
+    moonReasonLine,
     nextNightText,
     noDarknessCauseText,
     planetFactsText,
@@ -334,8 +389,11 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   // Keyed by target key: a Messier object's catalogue id ("M31") or a planet key ("jupiter").
   const seen = seenSummaries(log, date);
 
+  // The verdict card passes the night: a go or marginal verdict over a dark window.
+  const cardPasses = (tonight.level === "go" || tonight.level === "marginal") && window.kind === "window";
+
   let ranking: TonightRanking | null = null;
-  if ((tonight.level === "go" || tonight.level === "marginal") && window.kind === "window") {
+  if (cardPasses) {
     const ranked = rankObjects({
       site: engineSite,
       bortle: site.bortle,
@@ -370,10 +428,10 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     };
   }
 
-  // Planets (M-2 S-01): their own window, civil dusk to civil dawn, and that window's own weather, independent of
+  // The Moon and planets (M-2 S-01, S-02): their own window, civil dusk to civil dawn, and that window's own weather, independent of
   // the dark-window verdict, so a planet can show on a cloudy-at-night or a no-darkness night. Ranked once per build.
   // A failure here only drops the section (`null`), never the verdict, ranking and strip; nothing is logged.
-  let planets: TonightPlanets | null = null;
+  let solarSystem: TonightSolarSystem | null = null;
   try {
     const planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
     const planetVerdict = verdict(planetWindow, hourly, { fallback });
@@ -383,7 +441,6 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       // from them, and a planet up only under cloud is left out. On a go or marginal night the planets are ranked
       // over the whole planet window, as the deep-sky ranking is over the whole dark window. `null` without
       // forecast hours to judge by (no weather data): the whole planet window counts.
-      const cardPasses = (tonight.level === "go" || tonight.level === "marginal") && window.kind === "window";
       const clear = cardPasses ? null : clearIntervals(planetWindow, hourly, VERDICT_THRESHOLDS.marginalCloudPct);
       const ranked = rankPlanets({
         site: engineSite,
@@ -394,14 +451,49 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
         seen,
         ...(clear === null ? {} : { visibleIntervals: clear }),
       });
-      const planetNone = clear === null ? messages.tonight.planets.none : messages.tonight.planets.noneInClearHours;
-      planets = {
+      // The Moon over the same window and clear hours. A failure here drops only the Moon; nothing is logged.
+      let moon: TonightMoonEntry | null = null;
+      try {
+        const entry = moonTarget({
+          site: engineSite,
+          minAltitudeDeg: site.minAltitudeDeg,
+          window: planetWindow,
+          telescope,
+          eyepieces,
+          seen,
+          ...(clear === null ? {} : { visibleIntervals: clear }),
+        });
+        if (entry !== null) {
+          moon = {
+            key: MOON_TARGET_KEY,
+            name: messages.targets.moon,
+            windowStart: formatTime(entry.window.start, timeZone),
+            windowEnd: formatTime(entry.window.end, timeZone),
+            bestTime: formatTime(entry.peak.time, timeZone),
+            bestAt: entry.peak.time.getTime(),
+            bestDirection: formatDirection(entry.peak),
+            band: entry.facts.band,
+            phaseText: moonPhaseText(entry.facts.band, entry.facts.illuminatedFraction),
+            wholeDisc: entry.wholeDisc ? eyepieceLine(telescope, entry.wholeDisc.eyepiece) : null,
+            wholeDiscFits: entry.wholeDisc?.fits ?? false,
+            detail: entry.detail ? eyepieceLine(telescope, entry.detail) : null,
+            reason: moonReasonLine(entry, timeZone),
+            note: messages.tonight.moon.note[entry.facts.band],
+            seenText: entry.seen ? seenLine(entry.seen) : null,
+          };
+        }
+      } catch {
+        moon = null;
+      }
+      const none = clear === null ? messages.tonight.planets.none : messages.tonight.planets.noneInClearHours;
+      solarSystem = {
         windowText: planetWindowText(planetWindow, timeZone),
         // The verdict card already speaks for the planet window when it passes the night at the same level.
         weatherText:
           !cardPasses || planetVerdict.level !== tonight.level
             ? planetWeatherText(planetVerdict, clear === null ? null : { intervals: clear, timeZone })
             : null,
+        moon,
         entries: ranked.map((entry) => ({
           key: entry.key,
           name: messages.targets.planet[entry.key],
@@ -416,11 +508,29 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
           note: messages.tonight.planets.note[entry.key],
           seenText: entry.seen ? seenLine(entry.seen) : null,
         })),
-        noneText: ranked.length === 0 ? planetNone : null,
+        noneText: moon === null && ranked.length === 0 ? none : null,
       };
     }
   } catch {
-    planets = null;
+    solarSystem = null;
+  }
+
+  // The bright-Moon line (M-2 S-02) speaks about faint deep sky, which ranks only in the dark window, so it is
+  // judged there, from night 1 of the outlook: the strip's illumination and moon-free minutes. `moonFreeMinutes`
+  // counts whole minutes, so the dark window is counted in whole minutes too, as the strip's line does. A failure
+  // only drops the line.
+  let brightMoonText: string | null = null;
+  try {
+    if (cardPasses && first.moon.moonFreeMinutes !== null) {
+      const darkMinutes = Math.floor((window.end.getTime() - window.start.getTime()) / 60_000);
+      const upFraction = darkMinutes > 0 ? 1 - first.moon.moonFreeMinutes / darkMinutes : 0;
+      if (isBrightMoon(first.moon.illuminatedFraction, upFraction)) {
+        const pointer = solarSystem !== null && (solarSystem.moon !== null || solarSystem.entries.length > 0);
+        brightMoonText = brightMoonLine(first.moon.illuminatedFraction, { pointer });
+      }
+    }
+  } catch {
+    brightMoonText = null;
   }
 
   return {
@@ -442,6 +552,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },
     explanation,
     nights,
-    planets,
+    solarSystem,
+    brightMoonText,
   };
 }

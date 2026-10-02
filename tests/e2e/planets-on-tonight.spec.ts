@@ -6,13 +6,14 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * Planets on Tonight, end to end (M-2 S-01): the "Planets tonight" section shows, "Mark observed" on a planet
+ * Planets on Tonight, end to end (M-2 S-01): the "Solar system tonight" section shows, "Mark observed" on a planet
  * saves it through the log form, and the log lists it by name. Same setup as `observation-log.spec.ts`: a
  * production preview on local Supabase with FORECAST_BASE_URL pointing at `tests/e2e/forecast-fixture.mjs` (an
  * all-clear sky, so the planet window is go), and place search stubbed with Madrid.
  *
  * The clock is real, so which planets are up varies by date: the spec takes the first card and never names a
- * planet. Which planets qualify and in what order is pinned by the engine's and the build's unit tests.
+ * planet. Which planets qualify and in what order is pinned by the engine's and the build's unit tests. Since
+ * M-2 S-02 the Moon card shares the section, outside the planet list, so the spec reads the list by its name.
  */
 
 const LOG_FORM = 'form[action="/api/log"]';
@@ -24,13 +25,20 @@ test.beforeEach(async ({ context, baseURL }) => {
 test("marking a planet observed from Tonight saves it and the log lists it by name", async ({ page }) => {
   await onboardInMadrid(page, "e2e-planets");
 
-  const section = page.locator('section[aria-labelledby="planets-heading"]');
+  const section = page.locator('section[aria-labelledby="solar-system-heading"]');
   await expect(section.getByRole("heading", { level: 2 })).toHaveText(en.tonight.planets.heading);
-  const cards = section.locator("ol > li");
-  // Some nights no planet clears the minimum altitude; the section then says so, and there is nothing to mark.
+  const planetList = section.getByRole("list", { name: en.tonight.planets.listLabel });
+  const cards = planetList.getByRole("listitem");
   if ((await cards.count()) === 0) {
-    await expect(section).toContainText(en.tonight.planets.none);
-    test.skip(true, "no planet is up in Madrid tonight");
+    // Some nights no planet clears the minimum altitude. With no Moon card either, the section says so; with the
+    // Moon alone it shows no "none" text, and there is no planet to mark either way.
+    const moonCard = section.locator('article[aria-labelledby="moon-heading"]');
+    if ((await moonCard.count()) === 0) {
+      await expect(section).toContainText(en.tonight.planets.none);
+      test.skip(true, "neither the Moon nor a planet is up in Madrid tonight");
+    }
+    await expect(section).not.toContainText(en.tonight.planets.none);
+    test.skip(true, "only the Moon is up in Madrid tonight, no planet");
   }
 
   const firstCard = cards.first();
@@ -55,7 +63,7 @@ test("marking a planet observed from Tonight saves it and the log lists it by na
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: name }) })).toBeVisible();
 
   // Planets are never pushed down by the log, so the card stays and carries the "seen" tag.
-  const loggedCard = section.locator("ol > li").filter({ has: page.getByRole("heading", { name, exact: true }) });
+  const loggedCard = planetList.getByRole("listitem").filter({ has: page.getByRole("heading", { name, exact: true }) });
   await expect(loggedCard).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));
 
   await page.getByRole("link", { name: en.nav.log }).click();
