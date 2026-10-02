@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
 import { WARSAW } from "./fixtures";
 import { seenSummaries } from "./log";
-import { moonElongationDeg, moonPhaseBand, moonState } from "./moon";
+import { moonElongationDeg, moonPhaseBand, moonState, moonTrack } from "./moon";
 import { isBrightMoon, moonPlacementOf, moonTarget } from "./moon-target";
 import type { MoonTargetInput } from "./moon-target";
 import { observingNight } from "./night";
@@ -11,6 +11,7 @@ import {
   BRIGHT_MOON_MIN_ILLUMINATION,
   BRIGHT_MOON_MIN_UP_FRACTION,
   DEFAULT_MIN_ALTITUDE_DEG,
+  DEFAULT_TRACK_STEP_MINUTES,
   MOON_LOW_ALTITUDE_DEG,
   MOON_MIN_ILLUMINATION,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
@@ -116,8 +117,10 @@ describe("moonTarget", () => {
   it(`is null below ${MOON_MIN_ILLUMINATION * 100}% lit even when it clears the minimum altitude`, () => {
     // A minimum of −90° lets every sample clear it; on 2026-10-10 (new moon) the peak is under 1% lit.
     const newMoon = input("2026-10-10", { minAltitudeDeg: -90 });
-    const peakTime = newMoon.window.start;
-    expect(moonState(WARSAW, peakTime).illuminatedFraction).toBeLessThan(MOON_MIN_ILLUMINATION);
+    // Under the floor at every sample of the window, so whichever sample the code picks as the peak, it is dim.
+    for (const sample of moonTrack(WARSAW, newMoon.window, DEFAULT_TRACK_STEP_MINUTES)) {
+      expect(sample.illuminatedFraction).toBeLessThan(MOON_MIN_ILLUMINATION);
+    }
     expect(moonTarget(newMoon)).toBeNull();
     // Two nights later the evening crescent is about 4.5% lit and is listed.
     const crescent = moonTarget(input("2026-10-12", { minAltitudeDeg: -90 }));

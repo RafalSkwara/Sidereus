@@ -399,7 +399,11 @@ export const pl = {
       timesIn: (p) => ` · czas w strefie ${p.zone}`,
       brightMoon: (p) =>
         `Jasny Księżyc (oświetlony w ${p.percent}%) świeci przez większość ciemnych godzin: słabe galaktyki i mgławice zginą w jego blasku.`,
-      brightMoonPointer: "Lepszym wyborem na dziś są Księżyc i planety poniżej.",
+      brightMoonPointer: {
+        moon: "Lepszym wyborem na dziś jest Księżyc poniżej.",
+        planets: "Lepszym wyborem na dziś są planety poniżej.",
+        both: "Lepszym wyborem na dziś są Księżyc i planety poniżej.",
+      },
     },
 
     nights: {
@@ -448,7 +452,11 @@ export const pl = {
       noneInClearHours: "W pogodnych godzinach tej nocy ani Księżyc, ani żadna planeta nie jest dobrze widoczna.",
       markObserved: (p) => `Zapisz obserwację: ${p.planet}`,
       weather: {
-        line: (p) => `Dla Księżyca i planet: ${p.level} — ${p.reason}`,
+        line: {
+          moon: (p) => `Dla Księżyca: ${p.level} — ${p.reason}`,
+          planets: (p) => `Dla planet: ${p.level} — ${p.reason}`,
+          both: (p) => `Dla Księżyca i planet: ${p.level} — ${p.reason}`,
+        },
         clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
         humidityCap: (p) =>
           `między zmierzchem a świtem niebo dość czyste, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,

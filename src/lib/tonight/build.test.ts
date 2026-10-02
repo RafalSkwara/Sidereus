@@ -643,7 +643,8 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       { start: new Date(Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS), end: civil.end },
     ];
     const [evening, morning] = clear.map((interval) => `${hhmm(interval.start)}–${hhmm(interval.end)}`);
-    expect(planets.weatherText).toBe(`For the Moon and planets: marginal — clear ${evening} and ${morning}`);
+    // Only planets show in these clear hours (the Moon is not up then), so the line names only them.
+    expect(planets.weatherText).toBe(`For planets: marginal — clear ${evening} and ${morning}`);
 
     expect(planets.entries.length).toBeGreaterThan(0);
     for (const entry of planets.entries) {
@@ -702,7 +703,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.verdict.level).toBe("go");
     const planets = planetsOf(view);
     expect(planets.weatherText).toBe(
-      "For the Moon and planets: marginal — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
+      "For planets: marginal — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
     );
     // On a go night the planets are ranked over the whole planet window, as before.
     expect(planets.entries.map((entry) => entry.key)).toEqual(
@@ -892,10 +893,12 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     const view = buildTonight(clearNight("2026-10-26"), "en");
     expect(view.verdict.level).toBe("go");
     const percent = stripPercent(view);
-    expect(view.brightMoonText).toBe(`${en.tonight.card.brightMoon({ percent })} ${en.tonight.card.brightMoonPointer}`);
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent })} ${en.tonight.card.brightMoonPointer.both}`,
+    );
     const polish = buildTonight(clearNight("2026-10-26"), "pl");
     expect(polish.brightMoonText).toBe(
-      `${pl.tonight.card.brightMoon({ percent })} ${pl.tonight.card.brightMoonPointer}`,
+      `${pl.tonight.card.brightMoon({ percent })} ${pl.tonight.card.brightMoonPointer.both}`,
     );
   });
 
@@ -986,6 +989,21 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     expect(second.brightMoonText).toEqual(first.brightMoonText);
   });
 
+  it("keeps the Moon when working out the planets fails, and points only at the Moon", () => {
+    const working = buildTonight(clearNight("2026-10-26"), "en");
+    planetRanking.throws = true;
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const solarSystem = solarSystemOf(view);
+    expect(solarSystem.moon).toEqual(working.solarSystem?.moon);
+    expect(solarSystem.entries).toEqual([]);
+    // A failure is not "nothing is well placed": the Moon is listed, so there is no none text.
+    expect(solarSystem.noneText).toBeNull();
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.moon}`,
+    );
+  });
+
   it("drops only the Moon when working it out fails", () => {
     const working = buildTonight(clearNight("2026-10-26"), "en");
     moonTargeting.throws = true;
@@ -997,8 +1015,10 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     expect(view.verdict).toEqual(working.verdict);
     expect(view.ranking).toEqual(working.ranking);
     expect(view.nights).toEqual(working.nights);
-    // The planets still show, so the line still points at the section.
-    expect(view.brightMoonText).toEqual(working.brightMoonText);
+    // The planets still show, so the line still points at the section, now naming only the planets.
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.planets}`,
+    );
   });
 
   it("tags a logged Moon as seen", () => {

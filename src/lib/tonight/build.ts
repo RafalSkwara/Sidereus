@@ -21,6 +21,7 @@ import {
   VERDICT_THRESHOLDS,
   type LogEntry,
   type MoonPhaseBand,
+  type PlanetEntry,
   type PlanetKey,
   type RankedEntry,
   type Verdict,
@@ -31,7 +32,7 @@ import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecor
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
-import { createFormatter, type ForecastStatus } from "./format";
+import { createFormatter, type ForecastStatus, type ShownSolarTargets } from "./format";
 
 /**
  * Composes the Tonight view: the stored gear, the forecast and `now` in, a view model the page
@@ -442,15 +443,22 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       // over the whole planet window, as the deep-sky ranking is over the whole dark window. `null` without
       // forecast hours to judge by (no weather data): the whole planet window counts.
       const clear = cardPasses ? null : clearIntervals(planetWindow, hourly, VERDICT_THRESHOLDS.marginalCloudPct);
-      const ranked = rankPlanets({
-        site: engineSite,
-        minAltitudeDeg: site.minAltitudeDeg,
-        planetWindow,
-        telescope,
-        eyepieces,
-        seen,
-        ...(clear === null ? {} : { visibleIntervals: clear }),
-      });
+      // The planets and the Moon fail independently: a failure in one drops only that one (nothing is logged).
+      // If both fail, the section is dropped rather than claiming nothing is well placed.
+      let ranked: PlanetEntry<EyepieceRecord>[] | null = null;
+      try {
+        ranked = rankPlanets({
+          site: engineSite,
+          minAltitudeDeg: site.minAltitudeDeg,
+          planetWindow,
+          telescope,
+          eyepieces,
+          seen,
+          ...(clear === null ? {} : { visibleIntervals: clear }),
+        });
+      } catch {
+        ranked = null;
+      }
       // The Moon over the same window and clear hours. A failure here drops only the Moon; nothing is logged.
       let moon: TonightMoonEntry | null = null;
       try {
@@ -485,16 +493,26 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       } catch {
         moon = null;
       }
+      if (ranked === null && moon === null) {
+        throw new Error("Neither the planets nor the Moon could be computed");
+      }
+      const planetEntries = ranked ?? [];
+      const shown: ShownSolarTargets =
+        moon !== null && planetEntries.length === 0
+          ? "moon"
+          : moon === null && planetEntries.length > 0
+            ? "planets"
+            : "both";
       const none = clear === null ? messages.tonight.planets.none : messages.tonight.planets.noneInClearHours;
       solarSystem = {
         windowText: planetWindowText(planetWindow, timeZone),
         // The verdict card already speaks for the planet window when it passes the night at the same level.
         weatherText:
           !cardPasses || planetVerdict.level !== tonight.level
-            ? planetWeatherText(planetVerdict, clear === null ? null : { intervals: clear, timeZone })
+            ? planetWeatherText(planetVerdict, clear === null ? null : { intervals: clear, timeZone }, shown)
             : null,
         moon,
-        entries: ranked.map((entry) => ({
+        entries: planetEntries.map((entry) => ({
           key: entry.key,
           name: messages.targets.planet[entry.key],
           windowStart: formatTime(entry.window.start, timeZone),
@@ -508,7 +526,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
           note: messages.tonight.planets.note[entry.key],
           seenText: entry.seen ? seenLine(entry.seen) : null,
         })),
-        noneText: moon === null && ranked.length === 0 ? none : null,
+        noneText: moon === null && planetEntries.length === 0 ? none : null,
       };
     }
   } catch {
@@ -525,7 +543,10 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       const darkMinutes = Math.floor((window.end.getTime() - window.start.getTime()) / 60_000);
       const upFraction = darkMinutes > 0 ? 1 - first.moon.moonFreeMinutes / darkMinutes : 0;
       if (isBrightMoon(first.moon.illuminatedFraction, upFraction)) {
-        const pointer = solarSystem !== null && (solarSystem.moon !== null || solarSystem.entries.length > 0);
+        const hasMoon = solarSystem?.moon != null;
+        const hasPlanets = (solarSystem?.entries.length ?? 0) > 0;
+        const pointer: ShownSolarTargets | null =
+          hasMoon && hasPlanets ? "both" : hasMoon ? "moon" : hasPlanets ? "planets" : null;
         brightMoonText = brightMoonLine(first.moon.illuminatedFraction, { pointer });
       }
     }

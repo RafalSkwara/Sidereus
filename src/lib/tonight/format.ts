@@ -91,6 +91,9 @@ export function formatLocaleTag(locale: Locale): string {
  * The Tonight formatters for one locale. Create one per request and reuse it: the `Intl` formatters
  * are built once here.
  */
+/** Which solar-system targets the section shows, so copy names only those (the Moon, the planets, or both). */
+export type ShownSolarTargets = "moon" | "planets" | "both";
+
 export function createFormatter(locale: Locale) {
   const m = getMessages(locale);
   const tag = formatLocaleTag(locale);
@@ -446,6 +449,7 @@ export function createFormatter(locale: Locale) {
   function planetWeatherText(
     planetVerdict: Verdict,
     clear: { intervals: readonly Interval[]; timeZone: string } | null = null,
+    shown: ShownSolarTargets = "both",
   ): string {
     const text = m.tonight.planets.weather;
     const reason = planetVerdict.reason;
@@ -485,7 +489,7 @@ export function createFormatter(locale: Locale) {
         phrase = verdictReasonText(planetVerdict);
         break;
     }
-    return text.line({ level: m.tonight.nextNight.level[planetVerdict.level], reason: phrase });
+    return text.line[shown]({ level: m.tonight.nextNight.level[planetVerdict.level], reason: phrase });
   }
 
   /** The Moon's phase band and illumination: "Waxing gibbous · 78% lit". `fraction` is [0, 1], shown in whole percent. */
@@ -502,7 +506,10 @@ export function createFormatter(locale: Locale) {
   function moonReasonLine(entry: MoonReasonEntry, timeZone: string): string {
     const text = m.tonight.moon.reason;
     const params = {
-      altitude: num(Math.round(entry.peak.altitudeDeg)),
+      // The low wording rounds down, so a peak just under `MOON_LOW_ALTITUDE_DEG` never reads as the threshold itself.
+      altitude: num(
+        entry.placement === "low" ? Math.floor(entry.peak.altitudeDeg) : Math.round(entry.peak.altitudeDeg),
+      ),
       time: formatTime(entry.peak.time, timeZone),
       timing: text.timing[entry.timing],
     };
@@ -513,10 +520,11 @@ export function createFormatter(locale: Locale) {
    * The verdict card's bright-Moon line (`isBrightMoon`), with the Moon's illumination in whole percent; `pointer`
    * adds the sentence that sends the reader to the Moon and planets, only when the section shows one of them.
    */
-  function brightMoonLine(fraction: number, { pointer }: { pointer: boolean }): string {
+  /** `pointer` names what the solar-system section actually shows; `null` when it shows nothing. */
+  function brightMoonLine(fraction: number, { pointer }: { pointer: ShownSolarTargets | null }): string {
     const text = m.tonight.card;
     const line = text.brightMoon({ percent: num(Math.round(fraction * 100)) });
-    return pointer ? `${line} ${text.brightMoonPointer}` : line;
+    return pointer === null ? line : `${line} ${text.brightMoonPointer[pointer]}`;
   }
 
   return {

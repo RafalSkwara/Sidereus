@@ -81,12 +81,32 @@ describe("the Moon's wording (M-2 S-02)", () => {
     );
   });
 
-  it("words the bright-Moon line, with the pointer only when asked", () => {
-    expect(english.brightMoonLine(0.986, { pointer: false })).toBe(
-      "Bright Moon (99% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.",
+  it("rounds the low wording down, so a peak just under the low line never reads as the line itself", () => {
+    const justUnder = { placement: "low" as const, timing: "evening" as const, peak: { ...peak, altitudeDeg: 29.6 } };
+    expect(english.moonReasonLine(justUnder, "Europe/Warsaw")).toBe(
+      "Highest only 29° at 22:53 — best early in the night; this low, the view may shimmer",
     );
-    expect(english.brightMoonLine(0.986, { pointer: true })).toBe(
-      "Bright Moon (99% lit) up most of the dark hours: faint galaxies and nebulae will be washed out. The Moon and planets below are better bets tonight.",
+    // Above the low line the altitude still rounds to the nearest degree.
+    expect(
+      english.moonReasonLine(
+        { placement: "well", timing: "night", peak: { ...peak, altitudeDeg: 30.6 } },
+        "Europe/Warsaw",
+      ),
+    ).toBe("Highest 31° at 22:53 — best in the middle of the night");
+  });
+
+  it("words the bright-Moon line, pointing only at what the section shows", () => {
+    const line = "Bright Moon (99% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.";
+    expect(english.brightMoonLine(0.986, { pointer: null })).toBe(line);
+    expect(english.brightMoonLine(0.986, { pointer: "both" })).toBe(
+      `${line} The Moon and planets below are better bets tonight.`,
+    );
+    expect(english.brightMoonLine(0.986, { pointer: "moon" })).toBe(`${line} The Moon below is a better bet tonight.`);
+    expect(english.brightMoonLine(0.986, { pointer: "planets" })).toBe(
+      `${line} The planets below are better bets tonight.`,
+    );
+    expect(polish.brightMoonLine(0.986, { pointer: "planets" })).toMatch(
+      /Lepszym wyborem na dziś są planety poniżej\.$/,
     );
   });
 });

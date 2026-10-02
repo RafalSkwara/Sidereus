@@ -391,7 +391,12 @@ export const en = {
       brightMoon: (p: { percent: string }) =>
         `Bright Moon (${p.percent}% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.`,
       /** Follows `brightMoon` only when the "Solar system tonight" section shows the Moon or a planet. */
-      brightMoonPointer: "The Moon and planets below are better bets tonight.",
+      /** Names only what the solar-system section below actually shows. */
+      brightMoonPointer: {
+        moon: "The Moon below is a better bet tonight.",
+        planets: "The planets below are better bets tonight.",
+        both: "The Moon and planets below are better bets tonight.",
+      },
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
@@ -451,7 +456,12 @@ export const en = {
        * planet verdict whose level differs from the card's.
        */
       weather: {
-        line: (p: { level: string; reason: string }) => `For the Moon and planets: ${p.level} — ${p.reason}`,
+        /** Keyed by what the section shows, so the line names only those targets. */
+        line: {
+          moon: (p: { level: string; reason: string }) => `For the Moon: ${p.level} — ${p.reason}`,
+          planets: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
+          both: (p: { level: string; reason: string }) => `For the Moon and planets: ${p.level} — ${p.reason}`,
+        },
         clearRun: (p: { hours: string; cloud: string }) =>
           `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
         humidityCap: (p: { humidity: string }) =>
