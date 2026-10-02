@@ -565,8 +565,8 @@ export const pl = {
         follow: (p) => `na niebie przez ${p.duration} w oknie ciemności`,
       },
       moon: {
-        lead: (p) => `${p.percent}% bez blasku Księżyca`,
-        follow: (p) => `${p.percent}% bez blasku Księżyca`,
+        lead: "Blask Księżyca prawie mu nie przeszkadza",
+        follow: "blask Księżyca prawie mu nie przeszkadza",
       },
       brightness: {
         lead: (p) => `Jasny obiekt dla Twoich ${p.aperture} mm`,
@@ -622,6 +622,18 @@ export const pl = {
         many: (p) => `${p.count} obiektów wartych dziś uwagi`,
         other: (p) => `${p.count} obiektu wartego dziś uwagi`,
       },
+    },
+
+    washedOut: {
+      line: {
+        one: (p) => `${p.count} słaby obiekt ginie dziś w blasku Księżyca`,
+        few: (p) => `${p.count} słabe obiekty giną dziś w blasku Księżyca`,
+        many: (p) => `${p.count} słabych obiektów ginie dziś w blasku Księżyca`,
+        other: (p) => `${p.count} słabego obiektu ginie dziś w blasku Księżyca`,
+      },
+      heading: "Giną w blasku Księżyca",
+      intro:
+        "Dzisiejszy Księżyc tak rozjaśnia niebo wokół tych słabych obiektów, że bardzo trudno byłoby je dostrzec. W bezksiężycową noc byłyby na liście.",
     },
 
     age: {

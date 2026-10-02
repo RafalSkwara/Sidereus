@@ -588,9 +588,10 @@ export const en = {
         lead: (p: { duration: string }) => `Up for ${p.duration} of the dark window`,
         follow: (p: { duration: string }) => `up for ${p.duration} of the dark window`,
       },
+      /** The moon component measures how little the Moon brightens the sky where the object sits, by its type. */
       moon: {
-        lead: (p: { percent: string }) => `${p.percent}% clear of moonlight`,
-        follow: (p: { percent: string }) => `${p.percent}% clear of moonlight`,
+        lead: "Moonlight barely affects it",
+        follow: "moonlight barely affects it",
       },
       brightness: {
         lead: (p: { aperture: string }) => `Bright for your ${p.aperture} mm`,
@@ -642,6 +643,17 @@ export const en = {
         one: (p) => `${p.count} object cleared the bar tonight`,
         other: (p) => `${p.count} objects cleared the bar tonight`,
       } as PluralForms<Count>,
+    },
+
+    /** moonlight-and-the-verdict: faint objects tonight's Moon hides, counted on Tonight and listed on /tonight/all. */
+    washedOut: {
+      line: {
+        one: (p) => `${p.count} faint object is washed out by the Moon tonight`,
+        other: (p) => `${p.count} faint objects are washed out by the Moon tonight`,
+      } as PluralForms<Count>,
+      heading: "Washed out by the Moon",
+      intro:
+        "Tonight's Moon brightens the sky around these faint objects so much that they would be very hard to see. On a moonless night they would be on the list.",
     },
 
     age: {

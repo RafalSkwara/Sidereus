@@ -261,7 +261,14 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict.level).toBe("go");
-    expect(view.ranking).toEqual({ clearedCount: 0, clearedText: "No object cleared the bar tonight", entries: [] });
+    expect(view.ranking).toEqual({
+      clearedCount: 0,
+      clearedText: "No object cleared the bar tonight",
+      entries: [],
+      washedOutCount: 0,
+      washedOutText: null,
+      washedOutEntries: [],
+    });
   });
   it("explains a weather no-go with the next night worth a look", () => {
     // Warsaw's observing nights start at local noon, 10:00 UTC: nights 1 and 2 overcast, night 3 clear.
@@ -1050,5 +1057,57 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     });
     const empty = buildTonight(clearNight("2026-10-26", { eyepieces: [] }), "en");
     expect(solarSystemOf(empty).moon).toMatchObject({ wholeDisc: null, wholeDiscFits: false, detail: null });
+  });
+});
+
+describe("buildTonight's washed-out objects (moonlight-and-the-verdict)", () => {
+  /** An all-clear Warsaw night, as in the Moon tests above. */
+  function clearNight(date: string) {
+    const now = new Date(`${date}T16:00:00Z`);
+    return {
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast(`${date}T00:00:00Z`, 5), false, now),
+      now,
+    };
+  }
+
+  it("counts and lists the faint objects the full Moon of 26 October hides, apart from the ranking", () => {
+    const ranking = rankingOf(buildTonight(clearNight("2026-10-26"), "en"));
+    expect(ranking.washedOutCount).toBeGreaterThan(0);
+    expect(ranking.washedOutEntries).toHaveLength(ranking.washedOutCount);
+    expect(ranking.washedOutText).toBe(
+      ranking.washedOutCount === 1
+        ? en.tonight.washedOut.line.one({ count: "1" })
+        : en.tonight.washedOut.line.other({ count: String(ranking.washedOutCount) }),
+    );
+    const listed = new Set(ranking.entries.map((e) => e.id));
+    for (const entry of ranking.washedOutEntries) {
+      expect(listed.has(entry.id)).toBe(false);
+      expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
+    }
+    const bestAt = ranking.washedOutEntries.map((e) => e.bestAt);
+    expect(bestAt).toEqual([...bestAt].sort((a, b) => a - b));
+  });
+
+  it("words the line in Polish", () => {
+    const ranking = rankingOf(buildTonight(clearNight("2026-10-26"), "pl"));
+    expect(ranking.washedOutText).toMatch(/ginie dziś w blasku Księżyca|giną dziś w blasku Księżyca/);
+  });
+
+  it("lists the same washed-out objects on the all-objects page, whatever the limit", () => {
+    const top = rankingOf(buildTonight(clearNight("2026-10-26"), "en"));
+    const all = rankingOf(buildTonight(clearNight("2026-10-26"), "en", { limit: Number.POSITIVE_INFINITY }));
+    expect(all.washedOutEntries).toEqual(top.washedOutEntries);
+    const listed = new Set(all.entries.map((e) => e.id));
+    expect(top.washedOutEntries.filter((e) => listed.has(e.id))).toEqual([]);
+  });
+
+  it("has no line and no group on the new-Moon night of 10 October", () => {
+    const ranking = rankingOf(buildTonight(clearNight("2026-10-10"), "en"));
+    expect(ranking.washedOutCount).toBe(0);
+    expect(ranking.washedOutText).toBeNull();
+    expect(ranking.washedOutEntries).toEqual([]);
   });
 });

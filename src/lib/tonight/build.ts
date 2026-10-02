@@ -187,11 +187,35 @@ export interface TonightSolarSystem {
   noneText: string | null;
 }
 
+/** A faint object tonight's Moon washes out (moonlight-and-the-verdict): listed apart on /tonight/all, never ranked. */
+export interface TonightWashedOutEntry {
+  /** "M33": the catalogue id. */
+  id: string;
+  /** 33: the key for a localised common name. */
+  messier: number;
+  commonName: string | null;
+  constellation: string;
+  /** Best window and peak, `HH:mm` in the site's time zone. */
+  windowStart: string;
+  windowEnd: string;
+  bestTime: string;
+  /** Peak instant (epoch ms). */
+  bestAt: number;
+  /** Direction at the peak, "SW, 45°". */
+  bestDirection: string;
+}
+
 export interface TonightRanking {
+  /** Cleared objects only: a washed-out object is never counted here. */
   clearedCount: number;
   /** "N objects cleared the bar tonight", or "No object cleared the bar tonight". */
   clearedText: string;
   entries: TonightEntry[];
+  washedOutCount: number;
+  /** "4 faint objects are washed out by the Moon tonight", linking to their group on /tonight/all; `null` at 0. */
+  washedOutText: string | null;
+  /** Every washed-out object, by best time; not capped by the ranking's limit. */
+  washedOutEntries: TonightWashedOutEntry[];
 }
 
 export type TonightDarkWindow = { kind: "window"; start: string; end: string } | { kind: "none" };
@@ -329,6 +353,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     reasonLine,
     seenLine,
     verdictReasonText,
+    washedOutLine,
   } = createFormatter(locale);
   const messages = getMessages(locale);
   const { timeZone } = site;
@@ -425,6 +450,19 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
         pair: toPair(telescope, entry.pair),
         reason: reasonLine(entry, context),
         seenText: entry.seen ? seenLine(entry.seen) : null,
+      })),
+      washedOutCount: ranked.washedOutCount,
+      washedOutText: washedOutLine(ranked.washedOutCount),
+      washedOutEntries: ranked.washedOut.map(({ object, window: best, peak }) => ({
+        id: object.id,
+        messier: object.messier,
+        commonName: object.commonName,
+        constellation: object.constellation,
+        windowStart: formatTime(best.start, timeZone),
+        windowEnd: formatTime(best.end, timeZone),
+        bestTime: formatTime(peak.time, timeZone),
+        bestAt: peak.time.getTime(),
+        bestDirection: formatDirection(peak),
       })),
     };
   }

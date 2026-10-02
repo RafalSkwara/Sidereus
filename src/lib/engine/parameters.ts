@@ -315,3 +315,84 @@ export const BRIGHT_MOON_MIN_ILLUMINATION = 0.5;
  * horizon for more than this share of the dark window.
  */
 export const BRIGHT_MOON_MIN_UP_FRACTION = 0.5;
+
+// Moonlight (moonlight-and-the-verdict) ----------------------------------------------------------
+
+const DARK_SKY_ZENITH_MAG = [21.9, 21.7, 21.4, 20.8, 20.1, 19.3, 18.7, 18.2, 17.8] as const;
+
+/**
+ * Candidate (moonlight-and-the-verdict planning, 2026-10-02): moonless zenith sky brightness, V mag/arcsec², by
+ * Bortle class 1 → 21.9 down to 9 → 17.8, following the usual SQM-by-Bortle convention. It is the dark sky the
+ * Moon's light is added to (`moonlight.ts`); calibrated with `calibration-harness.md` (plan › Calibration).
+ */
+export const DARK_SKY_ZENITH_MAG_BY_BORTLE: readonly number[] = DARK_SKY_ZENITH_MAG;
+
+export function darkSkyZenithMagForBortle(bortle: number): number {
+  requireBortle(bortle);
+  return DARK_SKY_ZENITH_MAG[bortle - 1];
+}
+
+/**
+ * Candidate (moonlight-and-the-verdict planning, 2026-10-02): V-band extinction coefficient, mag per airmass, for
+ * the moonlit-sky model (Krisciunas & Schaefer 1991 use 0.172 at Mauna Kea; 0.25 suits a lowland site).
+ */
+export const EXTINCTION_V = 0.25;
+
+/**
+ * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): how much the Moon brightens the sky at an object,
+ * in magnitudes, before a sensitivity-1 object's moon component reaches 0. The component is
+ * `1 − sensitivity × brightening ÷ this`, clamped to [0, 1].
+ */
+export const MOONLIGHT_REF_MAG = 1.5;
+
+/**
+ * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): how much moonlight hurts each object type, 0-1.
+ * Diffuse objects take the full effect; star clusters keep their stars, so they take less; a double star least.
+ */
+export const MOONLIGHT_SENSITIVITY: Readonly<Record<MessierType, number>> = {
+  galaxy: 1,
+  nebula: 1,
+  "emission-nebula": 1,
+  "reflection-nebula": 1,
+  "planetary-nebula": 1,
+  "supernova-remnant": 1,
+  "globular-cluster": 0.6,
+  "cluster-with-nebula": 0.6,
+  "open-cluster": 0.3,
+  asterism: 0.3,
+  other: 0.3,
+  "double-star": 0.15,
+};
+
+export function moonlightSensitivity(type: MessierType): number {
+  return MOONLIGHT_SENSITIVITY[type];
+}
+
+/**
+ * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): a diffuse object is washed out when its effective
+ * surface brightness is more than this many magnitudes fainter than the moonlit sky around it.
+ */
+export const WASHED_OUT_CONTRAST_MAG = 3.5;
+
+/**
+ * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): the catalogue's mean surface brightness spreads the
+ * light over the whole ellipse; an object's core is brighter by about this much, magnitudes.
+ */
+export const BRIGHT_CORE_OFFSET_MAG = 1.5;
+
+/**
+ * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): objects never washed out whatever the contrast.
+ * M16 is typed a nebula, but its bright embedded cluster stays visible under a full Moon.
+ */
+export const MOONLIGHT_EXEMPT_IDS: readonly string[] = ["M16"];
+
+/** The diffuse types the washed-out rule applies to: every sensitivity-1 type, plus a cluster with nebulosity. */
+export const WASHED_OUT_TYPES: readonly MessierType[] = [
+  "galaxy",
+  "nebula",
+  "emission-nebula",
+  "reflection-nebula",
+  "planetary-nebula",
+  "supernova-remnant",
+  "cluster-with-nebula",
+];

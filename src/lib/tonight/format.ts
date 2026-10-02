@@ -196,7 +196,7 @@ export function createFormatter(locale: Locale) {
           duration: formatDuration(entry.score.window.end.getTime() - entry.score.window.start.getTime()),
         });
       case "moon":
-        return reason.moon[position]({ percent: num(Math.round(entry.score.components.moon * 100)) });
+        return reason.moon[position];
       case "brightness":
         return reason.brightness[position]({ aperture: num(context.apertureMm) });
       case "sky":
@@ -244,6 +244,14 @@ export function createFormatter(locale: Locale) {
       return m.tonight.cleared.none;
     }
     return plural(locale, clearedCount, m.tonight.cleared.count)({ count: num(clearedCount) });
+  }
+
+  /** "4 faint objects are washed out by the Moon tonight" (moonlight-and-the-verdict); `null` when none is. */
+  function washedOutLine(washedOutCount: number): string | null {
+    if (washedOutCount === 0) {
+      return null;
+    }
+    return plural(locale, washedOutCount, m.tonight.washedOut.line)({ count: num(washedOutCount) });
   }
 
   /**
@@ -540,6 +548,7 @@ export function createFormatter(locale: Locale) {
     reasonLine,
     verdictReasonText,
     clearedLine,
+    washedOutLine,
     seenLine,
     formatAge,
     forecastStatusText,

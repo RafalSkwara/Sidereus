@@ -7,7 +7,17 @@ export type * from "./types";
 export * from "./parameters";
 export { observingNight, observingNightDateFor } from "./night";
 export { darkWindow, sunAltitudeDeg, sunEvents, tonightDateFor } from "./sun";
-export { moonElongationDeg, moonFreeMinutes, moonPhaseBand, moonSeparationDeg, moonState, moonTrack } from "./moon";
+export {
+  moonElongationDeg,
+  moonFreeMinutes,
+  moonPhaseBand,
+  moonSeparationDeg,
+  moonSeparationsDeg,
+  moonState,
+  moonTrack,
+} from "./moon";
+export { effectiveSurfaceBrightness, moonBrighteningMag, magToNL, nlToMag, skyBrightnessNL } from "./moonlight";
+export type { SkyBrightness, SkyBrightnessInput } from "./moonlight";
 export type { MoonState } from "./moon";
 export { isBrightMoon, moonPlacementOf, moonTarget } from "./moon-target";
 export type { MoonFacts, MoonPlacement, MoonTargetEntry, MoonTargetInput } from "./moon-target";
@@ -25,7 +35,15 @@ export type {
   WholeDiscEyepiece,
 } from "./eyepieces";
 export { rankObjects, reasonComponents } from "./ranking";
-export type { RankInput, RankTelescope, RankableObject, RankedEntry, Ranking, ReasonComponents } from "./ranking";
+export type {
+  RankInput,
+  RankTelescope,
+  RankableObject,
+  RankedEntry,
+  Ranking,
+  ReasonComponents,
+  WashedOutEntry,
+} from "./ranking";
 export { PLANET_KEYS, planetFacts, planetTracks } from "./planets";
 export type { PlanetFacts, PlanetKey } from "./planets";
 export { rankPlanets } from "./planet-ranking";

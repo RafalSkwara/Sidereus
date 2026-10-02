@@ -195,6 +195,18 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
               {multipleTelescopes && (
                 <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
               )}
+              {view.ranking.washedOutText && (
+                <p class="mb-4 text-sm">
+                  <a
+                    href="/tonight/all#washed-out"
+                    data-washed-out={view.ranking.washedOutCount}
+                    class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                  >
+                    {view.ranking.washedOutText}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </p>
+              )}
               {view.ranking.entries.length > 0 && (
                 <ol class="space-y-4">
                   {view.ranking.entries.map((entry, i) => (
