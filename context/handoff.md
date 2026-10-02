@@ -49,8 +49,17 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 ## Suggested next step
 
-1. ~~`/10x-plan-review moonlight-and-the-verdict`~~ Done 2026-10-02 (`reviews/plan-review.md`): REVISE, all 5 findings fixed in triage, so the plan is SOUND.
-2. Then `/10x-implement moonlight-and-the-verdict phase 1` on `feat/moonlight-and-the-verdict`. On entry, flip #79 on the board to "in-progress". It is off-roadmap, so the roadmap is not touched.
+**Update 2026-10-02 (late):** `moonlight-and-the-verdict` is implemented in all 5 phases on `feat/moonlight-and-the-verdict`.
+- Phase commits: 7e4327a, 31e5aa1, c6f6972, 77fe3a0, e88d985, plus the epilogue be3a82f.
+- Both impl reviews are triaged and their fixes landed: phases 1–4 in a741c28 (`reviews/impl-review.md`), phase 5 in 562d783 (`reviews/impl-review-phase-5.md`).
+- `change.md` is `impl_reviewed`. The branch is pushed. No PR is open yet, and board card #79 is "in-progress".
+
+Next:
+1. Open the PR from `feat/moonlight-and-the-verdict` to `main` (pre-approved). The user merges it.
+2. After the merge, run `/10x-archive moonlight-and-the-verdict`, and move #79 to "done" on the board.
+3. Post-merge checks are listed in `context/changes/moonlight-and-the-verdict/follow-ups/review-fixes.md`:
+   - bright-Moon screenshots after 2026-10-22;
+   - a Firefox red-mode screenshot of the slider.
 
 ## Things a new session should know
 
