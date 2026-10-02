@@ -49,7 +49,7 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 ## Suggested next step
 
-1. `/10x-plan-review moonlight-and-the-verdict`: re-review revision 2. This is recommended because revision 1 was rejected.
+1. ~~`/10x-plan-review moonlight-and-the-verdict`~~ Done 2026-10-02 (`reviews/plan-review.md`): REVISE, all 5 findings fixed in triage, so the plan is SOUND.
 2. Then `/10x-implement moonlight-and-the-verdict phase 1` on `feat/moonlight-and-the-verdict`. On entry, flip #79 on the board to "in-progress". It is off-roadmap, so the roadmap is not touched.
 
 ## Things a new session should know
