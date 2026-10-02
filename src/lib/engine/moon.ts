@@ -6,12 +6,14 @@ import {
   Horizon,
   Illumination,
   InverseRefraction,
+  MoonPhase,
   SearchAltitude,
   Spherical,
   VectorFromSphere,
 } from "astronomy-engine";
 
-import { DEFAULT_TRACK_STEP_MINUTES } from "./parameters";
+import { DEFAULT_TRACK_STEP_MINUTES, MOON_PHASE_BANDS } from "./parameters";
+import type { MoonPhaseBand } from "./parameters";
 import { sampleInstants } from "./sampling";
 import { observerFor } from "./sun";
 import type { EquatorialJ2000, HorizontalPosition, Interval, Site } from "./types";
@@ -115,4 +117,29 @@ export function moonFreeMinutes(site: Site, interval: Interval): number {
 /** `moonState` sampled across `interval` every `stepMinutes`, inclusive of both ends. */
 export function moonTrack(site: Site, interval: Interval, stepMinutes = DEFAULT_TRACK_STEP_MINUTES): MoonState[] {
   return sampleInstants(interval, stepMinutes).map((time) => moonState(site, time));
+}
+
+/**
+ * The Moon's geocentric Sun–Moon ecliptic elongation at `time`, degrees, [0, 360): 0 new, 90 first quarter,
+ * 180 full, 270 last quarter. Unlike the illuminated fraction it tells waxing (below 180) from waning.
+ */
+export function moonElongationDeg(time: Date): number {
+  const deg = MoonPhase(time) % 360;
+  return deg < 0 ? deg + 360 : deg;
+}
+
+/**
+ * The `MOON_PHASE_BANDS` entry holding `elongationDeg` (`fromDeg` inclusive, `toDeg` exclusive). Any angle is
+ * accepted and wrapped into [0, 360) first, so 360 is a waxing crescent like 0.
+ */
+export function moonPhaseBand(elongationDeg: number): MoonPhaseBand {
+  if (!Number.isFinite(elongationDeg)) {
+    throw new RangeError(`Moon elongation must be finite, got ${elongationDeg}`);
+  }
+  const wrapped = ((elongationDeg % 360) + 360) % 360;
+  const match = MOON_PHASE_BANDS.find((b) => b.fromDeg <= wrapped && wrapped < b.toDeg);
+  if (match === undefined) {
+    throw new Error(`moonPhaseBand: no band holds ${wrapped}°, MOON_PHASE_BANDS must cover [0, 360)`);
+  }
+  return match.band;
 }

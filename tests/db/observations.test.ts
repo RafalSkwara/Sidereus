@@ -202,7 +202,18 @@ describe("target and messier stay in sync (the app deployed before target keys w
     expect(await row(data.id)).toEqual({ target: "jupiter", messier: null });
   });
 
-  it.each([["M0"], ["M111"], ["m31"], ["31"], ["Jupiter"], ["pluto"], [""]])(
+  it("stores the Moon with no Messier number", async () => {
+    const { data, error } = await a.client
+      .from("observations")
+      .insert({ ...entry(gearA), target: "moon" })
+      .select("id")
+      .single();
+    expect(error).toBeNull();
+    if (!data) throw new Error("A could not insert");
+    expect(await row(data.id)).toEqual({ target: "moon", messier: null });
+  });
+
+  it.each([["M0"], ["M111"], ["m31"], ["31"], ["Jupiter"], ["pluto"], ["Moon"], ["luna"], ["sun"], [""]])(
     "rejects the target %j",
     async (target) => {
       const { error } = await a.client.from("observations").insert({ ...entry(gearA), target });
@@ -238,6 +249,23 @@ describe("target and messier stay in sync (the app deployed before target keys w
 
     expect((await a.client.from("observations").update({ target: "M1" }).eq("id", data.id)).error).toBeNull();
     expect(await row(data.id)).toEqual({ target: "M1", messier: 1 });
+  });
+
+  it("follows a target edit to and from the Moon: messier is cleared, then re-derived", async () => {
+    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
+    if (!data) throw new Error("A could not insert");
+
+    expect((await a.client.from("observations").update({ target: "moon" }).eq("id", data.id)).error).toBeNull();
+    expect(await row(data.id)).toEqual({ target: "moon", messier: null });
+
+    expect((await a.client.from("observations").update({ target: "M42" }).eq("id", data.id)).error).toBeNull();
+    expect(await row(data.id)).toEqual({ target: "M42", messier: 42 });
+  });
+
+  it.each([["Moon"], ["luna"], ["sun"]])("rejects an update to the target %j", async (target) => {
+    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
+    if (!data) throw new Error("A could not insert");
+    expect((await a.client.from("observations").update({ target }).eq("id", data.id)).error).not.toBeNull();
   });
 
   it("follows a messier edit (the old app's): target is re-derived", async () => {

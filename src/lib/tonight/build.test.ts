@@ -18,12 +18,19 @@ import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 
-import { buildTonight, type TonightNight, type TonightPlanets, type TonightRanking, type TonightView } from "./build";
+import {
+  buildTonight,
+  type TonightNight,
+  type TonightSolarSystem,
+  type TonightRanking,
+  type TonightView,
+} from "./build";
 import { logHref } from "./load";
 import { tonightDateForSite } from "./tonight-date";
 
-/** Lets a test make the planet ranking throw; `false` (the default) leaves the engine untouched. */
+/** Lets a test make the planet ranking or the Moon throw; `false` (the default) leaves the engine untouched. */
 const planetRanking = vi.hoisted(() => ({ throws: false }));
+const moonTargeting = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -35,11 +42,18 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.rankPlanets(...args);
     },
+    moonTarget: (...args: Parameters<typeof actual.moonTarget>) => {
+      if (moonTargeting.throws) {
+        throw new Error("moon target failed");
+      }
+      return actual.moonTarget(...args);
+    },
   };
 });
 
 afterEach(() => {
   planetRanking.throws = false;
+  moonTargeting.throws = false;
 });
 
 const WARSAW: SiteRecord = {
@@ -572,11 +586,11 @@ describe("buildTonight's planets (M-2 S-01)", () => {
   /** `HH:mm` in Warsaw on 2026-10-10/11 (CEST, UTC+2). */
   const hhmm = (instant: Date) => utcWallTime(instant, 2);
 
-  function planetsOf(view: TonightView): TonightPlanets {
-    if (view.planets === null) {
+  function planetsOf(view: TonightView): TonightSolarSystem {
+    if (view.solarSystem === null) {
       throw new Error("expected planets");
     }
-    return view.planets;
+    return view.solarSystem;
   }
 
   it("lists the planets on a go night with facts, the detail eyepiece, a reason and a note", () => {
@@ -629,6 +643,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       { start: new Date(Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS), end: civil.end },
     ];
     const [evening, morning] = clear.map((interval) => `${hhmm(interval.start)}–${hhmm(interval.end)}`);
+    // Only planets show in these clear hours (the Moon is not up then), so the line names only them.
     expect(planets.weatherText).toBe(`For planets: marginal — clear ${evening} and ${morning}`);
 
     expect(planets.entries.length).toBeGreaterThan(0);
@@ -653,12 +668,14 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       overlapsDark(start) || start.getTime() >= dark.end.getTime() ? 100 : 5,
     );
     const planets = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "en"));
-    expect(planets.weatherText).toMatch(/^For planets: marginal — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For the Moon and planets: marginal — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries).toEqual([]);
     expect(planets.noneText).toBe(en.tonight.planets.noneInClearHours);
 
     const polish = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "pl"));
-    expect(polish.weatherText).toMatch(/^Dla planet: na granicy — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(polish.weatherText).toMatch(
+      /^Dla Księżyca i planet: na granicy — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/,
+    );
     expect(polish.noneText).toBe(pl.tonight.planets.noneInClearHours);
   });
 
@@ -669,7 +686,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     const planets = planetsOf(view);
     expect(planets.entries).toEqual([]);
     expect(planets.noneText).toBe(en.tonight.planets.none);
-    expect(planets.noneText).toBe("No planet is well placed for your telescope between dusk and dawn tonight.");
+    expect(planets.noneText).toBe("Neither the Moon nor any planet is well placed between dusk and dawn tonight.");
   });
 
   it("gives the planet weather line when the planet verdict differs from a go on the card", () => {
@@ -698,7 +715,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     const working = buildTonight(input, "en");
     planetRanking.throws = true;
     const view = buildTonight(input, "en");
-    expect(view.planets).toBeNull();
+    expect(view.solarSystem).toBeNull();
     expect(view.verdict).toEqual(working.verdict);
     expect(view.ranking).toEqual(working.ranking);
     expect(view.nights).toEqual(working.nights);
@@ -720,13 +737,13 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.ranking).toBeNull();
     const planets = planetsOf(view);
     // Every hour of the planet window is clear, so the clear hours are the whole window.
-    expect(planets.weatherText).toMatch(/^For planets: go — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For the Moon and planets: go — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries.length).toBeGreaterThan(0);
   });
 
   it("has no planets when the planet window is clouded out", () => {
     const view = buildTonight({ ...input, forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "en");
-    expect(view.planets).toBeNull();
+    expect(view.solarSystem).toBeNull();
   });
 
   it("has no planets when the sun never gets 6° below the horizon", () => {
@@ -739,7 +756,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       },
       "en",
     );
-    expect(view.planets).toBeNull();
+    expect(view.solarSystem).toBeNull();
   });
 
   it("lists Uranus and Neptune only with an aperture of at least 130 mm", () => {
@@ -806,7 +823,7 @@ describe("buildTonight between the dark window's end and civil dawn", () => {
       end: utcWallTime(dark.end, 2),
     });
 
-    const jupiter = view.planets?.entries.find((entry) => entry.key === "jupiter");
+    const jupiter = view.solarSystem?.entries.find((entry) => entry.key === "jupiter");
     expect(jupiter?.reason).toMatch(/best before dawn$/);
     const query = new URL(logHref(view, "jupiter"), "http://localhost").searchParams;
     expect(query.get("object")).toBe("jupiter");
@@ -816,5 +833,222 @@ describe("buildTonight between the dark window's end and civil dawn", () => {
   it("moves to the evening ahead once civil dawn has passed", () => {
     // 07:00 CEST on 11 October, after civil dawn.
     expect(tonightDateForSite(WARSAW, new Date("2026-10-11T05:00:00Z"))).toBe("2026-10-11");
+  });
+});
+
+describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
+  /** An all-clear Warsaw night: the forecast covers it from 00:00 UTC on the evening date, fetched at 16:00 UTC. */
+  function clearNight(date: string, overrides: Partial<Parameters<typeof buildTonight>[0]> = {}) {
+    const now = new Date(`${date}T16:00:00Z`);
+    return {
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast(`${date}T00:00:00Z`, 5), false, now),
+      now,
+      ...overrides,
+    };
+  }
+
+  function solarSystemOf(view: TonightView): TonightSolarSystem {
+    if (view.solarSystem === null) {
+      throw new Error("expected the solar-system section");
+    }
+    return view.solarSystem;
+  }
+
+  /** The strip's night-1 illumination ("Moon 99% · …"), which the bright-Moon line must repeat. */
+  function stripPercent(view: TonightView): string {
+    const percent = /^Moon (\d{1,3})%/.exec(view.nights[0].moonText)?.[1];
+    if (percent === undefined) {
+      throw new Error(`no illumination in "${view.nights[0].moonText}"`);
+    }
+    return percent;
+  }
+
+  it("puts a full Moon first on 26 October, with both eyepieces, a reason and the full-Moon note", () => {
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const moon = solarSystemOf(view).moon;
+    expect(moon).toMatchObject({
+      key: "moon",
+      name: "Moon",
+      band: "full",
+      // The 25 mm shows 1.7°, the whole disc; the 10 mm is the detail pick at 75×.
+      wholeDisc: { name: "25 mm Plössl", magnification: 30 },
+      wholeDiscFits: true,
+      detail: { name: "10 mm Plössl", magnification: 75 },
+      note: en.tonight.moon.note.full,
+      seenText: null,
+    });
+    expect(moon?.phaseText).toMatch(/^Full Moon · \d{2,3}% lit$/);
+    expect(moon?.windowStart).toMatch(/^\d{2}:\d{2}$/);
+    expect(moon?.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
+    expect(moon?.reason).toMatch(/^Highest \d{1,2}° at \d{2}:\d{2} — best in the middle of the night$/);
+    // The planets follow, unchanged.
+    expect(solarSystemOf(view).entries.length).toBeGreaterThan(0);
+    expect(solarSystemOf(view).noneText).toBeNull();
+  });
+
+  it("sets the bright-Moon line on 26 October from the strip's own Moon values, pointing at the section", () => {
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    expect(view.verdict.level).toBe("go");
+    const percent = stripPercent(view);
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent })} ${en.tonight.card.brightMoonPointer.both}`,
+    );
+    const polish = buildTonight(clearNight("2026-10-26"), "pl");
+    expect(polish.brightMoonText).toBe(
+      `${pl.tonight.card.brightMoon({ percent })} ${pl.tonight.card.brightMoonPointer.both}`,
+    );
+  });
+
+  it("has no Moon entry and no bright-Moon line at new Moon on 10 October", () => {
+    const view = buildTonight(clearNight("2026-10-10"), "en");
+    expect(view.verdict.level).toBe("go");
+    expect(solarSystemOf(view).moon).toBeNull();
+    expect(view.brightMoonText).toBeNull();
+    // Planets only: the section lists them and needs no "none" text.
+    expect(solarSystemOf(view).entries.length).toBeGreaterThan(0);
+    expect(solarSystemOf(view).noneText).toBeNull();
+  });
+
+  it("words the Moon in Polish", () => {
+    const moon = solarSystemOf(buildTonight(clearNight("2026-10-26"), "pl")).moon;
+    expect(moon).toMatchObject({ name: "Księżyc", note: pl.tonight.moon.note.full });
+    expect(moon?.phaseText).toMatch(/^Pełnia · oświetlony w \d{2,3}%$/);
+    expect(moon?.reason).toMatch(/^Najwyżej \d{1,2}° o \d{2}:\d{2} — najlepiej w środku nocy$/);
+  });
+
+  it("limits the Moon to the clear hours of a cloudy no-go night, and gives no bright-Moon line", () => {
+    // 31 October: a 61% Moon up most of the night, bright on an all-clear night.
+    expect(buildTonight(clearNight("2026-10-31"), "en").brightMoonText).not.toBeNull();
+
+    const engineSite = toEngineSite(WARSAW);
+    const night = observingNight("2026-10-31", WARSAW.timeZone);
+    const dark = darkWindow(engineSite, night, darknessThresholdDegForBortle(WARSAW.bortle));
+    const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    if (dark.kind !== "window" || civil.kind !== "window") {
+      throw new Error("expected a dark window and a planet window on 2026-10-31 in Warsaw");
+    }
+    // Overcast over every hour that overlaps the dark window, clear in the twilight either side.
+    const forecast = hourlyForecast("2026-10-31T00:00:00Z", 48, (start) =>
+      start.getTime() < dark.end.getTime() && start.getTime() + HOUR_MS > dark.start.getTime() ? 100 : 5,
+    );
+    const now = new Date("2026-10-31T16:00:00Z");
+    const view = buildTonight(clearNight("2026-10-31", { forecast: result(forecast, false, now) }), "en");
+    expect(view.verdict.level).toBe("no-go");
+    expect(view.brightMoonText).toBeNull();
+    const moon = solarSystemOf(view).moon;
+    if (moon === null) {
+      throw new Error("expected the Moon in the clear morning twilight");
+    }
+    // The only clear hours the Moon is up in are after the dark window, before civil dawn.
+    const morning = Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS;
+    expect(moon.bestAt).toBeGreaterThanOrEqual(morning);
+    expect(moon.bestAt).toBeLessThanOrEqual(civil.end.getTime());
+  });
+
+  it("gives no bright-Moon line on a night without a dark window, even near full Moon", () => {
+    // Warsaw under a Bortle 3 sky at the end of June: the sun never reaches −18°; full Moon is on 29 June.
+    const view = buildTonight(
+      clearNight("2026-06-29", { site: { ...WARSAW, bortle: 3 }, now: new Date("2026-06-29T19:00:00Z") }),
+      "en",
+    );
+    expect(view.darkWindow).toEqual({ kind: "none" });
+    expect(view.brightMoonText).toBeNull();
+  });
+
+  it("lists the Moon alone when no planet qualifies, with no none text", () => {
+    // 31 October with a 100 mm: no ice giants, and only the Moon (about 60°) clears a 57° minimum.
+    const view = buildTonight(
+      clearNight("2026-10-31", {
+        site: { ...WARSAW, minAltitudeDeg: 57 },
+        telescope: { ...TELESCOPE, apertureMm: 100 },
+      }),
+      "en",
+    );
+    const solarSystem = solarSystemOf(view);
+    expect(solarSystem.moon).not.toBeNull();
+    expect(solarSystem.entries).toEqual([]);
+    expect(solarSystem.noneText).toBeNull();
+  });
+
+  it("says neither the Moon nor a planet is well placed when both are absent", () => {
+    const solarSystem = solarSystemOf(
+      buildTonight(clearNight("2026-10-26", { site: { ...WARSAW, minAltitudeDeg: 70 } }), "en"),
+    );
+    expect(solarSystem.moon).toBeNull();
+    expect(solarSystem.entries).toEqual([]);
+    expect(solarSystem.noneText).toBe(en.tonight.planets.none);
+  });
+
+  it("is deterministic: identical inputs give an identical Moon entry and bright-Moon line", () => {
+    const first = buildTonight(clearNight("2026-10-26"), "en");
+    const second = buildTonight(clearNight("2026-10-26"), "en");
+    expect(second.solarSystem?.moon).toEqual(first.solarSystem?.moon);
+    expect(second.brightMoonText).toEqual(first.brightMoonText);
+  });
+
+  it("keeps the Moon when working out the planets fails, and points only at the Moon", () => {
+    const working = buildTonight(clearNight("2026-10-26"), "en");
+    planetRanking.throws = true;
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const solarSystem = solarSystemOf(view);
+    expect(solarSystem.moon).toEqual(working.solarSystem?.moon);
+    expect(solarSystem.entries).toEqual([]);
+    // A failure is not "nothing is well placed": the Moon is listed, so there is no none text.
+    expect(solarSystem.noneText).toBeNull();
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.moon}`,
+    );
+  });
+
+  it("drops only the Moon when working it out fails", () => {
+    const working = buildTonight(clearNight("2026-10-26"), "en");
+    moonTargeting.throws = true;
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const solarSystem = solarSystemOf(view);
+    expect(solarSystem.moon).toBeNull();
+    expect(solarSystem.entries).toEqual(working.solarSystem?.entries);
+    expect(solarSystem.noneText).toBeNull();
+    expect(view.verdict).toEqual(working.verdict);
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.nights).toEqual(working.nights);
+    // The planets still show, so the line still points at the section, now naming only the planets.
+    expect(view.brightMoonText).toBe(
+      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.planets}`,
+    );
+  });
+
+  it("tags a logged Moon as seen", () => {
+    const view = buildTonight(
+      clearNight("2026-10-26", { log: [{ target: "moon", night: "2026-10-01", rating: 5 }] }),
+      "en",
+    );
+    expect(solarSystemOf(view).moon?.seenText).toBe("Seen 1 time – last 1 Oct 2026");
+  });
+
+  it("shows only the whole-disc eyepiece when the detail pick is no stronger, and none for an empty kit", () => {
+    const single = buildTonight(clearNight("2026-10-26", { eyepieces: [EYEPIECES[0]] }), "en");
+    expect(solarSystemOf(single).moon).toMatchObject({
+      wholeDisc: { name: "25 mm Plössl", magnification: 30 },
+      wholeDiscFits: true,
+      detail: null,
+    });
+    // A 6 mm alone shows 0.42°, short of the whole disc: it is named as the widest, with no separate detail pick.
+    const short = buildTonight(
+      clearNight("2026-10-26", {
+        eyepieces: [{ id: "ep-3", name: "6 mm", focalLengthMm: 6, afovDeg: 52, createdAt: "2026-09-01T00:02:00Z" }],
+      }),
+      "en",
+    );
+    expect(solarSystemOf(short).moon).toMatchObject({
+      wholeDisc: { name: "6 mm", magnification: 125 },
+      wholeDiscFits: false,
+      detail: null,
+    });
+    const empty = buildTonight(clearNight("2026-10-26", { eyepieces: [] }), "en");
+    expect(solarSystemOf(empty).moon).toMatchObject({ wholeDisc: null, wholeDiscFits: false, detail: null });
   });
 });

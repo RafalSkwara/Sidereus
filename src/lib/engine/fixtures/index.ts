@@ -3,13 +3,14 @@ import { findMessier } from "@/lib/catalogue";
 import { PLANET_KEYS } from "../planets";
 import type { PlanetKey } from "../planets";
 import type { EquatorialJ2000, Site } from "../types";
+import skyfieldMoonWarsaw20261024 from "./skyfield/moon-warsaw-2026-10-24.json";
 import skyfieldPlanetsWarsaw20261010 from "./skyfield/planets-warsaw-2026-10-10.json";
 import tromso20260621 from "./stellarium/tromso-2026-06-21.json";
 import warsaw20261010 from "./stellarium/warsaw-2026-10-10.json";
 import warsaw20261024 from "./stellarium/warsaw-2026-10-24.json";
 
 /**
- * TEST-ONLY. Typed access to the hand-read Stellarium fixtures and the generated Skyfield reference.
+ * TEST-ONLY. Typed access to the hand-read Stellarium fixtures and the generated Skyfield references.
  *
  * This file lives under the engine directory for locality but is not part of the engine: it is
  * excluded from the purity guard and must never be imported by production code. Fixtures are
@@ -293,6 +294,61 @@ export function parsePlanetReference(raw: unknown, name: string): PlanetReferenc
 
 export const PLANET_REFERENCES: readonly PlanetReference[] = [
   parsePlanetReference(skyfieldPlanetsWarsaw20261010, "planets-warsaw-2026-10-10"),
+];
+
+export interface MoonReferenceSample {
+  /** ISO 8601 with offset. */
+  time: string;
+  /** Topocentric apparent (refracted) altitude. */
+  altitudeDeg: number;
+  azimuthDeg: number;
+  /** Geocentric illuminated fraction, [0, 1]. */
+  illuminatedFraction: number;
+  /** Geocentric Sun–Moon ecliptic-longitude difference, [0, 360). */
+  elongationDeg: number;
+}
+
+export interface MoonReference {
+  name: string;
+  site: FixtureSite;
+  night: string;
+  samples: MoonReferenceSample[];
+}
+
+/** Validates a Skyfield Moon reference (`scripts/moon-reference.py`, see the README). */
+export function parseMoonReference(raw: unknown, name: string): MoonReference {
+  const o = asRecord(raw, name, "reference");
+  const provenance = asRecord(o.provenance, name, "provenance");
+  for (const key of ["tool", "version", "ephemeris", "script"]) {
+    str(provenance, key, name);
+  }
+  const site = asRecord(o.site, name, "site");
+  const samples = samplesOf(o, name, "reference").map((m) => ({
+    time: iso(m, "time", name),
+    altitudeDeg: num(m, "altitudeDeg", name),
+    azimuthDeg: num(m, "azimuthDeg", name),
+    illuminatedFraction: num(m, "illuminatedFraction", name),
+    elongationDeg: num(m, "elongationDeg", name),
+  }));
+  if (samples.length === 0) {
+    fail(name, "samples must not be empty");
+  }
+  return {
+    name,
+    site: {
+      name: str(site, "name", name),
+      latitudeDeg: num(site, "latitudeDeg", name),
+      longitudeDeg: num(site, "longitudeDeg", name),
+      elevationM: num(site, "elevationM", name),
+      timeZone: str(site, "timeZone", name),
+    },
+    night: str(o, "night", name),
+    samples,
+  };
+}
+
+export const MOON_REFERENCES: readonly MoonReference[] = [
+  parseMoonReference(skyfieldMoonWarsaw20261024, "moon-warsaw-2026-10-24"),
 ];
 
 /** Synthetic-test sites shared across the engine tests (public reference points, not anyone's home). */

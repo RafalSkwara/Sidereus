@@ -1,0 +1,117 @@
+{
+  "provenance": {
+    "tool": "Skyfield",
+    "version": "1.55",
+    "ephemeris": "JPL DE421 (de421.bsp)",
+    "refraction": "Skyfield altaz, 10 C, 1010 mbar",
+    "illumination": "almanac.fraction_illuminated(eph, 'moon', t), geocentric",
+    "elongation": "almanac.moon_phase(eph, t): geocentric apparent Moon minus Sun ecliptic longitude of date",
+    "script": "scripts/moon-reference.py",
+    "generatedAt": "2026-10-01",
+    "civilWindow": {
+      "start": "2026-10-24T17:57:40+02:00",
+      "end": "2026-10-25T05:43:30+01:00"
+    }
+  },
+  "site": {
+    "name": "Warsaw centre",
+    "latitudeDeg": 52.23,
+    "longitudeDeg": 21.01,
+    "elevationM": 110,
+    "timeZone": "Europe/Warsaw"
+  },
+  "night": "2026-10-24",
+  "samples": [
+    {
+      "time": "2026-10-24T18:00:00+02:00",
+      "altitudeDeg": 14.3598,
+      "azimuthDeg": 97.0964,
+      "illuminatedFraction": 0.96967,
+      "elongationDeg": 160.1953
+    },
+    {
+      "time": "2026-10-24T19:00:00+02:00",
+      "altitudeDeg": 23.2396,
+      "azimuthDeg": 109.1539,
+      "illuminatedFraction": 0.9712,
+      "elongationDeg": 160.7311
+    },
+    {
+      "time": "2026-10-24T20:00:00+02:00",
+      "altitudeDeg": 31.5022,
+      "azimuthDeg": 122.5718,
+      "illuminatedFraction": 0.9727,
+      "elongationDeg": 161.2675
+    },
+    {
+      "time": "2026-10-24T21:00:00+02:00",
+      "altitudeDeg": 38.5725,
+      "azimuthDeg": 138.075,
+      "illuminatedFraction": 0.97416,
+      "elongationDeg": 161.8047
+    },
+    {
+      "time": "2026-10-24T22:00:00+02:00",
+      "altitudeDeg": 43.7061,
+      "azimuthDeg": 156.1519,
+      "illuminatedFraction": 0.97557,
+      "elongationDeg": 162.3425
+    },
+    {
+      "time": "2026-10-24T23:00:00+02:00",
+      "altitudeDeg": 46.1049,
+      "azimuthDeg": 176.4213,
+      "illuminatedFraction": 0.97695,
+      "elongationDeg": 162.8811
+    },
+    {
+      "time": "2026-10-25T00:00:00+02:00",
+      "altitudeDeg": 45.2949,
+      "azimuthDeg": 197.2169,
+      "illuminatedFraction": 0.97829,
+      "elongationDeg": 163.4203
+    },
+    {
+      "time": "2026-10-25T01:00:00+02:00",
+      "altitudeDeg": 41.4757,
+      "azimuthDeg": 216.4999,
+      "illuminatedFraction": 0.97958,
+      "elongationDeg": 163.9602
+    },
+    {
+      "time": "2026-10-25T02:00:00+02:00",
+      "altitudeDeg": 35.3723,
+      "azimuthDeg": 233.2727,
+      "illuminatedFraction": 0.98084,
+      "elongationDeg": 164.5008
+    },
+    {
+      "time": "2026-10-25T02:00:00+01:00",
+      "altitudeDeg": 27.8008,
+      "azimuthDeg": 247.7081,
+      "illuminatedFraction": 0.98205,
+      "elongationDeg": 165.042
+    },
+    {
+      "time": "2026-10-25T03:00:00+01:00",
+      "altitudeDeg": 19.4302,
+      "azimuthDeg": 260.4768,
+      "illuminatedFraction": 0.98323,
+      "elongationDeg": 165.5839
+    },
+    {
+      "time": "2026-10-25T04:00:00+01:00",
+      "altitudeDeg": 10.7758,
+      "azimuthDeg": 272.2928,
+      "illuminatedFraction": 0.98436,
+      "elongationDeg": 166.1265
+    },
+    {
+      "time": "2026-10-25T05:00:00+01:00",
+      "altitudeDeg": 2.3695,
+      "azimuthDeg": 283.78,
+      "illuminatedFraction": 0.98545,
+      "elongationDeg": 166.6697
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 ---
 // The details of one ranked object: window and best time, eyepiece pair, reason and "Mark observed". Shared by
 // Tonight's cards (ObjectCard) and the all-objects page's expandable rows (ObjectRow).
+import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
 import type { TonightEntry } from "@/lib/tonight/build";
 
@@ -14,41 +15,25 @@ const { entry, logHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.object;
 ---
 
-<dl class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-  <div class="flex gap-2">
-    <dt class="text-muted-foreground">{t.window}</dt>
-    <dd class="font-mono text-heading">
-      {entry.windowStart}–{entry.windowEnd}
-    </dd>
-  </div>
-  <div class="flex gap-2">
-    <dt class="text-muted-foreground">{t.best}</dt>
-    <dd class="font-mono text-heading">
-      {entry.bestTime}, {entry.bestDirection}
-    </dd>
-  </div>
-</dl>
+<TargetDetails
+  windowStart={entry.windowStart}
+  windowEnd={entry.windowEnd}
+  bestTime={entry.bestTime}
+  bestDirection={entry.bestDirection}
+  logHref={logHref}
+  srSuffix={entry.id}
+>
+  {entry.pair?.kind === "pair" && (
+    <p class="mt-2 text-sm text-foreground">
+      {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
+      {t.magnification({ magnification: String(entry.pair.finding.magnification) })} · {t.detailWith}{" "}
+      <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
+      {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
+    </p>
+  )}
+  {entry.pair?.kind === "none-fit" && (
+    <p class="mt-2 text-sm text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
+  )}
 
-{entry.pair?.kind === "pair" && (
-  <p class="mt-2 text-sm text-foreground">
-    {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
-    {t.magnification({ magnification: String(entry.pair.finding.magnification) })} · {t.detailWith}{" "}
-    <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
-    {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
-  </p>
-)}
-{entry.pair?.kind === "none-fit" && (
-  <p class="mt-2 text-sm text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
-)}
-
-<p class="mt-2 text-sm text-foreground">{entry.reason}</p>
-
-<div class="mt-3 border-t border-border pt-3">
-  <a
-    href={logHref}
-    class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
-  >
-    {t.markObserved}
-    <span class="sr-only"> {entry.id}</span>
-  </a>
-</div>
+  <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
+</TargetDetails>

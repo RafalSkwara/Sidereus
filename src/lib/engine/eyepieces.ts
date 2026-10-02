@@ -4,6 +4,7 @@ import {
   FOV_FIT_FRACTION,
   MAX_MAGNIFICATION,
   MAX_MAGNIFICATION_PER_MM,
+  MOON_WHOLE_DISC_FIELD_DEG,
 } from "./parameters";
 
 /**
@@ -140,4 +141,34 @@ export function planetEyepiece<E extends EyepieceOpticsInput>(
   );
   const fallback = maxBy(candidates, (c) => -c.optics.magnification);
   return (detail ?? fallback)?.eyepiece ?? null;
+}
+
+/** The whole-disc Moon eyepiece (`wholeDiscEyepiece`). */
+export interface WholeDiscEyepiece<E extends EyepieceOpticsInput = EyepieceOpticsInput> {
+  eyepiece: E;
+  optics: EyepieceOptics;
+  /** False when no eyepiece's true field reaches `MOON_WHOLE_DISC_FIELD_DEG`: `eyepiece` is then the widest. */
+  fits: boolean;
+}
+
+/**
+ * The eyepiece that frames the whole Moon at the most magnification (M-2 S-02): the highest-magnification one
+ * whose true field is at least `MOON_WHOLE_DISC_FIELD_DEG` (`fits: true`), else the widest-field one
+ * (`fits: false`). `null` for an empty kit; ties go to the earlier eyepiece in `eyepieces` (callers pass
+ * `created_at` order). The detail eyepiece is `planetEyepiece`.
+ */
+export function wholeDiscEyepiece<E extends EyepieceOpticsInput>(
+  telescope: TelescopeOpticsInput,
+  eyepieces: readonly E[],
+): WholeDiscEyepiece<E> | null {
+  const candidates = eyepieces.map((eyepiece) => ({ eyepiece, optics: eyepieceOptics(telescope, eyepiece) }));
+  const fitting = maxBy(
+    candidates.filter((c) => c.optics.trueFovDeg >= MOON_WHOLE_DISC_FIELD_DEG),
+    magnificationOf,
+  );
+  if (fitting !== null) {
+    return { ...fitting, fits: true };
+  }
+  const widest = maxBy(candidates, trueField);
+  return widest === null ? null : { ...widest, fits: false };
 }

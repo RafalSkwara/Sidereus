@@ -1,0 +1,54 @@
+---
+// The details every Tonight target shares (S-01 review F10): the window and best-time list, then the caller's own
+// lines (eyepieces, reason, note) in the default slot, then the "Mark observed" link. Used by ObjectDetails (ranked
+// cards and the all-objects rows), PlanetCard and MoonCard.
+import { getMessages } from "@/i18n";
+
+interface Props {
+  /** Best window, `HH:mm` in the site's time zone. */
+  windowStart: string;
+  windowEnd: string;
+  bestTime: string;
+  /** "SW, 45°" */
+  bestDirection: string;
+  /** The log form for this target, prefilled with tonight's night, site and telescope (FR-016). */
+  logHref: string;
+  /**
+   * How the link names its target for assistive tech, keeping each caller's naming: `srSuffix` appends a visually
+   * hidden " M31" to the visible text (objects), `ariaLabel` replaces the name ("Mark observed: Jupiter").
+   */
+  srSuffix?: string;
+  ariaLabel?: string;
+}
+
+const { windowStart, windowEnd, bestTime, bestDirection, logHref, srSuffix, ariaLabel } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight.object;
+---
+
+<dl class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+  <div class="flex gap-2">
+    <dt class="text-muted-foreground">{t.window}</dt>
+    <dd class="font-mono text-heading">
+      {windowStart}–{windowEnd}
+    </dd>
+  </div>
+  <div class="flex gap-2">
+    <dt class="text-muted-foreground">{t.best}</dt>
+    <dd class="font-mono text-heading">
+      {bestTime}, {bestDirection}
+    </dd>
+  </div>
+</dl>
+
+<slot />
+
+<div class="mt-3 border-t border-border pt-3">
+  <a
+    href={logHref}
+    aria-label={ariaLabel}
+    class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
+  >
+    {t.markObserved}
+    {srSuffix !== undefined && <span class="sr-only"> {srSuffix}</span>}
+  </a>
+</div>

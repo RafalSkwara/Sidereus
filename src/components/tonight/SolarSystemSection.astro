@@ -1,0 +1,39 @@
+---
+// "Solar system tonight" (M-2 S-01, the Moon since S-02): between the verdict card and the deep-sky ranking. It
+// shows whenever the planet window's own weather is go or marginal, so also on a cloudy-at-night no-go or a night
+// without a dark window, where the ranking is absent. The Moon card comes first, outside the labelled planet list.
+import MoonCard from "@/components/tonight/MoonCard.astro";
+import PlanetCard from "@/components/tonight/PlanetCard.astro";
+import { getMessages } from "@/i18n";
+import type { TonightSolarSystem } from "@/lib/tonight/build";
+
+interface Props {
+  solarSystem: TonightSolarSystem;
+  /** The log form for a target by its key ("moon", "jupiter"), prefilled with tonight's night, site and telescope. */
+  logHref: (key: string) => string;
+}
+
+const { solarSystem, logHref } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight.planets;
+---
+
+<section aria-labelledby="solar-system-heading">
+  <h2 id="solar-system-heading" class="mb-1 font-display text-2xl font-semibold text-heading">
+    {t.heading}
+  </h2>
+  <p class="text-sm text-muted-foreground">{solarSystem.windowText}</p>
+  {solarSystem.weatherText && <p class="mt-1 text-sm text-foreground">{solarSystem.weatherText}</p>}
+  {solarSystem.moon && <MoonCard entry={solarSystem.moon} logHref={logHref(solarSystem.moon.key)} />}
+  {solarSystem.entries.length > 0 && (
+    <ol aria-label={t.listLabel} class="mt-4 space-y-4">
+      {solarSystem.entries.map((entry) => (
+        <PlanetCard entry={entry} logHref={logHref(entry.key)} />
+      ))}
+    </ol>
+  )}
+  {solarSystem.noneText && (
+    <p class="mt-4 rounded-2xl border border-border bg-surface p-4 text-sm text-foreground sm:p-5">
+      {solarSystem.noneText}
+    </p>
+  )}
+</section>

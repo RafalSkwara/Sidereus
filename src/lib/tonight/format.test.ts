@@ -55,3 +55,58 @@ describe("noDarknessCauseText", () => {
     );
   });
 });
+
+describe("the Moon's wording (M-2 S-02)", () => {
+  const polish = createFormatter("pl");
+  const english = createFormatter("en");
+  const peak = { time: new Date("2026-10-26T21:53:00Z"), altitudeDeg: 57.6 };
+
+  it("names the phase band and the illumination in whole percent, in each locale", () => {
+    expect(english.moonPhaseText("waxing-gibbous", 0.784)).toBe("Waxing gibbous · 78% lit");
+    expect(english.moonPhaseText("waning-crescent", 0.05)).toBe("Waning crescent · 5% lit");
+    expect(polish.moonPhaseText("waxing-gibbous", 0.784)).toBe("Garbaty przybywający · oświetlony w 78%");
+    expect(polish.moonPhaseText("full", 0.995)).toBe("Pełnia · oświetlony w 100%");
+  });
+
+  it("gives the highest point and timing, with the low wording below the low altitude", () => {
+    expect(english.moonReasonLine({ placement: "high", timing: "night", peak }, "Europe/Warsaw")).toBe(
+      "Highest 58° at 22:53 — best in the middle of the night",
+    );
+    const low = { placement: "low" as const, timing: "evening" as const, peak: { ...peak, altitudeDeg: 22.2 } };
+    expect(english.moonReasonLine(low, "Europe/Warsaw")).toBe(
+      "Highest only 22° at 22:53 — best early in the night; this low, the view may shimmer",
+    );
+    expect(polish.moonReasonLine(low, "Europe/Warsaw")).toBe(
+      "Najwyżej tylko 22° o 22:53 — najlepiej wieczorem; tak nisko obraz może falować",
+    );
+  });
+
+  it("rounds the low wording down, so a peak just under the low line never reads as the line itself", () => {
+    const justUnder = { placement: "low" as const, timing: "evening" as const, peak: { ...peak, altitudeDeg: 29.6 } };
+    expect(english.moonReasonLine(justUnder, "Europe/Warsaw")).toBe(
+      "Highest only 29° at 22:53 — best early in the night; this low, the view may shimmer",
+    );
+    // Above the low line the altitude still rounds to the nearest degree.
+    expect(
+      english.moonReasonLine(
+        { placement: "well", timing: "night", peak: { ...peak, altitudeDeg: 30.6 } },
+        "Europe/Warsaw",
+      ),
+    ).toBe("Highest 31° at 22:53 — best in the middle of the night");
+  });
+
+  it("words the bright-Moon line, pointing only at what the section shows", () => {
+    const line = "Bright Moon (99% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.";
+    expect(english.brightMoonLine(0.986, { pointer: null })).toBe(line);
+    expect(english.brightMoonLine(0.986, { pointer: "both" })).toBe(
+      `${line} The Moon and planets below are better bets tonight.`,
+    );
+    expect(english.brightMoonLine(0.986, { pointer: "moon" })).toBe(`${line} The Moon below is a better bet tonight.`);
+    expect(english.brightMoonLine(0.986, { pointer: "planets" })).toBe(
+      `${line} The planets below are better bets tonight.`,
+    );
+    expect(polish.brightMoonLine(0.986, { pointer: "planets" })).toMatch(
+      /Lepszym wyborem na dziś są planety poniżej\.$/,
+    );
+  });
+});

@@ -15,4 +15,9 @@ describe("targetLabel", () => {
     expect(targetLabel("jupiter", "en")).toEqual({ id: "Jupiter", name: null });
     expect(targetLabel("jupiter", "pl")).toEqual({ id: "Jowisz", name: null });
   });
+
+  it("names the Moon by its localised name alone", () => {
+    expect(targetLabel("moon", "en")).toEqual({ id: "Moon", name: null });
+    expect(targetLabel("moon", "pl")).toEqual({ id: "Księżyc", name: null });
+  });
 });

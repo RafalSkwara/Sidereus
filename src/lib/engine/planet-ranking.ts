@@ -13,7 +13,11 @@ import {
 } from "./parameters";
 import { PLANET_KEYS, isIceGiant, planetFacts, planetTracks } from "./planets";
 import type { PlanetFacts, PlanetKey } from "./planets";
+import { maskedTrack, timingOf } from "./solar-system-window";
+import type { PlanetTiming } from "./solar-system-window";
 import type { DarkWindow, HorizontalPosition, Interval, Site } from "./types";
+
+export type { PlanetTiming } from "./solar-system-window";
 
 /**
  * Which planets are worth a look tonight and in what order (M-2 S-01). Pure and deterministic:
@@ -55,9 +59,6 @@ export interface PlanetScore {
 /** How high the planet gets: low below `PLANET_LOW_ALTITUDE_DEG`, high at `WELL_PLACED_ALTITUDE_DEG` or above. */
 export type PlanetPlacement = "high" | "well" | "low";
 
-/** Which third of the planet window holds the peak. */
-export type PlanetTiming = "evening" | "night" | "morning";
-
 export interface PlanetEntry<E extends EyepieceOpticsInput = EyepieceOpticsInput> {
   key: PlanetKey;
   /** The longest stretch at or above the site's minimum altitude within the planet window (and `visibleIntervals`). */
@@ -91,31 +92,6 @@ function placementOf(peakAltitudeDeg: number): PlanetPlacement {
     return "low";
   }
   return peakAltitudeDeg >= WELL_PLACED_ALTITUDE_DEG ? "high" : "well";
-}
-
-/**
- * Thirds are half-open, [0, ⅓) evening, [⅓, ⅔) night, [⅔, 1] morning, so a peak exactly on a boundary
- * belongs to the later third. Compared in whole milliseconds, so the boundaries are exact.
- */
-function timingOf(peak: Date, window: { start: Date; end: Date }): PlanetTiming {
-  const length = window.end.getTime() - window.start.getTime();
-  const elapsed = peak.getTime() - window.start.getTime();
-  if (3 * elapsed < length) {
-    return "evening";
-  }
-  return 3 * elapsed < 2 * length ? "night" : "morning";
-}
-
-/**
- * `track` with every sample outside `intervals` pushed below any horizon, so `bestWindow` neither counts it nor
- * picks it as the peak. The samples stay on the shared grid.
- */
-function maskedTrack(track: readonly HorizontalPosition[], intervals: readonly Interval[]): HorizontalPosition[] {
-  return track.map((position) => {
-    const t = position.time.getTime();
-    const visible = intervals.some((interval) => interval.start.getTime() <= t && t <= interval.end.getTime());
-    return visible ? position : { ...position, altitudeDeg: Number.NEGATIVE_INFINITY };
-  });
 }
 
 /**

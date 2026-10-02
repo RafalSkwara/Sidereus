@@ -255,3 +255,63 @@ export const MAX_MAGNIFICATION_PER_MM = 2;
 
 /** Candidate (S-01 planning, M-2, 2026-09-30): absolute magnification ceiling for the planet eyepiece. */
 export const MAX_MAGNIFICATION = 250;
+
+// Moon (M-2 S-02) --------------------------------------------------------------------------------
+
+/** The Moon's phase band, named from its Sun–Moon elongation (`MoonPhase`), so waxing and waning differ. */
+export type MoonPhaseBand =
+  | "waxing-crescent"
+  | "first-quarter"
+  | "waxing-gibbous"
+  | "full"
+  | "waning-gibbous"
+  | "last-quarter"
+  | "waning-crescent";
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01): phase bands by elongation, degrees, `fromDeg` inclusive and
+ * `toDeg` exclusive, in order and covering [0, 360) without gaps (0 new, 90 first quarter, 180 full, 270 last
+ * quarter). The quarter and full bands are wide because libration moves the terminator by about half a day, so
+ * the notes they key are hedged rather than exact (research §4).
+ */
+export const MOON_PHASE_BANDS: readonly Readonly<{ band: MoonPhaseBand; fromDeg: number; toDeg: number }>[] = [
+  { band: "waxing-crescent", fromDeg: 0, toDeg: 80 },
+  { band: "first-quarter", fromDeg: 80, toDeg: 110 },
+  { band: "waxing-gibbous", fromDeg: 110, toDeg: 165 },
+  { band: "full", fromDeg: 165, toDeg: 195 },
+  { band: "waning-gibbous", fromDeg: 195, toDeg: 250 },
+  { band: "last-quarter", fromDeg: 250, toDeg: 280 },
+  { band: "waning-crescent", fromDeg: 280, toDeg: 360 },
+];
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01): an eyepiece shows the whole Moon when its true field is at least
+ * this, degrees. The disc spans at most about 0.56°, so this leaves a margin around it.
+ */
+export const MOON_WHOLE_DISC_FIELD_DEG = 0.7;
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01): a Moon whose peak altitude is below this, degrees, is flagged low.
+ * Deliberately above `PLANET_LOW_ALTITUDE_DEG`: the Moon is used at high power along the terminator, where
+ * observing guides (Space.com, Sky at Night) advise 30° or more. Its "well" band is 30° up to
+ * `WELL_PLACED_ALTITUDE_DEG`.
+ */
+export const MOON_LOW_ALTITUDE_DEG = 30;
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01): below this illuminated fraction, at the peak, the Moon is not
+ * listed. A 1-2% sliver deep in bright twilight is not a beginner target; a 2-day crescent (about 4.5%) still is.
+ */
+export const MOON_MIN_ILLUMINATION = 0.03;
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01, user choice): the bright-Moon line (`isBrightMoon`) needs the Moon
+ * at least this lit at the dark-window midpoint, together with `BRIGHT_MOON_MIN_UP_FRACTION`.
+ */
+export const BRIGHT_MOON_MIN_ILLUMINATION = 0.5;
+
+/**
+ * Candidate (S-02 planning, M-2, 2026-10-01, user choice): the bright-Moon line also needs the Moon above the
+ * horizon for more than this share of the dark window.
+ */
+export const BRIGHT_MOON_MIN_UP_FRACTION = 0.5;

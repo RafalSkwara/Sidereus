@@ -397,6 +397,13 @@ export const pl = {
       darkTo: "do",
       noDarkWindow: "Dziś w nocy nie będzie okna ciemności",
       timesIn: (p) => ` · czas w strefie ${p.zone}`,
+      brightMoon: (p) =>
+        `Jasny Księżyc (oświetlony w ${p.percent}%) świeci przez większość ciemnych godzin: słabe galaktyki i mgławice zginą w jego blasku.`,
+      brightMoonPointer: {
+        moon: "Lepszym wyborem na dziś jest Księżyc poniżej.",
+        planets: "Lepszym wyborem na dziś są planety poniżej.",
+        both: "Lepszym wyborem na dziś są Księżyc i planety poniżej.",
+      },
     },
 
     nights: {
@@ -437,13 +444,19 @@ export const pl = {
     // Planet names stay in the nominative: where one follows other words (the "Mark observed" link name), a colon
     // separates them, as in `logged`, so no grammatical case is needed.
     planets: {
-      heading: "Planety dziś w nocy",
+      heading: "Układ Słoneczny dziś w nocy",
+      listLabel: "Planety",
       window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
-      none: "Dziś między zmierzchem a świtem żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
-      noneInClearHours: "W pogodnych godzinach tej nocy żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
+      // With "ani …, ani …" the verb agrees with the nearer subject ("żadna planeta").
+      none: "Dziś między zmierzchem a świtem ani Księżyc, ani żadna planeta nie jest dobrze widoczna.",
+      noneInClearHours: "W pogodnych godzinach tej nocy ani Księżyc, ani żadna planeta nie jest dobrze widoczna.",
       markObserved: (p) => `Zapisz obserwację: ${p.planet}`,
       weather: {
-        line: (p) => `Dla planet: ${p.level} — ${p.reason}`,
+        line: {
+          moon: (p) => `Dla Księżyca: ${p.level} — ${p.reason}`,
+          planets: (p) => `Dla planet: ${p.level} — ${p.reason}`,
+          both: (p) => `Dla Księżyca i planet: ${p.level} — ${p.reason}`,
+        },
         clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
         humidityCap: (p) =>
           `między zmierzchem a świtem niebo dość czyste, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
@@ -489,6 +502,51 @@ export const pl = {
         uranus:
           "Maleńka niebieskozielona tarcza: przy dużym powiększeniu widać, że to nie gwiazda, ale nie widać na niej żadnych szczegółów.",
         neptune: "Maleńka niebieskoszara kropka, trudna do odróżnienia od gwiazdy; samo odnalezienie jej to sukces.",
+      },
+    },
+
+    // Lunar features by their established Polish names (Morze Przesileń, Zatoka Tęczy, Kopernik…); a crater's name
+    // follows "krater"/"kraterów" in the nominative, as Polish observing guides write it.
+    moon: {
+      // Adjectives agreeing with the implied "Księżyc" (masculine), as in "Księżyc garbaty".
+      phase: {
+        "waxing-crescent": "Sierp przybywający",
+        "first-quarter": "Pierwsza kwadra",
+        "waxing-gibbous": "Garbaty przybywający",
+        full: "Pełnia",
+        "waning-gibbous": "Garbaty ubywający",
+        "last-quarter": "Ostatnia kwadra",
+        "waning-crescent": "Sierp ubywający",
+      },
+      lit: (p) => `oświetlony w ${p.percent}%`,
+      phaseLine: (p) => `${p.phase} · ${p.lit}`,
+      wholeDiscWith: "Cała tarcza:",
+      detailWith: "do szczegółów:",
+      partDisc: (p) => `Żaden z Twoich okularów nie mieści całej tarczy; najszerszy (${p.name}) pokaże jej część`,
+      reason: {
+        line: (p) => `Najwyżej ${p.altitude}° o ${p.time} — ${p.timing}`,
+        low: (p) => `Najwyżej tylko ${p.altitude}° o ${p.time} — ${p.timing}; tak nisko obraz może falować`,
+        timing: {
+          evening: "najlepiej wieczorem",
+          night: "najlepiej w środku nocy",
+          morning: "najlepiej przed świtem",
+        },
+      },
+      markObserved: (p) => `Zapisz obserwację: ${p.name}`,
+      note: {
+        "waxing-crescent":
+          "Wąski sierp wieczorem nad zachodnim horyzontem. Przy granicy cienia szukaj Morza Przesileń i łańcucha kraterów od Langrenusa do Petawiusza; ciemna część tarczy może słabo świecić światłem popielatym.",
+        "first-quarter":
+          "Połowa tarczy oświetlona, a rzeźba terenu jest najwyraźniejsza w całym miesiącu: przy granicy cienia szukaj Apeninów i Alp oraz kraterów Platon i Archimedes.",
+        "waxing-gibbous":
+          "Oświetlona jest większość tarczy. Przy granicy cienia szukaj krateru Kopernik, Zatoki Tęczy z łukiem gór na jej brzegu, a pod koniec tej fazy jasnego krateru Arystarch.",
+        full: "Cieni prawie nie ma, więc kratery wyglądają płasko; szukaj za to jasnych promieni wokół kraterów Tycho i Kopernik oraz lśniącego krateru Arystarch. Jeśli blask męczy oko, filtr księżycowy albo małe powiększenie poprawią komfort.",
+        "waning-gibbous":
+          "Wschodzi coraz później wieczorem; granica cienia wyznacza teraz miejsca, gdzie na Księżycu zachodzi Słońce. W tej fazie szukaj przy niej kraterów Langrenus i Petawiusz, a nieco później krateru Teofil.",
+        "last-quarter":
+          "Połowa tarczy oświetlona, najlepiej przed świtem: granica cienia wydobywa kratery Platon i Kopernik oraz długie cienie Apeninów.",
+        "waning-crescent":
+          "Sierp przed świtem, nisko na wschodzie. Przy granicy cienia szukaj jasnego krateru Arystarch i ciemnego krateru Grimaldi; reszta tarczy może słabo świecić światłem popielatym.",
       },
     },
 
@@ -623,6 +681,8 @@ export const pl = {
       neptune: "Neptun",
     },
     planetDetail: "Planeta",
+    moon: "Księżyc",
+    moonDetail: "Naturalny satelita Ziemi",
   },
 
   log: {
@@ -644,7 +704,7 @@ export const pl = {
     addGear: "Przejdź do sprzętu",
     manualTitle: "Dodaj obserwację",
     manualIntro:
-      "Wybierz obiekt Messiera albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+      "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     backToLog: "← Dziennik",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
