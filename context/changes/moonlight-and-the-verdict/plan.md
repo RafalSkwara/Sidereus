@@ -569,20 +569,20 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test` (geometry invariants on real states, moon-disc states, purity, determinism)
-- [x] 2.2 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Unit tests pass: `npm test` (geometry invariants on real states, moon-disc states, purity, determinism) — 31e5aa1
+- [x] 2.2 Type check and lint pass: `npx astro check && npm run lint` — 31e5aa1
 
 ### Phase 3: Sky wording everywhere
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass: `npm test` (headline table EN/PL, i18n parity)
-- [ ] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [ ] 3.3 E2E passes against a local preview (setup below): `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 3.1 Unit tests pass: `npm test` (headline table EN/PL, i18n parity)
+- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 3.3 E2E passes against a local preview (setup below): `BASE_URL=http://localhost:4321 npm run test:e2e`
 
 #### Manual
 
-- [ ] 3.4 Screenshots on the local preview of the sky card, the strip and the landing legend in EN/PL; no "Go" left in user-visible copy
+- [x] 3.4 Screenshots on the local preview of the sky card, the strip and the landing legend in EN/PL; no "Go" left in user-visible copy
 
 ### Phase 4: The Moon card
 

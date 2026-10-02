@@ -47,7 +47,10 @@ test.describe("onboarding in English", () => {
     await onboardingSubmit(page).click();
 
     await expect(page).toHaveURL(/\/tonight$/);
-    await expect(page.locator("#verdict-heading > span").first()).toHaveText(en.verdict.level.go);
+    // The fixture's all-clear sky: the "Clear" headline, by its catalogue key and its text.
+    const headline = page.locator("#verdict-heading [data-sky-headline]");
+    await expect(headline).toHaveAttribute("data-sky-headline", "verdict.level.go");
+    await expect(headline).toHaveText(en.verdict.level.go);
     const ranking = page.locator('section[aria-labelledby="ranking-heading"]');
     await expect(ranking.locator("ol > li").first()).toBeVisible();
     await expect(ranking.getByText(/25 mm/).first()).toBeVisible();

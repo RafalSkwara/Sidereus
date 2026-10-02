@@ -32,7 +32,7 @@ import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecor
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
-import { createFormatter, type ForecastStatus, type ShownSolarTargets } from "./format";
+import { createFormatter, type ForecastStatus, type ShownSolarTargets, type SkyHeadline } from "./format";
 
 /**
  * Composes the Tonight view: the stored gear, the forecast and `now` in, a view model the page
@@ -237,9 +237,11 @@ export type TonightExplanation =
  * One night of the seven-night strip (FR-011), worded for the page. Nights 1-3 carry the verdict,
  * nights 4-7 only a cloud outlook, never a level (invariant 5).
  *
- * - `reasonText` is `verdictReasonText(verdict)`, so a no-weather-data marginal is told apart from a
- *   forecast one; `null` on a no-darkness night, where `darkText` already says so (the card's
- *   wording names "tonight", which would misread on nights 2-3).
+ * - `headline` is `skyHeadline(verdict)`, the verdict card's own words for that night; `level` only
+ *   picks the tone.
+ * - `reasonText` is `verdictReasonText(verdict)`; `null` on a no-darkness night, where `headline` and
+ *   `darkText` already say so (the card's reason wording names "tonight", which would misread on
+ *   nights 2-3).
  * - `cloudText` is `null` on a night without a dark window: there is nothing to judge the cloud
  *   against.
  */
@@ -253,7 +255,8 @@ export type TonightNight = {
   /** "Moon 62% · 3 h 10 min moon-free" */
   moonText: string;
 } & (
-  { kind: "verdict"; level: VerdictLevel; reasonText: string | null } | { kind: "outlook"; cloudText: string | null }
+  | { kind: "verdict"; level: VerdictLevel; headline: SkyHeadline; reasonText: string | null }
+  | { kind: "outlook"; cloudText: string | null }
 );
 
 export interface TonightView {
@@ -268,6 +271,8 @@ export interface TonightView {
   dateLabel: string;
   timeZone: string;
   verdict: Verdict;
+  /** The sky headline from the verdict's level and reason: "Clear", "No forecast", "No dark window", … */
+  headline: SkyHeadline;
   verdictText: string;
   /** Formatted in the site's time zone. */
   darkWindow: TonightDarkWindow;
@@ -352,6 +357,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     planetWindowText,
     reasonLine,
     seenLine,
+    skyHeadline,
     verdictReasonText,
     washedOutLine,
   } = createFormatter(locale);
@@ -384,7 +390,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     };
     if (night.kind === "verdict") {
       const reasonText = night.verdict.reason.kind === "no-darkness" ? null : verdictReasonText(night.verdict);
-      return { ...base, kind: "verdict", level: night.verdict.level, reasonText };
+      return { ...base, kind: "verdict", level: night.verdict.level, headline: skyHeadline(night.verdict), reasonText };
     }
     return {
       ...base,
@@ -601,6 +607,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     dateLabel: formatNightDate(date),
     timeZone,
     verdict: tonight,
+    headline: skyHeadline(tonight),
     verdictText: verdictReasonText(tonight),
     darkWindow:
       window.kind === "window"

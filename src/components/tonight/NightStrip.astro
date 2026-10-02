@@ -1,7 +1,8 @@
 ---
 // FR-011: the next seven nights at the Tonight site, from tonight (the verdict card's night) onward. Nights 1-3
-// carry the verdict; nights 4-7 only the dark window, the moon and a cloud outlook, in neutral tokens and never a
-// verdict level or tone (invariant 5). One row per night on a phone; a three-column grid on wider screens.
+// carry the verdict, worded by its sky headline; nights 4-7 only the dark window, the moon and a cloud outlook, in
+// neutral tokens and never a headline or tone (invariant 5). One row per night on a phone; a three-column grid on
+// wider screens.
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
 import type { TonightNight } from "@/lib/tonight/build";
@@ -49,12 +50,15 @@ const groupLabel = "px-4 pb-1 text-xs font-semibold tracking-[0.18em] uppercase 
               <span class:list={[darkCell]}>{night.darkText}</span>
               <div class:list={[mainCell]}>
                 <p>
-                  <span class="inline-flex items-center gap-2 font-semibold text-heading">
+                  <span
+                    class="inline-flex items-center gap-2 font-semibold text-heading"
+                    data-sky-headline={night.headline.key}
+                  >
                     <span
                       class:list={["size-2 shrink-0 rounded-full", VERDICT_TONES[night.level].dot]}
                       aria-hidden="true"
                     ></span>
-                    {m.verdict.level[night.level]}
+                    {night.headline.text}
                   </span>
                   {night.reasonText && <span class="text-muted-foreground"> — {night.reasonText}</span>}
                 </p>

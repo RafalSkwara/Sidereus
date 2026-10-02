@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { DarkWindow } from "@/lib/engine";
+import { translateKey } from "@/i18n";
+import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
+import type { DarkWindow, Verdict } from "@/lib/engine";
 
-import { createFormatter } from "./format";
+import { createFormatter, type SkyHeadlineKey } from "./format";
 
 const { compassPoint, darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } =
   createFormatter("en");
@@ -108,5 +111,96 @@ describe("the Moon's wording (M-2 S-02)", () => {
     expect(polish.brightMoonLine(0.986, { pointer: "planets" })).toMatch(
       /Lepszym wyborem na dziś są planety poniżej\.$/,
     );
+  });
+});
+
+describe("the sky headline (moonlight-and-the-verdict)", () => {
+  const english = createFormatter("en");
+  const polish = createFormatter("pl");
+
+  // One row per line of the plan's headline table, plus a cloudy reason with no forecast hour in the dark window.
+  const rows: [string, Verdict, SkyHeadlineKey, string, string][] = [
+    [
+      "go",
+      { level: "go", reason: { kind: "clear-run", runHours: 3, cloudPct: 5 } },
+      "verdict.level.go",
+      "Clear",
+      "Pogodnie",
+    ],
+    [
+      "marginal (cloud)",
+      { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } },
+      "verdict.level.marginal",
+      "Partly clear",
+      "Częściowo pogodnie",
+    ],
+    [
+      "humidity cap",
+      { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } },
+      "verdict.sky.humidityCap",
+      "Clear, but damp",
+      "Pogodnie, ale wilgotno",
+    ],
+    [
+      "fallback cap",
+      { level: "marginal", reason: { kind: "fallback-cap", runHours: 3, cloudPct: 5 } },
+      "verdict.sky.fallbackCap",
+      "Clear (old forecast)",
+      "Pogodnie (stara prognoza)",
+    ],
+    [
+      "no weather data",
+      { level: "marginal", reason: { kind: "no-weather-data" } },
+      "verdict.sky.noForecast",
+      "No forecast",
+      "Brak prognozy",
+    ],
+    [
+      "no-go (cloud)",
+      { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: 80 } },
+      "verdict.level.no-go",
+      "Cloudy",
+      "Pochmurno",
+    ],
+    [
+      "no-go without a forecast hour in the dark window",
+      { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: null } },
+      "verdict.sky.noForecast",
+      "No forecast",
+      "Brak prognozy",
+    ],
+    [
+      "no-go (no darkness)",
+      { level: "no-go", reason: { kind: "no-darkness" } },
+      "tonight.card.noDarkWindow",
+      "No dark window",
+      "Brak ciemnej nocy",
+    ],
+  ];
+
+  it.each(rows)("words a %s night in English and Polish", (_label, verdict, key, englishText, polishText) => {
+    expect(english.skyHeadline(verdict)).toEqual({ key, text: englishText });
+    expect(polish.skyHeadline(verdict)).toEqual({ key, text: polishText });
+    // The key names the catalogue entry the text comes from.
+    expect(translateKey(en, key, "errors.generic")).toBe(englishText);
+    expect(translateKey(pl, key, "errors.generic")).toBe(polishText);
+  });
+
+  it("names the next clearer night by its short date and its headline in lowercase", () => {
+    const marginal: Verdict = { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } };
+    const next = { kind: "found" as const, date: "2026-10-09", verdict: marginal };
+    expect(english.nextNightText(next)).toBe("Next clearer night: Fri 9 Oct (partly clear)");
+    expect(polish.nextNightText(next)).toBe("Następna pogodniejsza noc: pt., 9 paź (częściowo pogodnie)");
+    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
+    expect(english.nextNightText({ ...next, verdict: damp })).toBe("Next clearer night: Fri 9 Oct (clear, but damp)");
+  });
+
+  it("leads the planet weather line with the headline words", () => {
+    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
+    expect(english.planetWeatherText(damp, null, "planets")).toBe(
+      "For planets: clear, but damp — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
+    );
+    const none: Verdict = { level: "marginal", reason: { kind: "no-weather-data" } };
+    expect(polish.planetWeatherText(none, null, "moon")).toBe("Dla Księżyca: brak prognozy — brak danych pogodowych");
   });
 });

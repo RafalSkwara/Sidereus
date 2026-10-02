@@ -217,6 +217,7 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict.level).toBe("no-go");
+    expect(view.headline).toEqual({ key: "verdict.level.no-go", text: "Cloudy" });
     expect(view.verdictText).toBe("too cloudy: the clearest dark hour has 100% cloud");
     expect(view.ranking).toBeNull();
   });
@@ -234,6 +235,8 @@ describe("buildTonight", () => {
     );
     expect(view.darkWindow).toEqual({ kind: "none" });
     expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
+    // Never "Cloudy" on a night that has no dark window to be cloudy in.
+    expect(view.headline).toEqual({ key: "tonight.card.noDarkWindow", text: "No dark window" });
     expect(view.ranking).toBeNull();
   });
 
@@ -243,6 +246,8 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+    // Never "Partly clear" without a forecast.
+    expect(view.headline).toEqual({ key: "verdict.sky.noForecast", text: "No forecast" });
     expect(view.verdictText).toBe("no weather data");
     expect(view.ranking?.entries.length).toBeGreaterThan(0);
   });
@@ -287,7 +292,7 @@ describe("buildTonight", () => {
     expect(view.ranking).toBeNull();
     expect(view.explanation?.kind).toBe("weather-no-go");
     if (view.explanation?.kind === "weather-no-go") {
-      expect(view.explanation.nextText).toMatch(/^Next night worth a look: Monday, 12 October 2026 — go, /);
+      expect(view.explanation.nextText).toBe("Next clearer night: Mon 12 Oct (clear)");
     }
   });
 
@@ -346,6 +351,7 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict).toMatchObject({ level: "marginal", reason: { kind: "fallback-cap", cloudPct: 5 } });
+    expect(view.headline).toEqual({ key: "verdict.sky.fallbackCap", text: "Clear (old forecast)" });
     expect(view.verdictText).toMatch(/^the last saved forecast showed \d+ h in a row with at most 5% cloud/);
     expect(view.explanation).toBeNull();
     expect(rankingOf(view).entries.length).toBeGreaterThan(0);
@@ -474,6 +480,7 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     ]);
     for (const night of view.nights.slice(3)) {
       expect(night).not.toHaveProperty("level");
+      expect(night).not.toHaveProperty("headline");
       expect(night).not.toHaveProperty("reasonText");
       expect(outlookNight(night).cloudText).toBe("Cloud ~50%");
     }
@@ -493,6 +500,7 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     const first = verdictNight(view.nights[0]);
     expect(first.date).toBe(view.date);
     expect(first.level).toBe(view.verdict.level);
+    expect(first.headline).toEqual(view.headline);
     expect(first.reasonText).toBe(view.verdictText);
     expect(view.darkWindow.kind).toBe("window");
     if (view.darkWindow.kind === "window") {
@@ -504,7 +512,11 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     // The series ends at 11:00 UTC on 11 Oct: after night 1's dark window, before night 2's.
     const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 36, () => 5)));
     expect(verdictNight(view.nights[0]).level).toBe("go");
-    expect(verdictNight(view.nights[1])).toMatchObject({ level: "marginal", reasonText: "no weather data" });
+    expect(verdictNight(view.nights[1])).toMatchObject({
+      level: "marginal",
+      headline: { key: "verdict.sky.noForecast", text: "No forecast" },
+      reasonText: "no weather data",
+    });
   });
 
   it("reads nights 4-7 as having no cloud outlook yet when the forecast covers only nights 1-3", () => {
@@ -562,7 +574,8 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     for (const night of view.nights.slice(0, 3)) {
       expect(verdictNight(night)).toMatchObject({
         level: "no-go",
-        // The dark-window column already says "No darkness"; the card's "…tonight" wording would misread here.
+        headline: { key: "tonight.card.noDarkWindow", text: "No dark window" },
+        // The headline already says it; the card's "…tonight" reason wording would misread on nights 2-3.
         reasonText: null,
       });
     }
@@ -651,7 +664,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     ];
     const [evening, morning] = clear.map((interval) => `${hhmm(interval.start)}–${hhmm(interval.end)}`);
     // Only planets show in these clear hours (the Moon is not up then), so the line names only them.
-    expect(planets.weatherText).toBe(`For planets: marginal — clear ${evening} and ${morning}`);
+    expect(planets.weatherText).toBe(`For planets: partly clear — clear ${evening} and ${morning}`);
 
     expect(planets.entries.length).toBeGreaterThan(0);
     for (const entry of planets.entries) {
@@ -675,13 +688,13 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       overlapsDark(start) || start.getTime() >= dark.end.getTime() ? 100 : 5,
     );
     const planets = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "en"));
-    expect(planets.weatherText).toMatch(/^For the Moon and planets: marginal — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For the Moon and planets: partly clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries).toEqual([]);
     expect(planets.noneText).toBe(en.tonight.planets.noneInClearHours);
 
     const polish = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "pl"));
     expect(polish.weatherText).toMatch(
-      /^Dla Księżyca i planet: na granicy — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/,
+      /^Dla Księżyca i planet: częściowo pogodnie — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/,
     );
     expect(polish.noneText).toBe(pl.tonight.planets.noneInClearHours);
   });
@@ -710,7 +723,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.verdict.level).toBe("go");
     const planets = planetsOf(view);
     expect(planets.weatherText).toBe(
-      "For planets: marginal — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
+      "For planets: clear, but damp — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
     );
     // On a go night the planets are ranked over the whole planet window, as before.
     expect(planets.entries.map((entry) => entry.key)).toEqual(
@@ -744,7 +757,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.ranking).toBeNull();
     const planets = planetsOf(view);
     // Every hour of the planet window is clear, so the clear hours are the whole window.
-    expect(planets.weatherText).toMatch(/^For the Moon and planets: go — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For the Moon and planets: clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries.length).toBeGreaterThan(0);
   });
 

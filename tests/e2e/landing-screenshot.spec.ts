@@ -71,7 +71,10 @@ test.describe("landing screenshot", () => {
 
     await expect(page).toHaveURL(/\/tonight$/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-    await expect(page.locator("#verdict-heading > span").first()).toHaveText(en.verdict.level.go);
+    // The fixture's all-clear sky: the "Clear" headline, by its catalogue key and its text.
+    const headline = page.locator("#verdict-heading [data-sky-headline]");
+    await expect(headline).toHaveAttribute("data-sky-headline", "verdict.level.go");
+    await expect(headline).toHaveText(en.verdict.level.go);
     await expect(page.locator('section[aria-labelledby="ranking-heading"] ol > li').first()).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
 

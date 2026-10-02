@@ -65,15 +65,36 @@ export const en = {
     },
   },
 
+  /**
+   * The sky headline (moonlight-and-the-verdict): what the forecast checks, the sky over the dark window, never a
+   * judgement of the whole night. `skyHeadline` in `src/lib/tonight/format.ts` picks one from the level and reason.
+   */
   verdict: {
-    level: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
+    /** The cloud words, by level: a clear run, a shorter or cloudier run, or too cloudy. */
+    level: { go: "Clear", marginal: "Partly clear", "no-go": "Cloudy" },
+    /** Headlines for a reason that says more than its level. A no-darkness night uses `tonight.card.noDarkWindow`. */
+    sky: {
+      humidityCap: "Clear, but damp",
+      fallbackCap: "Clear (old forecast)",
+      noForecast: "No forecast",
+    },
+    /** Every headline in lowercase, for mid-sentence use ("Next clearer night: Fri 9 Oct (partly clear)"). */
+    inline: {
+      go: "clear",
+      marginal: "partly clear",
+      "no-go": "cloudy",
+      humidityCap: "clear, but damp",
+      fallbackCap: "clear, from an old forecast",
+      noForecast: "no forecast",
+      noDarkness: "no dark window",
+    },
   },
 
   landing: {
     kicker: "Messier 1 – 110 · your sky, your kit",
     tagline: "Is tonight worth setting up for?",
     lead: "A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces you already own.",
-    verdictsLabel: "Night verdicts",
+    verdictsLabel: "Sky forecasts",
     howItWorks: "How it works",
     steps: {
       where: "Tell us where you observe",
@@ -84,7 +105,7 @@ export const en = {
     signIn: "Sign in",
     openTonight: "Open Tonight",
     screenshotAlt:
-      "Sidereus Tonight view: a Go verdict with the night's dark window, then the ranked Messier objects, each with where to look and which eyepiece to use.",
+      "Sidereus Tonight view: a clear sky tonight, with the night's dark window, then the ranked Messier objects, each with where to look and which eyepiece to use.",
     footerPrefix: "Named after Galileo's",
     footerWork: "Sidereus Nuncius",
     footerSuffix: ", 1610.",
@@ -379,10 +400,11 @@ export const en = {
     rankingFor: (p: { telescope: string }) => `For your ${p.telescope}`,
 
     card: {
-      kicker: "Tonight's verdict",
+      kicker: "Sky tonight",
       darkFrom: "Dark from",
       darkTo: "to",
-      noDarkWindow: "No dark window tonight",
+      /** Also the sky headline of a no-darkness night, on the card and on any night of the strip. */
+      noDarkWindow: "No dark window",
       timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
       /**
        * M-2 S-02: on a go or marginal night with a dark window, when the Moon is at least half lit and up for most
@@ -456,11 +478,11 @@ export const en = {
        * planet verdict whose level differs from the card's.
        */
       weather: {
-        /** Keyed by what the section shows, so the line names only those targets. */
+        /** Keyed by what the section shows, so the line names only those targets; `sky` is `verdict.inline`. */
         line: {
-          moon: (p: { level: string; reason: string }) => `For the Moon: ${p.level} — ${p.reason}`,
-          planets: (p: { level: string; reason: string }) => `For planets: ${p.level} — ${p.reason}`,
-          both: (p: { level: string; reason: string }) => `For the Moon and planets: ${p.level} — ${p.reason}`,
+          moon: (p: { sky: string; reason: string }) => `For the Moon: ${p.sky} — ${p.reason}`,
+          planets: (p: { sky: string; reason: string }) => `For planets: ${p.sky} — ${p.reason}`,
+          both: (p: { sky: string; reason: string }) => `For the Moon and planets: ${p.sky} — ${p.reason}`,
         },
         clearRun: (p: { hours: string; cloud: string }) =>
           `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
@@ -603,7 +625,7 @@ export const en = {
       },
     },
 
-    /** Lowercase phrases the verdict card puts after the level ("marginal — no weather data"). */
+    /** Lowercase phrases the verdict card puts after the headline ("No forecast — no weather data"). */
     verdictReason: {
       clearRun: (p: { hours: string; cloud: string }) =>
         `${p.hours} h in a row with at most ${p.cloud}% cloud in the dark window`,
@@ -673,10 +695,8 @@ export const en = {
     },
 
     nextNight: {
-      found: (p: { date: string; level: string; reason: string }) =>
-        `Next night worth a look: ${p.date} — ${p.level}, ${p.reason}`,
-      /** Lowercase, mid-sentence: not the verdict card's capitalised labels. */
-      level: { go: "go", marginal: "marginal", "no-go": "no-go" },
+      /** `sky` is the night's headline in lowercase (`verdict.inline`); the night is never a no-go. */
+      found: (p: { date: string; sky: string }) => `Next clearer night: ${p.date} (${p.sky})`,
       beyondForecast: "The forecast doesn't reach past tonight, so there is no next night to suggest yet",
       noneThrough: (p: { date: string }) => `No clear night in the forecast through ${p.date}`,
     },

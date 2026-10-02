@@ -228,12 +228,24 @@ not yet observing, building toward their own first sessions.
   > forecast confidence", "site-local time serves a case the persona doesn't
   > have." Resolution: stands. The verdict is the product's core answer, and
   > times must be in the timezone the user is standing in.
+  > Resolution (2026-10-02, moonlight-and-the-verdict): the verdict is a sky
+  > forecast and is worded as one. Its computation and thresholds are
+  > unchanged; go / marginal / no-go stay as its internal levels, but the
+  > headline names what the forecast checks, chosen from the level and the
+  > reason: Clear (go), Partly clear (marginal on cloud), Clear, but damp
+  > (humidity cap), Clear (old forecast) (saved-copy cap), No forecast (no
+  > weather data), Cloudy (no-go on cloud), No dark window (no darkness). The
+  > Moon is not part of it: Tonight shows it in its own card.
 - FR-011: User can see the next 7 nights at a selected site. Nights 1-3 carry a go / marginal / no-go verdict. Nights 4-7 show moon and darkness data, which are exactly predictable, plus a cloud outlook with no verdict. Priority: must-have
   > Socrates: Counter-argument accepted: "cloud forecasts past ~3 days are close
   > to noise, and presenting night 6 with the same weight as tonight dresses up
   > a coin-flip as information." Resolution: FR amended - the verdict is
   > withheld where the data can't support it, while the astronomy half of the
   > forecast stays fully useful for planning.
+  > Resolution (2026-10-02, moonlight-and-the-verdict): nights 1-3 carry the
+  > same sky headline as the verdict card (FR-010), and the next-night line of
+  > FR-020 names it too ("Next clearer night: Fri 9 Oct (partly clear)").
+  > Nights 4-7 still carry none.
 - FR-012: User can switch the selected site and see the same 7-night view for it. Priority: must-have
   > Socrates: Counter-arguments considered: "the real question is a comparison,
   > not a switch", "it serves the secondary persona." Resolution: stands. It is
@@ -398,6 +410,14 @@ each is best placed, and which two of the user's own eyepieces to use - one to
 find it, one to look closely. Objects already seen are pushed down gently rather
 than removed, and an object the user tried and could not make out is not pushed
 down at all.
+
+> Resolution (2026-10-02, moonlight-and-the-verdict): the night judgment is
+> the sky alone - cloud and humidity over the dark window - and every surface
+> words it as the sky ("Clear", "Partly clear", "Cloudy" and the reason-specific
+> headlines of FR-010), never as "go". Whether a night is worth setting up for
+> also depends on the Moon and on what the user wants to see; Tonight shows the
+> Moon beside the sky verdict and judges moonlight per object in the ranking,
+> not inside the verdict.
 
 The user encounters both on one screen. The verdict answers whether to go out;
 the ranking answers what to do once outside, with each entry carrying the single

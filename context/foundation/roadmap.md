@@ -189,6 +189,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Which verdict is judged? The forecast changes through the evening, so Sidereus has to record the verdict it showed (per user, site and night) when Tonight was viewed. Candidate: store the last verdict shown before the dark window started. — Owner: user. Block: no.
   - Where is the question asked? Candidate: on Tonight the day after a viewed night ("How was last night at Home?"), and next to each observing night in the log; answering is always optional. — Owner: user. Block: no.
   - What counts as a match? Candidate: go ↔ clear, marginal ↔ partly, no-go ↔ clouded out; anything else is a miss, with the direction (too optimistic / too pessimistic) kept because the PRD treats a false "go" as worse than a false "no-go". — Owner: user. Block: no.
+    > Note (2026-10-02, moonlight-and-the-verdict): Tonight now words the verdict as the sky ("Clear", "Partly clear", "Cloudy", plus "Clear, but damp", "Clear (old forecast)", "No forecast" and "No dark window"), so a match compares the user's answer against the sky words that were shown, not against go / marginal / no-go.
 - **Risk:** The only slice that yields real evidence without a telescope — anyone can look up at the sky — so it is the input the open calibration work (#21) has been missing. Adds a per-user table, so it needs RLS and an isolation-suite entry.
 - **Status:** ready
 
