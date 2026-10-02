@@ -16,6 +16,8 @@ export {
   moonState,
   moonTrack,
 } from "./moon";
+export { moonDiscState, moonDiscStates } from "./moon-disc";
+export type { MoonDiscState } from "@/lib/moon-disc/state";
 export { effectiveSurfaceBrightness, moonBrighteningMag, magToNL, nlToMag, skyBrightnessNL } from "./moonlight";
 export type { SkyBrightness, SkyBrightnessInput } from "./moonlight";
 export type { MoonState } from "./moon";

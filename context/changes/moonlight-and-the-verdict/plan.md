@@ -557,20 +557,20 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test` (moonlight model, score, ranking, build, determinism, purity)
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm test` (moonlight model, score, ranking, build, determinism, purity) — 7e4327a
+- [x] 1.2 Type check passes: `npx astro check` — 7e4327a
+- [x] 1.3 Lint passes: `npm run lint` — 7e4327a
 
 #### Manual
 
-- [x] 1.4 Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; local-preview screenshots of tonight's real-clock state, with bright-Moon states covered by the fixed-date build tests (post-merge bright-Moon screenshots after 2026-10-22)
+- [x] 1.4 Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; local-preview screenshots of tonight's real-clock state, with bright-Moon states covered by the fixed-date build tests (post-merge bright-Moon screenshots after 2026-10-22) — 7e4327a
 
 ### Phase 2: Moon disc geometry
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test` (geometry invariants on real states, moon-disc states, purity, determinism)
-- [ ] 2.2 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Unit tests pass: `npm test` (geometry invariants on real states, moon-disc states, purity, determinism)
+- [x] 2.2 Type check and lint pass: `npx astro check && npm run lint`
 
 ### Phase 3: Sky wording everywhere
 

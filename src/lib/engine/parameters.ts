@@ -396,3 +396,10 @@ export const WASHED_OUT_TYPES: readonly MessierType[] = [
   "supernova-remnant",
   "cluster-with-nebula",
 ];
+
+/**
+ * Candidate (moonlight-and-the-verdict planning, 2026-10-02): minutes between the Moon-disc states the Moon card's
+ * time slider steps through. The elongation changes by about 0.1° in ten minutes, so the terminator moves by well
+ * under a pixel on the card's disc between steps.
+ */
+export const MOON_DISC_STEP_MINUTES = 10;
