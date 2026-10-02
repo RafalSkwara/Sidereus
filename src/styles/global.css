@@ -40,6 +40,12 @@
 
   --star: rgb(255 255 255 / 0.5);
   --star-accent: rgb(253 230 138 / 0.3);
+
+  /* The Moon disc (moonlight-and-the-verdict): a bright lit part on a dark disc. */
+  --moon-lit: #fbf2dc;
+  --moon-dark: #141b30;
+  --moon-mare: #9ba4ba;
+  --moon-limb: #27304a;
 }
 
 [data-theme="light"] {
@@ -64,6 +70,12 @@
 
   --star: rgb(22 27 43 / 0.16);
   --star-accent: rgb(143 84 10 / 0.14);
+
+  /* The Moon looks the same as in the dark theme (user choice): the lit part is always the bright one. */
+  --moon-lit: #fbf2dc;
+  --moon-dark: #141b30;
+  --moon-mare: #9ba4ba;
+  --moon-limb: #27304a;
 }
 
 /*
@@ -94,6 +106,11 @@
 
   --star: rgb(255 0 0 / 0.35);
   --star-accent: rgb(255 0 0 / 0.2);
+
+  --moon-lit: #ff0000;
+  --moon-dark: #170000;
+  --moon-mare: #bb0000;
+  --moon-limb: #3d0000;
 }
 
 /*
@@ -288,6 +305,10 @@
   --color-no-go-surface: var(--no-go-surface);
   --color-no-go-border: var(--no-go-border);
   --color-star: var(--star);
+  --color-moon-lit: var(--moon-lit);
+  --color-moon-dark: var(--moon-dark);
+  --color-moon-mare: var(--moon-mare);
+  --color-moon-limb: var(--moon-limb);
   --color-star-accent: var(--star-accent);
 }
 

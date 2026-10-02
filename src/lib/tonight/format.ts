@@ -1,4 +1,4 @@
-import { getMessages, plural } from "@/i18n";
+import { getMessages, plural, type MessageKey, type Messages } from "@/i18n";
 import type {
   CloudOutlook,
   DarkWindow,
@@ -82,6 +82,61 @@ export interface PlanetFactsText {
 /** The first night after tonight with a dark window, as `darkWindowReturn` finds it, or null. */
 export type DarkReturn = { date: string; window: Interval } | null;
 
+/**
+ * When the Moon is up in the Moon card's window (moonlight-and-the-verdict), from a track over it: never, at every
+ * sample, or for part of it. Each span runs from the first sample with the Moon up to the first sample with it down
+ * again, or to the window's end; `upAtStart` is whether the first span starts at the window's start.
+ */
+export type MoonUp = { kind: "never" } | { kind: "all" } | { kind: "part"; spans: Interval[]; upAtStart: boolean };
+
+/**
+ * Which sky headline a verdict gets (moonlight-and-the-verdict): one per row of the plan's headline table. It keys
+ * `verdict.inline`, the headlines' lowercase forms.
+ */
+type SkyHeadlineId = keyof Messages["verdict"]["inline"];
+
+/** The catalogue key of each sky headline; a no-darkness night reuses the card's "No dark window". */
+export const SKY_HEADLINE_KEYS = {
+  go: "verdict.level.go",
+  marginal: "verdict.level.marginal",
+  "no-go": "verdict.level.no-go",
+  humidityCap: "verdict.sky.humidityCap",
+  fallbackCap: "verdict.sky.fallbackCap",
+  noForecast: "verdict.sky.noForecast",
+  noDarkness: "tonight.card.noDarkWindow",
+} as const satisfies Record<SkyHeadlineId, MessageKey>;
+
+export type SkyHeadlineKey = (typeof SKY_HEADLINE_KEYS)[SkyHeadlineId];
+
+/** A verdict's headline: its catalogue key (for tests and `data-sky-headline`) and its text in the locale. */
+export interface SkyHeadline {
+  key: SkyHeadlineKey;
+  text: string;
+}
+
+/**
+ * The headline row for a verdict, from its level and reason; the thresholds behind them are the verdict's own. A
+ * cloudy reason without a single forecast hour in the dark window (`minCloudPct` null) is no forecast, not cloud:
+ * nothing says the sky is overcast, only that no hour was forecast.
+ */
+function skyHeadlineId(verdict: Verdict): SkyHeadlineId {
+  const reason = verdict.reason;
+  switch (reason.kind) {
+    case "clear-run":
+      return verdict.level === "go" ? "go" : "marginal";
+    case "humidity-cap":
+      return "humidityCap";
+    case "fallback-cap":
+      return "fallbackCap";
+    case "no-weather-data":
+      return "noForecast";
+    case "cloudy":
+      return reason.minCloudPct === null ? "noForecast" : "no-go";
+    case "no-darkness":
+      return "noDarkness";
+  }
+}
+
 /** The BCP 47 tag used for dates, times and numbers. */
 export function formatLocaleTag(locale: Locale): string {
   return locale === "pl" ? "pl-PL" : "en-GB";
@@ -91,9 +146,6 @@ export function formatLocaleTag(locale: Locale): string {
  * The Tonight formatters for one locale. Create one per request and reuse it: the `Intl` formatters
  * are built once here.
  */
-/** Which solar-system targets the section shows, so copy names only those (the Moon, the planets, or both). */
-export type ShownSolarTargets = "moon" | "planets" | "both";
-
 export function createFormatter(locale: Locale) {
   const m = getMessages(locale);
   const tag = formatLocaleTag(locale);
@@ -196,7 +248,7 @@ export function createFormatter(locale: Locale) {
           duration: formatDuration(entry.score.window.end.getTime() - entry.score.window.start.getTime()),
         });
       case "moon":
-        return reason.moon[position]({ percent: num(Math.round(entry.score.components.moon * 100)) });
+        return reason.moon[position];
       case "brightness":
         return reason.brightness[position]({ aperture: num(context.apertureMm) });
       case "sky":
@@ -216,8 +268,32 @@ export function createFormatter(locale: Locale) {
   }
 
   /**
-   * Why the verdict came out as it did, as a lowercase phrase the page puts after the level
-   * ("marginal — no weather data").
+   * The sky headline every surface shows for a verdict (moonlight-and-the-verdict): the verdict card, the strip,
+   * the all-objects page. "Clear", "Partly clear", "Clear, but damp", "Clear (old forecast)", "No forecast",
+   * "Cloudy" or "No dark window".
+   */
+  function skyHeadline(verdict: Verdict): SkyHeadline {
+    const id = skyHeadlineId(verdict);
+    const text: Record<SkyHeadlineId, string> = {
+      go: m.verdict.level.go,
+      marginal: m.verdict.level.marginal,
+      "no-go": m.verdict.level["no-go"],
+      humidityCap: m.verdict.sky.humidityCap,
+      fallbackCap: m.verdict.sky.fallbackCap,
+      noForecast: m.verdict.sky.noForecast,
+      noDarkness: m.tonight.card.noDarkWindow,
+    };
+    return { key: SKY_HEADLINE_KEYS[id], text: text[id] };
+  }
+
+  /** The same headline in lowercase, for the middle of a sentence ("Next clearer night: Fri 9 Oct (partly clear)"). */
+  function skyInline(verdict: Verdict): string {
+    return m.verdict.inline[skyHeadlineId(verdict)];
+  }
+
+  /**
+   * Why the verdict came out as it did, as a lowercase phrase the page puts after the headline
+   * ("No forecast — no weather data").
    */
   function verdictReasonText(verdict: Verdict): string {
     const reason = verdict.reason;
@@ -244,6 +320,14 @@ export function createFormatter(locale: Locale) {
       return m.tonight.cleared.none;
     }
     return plural(locale, clearedCount, m.tonight.cleared.count)({ count: num(clearedCount) });
+  }
+
+  /** "4 faint objects are washed out by the Moon tonight" (moonlight-and-the-verdict); `null` when none is. */
+  function washedOutLine(washedOutCount: number): string | null {
+    if (washedOutCount === 0) {
+      return null;
+    }
+    return plural(locale, washedOutCount, m.tonight.washedOut.line)({ count: num(washedOutCount) });
   }
 
   /**
@@ -287,15 +371,14 @@ export function createFormatter(locale: Locale) {
     }
   }
 
-  /** What a weather no-go night suggests next (FR-020), within the verdict horizon. */
+  /**
+   * What a weather no-go night suggests next (FR-020), within the verdict horizon: "Next clearer night: Fri 9 Oct
+   * (partly clear)". The night found is never a no-go, but it can be partly clear, so it is only "clearer".
+   */
   function nextNightText(next: NextNight): string {
     const text = m.tonight.nextNight;
     if (next.kind === "found") {
-      return text.found({
-        date: formatNightDate(next.date),
-        level: text.level[next.verdict.level],
-        reason: verdictReasonText(next.verdict),
-      });
+      return text.found({ date: formatShortNightDate(next.date), sky: skyInline(next.verdict) });
     }
     return next.lastJudgedDate === null
       ? text.beyondForecast
@@ -439,17 +522,16 @@ export function createFormatter(locale: Locale) {
 
   /**
    * The planet window's own weather, for when the verdict card does not cover it (a no-go, no dark window, or a
-   * planet verdict of another level): "For the Moon and planets: marginal — 1 h in a row with at most 5% cloud
-   * between dusk and dawn". With `clear` (the Moon and planets are limited to the planet window's clear hours) the
-   * clear hours are named instead of the run, in the site's time zone: "For the Moon and planets: marginal — clear
-   * 19:00–20:00 and 05:00–06:00".
+   * planet verdict of another level), led by its sky headline in lowercase: "For planets: partly clear — 1 h in a
+   * row with at most 5% cloud between dusk and dawn". With `clear` (the planets are limited to the planet window's
+   * clear hours) the clear hours are named instead of the run, in the site's time zone: "For planets: partly clear
+   * — clear 19:00–20:00 and 05:00–06:00".
    * `buildTonight` calls it only for a go or marginal planet window; the no-go reasons fall back to the verdict
    * card's wording.
    */
   function planetWeatherText(
     planetVerdict: Verdict,
     clear: { intervals: readonly Interval[]; timeZone: string } | null = null,
-    shown: ShownSolarTargets = "both",
   ): string {
     const text = m.tonight.planets.weather;
     const reason = planetVerdict.reason;
@@ -489,7 +571,7 @@ export function createFormatter(locale: Locale) {
         phrase = verdictReasonText(planetVerdict);
         break;
     }
-    return text.line[shown]({ level: m.tonight.nextNight.level[planetVerdict.level], reason: phrase });
+    return text.line({ sky: skyInline(planetVerdict), reason: phrase });
   }
 
   /** The Moon's phase band and illumination: "Waxing gibbous · 78% lit". `fraction` is [0, 1], shown in whole percent. */
@@ -516,15 +598,49 @@ export function createFormatter(locale: Locale) {
     return entry.placement === "low" ? text.low(params) : text.line(params);
   }
 
+  /** The Moon's up spans as "22:10–06:58", or "19:05–20:10 and 04:30–06:58", in the site's time zone. */
+  function moonSpansText(spans: readonly Interval[], timeZone: string): string {
+    return listFormat.format(
+      spans.map((span) => `${formatTime(span.start, timeZone)}–${formatTime(span.end, timeZone)}`),
+    );
+  }
+
   /**
-   * The verdict card's bright-Moon line (`isBrightMoon`), with the Moon's illumination in whole percent; `pointer`
-   * adds the sentence that sends the reader to the Moon and planets, only when the section shows one of them.
+   * The Moon card's "when it's up" line: "Up all night", "Sets 01:30" (up at the window's start, then down for the
+   * rest), "Up 22:10–06:58" for any other part, or "Not up tonight".
    */
-  /** `pointer` names what the solar-system section actually shows; `null` when it shows nothing. */
-  function brightMoonLine(fraction: number, { pointer }: { pointer: ShownSolarTargets | null }): string {
-    const text = m.tonight.card;
-    const line = text.brightMoon({ percent: num(Math.round(fraction * 100)) });
-    return pointer === null ? line : `${line} ${text.brightMoonPointer[pointer]}`;
+  function moonUpText(up: MoonUp, timeZone: string): string {
+    const text = m.tonight.moon.card.up;
+    switch (up.kind) {
+      case "never":
+        return text.never;
+      case "all":
+        return text.all;
+      case "part":
+        return up.upAtStart && up.spans.length === 1
+          ? text.sets({ time: formatTime(up.spans[0].end, timeZone) })
+          : text.spans({ spans: moonSpansText(up.spans, timeZone) });
+    }
+  }
+
+  /**
+   * The Moon card's faint-objects line, for a night the ranking runs: "Bright Moon: 4 faint objects washed
+   * out tonight" when the Moon washes any out, else by how long the Moon is up: "Moon
+   * up 22:10–03:40 · no faint objects washed out", "Moonlit sky · no faint objects lost" or "Dark night: no Moon".
+   */
+  function moonFaintText(up: MoonUp, washedOutCount: number, timeZone: string): string {
+    const text = m.tonight.moon.card.faint;
+    if (washedOutCount > 0) {
+      return plural(locale, washedOutCount, text.washedOut)({ count: num(washedOutCount) });
+    }
+    switch (up.kind) {
+      case "never":
+        return text.dark;
+      case "all":
+        return text.moonlit;
+      case "part":
+        return text.unaffected({ spans: moonSpansText(up.spans, timeZone) });
+    }
   }
 
   return {
@@ -538,8 +654,10 @@ export function createFormatter(locale: Locale) {
     compassPoint,
     formatDirection,
     reasonLine,
+    skyHeadline,
     verdictReasonText,
     clearedLine,
+    washedOutLine,
     seenLine,
     formatAge,
     forecastStatusText,
@@ -552,7 +670,8 @@ export function createFormatter(locale: Locale) {
     planetWeatherText,
     moonPhaseText,
     moonReasonLine,
-    brightMoonLine,
+    moonUpText,
+    moonFaintText,
   };
 }
 

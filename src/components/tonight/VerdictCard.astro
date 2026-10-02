@@ -1,12 +1,16 @@
 ---
 import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
+import type { SkyHeadline } from "@/lib/tonight/format";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 interface Props {
+  /** Picks the tone only; the words come from `headline`. */
   level: VerdictLevel;
+  /** The sky headline from the verdict's level and reason (`skyHeadline`), e.g. "No forecast". */
+  headline: SkyHeadline;
   /** The reason phrase, e.g. "no weather data". */
   text: string;
   darkWindow: TonightDarkWindow;
@@ -19,20 +23,9 @@ interface Props {
    * card and the strip, so the week stays one tap away on a phone.
    */
   nightsLink?: boolean;
-  /** M-2 S-02: the bright-Moon line, shown under the reason; `null` or absent otherwise. */
-  moonNote?: string | null;
 }
 
-const {
-  level,
-  text,
-  darkWindow,
-  timeZone,
-  forecastStatus,
-  explanation,
-  nightsLink = false,
-  moonNote = null,
-} = Astro.props;
+const { level, headline, text, darkWindow, timeZone, forecastStatus, explanation, nightsLink = false } = Astro.props;
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
@@ -50,13 +43,12 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
     id="verdict-heading"
     class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-display text-3xl font-semibold text-heading"
   >
-    <span class="inline-flex items-center gap-2">
+    <span class="inline-flex items-center gap-2" data-sky-headline={headline.key}>
       <span class:list={["size-2.5 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
-      {m.verdict.level[level]}
+      {headline.text}
     </span>
     <span class="text-lg font-normal text-foreground">— {text}</span>
   </h2>
-  {moonNote && <p class="mt-3 text-foreground">{moonNote}</p>}
   {explanation?.kind === "weather-no-go" && <p class="mt-3 text-foreground">{explanation.nextText}</p>}
   {explanation?.kind === "no-darkness" && <p class="mt-3 text-foreground">{explanation.causeText}</p>}
   <p class="mt-3 text-sm text-foreground">

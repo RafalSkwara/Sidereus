@@ -3,7 +3,7 @@ import type { MessierObject } from "@/lib/catalogue";
 import { pairEyepieces } from "./eyepieces";
 import type { SeenSummary } from "./log";
 import type { EyepieceOpticsInput, EyepiecePair, NoEyepieceFits, TelescopeOpticsInput } from "./eyepieces";
-import { moonTrack } from "./moon";
+import { moonSeparationsDeg, moonTrack } from "./moon";
 import { objectTracks } from "./objects";
 import {
   DEFAULT_TRACK_STEP_MINUTES,
@@ -14,6 +14,7 @@ import {
 } from "./parameters";
 import { SCORE_COMPONENTS, scoreObject } from "./score";
 import type { ObjectScore, ScoreComponent, ScoreComponents } from "./score";
+import type { BestWindow } from "./objects";
 import type { DarkWindow, HorizontalPosition, Site } from "./types";
 
 /**
@@ -30,7 +31,15 @@ import type { DarkWindow, HorizontalPosition, Site } from "./types";
  */
 export type RankableObject = Pick<
   MessierObject,
-  "id" | "messier" | "raHours" | "decDeg" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin"
+  | "id"
+  | "messier"
+  | "raHours"
+  | "decDeg"
+  | "vMag"
+  | "surfaceBrightness"
+  | "type"
+  | "majorAxisArcmin"
+  | "minorAxisArcmin"
 >;
 
 /** A telescope as the ranking needs it. The gear store's `TelescopeRecord` is assignable to it. */
@@ -82,14 +91,25 @@ export interface RankedEntry<
   seen: SeenSummary | null;
 }
 
+/** An object tonight's Moon washes out (`ObjectScore.washedOut`): listed apart, never ranked. */
+export interface WashedOutEntry<O extends RankableObject = RankableObject> {
+  object: O;
+  window: BestWindow;
+  /** Where the object is at the highest sample of its best window. */
+  peak: HorizontalPosition;
+}
+
 export interface Ranking<
   O extends RankableObject = RankableObject,
   E extends EyepieceOpticsInput = EyepieceOpticsInput,
 > {
-  /** How many objects cleared `MIN_OBJECT_SCORE`, including those beyond the listed ones. */
+  /** How many objects cleared `MIN_OBJECT_SCORE`, including those beyond the listed ones. Never a washed-out one. */
   clearedCount: number;
   /** The first `limit` cleared objects (default `MAX_RANKED_OBJECTS`), best first. */
   entries: RankedEntry<O, E>[];
+  /** Every washed-out object, by best time (ties by Messier number); not capped by `limit`. */
+  washedOut: WashedOutEntry<O>[];
+  washedOutCount: number;
   telescopeId: string;
 }
 
@@ -157,18 +177,27 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
   const interval = { start: darkWindow.start, end: darkWindow.end };
   const tracks = objectTracks(site, interval, catalogue, DEFAULT_TRACK_STEP_MINUTES);
   const moon = moonTrack(site, interval, DEFAULT_TRACK_STEP_MINUTES);
+  // One Moon vector per sample, dotted with every object's (the tracks share the Moon's grid).
+  const separations = moonSeparationsDeg(
+    moon.map((state) => state.time),
+    catalogue,
+  );
 
   const scored: { object: O; score: ObjectScore; seen: SeenSummary | null; rankScore: number }[] = [];
+  const washedOut: WashedOutEntry<O>[] = [];
   catalogue.forEach((object, i) => {
     const score = scoreObject({
       object,
       track: tracks[i],
       moonTrack: moon,
+      moonSeparationsDeg: separations[i],
       minAltitudeDeg,
       bortle,
       apertureMm: telescope.apertureMm,
     });
-    if (score !== null) {
+    if (score?.washedOut) {
+      washedOut.push({ object, window: score.window, peak: score.window.peak });
+    } else if (score !== null) {
       const seenSummary = seen?.get(object.id) ?? null;
       scored.push({
         object,
@@ -194,5 +223,12 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
     rankScore,
     seen: seenSummary,
   }));
-  return { clearedCount: cleared.length, entries, telescopeId: telescope.id };
+  washedOut.sort((a, b) => a.peak.time.getTime() - b.peak.time.getTime() || a.object.messier - b.object.messier);
+  return {
+    clearedCount: cleared.length,
+    entries,
+    washedOut,
+    washedOutCount: washedOut.length,
+    telescopeId: telescope.id,
+  };
 }

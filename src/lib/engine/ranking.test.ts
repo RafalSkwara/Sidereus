@@ -19,10 +19,10 @@ const EYEPIECES = [
   { id: "e10", focalLengthMm: 10, afovDeg: 50 },
 ];
 
-function warsawDarkWindow(): Extract<DarkWindow, { kind: "window" }> {
-  const dark = darkWindow(WARSAW, observingNight("2026-10-10", WARSAW.timeZone), darknessThresholdDegForBortle(BORTLE));
+function warsawDarkWindow(date = "2026-10-10"): Extract<DarkWindow, { kind: "window" }> {
+  const dark = darkWindow(WARSAW, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(BORTLE));
   if (dark.kind !== "window") {
-    throw new Error("expected a dark window on 2026-10-10 in Warsaw");
+    throw new Error(`expected a dark window on ${date} in Warsaw`);
   }
   return dark;
 }
@@ -38,6 +38,7 @@ function synthetic(messier: number, decDeg: number, overrides: Partial<RankableO
     surfaceBrightness: null,
     type: "open-cluster",
     majorAxisArcmin: 5,
+    minorAxisArcmin: null,
     ...overrides,
   };
 }
@@ -70,6 +71,8 @@ describe("rankObjects (synthetic catalogue, Warsaw 2026-10-10)", () => {
     expect(rank([synthetic(2, 89.9)], { minAltitudeDeg: 60 })).toEqual({
       clearedCount: 0,
       entries: [],
+      washedOut: [],
+      washedOutCount: 0,
       telescopeId: "t1",
     });
   });
@@ -138,6 +141,36 @@ describe("rankObjects with a limit (tonight-all-objects, Warsaw 2026-10-10)", ()
     for (let i = 1; i < all.entries.length; i++) {
       expect(all.entries[i - 1].rankScore).toBeGreaterThanOrEqual(all.entries[i].rankScore);
     }
+  });
+});
+
+describe("rankObjects under moonlight (moonlight-and-the-verdict, Warsaw, Bortle 6, 150 mm)", () => {
+  const CLUSTER_TYPES: readonly string[] = ["open-cluster", "globular-cluster", "asterism", "double-star"];
+  const onNight = (date: string) => rank(MESSIER, { darkWindow: warsawDarkWindow(date) });
+
+  it("changes nothing on the new-Moon night of 2026-10-10: nothing washed out, the M-1 top five", () => {
+    const ranking = onNight("2026-10-10");
+    expect(ranking.washedOutCount).toBe(0);
+    expect(ranking.washedOut).toEqual([]);
+    expect(ranking.entries.map((e) => e.object.id)).toEqual(["M31", "M34", "M39", "M45", "M52"]);
+  });
+
+  it("lists only clusters under the full Moon of 2026-10-26, and sets the washed-out galaxies apart", () => {
+    const ranking = onNight("2026-10-26");
+    for (const entry of ranking.entries) {
+      expect(CLUSTER_TYPES).toContain(entry.object.type);
+    }
+    expect(ranking.washedOutCount).toBeGreaterThanOrEqual(3);
+    expect(ranking.washedOutCount).toBe(ranking.washedOut.length);
+    const all = rank(MESSIER, { darkWindow: warsawDarkWindow("2026-10-26"), limit: Number.POSITIVE_INFINITY });
+    const listedIds = new Set(all.entries.map((e) => e.object.id));
+    for (const { object, peak } of ranking.washedOut) {
+      expect(listedIds.has(object.id)).toBe(false);
+      expect(object.id).not.toBe("M16");
+      expect(peak.altitudeDeg).toBeGreaterThanOrEqual(15);
+    }
+    const times = ranking.washedOut.map((w) => w.peak.time.getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
   });
 });
 

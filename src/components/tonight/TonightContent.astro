@@ -6,11 +6,13 @@ import { FORECAST_BASE_URL } from "astro:env/server";
 import { ServerError } from "@/components/forms/ServerError";
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
+import MoonCard from "@/components/tonight/MoonCard.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
+import { MOON_TARGET_KEY } from "@/lib/targets";
 import { loadTonight, logHref } from "@/lib/tonight/load";
 
 interface Props {
@@ -59,10 +61,11 @@ const {
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
 // More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
 const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
-// The log, eyepiece and no-eyepieces notices speak for the solar system and the ranking alike, so they show once,
-// above both, whenever either is shown (also on a night with only the Moon and planets).
+// The log, eyepiece and no-eyepieces notices speak for the Moon target, the planets and the ranking alike, so they
+// show once, below the cards and above the sections, whenever any of them is shown.
 const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
-const showSections = view !== null && (view.solarSystem !== null || view.ranking !== null);
+const showSections =
+  view !== null && (view.moonCard?.target != null || view.solarSystem !== null || view.ranking !== null);
 const showNotices = showSections && (eyepiecesError !== null || noEyepieces || logError !== null);
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
@@ -138,16 +141,20 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
 
       {view && (
         <>
-          <VerdictCard
-            level={view.verdict.level}
-            text={view.verdictText}
-            darkWindow={view.darkWindow}
-            timeZone={view.timeZone}
-            forecastStatus={view.forecastStatus}
-            explanation={view.explanation}
-            nightsLink={view.ranking !== null || view.solarSystem !== null}
-            moonNote={view.brightMoonText}
-          />
+          {/* The sky and the Moon side by side from md, stacked on a phone; the sky card alone if the Moon failed. */}
+          <div class:list={["grid gap-6", view.moonCard && "md:grid-cols-2"]}>
+            <VerdictCard
+              level={view.verdict.level}
+              headline={view.headline}
+              text={view.verdictText}
+              darkWindow={view.darkWindow}
+              timeZone={view.timeZone}
+              forecastStatus={view.forecastStatus}
+              explanation={view.explanation}
+              nightsLink={view.ranking !== null || view.solarSystem !== null}
+            />
+            {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
+          </div>
 
           {showNotices && (
             <div class="space-y-4">
@@ -194,6 +201,18 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
               </div>
               {multipleTelescopes && (
                 <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+              )}
+              {view.ranking.washedOutText && (
+                <p class="mb-4 text-sm">
+                  <a
+                    href="/tonight/all#washed-out"
+                    data-washed-out={view.ranking.washedOutCount}
+                    class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                  >
+                    {view.ranking.washedOutText}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </p>
               )}
               {view.ranking.entries.length > 0 && (
                 <ol class="space-y-4">

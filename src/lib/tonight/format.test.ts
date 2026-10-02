@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { DarkWindow } from "@/lib/engine";
+import { translateKey } from "@/i18n";
+import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
+import type { DarkWindow, Verdict } from "@/lib/engine";
 
-import { createFormatter } from "./format";
+import { createFormatter, type MoonUp, type SkyHeadlineKey } from "./format";
 
 const { compassPoint, darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } =
   createFormatter("en");
@@ -94,19 +97,135 @@ describe("the Moon's wording (M-2 S-02)", () => {
       ),
     ).toBe("Highest 31° at 22:53 — best in the middle of the night");
   });
+});
 
-  it("words the bright-Moon line, pointing only at what the section shows", () => {
-    const line = "Bright Moon (99% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.";
-    expect(english.brightMoonLine(0.986, { pointer: null })).toBe(line);
-    expect(english.brightMoonLine(0.986, { pointer: "both" })).toBe(
-      `${line} The Moon and planets below are better bets tonight.`,
+describe("the Moon card's lines (moonlight-and-the-verdict)", () => {
+  const english = createFormatter("en");
+  const polish = createFormatter("pl");
+  const zone = "Europe/Warsaw";
+  // 22:10 and 06:58 CEST, 01:30 and 03:40 CEST on the night of 10-11 October.
+  const at = (hhmm: string, day = 11) => new Date(`2026-10-${day}T${hhmm}:00+02:00`);
+  const rising: MoonUp = { kind: "part", spans: [{ start: at("22:10", 10), end: at("06:58") }], upAtStart: false };
+  const setting: MoonUp = { kind: "part", spans: [{ start: at("19:05", 10), end: at("01:30") }], upAtStart: true };
+  const twice: MoonUp = {
+    kind: "part",
+    spans: [
+      { start: at("19:05", 10), end: at("20:10", 10) },
+      { start: at("04:30"), end: at("06:58") },
+    ],
+    upAtStart: true,
+  };
+
+  it("says when the Moon is up: all night, when it sets, its spans, or not at all", () => {
+    expect(english.moonUpText({ kind: "all" }, zone)).toBe("Up all night");
+    expect(english.moonUpText({ kind: "never" }, zone)).toBe("Not up tonight");
+    expect(english.moonUpText(rising, zone)).toBe("Up 22:10–06:58");
+    expect(english.moonUpText(setting, zone)).toBe("Sets 01:30");
+    expect(english.moonUpText(twice, zone)).toBe("Up 19:05–20:10 and 04:30–06:58");
+    expect(polish.moonUpText(setting, zone)).toBe("Zachodzi o 01:30");
+    expect(polish.moonUpText(twice, zone)).toBe("Nad horyzontem w godz. 19:05–20:10 i 04:30–06:58");
+  });
+
+  it("words the faint-objects line by the washed-out count first, then by the Moon's up time", () => {
+    expect(english.moonFaintText({ kind: "all" }, 4, zone)).toBe("Bright Moon: 4 faint objects washed out tonight");
+    expect(english.moonFaintText({ kind: "all" }, 1, zone)).toBe("Bright Moon: 1 faint object washed out tonight");
+    expect(english.moonFaintText({ kind: "all" }, 0, zone)).toBe("Moonlit sky · no faint objects lost");
+    expect(english.moonFaintText(rising, 0, zone)).toBe("Moon up 22:10–06:58 · no faint objects washed out");
+    expect(english.moonFaintText({ kind: "never" }, 0, zone)).toBe("Dark night: no Moon");
+    expect(polish.moonFaintText({ kind: "all" }, 5, zone)).toBe(
+      "Jasny Księżyc: 5 słabych obiektów ginie dziś w jego blasku",
     );
-    expect(english.brightMoonLine(0.986, { pointer: "moon" })).toBe(`${line} The Moon below is a better bet tonight.`);
-    expect(english.brightMoonLine(0.986, { pointer: "planets" })).toBe(
-      `${line} The planets below are better bets tonight.`,
+    expect(polish.moonFaintText({ kind: "never" }, 0, zone)).toBe("Ciemna noc: bez Księżyca");
+  });
+});
+
+describe("the sky headline (moonlight-and-the-verdict)", () => {
+  const english = createFormatter("en");
+  const polish = createFormatter("pl");
+
+  // One row per line of the plan's headline table, plus a cloudy reason with no forecast hour in the dark window.
+  const rows: [string, Verdict, SkyHeadlineKey, string, string][] = [
+    [
+      "go",
+      { level: "go", reason: { kind: "clear-run", runHours: 3, cloudPct: 5 } },
+      "verdict.level.go",
+      "Clear",
+      "Pogodnie",
+    ],
+    [
+      "marginal (cloud)",
+      { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } },
+      "verdict.level.marginal",
+      "Partly clear",
+      "Częściowo pogodnie",
+    ],
+    [
+      "humidity cap",
+      { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } },
+      "verdict.sky.humidityCap",
+      "Clear, but damp",
+      "Pogodnie, ale wilgotno",
+    ],
+    [
+      "fallback cap",
+      { level: "marginal", reason: { kind: "fallback-cap", runHours: 3, cloudPct: 5 } },
+      "verdict.sky.fallbackCap",
+      "Clear (old forecast)",
+      "Pogodnie (stara prognoza)",
+    ],
+    [
+      "no weather data",
+      { level: "marginal", reason: { kind: "no-weather-data" } },
+      "verdict.sky.noForecast",
+      "No forecast",
+      "Brak prognozy",
+    ],
+    [
+      "no-go (cloud)",
+      { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: 80 } },
+      "verdict.level.no-go",
+      "Cloudy",
+      "Pochmurno",
+    ],
+    [
+      "no-go without a forecast hour in the dark window",
+      { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: null } },
+      "verdict.sky.noForecast",
+      "No forecast",
+      "Brak prognozy",
+    ],
+    [
+      "no-go (no darkness)",
+      { level: "no-go", reason: { kind: "no-darkness" } },
+      "tonight.card.noDarkWindow",
+      "No dark window",
+      "Brak ciemnej nocy",
+    ],
+  ];
+
+  it.each(rows)("words a %s night in English and Polish", (_label, verdict, key, englishText, polishText) => {
+    expect(english.skyHeadline(verdict)).toEqual({ key, text: englishText });
+    expect(polish.skyHeadline(verdict)).toEqual({ key, text: polishText });
+    // The key names the catalogue entry the text comes from.
+    expect(translateKey(en, key, "errors.generic")).toBe(englishText);
+    expect(translateKey(pl, key, "errors.generic")).toBe(polishText);
+  });
+
+  it("names the next clearer night by its short date and its headline in lowercase", () => {
+    const marginal: Verdict = { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } };
+    const next = { kind: "found" as const, date: "2026-10-09", verdict: marginal };
+    expect(english.nextNightText(next)).toBe("Next clearer night: Fri 9 Oct (partly clear)");
+    expect(polish.nextNightText(next)).toBe("Następna pogodniejsza noc: pt., 9 paź (częściowo pogodnie)");
+    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
+    expect(english.nextNightText({ ...next, verdict: damp })).toBe("Next clearer night: Fri 9 Oct (clear, but damp)");
+  });
+
+  it("leads the planet weather line with the headline words", () => {
+    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
+    expect(english.planetWeatherText(damp, null)).toBe(
+      "For planets: clear, but damp — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
     );
-    expect(polish.brightMoonLine(0.986, { pointer: "planets" })).toMatch(
-      /Lepszym wyborem na dziś są planety poniżej\.$/,
-    );
+    const none: Verdict = { level: "marginal", reason: { kind: "no-weather-data" } };
+    expect(polish.planetWeatherText(none, null)).toBe("Dla planet: brak prognozy — brak danych pogodowych");
   });
 });

@@ -92,13 +92,13 @@ describe("engine determinism and budget", () => {
   });
 });
 
-/** The S-02 ranking for Warsaw on 2026-10-10: Bortle 6, a 150/750 telescope, 25 mm and 10 mm Plössls. */
-function fullRanking(log: readonly LogEntry[] = []): Ranking {
+/** The S-02 ranking for Warsaw on `date` (2026-10-10 by default): Bortle 6, a 150/750 telescope, 25 mm and 10 mm Plössls. */
+function fullRanking(log: readonly LogEntry[] = [], date = "2026-10-10"): Ranking {
   const bortle = 6;
-  const night = observingNight("2026-10-10", WARSAW.timeZone);
+  const night = observingNight(date, WARSAW.timeZone);
   const dark = darkWindow(WARSAW, night, darknessThresholdDegForBortle(bortle));
   if (dark.kind !== "window") {
-    throw new Error("expected a dark window on 2026-10-10 in Warsaw");
+    throw new Error(`expected a dark window on ${date} in Warsaw`);
   }
   return rankObjects({
     site: WARSAW,
@@ -111,7 +111,7 @@ function fullRanking(log: readonly LogEntry[] = []): Ranking {
       { id: "e10", focalLengthMm: 10, afovDeg: 50 },
     ],
     catalogue: MESSIER,
-    seen: seenSummaries(log, "2026-10-10"),
+    seen: seenSummaries(log, date),
   });
 }
 
@@ -174,6 +174,16 @@ describe("ranking determinism with a non-empty observation log", () => {
     expect(fullRanking(log)).toEqual(once);
     expect(once.entries.map((e) => e.object.messier)).not.toEqual(unlogged.entries.map((e) => e.object.messier));
     expect(once.clearedCount).toBe(unlogged.clearedCount);
+  });
+});
+
+describe("ranking determinism under a full Moon (moonlight-and-the-verdict)", () => {
+  it("yields deep-equal rankings, washed-out objects included, for two identical runs", () => {
+    const once = fullRanking([], "2026-10-26");
+    expect(once.washedOutCount).toBeGreaterThan(0);
+    const asNumbers = (ranking: Ranking): string =>
+      JSON.stringify(ranking, (_key, value: unknown) => (value instanceof Date ? value.getTime() : value));
+    expect(asNumbers(fullRanking([], "2026-10-26"))).toBe(asNumbers(once));
   });
 });
 

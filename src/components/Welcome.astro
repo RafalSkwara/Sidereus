@@ -3,16 +3,21 @@ import TabBar from "@/components/TabBar.astro";
 import Topbar from "@/components/Topbar.astro";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
+import type { Verdict } from "@/lib/engine";
+import { createFormatter } from "@/lib/tonight/format";
 
 const { user, locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.landing;
+const { skyHeadline } = createFormatter(locale);
 
-const verdicts = [
-  { label: m.verdict.level.go, dot: VERDICT_TONES.go.dot },
-  { label: m.verdict.level.marginal, dot: VERDICT_TONES.marginal.dot },
-  { label: m.verdict.level["no-go"], dot: VERDICT_TONES["no-go"].dot },
+// The legend: one cloud verdict per level, worded by the same headline function as Tonight.
+const examples: Verdict[] = [
+  { level: "go", reason: { kind: "clear-run", runHours: 3, cloudPct: 0 } },
+  { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } },
+  { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: 100 } },
 ];
+const verdicts = examples.map((verdict) => ({ headline: skyHeadline(verdict), dot: VERDICT_TONES[verdict.level].dot }));
 
 const steps = [t.steps.where, t.steps.kit, t.steps.tonight];
 
@@ -46,9 +51,12 @@ const secondaryCta =
 
     <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground" aria-label={t.verdictsLabel}>
       {verdicts.map((v) => (
-        <li class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1">
+        <li
+          class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1"
+          data-sky-headline={v.headline.key}
+        >
           <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
-          {v.label}
+          {v.headline.text}
         </li>
       ))}
     </ul>

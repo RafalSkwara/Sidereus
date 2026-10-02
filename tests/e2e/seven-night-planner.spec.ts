@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { translateKey } from "@/i18n";
 import { en } from "@/i18n/messages/en";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
@@ -18,7 +19,10 @@ const SITE_FORM = 'form[action="/api/gear/sites"]';
 const SECOND_SITE = { name: "Tenerife Plateau", latitude: "28.29", longitude: "-16.63", zone: "Atlantic/Canary" };
 
 const t = en.tonight;
-const VERDICT_WORDS = Object.values(en.verdict.level);
+/** Every sky headline a verdict night can show (`skyHeadline`), none of which an outlook night may show. */
+const HEADLINE_WORDS = [...Object.values(en.verdict.level), ...Object.values(en.verdict.sky), t.card.noDarkWindow];
+/** The element carrying a night's headline; its attribute is the headline's catalogue key. */
+const HEADLINE = "[data-sky-headline]";
 const strip = (page: Page) => page.locator("section#nights");
 const stripGroup = (page: Page, label: string) =>
   strip(page).getByRole("heading", { level: 3, name: label, exact: true }).locator("xpath=following-sibling::ol[1]");
@@ -97,18 +101,24 @@ test("the strip shows seven nights, and switching sites moves it to the other si
   await expectStripFor(page, first, "Europe/Madrid");
   await expect(sitePills(page)).toHaveCount(0);
 
-  // Seven nights: 1-3 with a verdict, 4-7 with a cloud outlook and never a verdict word (invariant 5).
+  // Seven nights: 1-3 with a verdict, 4-7 with a cloud outlook and never a headline (invariant 5).
   await expect(strip(page).locator("ol > li")).toHaveCount(7);
   const verdictNights = stripGroup(page, t.nights.verdictLabel).locator("li");
   const outlookNights = stripGroup(page, t.nights.outlookLabel).locator("li");
   await expect(verdictNights).toHaveCount(3);
   await expect(outlookNights).toHaveCount(4);
   for (const night of await verdictNights.all()) {
-    await expect(night).toContainText(new RegExp(VERDICT_WORDS.map(escapeRegExp).join("|")));
+    const headline = night.locator(HEADLINE);
+    await expect(headline).toHaveCount(1);
+    const key = await headline.getAttribute("data-sky-headline");
+    if (!key) throw new Error("a verdict night's headline has no catalogue key");
+    await expect(headline).toHaveText(translateKey(en, key, "errors.generic"));
+    await expect(headline).toHaveText(new RegExp(`^(${HEADLINE_WORDS.map(escapeRegExp).join("|")})$`));
   }
   for (const night of await outlookNights.all()) {
     await expect(night).toContainText(CLOUD_TEXT);
-    for (const word of VERDICT_WORDS) {
+    await expect(night.locator(HEADLINE)).toHaveCount(0);
+    for (const word of HEADLINE_WORDS) {
       await expect(night).not.toContainText(word);
     }
   }

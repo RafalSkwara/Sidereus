@@ -66,6 +66,29 @@ export function moonSeparationDeg(time: Date, target: EquatorialJ2000): number {
   return AngleBetween(moon, targetVector);
 }
 
+const DEG = Math.PI / 180;
+
+/**
+ * `moonSeparationDeg` for many targets over many instants, as `[target][instant]`: the Moon's J2000 unit vector is
+ * computed once per instant and dotted with each target's, so ranking the catalogue costs one `GeoVector` per
+ * sample instead of one per object and sample. Same frame and the same parallax-free approximation.
+ */
+export function moonSeparationsDeg(times: readonly Date[], targets: readonly EquatorialJ2000[]): number[][] {
+  const moon = times.map((time) => {
+    const v = GeoVector(Body.Moon, time, true);
+    const length = Math.hypot(v.x, v.y, v.z);
+    return [v.x / length, v.y / length, v.z / length] as const;
+  });
+  return targets.map(({ raHours, decDeg }) => {
+    const ra = raHours * 15 * DEG;
+    const dec = decDeg * DEG;
+    const tx = Math.cos(dec) * Math.cos(ra);
+    const ty = Math.cos(dec) * Math.sin(ra);
+    const tz = Math.sin(dec);
+    return moon.map(([x, y, z]) => Math.acos(Math.min(1, Math.max(-1, x * tx + y * ty + z * tz))) / DEG);
+  });
+}
+
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 

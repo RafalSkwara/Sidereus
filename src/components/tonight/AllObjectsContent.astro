@@ -7,6 +7,7 @@ import { FORECAST_BASE_URL } from "astro:env/server";
 import { ServerError } from "@/components/forms/ServerError";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import { getMessages, plural, translateKey } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
 import { loadTonight, logHref } from "@/lib/tonight/load";
@@ -41,6 +42,9 @@ const { view, tonightError, sitesError, telescopesError, needsSetup } = await lo
 const rows = view?.ranking
   ? sortEntries(view.ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.id) }))
   : [];
+// Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
+// Tonight is never unexplained.
+const washedOut = view?.ranking?.washedOutEntries ?? [];
 const failure = tonightError ?? sitesError ?? telescopesError ?? (needsSetup ? "errors.load.setup" : null);
 
 const sortLinks: { value: AllObjectsSort; label: string }[] = [
@@ -77,7 +81,7 @@ const segment =
       <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         {view && (
           <p class="mb-2 font-display text-xl text-heading">
-            {m.verdict.level[view.verdict.level]} — {view.verdictText}
+            <span data-sky-headline={view.headline.key}>{view.headline.text}</span> — {view.verdictText}
           </p>
         )}
         <p class="text-sm text-muted-foreground">{a.empty}</p>
@@ -109,6 +113,38 @@ const segment =
           ))}
         </ul>
       </>
+    )}
+
+    {washedOut.length > 0 && (
+      <section id="washed-out" aria-labelledby="washed-out-heading" class="mt-10 scroll-mt-20">
+        <h2 id="washed-out-heading" class="mb-2 font-display text-2xl font-semibold text-heading">
+          {t.washedOut.heading}
+        </h2>
+        <p class="mb-4 text-sm text-muted-foreground">{t.washedOut.intro}</p>
+        <ul class="grid gap-2">
+          {washedOut.map((entry) => {
+            const commonName = localCommonName(entry.messier, entry.commonName, locale);
+            return (
+              <li
+                data-washed-out-object={entry.id}
+                class="flex min-h-14 items-center gap-3 rounded-xl border border-dashed border-border px-4 py-2.5"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="font-display text-lg font-semibold text-muted-foreground">{entry.id}</span>
+                  {commonName && <span class="text-sm text-muted-foreground"> · {commonName}</span>}
+                  <span class="block text-xs text-muted-foreground">
+                    {t.object.inConstellation({ constellation: entry.constellation })}
+                  </span>
+                </span>
+                <span class="shrink-0 text-right font-mono text-sm text-muted-foreground">
+                  {entry.bestTime}
+                  <span class="block text-xs">{entry.bestDirection}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     )}
   </>
 )}

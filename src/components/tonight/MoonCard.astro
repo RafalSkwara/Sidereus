@@ -1,65 +1,88 @@
 ---
-// The Moon, first in the "Solar system tonight" section (M-2 S-02): PlanetCard's card, tokens and details layout,
-// with the phase, a whole-disc and a detail eyepiece, and the phase band's fixed note. A standalone article, outside
-// the planet list.
+// The Moon card beside the sky card (moonlight-and-the-verdict): the phase, the disc and a time slider across tonight's
+// window (the `MoonTimeSlider` island, which the server renders at the page-load moment), with when the Moon is up and
+// what it does to faint objects beside the disc, then, when the Moon is a target tonight (it passes the planets'
+// gate), its observing details with the shared TargetDetails layout. Without a civil window (high-latitude summer)
+// there are no states: only the phase shows, from local noon.
+import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
-import type { TonightMoonEntry } from "@/lib/tonight/build";
+import type { TonightMoonCard } from "@/lib/tonight/build";
 
 interface Props {
-  entry: TonightMoonEntry;
-  /** The log form for the Moon, prefilled with tonight's night, site and telescope (FR-016). */
+  card: TonightMoonCard;
+  /** The log form for the Moon, prefilled with tonight's night, site and telescope (FR-016); used with `card.target`. */
   logHref: string;
 }
 
-const { entry, logHref } = Astro.props;
-const t = getMessages(Astro.locals.locale).tonight;
+const { card, logHref } = Astro.props;
+const locale = Astro.locals.locale;
+const t = getMessages(locale).tonight;
+const target = card.target;
 ---
 
-<article aria-labelledby="moon-heading" class="mt-4 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-  <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-    <h3 id="moon-heading" class="font-display text-2xl font-semibold text-heading">
-      {entry.name}
-    </h3>
-    <span class="font-mono text-sm text-muted-foreground">{entry.phaseText}</span>
-  </div>
-  {entry.seenText && (
-    <p class="mt-2">
-      <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-        {entry.seenText}
-      </span>
-    </p>
+<section aria-labelledby="moon-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+  {/* The heading names the card; the phase line under it follows the slider, so it is not the heading. */}
+  <h2 id="moon-heading" class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+    {t.moon.card.kicker}
+  </h2>
+
+  {card.states.length > 0 ? (
+    <MoonTimeSlider
+      states={card.states}
+      timeLabels={card.timeLabels}
+      initialIndex={card.initialIndex}
+      locale={locale}
+      client:load
+    >
+      {card.upText && <p class="font-semibold text-heading">{card.upText}</p>}
+      {card.faintText && <p class="text-foreground">{card.faintText}</p>}
+    </MoonTimeSlider>
+  ) : (
+    <p class="mt-1 font-display text-2xl font-semibold text-heading">{card.phaseText}</p>
   )}
 
-  <TargetDetails
-    windowStart={entry.windowStart}
-    windowEnd={entry.windowEnd}
-    bestTime={entry.bestTime}
-    bestDirection={entry.bestDirection}
-    logHref={logHref}
-    ariaLabel={t.moon.markObserved({ name: entry.name })}
-  >
-    {entry.wholeDisc && (
-      <p class="mt-2 text-sm text-foreground">
-        {entry.wholeDiscFits ? (
-          <>
-            {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{entry.wholeDisc.name}</span>{" "}
-            {t.object.magnification({ magnification: String(entry.wholeDisc.magnification) })}
-          </>
-        ) : (
-          t.moon.partDisc({ name: entry.wholeDisc.name })
-        )}
-        {entry.detail && (
-          <>
-            {" "}
-            · {t.moon.detailWith} <span class="font-semibold text-primary-strong">{entry.detail.name}</span>{" "}
-            {t.object.magnification({ magnification: String(entry.detail.magnification) })}
-          </>
-        )}
-      </p>
-    )}
+  {target && (
+    <div class="mt-4 border-t border-border pt-1">
+      {target.seenText && (
+        <p class="mt-3">
+          <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            {target.seenText}
+          </span>
+        </p>
+      )}
 
-    <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
-    <p class="mt-2 text-sm text-muted-foreground">{entry.note}</p>
-  </TargetDetails>
-</article>
+      <TargetDetails
+        windowStart={target.windowStart}
+        windowEnd={target.windowEnd}
+        bestTime={target.bestTime}
+        bestDirection={target.bestDirection}
+        logHref={logHref}
+        ariaLabel={t.moon.markObserved({ name: target.name })}
+      >
+        {target.wholeDisc && (
+          <p class="mt-2 text-sm text-foreground">
+            {target.wholeDiscFits ? (
+              <>
+                {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{target.wholeDisc.name}</span>{" "}
+                {t.object.magnification({ magnification: String(target.wholeDisc.magnification) })}
+              </>
+            ) : (
+              t.moon.partDisc({ name: target.wholeDisc.name })
+            )}
+            {target.detail && (
+              <>
+                {" "}
+                · {t.moon.detailWith} <span class="font-semibold text-primary-strong">{target.detail.name}</span>{" "}
+                {t.object.magnification({ magnification: String(target.detail.magnification) })}
+              </>
+            )}
+          </p>
+        )}
+
+        <p class="mt-2 text-sm text-foreground">{target.reason}</p>
+        <p class="mt-2 text-sm text-muted-foreground">{target.note}</p>
+      </TargetDetails>
+    </div>
+  )}
+</section>
