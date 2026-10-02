@@ -77,7 +77,8 @@ for (const [date, bortle] of nights) it(`${date} B${bortle}`, ()=>{
         if (diffuse){ const dW = sb - toMag(B0+Bm), dWo = sb - toMag(B0); if(!(dW>T)) allLost=false; if(dWo<=T && dW>T) anyMoonFault=true; }
       }
       const moon = sum/n; const tot = s.total + SCORE_WEIGHTS.moon*(moon - s.components.moon);
-      const isWashed = diffuse && allLost && anyMoonFault;
+      const clearsIfDark = s.total + SCORE_WEIGHTS.moon*(1 - s.components.moon) >= MIN_OBJECT_SCORE; // review F2: only the Moon's fault
+      const isWashed = diffuse && o.id !== "M16" && allLost && anyMoonFault && clearsIfDark;
       if (isWashed) washed.push(o.id); else if (tot>=MIN_OBJECT_SCORE) res.push([o.id,tot]);
     });
     res.sort((a,b)=>b[1]-a[1]);

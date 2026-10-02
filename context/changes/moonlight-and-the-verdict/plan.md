@@ -1,6 +1,6 @@
 # Moonlight and the Verdict Implementation Plan
 
-> Revision 2 (2026-10-02). It replaces revision 1, which the plan review rejected (`reviews/plan-review.md`). In revision 1, Phase 1's graded moon component reversed the full-Moon ranking, and its thresholds were not calibrated. This revision keeps every user decision, redesigns the moonlight scoring with numbers taken from a calibration harness (`calibration-harness.md`), folds in review findings F3 to F9, and splits the work into five phases.
+> Revision 2 (2026-10-02). It replaces revision 1, which the plan review rejected (`reviews/plan-review-rev1.md`). In revision 1, Phase 1's graded moon component reversed the full-Moon ranking, and its thresholds were not calibrated. This revision keeps every user decision, redesigns the moonlight scoring with numbers taken from a calibration harness (`calibration-harness.md`), folds in review findings F3 to F9, and splits the work into five phases.
 
 ## Overview
 
@@ -21,12 +21,12 @@ The frame (`frame.md`) settled the problem:
 | Ranking under moonlight | STRONG | A flat moon term ignores faintness and distance from the Moon (`score.ts:131`, #21 item 2) |
 | Page layout | PARTIAL | The Moon card is text only, and there is no picture of the Moon |
 
-Facts confirmed by the plan review (`reviews/plan-review.md`):
+Facts confirmed by the plan review (`reviews/plan-review-rev1.md`):
 
 - **Scoring and ranking types**
   - `ScoredObject` is `Pick<MessierObject, "vMag" | "surfaceBrightness" | "type">` (`score.ts:34`).
   - `ScoreInput.moonTrack` is `Pick<MoonState, "altitudeDeg" | "illuminatedFraction">` (`:41`). `MoonState` already carries `phaseAngleDeg` (`moon.ts:31`).
-  - `RankableObject` (`ranking.ts:31-34`) also has to gain the new fields.
+  - `RankableObject` (`ranking.ts:31-34`) already has `id`, `raHours`, `decDeg` and `majorAxisArcmin`; only `minorAxisArcmin` is new.
   - `rankObjects` returns `{clearedCount, entries, telescopeId}` (`:197`).
 - **Catalogue**
   - The fields are `majorAxisArcmin`, `minorAxisArcmin`, `raHours` and `decDeg` (`catalogue/index.ts:40-46`).
@@ -47,16 +47,18 @@ Facts confirmed by the plan review (`reviews/plan-review.md`):
 | --- | --- | --- |
 | 10-10 new, B6 | 66 / M31 M34 M39 M45 M52 | 66 / 0 / unchanged |
 | 10-10 new, B3 | 63 / M31 M34 M33 M39 M52 | 63 / 0 / unchanged |
-| 10-20 69%, B6 | 53 / M31 M34 M45 M39 M52 | 64 / M16 / M34 M31 M45 M39 M52 |
-| 10-24 97%, B6 | 18 / M31 M34 M45 M52 M39 | 42 / M16 M33 M43 M74 M88 M89 M91 M98 M101 / M34 M45 M52 M39 M103 |
-| 10-26 full, B6 | 18 / M31 M34 M45 M52 M103 | 36 / M16 M33 M43 M74 M84 M88 M89 M91 M98 M101 / M34 M52 M39 M45 M103 |
-| 10-26 full, B3 | 21 / M34 M31 M33 M52 M45 | 27 / M16 M33 M43 M74 M88 M89 M91 M98 / M34 M52 M39 M103 M45 |
+| 10-20 69%, B6 | 53 / M31 M34 M45 M39 M52 | 65 / none / M34 M31 M45 M39 M52 |
+| 10-24 97%, B6 | 18 / M31 M34 M45 M52 M39 | 42 / M33 M43 M74 M101 / M34 M45 M52 M39 M103 |
+| 10-26 full, B6 | 18 / M31 M34 M45 M52 M103 | 36 / M33 M43 M74 M101 / M34 M52 M39 M45 M103 |
+| 10-26 full, B3 | 21 / M34 M31 M33 M52 M45 | 27 / M33 M43 M74 M88 M89 M91 M98 / M34 M52 M39 M103 M45 |
+
+The table includes the M16 exemption and the "Moon's fault" condition from plan review rev 2, F2: an object counts as washed out only if it would clear `MIN_OBJECT_SCORE` with its moon component at 1. Without that condition, 5 of the 10 full-Moon Bortle 6 objects (M84, M88, M89, M91, M98) were counted even though they miss the bar on a moonless night.
 
 How to read it:
 - Clusters rise under a bright Moon, which is honest: they survive moonlight.
 - Invisible galaxies are hidden, while M31, M42 and M57 stay.
 - New-Moon nights do not change.
-- M16 is wrongly washed out (its cluster is visible), hence the exempt override below.
+- Without the exemption, M16 is wrongly washed out (its cluster is visible), hence the exempt override below.
 
 ## Desired End State
 
@@ -84,11 +86,15 @@ The thresholds are unchanged. The same headline function drives the seven-night 
 - Phase name and % lit follow the slider.
 - Nightly facts:
   - **When it's up**, from the Moon track: "Up 22:10–06:58", "Sets 01:30", or "Not up tonight".
-  - **A faint-objects line**, one of:
-    - "Bright Moon (N% lit): K faint objects washed out tonight"
-    - "Bright Moon, but faint objects are fine after it sets at 01:30"
-    - "Dark night: no Moon"
-    - on cloudy and no-darkness nights, the line is omitted (nothing is ranked).
+  - **A faint-objects line**, picked by K (the ranking's `washedOutCount`) and the Moon's up time in the window. No illumination threshold is involved (review rev 2, F3, user choice):
+
+    | Case | Line (EN) |
+    | --- | --- |
+    | K > 0 | "Bright Moon (97% lit): 4 faint objects washed out tonight" |
+    | K = 0, Moon up for part of the window | "Moon up 22:10–03:40 · faint objects unaffected" |
+    | K = 0, Moon up the whole window | "Moonlit sky · no faint objects lost" |
+    | Moon never up in the window | "Dark night: no Moon" |
+    | Cloudy or no-darkness night (nothing ranked) | omitted |
 - **The observing details** (eyepieces, phase note, Mark observed) appear when the Moon target passes today's solar-system gate.
 
 **Below the cards.**
@@ -150,7 +156,10 @@ Every number is a candidate in `parameters.ts`. The user delegated the technical
 
 **Washed-out rule, for diffuse objects that are not exempt.**
 - `SB_eff = vMag + 2.5·log10(π/4·a·b·3600) − BRIGHT_CORE_OFFSET_MAG`, with `b = a` when the minor axis is missing. No major axis means the object is never washed out.
-- The object is washed out when `SB_eff − V_sky(with Moon) > T` at **every** best-window sample, **and** `SB_eff − V_sky(without Moon) ≤ T` at least once. The second condition makes sure it is the Moon's fault, not the light pollution's.
+- The object is washed out when all three conditions hold:
+  - `SB_eff − V_sky(with Moon) > T` at **every** best-window sample;
+  - `SB_eff − V_sky(without Moon) ≤ T` at least once, so the cause is the Moon, not the light pollution;
+  - its total with the moon component set to 1 clears `MIN_OBJECT_SCORE`, so it would be on the list on a moonless night (review rev 2, F2). The count therefore means "would be listed if not for the Moon".
 - Washed-out objects are excluded from `cleared` and returned separately.
 
 ## Critical Implementation Details
@@ -195,8 +204,8 @@ A moonlit-sky model, a single-scale moon component, the washed-out flag, and the
 **Intent**: Use the single-scale moon component for every object, add the washed-out flag, and exclude washed-out objects from the cleared list.
 
 **Contract**:
-- `ScoredObject` and `RankableObject` gain `id`, `majorAxisArcmin`, `minorAxisArcmin`, `raHours` and `decDeg`.
-- `ScoreInput` gains `darkZenithMag`, and `moonTrack` samples gain `phaseAngleDeg` plus the Moon's geocentric J2000 unit vector. `ranking.ts` computes the vector once per sample and dots it with each object's unit vector, rather than calling `moonSeparationDeg` per object.
+- `ScoredObject` gains `id`, `majorAxisArcmin`, `minorAxisArcmin`, `raHours` and `decDeg`. `RankableObject` gains `minorAxisArcmin`.
+- `ScoreInput` gains `darkZenithMag`. Its `moonTrack` samples gain `phaseAngleDeg`, which `MoonState` already has. `ScoreInput` also gains `moonSeparationsDeg: readonly number[]`, parallel to the track. `rankObjects` computes the Moon's geocentric J2000 unit vector once per sample, as an array parallel to `moonTrack`, and dots it with each object's unit vector, rather than calling `moonSeparationDeg` per object. `MoonState` is unchanged, because `outlook.ts` and `moon-target.ts` share it (review rev 2, F5).
 - `ObjectScore` gains `washedOut: boolean`.
 - `rankObjects` returns `washedOut: { object, window, peak }[]`, sorted by best time, together with `washedOutCount`.
 - Every `ScoredObject` and `RankableObject` test literal is updated (`score.test.ts:37, 164`, `ranking.test.ts:31`).
@@ -224,7 +233,8 @@ A moonlit-sky model, a single-scale moon component, the washed-out flag, and the
 - A synthetic SB-24 galaxy 30° from a full Moon is washed out; a synthetic SB-18 one is not. That leaves a wide margin.
 - Clusters and M16 are never washed out.
 - On the 2026-10-10 new-Moon night (Warsaw, Bortle 6), zero objects are washed out and the top 5 is unchanged.
-- On 2026-10-26 (full), the top 5 is clusters only and `washedOutCount ≥ 5`.
+- On 2026-10-26 (full, Bortle 6, 150 mm), the top 5 is clusters only and `washedOutCount ≥ 3` (the harness gives 4).
+- A diffuse object that meets the contrast rule but misses `MIN_OBJECT_SCORE` even with the moon component at 1 is neither washed out nor cleared.
 - Determinism holds.
 - Build view: on 2026-10-26, `washedOutCount > 0` and the line text is present.
 
@@ -246,9 +256,9 @@ A moonlit-sky model, a single-scale moon component, the washed-out flag, and the
 
 #### Manual Verification:
 
-- Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; washed-out line and `/tonight/all` group screenshotted on a local preview
+- Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; local-preview screenshots of tonight's real-clock state, with bright-Moon states covered by the fixed-date build tests (post-merge bright-Moon screenshots after 2026-10-22)
 
-**Implementation Note**: Run the checks yourself (the user verifies after merge), then continue.
+**Implementation Note**: Run the checks yourself (the user verifies after merge), then continue. The preview runs on the real clock (`TonightContent.astro:51`), and the Moon wanes to new around 2026-10-10. Bright-Moon states will not render locally until about 2026-10-22, so the fixed-date build tests (2026-10-26) are their evidence, and a bright-Moon screenshot check follows merge (review rev 2, F4: no test-only clock seam in production code).
 
 ---
 
@@ -297,7 +307,7 @@ The engine produces per-instant Moon states. A pure, browser-safe module turns o
 **Intent**: Pin orientation using **real engine states**, not synthetic angles that would share a convention error.
 
 **Contract**:
-- On a real waxing-crescent state (2026-10-12T18:00Z), the lit centroid is at x > 0, **and Crisium's centre lies inside the lit path**.
+- On a real waxing-crescent state (2026-10-15T17:00Z, 23.5% lit), the lit centroid is at x > 0, **and Crisium's centre lies inside the lit path** (margin about 0.30 of the radius). Not 2026-10-12: at 4.7% lit, Crisium is correctly unlit (review rev 2, F1).
 - On a real waning state (2026-11-02T04:00Z), the lit centroid is at x < 0.
 - Imbrium is in the upper half.
 - k = 0.5 gives a straight terminator; k = 0 gives null; k = 1 gives a full disc.
@@ -396,14 +406,14 @@ The Moon card moves up beside the sky card, with the server-rendered SVG and the
 
   | Night | `window` | `faintText` | `target` |
   | --- | --- | --- | --- |
-  | go/marginal with a dark window | dark window | bright with K / sets at HH:MM / dark night | per today's solar-system gate |
+  | go/marginal with a dark window | dark window | per the faint-objects table in Desired End State (K > 0 / up part / up all / never up) | per today's solar-system gate |
   | cloudy no-go | dark window | null | per gate (clear twilight hours) |
   | no-darkness | civil window | null | per gate |
   | no civil window (high-latitude summer) | civil window absent, so no states | null | none; the card shows the phase text only, from local noon |
   | no forecast | dark window | computed (Moon facts don't need weather) | per gate |
   | `view` null | no card (existing setup prompts) | — | — |
 
-- `upText` and the set time come from `moonTrack` / `moonFreeMinutes` over the window.
+- `upText`, the up interval for `faintText`, and the up-part / up-all / never-up case all come from `moonTrack` / `moonFreeMinutes` over the window. The case logic lives in `build.ts`, with no new parameter.
 - `initialIndex` is the sample nearest `now`, clamped into the window.
 - `solarSystem` keeps planets only.
 - **Removal touch-list:**
@@ -434,7 +444,7 @@ The Moon card moves up beside the sky card, with the server-rendered SVG and the
 
 **Files**: `build.test.ts`, `tests/e2e/moon-as-target.spec.ts`, `planets-on-tonight.spec.ts`
 
-**Intent**: Cover every row of the matrix on fixed nights, and move the e2e specs to the new structure.
+**Intent**: Cover every row of the matrix and all four faint-objects cases on fixed nights, and move the e2e specs to the new structure. Fixed nights per case: K > 0 on 2026-10-26; Moon up all window; Moon up part of the window; never up on 2026-10-10. Pick the up-all and up-part dates with the engine when writing the tests, and assert K = 0 for both.
 - `moon-as-target.spec.ts:31-37` finds the Moon card by `moon-heading` at h2 and skips on the **target's** presence, not the card's.
 - `planets-on-tonight.spec.ts:29, 35-41` uses the planets heading and planet-only skips.
 
@@ -448,7 +458,7 @@ The Moon card moves up beside the sky card, with the server-rendered SVG and the
 
 #### Manual Verification:
 
-- Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red
+- Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests
 
 ---
 
@@ -531,7 +541,7 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 ## References
 
-- Frame: `frame.md`. Review: `reviews/plan-review.md`. Calibration: `calibration-harness.md`.
+- Frame: `frame.md`. Reviews: `reviews/plan-review-rev1.md` (revision 1), `reviews/plan-review.md` (revision 2). Calibration: `calibration-harness.md`.
 - M-1 checkpoint: `context/archive/2026-09-25-tonight-verdict-and-ranking/checkpoint.md`; #21 item 2.
 - S-02: `context/archive/2026-10-01-moon-as-target/`, once PR #78 merges; until then `context/changes/moon-as-target/` on main.
 - Krisciunas & Schaefer 1991, PASP 103, 1033.
@@ -553,7 +563,7 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Manual
 
-- [ ] 1.4 Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; washed-out line and `/tonight/all` group screenshotted on a local preview
+- [ ] 1.4 Checkpoint written in `checkpoint.md` with before/after tables; new-Moon nights' top 5 unchanged; full-Moon top 5 clusters only; local-preview screenshots of tonight's real-clock state, with bright-Moon states covered by the fixed-date build tests (post-merge bright-Moon screenshots after 2026-10-22)
 
 ### Phase 2: Moon disc geometry
 
@@ -584,7 +594,7 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Manual
 
-- [ ] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red
+- [ ] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests
 
 ### Phase 5: The time slider
 

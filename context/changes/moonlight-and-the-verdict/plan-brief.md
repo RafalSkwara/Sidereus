@@ -1,7 +1,7 @@
 # Moonlight and the Verdict — Plan Brief
 
 > Full plan: `context/changes/moonlight-and-the-verdict/plan.md` (revision 2)
-> Frame brief: `frame.md` · Plan review: `reviews/plan-review.md` · Calibration: `calibration-harness.md`
+> Frame brief: `frame.md` · Plan reviews: `reviews/plan-review-rev1.md` (rev 1), `reviews/plan-review.md` (rev 2) · Calibration: `calibration-harness.md`
 
 ## What & Why
 
@@ -46,7 +46,9 @@ The top of Tonight has two cards.
 | SVG | Map orientation, exact lit shape at 1%, IAU maria with libration | Stable and familiar; no licensed data | Plan (user) |
 | Moment shown | Page load (clamped) plus a slider over the window and a "Now" button | User's request | Plan (user) |
 | Moon score | **One scale for every object:** Moon-induced sky brightening at the object (K&S), weighted by type sensitivity (galaxies 1, globulars 0.6, open clusters 0.3, doubles 0.15) | Revision 1's two-scale formula reversed the ranking | Review F1, calibrated |
-| Washed-out rule | Diffuse objects with SB_eff − sky > **3.5** mag at every best-window sample, and only because of the Moon; core offset **1.5**; b = a fallback; M16 exempt | Harness: full-Moon top 5 is clusters only; M33, M101 and faint Virgo galaxies hidden; M31, M42, M57 kept | Calibration (delegated) |
+| Washed-out rule | Diffuse objects with SB_eff − sky > **3.5** mag at every best-window sample, and only because of the Moon; core offset **1.5**; b = a fallback; M16 exempt | Harness: full-Moon top 5 is clusters only; M33, M43, M74 and M101 hidden; M31, M42, M57 kept | Calibration (delegated) |
+| What the count counts | Only objects that would clear the bar on a moonless night (full Moon, B6: 4) | The count blames the Moon only for what it actually hides | Review rev 2 F2 (user) |
+| Moon card faint-objects line | Four cases by K and Moon up time: washed out / up part · unaffected / moonlit · none lost / dark night | Every night gets a true line; no illumination threshold | Review rev 2 F3 (user) |
 | Verification | Property tests plus a checkpoint harness, with tuning bounded to T 3.0–4.0, offset 0–2, reference 1–2 | Avoid fitting to named objects | Review F2 |
 | Slider plumbing | 10-minute states precomputed on the server; browser-safe `src/lib/moon-disc/` owns the type and geometry; fallback to a custom element if island nesting fails | Keeps astronomy-engine off the client | Plan + Review F7 |
 

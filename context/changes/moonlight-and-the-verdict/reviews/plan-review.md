@@ -1,180 +1,123 @@
 <!-- PLAN-REVIEW-REPORT -->
-# Plan Review: Moonlight and the Verdict
+# Plan Review: Moonlight and the Verdict (revision 2)
 
 - **Plan**: `context/changes/moonlight-and-the-verdict/plan.md`
+- **Mode**: Deep (claims verified inline, calibration harness re-run)
 - **Date**: 2026-10-02
-- **Phases**: 4
-- **Findings**: 2 critical · 6 warnings · 1 observation
-- **Overall**: REJECTED → user chose re-plan; revision 2 of plan.md addresses every finding (not yet re-reviewed). Phase 1's scoring model fails when run; phases 2–4 need sharpening, not re-planning.
+- **Verdict**: REVISE → SOUND after triage (all 5 fixed)
+- **Findings**: 1 critical · 3 warnings · 1 observation
+
+The revision-1 review is in `plan-review-rev1.md`. This revision fixes its reversal: the harness reproduces every row of the plan's calibration table exactly. New-Moon nights are unchanged, and the full-Moon top 5 is clusters only.
 
 ## Verdicts
 
-| Dimension | Verdict | Findings |
-| --- | --- | --- |
-| Claim Accuracy | WARNING | F2, F7 |
-| Substance | WARNING | F5 |
-| Feasibility | FAIL | F1, F2 |
-| Sequencing | WARNING | F3, F8 |
-| Architecture Fit | WARNING | F7 |
-| Scope Discipline | PASS | — |
-| Verifiability | WARNING | F2 |
-| Coverage | WARNING | F4, F5, F6, F9 |
+| Dimension | Verdict |
+|-----------|---------|
+| End-State Alignment | PASS |
+| Lean Execution | PASS |
+| Architectural Fitness | PASS |
+| Blind Spots | WARNING |
+| Plan Completeness | FAIL |
 
-**Commands checked:**
-- `npm test` passed (485 tests).
-- `npx astro check` reported 0 errors.
-- `lint`, `build` and `test:e2e` exist in package.json, and Playwright 1.55 is installed.
-- e2e needs a preview, local Supabase and the forecast fixture. That setup is not written in the plan (F9).
+## Grounding
 
-**Evidence base:** a throwaway harness ran the plan's own model and candidates against the real engine: Warsaw, 150 mm, Bortle 6, K&S with k 0.25, T 3.5, ramp 1.5 and core offset 2.0. It lives in the scratchpad at `h/moon.spec.ts`.
+- 21/21 paths ✓.
+- Symbols ✓: `RotationAxis` and `Libration` are in astronomy-engine 2.1.19; the verdict reasons and the Skyfield Moon fixture exist.
+- brief↔plan ✓, Progress↔Phase ✓.
+- Disc conventions checked on the real engine:
+  - 2026-10-12T18:00Z (waxing): θ = 281°, lit on the right.
+  - 2026-11-02T04:00Z (waning): θ = 91.6°, lit on the left.
 
 ## Findings
 
-### F1 — The graded moon component reverses the full-Moon ranking
+### F1 — Phase 2 Crisium test instant is wrong
 
-- **Severity**: ❌ CRITICAL · **Impact**: 🔬 HIGH — architectural stakes; think carefully before deciding · **Dimension**: Feasibility
-- **Location**: Phase 1 §3, Implementation Approach, washed-out rule
+- **Severity**: ❌ CRITICAL
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Phase 2 §3 Tests
 - **Detail**:
-  - Diffuse objects get `clamp01((T−Δ)/ramp)`. Clusters keep the old `1 − illum × moonUp`, which is about 0.02 under a full Moon. That puts two different scales in one component.
-  - **High-surface-brightness galaxies and planetary nebulae jump to moon = 1.0 while clusters stay at 0.02.**
-  - Harness results:
-    - 2026-10-24: the top 5 goes from M31, M34, M45, M52, M39 to M31, M81, M32, M76, M82, and cleared rises from 18 to 35.
-    - 2026-10-26: the top 5 becomes M81, M32, M31, M76, M82.
-  - That is the opposite of the plan's own expected outcome: "demotes galaxies, keeps clusters".
-  - Δ also includes the dark-sky term, so faint galaxies lose points with no Moon at all (cleared falls from 66 to 63 on new-moon 10-10). This double-counts the Bortle sky penalty.
-- **Fix**:
-  - Re-plan Phase 1's scoring. The moon component should measure only the Moon's effect, on one scale for every object. For example, use the Moon-induced loss of contrast (Δ with the Moon minus Δ without), weighted by a per-type moonlight sensitivity: diffuse high, clusters low. Keep the washed-out flag as the separate "hide" rule.
-  - Strength: no regime split and no double counting with Bortle; clusters and galaxies are compared fairly.
-  - Tradeoff: one more design decision, and the checkpoint has to validate it.
-  - Confidence: HIGH, because it was measured in the harness.
-  - Blind spot: whether one sensitivity per type is enough for bright-core galaxies.
-- **Decision**: RE-PLANNED (revision 2): single-scale moon score (Moon brightening × type sensitivity), calibrated in calibration-harness.md
+  - At 2026-10-12T18:00Z the Moon is 4.7% lit.
+  - With correct geometry, Crisium's centre (17°N, 59.1°E, libration l 4.07°, b 6.49°) is outside the lit crescent: u = 0.813 against the terminator at 0.903.
+  - The test "Crisium's centre lies inside the lit path" would fail on correct code and steer the implementer to break the maths.
+- **Fix**: Use 2026-10-15T17:00Z instead. It is 23.5% lit, still a crescent, and Crisium is inside with a 0.30 margin.
+- **Decision**: FIXED — test instant moved to 2026-10-15T17:00Z (delegated; non-UI)
 
-### F2 — The thresholds don't produce the plan's expected outcomes, and tests pin objects by name
+### F2 — Washed-out count is mostly objects that would never be listed anyway
 
-- **Severity**: ❌ CRITICAL · **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it · **Dimension**: Feasibility / Verifiability / Claim Accuracy
-- **Location**: Phase 1 §4 tests, Phase 1 manual 1.4, Phase 3 §5, Key Discoveries, Current State
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: Implementation Approach (washed-out rule); Phase 1 §3–§5
+- **Detail**: The harness re-run annotated each washed-out object with its score.
+  - On 10-26 (full Moon, Bortle 6), 9 of the 10 washed-out objects are already below `MIN_OBJECT_SCORE`.
+  - M84, M88, M89, M91 and M98 fail the bar even with the Moon component at 1 (150 mm, Bortle 6).
+  - So "10 faint objects washed out by the Moon" blames the Moon for objects Tonight would never list. The rule only removes M33 from the cleared list.
+  - The plan never decides what the count counts. The test `washedOutCount ≥ 5` only passes under the inflated reading.
+- **Fix A ⭐ Recommended**: An object is washed out only when the rule holds **and** its score with the Moon component set to 1 clears `MIN_OBJECT_SCORE`. The count then means "would be on the list if not for the Moon".
+  - Strength: An honest count, matching the user's "feels like being lied to".
+  - Tradeoff: The full-Moon Bortle 6 count drops to 4 (M33, M43, M74, M101). The test bound becomes ≥ 3, and the harness gains this condition.
+  - Confidence: HIGH — the per-object values were verified on the harness.
+  - Blind spot: None significant.
+- **Fix B**: Keep the set and reword the line to "N faint objects too washed out to see".
+  - Strength: No model change.
+  - Tradeoff: The count still includes objects hidden for reasons other than the Moon.
+  - Confidence: MED.
+  - Blind spot: The `/tonight/all` group would list objects that the dark-night ranking also omits.
+- **Decision**: FIXED via Fix A (user) — 'Moon's fault' condition added to rule, harness and calibration table; test bound ≥ 3
+
+### F3 — Moon card faint-objects line has no selection rule
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: Desired End State (Moon card); Phase 4 matrix
 - **Detail**:
-  - The spot values in Key Discoveries (M33 6.0, M101 6.2) leave out the 2 mag core offset the plan then applies.
-  - With the offset, the minimum Δ over each best window was:
+  - The three variants are "Bright Moon: K washed out", "fine after it sets at HH:MM" and "Dark night: no Moon". Nothing says which one applies.
+  - Phase 4 deletes `BRIGHT_MOON_*` and `isBrightMoon`, the only existing thresholds.
+  - Three cases are unhandled:
+    - Moon up with K = 0. On 10-20 (69%), K is 0 once M16 is exempt; none of the variants is true, and "Dark night" would be false.
+    - Moon rising mid-window.
+    - Whether "bright" with K = 0 counts at all.
+- **Fix**: Add a decision table driven by K and the Moon's up interval, with no new illumination threshold:
+  1. K > 0 → the washed-out line.
+  2. K = 0 and the Moon is up for part of the window → "Moon up HH–HH; faint objects unaffected".
+  3. K = 0 and the Moon is up all night → "Moonlit sky; no faint objects lost".
+  4. The Moon is never up → "Dark night: no Moon".
 
-    | Object | 10-24 | 10-26 |
-    | --- | --- | --- |
-    | M33 | 3.21 → **not washed out** | 3.56 → washed out, margin 0.06 |
-    | M101 | 3.04 → not washed out | 3.26 → not washed out |
+  The copy is the user's call.
+- **Decision**: FIXED (user) — four-case faint-objects table in Desired End State and Phase 4 matrix, fixed-date build tests per case
 
-    M101 is circumpolar in Warsaw, so altitude isn't the cause.
-  - Meanwhile M43, M74, M16 and M89/M91 are washed out. M16's cluster actually survives moonlight.
-  - 2026-10-24 is 97% lit; full Moon is the 26th.
-  - "M33 in the top 5 at full Moon" is wrong: the M-1 checkpoint has it #6 (`checkpoint.md:261`).
-  - M57 was already absent on Night 2 because of its duration score (`:173`).
-- **Fix**:
-  - Make Phase 1 calibrate first: run the harness, then fix the expected outcomes.
-  - Unit tests assert properties instead of names: monotonic in separation and phase, clusters exempt, the Moon term zero below the horizon, plus one wide-margin case.
-  - Give the checkpoint a bounded tuning range, for example T 3.0–4.0 and core offset 0–2, so tuning can't turn into fitting to a target.
-  - Correct the M33 and date claims.
-- **Decision**: RE-PLANNED: calibrated candidates (T 3.5, offset 1.5, ref 1.5); property tests + bounded tuning; M33/date claims corrected
+### F4 — Bright-Moon manual screenshots can't be taken in the near term
 
-### F3 — Phase 1 alone ships an unexplained, shrunken list
-
-- **Severity**: ⚠️ WARNING · **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped · **Dimension**: Sequencing
-- **Location**: Phase 1 vs Phase 3
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: Phase 1 Manual 1.4; Phase 4 4.4; Phase 5 5.3
 - **Detail**:
-  - Phase 1 drops washed-out objects, while the "N washed out" line and the `/tonight/all` group only arrive in Phase 3.
-  - The phase note says the user checks after merge, so Phase 1 can reach production on its own.
-  - `reason.moon` ("N% clear of moonlight", `format.ts:199`, `en.ts:592`) would then describe a different quantity.
-- **Fix**: Move `washedOutCount`, the ranking line, the `/tonight/all` group and the `reason.moon` rewording into Phase 1. Or ship the flag without excluding objects until Phase 3.
-- **Decision**: FIXED in revision 2: count line, /tonight/all group and reason.moon rewording moved into Phase 1
+  - The preview uses the real clock (`TonightContent.astro:51`, `now: new Date()`).
+  - On 2026-10-02 the Moon is 58% lit and waning to new around 10-10. At 69%, the washed-out set is empty once M16 is exempt.
+  - The washed-out line, the `/tonight/all` group and the bright-Moon card cannot render locally until about 10-22.
+- **Fix A ⭐ Recommended**: Back the bright-Moon visuals with build-view tests at fixed dates (2026-10-26). Take screenshots of what the real clock shows, and add one post-merge bright-Moon screenshot check after 10-22.
+  - Strength: No production code just for testing.
+  - Tradeoff: The visual check of the bright-Moon state is delayed.
+  - Confidence: HIGH.
+  - Blind spot: None significant.
+- **Fix B**: Add a preview-only `now` override, read in `TonightContent` from an env var that production never sets.
+  - Strength: Screenshots of any phase right away.
+  - Tradeoff: A test seam in production code, which needs a guard.
+  - Confidence: MED.
+  - Blind spot: Whether the forecast fixture's hours must shift with the faked clock.
+- **Decision**: FIXED via Fix A (delegated; non-UI) — fixed-date build tests carry bright-Moon evidence; post-merge screenshot after 2026-10-22
 
-### F4 — The verdict-word rename misses readers and states
+### F5 — Small type-contract inaccuracies
 
-- **Severity**: ⚠️ WARNING · **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it · **Dimension**: Coverage
-- **Location**: Phase 3 §2–3
+- **Severity**: ℹ️ OBSERVATION
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Current State Analysis; Phase 1 §3
 - **Detail**:
-  - `verdict.level` is read by `VerdictCard.astro:55`, `NightStrip.astro:57`, `AllObjectsContent.astro:80` and `Welcome.astro:12-14` (the landing legend). `nextNight.level` is read by `format.ts:296` and `:492`.
-  - Only the sky card branches on no-darkness, so the strip and all-objects would print **"Cloudy" on no-darkness nights**.
-  - No-weather-data, humidity-cap and fallback-cap are all `marginal` (`verdict.ts:78-101`). A night with **no forecast** would therefore headline "Partly clear".
-  - Other gaps:
-    - `tonight.card.noDarkWindow` already exists (`en.ts:385`).
-    - "Next clear night" is wrong when that night is only partly clear.
-    - The landing alt text says "a Go verdict" (`en.ts:87`), and the `public/landing/tonight.png` screenshot goes stale.
-    - The roadmap's S-07 match definitions use go/marginal/no-go (`roadmap.md:182,191`).
-    - `VerdictCard` receives only `level` and `text`, so it needs the reason kind.
-- **Fix**:
-  - Define the headline from level **and** reason: no-darkness → "No dark window"; no-weather-data → "No forecast"; humidity-cap → "Clear, but damp" (or similar).
-  - Apply it everywhere a level is shown: the sky card, the strip, all-objects, the landing legend and the next-night line.
-  - Re-capture the landing screenshot, and add an S-07 note in the roadmap.
-- **Decision**: FIXED in revision 2: skyHeadline(level + reason) for every reader (Phase 3), PRD/roadmap notes, landing re-capture
-
-### F5 — The Moon card's path matrix is undefined
-
-- **Severity**: ⚠️ WARNING · **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it · **Dimension**: Substance / Coverage
-- **Location**: Phase 3 §1, Desired End State
-- **Detail**:
-  - On a cloudy no-go night `ranking` is null (`build.ts:394-397`), so the "K hidden" count of `faintText` can't be computed.
-  - No `faintText` variant exists for a cloudy night, a no-darkness night, or a bright Moon with K = 0.
-  - `target` today needs the planet window to pass and uses its clear-hour masking (`build.ts:439-495`), but the plan doesn't say whether that gate stays.
-  - `upText` and "sets at 01:30" are said to come from the precomputed states, but `MoonDiscState` is site-independent with no altitude, so the states can't supply them.
-  - Nothing says what happens when the civil window is also missing at high latitude, or when `view` is null.
-- **Fix**:
-  - Write the per-path matrix: cloudy, no-darkness, no forecast, new Moon, bright Moon with K = 0, high latitude, no view.
-  - Source `upText` and the set time from `moonTrack` / `moonFreeMinutes` on the window.
-  - Keep `target` behind the solar-system gate.
-  - Build `moonCard` outside the solar-system try/catch, in its own.
-- **Decision**: FIXED in revision 2: Moon-card per-path matrix; upText from moonTrack/moonFreeMinutes; own try/catch (Phase 4)
-
-### F6 — The washed-out list never reaches `/tonight/all`
-
-- **Severity**: ⚠️ WARNING · **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped · **Dimension**: Coverage
-- **Location**: Phase 1 §3 → Phase 3 §1/§3
-- **Detail**: `rankObjects` returns `washedOut`, but `TonightRanking` only gains `washedOutCount` and `washedOutText`. Also, `AllObjectsContent` shows its empty card when `rows.length === 0`, which hides the group exactly when everything is washed out.
-- **Fix**: Add `ranking.washedOutEntries` (id, name, window) to the view. Render the group independently of `rows`, and define whether the heading count includes it.
-- **Decision**: FIXED in revision 2: washedOutEntries in the view; group rendered independently of rows (Phase 1)
-
-### F7 — Phase 2 API and orientation details are wrong or missing
-
-- **Severity**: ⚠️ WARNING · **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped · **Dimension**: Claim Accuracy / Architecture Fit
-- **Location**: Phase 2 §1–3, Phase 1 §2, Phase 4 §2
-- **Detail**:
-  - `Equator(...)` requires an observer and is topocentric (`astronomy.d.ts:690-718`). The geocentric form is `GeoVector` + `EquatorFromVector`, as `moon.ts:63-66` uses.
-  - χ − P is measured from lunar north towards *celestial* east (the left). The contract's "towards lunar east" is mislabelled. The invariants themselves are right, but tests with synthetic angles would share the same convention error.
-  - The phase name needs the elongation band, which the island can't compute. Add `band` or `elongationDeg` to the state.
-  - `MoonDiscState` should live in `src/lib/moon-disc/`, so the island never type-imports the engine.
-  - `src/lib/moon-disc/` is outside `purity.test.ts`.
-  - `minorAxisArcmin` is null for 62 objects, including M27, M57, M76 and M97, so `objectSurfaceBrightnessV` needs b = a when it is missing.
-  - `RankableObject` (`ranking.ts:31-34`) also needs `minorAxisArcmin`.
-- **Fix**:
-  - Use `GeoVector` + `EquatorFromVector`, and fix the angle wording.
-  - Add a coupled test: on a real waxing-crescent engine state, Crisium lies inside the lit path.
-  - Add `band` to the state and move the type into `src/lib/moon-disc/`.
-  - Extend the purity guard to that directory.
-  - State the b = a fallback, and add `minorAxisArcmin` to `RankableObject` and the test fixtures.
-- **Decision**: FIXED in revision 2: GeoVector+EquatorFromVector, angle wording, band in state, type in src/lib/moon-disc, purity extended, b = a fallback, RankableObject
-
-### F8 — Phase 3 is too big
-
-- **Severity**: ⚠️ WARNING · **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped · **Dimension**: Sequencing
-- **Location**: Phase 3
-- **Detail**: Phase 3 holds build, copy, six components, the PRD note, unit tests, e2e and a 12-shot screenshot matrix, and with F4 it grows further.
-- **Fix**: Split it into **3 "Sky wording everywhere"** (F4 scope plus the PRD and the roadmap S-07 note) and **4 "Moon card"** (the card, the SVG and the faint line), then **5 "Time slider"**. Renumber Progress, which is allowed because no row is checked yet.
-- **Decision**: FIXED in revision 2: split into 5 phases (sky wording / Moon card / slider)
-
-### F9 — Removal, e2e and setup touch-lists are not spelled out
-
-- **Severity**: 💬 OBSERVATION · **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped · **Dimension**: Coverage
-- **Location**: Phase 3 §5, Phase 4
-- **Detail**:
-  - **Removal touch-list:**
-    - `brightMoonText` and `moonNote`: `build.ts:9,266-270,310,536-555,577`, `VerdictCard.astro:22-34,59`, `TonightContent.astro:149`;
-    - `format.ts:520-527,555`, `format.test.ts:100-108`, about 8 tests in `build.test.ts:894-1020`;
-    - `en.ts:387-399`, `pl.ts:400-406`;
-    - `isBrightMoon` / `BRIGHT_MOON_*` (keep or remove).
-  - **E2E follow-ups:**
-    - `moon-as-target.spec.ts:31-37` is scoped to the solar-system section with h3, and skips on the card's existence. It should key on the target.
-    - `planets-on-tonight.spec.ts:29,35-41` needs the heading and its skip updated.
-    - `seven-night-planner.spec.ts:107-112` passes, but fragilely.
-  - **E2E setup is not written down:** the fixture on :4400, `FORECAST_BASE_URL` in `.dev.vars`, rebuild, preview. See `.github/workflows` lines 51–70.
-  - **PRD:** it has no changelog section, only `version: 2` and inline "> Resolution" notes.
-  - **S-02 path:** it becomes `context/archive/2026-10-01-moon-as-target/` once PR #78 merges.
-- **Fix**: Add these touch-lists and the e2e setup to the relevant phases. Use the PRD's inline "> Resolution" note style instead of a changelog.
-- **Decision**: FIXED in revision 2: removal touch-list, e2e follow-ups, e2e setup and PRD inline-note style written into the phases
+  - `RankableObject` already has `id`, `raHours`, `decDeg` and `majorAxisArcmin` (`ranking.ts:31-34`). Only `minorAxisArcmin` is new.
+  - The plan doesn't say where the Moon's unit vector lives. `MoonState` is shared with `outlook.ts:176` and `moon-target.ts:91,104`.
+- **Fix**: Correct the field list. Compute the vector as an array parallel to `moonTrack` inside `rankObjects`, and leave `MoonState` unchanged.
+- **Decision**: FIXED (delegated) — RankableObject field list corrected; Moon vector as a parallel array in rankObjects, MoonState unchanged

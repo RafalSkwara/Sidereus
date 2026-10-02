@@ -32,7 +32,7 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 - **No preference toggle.** It is parked.
 
 **Plan status.** `plan.md` is **revision 2**, with 5 phases.
-- Revision 1 was **rejected** by `/10x-plan-review` (`reviews/plan-review.md`, F1–F9). Run on the real engine, its moon score reversed the full-Moon ranking.
+- Revision 1 was **rejected** by `/10x-plan-review` (`reviews/plan-review-rev1.md`, F1–F9). Run on the real engine, its moon score reversed the full-Moon ranking.
 - Revision 2 redesigns the score:
   - Moon-induced sky brightening at each object (Krisciunas–Schaefer 1991), weighted by a per-type sensitivity, on one scale for every object;
   - a separate washed-out rule;
