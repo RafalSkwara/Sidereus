@@ -626,7 +626,7 @@ export function createFormatter(locale: Locale) {
   /**
    * The Moon card's faint-objects line, for a night the ranking runs: "Bright Moon: 4 faint objects washed
    * out tonight" when the Moon washes any out, else by how long the Moon is up: "Moon
-   * up 22:10–03:40 · faint objects unaffected", "Moonlit sky · no faint objects lost" or "Dark night: no Moon".
+   * up 22:10–03:40 · no faint objects washed out", "Moonlit sky · no faint objects lost" or "Dark night: no Moon".
    */
   function moonFaintText(up: MoonUp, washedOutCount: number, timeZone: string): string {
     const text = m.tonight.moon.card.faint;

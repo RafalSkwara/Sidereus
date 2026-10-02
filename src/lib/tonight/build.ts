@@ -695,8 +695,8 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
         initialIndex,
         phaseText: moonPhaseText(shown.band, shown.illuminatedFraction),
         upText: moonUpText(up, timeZone),
-        // Only where the ranking runs, so the washed-out count is known. The illumination is the strip's night-1
-        // value, so the card and the strip never disagree.
+        // Only where the ranking runs, so the washed-out count is known. The line carries no percent: the card's
+        // heading gives the % lit of the state shown, while the strip's "Moon N%" is the night's own figure.
         faintText: ranking === null ? null : moonFaintText(up, ranking.washedOutCount, timeZone),
         target,
       };

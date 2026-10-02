@@ -130,7 +130,7 @@ describe("the Moon card's lines (moonlight-and-the-verdict)", () => {
     expect(english.moonFaintText({ kind: "all" }, 4, zone)).toBe("Bright Moon: 4 faint objects washed out tonight");
     expect(english.moonFaintText({ kind: "all" }, 1, zone)).toBe("Bright Moon: 1 faint object washed out tonight");
     expect(english.moonFaintText({ kind: "all" }, 0, zone)).toBe("Moonlit sky · no faint objects lost");
-    expect(english.moonFaintText(rising, 0, zone)).toBe("Moon up 22:10–06:58 · faint objects unaffected");
+    expect(english.moonFaintText(rising, 0, zone)).toBe("Moon up 22:10–06:58 · no faint objects washed out");
     expect(english.moonFaintText({ kind: "never" }, 0, zone)).toBe("Dark night: no Moon");
     expect(polish.moonFaintText({ kind: "all" }, 5, zone)).toBe(
       "Jasny Księżyc: 5 słabych obiektów ginie dziś w jego blasku",

@@ -551,7 +551,7 @@ export const pl = {
             many: (p) => `Jasny Księżyc: ${p.count} słabych obiektów ginie dziś w jego blasku`,
             other: (p) => `Jasny Księżyc: ${p.count} słabego obiektu ginie dziś w jego blasku`,
           },
-          unaffected: (p) => `Księżyc nad horyzontem w godz. ${p.spans} · słabym obiektom nie przeszkadza`,
+          unaffected: (p) => `Księżyc nad horyzontem w godz. ${p.spans} · żaden słaby obiekt nie ginie`,
           moonlit: "Niebo rozjaśnione Księżycem · żaden słaby obiekt nie ginie",
           dark: "Ciemna noc: bez Księżyca",
         },
@@ -588,8 +588,8 @@ export const pl = {
         follow: (p) => `na niebie przez ${p.duration} w oknie ciemności`,
       },
       moon: {
-        lead: "Blask Księżyca prawie mu nie przeszkadza",
-        follow: "blask Księżyca prawie mu nie przeszkadza",
+        lead: "Lepiej od innych znosi blask Księżyca",
+        follow: "lepiej od innych znosi blask Księżyca",
       },
       brightness: {
         lead: (p) => `Jasny obiekt dla Twoich ${p.aperture} mm`,

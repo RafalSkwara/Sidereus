@@ -588,13 +588,13 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Automated
 
-- [x] 4.1 Unit tests pass: `npm test` (build matrix, format, i18n parity, no-hardcoded-colors, red-theme)
-- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [x] 4.3 E2E passes against a local preview: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 4.1 Unit tests pass: `npm test` (build matrix, format, i18n parity, no-hardcoded-colors, red-theme) — 77fe3a0
+- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — 77fe3a0
+- [x] 4.3 E2E passes against a local preview: `BASE_URL=http://localhost:4321 npm run test:e2e` — 77fe3a0
 
 #### Manual
 
-- [x] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests
+- [x] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests — 77fe3a0
 
 ### Phase 5: The time slider
 

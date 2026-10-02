@@ -948,10 +948,10 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
       // Up at dusk, down from the first 10-minute sample after it sets.
       const sets = /^Sets (\d{2}:\d{2})$/.exec(card.upText ?? "")?.[1];
       expect(sets).toBeDefined();
-      expect(card.faintText).toBe(`Moon up ${card.window?.start}–${sets} · faint objects unaffected`);
+      expect(card.faintText).toBe(`Moon up ${card.window?.start}–${sets} · no faint objects washed out`);
       expect(card.timeLabels).toContain(sets);
       expect(moonCardOf(buildTonight(clearNight("2026-10-20"), "pl")).faintText).toBe(
-        `Księżyc nad horyzontem w godz. ${card.window?.start}–${sets} · słabym obiektom nie przeszkadza`,
+        `Księżyc nad horyzontem w godz. ${card.window?.start}–${sets} · żaden słaby obiekt nie ginie`,
       );
     });
 
@@ -963,7 +963,7 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
       const rises = /^Up (\d{2}:\d{2})–(\d{2}:\d{2})$/.exec(card.upText ?? "");
       expect(rises?.[2]).toBe(card.window?.end);
       expect(card.timeLabels.slice(1)).toContain(rises?.[1]);
-      expect(card.faintText).toBe(`Moon up ${rises?.[1]}–${rises?.[2]} · faint objects unaffected`);
+      expect(card.faintText).toBe(`Moon up ${rises?.[1]}–${rises?.[2]} · no faint objects washed out`);
     });
 
     it("calls the new-Moon night of 10 October dark, with no Moon target", () => {

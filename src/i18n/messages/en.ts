@@ -586,7 +586,7 @@ export const en = {
             one: (p) => `Bright Moon: ${p.count} faint object washed out tonight`,
             other: (p) => `Bright Moon: ${p.count} faint objects washed out tonight`,
           } as PluralForms<Count>,
-          unaffected: (p: { spans: string }) => `Moon up ${p.spans} · faint objects unaffected`,
+          unaffected: (p: { spans: string }) => `Moon up ${p.spans} · no faint objects washed out`,
           moonlit: "Moonlit sky · no faint objects lost",
           dark: "Dark night: no Moon",
         },
@@ -629,8 +629,8 @@ export const en = {
       },
       /** The moon component measures how little the Moon brightens the sky where the object sits, by its type. */
       moon: {
-        lead: "Moonlight barely affects it",
-        follow: "moonlight barely affects it",
+        lead: "Holds up better in moonlight than the rest",
+        follow: "holds up better in moonlight than the rest",
       },
       brightness: {
         lead: (p: { aperture: string }) => `Bright for your ${p.aperture} mm`,

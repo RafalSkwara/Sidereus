@@ -48,3 +48,24 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
     <Attribution />
   </div>
 </GearShell>
+
+<script>
+  // The list streams in through the server island after the browser has already tried the URL's fragment (Tonight's
+  // washed-out line links to /tonight/all#washed-out), so scroll to the target once the island has inserted it.
+  function scrollToHash(): boolean {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const target = id ? document.getElementById(id) : null;
+    target?.scrollIntoView();
+    return target !== null;
+  }
+  if (location.hash && !scrollToHash()) {
+    const observer = new MutationObserver(() => {
+      if (scrollToHash()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    // Stop watching if the target never arrives (an empty night, or a stale link).
+    window.setTimeout(() => {
+      observer.disconnect();
+    }, 10_000);
+  }
+</script>

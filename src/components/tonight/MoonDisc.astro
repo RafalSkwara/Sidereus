@@ -1,7 +1,7 @@
 ---
 // The Moon's disc for one state (moonlight-and-the-verdict): lunar north up, IAU lunar east (Mare Crisium) right, from
-// `moonDiscPaths`. Drawn back to front: the dark disc, the maria faintly over the whole disc (so the dark side still
-// shows them, dimly), the lit part, the maria again clipped to the lit part, then the limb. The `moon-*` tokens
+// `moonDiscPaths`. Drawn back to front: the plain dark disc (no earthshine), the lit part, the maria clipped to the
+// lit part, then the limb. The `moon-*` tokens
 // draw it the same in the dark and light themes (a bright lit part on a dark disc) and in red in red mode.
 import { getMessages } from "@/i18n";
 import { moonDiscPaths } from "@/lib/moon-disc/geometry";
@@ -38,11 +38,6 @@ const label = m.card.discLabel({
     </defs>
   )}
   <circle r="1" class="fill-moon-dark" />
-  <g class="fill-moon-mare opacity-15">
-    {mariaPaths.map((d) => (
-      <path d={d} />
-    ))}
-  </g>
   {litPath && (
     <>
       <path d={litPath} class="fill-moon-lit" />

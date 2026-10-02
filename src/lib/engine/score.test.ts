@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   BRIGHTNESS_RAMP_MAG,
   LOW_INTEREST_PENALTY,
+  MIN_OBJECT_SCORE,
   SCORE_WEIGHTS,
   WELL_PLACED_ALTITUDE_DEG,
   bortlePenaltyForBortle,
@@ -222,7 +223,10 @@ describe("scoreObject", () => {
       const brief = { ...fullMoonNight, object: coreGalaxy(24), track: track([40, 5, 5, 5, 5, 5, 5, 5, 5, 5]) };
       const night = { moonTrack: steadyMoon(10, 40, FULL), moonSeparationsDeg: apart(10, 30) };
       expect(score({ ...brief, ...night, apertureMm: 200 }).washedOut).toBe(true);
-      expect(score({ ...brief, ...night, apertureMm: 70 }).washedOut).toBe(false);
+      const dim = score({ ...brief, ...night, apertureMm: 70 });
+      expect(dim.washedOut).toBe(false);
+      // Neither washed out nor cleared: it stays under the bar on its own score.
+      expect(dim.total).toBeLessThan(MIN_OBJECT_SCORE);
     });
   });
 

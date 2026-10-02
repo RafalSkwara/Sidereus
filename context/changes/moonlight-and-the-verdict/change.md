@@ -1,7 +1,7 @@
 ---
 change_id: moonlight-and-the-verdict
 title: Make the verdict honest about the Moon, with a detailed Moon phase picture
-status: implementing
+status: impl_reviewed
 created: 2026-10-02
 updated: 2026-10-02
 archived_at: null

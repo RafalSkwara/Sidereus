@@ -46,3 +46,18 @@ test("Tonight links to every cleared object, which can be ordered by best time a
   await third.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
   await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${object}&`));
 });
+
+test("Tonight's washed-out line lands on the washed-out group on /tonight/all", async ({ page }) => {
+  await onboardInMadrid(page, "washedout");
+
+  const ranking = page.locator('section[aria-labelledby="ranking-heading"]');
+  await expect(ranking).toBeVisible();
+  const link = ranking.locator("a[data-washed-out]");
+  // Whether tonight's real Moon washes anything out depends on the date the suite runs.
+  test.skip((await link.count()) === 0, "tonight's Moon washes out no object");
+
+  await link.click();
+  await expect(page).toHaveURL(/\/tonight\/all#washed-out$/);
+  // The group arrives with the server island, after the fragment was first resolved; the page scrolls to it then.
+  await expect(page.locator("#washed-out")).toBeInViewport();
+});
