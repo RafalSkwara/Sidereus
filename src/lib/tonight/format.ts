@@ -83,6 +83,13 @@ export interface PlanetFactsText {
 export type DarkReturn = { date: string; window: Interval } | null;
 
 /**
+ * When the Moon is up in the Moon card's window (moonlight-and-the-verdict), from a track over it: never, at every
+ * sample, or for part of it. Each span runs from the first sample with the Moon up to the first sample with it down
+ * again, or to the window's end; `upAtStart` is whether the first span starts at the window's start.
+ */
+export type MoonUp = { kind: "never" } | { kind: "all" } | { kind: "part"; spans: Interval[]; upAtStart: boolean };
+
+/**
  * Which sky headline a verdict gets (moonlight-and-the-verdict): one per row of the plan's headline table. It keys
  * `verdict.inline`, the headlines' lowercase forms.
  */
@@ -139,9 +146,6 @@ export function formatLocaleTag(locale: Locale): string {
  * The Tonight formatters for one locale. Create one per request and reuse it: the `Intl` formatters
  * are built once here.
  */
-/** Which solar-system targets the section shows, so copy names only those (the Moon, the planets, or both). */
-export type ShownSolarTargets = "moon" | "planets" | "both";
-
 export function createFormatter(locale: Locale) {
   const m = getMessages(locale);
   const tag = formatLocaleTag(locale);
@@ -518,17 +522,16 @@ export function createFormatter(locale: Locale) {
 
   /**
    * The planet window's own weather, for when the verdict card does not cover it (a no-go, no dark window, or a
-   * planet verdict of another level), led by its sky headline in lowercase: "For the Moon and planets: partly clear
-   * — 1 h in a row with at most 5% cloud between dusk and dawn". With `clear` (the Moon and planets are limited to
-   * the planet window's clear hours) the clear hours are named instead of the run, in the site's time zone: "For the
-   * Moon and planets: partly clear — clear 19:00–20:00 and 05:00–06:00".
+   * planet verdict of another level), led by its sky headline in lowercase: "For planets: partly clear — 1 h in a
+   * row with at most 5% cloud between dusk and dawn". With `clear` (the planets are limited to the planet window's
+   * clear hours) the clear hours are named instead of the run, in the site's time zone: "For planets: partly clear
+   * — clear 19:00–20:00 and 05:00–06:00".
    * `buildTonight` calls it only for a go or marginal planet window; the no-go reasons fall back to the verdict
    * card's wording.
    */
   function planetWeatherText(
     planetVerdict: Verdict,
     clear: { intervals: readonly Interval[]; timeZone: string } | null = null,
-    shown: ShownSolarTargets = "both",
   ): string {
     const text = m.tonight.planets.weather;
     const reason = planetVerdict.reason;
@@ -568,7 +571,7 @@ export function createFormatter(locale: Locale) {
         phrase = verdictReasonText(planetVerdict);
         break;
     }
-    return text.line[shown]({ sky: skyInline(planetVerdict), reason: phrase });
+    return text.line({ sky: skyInline(planetVerdict), reason: phrase });
   }
 
   /** The Moon's phase band and illumination: "Waxing gibbous · 78% lit". `fraction` is [0, 1], shown in whole percent. */
@@ -595,15 +598,49 @@ export function createFormatter(locale: Locale) {
     return entry.placement === "low" ? text.low(params) : text.line(params);
   }
 
+  /** The Moon's up spans as "22:10–06:58", or "19:05–20:10 and 04:30–06:58", in the site's time zone. */
+  function moonSpansText(spans: readonly Interval[], timeZone: string): string {
+    return listFormat.format(
+      spans.map((span) => `${formatTime(span.start, timeZone)}–${formatTime(span.end, timeZone)}`),
+    );
+  }
+
   /**
-   * The verdict card's bright-Moon line (`isBrightMoon`), with the Moon's illumination in whole percent; `pointer`
-   * adds the sentence that sends the reader to the Moon and planets, only when the section shows one of them.
+   * The Moon card's "when it's up" line: "Up all night", "Sets 01:30" (up at the window's start, then down for the
+   * rest), "Up 22:10–06:58" for any other part, or "Not up tonight".
    */
-  /** `pointer` names what the solar-system section actually shows; `null` when it shows nothing. */
-  function brightMoonLine(fraction: number, { pointer }: { pointer: ShownSolarTargets | null }): string {
-    const text = m.tonight.card;
-    const line = text.brightMoon({ percent: num(Math.round(fraction * 100)) });
-    return pointer === null ? line : `${line} ${text.brightMoonPointer[pointer]}`;
+  function moonUpText(up: MoonUp, timeZone: string): string {
+    const text = m.tonight.moon.card.up;
+    switch (up.kind) {
+      case "never":
+        return text.never;
+      case "all":
+        return text.all;
+      case "part":
+        return up.upAtStart && up.spans.length === 1
+          ? text.sets({ time: formatTime(up.spans[0].end, timeZone) })
+          : text.spans({ spans: moonSpansText(up.spans, timeZone) });
+    }
+  }
+
+  /**
+   * The Moon card's faint-objects line, for a night the ranking runs: "Bright Moon: 4 faint objects washed
+   * out tonight" when the Moon washes any out, else by how long the Moon is up: "Moon
+   * up 22:10–03:40 · faint objects unaffected", "Moonlit sky · no faint objects lost" or "Dark night: no Moon".
+   */
+  function moonFaintText(up: MoonUp, washedOutCount: number, timeZone: string): string {
+    const text = m.tonight.moon.card.faint;
+    if (washedOutCount > 0) {
+      return plural(locale, washedOutCount, text.washedOut)({ count: num(washedOutCount) });
+    }
+    switch (up.kind) {
+      case "never":
+        return text.dark;
+      case "all":
+        return text.moonlit;
+      case "part":
+        return text.unaffected({ spans: moonSpansText(up.spans, timeZone) });
+    }
   }
 
   return {
@@ -633,7 +670,8 @@ export function createFormatter(locale: Locale) {
     planetWeatherText,
     moonPhaseText,
     moonReasonLine,
-    brightMoonLine,
+    moonUpText,
+    moonFaintText,
   };
 }
 

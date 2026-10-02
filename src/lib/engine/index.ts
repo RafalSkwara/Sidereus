@@ -21,7 +21,7 @@ export type { MoonDiscState } from "@/lib/moon-disc/state";
 export { effectiveSurfaceBrightness, moonBrighteningMag, magToNL, nlToMag, skyBrightnessNL } from "./moonlight";
 export type { SkyBrightness, SkyBrightnessInput } from "./moonlight";
 export type { MoonState } from "./moon";
-export { isBrightMoon, moonPlacementOf, moonTarget } from "./moon-target";
+export { moonPlacementOf, moonTarget } from "./moon-target";
 export type { MoonFacts, MoonPlacement, MoonTargetEntry, MoonTargetInput } from "./moon-target";
 export { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects";
 export type { BestWindow } from "./objects";

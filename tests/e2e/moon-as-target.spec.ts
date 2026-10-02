@@ -6,14 +6,16 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * The Moon on Tonight, end to end (M-2 S-02): "Mark observed" on the Moon card saves it through the log form,
- * Tonight confirms it and tags the card as seen, and the log lists it as "Moon". Same setup as
- * `planets-on-tonight.spec.ts`: a production preview on local Supabase with FORECAST_BASE_URL pointing at
- * `tests/e2e/forecast-fixture.mjs` (an all-clear sky), and place search stubbed with Madrid.
+ * The Moon on Tonight, end to end (M-2 S-02, moved into the Moon card by moonlight-and-the-verdict): "Mark observed"
+ * in the Moon card saves it through the log form, Tonight confirms it and tags the card as seen, and the log lists it
+ * as "Moon". Same setup as `planets-on-tonight.spec.ts`: a production preview on local Supabase with
+ * FORECAST_BASE_URL pointing at `tests/e2e/forecast-fixture.mjs` (an all-clear sky), and place search stubbed with
+ * Madrid.
  *
- * The clock is real, so on roughly half of all nights the Moon is not up between dusk and dawn (or is too thin a
- * crescent) and the spec skips. It proves the logging flow when it runs; what the card says on a given night, and
- * the bright-Moon line, are pinned on fixed nights by the build's unit tests.
+ * The Moon card shows every night, but the clock is real, so on roughly half of all nights the Moon is not a target
+ * (not up between dusk and dawn, or too thin a crescent) and the spec skips. It proves the logging flow when it runs;
+ * what the card says on a given night, faint-objects line included, is pinned on fixed nights by the build's unit
+ * tests.
  */
 
 const LOG_FORM = 'form[action="/api/log"]';
@@ -28,15 +30,15 @@ test("marking the Moon observed from Tonight saves it, tags the card and lists i
   // Tonight's content is a server island fetched after the page loads: wait for it (the verdict card always
   // renders) before deciding the Moon is absent, or the count below would always be 0.
   await expect(page.locator('section[aria-labelledby="verdict-heading"]')).toBeVisible();
-  const section = page.locator('section[aria-labelledby="solar-system-heading"]');
-  const moonCard = section.locator('article[aria-labelledby="moon-heading"]');
-  if ((await moonCard.count()) === 0) {
-    test.skip(true, "the Moon is not up in Madrid between dusk and dawn tonight");
-  }
+  const moonCard = page.locator('section[aria-labelledby="moon-heading"]');
+  await expect(moonCard.getByRole("heading", { level: 2 })).toBeVisible();
   const name = en.targets.moon;
-  await expect(moonCard.getByRole("heading", { level: 3 })).toHaveText(name);
+  const markObserved = moonCard.getByRole("link", { name: en.tonight.moon.markObserved({ name }) });
+  if ((await markObserved.count()) === 0) {
+    test.skip(true, "the Moon is not a target in Madrid between dusk and dawn tonight");
+  }
 
-  await moonCard.getByRole("link", { name: en.tonight.moon.markObserved({ name }) }).click();
+  await markObserved.click();
 
   // The form arrives prefilled with the Moon's target key and tonight's night, site and telescope.
   await expect(page).toHaveURL(/\/log\/new\?object=moon&night=\d{4}-\d{2}-\d{2}&site=/);

@@ -576,25 +576,25 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test` (headline table EN/PL, i18n parity)
-- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [x] 3.3 E2E passes against a local preview (setup below): `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 3.1 Unit tests pass: `npm test` (headline table EN/PL, i18n parity) — c6f6972
+- [x] 3.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build` — c6f6972
+- [x] 3.3 E2E passes against a local preview (setup below): `BASE_URL=http://localhost:4321 npm run test:e2e` — c6f6972
 
 #### Manual
 
-- [x] 3.4 Screenshots on the local preview of the sky card, the strip and the landing legend in EN/PL; no "Go" left in user-visible copy
+- [x] 3.4 Screenshots on the local preview of the sky card, the strip and the landing legend in EN/PL; no "Go" left in user-visible copy — c6f6972
 
 ### Phase 4: The Moon card
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass: `npm test` (build matrix, format, i18n parity, no-hardcoded-colors, red-theme)
-- [ ] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
-- [ ] 4.3 E2E passes against a local preview: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 4.1 Unit tests pass: `npm test` (build matrix, format, i18n parity, no-hardcoded-colors, red-theme)
+- [x] 4.2 Type check, lint and build pass: `npx astro check && npm run lint && npm run build`
+- [x] 4.3 E2E passes against a local preview: `BASE_URL=http://localhost:4321 npm run test:e2e`
 
 #### Manual
 
-- [ ] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests
+- [x] 4.4 Playwright screenshots on the local preview: EN/PL × dark/light/red × phone/desktop of tonight's real-clock Moon; the two cards read clearly, the SVG's lit side and % match the phase, red mode stays red; every faint-objects case covered by fixed-date build tests
 
 ### Phase 5: The time slider
 

@@ -411,13 +411,6 @@ export const pl = {
       darkTo: "do",
       noDarkWindow: "Brak ciemnej nocy",
       timesIn: (p) => ` · czas w strefie ${p.zone}`,
-      brightMoon: (p) =>
-        `Jasny Księżyc (oświetlony w ${p.percent}%) świeci przez większość ciemnych godzin: słabe galaktyki i mgławice zginą w jego blasku.`,
-      brightMoonPointer: {
-        moon: "Lepszym wyborem na dziś jest Księżyc poniżej.",
-        planets: "Lepszym wyborem na dziś są planety poniżej.",
-        both: "Lepszym wyborem na dziś są Księżyc i planety poniżej.",
-      },
     },
 
     nights: {
@@ -458,19 +451,14 @@ export const pl = {
     // Planet names stay in the nominative: where one follows other words (the "Mark observed" link name), a colon
     // separates them, as in `logged`, so no grammatical case is needed.
     planets: {
-      heading: "Układ Słoneczny dziś w nocy",
+      heading: "Planety dziś w nocy",
       listLabel: "Planety",
       window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
-      // With "ani …, ani …" the verb agrees with the nearer subject ("żadna planeta").
-      none: "Dziś między zmierzchem a świtem ani Księżyc, ani żadna planeta nie jest dobrze widoczna.",
-      noneInClearHours: "W pogodnych godzinach tej nocy ani Księżyc, ani żadna planeta nie jest dobrze widoczna.",
+      none: "Dziś między zmierzchem a świtem żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
+      noneInClearHours: "W pogodnych godzinach tej nocy żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
       markObserved: (p) => `Zapisz obserwację: ${p.planet}`,
       weather: {
-        line: {
-          moon: (p) => `Dla Księżyca: ${p.sky} — ${p.reason}`,
-          planets: (p) => `Dla planet: ${p.sky} — ${p.reason}`,
-          both: (p) => `Dla Księżyca i planet: ${p.sky} — ${p.reason}`,
-        },
+        line: (p) => `Dla planet: ${p.sky} — ${p.reason}`,
         clearRun: (p) => `${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem`,
         humidityCap: (p) =>
           `między zmierzchem a świtem niebo dość czyste, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
@@ -547,6 +535,27 @@ export const pl = {
         },
       },
       markObserved: (p) => `Zapisz obserwację: ${p.name}`,
+      card: {
+        kicker: "Księżyc dziś w nocy",
+        discLabel: (p) => `Księżyc: ${p.phase}, ${p.lit}`,
+        up: {
+          all: "Nad horyzontem przez całą noc",
+          sets: (p) => `Zachodzi o ${p.time}`,
+          spans: (p) => `Nad horyzontem w godz. ${p.spans}`,
+          never: "Dziś w nocy pod horyzontem",
+        },
+        faint: {
+          washedOut: {
+            one: (p) => `Jasny Księżyc: ${p.count} słaby obiekt ginie dziś w jego blasku`,
+            few: (p) => `Jasny Księżyc: ${p.count} słabe obiekty giną dziś w jego blasku`,
+            many: (p) => `Jasny Księżyc: ${p.count} słabych obiektów ginie dziś w jego blasku`,
+            other: (p) => `Jasny Księżyc: ${p.count} słabego obiektu ginie dziś w jego blasku`,
+          },
+          unaffected: (p) => `Księżyc nad horyzontem w godz. ${p.spans} · słabym obiektom nie przeszkadza`,
+          moonlit: "Niebo rozjaśnione Księżycem · żaden słaby obiekt nie ginie",
+          dark: "Ciemna noc: bez Księżyca",
+        },
+      },
       note: {
         "waxing-crescent":
           "Wąski sierp wieczorem nad zachodnim horyzontem. Przy granicy cienia szukaj Morza Przesileń i łańcucha kraterów od Langrenusa do Petawiusza; ciemna część tarczy może słabo świecić światłem popielatym.",

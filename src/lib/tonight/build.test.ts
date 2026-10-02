@@ -8,11 +8,14 @@ import {
   darkWindow,
   ICE_GIANT_MIN_APERTURE_MM,
   MAX_RANKED_OBJECTS,
+  MOON_DISC_STEP_MINUTES,
+  moonDiscState,
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
   type HourlyForecast,
   type Interval,
+  type MoonDiscState,
 } from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
@@ -20,6 +23,8 @@ import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecor
 
 import {
   buildTonight,
+  type TonightMoonCard,
+  type TonightMoonEntry,
   type TonightNight,
   type TonightSolarSystem,
   type TonightRanking,
@@ -663,7 +668,6 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       { start: new Date(Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS), end: civil.end },
     ];
     const [evening, morning] = clear.map((interval) => `${hhmm(interval.start)}–${hhmm(interval.end)}`);
-    // Only planets show in these clear hours (the Moon is not up then), so the line names only them.
     expect(planets.weatherText).toBe(`For planets: partly clear — clear ${evening} and ${morning}`);
 
     expect(planets.entries.length).toBeGreaterThan(0);
@@ -688,14 +692,12 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       overlapsDark(start) || start.getTime() >= dark.end.getTime() ? 100 : 5,
     );
     const planets = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "en"));
-    expect(planets.weatherText).toMatch(/^For the Moon and planets: partly clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For planets: partly clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries).toEqual([]);
     expect(planets.noneText).toBe(en.tonight.planets.noneInClearHours);
 
     const polish = planetsOf(buildTonight({ ...input, forecast: result(forecast) }, "pl"));
-    expect(polish.weatherText).toMatch(
-      /^Dla Księżyca i planet: częściowo pogodnie — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/,
-    );
+    expect(polish.weatherText).toMatch(/^Dla planet: częściowo pogodnie — pogodnie w godz\. \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(polish.noneText).toBe(pl.tonight.planets.noneInClearHours);
   });
 
@@ -706,7 +708,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     const planets = planetsOf(view);
     expect(planets.entries).toEqual([]);
     expect(planets.noneText).toBe(en.tonight.planets.none);
-    expect(planets.noneText).toBe("Neither the Moon nor any planet is well placed between dusk and dawn tonight.");
+    expect(planets.noneText).toBe("No planet is well placed for your telescope between dusk and dawn tonight.");
   });
 
   it("gives the planet weather line when the planet verdict differs from a go on the card", () => {
@@ -757,7 +759,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(view.ranking).toBeNull();
     const planets = planetsOf(view);
     // Every hour of the planet window is clear, so the clear hours are the whole window.
-    expect(planets.weatherText).toMatch(/^For the Moon and planets: clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
+    expect(planets.weatherText).toMatch(/^For planets: clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(planets.entries.length).toBeGreaterThan(0);
   });
 
@@ -856,7 +858,7 @@ describe("buildTonight between the dark window's end and civil dawn", () => {
   });
 });
 
-describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
+describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
   /** An all-clear Warsaw night: the forecast covers it from 00:00 UTC on the evening date, fetched at 16:00 UTC. */
   function clearNight(date: string, overrides: Partial<Parameters<typeof buildTonight>[0]> = {}) {
     const now = new Date(`${date}T16:00:00Z`);
@@ -870,86 +872,163 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     };
   }
 
-  function solarSystemOf(view: TonightView): TonightSolarSystem {
-    if (view.solarSystem === null) {
-      throw new Error("expected the solar-system section");
+  function moonCardOf(view: TonightView): TonightMoonCard {
+    if (view.moonCard === null) {
+      throw new Error("expected the Moon card");
     }
-    return view.solarSystem;
+    return view.moonCard;
   }
 
-  /** The strip's night-1 illumination ("Moon 99% · …"), which the bright-Moon line must repeat. */
-  function stripPercent(view: TonightView): string {
-    const percent = /^Moon (\d{1,3})%/.exec(view.nights[0].moonText)?.[1];
-    if (percent === undefined) {
-      throw new Error(`no illumination in "${view.nights[0].moonText}"`);
+  function targetOf(view: TonightView): TonightMoonEntry {
+    const target = moonCardOf(view).target;
+    if (target === null) {
+      throw new Error("expected the Moon as a target");
     }
-    return percent;
+    return target;
   }
 
-  it("puts a full Moon first on 26 October, with both eyepieces, a reason and the full-Moon note", () => {
-    const view = buildTonight(clearNight("2026-10-26"), "en");
-    const moon = solarSystemOf(view).moon;
-    expect(moon).toMatchObject({
-      key: "moon",
-      name: "Moon",
-      band: "full",
-      // The 25 mm shows 1.7°, the whole disc; the 10 mm is the detail pick at 75×.
-      wholeDisc: { name: "25 mm Plössl", magnification: 30 },
-      wholeDiscFits: true,
-      detail: { name: "10 mm Plössl", magnification: 75 },
-      note: en.tonight.moon.note.full,
-      seenText: null,
+  /** The night's window (dark or civil) in Warsaw, in UTC instants. */
+  function warsawWindow(date: string, altitudeDeg: number, site: SiteRecord = WARSAW): Interval {
+    const window = darkWindow(toEngineSite(site), observingNight(date, site.timeZone), altitudeDeg);
+    if (window.kind !== "window") {
+      throw new Error(`expected a window on ${date}`);
+    }
+    return window;
+  }
+
+  /** The phase line for a state, as the card words it in English. */
+  function englishPhase(state: Pick<MoonDiscState, "band" | "illuminatedFraction">): string {
+    return en.tonight.moon.phaseLine({
+      phase: en.tonight.moon.phase[state.band],
+      lit: en.tonight.moon.lit({ percent: String(Math.round(state.illuminatedFraction * 100)) }),
     });
-    expect(moon?.phaseText).toMatch(/^Full Moon · \d{2,3}% lit$/);
-    expect(moon?.windowStart).toMatch(/^\d{2}:\d{2}$/);
-    expect(moon?.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-    expect(moon?.reason).toMatch(/^Highest \d{1,2}° at \d{2}:\d{2} — best in the middle of the night$/);
-    // The planets follow, unchanged.
-    expect(solarSystemOf(view).entries.length).toBeGreaterThan(0);
-    expect(solarSystemOf(view).noneText).toBeNull();
+  }
+
+  describe("on a go night with a dark window", () => {
+    it("covers the dark window in 10-minute states, labelled in the site's zone", () => {
+      const view = buildTonight(clearNight("2026-10-26"), "en");
+      const card = moonCardOf(view);
+      const dark = warsawWindow("2026-10-26", darknessThresholdDegForBortle(WARSAW.bortle));
+      expect(card.windowKind).toBe("dark");
+      expect(view.darkWindow).toEqual({ kind: "window", ...card.window });
+      expect(card.states.length).toBeGreaterThan(1);
+      expect(card.timeLabels).toHaveLength(card.states.length);
+      expect(card.states[0].time).toBe(dark.start.toISOString());
+      expect(card.states.at(-1)?.time).toBe(dark.end.toISOString());
+      expect(Date.parse(card.states[1].time) - Date.parse(card.states[0].time)).toBe(MOON_DISC_STEP_MINUTES * 60_000);
+      expect(card.timeLabels[0]).toBe(card.window?.start);
+      expect(card.timeLabels.at(-1)).toBe(card.window?.end);
+    });
+
+    it("says how many faint objects the Moon washes out on 26 October, with no percent of its own", () => {
+      const view = buildTonight(clearNight("2026-10-26"), "en");
+      const card = moonCardOf(view);
+      const count = rankingOf(view).washedOutCount;
+      expect(count).toBeGreaterThan(0);
+      expect(card.upText).toBe("Up all night");
+      expect(card.faintText).toBe(en.tonight.moon.card.faint.washedOut.other({ count: String(count) }));
+      expect(card.faintText).toMatch(/^Bright Moon: \d+ faint objects washed out tonight$/);
+      const polish = moonCardOf(buildTonight(clearNight("2026-10-26"), "pl"));
+      expect(polish.faintText).toMatch(/^Jasny Księżyc: \d+ słab/);
+      expect(polish.upText).toBe("Nad horyzontem przez całą noc");
+    });
+
+    it("calls a Moon up the whole window without washed-out objects a moonlit sky (1 September)", () => {
+      const view = buildTonight(clearNight("2026-09-01"), "en");
+      expect(rankingOf(view).washedOutCount).toBe(0);
+      const card = moonCardOf(view);
+      expect(card.upText).toBe("Up all night");
+      expect(card.faintText).toBe("Moonlit sky · no faint objects lost");
+    });
+
+    it("names the Moon's up time when it sets mid-window without washing anything out (20 October)", () => {
+      const view = buildTonight(clearNight("2026-10-20"), "en");
+      expect(rankingOf(view).washedOutCount).toBe(0);
+      const card = moonCardOf(view);
+      // Up at dusk, down from the first 10-minute sample after it sets.
+      const sets = /^Sets (\d{2}:\d{2})$/.exec(card.upText ?? "")?.[1];
+      expect(sets).toBeDefined();
+      expect(card.faintText).toBe(`Moon up ${card.window?.start}–${sets} · faint objects unaffected`);
+      expect(card.timeLabels).toContain(sets);
+      expect(moonCardOf(buildTonight(clearNight("2026-10-20"), "pl")).faintText).toBe(
+        `Księżyc nad horyzontem w godz. ${card.window?.start}–${sets} · słabym obiektom nie przeszkadza`,
+      );
+    });
+
+    it("names the rising time when the Moon comes up mid-window (6 October)", () => {
+      const view = buildTonight(clearNight("2026-10-06"), "en");
+      expect(rankingOf(view).washedOutCount).toBe(0);
+      const card = moonCardOf(view);
+      // Down at dusk, up from the first 10-minute sample after it rises, then up to the window's end.
+      const rises = /^Up (\d{2}:\d{2})–(\d{2}:\d{2})$/.exec(card.upText ?? "");
+      expect(rises?.[2]).toBe(card.window?.end);
+      expect(card.timeLabels.slice(1)).toContain(rises?.[1]);
+      expect(card.faintText).toBe(`Moon up ${rises?.[1]}–${rises?.[2]} · faint objects unaffected`);
+    });
+
+    it("calls the new-Moon night of 10 October dark, with no Moon target", () => {
+      const view = buildTonight(clearNight("2026-10-10"), "en");
+      expect(rankingOf(view).washedOutCount).toBe(0);
+      const card = moonCardOf(view);
+      expect(card.upText).toBe("Not up tonight");
+      expect(card.faintText).toBe("Dark night: no Moon");
+      expect(card.target).toBeNull();
+      expect(moonCardOf(buildTonight(clearNight("2026-10-10"), "pl")).faintText).toBe("Ciemna noc: bez Księżyca");
+    });
+
+    it("shows the state nearest the page load, clamped into the window", () => {
+      const dark = warsawWindow("2026-10-26", darknessThresholdDegForBortle(WARSAW.bortle));
+      // 16:00 UTC is before dusk: the first state.
+      const before = moonCardOf(buildTonight(clearNight("2026-10-26"), "en"));
+      expect(before.initialIndex).toBe(0);
+      expect(before.phaseText).toBe(englishPhase(before.states[0]));
+
+      const now = new Date(dark.start.getTime() + 2 * HOUR_MS + 7 * 60_000);
+      const during = moonCardOf(buildTonight(clearNight("2026-10-26", { now }), "en"));
+      const shown = during.states[during.initialIndex];
+      expect(Math.abs(Date.parse(shown.time) - now.getTime())).toBeLessThanOrEqual(
+        (MOON_DISC_STEP_MINUTES / 2) * 60_000,
+      );
+      expect(during.phaseText).toBe(englishPhase(shown));
+
+      // After the dark window, before civil dawn: the night in progress, at its last state.
+      const late = new Date(dark.end.getTime() + 30 * 60_000);
+      const after = moonCardOf(buildTonight(clearNight("2026-10-26", { now: late }), "en"));
+      expect(after.initialIndex).toBe(after.states.length - 1);
+    });
+
+    it("puts the full Moon's observing details in the card on 26 October", () => {
+      const view = buildTonight(clearNight("2026-10-26"), "en");
+      expect(targetOf(view)).toMatchObject({
+        key: "moon",
+        name: "Moon",
+        band: "full",
+        // The 25 mm shows 1.7°, the whole disc; the 10 mm is the detail pick at 75×.
+        wholeDisc: { name: "25 mm Plössl", magnification: 30 },
+        wholeDiscFits: true,
+        detail: { name: "10 mm Plössl", magnification: 75 },
+        note: en.tonight.moon.note.full,
+        seenText: null,
+      });
+      expect(targetOf(view).windowStart).toMatch(/^\d{2}:\d{2}$/);
+      expect(targetOf(view).bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
+      expect(targetOf(view).reason).toMatch(/^Highest \d{1,2}° at \d{2}:\d{2} — best in the middle of the night$/);
+      // The planets keep their own section, planets only.
+      expect(view.solarSystem?.entries.length).toBeGreaterThan(0);
+      expect(view.solarSystem).not.toHaveProperty("moon");
+    });
+
+    it("words the card and the target in Polish", () => {
+      const view = buildTonight(clearNight("2026-10-26"), "pl");
+      expect(moonCardOf(view).phaseText).toMatch(/^(Pełnia|Garbaty (przybywający|ubywający)) · oświetlony w \d{2,3}%$/);
+      expect(targetOf(view)).toMatchObject({ name: "Księżyc", note: pl.tonight.moon.note.full });
+      expect(targetOf(view).reason).toMatch(/^Najwyżej \d{1,2}° o \d{2}:\d{2} — najlepiej w środku nocy$/);
+    });
   });
 
-  it("sets the bright-Moon line on 26 October from the strip's own Moon values, pointing at the section", () => {
-    const view = buildTonight(clearNight("2026-10-26"), "en");
-    expect(view.verdict.level).toBe("go");
-    const percent = stripPercent(view);
-    expect(view.brightMoonText).toBe(
-      `${en.tonight.card.brightMoon({ percent })} ${en.tonight.card.brightMoonPointer.both}`,
-    );
-    const polish = buildTonight(clearNight("2026-10-26"), "pl");
-    expect(polish.brightMoonText).toBe(
-      `${pl.tonight.card.brightMoon({ percent })} ${pl.tonight.card.brightMoonPointer.both}`,
-    );
-  });
-
-  it("has no Moon entry and no bright-Moon line at new Moon on 10 October", () => {
-    const view = buildTonight(clearNight("2026-10-10"), "en");
-    expect(view.verdict.level).toBe("go");
-    expect(solarSystemOf(view).moon).toBeNull();
-    expect(view.brightMoonText).toBeNull();
-    // Planets only: the section lists them and needs no "none" text.
-    expect(solarSystemOf(view).entries.length).toBeGreaterThan(0);
-    expect(solarSystemOf(view).noneText).toBeNull();
-  });
-
-  it("words the Moon in Polish", () => {
-    const moon = solarSystemOf(buildTonight(clearNight("2026-10-26"), "pl")).moon;
-    expect(moon).toMatchObject({ name: "Księżyc", note: pl.tonight.moon.note.full });
-    expect(moon?.phaseText).toMatch(/^Pełnia · oświetlony w \d{2,3}%$/);
-    expect(moon?.reason).toMatch(/^Najwyżej \d{1,2}° o \d{2}:\d{2} — najlepiej w środku nocy$/);
-  });
-
-  it("limits the Moon to the clear hours of a cloudy no-go night, and gives no bright-Moon line", () => {
-    // 31 October: a 61% Moon up most of the night, bright on an all-clear night.
-    expect(buildTonight(clearNight("2026-10-31"), "en").brightMoonText).not.toBeNull();
-
-    const engineSite = toEngineSite(WARSAW);
-    const night = observingNight("2026-10-31", WARSAW.timeZone);
-    const dark = darkWindow(engineSite, night, darknessThresholdDegForBortle(WARSAW.bortle));
-    const civil = darkWindow(engineSite, night, PLANET_WINDOW_SUN_ALTITUDE_DEG);
-    if (dark.kind !== "window" || civil.kind !== "window") {
-      throw new Error("expected a dark window and a planet window on 2026-10-31 in Warsaw");
-    }
+  it("keeps the dark window and the Moon target in the clear hours of a cloudy no-go night, with no faint line", () => {
+    const dark = warsawWindow("2026-10-31", darknessThresholdDegForBortle(WARSAW.bortle));
+    const civil = warsawWindow("2026-10-31", PLANET_WINDOW_SUN_ALTITUDE_DEG);
     // Overcast over every hour that overlaps the dark window, clear in the twilight either side.
     const forecast = hourlyForecast("2026-10-31T00:00:00Z", 48, (start) =>
       start.getTime() < dark.end.getTime() && start.getTime() + HOUR_MS > dark.start.getTime() ? 100 : 5,
@@ -957,88 +1036,108 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
     const now = new Date("2026-10-31T16:00:00Z");
     const view = buildTonight(clearNight("2026-10-31", { forecast: result(forecast, false, now) }), "en");
     expect(view.verdict.level).toBe("no-go");
-    expect(view.brightMoonText).toBeNull();
-    const moon = solarSystemOf(view).moon;
-    if (moon === null) {
-      throw new Error("expected the Moon in the clear morning twilight");
-    }
+    const card = moonCardOf(view);
+    expect(card.windowKind).toBe("dark");
+    expect(card.states[0].time).toBe(dark.start.toISOString());
+    expect(card.upText).not.toBeNull();
+    expect(card.faintText).toBeNull();
     // The only clear hours the Moon is up in are after the dark window, before civil dawn.
-    const morning = Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS;
-    expect(moon.bestAt).toBeGreaterThanOrEqual(morning);
-    expect(moon.bestAt).toBeLessThanOrEqual(civil.end.getTime());
+    const target = targetOf(view);
+    expect(target.bestAt).toBeGreaterThanOrEqual(Math.ceil(dark.end.getTime() / HOUR_MS) * HOUR_MS);
+    expect(target.bestAt).toBeLessThanOrEqual(civil.end.getTime());
   });
 
-  it("gives no bright-Moon line on a night without a dark window, even near full Moon", () => {
-    // Warsaw under a Bortle 3 sky at the end of June: the sun never reaches −18°; full Moon is on 29 June.
+  it("covers civil dusk to dawn on a no-darkness night, with no faint line", () => {
+    // Warsaw under a Bortle 3 sky at the end of June: the sun never reaches −18°, but it passes −6°.
+    const site = { ...WARSAW, bortle: 3 };
     const view = buildTonight(
-      clearNight("2026-06-29", { site: { ...WARSAW, bortle: 3 }, now: new Date("2026-06-29T19:00:00Z") }),
-      "en",
-    );
-    expect(view.darkWindow).toEqual({ kind: "none" });
-    expect(view.brightMoonText).toBeNull();
-  });
-
-  it("lists the Moon alone when no planet qualifies, with no none text", () => {
-    // 31 October with a 100 mm: no ice giants, and only the Moon (about 60°) clears a 57° minimum.
-    const view = buildTonight(
-      clearNight("2026-10-31", {
-        site: { ...WARSAW, minAltitudeDeg: 57 },
-        telescope: { ...TELESCOPE, apertureMm: 100 },
+      clearNight("2026-06-29", {
+        site,
+        forecast: result(uniformForecast("2026-06-29T00:00:00Z", 5)),
+        now: new Date("2026-06-29T19:00:00Z"),
       }),
       "en",
     );
-    const solarSystem = solarSystemOf(view);
-    expect(solarSystem.moon).not.toBeNull();
-    expect(solarSystem.entries).toEqual([]);
-    expect(solarSystem.noneText).toBeNull();
+    expect(view.darkWindow).toEqual({ kind: "none" });
+    const civil = warsawWindow("2026-06-29", PLANET_WINDOW_SUN_ALTITUDE_DEG, site);
+    const card = moonCardOf(view);
+    expect(card.windowKind).toBe("civil");
+    expect(card.states[0].time).toBe(civil.start.toISOString());
+    expect(card.states.at(-1)?.time).toBe(civil.end.toISOString());
+    expect(card.upText).not.toBeNull();
+    expect(card.faintText).toBeNull();
+    // The planet window passes, so the Moon is judged under the same gate as the planets.
+    expect(view.solarSystem).not.toBeNull();
   });
 
-  it("says neither the Moon nor a planet is well placed when both are absent", () => {
-    const solarSystem = solarSystemOf(
-      buildTonight(clearNight("2026-10-26", { site: { ...WARSAW, minAltitudeDeg: 70 } }), "en"),
+  it("shows only the phase at local noon without a civil window (Tromsø at the solstice)", () => {
+    const view = buildTonight(
+      clearNight("2026-06-21", {
+        site: TROMSO_SITE,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T20:00:00Z"),
+      }),
+      "en",
     );
-    expect(solarSystem.moon).toBeNull();
-    expect(solarSystem.entries).toEqual([]);
-    expect(solarSystem.noneText).toBe(en.tonight.planets.none);
+    const noon = moonDiscState(observingNight("2026-06-21", TROMSO_SITE.timeZone).start);
+    expect(view.moonCard).toEqual({
+      window: null,
+      windowKind: "none",
+      states: [],
+      timeLabels: [],
+      initialIndex: 0,
+      phaseText: englishPhase(noon),
+      upText: null,
+      faintText: null,
+      target: null,
+    });
   });
 
-  it("is deterministic: identical inputs give an identical Moon entry and bright-Moon line", () => {
-    const first = buildTonight(clearNight("2026-10-26"), "en");
-    const second = buildTonight(clearNight("2026-10-26"), "en");
-    expect(second.solarSystem?.moon).toEqual(first.solarSystem?.moon);
-    expect(second.brightMoonText).toEqual(first.brightMoonText);
+  it("works out the faint line and the target without a forecast", () => {
+    const view = buildTonight(clearNight("2026-10-26", { forecast: null }), "en");
+    expect(view.headline.key).toBe("verdict.sky.noForecast");
+    const card = moonCardOf(view);
+    expect(card.windowKind).toBe("dark");
+    expect(card.faintText).toMatch(/^Bright Moon: \d+ faint objects washed out tonight$/);
+    expect(card.target).not.toBeNull();
   });
 
-  it("keeps the Moon when working out the planets fails, and points only at the Moon", () => {
+  it("has no target when the planet window is clouded out, but keeps the card", () => {
+    const view = buildTonight(
+      clearNight("2026-10-26", { forecast: result(uniformForecast("2026-10-26T00:00:00Z", 100)) }),
+      "en",
+    );
+    expect(view.solarSystem).toBeNull();
+    const card = moonCardOf(view);
+    expect(card.target).toBeNull();
+    expect(card.faintText).toBeNull();
+    expect(card.upText).toBe("Up all night");
+  });
+
+  it("is deterministic: identical inputs give an identical card", () => {
+    expect(buildTonight(clearNight("2026-10-26"), "en").moonCard).toEqual(
+      buildTonight(clearNight("2026-10-26"), "en").moonCard,
+    );
+  });
+
+  it("keeps the Moon target when working out the planets fails", () => {
     const working = buildTonight(clearNight("2026-10-26"), "en");
     planetRanking.throws = true;
     const view = buildTonight(clearNight("2026-10-26"), "en");
-    const solarSystem = solarSystemOf(view);
-    expect(solarSystem.moon).toEqual(working.solarSystem?.moon);
-    expect(solarSystem.entries).toEqual([]);
-    // A failure is not "nothing is well placed": the Moon is listed, so there is no none text.
-    expect(solarSystem.noneText).toBeNull();
+    expect(view.solarSystem).toBeNull();
+    expect(view.moonCard).toEqual(working.moonCard);
     expect(view.ranking).toEqual(working.ranking);
-    expect(view.brightMoonText).toBe(
-      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.moon}`,
-    );
   });
 
-  it("drops only the Moon when working it out fails", () => {
+  it("drops only the target when working it out fails", () => {
     const working = buildTonight(clearNight("2026-10-26"), "en");
     moonTargeting.throws = true;
     const view = buildTonight(clearNight("2026-10-26"), "en");
-    const solarSystem = solarSystemOf(view);
-    expect(solarSystem.moon).toBeNull();
-    expect(solarSystem.entries).toEqual(working.solarSystem?.entries);
-    expect(solarSystem.noneText).toBeNull();
+    expect(view.moonCard).toEqual({ ...working.moonCard, target: null });
+    expect(view.solarSystem).toEqual(working.solarSystem);
     expect(view.verdict).toEqual(working.verdict);
     expect(view.ranking).toEqual(working.ranking);
     expect(view.nights).toEqual(working.nights);
-    // The planets still show, so the line still points at the section, now naming only the planets.
-    expect(view.brightMoonText).toBe(
-      `${en.tonight.card.brightMoon({ percent: stripPercent(view) })} ${en.tonight.card.brightMoonPointer.planets}`,
-    );
   });
 
   it("tags a logged Moon as seen", () => {
@@ -1046,12 +1145,12 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
       clearNight("2026-10-26", { log: [{ target: "moon", night: "2026-10-01", rating: 5 }] }),
       "en",
     );
-    expect(solarSystemOf(view).moon?.seenText).toBe("Seen 1 time – last 1 Oct 2026");
+    expect(targetOf(view).seenText).toBe("Seen 1 time – last 1 Oct 2026");
   });
 
   it("shows only the whole-disc eyepiece when the detail pick is no stronger, and none for an empty kit", () => {
     const single = buildTonight(clearNight("2026-10-26", { eyepieces: [EYEPIECES[0]] }), "en");
-    expect(solarSystemOf(single).moon).toMatchObject({
+    expect(targetOf(single)).toMatchObject({
       wholeDisc: { name: "25 mm Plössl", magnification: 30 },
       wholeDiscFits: true,
       detail: null,
@@ -1063,13 +1162,13 @@ describe("buildTonight's Moon and bright-Moon line (M-2 S-02)", () => {
       }),
       "en",
     );
-    expect(solarSystemOf(short).moon).toMatchObject({
+    expect(targetOf(short)).toMatchObject({
       wholeDisc: { name: "6 mm", magnification: 125 },
       wholeDiscFits: false,
       detail: null,
     });
     const empty = buildTonight(clearNight("2026-10-26", { eyepieces: [] }), "en");
-    expect(solarSystemOf(empty).moon).toMatchObject({ wholeDisc: null, wholeDiscFits: false, detail: null });
+    expect(targetOf(empty)).toMatchObject({ wholeDisc: null, wholeDiscFits: false, detail: null });
   });
 });
 

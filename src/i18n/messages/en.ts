@@ -406,19 +406,6 @@ export const en = {
       /** Also the sky headline of a no-darkness night, on the card and on any night of the strip. */
       noDarkWindow: "No dark window",
       timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
-      /**
-       * M-2 S-02: on a go or marginal night with a dark window, when the Moon is at least half lit and up for most
-       * of the dark window (`isBrightMoon`). Always shown with the line.
-       */
-      brightMoon: (p: { percent: string }) =>
-        `Bright Moon (${p.percent}% lit) up most of the dark hours: faint galaxies and nebulae will be washed out.`,
-      /** Follows `brightMoon` only when the "Solar system tonight" section shows the Moon or a planet. */
-      /** Names only what the solar-system section below actually shows. */
-      brightMoonPointer: {
-        moon: "The Moon below is a better bet tonight.",
-        planets: "The planets below are better bets tonight.",
-        both: "The Moon and planets below are better bets tonight.",
-      },
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
@@ -458,19 +445,19 @@ export const en = {
     },
 
     /**
-     * M-2 S-01: the "Solar system tonight" section (the Moon since S-02, then the planets). The planet window runs
-     * from civil dusk to civil dawn (sun below `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark
-     * window".
+     * M-2 S-01: the "Planets tonight" section (planets only again since moonlight-and-the-verdict: the Moon has its
+     * own card beside the sky card). The planet window runs from civil dusk to civil dawn (sun below
+     * `PLANET_WINDOW_SUN_ALTITUDE_DEG`), so its wording never says "dark window".
      */
     planets: {
-      heading: "Solar system tonight",
-      /** The planet list's accessible name, telling it apart from the Moon card above it. */
+      heading: "Planets tonight",
+      /** The planet list's accessible name. */
       listLabel: "Planets",
       window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
-      /** Neither the Moon nor a planet is listed (too low, too thin a crescent, or gated out by aperture). */
-      none: "Neither the Moon nor any planet is well placed between dusk and dawn tonight.",
-      /** The same, on a night whose Moon and planets are limited to the clear hours (a no-go or no dark window). */
-      noneInClearHours: "Neither the Moon nor any planet is well placed in tonight's clear hours.",
+      /** No planet is listed: none clears the minimum altitude, or the ones that do are gated out by aperture. */
+      none: "No planet is well placed for your telescope between dusk and dawn tonight.",
+      /** The same, on a night whose planets are limited to the clear hours (a no-go or no dark window). */
+      noneInClearHours: "No planet is well placed for your telescope in tonight's clear hours.",
       /** The "Mark observed" link's accessible name; the colon keeps the planet name in its base form. */
       markObserved: (p: { planet: string }) => `Mark observed: ${p.planet}`,
       /**
@@ -478,12 +465,8 @@ export const en = {
        * planet verdict whose level differs from the card's.
        */
       weather: {
-        /** Keyed by what the section shows, so the line names only those targets; `sky` is `verdict.inline`. */
-        line: {
-          moon: (p: { sky: string; reason: string }) => `For the Moon: ${p.sky} — ${p.reason}`,
-          planets: (p: { sky: string; reason: string }) => `For planets: ${p.sky} — ${p.reason}`,
-          both: (p: { sky: string; reason: string }) => `For the Moon and planets: ${p.sky} — ${p.reason}`,
-        },
+        /** `sky` is `verdict.inline`. */
+        line: (p: { sky: string; reason: string }) => `For planets: ${p.sky} — ${p.reason}`,
         clearRun: (p: { hours: string; cloud: string }) =>
           `${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn`,
         humidityCap: (p: { humidity: string }) =>
@@ -539,7 +522,10 @@ export const en = {
       },
     },
 
-    /** M-2 S-02: the Moon card, first in the "Solar system tonight" section. */
+    /**
+     * The Moon card beside the sky card (moonlight-and-the-verdict; the Moon target since M-2 S-02): the phase, the
+     * disc, when the Moon is up and what it does to faint objects, then the observing details when it is a target.
+     */
     moon: {
       /** By elongation band (`MOON_PHASE_BANDS`), so waxing and waning differ. */
       phase: {
@@ -574,6 +560,37 @@ export const en = {
       },
       /** The "Mark observed" link's accessible name; the colon keeps the name in its base form. */
       markObserved: (p: { name: string }) => `Mark observed: ${p.name}`,
+      card: {
+        kicker: "Moon tonight",
+        /** The disc's accessible name; `phase` is `phase[band]`, `lit` is `lit`. */
+        discLabel: (p: { phase: string; lit: string }) => `Moon: ${p.phase}, ${p.lit}`,
+        /**
+         * When the Moon is up in the card's window (the dark window, or civil dusk to dawn without one), read off a
+         * 10-minute track: each time is the first sample at which the Moon is up, or down again.
+         */
+        up: {
+          /** Up at every sample of the window. */
+          all: "Up all night",
+          /** Up at the window's start, sets inside it and stays down. */
+          sets: (p: { time: string }) => `Sets ${p.time}`,
+          /** Any other part of the window; `spans` is a locale-formatted list of "22:10–06:58". */
+          spans: (p: { spans: string }) => `Up ${p.spans}`,
+          never: "Not up tonight",
+        },
+        /**
+         * What the Moon does to faint objects tonight, on a night the ranking runs: `washedOut` when it washes out
+         * any (`count`), else by how long it is up. No percent here: the card's heading carries the % lit.
+         */
+        faint: {
+          washedOut: {
+            one: (p) => `Bright Moon: ${p.count} faint object washed out tonight`,
+            other: (p) => `Bright Moon: ${p.count} faint objects washed out tonight`,
+          } as PluralForms<Count>,
+          unaffected: (p: { spans: string }) => `Moon up ${p.spans} · faint objects unaffected`,
+          moonlit: "Moonlit sky · no faint objects lost",
+          dark: "Dark night: no Moon",
+        },
+      },
       /**
        * One fixed note per phase band (research §4: RASC, Sky at Night). Hedged on purpose: libration moves the
        * shadow line (the terminator) by about half a day, so a feature is named as "near" it, never promised.

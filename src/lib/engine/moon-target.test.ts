@@ -4,12 +4,10 @@ import { planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
 import { WARSAW } from "./fixtures";
 import { seenSummaries } from "./log";
 import { moonElongationDeg, moonPhaseBand, moonState, moonTrack } from "./moon";
-import { isBrightMoon, moonPlacementOf, moonTarget } from "./moon-target";
+import { moonPlacementOf, moonTarget } from "./moon-target";
 import type { MoonTargetInput } from "./moon-target";
 import { observingNight } from "./night";
 import {
-  BRIGHT_MOON_MIN_ILLUMINATION,
-  BRIGHT_MOON_MIN_UP_FRACTION,
   DEFAULT_MIN_ALTITUDE_DEG,
   DEFAULT_TRACK_STEP_MINUTES,
   MOON_LOW_ALTITUDE_DEG,
@@ -175,15 +173,5 @@ describe("moonPlacementOf", () => {
     expect(moonPlacementOf(MOON_LOW_ALTITUDE_DEG)).toBe("well");
     expect(moonPlacementOf(WELL_PLACED_ALTITUDE_DEG - 0.01)).toBe("well");
     expect(moonPlacementOf(WELL_PLACED_ALTITUDE_DEG)).toBe("high");
-  });
-});
-
-describe("isBrightMoon", () => {
-  it("needs at least half lit and up for more than half the dark window", () => {
-    expect(BRIGHT_MOON_MIN_ILLUMINATION).toBe(0.5);
-    expect(BRIGHT_MOON_MIN_UP_FRACTION).toBe(0.5);
-    expect(isBrightMoon(0.5, 0.51)).toBe(true);
-    expect(isBrightMoon(0.49, 1)).toBe(false);
-    expect(isBrightMoon(1, 0.5)).toBe(false);
   });
 });

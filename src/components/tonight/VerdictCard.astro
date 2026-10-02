@@ -23,21 +23,9 @@ interface Props {
    * card and the strip, so the week stays one tap away on a phone.
    */
   nightsLink?: boolean;
-  /** M-2 S-02: the bright-Moon line, shown under the reason; `null` or absent otherwise. */
-  moonNote?: string | null;
 }
 
-const {
-  level,
-  headline,
-  text,
-  darkWindow,
-  timeZone,
-  forecastStatus,
-  explanation,
-  nightsLink = false,
-  moonNote = null,
-} = Astro.props;
+const { level, headline, text, darkWindow, timeZone, forecastStatus, explanation, nightsLink = false } = Astro.props;
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
@@ -61,7 +49,6 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
     </span>
     <span class="text-lg font-normal text-foreground">— {text}</span>
   </h2>
-  {moonNote && <p class="mt-3 text-foreground">{moonNote}</p>}
   {explanation?.kind === "weather-no-go" && <p class="mt-3 text-foreground">{explanation.nextText}</p>}
   {explanation?.kind === "no-darkness" && <p class="mt-3 text-foreground">{explanation.causeText}</p>}
   <p class="mt-3 text-sm text-foreground">

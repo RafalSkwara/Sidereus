@@ -5,8 +5,6 @@ import { moonElongationDeg, moonPhaseBand, moonState, moonTrack } from "./moon";
 import { bestWindow } from "./objects";
 import type { BestWindow } from "./objects";
 import {
-  BRIGHT_MOON_MIN_ILLUMINATION,
-  BRIGHT_MOON_MIN_UP_FRACTION,
   DEFAULT_TRACK_STEP_MINUTES,
   MOON_LOW_ALTITUDE_DEG,
   MOON_MIN_ILLUMINATION,
@@ -19,8 +17,7 @@ import type { HorizontalPosition, Interval, Site } from "./types";
 
 /**
  * The Moon as a target (M-2 S-02): the Moon's counterpart of one `rankPlanets` entry, over the same planet
- * window and weather masking, plus the bright-Moon predicate behind the verdict-card line. Pure and
- * deterministic: identical inputs give an identical result.
+ * window and weather masking. Pure and deterministic: identical inputs give an identical result.
  */
 
 export interface MoonTargetInput<E extends EyepieceOpticsInput = EyepieceOpticsInput> {
@@ -126,14 +123,4 @@ export function moonTarget<E extends EyepieceOpticsInput>(input: MoonTargetInput
     detail,
     seen: seen?.get(MOON_KEY) ?? null,
   };
-}
-
-/**
- * Whether tonight's Moon washes out faint deep sky (the verdict-card line): at least
- * `BRIGHT_MOON_MIN_ILLUMINATION` lit and above the horizon for more than `BRIGHT_MOON_MIN_UP_FRACTION` of the
- * dark window. The caller passes the seven-night outlook's night-1 values (illumination at the dark-window
- * midpoint, and 1 − moon-free minutes ÷ dark-window minutes), so the card and the strip never disagree.
- */
-export function isBrightMoon(illuminatedFraction: number, upFraction: number): boolean {
-  return illuminatedFraction >= BRIGHT_MOON_MIN_ILLUMINATION && upFraction > BRIGHT_MOON_MIN_UP_FRACTION;
 }

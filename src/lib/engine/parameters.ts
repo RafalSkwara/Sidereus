@@ -304,18 +304,6 @@ export const MOON_LOW_ALTITUDE_DEG = 30;
  */
 export const MOON_MIN_ILLUMINATION = 0.03;
 
-/**
- * Candidate (S-02 planning, M-2, 2026-10-01, user choice): the bright-Moon line (`isBrightMoon`) needs the Moon
- * at least this lit at the dark-window midpoint, together with `BRIGHT_MOON_MIN_UP_FRACTION`.
- */
-export const BRIGHT_MOON_MIN_ILLUMINATION = 0.5;
-
-/**
- * Candidate (S-02 planning, M-2, 2026-10-01, user choice): the bright-Moon line also needs the Moon above the
- * horizon for more than this share of the dark window.
- */
-export const BRIGHT_MOON_MIN_UP_FRACTION = 0.5;
-
 // Moonlight (moonlight-and-the-verdict) ----------------------------------------------------------
 
 const DARK_SKY_ZENITH_MAG = [21.9, 21.7, 21.4, 20.8, 20.1, 19.3, 18.7, 18.2, 17.8] as const;
