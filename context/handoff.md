@@ -1,6 +1,6 @@
 # Handoff — 2026-10-02
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/changes/moonlight-and-the-verdict/plan-brief.md`. (This replaces the 2026-09-25 handoff, which is in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first; the last change is archived at `context/archive/2026-10-02-moonlight-and-the-verdict/`. (This replaces the 2026-09-25 handoff, which is in git history.)
 
 ## State of play
 
@@ -49,17 +49,16 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 ## Suggested next step
 
-**Update 2026-10-02 (late):** `moonlight-and-the-verdict` is implemented in all 5 phases on `feat/moonlight-and-the-verdict`.
-- Phase commits: 7e4327a, 31e5aa1, c6f6972, 77fe3a0, e88d985, plus the epilogue be3a82f.
-- Both impl reviews are triaged and their fixes landed: phases 1–4 in a741c28 (`reviews/impl-review.md`), phase 5 in 562d783 (`reviews/impl-review-phase-5.md`).
-- `change.md` is `impl_reviewed`. The branch is pushed. No PR is open yet, and board card #79 is "in-progress".
+**Update 2026-10-02 (night):** `moonlight-and-the-verdict` (#79) is shipped.
+- PR #80 is merged (merge commit 150c4a6).
+- The change is archived to `context/archive/2026-10-02-moonlight-and-the-verdict/` on branch `chore/archive-moonlight-and-the-verdict`.
+- The archive PR closes #79 when merged. The user merges it, never the agent.
 
-Next:
-1. Open the PR from `feat/moonlight-and-the-verdict` to `main` (pre-approved). The user merges it.
-2. After the merge, run `/10x-archive moonlight-and-the-verdict`, and move #79 to "done" on the board.
-3. Post-merge checks are listed in `context/changes/moonlight-and-the-verdict/follow-ups/review-fixes.md`:
-   - bright-Moon screenshots after 2026-10-22;
-   - a Firefox red-mode screenshot of the slider.
+Post-merge checks are listed in `context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`:
+- bright-Moon screenshots after 2026-10-22;
+- one Firefox red-mode screenshot of the Moon card slider.
+
+After that, the next roadmap work is M-2: S-03 deep sky beyond Messier, S-05 timeline, S-06 offline, S-07 verdict check (it compares against the sky words now), S-08 "use my location".
 
 ## Things a new session should know
 
