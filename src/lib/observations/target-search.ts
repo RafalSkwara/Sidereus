@@ -1,20 +1,20 @@
 /**
- * Search behind the log's object picker (roadmap S-07, FR-022; planets since M-2 S-01). The page builds one
- * option per target (the Messier objects with their localised and English names and designation, then the planets
- * with their localised and English names) and the island filters them as the user types. Island-safe: imports only
- * the target key grammar, so the catalogue JSON never reaches the browser bundle.
+ * Search behind the log's object picker (roadmap S-07, FR-022; planets since M-2 S-01, the Moon since S-02). The
+ * page builds one option per target (the Messier objects with their localised and English names and designation,
+ * then the Moon and the planets with their localised and English names) and the island filters them as the user
+ * types. Island-safe: imports only the target key grammar, so the catalogue JSON never reaches the browser bundle.
  */
 
 import { messierNumber, type TargetKey } from "@/lib/targets";
 
 export interface TargetOption {
-  /** The target key the form posts: "M31", "jupiter". */
+  /** The target key the form posts: "M31", "moon", "jupiter". */
   key: TargetKey;
-  /** What stands for the target: "M31", or a planet's localised name. */
+  /** What stands for the target: "M31", or the Moon's or a planet's localised name. */
   id: string;
-  /** What the input shows once chosen: "M31 · Andromeda Galaxy", "M3", or "Jowisz". */
+  /** What the input shows once chosen: "M31 · Andromeda Galaxy", "M3", "Księżyc" or "Jowisz". */
   label: string;
-  /** A secondary line in the list: designation and constellation ("NGC 224 · And"), or "Planet". */
+  /** A secondary line in the list: designation and constellation ("NGC 224 · And"), "Earth's satellite" or "Planet". */
   detail: string;
   /** Every name the target can be found by (localised, English, designation). */
   names: readonly string[];
@@ -29,10 +29,10 @@ const NUMBER_QUERY = /^m?\s*(\d{1,3})$/;
 
 /**
  * The options matching `query`, best first. A number ("31", "m31", "M 31") matches Messier objects whose number
- * starts with it, in number order, so the exact one comes first (M3 before M30-M39); it never matches a planet.
- * Anything else matches names by substring, ignoring case, accents and spaces, with names that start with the query
- * first and ties in the options' order (Messier objects by number, then the planets). An empty query returns every
- * option.
+ * starts with it, in number order, so the exact one comes first (M3 before M30-M39); it never matches the Moon or a
+ * planet. Anything else matches names by substring, ignoring case, accents and spaces, with names that start with
+ * the query first and ties in the options' order (Messier objects by number, then the Moon, then the planets). An
+ * empty query returns every option.
  */
 export function filterTargets(options: readonly TargetOption[], query: string): TargetOption[] {
   const q = normalizeQuery(query);

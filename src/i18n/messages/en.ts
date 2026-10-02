@@ -627,6 +627,10 @@ export const en = {
     },
     /** The picker's secondary line for a planet. */
     planetDetail: "Planet",
+    /** The Moon as a log target: headings, notices and the picker. */
+    moon: "Moon",
+    /** The picker's secondary line for the Moon. */
+    moonDetail: "Earth's satellite",
   },
 
   log: {
@@ -647,7 +651,8 @@ export const en = {
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",
     manualTitle: "Add an observation",
-    manualIntro: "Pick a Messier object or a planet, then confirm the night, site and telescope and rate how it went.",
+    manualIntro:
+      "Pick a Messier object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
     backToLog: "← Log",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",

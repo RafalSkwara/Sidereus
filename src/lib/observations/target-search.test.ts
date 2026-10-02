@@ -15,11 +15,31 @@ describe("normalizeQuery", () => {
 });
 
 describe("targetOptions", () => {
-  it("lists the Messier objects in catalogue order, then the planets in solar order", () => {
+  it("lists the Messier objects in catalogue order, then the Moon, then the planets in solar order", () => {
     const all = OPTIONS.map((o) => o.key);
-    expect(all).toHaveLength(117);
+    expect(all).toHaveLength(118);
     expect(all.slice(0, 2)).toEqual(["M1", "M2"]);
-    expect(all.slice(109)).toEqual(["M110", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune"]);
+    expect(all.slice(109)).toEqual([
+      "M110",
+      "moon",
+      "mercury",
+      "venus",
+      "mars",
+      "jupiter",
+      "saturn",
+      "uranus",
+      "neptune",
+    ]);
+  });
+
+  it("names the Moon by its localised name, findable by the English one too", () => {
+    expect(OPTIONS.find((o) => o.key === "moon")).toEqual({
+      key: "moon",
+      id: "Księżyc",
+      label: "Księżyc",
+      detail: "Naturalny satelita Ziemi",
+      names: ["Księżyc", "Moon"],
+    });
   });
 
   it("names a planet by its localised name, findable by the English one too", () => {
@@ -35,7 +55,7 @@ describe("targetOptions", () => {
 
 describe("filterTargets", () => {
   it("returns every option for an empty query, in catalogue order", () => {
-    expect(keys("   ")).toHaveLength(117);
+    expect(keys("   ")).toHaveLength(118);
     expect(keys("")[0]).toBe("M1");
   });
 
@@ -46,6 +66,9 @@ describe("filterTargets", () => {
     expect(keys("3")).toEqual(["M3", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39"]);
     expect(keys("110")).toEqual(["M110"]);
     expect(keys("111")).toEqual([]);
+    for (const query of ["1", "m1", "M 1"]) {
+      expect(keys(query)).not.toContain("moon");
+    }
   });
 
   it("finds objects by the localised name without Polish diacritics", () => {
@@ -72,5 +95,13 @@ describe("filterTargets", () => {
     expect(keys("wenus")).toEqual(["venus"]);
     expect(keys("Neptun")).toEqual(["neptune"]);
     expect(keys("jupiter", targetOptions("en"))).toEqual(["jupiter"]);
+  });
+
+  it("finds the Moon by its Polish and English names", () => {
+    expect(keys("księżyc")).toEqual(["moon"]);
+    expect(keys("ksiezyc")).toEqual(["moon"]);
+    expect(keys("moon")).toEqual(["moon"]);
+    expect(keys("moon", targetOptions("en"))).toEqual(["moon"]);
+    expect(keys("Mo", targetOptions("en"))[0]).toBe("moon");
   });
 });

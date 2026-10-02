@@ -623,6 +623,8 @@ export const pl = {
       neptune: "Neptun",
     },
     planetDetail: "Planeta",
+    moon: "Księżyc",
+    moonDetail: "Naturalny satelita Ziemi",
   },
 
   log: {
@@ -644,7 +646,7 @@ export const pl = {
     addGear: "Przejdź do sprzętu",
     manualTitle: "Dodaj obserwację",
     manualIntro:
-      "Wybierz obiekt Messiera albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+      "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     backToLog: "← Dziennik",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",

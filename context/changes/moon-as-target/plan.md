@@ -530,25 +530,25 @@ The migration is additive (it only widens a CHECK). The app deployed before it n
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm test` (new Moon tests, existing planet tests unchanged)
-- [x] 1.2 Moon positions agree with the committed Skyfield reference within the stated tolerances
-- [x] 1.3 Engine purity and determinism tests stay green
-- [x] 1.4 Type check passes: `npx astro check`
-- [x] 1.5 Lint passes: `npm run lint`
+- [x] 1.1 Unit tests pass: `npm test` (new Moon tests, existing planet tests unchanged) — fe51005
+- [x] 1.2 Moon positions agree with the committed Skyfield reference within the stated tolerances — fe51005
+- [x] 1.3 Engine purity and determinism tests stay green — fe51005
+- [x] 1.4 Type check passes: `npx astro check` — fe51005
+- [x] 1.5 Lint passes: `npm run lint` — fe51005
 
 ### Phase 2: The Moon in the log
 
 #### Automated
 
-- [ ] 2.1 Migration applies on local Supabase: `npx supabase db reset`
-- [ ] 2.2 DB isolation and target tests pass: `npm run test:db`
-- [ ] 2.3 Generated types show no drift: `npm run db:types` then `git diff --exit-code src/lib/database.types.ts`
-- [ ] 2.4 Unit tests pass: `npm test`
-- [ ] 2.5 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.1 Migration applies on local Supabase: `npx supabase db reset`
+- [x] 2.2 DB isolation and target tests pass: `npm run test:db`
+- [x] 2.3 Generated types show no drift: `npm run db:types` then `git diff --exit-code src/lib/database.types.ts`
+- [x] 2.4 Unit tests pass: `npm test`
+- [x] 2.5 Type check and lint pass: `npx astro check && npm run lint`
 
 #### Manual
 
-- [ ] 2.6 On the local dev server against local Supabase, the manual log picker finds "Moon" / "Księżyc" by name, an entry saves, and it shows in the log by name in EN and PL
+- [x] 2.6 On the local dev server against local Supabase, the manual log picker finds "Moon" / "Księżyc" by name, an entry saves, and it shows in the log by name in EN and PL
 
 ### Phase 3: The Moon on Tonight
 
