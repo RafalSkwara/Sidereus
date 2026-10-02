@@ -204,7 +204,8 @@ export interface TonightMoonCard {
   initialIndex: number;
   /**
    * "Waxing gibbous · 63% lit" for `states[initialIndex]`; without states (no civil window), for local noon at the
-   * start of the observing night.
+   * start of the observing night. The card shows it only without states: with them, the time slider words the state
+   * it shows the same way (`moonPhaseLine`).
    */
   phaseText: string;
   /** "Up 22:10–06:58", "Sets 01:30", "Up all night" or "Not up tonight"; `null` without a window. */
@@ -696,7 +697,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
         phaseText: moonPhaseText(shown.band, shown.illuminatedFraction),
         upText: moonUpText(up, timeZone),
         // Only where the ranking runs, so the washed-out count is known. The line carries no percent: the card's
-        // heading gives the % lit of the state shown, while the strip's "Moon N%" is the night's own figure.
+        // phase line gives the % lit of the state shown, while the strip's "Moon N%" is the night's own figure.
         faintText: ranking === null ? null : moonFaintText(up, ranking.washedOutCount, timeZone),
         target,
       };

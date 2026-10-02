@@ -600,9 +600,9 @@ No database change. The PRD and roadmap notes record the vocabulary change.
 
 #### Automated
 
-- [ ] 5.1 Unit tests, type check, lint and build pass: `npm test && npx astro check && npm run lint && npm run build`
-- [ ] 5.2 E2E passes, including `moon-card.spec.ts`: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 5.1 Unit tests, type check, lint and build pass: `npm test && npx astro check && npm run lint && npm run build`
+- [x] 5.2 E2E passes, including `moon-card.spec.ts`: `BASE_URL=http://localhost:4321 npm run test:e2e`
 
 #### Manual
 
-- [ ] 5.3 On the local preview, dragging the slider redraws the Moon smoothly at phone width; "Now" returns to the current moment; keyboard steps work; red mode stays red (screenshots at three slider positions)
+- [x] 5.3 On the local preview, dragging the slider redraws the Moon smoothly at phone width; "Now" returns to the current moment; keyboard steps work; red mode stays red (screenshots at three slider positions)

@@ -562,8 +562,15 @@ export const en = {
       markObserved: (p: { name: string }) => `Mark observed: ${p.name}`,
       card: {
         kicker: "Moon tonight",
-        /** The disc's accessible name; `phase` is `phase[band]`, `lit` is `lit`. */
-        discLabel: (p: { phase: string; lit: string }) => `Moon: ${p.phase}, ${p.lit}`,
+        /**
+         * The disc's accessible name for the moment the time slider shows: `time` is that moment's "23:40" in the
+         * site's time zone, `phase` is `phase[band]`, `lit` is `lit`.
+         */
+        discLabel: (p: { time: string; phase: string; lit: string }) => `Moon at ${p.time}: ${p.phase}, ${p.lit}`,
+        /** The time slider's accessible name; its value reads as the time shown. */
+        slider: "Time of night",
+        /** Returns the slider to the page-load moment (clamped into the window). */
+        now: "Now",
         /**
          * When the Moon is up in the card's window (the dark window, or civil dusk to dawn without one), read off a
          * 10-minute track: each time is the first sample at which the Moon is up, or down again.
@@ -579,7 +586,7 @@ export const en = {
         },
         /**
          * What the Moon does to faint objects tonight, on a night the ranking runs: `washedOut` when it washes out
-         * any (`count`), else by how long it is up. No percent here: the card's heading carries the % lit.
+         * any (`count`), else by how long it is up. No percent here: the card's phase line carries the % lit.
          */
         faint: {
           washedOut: {

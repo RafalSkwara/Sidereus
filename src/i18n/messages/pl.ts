@@ -537,7 +537,9 @@ export const pl = {
       markObserved: (p) => `Zapisz obserwację: ${p.name}`,
       card: {
         kicker: "Księżyc dziś w nocy",
-        discLabel: (p) => `Księżyc: ${p.phase}, ${p.lit}`,
+        discLabel: (p) => `Księżyc o ${p.time}: ${p.phase}, ${p.lit}`,
+        slider: "Godzina w nocy",
+        now: "Teraz",
         up: {
           all: "Nad horyzontem przez całą noc",
           sets: (p) => `Zachodzi o ${p.time}`,
