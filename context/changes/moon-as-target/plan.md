@@ -554,13 +554,13 @@ The migration is additive (it only widens a CHECK). The app deployed before it n
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm test` (build, format, i18n parity, no-hardcoded-colors, red-theme)
-- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint`
-- [x] 3.3 Production build succeeds: `npm run build`
-- [x] 3.4 E2E specs pass locally against local Supabase (moon-as-target, planets-on-tonight, existing Tonight specs)
+- [x] 3.1 Unit tests pass: `npm test` (build, format, i18n parity, no-hardcoded-colors, red-theme) — 6be56fe
+- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint` — 6be56fe
+- [x] 3.3 Production build succeeds: `npm run build` — 6be56fe
+- [x] 3.4 E2E specs pass locally against local Supabase (moon-as-target, planets-on-tonight, existing Tonight specs) — 6be56fe
 
 #### Manual
 
-- [x] 3.5 Playwright screenshots of Tonight with a Moon card on the local preview: EN and PL, dark, light and red, at phone width (about 390 px) and desktop; the Moon card reads first in "Solar system tonight", eyepieces and note are legible, red mode has no non-red colour
-- [x] 3.6 On a pinned bright-Moon night (stubbed forecast, local preview), the verdict card shows the bright-Moon line and the deep-sky ranking is unchanged; on a new-moon night it is absent
-- [x] 3.7 Mark observed on the Moon from Tonight lands in the log as "Moon" / "Księżyc" and Tonight shows the seen pill
+- [x] 3.5 Playwright screenshots of Tonight with a Moon card on the local preview: EN and PL, dark, light and red, at phone width (about 390 px) and desktop; the Moon card reads first in "Solar system tonight", eyepieces and note are legible, red mode has no non-red colour — 6be56fe
+- [x] 3.6 On a pinned bright-Moon night (stubbed forecast, local preview), the verdict card shows the bright-Moon line and the deep-sky ranking is unchanged; on a new-moon night it is absent — 6be56fe
+- [x] 3.7 Mark observed on the Moon from Tonight lands in the log as "Moon" / "Księżyc" and Tonight shows the seen pill — 6be56fe
