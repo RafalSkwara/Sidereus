@@ -7,7 +7,7 @@ import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * The Moon card's time slider, end to end (moonlight-and-the-verdict): moving the slider redraws the Moon for another
- * moment of tonight's window, the arrow keys step it, and "Now" brings back the page-load moment. Same setup as
+ * moment of tonight's window, the arrow keys step it, and "Now" jumps back to the current moment. Same setup as
  * `moon-as-target.spec.ts`: a production preview on local Supabase with FORECAST_BASE_URL pointing at
  * `tests/e2e/forecast-fixture.mjs`, and place search stubbed with Madrid.
  *
@@ -61,8 +61,20 @@ test("the Moon card's slider redraws the Moon across the window and Now restores
   await expect(slider).toHaveValue(atEnd ? "1" : String(max - 1));
   await expect(time).not.toHaveText(movedTime);
 
+  // "Now" jumps to the state nearest the click. The page loaded seconds earlier, so that is the page-load state, or
+  // its neighbour when the click falls just past the midpoint between two 10-minute states.
+  const stepped = await slider.inputValue();
   await card.getByRole("button", { name: en.tonight.moon.card.now }).click();
-  await expect(slider).toHaveValue(initialValue);
-  await expect(time).toHaveText(initialTime);
-  await expect(disc).toHaveAttribute("aria-label", initialLabel);
+  if (Math.abs(Number(stepped) - Number(initialValue)) > 1) {
+    await expect(slider).not.toHaveValue(stepped);
+  }
+  const restored = Number(await slider.inputValue());
+  expect(Math.abs(restored - Number(initialValue))).toBeLessThanOrEqual(1);
+  const restoredTime = (await time.textContent()) ?? "";
+  await expect(slider).toHaveAttribute("aria-valuetext", restoredTime);
+  await expect(disc).toHaveAttribute("aria-label", new RegExp(`\\b${restoredTime}\\b`));
+  if (restored === Number(initialValue)) {
+    expect(restoredTime).toBe(initialTime);
+    await expect(disc).toHaveAttribute("aria-label", initialLabel);
+  }
 });

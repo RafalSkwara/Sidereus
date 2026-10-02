@@ -2,14 +2,15 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { getMessages } from "@/i18n";
 import { moonDiscPaths } from "@/lib/moon-disc/geometry";
 import { moonDiscLabel, moonPhaseLine } from "@/lib/moon-disc/label";
-import type { MoonDiscState } from "@/lib/moon-disc/state";
+import { nearestStateIndex, type MoonDiscState } from "@/lib/moon-disc/state";
 import { cn } from "@/lib/utils";
 
 /*
  * The Moon card's phase line, disc and time slider (moonlight-and-the-verdict): the states the server sampled across
  * tonight's window, one every `MOON_DISC_STEP_MINUTES`, redrawn in the browser with `moonDiscPaths`. The slider's
- * arrow keys step one state (10 minutes); "Now" returns to `initialIndex`, the page-load moment clamped into the
- * window. With a single state there is nothing to slide, so only the phase line and the disc show.
+ * arrow keys step one state (10 minutes); "Now" jumps to the state nearest the moment of the click (review F1), clamped
+ * into the window, so it stays right on a tab left open. With a single state there is nothing to slide, so only the
+ * phase line and the disc show.
  *
  * Browser-safe on purpose: it imports only `@/lib/moon-disc/*`, `@/i18n` and `cn`, never astronomy-engine or the
  * engine, and receives `locale` as a prop. The server renders the state at `initialIndex`.
@@ -97,12 +98,18 @@ export default function MoonTimeSlider({ states, timeLabels, initialIndex, local
   const last = states.length - 1;
   const start = Math.min(Math.max(initialIndex, 0), last);
   const [index, setIndex] = useState(start);
-  // Per island (Astro gives each React root its own id prefix) and the same on the server and in the browser, so the
-  // clip path never collides with another disc's (review F8). Reduced to characters that are safe in `url(#…)`.
+  // The same on the server and in the browser, and unique within the Tonight island's render, so the clip path never
+  // collides with another disc's (review F8). `@astrojs/react` numbers React roots per render, so the page shell's
+  // islands can share the prefix; the `moon-lit-` prefix keeps these ids apart from theirs. Reduced to characters that
+  // are safe in `url(#…)`.
   const clipId = `moon-lit-${useId().replace(/[^\w-]/g, "")}`;
 
-  const state = states[index];
-  const time = timeLabels[index];
+  const state = states.at(index);
+  if (state === undefined) {
+    // No states: MoonCard renders the phase text instead and never mounts the island, but stay safe if it did.
+    return null;
+  }
+  const time = timeLabels.at(index) ?? "";
 
   return (
     <div>
@@ -125,7 +132,7 @@ export default function MoonTimeSlider({ states, timeLabels, initialIndex, local
               type="button"
               className={nowButtonClass}
               onClick={() => {
-                setIndex(start);
+                setIndex(nearestStateIndex(states, Date.now()));
               }}
             >
               {m.card.now}

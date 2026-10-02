@@ -538,7 +538,7 @@ export const pl = {
       card: {
         kicker: "Księżyc dziś w nocy",
         discLabel: (p) => `Księżyc o ${p.time}: ${p.phase}, ${p.lit}`,
-        slider: "Godzina w nocy",
+        slider: "Pora nocy",
         now: "Teraz",
         up: {
           all: "Nad horyzontem przez całą noc",

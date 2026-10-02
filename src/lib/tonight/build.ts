@@ -35,6 +35,7 @@ import {
 } from "@/lib/engine";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
@@ -380,20 +381,6 @@ function moonUpOf(track: readonly Pick<HorizontalPosition, "time" | "altitudeDeg
   return { kind: "part", spans, upAtStart: track[0].altitudeDeg >= 0 };
 }
 
-/** The index of the state nearest `now` (the earlier on a tie): the first before the window, the last after it. */
-function nearestStateIndex(states: readonly MoonDiscState[], now: Date): number {
-  let best = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  states.forEach((state, i) => {
-    const distance = Math.abs(Date.parse(state.time) - now.getTime());
-    if (distance < bestDistance) {
-      best = i;
-      bestDistance = distance;
-    }
-  });
-  return best;
-}
-
 function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastStatus {
   if (forecast === null) {
     return { kind: "none" };
@@ -686,7 +673,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       const states = moonDiscStates(interval, MOON_DISC_STEP_MINUTES);
       // The same instants as the states, so the up spans read on the slider's own grid.
       const up = moonUpOf(moonTrack(engineSite, interval, MOON_DISC_STEP_MINUTES));
-      const initialIndex = nearestStateIndex(states, now);
+      const initialIndex = nearestStateIndex(states, now.getTime());
       const shown = states[initialIndex];
       moonCard = {
         window: { start: formatTime(interval.start, timeZone), end: formatTime(interval.end, timeZone) },

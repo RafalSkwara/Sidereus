@@ -25,3 +25,21 @@ export interface MoonDiscState {
   /** Optical libration in longitude, degrees: the selenographic longitude of the sub-Earth point, east positive. */
   librationLonDeg: number;
 }
+
+/**
+ * The index of the state nearest `nowMs` (epoch ms; the earlier on a tie): the first before the window, the last after
+ * it, 0 for no states. The server uses it for the page-load moment and the Moon card's "Now" button for the moment of
+ * the click, so both pick the same state for the same instant.
+ */
+export function nearestStateIndex(states: readonly Pick<MoonDiscState, "time">[], nowMs: number): number {
+  let best = 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  states.forEach((state, i) => {
+    const distance = Math.abs(Date.parse(state.time) - nowMs);
+    if (distance < bestDistance) {
+      best = i;
+      bestDistance = distance;
+    }
+  });
+  return best;
+}

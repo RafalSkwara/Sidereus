@@ -18,6 +18,14 @@ const DEG = Math.PI / 180;
 /** Steps of the illuminated fraction a state carries. */
 const ILLUMINATION_STEPS = 100;
 
+/**
+ * Angles are carried to 0.01°: far below what the drawing shows, and it keeps the states the Moon card's slider
+ * receives as props small (review F2 of the Phase 5 review).
+ */
+function roundAngle(deg: number): number {
+  return Math.round(deg * 100) / 100;
+}
+
 /** Right ascension (hours) and declination (degrees) in the J2000 frame. */
 interface RaDec {
   ra: number;
@@ -62,9 +70,9 @@ export function moonDiscState(time: Date): MoonDiscState {
       Math.round(Illumination(Body.Moon, time).phase_fraction * ILLUMINATION_STEPS) / ILLUMINATION_STEPS,
     waxing: elongationDeg < 180,
     band: moonPhaseBand(elongationDeg),
-    brightLimbAngleDeg: (((chi - p) % 360) + 360) % 360,
-    librationLatDeg: libration.elat,
-    librationLonDeg: libration.elon,
+    brightLimbAngleDeg: roundAngle((((chi - p) % 360) + 360) % 360) % 360,
+    librationLatDeg: roundAngle(libration.elat),
+    librationLonDeg: roundAngle(libration.elon),
   };
 }
 
