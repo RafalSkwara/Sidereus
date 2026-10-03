@@ -55,7 +55,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
 | S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
-| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | in-progress |
+| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | done |
 | S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready |
 | S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
@@ -192,7 +192,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
     > Note (2026-10-02, moonlight-and-the-verdict): Tonight now words the verdict as the sky ("Clear", "Partly clear", "Cloudy", plus "Clear, but damp", "Clear (old forecast)", "No forecast" and "No dark window"), so a match compares the user's answer against the sky words that were shown, not against go / marginal / no-go.
     > Note (2026-10-03, verdict-check): delivered as a card on Tonight for the newest unanswered night of the last two (with Skip) plus a Sky checks page at `/log/sky` that lists every recorded night, lets any of them be answered or changed, and shows the tally (matched, too optimistic / too pessimistic, per sky word). The verdict recorded is the last one shown before the dark window starts. "Clear, but damp" and "Clear (old forecast)" count as a promise of Clear; "No forecast" and "No dark window" nights are never asked.
 - **Risk:** The only slice that yields real evidence without a telescope — anyone can look up at the sky — so it is the input the open calibration work (#21) has been missing. Adds a per-user table, so it needs RLS and an isolation-suite entry.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-08: "Use my location" on the site form
 
@@ -272,3 +272,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 
 - **S-01: user can see the planets that are above the site's minimum altitude tonight on Tonight — each with its best time, altitude and compass direction then, constellation, a detail eyepiece from their own kit and a one-line reason — and can mark one as observed so the log records it.** — Archived 2026-09-30 → `context/archive/2026-09-30-planets-on-tonight/`. Lesson: —.
 - **S-02: user can see the Moon on Tonight as a target in its own right — its phase, when it is up and how high, and a plain-language note on what is worth looking at in this phase (the terminator and craters near it, or "too full for detail, try filter or low power") — and can log it as observed; on nights when moonlight makes faint deep-sky objects a poor bet, Tonight says so and points at the Moon and planets instead.** — Archived 2026-10-02 → `context/archive/2026-10-01-moon-as-target/`. Lesson: —.
+- **S-07: user can, for a past night at one of their sites, answer "how was the sky?" (for example clear as promised, partly cloudy, clouded out) against the verdict Sidereus showed for that night, and see a running tally of how often go, marginal and no-go verdicts matched what they saw.** — Archived 2026-10-03 → `context/archive/2026-10-03-verdict-check/`. Lesson: —.
