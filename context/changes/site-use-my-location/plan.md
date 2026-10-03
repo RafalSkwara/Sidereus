@@ -54,6 +54,8 @@ Phase 1 extracts the picker with no visible change and proves it through the exi
 
 Move the location logic out of onboarding into `src/lib/location/` and `src/components/location/`, with shared copy, and rebuild onboarding's Where section on it. Users see no change.
 
+Before touching `OnboardingWizard.tsx`, capture the baseline screenshot of onboarding's Where section (EN, dark, 390 px) that check 1.5 compares against.
+
 ### Changes Required:
 
 #### 1. Location library
@@ -137,7 +139,7 @@ Mount the picker on the add/edit site form with always-visible coordinates, Name
 - New state `source: "device" | { place label } | "manual" | null`. `onPick` writes `String(latitudeDeg)` / `String(longitudeDeg)` into the fields, clears their errors and records the source; typing in either field sets the source to manual.
 - `summary`: `location.usingDevice` for device, `location.usingPlace({ place: label })` for a place, `null` for manual or untouched (the fields already show the values).
 - Name fill: on a place pick, if `name.trim() === ""`, set Name to `pick.source.name` and clear its error. Never on a device pick.
-- Undo note (edit only, `initial` present): shown while the source is device or place and the field values differ from `initial.latitudeDeg` / `initial.longitudeDeg`; text `siteForm.previousLocation({ latitude, longitude })` with the saved values formatted for the locale, plus an `Undo` button (`siteForm.undoLocation`, `type="button"`) that restores both saved values, sets the source to null and focuses `#latitudeDeg`.
+- Undo note (edit only, `initial` present): shown while the picker has been used since the page loaded (a sticky flag set by `onPick`, so a hand-tweak after a pick keeps the note) and the field values, as numbers, differ from `initial.latitudeDeg` / `initial.longitudeDeg`; typing alone, with no pick, never shows it. Text `siteForm.previousLocation({ latitude, longitude })` with the saved values formatted for the locale, plus an `Undo` button (`siteForm.undoLocation`, `type="button"`) that restores both saved values, sets the source to null, resets the sticky flag and focuses `#latitudeDeg`.
 - The group is a `<fieldset>` with a `<legend>` (`siteForm.location`) so screen readers announce the block.
 
 #### 2. Site form copy
@@ -155,7 +157,7 @@ Mount the picker on the add/edit site form with always-visible coordinates, Name
 **Intent**: Pin the two promises nobody can eyeball reliably: no permission request before the click, and Undo on edit.
 
 **Contract**:
-- *New site*: an init script wraps `navigator.geolocation.getCurrentPosition` to count calls; with geolocation granted at a 4-decimal point, the count is 0 after `/gear/sites/new` hydrates, the click fills latitude/longitude with the 2-decimal values, and saving lands on `/gear` with the site listed.
+- *New site*: an init script wraps `navigator.geolocation.getCurrentPosition` to count calls; with geolocation granted at a 4-decimal point, the count is 0 after `/gear/sites/new` hydrates, the click fills latitude/longitude with the 2-decimal values, and after filling Name and Bortle (a device pick fills neither; reuse the `SITE_FORM` / `addSite` pattern from `tests/e2e/seven-night-planner.spec.ts:49-59`) saving lands on `/gear` with the site listed.
 - *Edit site*: `onboardInMadrid`, open the site from `/gear`, geolocation granted elsewhere (e.g. Kraków), click → the "Was 40.42, -3.7" line shows → Undo → the fields read 40.42 / -3.7 again.
 
 #### 4. Agent context
@@ -197,6 +199,7 @@ Mount the picker on the add/edit site form with always-visible coordinates, Name
 
 - Existing `onboarding.spec.ts` guards the extraction (place search and Use my location paths).
 - New `site-location.spec.ts`: no call before click + rounded fill + save; edit Undo.
+- Existing `seven-night-planner.spec.ts` (`addSite`, typed coordinates on `/gear/sites/new`) guards the manual path of the reworked site form.
 
 ### Manual Testing Steps:
 

@@ -19,7 +19,7 @@ On `/gear/sites/new` and `/gear/sites/<id>`, a Location block under Name holds t
 | Decision | Choice | Why (1 sentence) |
 | --- | --- | --- |
 | Choices on the site form | All three, one shared `LocationPicker` (user) | Matches onboarding and gives S-09 a single component to extend. |
-| Replacing a saved location on edit | "Was … · Undo" note, no blocking confirm (user) | Nothing is saved until Save, so an undo line is enough without an extra click every time. |
+| Replacing a saved location on edit | "Was … · Undo" note, no blocking confirm (user); it stays after a hand-tweak that follows a pick (plan review F1) | Nothing is saved until Save, so an undo line is enough without an extra click every time. |
 | Layout | Picker above always-visible lat/lon fields; onboarding keeps its disclosure (user) | Edit always shows the stored coordinates, and the fields stay the one source of truth. |
 | Name from a picked place | Fill only when Name is empty; never from Use my location (user) | Saves typing on add and never overwrites a typed name. |
 | Test depth | One small unit file plus a two-test e2e spec; the rest by screenshots (user: "be modest with tests") | The suite is already large; the e2e tests pin only what can't be eyeballed. |
