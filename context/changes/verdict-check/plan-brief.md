@@ -29,6 +29,7 @@ Each signed-in Tonight view records the night's headline per (user, site, night)
 | Data model | `sky_checks` with `unique (user_id, site_id, night)`; site FK `on delete set null` + name snapshot | Supports PostgREST upsert; rows outlive a deleted site like observations | Research + Plan (delegated) |
 | Write path | `security invoker` RPC `record_sky_verdict`, called fire-and-forget after the response | Idempotent under island preload/reloads; never delays or breaks Tonight | Plan (delegated) |
 | Tally computation | SQL `sky_check_tally()` grouping + a pure `tallyOf` | Avoids the 1000-row cap (lessons.md); the match rule stays unit-testable | Plan (delegated) |
+| Plan review fixes | F1–F6 applied (hide and refuse rows before dark, parallel open-checks read, named conflict constraint, e2e credentials, hoisted `defer`, test list and plain-form note) | `reviews/plan-review.md` | Plan review (delegated) |
 | Card placement | Below the Sky and Moon cards, above the sections | The main answer stays on top; the question is secondary | Plan (delegated; visual check on the PR) |
 
 ## Scope
@@ -48,11 +49,12 @@ Each signed-in Tonight view records the night's headline per (user, site, night)
 
 ```
 TonightContent (server island, GET)
-  ├─ loadTonight → view {siteId, date, headline.id, darkStart}
+  ├─ loadTonight({withSkyChecks}) → Promise.all[…, openRecent(night ≥ UTC today−3)]
+  │     → view {siteId, date, headline.id, darkStart}, openSkyChecks
   ├─ defer(waitUntil) → skyCheckStore.record → rpc record_sky_verdict  (upsert, DB-clock rule)
-  └─ skyCheckStore.pendingFor(site, date-2 … date-1) → SkyCheckCard
+  └─ pendingCheck(openSkyChecks, site, date-2 … date-1) → SkyCheckCard (plain Astro POST form)
 POST /api/log/sky/[id] {action, from} → answer | skip → redirect ?skyChecked=1
-/log/sky → rpc sky_check_tally → tallyOf (pure) + paged list
+/log/sky → rpc sky_check_tally → tallyOf (pure) + paged list (rows whose dark window has started)
 ```
 
 ## Phases at a Glance
@@ -61,8 +63,8 @@ POST /api/log/sky/[id] {action, from} → answer | skip → redirect ?skyChecked
 | --- | --- | --- |
 | 1. Data layer and tally | Migration, RPCs, types, DB tests, store, pure claim/tally | Getting the conflict rule right with nullable `site_id` |
 | 2. Record on Tonight | `headline.id` + `darkStart` on the view; fire-and-forget recording | First write during a GET; must never break the render |
-| 3. Answer on Tonight | Route, card, notice, copy, smoke step | Card adds a query to Tonight's critical path |
-| 4. Sky checks page | `/log/sky`, tally, log link, e2e, docs | e2e needs a seeded past night |
+| 3. Answer on Tonight | Route, card, notice, copy, smoke step | Touches the shared loader (opt-in flag keeps all-objects unchanged) |
+| 4. Sky checks page | `/log/sky`, tally, log link, e2e (with Supabase env in CI), docs | e2e needs a seeded past night |
 
 **Prerequisites:** local Supabase (Docker) for `test:db`, types and e2e; nothing blocks on the user.
 **Estimated effort:** about 1–2 sessions across 4 phases.

@@ -1,7 +1,7 @@
 ---
 change_id: verdict-check
 title: Verdict check — was the sky what Sidereus promised?
-status: planned
+status: plan_reviewed
 created: 2026-10-03
 updated: 2026-10-03
 archived_at: null

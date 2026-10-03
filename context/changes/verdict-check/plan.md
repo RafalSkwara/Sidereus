@@ -31,7 +31,7 @@ From `research.md` (verified 2026-10-03 at 85e2a05):
   - "x too optimistic · y too pessimistic"
   - Clear a of b · Partly clear c of d · Cloudy e of f
 
-  Below the tally is the list of checkable recorded nights, newest first, each with its site, "We said: …", the user's answer with its outcome, and the three buttons for answering or changing. The page is linked from `/log`.
+  Below the tally is the list of checkable recorded nights whose dark window has started, newest first, each with its site, "We said: …", the user's answer with its outcome, and the three buttons for answering or changing. The page is linked from `/log`.
 - Everything is in EN and PL and in the dark, light and red themes. A per-user table is covered by RLS and by the isolation suite.
 
 Verify with `npm test`, `npm run test:db`, `npx astro check`, `npm run lint`, the e2e spec `tests/e2e/sky-checks.spec.ts`, and screenshots of the card and the page (EN/PL, dark/light/red, phone/desktop).
@@ -105,7 +105,8 @@ RLS is enabled with four `to authenticated` policies named `sky_checks_<op>_own`
 Function `public.record_sky_verdict(site_id uuid, night date, headline text, dark_start timestamptz) returns void`:
 - `language plpgsql security invoker set search_path = ''`
 - Reads the site's name through RLS; if the site is not visible, it returns without writing.
-- Inserts a row with `on conflict (user_id, site_id, night) do update` that sets `headline`, `dark_start` and `shown_at = now()` `where now() < public.sky_checks.dark_start and public.sky_checks.answer is null`.
+- Inserts a row with `on conflict on constraint sky_checks_user_site_night_key do update` that sets `headline`, `dark_start` and `shown_at = now()` `where now() < public.sky_checks.dark_start and public.sky_checks.answer is null`.
+- In plpgsql the parameter names shadow the column names (plan review F3). So the conflict target is the named constraint, never a column list, and every parameter reference is qualified as `record_sky_verdict.<name>`, as `complete_onboarding` does.
 - Execute is revoked from `public` and `anon` and granted to `authenticated`.
 
 Function `public.sky_check_tally() returns table (headline text, answer text, nights bigint)`:
@@ -135,6 +136,7 @@ Function `public.sky_check_tally() returns table (headline text, answer text, ni
   - before `dark_start` (a future `dark_start`), a second call overwrites the headline;
   - after `dark_start` (a past `dark_start`), a second call leaves it unchanged;
   - an answered row is never overwritten;
+  - the store's `answer`, `skip` and `list` leave out a row whose `dark_start` is still in the future (plan review F1);
   - the RPC for another user's site writes nothing;
   - the row outlives its site (`site_id` becomes null, `site_name` is kept), and two deleted sites with the same night both survive;
   - the tally RPC returns only the caller's answered rows, grouped.
@@ -147,10 +149,11 @@ Function `public.sky_check_tally() returns table (headline text, answer text, ni
 
 **Contract**: `skyCheckStore` methods:
 - `record(client, { siteId, night, headline, darkStart })` calls the RPC and returns `WriteResult`.
-- `pendingFor(client, { siteId, fromNight, beforeNight })` returns `SkyCheckRecord | null`. It narrows to the site, `night >= fromNight and night < beforeNight`, `answer is null`, `skipped_at is null` and a checkable headline, then orders by `night desc, id` with `limit 1`.
+- `openRecent(client, { sinceNight })` returns `SkyCheckRecord[]`: the caller's rows with `night >= sinceNight`, `answer is null`, `skipped_at is null` and a checkable headline, ordered `night desc, id`. It is used by `loadTonight` (Phase 3) and stays at most a few rows per site.
 - `answer(client, id, answer, now)` sets `answer` and `answered_at` and clears `skipped_at`.
 - `skip(client, id, now)` sets `skipped_at`.
-- `list(client, { page })` returns `{ entries, hasOlder }`. It filters to checkable headlines, orders by `night desc, site_name, id` and pages 50 at a time, like `LOG_PAGE_SIZE`.
+- `answer` and `skip` update only `where dark_start < now`. A row whose dark window hasn't started reads as not found (plan review F1).
+- `list(client, { page, now })` returns `{ entries, hasOlder }`. It filters to checkable headlines with `dark_start < now`, so tonight's own row stays hidden until dark. It orders by `night desc, site_name, id` and pages 50 at a time, copying `observationStore.list`'s `range(offset, offset + PAGE_SIZE)` and `hasOlder` pattern (`src/lib/observations/store.ts:136-151`).
 - `tally(client)` returns `TallyRow[]` from the RPC.
 
 `SkyCheckRecord` is `{ id, siteId | null, siteName, night, headline, answer | null, skipped: boolean }`.
@@ -218,7 +221,9 @@ Tonight's island stores the night-1 headline after rendering.
 **Contract**:
 - `SkyHeadline` gains `id: SkyHeadlineId`, and `SkyHeadlineId` is exported.
 - `TonightView` gains `darkStart: Date | null`: the night-1 `DarkWindow.start`, or `null` for `kind: "none"`.
-- Existing consumers of `headline.key` and `headline.text` are unchanged.
+- Existing consumers of `headline.key` and `headline.text` are unchanged: `VerdictCard.astro`, `NightStrip.astro`, `AllObjectsContent.astro` and `Welcome.astro`.
+- `darkStart` stays on the server: no client island receives the view.
+- Tests that deep-equal a headline gain the `id` (plan review F6): `src/lib/tonight/format.test.ts:207-208` (add an id column to the rows at `:147`) and `src/lib/tonight/build.test.ts:225,244,255,359`.
 
 #### 2. Recording rule and call
 
@@ -228,7 +233,8 @@ Tonight's island stores the night-1 headline after rendering.
 
 **Contract**:
 - `recordableVerdict(view)` returns `{ siteId, night: view.date, headline: view.headline.id, darkStart }`, or `null` when there is no view, `darkStart` is null, or the headline is `noDarkness`.
-- In `TonightContent.astro`, when `supabase` and `user` are set and the result is non-null, it calls `defer(skyCheckStore.record(supabase, …).then(() => undefined, () => undefined))`. The `defer` wraps `cfContext.waitUntil`, like the forecast cache.
+- In `TonightContent.astro`, the inline `defer` arrow passed to `loadTonight` (`:57-59`) is hoisted into a `const defer = (task: Promise<void>) => Astro.locals.cfContext.waitUntil(task)` and used by both calls (plan review F5).
+- When `supabase` and `user` are set and the result is non-null, it calls `defer(skyCheckStore.record(supabase, …).then(() => undefined, () => undefined))`. So `record` must resolve to `Promise<void>` and never reject.
 - `AllObjectsContent.astro` is untouched.
 
 ### Success Criteria:
@@ -265,18 +271,20 @@ The POST route for answers and skips, and the Tonight card.
 - It checks `NOT_CONFIGURED`, then runs zod `safeParse`, then calls `skyCheckStore.answer` or `skip`.
 - On success it redirects to `/tonight?skyChecked=1` or `/log/sky?skyChecked=1`.
 - On failure it redirects to the same path with `?error=<key>`.
-- An unknown `id` gives `errors.notFound.skyCheck`.
+- An unknown `id`, or a row whose dark window hasn't started yet, gives `errors.notFound.skyCheck`.
 - No form value is echoed into the URL.
 
 #### 2. Pending check for the card
 
-**File**: `src/components/tonight/TonightContent.astro`
+**Files**: `src/lib/tonight/load.ts`, `src/lib/sky-checks/pending.ts` (new, with a test), `src/components/tonight/TonightContent.astro`
 
-**Intent**: Load the card's data once Tonight's date is known.
+**Intent**: Load the card's data without adding a sequential DB round trip to Tonight (plan review F2). Today nothing in TonightContent queries after `loadTonight`, whose four reads run in one `Promise.all` (`load.ts:~103-108`).
 
 **Contract**:
-- When `supabase`, `site` and `view` are set, it calls `skyCheckStore.pendingFor(supabase, { siteId: site.id, fromNight: view.date − 2 days, beforeNight: view.date })`.
-- Date arithmetic is on the ISO date string, with a small helper in `src/lib/sky-checks/` and a unit test that crosses a month boundary.
+- `LoadTonightInput` gains an opt-in `withSkyChecks?: boolean`. Only TonightContent sets it, so `AllObjectsContent` is unchanged.
+- When set, a fifth `load(...)` entry in the same `Promise.all` calls `skyCheckStore.openRecent(supabase, { sinceNight })`. `sinceNight` is the UTC date of `now` minus 3 days, a superset of every site's two-night window in any time zone. `TonightLoad` gains `openSkyChecks: SkyCheckRecord[]`, empty on failure or when not requested.
+- `pendingCheck(openSkyChecks, siteId, tonightDate)` is a pure helper in `pending.ts`. It returns the newest row for the site with `tonightDate − 2 days <= night < tonightDate`, or `null`. The date arithmetic is on the ISO date string, with unit tests that cross a month boundary and exclude tonight, three days back and another site.
+- TonightContent calls `pendingCheck(openSkyChecks, site.id, view.date)`.
 - A load failure hides the card silently. It is optional UI and must not cost Tonight its render.
 
 #### 3. The card
@@ -289,6 +297,10 @@ The POST route for answers and skips, and the Tonight card.
 - The title is "How was the sky last night at {site}?" when `night` is `view.date − 1`, else "How was the sky on {date} at {site}?". The date is formatted with `createFormatter`.
 - The line "We said: {headline text}" uses the stored headline's catalogue key (`SKY_HEADLINE_KEYS`).
 - There are three POST buttons labelled with `verdict.level.go`, `verdict.level.marginal` and `verdict.level.no-go`, so the answer words are the headline words, plus a quiet "Skip" button and a link "All sky checks" → `/log/sky`.
+- It is a plain Astro `<form method="POST" action="/api/log/sky/{id}">` with a hidden `from=tonight` and named submit buttons (`<button name="action" value="clear">` and so on), with no React island.
+  - This is the repo's first plain Astro POST form; every POST form today is a React island (plan review F6).
+  - It needs no client state, and Astro's default `checkOrigin` accepts the same-origin post.
+  - The `/log/sky` rows use the same form shape with `from=sky`.
 - Colours come from tokens only, and the card works in red mode.
 
 #### 4. Confirmation and copy
@@ -366,11 +378,15 @@ The POST route for answers and skips, and the Tonight card.
 
 #### 3. e2e
 
-**Files**: `tests/e2e/sky-checks.spec.ts` (new), `tests/e2e/helpers.ts`
+**Files**: `tests/e2e/sky-checks.spec.ts` (new), `tests/e2e/helpers.ts`, `.github/workflows/ci.yml`
 
 **Intent**: Cover the card, the answer and the tally end to end.
 
 **Contract**:
+- Credentials (plan review F4): the Playwright process has no Supabase credentials today. The CI e2e step sets only `BASE_URL`, and `playwright.config.ts` loads no env.
+  - The CI e2e step sources the same `supabase.env` the `test:db` step uses, and exports `SUPABASE_URL="$API_URL"` and `SUPABASE_KEY="$ANON_KEY"`.
+  - Locally, the e2e recipe exports the same values from `npx supabase status -o env`.
+  - The helper throws the `tests/db` missing-env message when they are absent.
 - Seeding: `seedSkyCheck(credentials, { headline, night })` signs in with supabase-js as the spec's user, looks up its site, and calls `record_sky_verdict` with a past `dark_start`. The night is the Madrid date two days before today, which falls in the card's window whether or not civil dawn has passed.
 - The spec:
   1. onboard in Madrid;
@@ -438,7 +454,7 @@ The POST route for answers and skips, and the Tonight card.
 
 Tonight gains two calls:
 - The recording runs after the response via `waitUntil`, so it adds no render time.
-- The pending check is one indexed, single-row query after `loadTonight`. Its latency is accepted. If it shows up in Tonight's timing, it can move into `loadTonight`'s parallel block later.
+- The open-checks read is a fifth entry in `loadTonight`'s existing `Promise.all` (plan review F2). It is narrowed by `night >= UTC today − 3`, so it adds no sequential round trip.
 
 ## Migration Notes
 
