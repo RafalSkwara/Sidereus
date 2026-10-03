@@ -56,7 +56,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
 | S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
 | S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | done |
-| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready |
+| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | planning |
 | S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
 ## Streams
@@ -206,7 +206,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Should the site form also get onboarding's place-name search, so the add-site options match onboarding's? Candidate: yes, as the same set of choices (use my location · search a place · enter coordinates) shared by both surfaces. — Owner: user. Block: no.
   - Does editing an existing site with a new location need a confirmation ("replace the saved location?")? Candidate: yes, showing the old and new place names or coordinates. — Owner: user. Block: no.
 - **Risk:** Small and self-contained; onboarding already has the click-triggered locate and the rounding, so the work is reuse. The risk is ending up with two diverging location pickers, so the plan should extract one shared component.
-- **Status:** ready
+- **Status:** planning
 
 ### S-09: "Pick from map" for a site
 
