@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LocateFixed, MapPin, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { FormField } from "@/components/forms/FormField";
+import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
 import { ServerError } from "@/components/forms/ServerError";
 import { Button } from "@/components/ui/button";
-import { getMessages, plural, translateKey, type Messages } from "@/i18n";
+import { getMessages, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { roundCoordinate } from "@/lib/gear/coordinates";
 import { AFOV_PRESET_OPTIONS, type AfovPreset } from "@/lib/gear/eyepiece-presets";
-import { GEOCODING_FAILED, PLACE_QUERY_MIN_LENGTH, searchPlaces, type PlaceResult } from "@/lib/onboarding/geocode";
 import {
   DEFAULT_EYEPIECE_KIT_ID,
   DEFAULT_SKY_SCENE_ID,
@@ -29,9 +29,8 @@ import { cn } from "@/lib/utils";
  * The form's payload is exactly the hidden inputs below, one per `onboardingInputSchema` field;
  * the visible text controls have an empty `name`, so they are never submitted themselves.
  *
- * Privacy (PRD NFR): a device position is rounded with `roundCoordinate` before it enters state,
- * place-search results arrive rounded from `searchPlaces`, and typed coordinates are rounded into the
- * hidden inputs. Nothing here logs, and coordinates never go into a URL.
+ * Privacy (PRD NFR): the shared `LocationPicker` reports picks already rounded (`locateDevice`,
+ * `searchPlaces`), and typed coordinates are rounded into the hidden inputs. Nothing here logs, and coordinates never go into a URL.
  *
  * Island-safe imports only: never `timezone.ts` or any `store.ts`.
  */
@@ -45,9 +44,6 @@ interface Props {
 
 /** How the current coordinates were chosen; drives the confirmation line. */
 type WhereSource = { kind: "device" } | { kind: "place"; label: string } | { kind: "manual" };
-
-type GeoStatus = "idle" | "locating" | "denied" | "unavailable";
-type SearchStatus = "idle" | "searching" | "done" | "failed";
 
 interface EyepieceRow {
   key: number;
@@ -71,12 +67,8 @@ interface Errors {
 
 const NO_ERRORS: Errors = { rows: {} };
 
-const SEARCH_DEBOUNCE_MS = 300;
-
 const selectBase =
   "h-11 w-full rounded-lg border bg-surface px-3 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
-const inputBase =
-  "h-11 w-full rounded-lg border bg-surface px-3 text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:ring-[3px]";
 const inputOk = "border-input focus-visible:border-ring focus-visible:ring-ring/50";
 const inputBad = "border-destructive focus-visible:ring-destructive/20";
 
@@ -154,14 +146,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [source, setSource] = useState<WhereSource | null>(null);
-  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PlaceResult[]>([]);
-  const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
   const [manualOpen, setManualOpen] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const searchController = useRef<AbortController | undefined>(undefined);
-  const summaryRef = useRef<HTMLParagraphElement>(null);
 
   // Sky --------------------------------------------------------------------------------------
   const [sceneId, setSceneId] = useState<SkySceneId>(DEFAULT_SKY_SCENE_ID);
@@ -183,15 +168,6 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
   const [showSummary, setShowSummary] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Cancel a pending search when the island goes away.
-  useEffect(
-    () => () => {
-      clearTimeout(searchTimer.current);
-      searchController.current?.abort();
-    },
-    [],
-  );
-
   // Coming back to this page from the browser's history cache re-enables the submit button.
   useEffect(() => {
     function onPageShow(event: PageTransitionEvent) {
@@ -205,77 +181,11 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
 
   const hasLocation = latitude.trim() !== "" && longitude.trim() !== "";
 
-  function setLocation(lat: number, lon: number, next: WhereSource) {
-    setLatitude(String(lat));
-    setLongitude(String(lon));
-    setSource(next);
+  function pickLocation(pick: LocationPick) {
+    setLatitude(String(pick.latitudeDeg));
+    setLongitude(String(pick.longitudeDeg));
+    setSource(pick.source.kind === "device" ? { kind: "device" } : { kind: "place", label: pick.source.label });
     setErrors((prev) => ({ ...prev, where: undefined }));
-  }
-
-  function locateMe() {
-    if (!("geolocation" in navigator)) {
-      setGeoStatus("unavailable");
-      return;
-    }
-    setGeoStatus("locating");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        // Rounded before anything else sees it: the raw position never reaches state.
-        const lat = roundCoordinate(position.coords.latitude);
-        const lon = roundCoordinate(position.coords.longitude);
-        setLocation(lat, lon, { kind: "device" });
-        setGeoStatus("idle");
-      },
-      (error) => {
-        setGeoStatus(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable");
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 },
-    );
-  }
-
-  function cancelSearch() {
-    clearTimeout(searchTimer.current);
-    searchController.current?.abort();
-    searchController.current = undefined;
-  }
-
-  function changeQuery(value: string) {
-    setQuery(value);
-    cancelSearch();
-    const trimmed = value.trim();
-    if (trimmed.length < PLACE_QUERY_MIN_LENGTH) {
-      setResults([]);
-      setSearchStatus("idle");
-      return;
-    }
-    const controller = new AbortController();
-    searchController.current = controller;
-    searchTimer.current = setTimeout(() => {
-      setSearchStatus("searching");
-      searchPlaces(trimmed, locale, globalThis.fetch.bind(globalThis), controller.signal).then(
-        (found) => {
-          if (controller.signal.aborted) return;
-          setResults(found);
-          setSearchStatus("done");
-        },
-        () => {
-          // A cancelled (stale) search rejects too; only the current one may show an error.
-          if (controller.signal.aborted) return;
-          setResults([]);
-          setSearchStatus("failed");
-        },
-      );
-    }, SEARCH_DEBOUNCE_MS);
-  }
-
-  function pickPlace(place: PlaceResult) {
-    cancelSearch();
-    setLocation(place.latitudeDeg, place.longitudeDeg, { kind: "place", label: place.label });
-    setQuery("");
-    setResults([]);
-    setSearchStatus("idle");
-    // The results list is gone; land on the confirmation instead of losing focus to the page.
-    requestAnimationFrame(() => summaryRef.current?.focus());
   }
 
   function changeManual(field: "latitude" | "longitude", value: string) {
@@ -404,30 +314,10 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
     source === null || !hasLocation
       ? null
       : source.kind === "device"
-        ? t.where.usingDevice
+        ? m.location.usingDevice
         : source.kind === "place"
-          ? t.where.usingPlace({ place: source.label })
-          : t.where.usingCoordinates;
-
-  const geoHint =
-    geoStatus === "locating"
-      ? t.where.locating
-      : geoStatus === "denied"
-        ? t.where.locationDenied
-        : geoStatus === "unavailable"
-          ? t.where.locationUnavailable
-          : null;
-
-  const searchMessage =
-    searchStatus === "searching"
-      ? t.where.searching
-      : searchStatus === "failed"
-        ? `${translateKey(m, GEOCODING_FAILED, "errors.generic")} ${t.where.searchFallback}`
-        : searchStatus === "done"
-          ? results.length === 0
-            ? t.where.noResults
-            : plural(locale, results.length, t.where.resultsCount)({ count: number.format(results.length) })
-          : null;
+          ? m.location.usingPlace({ place: source.label })
+          : m.location.usingCoordinates;
 
   const hasErrors =
     [errors.where, errors.telescopeName, errors.apertureMm, errors.focalLengthMm, errors.eyepieces].some(Boolean) ||
@@ -455,111 +345,12 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
           <p className="text-muted-foreground text-sm">{t.where.hint}</p>
         </div>
 
-        <div className="flex flex-col">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-11 w-full rounded-lg text-[15px] font-semibold sm:w-auto sm:self-start"
-            onClick={locateMe}
-            disabled={geoStatus === "locating"}
-          >
-            <LocateFixed className="size-4" />
-            {t.where.useLocation}
-          </Button>
-          <p aria-live="polite" className="text-muted-foreground mt-2 text-sm empty:mt-0">
-            {geoHint}
-          </p>
-        </div>
-
-        <div className="text-muted-foreground flex items-center gap-3 text-xs tracking-[0.18em] uppercase">
-          <span className="bg-border h-px flex-1" aria-hidden="true" />
-          {t.where.or}
-          <span className="bg-border h-px flex-1" aria-hidden="true" />
-        </div>
-
-        <div>
-          <label htmlFor="place-search" className="text-heading mb-1 block text-sm font-semibold">
-            {t.where.searchLabel}
-          </label>
-          <div className="relative">
-            <Search
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
-              aria-hidden="true"
-            />
-            <input
-              id="place-search"
-              type="search"
-              name=""
-              autoComplete="off"
-              enterKeyHint="search"
-              spellCheck={false}
-              value={query}
-              placeholder={t.where.searchPlaceholder}
-              aria-describedby="place-search-status"
-              aria-invalid={errors.where && !manualOpen ? true : undefined}
-              onChange={(e) => {
-                changeQuery(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                // Enter in the search box searches; it must not submit the whole setup.
-                if (e.key === "Enter") e.preventDefault();
-                if (e.key === "Escape" && query !== "") {
-                  e.preventDefault();
-                  changeQuery("");
-                }
-              }}
-              className={cn(inputBase, "pl-10", errors.where && !manualOpen ? inputBad : inputOk)}
-            />
-          </div>
-          <p
-            id="place-search-status"
-            aria-live="polite"
-            className={cn(
-              "mt-1 text-xs empty:mt-0",
-              searchStatus === "failed" ? "text-destructive" : "text-muted-foreground",
-            )}
-          >
-            {searchMessage}
-          </p>
-          {results.length > 0 ? (
-            <ul
-              aria-label={t.where.resultsLabel}
-              className="border-border mt-2 flex flex-col overflow-hidden rounded-lg border"
-            >
-              {results.map((place) => (
-                <li key={place.id} className="border-border border-b last:border-b-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      pickPlace(place);
-                    }}
-                    className="text-foreground hover:bg-accent focus-visible:bg-accent flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-[15px] outline-none"
-                  >
-                    <MapPin className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-                    {place.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <p
-            ref={summaryRef}
-            tabIndex={-1}
-            role="status"
-            className={cn(
-              "focus-visible:ring-ring/50 flex items-center gap-2 rounded-lg text-sm outline-none focus-visible:ring-[3px]",
-              whereSummary && "border-selected text-heading mt-3 border px-3 py-2 font-semibold",
-            )}
-          >
-            {whereSummary ? (
-              <>
-                <MapPin className="text-primary size-4 shrink-0" aria-hidden="true" />
-                {whereSummary}
-              </>
-            ) : null}
-          </p>
-        </div>
+        <LocationPicker
+          locale={locale}
+          onPick={pickLocation}
+          summary={whereSummary}
+          invalid={Boolean(errors.where) && !manualOpen}
+        />
 
         <details
           open={manualOpen}

@@ -1,7 +1,7 @@
 ---
 change_id: site-use-my-location
 title: 'Add "Use my location" to the add/edit site form'
-status: plan_reviewed
+status: implementing
 created: 2026-10-03
 updated: 2026-10-03
 archived_at: null

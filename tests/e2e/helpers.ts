@@ -79,10 +79,7 @@ export async function onboardInMadrid(page: Page, emailPrefix: string): Promise<
   const email = await signUp(page, emailPrefix);
 
   await page.locator("#place-search").fill("Madrid");
-  await page
-    .getByRole("list", { name: en.onboarding.where.resultsLabel })
-    .getByRole("button", { name: MADRID_LABEL })
-    .click();
+  await page.getByRole("list", { name: en.location.resultsLabel }).getByRole("button", { name: MADRID_LABEL }).click();
   await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();
   await expect(page).toHaveURL(/\/tonight$/);
   return email;

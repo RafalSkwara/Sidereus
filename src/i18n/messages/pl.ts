@@ -259,6 +259,30 @@ export const pl = {
     submit: "Zapisz okular",
   },
 
+  location: {
+    useLocation: "Użyj mojej lokalizacji",
+    locating: "Szukam Twojej lokalizacji...",
+    locationDenied:
+      "Dostęp do lokalizacji jest zablokowany, więc wyszukaj miejsce. Możesz go później włączyć w ustawieniach przeglądarki.",
+    locationUnavailable: "Nie udało się ustalić Twojej lokalizacji. Wyszukaj miejsce.",
+    or: "albo",
+    searchLabel: "Wyszukaj miejscowość",
+    searchPlaceholder: "np. Toruń",
+    searching: "Szukam...",
+    noResults: "Nie znaleziono takiego miejsca. Sprawdź pisownię albo wpisz pobliską miejscowość.",
+    resultsLabel: "Pasujące miejsca",
+    resultsCount: {
+      one: (p) => `Znaleziono ${p.count} miejsce`,
+      few: (p) => `Znaleziono ${p.count} miejsca`,
+      many: (p) => `Znaleziono ${p.count} miejsc`,
+      other: (p) => `Znaleziono ${p.count} miejsca`,
+    },
+    searchFallback: "Zamiast tego możesz wpisać współrzędne poniżej.",
+    usingDevice: "Używam Twojej bieżącej lokalizacji (z dokładnością do ok. 1 km)",
+    usingPlace: (p) => `Używam lokalizacji: ${p.place} (z dokładnością do ok. 1 km)`,
+    usingCoordinates: "Używam wpisanych współrzędnych, zaokrąglonych do ok. 1 km",
+  },
+
   onboarding: {
     title: "Skonfiguruj Sidereus",
     intro:
@@ -269,28 +293,7 @@ export const pl = {
       kicker: "1 · Miejsce",
       heading: "Skąd obserwujesz?",
       hint: "Twój dom albo miejsce, w którym zwykle rozstawiasz sprzęt. Zapisujemy je z dokładnością do ok. 1 km, nigdy dokładniej.",
-      useLocation: "Użyj mojej lokalizacji",
-      locating: "Szukam Twojej lokalizacji...",
-      locationDenied:
-        "Dostęp do lokalizacji jest zablokowany, więc wyszukaj miejsce. Możesz go później włączyć w ustawieniach przeglądarki.",
-      locationUnavailable: "Nie udało się ustalić Twojej lokalizacji. Wyszukaj miejsce.",
-      or: "albo",
-      searchLabel: "Wyszukaj miejscowość",
-      searchPlaceholder: "np. Toruń",
-      searching: "Szukam...",
-      noResults: "Nie znaleziono takiego miejsca. Sprawdź pisownię albo wpisz pobliską miejscowość.",
-      resultsLabel: "Pasujące miejsca",
-      resultsCount: {
-        one: (p) => `Znaleziono ${p.count} miejsce`,
-        few: (p) => `Znaleziono ${p.count} miejsca`,
-        many: (p) => `Znaleziono ${p.count} miejsc`,
-        other: (p) => `Znaleziono ${p.count} miejsca`,
-      },
-      searchFallback: "Zamiast tego możesz wpisać współrzędne poniżej.",
       manualToggle: "Wpisz współrzędne ręcznie",
-      usingDevice: "Używam Twojej bieżącej lokalizacji (z dokładnością do ok. 1 km)",
-      usingPlace: (p) => `Używam lokalizacji: ${p.place} (z dokładnością do ok. 1 km)`,
-      usingCoordinates: "Używam wpisanych współrzędnych, zaokrąglonych do ok. 1 km",
     },
     sky: {
       kicker: "2 · Niebo",

@@ -231,14 +231,14 @@ None (no data change).
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass, including `locate.test.ts` and the moved `geocode.test.ts`: `npm test`
-- [ ] 1.2 Type check passes: `npx astro check`
-- [ ] 1.3 Lint passes: `npm run lint`
-- [ ] 1.4 Onboarding e2e passes unchanged in behaviour: `npx playwright test tests/e2e/onboarding.spec.ts`
+- [x] 1.1 Unit tests pass, including `locate.test.ts` and the moved `geocode.test.ts`: `npm test`
+- [x] 1.2 Type check passes: `npx astro check`
+- [x] 1.3 Lint passes: `npm run lint`
+- [x] 1.4 Onboarding e2e passes unchanged in behaviour: `npx playwright test tests/e2e/onboarding.spec.ts`
 
 #### Manual
 
-- [ ] 1.5 Onboarding's Where section looks identical to before (Playwright screenshot, EN, dark, phone width)
+- [x] 1.5 Onboarding's Where section looks identical to before (Playwright screenshot, EN, dark, phone width)
 
 ### Phase 2: Site form uses the picker
 

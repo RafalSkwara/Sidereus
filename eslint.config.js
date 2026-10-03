@@ -99,6 +99,9 @@ const gearConfig = defineConfig({
     "src/components/tonight/**",
     "src/lib/sky-checks/**",
     "src/components/sky-checks/**",
+    "src/lib/location/**",
+    "src/components/location/**",
+    "src/components/gear/**",
   ],
   rules: { "no-console": "error" },
 });
