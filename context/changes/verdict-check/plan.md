@@ -487,27 +487,27 @@ The migration is additive (a new table and functions) and is pushed by CI's `mig
 
 #### Automated
 
-- [x] 2.1 `recordableVerdict` unit tests pass (no view, no-darkness night, normal night): `npm test`
-- [x] 2.2 `format`/`build` tests updated for `headline.id` and `darkStart` pass: `npm test`
-- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint`
-- [x] 2.4 Existing Tonight e2e specs still pass against a local preview
+- [x] 2.1 `recordableVerdict` unit tests pass (no view, no-darkness night, normal night): `npm test` — 8730d51
+- [x] 2.2 `format`/`build` tests updated for `headline.id` and `darkStart` pass: `npm test` — 8730d51
+- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint` — 8730d51
+- [x] 2.4 Existing Tonight e2e specs still pass against a local preview — 8730d51
 
 #### Manual
 
-- [x] 2.5 After opening Tonight locally as a signed-in user, `sky_checks` holds one row for (user, Home, tonight's date) with headline `go`; a reload keeps one row (checked with a local SQL query)
+- [x] 2.5 After opening Tonight locally as a signed-in user, `sky_checks` holds one row for (user, Home, tonight's date) with headline `go`; a reload keeps one row (checked with a local SQL query) — 8730d51
 
 ### Phase 3: Answer on Tonight
 
 #### Automated
 
-- [ ] 3.1 Schema and date-helper unit tests pass, and the i18n parity test passes: `npm test`
-- [ ] 3.2 Type check and lint pass: `npx astro check && npm run lint`
-- [ ] 3.3 Smoke passes against a local preview on local Supabase: `npm run smoke`
+- [x] 3.1 Schema and date-helper unit tests pass, and the i18n parity test passes: `npm test`
+- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 3.3 Smoke passes against a local preview on local Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.4 With a seeded row for two nights ago, Tonight shows the card below the Sky and Moon cards; answering returns to Tonight with the confirmation and no card; Skip does the same without an answer (screenshots EN/PL, dark/light/red, phone/desktop)
-- [ ] 3.5 A night three or more days back, an answered night, a skipped night and a `noForecast` night produce no card
+- [x] 3.4 With a seeded row for two nights ago, Tonight shows the card below the Sky and Moon cards; answering returns to Tonight with the confirmation and no card; Skip does the same without an answer (screenshots EN/PL, dark/light/red, phone/desktop)
+- [x] 3.5 A night three or more days back, an answered night, a skipped night and a `noForecast` night produce no card
 
 ### Phase 4: Sky checks page and tally
 

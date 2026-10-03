@@ -820,6 +820,21 @@ export const en = {
     },
   },
 
+  /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
+  skyChecks: {
+    card: {
+      kicker: "Sky check",
+      titleLastNight: "How was the sky last night?",
+      titleOn: (p: { date: string }) => `How was the sky on ${p.date}?`,
+      weSaid: (p: { site: string; headline: string }) => `${p.site} · We said: ${p.headline}`,
+      hint: "Your answers show how often the forecast was right.",
+      answers: "What you saw",
+      skip: "Skip",
+      all: "All sky checks",
+    },
+    saved: "Saved to your sky checks.",
+  },
+
   /**
    * Every value a route may put into `?error=`, a zod issue may carry, or a store may return. Fixed
    * strings only: none of them may ever contain a submitted value.

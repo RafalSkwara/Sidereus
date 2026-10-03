@@ -4,19 +4,27 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
 import TonightContent from "@/components/tonight/TonightContent.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
+import { ServerError } from "@/components/forms/ServerError";
 import { CircleCheck } from "lucide-react";
-import { getMessages } from "@/i18n";
+import { getMessages, isMessageKey, translateKey } from "@/i18n";
+import { hasSkyCheckedNotice } from "@/lib/sky-checks/redirect";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { requestedGear } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
-const t = getMessages(locale).tonight;
+const m = getMessages(locale);
+const t = m.tonight;
 // After a save, POST /api/log returns here with `?logged=<target key>` (a bare Messier number from an older link
 // still reads). Read in the shell: inside the server island below, Astro.url is the island's own request and
 // carries no page query.
 const loggedTarget = parseTargetParam(Astro.url.searchParams.get("logged"));
 const logged = loggedTarget ? targetLabel(loggedTarget, locale) : null;
+// After the sky question (verdict-check), POST /api/log/sky/[id] returns here with `?skyChecked=1`, or with
+// `?error=<message key>` when the answer could not be saved. Only catalogue keys are shown.
+const skyChecked = hasSkyCheckedNotice(Astro.url.searchParams);
+const errorParam = Astro.url.searchParams.get("error");
+const error = errorParam && isMessageKey(errorParam) ? translateKey(m, errorParam, "errors.generic") : null;
 
 // The site and telescope picked in a selector (or remembered on this device); see requested-gear.ts.
 const { siteId: requestedSite, telescopeId: requestedTelescope } = requestedGear(Astro.url, Astro.cookies);
@@ -31,6 +39,20 @@ const { siteId: requestedSite, telescopeId: requestedTelescope } = requestedGear
       <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
       {t.logged({ object: logged.id })}
     </p>
+  )}
+  {skyChecked && (
+    <p
+      role="status"
+      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
+    >
+      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
+      {m.skyChecks.saved}
+    </p>
+  )}
+  {error && (
+    <div class="mb-6">
+      <ServerError message={error} />
+    </div>
   )}
   {supabase ? (
     // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in.

@@ -775,6 +775,20 @@ export const pl = {
     },
   },
 
+  skyChecks: {
+    card: {
+      kicker: "Ocena nieba",
+      titleLastNight: "Jakie było niebo ostatniej nocy?",
+      titleOn: (p) => `Jakie było niebo w nocy ${p.date}?`,
+      weSaid: (p) => `${p.site} · Prognoza: ${p.headline}`,
+      hint: "Twoje odpowiedzi pokazują, jak często prognoza się sprawdza.",
+      answers: "Co było widać",
+      skip: "Pomiń",
+      all: "Wszystkie oceny nieba",
+    },
+    saved: "Zapisano w ocenach nieba.",
+  },
+
   errors: {
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
     notConfigured: "Baza danych nie jest skonfigurowana.",

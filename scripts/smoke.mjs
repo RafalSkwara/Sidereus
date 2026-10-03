@@ -160,6 +160,16 @@ const steps = [
   ],
   // Renders even when the forecast is unreachable: the verdict falls back to "marginal — no weather data".
   ["tonight renders for signed-in user", () => request("/tonight"), { status: 200 }],
+  [
+    // A well-formed id that matches no row: the route answers with the store's fixed "not found" key.
+    "answering an unknown sky check returns with a fixed error",
+    () =>
+      request("/api/log/sky/00000000-0000-4000-8000-000000000000", {
+        method: "POST",
+        form: { action: "clear", from: "sky" },
+      }),
+    { status: 302, location: "/log/sky?error=errors.notFound.skyCheck", exact: true },
+  ],
   ["dashboard redirects to tonight", () => request("/dashboard"), { status: 302, location: "/tonight", exact: true }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
