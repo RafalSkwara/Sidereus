@@ -244,14 +244,14 @@ None (no data change).
 
 #### Automated
 
-- [x] 2.1 Unit tests pass (i18n parity included): `npm test`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 New site-location e2e passes: `npx playwright test tests/e2e/site-location.spec.ts`
-- [x] 2.5 Full e2e suite stays green: `npm run test:e2e`
+- [x] 2.1 Unit tests pass (i18n parity included): `npm test` — 7100b26
+- [x] 2.2 Type check passes: `npx astro check` — 7100b26
+- [x] 2.3 Lint passes: `npm run lint` — 7100b26
+- [x] 2.4 New site-location e2e passes: `npx playwright test tests/e2e/site-location.spec.ts` — 7100b26
+- [x] 2.5 Full e2e suite stays green: `npm run test:e2e` — 7100b26
 
 #### Manual
 
-- [x] 2.6 Add and edit site pages show the Location block correctly in EN and PL, in dark, light and red, at phone width (Playwright screenshots)
-- [x] 2.7 With location denied, the denied message shows and typed coordinates still save
-- [x] 2.8 Place search on the add form fills the coordinates and an empty Name, and leaves a typed Name alone
+- [x] 2.6 Add and edit site pages show the Location block correctly in EN and PL, in dark, light and red, at phone width (Playwright screenshots) — 7100b26
+- [x] 2.7 With location denied, the denied message shows and typed coordinates still save — 7100b26
+- [x] 2.8 Place search on the add form fills the coordinates and an empty Name, and leaves a typed Name alone — 7100b26
