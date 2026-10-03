@@ -804,6 +804,7 @@ export const pl = {
       youSaw: (p) => `Było: ${p.answer}`,
       notAnswered: "Jeszcze bez odpowiedzi",
       answers: "Co było widać",
+      answersFor: (p) => `Co było widać w nocy ${p.night} (${p.site})`,
     },
     tally: {
       title: "Jak często prognoza się sprawdzała",

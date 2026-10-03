@@ -138,6 +138,29 @@ describe("record_sky_verdict", () => {
     });
     expect(error).not.toBeNull();
   });
+  it("does not let another user repoint its own check at the first user's site", async () => {
+    const siteB = await addSite(b, "Allotment");
+    await record(b, siteB, "2026-09-07", "go", past());
+    const [own] = await rows(b, siteB, "2026-09-07");
+
+    // No .select(): RETURNING would apply the SELECT policy and mask a missing WITH CHECK.
+    const { error } = await b.from("sky_checks").update({ site_id: siteA }).eq("id", own.id);
+    expect(error).not.toBeNull();
+    expect(await rows(b, siteB, "2026-09-07")).toHaveLength(1);
+  });
+
+  it("cannot be executed by an anonymous client", async () => {
+    const anon = newClient();
+    const recorded = await anon.rpc("record_sky_verdict", {
+      site_id: siteA,
+      night: "2026-09-08",
+      headline: "go",
+      dark_start: past().toISOString(),
+    });
+    expect(recorded.error?.code).toBe("42501");
+    const tallied = await anon.rpc("sky_check_tally");
+    expect(tallied.error?.code).toBe("42501");
+  });
 });
 
 describe("a check outlives its site", () => {
@@ -215,6 +238,26 @@ describe("skyCheckStore", () => {
     expect(await skyCheckStore.answer(user, row.id, "partly", new Date())).toEqual({ ok: true });
     const { entries } = await skyCheckStore.list(user, { page: 1, now: new Date() });
     expect(entries).toMatchObject([{ id: row.id, answer: "partly", skipped: false }]);
+  });
+
+  it("refuses to answer a night with no forecast, and to skip an answered night", async () => {
+    const user = await signUp("unoffered");
+    const site = await addSite(user);
+    await record(user, site, "2026-09-18", "noForecast", past());
+    await record(user, site, "2026-09-19", "go", past());
+    const [noForecast] = await rows(user, site, "2026-09-18");
+    const [answered] = await rows(user, site, "2026-09-19");
+    expect(await skyCheckStore.answer(user, answered.id, "clear", new Date())).toEqual({ ok: true });
+
+    expect(await skyCheckStore.answer(user, noForecast.id, "clear", new Date())).toEqual({
+      ok: false,
+      message: "errors.notFound.skyCheck",
+    });
+    expect(await skyCheckStore.skip(user, answered.id, new Date())).toEqual({
+      ok: false,
+      message: "errors.notFound.skyCheck",
+    });
+    expect(await rows(user, site, "2026-09-18")).toMatchObject([{ answer: null }]);
   });
 
   it("cannot answer another user's night, and treats a malformed id as not found", async () => {

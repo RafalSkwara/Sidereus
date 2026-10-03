@@ -44,10 +44,11 @@ if (supabase) {
 }
 
 const format = createFormatter(locale);
-const OUTCOME_TONES: Record<Outcome, string> = {
-  match: "text-go",
-  optimistic: "text-no-go",
-  pessimistic: "text-marginal",
+// The tone rides on a dot, never on the word: the words keep text contrast in every theme (impl review F1).
+const OUTCOME_DOTS: Record<Outcome, string> = {
+  match: "bg-go",
+  optimistic: "bg-no-go",
+  pessimistic: "bg-marginal",
 };
 const outcomeOfCheck = (check: SkyCheckRecord): Outcome | null => {
   const claim = claimOf(check.headline);
@@ -108,7 +109,7 @@ const pageLink =
     <div class="space-y-6">
       {tally && <SkyTally tally={tally} />}
 
-      <section class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+      <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
         <ul class="divide-y divide-border">
           {entries.map((check) => {
             const outcome = outcomeOfCheck(check);
@@ -130,22 +131,33 @@ const pageLink =
                     <>
                       {t.youSaw({ answer: answerLabel(m, check.answer) })}
                       {outcome && (
-                        <span class:list={["font-semibold", OUTCOME_TONES[outcome]]}>
-                          {" "}
-                          · {m.skyChecks.outcome[outcome]}
-                        </span>
+                        <>
+                          {" · "}
+                          <span class="inline-flex items-center gap-1.5 font-semibold text-heading">
+                            <span
+                              class:list={["size-2 shrink-0 rounded-full", OUTCOME_DOTS[outcome]]}
+                              aria-hidden="true"
+                            />
+                            {m.skyChecks.outcome[outcome]}
+                          </span>
+                        </>
                       )}
                     </>
                   ) : (
                     <span class="text-muted-foreground">{t.notAnswered}</span>
                   )}
                 </p>
-                <SkyAnswerForm id={check.id} from="sky" current={check.answer} label={t.answers} />
+                <SkyAnswerForm
+                  id={check.id}
+                  from="sky"
+                  current={check.answer}
+                  label={t.answersFor({ night: format.formatNightDate(check.night), site: siteName(check) })}
+                />
               </li>
             );
           })}
         </ul>
-      </section>
+      </div>
 
       {(page > 1 || hasOlder) && (
         <nav aria-label={t.pages} class="flex justify-between gap-4">

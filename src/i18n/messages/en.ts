@@ -849,6 +849,7 @@ export const en = {
       youSaw: (p: { answer: string }) => `You saw: ${p.answer}`,
       notAnswered: "Not answered yet",
       answers: "What you saw",
+      answersFor: (p: { night: string; site: string }) => `What you saw on ${p.night} at ${p.site}`,
     },
     tally: {
       title: "How often the forecast was right",

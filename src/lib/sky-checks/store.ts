@@ -87,13 +87,17 @@ export const skyCheckStore = {
     return data.map(toSkyCheckRecord);
   },
 
-  /** Saves (or changes) the answer for one of the caller's nights whose dark window has started. Clears a skip. */
+  /**
+   * Saves (or changes) the answer for one of the caller's checkable nights whose dark window has started. Clears a
+   * skip. A night with no checkable claim reads as not found, as it is never offered.
+   */
   async answer(client: TypedSupabaseClient, id: string, answer: SkyAnswer, now: Date): Promise<WriteResult> {
     const at = now.toISOString();
     const { data, error } = await client
       .from("sky_checks")
       .update({ answer, answered_at: at, skipped_at: null })
       .eq("id", id)
+      .in("headline", CHECKABLE_HEADLINES)
       .lt("dark_start", at)
       .select("id");
     if (error) {
@@ -102,13 +106,18 @@ export const skyCheckStore = {
     return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND };
   },
 
-  /** Hides one of the caller's nights from Tonight's question. It stays answerable on the sky checks page. */
+  /**
+   * Hides one of the caller's unanswered, checkable nights from Tonight's question. It stays answerable on the sky
+   * checks page. An answered night reads as not found: there is nothing left to skip.
+   */
   async skip(client: TypedSupabaseClient, id: string, now: Date): Promise<WriteResult> {
     const at = now.toISOString();
     const { data, error } = await client
       .from("sky_checks")
       .update({ skipped_at: at })
       .eq("id", id)
+      .in("headline", CHECKABLE_HEADLINES)
+      .is("answer", null)
       .lt("dark_start", at)
       .select("id");
     if (error) {
