@@ -97,6 +97,8 @@ const gearConfig = defineConfig({
     "src/pages/api/log/**",
     "src/pages/log/**",
     "src/components/tonight/**",
+    "src/lib/sky-checks/**",
+    "src/components/sky-checks/**",
   ],
   rules: { "no-console": "error" },
 });

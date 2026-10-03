@@ -55,7 +55,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
 | S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
-| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | planning |
+| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | in-progress |
 | S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready |
 | S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
@@ -191,7 +191,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What counts as a match? Candidate: go ↔ clear, marginal ↔ partly, no-go ↔ clouded out; anything else is a miss, with the direction (too optimistic / too pessimistic) kept because the PRD treats a false "go" as worse than a false "no-go". — Owner: user. Block: no.
     > Note (2026-10-02, moonlight-and-the-verdict): Tonight now words the verdict as the sky ("Clear", "Partly clear", "Cloudy", plus "Clear, but damp", "Clear (old forecast)", "No forecast" and "No dark window"), so a match compares the user's answer against the sky words that were shown, not against go / marginal / no-go.
 - **Risk:** The only slice that yields real evidence without a telescope — anyone can look up at the sky — so it is the input the open calibration work (#21) has been missing. Adds a per-user table, so it needs RLS and an isolation-suite entry.
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-08: "Use my location" on the site form
 

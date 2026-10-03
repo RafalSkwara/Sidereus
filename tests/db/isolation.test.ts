@@ -92,6 +92,20 @@ const TABLES = [
     // Changing the target also exercises the target/messier sync trigger under RLS.
     change: { target: "jupiter", rating: 2 },
   } satisfies TableCase<"observations">,
+  {
+    // The site reference is nullable (a check outlives its site), and the unique key on (user, site, night) treats
+    // null sites as distinct, so the row can be inserted repeatedly; the site guard and the recording function have
+    // their own suite in sky-checks.test.ts.
+    table: "sky_checks",
+    valid: {
+      site_id: null,
+      site_name: "Home",
+      night: "2026-09-26",
+      headline: "go",
+      dark_start: "2026-09-26T18:30:00Z",
+    },
+    change: { answer: "clear" },
+  } satisfies TableCase<"sky_checks">,
 ] as const;
 
 let a: { client: Client; userId: string };

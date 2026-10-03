@@ -874,6 +874,7 @@ export const en = {
       eyepiece: "Could not load the eyepiece. Please try again.",
       setup: "Could not load your setup. Please try again.",
       observations: "Could not load your observation log. Please try again.",
+      skyChecks: "Could not load your sky checks. Please try again.",
     },
     save: {
       site: "Could not save the site. Please try again.",
@@ -881,6 +882,7 @@ export const en = {
       eyepiece: "Could not save the eyepiece. Please try again.",
       setup: "Could not save your setup. Please try again.",
       observation: "Could not save the observation. Please try again.",
+      skyCheck: "Could not save your answer. Please try again.",
     },
     delete: {
       site: "Could not delete the site. Please try again.",
@@ -893,6 +895,7 @@ export const en = {
       telescope: "Telescope not found.",
       eyepiece: "Eyepiece not found.",
       observation: "Observation not found.",
+      skyCheck: "That night can't be checked yet, or it no longer exists.",
     },
     geocoding: {
       failed: "Place search is unavailable right now.",

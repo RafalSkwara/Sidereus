@@ -93,7 +93,7 @@ export type MoonUp = { kind: "never" } | { kind: "all" } | { kind: "part"; spans
  * Which sky headline a verdict gets (moonlight-and-the-verdict): one per row of the plan's headline table. It keys
  * `verdict.inline`, the headlines' lowercase forms.
  */
-type SkyHeadlineId = keyof Messages["verdict"]["inline"];
+export type SkyHeadlineId = keyof Messages["verdict"]["inline"];
 
 /** The catalogue key of each sky headline; a no-darkness night reuses the card's "No dark window". */
 export const SKY_HEADLINE_KEYS = {

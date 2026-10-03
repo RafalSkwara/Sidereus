@@ -825,6 +825,7 @@ export const pl = {
       eyepiece: "Nie udało się wczytać okularu. Spróbuj ponownie.",
       setup: "Nie udało się wczytać Twojego sprzętu. Spróbuj ponownie.",
       observations: "Nie udało się wczytać Twojego dziennika obserwacji. Spróbuj ponownie.",
+      skyChecks: "Nie udało się wczytać Twoich ocen nieba. Spróbuj ponownie.",
     },
     save: {
       site: "Nie udało się zapisać stanowiska. Spróbuj ponownie.",
@@ -832,6 +833,7 @@ export const pl = {
       eyepiece: "Nie udało się zapisać okularu. Spróbuj ponownie.",
       setup: "Nie udało się zapisać Twojego sprzętu. Spróbuj ponownie.",
       observation: "Nie udało się zapisać obserwacji. Spróbuj ponownie.",
+      skyCheck: "Nie udało się zapisać odpowiedzi. Spróbuj ponownie.",
     },
     delete: {
       site: "Nie udało się usunąć stanowiska. Spróbuj ponownie.",
@@ -844,6 +846,7 @@ export const pl = {
       telescope: "Nie znaleziono teleskopu.",
       eyepiece: "Nie znaleziono okularu.",
       observation: "Nie znaleziono obserwacji.",
+      skyCheck: "Tej nocy nie można jeszcze ocenić albo już nie istnieje.",
     },
     geocoding: {
       failed: "Wyszukiwanie miejsc jest teraz niedostępne.",
