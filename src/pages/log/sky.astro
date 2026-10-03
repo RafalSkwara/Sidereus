@@ -1,0 +1,168 @@
+---
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import GearShell from "@/components/gear/GearShell.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import SkyAnswerForm from "@/components/sky-checks/SkyAnswerForm.astro";
+import SkyTally from "@/components/sky-checks/SkyTally.astro";
+import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { CircleCheck } from "lucide-react";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { LOG_LIST, parseLogPage } from "@/lib/observations/redirect";
+import { claimOf, outcomeOf, tallyOf, type Outcome, type Tally } from "@/lib/sky-checks/claim";
+import { answerLabel, headlineLevel } from "@/lib/sky-checks/labels";
+import { hasSkyCheckedNotice, SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
+import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
+import { createFormatter, SKY_HEADLINE_KEYS } from "@/lib/tonight/format";
+
+// The sky checks page (verdict-check): the tally, then every recorded night whose dark window has started, newest
+// first, one page at a time, each answerable or changeable in place. Answers come back here with `?skyChecked=1`, a
+// failed one with `?error=<message key>`.
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.skyChecks.page;
+const params = Astro.url.searchParams;
+const page = parseLogPage(params.get("page"));
+const error = params.get("error");
+const saved = hasSkyCheckedNotice(params);
+
+let entries: SkyCheckRecord[] = [];
+let hasOlder = false;
+let tally: Tally | null = null;
+let loadError: MessageKey | null = null;
+if (supabase) {
+  try {
+    const now = new Date();
+    const [list, rows] = await Promise.all([
+      skyCheckStore.list(supabase, { page, now }),
+      skyCheckStore.tally(supabase),
+    ]);
+    ({ entries, hasOlder } = list);
+    tally = tallyOf(rows);
+  } catch {
+    loadError = "errors.load.skyChecks";
+  }
+}
+
+const format = createFormatter(locale);
+const OUTCOME_TONES: Record<Outcome, string> = {
+  match: "text-go",
+  optimistic: "text-no-go",
+  pessimistic: "text-marginal",
+};
+const outcomeOfCheck = (check: SkyCheckRecord): Outcome | null => {
+  const claim = claimOf(check.headline);
+  return claim && check.answer ? outcomeOf(claim, check.answer) : null;
+};
+const siteName = (check: SkyCheckRecord) =>
+  check.siteId ? check.siteName : m.log.list.deletedGear({ name: check.siteName });
+const pageHref = (n: number) => (n === 1 ? SKY_CHECKS_PAGE : `${SKY_CHECKS_PAGE}?page=${n}`);
+const primaryLink =
+  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
+const pageLink =
+  "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary-strong transition-colors hover:text-heading";
+---
+
+<GearShell title={t.title}>
+  {saved && (
+    <p
+      role="status"
+      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
+    >
+      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
+      {m.skyChecks.saved}
+    </p>
+  )}
+
+  <p class="mb-2">
+    <a href={LOG_LIST} class="text-sm font-semibold text-primary-strong underline-offset-4 hover:underline">
+      {m.log.backToLog}
+    </a>
+  </p>
+  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+  <p class="mb-6 text-sm text-muted-foreground">{t.intro}</p>
+
+  <div class="mb-6 empty:hidden">
+    <ServerError message={error ? translateKey(m, error, "errors.generic") : null} />
+  </div>
+
+  {!supabase ? (
+    <DatabaseMissing />
+  ) : loadError ? (
+    <ServerError message={translateKey(m, loadError, "errors.generic")} />
+  ) : entries.length === 0 && page > 1 ? (
+    // Past the last page (a stale or edited link): there are nights, so say so and lead back to the newest.
+    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+      <p class="mb-4 text-foreground">{t.pageEmpty}</p>
+      <a href={SKY_CHECKS_PAGE} class:list={[primaryLink]}>
+        {t.toNewest}
+      </a>
+    </div>
+  ) : entries.length === 0 ? (
+    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+      <p class="mb-4 text-foreground">{t.empty}</p>
+      <a href="/tonight" class:list={[primaryLink]}>
+        {t.toTonight}
+      </a>
+    </div>
+  ) : (
+    <div class="space-y-6">
+      {tally && <SkyTally tally={tally} />}
+
+      <section class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+        <ul class="divide-y divide-border">
+          {entries.map((check) => {
+            const outcome = outcomeOfCheck(check);
+            return (
+              <li class="py-4 first:pt-0 last:pb-0" data-sky-check-row={check.night}>
+                <p class="font-semibold break-words text-heading">
+                  {format.formatNightDate(check.night)}
+                  <span class="font-normal text-muted-foreground"> · {siteName(check)}</span>
+                </p>
+                <p class="mt-1 flex items-center gap-2 text-sm text-foreground">
+                  <span
+                    class:list={["size-2 shrink-0 rounded-full", VERDICT_TONES[headlineLevel(check.headline)].dot]}
+                    aria-hidden="true"
+                  />
+                  {t.weSaid({ headline: translateKey(m, SKY_HEADLINE_KEYS[check.headline], "errors.generic") })}
+                </p>
+                <p class="mt-1 mb-3 text-sm text-foreground">
+                  {check.answer ? (
+                    <>
+                      {t.youSaw({ answer: answerLabel(m, check.answer) })}
+                      {outcome && (
+                        <span class:list={["font-semibold", OUTCOME_TONES[outcome]]}>
+                          {" "}
+                          · {m.skyChecks.outcome[outcome]}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span class="text-muted-foreground">{t.notAnswered}</span>
+                  )}
+                </p>
+                <SkyAnswerForm id={check.id} from="sky" current={check.answer} label={t.answers} />
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {(page > 1 || hasOlder) && (
+        <nav aria-label={t.pages} class="flex justify-between gap-4">
+          {page > 1 ? (
+            <a href={pageHref(page - 1)} class:list={[pageLink]}>
+              {t.newer}
+            </a>
+          ) : (
+            <span />
+          )}
+          {hasOlder && (
+            <a href={pageHref(page + 1)} class:list={[pageLink]}>
+              {t.older}
+            </a>
+          )}
+        </nav>
+      )}
+    </div>
+  )}
+</GearShell>

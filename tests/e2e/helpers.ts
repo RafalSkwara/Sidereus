@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 
 import { en } from "@/i18n/messages/en";
+import type { Database } from "@/lib/database.types";
 
 /*
  * Shared steps for the e2e specs. They run against a production preview on local Supabase with
@@ -84,4 +86,48 @@ export async function onboardInMadrid(page: Page, emailPrefix: string): Promise<
   await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();
   await expect(page).toHaveURL(/\/tonight$/);
   return email;
+}
+
+/**
+ * Records a past night's sky check for the user signed up as `email` (verdict-check), as Tonight would have the
+ * evening it was shown: signs in through PostgREST as that user, finds their (only) site and calls
+ * `record_sky_verdict` with a dark window that has already started. Needs SUPABASE_URL and SUPABASE_KEY of the
+ * local stack the preview uses, as tests/db does.
+ */
+export async function seedSkyCheck(email: string, { night, headline }: { night: string; headline: string }) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "the sky-checks e2e needs SUPABASE_URL and SUPABASE_KEY (the anon/publishable key) of the preview's Supabase. " +
+        "Locally: take API_URL and ANON_KEY from `npx supabase status -o env`.",
+    );
+  }
+  const client = createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const signIn = await client.auth.signInWithPassword({ email, password: PASSWORD });
+  if (signIn.error) throw new Error(`sign-in for seeding failed: ${signIn.error.message}`);
+  const { data: site, error: siteError } = await client.from("sites").select("id").single();
+  if (siteError) throw new Error(`no single site to seed for: ${siteError.message}`);
+  const { error } = await client.rpc("record_sky_verdict", {
+    site_id: site.id,
+    night,
+    headline,
+    dark_start: new Date(Date.UTC(...isoDateParts(night), 19)).toISOString(),
+  });
+  if (error) throw new Error(`seeding the sky check failed: ${error.message}`);
+}
+
+/** The date `days` before today in Madrid, `YYYY-MM-DD` (the e2e site's time zone). */
+export function madridDateDaysAgo(days: number): string {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date());
+  const [year, month, day] = isoDateParts(today);
+  return new Date(Date.UTC(year, month, day - days)).toISOString().slice(0, 10);
+}
+
+/** `YYYY-MM-DD` as [year, zero-based month, day] for `Date.UTC`. */
+function isoDateParts(date: string): [number, number, number] {
+  const [year, month, day] = date.split("-").map(Number);
+  return [year, month - 1, day];
 }

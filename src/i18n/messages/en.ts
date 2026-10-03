@@ -812,6 +812,7 @@ export const en = {
       rated: (p: { rating: string }) => `Rated ${p.rating} of 5`,
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
       pages: "Log pages",
+      skyChecks: "Sky checks",
       newer: "← Newer",
       older: "Older →",
       saved: (p: { object: string }) => `${p.object} logged.`,
@@ -833,6 +834,36 @@ export const en = {
       all: "All sky checks",
     },
     saved: "Saved to your sky checks.",
+    page: {
+      title: "Sky checks",
+      intro:
+        "Every night Tonight judged for you, and what you saw. A night can be answered once its dark window has started.",
+      empty: "No sky checks yet. Open Tonight before dark, and the next morning Sidereus asks how the sky was.",
+      toTonight: "Go to Tonight",
+      pageEmpty: "No nights on this page.",
+      toNewest: "Go to the newest nights",
+      pages: "Sky check pages",
+      newer: "← Newer",
+      older: "Older →",
+      weSaid: (p: { headline: string }) => `We said: ${p.headline}`,
+      youSaw: (p: { answer: string }) => `You saw: ${p.answer}`,
+      notAnswered: "Not answered yet",
+      answers: "What you saw",
+    },
+    tally: {
+      title: "How often the forecast was right",
+      none: "No answers yet. Answer a night below, or on Tonight the morning after.",
+      matched: {
+        one: (p) => `${p.matched} of ${p.answered} night matched`,
+        other: (p) => `${p.matched} of ${p.answered} nights matched`,
+      } as PluralForms<(p: { matched: string; answered: string }) => string>,
+      misses: (p: { optimistic: string; pessimistic: string }) =>
+        `${p.optimistic} too optimistic · ${p.pessimistic} too pessimistic`,
+      byWord: "By what we said",
+      word: (p: { matched: string; answered: string }) => `${p.matched} of ${p.answered}`,
+      hint: "Too optimistic means the sky was cloudier than we said: the costlier mistake, since it wastes a setup.",
+    },
+    outcome: { match: "Matched", optimistic: "Too optimistic", pessimistic: "Too pessimistic" },
   },
 
   /**

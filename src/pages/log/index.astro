@@ -6,6 +6,7 @@ import { CircleCheck } from "lucide-react";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
+import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
 
@@ -69,9 +70,17 @@ const pageLink =
   <div class="mb-2 flex flex-wrap items-end justify-between gap-3">
     <h1 class="font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
     {supabase && (
-      <a href={`/log/new?from=log`} class:list={[primaryLink]}>
-        {t.add}
-      </a>
+      <div class="flex flex-wrap gap-3">
+        <a
+          href={SKY_CHECKS_PAGE}
+          class="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-heading transition-colors hover:bg-accent"
+        >
+          {t.skyChecks}
+        </a>
+        <a href={`/log/new?from=log`} class:list={[primaryLink]}>
+          {t.add}
+        </a>
+      </div>
     )}
   </div>
   <p class="mb-6 text-sm text-muted-foreground">{t.intro}</p>

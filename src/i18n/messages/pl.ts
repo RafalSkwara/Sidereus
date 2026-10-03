@@ -767,6 +767,7 @@ export const pl = {
       rated: (p) => `Ocena ${p.rating} z 5`,
       deletedGear: (p) => `${p.name} (usunięte)`,
       pages: "Strony dziennika",
+      skyChecks: "Oceny nieba",
       newer: "← Nowsze",
       older: "Starsze →",
       saved: (p) => `Zapisano obserwację: ${p.object}.`,
@@ -787,6 +788,39 @@ export const pl = {
       all: "Wszystkie oceny nieba",
     },
     saved: "Zapisano w ocenach nieba.",
+    page: {
+      title: "Oceny nieba",
+      intro:
+        "Każda noc, którą Sidereus ocenił dla Ciebie, i to, co było widać. Noc można ocenić, gdy zacznie się jej okno ciemności.",
+      empty:
+        "Nie ma jeszcze ocen nieba. Otwórz Dziś w nocy przed zmrokiem, a następnego ranka Sidereus zapyta, jakie było niebo.",
+      toTonight: "Przejdź do Dziś w nocy",
+      pageEmpty: "Na tej stronie nie ma nocy.",
+      toNewest: "Przejdź do najnowszych nocy",
+      pages: "Strony ocen nieba",
+      newer: "← Nowsze",
+      older: "Starsze →",
+      weSaid: (p) => `Prognoza: ${p.headline}`,
+      youSaw: (p) => `Było: ${p.answer}`,
+      notAnswered: "Jeszcze bez odpowiedzi",
+      answers: "Co było widać",
+    },
+    tally: {
+      title: "Jak często prognoza się sprawdzała",
+      none: "Brak odpowiedzi. Oceń noc poniżej albo rano w widoku Dziś w nocy.",
+      // "nocy" is both the genitive singular and plural of "noc", so every form reads the same.
+      matched: {
+        one: (p) => `Sprawdziła się w ${p.matched} z ${p.answered} nocy`,
+        few: (p) => `Sprawdziła się w ${p.matched} z ${p.answered} nocy`,
+        many: (p) => `Sprawdziła się w ${p.matched} z ${p.answered} nocy`,
+        other: (p) => `Sprawdziła się w ${p.matched} z ${p.answered} nocy`,
+      },
+      misses: (p) => `Zbyt optymistyczna: ${p.optimistic} · zbyt pesymistyczna: ${p.pessimistic}`,
+      byWord: "Według prognozy",
+      word: (p) => `${p.matched} z ${p.answered}`,
+      hint: "Zbyt optymistyczna: niebo było bardziej zachmurzone, niż mówiła prognoza. To droższa pomyłka, bo marnuje rozstawienie sprzętu.",
+    },
+    outcome: { match: "Trafiona", optimistic: "Zbyt optymistyczna", pessimistic: "Zbyt pesymistyczna" },
   },
 
   errors: {

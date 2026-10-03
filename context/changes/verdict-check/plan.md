@@ -500,25 +500,25 @@ The migration is additive (a new table and functions) and is pushed by CI's `mig
 
 #### Automated
 
-- [x] 3.1 Schema and date-helper unit tests pass, and the i18n parity test passes: `npm test`
-- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint`
-- [x] 3.3 Smoke passes against a local preview on local Supabase: `npm run smoke`
+- [x] 3.1 Schema and date-helper unit tests pass, and the i18n parity test passes: `npm test` — fee9747
+- [x] 3.2 Type check and lint pass: `npx astro check && npm run lint` — fee9747
+- [x] 3.3 Smoke passes against a local preview on local Supabase: `npm run smoke` — fee9747
 
 #### Manual
 
-- [x] 3.4 With a seeded row for two nights ago, Tonight shows the card below the Sky and Moon cards; answering returns to Tonight with the confirmation and no card; Skip does the same without an answer (screenshots EN/PL, dark/light/red, phone/desktop)
-- [x] 3.5 A night three or more days back, an answered night, a skipped night and a `noForecast` night produce no card
+- [x] 3.4 With a seeded row for two nights ago, Tonight shows the card below the Sky and Moon cards; answering returns to Tonight with the confirmation and no card; Skip does the same without an answer (screenshots EN/PL, dark/light/red, phone/desktop) — fee9747
+- [x] 3.5 A night three or more days back, an answered night, a skipped night and a `noForecast` night produce no card — fee9747
 
 ### Phase 4: Sky checks page and tally
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass: `npm test`
-- [ ] 4.2 Type check and lint pass: `npx astro check && npm run lint`
-- [ ] 4.3 DB tests pass: `npm run test:db`
-- [ ] 4.4 The new e2e spec and the existing suite pass against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 4.1 Unit tests pass: `npm test`
+- [x] 4.2 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 4.3 DB tests pass: `npm run test:db`
+- [x] 4.4 The new e2e spec and the existing suite pass against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
 
 #### Manual
 
-- [ ] 4.5 `/log/sky` with a mix of answered, unanswered and too-optimistic/pessimistic rows reads correctly; tally numbers match the rows (screenshots EN/PL, dark/light/red, phone/desktop)
-- [ ] 4.6 Empty state and paging links render; the log links to the page
+- [x] 4.5 `/log/sky` with a mix of answered, unanswered and too-optimistic/pessimistic rows reads correctly; tally numbers match the rows (screenshots EN/PL, dark/light/red, phone/desktop)
+- [x] 4.6 Empty state and paging links render; the log links to the page
