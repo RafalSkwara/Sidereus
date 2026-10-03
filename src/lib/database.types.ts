@@ -151,6 +151,59 @@ export type Database = {
         };
         Relationships: [];
       };
+      sky_checks: {
+        Row: {
+          answer: string | null;
+          answered_at: string | null;
+          created_at: string;
+          dark_start: string;
+          headline: string;
+          id: string;
+          night: string;
+          shown_at: string;
+          site_id: string | null;
+          site_name: string;
+          skipped_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          answer?: string | null;
+          answered_at?: string | null;
+          created_at?: string;
+          dark_start: string;
+          headline: string;
+          id?: string;
+          night: string;
+          shown_at?: string;
+          site_id?: string | null;
+          site_name: string;
+          skipped_at?: string | null;
+          user_id?: string;
+        };
+        Update: {
+          answer?: string | null;
+          answered_at?: string | null;
+          created_at?: string;
+          dark_start?: string;
+          headline?: string;
+          id?: string;
+          night?: string;
+          shown_at?: string;
+          site_id?: string | null;
+          site_name?: string;
+          skipped_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sky_checks_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       telescopes: {
         Row: {
           aperture_mm: number;
@@ -198,6 +251,23 @@ export type Database = {
           time_zone_source: string;
         };
         Returns: undefined;
+      };
+      record_sky_verdict: {
+        Args: {
+          dark_start: string;
+          headline: string;
+          night: string;
+          site_id: string;
+        };
+        Returns: undefined;
+      };
+      sky_check_tally: {
+        Args: never;
+        Returns: {
+          answer: string;
+          headline: string;
+          nights: number;
+        }[];
       };
     };
     Enums: {

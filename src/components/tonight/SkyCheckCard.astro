@@ -1,0 +1,63 @@
+---
+// Tonight's sky question (verdict-check): how the sky really was on a recent night, against the headline Tonight
+// showed then. The shared answer form posts to /api/log/sky/[id], which returns to Tonight; Skip rides in the same
+// form. Asked for the newest open night of the last two (see `pendingCheck`).
+import SkyAnswerForm from "@/components/sky-checks/SkyAnswerForm.astro";
+import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import { getMessages, translateKey } from "@/i18n";
+import { headlineLevel } from "@/lib/sky-checks/labels";
+import { nightsBefore } from "@/lib/sky-checks/pending";
+import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
+import type { SkyCheckRecord } from "@/lib/sky-checks/store";
+import { createFormatter, SKY_HEADLINE_KEYS } from "@/lib/tonight/format";
+
+interface Props {
+  check: SkyCheckRecord;
+  /** Tonight's own night, `YYYY-MM-DD`: the question says "last night" for the night before it. */
+  tonightDate: string;
+}
+
+const { check, tonightDate } = Astro.props;
+const { locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.skyChecks.card;
+const { formatShortNightDate } = createFormatter(locale);
+
+const title =
+  check.night === nightsBefore(tonightDate, 1)
+    ? t.titleLastNight
+    : t.titleOn({ date: formatShortNightDate(check.night) });
+const headline = translateKey(m, SKY_HEADLINE_KEYS[check.headline], "errors.generic");
+
+const quietAction =
+  "inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-primary-strong underline-offset-4 transition-colors hover:underline outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50";
+---
+
+<section
+  aria-labelledby="sky-check-heading"
+  class="rounded-2xl border border-border bg-surface p-4 sm:p-6"
+  data-sky-check
+>
+  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
+  <h2 id="sky-check-heading" class="font-display text-2xl font-semibold text-heading">
+    {title}
+  </h2>
+  <p class="mt-1 mb-4 flex items-center gap-2 text-sm text-foreground">
+    <span
+      class:list={["size-2 shrink-0 rounded-full", VERDICT_TONES[headlineLevel(check.headline)].dot]}
+      aria-hidden="true"
+    ></span>
+    {t.weSaid({ site: check.siteName, headline })}
+  </p>
+  <SkyAnswerForm id={check.id} from="tonight" current={null} label={t.answers}>
+    <div class="mt-2 flex flex-wrap items-center gap-x-5">
+      <button type="submit" name="action" value="skip" class:list={[quietAction]}>
+        {t.skip}
+      </button>
+      <a href={SKY_CHECKS_PAGE} class:list={[quietAction]}>
+        {t.all}
+      </a>
+    </div>
+    <p class="mt-1 text-xs text-muted-foreground">{t.hint}</p>
+  </SkyAnswerForm>
+</section>

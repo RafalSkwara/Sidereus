@@ -93,7 +93,7 @@ export type MoonUp = { kind: "never" } | { kind: "all" } | { kind: "part"; spans
  * Which sky headline a verdict gets (moonlight-and-the-verdict): one per row of the plan's headline table. It keys
  * `verdict.inline`, the headlines' lowercase forms.
  */
-type SkyHeadlineId = keyof Messages["verdict"]["inline"];
+export type SkyHeadlineId = keyof Messages["verdict"]["inline"];
 
 /** The catalogue key of each sky headline; a no-darkness night reuses the card's "No dark window". */
 export const SKY_HEADLINE_KEYS = {
@@ -108,8 +108,12 @@ export const SKY_HEADLINE_KEYS = {
 
 export type SkyHeadlineKey = (typeof SKY_HEADLINE_KEYS)[SkyHeadlineId];
 
-/** A verdict's headline: its catalogue key (for tests and `data-sky-headline`) and its text in the locale. */
+/**
+ * A verdict's headline: its stable id (what a sky check stores, verdict-check), its catalogue key (for tests and
+ * `data-sky-headline`) and its text in the locale.
+ */
 export interface SkyHeadline {
+  id: SkyHeadlineId;
   key: SkyHeadlineKey;
   text: string;
 }
@@ -283,7 +287,7 @@ export function createFormatter(locale: Locale) {
       noForecast: m.verdict.sky.noForecast,
       noDarkness: m.tonight.card.noDarkWindow,
     };
-    return { key: SKY_HEADLINE_KEYS[id], text: text[id] };
+    return { id, key: SKY_HEADLINE_KEYS[id], text: text[id] };
   }
 
   /** The same headline in lowercase, for the middle of a sentence ("Next clearer night: Fri 9 Oct (partly clear)"). */

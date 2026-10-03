@@ -8,10 +8,14 @@ import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import MoonCard from "@/components/tonight/MoonCard.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
+import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
+import { pendingCheck } from "@/lib/sky-checks/pending";
+import { recordableVerdict } from "@/lib/sky-checks/record";
+import { skyCheckStore } from "@/lib/sky-checks/store";
 import { MOON_TARGET_KEY } from "@/lib/targets";
 import { loadTonight, logHref } from "@/lib/tonight/load";
 
@@ -30,6 +34,10 @@ const supabase = user ? Astro.locals.supabase : null;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
+// Work that runs after the response is sent: the forecast's KV write and the sky check's record.
+const defer = (task: Promise<void>) => {
+  Astro.locals.cfContext.waitUntil(task);
+};
 
 const {
   sites,
@@ -45,6 +53,7 @@ const {
   needsSetup,
   view,
   tonightError,
+  openSkyChecks,
 } = await loadTonight({
   supabase,
   locale,
@@ -53,11 +62,23 @@ const {
   now: new Date(),
   cache: kvForecastCache(),
   forecastBaseUrl: FORECAST_BASE_URL,
-  // The KV write runs after the response is sent.
-  defer: (task) => {
-    Astro.locals.cfContext.waitUntil(task);
-  },
+  defer,
+  withSkyChecks: true,
 });
+
+// Record the headline this view shows for the sky check (verdict-check). Fire and forget: it runs after the
+// response, and a failure is swallowed (never logged, never shown) so the check can never cost Tonight its render.
+const recordable = supabase ? recordableVerdict(view) : null;
+if (supabase && recordable) {
+  defer(
+    skyCheckStore.record(supabase, recordable).then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+}
+// The sky question for a recent night at the shown site (verdict-check); `null` when there is nothing to ask.
+const skyCheck = site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
 // More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
 const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
@@ -155,6 +176,8 @@ const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
             />
             {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
           </div>
+
+          {skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
 
           {showNotices && (
             <div class="space-y-4">

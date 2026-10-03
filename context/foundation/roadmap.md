@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-10-02
+updated: 2026-10-03
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -51,11 +51,11 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- | -------- |
 | S-01 | planets-on-tonight               | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed | —             | MS-01          | done |
 | S-02 | moon-as-target                   | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                         | S-01          | MS-02          | done |
-| S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | proposed |
+| S-03 | deep-sky-beyond-messier          | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                             | S-01          | MS-03          | ready |
 | S-04 | double-stars                     | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                         | S-01          | MS-04          | blocked |
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
 | S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
-| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | ready |
+| S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | in-progress |
 | S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | ready |
 | S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
@@ -132,7 +132,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Does the wider list crowd Messier out of the top 5 for a beginner? Candidate: rank together, but tie-break towards Messier and show the catalogue label on each row. — Owner: user. Block: no.
   - The manual log entry picker lists Messier numbers only; it needs search by catalogue name. — Owner: team. Block: no.
 - **Risk:** The scoring was calibrated only against Messier objects; faint objects with missing surface brightness fall back to type-based penalties, so check the new objects' ranks against published seasonal lists as the S-02 checkpoint of M-1 did.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-04: Double stars
 
@@ -190,8 +190,9 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Where is the question asked? Candidate: on Tonight the day after a viewed night ("How was last night at Home?"), and next to each observing night in the log; answering is always optional. — Owner: user. Block: no.
   - What counts as a match? Candidate: go ↔ clear, marginal ↔ partly, no-go ↔ clouded out; anything else is a miss, with the direction (too optimistic / too pessimistic) kept because the PRD treats a false "go" as worse than a false "no-go". — Owner: user. Block: no.
     > Note (2026-10-02, moonlight-and-the-verdict): Tonight now words the verdict as the sky ("Clear", "Partly clear", "Cloudy", plus "Clear, but damp", "Clear (old forecast)", "No forecast" and "No dark window"), so a match compares the user's answer against the sky words that were shown, not against go / marginal / no-go.
+    > Note (2026-10-03, verdict-check): delivered as a card on Tonight for the newest unanswered night of the last two (with Skip) plus a Sky checks page at `/log/sky` that lists every recorded night, lets any of them be answered or changed, and shows the tally (matched, too optimistic / too pessimistic, per sky word). The verdict recorded is the last one shown before the dark window starts. "Clear, but damp" and "Clear (old forecast)" count as a promise of Clear; "No forecast" and "No dark window" nights are never asked.
 - **Risk:** The only slice that yields real evidence without a telescope — anyone can look up at the sky — so it is the input the open calibration work (#21) has been missing. Adds a per-user table, so it needs RLS and an isolation-suite entry.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-08: "Use my location" on the site form
 
@@ -239,7 +240,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 
 1. **PRD amendment for M-2.** Several M-2 slices cross PRD v2 Non-Goals ("Anything outside the Messier catalogue") and one guardrail ("never outside the darkness window", which S-01/S-02 relax for solar-system targets). Should the PRD be bumped to v3 to record the new scope and the relaxed guardrail, or does this roadmap's charter stand as the record for M-2? — Owner: user. Block: none (recommended before S-01's plan is reviewed, so the guardrail change is written down).
 2. **Judging advice without an observer.** With no equipment or observing experience (`top_blocker: skills`), how is planet, Moon, double-star and field-use advice checked? Candidate: Stellarium fixtures for positions (as F-01 of M-1 did), published seasonal and phase guides for advice, and S-07's verdict check for weather; anything else is accepted as judgment and noted in each plan. — Owner: user. Block: none.
-3. **Carry-over follow-ups from M-1:** #19 (Stellarium moon/object fixture values), #21 (ranking calibration refinements), #22 (re-measure Tonight's CPU against the Free-plan trigger). None is a slice; #22 should be re-run after S-01 and S-03, which add the most work per request. — Owner: team. Block: none.
+3. **Carry-over follow-ups from M-1:** #19 (Stellarium moon/object fixture values), #21 (ranking calibration refinements), #22 (re-measure Tonight's CPU against the Free-plan trigger; closed 2026-09-30 when Sidereus moved to Workers Paid, so the 10 ms CPU cap no longer applies). None is a slice. — Owner: team. Block: none.
 
 ## Parked
 

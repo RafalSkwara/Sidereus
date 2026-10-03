@@ -66,8 +66,12 @@ jobs:
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:4321/ && break; sleep 1; done
           BASE_URL=http://localhost:4321 npm run smoke
       - run: npx playwright install --with-deps chromium
+      # The sky-checks spec seeds a past night through PostgREST as its own user, so it needs the local stack's
+      # URL and anon key (verdict-check).
       - name: Run e2e spec against production preview
-        run: BASE_URL=http://localhost:4321 npm run test:e2e
+        run: |
+          source supabase.env
+          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" BASE_URL=http://localhost:4321 npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

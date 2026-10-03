@@ -812,12 +812,59 @@ export const en = {
       rated: (p: { rating: string }) => `Rated ${p.rating} of 5`,
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
       pages: "Log pages",
+      skyChecks: "Sky checks",
       newer: "← Newer",
       older: "Older →",
       saved: (p: { object: string }) => `${p.object} logged.`,
       updated: (p: { object: string }) => `${p.object} updated.`,
       deleted: (p: { object: string }) => `${p.object} deleted from the log.`,
     },
+  },
+
+  /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
+  skyChecks: {
+    card: {
+      kicker: "Sky check",
+      titleLastNight: "How was the sky last night?",
+      titleOn: (p: { date: string }) => `How was the sky on ${p.date}?`,
+      weSaid: (p: { site: string; headline: string }) => `${p.site} · We said: ${p.headline}`,
+      hint: "Your answers show how often the forecast was right.",
+      answers: "What you saw",
+      skip: "Skip",
+      all: "All sky checks",
+    },
+    saved: "Saved to your sky checks.",
+    page: {
+      title: "Sky checks",
+      intro:
+        "Every night Tonight judged for you, and what you saw. A night can be answered once its dark window has started.",
+      empty: "No sky checks yet. Open Tonight before dark, and the next morning Sidereus asks how the sky was.",
+      toTonight: "Go to Tonight",
+      pageEmpty: "No nights on this page.",
+      toNewest: "Go to the newest nights",
+      pages: "Sky check pages",
+      newer: "← Newer",
+      older: "Older →",
+      weSaid: (p: { headline: string }) => `We said: ${p.headline}`,
+      youSaw: (p: { answer: string }) => `You saw: ${p.answer}`,
+      notAnswered: "Not answered yet",
+      answers: "What you saw",
+      answersFor: (p: { night: string; site: string }) => `What you saw on ${p.night} at ${p.site}`,
+    },
+    tally: {
+      title: "How often the forecast was right",
+      none: "No answers yet. Answer a night below, or on Tonight the morning after.",
+      matched: {
+        one: (p) => `${p.matched} of ${p.answered} night matched`,
+        other: (p) => `${p.matched} of ${p.answered} nights matched`,
+      } as PluralForms<(p: { matched: string; answered: string }) => string>,
+      misses: (p: { optimistic: string; pessimistic: string }) =>
+        `${p.optimistic} too optimistic · ${p.pessimistic} too pessimistic`,
+      byWord: "By what we said",
+      word: (p: { matched: string; answered: string }) => `${p.matched} of ${p.answered}`,
+      hint: "Too optimistic means the sky was cloudier than we said: the costlier mistake, since it wastes a setup.",
+    },
+    outcome: { match: "Matched", optimistic: "Too optimistic", pessimistic: "Too pessimistic" },
   },
 
   /**
@@ -874,6 +921,7 @@ export const en = {
       eyepiece: "Could not load the eyepiece. Please try again.",
       setup: "Could not load your setup. Please try again.",
       observations: "Could not load your observation log. Please try again.",
+      skyChecks: "Could not load your sky checks. Please try again.",
     },
     save: {
       site: "Could not save the site. Please try again.",
@@ -881,6 +929,7 @@ export const en = {
       eyepiece: "Could not save the eyepiece. Please try again.",
       setup: "Could not save your setup. Please try again.",
       observation: "Could not save the observation. Please try again.",
+      skyCheck: "Could not save your answer. Please try again.",
     },
     delete: {
       site: "Could not delete the site. Please try again.",
@@ -893,6 +942,7 @@ export const en = {
       telescope: "Telescope not found.",
       eyepiece: "Eyepiece not found.",
       observation: "Observation not found.",
+      skyCheck: "That night can't be checked yet, or it no longer exists.",
     },
     geocoding: {
       failed: "Place search is unavailable right now.",

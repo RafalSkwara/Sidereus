@@ -16,6 +16,8 @@ import {
   type TelescopeRecord,
 } from "@/lib/gear/store";
 import { observationStore } from "@/lib/observations/store";
+import { openSkyChecksSince } from "@/lib/sky-checks/pending";
+import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { Locale } from "@/lib/preferences";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
@@ -42,6 +44,11 @@ export interface LoadTonightInput {
   defer: (task: Promise<void>) => void;
   /** How many cleared objects get full entries; see `buildTonight`. */
   limit?: number;
+  /**
+   * Also read the user's recent open sky checks (verdict-check), alongside the other lists so it adds no round trip.
+   * Only Tonight asks about the sky; the all-objects page leaves it off.
+   */
+  withSkyChecks?: boolean;
 }
 
 export interface TonightLoad {
@@ -62,6 +69,8 @@ export interface TonightLoad {
   needsSetup: boolean;
   view: TonightView | null;
   tonightError: MessageKey | null;
+  /** The user's recent open sky checks when `withSkyChecks` is set; empty otherwise or when the read fails. */
+  openSkyChecks: SkyCheckRecord[];
 }
 
 /** Loads one list; a failure only affects what depends on it, never the whole page. */
@@ -86,18 +95,24 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
   let telescopesError: MessageKey | null = null;
   let eyepiecesError: MessageKey | null = null;
   let logError: MessageKey | null = null;
+  let openSkyChecks: SkyCheckRecord[] = [];
 
   if (supabase) {
-    const [siteResult, telescopeResult, eyepieceResult, logResult] = await Promise.all([
+    const [siteResult, telescopeResult, eyepieceResult, logResult, skyCheckResult] = await Promise.all([
       load(() => siteStore.list(supabase), SITES_FAILED),
       load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
       load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
       load(() => observationStore.listForRanking(supabase), LOG_FAILED),
+      // The question is optional, so a failed read only hides it: its error is dropped.
+      input.withSkyChecks
+        ? load(() => skyCheckStore.openRecent(supabase, { sinceNight: openSkyChecksSince(now) }), LOG_FAILED)
+        : { items: [], error: null },
     ]);
     ({ items: sites, error: sitesError } = siteResult);
     ({ items: telescopes, error: telescopesError } = telescopeResult);
     ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
     ({ items: log, error: logError } = logResult);
+    openSkyChecks = skyCheckResult.items;
   }
 
   // The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
@@ -143,6 +158,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
     needsSetup,
     view,
     tonightError,
+    openSkyChecks,
   };
 }
 
