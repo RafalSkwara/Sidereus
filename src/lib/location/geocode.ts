@@ -4,8 +4,8 @@ import { roundCoordinate } from "@/lib/gear/coordinates";
 import type { Locale } from "@/lib/preferences";
 
 /**
- * Open-Meteo Geocoding client for the onboarding place search, called from the browser. The fetch
- * function is passed in so tests need no network.
+ * Open-Meteo Geocoding client for the place search in the shared location picker (onboarding and the
+ * site form), called from the browser. The fetch function is passed in so tests need no network.
  *
  * Privacy (PRD NFR): result coordinates are rounded with `roundCoordinate` before they leave this
  * module. Every failure throws an `Error` with the one fixed message key (no URL, no query, no
@@ -30,6 +30,8 @@ export const PLACE_RESULT_COUNT = 5;
 
 export interface PlaceResult {
   id: number;
+  /** The bare place name ("Kraków"), used to fill an empty site name. */
+  name: string;
   label: string;
   latitudeDeg: number;
   longitudeDeg: number;
@@ -104,6 +106,7 @@ export async function searchPlaces(
   }
   return (parsed.data.results ?? []).map((place) => ({
     id: place.id,
+    name: place.name.trim(),
     label: label([place.name, place.admin1, place.country]),
     latitudeDeg: roundCoordinate(place.latitude),
     longitudeDeg: roundCoordinate(place.longitude),

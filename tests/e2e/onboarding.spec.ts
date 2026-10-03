@@ -35,9 +35,9 @@ test.describe("onboarding in English", () => {
     await signUp(page, "e2e");
 
     await page.locator("#place-search").fill("Madrid");
-    const results = page.getByRole("list", { name: en.onboarding.where.resultsLabel });
+    const results = page.getByRole("list", { name: en.location.resultsLabel });
     await results.getByRole("button", { name: MADRID_LABEL }).click();
-    await expect(page.getByText(en.onboarding.where.usingPlace({ place: MADRID_LABEL }))).toBeVisible();
+    await expect(page.getByText(en.location.usingPlace({ place: MADRID_LABEL }))).toBeVisible();
 
     // Defaults stay: "Suburb", the 150 mm reflector and the Supplied pair.
     await expect(page.getByRole("radio", { name: new RegExp(`^${en.onboarding.scenes.suburb.title}`) })).toBeChecked();
@@ -63,9 +63,9 @@ test.describe("onboarding in English", () => {
       await signUp(page, "e2e");
       await expect(onboardingSubmit(page)).toBeDisabled();
 
-      await page.getByRole("button", { name: en.onboarding.where.useLocation }).click();
+      await page.getByRole("button", { name: en.location.useLocation }).click();
 
-      await expect(page.getByText(en.onboarding.where.usingDevice)).toBeVisible();
+      await expect(page.getByText(en.location.usingDevice)).toBeVisible();
       await expect(onboardingSubmit(page)).toBeEnabled();
     });
   });
