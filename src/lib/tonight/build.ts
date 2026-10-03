@@ -312,6 +312,11 @@ export interface TonightView {
   verdictText: string;
   /** Formatted in the site's time zone. */
   darkWindow: TonightDarkWindow;
+  /**
+   * When tonight's dark window starts, `null` without one (verdict-check): a sky check keeps the last headline shown
+   * before it. Server-side only; no client island receives the view.
+   */
+  darkStart: Date | null;
   /** `null` on a no-go night or without a dark window: the verdict stands in its place. */
   ranking: TonightRanking | null;
   hasEyepieces: boolean;
@@ -708,6 +713,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       window.kind === "window"
         ? { kind: "window", start: formatTime(window.start, timeZone), end: formatTime(window.end, timeZone) }
         : { kind: "none" },
+    darkStart: window.kind === "window" ? window.start : null,
     ranking,
     hasEyepieces: eyepieces.length > 0,
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },

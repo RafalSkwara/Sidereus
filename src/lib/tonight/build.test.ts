@@ -177,6 +177,9 @@ describe("buildTonight", () => {
       expect(view.darkWindow.start).toMatch(/^(19|20):\d{2}$/);
       expect(view.darkWindow.end).toMatch(/^0[4-6]:\d{2}$/);
     }
+    // The raw start behind the formatted one, for the sky check (verdict-check): the evening of 10 October.
+    expect(view.headline.id).toBe("go");
+    expect(view.darkStart?.toISOString()).toMatch(/^2026-10-10T1[78]:/);
     const ranking = rankingOf(view);
     expect(ranking.clearedCount).toBeGreaterThan(0);
     expect(ranking.clearedText).toBe(`${ranking.clearedCount} objects cleared the bar tonight`);
@@ -222,7 +225,7 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict.level).toBe("no-go");
-    expect(view.headline).toEqual({ key: "verdict.level.no-go", text: "Cloudy" });
+    expect(view.headline).toEqual({ id: "no-go", key: "verdict.level.no-go", text: "Cloudy" });
     expect(view.verdictText).toBe("too cloudy: the clearest dark hour has 100% cloud");
     expect(view.ranking).toBeNull();
   });
@@ -239,9 +242,10 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.darkWindow).toEqual({ kind: "none" });
+    expect(view.darkStart).toBeNull();
     expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
     // Never "Cloudy" on a night that has no dark window to be cloudy in.
-    expect(view.headline).toEqual({ key: "tonight.card.noDarkWindow", text: "No dark window" });
+    expect(view.headline).toEqual({ id: "noDarkness", key: "tonight.card.noDarkWindow", text: "No dark window" });
     expect(view.ranking).toBeNull();
   });
 
@@ -252,7 +256,7 @@ describe("buildTonight", () => {
     );
     expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
     // Never "Partly clear" without a forecast.
-    expect(view.headline).toEqual({ key: "verdict.sky.noForecast", text: "No forecast" });
+    expect(view.headline).toEqual({ id: "noForecast", key: "verdict.sky.noForecast", text: "No forecast" });
     expect(view.verdictText).toBe("no weather data");
     expect(view.ranking?.entries.length).toBeGreaterThan(0);
   });
@@ -356,7 +360,7 @@ describe("buildTonight", () => {
       "en",
     );
     expect(view.verdict).toMatchObject({ level: "marginal", reason: { kind: "fallback-cap", cloudPct: 5 } });
-    expect(view.headline).toEqual({ key: "verdict.sky.fallbackCap", text: "Clear (old forecast)" });
+    expect(view.headline).toEqual({ id: "fallbackCap", key: "verdict.sky.fallbackCap", text: "Clear (old forecast)" });
     expect(view.verdictText).toMatch(/^the last saved forecast showed \d+ h in a row with at most 5% cloud/);
     expect(view.explanation).toBeNull();
     expect(rankingOf(view).entries.length).toBeGreaterThan(0);

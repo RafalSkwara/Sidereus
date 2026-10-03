@@ -477,24 +477,24 @@ The migration is additive (a new table and functions) and is pushed by CI's `mig
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase: `npx supabase db reset` succeeds
-- [x] 1.2 Types regenerated with no drift: `npm run db:types && git diff --exit-code src/lib/database.types.ts` after commit
-- [x] 1.3 Isolation and sky-check DB tests pass: `npm run test:db`
-- [x] 1.4 Claim and tally unit tests pass: `npm test`
-- [x] 1.5 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 1.1 Migration applies on local Supabase: `npx supabase db reset` succeeds — 8eea91c
+- [x] 1.2 Types regenerated with no drift: `npm run db:types && git diff --exit-code src/lib/database.types.ts` after commit — 8eea91c
+- [x] 1.3 Isolation and sky-check DB tests pass: `npm run test:db` — 8eea91c
+- [x] 1.4 Claim and tally unit tests pass: `npm test` — 8eea91c
+- [x] 1.5 Type check and lint pass: `npx astro check && npm run lint` — 8eea91c
 
 ### Phase 2: Record the shown verdict on Tonight
 
 #### Automated
 
-- [ ] 2.1 `recordableVerdict` unit tests pass (no view, no-darkness night, normal night): `npm test`
-- [ ] 2.2 `format`/`build` tests updated for `headline.id` and `darkStart` pass: `npm test`
-- [ ] 2.3 Type check and lint pass: `npx astro check && npm run lint`
-- [ ] 2.4 Existing Tonight e2e specs still pass against a local preview
+- [x] 2.1 `recordableVerdict` unit tests pass (no view, no-darkness night, normal night): `npm test`
+- [x] 2.2 `format`/`build` tests updated for `headline.id` and `darkStart` pass: `npm test`
+- [x] 2.3 Type check and lint pass: `npx astro check && npm run lint`
+- [x] 2.4 Existing Tonight e2e specs still pass against a local preview
 
 #### Manual
 
-- [ ] 2.5 After opening Tonight locally as a signed-in user, `sky_checks` holds one row for (user, Home, tonight's date) with headline `go`; a reload keeps one row (checked with a local SQL query)
+- [x] 2.5 After opening Tonight locally as a signed-in user, `sky_checks` holds one row for (user, Home, tonight's date) with headline `go`; a reload keeps one row (checked with a local SQL query)
 
 ### Phase 3: Answer on Tonight
 

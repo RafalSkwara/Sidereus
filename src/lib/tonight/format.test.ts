@@ -5,7 +5,7 @@ import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import type { DarkWindow, Verdict } from "@/lib/engine";
 
-import { createFormatter, type MoonUp, type SkyHeadlineKey } from "./format";
+import { createFormatter, type MoonUp, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
 
 const { compassPoint, darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } =
   createFormatter("en");
@@ -144,10 +144,11 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
   const polish = createFormatter("pl");
 
   // One row per line of the plan's headline table, plus a cloudy reason with no forecast hour in the dark window.
-  const rows: [string, Verdict, SkyHeadlineKey, string, string][] = [
+  const rows: [string, Verdict, SkyHeadlineId, SkyHeadlineKey, string, string][] = [
     [
       "go",
       { level: "go", reason: { kind: "clear-run", runHours: 3, cloudPct: 5 } },
+      "go",
       "verdict.level.go",
       "Clear",
       "Pogodnie",
@@ -155,6 +156,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "marginal (cloud)",
       { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } },
+      "marginal",
       "verdict.level.marginal",
       "Partly clear",
       "Częściowo pogodnie",
@@ -162,6 +164,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "humidity cap",
       { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } },
+      "humidityCap",
       "verdict.sky.humidityCap",
       "Clear, but damp",
       "Pogodnie, ale wilgotno",
@@ -169,6 +172,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "fallback cap",
       { level: "marginal", reason: { kind: "fallback-cap", runHours: 3, cloudPct: 5 } },
+      "fallbackCap",
       "verdict.sky.fallbackCap",
       "Clear (old forecast)",
       "Pogodnie (stara prognoza)",
@@ -176,6 +180,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "no weather data",
       { level: "marginal", reason: { kind: "no-weather-data" } },
+      "noForecast",
       "verdict.sky.noForecast",
       "No forecast",
       "Brak prognozy",
@@ -183,6 +188,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "no-go (cloud)",
       { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: 80 } },
+      "no-go",
       "verdict.level.no-go",
       "Cloudy",
       "Pochmurno",
@@ -190,6 +196,7 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "no-go without a forecast hour in the dark window",
       { level: "no-go", reason: { kind: "cloudy", bestRunHours: 0, minCloudPct: null } },
+      "noForecast",
       "verdict.sky.noForecast",
       "No forecast",
       "Brak prognozy",
@@ -197,15 +204,16 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     [
       "no-go (no darkness)",
       { level: "no-go", reason: { kind: "no-darkness" } },
+      "noDarkness",
       "tonight.card.noDarkWindow",
       "No dark window",
       "Brak ciemnej nocy",
     ],
   ];
 
-  it.each(rows)("words a %s night in English and Polish", (_label, verdict, key, englishText, polishText) => {
-    expect(english.skyHeadline(verdict)).toEqual({ key, text: englishText });
-    expect(polish.skyHeadline(verdict)).toEqual({ key, text: polishText });
+  it.each(rows)("words a %s night in English and Polish", (_label, verdict, id, key, englishText, polishText) => {
+    expect(english.skyHeadline(verdict)).toEqual({ id, key, text: englishText });
+    expect(polish.skyHeadline(verdict)).toEqual({ id, key, text: polishText });
     // The key names the catalogue entry the text comes from.
     expect(translateKey(en, key, "errors.generic")).toBe(englishText);
     expect(translateKey(pl, key, "errors.generic")).toBe(polishText);
