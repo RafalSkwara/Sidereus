@@ -231,27 +231,27 @@ None (no data change).
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including `locate.test.ts` and the moved `geocode.test.ts`: `npm test`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 Onboarding e2e passes unchanged in behaviour: `npx playwright test tests/e2e/onboarding.spec.ts`
+- [x] 1.1 Unit tests pass, including `locate.test.ts` and the moved `geocode.test.ts`: `npm test` — 8999006
+- [x] 1.2 Type check passes: `npx astro check` — 8999006
+- [x] 1.3 Lint passes: `npm run lint` — 8999006
+- [x] 1.4 Onboarding e2e passes unchanged in behaviour: `npx playwright test tests/e2e/onboarding.spec.ts` — 8999006
 
 #### Manual
 
-- [x] 1.5 Onboarding's Where section looks identical to before (Playwright screenshot, EN, dark, phone width)
+- [x] 1.5 Onboarding's Where section looks identical to before (Playwright screenshot, EN, dark, phone width) — 8999006
 
 ### Phase 2: Site form uses the picker
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass (i18n parity included): `npm test`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 New site-location e2e passes: `npx playwright test tests/e2e/site-location.spec.ts`
-- [ ] 2.5 Full e2e suite stays green: `npm run test:e2e`
+- [x] 2.1 Unit tests pass (i18n parity included): `npm test`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 New site-location e2e passes: `npx playwright test tests/e2e/site-location.spec.ts`
+- [x] 2.5 Full e2e suite stays green: `npm run test:e2e`
 
 #### Manual
 
-- [ ] 2.6 Add and edit site pages show the Location block correctly in EN and PL, in dark, light and red, at phone width (Playwright screenshots)
-- [ ] 2.7 With location denied, the denied message shows and typed coordinates still save
-- [ ] 2.8 Place search on the add form fills the coordinates and an empty Name, and leaves a typed Name alone
+- [x] 2.6 Add and edit site pages show the Location block correctly in EN and PL, in dark, light and red, at phone width (Playwright screenshots)
+- [x] 2.7 With location denied, the denied message shows and typed coordinates still save
+- [x] 2.8 Place search on the add form fills the coordinates and an empty Name, and leaves a typed Name alone

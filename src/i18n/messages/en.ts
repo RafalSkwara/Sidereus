@@ -251,6 +251,9 @@ export const en = {
     timeZone: "Time zone",
     autoCurrent: (p: { zone: string }) => `Automatic, currently ${p.zone}`,
     autoFromCoordinates: "Automatic (from coordinates)",
+    location: "Location",
+    previousLocation: (p: { latitude: string; longitude: string }) => `Was ${p.latitude}, ${p.longitude}`,
+    undoLocation: "Undo",
     submit: "Save site",
   },
 

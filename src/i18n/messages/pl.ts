@@ -239,6 +239,9 @@ export const pl = {
     timeZone: "Strefa czasowa",
     autoCurrent: (p) => `Automatycznie, obecnie ${p.zone}`,
     autoFromCoordinates: "Automatycznie (ze współrzędnych)",
+    location: "Lokalizacja",
+    previousLocation: (p) => `Było: ${p.latitude}; ${p.longitude}`,
+    undoLocation: "Cofnij",
     submit: "Zapisz stanowisko",
   },
 
