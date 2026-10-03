@@ -513,12 +513,12 @@ The migration is additive (a new table and functions) and is pushed by CI's `mig
 
 #### Automated
 
-- [x] 4.1 Unit tests pass: `npm test`
-- [x] 4.2 Type check and lint pass: `npx astro check && npm run lint`
-- [x] 4.3 DB tests pass: `npm run test:db`
-- [x] 4.4 The new e2e spec and the existing suite pass against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e`
+- [x] 4.1 Unit tests pass: `npm test` — 0efc39e
+- [x] 4.2 Type check and lint pass: `npx astro check && npm run lint` — 0efc39e
+- [x] 4.3 DB tests pass: `npm run test:db` — 0efc39e
+- [x] 4.4 The new e2e spec and the existing suite pass against a local preview on local Supabase: `BASE_URL=http://localhost:4321 npm run test:e2e` — 0efc39e
 
 #### Manual
 
-- [x] 4.5 `/log/sky` with a mix of answered, unanswered and too-optimistic/pessimistic rows reads correctly; tally numbers match the rows (screenshots EN/PL, dark/light/red, phone/desktop)
-- [x] 4.6 Empty state and paging links render; the log links to the page
+- [x] 4.5 `/log/sky` with a mix of answered, unanswered and too-optimistic/pessimistic rows reads correctly; tally numbers match the rows (screenshots EN/PL, dark/light/red, phone/desktop) — 0efc39e
+- [x] 4.6 Empty state and paging links render; the log links to the page — 0efc39e
