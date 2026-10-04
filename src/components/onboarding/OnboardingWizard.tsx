@@ -30,7 +30,8 @@ import { cn } from "@/lib/utils";
  * the visible text controls have an empty `name`, so they are never submitted themselves.
  *
  * Privacy (PRD NFR): the shared `LocationPicker` reports picks already rounded (`locateDevice`,
- * `searchPlaces`), and typed coordinates are rounded into the hidden inputs. Nothing here logs, and coordinates never go into a URL.
+ * `searchPlaces`), and typed coordinates are rounded into the hidden inputs. Nothing here logs, and
+ * coordinates never go into a URL.
  *
  * Island-safe imports only: never `timezone.ts` or any `store.ts`.
  */

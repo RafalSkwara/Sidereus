@@ -80,8 +80,14 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
     zoneOptions.unshift(zone);
   }
 
+  // Edit only: the shown coordinates are no longer the saved ones (picked or typed).
+  const coordinatesMoved =
+    initial !== undefined && (Number(latitude) !== initial.latitudeDeg || Number(longitude) !== initial.longitudeDeg);
+  // The saved zone describes the saved location only; a moved site gets its zone on save.
   const autoLabel =
-    initial?.timeZoneSource === "auto" ? t.autoCurrent({ zone: initial.timeZone }) : t.autoFromCoordinates;
+    initial?.timeZoneSource === "auto" && !coordinatesMoved
+      ? t.autoCurrent({ zone: initial.timeZone })
+      : t.autoFromCoordinates;
   const timeZoneMode = zone === "" ? "auto" : "manual";
 
   function validate() {
@@ -155,10 +161,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
         : null;
 
   // Edit only: a pick replaced the saved location, so offer the way back until Save.
-  const showUndo =
-    initial !== undefined &&
-    pickerUsed &&
-    (Number(latitude) !== initial.latitudeDeg || Number(longitude) !== initial.longitudeDeg);
+  const showUndo = initial !== undefined && pickerUsed && coordinatesMoved;
   const coordinate = new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 2 });
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -222,22 +225,30 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
             error={errors.longitudeDeg}
           />
         </div>
-        <p className="text-muted-foreground -mt-2 text-xs">{t.coordinatesHint}</p>
-        {showUndo ? (
-          <p role="status" className="text-muted-foreground -mt-2 flex flex-wrap items-center gap-x-2 text-sm">
-            {t.previousLocation({
-              latitude: coordinate.format(initial.latitudeDeg),
-              longitude: coordinate.format(initial.longitudeDeg),
-            })}
-            <button
-              type="button"
-              onClick={undoLocation}
-              className="text-primary-strong hover:text-heading focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-[3px]"
-            >
-              {t.undoLocation}
-            </button>
+        <div className="-mt-2">
+          <p className="text-muted-foreground text-xs">{t.coordinatesHint}</p>
+          {/* Always rendered, so screen readers announce the Undo line when it fills in. */}
+          <p
+            role="status"
+            className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 text-sm empty:mt-0"
+          >
+            {showUndo ? (
+              <>
+                {t.previousLocation({
+                  latitude: coordinate.format(initial.latitudeDeg),
+                  longitude: coordinate.format(initial.longitudeDeg),
+                })}
+                <button
+                  type="button"
+                  onClick={undoLocation}
+                  className="text-primary-strong hover:text-heading focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-[3px]"
+                >
+                  {t.undoLocation}
+                </button>
+              </>
+            ) : null}
           </p>
-        ) : null}
+        </div>
       </fieldset>
 
       <div>
