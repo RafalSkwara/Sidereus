@@ -430,7 +430,6 @@ export const pl = {
     nights: {
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       heading: (p) => `Najbliższe ${p.count} nocy: ${p.site}`,
-      jumpLink: (p) => `Najbliższe ${p.count} nocy ↓`,
       timesIn: (p) => `Czas w strefie ${p.zone}`,
       verdictLabel: "Ocena",
       outlookLabel: "Prognoza — bez oceny",
@@ -717,6 +716,26 @@ export const pl = {
     attribution: {
       objectData: "Dane obiektów:",
       weather: "Pogoda:",
+    },
+
+    verdict: {
+      word: { go: "Tak", marginal: "Może", "no-go": "Nie" },
+    },
+
+    summary: {
+      targets: "Zacznij od nich",
+      targetsCaption: {
+        one: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} cel.`,
+        few: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} cele.`,
+        many: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} celów.`,
+        other: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} celu.`,
+      },
+      moon: "Księżyc",
+      planets: "Planety",
+      nights: "Najbliższe 7 nocy",
+      nightsCaption: "Wysokość to bezchmurne niebo. Kolor to werdykt na najbliższe trzy noce.",
+      noTargets: "Dziś nie ma na co celować.",
+      seeDetail: "Pokaż szczegóły",
     },
   },
 

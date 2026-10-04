@@ -78,6 +78,7 @@ Stack and versions: `@README.md`. `output: "server"` — every page and route is
 - **Components** live in `src/components/ui/` (`Button` / `buttonVariants`, `Input`, `NativeSelect`, `Label`, `PageHeader`, `Band`, `BackLink`, `Notice`) and `src/components/forms/` (`FormField`, `ServerError`, `SubmitButton`). Check `ui/` before writing a control; add a missing primitive with `npx shadcn@latest add <name>` and style it with the tokens. A link that acts as a button uses `buttonVariants`.
 - **No arbitrary values or literal colours in views** (`text-[15px]`, `rounded-[14px]`, hex): use the type roles, the radius scale and the colour tokens. When none fits, add a token or a shared component, never a one-off value.
 - **Nightfall composition**: a sky header (the page's `PageHeader` in the shell's `header` slot, zenith to horizon), content in ruled `Band`s rather than boxed cards, and at most one primary (`default` variant) action per screen.
+- **Tonight's sky**: a page whose sky depends on island data uses GearShell's `skyFlow` mode, and the island renders `TonightSky` as the full-bleed sky band with the content below in the `max-w-3xl px-4` container. The giant Go / Marginal / No-go word (`tonight.verdict.word`, the `text-verdict-*` roles) is used only there; everywhere else the verdict reads as the sky headline.
 - **The kitchen sink is `/design`** (dev only): the tokens, the type roles and every shared component in the 7-state matrix. A new shared component gets its states there.
 
 ## Conventions

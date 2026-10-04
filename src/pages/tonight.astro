@@ -4,12 +4,13 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
 import TonightContent from "@/components/tonight/TonightContent.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
-import { ServerError } from "@/components/forms/ServerError";
-import { CircleCheck } from "lucide-react";
+import TonightSky from "@/components/tonight/TonightSky.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { hasSkyCheckedNotice } from "@/lib/sky-checks/redirect";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
+import { pickTonightNotice } from "@/lib/tonight/notice";
 import { requestedGear } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
@@ -25,49 +26,37 @@ const logged = loggedTarget ? targetLabel(loggedTarget, locale) : null;
 const skyChecked = hasSkyCheckedNotice(Astro.url.searchParams);
 const errorParam = Astro.url.searchParams.get("error");
 const error = errorParam && isMessageKey(errorParam) ? translateKey(m, errorParam, "errors.generic") : null;
+// Resolved here to catalogue text and handed to the island, which shows it under the sky (tonight-nightfall).
+const notice = pickTonightNotice({
+  error,
+  logged: logged ? t.logged({ object: logged.id }) : null,
+  skyChecked: skyChecked ? m.skyChecks.saved : null,
+});
 
 // The site and telescope picked in a selector (or remembered on this device); see requested-gear.ts.
 const { siteId: requestedSite, telescopeId: requestedTelescope } = requestedGear(Astro.url, Astro.cookies);
 ---
 
-<GearShell title={t.title}>
-  {logged && (
-    <p
-      role="status"
-      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
-    >
-      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
-      {t.logged({ object: logged.id })}
-    </p>
-  )}
-  {skyChecked && (
-    <p
-      role="status"
-      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
-    >
-      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
-      {m.skyChecks.saved}
-    </p>
-  )}
-  {error && (
-    <div class="mb-6">
-      <ServerError message={error} />
-    </div>
-  )}
+<GearShell title={t.title} skyFlow>
   {supabase ? (
-    // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in.
-    <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope}>
+    // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in, sky first.
+    <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope} notice={notice}>
       <TonightSkeleton slot="fallback" />
     </TonightContent>
   ) : (
     <>
-      <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
-      <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-      <DatabaseMissing />
+      <TonightSky>
+        <PageHeader title={t.title} />
+      </TonightSky>
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <DatabaseMissing />
+      </div>
     </>
   )}
 
-  <div class="mt-10 border-t border-border pt-4">
-    <Attribution />
+  <div class="mx-auto w-full max-w-3xl px-4">
+    <div class="mt-10 border-t border-border pt-4">
+      <Attribution />
+    </div>
   </div>
 </GearShell>

@@ -1,0 +1,44 @@
+---
+/*
+ * Tonight's sky (tonight-nightfall): a full-bleed zenith-to-horizon band with a decorative star field, ending in a
+ * horizon silhouette in the page's ground colour. Under GearShell's sky-flow mode it continues the Topbar's zenith
+ * strip, so the page reads as one sky. The slot (the date, the verdict and its reason) sits in the shared
+ * `max-w-3xl px-4` container. Stars and horizon are inline SVG filled from tokens, so red mode stays pure red;
+ * the stars are hidden in the light theme (`dark:` means "not light").
+ */
+
+// A fixed, seeded field (the canvas's Lehmer generator), so every render draws the same sky. Positions are
+// percentages of the band, so the field spans any width while each star keeps its size; more stars sit high.
+const STAR_COUNT = 80;
+let seed = 11;
+const next = () => {
+  seed = (seed * 16807) % 2147483647;
+  return seed / 2147483647;
+};
+const stars = Array.from({ length: STAR_COUNT }, () => ({
+  x: `${(next() * 100).toFixed(2)}%`,
+  y: `${(3 + Math.pow(next(), 1.4) * 82).toFixed(2)}%`,
+  r: (0.4 + next() * 0.9).toFixed(1),
+}));
+---
+
+<div class="relative overflow-hidden bg-linear-to-b from-zenith to-horizon">
+  <svg aria-hidden="true" focusable="false" class="absolute inset-0 hidden size-full fill-star dark:block">
+    {stars.map((star) => (
+      <circle cx={star.x} cy={star.y} r={star.r} />
+    ))}
+  </svg>
+  <!-- The minimum height is the go/clear verdict's content, so the skeleton paints the same sky and nothing jumps. -->
+  <div class="relative mx-auto min-h-109 w-full max-w-3xl px-4 pt-6 pb-10 sm:min-h-111 sm:pt-12 sm:pb-14">
+    <slot />
+  </div>
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    viewBox="0 0 390 40"
+    preserveAspectRatio="none"
+    class="relative block h-8 w-full fill-background sm:h-12"
+  >
+    <path d="M0 40V22C40 14 72 28 112 21C152 14 182 3 232 12C282 21 324 8 390 17V40Z"></path>
+  </svg>
+</div>

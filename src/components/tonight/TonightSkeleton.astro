@@ -1,60 +1,59 @@
 ---
-// Stand-in for TonightContent while its server island loads: same vertical rhythm as the kicker, heading, site
-// line, the sky and Moon cards, object cards and the seven-night strip, so nothing jumps when the real content swaps in.
+// Stand-in for TonightContent while its server island loads: the same sky (TonightSky) with bars where the date, the
+// giant word and the headline lines go, then ruled bands under it, so nothing jumps when the real content swaps in.
+// Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line height.
+import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 const t = getMessages(Astro.locals.locale).tonight;
-// bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish inside the cards.
+// bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
 const bar = "rounded bg-border motion-safe:animate-pulse";
+const band = "border-border py-8 not-first:border-t first:pt-0";
 ---
 
 <div role="status" aria-busy="true">
-  <div aria-hidden="true" class:list={[bar, "mb-2 h-4 w-44"]}></div>
-  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+  <h1 class="sr-only">{t.title}</h1>
   <span class="sr-only">{t.loading}</span>
-  <div aria-hidden="true">
-    <div class:list={[bar, "mb-6 h-5 w-52"]}></div>
+  <TonightSky>
+    <div aria-hidden="true">
+      <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
+      <div class="mt-2 font-display text-verdict-lg font-extrabold sm:text-verdict-xl">
+        <div class:list={[bar, "w-1/2"]}>&nbsp;</div>
+      </div>
+      <div class:list={[bar, "mt-5 w-3/4 text-title sm:mt-6"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-3 w-40 text-label"]}>&nbsp;</div>
+    </div>
+  </TonightSky>
 
-    <div class="mt-6 space-y-6">
-      <div class="grid gap-6 md:grid-cols-2">
-        <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-6">
-          <div class:list={[bar, "h-3 w-28"]}></div>
-          <div class:list={[bar, "h-8 w-1/2"]}></div>
-          <div class:list={[bar, "h-4 w-full"]}></div>
-          <div class:list={[bar, "h-4 w-2/3"]}></div>
-          <div class:list={[bar, "h-4 w-1/2"]}></div>
-          <div class:list={[bar, "h-3 w-1/3"]}></div>
-        </div>
-        <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-6">
-          <div class:list={[bar, "h-3 w-28"]}></div>
-          <div class:list={[bar, "h-7 w-2/3"]}></div>
-          <div class="flex items-center gap-4 pt-1">
-            <div class="size-24 shrink-0 rounded-full bg-border motion-safe:animate-pulse sm:size-28"></div>
-            <div class="flex-1 space-y-2">
-              <div class:list={[bar, "h-4 w-2/3"]}></div>
-              <div class:list={[bar, "h-4 w-full"]}></div>
-            </div>
+  <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+    <div aria-hidden="true">
+      <div class:list={[band]}>
+        <div class:list={[bar, "mb-4 w-40 text-title"]}>&nbsp;</div>
+        <div class="flex items-center gap-4">
+          <div class="size-24 shrink-0 rounded-full bg-border motion-safe:animate-pulse sm:size-28"></div>
+          <div class="flex-1 space-y-2">
+            <div class:list={[bar, "h-4 w-2/3"]}></div>
+            <div class:list={[bar, "h-4 w-full"]}></div>
           </div>
         </div>
       </div>
 
-      <div>
-        <div class:list={[bar, "mb-4 h-7 w-60"]}></div>
+      <div class:list={[band]}>
+        <div class:list={[bar, "mb-4 w-60 max-w-full text-title"]}>&nbsp;</div>
         <div class="space-y-4">
           {[1, 2, 3].map(() => (
-            <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-              <div class:list={[bar, "h-7 w-1/2"]} />
+            <div class="space-y-2">
+              <div class:list={[bar, "h-6 w-1/2"]} />
               <div class:list={[bar, "h-4 w-2/3"]} />
             </div>
           ))}
         </div>
       </div>
 
-      <div>
-        <div class:list={[bar, "mb-2 h-7 w-56"]}></div>
-        <div class:list={[bar, "mb-4 h-4 w-40"]}></div>
-        <div class="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+      <div class:list={[band]}>
+        <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
+        <div class="space-y-3">
           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
             <div class="flex gap-4 py-1">
               <div class:list={[bar, "h-4 w-24 shrink-0"]} />
@@ -67,15 +66,15 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
-  <p class="slow-hint mt-6 text-sm text-muted-foreground">
-    {t.loadingSlow}{" "}
-    <a href="/tonight" class="font-semibold text-primary underline-offset-4 hover:underline">
-      {t.reload}
-    </a>
-  </p>
+    <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
+    <p class="slow-hint mt-6 text-sm text-muted-foreground">
+      {t.loadingSlow}{" "}
+      <a href="/tonight" class="font-semibold text-primary underline-offset-4 hover:underline">
+        {t.reload}
+      </a>
+    </p>
+  </div>
 </div>
 
 <style>

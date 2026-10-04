@@ -4,30 +4,43 @@
 import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { ServerError } from "@/components/forms/ServerError";
+import Band from "@/components/ui/Band.astro";
+import Notice from "@/components/ui/Notice.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { buttonVariants } from "@/components/ui/button";
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import MoonCard from "@/components/tonight/MoonCard.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
+import TonightSky from "@/components/tonight/TonightSky.astro";
+import TonightSummary from "@/components/tonight/TonightSummary.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
 import { MOON_TARGET_KEY } from "@/lib/targets";
 import { loadTonight, logHref } from "@/lib/tonight/load";
+import type { TonightNotice } from "@/lib/tonight/notice";
 
 interface Props {
   /** The site picked on the page (`?site=` or the remembered cookie); resolved against the user's own. */
   siteId?: string;
   /** The telescope picked on the page (`?telescope=` or the remembered cookie); resolved against the user's own. */
   telescopeId?: string;
+  /**
+   * The page's notice, resolved in the shell from `?logged`, `?skyChecked` or `?error` to catalogue text (the
+   * island's own Astro.url carries no page query). Shown under the sky; `null` when there is none.
+   */
+  notice?: TonightNotice | null;
 }
 
 const { user, locale } = Astro.locals;
-const { siteId, telescopeId } = Astro.props;
+const { siteId, telescopeId, notice = null } = Astro.props;
 // The island route (/_server-islands/...) sits outside PROTECTED_ROUTES, so it guards itself: signed out, it
 // renders nothing and loads nothing.
 const supabase = user ? Astro.locals.supabase : null;
@@ -91,180 +104,197 @@ const showNotices = showSections && (eyepiecesError !== null || noEyepieces || l
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
   .join(" · ");
-
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
-const promptCard = "rounded-2xl border border-border bg-surface p-4 sm:p-6";
+// The setup and add prompts, each a band with one link-button; when both add prompts show, adding a site leads.
+const addSite = !needsSetup && !sitesError && !site;
+const addTelescope = !needsSetup && !telescopesError && !telescope;
+const showPrompts = needsSetup || addSite || addTelescope;
+// The quiet links (the gear line, "See all", the washed-out and add-eyepieces links): the link style at 44 px, with
+// the ring focus; they may wrap. The ranking's "See all N" is the band's one outline button.
+const linkButton = buttonVariants({ variant: "link", size: "sm" });
+const quietLink = cn(linkButton, "-ml-3 whitespace-normal");
+const inlineLink = cn(linkButton, "px-0 whitespace-normal");
+// On a phone the long ranking heading wraps the action under it (left edge); from sm it sits on the right.
+const actionLink = cn(linkButton, "-ml-3 sm:ml-0 sm:-mr-3");
+const gearLink =
+  "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 {supabase && (
   <>
-    <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-      {view ? view.dateLabel : t.kicker}
-    </p>
-    <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-    {site && telescope && gearLine && (
-      <p class="mb-6 text-sm text-muted-foreground">
-        <a href="/gear" class="transition-colors hover:text-heading">
-          {gearLine}
-        </a>
-      </p>
-    )}
-    {site && telescope && multipleSites && (
-      <GearSelector
-        items={sites.map(({ id, name }) => ({ id, name }))}
-        activeId={site.id}
-        param="site"
-        label={t.siteSelector.label}
-        show={t.siteSelector.show}
-      />
-    )}
-    {site && telescope && multipleTelescopes && (
-      <GearSelector
-        items={telescopes.map(({ id, name }) => ({ id, name }))}
-        activeId={telescope.id}
-        param="telescope"
-        label={t.selector.label}
-        show={t.selector.show}
-      />
-    )}
-
-    <div class="mt-6 space-y-6">
-      {sitesError && <ServerError message={translate(sitesError)} />}
-      {telescopesError && <ServerError message={translate(telescopesError)} />}
-
-      {needsSetup && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.setupPrompt}</p>
-          <a href="/onboarding" class:list={[primaryLink]}>
-            {t.setup}
-          </a>
-        </div>
-      )}
-      {!needsSetup && !sitesError && !site && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.addSitePrompt}</p>
-          <a href="/gear/sites/new" class:list={[primaryLink]}>
-            {t.addSite}
-          </a>
-        </div>
-      )}
-      {!needsSetup && !telescopesError && !telescope && (
-        <div class:list={[promptCard]}>
-          <p class="mb-4 text-foreground">{t.addTelescopePrompt}</p>
-          <a href="/gear/telescopes/new" class:list={[primaryLink]}>
-            {t.addTelescope}
-          </a>
-        </div>
-      )}
-
-      {tonightError && <ServerError message={translate(tonightError)} />}
-
-      {view && (
+    <TonightSky>
+      {view ? (
         <>
-          {/* The sky and the Moon side by side from md, stacked on a phone; the sky card alone if the Moon failed. */}
-          <div class:list={["grid gap-6", view.moonCard && "md:grid-cols-2"]}>
-            <VerdictCard
-              level={view.verdict.level}
-              headline={view.headline}
-              text={view.verdictText}
-              darkWindow={view.darkWindow}
-              timeZone={view.timeZone}
-              forecastStatus={view.forecastStatus}
-              explanation={view.explanation}
-              nightsLink={view.ranking !== null || view.solarSystem !== null}
-            />
-            {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
+          <h1 class="sr-only">{t.title}</h1>
+          <VerdictCard
+            level={view.verdict.level}
+            dateLabel={view.dateLabel}
+            headline={view.headline}
+            text={view.verdictText}
+            darkWindow={view.darkWindow}
+            timeZone={view.timeZone}
+            forecastStatus={view.forecastStatus}
+            explanation={view.explanation}
+          />
+        </>
+      ) : (
+        <PageHeader title={t.title} />
+      )}
+    </TonightSky>
+
+    <div class="mx-auto w-full max-w-3xl pt-8">
+      {notice && (
+        <div class="mb-6 px-4">
+          {notice.tone === "success" ? (
+            <Notice tone="success">{notice.text}</Notice>
+          ) : (
+            <ServerError message={notice.text} />
+          )}
+        </div>
+      )}
+
+      {/* The summary bands run the container's full width, so their rules and hover reach the phone's edges. */}
+      {view && <TonightSummary view={view} />}
+
+      <div class:list={["space-y-6 px-4", view && "pt-8"]}>
+        {view && skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
+
+        {site && telescope && (gearLine || multipleSites || multipleTelescopes) && (
+          <div>
+            {gearLine && (
+              <p class="mb-6">
+                <a href="/gear" class:list={[gearLink]}>
+                  {gearLine}
+                </a>
+              </p>
+            )}
+            {multipleSites && (
+              <GearSelector
+                items={sites.map(({ id, name }) => ({ id, name }))}
+                activeId={site.id}
+                param="site"
+                label={t.siteSelector.label}
+                show={t.siteSelector.show}
+              />
+            )}
+            {multipleTelescopes && (
+              <GearSelector
+                items={telescopes.map(({ id, name }) => ({ id, name }))}
+                activeId={telescope.id}
+                param="telescope"
+                label={t.selector.label}
+                show={t.selector.show}
+              />
+            )}
           </div>
+        )}
 
-          {skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
+        {sitesError && <ServerError message={translate(sitesError)} />}
+        {telescopesError && <ServerError message={translate(telescopesError)} />}
 
-          {showNotices && (
-            <div class="space-y-4">
-              {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
-              {noEyepieces && (
-                <p class="text-sm text-muted-foreground">
-                  {t.noEyepiecesPrompt}{" "}
-                  <a
-                    href="/gear/eyepieces/new"
-                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                  >
-                    {t.addEyepieces}
-                  </a>
-                </p>
-              )}
-              {logError && <ServerError message={translate(logError)} />}
-            </div>
-          )}
+        {showPrompts && (
+          <div>
+            {needsSetup && (
+              <Band headingId="setup-heading" heading={t.setupPrompt}>
+                <a href="/onboarding" class:list={[buttonVariants()]}>
+                  {t.setup}
+                </a>
+              </Band>
+            )}
+            {addSite && (
+              <Band headingId="add-site-heading" heading={t.addSitePrompt}>
+                <a href="/gear/sites/new" class:list={[buttonVariants()]}>
+                  {t.addSite}
+                </a>
+              </Band>
+            )}
+            {addTelescope && (
+              <Band headingId="add-telescope-heading" heading={t.addTelescopePrompt}>
+                <a
+                  href="/gear/telescopes/new"
+                  class:list={[buttonVariants({ variant: addSite ? "outline" : "default" })]}
+                >
+                  {t.addTelescope}
+                </a>
+              </Band>
+            )}
+          </div>
+        )}
 
-          {view.solarSystem && (
-            <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
-          )}
+        {tonightError && <ServerError message={translate(tonightError)} />}
 
-          {view.ranking && (
-            <section aria-labelledby="ranking-heading">
-              <div
-                class:list={[
-                  "flex flex-wrap items-baseline justify-between gap-x-4",
-                  multipleTelescopes ? "mb-1" : "mb-4",
-                ]}
-              >
-                <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
-                  {view.ranking.clearedText}
-                </h2>
+        {view && (
+          /* The detail bands, ruled like the summary above; the summary's chevrons jump to their ids. */
+          <div>
+            {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
+
+            {showNotices && (
+              <div class="space-y-4 pb-8">
+                {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
+                {noEyepieces && (
+                  <p class="text-label text-muted-foreground">
+                    {t.noEyepiecesPrompt}{" "}
+                    <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
+                      {t.addEyepieces}
+                    </a>
+                  </p>
+                )}
+                {logError && <ServerError message={translate(logError)} />}
+              </div>
+            )}
+
+            {view.solarSystem && (
+              <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
+            )}
+
+            {view.ranking && (
+              <Band id="ranking" headingId="ranking-heading" heading={view.ranking.clearedText}>
                 {hasMore && (
-                  <a
-                    href="/tonight/all"
-                    class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
-                  >
+                  <a slot="action" href="/tonight/all" class:list={[actionLink]}>
                     {t.all.seeAll}
                     <span aria-hidden="true">→</span>
                   </a>
                 )}
-              </div>
-              {multipleTelescopes && (
-                <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
-              )}
-              {view.ranking.washedOutText && (
-                <p class="mb-4 text-sm">
-                  <a
-                    href="/tonight/all#washed-out"
-                    data-washed-out={view.ranking.washedOutCount}
-                    class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                  >
-                    {view.ranking.washedOutText}
+                {multipleTelescopes && (
+                  <p class="mb-4 text-label text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+                )}
+                {view.ranking.washedOutText && (
+                  <p class="mb-4">
+                    <a
+                      href="/tonight/all#washed-out"
+                      data-washed-out={view.ranking.washedOutCount}
+                      class:list={[quietLink]}
+                    >
+                      {view.ranking.washedOutText}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </p>
+                )}
+                {view.ranking.entries.length > 0 && (
+                  <ol class="divide-y divide-border">
+                    {view.ranking.entries.map((entry, i) => (
+                      <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
+                    ))}
+                  </ol>
+                )}
+                {hasMore && (
+                  <a href="/tonight/all" class:list={[buttonVariants({ variant: "outline" }), "mt-6 w-full"]}>
+                    {plural(
+                      locale,
+                      view.ranking.clearedCount,
+                      t.all.seeAllCount,
+                    )({
+                      count: String(view.ranking.clearedCount),
+                    })}
                     <span aria-hidden="true">→</span>
                   </a>
-                </p>
-              )}
-              {view.ranking.entries.length > 0 && (
-                <ol class="space-y-4">
-                  {view.ranking.entries.map((entry, i) => (
-                    <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
-                  ))}
-                </ol>
-              )}
-              {hasMore && (
-                <a
-                  href="/tonight/all"
-                  class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-                >
-                  {plural(
-                    locale,
-                    view.ranking.clearedCount,
-                    t.all.seeAllCount,
-                  )({
-                    count: String(view.ranking.clearedCount),
-                  })}
-                  <span aria-hidden="true">→</span>
-                </a>
-              )}
-            </section>
-          )}
+                )}
+              </Band>
+            )}
 
-          <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
-        </>
-      )}
+            <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
+          </div>
+        )}
+      </div>
     </div>
   </>
 )}

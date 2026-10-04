@@ -1,6 +1,7 @@
 ---
-// One planet of the "Planets tonight" section (M-2 S-01): the same card, tokens and details layout as the
-// deep-sky ObjectCard, with the planet's facts, one detail eyepiece and a fixed "what you'll see" note.
+// One planet of the "Planets tonight" band (M-2 S-01): a row in its ruled list, with the same tokens and details
+// layout as the deep-sky ObjectCard, with the planet's facts, one detail eyepiece and a fixed "what you'll see" note.
+import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
 import type { TonightPlanetEntry } from "@/lib/tonight/build";
@@ -18,18 +19,12 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
 );
 ---
 
-<li class="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+<li class="py-4 first:pt-0 last:pb-0">
   <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-    <h3 class="font-display text-2xl font-semibold text-heading">{entry.name}</h3>
-    <span class="font-mono text-sm text-muted-foreground">{facts.join(" · ")}</span>
+    <h3 class="font-display text-title font-semibold break-words text-heading">{entry.name}</h3>
+    <span class="font-mono text-label text-muted-foreground">{facts.join(" · ")}</span>
   </div>
-  {entry.seenText && (
-    <p class="mt-2">
-      <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-        {entry.seenText}
-      </span>
-    </p>
-  )}
+  {entry.seenText && <SeenTag text={entry.seenText} />}
 
   <TargetDetails
     windowStart={entry.windowStart}
@@ -40,13 +35,13 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
     ariaLabel={t.planets.markObserved({ planet: entry.name })}
   >
     {entry.eyepiece && (
-      <p class="mt-2 text-sm text-foreground">
+      <p class="mt-2 text-label text-foreground">
         {t.planets.detailWith} <span class="font-semibold text-primary-strong">{entry.eyepiece.name}</span>{" "}
         {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
       </p>
     )}
 
-    <p class="mt-2 text-sm text-foreground">{entry.reason}</p>
-    <p class="mt-2 text-sm text-muted-foreground">{entry.note}</p>
+    <p class="mt-2 text-label text-foreground">{entry.reason}</p>
+    <p class="mt-2 text-label text-muted-foreground">{entry.note}</p>
   </TargetDetails>
 </li>

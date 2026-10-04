@@ -1,14 +1,21 @@
 ---
+/*
+ * The verdict over Tonight's sky (tonight-nightfall), rendered in TonightSky's slot: the date and dark window, the
+ * giant Go / Marginal / No-go word, the sky headline with its reason and next step, and how fresh the forecast is.
+ * All text is heading or muted ink, the pair the contrast test pins on zenith and horizon; the verdict's colour is
+ * only the small dot before the headline.
+ */
 import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
 import type { SkyHeadline } from "@/lib/tonight/format";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
-import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 interface Props {
-  /** Picks the tone only; the words come from `headline`. */
+  /** Picks the giant word and the dot's tone; the headline's words come from `headline`. */
   level: VerdictLevel;
+  /** The night's date, e.g. "Saturday 4 October". */
+  dateLabel: string;
   /** The sky headline from the verdict's level and reason (`skyHeadline`), e.g. "No forecast". */
   headline: SkyHeadline;
   /** The reason phrase, e.g. "no weather data". */
@@ -18,40 +25,32 @@ interface Props {
   forecastStatus: TonightForecastStatus;
   /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
   explanation: TonightExplanation | null;
-  /**
-   * Show a "Next 7 nights ↓" link to the strip (`#nights`): only when a ranking or the solar system sits between the
-   * card and the strip, so the week stays one tap away on a phone.
-   */
-  nightsLink?: boolean;
 }
 
-const { level, headline, text, darkWindow, timeZone, forecastStatus, explanation, nightsLink = false } = Astro.props;
+const { level, dateLabel, headline, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
+// The giant word is as large as its length allows on a 360 px phone (widths in global.css's verdict roles):
+// Go, Tak, Nie at verdict-lg; Może, No-go at verdict-md; Marginal at verdict-sm. One step up from `sm`.
+const verdictSize = (word: string) =>
+  word.length <= 3
+    ? "text-verdict-lg sm:text-verdict-xl"
+    : word.length <= 5
+      ? "text-verdict-md sm:text-verdict-lg"
+      : "text-verdict-sm sm:text-verdict-md";
 // A saved copy or no forecast at all stands out from the routine "Forecast updated … ago".
 const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
   fresh: "text-muted-foreground",
-  fallback: "font-semibold text-primary-strong",
-  none: "font-semibold text-primary-strong",
+  fallback: "font-semibold text-heading",
+  none: "font-semibold text-heading",
 };
 ---
 
-<section aria-labelledby="verdict-heading" class:list={["rounded-2xl border p-4 sm:p-6", VERDICT_TONES[level].card]}>
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
-  <h2
-    id="verdict-heading"
-    class="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-display text-3xl font-semibold text-heading"
-  >
-    <span class="inline-flex items-center gap-2" data-sky-headline={headline.key}>
-      <span class:list={["size-2.5 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
-      {headline.text}
-    </span>
-    <span class="text-lg font-normal text-foreground">— {text}</span>
-  </h2>
-  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-foreground">{explanation.nextText}</p>}
-  {explanation?.kind === "no-darkness" && <p class="mt-3 text-foreground">{explanation.causeText}</p>}
-  <p class="mt-3 text-sm text-foreground">
+<section aria-labelledby="verdict-heading">
+  <p class="text-label font-medium text-muted-foreground">
+    {dateLabel}
+    {" · "}
     {darkWindow.kind === "window" ? (
       <>
         {t.darkFrom} <span class="font-mono text-heading">{darkWindow.start}</span> {t.darkTo}{" "}
@@ -62,17 +61,21 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
     ) : (
       t.noDarkWindow
     )}
-    <span class="text-muted-foreground">{t.timesIn({ zone: timeZone })}</span>
+    {t.timesIn({ zone: timeZone })}
   </p>
-  <p class:list={["mt-1 text-sm", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
-  {nightsLink && (
-    <p class="mt-2">
-      <a
-        href="#nights"
-        class="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong underline-offset-4 transition-colors hover:underline"
-      >
-        {m.tonight.nights.jumpLink({ count: String(OUTLOOK_NIGHTS) })}
-      </a>
-    </p>
-  )}
+  <h2 id="verdict-heading" class="mt-2 text-heading">
+    <span class:list={["block font-display font-extrabold", verdictSize(m.tonight.verdict.word[level])]}>
+      {m.tonight.verdict.word[level]}
+    </span>{" "}
+    <span class="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-title sm:mt-6">
+      <span class="inline-flex items-center gap-2 font-display font-semibold" data-sky-headline={headline.key}>
+        <span class:list={["size-2.5 shrink-0 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
+        {headline.text}
+      </span>
+      <span class="font-normal text-muted-foreground">— {text}</span>
+    </span>
+  </h2>
+  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-body text-heading">{explanation.nextText}</p>}
+  {explanation?.kind === "no-darkness" && <p class="mt-3 text-body text-heading">{explanation.causeText}</p>}
+  <p class:list={["mt-3 text-label", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
 </section>

@@ -430,7 +430,6 @@ export const en = {
     nights: {
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       heading: (p: { count: string; site: string }) => `Next ${p.count} nights at ${p.site}`,
-      jumpLink: (p: { count: string }) => `Next ${p.count} nights ↓`,
       timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
       verdictLabel: "Verdict",
       outlookLabel: "Outlook — no verdict",
@@ -762,6 +761,26 @@ export const en = {
     attribution: {
       objectData: "Object data:",
       weather: "Weather:",
+    },
+
+    /** tonight-nightfall: the giant word over the sky. Used only there; the sky headline stays the canonical wording. */
+    verdict: {
+      word: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
+    },
+
+    /** tonight-nightfall: the summary bands under the sky, each with a chevron to its detail band. */
+    summary: {
+      targets: "Point here first",
+      targetsCaption: {
+        one: (p) => `Each at the time it stands highest. ${p.count} target tonight.`,
+        other: (p) => `Each at the time it stands highest. ${p.count} targets tonight.`,
+      } as PluralForms<Count>,
+      moon: "The Moon",
+      planets: "Planets",
+      nights: "Next 7 nights",
+      nightsCaption: "Height is clear sky. Colour is the verdict for the next three nights.",
+      noTargets: "No targets to point at tonight.",
+      seeDetail: "Show details",
     },
   },
 

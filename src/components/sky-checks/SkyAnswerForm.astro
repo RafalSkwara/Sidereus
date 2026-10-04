@@ -2,6 +2,7 @@
 // The answer buttons for one sky check (verdict-check), shared by Tonight's card and the sky checks page: a plain
 // form with one named submit button per sky word, posting to /api/log/sky/[id]. No client state, so no island. The
 // current answer, if any, is pressed. The default slot adds controls inside the same form (Tonight's Skip).
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { SKY_ANSWERS, type SkyAnswer } from "@/lib/sky-checks/claim";
 import { answerLabel } from "@/lib/sky-checks/labels";
@@ -13,15 +14,18 @@ interface Props {
   from: SkyCheckReturn;
   /** The saved answer, shown pressed; `null` when the night is unanswered. */
   current: SkyAnswer | null;
+  /** The answer that matches the headline we showed (`claimOf`), outlined while `current` is unset. */
+  matching?: SkyAnswer | null;
   /** Names the button group for assistive tech. */
   label: string;
 }
 
-const { id, from, current, label } = Astro.props;
+const { id, from, current, matching = null, label } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 
-const answerButton =
-  "inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50";
+// One answer is outlined: the saved one, or else the one that matches what we said; the others are ghost buttons.
+// No primary fill, so the page keeps its one primary action.
+const outlined = current ?? matching;
 ---
 
 <form method="POST" action={`/api/log/sky/${encodeURIComponent(id)}`}>
@@ -33,7 +37,7 @@ const answerButton =
         name="action"
         value={answer}
         aria-pressed={current === null ? undefined : current === answer}
-        class:list={[answerButton]}
+        class:list={[buttonVariants({ variant: answer === outlined ? "outline" : "ghost" })]}
       >
         {answerLabel(m, answer)}
       </button>

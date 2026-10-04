@@ -3,7 +3,9 @@
 import { getMessages } from "@/i18n";
 
 const t = getMessages(Astro.locals.locale).tonight.attribution;
-const link = "underline decoration-border underline-offset-2 transition-colors hover:text-heading";
+// Inline links in a credit line (exempt from the 44 px target); they still take the shared focus ring.
+const link =
+  "rounded-sm underline decoration-border underline-offset-2 transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 <p class="text-xs text-muted-foreground">

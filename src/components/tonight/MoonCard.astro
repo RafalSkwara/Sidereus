@@ -1,11 +1,13 @@
 ---
-// The Moon card beside the sky card (moonlight-and-the-verdict): the phase, the disc and a time slider across tonight's
+// The Moon's detail band (moonlight-and-the-verdict; a ruled Band since tonight-nightfall): the phase, the disc and a time slider across tonight's
 // window (the `MoonTimeSlider` island, which the server renders at the page-load moment), with when the Moon is up and
 // what it does to faint objects beside the disc, then, when the Moon is a target tonight (it passes the planets'
 // gate), its observing details with the shared TargetDetails layout. Without a civil window (high-latitude summer)
 // there are no states: only the phase shows, from local noon.
 import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
+import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
+import Band from "@/components/ui/Band.astro";
 import { getMessages } from "@/i18n";
 import type { TonightMoonCard } from "@/lib/tonight/build";
 
@@ -21,12 +23,8 @@ const t = getMessages(locale).tonight;
 const target = card.target;
 ---
 
-<section aria-labelledby="moon-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-  {/* The heading names the card; the phase line under it follows the slider, so it is not the heading. */}
-  <h2 id="moon-heading" class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-    {t.moon.card.kicker}
-  </h2>
-
+{/* The heading names the band; the phase line under it follows the slider, so it is not the heading. */}
+<Band id="moon" headingId="moon-heading" heading={t.moon.card.kicker}>
   {card.states.length > 0 ? (
     <MoonTimeSlider
       states={card.states}
@@ -39,18 +37,12 @@ const target = card.target;
       {card.faintText && <p class="text-foreground">{card.faintText}</p>}
     </MoonTimeSlider>
   ) : (
-    <p class="mt-1 font-display text-2xl font-semibold text-heading">{card.phaseText}</p>
+    <p class="text-body font-semibold text-heading">{card.phaseText}</p>
   )}
 
   {target && (
-    <div class="mt-4 border-t border-border pt-1">
-      {target.seenText && (
-        <p class="mt-3">
-          <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-            {target.seenText}
-          </span>
-        </p>
-      )}
+    <div class="mt-4 border-t border-border pt-4">
+      {target.seenText && <SeenTag text={target.seenText} />}
 
       <TargetDetails
         windowStart={target.windowStart}
@@ -61,7 +53,7 @@ const target = card.target;
         ariaLabel={t.moon.markObserved({ name: target.name })}
       >
         {target.wholeDisc && (
-          <p class="mt-2 text-sm text-foreground">
+          <p class="mt-2 text-label text-foreground">
             {target.wholeDiscFits ? (
               <>
                 {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{target.wholeDisc.name}</span>{" "}
@@ -80,9 +72,9 @@ const target = card.target;
           </p>
         )}
 
-        <p class="mt-2 text-sm text-foreground">{target.reason}</p>
-        <p class="mt-2 text-sm text-muted-foreground">{target.note}</p>
+        <p class="mt-2 text-label text-foreground">{target.reason}</p>
+        <p class="mt-2 text-label text-muted-foreground">{target.note}</p>
       </TargetDetails>
     </div>
   )}
-</section>
+</Band>

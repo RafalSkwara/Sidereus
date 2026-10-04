@@ -2,6 +2,7 @@ import { getMessages } from "@/i18n";
 import { MESSIER, type MessierObject } from "@/lib/catalogue";
 import {
   clearIntervals,
+  cloudOutlook,
   darknessThresholdDegForBortle,
   darkWindow,
   darkWindowReturn,
@@ -46,6 +47,9 @@ import { createFormatter, type ForecastStatus, type MoonUp, type SkyHeadline } f
  * renders without logic out. Everything here is deterministic for identical inputs; the page reads
  * the clock and the forecast and passes them in.
  */
+
+/** How many ranked objects the "Point here first" summary band lists. */
+export const SUMMARY_TARGETS = 3;
 
 export interface TonightInput {
   site: SiteRecord;
@@ -290,6 +294,12 @@ export type TonightNight = {
   darkText: string;
   /** "Moon 62% · 3 h 10 min moon-free" */
   moonText: string;
+  /**
+   * The night's clear share for the summary bars, 0-100: 100 minus `CloudOutlook.meanCloudPct`, the mean cloud cover
+   * over the dark window's whole forecast hours, rounded. The same hours on all seven nights, verdict or outlook.
+   * `null` without a dark window or without forecast hours spanning it.
+   */
+  clearPct: number | null;
 } & (
   | { kind: "verdict"; level: VerdictLevel; headline: SkyHeadline; reasonText: string | null }
   | { kind: "outlook"; cloudText: string | null }
@@ -319,6 +329,11 @@ export interface TonightView {
   darkStart: Date | null;
   /** `null` on a no-go night or without a dark window: the verdict stands in its place. */
   ranking: TonightRanking | null;
+  /**
+   * The summary band's "Point here first": the ranking's best three entries, ordered by best time (`bestAt`)
+   * so they read as the night unfolds. Empty when `ranking` is `null`.
+   */
+  summaryTargets: TonightEntry[];
   hasEyepieces: boolean;
   /** Always present: how fresh the forecast behind the verdict is. */
   forecastStatus: TonightForecastStatus;
@@ -449,11 +464,14 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   const tonight = first.verdict;
 
   const nights = outlook.map((night): TonightNight => {
+    // Nights 1-3 carry a verdict, not cloud numbers, so their mean comes from `cloudOutlook` over the same hours.
+    const cloud = night.kind === "outlook" ? night.cloud : cloudOutlook(night.darkWindow, hourly);
     const base = {
       date: night.date,
       label: formatShortNightDate(night.date),
       darkText: darkSpanText(night.darkWindow, timeZone),
       moonText: moonLine(night.moon, night.darkWindow),
+      clearPct: cloud === null ? null : Math.round(100 - cloud.meanCloudPct),
     };
     if (night.kind === "verdict") {
       const reasonText = night.verdict.reason.kind === "no-darkness" ? null : verdictReasonText(night.verdict);
@@ -715,6 +733,13 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
         : { kind: "none" },
     darkStart: window.kind === "window" ? window.start : null,
     ranking,
+    summaryTargets:
+      ranking === null
+        ? []
+        : [...ranking.entries]
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, SUMMARY_TARGETS)
+            .sort((a, b) => a.bestAt - b.bestAt),
     hasEyepieces: eyepieces.length > 0,
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },
     explanation,
