@@ -26,6 +26,7 @@ The user hasn't decided the order of S-10 and S-11 yet (roadmap Open Roadmap Que
 3. **Then restyle the remaining screens** with `/10x-ui`, one view per pass, and continue with S-05 → S-06, S-03.
 
 **Hard constraints for both slices:**
+
 - Colours only from tokens (`no-hardcoded-colors.test.ts`). A new token needs a value in every theme block, and the red theme has zero green and blue (`red-theme.test.ts`).
 - WCAG AA contrast in all three themes, with focus visible everywhere.
 - EN and PL copy: Polish runs longer, and every string goes through the i18n catalogue.
