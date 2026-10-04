@@ -4,6 +4,7 @@
 // Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line height.
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
+import { buttonVariants } from "@/components/ui/button";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 const t = getMessages(Astro.locals.locale).tonight;
@@ -15,7 +16,7 @@ const band = "border-border py-8 not-first:border-t first:pt-0";
 <div role="status" aria-busy="true">
   <h1 class="sr-only">{t.title}</h1>
   <span class="sr-only">{t.loading}</span>
-  <TonightSky>
+  <TonightSky verdict>
     <div aria-hidden="true">
       <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
       <div class="mt-2 font-display text-verdict-lg font-extrabold sm:text-verdict-xl">
@@ -70,7 +71,7 @@ const band = "border-border py-8 not-first:border-t first:pt-0";
     <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
     <p class="slow-hint mt-6 text-sm text-muted-foreground">
       {t.loadingSlow}{" "}
-      <a href="/tonight" class="font-semibold text-primary underline-offset-4 hover:underline">
+      <a href="/tonight" class:list={[buttonVariants({ variant: "link", size: "sm" })]}>
         {t.reload}
       </a>
     </p>

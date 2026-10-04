@@ -530,6 +530,13 @@ No data changes. Rollback is a revert of the change's commits.
 - Contract: `context/changes/visual-redesign/plan.md`, `CLAUDE.md` "## UI (Nightfall)"
 - Prior Tonight decisions: the moonlight-and-the-verdict, verdict-check, seven-night-site-planner, planets-on-tonight, server-latency and tonight-all-objects archives
 
+## Addendum (implementation, 2026-10-04)
+
+Two decisions made during phase 2 and recorded after the implementation review (F6):
+
+- **The verdict word's size roles.** `global.css` has four `text-verdict-*` roles (sm, md, lg, xl). VerdictCard picks one by the word's length, one step up from `sm`: three letters or fewer (Go, Tak, Nie) use lg, then xl; up to five (Może, No-go) use md, then lg; longer (Marginal) uses sm, then md. Each size is as large as the word fits on a 360 px phone. After the review (F2), each role is also fluid inside the token, `min(<size>, calc((100vw - 2rem) / <divisor>))`, so the word never clips at 320 px or at 400% zoom. The sizes at 390 px and from `sm` stay the same.
+- **TonightSky's minimum height.** `min-h-109 sm:min-h-111` is the EN go verdict's content height, so the skeleton paints the same sky as the content and nothing jumps when the island swaps in. After the review, it applies only when the sky holds a verdict (TonightSky's `verdict` prop, passed by the skeleton and the verdict content). The setup, add-site and no-view states keep a short, title-only sky.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

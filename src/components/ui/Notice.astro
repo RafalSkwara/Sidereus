@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
  * A status notice. `success` reuses the go verdict surface, `warning` the marginal one, `info` the plain surface.
  * The text comes from the slot (catalogue copy); the notice never builds a URL.
  * A live region announces changes, not the text it loads with, so after load the script below takes the text out
- * and puts it back, which makes screen readers read it once. Without JavaScript the text is simply there.
+ * and puts it back, which makes screen readers read it once. Notices that arrive later (a server island's) get the
+ * same once-over when they are added; a data attribute marks each one done. Without JavaScript the text is simply
+ * there.
  */
 interface Props {
   tone: "success" | "info" | "warning";
@@ -30,9 +32,24 @@ const { box, icon, Icon } = TONES[tone];
 </div>
 
 <script>
-  for (const text of document.querySelectorAll<HTMLElement>("[data-notice-text]")) {
+  const SELECTOR = "[data-notice-text]:not([data-notice-announced])";
+
+  const announce = (text: HTMLElement) => {
+    text.dataset.noticeAnnounced = "";
     const nodes = [...text.childNodes];
     text.replaceChildren();
     setTimeout(() => text.replaceChildren(...nodes), 150);
-  }
+  };
+
+  for (const text of document.querySelectorAll<HTMLElement>(SELECTOR)) announce(text);
+
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.matches(SELECTOR)) announce(node);
+        for (const text of node.querySelectorAll<HTMLElement>(SELECTOR)) announce(text);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
 </script>
