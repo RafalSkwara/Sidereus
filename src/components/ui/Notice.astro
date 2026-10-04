@@ -1,0 +1,28 @@
+---
+import { CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/*
+ * A status notice. `success` reuses the go verdict surface, `warning` the marginal one, `info` the plain surface.
+ * The text comes from the slot (catalogue copy); the notice never builds a URL.
+ */
+interface Props {
+  tone: "success" | "info" | "warning";
+}
+
+const { tone } = Astro.props;
+
+const TONES = {
+  success: { box: "border-go-border bg-go-surface", icon: "text-go", Icon: CircleCheck },
+  warning: { box: "border-marginal-border bg-marginal-surface", icon: "text-marginal", Icon: TriangleAlert },
+  info: { box: "border-border bg-surface", icon: "text-primary-strong", Icon: Info },
+} as const;
+const { box, icon, Icon } = TONES[tone];
+---
+
+<div role="status" class:list={["flex items-start gap-2 rounded-lg border px-3 py-2 text-body text-foreground", box]}>
+  <Icon className={cn("mt-1 size-4 shrink-0", icon)} aria-hidden="true" />
+  <div class="min-w-0">
+    <slot />
+  </div>
+</div>

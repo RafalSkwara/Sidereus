@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { getMessages, plural, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { GEOCODING_FAILED, PLACE_QUERY_MIN_LENGTH, searchPlaces, type PlaceResult } from "@/lib/location/geocode";
@@ -40,11 +42,6 @@ type GeoStatus = "idle" | "locating" | "denied" | "unavailable";
 type SearchStatus = "idle" | "searching" | "done" | "failed";
 
 const SEARCH_DEBOUNCE_MS = 300;
-
-const inputBase =
-  "h-11 w-full rounded-lg border bg-surface px-3 text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:ring-[3px]";
-const inputOk = "border-input focus-visible:border-ring focus-visible:ring-ring/50";
-const inputBad = "border-destructive focus-visible:ring-destructive/20";
 
 export default function LocationPicker({ locale, onPick, summary, invalid = false }: Props) {
   const m = getMessages(locale);
@@ -157,7 +154,7 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
           type="button"
           variant="outline"
           size="lg"
-          className="h-11 w-full rounded-lg text-[15px] font-semibold sm:w-auto sm:self-start"
+          className="w-full sm:w-auto sm:self-start"
           onClick={locateMe}
           disabled={geoStatus === "locating"}
         >
@@ -169,22 +166,22 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
         </p>
       </div>
 
-      <div className="text-muted-foreground flex items-center gap-3 text-xs tracking-[0.18em] uppercase">
+      <div className="text-muted-foreground flex items-center gap-3 text-sm">
         <span className="bg-border h-px flex-1" aria-hidden="true" />
         {t.or}
         <span className="bg-border h-px flex-1" aria-hidden="true" />
       </div>
 
       <div>
-        <label htmlFor="place-search" className="text-heading mb-1 block text-sm font-semibold">
+        <Label htmlFor="place-search" className="mb-1.5">
           {t.searchLabel}
-        </label>
+        </Label>
         <div className="relative">
           <Search
             className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
             aria-hidden="true"
           />
-          <input
+          <Input
             id="place-search"
             type="search"
             name=""
@@ -206,14 +203,14 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
                 changeQuery("");
               }
             }}
-            className={cn(inputBase, "pl-10", invalid ? inputBad : inputOk)}
+            className="pl-10"
           />
         </div>
         <p
           id="place-search-status"
           aria-live="polite"
           className={cn(
-            "mt-1 text-xs empty:mt-0",
+            "mt-1.5 text-sm empty:mt-0",
             searchStatus === "failed" ? "text-destructive" : "text-muted-foreground",
           )}
         >
@@ -231,7 +228,7 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
                   onClick={() => {
                     pickPlace(place);
                   }}
-                  className="text-foreground hover:bg-accent focus-visible:bg-accent flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-[15px] outline-none"
+                  className="text-foreground hover:bg-accent focus-visible:bg-accent focus-visible:outline-ring text-label flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
                 >
                   <MapPin className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
                   {place.label}
@@ -245,7 +242,7 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
           tabIndex={-1}
           role="status"
           className={cn(
-            "focus-visible:ring-ring/50 flex items-center gap-2 rounded-lg text-sm outline-none focus-visible:ring-[3px]",
+            "focus-visible:outline-ring flex items-center gap-2 rounded-lg text-sm focus-visible:outline-2 focus-visible:outline-offset-2",
             summary && "border-selected text-heading mt-3 border px-3 py-2 font-semibold",
           )}
         >

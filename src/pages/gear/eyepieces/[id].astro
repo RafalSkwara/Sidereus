@@ -57,6 +57,7 @@ if (supabase) {
           action={`/api/gear/eyepieces/${encodeURIComponent(eyepiece.id)}/delete`}
           label={t.delete}
           confirmMessage={t.confirmDelete}
+          cancelLabel={m.common.cancel}
           client:load
         />
       </div>

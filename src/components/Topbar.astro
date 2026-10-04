@@ -13,6 +13,8 @@ const links = NAV_ITEMS.map((item) => ({
   current: isCurrentPage(pathname, item.href),
 }));
 const onSignin = isCurrentPage(pathname, "/auth/signin");
+// Focus is a `--ring` outline offset from the control, so it shows on the filled current segment too.
+const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 <!--
@@ -21,11 +23,14 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
   carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
 -->
 <header class="flex h-16 items-center gap-4">
-  <a href="/" class="flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90">
-    <svg viewBox="0 0 24 24" class="size-[22px] text-primary" fill="currentColor" aria-hidden="true">
+  <a
+    href="/"
+    class:list={["flex shrink-0 items-center gap-2.5 rounded-md transition-opacity hover:opacity-90", focusRing]}
+  >
+    <svg viewBox="0 0 24 24" class="size-5.5 text-primary" fill="currentColor" aria-hidden="true">
       <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
     </svg>
-    <span class="font-display text-2xl font-semibold text-heading">{m.common.appName}</span>
+    <span class="font-display text-title font-semibold text-heading">{m.common.appName}</span>
   </a>
 
   <div class="ml-auto flex items-center gap-3">
@@ -36,14 +41,17 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
             href={link.href}
             aria-current={link.current ? "page" : undefined}
             class:list={[
-              "group inline-flex h-[34px] items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold",
-              "transition-[background-color,color,scale] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none",
-              "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-              // The current segment is the indicator that glides to the next page's segment (global.css).
+              "group inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold",
+              "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
+              focusRing,
               link.current
-                ? "bg-selected text-selected-foreground [view-transition-name:nav-current]"
+                ? "bg-selected text-selected-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-heading",
             ]}
+            style={
+              // The current segment is the indicator that glides to the next page's segment (global.css).
+              link.current ? "view-transition-name: nav-current" : undefined
+            }
           >
             <NavIcon
               name={link.icon}
@@ -62,7 +70,8 @@ const onSignin = isCurrentPage(pathname, "/auth/signin");
         href="/auth/signin"
         aria-current={onSignin ? "page" : undefined}
         class:list={[
-          "text-[15px] transition-colors hover:text-heading",
+          "inline-flex min-h-11 items-center rounded-md px-1 text-label transition-colors hover:text-heading",
+          focusRing,
           onSignin ? "font-semibold text-heading" : "text-muted-foreground",
         ]}
       >

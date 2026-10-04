@@ -1,9 +1,8 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { CircleAlert } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-
-const inputBase =
-  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:ring-[3px]";
 
 interface FormFieldProps {
   id: string;
@@ -23,6 +22,17 @@ interface FormFieldProps {
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
 }
 
+/** The one field error style. Give it the `id` the control names in `aria-describedby`. */
+export function FieldError({ id, message }: { id?: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="text-destructive mt-1.5 flex items-start gap-1.5 text-sm">
+      <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      {message}
+    </p>
+  );
+}
+
 export function FormField({
   id,
   name,
@@ -40,16 +50,22 @@ export function FormField({
   step,
   inputMode,
 }: FormFieldProps) {
+  const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
+  const describedBy = error ? errorId : hint ? hintId : undefined;
+
   return (
     <div>
-      <label htmlFor={id} className="text-heading mb-1 block text-sm font-semibold">
+      <Label htmlFor={id} className="mb-1.5">
         {label}
-      </label>
+      </Label>
       <div className="relative">
         {icon ? (
-          <span className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2">{icon}</span>
+          <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2">
+            {icon}
+          </span>
         ) : null}
-        <input
+        <Input
           id={id}
           name={name ?? id}
           type={type}
@@ -62,24 +78,13 @@ export function FormField({
           max={max}
           step={step}
           inputMode={inputMode}
-          className={cn(
-            inputBase,
-            icon && "pl-10",
-            error
-              ? "border-destructive focus-visible:ring-destructive/20"
-              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
-          )}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(icon && "pl-10", endContent && "pr-10")}
         />
         {endContent}
       </div>
-      {error ? (
-        <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
-          <CircleAlert className="size-3" />
-          {error}
-        </p>
-      ) : (
-        hint
-      )}
+      {error ? <FieldError id={errorId} message={error} /> : hint ? <div id={hintId}>{hint}</div> : null}
     </div>
   );
 }

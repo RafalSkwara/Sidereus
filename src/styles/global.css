@@ -265,6 +265,18 @@
   }
 }
 
+/*
+ * Shell layout helpers (visual-redesign), so Topbar, TabBar and the settings panel need no arbitrary values:
+ * the phone's bottom safe-area inset, and the right edge of the Topbar row (`max-w-5xl` = 64rem, `sm:px-8` = 2rem).
+ */
+@utility pb-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility right-topbar-edge {
+  right: max(2rem, calc((100vw - 64rem) / 2 + 2rem));
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

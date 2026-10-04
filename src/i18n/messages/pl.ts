@@ -17,6 +17,7 @@ export const pl = {
     saving: "Zapisywanie...",
     name: "Nazwa",
     focalLengthMm: "Ogniskowa (mm)",
+    cancel: "Anuluj",
   },
 
   nav: {

@@ -61,6 +61,7 @@ if (supabase) {
           action={`/api/gear/sites/${encodeURIComponent(site.id)}/delete`}
           label={t.delete}
           confirmMessage={t.confirmDelete}
+          cancelLabel={m.common.cancel}
           client:load
         />
       </div>

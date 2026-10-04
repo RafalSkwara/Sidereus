@@ -1,0 +1,22 @@
+---
+import { ChevronLeft } from "lucide-react";
+
+/*
+ * The way back to a parent page, with a 44 px target. `href` is a fixed app path chosen by the page (ids at most,
+ * encoded by the caller), never user text.
+ */
+interface Props {
+  href: string;
+  label: string;
+}
+
+const { href, label } = Astro.props;
+---
+
+<a
+  href={href}
+  class="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md pr-2 pl-1 text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+>
+  <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />
+  {label}
+</a>

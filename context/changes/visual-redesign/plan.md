@@ -573,31 +573,31 @@ No data changes. The success redirect gains a query string. External links to `/
 
 #### Automated
 
-- [x] 2.1 Contrast, colour and red guards pass
-- [x] 2.2 Lint passes
-- [x] 2.3 Type check passes
-- [x] 2.4 Build succeeds
+- [x] 2.1 Contrast, colour and red guards pass — d2844e3
+- [x] 2.2 Lint passes — d2844e3
+- [x] 2.3 Type check passes — d2844e3
+- [x] 2.4 Build succeeds — d2844e3
 
 #### Manual
 
-- [x] 2.5 /design swatches show the Nightfall values and the zenith-to-horizon gradient in dark, light and red
-- [x] 2.6 /tonight and /log still read correctly in all three themes with the new values at 390 px
+- [x] 2.5 /design swatches show the Nightfall values and the zenith-to-horizon gradient in dark, light and red — d2844e3
+- [x] 2.6 /tonight and /log still read correctly in all three themes with the new values at 390 px — d2844e3
 
 ### Phase 3: Shared components and the sky header
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass
-- [ ] 3.2 Lint passes
-- [ ] 3.3 Type check passes
-- [ ] 3.4 Build succeeds
-- [ ] 3.5 Hardcoded-value scan on shell, Topbar, TabBar, TopbarControls, form helpers and DeleteButton returns 0
-- [ ] 3.6 e2e suite passes against local preview
+- [x] 3.1 Unit tests pass
+- [x] 3.2 Lint passes
+- [x] 3.3 Type check passes
+- [x] 3.4 Build succeeds
+- [x] 3.5 Hardcoded-value scan on shell, Topbar, TabBar, TopbarControls, form helpers and DeleteButton returns 0
+- [x] 3.6 e2e suite passes against local preview
 
 #### Manual
 
-- [ ] 3.7 Delete dialog: Escape and Cancel keep, confirm deletes, no white flash in red
-- [ ] 3.8 Focus visible on every Topbar, TabBar and settings-panel control in all three themes
+- [x] 3.7 Delete dialog: Escape and Cancel keep, confirm deletes, no white flash in red
+- [x] 3.8 Focus visible on every Topbar, TabBar and settings-panel control in all three themes
 
 ### Phase 4: The /gear view
 

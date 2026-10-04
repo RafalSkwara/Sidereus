@@ -38,11 +38,10 @@ async function deleteTelescope(page: Page, name: string) {
     .locator('main a[href^="/gear/telescopes/"]')
     .filter({ has: page.locator("span.font-semibold", { hasText: name }) })
     .click();
-  // DeleteButton asks for confirmation only once hydrated (see telescope-selector.spec.ts).
+  // DeleteButton opens its confirm dialog only once hydrated (see telescope-selector.spec.ts).
   await waitForHydration(page, DELETE_FORM);
-  const confirmed = page.waitForEvent("dialog").then((dialog) => dialog.accept());
-  await page.locator(DELETE_FORM).getByRole("button").click();
-  await confirmed;
+  await page.locator(DELETE_FORM).getByRole("button", { name: en.gear.telescopes.delete }).click();
+  await page.getByRole("dialog").getByRole("button", { name: en.gear.telescopes.delete }).click();
   await expect(page).toHaveURL(/\/gear$/);
 }
 
@@ -134,12 +133,11 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "3" }));
   await expect(logEntry(page, "M31")).toContainText(t.list.deletedGear({ name: "Travel refractor" }));
 
-  // Delete the entry (accepting the confirm): the log is empty again.
+  // Delete the entry (confirming in the dialog): the log is empty again.
   await openEntry(page, "M31");
   await waitForHydration(page, DELETE_FORM);
-  const confirmed = page.waitForEvent("dialog").then((dialog) => dialog.accept());
   await page.getByRole("button", { name: t.delete }).click();
-  await confirmed;
+  await page.getByRole("dialog").getByRole("button", { name: t.delete }).click();
   await expect(page).toHaveURL(/\/log\?deleted=M31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.deleted({ object: "M31" }));
   await expect(page.getByText(t.list.empty)).toBeVisible();
