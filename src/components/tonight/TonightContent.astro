@@ -1,28 +1,25 @@
 ---
 // The data-dependent part of /tonight, rendered as a server island (`server:defer` in pages/tonight.astro) so the
-// page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives.
+// page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives. Since
+// tonight-dashboard it is the dashboard: the sky, then tiles that open the focused pages under /tonight/*, the sky
+// check, the gear and the setup prompts. The detail lives on those pages; only this island records the sky verdict.
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
-import NightStrip from "@/components/tonight/NightStrip.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
-import MoonCard from "@/components/tonight/MoonCard.astro";
-import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
-import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
-import TonightSummary from "@/components/tonight/TonightSummary.astro";
+import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
-import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
-import { MOON_TARGET_KEY } from "@/lib/targets";
 import { islandDefer, loadTonightFor } from "@/lib/tonight/island";
-import { logHref, type TonightLoad } from "@/lib/tonight/load";
+import type { TonightLoad } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
 
 interface Props {
@@ -93,15 +90,11 @@ if (supabase && recordable) {
 }
 // The sky question for a recent night at the shown site (verdict-check); `null` when there is nothing to ask.
 const skyCheck = site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;
-// The line under the title names only what no selector already shows; with both selectors it is omitted.
-// More objects cleared the bar than Tonight lists: link to the Targets page (tonight-dashboard).
-const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
-// The log, eyepiece and no-eyepieces notices speak for the Moon target, the planets and the ranking alike, so they
-// show once, below the cards and above the sections, whenever any of them is shown.
+// No eyepieces in the kit: the dashboard says how to add them, with the other setup prompts (the pages show only the
+// eyepiece-load error). The log-load error shows here too, since "Point here first" depends on the log.
 const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
-const showSections =
-  view !== null && (view.moonCard?.target != null || view.solarSystem !== null || view.ranking !== null);
-const showNotices = showSections && (eyepiecesError !== null || noEyepieces || logError !== null);
+const showNotices = view !== null && (noEyepieces || logError !== null);
+// The line under the title names only what no selector already shows; with both selectors it is omitted.
 const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
   .filter((name): name is string => Boolean(name))
   .join(" · ");
@@ -109,13 +102,8 @@ const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null :
 const addSite = !needsSetup && !sitesError && !site;
 const addTelescope = !needsSetup && !telescopesError && !telescope;
 const showPrompts = needsSetup || addSite || addTelescope;
-// The quiet links (the gear line, "See all", the washed-out and add-eyepieces links): the link style at 44 px, with
-// the ring focus; they may wrap. The ranking's "See all N" is the band's one outline button.
-const linkButton = buttonVariants({ variant: "link", size: "sm" });
-const quietLink = cn(linkButton, "-ml-3 whitespace-normal");
-const inlineLink = cn(linkButton, "px-0 whitespace-normal");
-// On a phone the long ranking heading wraps the action under it (left edge); from sm it sits on the right.
-const actionLink = cn(linkButton, "-ml-3 sm:ml-0 sm:-mr-3");
+// The add-eyepieces link: the link style at 44 px, with the ring focus; it may wrap.
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
 const gearLink =
   "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
@@ -155,8 +143,8 @@ const gearLink =
         </div>
       )}
 
-      {/* The summary bands run the container's full width, so their rules and hover reach the phone's edges. */}
-      {view && <TonightSummary view={view} />}
+      {/* The tiles run the container's full width, so their rules and hover reach the phone's edges. */}
+      {view && <TonightTiles view={view} />}
 
       <div class:list={["space-y-6 px-4", view && "pt-8"]}>
         {view && skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
@@ -225,76 +213,17 @@ const gearLink =
 
         {tonightError && <ServerError message={translate(tonightError)} />}
 
-        {view && (
-          /* The detail bands, ruled like the summary above; the summary's chevrons jump to their ids. */
-          <div>
-            {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
-
-            {showNotices && (
-              <div class="space-y-4 pb-8">
-                {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
-                {noEyepieces && (
-                  <p class="text-label text-muted-foreground">
-                    {t.noEyepiecesPrompt}{" "}
-                    <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
-                      {t.addEyepieces}
-                    </a>
-                  </p>
-                )}
-                {logError && <ServerError message={translate(logError)} />}
-              </div>
+        {showNotices && (
+          <div class="space-y-4">
+            {noEyepieces && (
+              <p class="text-label text-muted-foreground">
+                {t.noEyepiecesPrompt}{" "}
+                <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
+                  {t.addEyepieces}
+                </a>
+              </p>
             )}
-
-            {view.solarSystem && (
-              <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
-            )}
-
-            {view.ranking && (
-              <Band id="ranking" headingId="ranking-heading" heading={view.ranking.clearedText}>
-                {hasMore && (
-                  <a slot="action" href="/tonight/targets" class:list={[actionLink]}>
-                    {t.all.seeAll}
-                    <span aria-hidden="true">→</span>
-                  </a>
-                )}
-                {multipleTelescopes && (
-                  <p class="mb-4 text-label text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
-                )}
-                {view.ranking.washedOutText && (
-                  <p class="mb-4">
-                    <a
-                      href="/tonight/targets#washed-out"
-                      data-washed-out={view.ranking.washedOutCount}
-                      class:list={[quietLink]}
-                    >
-                      {view.ranking.washedOutText}
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </p>
-                )}
-                {view.ranking.entries.length > 0 && (
-                  <ol class="divide-y divide-border">
-                    {view.ranking.entries.map((entry, i) => (
-                      <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
-                    ))}
-                  </ol>
-                )}
-                {hasMore && (
-                  <a href="/tonight/targets" class:list={[buttonVariants({ variant: "outline" }), "mt-6 w-full"]}>
-                    {plural(
-                      locale,
-                      view.ranking.clearedCount,
-                      t.all.seeAllCount,
-                    )({
-                      count: String(view.ranking.clearedCount),
-                    })}
-                    <span aria-hidden="true">→</span>
-                  </a>
-                )}
-              </Band>
-            )}
-
-            <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
+            {logError && <ServerError message={translate(logError)} />}
           </div>
         )}
       </div>

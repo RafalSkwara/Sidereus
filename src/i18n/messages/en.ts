@@ -691,11 +691,6 @@ export const en = {
       byTime: "By best time",
       sortHintRank: "Best first. Open a row for its details.",
       sortHintTime: "In the order they are best placed tonight. Open a row for its details.",
-      seeAll: "See all",
-      seeAllCount: {
-        one: (p) => `See the ${p.count} object`,
-        other: (p) => `See all ${p.count} objects`,
-      } as PluralForms<Count>,
       empty: "No object cleared the bar tonight, so there is nothing to list.",
     },
 
@@ -767,7 +762,7 @@ export const en = {
       word: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
     },
 
-    /** tonight-nightfall: the summary bands under the sky, each with a chevron to its detail band. */
+    /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */
     summary: {
       targets: "Point here first",
       targetsCaption: {
@@ -782,7 +777,6 @@ export const en = {
       nightsCaption: (p: { count: string }) =>
         `Height is clear sky. Colour and mark show the verdict for the next ${p.count} nights.`,
       noTargets: "No targets to point at tonight.",
-      seeDetail: "Show details",
     },
 
     /**

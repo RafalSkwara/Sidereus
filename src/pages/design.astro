@@ -4,7 +4,7 @@
 // matrix, built from token classes only (no arbitrary values, no literal colours), with static sample data and no
 // stores. Hover and focus-visible cannot be forced on a static page, so those cells are labelled specimens that
 // apply the classes the component uses on `:hover` / `:focus-visible`; the "default · live" cells are the real
-// components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, summary
+// components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
 import { Plus, Save } from "lucide-react";
@@ -26,7 +26,7 @@ import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro"
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
-import TonightSummary from "@/components/tonight/TonightSummary.astro";
+import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages } from "@/i18n";
 import type { MoonDiscState, Verdict } from "@/lib/engine";
@@ -412,8 +412,8 @@ const noTargetsView: TonightView = {
 const nullBarsView: TonightView = { ...targetsOnlyView, nights: sampleNights([88, null, 40, 12, null, 65, 95]) };
 
 /*
- * The summary's bands are links inside TonightSummary, so the specimens reach them from a wrapper with the
- * child variant (wrapper > summary root > band) and apply the classes the band takes on `:hover` /
+ * The tiles are links inside TonightTiles, so the specimens reach them from a wrapper with the
+ * child variant (wrapper > tiles root > tile) and apply the classes the tile takes on `:hover` /
  * `:focus-visible`. `inert` keeps the specimen links out of the tab order.
  */
 const summaryHover = "*:*:bg-accent";
@@ -1041,39 +1041,39 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
-          <!-- TonightSummary -->
-          <section class:list={block} aria-labelledby="c-tonight-summary">
-            <h3 id="c-tonight-summary" class:list={blockTitle}>
-              TonightSummary
+          <!-- TonightTiles -->
+          <section class:list={block} aria-labelledby="c-tonight-tiles">
+            <h3 id="c-tonight-tiles" class:list={blockTitle}>
+              TonightTiles
             </h3>
             <div class:list={grid}>
               <div class:list={cell}>
                 <p class:list={stateLabel}>default · live (targets, Moon, planets, nights)</p>
-                <TonightSummary view={summaryView} />
+                <TonightTiles view={summaryView} />
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>hover · specimen</p>
                 <div class:list={summaryHover} inert>
-                  <TonightSummary view={targetsOnlyView} />
+                  <TonightTiles view={targetsOnlyView} />
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>focus-visible · specimen</p>
                 <div class:list={summaryFocus} inert>
-                  <TonightSummary view={targetsOnlyView} />
+                  <TonightTiles view={targetsOnlyView} />
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>empty · no targets (weather no-go)</p>
-                <TonightSummary view={noTargetsView} />
+                <TonightTiles view={noTargetsView} />
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>bars · nights 2 and 5 without a clear share (dashed outline)</p>
-                <TonightSummary view={nullBarsView} />
+                <TonightTiles view={nullBarsView} />
               </div>
             </div>
             <p class:list={notApplicable}>
-              disabled — N/A (a link is never disabled) · error — N/A (no view, no summary) · loading — see
+              disabled — N/A (a link is never disabled) · error — N/A (no view, no tiles) · loading — see
               TonightSkeleton
             </p>
           </section>

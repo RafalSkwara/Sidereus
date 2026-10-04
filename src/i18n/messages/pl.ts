@@ -641,13 +641,6 @@ export const pl = {
       byTime: "Według najlepszej pory",
       sortHintRank: "Najlepsze najpierw. Otwórz wiersz, aby zobaczyć szczegóły.",
       sortHintTime: "W kolejności, w jakiej są dziś najlepiej widoczne. Otwórz wiersz, aby zobaczyć szczegóły.",
-      seeAll: "Zobacz wszystkie",
-      seeAllCount: {
-        one: (p) => `Zobacz ${p.count} obiekt`,
-        few: (p) => `Zobacz wszystkie ${p.count} obiekty`,
-        many: (p) => `Zobacz wszystkie ${p.count} obiektów`,
-        other: (p) => `Zobacz wszystkie ${p.count} obiektu`,
-      },
       empty: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma czego wyświetlić.",
     },
 
@@ -737,7 +730,6 @@ export const pl = {
       nightsCaption: (p) =>
         `Wysokość to bezchmurne niebo. Kolor i znak pokazują werdykt na najbliższe ${p.count} noce.`,
       noTargets: "Dziś nie ma na co celować.",
-      seeDetail: "Pokaż szczegóły",
     },
 
     pages: {

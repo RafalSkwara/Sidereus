@@ -2,8 +2,8 @@
 /*
  * A Nightfall band: a full-width, unboxed section with a rule between it and the band before it. The heading
  * (`text-title` role) labels the section; the optional `action` slot holds one quiet action beside it. The optional
- * `id` is an anchor other links can jump to (Tonight's summary bands link to its detail bands); `class` is merged last
- * (the Targets page gives its `#washed-out` band a scroll margin).
+ * `id` is an anchor on the section (the Targets page's `#washed-out`, and hooks such as `section#nights` for e2e);
+ * Tonight's tiles open pages, never anchors. `class` is merged last (the `#washed-out` band takes a scroll margin).
  */
 import { cn } from "@/lib/utils";
 

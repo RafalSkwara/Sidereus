@@ -75,7 +75,8 @@ test.describe("landing screenshot", () => {
     const headline = page.locator("#verdict-heading [data-sky-headline]");
     await expect(headline).toHaveAttribute("data-sky-headline", "verdict.level.go");
     await expect(headline).toHaveText(en.verdict.level.go);
-    await expect(page.locator('section[aria-labelledby="ranking-heading"] ol > li').first()).toBeVisible();
+    // The dashboard's tiles (tonight-dashboard): the screenshot is of /tonight, so wait for "Point here first".
+    await expect(page.locator('[data-tonight-tiles] a[href="/tonight/targets"] li').first()).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
 
     await page.screenshot({ path: OUTPUT, clip: { x: 0, y: 0, ...VIEWPORT } });

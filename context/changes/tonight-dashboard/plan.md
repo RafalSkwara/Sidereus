@@ -558,29 +558,29 @@ None for data. Links:
 
 #### Automated
 
-- [x] 3.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
-- [x] 3.2 `no-hardcoded-colors` and `red-theme` tests pass (part of `npm test`)
-- [x] 3.3 Targets and observation-log e2e specs pass, and the rest stay green: `npm run test:e2e`
+- [x] 3.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build` — 4558032
+- [x] 3.2 `no-hardcoded-colors` and `red-theme` tests pass (part of `npm test`) — 4558032
+- [x] 3.3 Targets and observation-log e2e specs pass, and the rest stay green: `npm run test:e2e` — 4558032
 
 #### Manual
 
-- [x] 3.4 `/tonight/targets` in EN/PL × dark/light/red at 390 px and desktop: ruled rows, sort control, an expanded row with eyepiece pair and Mark observed, washed-out section
-- [x] 3.5 No-go night and no-darkness night show the reason and the link to Next 7 nights
-- [x] 3.6 An old bookmark `/tonight/all#washed-out` lands scrolled to the washed-out section
+- [x] 3.4 `/tonight/targets` in EN/PL × dark/light/red at 390 px and desktop: ruled rows, sort control, an expanded row with eyepiece pair and Mark observed, washed-out section — 4558032
+- [x] 3.5 No-go night and no-darkness night show the reason and the link to Next 7 nights — 4558032
+- [x] 3.6 An old bookmark `/tonight/all#washed-out` lands scrolled to the washed-out section — 4558032
 
 ### Phase 4: The dashboard
 
 #### Automated
 
-- [ ] 4.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
-- [ ] 4.2 No in-page anchor links remain on the dashboard: `grep -rnE '"#(ranking|moon|planets|nights)"' src/components/tonight/` returns nothing, and `grep -rn '"#washed-out"\|#washed-out' src/components/tonight/TonightContent.astro src/components/tonight/TonightSummary.astro` returns nothing (adjust the path if the summary is renamed; the targets page's own `id="washed-out"` is expected)
-- [ ] 4.3 Full e2e suite passes, including the new dashboard spec: `npm run test:e2e`
+- [x] 4.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
+- [x] 4.2 No in-page anchor links remain on the dashboard: `grep -rnE '"#(ranking|moon|planets|nights)"' src/components/tonight/` returns nothing, and `grep -rn '"#washed-out"\|#washed-out' src/components/tonight/TonightContent.astro src/components/tonight/TonightSummary.astro` returns nothing (adjust the path if the summary is renamed; the targets page's own `id="washed-out"` is expected)
+- [x] 4.3 Full e2e suite passes, including the new dashboard spec: `npm run test:e2e`
 
 #### Manual
 
-- [ ] 4.4 `/tonight` in EN/PL × dark/light/red at 390 px and desktop: sky, four tiles, sky check (when open), pickers; noticeably shorter than before
-- [ ] 4.5 Each tile opens its page; back returns to the dashboard; the Tonight tab stays active on every page
-- [ ] 4.6 Edge states: no-go night (targets tile says no targets, opens Targets with the reason), no Moon card / no planets (tile omitted), forecast down, no site/telescope (setup prompt, no tiles)
+- [x] 4.4 `/tonight` in EN/PL × dark/light/red at 390 px and desktop: sky, four tiles, sky check (when open), pickers; noticeably shorter than before
+- [x] 4.5 Each tile opens its page; back returns to the dashboard; the Tonight tab stays active on every page
+- [x] 4.6 Edge states: no-go night (targets tile says no targets, opens Targets with the reason), no Moon card / no planets (tile omitted), forecast down, no site/telescope (setup prompt, no tiles)
 
 ### Phase 5: States, gate, rule
 
