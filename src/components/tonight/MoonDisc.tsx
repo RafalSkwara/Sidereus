@@ -15,8 +15,13 @@ interface MoonDiscProps {
   state: MoonDiscState;
   /** The lit part's clip-path id; unique on the page, and safe inside `url(#…)`. */
   clipId: string;
-  /** The image's accessible name, "Moon at 23:40: Waxing gibbous, 63% lit". */
-  label: string;
+  /** The image's accessible name, "Moon at 23:40: Waxing gibbous, 63% lit"; unused when `decorative`. */
+  label?: string;
+  /**
+   * The summary band's disc: hidden from assistive tech (the band's text says the phase), with no name and no
+   * `data-moon-disc` hook, which stays unique to the slider's disc. Off by default.
+   */
+  decorative?: boolean;
   /** The disc's size utilities; the Moon card's size by default. */
   className?: string;
 }
@@ -26,16 +31,17 @@ interface MoonDiscProps {
  * Lunar north up, IAU lunar east (Mare Crisium) right. The `moon-*` tokens draw it the same in the dark and light
  * themes (a bright lit part on a dark disc) and in red in red mode.
  */
-export default function MoonDisc({ state, clipId, label, className = "size-24 sm:size-28" }: MoonDiscProps) {
+export default function MoonDisc({
+  state,
+  clipId,
+  label,
+  decorative = false,
+  className = "size-24 sm:size-28",
+}: MoonDiscProps) {
   const { litPath, mariaPaths } = useMemo(() => moonDiscPaths(state), [state]);
+  const semantics = decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label, "data-moon-disc": true };
   return (
-    <svg
-      viewBox="-1.04 -1.04 2.08 2.08"
-      role="img"
-      aria-label={label}
-      className={cn("block shrink-0", className)}
-      data-moon-disc
-    >
+    <svg viewBox="-1.04 -1.04 2.08 2.08" className={cn("block shrink-0", className)} {...semantics}>
       {litPath && (
         <defs>
           <clipPath id={clipId}>

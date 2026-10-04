@@ -420,7 +420,6 @@ export const pl = {
     rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {
-      kicker: "Niebo dziś w nocy",
       darkFrom: "Ciemno od",
       darkTo: "do",
       noDarkWindow: "Brak ciemnej nocy",
@@ -732,8 +731,11 @@ export const pl = {
       },
       moon: "Księżyc",
       planets: "Planety",
-      nights: "Najbliższe 7 nocy",
-      nightsCaption: "Wysokość to bezchmurne niebo. Kolor to werdykt na najbliższe trzy noce.",
+      // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
+      nights: (p) => `Najbliższe ${p.count} nocy`,
+      // "noce" fits counts 2-4, which covers VERDICT_NIGHTS = 3; switch to plural() if it changes.
+      nightsCaption: (p) =>
+        `Wysokość to bezchmurne niebo. Kolor i znak pokazują werdykt na najbliższe ${p.count} noce.`,
       noTargets: "Dziś nie ma na co celować.",
       seeDetail: "Pokaż szczegóły",
     },
@@ -811,7 +813,6 @@ export const pl = {
 
   skyChecks: {
     card: {
-      kicker: "Ocena nieba",
       titleLastNight: "Jakie było niebo ostatniej nocy?",
       titleOn: (p) => `Jakie było niebo w nocy ${p.date}?`,
       weSaid: (p) => `${p.site} · Prognoza: ${p.headline}`,

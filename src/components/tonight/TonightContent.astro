@@ -121,7 +121,7 @@ const gearLink =
 
 {supabase && (
   <>
-    <TonightSky>
+    <TonightSky verdict={view !== null}>
       {view ? (
         <>
           <h1 class="sr-only">{t.title}</h1>
@@ -147,7 +147,9 @@ const gearLink =
           {notice.tone === "success" ? (
             <Notice tone="success">{notice.text}</Notice>
           ) : (
-            <ServerError message={notice.text} />
+            <div role="alert">
+              <ServerError message={notice.text} />
+            </div>
           )}
         </div>
       )}

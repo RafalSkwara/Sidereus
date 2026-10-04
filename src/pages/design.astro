@@ -1025,7 +1025,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>{sky.label}</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSky>
+                    <TonightSky verdict>
                       <VerdictCard {...sky.props} />
                     </TonightSky>
                   </div>
@@ -1065,7 +1065,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <TonightSummary view={noTargetsView} />
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>bars · nights 2 and 5 without a clear share (hairline)</p>
+                <p class:list={stateLabel}>bars · nights 2 and 5 without a clear share (dashed outline)</p>
                 <TonightSummary view={nullBarsView} />
               </div>
             </div>

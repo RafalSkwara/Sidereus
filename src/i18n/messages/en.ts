@@ -418,7 +418,6 @@ export const en = {
     rankingFor: (p: { telescope: string }) => `For your ${p.telescope}`,
 
     card: {
-      kicker: "Sky tonight",
       darkFrom: "Dark from",
       darkTo: "to",
       /** Also the sky headline of a no-darkness night, on the card and on any night of the strip. */
@@ -777,8 +776,11 @@ export const en = {
       } as PluralForms<Count>,
       moon: "The Moon",
       planets: "Planets",
-      nights: "Next 7 nights",
-      nightsCaption: "Height is clear sky. Colour is the verdict for the next three nights.",
+      /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
+      nights: (p: { count: string }) => `Next ${p.count} nights`,
+      /** `count` is `VERDICT_NIGHTS`, pre-formatted; the wording assumes more than one night. */
+      nightsCaption: (p: { count: string }) =>
+        `Height is clear sky. Colour and mark show the verdict for the next ${p.count} nights.`,
       noTargets: "No targets to point at tonight.",
       seeDetail: "Show details",
     },
@@ -861,7 +863,6 @@ export const en = {
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
   skyChecks: {
     card: {
-      kicker: "Sky check",
       titleLastNight: "How was the sky last night?",
       titleOn: (p: { date: string }) => `How was the sky on ${p.date}?`,
       weSaid: (p: { site: string; headline: string }) => `${p.site} · We said: ${p.headline}`,

@@ -56,7 +56,7 @@ Nothing in the plan is missing.
   - Tradeoff: The bars lose meaning at a glance, which is the band's purpose.
   - Confidence: MED.
   - Blind spot: Users who never scroll to the strip.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F2 — The giant verdict word clips at 320 px and at 400% zoom
 
@@ -68,7 +68,7 @@ Nothing in the plan is missing.
   - **Why it clips.** The tiers are sized for a 360 px screen. At 320 px the content is 288 px wide: "Tak" at 144 px needs about 310 px and "Marginal" at 60 px needs about 303 px.
   - **Effect.** TonightSky is `overflow-hidden` and a single word cannot wrap, so the word is cut off (WCAG 1.4.10).
 - **Fix**: Make each verdict role fluid in the token itself, e.g. `--text-verdict-lg: min(9rem, calc((100vw - 2rem) / 2.2))`, with the divisor set from each tier's widest word. It stays a token (no arbitrary class) and fits any width.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F3 — Summary band links have overlong, repeated accessible names
 
@@ -80,7 +80,7 @@ Nothing in the plan is missing.
   - **Whole band as the name.** Each band is one `<a>` around an h2, lists and captions, so a screen reader reads the whole band as the link name.
   - **The Moon band repeats itself.** It reads the phase and % twice: the disc's `aria-label`, then the visible text.
 - **Fix**: Give each link `aria-labelledby="<heading id> <sr-only 'Show details' id>"`, and mark the summary MoonDisc decorative (`aria-hidden`, no label).
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F4 — `/log/sky` pre-outlines the forecast's answer, and pressed and suggested answers look the same
 
@@ -105,7 +105,7 @@ Nothing in the plan is missing.
   - Tradeoff: Departs from the approved Tonight look (one answer outlined).
   - Confidence: HIGH.
   - Blind spot: None significant.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F5 — Notices inside the island may not be announced, and errors never are
 
@@ -119,7 +119,7 @@ Nothing in the plan is missing.
 - **Fix**:
   - Notice's script watches for notices added later (a `MutationObserver` on `document.body` for `[data-notice-text]`) and re-announces them once.
   - The island's error path renders `ServerError` inside a `role="alert"` wrapper.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F6 — The sky's minimum height and the verdict size tiers are not in the plan; setup states show a tall empty sky
 
@@ -133,7 +133,7 @@ Nothing in the plan is missing.
 - **Fix**:
   - Add a plan addendum recording both decisions.
   - Make the minimum height apply only when a verdict is shown, via a `verdict` prop on TonightSky that both the skeleton and the content pass.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F7 — The skeleton's reload link is under 44 px and has no ring focus
 
@@ -143,7 +143,7 @@ Nothing in the plan is missing.
 - **Location**: src/components/tonight/TonightSkeleton.astro:73-75
 - **Detail**: The rest of the view moved to 44 px controls with the ring focus; this link did not.
 - **Fix**: Use `buttonVariants({ variant: "link", size: "sm" })`.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F8 — Dead code after the restyle
 
@@ -153,7 +153,7 @@ Nothing in the plan is missing.
 - **Location**: src/components/tonight/verdict-tones.ts:5-7; en.ts/pl.ts `tonight.card.kicker`, `skyChecks.card.kicker`
 - **Detail**: `VERDICT_TONES[*].card` and the two kicker keys no longer have any users.
 - **Fix**: Remove them; parity stays.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F9 — Hardcoded counts and repeated text in the summary
 
@@ -167,7 +167,7 @@ Nothing in the plan is missing.
 - **Fix**:
   - Parametrise the counts.
   - In the no-ranking band, show only `noTargets` and let the sky carry the next clearer night.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
 
 ### F10 — Two `[data-moon-disc]` elements on Tonight
 
@@ -177,4 +177,4 @@ Nothing in the plan is missing.
 - **Location**: src/components/tonight/TonightSummary.astro (MoonDisc); MoonTimeSlider.tsx
 - **Detail**: The summary disc also carries `data-moon-disc`. The specs scope to the Moon section, but an unscoped selector would match two elements.
 - **Fix**: Drop `data-moon-disc` from the summary disc; it is decorative after F3.
-- **Decision**: APPROVED (Fix A where offered), not yet applied — follow-up before archive
+- **Decision**: FIXED (Fix A where offered) on fix/tonight-review-fixes, 2026-10-04
