@@ -603,14 +603,14 @@ No data changes. Rollback is a revert of the change's commits.
 
 #### Automated
 
-- [x] 5.1 Unit tests pass
-- [x] 5.2 Lint passes
-- [x] 5.3 Type check passes
-- [x] 5.4 Build succeeds
-- [x] 5.5 CLAUDE.md and AGENTS.md stay identical
+- [x] 5.1 Unit tests pass — cd34b3b
+- [x] 5.2 Lint passes — cd34b3b
+- [x] 5.3 Type check passes — cd34b3b
+- [x] 5.4 Build succeeds — cd34b3b
+- [x] 5.5 CLAUDE.md and AGENTS.md stay identical — cd34b3b
 
 #### Manual
 
-- [x] 5.6 /design shows the Tonight specimens in dark, light and red
-- [x] 5.7 Screenshot matrix for /tonight approved by the user
-- [x] 5.8 Red-mode screenshots pass the pixel audit
+- [x] 5.6 /design shows the Tonight specimens in dark, light and red — cd34b3b
+- [x] 5.7 Screenshot matrix for /tonight approved by the user — cd34b3b
+- [x] 5.8 Red-mode screenshots pass the pixel audit — cd34b3b
