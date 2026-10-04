@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-10-03
+updated: 2026-10-04
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -56,7 +56,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-05 | session-plan-timeline            | read Tonight as a timeline for the session, ordered by when each target is best, with the dark window and moonrise/set on it    | —             | MS-05          | ready |
 | S-06 | offline-night-plan               | install Sidereus and open tonight's plan for a site with no network, seeing when it was prepared                                | S-05          | MS-06          | proposed |
 | S-07 | verdict-check                    | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                  | —             | MS-07          | done |
-| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | in-progress |
+| S-08 | site-use-my-location             | add or edit a site with a "Use my location" button that asks the browser for location only after the click                     | —             | MS-08          | done |
 | S-09 | site-pick-from-map               | add or edit a site by pointing at its location on a map                                                                         | S-08          | MS-09          | blocked |
 
 ## Streams
@@ -206,7 +206,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Should the site form also get onboarding's place-name search, so the add-site options match onboarding's? Candidate: yes, as the same set of choices (use my location · search a place · enter coordinates) shared by both surfaces. — Owner: user. Block: no.
   - Does editing an existing site with a new location need a confirmation ("replace the saved location?")? Candidate: yes, showing the old and new place names or coordinates. — Owner: user. Block: no.
 - **Risk:** Small and self-contained; onboarding already has the click-triggered locate and the rounding, so the work is reuse. The risk is ending up with two diverging location pickers, so the plan should extract one shared component.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-09: "Pick from map" for a site
 
@@ -273,3 +273,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-01: user can see the planets that are above the site's minimum altitude tonight on Tonight — each with its best time, altitude and compass direction then, constellation, a detail eyepiece from their own kit and a one-line reason — and can mark one as observed so the log records it.** — Archived 2026-09-30 → `context/archive/2026-09-30-planets-on-tonight/`. Lesson: —.
 - **S-02: user can see the Moon on Tonight as a target in its own right — its phase, when it is up and how high, and a plain-language note on what is worth looking at in this phase (the terminator and craters near it, or "too full for detail, try filter or low power") — and can log it as observed; on nights when moonlight makes faint deep-sky objects a poor bet, Tonight says so and points at the Moon and planets instead.** — Archived 2026-10-02 → `context/archive/2026-10-01-moon-as-target/`. Lesson: —.
 - **S-07: user can, for a past night at one of their sites, answer "how was the sky?" (for example clear as promised, partly cloudy, clouded out) against the verdict Sidereus showed for that night, and see a running tally of how often go, marginal and no-go verdicts matched what they saw.** — Archived 2026-10-03 → `context/archive/2026-10-03-verdict-check/`. Lesson: —.
+- **S-08: user adding or editing a site sees a "Use my location" button; only when they click it does the browser ask for location permission, and on success the coordinates are filled in, rounded to about 1 km before anything else sees them; a refusal or failure leaves the form usable with a plain message and the manual fields.** — Archived 2026-10-04 → `context/archive/2026-10-03-site-use-my-location/`. Lesson: —.
