@@ -622,14 +622,14 @@ No data changes. The success redirect gains a query string. External links to `/
 
 #### Automated
 
-- [x] 5.1 Unit tests pass
-- [x] 5.2 Lint passes
-- [x] 5.3 Type check passes
-- [x] 5.4 Build succeeds
-- [x] 5.5 CLAUDE.md and AGENTS.md stay identical
+- [x] 5.1 Unit tests pass — 48bd61b
+- [x] 5.2 Lint passes — 48bd61b
+- [x] 5.3 Type check passes — 48bd61b
+- [x] 5.4 Build succeeds — 48bd61b
+- [x] 5.5 CLAUDE.md and AGENTS.md stay identical — 48bd61b
 
 #### Manual
 
-- [x] 5.6 /design shows all 7 states for every shared component in dark, light and red at 390 and 1280 px
-- [x] 5.7 Screenshot matrix for /gear approved by the user
-- [x] 5.8 Red-mode screenshots pass the pixel audit, including the delete dialog
+- [x] 5.6 /design shows all 7 states for every shared component in dark, light and red at 390 and 1280 px — 48bd61b
+- [x] 5.7 Screenshot matrix for /gear approved by the user — 48bd61b
+- [x] 5.8 Red-mode screenshots pass the pixel audit, including the delete dialog — 48bd61b
