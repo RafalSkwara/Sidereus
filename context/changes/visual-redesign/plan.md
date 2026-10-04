@@ -603,33 +603,33 @@ No data changes. The success redirect gains a query string. External links to `/
 
 #### Automated
 
-- [x] 4.1 Unit tests pass, including i18n parity
-- [x] 4.2 Lint passes
-- [x] 4.3 Type check passes
-- [x] 4.4 Build succeeds
-- [x] 4.5 Hardcoded-value scan on gear pages and gear forms returns 0
-- [x] 4.6 e2e suite passes against local preview
-- [x] 4.7 Smoke walk passes against local Supabase
+- [x] 4.1 Unit tests pass, including i18n parity — 0bbb4e4
+- [x] 4.2 Lint passes — 0bbb4e4
+- [x] 4.3 Type check passes — 0bbb4e4
+- [x] 4.4 Build succeeds — 0bbb4e4
+- [x] 4.5 Hardcoded-value scan on gear pages and gear forms returns 0 — 0bbb4e4
+- [x] 4.6 e2e suite passes against local preview — 0bbb4e4
+- [x] 4.7 Smoke walk passes against local Supabase — 0bbb4e4
 
 #### Manual
 
-- [x] 4.8 Hub matches the Nightfall canvas: sky header, ruled bands, no boxed cards, at most one primary action
-- [x] 4.9 New account sees explanatory empty bands with "add a site" as the one primary action
-- [x] 4.10 Save and delete show the matching notice in EN and PL
-- [x] 4.11 Polish copy fits at 390 px with no overflow at 360/390/768/1280
+- [x] 4.8 Hub matches the Nightfall canvas: sky header, ruled bands, no boxed cards, at most one primary action — 0bbb4e4
+- [x] 4.9 New account sees explanatory empty bands with "add a site" as the one primary action — 0bbb4e4
+- [x] 4.10 Save and delete show the matching notice in EN and PL — 0bbb4e4
+- [x] 4.11 Polish copy fits at 390 px with no overflow at 360/390/768/1280 — 0bbb4e4
 
 ### Phase 5: States, visual gate and the rule
 
 #### Automated
 
-- [ ] 5.1 Unit tests pass
-- [ ] 5.2 Lint passes
-- [ ] 5.3 Type check passes
-- [ ] 5.4 Build succeeds
-- [ ] 5.5 CLAUDE.md and AGENTS.md stay identical
+- [x] 5.1 Unit tests pass
+- [x] 5.2 Lint passes
+- [x] 5.3 Type check passes
+- [x] 5.4 Build succeeds
+- [x] 5.5 CLAUDE.md and AGENTS.md stay identical
 
 #### Manual
 
-- [ ] 5.6 /design shows all 7 states for every shared component in dark, light and red at 390 and 1280 px
-- [ ] 5.7 Screenshot matrix for /gear approved by the user
-- [ ] 5.8 Red-mode screenshots pass the pixel audit, including the delete dialog
+- [x] 5.6 /design shows all 7 states for every shared component in dark, light and red at 390 and 1280 px
+- [x] 5.7 Screenshot matrix for /gear approved by the user
+- [x] 5.8 Red-mode screenshots pass the pixel audit, including the delete dialog
