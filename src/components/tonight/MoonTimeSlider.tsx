@@ -1,19 +1,20 @@
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import MoonDisc from "@/components/tonight/MoonDisc";
 import { getMessages } from "@/i18n";
-import { moonDiscPaths } from "@/lib/moon-disc/geometry";
 import { moonDiscLabel, moonPhaseLine } from "@/lib/moon-disc/label";
 import { nearestStateIndex, type MoonDiscState } from "@/lib/moon-disc/state";
 import { cn } from "@/lib/utils";
 
 /*
  * The Moon card's phase line, disc and time slider (moonlight-and-the-verdict): the states the server sampled across
- * tonight's window, one every `MOON_DISC_STEP_MINUTES`, redrawn in the browser with `moonDiscPaths`. The slider's
- * arrow keys step one state (10 minutes); "Now" jumps to the state nearest the moment of the click (review F1), clamped
- * into the window, so it stays right on a tab left open. With a single state there is nothing to slide, so only the
- * phase line and the disc show.
+ * tonight's window, one every `MOON_DISC_STEP_MINUTES`, redrawn in the browser by `MoonDisc` (`moonDiscPaths`). The
+ * slider's arrow keys step one state (10 minutes); "Now" jumps to the state nearest the moment of the click (review
+ * F1), clamped into the window, so it stays right on a tab left open. With a single state there is nothing to slide,
+ * so only the phase line and the disc show.
  *
- * Browser-safe on purpose: it imports only `@/lib/moon-disc/*`, `@/i18n` and `cn`, never astronomy-engine or the
- * engine, and receives `locale` as a prop. The server renders the state at `initialIndex`.
+ * Browser-safe on purpose: it imports only `@/lib/moon-disc/*`, `@/i18n`, `cn` and the equally browser-safe
+ * `MoonDisc`, never astronomy-engine or the engine, and receives `locale` as a prop. The server renders the state at
+ * `initialIndex`.
  *
  * Accessibility (review F7): the range input's `aria-valuetext` is the time shown, which is what a screen reader
  * announces on each step; the disc is an image named for that moment ("Moon at 23:40: Waxing gibbous, 63% lit"),
@@ -54,44 +55,6 @@ const rangeClass = cn(
   "[&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2",
   "[&::-moz-range-thumb]:border-surface [&::-moz-range-thumb]:bg-primary",
 );
-
-/**
- * One state's disc: back to front, the plain dark disc (no earthshine), the lit part, the maria clipped to the lit
- * part, then the limb. Lunar north up, IAU lunar east (Mare Crisium) right. The `moon-*` tokens draw it the same in
- * the dark and light themes (a bright lit part on a dark disc) and in red in red mode.
- */
-function MoonDisc({ state, clipId, label }: { state: MoonDiscState; clipId: string; label: string }) {
-  const { litPath, mariaPaths } = useMemo(() => moonDiscPaths(state), [state]);
-  return (
-    <svg
-      viewBox="-1.04 -1.04 2.08 2.08"
-      role="img"
-      aria-label={label}
-      className="block size-24 shrink-0 sm:size-28"
-      data-moon-disc
-    >
-      {litPath && (
-        <defs>
-          <clipPath id={clipId}>
-            <path d={litPath} />
-          </clipPath>
-        </defs>
-      )}
-      <circle r="1" className="fill-moon-dark" />
-      {litPath && (
-        <>
-          <path d={litPath} className="fill-moon-lit" />
-          <g className="fill-moon-mare opacity-50" clipPath={`url(#${clipId})`}>
-            {mariaPaths.map((d, i) => (
-              <path key={i} d={d} />
-            ))}
-          </g>
-        </>
-      )}
-      <circle r="1" className="stroke-moon-limb fill-none" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-    </svg>
-  );
-}
 
 export default function MoonTimeSlider({ states, timeLabels, initialIndex, locale, children }: MoonTimeSliderProps) {
   const m = getMessages(locale).tonight.moon;

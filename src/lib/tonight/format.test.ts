@@ -237,3 +237,10 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     expect(polish.planetWeatherText(none, null)).toBe("Dla planet: brak prognozy — brak danych pogodowych");
   });
 });
+
+describe("listOf (tonight-nightfall)", () => {
+  it("joins names as a locale conjunction list", () => {
+    expect(createFormatter("en").listOf(["Jupiter", "Saturn", "Mars"])).toBe("Jupiter, Saturn and Mars");
+    expect(createFormatter("pl").listOf(["Jowisz", "Saturn", "Mars"])).toBe("Jowisz, Saturn i Mars");
+  });
+});

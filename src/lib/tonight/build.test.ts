@@ -594,6 +594,46 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
   });
 });
 
+describe("buildTonight's summary fields (tonight-nightfall)", () => {
+  const build = (forecast: ForecastResult | null) =>
+    buildTonight({ site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW }, "en");
+
+  it("gives each night with forecast hours its rounded clear share, and none past the forecast", () => {
+    // Every hour 33% cloud until 23:00 UTC on 13 Oct: nights 1-3 are covered, night 4's dark window is not.
+    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 96, () => 33)));
+    expect(view.nights.map((night) => night.clearPct)).toEqual([67, 67, 67, null, null, null, null]);
+  });
+
+  it("has no clear share on a night without darkness", () => {
+    const view = buildTonight(
+      {
+        site: TROMSO_SITE,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T20:00:00Z"),
+      },
+      "en",
+    );
+    expect(view.nights.map((night) => night.clearPct)).toEqual(Array(7).fill(null));
+  });
+
+  it("lists the ranking's best three by best time", () => {
+    const view = build(result(uniformForecast("2026-10-10T00:00:00Z", 5)));
+    const best = rankingOf(view).entries.slice(0, 3);
+    expect(view.summaryTargets).toHaveLength(3);
+    expect(view.summaryTargets.map((entry) => entry.id).sort()).toEqual(best.map((entry) => entry.id).sort());
+    const times = view.summaryTargets.map((entry) => entry.bestAt);
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    // This night's top three peak out of rank order, so the order above is the sort's doing.
+    expect(view.summaryTargets.map((entry) => entry.rank)).not.toEqual([1, 2, 3]);
+  });
+
+  it("has no summary targets on a no-go night", () => {
+    expect(build(result(uniformForecast("2026-10-10T00:00:00Z", 100))).summaryTargets).toEqual([]);
+  });
+});
+
 describe("buildTonight's planets (M-2 S-01)", () => {
   const input = {
     site: WARSAW,

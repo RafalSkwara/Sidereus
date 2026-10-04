@@ -718,6 +718,26 @@ export const pl = {
       objectData: "Dane obiektów:",
       weather: "Pogoda:",
     },
+
+    verdict: {
+      word: { go: "Tak", marginal: "Może", "no-go": "Nie" },
+    },
+
+    summary: {
+      targets: "Zacznij od nich",
+      targetsCaption: {
+        one: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} cel.`,
+        few: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} cele.`,
+        many: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} celów.`,
+        other: (p) => `Każdy o godzinie, gdy stoi najwyżej. Dziś ${p.count} celu.`,
+      },
+      moon: "Księżyc",
+      planets: "Planety",
+      nights: "Najbliższe 7 nocy",
+      nightsCaption: "Wysokość to bezchmurne niebo. Kolor to werdykt na najbliższe trzy noce.",
+      noTargets: "Dziś nie ma na co celować.",
+      seeDetail: "Pokaż szczegóły",
+    },
   },
 
   targets: {

@@ -647,6 +647,11 @@ export function createFormatter(locale: Locale) {
     }
   }
 
+  /** Names joined as a locale list: "Jupiter, Saturn and Mars" / "Jowisz, Saturn i Mars". */
+  function listOf(names: string[]): string {
+    return listFormat.format(names);
+  }
+
   return {
     formatTime,
     formatNightDate,
@@ -676,6 +681,7 @@ export function createFormatter(locale: Locale) {
     moonReasonLine,
     moonUpText,
     moonFaintText,
+    listOf,
   };
 }
 

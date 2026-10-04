@@ -763,6 +763,26 @@ export const en = {
       objectData: "Object data:",
       weather: "Weather:",
     },
+
+    /** tonight-nightfall: the giant word over the sky. Used only there; the sky headline stays the canonical wording. */
+    verdict: {
+      word: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
+    },
+
+    /** tonight-nightfall: the summary bands under the sky, each with a chevron to its detail band. */
+    summary: {
+      targets: "Point here first",
+      targetsCaption: {
+        one: (p) => `Each at the time it stands highest. ${p.count} target tonight.`,
+        other: (p) => `Each at the time it stands highest. ${p.count} targets tonight.`,
+      } as PluralForms<Count>,
+      moon: "The Moon",
+      planets: "Planets",
+      nights: "Next 7 nights",
+      nightsCaption: "Height is clear sky. Colour is the verdict for the next three nights.",
+      noTargets: "No targets to point at tonight.",
+      seeDetail: "Show details",
+    },
   },
 
   /** How the log names a target that is not a Messier object (M-2 S-01): by its localised name. */
