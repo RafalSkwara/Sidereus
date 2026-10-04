@@ -1,6 +1,6 @@
-# Handoff — 2026-10-03
+# Handoff — 2026-10-04
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first. The last change is archived at `context/archive/2026-10-03-verdict-check/`. (This replaces the 2026-10-02 handoff, which is in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first. The last change is archived at `context/archive/2026-10-03-site-use-my-location/`. (This replaces the 2026-10-03 handoff, which is in git history.)
 
 ## State of play
 
@@ -8,35 +8,31 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
   - Done:
     - S-01 planets on Tonight;
     - S-02 the Moon as a target;
-    - S-07 verdict check (PR #82, merged 2026-10-03).
+    - S-07 verdict check (PR #82);
+    - S-08 "Use my location" on the site form (PR #84, merged 2026-10-04).
   - Also shipped: the off-roadmap change moonlight-and-the-verdict (#79, closed).
   - Remaining slices:
     - **S-03** deep sky beyond Messier: `ready`, #67;
     - **S-05** session-plan timeline: `ready`, #69;
-    - **S-08** "Use my location": `ready`, #72, the smallest win;
     - **S-06** offline night plan: `proposed`, #70, waits on S-05;
     - **S-04** double stars: `blocked` until the user decides the data source and licence, #68;
-    - **S-09** map picker: `blocked` until the user decides about map-tile privacy, #73.
-- **No change is in flight.** `context/changes/` is empty once the S-07 archive PR merges.
+    - **S-09** map picker: `blocked` until the user decides about map-tile privacy, #73. Its S-08 prerequisite is now met: the map joins the shared `LocationPicker`.
+- **No change is in flight.** `context/changes/` is empty once the S-08 archive PR merges.
 
-## What S-07 shipped (verdict-check)
+## What S-08 shipped (site-use-my-location)
 
-- **Recording.** Each signed-in Tonight view stores the night's sky headline per (user, site, night) in `sky_checks`.
-  - It goes through the `record_sky_verdict` RPC, called fire and forget after the response.
-  - This is the app's only database write from a GET.
-  - The headline is overwritten only before the dark window starts, and never after an answer.
-- **Asking.**
-  - A card on Tonight asks about the newest unanswered night of the last two (with Skip).
-  - `/log/sky`, linked from the log, lists every night whose dark window has started, with the tally: matched, too optimistic / too pessimistic, and per sky word.
-- **Recording started with the 2026-10-03 deploy**, so the tally is empty until the user answers a few nights.
-- **Follow-ups:**
-  - impl review F5: a first view at 3 a.m. still counts. `shown_at` and `dark_start` are both stored, so late records can be told apart once the tally feeds calibration (#21, PRD tunable #2);
-  - #71 closes when the archive PR merges.
+- **Shared picker.** `src/components/location/LocationPicker.tsx` ("Use my location", place search, confirmation line) is used by onboarding and the add/edit site form; the host keeps the coordinate fields and validation.
+  - `locateDevice` (`src/lib/location/locate.ts`) asks only on the click and rounds to about 1 km before returning; `geocode.ts` moved to `src/lib/location/` and returns the bare place `name`.
+  - Picker copy lives in the top-level `location` i18n namespace.
+- **Site form.** A Location block above always-visible latitude/longitude fields; a picked town fills an empty Name; on edit, "Was … · Undo" restores the saved location until Save, and the automatic zone label reads "Automatic (from coordinates)" once the coordinates move.
+- **Lint.** `no-console` now also covers `src/lib/location/**`, `src/components/location/**` and `src/components/gear/**`.
+- **User preference recorded during S-08:** keep new tests modest ("we've got loads of them already"): pin only what screenshots can't show.
+- #72 closes when the archive PR merges.
 
 ## Suggested next step
 
-1. Merge the S-07 archive PR (branch `chore/archive-verdict-check`). The user merges it, never the agent.
-2. Pick the next M-2 slice. Candidates: **S-08** (small, reuses onboarding's locate and rounding; extract one shared picker), **S-05** (presentation over data Tonight already computes; unblocks S-06), or **S-03** (catalogue work; re-check ranks against seasonal lists).
+1. Merge the S-08 archive PR (branch `chore/archive-site-use-my-location`). The user merges it, never the agent.
+2. Pick the next M-2 slice: **S-05** (presentation over data Tonight already computes; unblocks S-06) or **S-03** (catalogue work; re-check ranks against seasonal lists). S-09 needs the user's map-tile privacy decision first.
 3. Post-merge checks still open from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider.
 
 ## Things a new session should know
@@ -54,11 +50,11 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 - **Local e2e recipe** (CI does the same in `.github/workflows/ci.yml`):
   1. `npx supabase start`.
   2. `FIXTURE_PORT=4400 node tests/e2e/forecast-fixture.mjs &`.
-  3. **Back up `.dev.vars` and `.env` first** (to the scratchpad). Then write the local `SUPABASE_URL` / `SUPABASE_KEY` (from `npx supabase status -o env`: `API_URL`, `ANON_KEY`) and `FORECAST_BASE_URL=http://127.0.0.1:4400` into both. Writing both worked on 2026-10-03.
-  4. `npm run build && npx astro preview --port 4321`. Astro 7's preview detaches as a daemon; stop it with `npx astro preview stop`. Rebuild after any source change.
+  3. `npm run build`, then write the local `SUPABASE_URL` / `SUPABASE_KEY` (from `npx supabase status -o env`: `API_URL`, `ANON_KEY`) and `FORECAST_BASE_URL=http://127.0.0.1:4400` into **`dist/server/.dev.vars` only**: preview reads that copy, so the repo's `.env` / `.dev.vars` stay untouched (worked on 2026-10-03/04; no backup or restore needed). Every build overwrites the copy, so rewrite it after each rebuild.
+  4. `npx astro preview --port 4321`. Astro 7's preview detaches as a daemon; stop it with `npx astro preview stop`. Rebuild after any source change.
   5. `SUPABASE_URL=$API_URL SUPABASE_KEY=$ANON_KEY BASE_URL=http://localhost:4321 npm run test:e2e`. The sky-checks spec seeds a past night through PostgREST, so it needs the Supabase variables.
-  6. Restore `.dev.vars` and `.env` from the backups and check them with `cmp`.
-- **Scratch Playwright scripts** for manual screenshots must sit under `tests/e2e/` to resolve the `@/` alias. Move them out to the scratchpad afterwards: an `rm` inside the repo was refused this session.
+- **Scratch Playwright scripts** for manual screenshots can live in the scratchpad if they load Playwright with `createRequire(process.cwd() + "/package.json")` and run from the repo root (S-08); scripts that import `@/` modules must sit under `tests/e2e/` to resolve the alias.
+- **Background processes stop after 2 hours.** Start the forecast fixture inside the same foreground command as the tests (`node tests/e2e/forecast-fixture.mjs & FIX=$!; …; kill $FIX`) rather than as a long-lived background task.
 - **Tonight is a server island.** Wait for `[data-sky-headline]` or `section[aria-labelledby="verdict-heading"]` before asserting on its content in e2e.
 - **CI flake:** the `smoke` job's `supabase/setup-cli` sometimes fails with "rate limit exceeded" while resolving the latest CLI. Re-run only the failed job: `gh run rerun <id> --failed`.
 - **Hosting:** Workers Paid since 2026-09-30, so the 10 ms CPU cap (#22, closed) no longer applies.
