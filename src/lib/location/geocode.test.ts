@@ -47,7 +47,7 @@ describe("searchPlaces", () => {
     expect(fake.calls).toHaveLength(0);
   });
 
-  it("maps results into labels and rounded coordinates", async () => {
+  it("maps results into names, labels and rounded coordinates", async () => {
     const fake = fakeFetch(() =>
       jsonResponse({
         results: [
@@ -66,9 +66,9 @@ describe("searchPlaces", () => {
       }),
     );
     await expect(searchPlaces("Ma", "en", fake.fetchFn)).resolves.toEqual([
-      { id: 3117735, label: "Madrid, Madrid, Spain", latitudeDeg: 40.42, longitudeDeg: -3.7 },
-      { id: 1, label: "Sydney, New South Wales, Australia", latitudeDeg: -33.87, longitudeDeg: 151.21 },
-      { id: 2, label: "Null Island", latitudeDeg: 0, longitudeDeg: 0 },
+      { id: 3117735, name: "Madrid", label: "Madrid, Madrid, Spain", latitudeDeg: 40.42, longitudeDeg: -3.7 },
+      { id: 1, name: "Sydney", label: "Sydney, New South Wales, Australia", latitudeDeg: -33.87, longitudeDeg: 151.21 },
+      { id: 2, name: "Null Island", label: "Null Island", latitudeDeg: 0, longitudeDeg: 0 },
     ]);
   });
 

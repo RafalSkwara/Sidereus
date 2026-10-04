@@ -64,7 +64,7 @@ test.describe("landing screenshot", () => {
 
     await page.locator("#place-search").fill("Madrid");
     await page
-      .getByRole("list", { name: en.onboarding.where.resultsLabel })
+      .getByRole("list", { name: en.location.resultsLabel })
       .getByRole("button", { name: MADRID_LABEL })
       .click();
     await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();

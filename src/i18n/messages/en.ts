@@ -251,6 +251,9 @@ export const en = {
     timeZone: "Time zone",
     autoCurrent: (p: { zone: string }) => `Automatic, currently ${p.zone}`,
     autoFromCoordinates: "Automatic (from coordinates)",
+    location: "Location",
+    previousLocation: (p: { latitude: string; longitude: string }) => `Was ${p.latitude}, ${p.longitude}`,
+    undoLocation: "Undo",
     submit: "Save site",
   },
 
@@ -271,6 +274,28 @@ export const en = {
     submit: "Save eyepiece",
   },
 
+  location: {
+    useLocation: "Use my location",
+    locating: "Finding your location...",
+    locationDenied:
+      "Location access is blocked, so search for a place instead. You can allow it later in your browser settings.",
+    locationUnavailable: "Your location could not be found. Search for a place instead.",
+    or: "or",
+    searchLabel: "Search for a town or city",
+    searchPlaceholder: "e.g. Kraków",
+    searching: "Searching...",
+    noResults: "No places found. Check the spelling or try a nearby town.",
+    resultsLabel: "Matching places",
+    resultsCount: {
+      one: (p) => `${p.count} place found`,
+      other: (p) => `${p.count} places found`,
+    } as PluralForms<Count>,
+    searchFallback: "You can enter coordinates instead, below.",
+    usingDevice: "Using your current location (about 1 km)",
+    usingPlace: (p: { place: string }) => `Using ${p.place} (about 1 km)`,
+    usingCoordinates: "Using the coordinates you entered, rounded to about 1 km",
+  },
+
   onboarding: {
     title: "Set up Sidereus",
     intro: "Three quick choices, and tonight's verdict is ready. You can change any of it later in My gear.",
@@ -280,26 +305,7 @@ export const en = {
       kicker: "1 · Where",
       heading: "Where do you observe from?",
       hint: "Your home, or wherever you usually set up. It is saved to about 1 km, never more precisely.",
-      useLocation: "Use my location",
-      locating: "Finding your location...",
-      locationDenied:
-        "Location access is blocked, so search for a place instead. You can allow it later in your browser settings.",
-      locationUnavailable: "Your location could not be found. Search for a place instead.",
-      or: "or",
-      searchLabel: "Search for a town or city",
-      searchPlaceholder: "e.g. Kraków",
-      searching: "Searching...",
-      noResults: "No places found. Check the spelling or try a nearby town.",
-      resultsLabel: "Matching places",
-      resultsCount: {
-        one: (p) => `${p.count} place found`,
-        other: (p) => `${p.count} places found`,
-      } as PluralForms<Count>,
-      searchFallback: "You can enter coordinates instead, below.",
       manualToggle: "Enter coordinates instead",
-      usingDevice: "Using your current location (about 1 km)",
-      usingPlace: (p: { place: string }) => `Using ${p.place} (about 1 km)`,
-      usingCoordinates: "Using the coordinates you entered, rounded to about 1 km",
     },
     sky: {
       kicker: "2 · Sky",
