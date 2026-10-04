@@ -430,7 +430,6 @@ export const en = {
     nights: {
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       heading: (p: { count: string; site: string }) => `Next ${p.count} nights at ${p.site}`,
-      jumpLink: (p: { count: string }) => `Next ${p.count} nights ↓`,
       timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
       verdictLabel: "Verdict",
       outlookLabel: "Outlook — no verdict",

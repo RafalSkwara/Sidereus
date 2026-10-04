@@ -551,35 +551,35 @@ No data changes. Rollback is a revert of the change's commits.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Lint passes
-- [x] 2.3 Type check passes
-- [x] 2.4 Build succeeds
-- [x] 2.5 Hardcoded-value scan on the sky files returns 0
-- [x] 2.6 e2e suite passes against local preview
+- [x] 2.1 Unit tests pass — 9ebe554
+- [x] 2.2 Lint passes — 9ebe554
+- [x] 2.3 Type check passes — 9ebe554
+- [x] 2.4 Build succeeds — 9ebe554
+- [x] 2.5 Hardcoded-value scan on the sky files returns 0 — 9ebe554
+- [x] 2.6 e2e suite passes against local preview — 9ebe554
 
 #### Manual
 
-- [x] 2.7 One sky with stars, horizon, giant word and explanation in all themes at 390 and 1280; skeleton without jump; red audit
-- [x] 2.8 /gear and another GearShell page render as before
+- [x] 2.7 One sky with stars, horizon, giant word and explanation in all themes at 390 and 1280; skeleton without jump; red audit — 9ebe554
+- [x] 2.8 /gear and another GearShell page render as before — 9ebe554
 
 ### Phase 3: Summary bands
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass
-- [ ] 3.2 Lint passes
-- [ ] 3.3 Type check passes
-- [ ] 3.4 Build succeeds
-- [ ] 3.5 Hardcoded-value scan on the summary and sky-check files returns 0
-- [ ] 3.6 e2e suite passes against local preview
+- [x] 3.1 Unit tests pass
+- [x] 3.2 Lint passes
+- [x] 3.3 Type check passes
+- [x] 3.4 Build succeeds
+- [x] 3.5 Hardcoded-value scan on the summary and sky-check files returns 0
+- [x] 3.6 e2e suite passes against local preview
 
 #### Manual
 
-- [ ] 3.7 Summary matches the canvas in spirit at 390 and 1280 in all themes
-- [ ] 3.8 Each chevron lands on its detail
-- [ ] 3.9 No-go night shows the no-targets text and next clearer night
-- [ ] 3.10 Bars read correctly in red
+- [x] 3.7 Summary matches the canvas in spirit at 390 and 1280 in all themes
+- [x] 3.8 Each chevron lands on its detail
+- [x] 3.9 No-go night shows the no-targets text and next clearer night
+- [x] 3.10 Bars read correctly in red
 
 ### Phase 4: Detail as bands
 

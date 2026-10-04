@@ -1,0 +1,176 @@
+---
+/*
+ * Tonight's summary bands under the sky (tonight-nightfall): what to point at first, the Moon, the planets and the
+ * week, each a ruled, full-width link to its detail band further down (`#ranking`, `#moon`, `#planets`, `#nights`).
+ * The summary only restates the view; the detail bands keep every number and action. Bands with nothing to say are
+ * left out (no Moon card, no solar system); "Point here first" always shows, with the reason when nothing ranks.
+ */
+import { ChevronRight } from "lucide-react";
+
+import MoonDisc from "@/components/tonight/MoonDisc";
+import { getMessages, plural } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
+import { moonDiscLabel } from "@/lib/moon-disc/label";
+import type { TonightView } from "@/lib/tonight/build";
+import { createFormatter, formatLocaleTag } from "@/lib/tonight/format";
+
+interface Props {
+  view: TonightView;
+}
+
+const { view } = Astro.props;
+const { locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.tonight.summary;
+const { listOf } = createFormatter(locale);
+const tag = formatLocaleTag(locale);
+
+// The band link: full width, at least 44 px, the token hover and ring focus. Rules run between the bands.
+const band =
+  "block min-h-11 border-b border-border px-4 py-5 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+const heading = "flex items-center justify-between gap-3 text-label font-semibold text-muted-foreground";
+const caption = "mt-2 block text-label text-muted-foreground";
+
+// Point here first. Without a ranking (weather no-go or no darkness) the band says why and links to the week,
+// where the next clearer night is; with one, it links to the ranking.
+const targets = view.summaryTargets.map((entry) => ({
+  id: entry.id,
+  name: localCommonName(entry.messier, entry.commonName, locale) ?? entry.id,
+  bestTime: entry.bestTime,
+}));
+const noTargetsReason =
+  view.explanation?.kind === "weather-no-go"
+    ? view.explanation.nextText
+    : view.explanation?.kind === "no-darkness"
+      ? view.explanation.causeText
+      : null;
+const targetsHref = view.ranking ? "#ranking" : "#nights";
+
+// The Moon at the page-load moment: the card's own initial state, so the band and the slider agree.
+const moonCard = view.moonCard;
+const moonState = moonCard && moonCard.states.length > 0 ? moonCard.states[moonCard.initialIndex] : null;
+const percentFormat = new Intl.NumberFormat(tag, { style: "percent", maximumFractionDigits: 0 });
+
+// Planets: the names as one list, best-placed first, and the best one's reason.
+const solarSystem = view.solarSystem;
+const planetNames = solarSystem ? listOf(solarSystem.entries.map((entry) => entry.name)) : "";
+
+// The week as bars: height is the clear share (a hairline without one), colour the verdict on nights 1-3 and a
+// neutral ink after. The bars are decorative; a hidden sentence reads the three verdict nights instead.
+const BAR_FILLS = { go: "fill-go", marginal: "fill-marginal", "no-go": "fill-no-go" } as const;
+const HAIRLINE = 2;
+const weekdayFormat = new Intl.DateTimeFormat(tag, { timeZone: "UTC", weekday: "short" });
+const weekday = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  return weekdayFormat.format(new Date(Date.UTC(year, month - 1, day)));
+};
+const bars = view.nights.map((night) => ({
+  day: weekday(night.date),
+  height: night.clearPct === null ? HAIRLINE : Math.max(HAIRLINE, night.clearPct),
+  fill: night.kind === "verdict" ? BAR_FILLS[night.level] : "fill-faint",
+}));
+const nightsSummary = view.nights
+  .flatMap((night) => (night.kind === "verdict" ? [`${night.label}: ${night.headline.text}`] : []))
+  .join("; ");
+---
+
+<div>
+  <a href={targetsHref} class:list={[band]}>
+    <h2 id="summary-targets-heading" class:list={[heading]}>
+      {t.targets}
+      <ChevronRight className="size-5" aria-hidden="true" />
+    </h2>
+    {targets.length > 0 ? (
+      <>
+        <ul class="mt-3">
+          {targets.map((target) => (
+            <li class="flex items-baseline justify-between gap-3 py-1 text-title">
+              <span class="min-w-0 font-semibold break-words">{target.name}</span>
+              <span class="shrink-0 tabular-nums">{target.bestTime}</span>
+            </li>
+          ))}
+        </ul>
+        {view.ranking && (
+          <span class:list={[caption]}>
+            {plural(locale, view.ranking.clearedCount, t.targetsCaption)({ count: String(view.ranking.clearedCount) })}
+          </span>
+        )}
+      </>
+    ) : (
+      <>
+        <span class="mt-3 block text-body font-semibold">{t.noTargets}</span>
+        {noTargetsReason && <span class="mt-1 block text-body text-muted-foreground">{noTargetsReason}</span>}
+      </>
+    )}
+    <span class="sr-only">{t.seeDetail}</span>
+  </a>
+
+  {moonCard && (
+    <a href="#moon" class:list={[band]}>
+      <h2 id="summary-moon-heading" class:list={[heading]}>
+        {t.moon}
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </h2>
+      {moonState ? (
+        <>
+          <span class="mt-3 flex items-center gap-4">
+            <MoonDisc
+              state={moonState}
+              clipId="moon-summary-lit"
+              label={moonDiscLabel(m.tonight.moon, moonState, moonCard.timeLabels[moonCard.initialIndex] ?? "")}
+              className="size-13"
+            />
+            <span class="font-display text-display font-extrabold tabular-nums">
+              {percentFormat.format(moonState.illuminatedFraction)}
+            </span>
+          </span>
+          <span class="mt-3 block text-body">{m.tonight.moon.phase[moonState.band]}</span>
+          {moonCard.upText && <span class="block text-body text-muted-foreground">{moonCard.upText}</span>}
+        </>
+      ) : (
+        <span class="mt-3 block text-body">{moonCard.phaseText}</span>
+      )}
+      <span class="sr-only">{t.seeDetail}</span>
+    </a>
+  )}
+
+  {solarSystem && (
+    <a href="#planets" class:list={[band]}>
+      <h2 id="summary-planets-heading" class:list={[heading]}>
+        {t.planets}
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </h2>
+      {solarSystem.entries.length > 0 ? (
+        <>
+          <span class="mt-3 block font-display text-title font-bold break-words">{planetNames}</span>
+          <span class="mt-2 block text-body">{solarSystem.entries[0].reason}</span>
+        </>
+      ) : (
+        solarSystem.noneText && <span class="mt-3 block text-body">{solarSystem.noneText}</span>
+      )}
+      <span class="sr-only">{t.seeDetail}</span>
+    </a>
+  )}
+
+  {bars.length > 0 && (
+    <a href="#nights" class:list={[band]}>
+      <h2 id="summary-nights-heading" class:list={[heading]}>
+        {t.nights}
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </h2>
+      <span class="mt-4 grid grid-cols-7 items-end gap-2" aria-hidden="true">
+        {bars.map((bar) => (
+          <span class="flex flex-col items-center gap-2">
+            <svg viewBox="0 0 10 100" preserveAspectRatio="none" focusable="false" class="block h-18 w-full">
+              <rect x="0" y={100 - bar.height} width="10" height={bar.height} class:list={[bar.fill]} />
+            </svg>
+            <span class="text-label font-semibold">{bar.day}</span>
+          </span>
+        ))}
+      </span>
+      {nightsSummary && <span class="sr-only">{nightsSummary}</span>}
+      <span class:list={[caption]}>{t.nightsCaption}</span>
+      <span class="sr-only">{t.seeDetail}</span>
+    </a>
+  )}
+</div>

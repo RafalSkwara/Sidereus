@@ -15,6 +15,7 @@ import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
+import TonightSummary from "@/components/tonight/TonightSummary.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
@@ -123,7 +124,6 @@ const showPrompts = needsSetup || addSite || addTelescope;
             timeZone={view.timeZone}
             forecastStatus={view.forecastStatus}
             explanation={view.explanation}
-            nightsLink={view.ranking !== null || view.solarSystem !== null}
           />
         </>
       ) : (
@@ -131,166 +131,178 @@ const showPrompts = needsSetup || addSite || addTelescope;
       )}
     </TonightSky>
 
-    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
-      {notice?.tone === "success" && <Notice tone="success">{notice.text}</Notice>}
-      {notice?.tone === "error" && <ServerError message={notice.text} />}
-
-      {site && telescope && (gearLine || multipleSites || multipleTelescopes) && (
-        <div>
-          {gearLine && (
-            <p class="mb-6 text-sm text-muted-foreground">
-              <a href="/gear" class="transition-colors hover:text-heading">
-                {gearLine}
-              </a>
-            </p>
-          )}
-          {multipleSites && (
-            <GearSelector
-              items={sites.map(({ id, name }) => ({ id, name }))}
-              activeId={site.id}
-              param="site"
-              label={t.siteSelector.label}
-              show={t.siteSelector.show}
-            />
-          )}
-          {multipleTelescopes && (
-            <GearSelector
-              items={telescopes.map(({ id, name }) => ({ id, name }))}
-              activeId={telescope.id}
-              param="telescope"
-              label={t.selector.label}
-              show={t.selector.show}
-            />
+    <div class="mx-auto w-full max-w-3xl pt-8">
+      {notice && (
+        <div class="mb-6 px-4">
+          {notice.tone === "success" ? (
+            <Notice tone="success">{notice.text}</Notice>
+          ) : (
+            <ServerError message={notice.text} />
           )}
         </div>
       )}
 
-      {sitesError && <ServerError message={translate(sitesError)} />}
-      {telescopesError && <ServerError message={translate(telescopesError)} />}
+      {/* The summary bands run the container's full width, so their rules and hover reach the phone's edges. */}
+      {view && <TonightSummary view={view} />}
 
-      {showPrompts && (
-        <div>
-          {needsSetup && (
-            <Band headingId="setup-heading" heading={t.setupPrompt}>
-              <a href="/onboarding" class:list={[buttonVariants()]}>
-                {t.setup}
-              </a>
-            </Band>
-          )}
-          {addSite && (
-            <Band headingId="add-site-heading" heading={t.addSitePrompt}>
-              <a href="/gear/sites/new" class:list={[buttonVariants()]}>
-                {t.addSite}
-              </a>
-            </Band>
-          )}
-          {addTelescope && (
-            <Band headingId="add-telescope-heading" heading={t.addTelescopePrompt}>
-              <a
-                href="/gear/telescopes/new"
-                class:list={[buttonVariants({ variant: addSite ? "outline" : "default" })]}
-              >
-                {t.addTelescope}
-              </a>
-            </Band>
-          )}
-        </div>
-      )}
+      <div class:list={["space-y-6 px-4", view && "pt-8"]}>
+        {view && skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
 
-      {tonightError && <ServerError message={translate(tonightError)} />}
+        {site && telescope && (gearLine || multipleSites || multipleTelescopes) && (
+          <div>
+            {gearLine && (
+              <p class="mb-6 text-sm text-muted-foreground">
+                <a href="/gear" class="transition-colors hover:text-heading">
+                  {gearLine}
+                </a>
+              </p>
+            )}
+            {multipleSites && (
+              <GearSelector
+                items={sites.map(({ id, name }) => ({ id, name }))}
+                activeId={site.id}
+                param="site"
+                label={t.siteSelector.label}
+                show={t.siteSelector.show}
+              />
+            )}
+            {multipleTelescopes && (
+              <GearSelector
+                items={telescopes.map(({ id, name }) => ({ id, name }))}
+                activeId={telescope.id}
+                param="telescope"
+                label={t.selector.label}
+                show={t.selector.show}
+              />
+            )}
+          </div>
+        )}
 
-      {view && (
-        <>
-          {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
+        {sitesError && <ServerError message={translate(sitesError)} />}
+        {telescopesError && <ServerError message={translate(telescopesError)} />}
 
-          {skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
+        {showPrompts && (
+          <div>
+            {needsSetup && (
+              <Band headingId="setup-heading" heading={t.setupPrompt}>
+                <a href="/onboarding" class:list={[buttonVariants()]}>
+                  {t.setup}
+                </a>
+              </Band>
+            )}
+            {addSite && (
+              <Band headingId="add-site-heading" heading={t.addSitePrompt}>
+                <a href="/gear/sites/new" class:list={[buttonVariants()]}>
+                  {t.addSite}
+                </a>
+              </Band>
+            )}
+            {addTelescope && (
+              <Band headingId="add-telescope-heading" heading={t.addTelescopePrompt}>
+                <a
+                  href="/gear/telescopes/new"
+                  class:list={[buttonVariants({ variant: addSite ? "outline" : "default" })]}
+                >
+                  {t.addTelescope}
+                </a>
+              </Band>
+            )}
+          </div>
+        )}
 
-          {showNotices && (
-            <div class="space-y-4">
-              {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
-              {noEyepieces && (
-                <p class="text-sm text-muted-foreground">
-                  {t.noEyepiecesPrompt}{" "}
-                  <a
-                    href="/gear/eyepieces/new"
-                    class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                  >
-                    {t.addEyepieces}
-                  </a>
-                </p>
-              )}
-              {logError && <ServerError message={translate(logError)} />}
-            </div>
-          )}
+        {tonightError && <ServerError message={translate(tonightError)} />}
 
-          {view.solarSystem && (
-            <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
-          )}
+        {view && (
+          <>
+            {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
 
-          {view.ranking && (
-            <section aria-labelledby="ranking-heading">
-              <div
-                class:list={[
-                  "flex flex-wrap items-baseline justify-between gap-x-4",
-                  multipleTelescopes ? "mb-1" : "mb-4",
-                ]}
-              >
-                <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
-                  {view.ranking.clearedText}
-                </h2>
+            {showNotices && (
+              <div class="space-y-4">
+                {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
+                {noEyepieces && (
+                  <p class="text-sm text-muted-foreground">
+                    {t.noEyepiecesPrompt}{" "}
+                    <a
+                      href="/gear/eyepieces/new"
+                      class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                    >
+                      {t.addEyepieces}
+                    </a>
+                  </p>
+                )}
+                {logError && <ServerError message={translate(logError)} />}
+              </div>
+            )}
+
+            {view.solarSystem && (
+              <SolarSystemSection solarSystem={view.solarSystem} logHref={(key: string) => logHref(view, key)} />
+            )}
+
+            {view.ranking && (
+              <section id="ranking" aria-labelledby="ranking-heading">
+                <div
+                  class:list={[
+                    "flex flex-wrap items-baseline justify-between gap-x-4",
+                    multipleTelescopes ? "mb-1" : "mb-4",
+                  ]}
+                >
+                  <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
+                    {view.ranking.clearedText}
+                  </h2>
+                  {hasMore && (
+                    <a
+                      href="/tonight/all"
+                      class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
+                    >
+                      {t.all.seeAll}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  )}
+                </div>
+                {multipleTelescopes && (
+                  <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+                )}
+                {view.ranking.washedOutText && (
+                  <p class="mb-4 text-sm">
+                    <a
+                      href="/tonight/all#washed-out"
+                      data-washed-out={view.ranking.washedOutCount}
+                      class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                    >
+                      {view.ranking.washedOutText}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </p>
+                )}
+                {view.ranking.entries.length > 0 && (
+                  <ol class="space-y-4">
+                    {view.ranking.entries.map((entry, i) => (
+                      <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
+                    ))}
+                  </ol>
+                )}
                 {hasMore && (
                   <a
                     href="/tonight/all"
-                    class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
+                    class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
                   >
-                    {t.all.seeAll}
+                    {plural(
+                      locale,
+                      view.ranking.clearedCount,
+                      t.all.seeAllCount,
+                    )({
+                      count: String(view.ranking.clearedCount),
+                    })}
                     <span aria-hidden="true">→</span>
                   </a>
                 )}
-              </div>
-              {multipleTelescopes && (
-                <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
-              )}
-              {view.ranking.washedOutText && (
-                <p class="mb-4 text-sm">
-                  <a
-                    href="/tonight/all#washed-out"
-                    data-washed-out={view.ranking.washedOutCount}
-                    class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                  >
-                    {view.ranking.washedOutText}
-                    <span aria-hidden="true">→</span>
-                  </a>
-                </p>
-              )}
-              {view.ranking.entries.length > 0 && (
-                <ol class="space-y-4">
-                  {view.ranking.entries.map((entry, i) => (
-                    <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
-                  ))}
-                </ol>
-              )}
-              {hasMore && (
-                <a
-                  href="/tonight/all"
-                  class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-                >
-                  {plural(
-                    locale,
-                    view.ranking.clearedCount,
-                    t.all.seeAllCount,
-                  )({
-                    count: String(view.ranking.clearedCount),
-                  })}
-                  <span aria-hidden="true">→</span>
-                </a>
-              )}
-            </section>
-          )}
+              </section>
+            )}
 
-          <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
-        </>
-      )}
+            <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
+          </>
+        )}
+      </div>
     </div>
   </>
 )}

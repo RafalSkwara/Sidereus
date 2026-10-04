@@ -151,6 +151,7 @@ const pageLink =
                   id={check.id}
                   from="sky"
                   current={check.answer}
+                  matching={claimOf(check.headline)}
                   label={t.answersFor({ night: format.formatNightDate(check.night), site: siteName(check) })}
                 />
               </li>

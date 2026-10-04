@@ -430,7 +430,6 @@ export const pl = {
     nights: {
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       heading: (p) => `Najbliższe ${p.count} nocy: ${p.site}`,
-      jumpLink: (p) => `Najbliższe ${p.count} nocy ↓`,
       timesIn: (p) => `Czas w strefie ${p.zone}`,
       verdictLabel: "Ocena",
       outlookLabel: "Prognoza — bez oceny",

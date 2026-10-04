@@ -21,7 +21,7 @@ const t = getMessages(locale).tonight;
 const target = card.target;
 ---
 
-<section aria-labelledby="moon-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+<section id="moon" aria-labelledby="moon-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
   {/* The heading names the card; the phase line under it follows the slider, so it is not the heading. */}
   <h2 id="moon-heading" class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
     {t.moon.card.kicker}
