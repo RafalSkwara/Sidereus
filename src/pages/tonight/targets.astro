@@ -1,0 +1,82 @@
+---
+// The Targets focused page (tonight-dashboard, taking over tonight-all-objects' /tonight/all): every object that
+// cleared tonight's bar for the site and telescope picked on Tonight, by rank or by best time, then the ones the Moon
+// washes out. The shell reads the gear, the order and the notice and paints at once; TargetsPageContent streams the
+// list in under the slim page sky.
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import Attribution from "@/components/tonight/Attribution.astro";
+import TargetsPageContent from "@/components/tonight/TargetsPageContent.astro";
+import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import { getMessages, isMessageKey, translateKey } from "@/i18n";
+import { parseTargetParam } from "@/lib/targets";
+import { targetLabel } from "@/lib/targets/labels";
+import { parseSort } from "@/lib/tonight/all-objects";
+import { pickTonightNotice } from "@/lib/tonight/notice";
+import { requestedGear } from "@/lib/tonight/requested-gear";
+
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.tonight;
+const title = t.pages.targets;
+// After "Mark observed" here, POST /api/log returns with `?logged=<target key>` (`from=targets`). Read in the shell:
+// the island's own Astro.url carries no page query. Only catalogue keys are shown for `?error`.
+const loggedTarget = parseTargetParam(Astro.url.searchParams.get("logged"));
+const logged = loggedTarget ? targetLabel(loggedTarget, locale) : null;
+const errorParam = Astro.url.searchParams.get("error");
+const error = errorParam && isMessageKey(errorParam) ? translateKey(m, errorParam, "errors.generic") : null;
+const notice = pickTonightNotice({
+  error,
+  logged: logged ? t.logged({ object: logged.id }) : null,
+  skyChecked: null,
+});
+
+// The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
+const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+// A fixed enum ("rank" | "time"), so it travels to the island as is.
+const sort = parseSort(Astro.url.searchParams.get("sort"));
+---
+
+<GearShell title={title} skyFlow>
+  {supabase ? (
+    <TargetsPageContent server:defer siteId={siteId} telescopeId={telescopeId} sort={sort} notice={notice}>
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/targets" rows={8} />
+    </TargetsPageContent>
+  ) : (
+    <>
+      <TonightPageSky title={title} view={null} />
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <DatabaseMissing />
+      </div>
+    </>
+  )}
+
+  <div class="mx-auto w-full max-w-3xl px-4">
+    <div class="mt-10 border-t border-border pt-4">
+      <Attribution />
+    </div>
+  </div>
+</GearShell>
+
+<script>
+  // The list streams in through the server island after the browser has already tried the URL's fragment (Tonight's
+  // washed-out line, and old /tonight/all#washed-out bookmarks through the redirect, land on #washed-out), so scroll
+  // to the target once the island has inserted it.
+  function scrollToHash(): boolean {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const target = id ? document.getElementById(id) : null;
+    target?.scrollIntoView();
+    return target !== null;
+  }
+  if (location.hash && !scrollToHash()) {
+    const observer = new MutationObserver(() => {
+      if (scrollToHash()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    // Stop watching if the target never arrives (an empty night, or a stale link).
+    window.setTimeout(() => {
+      observer.disconnect();
+    }, 10_000);
+  }
+</script>

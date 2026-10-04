@@ -1,5 +1,5 @@
 // FR-012 / FR-019: a site or telescope picked in a selector (`?site=<id>`, `?telescope=<id>`) is remembered on this
-// device, so a plain /tonight (the post-log redirect included) and /tonight/all keep it. Only the shape is checked
+// device, so a plain /tonight (the post-log redirect included) and its focused pages keep it. Only the shape is checked
 // here; the island resolves each id against the user's own sites and telescopes and falls back to the oldest. Set in
 // the page shell, not the island: the island's request carries no page query, so the ids reach it as props. Only ids
 // travel (island props are serialised into its URL), never a site's coordinates.

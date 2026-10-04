@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSort, sortEntries } from "./all-objects";
+import { parseSort, sortEntries, targetsRedirectPath } from "./all-objects";
 
 /** Rows with just what ordering reads: rank and the peak instant. */
 const at = (iso: string) => Date.parse(iso);
@@ -27,5 +27,21 @@ describe("parseSort", () => {
     expect(parseSort(null)).toBe("rank");
     expect(parseSort("TIME")).toBe("rank");
     expect(parseSort("peak")).toBe("rank");
+  });
+});
+
+describe("targetsRedirectPath", () => {
+  const from = (query: string) => targetsRedirectPath(new URLSearchParams(query));
+
+  it("keeps a known order", () => {
+    expect(from("sort=time")).toBe("/tonight/targets?sort=time");
+    expect(from("sort=rank")).toBe("/tonight/targets?sort=rank");
+  });
+
+  it("drops an unknown order and every other parameter", () => {
+    expect(from("")).toBe("/tonight/targets");
+    expect(from("sort=peak")).toBe("/tonight/targets");
+    expect(from("sort=%2F%2Fevil.example&next=x")).toBe("/tonight/targets");
+    expect(from("site=abc&telescope=def")).toBe("/tonight/targets");
   });
 });

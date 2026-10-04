@@ -689,7 +689,7 @@ export const en = {
       sortLabel: "Order",
       byRank: "By rank",
       byTime: "By best time",
-      sortHintRank: "Best first, as on Tonight. Open a row for its details.",
+      sortHintRank: "Best first. Open a row for its details.",
       sortHintTime: "In the order they are best placed tonight. Open a row for its details.",
       seeAll: "See all",
       seeAllCount: {
@@ -707,7 +707,7 @@ export const en = {
       } as PluralForms<Count>,
     },
 
-    /** moonlight-and-the-verdict: faint objects tonight's Moon hides, counted on Tonight and listed on /tonight/all. */
+    /** moonlight-and-the-verdict: faint objects tonight's Moon hides, counted on Tonight and listed on /tonight/targets. */
     washedOut: {
       line: {
         one: (p) => `${p.count} faint object is washed out by the Moon tonight`,

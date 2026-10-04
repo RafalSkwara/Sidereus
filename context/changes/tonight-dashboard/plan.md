@@ -543,30 +543,30 @@ None for data. Links:
 
 #### Automated
 
-- [x] 2.1 Type check, lint and unit tests pass: `npx astro check && npm run lint && npm test`
-- [x] 2.2 Build passes: `npm run build`
-- [x] 2.3 Updated e2e specs pass (moon-card, moon-as-target, planets-on-tonight, seven-night-planner) and the rest stay green: `npm run test:e2e`
+- [x] 2.1 Type check, lint and unit tests pass: `npx astro check && npm run lint && npm test` — 1865c3b
+- [x] 2.2 Build passes: `npm run build` — 1865c3b
+- [x] 2.3 Updated e2e specs pass (moon-card, moon-as-target, planets-on-tonight, seven-night-planner) and the rest stay green: `npm run test:e2e` — 1865c3b
 
 #### Manual
 
-- [x] 2.4 Each page in EN/PL × dark/light/red at 390 px and desktop: slim sky, context line, back link returns to `/tonight`, content matches what the dashboard showed for the same site
-- [x] 2.5 The Moon slider still works on `/tonight/moon` (drag, keys, Now), including red mode
-- [x] 2.6 Planets page on a cloudy-planet-window night and nights page with a forecast outage (fixture down) read sensibly
-- [x] 2.7 A second site chosen on the dashboard carries to all three pages
+- [x] 2.4 Each page in EN/PL × dark/light/red at 390 px and desktop: slim sky, context line, back link returns to `/tonight`, content matches what the dashboard showed for the same site — 1865c3b
+- [x] 2.5 The Moon slider still works on `/tonight/moon` (drag, keys, Now), including red mode — 1865c3b
+- [x] 2.6 Planets page on a cloudy-planet-window night and nights page with a forecast outage (fixture down) read sensibly — 1865c3b
+- [x] 2.7 A second site chosen on the dashboard carries to all three pages — 1865c3b
 
 ### Phase 3: Targets page
 
 #### Automated
 
-- [ ] 3.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
-- [ ] 3.2 `no-hardcoded-colors` and `red-theme` tests pass (part of `npm test`)
-- [ ] 3.3 Targets and observation-log e2e specs pass, and the rest stay green: `npm run test:e2e`
+- [x] 3.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
+- [x] 3.2 `no-hardcoded-colors` and `red-theme` tests pass (part of `npm test`)
+- [x] 3.3 Targets and observation-log e2e specs pass, and the rest stay green: `npm run test:e2e`
 
 #### Manual
 
-- [ ] 3.4 `/tonight/targets` in EN/PL × dark/light/red at 390 px and desktop: ruled rows, sort control, an expanded row with eyepiece pair and Mark observed, washed-out section
-- [ ] 3.5 No-go night and no-darkness night show the reason and the link to Next 7 nights
-- [ ] 3.6 An old bookmark `/tonight/all#washed-out` lands scrolled to the washed-out section
+- [x] 3.4 `/tonight/targets` in EN/PL × dark/light/red at 390 px and desktop: ruled rows, sort control, an expanded row with eyepiece pair and Mark observed, washed-out section
+- [x] 3.5 No-go night and no-darkness night show the reason and the link to Next 7 nights
+- [x] 3.6 An old bookmark `/tonight/all#washed-out` lands scrolled to the washed-out section
 
 ### Phase 4: The dashboard
 

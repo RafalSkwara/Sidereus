@@ -1,6 +1,6 @@
 // Everything Tonight's server islands load for one request: the user's sites, telescopes, eyepieces and log, the
 // chosen site and telescope, the forecast and the built view. Shared by TonightContent (top five) and
-// AllObjectsContent (every cleared object), so both pages always show the same night for the same setup.
+// TargetsPageContent (every cleared object), so both pages always show the same night for the same setup.
 // Framework-free: the Worker's KV cache, the forecast base URL and `waitUntil` come in from the island, wired once
 // by `loadTonightFor` in `island.ts`.
 
@@ -48,7 +48,7 @@ export interface LoadTonightInput {
   limit?: number;
   /**
    * Also read the user's recent open sky checks (verdict-check), alongside the other lists so it adds no round trip.
-   * Only Tonight asks about the sky; the all-objects page leaves it off.
+   * Only Tonight asks about the sky; its focused pages leave it off.
    */
   withSkyChecks?: boolean;
 }

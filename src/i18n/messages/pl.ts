@@ -639,7 +639,7 @@ export const pl = {
       sortLabel: "Kolejność",
       byRank: "Według oceny",
       byTime: "Według najlepszej pory",
-      sortHintRank: "Najlepsze najpierw, jak w widoku Dziś w nocy. Otwórz wiersz, aby zobaczyć szczegóły.",
+      sortHintRank: "Najlepsze najpierw. Otwórz wiersz, aby zobaczyć szczegóły.",
       sortHintTime: "W kolejności, w jakiej są dziś najlepiej widoczne. Otwórz wiersz, aby zobaczyć szczegóły.",
       seeAll: "Zobacz wszystkie",
       seeAllCount: {

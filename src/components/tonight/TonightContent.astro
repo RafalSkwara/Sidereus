@@ -94,7 +94,7 @@ if (supabase && recordable) {
 // The sky question for a recent night at the shown site (verdict-check); `null` when there is nothing to ask.
 const skyCheck = site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;
 // The line under the title names only what no selector already shows; with both selectors it is omitted.
-// More objects cleared the bar than Tonight lists: link to the all-objects page (tonight-all-objects).
+// More objects cleared the bar than Tonight lists: link to the Targets page (tonight-dashboard).
 const hasMore = view?.ranking ? view.ranking.clearedCount > view.ranking.entries.length : false;
 // The log, eyepiece and no-eyepieces notices speak for the Moon target, the planets and the ranking alike, so they
 // show once, below the cards and above the sections, whenever any of them is shown.
@@ -252,7 +252,7 @@ const gearLink =
             {view.ranking && (
               <Band id="ranking" headingId="ranking-heading" heading={view.ranking.clearedText}>
                 {hasMore && (
-                  <a slot="action" href="/tonight/all" class:list={[actionLink]}>
+                  <a slot="action" href="/tonight/targets" class:list={[actionLink]}>
                     {t.all.seeAll}
                     <span aria-hidden="true">→</span>
                   </a>
@@ -263,7 +263,7 @@ const gearLink =
                 {view.ranking.washedOutText && (
                   <p class="mb-4">
                     <a
-                      href="/tonight/all#washed-out"
+                      href="/tonight/targets#washed-out"
                       data-washed-out={view.ranking.washedOutCount}
                       class:list={[quietLink]}
                     >
@@ -280,7 +280,7 @@ const gearLink =
                   </ol>
                 )}
                 {hasMore && (
-                  <a href="/tonight/all" class:list={[buttonVariants({ variant: "outline" }), "mt-6 w-full"]}>
+                  <a href="/tonight/targets" class:list={[buttonVariants({ variant: "outline" }), "mt-6 w-full"]}>
                     {plural(
                       locale,
                       view.ranking.clearedCount,

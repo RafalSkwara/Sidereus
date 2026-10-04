@@ -1,6 +1,7 @@
 ---
-// One object on the all-objects page (tonight-all-objects): a compact line that expands into the same details as
-// Tonight's card. Native <details>, so opening a row needs no script of its own.
+// One object on the Targets page (tonight-all-objects, Nightfall since tonight-dashboard): a ruled row in the list's
+// `divide-y`, which expands into the same details as Tonight's card. Native <details>, so opening a row needs no
+// script of its own. `data-object` (the target key) and `data-best-at` (the peak instant) are what the e2e reads.
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
@@ -8,6 +9,7 @@ import type { TonightEntry } from "@/lib/tonight/build";
 
 interface Props {
   entry: TonightEntry;
+  /** The log form for this object, returning to the Targets page (`from=targets`). */
   logHref: string;
 }
 
@@ -17,24 +19,25 @@ const t = getMessages(locale).tonight.object;
 const commonName = localCommonName(entry.messier, entry.commonName, locale);
 ---
 
-<li data-object={entry.id} data-best-at={entry.bestAt} class="rounded-xl border border-border bg-surface">
+<li data-object={entry.id} data-best-at={entry.bestAt}>
   <details class="group">
+    <!-- At least 44 px; the hover tint and the ring run a little past the text, inside the list's width. -->
     <summary
       class:list={[
-        "flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-xl px-4 py-2.5 [&::-webkit-details-marker]:hidden",
-        "transition-colors hover:bg-accent",
-        "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "-mx-2 flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-lg px-2 py-3 [&::-webkit-details-marker]:hidden",
+        "transition-colors hover:bg-accent motion-reduce:transition-none",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
       ]}
     >
-      <span class="w-7 shrink-0 text-right font-mono text-sm text-muted-foreground">{entry.rank}.</span>
+      <span class="w-7 shrink-0 text-right font-mono text-label text-muted-foreground">{entry.rank}.</span>
       <span class="min-w-0 flex-1">
-        <span class="font-display text-lg font-semibold text-heading">{entry.id}</span>
-        {commonName && <span class="text-sm text-foreground"> · {commonName}</span>}
-        {entry.seenText && <span class="block text-xs text-muted-foreground">{entry.seenText}</span>}
+        <span class="font-display text-title font-semibold break-words text-heading">{entry.id}</span>
+        {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
+        {entry.seenText && <span class="block text-label text-muted-foreground">{entry.seenText}</span>}
       </span>
-      <span class="shrink-0 text-right font-mono text-sm text-heading">
+      <span class="shrink-0 text-right font-mono text-label text-heading">
         {entry.bestTime}
-        <span class="block text-xs text-muted-foreground">{entry.bestDirection}</span>
+        <span class="block text-muted-foreground">{entry.bestDirection}</span>
       </span>
       <svg
         viewBox="0 0 24 24"
@@ -49,8 +52,8 @@ const commonName = localCommonName(entry.messier, entry.commonName, locale);
         <path d="m6 9 6 6 6-6"></path>
       </svg>
     </summary>
-    <div class="px-4 pb-4">
-      <p class="text-sm text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</p>
+    <div class="pb-4 pl-10">
+      <p class="text-label text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</p>
       <ObjectDetails entry={entry} logHref={logHref} />
     </div>
   </details>

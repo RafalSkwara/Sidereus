@@ -2,21 +2,29 @@
 /*
  * A Nightfall band: a full-width, unboxed section with a rule between it and the band before it. The heading
  * (`text-title` role) labels the section; the optional `action` slot holds one quiet action beside it. The optional
- * `id` is an anchor other links can jump to (Tonight's summary bands link to its detail bands).
+ * `id` is an anchor other links can jump to (Tonight's summary bands link to its detail bands); `class` is merged last
+ * (the Targets page gives its `#washed-out` band a scroll margin).
  */
+import { cn } from "@/lib/utils";
+
 interface Props {
   /** The heading's id, which labels the section. */
   headingId: string;
   heading: string;
   /** An anchor id on the section itself. */
   id?: string;
+  class?: string;
 }
 
-const { headingId, heading, id } = Astro.props;
+const { headingId, heading, id, class: className } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
-<section id={id} aria-labelledby={headingId} class="border-border py-8 not-first:border-t first:pt-0 last:pb-0">
+<section
+  id={id}
+  aria-labelledby={headingId}
+  class:list={cn("border-border py-8 not-first:border-t first:pt-0 last:pb-0", className)}
+>
   <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
       {heading}

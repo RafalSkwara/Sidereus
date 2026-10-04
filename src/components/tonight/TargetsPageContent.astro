@@ -1,0 +1,197 @@
+---
+// The data-dependent part of /tonight/targets (tonight-dashboard), a server island like TonightContent: the slim page
+// sky, the page's notice, then every object that cleared tonight's bar as ruled expandable rows, by rank or by best
+// time, and the ones the Moon washes out. Each row's "Mark observed" returns here (`from=targets`). It loads through
+// the same loadTonight as Tonight, so both always agree; it never records the sky verdict (only Tonight shows it).
+import { ServerError } from "@/components/forms/ServerError";
+import ObjectRow from "@/components/tonight/ObjectRow.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import Band from "@/components/ui/Band.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
+import { loadTonightFor } from "@/lib/tonight/island";
+import { logHref } from "@/lib/tonight/load";
+import type { TonightNotice } from "@/lib/tonight/notice";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The site picked on Tonight (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
+  /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+  /** The page's `?sort=`, parsed in the shell to the fixed set. */
+  sort: AllObjectsSort;
+  /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
+  notice?: TonightNotice | null;
+}
+
+const { locale } = Astro.locals;
+const { siteId, telescopeId, sort, notice = null } = Astro.props;
+const m = getMessages(locale);
+const t = m.tonight;
+const a = t.all;
+const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
+
+// Signed out, `load` is null and the island renders nothing. Every cleared object gets a full entry.
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, limit: Number.POSITIVE_INFINITY });
+const view = load?.view ?? null;
+const failures = load
+  ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
+  : [];
+// No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
+const noGear =
+  load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+const ranking = view?.ranking ?? null;
+const rows =
+  view && ranking
+    ? sortEntries(ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.id, "targets") }))
+    : [];
+// Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
+// Tonight is never unexplained.
+const washedOut = ranking?.washedOutEntries ?? [];
+
+const sortLinks: { value: AllObjectsSort; label: string }[] = [
+  { value: "rank", label: a.byRank },
+  { value: "time", label: a.byTime },
+];
+// A segmented control of two links, 44 px each; the current order is filled and carries `aria-current`. Focus is a
+// `--ring` outline offset from the segment, so it shows on the filled one too (as in the Topbar's pill).
+const segment = cn(
+  "inline-flex h-11 items-center rounded-full px-3.5 text-label font-semibold",
+  "transition-colors duration-150 ease-out motion-reduce:transition-none",
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+);
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+{load && (
+  <>
+    <TonightPageSky title={t.pages.targets} view={view} />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {notice &&
+        (notice.tone === "success" ? (
+          <Notice tone="success">{notice.text}</Notice>
+        ) : (
+          <div role="alert">
+            <ServerError message={notice.text} />
+          </div>
+        ))}
+
+      {failures.map((key) => (
+        <ServerError message={translate(key)} />
+      ))}
+
+      {noGear && (
+        <p class="text-body text-foreground">
+          {t.pages.noGear}{" "}
+          <a href="/tonight" class:list={[inlineLink]}>
+            {t.pages.toTonight}
+          </a>
+        </p>
+      )}
+
+      {view && load.eyepiecesError && <ServerError message={translate(load.eyepiecesError)} />}
+      {view && load.logError && <ServerError message={translate(load.logError)} />}
+
+      {view && !ranking && (
+        /* No ranking (a weather no-go or no darkness): why, from the view, and the way to a better night. */
+        <div class="space-y-3">
+          <p class="font-display text-title font-semibold text-heading">
+            <span data-sky-headline={view.headline.key}>{view.headline.text}</span>
+            <span class="font-normal text-muted-foreground"> — {view.verdictText}</span>
+          </p>
+          {view.explanation?.kind === "weather-no-go" && (
+            <p class="text-body text-foreground">{view.explanation.nextText}</p>
+          )}
+          {/* Two lines, as the dashboard's sky shows them: the cause has no closing stop and the return starts a
+              new sentence. */}
+          {view.explanation?.kind === "no-darkness" && (
+            <>
+              <p class="text-body text-foreground">{view.explanation.causeText}</p>
+              <p class="text-body text-foreground">{view.explanation.returnText}</p>
+            </>
+          )}
+          <p class="text-body text-muted-foreground">{t.pages.noTargets}</p>
+          <a href="/tonight/nights" class:list={[buttonVariants({ variant: "outline" })]}>
+            {t.pages.seeNights({ count: String(OUTLOOK_NIGHTS) })}
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      )}
+
+      {view && ranking && (
+        <div>
+          {rows.length > 0 ? (
+            <Band
+              headingId="targets-heading"
+              heading={plural(locale, rows.length, a.heading)({ count: String(rows.length) })}
+            >
+              {load.multipleTelescopes && (
+                <p class="mb-4 text-label text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+              )}
+              <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <nav aria-label={a.sortLabel} class="flex gap-0.5 rounded-full border border-border p-0.5">
+                  {sortLinks.map((link) => (
+                    <a
+                      href={`/tonight/targets?sort=${link.value}`}
+                      aria-current={sort === link.value ? "page" : undefined}
+                      class:list={[
+                        segment,
+                        sort === link.value
+                          ? "bg-selected text-selected-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-heading",
+                      ]}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+                <p class="text-label text-muted-foreground">{sort === "time" ? a.sortHintTime : a.sortHintRank}</p>
+              </div>
+              <ul class="divide-y divide-border">
+                {rows.map(({ entry, href }) => (
+                  <ObjectRow entry={entry} logHref={href} />
+                ))}
+              </ul>
+            </Band>
+          ) : (
+            <p class="pb-8 text-body text-foreground">{a.empty}</p>
+          )}
+
+          {washedOut.length > 0 && (
+            <Band id="washed-out" class="scroll-mt-4" headingId="washed-out-heading" heading={t.washedOut.heading}>
+              <p class="mb-4 text-label text-muted-foreground">{t.washedOut.intro}</p>
+              <ul class="divide-y divide-border">
+                {washedOut.map((entry) => {
+                  const commonName = localCommonName(entry.messier, entry.commonName, locale);
+                  return (
+                    <li data-washed-out-object={entry.id} class="flex min-h-11 items-center gap-3 py-3">
+                      <span class="min-w-0 flex-1">
+                        <span class="font-display text-title font-semibold break-words text-muted-foreground">
+                          {entry.id}
+                        </span>
+                        {commonName && <span class="text-body text-muted-foreground"> · {commonName}</span>}
+                        <span class="block text-label text-muted-foreground">
+                          {t.object.inConstellation({ constellation: entry.constellation })}
+                        </span>
+                      </span>
+                      <span class="shrink-0 text-right font-mono text-label text-muted-foreground">
+                        {entry.bestTime}
+                        <span class="block">{entry.bestDirection}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Band>
+          )}
+        </div>
+      )}
+    </div>
+  </>
+)}

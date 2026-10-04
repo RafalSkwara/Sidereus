@@ -273,7 +273,7 @@ export function createFormatter(locale: Locale) {
 
   /**
    * The sky headline every surface shows for a verdict (moonlight-and-the-verdict): the verdict card, the strip,
-   * the all-objects page. "Clear", "Partly clear", "Clear, but damp", "Clear (old forecast)", "No forecast",
+   * the Targets page. "Clear", "Partly clear", "Clear, but damp", "Clear (old forecast)", "No forecast",
    * "Cloudy" or "No dark window".
    */
   function skyHeadline(verdict: Verdict): SkyHeadline {
