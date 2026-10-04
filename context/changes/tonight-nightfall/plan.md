@@ -585,32 +585,32 @@ No data changes. Rollback is a revert of the change's commits.
 
 #### Automated
 
-- [x] 4.1 Unit tests pass
-- [x] 4.2 Lint passes
-- [x] 4.3 Type check passes
-- [x] 4.4 Build succeeds
-- [x] 4.5 Hardcoded-value scan on all Tonight files returns 0 (pseudo-element variants listed)
-- [x] 4.6 e2e suite passes against local preview
-- [x] 4.7 Smoke walk passes against local Supabase
+- [x] 4.1 Unit tests pass — 9ffc1e8
+- [x] 4.2 Lint passes — 9ffc1e8
+- [x] 4.3 Type check passes — 9ffc1e8
+- [x] 4.4 Build succeeds — 9ffc1e8
+- [x] 4.5 Hardcoded-value scan on all Tonight files returns 0 (pseudo-element variants listed) — 9ffc1e8
+- [x] 4.6 e2e suite passes against local preview — 9ffc1e8
+- [x] 4.7 Smoke walk passes against local Supabase — 9ffc1e8
 
 #### Manual
 
-- [x] 4.8 No boxed cards remain; detail reads as ruled bands in all themes at 390 and 1280
-- [x] 4.9 Every /tonight control is at least 44 px with a visible ring focus
-- [x] 4.10 Moon slider, Mark observed and the selectors work as before
+- [x] 4.8 No boxed cards remain; detail reads as ruled bands in all themes at 390 and 1280 — 9ffc1e8
+- [x] 4.9 Every /tonight control is at least 44 px with a visible ring focus — 9ffc1e8
+- [x] 4.10 Moon slider, Mark observed and the selectors work as before — 9ffc1e8
 
 ### Phase 5: States, visual gate and the rule
 
 #### Automated
 
-- [ ] 5.1 Unit tests pass
-- [ ] 5.2 Lint passes
-- [ ] 5.3 Type check passes
-- [ ] 5.4 Build succeeds
-- [ ] 5.5 CLAUDE.md and AGENTS.md stay identical
+- [x] 5.1 Unit tests pass
+- [x] 5.2 Lint passes
+- [x] 5.3 Type check passes
+- [x] 5.4 Build succeeds
+- [x] 5.5 CLAUDE.md and AGENTS.md stay identical
 
 #### Manual
 
-- [ ] 5.6 /design shows the Tonight specimens in dark, light and red
-- [ ] 5.7 Screenshot matrix for /tonight approved by the user
-- [ ] 5.8 Red-mode screenshots pass the pixel audit
+- [x] 5.6 /design shows the Tonight specimens in dark, light and red
+- [x] 5.7 Screenshot matrix for /tonight approved by the user
+- [x] 5.8 Red-mode screenshots pass the pixel audit
