@@ -9,6 +9,7 @@ tags: [research, ui, design-tokens, themes, typography, components, visual-redes
 status: complete
 last_updated: 2026-10-04
 last_updated_by: Claude (Opus 5.5)
+last_updated_note: "Added ## Charges: the /10x-ui audit of /gear against the chosen Nightfall direction"
 ---
 
 # Research: the current design-system contract and what constrains the redesign
@@ -179,6 +180,105 @@ What `/gear` lacks: a success notice (saves redirect to `/gear` silently) and a 
   - `seedSkyCheck` (`:94-117`)
 - There is no sign-in helper for an existing user, and no theme, locale or viewport helper.
 - The handoff's scratch-script pattern for manual screenshots (`createRequire(process.cwd() + "/package.json")` from the repo root) is the practical route. It covers EN/PL × dark/light/red × 390/1280 without adding a spec.
+
+## Charges
+
+> `/10x-ui` audit of **`/gear`** (the hub, its sites/telescopes/eyepieces new and edit pages, `GearShell`, `Topbar`, `TabBar`, `TopbarControls`, the form helpers, `DeleteButton`, and `LocationPicker` inside `SiteForm`), against the chosen direction **C · Nightfall** (canvas https://claude.ai/artifact/8VZbxuqAVU1RntyMQ8u6vu, decision recorded in `change.md`). Added 2026-10-04.
+
+**Pre-audit**, 20 view files:
+
+- **Literal colours:** 0. The colour guard holds.
+- **Arbitrary values:** 20 hits from the hardcoded-value scan:
+  - `tracking-[0.18em]` (`src/pages/gear/index.astro:85`, `LocationPicker.tsx:172`)
+  - `ring-[3px]` (`FormField.tsx:6`, `EyepieceForm.tsx:33`, `SiteForm.tsx:42,244`, `Topbar.astro:41`, `TabBar.astro:37`, `TopbarControls.tsx:19,26`, `LocationPicker.tsx:45,248`)
+  - `h-[34px]` (`Topbar.astro:39`)
+  - `text-[15px]` (`Topbar.astro:65`, `LocationPicker.tsx:160,234`)
+  - `text-[13px]` (`TopbarControls.tsx:23`)
+  - `text-[11px] tracking-[0.12em]` (`TopbarControls.tsx:29`)
+  - `size-[22px]` (`Topbar.astro:25`)
+  - the popover offsets (`TopbarControls.tsx:38`)
+- **Component use:** 2 of the 20 files import from `src/components/ui/` (`SubmitButton.tsx`, `LocationPicker.tsx`).
+- **Agent rules:** `AGENTS.md` matches `CLAUDE.md`. Its UI rules (`CLAUDE.md:77-81`) cover colours and the shadcn path. No rule invites one-off values, but none covers type, radius, spacing or the shared components either.
+
+### C1 · Missing tokens: type, surfaces and radius are not in the contract (missing tokens)
+
+- **Evidence: the type comes from the old fonts and per-file literals.**
+  - The old fonts are imported and named in the theme: `src/styles/global.css:5-7`, `:267-269`.
+  - The kicker is a literal: `src/pages/gear/index.astro:85`.
+  - The h1 is a literal at a different size on each page: `gear/index.astro:86` (`text-4xl sm:text-5xl`), `gear/sites/new.astro:18` and `gear/sites/[id].astro:41` (`text-3xl sm:text-4xl`), plus the same in the telescope and eyepiece pages.
+  - Section h2 strings: `gear/index.astro:96`, `:134`, `:169`.
+  - Nav sizes: `Topbar.astro:39`, `:65`; `TopbarControls.tsx:23`, `:29`.
+- **Evidence: surfaces and radius have no tier tokens.**
+  - Cards use `rounded-2xl` (`gear/index.astro:94`, `:132`, `:167`), which resolves to Tailwind's `1rem` default and not to `--radius` (`global.css:262-265`; `node_modules/tailwindcss/theme.css:402`).
+  - No sky, horizon or band surface exists for Nightfall to use.
+- **What should cover it:**
+  - Archivo as the one family (self-hosted, latin-ext), with type-role utilities: display (expanded), title, band value, label and body.
+  - Base colour tokens for the sky: sky top and horizon, in every theme including red.
+  - Surface tiers: page ground, band, and inset field.
+  - One radius scale that controls actually use.
+- **User impact:** every gear screen speaks in the same stock serif headline, amber kicker and rounded box, so nothing on the page tells the user what matters first, and a new look can't be applied in one place.
+
+### C2 · Missing shared components: card, page header, link-button, select, label, list row, back link (missing shared component)
+
+- **Evidence:**
+  - Card recipe copied on every page: `gear/index.astro:94`, `:132`, `:167`; `gear/sites/new.astro:20`; `gear/sites/[id].astro:42`, `:69`; the same in the telescope and eyepiece pages; `DatabaseMissing.astro:8`.
+  - Page header (kicker + h1): `gear/index.astro:85-86`.
+  - `primaryLink`: `gear/index.astro:80-81`, redefined in `log/index.astro:53`, `log/new.astro:57`, `log/sky.astro:60` and `TonightContent.astro:95`. `ui/button.tsx` is React-only, so Astro pages can't use it.
+  - List row: `gear/index.astro:114`, `:152`, `:187`.
+  - Back link: `gear/sites/new.astro:15`, `gear/sites/[id].astro:32`.
+  - Selects and labels:
+    - `selectBase`: `SiteForm.tsx:41`, `EyepieceForm.tsx:32`
+    - labels: `SiteForm.tsx:255`, `:303`
+    - field error line: `SiteForm.tsx:59`
+  - Input heights differ: `FormField.tsx:6` (`py-2`) vs `LocationPicker.tsx:45` (`h-11`).
+  - `DeleteButton.tsx:21-24` is a raw `<button>` that bypasses `Button`.
+- **What should cover it:**
+  - Astro components for `Band` (Nightfall's ruled, unboxed section), `PageHeader` and `BackLink`.
+  - `buttonVariants` exported from `ui/button.tsx` and used by Astro `<a>`s, which replaces `primaryLink`.
+  - `ui/select` and `ui/label` (shadcn path, or thin local wrappers if the native `<select>` must stay for no-JS forms), used by `FormField` and the gear forms.
+  - `DeleteButton` built on `Button variant="destructive"`.
+- **User impact:** the same control looks and behaves slightly differently from form to form (field heights, corner radii, label weight), and every future screen copies whichever version it finds first.
+
+### C3 · Composition: the hub is three identical boxes with three competing primary buttons (accidental architecture, layout)
+
+- **Evidence:**
+  - Three byte-identical sections, each with its own primary "Add" button: `gear/index.astro:94-101`, `:132-139`, `:167-174`.
+  - Their empty states are a single muted line each: `:107`, `:145`, `:180`.
+  - The order mirrors the build order (sites, telescopes, eyepieces), not what Tonight needs. Tonight needs a site and a telescope; eyepieces have a default kit.
+- **What should cover it:** Nightfall bands. Each kind is a full-width ruled band with an unboxed list and a quiet "Add" action. An empty band shows a real empty state that says why it matters ("Tonight needs a site to work out your sky"), and one primary action at most per screen.
+- **User impact:** someone arriving with nothing set up sees three same-weight boxes and three same-weight "Add" buttons, with no hint which one Tonight needs first.
+
+### C4 · Feedback and dialogs: silent saves, and a system confirm that breaks red mode (accidental architecture)
+
+- **Evidence:**
+  - **Silent saves.** A gear save or delete redirects to `/gear` with no notice. `/gear` has no `role="status"` notice, while `/log` has one (`log/index.astro:60-68`).
+  - **System confirm.** Delete asks with `window.confirm` (`DeleteButton.tsx:14`), an OS-drawn dialog the theme can't reach. In red mode it flashes a bright, unstyled box at the eyepiece. `red-night-mode` accepted OS popups as a limit, but this one is ours to replace.
+- **Logged-out and direct-link paths are fine:**
+  - Logged out: the middleware redirects to sign-in with `?next=`.
+  - Another user's id: a 404 card (`gear/sites/[id].astro:25-27`, `:68-75`).
+  - Database missing: `DatabaseMissing` renders.
+- **What should cover it:**
+  - A shared `Notice` component (success/status), reused by `/log`, and a `?saved=` / `?deleted=` notice on `/gear`. Fixed keys only: no names, no coordinates.
+  - A token-styled confirm using a native `<dialog>`.
+- **User impact:** after saving a site the user lands back on the list with no sign the save worked. In red mode, deleting anything blinds the observer for a moment.
+
+### C5 · Guards: the contract has no rule or check beyond colour (accidental architecture, rules)
+
+- **Evidence:**
+  - Agent rules cover colours and the shadcn path only (`CLAUDE.md:77-81`).
+  - The `/design` reference has drifted from the live app: `design.astro:97` vs `FormField.tsx:5-6`.
+  - No contrast test exists in any theme (research §1). The red-mode floors planned in `red-night-mode/plan.md:90` never shipped.
+- **What should cover it:**
+  - A UI block in `CLAUDE.md`/`AGENTS.md`: where the tokens and components live, check `src/components/ui/` before writing a control, no arbitrary values in views, and the kitchen sink is `/design`.
+  - A pure contrast test over `global.css` for dark, light and red.
+  - `/design` rebuilt as the kitchen sink for the 7-state matrix.
+- **User impact:** without a check, text that is readable in one theme can become unreadable in another, and the next view drifts back to literals.
+
+**Deferred to other changes:**
+
+- Tonight's composition, which S-11 rebuilds on this contract (the interactive sky lives there).
+- The landing page, which gets its own bigger rework (`change.md` decisions).
+- `/log`, `/log/sky`, auth and onboarding, which each get a `/10x-ui` pass once the contract exists. Shared components such as `PageHeader` and `buttonVariants` will reach their call sites then, unless the plan migrates them in the same phase.
 
 ## Code References
 
