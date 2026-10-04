@@ -1,10 +1,10 @@
 ---
 change_id: tonight-nightfall
 title: Tonight in the Nightfall design
-status: impl_reviewed
+status: archived
 created: 2026-10-04
 updated: 2026-10-04
-archived_at: null
+archived_at: 2026-10-04T17:35:29Z
 ---
 
 ## Notes
