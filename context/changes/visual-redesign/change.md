@@ -9,4 +9,8 @@ archived_at: null
 
 ## Notes
 
-<!-- Free-form notes for this change: links, ad-hoc context, decisions that don't belong in research/frame/plan. -->
+- Design directions canvas (2026-10-04): https://claude.ai/artifact/8VZbxuqAVU1RntyMQ8u6vu. A Atlas, B Instrument, C Nightfall; each row is a style tile plus the Tonight dashboard on a phone in dark, light and red.
+- **Decisions (user, 2026-10-04):**
+  - Direction: **C · Nightfall**. Newsreader and Public Sans are replaced by Archivo (widths); IBM Plex Mono to be reconsidered in the contract.
+  - Landing: a bigger rework than the in-app views, and `/` is for signed-out visitors only; a signed-in user is redirected to `/tonight` (later the dashboard).
+  - The interactive sky (slider across the dark window, targets at their real positions) belongs to S-11's dashboard, built on this change's contract; recorded in the roadmap's S-11 unknowns.
