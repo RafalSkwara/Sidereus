@@ -560,28 +560,28 @@ No data changes. The success redirect gains a query string. External links to `/
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the colour and red guards
-- [x] 1.2 Lint passes
-- [x] 1.3 Type check passes
-- [x] 1.4 Production build succeeds and the CSS contains no Newsreader, Public Sans or Plex Mono @font-face
+- [x] 1.1 Unit tests pass, including the colour and red guards — c9e605d
+- [x] 1.2 Lint passes — c9e605d
+- [x] 1.3 Type check passes — c9e605d
+- [x] 1.4 Production build succeeds and the CSS contains no Newsreader, Public Sans or Plex Mono @font-face — c9e605d
 
 #### Manual
 
-- [x] 1.5 /gear and /tonight render in Archivo with Polish diacritics intact, in dark at 390 px
+- [x] 1.5 /gear and /tonight render in Archivo with Polish diacritics intact, in dark at 390 px — c9e605d
 
 ### Phase 2: Nightfall token values
 
 #### Automated
 
-- [ ] 2.1 Contrast, colour and red guards pass
-- [ ] 2.2 Lint passes
-- [ ] 2.3 Type check passes
-- [ ] 2.4 Build succeeds
+- [x] 2.1 Contrast, colour and red guards pass
+- [x] 2.2 Lint passes
+- [x] 2.3 Type check passes
+- [x] 2.4 Build succeeds
 
 #### Manual
 
-- [ ] 2.5 /design swatches show the Nightfall values and the zenith-to-horizon gradient in dark, light and red
-- [ ] 2.6 /tonight and /log still read correctly in all three themes with the new values at 390 px
+- [x] 2.5 /design swatches show the Nightfall values and the zenith-to-horizon gradient in dark, light and red
+- [x] 2.6 /tonight and /log still read correctly in all three themes with the new values at 390 px
 
 ### Phase 3: Shared components and the sky header
 

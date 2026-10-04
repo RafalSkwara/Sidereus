@@ -69,6 +69,8 @@ const tokenGroups = [
       { name: "success", swatch: "bg-success" },
       { name: "star", swatch: "bg-star" },
       { name: "star-accent", swatch: "bg-star-accent" },
+      { name: "zenith", swatch: "bg-zenith" },
+      { name: "horizon", swatch: "bg-horizon" },
     ],
   },
 ];
@@ -144,6 +146,12 @@ const inputClass =
               </ul>
             </div>
           ))}
+          <div class="flex flex-col gap-3">
+            <h3 class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Sky gradient</h3>
+            <div class="flex h-28 items-end rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pb-3">
+              <span class="font-mono text-xs text-heading">--zenith → --horizon</span>
+            </div>
+          </div>
         </section>
 
         <section class="flex flex-col gap-5" aria-labelledby="type-heading">
