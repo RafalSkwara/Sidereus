@@ -180,11 +180,11 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Blockers:** —
 - **Unknowns:**
   - **Interactive sky (user, 2026-10-04):** the dashboard's hero is Nightfall's sky with a slider from the start to the end of the dark window; moving it moves the sky, so every visible target sits at its real position (altitude and azimuth) at that time and the sky colour follows the Sun. The engine already computes positions for any instant; open: real background stars (needs a bright-star catalogue and its licence) or decorative ones. — Owner: user (stars), team (how positions reach the island). Block: no.
-  - The final tile set and grouping: the six above are a starting point; extras such as log and gear shortcuts, or a "start here tonight" tile, are open. — Owner: user. Block: no.
-  - Tile order: following the night (verdict → Moon → targets) or fixed? — Owner: user. Block: no.
-  - Does the dashboard take over the Tonight address, or live at its own and keep Tonight's address for the verdict page? — Owner: user. Block: no.
-  - How each page loads and fails on its own (no site yet, no dark window, forecast down), given that Tonight's content currently needs JavaScript (lessons.md). — Owner: team. Block: no (settled by `/10x-plan` research).
-  - One change or several? Candidate: the dashboard plus the verdict and forecast pages first, then the Moon, planets and targets pages; `/10x-plan` decides. — Owner: team. Block: no.
+  - ~~The final tile set and grouping~~ Settled 2026-10-04 (tonight-dashboard): four tiles, Point here first, The Moon, Planets and Next 7 nights; the verdict stays the dashboard's sky and the sky check shows inline only while a question is open; no log or gear shortcuts. — Owner: user.
+  - ~~Tile order~~ Settled 2026-10-04: fixed, targets → Moon → planets → nights, as ruled full-width rows. — Owner: user.
+  - ~~Dashboard address~~ Settled 2026-10-04: the dashboard keeps `/tonight`; pages at `/tonight/targets` (absorbing `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets`, `/tonight/nights`. — Owner: user.
+  - ~~How each page loads and fails~~ Settled 2026-10-04: each page has its own server island calling `loadTonight` (JavaScript still required), with its own no-setup, unavailable and error states. — Owner: team.
+  - ~~One change or several~~ Settled 2026-10-04: one change (`tonight-dashboard`) for the dashboard and the four pages; the interactive sky above is a follow-up change. — Owner: team.
 - **Risk:** The largest navigation change since M-1: every end-to-end test that walks Tonight moves, and a dashboard that computes every page's content for every tile would slow the landing page, so tiles should show only their summary. S-05 and S-06 were re-scoped on top of it (2026-10-04), so it goes before them. GitHub #87.
 - **Status:** in-progress
 

@@ -464,6 +464,12 @@ export const pl = {
     // separates them, as in `logged`, so no grammatical case is needed.
     planets: {
       heading: "Planety dziś w nocy",
+      absent: {
+        noWindow: "Dziś bez planet: między zmierzchem a świtem niebo nie robi się dość ciemne.",
+        cloudy: (p) =>
+          `Dziś bez planet: między zmierzchem a świtem jest zbyt pochmurno (w najpogodniejszej godzinie ${p.cloudPct}% zachmurzenia).`,
+        unavailable: "Szczegóły planet są teraz niedostępne.",
+      },
       listLabel: "Planety",
       window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
       none: "Dziś między zmierzchem a świtem żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
@@ -738,10 +744,22 @@ export const pl = {
       noGear: "Dodaj miejsce obserwacji i teleskop, aby zobaczyć tę stronę.",
       toTonight: "Przejdź do Dziś w nocy",
       moonUnavailable: "Szczegóły Księżyca są teraz niedostępne.",
-      noPlanets: "Dziś nie ma planet do pokazania.",
       noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       seeNights: (p) => `Zobacz najbliższe ${p.count} nocy`,
+      showRest: {
+        one: (p) => `Pokaż jeszcze ${p.count} obiekt`,
+        few: (p) => `Pokaż pozostałe ${p.count} obiekty`,
+        many: (p) => `Pokaż pozostałych ${p.count} obiektów`,
+        other: (p) => `Pokaż pozostałe ${p.count} obiektu`,
+      },
+      restLabel: "Pozostałe obiekty warte dziś uwagi",
+      seeWashedOut: {
+        one: (p) => `Zobacz ${p.count} obiekt przyćmiony przez Księżyc`,
+        few: (p) => `Zobacz ${p.count} obiekty przyćmione przez Księżyc`,
+        many: (p) => `Zobacz ${p.count} obiektów przyćmionych przez Księżyc`,
+        other: (p) => `Zobacz ${p.count} obiektu przyćmionego przez Księżyc`,
+      },
       // The colon keeps the page title in its base form.
       open: (p) => `Otwórz: ${p.page}`,
     },

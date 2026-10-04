@@ -8,23 +8,31 @@ import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import Band from "@/components/ui/Band.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import type { TonightMoonCard } from "@/lib/tonight/build";
+import { cn } from "@/lib/utils";
 
 interface Props {
   card: TonightMoonCard;
   /** The log form for the Moon, prefilled with tonight's night, site and telescope (FR-016); used with `card.target`. */
   logHref: string;
+  /**
+   * The way to the objects tonight's Moon washes out, listed on Targets (`/tonight/targets#washed-out`), under the
+   * faint-objects line; left out when it washes out none.
+   */
+  washedOut?: { href: string; label: string } | null;
 }
 
-const { card, logHref } = Astro.props;
+const { card, logHref, washedOut = null } = Astro.props;
 const locale = Astro.locals.locale;
 const t = getMessages(locale).tonight;
 const target = card.target;
+const washedOutLink = cn(buttonVariants({ variant: "link", size: "sm" }), "-ml-3 whitespace-normal");
 ---
 
 {/* The heading names the band; the phase line under it follows the slider, so it is not the heading. */}
-<Band id="moon" headingId="moon-heading" heading={t.moon.card.kicker}>
+<Band id="moon" headingId="moon-heading" heading={t.moon.card.kicker} headingHidden>
   {card.states.length > 0 ? (
     <MoonTimeSlider
       states={card.states}
@@ -35,6 +43,12 @@ const target = card.target;
     >
       {card.upText && <p class="font-semibold text-heading">{card.upText}</p>}
       {card.faintText && <p class="text-foreground">{card.faintText}</p>}
+      {washedOut && (
+        <a href={washedOut.href} class:list={[washedOutLink]}>
+          {washedOut.label}
+          <span aria-hidden="true">→</span>
+        </a>
+      )}
     </MoonTimeSlider>
   ) : (
     <p class="text-body font-semibold text-heading">{card.phaseText}</p>

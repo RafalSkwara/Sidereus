@@ -370,6 +370,7 @@ const summaryView: TonightView = {
   forecastStatus: { kind: freshForecast.kind, text: fmt.forecastStatusText(freshForecast) },
   explanation: null,
   nights: sampleNights([92, 55, 14, 30, 70, 85, 60]),
+  planetsAbsentText: null,
   solarSystem: {
     windowText: "",
     weatherText: null,
@@ -399,7 +400,13 @@ const summaryView: TonightView = {
   },
 };
 // One band only (the Moon band is left out so its disc's clip id stays unique on the page).
-const targetsOnlyView: TonightView = { ...summaryView, moonCard: null, solarSystem: null, nights: [] };
+const targetsOnlyView: TonightView = {
+  ...summaryView,
+  moonCard: null,
+  solarSystem: null,
+  planetsAbsentText: m.tonight.planets.absent.unavailable,
+  nights: [],
+};
 const noTargetsView: TonightView = {
   ...targetsOnlyView,
   verdict: noGoVerdict,
@@ -709,6 +716,14 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                       </div>
                     </Band>
                   </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    heading hidden — the page title already names it (Moon, Planets, Nights); screen readers keep it
+                  </p>
+                  <Band headingId="sample-hidden-heading" heading={m.tonight.planets.heading} headingHidden>
+                    <p class="text-label text-muted-foreground">{m.tonight.planets.none}</p>
+                  </Band>
                 </div>
               </div>
               <p class:list={notApplicable}>
@@ -1073,8 +1088,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
             </div>
             <p class:list={notApplicable}>
-              disabled — N/A (a link is never disabled) · error — N/A (no view, no tiles) · loading — see
-              TonightSkeleton
+              active — N/A (no pressed style: a tile navigates to its page) · disabled — N/A (a link is never disabled)
+              · error — N/A (no view, no tiles) · loading — see TonightSkeleton
             </p>
           </section>
 

@@ -24,13 +24,13 @@ test("marking a target observed on the Targets page saves it and tags its row th
   await onboardInMadrid(page, "e2e-log");
   await page.goto("/tonight/targets");
 
-  // The list is a server island fetched after the page loads: the first row waits for it.
+  // The list is a server island fetched after the page loads: the first of the best objects waits for it. Those are
+  // shown in full, so "Mark observed" is right there.
   const firstRow = page.locator("li[data-object]").first();
   await expect(firstRow).toBeVisible();
   const id = await firstRow.getAttribute("data-object");
   if (!id || !/^M\d{1,3}$/.test(id)) throw new Error(`no Messier id on the first row: ${id}`);
 
-  await firstRow.locator("summary").click();
   await firstRow.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
 
   // The form arrives prefilled from the row (the object by its target key, "M31"), with the rating left to the user,
@@ -55,8 +55,8 @@ test("marking a target observed on the Targets page saves it and tags its row th
   await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${id}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: id }) })).toBeVisible();
 
-  // Rated 4, the object moves down the list but still cleared the bar, so its row is there with the "seen" tag
-  // (the tag's wording up to the date, taken from the catalogue).
+  // Rated 4, the object moves down the list (maybe behind "Show the other …") but still cleared the bar, so its row
+  // is there with the "seen" tag (the tag's wording up to the date, taken from the catalogue).
   const loggedRow = page.locator(`li[data-object="${id}"]`);
   await expect(loggedRow).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));
 });

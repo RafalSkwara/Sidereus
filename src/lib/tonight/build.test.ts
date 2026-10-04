@@ -782,6 +782,8 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     planetRanking.throws = true;
     const view = buildTonight(input, "en");
     expect(view.solarSystem).toBeNull();
+    expect(view.planetsAbsentText).toBe("Planet details aren't available right now.");
+    expect(working.planetsAbsentText).toBeNull();
     expect(view.verdict).toEqual(working.verdict);
     expect(view.ranking).toEqual(working.ranking);
     expect(view.nights).toEqual(working.nights);
@@ -810,6 +812,10 @@ describe("buildTonight's planets (M-2 S-01)", () => {
   it("has no planets when the planet window is clouded out", () => {
     const view = buildTonight({ ...input, forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "en");
     expect(view.solarSystem).toBeNull();
+    // The Planets page says why, with the planet window's own reason.
+    expect(view.planetsAbsentText).toBe(
+      "No planets tonight: too cloudy between dusk and dawn (the clearest hour has 100% cloud).",
+    );
   });
 
   it("has no planets when the sun never gets 6° below the horizon", () => {
@@ -823,6 +829,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       "en",
     );
     expect(view.solarSystem).toBeNull();
+    expect(view.planetsAbsentText).toBe("No planets tonight: the sky never gets dark enough between dusk and dawn.");
   });
 
   it("lists Uranus and Neptune only with an aperture of at least 130 mm", () => {

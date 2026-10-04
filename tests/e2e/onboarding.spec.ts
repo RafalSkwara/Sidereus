@@ -51,11 +51,11 @@ test.describe("onboarding in English", () => {
     const headline = page.locator("#verdict-heading [data-sky-headline]");
     await expect(headline).toHaveAttribute("data-sky-headline", "verdict.level.go");
     await expect(headline).toHaveText(en.verdict.level.go);
-    // The ranking lives on the Targets page (tonight-dashboard); its first row names a pair from the default kit.
+    // The ranking lives on the Targets page (tonight-dashboard); its first object, shown in full, names a pair from
+    // the default kit.
     await page.goto("/tonight/targets");
     const firstRow = page.locator('section[aria-labelledby="targets-heading"] li[data-object]').first();
     await expect(firstRow).toBeVisible();
-    await firstRow.locator("summary").click();
     await expect(firstRow.getByText(/25 mm/).first()).toBeVisible();
   });
 

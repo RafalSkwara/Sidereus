@@ -572,23 +572,23 @@ None for data. Links:
 
 #### Automated
 
-- [x] 4.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build`
-- [x] 4.2 No in-page anchor links remain on the dashboard: `grep -rnE '"#(ranking|moon|planets|nights)"' src/components/tonight/` returns nothing, and `grep -rn '"#washed-out"\|#washed-out' src/components/tonight/TonightContent.astro src/components/tonight/TonightSummary.astro` returns nothing (adjust the path if the summary is renamed; the targets page's own `id="washed-out"` is expected)
-- [x] 4.3 Full e2e suite passes, including the new dashboard spec: `npm run test:e2e`
+- [x] 4.1 Type check, lint, unit tests and build pass: `npx astro check && npm run lint && npm test && npm run build` — 04956ea
+- [x] 4.2 No in-page anchor links remain on the dashboard: `grep -rnE '"#(ranking|moon|planets|nights)"' src/components/tonight/` returns nothing, and `grep -rn '"#washed-out"\|#washed-out' src/components/tonight/TonightContent.astro src/components/tonight/TonightSummary.astro` returns nothing (adjust the path if the summary is renamed; the targets page's own `id="washed-out"` is expected) — 04956ea
+- [x] 4.3 Full e2e suite passes, including the new dashboard spec: `npm run test:e2e` — 04956ea
 
 #### Manual
 
-- [x] 4.4 `/tonight` in EN/PL × dark/light/red at 390 px and desktop: sky, four tiles, sky check (when open), pickers; noticeably shorter than before
-- [x] 4.5 Each tile opens its page; back returns to the dashboard; the Tonight tab stays active on every page
-- [x] 4.6 Edge states: no-go night (targets tile says no targets, opens Targets with the reason), no Moon card / no planets (tile omitted), forecast down, no site/telescope (setup prompt, no tiles)
+- [x] 4.4 `/tonight` in EN/PL × dark/light/red at 390 px and desktop: sky, four tiles, sky check (when open), pickers; noticeably shorter than before — 04956ea
+- [x] 4.5 Each tile opens its page; back returns to the dashboard; the Tonight tab stays active on every page — 04956ea
+- [x] 4.6 Edge states: no-go night (targets tile says no targets, opens Targets with the reason), no Moon card / no planets (tile omitted), forecast down, no site/telescope (setup prompt, no tiles) — 04956ea
 
 ### Phase 5: States, gate, rule
 
 #### Automated
 
-- [ ] 5.1 Type check, lint, unit tests, build and the full e2e suite pass: `npx astro check && npm run lint && npm test && npm run build && npm run test:e2e`
+- [x] 5.1 Type check, lint, unit tests, build and the full e2e suite pass: `npx astro check && npm run lint && npm test && npm run build && npm run test:e2e`
 
 #### Manual
 
-- [ ] 5.2 `/design` shows the tile rows and page sky in the 7-state matrix across themes
+- [x] 5.2 `/design` shows the tile rows and page sky in the 7-state matrix across themes
 - [ ] 5.3 The user approves the screenshot gate

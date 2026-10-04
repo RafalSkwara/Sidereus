@@ -1,9 +1,13 @@
 ---
 // The data-dependent part of /tonight/targets (tonight-dashboard), a server island like TonightContent: the slim page
-// sky, the page's notice, then every object that cleared tonight's bar as ruled expandable rows, by rank or by best
-// time, and the ones the Moon washes out. Each row's "Mark observed" returns here (`from=targets`). It loads through
-// the same loadTonight as Tonight, so both always agree; it never records the sky verdict (only Tonight shows it).
+// sky, the page's notice, then tonight's best objects in full ("Point here first", by rank), a button that opens the
+// rest as a scrollable list of expandable rows, by rank or by best time, and the ones the Moon washes out. Each
+// "Mark observed" returns here (`from=targets`). It loads through the same loadTonight as Tonight, so both always
+// agree; it never records the sky verdict (only Tonight shows it).
+import { ChevronDown } from "lucide-react";
+
 import { ServerError } from "@/components/forms/ServerError";
+import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Band from "@/components/ui/Band.astro";
@@ -11,7 +15,7 @@ import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
-import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+import { MAX_RANKED_OBJECTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
@@ -27,10 +31,12 @@ interface Props {
   sort: AllObjectsSort;
   /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
   notice?: TonightNotice | null;
+  /** The rest of the list starts open: the page came with a `?sort=` (a sort link inside it was followed). */
+  restOpen?: boolean;
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, sort, notice = null } = Astro.props;
+const { siteId, telescopeId, sort, notice = null, restOpen = false } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const a = t.all;
@@ -46,10 +52,11 @@ const failures = load
 const noGear =
   load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
 const ranking = view?.ranking ?? null;
-const rows =
-  view && ranking
-    ? sortEntries(ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.id, "targets") }))
-    : [];
+// The best few in full, by rank (the same objects the dashboard's "Point here first" tile counts from), then the rest
+// in the chosen order behind a button.
+const href = (id: string) => (view ? logHref(view, id, "targets") : "");
+const best = ranking ? ranking.entries.slice(0, MAX_RANKED_OBJECTS) : [];
+const rest = ranking ? sortEntries(ranking.entries.slice(MAX_RANKED_OBJECTS), sort) : [];
 // Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
 // Tonight is never unexplained.
 const washedOut = ranking?.washedOutEntries ?? [];
@@ -126,38 +133,66 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 
       {view && ranking && (
         <div>
-          {rows.length > 0 ? (
-            <Band
-              headingId="targets-heading"
-              heading={plural(locale, rows.length, a.heading)({ count: String(rows.length) })}
-            >
-              {load.multipleTelescopes && (
-                <p class="mb-4 text-label text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
-              )}
-              <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <nav aria-label={a.sortLabel} class="flex gap-0.5 rounded-full border border-border p-0.5">
-                  {sortLinks.map((link) => (
-                    <a
-                      href={`/tonight/targets?sort=${link.value}`}
-                      aria-current={sort === link.value ? "page" : undefined}
-                      class:list={[
-                        segment,
-                        sort === link.value
-                          ? "bg-selected text-selected-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-heading",
-                      ]}
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </nav>
-                <p class="text-label text-muted-foreground">{sort === "time" ? a.sortHintTime : a.sortHintRank}</p>
-              </div>
-              <ul class="divide-y divide-border">
-                {rows.map(({ entry, href }) => (
-                  <ObjectRow entry={entry} logHref={href} />
+          {best.length > 0 ? (
+            <Band headingId="targets-heading" heading={t.summary.targets}>
+              <p class="mb-4 text-label text-muted-foreground">
+                {ranking.clearedText}
+                {load.multipleTelescopes && <> · {t.rankingFor({ telescope: view.telescopeName })}</>}
+              </p>
+              <ol class="divide-y divide-border">
+                {best.map((entry) => (
+                  <ObjectCard entry={entry} rank={entry.rank} logHref={href(entry.id)} />
                 ))}
-              </ul>
+              </ol>
+
+              {rest.length > 0 && (
+                /* Native <details>: the button needs no script of its own, and a sort link reopens it (restOpen). */
+                <details id="more" open={restOpen} class="group mt-6 scroll-mt-4">
+                  <summary
+                    class:list={[
+                      buttonVariants({ variant: "outline" }),
+                      "w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden",
+                    ]}
+                  >
+                    {plural(locale, rest.length, t.pages.showRest)({ count: String(rest.length) })}
+                    <ChevronDown
+                      className="size-4 transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
+                      aria-hidden="true"
+                    />
+                  </summary>
+                  <div class="mt-4 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <nav aria-label={a.sortLabel} class="flex gap-0.5 rounded-full border border-border p-0.5">
+                      {sortLinks.map((link) => (
+                        <a
+                          href={`/tonight/targets?sort=${link.value}#more`}
+                          aria-current={sort === link.value ? "page" : undefined}
+                          class:list={[
+                            segment,
+                            sort === link.value
+                              ? "bg-selected text-selected-foreground"
+                              : "text-muted-foreground hover:bg-accent hover:text-heading",
+                          ]}
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </nav>
+                    <p class="text-label text-muted-foreground">{sort === "time" ? a.sortHintTime : a.sortHintRank}</p>
+                  </div>
+                  {/* Scrolls on its own, so the washed-out group below stays near; each row is focusable, and focus scrolls it into view. */}
+                  <div
+                    role="region"
+                    aria-label={t.pages.restLabel}
+                    class="max-h-128 overflow-y-auto overscroll-contain rounded-lg border border-border px-3"
+                  >
+                    <ul class="divide-y divide-border">
+                      {rest.map((entry) => (
+                        <ObjectRow entry={entry} logHref={href(entry.id)} />
+                      ))}
+                    </ul>
+                  </div>
+                </details>
+              )}
             </Band>
           ) : (
             <p class="pb-8 text-body text-foreground">{a.empty}</p>

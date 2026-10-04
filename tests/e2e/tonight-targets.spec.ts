@@ -6,51 +6,61 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * The Targets page (tonight-all-objects; /tonight/targets since tonight-dashboard): every object that cleared the bar
- * for the setup picked on Tonight, as ruled rows by rank or by best time, each opening into the same details as
- * Tonight's card, "Mark observed" included, which returns here. The retired /tonight/all redirects here for good.
- * Runs on the all-clear forecast fixture, so the ranking always exists and lists more than Tonight's five.
+ * The Targets page (tonight-all-objects; /tonight/targets since tonight-dashboard): tonight's best objects in full,
+ * then a button that opens the rest of what cleared the bar as ruled rows, by rank or by best time, each opening into
+ * the same details, "Mark observed" included, which returns here. The retired /tonight/all redirects here for good.
+ * Runs on the all-clear forecast fixture, so the ranking always exists and clears more than the best five.
  */
 
 const LOG_FORM = 'form[action="/api/log"]';
+const BEST = 5;
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
 
-test("the Targets page lists every cleared object by best time or rank, and logs from a row", async ({ page }) => {
+test("Targets shows the best five, opens the rest by best time or rank, and logs from a row", async ({ page }) => {
   await onboardInMadrid(page, "e2e-targets");
 
   // An old /tonight/all link moves for good, keeping a valid order.
   const response = await page.request.get("/tonight/all?sort=time", { maxRedirects: 0 });
   expect(response.status()).toBe(301);
   expect(response.headers().location).toMatch(/\/tonight\/targets\?sort=time$/);
-  await page.goto("/tonight/all?sort=time");
-  await expect(page).toHaveURL(/\/tonight\/targets\?sort=time$/);
 
-  // The list is a server island fetched after the page loads: its heading waits for it.
-  const heading = page.locator("#targets-heading");
-  await expect(heading).toBeVisible();
-  const count = Number(/(\d+)/.exec(await heading.innerText())?.[1]);
-  expect(count).toBeGreaterThan(5);
-  await expect(heading).toHaveText(en.tonight.all.heading.other({ count: String(count) }));
-  const rows = page.locator("li[data-best-at]");
-  await expect(rows).toHaveCount(count);
+  // Without an order the rest of the list waits behind its button; the best five are shown in full.
+  await page.goto("/tonight/targets");
+  const best = page.locator('section[aria-labelledby="targets-heading"] > ol > li[data-object]');
+  await expect(best).toHaveCount(BEST);
+  await expect(page.locator("#targets-heading")).toHaveText(en.tonight.summary.targets);
+  const more = page.locator("details#more");
+  await expect(more).not.toHaveAttribute("open");
+  const button = more.locator(":scope > summary");
+  const rest = Number(/(\d+)/.exec(await button.innerText())?.[1]);
+  expect(rest).toBeGreaterThan(0);
+  await expect(button).toHaveText(en.tonight.pages.showRest.other({ count: String(rest) }));
+  await button.click();
+  await expect(more).toHaveAttribute("open");
+  const rows = more.locator("li[data-best-at]");
+  await expect(rows).toHaveCount(rest);
 
+  // An order is a link inside the list, so the page comes back with the list open, in that order.
   const order = page.getByRole("navigation", { name: en.tonight.all.sortLabel });
+  await order.getByRole("link", { name: en.tonight.all.byTime }).click();
+  await expect(page).toHaveURL(/\/tonight\/targets\?sort=time#more$/);
+  await expect(more).toHaveAttribute("open");
+  await expect(rows).toHaveCount(rest);
   await expect(order.getByRole("link", { name: en.tonight.all.byTime })).toHaveAttribute("aria-current", "page");
   const bestAt = await rows.evaluateAll((els) => els.map((e) => Number(e.getAttribute("data-best-at"))));
   expect(bestAt).toEqual([...bestAt].sort((a, b) => a - b));
 
   await order.getByRole("link", { name: en.tonight.all.byRank }).click();
-  await expect(page).toHaveURL(/\/tonight\/targets\?sort=rank$/);
-  await expect(rows).toHaveCount(count);
+  await expect(page).toHaveURL(/\/tonight\/targets\?sort=rank#more$/);
   await expect(order.getByRole("link", { name: en.tonight.all.byRank })).toHaveAttribute("aria-current", "page");
-  // Each summary opens with its rank ("1."), so by rank they read 1, 2, 3, …
+  // Each summary opens with its rank ("6."): the rest picks up after the best five.
   const ranks = await rows.evaluateAll((els) =>
     els.map((e) => Number(/(\d+)\./.exec(e.querySelector("summary")?.textContent ?? "")?.[1])),
   );
-  expect(ranks).toEqual(Array.from({ length: count }, (_, i) => i + 1));
+  expect(ranks).toEqual(Array.from({ length: rest }, (_, i) => BEST + i + 1));
 
   // "Mark observed" inside a row: the form returns to this page (`from=targets`).
   const third = rows.nth(2);
@@ -68,6 +78,21 @@ test("the Targets page lists every cleared object by best time or rank, and logs
 
   await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${object}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object }) })).toBeVisible();
+});
+
+test("an old /tonight/all link with a fragment lands on that place on Targets once the list streams in", async ({
+  page,
+}) => {
+  await onboardInMadrid(page, "e2e-targets-fragment");
+
+  // The redirect's Location carries no fragment; the browser keeps the request's own. #more is always there on the
+  // all-clear fixture, so this runs every night, whatever the Moon does (the #washed-out case below needs a bright
+  // Moon). The fragment was first resolved before the island arrived; the page opens the list and scrolls to it then.
+  await page.goto("/tonight/all#more");
+  await expect(page).toHaveURL(/\/tonight\/targets#more$/);
+  const more = page.locator("details#more");
+  await expect(more).toHaveAttribute("open");
+  await expect(more).toBeInViewport();
 });
 
 test("an old /tonight/all#washed-out bookmark lands on the washed-out group on Targets", async ({ page }) => {

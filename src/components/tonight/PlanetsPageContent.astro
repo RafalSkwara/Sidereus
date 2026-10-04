@@ -79,7 +79,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
               logHref={(key: string) => logHref(view, key, "planets")}
             />
           ) : (
-            <p class="text-body text-foreground">{t.pages.noPlanets}</p>
+            <p class="text-body text-foreground">{view.planetsAbsentText}</p>
           )}
         </div>
       )}

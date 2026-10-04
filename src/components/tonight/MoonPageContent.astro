@@ -7,7 +7,7 @@ import MoonCard from "@/components/tonight/MoonCard.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
-import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { MOON_TARGET_KEY } from "@/lib/targets";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
@@ -39,6 +39,15 @@ const failures = load
 const noGear =
   load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
 const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+// The objects tonight's Moon washes out are listed on Targets; the card links there when there are any.
+const washedOutCount = view?.ranking?.washedOutCount ?? 0;
+const washedOut =
+  washedOutCount > 0
+    ? {
+        href: "/tonight/targets#washed-out",
+        label: plural(locale, washedOutCount, t.pages.seeWashedOut)({ count: String(washedOutCount) }),
+      }
+    : null;
 ---
 
 {load && (
@@ -74,7 +83,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
       {view && (
         <div>
           {view.moonCard ? (
-            <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY, "moon")} />
+            <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY, "moon")} washedOut={washedOut} />
           ) : (
             <p class="text-body text-foreground">{t.pages.moonUnavailable}</p>
           )}

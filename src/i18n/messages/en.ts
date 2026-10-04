@@ -467,6 +467,13 @@ export const en = {
      */
     planets: {
       heading: "Planets tonight",
+      /** Why the Planets page lists nothing (tonight-dashboard); `cloudPct` is the clearest hour's cloud cover. */
+      absent: {
+        noWindow: "No planets tonight: the sky never gets dark enough between dusk and dawn.",
+        cloudy: (p: { cloudPct: string }) =>
+          `No planets tonight: too cloudy between dusk and dawn (the clearest hour has ${p.cloudPct}% cloud).`,
+        unavailable: "Planet details aren't available right now.",
+      },
       /** The planet list's accessible name. */
       listLabel: "Planets",
       window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
@@ -792,12 +799,22 @@ export const en = {
       toTonight: "Go to Tonight",
       /** The view has no Moon card (only when building it failed). */
       moonUnavailable: "Moon details aren't available right now.",
-      /** The view has no solar system: no planet window, a no-go for the planets, or a failure. */
-      noPlanets: "No planets to show tonight.",
       /** Targets without a ranking (weather no-go or no darkness), under the view's explanation. */
       noTargets: "No object cleared the bar tonight, so there is nothing to point at.",
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       seeNights: (p: { count: string }) => `See the next ${p.count} nights`,
+      /** Targets: the button that opens the rest of the list, after the best few. */
+      showRest: {
+        one: (p) => `Show the other ${p.count} object`,
+        other: (p) => `Show the other ${p.count} objects`,
+      } as PluralForms<Count>,
+      /** The scrollable list's accessible name. */
+      restLabel: "The other objects that cleared the bar",
+      /** The Moon page's link to the objects it washes out, listed on Targets. */
+      seeWashedOut: {
+        one: (p) => `See the ${p.count} washed-out object`,
+        other: (p) => `See the ${p.count} washed-out objects`,
+      } as PluralForms<Count>,
       /** A summary tile's accessible suffix after its heading; `page` is the page's title. */
       open: (p: { page: string }) => `Open ${p.page}`,
     },

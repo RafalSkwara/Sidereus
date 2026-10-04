@@ -4,6 +4,8 @@
  * (`text-title` role) labels the section; the optional `action` slot holds one quiet action beside it. The optional
  * `id` is an anchor on the section (the Targets page's `#washed-out`, and hooks such as `section#nights` for e2e);
  * Tonight's tiles open pages, never anchors. `class` is merged last (the `#washed-out` band takes a scroll margin).
+ * `headingHidden` keeps the heading for screen readers only, for a band whose page title already names it (the
+ * Moon, Planets and Nights pages).
  */
 import { cn } from "@/lib/utils";
 
@@ -14,9 +16,11 @@ interface Props {
   /** An anchor id on the section itself. */
   id?: string;
   class?: string;
+  /** Keep the heading for screen readers only: the page's own title already says it. */
+  headingHidden?: boolean;
 }
 
-const { headingId, heading, id, class: className } = Astro.props;
+const { headingId, heading, id, class: className, headingHidden = false } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
@@ -25,11 +29,17 @@ const hasAction = Astro.slots.has("action");
   aria-labelledby={headingId}
   class:list={cn("border-border py-8 not-first:border-t first:pt-0 last:pb-0", className)}
 >
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-    <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
+  {headingHidden ? (
+    <h2 id={headingId} class="sr-only">
       {heading}
     </h2>
-    {hasAction && <slot name="action" />}
-  </div>
+  ) : (
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
+        {heading}
+      </h2>
+      {hasAction && <slot name="action" />}
+    </div>
+  )}
   <slot />
 </section>
