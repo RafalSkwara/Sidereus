@@ -78,7 +78,7 @@ export type TonightPair =
   { kind: "pair"; finding: EyepieceLine; detail: EyepieceLine } | { kind: "none-fit"; widestName: string };
 
 export interface TonightEntry {
-  /** 1-based place in the ranking; kept when the all-objects page orders by best time. */
+  /** 1-based place in the ranking; kept when the Targets page orders by best time. */
   rank: number;
   /** "M31": the catalogue id, which is also the object's target key in the log. */
   id: string;
@@ -227,7 +227,7 @@ export interface TonightMoonCard {
   target: TonightMoonEntry | null;
 }
 
-/** A faint object tonight's Moon washes out (moonlight-and-the-verdict): listed apart on /tonight/all, never ranked. */
+/** A faint object tonight's Moon washes out (moonlight-and-the-verdict): listed apart on /tonight/targets, never ranked. */
 export interface TonightWashedOutEntry {
   /** "M33": the catalogue id. */
   id: string;
@@ -252,7 +252,7 @@ export interface TonightRanking {
   clearedText: string;
   entries: TonightEntry[];
   washedOutCount: number;
-  /** "4 faint objects are washed out by the Moon tonight", linking to their group on /tonight/all; `null` at 0. */
+  /** "4 faint objects are washed out by the Moon tonight", linking to their group on /tonight/targets; `null` at 0. */
   washedOutText: string | null;
   /** Every washed-out object, by best time; not capped by the ranking's limit. */
   washedOutEntries: TonightWashedOutEntry[];
@@ -347,6 +347,12 @@ export interface TonightView {
    * Also `null` when working out the planets fails, so that never takes the rest of the view down.
    */
   solarSystem: TonightSolarSystem | null;
+  /**
+   * Why there is no solar system (tonight-dashboard), for the Planets page: no window between civil dusk and dawn,
+   * clouds over that window (with its clearest hour's cover), or "not available" when working it out failed.
+   * `null` whenever `solarSystem` is set.
+   */
+  planetsAbsentText: string | null;
   /** The Moon card; `null` only when working it out fails, which never takes the rest of the view down. */
   moonCard: TonightMoonCard | null;
 }
@@ -412,7 +418,7 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
 /** Every text field of the view is worded for `locale`; the rest of the view does not depend on it. */
 /**
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
- * all-objects page).
+ * Targets page).
  */
 export function buildTonight(input: TonightInput, locale: Locale, options: { limit?: number } = {}): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
@@ -567,15 +573,17 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   // without forecast hours to judge by (no weather data): the whole planet window counts. A failure here only drops
   // the planets and the Moon target (`null`); nothing is logged.
   let planetWindow: DarkWindow | null = null;
+  let planetVerdict: Verdict | null = null;
   let gate: { window: Extract<DarkWindow, { kind: "window" }>; verdict: Verdict; clear: Interval[] | null } | null =
     null;
   try {
     planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
-    const planetVerdict = verdict(planetWindow, hourly, { fallback });
-    if (planetWindow.kind === "window" && (planetVerdict.level === "go" || planetVerdict.level === "marginal")) {
+    const windowVerdict = verdict(planetWindow, hourly, { fallback });
+    planetVerdict = windowVerdict;
+    if (planetWindow.kind === "window" && (windowVerdict.level === "go" || windowVerdict.level === "marginal")) {
       gate = {
         window: planetWindow,
-        verdict: planetVerdict,
+        verdict: windowVerdict,
         clear: cardPasses ? null : clearIntervals(planetWindow, hourly, VERDICT_THRESHOLDS.marginalCloudPct),
       };
     }
@@ -630,6 +638,15 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   } catch {
     solarSystem = null;
   }
+  // Why the Planets page has nothing to list: the window, then its weather; anything else is a failure.
+  const planetsAbsentText =
+    solarSystem !== null
+      ? null
+      : planetWindow !== null && planetWindow.kind !== "window"
+        ? messages.tonight.planets.absent.noWindow
+        : planetVerdict?.reason.kind === "cloudy" && planetVerdict.reason.minCloudPct !== null
+          ? messages.tonight.planets.absent.cloudy({ cloudPct: String(Math.round(planetVerdict.reason.minCloudPct)) })
+          : messages.tonight.planets.absent.unavailable;
 
   // The Moon card (moonlight-and-the-verdict), on every night: the Moon over the dark window, or civil dusk to dawn
   // without one, or only its phase at local noon without either. Its facts need no weather. A failure drops only the
@@ -745,6 +762,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     explanation,
     nights,
     solarSystem,
+    planetsAbsentText,
     moonCard,
   };
 }

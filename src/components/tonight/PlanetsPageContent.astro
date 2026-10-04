@@ -1,0 +1,88 @@
+---
+// The data-dependent part of /tonight/planets (tonight-dashboard), a server island like TonightContent: the slim page
+// sky, the page's notice, then "Planets tonight", whose "Mark observed" links return here (`from=planets`). Without a
+// solar system (no planet window, a no-go for the planets, or a failure) one line says so, never an empty page. It
+// loads through the same loadTonight as Tonight and never records the sky verdict (only Tonight shows it).
+import { ServerError } from "@/components/forms/ServerError";
+import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { loadTonightFor } from "@/lib/tonight/island";
+import { logHref } from "@/lib/tonight/load";
+import type { TonightNotice } from "@/lib/tonight/notice";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The site picked on Tonight (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
+  /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+  /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
+  notice?: TonightNotice | null;
+}
+
+const { locale } = Astro.locals;
+const { siteId, telescopeId, notice = null } = Astro.props;
+const m = getMessages(locale);
+const t = m.tonight;
+const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
+
+// Signed out, `load` is null and the island renders nothing.
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId });
+const view = load?.view ?? null;
+const failures = load
+  ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
+  : [];
+// No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
+const noGear =
+  load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+{load && (
+  <>
+    <TonightPageSky title={t.summary.planets} view={view} />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {notice &&
+        (notice.tone === "success" ? (
+          <Notice tone="success">{notice.text}</Notice>
+        ) : (
+          <div role="alert">
+            <ServerError message={notice.text} />
+          </div>
+        ))}
+
+      {failures.map((key) => (
+        <ServerError message={translate(key)} />
+      ))}
+
+      {noGear && (
+        <p class="text-body text-foreground">
+          {t.pages.noGear}{" "}
+          <a href="/tonight" class:list={[inlineLink]}>
+            {t.pages.toTonight}
+          </a>
+        </p>
+      )}
+
+      {view && load.eyepiecesError && <ServerError message={translate(load.eyepiecesError)} />}
+      {view && load.logError && <ServerError message={translate(load.logError)} />}
+
+      {view && (
+        <div>
+          {view.solarSystem ? (
+            <SolarSystemSection
+              solarSystem={view.solarSystem}
+              logHref={(key: string) => logHref(view, key, "planets")}
+            />
+          ) : (
+            <p class="text-body text-foreground">{view.planetsAbsentText}</p>
+          )}
+        </div>
+      )}
+    </div>
+  </>
+)}

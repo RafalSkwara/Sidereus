@@ -35,7 +35,12 @@ const mainCell = "min-w-0 flex-1";
 const groupLabel = "text-label font-semibold";
 ---
 
-<Band id="nights" headingId="nights-heading" heading={t.heading({ count: String(nights.length), site: siteName })}>
+<Band
+  id="nights"
+  headingId="nights-heading"
+  heading={t.heading({ count: String(nights.length), site: siteName })}
+  headingHidden
+>
   <p class="mb-4 text-label text-muted-foreground">{t.timesIn({ zone: timeZone })}</p>
 
   <div>

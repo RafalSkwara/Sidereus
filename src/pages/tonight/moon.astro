@@ -1,0 +1,56 @@
+---
+// The Moon's focused page (tonight-dashboard): the Moon card with its time slider and the Moon as a target, for the
+// site and telescope picked on Tonight. The shell reads the gear and the notice and paints at once; MoonPageContent
+// streams the card in under the slim page sky.
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import Attribution from "@/components/tonight/Attribution.astro";
+import MoonPageContent from "@/components/tonight/MoonPageContent.astro";
+import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import { getMessages, isMessageKey, translateKey } from "@/i18n";
+import { parseTargetParam } from "@/lib/targets";
+import { targetLabel } from "@/lib/targets/labels";
+import { pickTonightNotice } from "@/lib/tonight/notice";
+import { requestedGear } from "@/lib/tonight/requested-gear";
+
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.tonight;
+const title = t.summary.moon;
+// After "Mark observed" here, POST /api/log returns with `?logged=moon` (`from=moon`). Read in the shell: the
+// island's own Astro.url carries no page query. Only catalogue keys are shown for `?error`.
+const loggedTarget = parseTargetParam(Astro.url.searchParams.get("logged"));
+const logged = loggedTarget ? targetLabel(loggedTarget, locale) : null;
+const errorParam = Astro.url.searchParams.get("error");
+const error = errorParam && isMessageKey(errorParam) ? translateKey(m, errorParam, "errors.generic") : null;
+const notice = pickTonightNotice({
+  error,
+  logged: logged ? t.logged({ object: logged.id }) : null,
+  skyChecked: null,
+});
+
+// The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
+const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+---
+
+<GearShell title={title} skyFlow>
+  {supabase ? (
+    <MoonPageContent server:defer siteId={siteId} telescopeId={telescopeId} notice={notice}>
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/moon" rows={3} />
+    </MoonPageContent>
+  ) : (
+    <>
+      <TonightPageSky title={title} view={null} />
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <DatabaseMissing />
+      </div>
+    </>
+  )}
+
+  <div class="mx-auto w-full max-w-3xl px-4">
+    <div class="mt-10 border-t border-border pt-4">
+      <Attribution />
+    </div>
+  </div>
+</GearShell>

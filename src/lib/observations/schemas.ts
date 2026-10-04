@@ -88,7 +88,14 @@ export const observationUpdateSchema = observationInputSchema.extend({
 
 export type ObservationUpdateInput = z.infer<typeof observationUpdateSchema>;
 
-/** Where `/log/new` returns after a save: absent → Tonight (the ranking flow), `log` → the log (manual entry). */
-export const returnTargetSchema = z.enum(["log"]).optional();
+/**
+ * Where `/log/new` returns after a save: absent → Tonight (the ranking flow), `log` → the log (manual entry), and
+ * `targets`, `moon` or `planets` → that focused Tonight page, whose "Mark observed" linked here (tonight-dashboard).
+ * `tonightReturnPath` in `redirect.ts` maps a value to its page.
+ */
+export const returnTargetSchema = z.enum(["log", "targets", "moon", "planets"]).optional();
 
 export type ReturnTarget = z.infer<typeof returnTargetSchema>;
+
+/** The focused Tonight pages a "Mark observed" link can return to. */
+export type TonightReturnPage = Exclude<NonNullable<ReturnTarget>, "log">;

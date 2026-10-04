@@ -1,7 +1,8 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky) with bars where the date, the
-// giant word and the headline lines go, then ruled bands under it, so nothing jumps when the real content swaps in.
-// Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line height.
+// giant word and the headline lines go, then four ruled rows standing for the dashboard's tiles (TonightTiles), so
+// nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
+// non-breaking space, so they have its line height.
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 const t = getMessages(Astro.locals.locale).tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
 const bar = "rounded bg-border motion-safe:animate-pulse";
-const band = "border-border py-8 not-first:border-t first:pt-0";
+// A tile row as TonightTiles draws it: full width, ruled below, the same padding.
+const tile = "border-b border-border px-4 py-4";
 ---
 
 <div role="status" aria-busy="true">
@@ -27,49 +29,42 @@ const band = "border-border py-8 not-first:border-t first:pt-0";
     </div>
   </TonightSky>
 
-  <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+  <div class="mx-auto w-full max-w-3xl pt-8">
     <div aria-hidden="true">
-      <div class:list={[band]}>
-        <div class:list={[bar, "mb-4 w-40 text-title"]}>&nbsp;</div>
-        <div class="flex items-center gap-4">
-          <div class="size-24 shrink-0 rounded-full bg-border motion-safe:animate-pulse sm:size-28"></div>
-          <div class="flex-1 space-y-2">
-            <div class:list={[bar, "h-4 w-2/3"]}></div>
-            <div class:list={[bar, "h-4 w-full"]}></div>
-          </div>
-        </div>
-      </div>
-
-      <div class:list={[band]}>
-        <div class:list={[bar, "mb-4 w-60 max-w-full text-title"]}>&nbsp;</div>
-        <div class="space-y-4">
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
+        <div class="mt-3 space-y-2">
           {[1, 2, 3].map(() => (
-            <div class="space-y-2">
-              <div class:list={[bar, "h-6 w-1/2"]} />
-              <div class:list={[bar, "h-4 w-2/3"]} />
-            </div>
+            <div class:list={[bar, "w-2/3 text-title"]}>&nbsp;</div>
           ))}
         </div>
       </div>
 
-      <div class:list={[band]}>
-        <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
-        <div class="space-y-3">
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+        <div class="mt-3 flex items-center gap-4">
+          <div class="size-13 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
+          <div class:list={[bar, "w-24 text-display"]}>&nbsp;</div>
+        </div>
+      </div>
+
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-3 w-1/2 text-title"]}>&nbsp;</div>
+      </div>
+
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-36 text-label"]}>&nbsp;</div>
+        <div class="mt-4 grid grid-cols-7 items-end gap-2">
           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
-            <div class="flex gap-4 py-1">
-              <div class:list={[bar, "h-4 w-24 shrink-0"]} />
-              <div class="flex-1 space-y-2">
-                <div class:list={[bar, "h-4 w-full"]} />
-                <div class:list={[bar, "h-3 w-2/3"]} />
-              </div>
-            </div>
+            <div class="h-18 rounded bg-border motion-safe:animate-pulse" />
           ))}
         </div>
       </div>
     </div>
 
     <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
-    <p class="slow-hint mt-6 text-sm text-muted-foreground">
+    <p class="slow-hint mt-6 px-4 text-label text-muted-foreground">
       {t.loadingSlow}{" "}
       <a href="/tonight" class:list={[buttonVariants({ variant: "link", size: "sm" })]}>
         {t.reload}

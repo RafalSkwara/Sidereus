@@ -467,6 +467,13 @@ export const en = {
      */
     planets: {
       heading: "Planets tonight",
+      /** Why the Planets page lists nothing (tonight-dashboard); `cloudPct` is the clearest hour's cloud cover. */
+      absent: {
+        noWindow: "No planets tonight: the sky never gets dark enough between dusk and dawn.",
+        cloudy: (p: { cloudPct: string }) =>
+          `No planets tonight: too cloudy between dusk and dawn (the clearest hour has ${p.cloudPct}% cloud).`,
+        unavailable: "Planet details aren't available right now.",
+      },
       /** The planet list's accessible name. */
       listLabel: "Planets",
       window: (p: { start: string; end: string }) => `From civil dusk to dawn, ${p.start}–${p.end}`,
@@ -689,13 +696,8 @@ export const en = {
       sortLabel: "Order",
       byRank: "By rank",
       byTime: "By best time",
-      sortHintRank: "Best first, as on Tonight. Open a row for its details.",
+      sortHintRank: "Best first. Open a row for its details.",
       sortHintTime: "In the order they are best placed tonight. Open a row for its details.",
-      seeAll: "See all",
-      seeAllCount: {
-        one: (p) => `See the ${p.count} object`,
-        other: (p) => `See all ${p.count} objects`,
-      } as PluralForms<Count>,
       empty: "No object cleared the bar tonight, so there is nothing to list.",
     },
 
@@ -707,7 +709,7 @@ export const en = {
       } as PluralForms<Count>,
     },
 
-    /** moonlight-and-the-verdict: faint objects tonight's Moon hides, counted on Tonight and listed on /tonight/all. */
+    /** moonlight-and-the-verdict: faint objects tonight's Moon hides, counted on Tonight and listed on /tonight/targets. */
     washedOut: {
       line: {
         one: (p) => `${p.count} faint object is washed out by the Moon tonight`,
@@ -767,7 +769,7 @@ export const en = {
       word: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
     },
 
-    /** tonight-nightfall: the summary bands under the sky, each with a chevron to its detail band. */
+    /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */
     summary: {
       targets: "Point here first",
       targetsCaption: {
@@ -782,7 +784,39 @@ export const en = {
       nightsCaption: (p: { count: string }) =>
         `Height is clear sky. Colour and mark show the verdict for the next ${p.count} nights.`,
       noTargets: "No targets to point at tonight.",
-      seeDetail: "Show details",
+    },
+
+    /**
+     * tonight-dashboard: the focused pages under /tonight/* that the summary tiles open. The Moon, Planets and Next 7
+     * nights pages take their titles from `summary` (`moon`, `planets`, `nights`); the back link is `nav.tonight`.
+     */
+    pages: {
+      targets: "Targets",
+      /** The page sky's context line: the headline beside the verdict dot, read by screen readers only. */
+      skyVerdict: (p: { headline: string }) => `Sky: ${p.headline}.`,
+      /** A focused page without a site or a telescope; Tonight holds the setup prompts. */
+      noGear: "Add a site and a telescope to see this page.",
+      toTonight: "Go to Tonight",
+      /** The view has no Moon card (only when building it failed). */
+      moonUnavailable: "Moon details aren't available right now.",
+      /** Targets without a ranking (weather no-go or no darkness), under the view's explanation. */
+      noTargets: "No object cleared the bar tonight, so there is nothing to point at.",
+      /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
+      seeNights: (p: { count: string }) => `See the next ${p.count} nights`,
+      /** Targets: the button that opens the rest of the list, after the best few. */
+      showRest: {
+        one: (p) => `Show the other ${p.count} object`,
+        other: (p) => `Show the other ${p.count} objects`,
+      } as PluralForms<Count>,
+      /** The scrollable list's accessible name. */
+      restLabel: "The other objects that cleared the bar",
+      /** The Moon page's link to the objects it washes out, listed on Targets. */
+      seeWashedOut: {
+        one: (p) => `See the ${p.count} washed-out object`,
+        other: (p) => `See the ${p.count} washed-out objects`,
+      } as PluralForms<Count>,
+      /** A summary tile's accessible suffix after its heading; `page` is the page's title. */
+      open: (p: { page: string }) => `Open ${p.page}`,
     },
   },
 
@@ -818,7 +852,6 @@ export const en = {
     ratingHigh: "5 · Superb",
     ratingHint: "A rating of 1-2 keeps the object where it is; 3-5 moves it down gently in later rankings.",
     submit: "Save observation",
-    back: "← Tonight",
     objectNotFound: "Sidereus doesn't know that object.",
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",

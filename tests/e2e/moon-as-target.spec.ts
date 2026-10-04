@@ -6,9 +6,9 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * The Moon on Tonight, end to end (M-2 S-02, moved into the Moon card by moonlight-and-the-verdict): "Mark observed"
- * in the Moon card saves it through the log form, Tonight confirms it and tags the card as seen, and the log lists it
- * as "Moon". Same setup as `planets-on-tonight.spec.ts`: a production preview on local Supabase with
+ * The Moon as a target, end to end (M-2 S-02, moved into the Moon card by moonlight-and-the-verdict and onto the Moon
+ * page by tonight-dashboard): "Mark observed" in the Moon card saves it through the log form, the save returns to the
+ * Moon page, which confirms it and tags the card as seen, and the log lists it as "Moon". Same setup as `planets-on-tonight.spec.ts`: a production preview on local Supabase with
  * FORECAST_BASE_URL pointing at `tests/e2e/forecast-fixture.mjs` (an all-clear sky), and place search stubbed with
  * Madrid.
  *
@@ -24,12 +24,12 @@ test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
 
-test("marking the Moon observed from Tonight saves it, tags the card and lists it in the log", async ({ page }) => {
+test("marking the Moon observed on the Moon page saves it, tags the card and lists it in the log", async ({ page }) => {
   await onboardInMadrid(page, "e2e-moon");
+  await page.goto("/tonight/moon");
 
-  // Tonight's content is a server island fetched after the page loads: wait for it (the verdict card always
-  // renders) before deciding the Moon is absent, or the count below would always be 0.
-  await expect(page.locator('section[aria-labelledby="verdict-heading"]')).toBeVisible();
+  // The page's content is a server island fetched after the page loads: wait for the card (it always renders in
+  // Madrid) before deciding the Moon is no target, or the count below would always be 0.
   const moonCard = page.locator('section[aria-labelledby="moon-heading"]');
   await expect(moonCard.getByRole("heading", { level: 2 })).toBeVisible();
   const name = en.targets.moon;
@@ -41,7 +41,7 @@ test("marking the Moon observed from Tonight saves it, tags the card and lists i
   await markObserved.click();
 
   // The form arrives prefilled with the Moon's target key and tonight's night, site and telescope.
-  await expect(page).toHaveURL(/\/log\/new\?object=moon&night=\d{4}-\d{2}-\d{2}&site=/);
+  await expect(page).toHaveURL(/\/log\/new\?object=moon&night=\d{4}-\d{2}-\d{2}&site=.*&from=moon$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(en.log.title({ object: name }));
   await waitForHydration(page, LOG_FORM);
   const form = page.locator(LOG_FORM);
@@ -49,7 +49,8 @@ test("marking the Moon observed from Tonight saves it, tags the card and lists i
   await form.locator("label").filter({ hasText: /^4$/ }).click();
   await form.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(/\/tonight\?logged=moon$/);
+  // The save returns to the page it came from (`from=moon`).
+  await expect(page).toHaveURL(/\/tonight\/moon\?logged=moon$/);
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: name }) })).toBeVisible();
   // The log never reorders the Moon: the card stays and carries the "seen" tag.
   await expect(moonCard).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));

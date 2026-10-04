@@ -8,10 +8,11 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * The seven-night strip and site switching on Tonight, end to end (S-05, US-03, FR-011 / FR-012), walked by one
- * user from the shared onboarding in Madrid. The forecast fixture is an all-clear sky and the clock is real, so
- * the spec never asserts which nights are go, which objects rank or which times are shown, only the strip's
- * shape and which site and time zone it is for.
+ * The seven-night strip and site switching, end to end (S-05, US-03, FR-011 / FR-012), walked by one user from the
+ * shared onboarding in Madrid. Since tonight-dashboard the strip lives on /tonight/nights while the site pickers stay
+ * on Tonight: a site picked there (and remembered in its cookie) carries to the nights page. The forecast fixture is
+ * an all-clear sky and the clock is real, so the spec never asserts which nights are go, which objects rank or which
+ * times are shown, only the strip's shape and which site and time zone it is for.
  */
 
 const SITE_FORM = 'form[action="/api/gear/sites"]';
@@ -37,6 +38,16 @@ const CLOUD_TEXT = new RegExp(`${escapeRegExp(t.nights.cloud({ mean: "" }).repla
 async function openTonight(page: Page, query = "") {
   await page.goto(`/tonight${query}`);
   await expect(page.getByRole("heading", { level: 1, name: t.title })).toBeVisible();
+  // The skeleton already carries the title: wait for the island (the verdict always renders) before counting pickers.
+  await expect(page.locator('section[aria-labelledby="verdict-heading"]')).toBeVisible();
+}
+
+/** Opens the Next 7 nights page; its skeleton already carries the title, so `expectStripFor` waits for the island. */
+async function openNights(page: Page) {
+  await page.goto("/tonight/nights");
+  await expect(
+    page.getByRole("heading", { level: 1, name: t.summary.nights({ count: String(OUTLOOK_NIGHTS) }) }),
+  ).toBeVisible();
 }
 
 async function expectStripFor(page: Page, site: string, zone: string) {
@@ -96,11 +107,12 @@ test("the strip shows seven nights, and switching sites moves it to the other si
   test.setTimeout(120_000);
   await onboardInMadrid(page, "e2e-seven-nights");
 
-  // One site: the strip for it, no site selector.
+  // One site: no site selector on Tonight, and the strip for it on the nights page.
   const first = await siteName(page);
   await openTonight(page);
-  await expectStripFor(page, first, "Europe/Madrid");
   await expect(sitePills(page)).toHaveCount(0);
+  await openNights(page);
+  await expectStripFor(page, first, "Europe/Madrid");
 
   // Seven nights: 1-3 with a verdict, 4-7 with a cloud outlook and never a headline (invariant 5).
   await expect(strip(page).locator("ol > li")).toHaveCount(7);
@@ -129,29 +141,33 @@ test("the strip shows seven nights, and switching sites moves it to the other si
   await openTonight(page);
   await expect(sitePills(page).getByRole("link")).toHaveCount(2);
   await expect(sitePills(page).getByRole("link", { name: first, exact: true })).toHaveAttribute("aria-current", "page");
+  await openNights(page);
   await expectStripFor(page, first, "Europe/Madrid");
 
-  // Picking the second moves the strip there, in its zone; plain /tonight remembers the pick.
+  // Picking the second on Tonight moves the nights page there, in its zone; plain /tonight remembers the pick.
+  await openTonight(page);
   await sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true }).click();
   await expect(page).toHaveURL(/\/tonight\?site=[0-9a-f-]{36}$/);
   await expect(sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true })).toHaveAttribute(
     "aria-current",
     "page",
   );
+  await openNights(page);
   await expectStripFor(page, SECOND_SITE.name, SECOND_SITE.zone);
   await openTonight(page);
   await expect(sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  await expectStripFor(page, SECOND_SITE.name, SECOND_SITE.zone);
 
-  // The remembered site is deleted: Tonight falls back to the first, without an error or a site selector.
+  // The remembered site is deleted: Tonight and the nights page fall back to the first, without an error or a site
+  // selector.
   await deleteGear(page, SECOND_SITE.name);
   await openTonight(page);
-  await expectStripFor(page, first, "Europe/Madrid");
   await expect(sitePills(page)).toHaveCount(0);
   await expect(page.locator('form[data-gear-select="site"]')).toHaveCount(0);
+  await openNights(page);
+  await expectStripFor(page, first, "Europe/Madrid");
   await expect(page.getByText(t.failed)).toHaveCount(0);
   await expect(strip(page).locator("ol > li")).toHaveCount(7);
 });

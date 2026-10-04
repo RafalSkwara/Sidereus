@@ -17,7 +17,7 @@ const { solarSystem, logHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.planets;
 ---
 
-<Band id="planets" headingId="planets-heading" heading={t.heading}>
+<Band id="planets" headingId="planets-heading" heading={t.heading} headingHidden>
   <p class="text-label text-muted-foreground">{solarSystem.windowText}</p>
   {solarSystem.weatherText && <p class="mt-1 text-label text-foreground">{solarSystem.weatherText}</p>}
   {solarSystem.entries.length > 0 && (

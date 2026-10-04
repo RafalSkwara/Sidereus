@@ -464,6 +464,12 @@ export const pl = {
     // separates them, as in `logged`, so no grammatical case is needed.
     planets: {
       heading: "Planety dziś w nocy",
+      absent: {
+        noWindow: "Dziś bez planet: między zmierzchem a świtem niebo nie robi się dość ciemne.",
+        cloudy: (p) =>
+          `Dziś bez planet: między zmierzchem a świtem jest zbyt pochmurno (w najpogodniejszej godzinie ${p.cloudPct}% zachmurzenia).`,
+        unavailable: "Szczegóły planet są teraz niedostępne.",
+      },
       listLabel: "Planety",
       window: (p) => `Od zmierzchu cywilnego do świtu, ${p.start}–${p.end}`,
       none: "Dziś między zmierzchem a świtem żadna planeta nie jest dobrze widoczna przez Twój teleskop.",
@@ -639,15 +645,8 @@ export const pl = {
       sortLabel: "Kolejność",
       byRank: "Według oceny",
       byTime: "Według najlepszej pory",
-      sortHintRank: "Najlepsze najpierw, jak w widoku Dziś w nocy. Otwórz wiersz, aby zobaczyć szczegóły.",
+      sortHintRank: "Najlepsze najpierw. Otwórz wiersz, aby zobaczyć szczegóły.",
       sortHintTime: "W kolejności, w jakiej są dziś najlepiej widoczne. Otwórz wiersz, aby zobaczyć szczegóły.",
-      seeAll: "Zobacz wszystkie",
-      seeAllCount: {
-        one: (p) => `Zobacz ${p.count} obiekt`,
-        few: (p) => `Zobacz wszystkie ${p.count} obiekty`,
-        many: (p) => `Zobacz wszystkie ${p.count} obiektów`,
-        other: (p) => `Zobacz wszystkie ${p.count} obiektu`,
-      },
       empty: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma czego wyświetlić.",
     },
 
@@ -737,7 +736,32 @@ export const pl = {
       nightsCaption: (p) =>
         `Wysokość to bezchmurne niebo. Kolor i znak pokazują werdykt na najbliższe ${p.count} noce.`,
       noTargets: "Dziś nie ma na co celować.",
-      seeDetail: "Pokaż szczegóły",
+    },
+
+    pages: {
+      targets: "Cele",
+      skyVerdict: (p) => `Niebo: ${p.headline}.`,
+      noGear: "Dodaj miejsce obserwacji i teleskop, aby zobaczyć tę stronę.",
+      toTonight: "Przejdź do Dziś w nocy",
+      moonUnavailable: "Szczegóły Księżyca są teraz niedostępne.",
+      noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",
+      // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
+      seeNights: (p) => `Zobacz najbliższe ${p.count} nocy`,
+      showRest: {
+        one: (p) => `Pokaż jeszcze ${p.count} obiekt`,
+        few: (p) => `Pokaż pozostałe ${p.count} obiekty`,
+        many: (p) => `Pokaż pozostałych ${p.count} obiektów`,
+        other: (p) => `Pokaż pozostałe ${p.count} obiektu`,
+      },
+      restLabel: "Pozostałe obiekty warte dziś uwagi",
+      seeWashedOut: {
+        one: (p) => `Zobacz ${p.count} obiekt przyćmiony przez Księżyc`,
+        few: (p) => `Zobacz ${p.count} obiekty przyćmione przez Księżyc`,
+        many: (p) => `Zobacz ${p.count} obiektów przyćmionych przez Księżyc`,
+        other: (p) => `Zobacz ${p.count} obiektu przyćmionego przez Księżyc`,
+      },
+      // The colon keeps the page title in its base form.
+      open: (p) => `Otwórz: ${p.page}`,
     },
   },
 
@@ -769,7 +793,6 @@ export const pl = {
     ratingHigh: "5 · Znakomicie",
     ratingHint: "Ocena 1–2 zostawia obiekt na swoim miejscu; 3–5 lekko obniża go w kolejnych rankingach.",
     submit: "Zapisz obserwację",
-    back: "← Dziś w nocy",
     objectNotFound: "Sidereus nie zna tego obiektu.",
     needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
     addGear: "Przejdź do sprzętu",

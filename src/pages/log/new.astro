@@ -3,11 +3,12 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
+import BackLink from "@/components/ui/BackLink.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { observingNightDateFor } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
-import { LOG_LIST } from "@/lib/observations/redirect";
-import { isCalendarDate, returnTargetSchema } from "@/lib/observations/schemas";
+import { LOG_LIST, tonightReturnPath } from "@/lib/observations/redirect";
+import { isCalendarDate, returnTargetSchema, type TonightReturnPage } from "@/lib/observations/schemas";
 import { targetOptions } from "@/lib/observations/target-options";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
@@ -17,14 +18,26 @@ import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 // telescope; `POST /api/log` sends a failed save back with the same prefill and a `?error=` message key.
 // With `?from=log` it is the log's manual entry instead (S-07, FR-022): any object, chosen in a picker, and the
 // save returns to the log; `?object=` then only preselects the picker. `?object=` is a target key ("M31",
-// "jupiter"), or the bare Messier number older links carry.
+// "jupiter"), or the bare Messier number older links carry. A focused Tonight page's "Mark observed" adds
+// `?from=targets|moon|planets` (tonight-dashboard): the form posts it on, so the save and the back link return there.
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.log;
 const params = Astro.url.searchParams;
 const error = params.get("error");
 
-const manual = returnTargetSchema.safeParse(params.get("from") ?? undefined).data === "log";
+// Parsed once: the form posts it back as `from`, and the back link follows it. Unknown values read as absent.
+const from = returnTargetSchema.safeParse(params.get("from") ?? undefined).data;
+const manual = from === "log";
+const PAGE_TITLES: Record<TonightReturnPage, string> = {
+  targets: m.tonight.pages.targets,
+  moon: m.tonight.summary.moon,
+  planets: m.tonight.summary.planets,
+};
+const back =
+  from === "log"
+    ? { href: LOG_LIST, label: m.nav.log }
+    : { href: tonightReturnPath(from), label: from ? PAGE_TITLES[from] : m.nav.tonight };
 const object = parseTargetParam(params.get("object"));
 const label = object ? targetLabel(object, locale) : null;
 
@@ -59,12 +72,7 @@ const primaryLink =
 ---
 
 <GearShell title={title}>
-  <a
-    href={manual ? LOG_LIST : "/tonight"}
-    class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading"
-  >
-    {manual ? t.backToLog : t.back}
-  </a>
+  <BackLink href={back.href} label={back.label} class="mb-4" />
   <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
   <h1 class="mb-2 font-display text-3xl font-semibold text-heading sm:text-4xl">
     {title}
@@ -99,6 +107,7 @@ const primaryLink =
           telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
           maxNight={maxNight}
           serverError={error}
+          returnTo={from}
           locale={locale}
           client:load
         />

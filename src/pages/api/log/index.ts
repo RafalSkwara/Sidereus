@@ -1,12 +1,13 @@
 import type { APIRoute } from "astro";
 import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
-import { formRedirect, logNotice } from "@/lib/observations/redirect";
+import { formRedirect, logNotice, tonightReturnPath } from "@/lib/observations/redirect";
 import { observationInputSchema, returnTargetSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 
 /*
- * Saves one observation log entry (roadmap S-06) and returns to Tonight, which confirms it; a manual entry from
+ * Saves one observation log entry (roadmap S-06) and returns to the Tonight page that linked to the form (`from`
+ * names a focused page, tonight-dashboard; missing or unknown → Tonight), which confirms it; a manual entry from
  * the log (`from=log`, S-07) returns to the log instead. Every
  * `?error=` value is a fixed message key, and the prefill carried back is filtered by `formRedirect`,
  * so no typed value (and never a coordinate) reaches the URL. Nothing is logged.
@@ -29,9 +30,12 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(result.message);
   }
-  const manual = returnTargetSchema.safeParse(raw.from).data === "log";
+  const from = returnTargetSchema.safeParse(raw.from).data;
+  const manual = from === "log";
   const { target } = parsed.data;
   return context.redirect(
-    manual ? logNotice("saved", target) : `/tonight?${new URLSearchParams({ logged: target }).toString()}`,
+    manual
+      ? logNotice("saved", target)
+      : `${tonightReturnPath(from)}?${new URLSearchParams({ logged: target }).toString()}`,
   );
 };

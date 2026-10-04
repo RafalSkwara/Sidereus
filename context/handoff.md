@@ -1,40 +1,32 @@
-# Handoff — 2026-10-04 (evening)
+# Handoff — 2026-10-04 (night)
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` (S-10 and S-11) and GitHub #86 / #87. The last change is archived at `context/archive/2026-10-03-site-use-my-location/`. (This replaces the earlier 2026-10-04 handoff, which is in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #86 / #87. (This replaces the earlier 2026-10-04 handoffs, which are in git history.)
 
 ## State of play
 
-- **Milestone M-2 "First real nights"** is open. On 2026-10-04 the user added two slices that come **ahead of everything else** ("Both are more important than anything else"):
-  - **S-10 `visual-redesign`** (#86, `ready`): the light and dark themes look "very generic and … very much like coming from an LLM". The goal is a distinct, deliberate visual identity on every screen; the red night mode keeps its function.
-  - **S-11 `tonight-dashboard`** (#87, `ready`): `/tonight` is "super crowded … really difficult to find anything". A signed-in user should land on a dashboard of tiles (verdict, Moon, planets, deep-sky targets, forecast, sky check, "maybe even more or separated differently"), each opening its own focused page.
-  - Both are labelled `priority:top` and pinned to the top of board #1 (#86 first).
-- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location" (PR #84; archive PR #85 merged).
-- **Re-scoped on 2026-10-04:** S-05 session timeline (#69) is now a page reached from the dashboard, waits for S-11 and went back to `proposed`. S-06 offline (#70) caches the dashboard pages and waits for S-05 and S-11.
+- **Milestone M-2 "First real nights"** is open. Two user-requested slices came ahead of everything else on 2026-10-04:
+  - **S-10 `visual-redesign`** (#86): the Nightfall contract and `/gear` merged (#89) and deployed; Tonight in Nightfall merged (#91, #92) and archived (`context/archive/2026-10-04-tonight-nightfall/`). The `visual-redesign` change folder is still unarchived: it waits until the remaining views (log, auth, onboarding, landing) get their `/10x-ui` passes, or the user says otherwise.
+  - **S-11 `tonight-dashboard`** (#87, `in-progress`): implemented on branch `feat/tonight-dashboard` (change folder `context/changes/tonight-dashboard/`). `/tonight` is now the sky verdict plus four ruled tiles that open `/tonight/targets` (which replaced `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets` and `/tonight/nights`; "Mark observed" returns to the page it came from. Next: the user approves the screenshot gate, then impl review, PR, merge, archive.
+- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location".
+- **Waiting on S-11:** S-05 session timeline (#69) becomes another `/tonight/*` page (and maybe a tile); S-06 offline (#70) caches the dashboard pages.
 - **Still open behind them:** S-03 deep sky beyond Messier (`ready`, #67); S-04 double stars (`blocked`: data source and licence, #68); S-09 map picker (`blocked`: map-tile privacy decision, #73).
-- **No change is in flight.** `context/changes/` is empty and `main` is clean, apart from the user's untracked `.mcp.json`.
 
-## Suggested next step: S-10, starting with the direction
+## Suggested next step
 
-The user hasn't decided the order of S-10 and S-11 yet (roadmap Open Roadmap Question 4). The recommendation written into the roadmap and both issues:
+1. Finish S-11: screenshot gate → `/10x-impl-review tonight-dashboard` → PR from `feat/tonight-dashboard` → merge (user OK) → `/10x-archive tonight-dashboard`.
+2. S-11's remaining unknown, the **interactive sky** (a slider moving real target positions across the dashboard sky; real or decorative stars), is a follow-up change of its own.
+3. Then the remaining `/10x-ui` passes (log, auth, onboarding, landing), and S-05 → S-06, S-03.
 
-1. **S-10 first: direction, then contract.**
-   - Open the change with `/10x-new visual-redesign`.
-   - Before any code, present **2–3 concrete design directions**. For each, give the mood, palette (light, dark and the red-mode adaptation), type pairing, and one key screen mocked up (Tonight or the future dashboard). Artifact pages or Playwright-rendered mockups work well, and the `frontend-design` skill is the guidance for distinctive, non-template choices.
-   - The user picks one. This is a UI decision, so ask it natively and send a push first.
-   - Then run `/10x-ui visual-redesign`. It works on **one existing view at a time**: audit → 3–5 charges → fix the design-system contract (tokens in `src/styles/global.css`, shared components in `src/components/ui/`, forms, top bar, tab bar) → 7-state matrix → screenshot gate → a rule in CLAUDE.md or lessons.md. Use a representative, stable view for the first pass (for example `/gear` or the landing page). Don't use Tonight, which S-11 is about to split.
-2. **S-11 next, built on the new contract.** These are new pages, so they go through the ordinary chain: `/10x-new tonight-dashboard` → `/10x-research` → `/10x-plan` → `/10x-implement`. The user decides the tile set, the tile order, and whether the dashboard takes the `/tonight` address. `/dashboard` currently just redirects to `/tonight`. Reuse `VerdictCard`, `MoonCard`, `SolarSystemSection`, `ObjectCard`, `NightStrip` and `SkyCheckCard`, which all live in `src/components/tonight/`.
-3. **Then restyle the remaining screens** with `/10x-ui`, one view per pass, and continue with S-05 → S-06, S-03.
-
-**Hard constraints for both slices:**
+**Hard constraints (all UI work):**
 
 - Colours only from tokens (`no-hardcoded-colors.test.ts`). A new token needs a value in every theme block, and the red theme has zero green and blue (`red-theme.test.ts`).
 - WCAG AA contrast in all three themes, with focus visible everywhere.
 - EN and PL copy: Polish runs longer, and every string goes through the i18n catalogue.
 - Phone first (390 px).
 - Coordinates never go into URLs or logs. The site and telescope choice travels as ids (`?site=`, `?telescope=` plus the cookies).
-- Tonight's content currently needs JavaScript (server island; see lessons.md), so each new page must decide its own loading behaviour.
+- Tonight's pages are server islands and need JavaScript (lessons.md).
 
-**Also still open:** post-merge checks from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider.
+**Also still open:** post-merge checks from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider. The same bright Moon will exercise tonight-dashboard's `/tonight/all#washed-out` → Targets scroll (its e2e test skips until the Moon washes out an object).
 
 ## Things a new session should know
 
@@ -57,7 +49,8 @@ The user hasn't decided the order of S-10 and S-11 yet (roadmap Open Roadmap Que
   5. `SUPABASE_URL=$API_URL SUPABASE_KEY=$ANON_KEY BASE_URL=http://localhost:4321 npm run test:e2e`. The sky-checks spec seeds a past night through PostgREST, so it needs the Supabase variables.
 - **Scratch Playwright scripts** for manual screenshots can live in the scratchpad if they load Playwright with `createRequire(process.cwd() + "/package.json")` and run from the repo root (S-08); scripts that import `@/` modules must sit under `tests/e2e/` to resolve the alias.
 - **Background processes stop after 2 hours.** Start the forecast fixture inside the same foreground command as the tests (`node tests/e2e/forecast-fixture.mjs & FIX=$!; …; kill $FIX`) rather than as a long-lived background task.
-- **Tonight is a server island.** Wait for `[data-sky-headline]` or `section[aria-labelledby="verdict-heading"]` before asserting on its content in e2e.
+- **Tonight is a server island**, and so is each `/tonight/*` page. Wait for `[data-sky-headline]` or `section[aria-labelledby="verdict-heading"]` on the dashboard, or the page's own section, before asserting on island content in e2e; a skeleton already renders the title and back link.
+- **Port 4321 must be free before `astro preview`.** A leftover `astro dev` on 4321 makes the preview fail to bind, so the e2e run hits the dev server (hosted Supabase) and every sign-up fails; check with `lsof -iTCP:4321 -sTCP:LISTEN`.
 - **CI flake:** the `smoke` job's `supabase/setup-cli` sometimes fails with "rate limit exceeded" while resolving the latest CLI. Re-run only the failed job: `gh run rerun <id> --failed`.
 - **Hosting:** Workers Paid since 2026-09-30, so the 10 ms CPU cap (#22, closed) no longer applies.
 - **Untracked `.mcp.json`:** leave it out of commits (the user's choice).
@@ -66,5 +59,5 @@ The user hasn't decided the order of S-10 and S-11 yet (roadmap Open Roadmap Que
 
 - **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#86, #87:** the two top-priority slices (S-10, S-11), labelled `priority:top`.
+- **#86, #87:** the two top-priority slices (S-10, S-11), labelled `priority:top`; #87 is `in-progress` on `feat/tonight-dashboard`.
 - **#67–#70, #73:** the other remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editRedirect, formRedirect, logNotice, parseLogPage, readLogNotice } from "./redirect";
+import { editRedirect, formRedirect, logNotice, parseLogPage, readLogNotice, tonightReturnPath } from "./redirect";
 
 const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
 const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
@@ -62,6 +62,30 @@ describe("formRedirect for manual entry", () => {
 
   it("drops any other return target", () => {
     expect(params(formRedirect({ from: "https://evil.test" }, "errors.generic"))).toEqual({ error: "errors.generic" });
+  });
+});
+
+describe("formRedirect from a focused Tonight page", () => {
+  it("keeps the page, so the retried save still returns there", () => {
+    expect(params(formRedirect({ target: "moon", from: "moon" }, "errors.observation.ratingRequired"))).toEqual({
+      object: "moon",
+      from: "moon",
+      error: "errors.observation.ratingRequired",
+    });
+  });
+});
+
+describe("tonightReturnPath", () => {
+  it("maps each focused page to its path", () => {
+    expect(tonightReturnPath("targets")).toBe("/tonight/targets");
+    expect(tonightReturnPath("moon")).toBe("/tonight/moon");
+    expect(tonightReturnPath("planets")).toBe("/tonight/planets");
+  });
+
+  it("returns to Tonight for a missing, unknown or log value", () => {
+    for (const from of [undefined, null, "", "log", "nights", "tonight", "https://evil.test", "/tonight/moon"]) {
+      expect(tonightReturnPath(from)).toBe("/tonight");
+    }
   });
 });
 
