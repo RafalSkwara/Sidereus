@@ -50,19 +50,19 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 
 ## At a glance
 
-| ID   | Change ID               | Outcome (user can …)                                                                                                                | Prerequisites | PRD refs | Status   |
-| ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | -------- |
-| S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done     |
-| S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done     |
-| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready    |
-| S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked  |
-| S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | ready    |
-| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | ready    |
-| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | proposed |
-| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed |
-| S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done     |
-| S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done     |
-| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked  |
+| ID   | Change ID               | Outcome (user can …)                                                                                                                | Prerequisites | PRD refs | Status      |
+| ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ----------- |
+| S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done        |
+| S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done        |
+| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready       |
+| S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
+| S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | in-progress |
+| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | ready       |
+| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | proposed    |
+| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
+| S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
+| S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
+| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked     |
 
 ## Streams
 
@@ -168,7 +168,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - ~~Do the current typefaces stay?~~ Settled 2026-10-04: replaced; Nightfall uses one family with widths, Archivo (expanded for display, normal for reading), self-hosted and subset. — Owner: user.
   - ~~Does the landing page get a bigger rework?~~ Settled 2026-10-04: yes, its own composition pass; and `/` becomes a signed-out page only: a signed-in user is redirected to `/tonight` (to the dashboard once S-11 lands). — Owner: user.
 - **Risk:** Touches every screen, so the danger is a restyle that drifts into one-off styling per page; the change should rework the shared design tokens and components first and apply them second, keep the existing colour, red-theme and contrast guardrails green, and gate on before/after screenshots of every screen in EN/PL × light/dark/red at phone and desktop widths. GitHub #86.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-11: Tonight as a dashboard of focused pages
 

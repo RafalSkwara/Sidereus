@@ -2,9 +2,7 @@
 @import "tw-animate-css";
 
 /* Self-hosted fonts (no third-party font requests). Latin-ext subsets cover Polish. */
-@import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/public-sans";
-@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource-variable/archivo/wdth.css";
 
 /* `dark:` follows the resolved theme on <html data-theme>, never the OS setting. */
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
@@ -264,9 +262,12 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-display: "Newsreader Variable", Georgia, serif;
-  --font-sans: "Public Sans Variable", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
+  --font-sans: "Archivo Variable", system-ui, sans-serif;
+  --font-display: "Archivo Variable", system-ui, sans-serif;
+  --font-display--font-variation-settings: "wdth" 125;
+  --font-mono: "Archivo Variable", system-ui, sans-serif;
+  --font-mono--font-feature-settings: "tnum";
 
   --color-background: var(--background);
   --color-surface: var(--surface);
