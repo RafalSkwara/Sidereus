@@ -1,45 +1,47 @@
-# Handoff — 2026-10-04
+# Handoff — 2026-10-04 (evening)
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first. The last change is archived at `context/archive/2026-10-03-site-use-my-location/`. (This replaces the 2026-10-03 handoff, which is in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` (S-10 and S-11) and GitHub #86 / #87. The last change is archived at `context/archive/2026-10-03-site-use-my-location/`. (This replaces the earlier 2026-10-04 handoff, which is in git history.)
 
 ## State of play
 
-- **Milestone M-2 "First real nights"** is open (`context/foundation/roadmap.md`).
-  - Done:
-    - S-01 planets on Tonight;
-    - S-02 the Moon as a target;
-    - S-07 verdict check (PR #82);
-    - S-08 "Use my location" on the site form (PR #84, merged 2026-10-04).
-  - Also shipped: the off-roadmap change moonlight-and-the-verdict (#79, closed).
-  - Remaining slices:
-    - **S-03** deep sky beyond Messier: `ready`, #67;
-    - **S-05** session-plan timeline: `ready`, #69;
-    - **S-06** offline night plan: `proposed`, #70, waits on S-05;
-    - **S-04** double stars: `blocked` until the user decides the data source and licence, #68;
-    - **S-09** map picker: `blocked` until the user decides about map-tile privacy, #73. Its S-08 prerequisite is now met: the map joins the shared `LocationPicker`.
-- **No change is in flight.** `context/changes/` is empty once the S-08 archive PR merges.
+- **Milestone M-2 "First real nights"** is open. On 2026-10-04 the user added two slices that come **ahead of everything else** ("Both are more important than anything else"):
+  - **S-10 `visual-redesign`** (#86, `ready`): the light and dark themes look "very generic and … very much like coming from an LLM". The goal is a distinct, deliberate visual identity on every screen; the red night mode keeps its function.
+  - **S-11 `tonight-dashboard`** (#87, `ready`): `/tonight` is "super crowded … really difficult to find anything". A signed-in user should land on a dashboard of tiles (verdict, Moon, planets, deep-sky targets, forecast, sky check, "maybe even more or separated differently"), each opening its own focused page.
+  - Both are labelled `priority:top` and pinned to the top of board #1 (#86 first).
+- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location" (PR #84; archive PR #85 merged).
+- **Re-scoped on 2026-10-04:** S-05 session timeline (#69) is now a page reached from the dashboard, waits for S-11 and went back to `proposed`. S-06 offline (#70) caches the dashboard pages and waits for S-05 and S-11.
+- **Still open behind them:** S-03 deep sky beyond Messier (`ready`, #67); S-04 double stars (`blocked`: data source and licence, #68); S-09 map picker (`blocked`: map-tile privacy decision, #73).
+- **No change is in flight.** `context/changes/` is empty and `main` is clean, apart from the user's untracked `.mcp.json`.
 
-## What S-08 shipped (site-use-my-location)
+## Suggested next step: S-10, starting with the direction
 
-- **Shared picker.** `src/components/location/LocationPicker.tsx` ("Use my location", place search, confirmation line) is used by onboarding and the add/edit site form; the host keeps the coordinate fields and validation.
-  - `locateDevice` (`src/lib/location/locate.ts`) asks only on the click and rounds to about 1 km before returning; `geocode.ts` moved to `src/lib/location/` and returns the bare place `name`.
-  - Picker copy lives in the top-level `location` i18n namespace.
-- **Site form.** A Location block above always-visible latitude/longitude fields; a picked town fills an empty Name; on edit, "Was … · Undo" restores the saved location until Save, and the automatic zone label reads "Automatic (from coordinates)" once the coordinates move.
-- **Lint.** `no-console` now also covers `src/lib/location/**`, `src/components/location/**` and `src/components/gear/**`.
-- **User preference recorded during S-08:** keep new tests modest ("we've got loads of them already"): pin only what screenshots can't show.
-- #72 closes when the archive PR merges.
+The user hasn't decided the order of S-10 and S-11 yet (roadmap Open Roadmap Question 4). The recommendation written into the roadmap and both issues:
 
-## Suggested next step
+1. **S-10 first: direction, then contract.**
+   - Open the change with `/10x-new visual-redesign`.
+   - Before any code, present **2–3 concrete design directions**. For each, give the mood, palette (light, dark and the red-mode adaptation), type pairing, and one key screen mocked up (Tonight or the future dashboard). Artifact pages or Playwright-rendered mockups work well, and the `frontend-design` skill is the guidance for distinctive, non-template choices.
+   - The user picks one. This is a UI decision, so ask it natively and send a push first.
+   - Then run `/10x-ui visual-redesign`. It works on **one existing view at a time**: audit → 3–5 charges → fix the design-system contract (tokens in `src/styles/global.css`, shared components in `src/components/ui/`, forms, top bar, tab bar) → 7-state matrix → screenshot gate → a rule in CLAUDE.md or lessons.md. Use a representative, stable view for the first pass (for example `/gear` or the landing page). Don't use Tonight, which S-11 is about to split.
+2. **S-11 next, built on the new contract.** These are new pages, so they go through the ordinary chain: `/10x-new tonight-dashboard` → `/10x-research` → `/10x-plan` → `/10x-implement`. The user decides the tile set, the tile order, and whether the dashboard takes the `/tonight` address. `/dashboard` currently just redirects to `/tonight`. Reuse `VerdictCard`, `MoonCard`, `SolarSystemSection`, `ObjectCard`, `NightStrip` and `SkyCheckCard`, which all live in `src/components/tonight/`.
+3. **Then restyle the remaining screens** with `/10x-ui`, one view per pass, and continue with S-05 → S-06, S-03.
 
-1. Merge the S-08 archive PR (branch `chore/archive-site-use-my-location`). The user merges it, never the agent.
-2. Pick the next M-2 slice: **S-05** (presentation over data Tonight already computes; unblocks S-06) or **S-03** (catalogue work; re-check ranks against seasonal lists). S-09 needs the user's map-tile privacy decision first.
-3. Post-merge checks still open from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider.
+**Hard constraints for both slices:**
+
+- Colours only from tokens (`no-hardcoded-colors.test.ts`). A new token needs a value in every theme block, and the red theme has zero green and blue (`red-theme.test.ts`).
+- WCAG AA contrast in all three themes, with focus visible everywhere.
+- EN and PL copy: Polish runs longer, and every string goes through the i18n catalogue.
+- Phone first (390 px).
+- Coordinates never go into URLs or logs. The site and telescope choice travels as ids (`?site=`, `?telescope=` plus the cookies).
+- Tonight's content currently needs JavaScript (server island; see lessons.md), so each new page must decide its own loading behaviour.
+
+**Also still open:** post-merge checks from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider.
 
 ## Things a new session should know
 
 - **How the user works** (also in the auto-memory):
   - Ask only for permissions and UI decisions. Decide non-UI choices yourself and record them as delegated.
   - Send a `PushNotification` before every question.
+  - Keep new tests modest ("we've got loads of them already", S-08): pin only what screenshots can't show.
   - Run manual checks yourself (a local preview against local Supabase, plus Playwright screenshots in EN/PL, dark/light/red, phone/desktop) and tick them with evidence.
   - Never commit to `main` or merge without case-by-case approval. Feature-branch pushes and PRs are pre-approved.
   - Mirror progress on GitHub Projects board #1. Check `gh auth status` first; the token needs the `project` scope.
@@ -64,4 +66,5 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 - **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#67–#73:** the remaining M-2 slices (see State of play).
+- **#86, #87:** the two top-priority slices (S-10, S-11), labelled `priority:top`.
+- **#67–#70, #73:** the other remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.
