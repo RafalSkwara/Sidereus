@@ -1,0 +1,15 @@
+---
+// The "seen" tag on a Tonight target (the Moon, a planet, a ranked object): how often and when the user last logged
+// it. One markup for every detail band, so the tag reads the same wherever it shows.
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<p class="mt-2">
+  <span class="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-label text-muted-foreground">
+    {text}
+  </span>
+</p>

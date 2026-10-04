@@ -18,6 +18,7 @@ import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSummary from "@/components/tonight/TonightSummary.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
@@ -107,6 +108,15 @@ const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null :
 const addSite = !needsSetup && !sitesError && !site;
 const addTelescope = !needsSetup && !telescopesError && !telescope;
 const showPrompts = needsSetup || addSite || addTelescope;
+// The quiet links (the gear line, "See all", the washed-out and add-eyepieces links): the link style at 44 px, with
+// the ring focus; they may wrap. The ranking's "See all N" is the band's one outline button.
+const linkButton = buttonVariants({ variant: "link", size: "sm" });
+const quietLink = cn(linkButton, "-ml-3 whitespace-normal");
+const inlineLink = cn(linkButton, "px-0 whitespace-normal");
+// On a phone the long ranking heading wraps the action under it (left edge); from sm it sits on the right.
+const actionLink = cn(linkButton, "-ml-3 sm:ml-0 sm:-mr-3");
+const gearLink =
+  "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 {supabase && (
@@ -151,8 +161,8 @@ const showPrompts = needsSetup || addSite || addTelescope;
         {site && telescope && (gearLine || multipleSites || multipleTelescopes) && (
           <div>
             {gearLine && (
-              <p class="mb-6 text-sm text-muted-foreground">
-                <a href="/gear" class="transition-colors hover:text-heading">
+              <p class="mb-6">
+                <a href="/gear" class:list={[gearLink]}>
                   {gearLine}
                 </a>
               </p>
@@ -213,19 +223,17 @@ const showPrompts = needsSetup || addSite || addTelescope;
         {tonightError && <ServerError message={translate(tonightError)} />}
 
         {view && (
-          <>
+          /* The detail bands, ruled like the summary above; the summary's chevrons jump to their ids. */
+          <div>
             {view.moonCard && <MoonCard card={view.moonCard} logHref={logHref(view, MOON_TARGET_KEY)} />}
 
             {showNotices && (
-              <div class="space-y-4">
+              <div class="space-y-4 pb-8">
                 {eyepiecesError && <ServerError message={translate(eyepiecesError)} />}
                 {noEyepieces && (
-                  <p class="text-sm text-muted-foreground">
+                  <p class="text-label text-muted-foreground">
                     {t.noEyepiecesPrompt}{" "}
-                    <a
-                      href="/gear/eyepieces/new"
-                      class="font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
-                    >
+                    <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
                       {t.addEyepieces}
                     </a>
                   </p>
@@ -239,35 +247,22 @@ const showPrompts = needsSetup || addSite || addTelescope;
             )}
 
             {view.ranking && (
-              <section id="ranking" aria-labelledby="ranking-heading">
-                <div
-                  class:list={[
-                    "flex flex-wrap items-baseline justify-between gap-x-4",
-                    multipleTelescopes ? "mb-1" : "mb-4",
-                  ]}
-                >
-                  <h2 id="ranking-heading" class="font-display text-2xl font-semibold text-heading">
-                    {view.ranking.clearedText}
-                  </h2>
-                  {hasMore && (
-                    <a
-                      href="/tonight/all"
-                      class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-strong transition-colors hover:text-heading"
-                    >
-                      {t.all.seeAll}
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  )}
-                </div>
+              <Band id="ranking" headingId="ranking-heading" heading={view.ranking.clearedText}>
+                {hasMore && (
+                  <a slot="action" href="/tonight/all" class:list={[actionLink]}>
+                    {t.all.seeAll}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                )}
                 {multipleTelescopes && (
-                  <p class="mb-4 text-sm text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
+                  <p class="mb-4 text-label text-muted-foreground">{t.rankingFor({ telescope: view.telescopeName })}</p>
                 )}
                 {view.ranking.washedOutText && (
-                  <p class="mb-4 text-sm">
+                  <p class="mb-4">
                     <a
                       href="/tonight/all#washed-out"
                       data-washed-out={view.ranking.washedOutCount}
-                      class="inline-flex min-h-11 items-center gap-1 font-medium text-primary-strong underline-offset-4 transition-colors hover:underline"
+                      class:list={[quietLink]}
                     >
                       {view.ranking.washedOutText}
                       <span aria-hidden="true">→</span>
@@ -275,17 +270,14 @@ const showPrompts = needsSetup || addSite || addTelescope;
                   </p>
                 )}
                 {view.ranking.entries.length > 0 && (
-                  <ol class="space-y-4">
+                  <ol class="divide-y divide-border">
                     {view.ranking.entries.map((entry, i) => (
                       <ObjectCard entry={entry} rank={i + 1} logHref={logHref(view, entry.id)} />
                     ))}
                   </ol>
                 )}
                 {hasMore && (
-                  <a
-                    href="/tonight/all"
-                    class="mt-4 flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-                  >
+                  <a href="/tonight/all" class:list={[buttonVariants({ variant: "outline" }), "mt-6 w-full"]}>
                     {plural(
                       locale,
                       view.ranking.clearedCount,
@@ -296,11 +288,11 @@ const showPrompts = needsSetup || addSite || addTelescope;
                     <span aria-hidden="true">→</span>
                   </a>
                 )}
-              </section>
+              </Band>
             )}
 
             <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
-          </>
+          </div>
         )}
       </div>
     </div>

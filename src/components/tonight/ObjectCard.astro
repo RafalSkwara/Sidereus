@@ -1,5 +1,7 @@
 ---
+// One ranked object on Tonight: a row in the ranking band's ruled list, its heading and the shared details.
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
+import SeenTag from "@/components/tonight/SeenTag.astro";
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightEntry } from "@/lib/tonight/build";
@@ -17,22 +19,16 @@ const t = getMessages(locale).tonight.object;
 const commonName = localCommonName(entry.messier, entry.commonName, locale);
 ---
 
-<li class="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+<li class="py-4 first:pt-0 last:pb-0">
   <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-    <h3 class="font-display text-2xl font-semibold text-heading">
-      <span class="mr-2 font-mono text-sm font-normal text-muted-foreground">{rank}.</span>
+    <h3 class="font-display text-title font-semibold break-words text-heading">
+      <span class="mr-2 font-mono text-label font-normal text-muted-foreground">{rank}.</span>
       {entry.id}
-      {commonName && <span class="text-lg text-foreground"> · {commonName}</span>}
+      {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
     </h3>
-    <span class="text-sm text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</span>
+    <span class="text-label text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</span>
   </div>
-  {entry.seenText && (
-    <p class="mt-2">
-      <span class="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-        {entry.seenText}
-      </span>
-    </p>
-  )}
+  {entry.seenText && <SeenTag text={entry.seenText} />}
 
   <ObjectDetails entry={entry} logHref={logHref} />
 </li>

@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 /**
  * Import guard for the Moon card's time slider (moonlight-and-the-verdict): it runs in the browser, so it may import
  * only React, the browser-safe Moon-disc drawing (`@/lib/moon-disc/*`), the engine's island-safe `parameters`, the
- * message catalogue, `cn` and its extracted `MoonDisc`, held to the same list. Never astronomy-engine, the engine barrel or another engine module, which would pull
+ * message catalogue, `cn`, the shared `buttonVariants` (for "Now", tonight-nightfall) and its extracted `MoonDisc`,
+ * held to the same list. Never astronomy-engine, the engine barrel or another engine module, which would pull
  * the sky maths into the client bundle.
  */
 
@@ -25,12 +26,13 @@ function isAllowedImport(specifier: string): boolean {
     specifier === "@/lib/engine/parameters" ||
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
+    specifier === "@/components/ui/button" ||
     specifier === "@/components/tonight/MoonDisc"
   );
 }
 
 describe("MoonTimeSlider import guard", () => {
-  it("imports only React, the Moon-disc drawing, engine parameters, i18n, cn and MoonDisc", () => {
+  it("imports only React, the Moon-disc drawing, engine parameters, i18n, cn, buttonVariants and MoonDisc", () => {
     const specifiers = SOURCES.flatMap((source) => importSpecifiers(readFileSync(source, "utf8")));
     expect(specifiers).toContain("@/lib/moon-disc/geometry");
     expect(specifiers.filter((specifier) => !isAllowedImport(specifier))).toEqual([]);

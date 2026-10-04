@@ -567,37 +567,37 @@ No data changes. Rollback is a revert of the change's commits.
 
 #### Automated
 
-- [x] 3.1 Unit tests pass
-- [x] 3.2 Lint passes
-- [x] 3.3 Type check passes
-- [x] 3.4 Build succeeds
-- [x] 3.5 Hardcoded-value scan on the summary and sky-check files returns 0
-- [x] 3.6 e2e suite passes against local preview
+- [x] 3.1 Unit tests pass — 5222798
+- [x] 3.2 Lint passes — 5222798
+- [x] 3.3 Type check passes — 5222798
+- [x] 3.4 Build succeeds — 5222798
+- [x] 3.5 Hardcoded-value scan on the summary and sky-check files returns 0 — 5222798
+- [x] 3.6 e2e suite passes against local preview — 5222798
 
 #### Manual
 
-- [x] 3.7 Summary matches the canvas in spirit at 390 and 1280 in all themes
-- [x] 3.8 Each chevron lands on its detail
-- [x] 3.9 No-go night shows the no-targets text and next clearer night
-- [x] 3.10 Bars read correctly in red
+- [x] 3.7 Summary matches the canvas in spirit at 390 and 1280 in all themes — 5222798
+- [x] 3.8 Each chevron lands on its detail — 5222798
+- [x] 3.9 No-go night shows the no-targets text and next clearer night — 5222798
+- [x] 3.10 Bars read correctly in red — 5222798
 
 ### Phase 4: Detail as bands
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass
-- [ ] 4.2 Lint passes
-- [ ] 4.3 Type check passes
-- [ ] 4.4 Build succeeds
-- [ ] 4.5 Hardcoded-value scan on all Tonight files returns 0 (pseudo-element variants listed)
-- [ ] 4.6 e2e suite passes against local preview
-- [ ] 4.7 Smoke walk passes against local Supabase
+- [x] 4.1 Unit tests pass
+- [x] 4.2 Lint passes
+- [x] 4.3 Type check passes
+- [x] 4.4 Build succeeds
+- [x] 4.5 Hardcoded-value scan on all Tonight files returns 0 (pseudo-element variants listed)
+- [x] 4.6 e2e suite passes against local preview
+- [x] 4.7 Smoke walk passes against local Supabase
 
 #### Manual
 
-- [ ] 4.8 No boxed cards remain; detail reads as ruled bands in all themes at 390 and 1280
-- [ ] 4.9 Every /tonight control is at least 44 px with a visible ring focus
-- [ ] 4.10 Moon slider, Mark observed and the selectors work as before
+- [x] 4.8 No boxed cards remain; detail reads as ruled bands in all themes at 390 and 1280
+- [x] 4.9 Every /tonight control is at least 44 px with a visible ring focus
+- [x] 4.10 Moon slider, Mark observed and the selectors work as before
 
 ### Phase 5: States, visual gate and the rule
 

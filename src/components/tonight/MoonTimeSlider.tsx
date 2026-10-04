@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import MoonDisc from "@/components/tonight/MoonDisc";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { moonDiscLabel, moonPhaseLine } from "@/lib/moon-disc/label";
 import { nearestStateIndex, type MoonDiscState } from "@/lib/moon-disc/state";
@@ -35,21 +36,18 @@ interface MoonTimeSliderProps {
   children?: ReactNode;
 }
 
-const nowButtonClass = cn(
-  "inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border px-4",
-  "text-sm font-semibold text-primary-strong transition-colors hover:text-heading",
-  "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-);
+const nowButtonClass = buttonVariants({ variant: "outline", size: "sm" });
 
 /*
  * A native range input restyled from tokens only, so red mode stays red: the browser's own track and thumb carry
- * system greys. 44 px tall for touch; the track is thin, the thumb a primary dot with a surface rim.
+ * system greys. 44 px tall for touch; the track is thin, the thumb a primary dot with a surface rim. The thumb's
+ * -mt-1.75 centres the 20 px thumb on the 6 px WebKit track ((6 - 20) / 2 = -7 px); Firefox centres it itself.
  */
 const rangeClass = cn(
   "block h-11 w-full cursor-pointer appearance-none rounded-full bg-transparent",
-  "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
   "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-border",
-  "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none",
+  "[&::-webkit-slider-thumb]:-mt-1.75 [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none",
   "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-surface [&::-webkit-slider-thumb]:bg-primary",
   "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-border",
   "[&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2",
@@ -76,19 +74,19 @@ export default function MoonTimeSlider({ states, timeLabels, initialIndex, local
 
   return (
     <div>
-      <p className="font-display text-heading mt-1 text-2xl font-semibold" data-moon-phase>
+      <p className="text-body text-heading font-semibold" data-moon-phase>
         {moonPhaseLine(m, state)}
       </p>
 
       <div className="mt-4 flex items-center gap-4 sm:gap-5">
         <MoonDisc state={state} clipId={clipId} label={moonDiscLabel(m, state, time)} />
-        {children && <div className="min-w-0 space-y-2 text-sm">{children}</div>}
+        {children && <div className="text-label min-w-0 space-y-2">{children}</div>}
       </div>
 
       {last > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-heading font-mono text-lg" data-moon-time>
+            <span className="text-heading text-title font-mono" data-moon-time>
               {time}
             </span>
             <button
@@ -114,7 +112,7 @@ export default function MoonTimeSlider({ states, timeLabels, initialIndex, local
             aria-valuetext={time}
             className={cn("mt-1", rangeClass)}
           />
-          <div className="text-muted-foreground flex justify-between font-mono text-xs" aria-hidden="true">
+          <div className="text-muted-foreground text-label flex justify-between font-mono" aria-hidden="true">
             <span>{timeLabels[0]}</span>
             <span>{timeLabels[last]}</span>
           </div>

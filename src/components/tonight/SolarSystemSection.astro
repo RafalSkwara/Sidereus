@@ -3,6 +3,7 @@
 // window's own weather is go or marginal, so also on a cloudy-at-night no-go or a night without a dark window, where
 // the ranking is absent. Planets only: since moonlight-and-the-verdict the Moon has its own card at the top.
 import PlanetCard from "@/components/tonight/PlanetCard.astro";
+import Band from "@/components/ui/Band.astro";
 import { getMessages } from "@/i18n";
 import type { TonightSolarSystem } from "@/lib/tonight/build";
 
@@ -16,22 +17,15 @@ const { solarSystem, logHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.planets;
 ---
 
-<section id="planets" aria-labelledby="planets-heading">
-  <h2 id="planets-heading" class="mb-1 font-display text-2xl font-semibold text-heading">
-    {t.heading}
-  </h2>
-  <p class="text-sm text-muted-foreground">{solarSystem.windowText}</p>
-  {solarSystem.weatherText && <p class="mt-1 text-sm text-foreground">{solarSystem.weatherText}</p>}
+<Band id="planets" headingId="planets-heading" heading={t.heading}>
+  <p class="text-label text-muted-foreground">{solarSystem.windowText}</p>
+  {solarSystem.weatherText && <p class="mt-1 text-label text-foreground">{solarSystem.weatherText}</p>}
   {solarSystem.entries.length > 0 && (
-    <ol aria-label={t.listLabel} class="mt-4 space-y-4">
+    <ol aria-label={t.listLabel} class="mt-4 divide-y divide-border">
       {solarSystem.entries.map((entry) => (
         <PlanetCard entry={entry} logHref={logHref(entry.key)} />
       ))}
     </ol>
   )}
-  {solarSystem.noneText && (
-    <p class="mt-4 rounded-2xl border border-border bg-surface p-4 text-sm text-foreground sm:p-5">
-      {solarSystem.noneText}
-    </p>
-  )}
-</section>
+  {solarSystem.noneText && <p class="mt-4 text-body text-foreground">{solarSystem.noneText}</p>}
+</Band>
