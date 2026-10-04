@@ -1,0 +1,77 @@
+---
+// The data-dependent part of /tonight/nights (tonight-dashboard), a server island like TonightContent: the slim page
+// sky, the page's notice, then the seven-night strip for the site picked on Tonight. It loads through the same
+// loadTonight as Tonight, so both always agree, and never records the sky verdict (only Tonight shows it).
+import { ServerError } from "@/components/forms/ServerError";
+import NightStrip from "@/components/tonight/NightStrip.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+import { loadTonightFor } from "@/lib/tonight/island";
+import type { TonightNotice } from "@/lib/tonight/notice";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The site picked on Tonight (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
+  /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+  /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
+  notice?: TonightNotice | null;
+}
+
+const { locale } = Astro.locals;
+const { siteId, telescopeId, notice = null } = Astro.props;
+const m = getMessages(locale);
+const t = m.tonight;
+const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
+
+// Signed out, `load` is null and the island renders nothing.
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId });
+const view = load?.view ?? null;
+const failures = load
+  ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
+  : [];
+// No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
+const noGear =
+  load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+{load && (
+  <>
+    <TonightPageSky title={t.summary.nights({ count: String(OUTLOOK_NIGHTS) })} view={view} />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {notice &&
+        (notice.tone === "success" ? (
+          <Notice tone="success">{notice.text}</Notice>
+        ) : (
+          <div role="alert">
+            <ServerError message={notice.text} />
+          </div>
+        ))}
+
+      {failures.map((key) => (
+        <ServerError message={translate(key)} />
+      ))}
+
+      {noGear && (
+        <p class="text-body text-foreground">
+          {t.pages.noGear}{" "}
+          <a href="/tonight" class:list={[inlineLink]}>
+            {t.pages.toTonight}
+          </a>
+        </p>
+      )}
+
+      {view && (
+        <div>
+          <NightStrip siteName={view.siteName} timeZone={view.timeZone} nights={view.nights} />
+        </div>
+      )}
+    </div>
+  </>
+)}

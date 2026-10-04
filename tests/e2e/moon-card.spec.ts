@@ -6,8 +6,9 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * The Moon card's time slider, end to end (moonlight-and-the-verdict): moving the slider redraws the Moon for another
- * moment of tonight's window, the arrow keys step it, and "Now" jumps back to the current moment. Same setup as
+ * The Moon card's time slider, end to end (moonlight-and-the-verdict; on the Moon page since tonight-dashboard): moving
+ * the slider redraws the Moon for another moment of tonight's window, the arrow keys step it, and "Now" jumps back to
+ * the current moment. Same setup as
  * `moon-as-target.spec.ts`: a production preview on local Supabase with FORECAST_BASE_URL pointing at
  * `tests/e2e/forecast-fixture.mjs`, and place search stubbed with Madrid.
  *
@@ -22,11 +23,12 @@ test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
 
-test("the Moon card's slider redraws the Moon across the window and Now restores it", async ({ page }) => {
+test("the Moon page's slider redraws the Moon across the window and Now restores it", async ({ page }) => {
   await onboardInMadrid(page, "e2e-moon-card");
+  await page.goto("/tonight/moon");
 
-  // Tonight's content is a server island fetched after the page loads: wait for it before looking for the slider.
-  await expect(page.locator('section[aria-labelledby="verdict-heading"]')).toBeVisible();
+  // The page's content is a server island fetched after the page loads: wait for the card before looking for the
+  // slider.
   const card = page.locator(MOON_CARD);
   await expect(card.getByRole("heading", { level: 2, name: en.tonight.moon.card.kicker })).toBeVisible();
   const slider = card.getByRole("slider", { name: en.tonight.moon.card.slider });

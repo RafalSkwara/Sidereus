@@ -529,30 +529,30 @@ None for data. Links:
 
 #### Automated
 
-- [x] 1.1 Type check passes: `npx astro sync && npx astro check`
-- [x] 1.2 Lint passes: `npm run lint`
-- [x] 1.3 Unit tests pass, including new cases for `tonightReturnPath` / `returnTargetSchema` and the `formRedirect` keeping `from=moon`: `npm test`
-- [x] 1.4 i18n parity test passes (part of `npm test`)
-- [x] 1.5 e2e still green (nothing user-visible moved yet; `observation-log`, `moon-as-target` and `planets-on-tonight` still land on `/tonight?logged=`): `npm run test:e2e` per the handoff recipe
+- [x] 1.1 Type check passes: `npx astro sync && npx astro check` — 15b2c3f
+- [x] 1.2 Lint passes: `npm run lint` — 15b2c3f
+- [x] 1.3 Unit tests pass, including new cases for `tonightReturnPath` / `returnTargetSchema` and the `formRedirect` keeping `from=moon`: `npm test` — 15b2c3f
+- [x] 1.4 i18n parity test passes (part of `npm test`) — 15b2c3f
+- [x] 1.5 e2e still green (nothing user-visible moved yet; `observation-log`, `moon-as-target` and `planets-on-tonight` still land on `/tonight?logged=`): `npm run test:e2e` per the handoff recipe — 15b2c3f
 
 #### Manual
 
-- [x] 1.6 `/design` shows `TonightPageSky` (with view, without view) and `TonightPageSkeleton` in dark, light and red, at 390 px, with the dot and text legible
+- [x] 1.6 `/design` shows `TonightPageSky` (with view, without view) and `TonightPageSkeleton` in dark, light and red, at 390 px, with the dot and text legible — 15b2c3f
 
 ### Phase 2: Moon, Planets and Nights pages
 
 #### Automated
 
-- [ ] 2.1 Type check, lint and unit tests pass: `npx astro check && npm run lint && npm test`
-- [ ] 2.2 Build passes: `npm run build`
-- [ ] 2.3 Updated e2e specs pass (moon-card, moon-as-target, planets-on-tonight, seven-night-planner) and the rest stay green: `npm run test:e2e`
+- [x] 2.1 Type check, lint and unit tests pass: `npx astro check && npm run lint && npm test`
+- [x] 2.2 Build passes: `npm run build`
+- [x] 2.3 Updated e2e specs pass (moon-card, moon-as-target, planets-on-tonight, seven-night-planner) and the rest stay green: `npm run test:e2e`
 
 #### Manual
 
-- [ ] 2.4 Each page in EN/PL × dark/light/red at 390 px and desktop: slim sky, context line, back link returns to `/tonight`, content matches what the dashboard showed for the same site
-- [ ] 2.5 The Moon slider still works on `/tonight/moon` (drag, keys, Now), including red mode
-- [ ] 2.6 Planets page on a cloudy-planet-window night and nights page with a forecast outage (fixture down) read sensibly
-- [ ] 2.7 A second site chosen on the dashboard carries to all three pages
+- [x] 2.4 Each page in EN/PL × dark/light/red at 390 px and desktop: slim sky, context line, back link returns to `/tonight`, content matches what the dashboard showed for the same site
+- [x] 2.5 The Moon slider still works on `/tonight/moon` (drag, keys, Now), including red mode
+- [x] 2.6 Planets page on a cloudy-planet-window night and nights page with a forecast outage (fixture down) read sensibly
+- [x] 2.7 A second site chosen on the dashboard carries to all three pages
 
 ### Phase 3: Targets page
 
