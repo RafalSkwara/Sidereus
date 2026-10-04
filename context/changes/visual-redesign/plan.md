@@ -587,36 +587,36 @@ No data changes. The success redirect gains a query string. External links to `/
 
 #### Automated
 
-- [x] 3.1 Unit tests pass
-- [x] 3.2 Lint passes
-- [x] 3.3 Type check passes
-- [x] 3.4 Build succeeds
-- [x] 3.5 Hardcoded-value scan on shell, Topbar, TabBar, TopbarControls, form helpers and DeleteButton returns 0
-- [x] 3.6 e2e suite passes against local preview
+- [x] 3.1 Unit tests pass — 6a2281f
+- [x] 3.2 Lint passes — 6a2281f
+- [x] 3.3 Type check passes — 6a2281f
+- [x] 3.4 Build succeeds — 6a2281f
+- [x] 3.5 Hardcoded-value scan on shell, Topbar, TabBar, TopbarControls, form helpers and DeleteButton returns 0 — 6a2281f
+- [x] 3.6 e2e suite passes against local preview — 6a2281f
 
 #### Manual
 
-- [x] 3.7 Delete dialog: Escape and Cancel keep, confirm deletes, no white flash in red
-- [x] 3.8 Focus visible on every Topbar, TabBar and settings-panel control in all three themes
+- [x] 3.7 Delete dialog: Escape and Cancel keep, confirm deletes, no white flash in red — 6a2281f
+- [x] 3.8 Focus visible on every Topbar, TabBar and settings-panel control in all three themes — 6a2281f
 
 ### Phase 4: The /gear view
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass, including i18n parity
-- [ ] 4.2 Lint passes
-- [ ] 4.3 Type check passes
-- [ ] 4.4 Build succeeds
-- [ ] 4.5 Hardcoded-value scan on gear pages and gear forms returns 0
-- [ ] 4.6 e2e suite passes against local preview
-- [ ] 4.7 Smoke walk passes against local Supabase
+- [x] 4.1 Unit tests pass, including i18n parity
+- [x] 4.2 Lint passes
+- [x] 4.3 Type check passes
+- [x] 4.4 Build succeeds
+- [x] 4.5 Hardcoded-value scan on gear pages and gear forms returns 0
+- [x] 4.6 e2e suite passes against local preview
+- [x] 4.7 Smoke walk passes against local Supabase
 
 #### Manual
 
-- [ ] 4.8 Hub matches the Nightfall canvas: sky header, ruled bands, no boxed cards, at most one primary action
-- [ ] 4.9 New account sees explanatory empty bands with "add a site" as the one primary action
-- [ ] 4.10 Save and delete show the matching notice in EN and PL
-- [ ] 4.11 Polish copy fits at 390 px with no overflow at 360/390/768/1280
+- [x] 4.8 Hub matches the Nightfall canvas: sky header, ruled bands, no boxed cards, at most one primary action
+- [x] 4.9 New account sees explanatory empty bands with "add a site" as the one primary action
+- [x] 4.10 Save and delete show the matching notice in EN and PL
+- [x] 4.11 Polish copy fits at 390 px with no overflow at 360/390/768/1280
 
 ### Phase 5: States, visual gate and the rule
 

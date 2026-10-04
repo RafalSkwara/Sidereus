@@ -25,7 +25,7 @@ async function addTelescope(page: Page, name: string) {
   await form.locator("#apertureMm").fill("90");
   await form.locator("#focalLengthMm").fill("1250");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear$/);
+  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
 }
 
 /** Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog). */
@@ -33,7 +33,7 @@ async function deleteGear(page: Page, name: string) {
   await page.goto("/gear");
   await page
     .locator('main a[href^="/gear/"]')
-    .filter({ has: page.locator("span.font-semibold", { hasText: name }) })
+    .filter({ has: page.locator("[data-item-name]", { hasText: name }) })
     .first()
     .click();
   await expect(page).toHaveURL(/\/gear\/\w+\/[0-9a-f-]+$/);
@@ -43,13 +43,13 @@ async function deleteGear(page: Page, name: string) {
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("dialog").getByRole("button", { name: label }).click();
-  await expect(page).toHaveURL(/\/gear$/);
+  await expect(page).toHaveURL(/\/gear\?deleted=(site|telescope|eyepiece)$/);
 }
 
 /** The names of the user's eyepieces, as listed on `/gear`. */
 async function eyepieceNames(page: Page): Promise<string[]> {
   await page.goto("/gear");
-  const links = page.locator('a[href^="/gear/eyepieces/"]:not([href="/gear/eyepieces/new"]) span.font-semibold');
+  const links = page.locator('a[href^="/gear/eyepieces/"]:not([href="/gear/eyepieces/new"]) [data-item-name]');
   return (await links.allTextContents()).map((name) => name.trim());
 }
 
@@ -57,7 +57,7 @@ async function eyepieceNames(page: Page): Promise<string[]> {
 async function siteName(page: Page): Promise<string> {
   await page.goto("/gear");
   const name = await page
-    .locator('a[href^="/gear/sites/"]:not([href="/gear/sites/new"]) span.font-semibold')
+    .locator('a[href^="/gear/sites/"]:not([href="/gear/sites/new"]) [data-item-name]')
     .first()
     .textContent();
   if (!name) throw new Error("no site listed on /gear");

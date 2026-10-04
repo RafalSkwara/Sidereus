@@ -60,7 +60,7 @@ test("a new site asks for the location only on click and saves it rounded", asyn
   await form.locator("#name").fill("Kraków balcony");
   await form.locator("#bortle").selectOption("7");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear$/);
+  await expect(page).toHaveURL(/\/gear\?saved=site$/);
   await expect(page.getByText("Kraków balcony")).toBeVisible();
 });
 

@@ -172,14 +172,23 @@ export const en = {
 
   gear: {
     title: "My gear",
-    kicker: "Your sky, your kit",
-    back: "← My gear",
+    subtitle: "Where you observe from, and what you observe with.",
     backToGear: "Back to My gear",
     notFound: "Not found",
+    /** Band headings on the add and edit pages. */
+    detailsHeading: "Details",
+    deleteHeading: "Delete",
+    /** After a save or delete the hub shows one of these; the kind comes from a fixed `?saved=` / `?deleted=` value. */
+    notice: {
+      saved: { site: "Site saved.", telescope: "Telescope saved.", eyepiece: "Eyepiece saved." },
+      deleted: { site: "Site deleted.", telescope: "Telescope deleted.", eyepiece: "Eyepiece deleted." },
+    },
     sites: {
       heading: "Sites",
       add: "Add site",
-      empty: "No sites yet. Add the place you observe from, so tonight's verdict uses your sky.",
+      emptyTitle: "No sites yet",
+      emptyWhy:
+        "Tonight needs a site to read your sky: when it gets dark, what rises and how dark it is where you stand.",
       bortle: (p: { bortle: string }) => `Bortle ${p.bortle}`,
       minAltitude: (p: { degrees: string }) => `Min ${p.degrees}°`,
       zonePinned: "pinned",
@@ -194,7 +203,8 @@ export const en = {
     telescopes: {
       heading: "Telescopes",
       add: "Add telescope",
-      empty: "No telescopes yet. Add yours, so the suggested magnifications fit your scope.",
+      emptyTitle: "No telescopes yet",
+      emptyWhy: "Tonight needs a telescope to rank the objects it can show and suggest magnifications that fit it.",
       aperture: (p: { mm: string }) => `${p.mm} mm aperture`,
       focalLength: (p: { mm: string }) => `${p.mm} mm focal length`,
       newTitle: "Add telescope",
@@ -207,7 +217,8 @@ export const en = {
     eyepieces: {
       heading: "Eyepieces",
       add: "Add eyepiece",
-      empty: "No eyepieces yet. Add the ones in your case, so each object gets a pair you actually own.",
+      emptyTitle: "No eyepieces yet",
+      emptyWhy: "Optional. Add the ones in your case, and each object gets an eyepiece you actually own.",
       focalLength: (p: { mm: string }) => `${p.mm} mm`,
       afov: (p: { degrees: string; type: string }) => `${p.degrees}° AFOV · ${p.type}`,
       otherType: "Other",

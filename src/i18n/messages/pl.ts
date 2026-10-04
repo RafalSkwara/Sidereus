@@ -157,15 +157,21 @@ export const pl = {
 
   gear: {
     title: "Mój sprzęt",
-    kicker: "Twoje niebo, Twój sprzęt",
-    back: "← Mój sprzęt",
+    subtitle: "Skąd obserwujesz i czym obserwujesz.",
     backToGear: "Wróć do sprzętu",
     notFound: "Nie znaleziono",
+    detailsHeading: "Szczegóły",
+    deleteHeading: "Usuwanie",
+    notice: {
+      saved: { site: "Zapisano stanowisko.", telescope: "Zapisano teleskop.", eyepiece: "Zapisano okular." },
+      deleted: { site: "Usunięto stanowisko.", telescope: "Usunięto teleskop.", eyepiece: "Usunięto okular." },
+    },
     sites: {
       heading: "Stanowiska",
       add: "Dodaj stanowisko",
-      empty:
-        "Nie masz jeszcze żadnego stanowiska. Dodaj miejsce, z którego obserwujesz, żeby ocena nocy uwzględniała Twoje niebo.",
+      emptyTitle: "Nie masz jeszcze stanowisk",
+      emptyWhy:
+        "Widok „Dziś w nocy” potrzebuje stanowiska, żeby ocenić Twoje niebo: kiedy zapada zmrok, co wschodzi i jak ciemno jest tam, gdzie stoisz.",
       bortle: (p) => `${p.bortle} w skali Bortle'a`,
       minAltitude: (p) => `min. wysokość ${p.degrees}°`,
       zonePinned: "ustawiona ręcznie",
@@ -180,8 +186,9 @@ export const pl = {
     telescopes: {
       heading: "Teleskopy",
       add: "Dodaj teleskop",
-      empty:
-        "Nie masz jeszcze żadnego teleskopu. Dodaj swój, żeby proponowane powiększenia pasowały do Twojego sprzętu.",
+      emptyTitle: "Nie masz jeszcze teleskopów",
+      emptyWhy:
+        "Widok „Dziś w nocy” potrzebuje teleskopu, żeby wybrać obiekty, które w nim zobaczysz, i dobrać do niego powiększenia.",
       aperture: (p) => `apertura ${p.mm} mm`,
       focalLength: (p) => `ogniskowa ${p.mm} mm`,
       newTitle: "Dodaj teleskop",
@@ -194,8 +201,8 @@ export const pl = {
     eyepieces: {
       heading: "Okulary",
       add: "Dodaj okular",
-      empty:
-        "Nie masz jeszcze żadnego okularu. Dodaj te ze swojej walizki, żeby do każdego obiektu dobrać okulary, które naprawdę masz.",
+      emptyTitle: "Nie masz jeszcze okularów",
+      emptyWhy: "Opcjonalnie. Dodaj te ze swojej walizki, a każdy obiekt dostanie okular, który naprawdę masz.",
       focalLength: (p) => `${p.mm} mm`,
       afov: (p) => `pole widzenia ${p.degrees}° · ${p.type}`,
       otherType: "Inny",

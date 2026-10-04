@@ -29,20 +29,20 @@ async function addTelescope(page: Page, name: string) {
   await form.locator("#apertureMm").fill("80");
   await form.locator("#focalLengthMm").fill("400");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear$/);
+  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
 }
 
 async function deleteTelescope(page: Page, name: string) {
   await page.goto("/gear");
   await page
     .locator('main a[href^="/gear/telescopes/"]')
-    .filter({ has: page.locator("span.font-semibold", { hasText: name }) })
+    .filter({ has: page.locator("[data-item-name]", { hasText: name }) })
     .click();
   // DeleteButton opens its confirm dialog only once hydrated (see telescope-selector.spec.ts).
   await waitForHydration(page, DELETE_FORM);
   await page.locator(DELETE_FORM).getByRole("button", { name: en.gear.telescopes.delete }).click();
   await page.getByRole("dialog").getByRole("button", { name: en.gear.telescopes.delete }).click();
-  await expect(page).toHaveURL(/\/gear$/);
+  await expect(page).toHaveURL(/\/gear\?deleted=telescope$/);
 }
 
 async function openEntry(page: Page, id: string) {

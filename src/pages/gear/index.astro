@@ -1,6 +1,11 @@
 ---
+import { Plus } from "lucide-react";
 import GearShell from "@/components/gear/GearShell.astro";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import Band from "@/components/ui/Band.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { ServerError } from "@/components/forms/ServerError";
 import {
   eyepieceStore,
@@ -18,6 +23,11 @@ const SITES_FAILED: MessageKey = "errors.load.sites";
 const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
 const EYEPIECES_FAILED: MessageKey = "errors.load.eyepieces";
 
+/** The kinds a `?saved=` / `?deleted=` value may name; the gear routes redirect with exactly these. */
+const GEAR_KINDS = ["site", "telescope", "eyepiece"] as const;
+type GearKind = (typeof GEAR_KINDS)[number];
+const asGearKind = (value: string | null): GearKind | null => GEAR_KINDS.find((kind) => kind === value) ?? null;
+
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
 // Stored gear values carry at most one decimal; coordinates are stored rounded to two. No grouping, so 1000 mm stays "1000".
@@ -33,9 +43,14 @@ const coordinateSeparator = locale === "pl" ? "; " : ", ";
 const coordinates = (site: { latitudeDeg: number; longitudeDeg: number }) =>
   `${coordinate.format(site.latitudeDeg)}${coordinateSeparator}${coordinate.format(site.longitudeDeg)}`;
 const t = m.gear;
+const params = Astro.url.searchParams;
 const translate = (key: string | null) => (key ? translateKey(m, key, "errors.generic") : null);
 // `?error=` carries a message key; anything else reads as the generic message.
-const error = translate(Astro.url.searchParams.get("error"));
+const error = translate(params.get("error"));
+// `?saved=` / `?deleted=` name a gear kind from the fixed set; any other value shows nothing.
+const savedKind = asGearKind(params.get("saved"));
+const deletedKind = asGearKind(params.get("deleted"));
+const notice = savedKind ? t.notice.saved[savedKind] : deletedKind ? t.notice.deleted[deletedKind] : null;
 
 /** Loads one section; a failure only affects that section, never the whole hub. */
 async function load<T>(
@@ -66,6 +81,22 @@ if (supabase) {
   ({ items: eyepieces, error: eyepiecesError } = eyepieceResult);
 }
 
+/*
+ * One primary action at most: the first kind Tonight needs that is missing (a site, then a telescope; eyepieces are
+ * optional). A band that failed to load is not "missing". Other empty bands get an outline action, filled ones a
+ * ghost one.
+ */
+const missingSites = !sitesError && sites.length === 0;
+const missingTelescopes = !telescopesError && telescopes.length === 0;
+const primaryKind: GearKind | null = missingSites ? "site" : missingTelescopes ? "telescope" : null;
+const addClass = (kind: GearKind, empty: boolean) =>
+  buttonVariants({ variant: kind === primaryKind ? "default" : empty ? "outline" : "ghost" });
+
+const rowLink =
+  "-mx-2 flex min-h-11 flex-col justify-center rounded-lg px-2 py-3 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const rowName = "text-body font-semibold break-words text-heading";
+const rowMeta = "mt-1 flex flex-wrap gap-x-4 gap-y-1 text-label text-muted-foreground";
+
 /** f/ratio = focal length ÷ aperture, one decimal, trailing ".0" dropped (650 / 130 → "5"). */
 function focalRatio(telescope: TelescopeRecord): string {
   return num(telescope.focalLengthMm / telescope.apertureMm);
@@ -76,45 +107,44 @@ function eyepieceType(afovDeg: number): string {
   const preset = presetForAfov(afovDeg);
   return preset === "other" ? t.eyepieces.otherType : m.eyepiecePresets[preset].short;
 }
-
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
 ---
 
 <GearShell title={t.title}>
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
-  <h1 class="mb-6 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
+  <PageHeader slot="header" title={t.title} subtitle={t.subtitle} />
+
+  {notice && (
+    <div class="mb-6">
+      <Notice tone="success">{notice}</Notice>
+    </div>
+  )}
 
   <div class="mb-6 empty:hidden">
     <ServerError message={error} />
   </div>
 
   {supabase ? (
-    <div class="space-y-6">
-      <section aria-labelledby="sites-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="sites-heading" class="font-display text-2xl font-semibold text-heading">
-            {t.sites.heading}
-          </h2>
-          <a href="/gear/sites/new" class:list={[primaryLink]}>
-            {t.sites.add}
-          </a>
-        </div>
-
+    <div>
+      <Band headingId="sites-heading" heading={t.sites.heading}>
+        <a slot="action" href="/gear/sites/new" class:list={addClass("site", sites.length === 0)}>
+          <Plus aria-hidden="true" />
+          {t.sites.add}
+        </a>
         {sitesError ? (
           <ServerError message={translate(sitesError)} />
         ) : sites.length === 0 ? (
-          <p class="text-sm text-muted-foreground">{t.sites.empty}</p>
+          <div>
+            <p class="text-body font-semibold text-heading">{t.sites.emptyTitle}</p>
+            <p class="mt-1 text-body text-muted-foreground">{t.sites.emptyWhy}</p>
+          </div>
         ) : (
           <ul class="divide-y divide-border">
             {sites.map((site) => (
               <li>
-                <a
-                  href={`/gear/sites/${site.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
-                >
-                  <span class="block font-semibold break-words text-heading">{site.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <a href={`/gear/sites/${site.id}`} class:list={rowLink}>
+                  <span data-item-name class:list={rowName}>
+                    {site.name}
+                  </span>
+                  <span class:list={rowMeta}>
                     <span>{coordinates(site)}</span>
                     <span>{t.sites.bortle({ bortle: num(site.bortle) })}</span>
                     <span>{t.sites.minAltitude({ degrees: num(site.minAltitudeDeg) })}</span>
@@ -127,32 +157,29 @@ const primaryLink =
             ))}
           </ul>
         )}
-      </section>
+      </Band>
 
-      <section aria-labelledby="telescopes-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="telescopes-heading" class="font-display text-2xl font-semibold text-heading">
-            {t.telescopes.heading}
-          </h2>
-          <a href="/gear/telescopes/new" class:list={[primaryLink]}>
-            {t.telescopes.add}
-          </a>
-        </div>
-
+      <Band headingId="telescopes-heading" heading={t.telescopes.heading}>
+        <a slot="action" href="/gear/telescopes/new" class:list={addClass("telescope", telescopes.length === 0)}>
+          <Plus aria-hidden="true" />
+          {t.telescopes.add}
+        </a>
         {telescopesError ? (
           <ServerError message={translate(telescopesError)} />
         ) : telescopes.length === 0 ? (
-          <p class="text-sm text-muted-foreground">{t.telescopes.empty}</p>
+          <div>
+            <p class="text-body font-semibold text-heading">{t.telescopes.emptyTitle}</p>
+            <p class="mt-1 text-body text-muted-foreground">{t.telescopes.emptyWhy}</p>
+          </div>
         ) : (
           <ul class="divide-y divide-border">
             {telescopes.map((telescope) => (
               <li>
-                <a
-                  href={`/gear/telescopes/${telescope.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
-                >
-                  <span class="block font-semibold break-words text-heading">{telescope.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <a href={`/gear/telescopes/${telescope.id}`} class:list={rowLink}>
+                  <span data-item-name class:list={rowName}>
+                    {telescope.name}
+                  </span>
+                  <span class:list={rowMeta}>
                     <span>{t.telescopes.aperture({ mm: num(telescope.apertureMm) })}</span>
                     <span>{t.telescopes.focalLength({ mm: num(telescope.focalLengthMm) })}</span>
                     <span>f/{focalRatio(telescope)}</span>
@@ -162,32 +189,29 @@ const primaryLink =
             ))}
           </ul>
         )}
-      </section>
+      </Band>
 
-      <section aria-labelledby="eyepieces-heading" class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="eyepieces-heading" class="font-display text-2xl font-semibold text-heading">
-            {t.eyepieces.heading}
-          </h2>
-          <a href="/gear/eyepieces/new" class:list={[primaryLink]}>
-            {t.eyepieces.add}
-          </a>
-        </div>
-
+      <Band headingId="eyepieces-heading" heading={t.eyepieces.heading}>
+        <a slot="action" href="/gear/eyepieces/new" class:list={addClass("eyepiece", eyepieces.length === 0)}>
+          <Plus aria-hidden="true" />
+          {t.eyepieces.add}
+        </a>
         {eyepiecesError ? (
           <ServerError message={translate(eyepiecesError)} />
         ) : eyepieces.length === 0 ? (
-          <p class="text-sm text-muted-foreground">{t.eyepieces.empty}</p>
+          <div>
+            <p class="text-body font-semibold text-heading">{t.eyepieces.emptyTitle}</p>
+            <p class="mt-1 text-body text-muted-foreground">{t.eyepieces.emptyWhy}</p>
+          </div>
         ) : (
           <ul class="divide-y divide-border">
             {eyepieces.map((eyepiece) => (
               <li>
-                <a
-                  href={`/gear/eyepieces/${eyepiece.id}`}
-                  class="-mx-2 block rounded-lg px-2 py-3 transition-colors hover:bg-accent"
-                >
-                  <span class="block font-semibold break-words text-heading">{eyepiece.name}</span>
-                  <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <a href={`/gear/eyepieces/${eyepiece.id}`} class:list={rowLink}>
+                  <span data-item-name class:list={rowName}>
+                    {eyepiece.name}
+                  </span>
+                  <span class:list={rowMeta}>
                     <span>{t.eyepieces.focalLength({ mm: num(eyepiece.focalLengthMm) })}</span>
                     <span>
                       {t.eyepieces.afov({ degrees: num(eyepiece.afovDeg), type: eyepieceType(eyepiece.afovDeg) })}
@@ -198,7 +222,7 @@ const primaryLink =
             ))}
           </ul>
         )}
-      </section>
+      </Band>
     </div>
   ) : (
     <DatabaseMissing />
