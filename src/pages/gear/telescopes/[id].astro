@@ -70,9 +70,6 @@ if (supabase) {
   ) : (
     <Band headingId="not-found-heading" heading={m.gear.notFound}>
       <p class="text-body text-muted-foreground">{t.notFoundText}</p>
-      <div class="mt-4">
-        <BackLink href="/gear" label={m.gear.backToGear} />
-      </div>
     </Band>
   )}
 </GearShell>

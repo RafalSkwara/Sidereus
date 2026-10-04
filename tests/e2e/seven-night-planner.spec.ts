@@ -84,7 +84,7 @@ async function deleteGear(page: Page, name: string) {
   // DeleteButton opens its confirm dialog only once hydrated; clicked earlier it would post unconfirmed.
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
-  await page.getByRole("dialog").getByRole("button", { name: label }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
   await expect(page).toHaveURL(/\/gear\?deleted=(site|telescope|eyepiece)$/);
 }
 

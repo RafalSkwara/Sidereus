@@ -15,14 +15,14 @@ const SETTINGS_ID = "settings-panel";
 // Focus is a `--ring` outline offset from the control, so it shows on a pressed (filled) control too.
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const iconButton = cn(
-  "inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
+  "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground",
   focusRing,
 );
 const groupClass = "grid auto-cols-fr grid-flow-col gap-0.5 rounded-full border border-border p-0.5";
 const segmentClass = cn(
-  "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold",
+  "inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:bg-selected aria-pressed:text-selected-foreground",
   focusRing,

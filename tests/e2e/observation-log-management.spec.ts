@@ -41,7 +41,7 @@ async function deleteTelescope(page: Page, name: string) {
   // DeleteButton opens its confirm dialog only once hydrated (see telescope-selector.spec.ts).
   await waitForHydration(page, DELETE_FORM);
   await page.locator(DELETE_FORM).getByRole("button", { name: en.gear.telescopes.delete }).click();
-  await page.getByRole("dialog").getByRole("button", { name: en.gear.telescopes.delete }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: en.gear.telescopes.delete }).click();
   await expect(page).toHaveURL(/\/gear\?deleted=telescope$/);
 }
 
@@ -137,7 +137,7 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await openEntry(page, "M31");
   await waitForHydration(page, DELETE_FORM);
   await page.getByRole("button", { name: t.delete }).click();
-  await page.getByRole("dialog").getByRole("button", { name: t.delete }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: t.delete }).click();
   await expect(page).toHaveURL(/\/log\?deleted=M31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.deleted({ object: "M31" }));
   await expect(page.getByText(t.list.empty)).toBeVisible();

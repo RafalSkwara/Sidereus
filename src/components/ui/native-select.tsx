@@ -4,17 +4,12 @@ import { ChevronDownIcon } from "lucide-react";
 import { fieldClass } from "@/components/ui/input";
 
 /** A native `<select>` with the shared field look (`fieldClass`) and a token-coloured chevron. Full width. */
-function NativeSelect({
-  className,
-  size = "default",
-  ...props
-}: Omit<React.ComponentProps<"select">, "size"> & { size?: "sm" | "default" }) {
+function NativeSelect({ className, ...props }: Omit<React.ComponentProps<"select">, "size">) {
   return (
     <div className="group/native-select relative w-full" data-slot="native-select-wrapper">
       <select
         data-slot="native-select"
-        data-size={size}
-        className={cn(fieldClass, "cursor-pointer appearance-none pr-10 data-[size=sm]:h-9", className)}
+        className={cn(fieldClass, "cursor-pointer appearance-none pr-10", className)}
         {...props}
       />
       <ChevronDownIcon

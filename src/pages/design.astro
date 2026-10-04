@@ -24,8 +24,8 @@ import DeleteButton from "@/components/gear/DeleteButton";
 import { getMessages } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-const enabled = import.meta.env.DEV;
-if (!enabled) Astro.response.status = 404;
+// Dev only: anywhere else the page is a bare 404 and renders nothing.
+if (!import.meta.env.DEV) return new Response(null, { status: 404 });
 
 const { theme, locale } = Astro.locals;
 const m = getMessages(locale);
@@ -165,599 +165,590 @@ const row = "flex flex-wrap items-center gap-3";
 const groupTitle = "text-label font-semibold text-muted-foreground";
 ---
 
-{enabled ? (
-  <Layout title="Design · Sidereus">
-    <div class="min-h-screen w-full bg-background text-foreground">
-      <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
-        <div class="mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-4 pt-4 sm:px-8 sm:pt-6">
-          <span class="flex shrink-0 items-center gap-2.5">
-            <svg viewBox="0 0 24 24" class="size-5.5 text-primary" fill="currentColor" aria-hidden="true">
-              <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
-            </svg>
-            <span class="font-display text-title font-semibold text-heading">{m.common.appName}</span>
-          </span>
-          <div class="ml-auto">
-            <TopbarControls theme={theme} locale={locale} email={null} client:load />
-          </div>
-        </div>
-        <div class="mx-auto w-full max-w-5xl px-4 pt-6 pb-8 sm:px-8 sm:pt-10 sm:pb-12">
-          <PageHeader
-            title="Kitchen sink"
-            subtitle="Dev only. Every colour on this page is a theme token; switch the theme above to review dark, light and red."
-          >
-            <a slot="actions" href="#components-heading" class:list={buttonVariants({ variant: "outline" })}>
-              State matrix
-            </a>
-          </PageHeader>
+<Layout title="Design · Sidereus">
+  <div class="min-h-screen w-full bg-background text-foreground">
+    <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
+      <div class="mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-4 pt-4 sm:px-8 sm:pt-6">
+        <span class="flex shrink-0 items-center gap-2.5">
+          <svg viewBox="0 0 24 24" class="size-5.5 text-primary" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
+          </svg>
+          <span class="font-display text-title font-semibold text-heading">{m.common.appName}</span>
+        </span>
+        <div class="ml-auto">
+          <TopbarControls theme={theme} locale={locale} email={null} client:load />
         </div>
       </div>
+      <div class="mx-auto w-full max-w-5xl px-4 pt-6 pb-8 sm:px-8 sm:pt-10 sm:pb-12">
+        <PageHeader
+          title="Kitchen sink"
+          subtitle="Dev only. Every colour on this page is a theme token; switch the theme above to review dark, light and red."
+        >
+          <a slot="actions" href="#components-heading" class:list={buttonVariants({ variant: "outline" })}>
+            State matrix
+          </a>
+        </PageHeader>
+      </div>
+    </div>
 
-      <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
-        <Band headingId="tokens-heading" heading="Tokens">
-          <div class="flex flex-col gap-6">
-            {tokenGroups.map((group) => (
-              <div class="flex flex-col gap-3">
-                <h3 class:list={groupTitle}>{group.title}</h3>
-                <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  {group.tokens.map((token) => (
-                    <li class="flex min-w-0 flex-col gap-1.5">
-                      <span class:list={["h-14 rounded-lg border border-border", token.swatch]} aria-hidden="true" />
-                      <span class="font-mono text-xs break-all text-heading">--{token.name}</span>
-                      <span class="font-mono text-xs text-muted-foreground" data-token-value={token.name} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+    <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
+      <Band headingId="tokens-heading" heading="Tokens">
+        <div class="flex flex-col gap-6">
+          {tokenGroups.map((group) => (
             <div class="flex flex-col gap-3">
-              <h3 class:list={groupTitle}>Sky gradient</h3>
-              <div class="flex h-28 items-end rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pb-3">
-                <span class="font-mono text-xs text-heading">--zenith → --horizon</span>
-              </div>
-            </div>
-          </div>
-        </Band>
-
-        <Band headingId="type-heading" heading="Type and radius">
-          <div class="flex flex-col gap-6">
-            <div class="flex flex-col gap-4">
-              <p class="font-display text-display font-semibold break-words text-heading">text-display · My gear</p>
-              <p class="font-display text-title font-semibold text-heading">text-title · M31 · Andromeda Galaxy</p>
-              <p class="text-label font-semibold text-heading">text-label · Field label, button, row meta</p>
-              <p class="text-body text-foreground">
-                text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
-                <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
-              </p>
-              <p class="text-body text-foreground">
-                font-mono (Archivo, tabular figures) · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
-                <span class="font-mono text-heading">05:18</span> · best{" "}
-                <span class="font-mono text-heading">23:40 · S, 78°</span>
-              </p>
-              <p class="text-sm text-muted-foreground">Muted · 150 mm reflector · times in Europe/Warsaw</p>
-              <p class="text-xs text-faint">
-                Faint · Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
-              </p>
-              <p class="text-body text-foreground">
-                Polish glyphs · Zażółć gęślą jaźń ·{" "}
-                <span class="font-display font-semibold text-heading">Łabędź, Wężownik</span>
-              </p>
-            </div>
-            <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {radii.map((radius) => (
-                <li class="flex min-w-0 flex-col gap-1.5">
-                  <span class:list={["h-14 border border-border bg-surface", radius.swatch]} aria-hidden="true" />
-                  <span class="font-mono text-xs text-heading">{radius.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Band>
-
-        <Band headingId="components-heading" heading="Components × states">
-          <div class="flex flex-col gap-8">
-            <div class="flex flex-col gap-3">
-              <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                {stateContract.map((entry) => (
-                  <div class="flex min-w-0 flex-wrap gap-x-2">
-                    <dt class="font-mono font-semibold text-heading">{entry.state}</dt>
-                    <dd class="text-muted-foreground">{entry.where}</dd>
-                  </div>
+              <h3 class:list={groupTitle}>{group.title}</h3>
+              <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {group.tokens.map((token) => (
+                  <li class="flex min-w-0 flex-col gap-1.5">
+                    <span class:list={["h-14 rounded-lg border border-border", token.swatch]} aria-hidden="true" />
+                    <span class="font-mono text-xs break-all text-heading">--{token.name}</span>
+                    <span class="font-mono text-xs text-muted-foreground" data-token-value={token.name} />
+                  </li>
                 ))}
-              </dl>
-              <p class:list={blockNote}>
-                Skeletons: N/A for /gear. It is server-rendered and has no loading state besides form submission.
-              </p>
+              </ul>
             </div>
+          ))}
+          <div class="flex flex-col gap-3">
+            <h3 class:list={groupTitle}>Sky gradient</h3>
+            <div class="flex h-28 items-end rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pb-3">
+              <span class="font-mono text-xs text-heading">--zenith → --horizon</span>
+            </div>
+          </div>
+        </div>
+      </Band>
 
-            <div class="flex flex-col gap-10">
-              <!-- Button -->
-              <section class:list={block} aria-labelledby="c-button">
-                <h3 id="c-button" class:list={blockTitle}>
-                  Button
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <div class:list={row}>
-                      {variants.map((v) => (
-                        <Button type="button" variant={v.variant}>
-                          {v.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>hover · specimen</p>
-                    <div class:list={row}>
-                      {variants.map((v) => (
-                        <Button type="button" variant={v.variant} className={v.hover} tabIndex={-1}>
-                          {v.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>focus-visible · specimen</p>
-                    <div class:list={row}>
-                      {variants.map((v) => (
-                        <Button type="button" variant={v.variant} className={focusRing} tabIndex={-1}>
-                          {v.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>disabled</p>
-                    <div class:list={row}>
-                      {variants.map((v) => (
-                        <Button type="button" variant={v.variant} disabled>
-                          {v.label}
-                        </Button>
-                      ))}
-                    </div>
+      <Band headingId="type-heading" heading="Type and radius">
+        <div class="flex flex-col gap-6">
+          <div class="flex flex-col gap-4">
+            <p class="font-display text-display font-semibold break-words text-heading">text-display · My gear</p>
+            <p class="font-display text-title font-semibold text-heading">text-title · M31 · Andromeda Galaxy</p>
+            <p class="text-label font-semibold text-heading">text-label · Field label, button, row meta</p>
+            <p class="text-body text-foreground">
+              text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
+              <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
+            </p>
+            <p class="text-body text-foreground">
+              font-mono (Archivo, tabular figures) · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
+              <span class="font-mono text-heading">05:18</span> · best{" "}
+              <span class="font-mono text-heading">23:40 · S, 78°</span>
+            </p>
+            <p class="text-sm text-muted-foreground">Muted · 150 mm reflector · times in Europe/Warsaw</p>
+            <p class="text-xs text-faint">
+              Faint · Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+            </p>
+            <p class="text-body text-foreground">
+              Polish glyphs · Zażółć gęślą jaźń ·{" "}
+              <span class="font-display font-semibold text-heading">Łabędź, Wężownik</span>
+            </p>
+          </div>
+          <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {radii.map((radius) => (
+              <li class="flex min-w-0 flex-col gap-1.5">
+                <span class:list={["h-14 border border-border bg-surface", radius.swatch]} aria-hidden="true" />
+                <span class="font-mono text-xs text-heading">{radius.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Band>
+
+      <Band headingId="components-heading" heading="Components × states">
+        <div class="flex flex-col gap-8">
+          <div class="flex flex-col gap-3">
+            <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              {stateContract.map((entry) => (
+                <div class="flex min-w-0 flex-wrap gap-x-2">
+                  <dt class="font-mono font-semibold text-heading">{entry.state}</dt>
+                  <dd class="text-muted-foreground">{entry.where}</dd>
+                </div>
+              ))}
+            </dl>
+            <p class:list={blockNote}>
+              Skeletons: N/A for /gear. It is server-rendered and has no loading state besides form submission.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-10">
+            <!-- Button -->
+            <section class:list={block} aria-labelledby="c-button">
+              <h3 id="c-button" class:list={blockTitle}>
+                Button
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant}>
+                        {v.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <p class:list={notApplicable}>error, empty — N/A · loading — see SubmitButton</p>
-              </section>
-
-              <!-- Link-button -->
-              <section class:list={block} aria-labelledby="c-link-button">
-                <h3 id="c-link-button" class:list={blockTitle}>
-                  Link-button (buttonVariants on an a)
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <div class:list={row}>
-                      {linkVariants.map((v) => (
-                        <a href="#c-link-button" class:list={buttonVariants({ variant: v.variant })}>
-                          <Plus aria-hidden="true" />
-                          {v.label}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>hover · specimen</p>
-                    <div class:list={row}>
-                      {linkVariants.map((v) => (
-                        <a
-                          href="#c-link-button"
-                          tabindex="-1"
-                          class:list={cn(buttonVariants({ variant: v.variant }), v.hover)}
-                        >
-                          <Plus aria-hidden="true" />
-                          {v.label}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>focus-visible · specimen</p>
-                    <div class:list={row}>
-                      {linkVariants.map((v) => (
-                        <a
-                          href="#c-link-button"
-                          tabindex="-1"
-                          class:list={cn(buttonVariants({ variant: v.variant }), focusRing)}
-                        >
-                          <Plus aria-hidden="true" />
-                          {v.label}
-                        </a>
-                      ))}
-                    </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} className={v.hover} tabIndex={-1}>
+                        {v.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <p class:list={notApplicable}>
-                  disabled — N/A (a link is never disabled) · error, empty, loading — N/A
-                </p>
-              </section>
-
-              <!-- PageHeader -->
-              <section class:list={block} aria-labelledby="c-page-header">
-                <h3 id="c-page-header" class:list={blockTitle}>
-                  PageHeader in the sky header
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>default · title, subtitle and actions (also the header of this page)</p>
-                    <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
-                      <PageHeader title={m.gear.title} subtitle={m.gear.subtitle}>
-                        <a slot="actions" href="#c-page-header" class:list={buttonVariants({ variant: "outline" })}>
-                          <Plus aria-hidden="true" />
-                          {m.gear.sites.add}
-                        </a>
-                      </PageHeader>
-                    </div>
-                  </div>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>default · title only</p>
-                    <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
-                      <PageHeader title={m.gear.sites.editTitle} />
-                    </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} className={focusRing} tabIndex={-1}>
+                        {v.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — N/A (not interactive; its actions are link-buttons) · error, empty,
-                  loading — N/A
-                </p>
-              </section>
-
-              <!-- Band -->
-              <section class:list={block} aria-labelledby="c-band">
-                <h3 id="c-band" class:list={blockTitle}>
-                  Band
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>
-                      default (with rows), then empty — stacked, so the rule between bands shows
-                    </p>
-                    <div>
-                      <Band headingId="sample-sites-heading" heading={m.gear.sites.heading}>
-                        <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "ghost" })}>
-                          <Plus aria-hidden="true" />
-                          {m.gear.sites.add}
-                        </a>
-                        <ul class="divide-y divide-border">
-                          {sampleSites.map((site) => (
-                            <li>
-                              <a href="#c-band" class:list={rowLink}>
-                                <span class="text-body font-semibold break-words text-heading">{site.name}</span>
-                                <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-label text-muted-foreground">
-                                  {site.meta.map((part) => (
-                                    <span>{part}</span>
-                                  ))}
-                                </span>
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </Band>
-                      <Band headingId="sample-telescopes-heading" heading={m.gear.telescopes.heading}>
-                        <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "outline" })}>
-                          <Plus aria-hidden="true" />
-                          {m.gear.telescopes.add}
-                        </a>
-                        <div>
-                          <p class="text-body font-semibold text-heading">{m.gear.telescopes.emptyTitle}</p>
-                          <p class="mt-1 text-body text-muted-foreground">{m.gear.telescopes.emptyWhy}</p>
-                        </div>
-                      </Band>
-                    </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} disabled>
+                        {v.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — N/A (not interactive; rows and the action are links) · error — a
-                  failed band holds a ServerError · loading — N/A
-                </p>
-              </section>
+              </div>
+              <p class:list={notApplicable}>error, empty — N/A · loading — see SubmitButton</p>
+            </section>
 
-              <!-- BackLink -->
-              <section class:list={block} aria-labelledby="c-back-link">
-                <h3 id="c-back-link" class:list={blockTitle}>
-                  BackLink
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <div>
-                      <BackLink href="#c-back-link" label={m.gear.backToGear} />
-                    </div>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>hover · specimen</p>
-                    <div>
-                      <BackLink href="#c-back-link" label={m.gear.backToGear} class="text-heading" />
-                    </div>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>focus-visible · specimen</p>
-                    <div>
-                      <BackLink href="#c-back-link" label={m.gear.backToGear} class:list={focusRing} />
-                    </div>
+            <!-- Link-button -->
+            <section class:list={block} aria-labelledby="c-link-button">
+              <h3 id="c-link-button" class:list={blockTitle}>
+                Link-button (buttonVariants on an a)
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a href="#c-link-button" class:list={buttonVariants({ variant: v.variant })}>
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
                   </div>
                 </div>
-                <p class:list={notApplicable}>
-                  disabled — N/A (a link is never disabled) · error, empty, loading — N/A
-                </p>
-              </section>
-
-              <!-- Notice -->
-              <section class:list={block} aria-labelledby="c-notice">
-                <h3 id="c-notice" class:list={blockTitle}>
-                  Notice
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · success</p>
-                    <Notice tone="success">{m.gear.notice.saved.site}</Notice>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · warning</p>
-                    <Notice tone="warning">Forecast is 3 h old; the weather service could not be reached.</Notice>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · info</p>
-                    <Notice tone="info">{m.gear.notice.deleted.telescope}</Notice>
-                  </div>
-                </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — N/A (not interactive) · error — see ServerError · empty, loading —
-                  N/A
-                </p>
-              </section>
-
-              <!-- Input -->
-              <section class:list={block} aria-labelledby="c-input">
-                <h3 id="c-input" class:list={blockTitle}>
-                  Input
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <Input aria-label="Input, default" placeholder={m.siteForm.namePlaceholder} />
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>hover</p>
-                    <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>focus-visible · specimen</p>
-                    <Input
-                      aria-label="Input, focus specimen"
-                      value="Dark-sky park"
-                      className={fieldFocus}
-                      tabIndex={-1}
-                    />
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>disabled</p>
-                    <Input aria-label="Input, disabled" value="Back garden" disabled />
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>error · aria-invalid · live</p>
-                    <Input aria-label="Input, invalid" value="95.5" aria-invalid="true" />
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>error + focus-visible · specimen</p>
-                    <Input
-                      aria-label="Input, invalid focus specimen"
-                      value="95.5"
-                      aria-invalid="true"
-                      className={fieldFocusInvalid}
-                      tabIndex={-1}
-                    />
-                  </div>
-                </div>
-                <p class:list={notApplicable}>empty — the placeholder is the default cell · loading — N/A</p>
-              </section>
-
-              <!-- NativeSelect -->
-              <section class:list={block} aria-labelledby="c-select">
-                <h3 id="c-select" class:list={blockTitle}>
-                  NativeSelect
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <NativeSelect aria-label="Select, default">
-                      <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
-                      {bortleOptions.map((o) => (
-                        <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>hover</p>
-                    <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>focus-visible · specimen</p>
-                    <NativeSelect aria-label="Select, focus specimen" className={fieldFocus} tabIndex={-1}>
-                      {bortleOptions.map((o) => (
-                        <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>disabled</p>
-                    <NativeSelect aria-label="Select, disabled" disabled>
-                      {bortleOptions.map((o) => (
-                        <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>error · aria-invalid · live</p>
-                    <NativeSelect aria-label="Select, invalid" aria-invalid="true">
-                      <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
-                      {bortleOptions.map((o) => (
-                        <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                </div>
-                <p class:list={notApplicable}>empty — the “choose” option is the default cell · loading — N/A</p>
-              </section>
-
-              <!-- Label -->
-              <section class:list={block} aria-labelledby="c-label">
-                <h3 id="c-label" class:list={blockTitle}>
-                  Label
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default</p>
-                    <Label>{m.siteForm.latitude}</Label>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>disabled (peer-disabled) · live</p>
-                    <div class="flex flex-col gap-1.5">
-                      <input id="c-label-disabled-target" class="peer sr-only" disabled aria-hidden="true" />
-                      <Label htmlFor="c-label-disabled-target">{m.siteForm.longitude}</Label>
-                    </div>
-                  </div>
-                </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible — N/A (not a control; its field takes focus) · error — the field and FieldError
-                  carry it · empty, loading — N/A
-                </p>
-              </section>
-
-              <!-- FormField -->
-              <section class:list={block} aria-labelledby="c-form-field">
-                <h3 id="c-form-field" class:list={blockTitle}>
-                  FormField
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live</p>
-                    <FormField
-                      id="c-ff-default"
-                      label={m.common.name}
-                      value=""
-                      onChange={() => undefined}
-                      placeholder={m.siteForm.namePlaceholder}
-                    />
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>error · live</p>
-                    <FormField
-                      id="c-ff-error"
-                      label={m.siteForm.latitude}
-                      value="95.5"
-                      onChange={() => undefined}
-                      inputMode="decimal"
-                      error={m.errors.site.latitudeRange}
-                    />
-                  </div>
-                </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — the field is Input (rows above) · empty, loading — N/A
-                </p>
-              </section>
-
-              <!-- ServerError -->
-              <section class:list={block} aria-labelledby="c-server-error">
-                <h3 id="c-server-error" class:list={blockTitle}>
-                  ServerError
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>error (its only visible state; no message renders nothing)</p>
-                    <ServerError message={m.errors.save.site} />
-                  </div>
-                </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — N/A (not interactive) · empty, loading — N/A
-                </p>
-              </section>
-
-              <!-- SubmitButton -->
-              <section class:list={block} aria-labelledby="c-submit">
-                <h3 id="c-submit" class:list={blockTitle}>
-                  SubmitButton
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live (outside a form)</p>
-                    <SubmitButton pendingText={m.common.saving} icon={submitIcon}>
-                      {m.siteForm.submit}
-                    </SubmitButton>
-                  </div>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>loading · specimen (pending markup)</p>
-                    <Button type="button" disabled size="lg" className="w-full">
-                      <span class="flex items-center gap-2">
-                        <span class="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
-                        {m.common.saving}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible — the Primary Button (above) · disabled — only while pending (the loading cell) ·
-                  error — the form's ServerError · empty — N/A
-                </p>
-              </section>
-
-              <!-- Delete dialog -->
-              <section class:list={block} aria-labelledby="c-delete">
-                <h3 id="c-delete" class:list={blockTitle}>
-                  DeleteButton and its dialog
-                </h3>
-                <div class:list={grid}>
-                  <div class:list={cell}>
-                    <p class:list={stateLabel}>default · live (opens the real dialog)</p>
-                    <DeleteButton
-                      action="/design"
-                      label={m.gear.sites.delete}
-                      confirmMessage={m.gear.sites.confirmDelete}
-                      cancelLabel={m.common.cancel}
-                      client:load
-                    />
-                  </div>
-                  <div class:list={wideCell}>
-                    <p class:list={stateLabel}>open · specimen (the dialog's classes, always open)</p>
-                    <div class="flex justify-center rounded-lg bg-background/80 px-4 py-8">
-                      <div
-                        role="group"
-                        aria-label="Delete dialog specimen"
-                        class="w-full max-w-sm rounded-xl border border-border bg-surface p-5 text-foreground shadow-2xl"
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a
+                        href="#c-link-button"
+                        tabindex="-1"
+                        class:list={cn(buttonVariants({ variant: v.variant }), v.hover)}
                       >
-                        <p class="text-body text-heading">{m.gear.sites.confirmDelete}</p>
-                        <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                          <Button type="button" variant="outline" className={focusRing} tabIndex={-1}>
-                            {m.common.cancel}
-                          </Button>
-                          <Button type="button" variant="destructive" tabIndex={-1}>
-                            {m.gear.sites.delete}
-                          </Button>
-                        </div>
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a
+                        href="#c-link-button"
+                        tabindex="-1"
+                        class:list={cn(buttonVariants({ variant: v.variant }), focusRing)}
+                      >
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
+            </section>
+
+            <!-- PageHeader -->
+            <section class:list={block} aria-labelledby="c-page-header">
+              <h3 id="c-page-header" class:list={blockTitle}>
+                PageHeader in the sky header
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · title, subtitle and actions (also the header of this page)</p>
+                  <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
+                    <PageHeader title={m.gear.title} subtitle={m.gear.subtitle}>
+                      <a slot="actions" href="#c-page-header" class:list={buttonVariants({ variant: "outline" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.sites.add}
+                      </a>
+                    </PageHeader>
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · title only</p>
+                  <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
+                    <PageHeader title={m.gear.sites.editTitle} />
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive; its actions are link-buttons) · error, empty,
+                loading — N/A
+              </p>
+            </section>
+
+            <!-- Band -->
+            <section class:list={block} aria-labelledby="c-band">
+              <h3 id="c-band" class:list={blockTitle}>
+                Band
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    default (with rows), then empty — stacked, so the rule between bands shows
+                  </p>
+                  <div>
+                    <Band headingId="sample-sites-heading" heading={m.gear.sites.heading}>
+                      <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "ghost" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.sites.add}
+                      </a>
+                      <ul class="divide-y divide-border">
+                        {sampleSites.map((site) => (
+                          <li>
+                            <a href="#c-band" class:list={rowLink}>
+                              <span class="text-body font-semibold break-words text-heading">{site.name}</span>
+                              <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-label text-muted-foreground">
+                                {site.meta.map((part) => (
+                                  <span>{part}</span>
+                                ))}
+                              </span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </Band>
+                    <Band headingId="sample-telescopes-heading" heading={m.gear.telescopes.heading}>
+                      <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "outline" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.telescopes.add}
+                      </a>
+                      <div>
+                        <p class="text-body font-semibold text-heading">{m.gear.telescopes.emptyTitle}</p>
+                        <p class="mt-1 text-body text-muted-foreground">{m.gear.telescopes.emptyWhy}</p>
+                      </div>
+                    </Band>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive; rows and the action are links) · error — a failed
+                band holds a ServerError · loading — N/A
+              </p>
+            </section>
+
+            <!-- BackLink -->
+            <section class:list={block} aria-labelledby="c-back-link">
+              <h3 id="c-back-link" class:list={blockTitle}>
+                BackLink
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} class="text-heading" />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} class:list={focusRing} />
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
+            </section>
+
+            <!-- Notice -->
+            <section class:list={block} aria-labelledby="c-notice">
+              <h3 id="c-notice" class:list={blockTitle}>
+                Notice
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · success</p>
+                  <Notice tone="success">{m.gear.notice.saved.site}</Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · warning</p>
+                  <Notice tone="warning">Forecast is 3 h old; the weather service could not be reached.</Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · info</p>
+                  <Notice tone="info">{m.gear.notice.deleted.telescope}</Notice>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive) · error — see ServerError · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- Input -->
+            <section class:list={block} aria-labelledby="c-input">
+              <h3 id="c-input" class:list={blockTitle}>
+                Input
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <Input aria-label="Input, default" placeholder={m.siteForm.namePlaceholder} />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover</p>
+                  <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <Input
+                    aria-label="Input, focus specimen"
+                    value="Dark-sky park"
+                    className={fieldFocus}
+                    tabIndex={-1}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <Input aria-label="Input, disabled" value="Back garden" disabled />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · aria-invalid · live</p>
+                  <Input aria-label="Input, invalid" value="95.5" aria-invalid="true" />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error + focus-visible · specimen</p>
+                  <Input
+                    aria-label="Input, invalid focus specimen"
+                    value="95.5"
+                    aria-invalid="true"
+                    className={fieldFocusInvalid}
+                    tabIndex={-1}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>empty — the placeholder is the default cell · loading — N/A</p>
+            </section>
+
+            <!-- NativeSelect -->
+            <section class:list={block} aria-labelledby="c-select">
+              <h3 id="c-select" class:list={blockTitle}>
+                NativeSelect
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <NativeSelect aria-label="Select, default">
+                    <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover</p>
+                  <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <NativeSelect aria-label="Select, focus specimen" className={fieldFocus} tabIndex={-1}>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <NativeSelect aria-label="Select, disabled" disabled>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · aria-invalid · live</p>
+                  <NativeSelect aria-label="Select, invalid" aria-invalid="true">
+                    <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+              </div>
+              <p class:list={notApplicable}>empty — the “choose” option is the default cell · loading — N/A</p>
+            </section>
+
+            <!-- Label -->
+            <section class:list={block} aria-labelledby="c-label">
+              <h3 id="c-label" class:list={blockTitle}>
+                Label
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default</p>
+                  <Label>{m.siteForm.latitude}</Label>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled (peer-disabled) · live</p>
+                  <div class="flex flex-col gap-1.5">
+                    <input id="c-label-disabled-target" class="peer sr-only" disabled aria-hidden="true" />
+                    <Label htmlFor="c-label-disabled-target">{m.siteForm.longitude}</Label>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible — N/A (not a control; its field takes focus) · error — the field and FieldError
+                carry it · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- FormField -->
+            <section class:list={block} aria-labelledby="c-form-field">
+              <h3 id="c-form-field" class:list={blockTitle}>
+                FormField
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <FormField
+                    id="c-ff-default"
+                    label={m.common.name}
+                    value=""
+                    onChange={() => undefined}
+                    placeholder={m.siteForm.namePlaceholder}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · live</p>
+                  <FormField
+                    id="c-ff-error"
+                    label={m.siteForm.latitude}
+                    value="95.5"
+                    onChange={() => undefined}
+                    inputMode="decimal"
+                    error={m.errors.site.latitudeRange}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — the field is Input (rows above) · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- ServerError -->
+            <section class:list={block} aria-labelledby="c-server-error">
+              <h3 id="c-server-error" class:list={blockTitle}>
+                ServerError
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>error (its only visible state; no message renders nothing)</p>
+                  <ServerError message={m.errors.save.site} />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive) · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- SubmitButton -->
+            <section class:list={block} aria-labelledby="c-submit">
+              <h3 id="c-submit" class:list={blockTitle}>
+                SubmitButton
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live (outside a form)</p>
+                  <SubmitButton pendingText={m.common.saving} icon={submitIcon}>
+                    {m.siteForm.submit}
+                  </SubmitButton>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>loading · specimen (pending markup)</p>
+                  <Button type="button" disabled size="lg" className="w-full">
+                    <span class="flex items-center gap-2">
+                      <span class="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+                      {m.common.saving}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible — the Primary Button (above) · disabled — only while pending (the loading cell) ·
+                error — the form's ServerError · empty — N/A
+              </p>
+            </section>
+
+            <!-- Delete dialog -->
+            <section class:list={block} aria-labelledby="c-delete">
+              <h3 id="c-delete" class:list={blockTitle}>
+                DeleteButton and its dialog
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live (opens the real dialog)</p>
+                  <DeleteButton
+                    action="#"
+                    label={m.gear.sites.delete}
+                    confirmMessage={m.gear.sites.confirmDelete}
+                    cancelLabel={m.common.cancel}
+                    client:load
+                  />
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>open · specimen (the dialog's classes, always open)</p>
+                  <div class="flex justify-center rounded-lg bg-background/80 px-4 py-8">
+                    <div
+                      role="group"
+                      aria-label="Delete dialog specimen"
+                      class="w-full max-w-sm rounded-xl border border-border bg-surface p-5 text-foreground shadow-2xl"
+                    >
+                      <p class="text-body text-heading">{m.gear.sites.confirmDelete}</p>
+                      <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" className={focusRing} tabIndex={-1}>
+                          {m.common.cancel}
+                        </Button>
+                        <Button type="button" variant="destructive" tabIndex={-1}>
+                          {m.gear.sites.delete}
+                        </Button>
                       </div>
                     </div>
                   </div>
                 </div>
-                <p class:list={notApplicable}>
-                  hover, focus-visible, disabled — the Destructive and Outline Buttons (above; Cancel takes the initial
-                  focus, shown in the specimen) · error — the page's ServerError after a failed delete · empty, loading
-                  — N/A
-                </p>
-              </section>
-            </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — the Destructive and Outline Buttons (above; Cancel takes the initial
+                focus, shown in the specimen) · error — the page's ServerError after a failed delete · empty, loading —
+                N/A
+              </p>
+            </section>
           </div>
-        </Band>
+        </div>
+      </Band>
 
-        <footer class="mt-12 border-t border-border pt-4 text-xs text-faint">
-          Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
-        </footer>
-      </main>
-    </div>
-  </Layout>
-) : (
-  "Not found"
-)}
+      <footer class="mt-12 border-t border-border pt-4 text-xs text-faint">
+        Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+      </footer>
+    </main>
+  </div>
+</Layout>
 
 <script>
   // Print each token's resolved value next to its swatch, and refresh it when the theme flips.

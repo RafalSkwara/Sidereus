@@ -168,7 +168,10 @@
  * loses its system-blue highlight.
  * Native input icons live in the browser's shadow DOM, where `url(#red-only)` does not resolve, so they are
  * hidden instead: the date field keeps its own token-coloured icon (and the invisible picker button still
- * works), and numbers are typed or stepped with the arrow keys.
+ * works), numbers are typed or stepped with the arrow keys, and a search field is cleared with Escape.
+ * Known limit: an open <select> list is drawn by the operating system on macOS, iOS and Android (a system menu
+ * or sheet in grey with a blue highlight), which no page CSS reaches. The closed field and its options, where the
+ * browser draws them itself, follow the tokens.
  */
 [data-theme="red"] img {
   filter: url(#red-only);
@@ -176,6 +179,10 @@
 
 [data-theme="red"] ::-webkit-calendar-picker-indicator {
   opacity: 0;
+}
+
+[data-theme="red"] ::-webkit-search-cancel-button {
+  appearance: none;
 }
 
 [data-theme="red"] input[type="number"] {

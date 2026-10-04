@@ -1,7 +1,7 @@
 ---
 change_id: visual-redesign
 title: Visual redesign
-status: implemented
+status: impl_reviewed
 created: 2026-10-04
 updated: 2026-10-04
 archived_at: null

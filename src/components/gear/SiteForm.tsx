@@ -219,7 +219,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
           />
         </div>
         <div className="-mt-2">
-          <p className="text-muted-foreground text-xs">{t.coordinatesHint}</p>
+          <p className="text-muted-foreground text-sm">{t.coordinatesHint}</p>
           {/* Always rendered, so screen readers announce the Undo line when it fills in. */}
           <p
             role="status"
@@ -285,7 +285,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
           clearError("minAltitudeDeg");
         }}
         error={errors.minAltitudeDeg}
-        hint={<p className="text-muted-foreground mt-1 text-xs">{t.minAltitudeHint}</p>}
+        hint={<p className="text-muted-foreground mt-1.5 text-sm">{t.minAltitudeHint}</p>}
       />
 
       <div>
