@@ -1,0 +1,76 @@
+---
+/*
+ * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
+ * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
+ * ruled placeholder rows, so nothing jumps when the island swaps in. Bars that stand for text take that text's type
+ * role and hold a non-breaking space, so they have its line height.
+ */
+import BackLink from "@/components/ui/BackLink.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import TonightSky from "@/components/tonight/TonightSky.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages } from "@/i18n";
+
+interface Props {
+  title: string;
+  /** The page's own path, which the slow hint's reload link opens (never `/tonight`). */
+  reloadHref: string;
+  /** How many placeholder rows stand for the page's content. */
+  rows?: number;
+}
+
+const { title, reloadHref, rows = 5 } = Astro.props;
+const m = getMessages(Astro.locals.locale);
+const t = m.tonight;
+// bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
+const bar = "rounded bg-border motion-safe:animate-pulse";
+---
+
+<div role="status" aria-busy="true">
+  <span class="sr-only">{t.loading}</span>
+  <TonightSky>
+    <BackLink href="/tonight" label={m.nav.tonight} />
+    <div class="mt-2">
+      <PageHeader title={title} />
+    </div>
+    <div aria-hidden="true" class:list={[bar, "mt-3 w-72 max-w-full text-label"]}>
+      &nbsp;
+    </div>
+  </TonightSky>
+
+  <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+    <div aria-hidden="true">
+      <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
+      <div class="divide-y divide-border">
+        {Array.from({ length: rows }, () => (
+          <div class="space-y-2 py-4">
+            <div class:list={[bar, "h-6 w-1/2"]} />
+            <div class:list={[bar, "h-4 w-2/3"]} />
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
+    <p class="slow-hint mt-6 text-label text-muted-foreground">
+      {t.loadingSlow}{" "}
+      <a href={reloadHref} class:list={[buttonVariants({ variant: "link", size: "sm" })]}>
+        {t.reload}
+      </a>
+    </p>
+  </div>
+</div>
+
+<style>
+  /* visibility (not opacity) keeps the hint out of the accessibility tree and unclickable until it shows. */
+  .slow-hint {
+    visibility: hidden;
+    animation: slow-hint-reveal 0s linear 10s forwards;
+  }
+
+  @keyframes slow-hint-reveal {
+    to {
+      visibility: visible;
+    }
+  }
+</style>

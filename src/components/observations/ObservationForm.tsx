@@ -6,7 +6,12 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import type { TargetOption } from "@/lib/observations/target-search";
-import { MIN_NIGHT, observationInputSchema, observationUpdateSchema } from "@/lib/observations/schemas";
+import {
+  MIN_NIGHT,
+  observationInputSchema,
+  observationUpdateSchema,
+  type ReturnTarget,
+} from "@/lib/observations/schemas";
 import type { TargetKey } from "@/lib/targets";
 import { cn } from "@/lib/utils";
 import { TargetPicker } from "./TargetPicker";
@@ -47,6 +52,11 @@ interface Props {
   maxNight: string;
   /** A message key from `?error=`; translated here, unknown values read as the generic message. */
   serverError?: string | null;
+  /**
+   * Where the save returns (`returnTargetSchema`), posted as `from`: the focused Tonight page whose "Mark observed"
+   * linked here (tonight-dashboard), or `log` for manual entry, which `manual` mode posts on its own.
+   */
+  returnTo?: ReturnTarget;
   locale: Locale;
 }
 
@@ -91,6 +101,7 @@ export default function ObservationForm({
   telescopes,
   maxNight,
   serverError,
+  returnTo,
   locale,
 }: Props) {
   const m = getMessages(locale);
@@ -101,6 +112,7 @@ export default function ObservationForm({
   const [telescopeId, setTelescopeId] = useState(initial.telescopeId);
   const [rating, setRating] = useState(initial.rating === undefined ? "" : String(initial.rating));
   const [errors, setErrors] = useState<FieldErrors>({});
+  const from = returnTo ?? (mode === "manual" ? "log" : undefined);
 
   function validate() {
     const schema = mode === "edit" ? observationUpdateSchema : observationInputSchema;
@@ -130,25 +142,23 @@ export default function ObservationForm({
 
   return (
     <form method="POST" action={action} className="space-y-5" onSubmit={handleSubmit} noValidate>
+      {from && <input type="hidden" name="from" value={from} />}
       {mode === "ranking" ? (
         <input type="hidden" name="target" value={target} />
       ) : (
-        <>
-          {mode === "manual" && <input type="hidden" name="from" value="log" />}
-          <TargetPicker
-            id="target"
-            options={targetOptions}
-            initial={initial.target}
-            label={t.picker.label}
-            placeholder={t.picker.placeholder}
-            noMatch={t.picker.noMatch}
-            error={errors.target}
-            onChange={(value) => {
-              setTarget(value ?? "");
-              clearError("target");
-            }}
-          />
-        </>
+        <TargetPicker
+          id="target"
+          options={targetOptions}
+          initial={initial.target}
+          label={t.picker.label}
+          placeholder={t.picker.placeholder}
+          noMatch={t.picker.noMatch}
+          error={errors.target}
+          onChange={(value) => {
+            setTarget(value ?? "");
+            clearError("target");
+          }}
+        />
       )}
 
       <FormField

@@ -2,15 +2,13 @@
 // The data-dependent part of /tonight/all (tonight-all-objects): every object that cleared tonight's bar for the
 // same site and telescope as Tonight, as compact rows, by rank or by best time. A server island like
 // TonightContent, loading through the same loadTonight so both pages always agree.
-import { FORECAST_BASE_URL } from "astro:env/server";
-
 import { ServerError } from "@/components/forms/ServerError";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import { getMessages, plural, translateKey } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
-import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
-import { loadTonight, logHref } from "@/lib/tonight/load";
+import { loadTonightFor } from "@/lib/tonight/island";
+import { logHref } from "@/lib/tonight/load";
 
 interface Props {
   siteId?: string;
@@ -18,34 +16,24 @@ interface Props {
   sort: AllObjectsSort;
 }
 
-const { user, locale } = Astro.locals;
+const { locale } = Astro.locals;
 const { siteId, telescopeId, sort } = Astro.props;
-// The island route sits outside PROTECTED_ROUTES, so it guards itself: signed out, it renders nothing.
-const supabase = user ? Astro.locals.supabase : null;
 const m = getMessages(locale);
 const t = m.tonight;
 const a = t.all;
 
-const { view, tonightError, sitesError, telescopesError, needsSetup } = await loadTonight({
-  supabase,
-  locale,
-  siteId,
-  telescopeId,
-  now: new Date(),
-  cache: kvForecastCache(),
-  forecastBaseUrl: FORECAST_BASE_URL,
-  defer: (task) => {
-    Astro.locals.cfContext.waitUntil(task);
-  },
-  limit: Number.POSITIVE_INFINITY,
-});
+// Signed out, `load` is null and the island renders nothing.
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, limit: Number.POSITIVE_INFINITY });
+const view = load?.view ?? null;
 const rows = view?.ranking
   ? sortEntries(view.ranking.entries, sort).map((entry) => ({ entry, href: logHref(view, entry.id) }))
   : [];
 // Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
 // Tonight is never unexplained.
 const washedOut = view?.ranking?.washedOutEntries ?? [];
-const failure = tonightError ?? sitesError ?? telescopesError ?? (needsSetup ? "errors.load.setup" : null);
+const failure = load
+  ? (load.tonightError ?? load.sitesError ?? load.telescopesError ?? (load.needsSetup ? "errors.load.setup" : null))
+  : null;
 
 const sortLinks: { value: AllObjectsSort; label: string }[] = [
   { value: "rank", label: a.byRank },
@@ -55,7 +43,7 @@ const segment =
   "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-semibold transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50";
 ---
 
-{supabase && (
+{load && (
   <>
     <a
       href="/tonight"

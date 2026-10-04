@@ -739,6 +739,20 @@ export const pl = {
       noTargets: "Dziś nie ma na co celować.",
       seeDetail: "Pokaż szczegóły",
     },
+
+    pages: {
+      targets: "Cele",
+      skyVerdict: (p) => `Niebo: ${p.headline}.`,
+      noGear: "Dodaj miejsce obserwacji i teleskop, aby zobaczyć tę stronę.",
+      toTonight: "Przejdź do Dziś w nocy",
+      moonUnavailable: "Szczegóły Księżyca są teraz niedostępne.",
+      noPlanets: "Dziś nie ma planet do pokazania.",
+      noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",
+      // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
+      seeNights: (p) => `Zobacz najbliższe ${p.count} nocy`,
+      // The colon keeps the page title in its base form.
+      open: (p) => `Otwórz: ${p.page}`,
+    },
   },
 
   targets: {
@@ -769,7 +783,6 @@ export const pl = {
     ratingHigh: "5 · Znakomicie",
     ratingHint: "Ocena 1–2 zostawia obiekt na swoim miejscu; 3–5 lekko obniża go w kolejnych rankingach.",
     submit: "Zapisz obserwację",
-    back: "← Dziś w nocy",
     objectNotFound: "Sidereus nie zna tego obiektu.",
     needsGear: "Dodaj stanowisko i teleskop, zanim zapiszesz obserwację.",
     addGear: "Przejdź do sprzętu",

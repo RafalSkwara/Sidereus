@@ -57,7 +57,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready       |
 | S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | in-progress |
-| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | ready       |
+| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | in-progress |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | proposed    |
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
@@ -186,7 +186,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - How each page loads and fails on its own (no site yet, no dark window, forecast down), given that Tonight's content currently needs JavaScript (lessons.md). — Owner: team. Block: no (settled by `/10x-plan` research).
   - One change or several? Candidate: the dashboard plus the verdict and forecast pages first, then the Moon, planets and targets pages; `/10x-plan` decides. — Owner: team. Block: no.
 - **Risk:** The largest navigation change since M-1: every end-to-end test that walks Tonight moves, and a dashboard that computes every page's content for every tile would slow the landing page, so tiles should show only their summary. S-05 and S-06 were re-scoped on top of it (2026-10-04), so it goes before them. GitHub #87.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-05: Session plan timeline
 

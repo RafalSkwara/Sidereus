@@ -784,6 +784,29 @@ export const en = {
       noTargets: "No targets to point at tonight.",
       seeDetail: "Show details",
     },
+
+    /**
+     * tonight-dashboard: the focused pages under /tonight/* that the summary tiles open. The Moon, Planets and Next 7
+     * nights pages take their titles from `summary` (`moon`, `planets`, `nights`); the back link is `nav.tonight`.
+     */
+    pages: {
+      targets: "Targets",
+      /** The page sky's context line: the headline beside the verdict dot, read by screen readers only. */
+      skyVerdict: (p: { headline: string }) => `Sky: ${p.headline}.`,
+      /** A focused page without a site or a telescope; Tonight holds the setup prompts. */
+      noGear: "Add a site and a telescope to see this page.",
+      toTonight: "Go to Tonight",
+      /** The view has no Moon card (only when building it failed). */
+      moonUnavailable: "Moon details aren't available right now.",
+      /** The view has no solar system: no planet window, a no-go for the planets, or a failure. */
+      noPlanets: "No planets to show tonight.",
+      /** Targets without a ranking (weather no-go or no darkness), under the view's explanation. */
+      noTargets: "No object cleared the bar tonight, so there is nothing to point at.",
+      /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
+      seeNights: (p: { count: string }) => `See the next ${p.count} nights`,
+      /** A summary tile's accessible suffix after its heading; `page` is the page's title. */
+      open: (p: { page: string }) => `Open ${p.page}`,
+    },
   },
 
   /** How the log names a target that is not a Messier object (M-2 S-01): by its localised name. */
@@ -818,7 +841,6 @@ export const en = {
     ratingHigh: "5 · Superb",
     ratingHint: "A rating of 1-2 keeps the object where it is; 3-5 moves it down gently in later rankings.",
     submit: "Save observation",
-    back: "← Tonight",
     objectNotFound: "Sidereus doesn't know that object.",
     needsGear: "Add a site and a telescope before logging an observation.",
     addGear: "Go to my gear",

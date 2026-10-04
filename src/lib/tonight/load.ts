@@ -1,7 +1,8 @@
 // Everything Tonight's server islands load for one request: the user's sites, telescopes, eyepieces and log, the
 // chosen site and telescope, the forecast and the built view. Shared by TonightContent (top five) and
 // AllObjectsContent (every cleared object), so both pages always show the same night for the same setup.
-// Framework-free: the Worker's KV cache, the forecast base URL and `waitUntil` come in from the island.
+// Framework-free: the Worker's KV cache, the forecast base URL and `waitUntil` come in from the island, wired once
+// by `loadTonightFor` in `island.ts`.
 
 import type { MessageKey } from "@/i18n";
 import type { LogEntry } from "@/lib/engine";
@@ -15,6 +16,7 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
+import type { TonightReturnPage } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { openSkyChecksSince } from "@/lib/sky-checks/pending";
 import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
@@ -164,14 +166,18 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
 
 /**
  * The log form for one ranked object, by its target key ("M31"), prefilled with the ranking's night, site and
- * telescope (FR-016).
+ * telescope (FR-016). `from` names the focused Tonight page the link sits on (tonight-dashboard), so the save
+ * returns there; without it the save returns to Tonight.
  */
-export function logHref(tonight: TonightView, target: string): string {
+export function logHref(tonight: TonightView, target: string, from?: TonightReturnPage): string {
   const query = new URLSearchParams({
     object: target,
     night: tonight.date,
     site: tonight.siteId,
     telescope: tonight.telescopeId,
   });
+  if (from) {
+    query.set("from", from);
+  }
   return `/log/new?${query.toString()}`;
 }

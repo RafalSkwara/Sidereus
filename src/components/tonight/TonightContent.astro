@@ -1,8 +1,6 @@
 ---
 // The data-dependent part of /tonight, rendered as a server island (`server:defer` in pages/tonight.astro) so the
 // page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives.
-import { FORECAST_BASE_URL } from "astro:env/server";
-
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -19,12 +17,12 @@ import TonightSummary from "@/components/tonight/TonightSummary.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { kvForecastCache } from "@/lib/forecast/kv-cache";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
 import { MOON_TARGET_KEY } from "@/lib/targets";
-import { loadTonight, logHref } from "@/lib/tonight/load";
+import { islandDefer, loadTonightFor } from "@/lib/tonight/island";
+import { logHref, type TonightLoad } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
 
 interface Props {
@@ -39,19 +37,32 @@ interface Props {
   notice?: TonightNotice | null;
 }
 
-const { user, locale } = Astro.locals;
+const { locale } = Astro.locals;
 const { siteId, telescopeId, notice = null } = Astro.props;
-// The island route (/_server-islands/...) sits outside PROTECTED_ROUTES, so it guards itself: signed out, it
-// renders nothing and loads nothing.
-const supabase = user ? Astro.locals.supabase : null;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
-// Work that runs after the response is sent: the forecast's KV write and the sky check's record.
-const defer = (task: Promise<void>) => {
-  Astro.locals.cfContext.waitUntil(task);
-};
 
+// Signed out, the island loads nothing (`null`) and renders nothing; the empty load only keeps the names below typed.
+const NOTHING_LOADED: TonightLoad = {
+  sites: [],
+  telescopes: [],
+  eyepieces: [],
+  sitesError: null,
+  telescopesError: null,
+  eyepiecesError: null,
+  logError: null,
+  site: undefined,
+  telescope: undefined,
+  multipleSites: false,
+  multipleTelescopes: false,
+  needsSetup: false,
+  view: null,
+  tonightError: null,
+  openSkyChecks: [],
+};
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, withSkyChecks: true });
+const supabase = load ? Astro.locals.supabase : null;
 const {
   sites,
   telescopes,
@@ -67,23 +78,13 @@ const {
   view,
   tonightError,
   openSkyChecks,
-} = await loadTonight({
-  supabase,
-  locale,
-  siteId,
-  telescopeId,
-  now: new Date(),
-  cache: kvForecastCache(),
-  forecastBaseUrl: FORECAST_BASE_URL,
-  defer,
-  withSkyChecks: true,
-});
+} = load ?? NOTHING_LOADED;
 
 // Record the headline this view shows for the sky check (verdict-check). Fire and forget: it runs after the
 // response, and a failure is swallowed (never logged, never shown) so the check can never cost Tonight its render.
 const recordable = supabase ? recordableVerdict(view) : null;
 if (supabase && recordable) {
-  defer(
+  islandDefer(Astro.locals)(
     skyCheckStore.record(supabase, recordable).then(
       () => undefined,
       () => undefined,
@@ -119,7 +120,7 @@ const gearLink =
   "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
-{supabase && (
+{load && (
   <>
     <TonightSky verdict={view !== null}>
       {view ? (

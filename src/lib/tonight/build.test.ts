@@ -894,6 +894,9 @@ describe("buildTonight between the dark window's end and civil dawn", () => {
     const query = new URL(logHref(view, "jupiter"), "http://localhost").searchParams;
     expect(query.get("object")).toBe("jupiter");
     expect(query.get("night")).toBe("2026-10-10");
+    // Only a focused page's link names the page to return to (tonight-dashboard).
+    expect(query.has("from")).toBe(false);
+    expect(new URL(logHref(view, "jupiter", "planets"), "http://localhost").searchParams.get("from")).toBe("planets");
   });
 
   it("moves to the evening ahead once civil dawn has passed", () => {

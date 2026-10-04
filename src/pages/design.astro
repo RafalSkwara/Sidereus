@@ -5,7 +5,7 @@
 // stores. Hover and focus-visible cannot be forced on a static page, so those cells are labelled specimens that
 // apply the classes the component uses on `:hover` / `:focus-visible`; the "default · live" cells are the real
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, summary
-// and skeleton (tonight-nightfall) the same way.
+// and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
 import { Plus, Save } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
@@ -22,12 +22,15 @@ import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
+import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSummary from "@/components/tonight/TonightSummary.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages } from "@/i18n";
 import type { MoonDiscState, Verdict } from "@/lib/engine";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import type {
   TonightDarkWindow,
   TonightEntry,
@@ -1084,6 +1087,54 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <p class:list={stateLabel}>loading · the skeleton sky (its reload hint appears after 10 s)</p>
               <div class="overflow-hidden rounded-lg">
                 <TonightSkeleton />
+              </div>
+            </div>
+          </section>
+
+          <!-- TonightPageSky -->
+          <section class:list={block} aria-labelledby="c-tonight-page-sky">
+            <h3 id="c-tonight-page-sky" class:list={blockTitle}>
+              TonightPageSky
+            </h3>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · with view (go)</p>
+                <div class="overflow-hidden rounded-lg">
+                  <TonightPageSky title={m.tonight.pages.targets} view={summaryView} />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · with view (no-go)</p>
+                <div class="overflow-hidden rounded-lg">
+                  <TonightPageSky title={m.tonight.summary.planets} view={noTargetsView} />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · without view (setup missing or a failure: no context line)</p>
+                <div class="overflow-hidden rounded-lg">
+                  <TonightPageSky title={m.tonight.summary.moon} view={null} />
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible — see BackLink · disabled — N/A (a link is never disabled) · error — the without-view
+              sky, with the page's ServerError below it · loading — see TonightPageSkeleton
+            </p>
+          </section>
+
+          <!-- TonightPageSkeleton -->
+          <section class:list={block} aria-labelledby="c-tonight-page-skeleton">
+            <h3 id="c-tonight-page-skeleton" class:list={blockTitle}>
+              TonightPageSkeleton
+            </h3>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>loading · the slim sky and 3 rows (its reload hint appears after 10 s)</p>
+              <div class="overflow-hidden rounded-lg">
+                <TonightPageSkeleton
+                  title={m.tonight.summary.nights({ count: String(OUTLOOK_NIGHTS) })}
+                  reloadHref="/design"
+                  rows={3}
+                />
               </div>
             </div>
           </section>
