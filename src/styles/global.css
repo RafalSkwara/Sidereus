@@ -302,6 +302,23 @@
   --text-label--line-height: 1.25rem;
   --text-body: 1rem;
   --text-body--line-height: 1.5rem;
+  /*
+   * The giant verdict word over Tonight's sky (tonight-nightfall), with `font-display font-extrabold`, sized by word
+   * length so each word is as large as fits a 360 px screen (measured widths at wdth 125 / 800 / -0.035em: Go 1.72em,
+   * Tak 2.15, Nie 1.98, Może 3.01, No-go 3.56, Marginal 5.05; 328 px of content). VerdictCard picks the step.
+   */
+  --text-verdict-sm: 3.75rem;
+  --text-verdict-sm--line-height: 0.9;
+  --text-verdict-sm--letter-spacing: -0.035em;
+  --text-verdict-md: 5.5rem;
+  --text-verdict-md--line-height: 0.9;
+  --text-verdict-md--letter-spacing: -0.035em;
+  --text-verdict-lg: 9rem;
+  --text-verdict-lg--line-height: 0.9;
+  --text-verdict-lg--letter-spacing: -0.035em;
+  --text-verdict-xl: 12rem;
+  --text-verdict-xl--line-height: 0.9;
+  --text-verdict-xl--letter-spacing: -0.035em;
 
   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
   --font-sans: "Archivo Variable", system-ui, sans-serif;

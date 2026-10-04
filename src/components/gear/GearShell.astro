@@ -6,9 +6,15 @@ import { getMessages } from "@/i18n";
 
 interface Props {
   title: string;
+  /**
+   * Sky-flow mode (tonight-nightfall): for a page whose sky depends on island data. The Topbar sits on a zenith strip
+   * with no rule and `<main>` is full width with no top padding, so the sky band the page draws first (TonightSky)
+   * continues the strip as one sky. The page then puts its own content in the `max-w-3xl px-4` container.
+   */
+  skyFlow?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, skyFlow = false } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 // A page that fills the `header` slot gets the sky header: a full-bleed zenith-to-horizon band behind the Topbar
 // and that slot, ending in the horizon rule. Every other page renders as before.
@@ -17,7 +23,13 @@ const skyHeader = Astro.slots.has("header");
 
 <Layout title={m.common.pageTitle({ title })}>
   <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
-    {skyHeader ? (
+    {skyFlow ? (
+      <div class="bg-zenith">
+        <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+          <Topbar />
+        </div>
+      </div>
+    ) : skyHeader ? (
       <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
         <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
           <Topbar />
@@ -31,7 +43,7 @@ const skyHeader = Astro.slots.has("header");
         <Topbar />
       </div>
     )}
-    <main class="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-12">
+    <main class:list={[skyFlow ? "w-full flex-1 pb-8 sm:pb-12" : "mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-12"]}>
       <slot />
     </main>
     <TabBar />

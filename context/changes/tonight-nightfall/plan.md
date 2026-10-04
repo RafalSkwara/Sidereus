@@ -538,30 +538,30 @@ No data changes. Rollback is a revert of the change's commits.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the new ones and i18n parity
-- [x] 1.2 Lint passes
-- [x] 1.3 Type check passes
-- [x] 1.4 Build succeeds
+- [x] 1.1 Unit tests pass, including the new ones and i18n parity — d8f4d3f
+- [x] 1.2 Lint passes — d8f4d3f
+- [x] 1.3 Type check passes — d8f4d3f
+- [x] 1.4 Build succeeds — d8f4d3f
 
 #### Manual
 
-- [x] 1.5 /tonight still renders exactly as before at 390 px in dark
+- [x] 1.5 /tonight still renders exactly as before at 390 px in dark — d8f4d3f
 
 ### Phase 2: The sky
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Lint passes
-- [ ] 2.3 Type check passes
-- [ ] 2.4 Build succeeds
-- [ ] 2.5 Hardcoded-value scan on the sky files returns 0
-- [ ] 2.6 e2e suite passes against local preview
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Lint passes
+- [x] 2.3 Type check passes
+- [x] 2.4 Build succeeds
+- [x] 2.5 Hardcoded-value scan on the sky files returns 0
+- [x] 2.6 e2e suite passes against local preview
 
 #### Manual
 
-- [ ] 2.7 One sky with stars, horizon, giant word and explanation in all themes at 390 and 1280; skeleton without jump; red audit
-- [ ] 2.8 /gear and another GearShell page render as before
+- [x] 2.7 One sky with stars, horizon, giant word and explanation in all themes at 390 and 1280; skeleton without jump; red audit
+- [x] 2.8 /gear and another GearShell page render as before
 
 ### Phase 3: Summary bands
 
