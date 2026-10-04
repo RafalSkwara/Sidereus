@@ -586,9 +586,9 @@ None for data. Links:
 
 #### Automated
 
-- [x] 5.1 Type check, lint, unit tests, build and the full e2e suite pass: `npx astro check && npm run lint && npm test && npm run build && npm run test:e2e`
+- [x] 5.1 Type check, lint, unit tests, build and the full e2e suite pass: `npx astro check && npm run lint && npm test && npm run build && npm run test:e2e` — 3a8fb60
 
 #### Manual
 
-- [x] 5.2 `/design` shows the tile rows and page sky in the 7-state matrix across themes
+- [x] 5.2 `/design` shows the tile rows and page sky in the 7-state matrix across themes — 3a8fb60
 - [ ] 5.3 The user approves the screenshot gate
