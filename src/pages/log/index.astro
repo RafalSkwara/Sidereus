@@ -2,7 +2,7 @@
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
-import { CircleCheck } from "lucide-react";
+import Notice from "@/components/ui/Notice.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
@@ -58,13 +58,9 @@ const pageLink =
 
 <GearShell title={t.title}>
   {notice && (
-    <p
-      role="status"
-      class="mb-6 flex items-center gap-2 rounded-lg border border-go-border bg-go-surface px-3 py-2 text-sm text-foreground"
-    >
-      <CircleCheck className="size-4 shrink-0 text-go" aria-hidden="true" />
-      {notice}
-    </p>
+    <div class="mb-6">
+      <Notice tone="success">{notice}</Notice>
+    </div>
   )}
 
   <div class="mb-2 flex flex-wrap items-end justify-between gap-3">

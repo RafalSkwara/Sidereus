@@ -20,5 +20,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(result.message);
   }
-  return context.redirect("/gear");
+  return context.redirect("/gear?deleted=telescope");
 };

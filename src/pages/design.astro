@@ -1,14 +1,34 @@
 ---
-// Dev-only visual reference for the Observatory theme tokens (F-03). Not linked from anywhere and not gated:
-// it 404s outside `npm run dev`. Build it from token classes only, so it shows exactly what the tokens give.
+// Dev-only kitchen sink for the Nightfall design system (visual-redesign). Not linked from anywhere and not gated:
+// it 404s outside `npm run dev`. It shows the tokens, the type roles and every shared component in the 7-state
+// matrix, built from token classes only (no arbitrary values, no literal colours), with static sample data and no
+// stores. Hover and focus-visible cannot be forced on a static page, so those cells are labelled specimens that
+// apply the classes the component uses on `:hover` / `:focus-visible`; the "default · live" cells are the real
+// components, so real hover and real focus (Tab) can be checked there.
+import { createElement } from "react";
+import { Plus, Save } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import Band from "@/components/ui/Band.astro";
+import BackLink from "@/components/ui/BackLink.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { FormField } from "@/components/forms/FormField";
+import { ServerError } from "@/components/forms/ServerError";
+import { SubmitButton } from "@/components/forms/SubmitButton";
+import DeleteButton from "@/components/gear/DeleteButton";
+import { getMessages } from "@/i18n";
+import { cn } from "@/lib/utils";
 
-const enabled = import.meta.env.DEV;
-if (!enabled) Astro.response.status = 404;
+// Dev only: anywhere else the page is a bare 404 and renders nothing.
+if (!import.meta.env.DEV) return new Response(null, { status: 404 });
 
 const { theme, locale } = Astro.locals;
+const m = getMessages(locale);
 
 const tokenGroups = [
   {
@@ -69,267 +89,666 @@ const tokenGroups = [
       { name: "success", swatch: "bg-success" },
       { name: "star", swatch: "bg-star" },
       { name: "star-accent", swatch: "bg-star-accent" },
+      { name: "zenith", swatch: "bg-zenith" },
+      { name: "horizon", swatch: "bg-horizon" },
     ],
   },
 ];
 
-const verdicts = [
-  {
-    label: "Go",
-    dot: "bg-go",
-    card: "border-go-border bg-go-surface",
-    detail: "clear for 5 h 10 min of the dark window",
-  },
-  {
-    label: "Marginal",
-    dot: "bg-marginal",
-    card: "border-marginal-border bg-marginal-surface",
-    detail: "breaks in the cloud for 1 h 40 min",
-  },
-  {
-    label: "No-go",
-    dot: "bg-no-go",
-    card: "border-no-go-border bg-no-go-surface",
-    detail: "overcast for the whole dark window",
-  },
+const radii = [
+  { name: "rounded-sm", swatch: "rounded-sm" },
+  { name: "rounded-md", swatch: "rounded-md" },
+  { name: "rounded-lg (controls)", swatch: "rounded-lg" },
+  { name: "rounded-xl (dialog)", swatch: "rounded-xl" },
+  { name: "rounded-2xl", swatch: "rounded-2xl" },
+  { name: "rounded-full", swatch: "rounded-full" },
 ];
 
-const inputClass =
-  "h-11 w-full rounded-[10px] border border-input bg-surface px-3 text-[15px] text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20";
+/** Where each of the 7 states is shown (the plan's contract). */
+const stateContract = [
+  { state: "default", where: "every component (the “default · live” cells are the real components)" },
+  { state: "hover", where: "every interactive component (specimen + real hover on the live cell)" },
+  { state: "focus-visible", where: "every control (specimen + real focus by Tab on the live cell)" },
+  { state: "disabled", where: "every control" },
+  { state: "error", where: "FormField invalid, Input / NativeSelect aria-invalid, ServerError" },
+  { state: "empty", where: "an empty Band" },
+  { state: "loading", where: "SubmitButton pending" },
+];
+
+/*
+ * The six Button variants and the class each one takes on `:hover` (button.tsx). The hover specimen applies that
+ * class directly; the focus-visible specimen applies the `focus-visible:` outline classes directly.
+ */
+const variants = [
+  { variant: "default", label: "Primary", hover: "bg-primary/85" },
+  { variant: "outline", label: "Outline", hover: "bg-accent" },
+  { variant: "secondary", label: "Secondary", hover: "bg-accent" },
+  { variant: "ghost", label: "Ghost", hover: "bg-accent" },
+  { variant: "destructive", label: "Destructive", hover: "bg-destructive/10" },
+  { variant: "link", label: "Link", hover: "underline" },
+] as const;
+const linkVariants = variants.filter(
+  (v) => v.variant === "default" || v.variant === "outline" || v.variant === "ghost",
+);
+
+const focusRing = "outline-2 outline-offset-2 outline-ring";
+// The field look on `:focus-visible` (input.tsx `fieldClass`).
+const fieldFocus = "border-ring ring-1 ring-ring";
+// The field look on `:focus-visible` while `aria-invalid`.
+const fieldFocusInvalid = "border-destructive ring-1 ring-destructive";
+
+const bortleOptions = ([4, 5, 6] as const).map((value) => ({
+  value: String(value),
+  label: m.siteForm.bortleOption({ value: String(value), label: m.siteForm.bortleLabels[value] }),
+}));
+
+// Sample rows in the hub's row pattern. Static sample data, never a store.
+const sampleSites = [
+  { name: "Back garden", meta: ["52.23, 21.01", "Bortle 6", "Min 15°", "Europe/Warsaw (auto)"] },
+  { name: "Dark-sky park", meta: ["49.27, 22.53", "Bortle 2", "Min 10°", "Europe/Warsaw (pinned)"] },
+];
+const rowLink =
+  "-mx-2 flex min-h-11 flex-col justify-center rounded-lg px-2 py-3 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+const submitIcon = createElement(Save, { className: "size-4", "aria-hidden": true });
+
+// Shared page classes (token classes and type roles only).
+const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
+const blockTitle = "font-display text-title font-semibold text-heading";
+const blockNote = "text-sm text-muted-foreground";
+const grid = "grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3";
+const cell = "flex min-w-0 flex-col gap-2";
+const wideCell = "flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-3";
+const stateLabel = "font-mono text-sm text-muted-foreground";
+const notApplicable = "text-sm text-faint";
+const row = "flex flex-wrap items-center gap-3";
+const groupTitle = "text-label font-semibold text-muted-foreground";
 ---
 
-{enabled ? (
-  <Layout title="Design · Sidereus">
-    <div class="min-h-screen w-full bg-background text-foreground">
-      <div class="mx-auto flex w-full max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
-        <header class="flex flex-wrap items-center justify-between gap-4">
-          <span class="flex items-center gap-2.5">
-            <svg viewBox="0 0 24 24" class="size-[22px] text-primary" fill="currentColor" aria-hidden="true">
-              <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
-            </svg>
-            <span class="font-display text-2xl font-semibold text-heading">Sidereus</span>
-          </span>
-          <nav class="flex flex-wrap items-center justify-end gap-4 text-[15px]" aria-label="Sample navigation">
-            <span class="font-semibold text-heading">Tonight</span>
-            <span class="text-muted-foreground">My gear</span>
-            <TopbarControls theme={theme} locale={locale} email={null} client:load />
-          </nav>
-        </header>
+<Layout title="Design · Sidereus">
+  <div class="min-h-screen w-full bg-background text-foreground">
+    <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
+      <div class="mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-4 pt-4 sm:px-8 sm:pt-6">
+        <span class="flex shrink-0 items-center gap-2.5">
+          <svg viewBox="0 0 24 24" class="size-5.5 text-primary" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
+          </svg>
+          <span class="font-display text-title font-semibold text-heading">{m.common.appName}</span>
+        </span>
+        <div class="ml-auto">
+          <TopbarControls theme={theme} locale={locale} email={null} client:load />
+        </div>
+      </div>
+      <div class="mx-auto w-full max-w-5xl px-4 pt-6 pb-8 sm:px-8 sm:pt-10 sm:pb-12">
+        <PageHeader
+          title="Kitchen sink"
+          subtitle="Dev only. Every colour on this page is a theme token; switch the theme above to review dark, light and red."
+        >
+          <a slot="actions" href="#components-heading" class:list={buttonVariants({ variant: "outline" })}>
+            State matrix
+          </a>
+        </PageHeader>
+      </div>
+    </div>
 
-        <section class="flex flex-col gap-1.5" aria-labelledby="design-title">
-          <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">Design reference · dev only</p>
-          <h1 id="design-title" class="font-display text-[42px] leading-tight font-semibold text-heading">
-            Observatory tokens
-          </h1>
-          <p class="text-sm text-muted-foreground">
-            Every colour on this page comes from a theme token. Switch the theme above to review all three sets.
-          </p>
-        </section>
-
-        <section class="flex flex-col gap-6" aria-labelledby="tokens-heading">
-          <h2 id="tokens-heading" class="font-display text-[22px] font-semibold text-heading">
-            Tokens
-          </h2>
+    <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
+      <Band headingId="tokens-heading" heading="Tokens">
+        <div class="flex flex-col gap-6">
           {tokenGroups.map((group) => (
             <div class="flex flex-col gap-3">
-              <h3 class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">{group.title}</h3>
+              <h3 class:list={groupTitle}>{group.title}</h3>
               <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {group.tokens.map((token) => (
-                  <li class="flex flex-col gap-1.5">
+                  <li class="flex min-w-0 flex-col gap-1.5">
                     <span class:list={["h-14 rounded-lg border border-border", token.swatch]} aria-hidden="true" />
-                    <span class="font-mono text-xs text-heading">--{token.name}</span>
+                    <span class="font-mono text-xs break-all text-heading">--{token.name}</span>
                     <span class="font-mono text-xs text-muted-foreground" data-token-value={token.name} />
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-        </section>
+          <div class="flex flex-col gap-3">
+            <h3 class:list={groupTitle}>Sky gradient</h3>
+            <div class="flex h-28 items-end rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pb-3">
+              <span class="font-mono text-xs text-heading">--zenith → --horizon</span>
+            </div>
+          </div>
+        </div>
+      </Band>
 
-        <section class="flex flex-col gap-5" aria-labelledby="type-heading">
-          <h2 id="type-heading" class="font-display text-[22px] font-semibold text-heading">
-            Type
-          </h2>
-          <div class="flex flex-col gap-4 rounded-[14px] border border-border bg-surface px-6 py-5">
-            <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-              Kicker · Tonight · Saturday 10 October
+      <Band headingId="type-heading" heading="Type and radius">
+        <div class="flex flex-col gap-6">
+          <div class="flex flex-col gap-4">
+            <p class="font-display text-display font-semibold break-words text-heading">text-display · My gear</p>
+            <p class="font-display text-title font-semibold text-heading">text-title · M31 · Andromeda Galaxy</p>
+            <p class="text-label font-semibold text-heading">text-label · Field label, button, row meta</p>
+            <p class="text-body text-foreground">
+              text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
+              <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
             </p>
-            <p class="font-display text-[42px] leading-tight font-semibold text-heading">Display 42 · Home</p>
-            <p class="font-display text-[32px] font-semibold text-heading">Display 32 · Go</p>
-            <p class="font-display text-[22px] font-semibold text-heading">Display 22 · M31 · Andromeda Galaxy</p>
-            <p class="text-[15px] leading-relaxed text-foreground">
-              Body 15 · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
-              <span class="font-semibold text-primary-strong">25 mm Plössl</span> · detail with{" "}
-              <span class="font-semibold text-primary-strong">10 mm Plössl</span>.
-            </p>
-            <p class="text-sm text-muted-foreground">Muted 14 · 150 mm reflector · times in Europe/Warsaw</p>
-            <p class="text-[15px] text-foreground">
-              Mono · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
+            <p class="text-body text-foreground">
+              font-mono (Archivo, tabular figures) · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
               <span class="font-mono text-heading">05:18</span> · best{" "}
               <span class="font-mono text-heading">23:40 · S, 78°</span>
             </p>
+            <p class="text-sm text-muted-foreground">Muted · 150 mm reflector · times in Europe/Warsaw</p>
             <p class="text-xs text-faint">
-              Faint 12 · Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+              Faint · Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
             </p>
-            <p class="text-[15px] text-foreground">
-              Polish glyphs · Zażółć gęślą jaźń · <span class="font-display text-heading">Łabędź, Wężownik</span>
+            <p class="text-body text-foreground">
+              Polish glyphs · Zażółć gęślą jaźń ·{" "}
+              <span class="font-display font-semibold text-heading">Łabędź, Wężownik</span>
             </p>
           </div>
-        </section>
-
-        <section class="flex flex-col gap-5" aria-labelledby="verdicts-heading">
-          <h2 id="verdicts-heading" class="font-display text-[22px] font-semibold text-heading">
-            Verdicts
-          </h2>
-          <ul class="flex flex-wrap gap-2 text-sm text-muted-foreground" aria-label="Verdict chips">
-            {verdicts.map((v) => (
-              <li class="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
-                <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
-                {v.label}
+          <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {radii.map((radius) => (
+              <li class="flex min-w-0 flex-col gap-1.5">
+                <span class:list={["h-14 border border-border bg-surface", radius.swatch]} aria-hidden="true" />
+                <span class="font-mono text-xs text-heading">{radius.name}</span>
               </li>
             ))}
           </ul>
-          <div class="flex flex-col gap-4">
-            {verdicts.map((v) => (
-              <div class:list={["flex flex-col gap-2.5 rounded-[14px] border px-6 py-5", v.card]}>
-                <div class="flex flex-wrap items-center gap-3">
-                  <span class:list={["size-3 rounded-full", v.dot]} aria-hidden="true" />
-                  <span class="font-display text-[32px] font-semibold text-heading">{v.label}</span>
-                  <span class="text-[15px] text-foreground">{v.detail}</span>
+        </div>
+      </Band>
+
+      <Band headingId="components-heading" heading="Components × states">
+        <div class="flex flex-col gap-8">
+          <div class="flex flex-col gap-3">
+            <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              {stateContract.map((entry) => (
+                <div class="flex min-w-0 flex-wrap gap-x-2">
+                  <dt class="font-mono font-semibold text-heading">{entry.state}</dt>
+                  <dd class="text-muted-foreground">{entry.where}</dd>
                 </div>
-                <p class="text-[15px] text-foreground">
-                  Dark from <span class="font-mono text-heading">19:42</span> to{" "}
-                  <span class="font-mono text-heading">05:18</span>
-                </p>
-                <p class="text-[13px] text-muted-foreground">Forecast updated 12 min ago</p>
+              ))}
+            </dl>
+            <p class:list={blockNote}>
+              Skeletons: N/A for /gear. It is server-rendered and has no loading state besides form submission.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-10">
+            <!-- Button -->
+            <section class:list={block} aria-labelledby="c-button">
+              <h3 id="c-button" class:list={blockTitle}>
+                Button
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant}>
+                        {v.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} className={v.hover} tabIndex={-1}>
+                        {v.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} className={focusRing} tabIndex={-1}>
+                        {v.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <div class:list={row}>
+                    {variants.map((v) => (
+                      <Button type="button" variant={v.variant} disabled>
+                        {v.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
+              <p class:list={notApplicable}>error, empty — N/A · loading — see SubmitButton</p>
+            </section>
 
-        <section class="flex flex-col gap-5" aria-labelledby="card-heading">
-          <h2 id="card-heading" class="font-display text-[22px] font-semibold text-heading">
-            Card
-          </h2>
-          <article class="flex flex-col gap-2.5 rounded-[14px] border border-border bg-card px-[22px] py-5 text-card-foreground">
-            <div class="flex items-baseline justify-between gap-3">
-              <h3 class="font-display text-[22px] font-semibold text-heading">M31 · Andromeda Galaxy</h3>
-              <span class="text-[13px] text-muted-foreground">in Andromeda</span>
-            </div>
-            <p class="text-[15px] leading-normal">Up for 7 h 50 min of the dark window · 92% clear of moonlight</p>
-            <p class="flex flex-wrap gap-6 text-sm text-muted-foreground">
-              <span>
-                Window <span class="font-mono text-heading">19:50–04:40</span>
-              </span>
-              <span>
-                Best <span class="font-mono text-heading">23:40 · S, 78°</span>
-              </span>
-            </p>
-            <p class="text-sm">
-              Find with <span class="font-semibold text-primary-strong">25 mm Plössl</span> · detail with{" "}
-              <span class="font-semibold text-primary-strong">10 mm Plössl</span>
-            </p>
-          </article>
-        </section>
+            <!-- Link-button -->
+            <section class:list={block} aria-labelledby="c-link-button">
+              <h3 id="c-link-button" class:list={blockTitle}>
+                Link-button (buttonVariants on an a)
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a href="#c-link-button" class:list={buttonVariants({ variant: v.variant })}>
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a
+                        href="#c-link-button"
+                        tabindex="-1"
+                        class:list={cn(buttonVariants({ variant: v.variant }), v.hover)}
+                      >
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div class:list={row}>
+                    {linkVariants.map((v) => (
+                      <a
+                        href="#c-link-button"
+                        tabindex="-1"
+                        class:list={cn(buttonVariants({ variant: v.variant }), focusRing)}
+                      >
+                        <Plus aria-hidden="true" />
+                        {v.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
+            </section>
 
-        <section class="flex flex-col gap-5" aria-labelledby="buttons-heading">
-          <h2 id="buttons-heading" class="font-display text-[22px] font-semibold text-heading">
-            Buttons
-          </h2>
-          <div class="flex flex-wrap gap-3">
-            <a
-              href="#buttons-heading"
-              class="inline-flex h-11 items-center rounded-[10px] bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Plan the next 7 nights
-            </a>
-            <a
-              href="#buttons-heading"
-              class="inline-flex h-11 items-center rounded-[10px] border border-border px-5 text-[15px] font-semibold text-heading transition-colors hover:bg-accent"
-            >
-              Edit gear
-            </a>
-          </div>
-          <p class="text-sm text-muted-foreground">
-            shadcn <code class="font-mono">Button</code> variants, unchanged:
-          </p>
-          <div class="flex flex-wrap gap-3">
-            <Button size="lg">Primary</Button>
-            <Button size="lg" variant="secondary">
-              Secondary
-            </Button>
-            <Button size="lg" variant="outline">
-              Outline
-            </Button>
-            <Button size="lg" variant="destructive">
-              Destructive
-            </Button>
-            <Button size="lg" variant="ghost">
-              Ghost
-            </Button>
-            <Button size="lg" variant="link">
-              Link
-            </Button>
-            <Button size="lg" disabled>
-              Disabled
-            </Button>
-          </div>
-        </section>
-
-        <section class="flex flex-col gap-5" aria-labelledby="forms-heading">
-          <h2 id="forms-heading" class="font-display text-[22px] font-semibold text-heading">
-            Form controls
-          </h2>
-          <div class="grid gap-5 sm:grid-cols-3">
-            <div class="flex flex-col gap-1.5">
-              <label for="design-default" class="text-sm font-semibold text-heading">
-                Default
-              </label>
-              <input id="design-default" class:list={[inputClass]} placeholder="Backyard" />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label for="design-focus" class="text-sm font-semibold text-heading">
-                Focus
-              </label>
-              <input
-                id="design-focus"
-                class:list={[inputClass, "border-ring ring-[3px] ring-ring/50"]}
-                value="Dark-sky park"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label for="design-invalid" class="text-sm font-semibold text-heading">
-                Invalid
-              </label>
-              <input
-                id="design-invalid"
-                class:list={[inputClass]}
-                value="95.5"
-                aria-invalid="true"
-                aria-describedby="design-invalid-error"
-              />
-              <p id="design-invalid-error" class="text-sm text-destructive">
-                Latitude must be between −90 and 90.
+            <!-- PageHeader -->
+            <section class:list={block} aria-labelledby="c-page-header">
+              <h3 id="c-page-header" class:list={blockTitle}>
+                PageHeader in the sky header
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · title, subtitle and actions (also the header of this page)</p>
+                  <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
+                    <PageHeader title={m.gear.title} subtitle={m.gear.subtitle}>
+                      <a slot="actions" href="#c-page-header" class:list={buttonVariants({ variant: "outline" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.sites.add}
+                      </a>
+                    </PageHeader>
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · title only</p>
+                  <div class="rounded-lg border-b border-border bg-linear-to-b from-zenith to-horizon px-4 pt-6 pb-8">
+                    <PageHeader title={m.gear.sites.editTitle} />
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive; its actions are link-buttons) · error, empty,
+                loading — N/A
               </p>
-            </div>
-          </div>
-          <div
-            role="alert"
-            class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground"
-          >
-            <strong class="font-semibold text-heading">Could not save the site.</strong> Please try again.
-          </div>
-        </section>
+            </section>
 
-        <footer class="border-t border-border pt-4 text-xs text-faint">
-          Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
-        </footer>
-      </div>
-    </div>
-  </Layout>
-) : (
-  "Not found"
-)}
+            <!-- Band -->
+            <section class:list={block} aria-labelledby="c-band">
+              <h3 id="c-band" class:list={blockTitle}>
+                Band
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    default (with rows), then empty — stacked, so the rule between bands shows
+                  </p>
+                  <div>
+                    <Band headingId="sample-sites-heading" heading={m.gear.sites.heading}>
+                      <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "ghost" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.sites.add}
+                      </a>
+                      <ul class="divide-y divide-border">
+                        {sampleSites.map((site) => (
+                          <li>
+                            <a href="#c-band" class:list={rowLink}>
+                              <span class="text-body font-semibold break-words text-heading">{site.name}</span>
+                              <span class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-label text-muted-foreground">
+                                {site.meta.map((part) => (
+                                  <span>{part}</span>
+                                ))}
+                              </span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </Band>
+                    <Band headingId="sample-telescopes-heading" heading={m.gear.telescopes.heading}>
+                      <a slot="action" href="#c-band" class:list={buttonVariants({ variant: "outline" })}>
+                        <Plus aria-hidden="true" />
+                        {m.gear.telescopes.add}
+                      </a>
+                      <div>
+                        <p class="text-body font-semibold text-heading">{m.gear.telescopes.emptyTitle}</p>
+                        <p class="mt-1 text-body text-muted-foreground">{m.gear.telescopes.emptyWhy}</p>
+                      </div>
+                    </Band>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive; rows and the action are links) · error — a failed
+                band holds a ServerError · loading — N/A
+              </p>
+            </section>
+
+            <!-- BackLink -->
+            <section class:list={block} aria-labelledby="c-back-link">
+              <h3 id="c-back-link" class:list={blockTitle}>
+                BackLink
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} class="text-heading" />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div>
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} class:list={focusRing} />
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
+            </section>
+
+            <!-- Notice -->
+            <section class:list={block} aria-labelledby="c-notice">
+              <h3 id="c-notice" class:list={blockTitle}>
+                Notice
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · success</p>
+                  <Notice tone="success">{m.gear.notice.saved.site}</Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · warning</p>
+                  <Notice tone="warning">Forecast is 3 h old; the weather service could not be reached.</Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · info</p>
+                  <Notice tone="info">{m.gear.notice.deleted.telescope}</Notice>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive) · error — see ServerError · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- Input -->
+            <section class:list={block} aria-labelledby="c-input">
+              <h3 id="c-input" class:list={blockTitle}>
+                Input
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <Input aria-label="Input, default" placeholder={m.siteForm.namePlaceholder} />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover</p>
+                  <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <Input
+                    aria-label="Input, focus specimen"
+                    value="Dark-sky park"
+                    className={fieldFocus}
+                    tabIndex={-1}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <Input aria-label="Input, disabled" value="Back garden" disabled />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · aria-invalid · live</p>
+                  <Input aria-label="Input, invalid" value="95.5" aria-invalid="true" />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error + focus-visible · specimen</p>
+                  <Input
+                    aria-label="Input, invalid focus specimen"
+                    value="95.5"
+                    aria-invalid="true"
+                    className={fieldFocusInvalid}
+                    tabIndex={-1}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>empty — the placeholder is the default cell · loading — N/A</p>
+            </section>
+
+            <!-- NativeSelect -->
+            <section class:list={block} aria-labelledby="c-select">
+              <h3 id="c-select" class:list={blockTitle}>
+                NativeSelect
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <NativeSelect aria-label="Select, default">
+                    <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover</p>
+                  <p class:list={notApplicable}>No hover style by design: the field changes only on focus.</p>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <NativeSelect aria-label="Select, focus specimen" className={fieldFocus} tabIndex={-1}>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <NativeSelect aria-label="Select, disabled" disabled>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · aria-invalid · live</p>
+                  <NativeSelect aria-label="Select, invalid" aria-invalid="true">
+                    <NativeSelectOption value="">{m.siteForm.chooseBortle}</NativeSelectOption>
+                    {bortleOptions.map((o) => (
+                      <NativeSelectOption value={o.value}>{o.label}</NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+              </div>
+              <p class:list={notApplicable}>empty — the “choose” option is the default cell · loading — N/A</p>
+            </section>
+
+            <!-- Label -->
+            <section class:list={block} aria-labelledby="c-label">
+              <h3 id="c-label" class:list={blockTitle}>
+                Label
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default</p>
+                  <Label>{m.siteForm.latitude}</Label>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled (peer-disabled) · live</p>
+                  <div class="flex flex-col gap-1.5">
+                    <input id="c-label-disabled-target" class="peer sr-only" disabled aria-hidden="true" />
+                    <Label htmlFor="c-label-disabled-target">{m.siteForm.longitude}</Label>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible — N/A (not a control; its field takes focus) · error — the field and FieldError
+                carry it · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- FormField -->
+            <section class:list={block} aria-labelledby="c-form-field">
+              <h3 id="c-form-field" class:list={blockTitle}>
+                FormField
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <FormField
+                    id="c-ff-default"
+                    label={m.common.name}
+                    value=""
+                    onChange={() => undefined}
+                    placeholder={m.siteForm.namePlaceholder}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · live</p>
+                  <FormField
+                    id="c-ff-error"
+                    label={m.siteForm.latitude}
+                    value="95.5"
+                    onChange={() => undefined}
+                    inputMode="decimal"
+                    error={m.errors.site.latitudeRange}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — the field is Input (rows above) · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- ServerError -->
+            <section class:list={block} aria-labelledby="c-server-error">
+              <h3 id="c-server-error" class:list={blockTitle}>
+                ServerError
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>error (its only visible state; no message renders nothing)</p>
+                  <ServerError message={m.errors.save.site} />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive) · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- SubmitButton -->
+            <section class:list={block} aria-labelledby="c-submit">
+              <h3 id="c-submit" class:list={blockTitle}>
+                SubmitButton
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live (outside a form)</p>
+                  <SubmitButton pendingText={m.common.saving} icon={submitIcon}>
+                    {m.siteForm.submit}
+                  </SubmitButton>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>loading · specimen (pending markup)</p>
+                  <Button type="button" disabled size="lg" className="w-full">
+                    <span class="flex items-center gap-2">
+                      <span class="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+                      {m.common.saving}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible — the Primary Button (above) · disabled — only while pending (the loading cell) ·
+                error — the form's ServerError · empty — N/A
+              </p>
+            </section>
+
+            <!-- Delete dialog -->
+            <section class:list={block} aria-labelledby="c-delete">
+              <h3 id="c-delete" class:list={blockTitle}>
+                DeleteButton and its dialog
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live (opens the real dialog)</p>
+                  <DeleteButton
+                    action="#"
+                    label={m.gear.sites.delete}
+                    confirmMessage={m.gear.sites.confirmDelete}
+                    cancelLabel={m.common.cancel}
+                    client:load
+                  />
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>open · specimen (the dialog's classes, always open)</p>
+                  <div class="flex justify-center rounded-lg bg-background/80 px-4 py-8">
+                    <div
+                      role="group"
+                      aria-label="Delete dialog specimen"
+                      class="w-full max-w-sm rounded-xl border border-border bg-surface p-5 text-foreground shadow-2xl"
+                    >
+                      <p class="text-body text-heading">{m.gear.sites.confirmDelete}</p>
+                      <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" className={focusRing} tabIndex={-1}>
+                          {m.common.cancel}
+                        </Button>
+                        <Button type="button" variant="destructive" tabIndex={-1}>
+                          {m.gear.sites.delete}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — the Destructive and Outline Buttons (above; Cancel takes the initial
+                focus, shown in the specimen) · error — the page's ServerError after a failed delete · empty, loading —
+                N/A
+              </p>
+            </section>
+          </div>
+        </div>
+      </Band>
+
+      <footer class="mt-12 border-t border-border pt-4 text-xs text-faint">
+        Object data: OpenNGC (CC BY-SA 4.0) · Weather: Open-Meteo (CC BY 4.0)
+      </footer>
+    </main>
+  </div>
+</Layout>
 
 <script>
   // Print each token's resolved value next to its swatch, and refresh it when the theme flips.

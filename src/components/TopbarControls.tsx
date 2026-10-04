@@ -12,21 +12,23 @@ interface TopbarControlsProps {
 
 const SETTINGS_ID = "settings-panel";
 
+// Focus is a `--ring` outline offset from the control, so it shows on a pressed (filled) control too.
+const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const iconButton = cn(
-  "inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
+  "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground",
-  "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+  focusRing,
 );
 const groupClass = "grid auto-cols-fr grid-flow-col gap-0.5 rounded-full border border-border p-0.5";
 const segmentClass = cn(
-  "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold [&_svg]:shrink-0",
+  "inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:bg-selected aria-pressed:text-selected-foreground",
-  "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+  focusRing,
   "disabled:cursor-progress",
 );
-const sectionLabel = "text-[11px] font-bold tracking-[0.12em] text-faint uppercase";
+const sectionLabel = "text-label font-semibold text-muted-foreground";
 
 /*
  * Native popover (`popover` + `popovertarget`): it opens before hydration, closes on Esc or an outside tap and
@@ -34,8 +36,9 @@ const sectionLabel = "text-[11px] font-bold tracking-[0.12em] text-faint upperca
  */
 const panelClass = cn(
   "fixed inset-x-0 top-auto bottom-0 m-0 w-full max-w-none rounded-t-2xl border-0 border-t border-border bg-surface text-foreground",
-  "p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl backdrop:bg-background/70",
-  "sm:inset-x-auto sm:top-[5.75rem] sm:right-[max(2rem,calc((100vw-64rem)/2+2rem))] sm:bottom-auto sm:w-80",
+  "p-5 shadow-2xl backdrop:bg-background/70",
+  // Under the Topbar from `sm`, its right edge aligned with the bar's (`right-topbar-edge`, global.css).
+  "sm:inset-x-auto sm:top-23 sm:right-topbar-edge sm:bottom-auto sm:w-80",
   "sm:rounded-2xl sm:border sm:p-4 sm:backdrop:bg-transparent",
 );
 
@@ -50,6 +53,7 @@ function Icon({ children }: { children: ReactNode }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      className="shrink-0"
       aria-hidden="true"
     >
       {children}
@@ -153,7 +157,8 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
 
       <div id={SETTINGS_ID} popover="auto" role="dialog" aria-label={m.nav.settings} className={panelClass}>
         <div className="bg-border mx-auto mb-4 h-1 w-10 rounded-full sm:hidden" aria-hidden="true" />
-        <div className="grid gap-4">
+        {/* The phone sheet clears the home indicator (`pb-safe-area`, global.css). */}
+        <div className="pb-safe-area grid gap-4 sm:pb-0">
           {email && (
             <div className="border-border grid gap-0.5 border-b pb-3">
               <p className="text-faint text-xs">{m.nav.signedInAs}</p>
@@ -226,7 +231,10 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
             <form method="POST" action="/api/auth/signout" className="border-border border-t pt-3">
               <button
                 type="submit"
-                className="text-muted-foreground hover:text-heading cursor-pointer text-sm transition-colors"
+                className={cn(
+                  "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
+                  focusRing,
+                )}
               >
                 {m.nav.signOut}
               </button>

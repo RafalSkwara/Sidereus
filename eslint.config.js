@@ -85,6 +85,7 @@ const gearConfig = defineConfig({
   files: [
     "src/lib/gear/**",
     "src/pages/api/gear/**",
+    "src/pages/gear/**",
     "src/lib/forecast/**",
     "src/lib/tonight/**",
     "src/pages/tonight.astro",

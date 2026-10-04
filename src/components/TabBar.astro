@@ -20,10 +20,10 @@ const tabs = NAV_ITEMS.map((item) => ({
 
 {show && (
   <>
-    <div class="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true"></div>
+    <div class="pt-16 pb-safe-area md:hidden" aria-hidden="true"></div>
     <nav
       aria-label={m.nav.primary}
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-safe-area md:hidden"
     >
       <ul class="mx-auto grid h-16 max-w-md grid-cols-3">
         {tabs.map((tab) => (
@@ -33,15 +33,17 @@ const tabs = NAV_ITEMS.map((item) => ({
               aria-current={tab.current ? "page" : undefined}
               class:list={[
                 "relative flex h-full flex-col items-center justify-center gap-1 text-xs",
-                "transition-[color,scale] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none",
-                "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
+                // Inset, so the outline stays inside the fixed bar at the screen's edge.
+                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
                 tab.current ? "font-semibold text-heading" : "text-muted-foreground hover:text-heading",
               ]}
             >
               {/* The current tab's top bar glides to the next page's tab; its icon bounces in (global.css). */}
               {tab.current && (
                 <span
-                  class="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary [view-transition-name:tab-current]"
+                  class="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary"
+                  style="view-transition-name: tab-current"
                   aria-hidden="true"
                 ></span>
               )}

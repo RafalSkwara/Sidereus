@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Eye, Save } from "lucide-react";
-import { FormField } from "@/components/forms/FormField";
+import { FieldError, FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { eyepieceInputSchema } from "@/lib/gear/schemas";
 import { AFOV_PRESET_OPTIONS, presetForAfov, type AfovPreset } from "@/lib/gear/eyepiece-presets";
-import { cn } from "@/lib/utils";
 
 /** Stored values used to prefill the edit form. Only the AFOV is stored; the type is derived from it. */
 export interface EyepieceFormValues {
@@ -29,16 +30,8 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 
 const FIELD_NAMES: readonly string[] = ["name", "focalLengthMm", "afovPreset", "afovDeg"];
 
-const selectBase =
-  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
-
 function presetLabel(presets: Messages["eyepiecePresets"], option: AfovPreset): string {
   return option === "other" ? presets.other : presets[option].long;
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
 export default function EyepieceForm({ action, initial, serverError, locale }: Props) {
@@ -117,10 +110,10 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
       />
 
       <div>
-        <label htmlFor="afovPreset" className="text-heading mb-1 block text-sm font-semibold">
+        <Label htmlFor="afovPreset" className="mb-1.5">
           {t.type}
-        </label>
-        <select
+        </Label>
+        <NativeSelect
           id="afovPreset"
           name="afovPreset"
           value={preset}
@@ -129,26 +122,24 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
             clearError("afovPreset");
             clearError("afovDeg");
           }}
-          className={cn(
-            selectBase,
-            errors.afovPreset
-              ? "border-destructive focus-visible:ring-destructive/20"
-              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
-          )}
+          aria-invalid={errors.afovPreset ? true : undefined}
+          aria-describedby={errors.afovPreset ? "afovPreset-error" : "afovPreset-hint"}
         >
-          <option value="" disabled>
+          <NativeSelectOption value="" disabled>
             {t.chooseType}
-          </option>
+          </NativeSelectOption>
           {AFOV_PRESET_OPTIONS.map((option) => (
-            <option key={option} value={option}>
+            <NativeSelectOption key={option} value={option}>
               {presetLabel(m.eyepiecePresets, option)}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
         {errors.afovPreset ? (
-          <FieldError message={errors.afovPreset} />
+          <FieldError id="afovPreset-error" message={errors.afovPreset} />
         ) : (
-          <p className="text-muted-foreground mt-1 text-xs">{t.typeHint}</p>
+          <p id="afovPreset-hint" className="text-muted-foreground mt-1.5 text-sm">
+            {t.typeHint}
+          </p>
         )}
       </div>
 

@@ -2,38 +2,41 @@
 @import "tw-animate-css";
 
 /* Self-hosted fonts (no third-party font requests). Latin-ext subsets cover Polish. */
-@import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/public-sans";
-@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource-variable/archivo/wdth.css";
 
 /* `dark:` follows the resolved theme on <html data-theme>, never the OS setting. */
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
 /*
- * Observatory palette (design board "A · Observatory").
- * Dark is the default; light ("daylight paper") is opt-in via data-theme="light", and red night mode
- * (S-10, FR-024) via data-theme="red".
+ * Nightfall palette (direction "C · Nightfall", values in context/changes/visual-redesign/tokens-nightfall.md).
+ * Dark is the default; light ("day") is opt-in via data-theme="light", and red night mode (S-10, FR-024) via
+ * data-theme="red". Contrast floors for all three are pinned by src/styles/contrast.test.ts.
  * shadcn token names are kept, so src/components/ui works unchanged:
- * --primary is the brand amber (call to action), --accent is shadcn's subtle hover surface.
+ * --primary is the ink (filled action), --primary-strong the link and focus colour, --accent shadcn's subtle
+ * hover surface. --zenith and --horizon are the sky header's gradient stops (not named after a Tailwind palette
+ * colour, so the colour guard does not read `from-zenith` as a palette class).
  */
 :root {
   color-scheme: dark;
-  --radius: 0.625rem;
+  --radius: 0.375rem;
 
-  --background: #0b1020;
-  --surface: #141b30;
-  --border: #27304a;
-  --foreground: #d9deea;
-  --muted-foreground: #9ba4ba;
-  --heading: #fbf2dc;
+  --background: #070a12;
+  --surface: #0d1220;
+  --border: #232b3f;
+  --foreground: #dfe3ec;
+  --muted-foreground: #a9b1c5;
+  --heading: #f2f4f8;
 
-  --primary: #f2c36b;
-  --primary-foreground: #1c1403;
-  --primary-strong: #f6d596;
+  --primary: #f2f4f8;
+  --primary-foreground: #070a12;
+  --primary-strong: #c3d0ff;
 
-  --go: #6fd3a8;
-  --marginal: #f2c36b;
-  --no-go: #f28b8b;
+  --go: #7ee2b0;
+  --marginal: #f1cf6b;
+  --no-go: #ff9b8c;
+
+  --zenith: #050916;
+  --horizon: #1b2a55;
 
   --verdict-surface-alpha: 10%;
   --verdict-border-alpha: 35%;
@@ -41,30 +44,33 @@
   --star: rgb(255 255 255 / 0.5);
   --star-accent: rgb(253 230 138 / 0.3);
 
-  /* The Moon disc (moonlight-and-the-verdict): a bright lit part on a dark disc. */
-  --moon-lit: #fbf2dc;
-  --moon-dark: #141b30;
-  --moon-mare: #9ba4ba;
-  --moon-limb: #27304a;
+  /* The Moon disc (moonlight-and-the-verdict): a bright lit part (ink) on a dark disc (ground). */
+  --moon-lit: #f2f4f8;
+  --moon-dark: #070a12;
+  --moon-mare: #a9b1c5;
+  --moon-limb: #232b3f;
 }
 
 [data-theme="light"] {
   color-scheme: light;
 
-  --background: #f7f3ea;
-  --surface: #fffdf7;
-  --border: #e2d9c6;
-  --foreground: #2a3040;
-  --muted-foreground: #5b6273;
-  --heading: #161b2b;
+  --background: #fbfcfd;
+  --surface: #f2f5f8;
+  --border: #d6dce6;
+  --foreground: #1c2538;
+  --muted-foreground: #3c465c;
+  --heading: #0b1428;
 
-  --primary: #8f540a;
-  --primary-foreground: #fffaf0;
-  --primary-strong: #7a4708;
+  --primary: #0b1428;
+  --primary-foreground: #fbfcfd;
+  --primary-strong: #23439f;
 
-  --go: #1d7a54;
-  --marginal: #b87a12;
-  --no-go: #b3363a;
+  --go: #17784c;
+  --marginal: #8f6100;
+  --no-go: #b0322b;
+
+  --zenith: #a9c3e6;
+  --horizon: #e9f0f8;
 
   --verdict-surface-alpha: 8%;
 
@@ -72,10 +78,10 @@
   --star-accent: rgb(143 84 10 / 0.14);
 
   /* The Moon looks the same as in the dark theme (user choice): the lit part is always the bright one. */
-  --moon-lit: #fbf2dc;
-  --moon-dark: #141b30;
-  --moon-mare: #9ba4ba;
-  --moon-limb: #27304a;
+  --moon-lit: #f2f4f8;
+  --moon-dark: #070a12;
+  --moon-mare: #a9b1c5;
+  --moon-limb: #232b3f;
 }
 
 /*
@@ -86,20 +92,23 @@
 [data-theme="red"] {
   color-scheme: dark;
 
-  --background: #0a0000;
+  --background: #080000;
   --surface: #170000;
-  --border: #3d0000;
+  --border: #3a0000;
   --foreground: #f20000;
-  --muted-foreground: #bb0000;
+  --muted-foreground: #c40000;
   --heading: #ff0000;
 
   --primary: #ff0000;
   --primary-foreground: #000000;
-  --primary-strong: #cc0000;
+  --primary-strong: #ff0000;
 
   --go: #ff0000;
   --marginal: #d60000;
   --no-go: #bb0000;
+
+  --zenith: #000000;
+  --horizon: #240000;
 
   --verdict-surface-alpha: 10%;
   --verdict-border-alpha: 35%;
@@ -108,9 +117,9 @@
   --star-accent: rgb(255 0 0 / 0.2);
 
   --moon-lit: #ff0000;
-  --moon-dark: #170000;
-  --moon-mare: #bb0000;
-  --moon-limb: #3d0000;
+  --moon-dark: #080000;
+  --moon-mare: #c40000;
+  --moon-limb: #3a0000;
 }
 
 /*
@@ -132,12 +141,12 @@
   /* Text on a destructive fill: light on the dark theme's /60 tint (ui/button.tsx), paper on the light red. */
   --destructive-foreground: var(--heading);
   --input: var(--border);
-  --ring: var(--primary);
+  --ring: var(--primary-strong);
   --faint: color-mix(in srgb, var(--muted-foreground) 75%, var(--background));
   --warning: var(--marginal);
   --success: var(--go);
 
-  /* Pressed segment of a segmented control: amber on navy, ink on paper. */
+  /* Pressed segment of a segmented control: the filled-action ink in every theme. */
   --selected: var(--primary);
   --selected-foreground: var(--primary-foreground);
 
@@ -150,8 +159,6 @@
 }
 
 [data-theme="light"] {
-  --selected: var(--heading);
-  --selected-foreground: var(--background);
   --destructive-foreground: var(--background);
 }
 
@@ -161,7 +168,10 @@
  * loses its system-blue highlight.
  * Native input icons live in the browser's shadow DOM, where `url(#red-only)` does not resolve, so they are
  * hidden instead: the date field keeps its own token-coloured icon (and the invisible picker button still
- * works), and numbers are typed or stepped with the arrow keys.
+ * works), numbers are typed or stepped with the arrow keys, and a search field is cleared with Escape.
+ * Known limit: an open <select> list is drawn by the operating system on macOS, iOS and Android (a system menu
+ * or sheet in grey with a blue highlight), which no page CSS reaches. The closed field and its options, where the
+ * browser draws them itself, follow the tokens.
  */
 [data-theme="red"] img {
   filter: url(#red-only);
@@ -169,6 +179,10 @@
 
 [data-theme="red"] ::-webkit-calendar-picker-indicator {
   opacity: 0;
+}
+
+[data-theme="red"] ::-webkit-search-cancel-button {
+  appearance: none;
 }
 
 [data-theme="red"] input[type="number"] {
@@ -208,7 +222,7 @@
 /*
  * Navigation motion (nav-motion-theme-cycle). Every page change is a full load, so the active indicator travels
  * with cross-document view transitions (Chrome 126+, Safari 18.2+; other browsers switch instantly). The page
- * itself swaps without a cross-fade; only the named indicators move: the amber pill segment (Topbar.astro) and the
+ * itself swaps without a cross-fade; only the named indicators move: the pressed pill segment (Topbar.astro) and the
  * phone tab bar's top bar plus the new tab's icon bounce (TabBar.astro). Off with reduced motion.
  */
 @view-transition {
@@ -258,15 +272,43 @@
   }
 }
 
+/*
+ * Shell layout helpers (visual-redesign), so Topbar, TabBar and the settings panel need no arbitrary values:
+ * the phone's bottom safe-area inset, and the right edge of the Topbar row (`max-w-5xl` = 64rem, `sm:px-8` = 2rem).
+ */
+@utility pb-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility right-topbar-edge {
+  right: max(2rem, calc((100vw - 64rem) / 2 + 2rem));
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 4px);
 
-  --font-display: "Newsreader Variable", Georgia, serif;
-  --font-sans: "Public Sans Variable", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Type roles (Nightfall). Pair display and title with `font-display` for the expanded width. */
+  --text-display: 2.5rem;
+  --text-display--line-height: 2.75rem;
+  --text-display--letter-spacing: -0.015em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.75rem;
+  --text-title--letter-spacing: -0.005em;
+  --text-label: 0.9375rem;
+  --text-label--line-height: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+
+  /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
+  --font-sans: "Archivo Variable", system-ui, sans-serif;
+  --font-display: "Archivo Variable", system-ui, sans-serif;
+  --font-display--font-variation-settings: "wdth" 125;
+  --font-mono: "Archivo Variable", system-ui, sans-serif;
+  --font-mono--font-feature-settings: "tnum";
 
   --color-background: var(--background);
   --color-surface: var(--surface);
@@ -310,6 +352,8 @@
   --color-moon-mare: var(--moon-mare);
   --color-moon-limb: var(--moon-limb);
   --color-star-accent: var(--star-accent);
+  --color-zenith: var(--zenith);
+  --color-horizon: var(--horizon);
 }
 
 @layer base {

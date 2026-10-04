@@ -133,7 +133,7 @@ const steps = [
   [
     "create site redirects to gear",
     () => request("/api/gear/sites", { method: "POST", form: site }),
-    { status: 302, location: "/gear", exact: true },
+    { status: 302, location: "/gear?saved=site", exact: true },
   ],
   [
     "invalid site returns to form with error",
@@ -147,7 +147,7 @@ const steps = [
         method: "POST",
         form: { name: "Smoke Newtonian", apertureMm: "130", focalLengthMm: "650" },
       }),
-    { status: 302, location: "/gear", exact: true },
+    { status: 302, location: "/gear?saved=telescope", exact: true },
   ],
   [
     "create eyepiece redirects to gear",
@@ -156,7 +156,7 @@ const steps = [
         method: "POST",
         form: { name: "Smoke Plossl", focalLengthMm: "25", afovPreset: "plossl" },
       }),
-    { status: 302, location: "/gear", exact: true },
+    { status: 302, location: "/gear?saved=eyepiece", exact: true },
   ],
   // Renders even when the forecast is unreachable: the verdict falls back to "marginal — no weather data".
   ["tonight renders for signed-in user", () => request("/tonight"), { status: 200 }],

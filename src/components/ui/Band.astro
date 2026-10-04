@@ -1,0 +1,24 @@
+---
+/*
+ * A Nightfall band: a full-width, unboxed section with a rule between it and the band before it. The heading
+ * (`text-title` role) labels the section; the optional `action` slot holds one quiet action beside it.
+ */
+interface Props {
+  /** The heading's id, which labels the section. */
+  headingId: string;
+  heading: string;
+}
+
+const { headingId, heading } = Astro.props;
+const hasAction = Astro.slots.has("action");
+---
+
+<section aria-labelledby={headingId} class="border-border py-8 not-first:border-t first:pt-0 last:pb-0">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
+      {heading}
+    </h2>
+    {hasAction && <slot name="action" />}
+  </div>
+  <slot />
+</section>

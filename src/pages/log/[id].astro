@@ -93,6 +93,7 @@ const maxNight = latestNightBound(sites, new Date());
           action={`/api/log/${encodeURIComponent(entry.id)}/delete`}
           label={t.delete}
           confirmMessage={t.confirmDelete({ object: objectId })}
+          cancelLabel={m.common.cancel}
           client:load
         />
       </div>

@@ -1,13 +1,14 @@
 import React, { useState, useSyncExternalStore } from "react";
 import { MapPin, Save } from "lucide-react";
-import { FormField } from "@/components/forms/FormField";
+import { FieldError, FormField } from "@/components/forms/FormField";
 import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { SITE_FORM_DEFAULTS, siteInputSchema } from "@/lib/gear/schemas";
-import { cn } from "@/lib/utils";
 
 /** Stored values used to prefill the edit form. */
 export interface SiteFormValues {
@@ -38,9 +39,6 @@ const FIELD_NAMES: readonly string[] = ["name", "latitudeDeg", "longitudeDeg", "
 
 const BORTLE_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
-const selectBase =
-  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
-
 /*
  * The browser's zone list is read after hydration only (the server snapshot is `null`), so the
  * server-rendered markup and the first client render match.
@@ -52,11 +50,6 @@ function getBrowserZones(): readonly string[] {
 }
 function subscribeNever() {
   return () => undefined;
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive mt-1 text-xs">{message}</p>;
 }
 
 export default function SiteForm({ action, initial, serverError, locale }: Props) {
@@ -186,7 +179,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
       />
 
       <fieldset className="flex flex-col gap-4">
-        <legend className="text-heading mb-3 text-sm font-semibold">{t.location}</legend>
+        <legend className="text-label text-heading mb-3 font-semibold">{t.location}</legend>
         <LocationPicker locale={locale} onPick={pickLocation} summary={locationSummary} />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -226,7 +219,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
           />
         </div>
         <div className="-mt-2">
-          <p className="text-muted-foreground text-xs">{t.coordinatesHint}</p>
+          <p className="text-muted-foreground text-sm">{t.coordinatesHint}</p>
           {/* Always rendered, so screen readers announce the Undo line when it fills in. */}
           <p
             role="status"
@@ -241,7 +234,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
                 <button
                   type="button"
                   onClick={undoLocation}
-                  className="text-primary-strong hover:text-heading focus-visible:ring-ring/50 inline-flex min-h-11 items-center rounded-md font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-[3px]"
+                  className="text-primary-strong hover:text-heading focus-visible:outline-ring inline-flex min-h-11 items-center rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {t.undoLocation}
                 </button>
@@ -252,10 +245,10 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
       </fieldset>
 
       <div>
-        <label htmlFor="bortle" className="text-heading mb-1 block text-sm font-semibold">
+        <Label htmlFor="bortle" className="mb-1.5">
           {t.bortle}
-        </label>
-        <select
+        </Label>
+        <NativeSelect
           id="bortle"
           name="bortle"
           value={bortle}
@@ -263,23 +256,19 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
             setBortle(e.target.value);
             clearError("bortle");
           }}
-          className={cn(
-            selectBase,
-            errors.bortle
-              ? "border-destructive focus-visible:ring-destructive/20"
-              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
-          )}
+          aria-invalid={errors.bortle ? true : undefined}
+          aria-describedby={errors.bortle ? "bortle-error" : undefined}
         >
-          <option value="" disabled>
+          <NativeSelectOption value="" disabled>
             {t.chooseBortle}
-          </option>
+          </NativeSelectOption>
           {BORTLE_CLASSES.map((value) => (
-            <option key={value} value={value}>
+            <NativeSelectOption key={value} value={value}>
               {t.bortleOption({ value: String(value), label: t.bortleLabels[value] })}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
-        <FieldError message={errors.bortle} />
+        </NativeSelect>
+        <FieldError id="bortle-error" message={errors.bortle} />
       </div>
 
       <FormField
@@ -296,15 +285,15 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
           clearError("minAltitudeDeg");
         }}
         error={errors.minAltitudeDeg}
-        hint={<p className="text-muted-foreground mt-1 text-xs">{t.minAltitudeHint}</p>}
+        hint={<p className="text-muted-foreground mt-1.5 text-sm">{t.minAltitudeHint}</p>}
       />
 
       <div>
-        <label htmlFor="timeZone" className="text-heading mb-1 block text-sm font-semibold">
+        <Label htmlFor="timeZone" className="mb-1.5">
           {t.timeZone}
-        </label>
+        </Label>
         <input type="hidden" name="timeZoneMode" value={timeZoneMode} />
-        <select
+        <NativeSelect
           id="timeZone"
           name="timeZone"
           value={zone}
@@ -312,21 +301,17 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
             setZone(e.target.value);
             clearError("timeZone");
           }}
-          className={cn(
-            selectBase,
-            errors.timeZone
-              ? "border-destructive focus-visible:ring-destructive/20"
-              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
-          )}
+          aria-invalid={errors.timeZone ? true : undefined}
+          aria-describedby={errors.timeZone ? "timeZone-error" : undefined}
         >
-          <option value="">{autoLabel}</option>
+          <NativeSelectOption value="">{autoLabel}</NativeSelectOption>
           {zoneOptions.map((tz) => (
-            <option key={tz} value={tz}>
+            <NativeSelectOption key={tz} value={tz}>
               {tz}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
-        <FieldError message={errors.timeZone} />
+        </NativeSelect>
+        <FieldError id="timeZone-error" message={errors.timeZone} />
       </div>
 
       <ServerError message={serverError ? translateKey(m, serverError, "errors.generic") : null} />
