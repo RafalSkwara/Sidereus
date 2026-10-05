@@ -72,7 +72,7 @@ const RATINGS = [1, 2, 3, 4, 5] as const;
 // (as a pressed sky answer, SkyAnswerForm).
 const ratingOption = cn(
   "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface font-mono text-body font-semibold text-heading transition-colors",
-  "hover:bg-accent has-[:checked]:border-selected has-[:checked]:bg-selected has-[:checked]:text-selected-foreground",
+  "hover:bg-accent has-[:checked]:border-selected has-[:checked]:bg-selected has-[:checked]:text-selected-foreground has-[:checked]:hover:bg-selected",
   "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
 );
 

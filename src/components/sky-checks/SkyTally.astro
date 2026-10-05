@@ -24,7 +24,7 @@ const words = SKY_ANSWERS.filter((claim) => tally.byClaim[claim].answered > 0);
       <p class="text-body text-foreground">{t.none}</p>
     ) : (
       <>
-        <p class="font-display text-title font-semibold text-heading">
+        <p class="text-body font-semibold text-heading">
           {plural(
             locale,
             tally.answered,
