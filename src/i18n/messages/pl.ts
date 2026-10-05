@@ -703,8 +703,17 @@ export const pl = {
       on: (p) => `Następne okno ciemności: ${p.date} (${p.start}–${p.end})`,
     },
 
+    sky: {
+      panorama: "Niebo dziś w nocy, przesuń, aby się rozejrzeć",
+      slider: "Pora nocy",
+      now: "Teraz",
+      darkWindow: "Ciemne niebo",
+      bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
+    },
+
     attribution: {
       objectData: "Dane obiektów:",
+      starData: "Dane gwiazd:",
       weather: "Pogoda:",
     },
 

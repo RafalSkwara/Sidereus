@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import MoonDisc from "@/components/tonight/MoonDisc";
+import { rangeClasses } from "@/components/tonight/range-classes";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { moonDiscLabel, moonPhaseLine } from "@/lib/moon-disc/label";
@@ -38,21 +39,8 @@ interface MoonTimeSliderProps {
 
 const nowButtonClass = buttonVariants({ variant: "outline", size: "sm" });
 
-/*
- * A native range input restyled from tokens only, so red mode stays red: the browser's own track and thumb carry
- * system greys. 44 px tall for touch; the track is thin, the thumb a primary dot with a surface rim. The thumb's
- * -mt-1.75 centres the 20 px thumb on the 6 px WebKit track ((6 - 20) / 2 = -7 px); Firefox centres it itself.
- */
-const rangeClass = cn(
-  "block h-11 w-full cursor-pointer appearance-none rounded-full bg-transparent",
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-  "[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-border",
-  "[&::-webkit-slider-thumb]:-mt-1.75 [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none",
-  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-surface [&::-webkit-slider-thumb]:bg-primary",
-  "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-border",
-  "[&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2",
-  "[&::-moz-range-thumb]:border-surface [&::-moz-range-thumb]:bg-primary",
-);
+/* The shared range styling (`range-classes.ts`) with its track drawn in the border colour. */
+const rangeClass = rangeClasses("border");
 
 export default function MoonTimeSlider({ states, timeLabels, initialIndex, locale, children }: MoonTimeSliderProps) {
   const m = getMessages(locale).tonight.moon;

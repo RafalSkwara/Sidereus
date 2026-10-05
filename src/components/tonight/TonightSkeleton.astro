@@ -1,8 +1,10 @@
 ---
-// Stand-in for TonightContent while its server island loads: the same sky (TonightSky) with bars where the date, the
-// giant word and the headline lines go, then four ruled rows standing for the dashboard's tiles (TonightTiles), so
+// Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
+// strip and slider row reserved, interactive-sky) with bars where the date, the giant word and the headline lines go,
+// then four ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
+import { SLIDER_ROW_CLASS } from "@/components/tonight/sky-band";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,7 +24,7 @@ const tile = "border-b border-border px-4 py-4";
   <span role="status" class="sr-only">
     {t.loading}
   </span>
-  <TonightSky verdict>
+  <TonightSky verdict strip>
     <div aria-hidden="true">
       <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
       <div class="mt-2 font-display text-verdict-lg font-extrabold sm:text-verdict-xl">
@@ -32,6 +34,16 @@ const tile = "border-b border-border px-4 py-4";
       <div class:list={[bar, "mt-3 w-40 text-label"]}>&nbsp;</div>
     </div>
   </TonightSky>
+  <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->
+  <div class:list={[SLIDER_ROW_CLASS]} aria-hidden="true">
+    <div class="flex items-center justify-between gap-3">
+      <div class:list={[bar, "w-16 text-title"]}>&nbsp;</div>
+      <div class:list={[bar, "h-11 w-20"]}></div>
+    </div>
+    <div class="flex h-11 items-center">
+      <div class:list={[bar, "mt-1 h-1.5 w-full"]}></div>
+    </div>
+  </div>
 
   <div class="mx-auto w-full max-w-3xl pt-8">
     <div aria-hidden="true">

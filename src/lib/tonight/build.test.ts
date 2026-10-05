@@ -13,6 +13,7 @@ import {
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
+  sunEvents,
   type HourlyForecast,
   type Interval,
   type MoonDiscState,
@@ -28,14 +29,19 @@ import {
   type TonightNight,
   type TonightSolarSystem,
   type TonightRanking,
+  type TonightSkyView,
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
 import { tonightDateForSite } from "./tonight-date";
 
-/** Lets a test make the planet ranking or the Moon throw; `false` (the default) leaves the engine untouched. */
+/**
+ * Lets a test make the planet ranking, the Moon or the sky view's frames throw; `false` (the default) leaves the
+ * engine untouched.
+ */
 const planetRanking = vi.hoisted(() => ({ throws: false }));
 const moonTargeting = vi.hoisted(() => ({ throws: false }));
+const skyFraming = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -53,12 +59,19 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.moonTarget(...args);
     },
+    skyFrames: (...args: Parameters<typeof actual.skyFrames>) => {
+      if (skyFraming.throws) {
+        throw new Error("sky frames failed");
+      }
+      return actual.skyFrames(...args);
+    },
   };
 });
 
 afterEach(() => {
   planetRanking.throws = false;
   moonTargeting.throws = false;
+  skyFraming.throws = false;
 });
 
 const WARSAW: SiteRecord = {
@@ -1275,5 +1288,175 @@ describe("buildTonight's washed-out objects (moonlight-and-the-verdict)", () => 
     expect(ranking.washedOutCount).toBe(0);
     expect(ranking.washedOutText).toBeNull();
     expect(ranking.washedOutEntries).toEqual([]);
+  });
+});
+
+describe("buildTonight's sky view (interactive-sky)", () => {
+  const SOUTH: SiteRecord = {
+    ...WARSAW,
+    id: "site-4",
+    name: "Sydney",
+    latitudeDeg: -33.87,
+    longitudeDeg: 151.21,
+    timeZone: "Australia/Sydney",
+  };
+
+  function build(overrides: Partial<Parameters<typeof buildTonight>[0]> = {}, locale: "en" | "pl" = "en") {
+    return buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+        ...overrides,
+      },
+      locale,
+      { withSkyView: true },
+    );
+  }
+
+  function skyViewOf(view: TonightView): TonightSkyView {
+    if (view.skyView === null) {
+      throw new Error("expected a sky view");
+    }
+    return view.skyView;
+  }
+
+  it("is null, and not computed, without the option", () => {
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+      },
+      "en",
+    );
+    expect(view.skyView).toBeNull();
+  });
+
+  it("spans sunset to sunrise with aligned frames, rotations and tracks", () => {
+    const sky = skyViewOf(build());
+    const { sunset, sunrise } = sunEvents(toEngineSite(WARSAW), observingNight("2026-10-10", WARSAW.timeZone));
+    expect(sky.startMs).toBe(sunset?.getTime());
+    expect(sky.endMs).toBe(sunrise?.getTime());
+    expect(sky.stepMs).toBe(10 * 60_000);
+    expect(sky.frameCount).toBe(Math.ceil((sky.endMs - sky.startMs) / sky.stepMs) + 1);
+    expect(sky.rotations).toHaveLength(sky.frameCount * 9);
+    expect(sky.sunAltDeg).toHaveLength(sky.frameCount);
+    expect(sky.facing).toBe("south");
+    // Every frame's time, formatted on the server like the range's ends, so the island never formats one.
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
+    expect(sky.timeLabels.every((label) => /^\d{2}:\d{2}$/.test(label))).toBe(true);
+    expect(sky.timeLabels[0]).toBe(sky.startLabel);
+    expect(sky.timeLabels.at(-1)).toBe(sky.endLabel);
+    expect(sky.startLabel).toMatch(/^\d{2}:\d{2}$/);
+    for (const body of sky.bodies) {
+      expect(body.track).toHaveLength(sky.frameCount * 2);
+      expect(body.track.every(Number.isInteger)).toBe(true);
+    }
+    const objects = sky.bodies.filter((body) => body.kind === "object");
+    expect(objects.map((body) => body.key)).toEqual(
+      rankingOf(build())
+        .entries.slice(0, MAX_RANKED_OBJECTS)
+        .map((entry) => entry.id),
+    );
+    expect(objects[0].href).toBe(`/tonight/targets#object-${objects[0].key}`);
+    // The strip shows the Messier number only; the full name is the marker's accessible name.
+    expect(objects.every((body) => body.label === body.key && body.name.startsWith(body.key))).toBe(true);
+    expect(objects.some((body) => body.name.startsWith(`${body.key} · `))).toBe(true);
+    expect(sky.bodies.filter((body) => body.kind === "planet").map((body) => body.key)).toEqual([...PLANET_KEYS]);
+    expect(sky.bodies.find((body) => body.key === "saturn")?.href).toBe("/tonight/planets#planet-saturn");
+    expect(sky.bodies.at(-1)).toMatchObject({
+      kind: "moon",
+      key: "moon",
+      label: "Moon",
+      name: "Moon",
+      href: "/tonight/moon",
+    });
+    expect(sky.darkSpan).not.toBeNull();
+  });
+
+  it("starts at the frame nearest now inside the range, else at the dark span's start, else at 0", () => {
+    const inside = skyViewOf(build());
+    expect(Math.abs(inside.startMs + inside.initialIndex * inside.stepMs - NOW.getTime())).toBeLessThanOrEqual(
+      inside.stepMs / 2,
+    );
+    // Local noon, before sunset.
+    const daytime = skyViewOf(build({ now: new Date("2026-10-10T10:00:00Z") }));
+    expect(daytime.darkSpan).not.toBeNull();
+    expect(daytime.initialIndex).toBe(daytime.darkSpan?.from);
+    // Helsinki in midsummer under a Bortle 3 sky: a sunset, but no dark window.
+    const light = skyViewOf(
+      build({
+        site: HELSINKI_DARK,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T09:00:00Z"),
+      }),
+    );
+    expect(light.darkSpan).toBeNull();
+    expect(light.initialIndex).toBe(0);
+  });
+
+  it("has no deep-sky targets on a no-go night but keeps every planet and the Moon, with Polish labels", () => {
+    const view = build({ forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "pl");
+    expect(view.ranking).toBeNull();
+    expect(view.solarSystem).toBeNull();
+    const sky = skyViewOf(view);
+    expect(sky.bodies.some((body) => body.kind === "object")).toBe(false);
+    const planets = sky.bodies.filter((body) => body.kind === "planet");
+    expect(planets).toHaveLength(PLANET_KEYS.length);
+    expect(planets.every((body) => body.href === "/tonight/planets")).toBe(true);
+    expect(planets.find((body) => body.key === "jupiter")).toMatchObject({
+      label: pl.targets.planet.jupiter,
+      name: pl.targets.planet.jupiter,
+    });
+    expect(sky.bodies.at(-1)?.label).toBe(pl.targets.moon);
+  });
+
+  it("faces north at a southern-hemisphere site", () => {
+    const view = build({
+      site: SOUTH,
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+      now: new Date("2026-10-10T09:00:00Z"),
+    });
+    expect(skyViewOf(view).facing).toBe("north");
+  });
+
+  it("stays under 30 KB of JSON for a December night at 52° N", () => {
+    const now = new Date("2026-12-21T12:00:00Z");
+    const sky = skyViewOf(build({ forecast: result(uniformForecast("2026-12-21T00:00:00Z", 5), false, now), now }));
+    expect(sky.bodies.some((body) => body.kind === "object")).toBe(true);
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
+    expect(JSON.stringify(sky).length).toBeLessThan(30_000);
+  });
+
+  it("covers the whole observing night when the Sun doesn't set (Tromsø at midsummer)", () => {
+    const night = observingNight("2026-06-21", TROMSO_SITE.timeZone);
+    const { sunset, sunrise } = sunEvents(toEngineSite(TROMSO_SITE), night);
+    expect(sunset === null || sunrise === null).toBe(true);
+    const sky = skyViewOf(
+      build({
+        site: TROMSO_SITE,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T10:00:00Z"),
+      }),
+    );
+    expect(sky.startMs).toBe(night.start.getTime());
+    expect(sky.endMs).toBe(night.end.getTime());
+    expect(sky.darkSpan).toBeNull();
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
+    expect(sky.rotations).toHaveLength(sky.frameCount * 9);
+  });
+
+  it("drops only the sky view when building it fails", () => {
+    const intact = build();
+    skyFraming.throws = true;
+    const view = build();
+    expect(view.skyView).toBeNull();
+    expect(intact.skyView).not.toBeNull();
+    expect(view).toEqual({ ...intact, skyView: null });
   });
 });

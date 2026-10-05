@@ -25,9 +25,21 @@ interface Props {
   forecastStatus: TonightForecastStatus;
   /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
   explanation: TonightExplanation | null;
+  /** The heading's id, `verdict-heading` by default; /design gives each specimen its own so ids stay unique. */
+  headingId?: string;
 }
 
-const { level, dateLabel, headline, text, darkWindow, timeZone, forecastStatus, explanation } = Astro.props;
+const {
+  level,
+  dateLabel,
+  headline,
+  text,
+  darkWindow,
+  timeZone,
+  forecastStatus,
+  explanation,
+  headingId = "verdict-heading",
+} = Astro.props;
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
@@ -47,7 +59,7 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
 };
 ---
 
-<section aria-labelledby="verdict-heading">
+<section aria-labelledby={headingId}>
   <p class="text-label font-medium text-muted-foreground">
     {dateLabel}
     {" · "}
@@ -63,7 +75,7 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
     )}
     {t.timesIn({ zone: timeZone })}
   </p>
-  <h2 id="verdict-heading" class="mt-2 text-heading">
+  <h2 id={headingId} class="mt-2 text-heading">
     <span class:list={["block font-display font-extrabold", verdictSize(m.tonight.verdict.word[level])]}>
       {m.tonight.verdict.word[level]}
     </span>{" "}

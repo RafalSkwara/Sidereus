@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:db": "vitest run --config vitest.db.config.ts",
     "catalogue:build": "node scripts/build-catalogue.mjs",
+    "stars:build": "node scripts/build-stars.mjs",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
     "cf:types": "wrangler types"
   },

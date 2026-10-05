@@ -7,13 +7,14 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 - **Milestone M-2 "First real nights"** is open. Two user-requested slices came ahead of everything else on 2026-10-04:
   - **S-10 `visual-redesign`** (#86): the Nightfall contract and `/gear` merged (#89) and deployed; Tonight in Nightfall merged (#91, #92) and archived (`context/archive/2026-10-04-tonight-nightfall/`). The `visual-redesign` change folder is still unarchived: it waits until the remaining views (log, auth, onboarding, landing) get their `/10x-ui` passes, or the user says otherwise.
   - **S-11 `tonight-dashboard`** (#87) is **done**: merged (#94), review fixes merged (#95), deployed, archived (`context/archive/2026-10-04-tonight-dashboard/`). `/tonight` is the sky verdict plus four ruled tiles that open `/tonight/targets` (which replaced `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets` and `/tonight/nights`. "Mark observed" returns to the page it came from, and on Targets it reopens "the other N" at the logged row.
-- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location", S-11 the Tonight dashboard.
+  - **S-11 follow-up `interactive-sky`** (#97) is **done, pending merge**: the dashboard's sky is a live horizon panorama (the `TonightSkyView` island) with the real bright stars from HYG v4.1 (`npm run stars:build`), the top five targets, the planets and the Moon, a sunset-to-sunrise slider with the dark window marked and a Now button, and the band's colour following the Sun (`--dusk-*` tokens). A marker opens its row on `/tonight/targets` or `/tonight/planets`, or `/tonight/moon`. Pinned by `tests/e2e/tonight-sky.spec.ts`.
+- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location", S-11 the Tonight dashboard and its interactive sky (pending merge).
 - **Unblocked by S-11:** S-05 session timeline (#69) becomes another `/tonight/*` page (and maybe a tile); S-06 offline (#70) caches the dashboard pages. Both still need re-scoping against the dashboard before planning.
 - **Still open behind them:** S-03 deep sky beyond Messier (`ready`, #67); S-04 double stars (`blocked`: data source and licence, #68); S-09 map picker (`blocked`: map-tile privacy decision, #73).
 
 ## Suggested next step
 
-1. S-11's remaining unknown, the **interactive sky** (a slider moving real target positions across the dashboard sky), is a follow-up change of its own. It needs the user's call on real background stars (a bright-star catalogue and its licence) or decorative ones.
+1. Merge `interactive-sky` once reviewed, then archive it.
 2. The remaining `/10x-ui` passes (log, auth, onboarding, landing), which close S-10 (`visual-redesign`).
 3. Then S-05 → S-06 (re-scoped as dashboard pages), then S-03.
 
@@ -59,5 +60,5 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 - **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#86:** the remaining top-priority slice (S-10), labelled `priority:top`. #87 (S-11) is closed.
+- **#86:** the remaining top-priority slice (S-10), labelled `priority:top`. #87 (S-11) is closed; #97 (interactive sky) closes with its merge.
 - **#67–#70, #73:** the other remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.

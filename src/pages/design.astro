@@ -26,18 +26,22 @@ import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro"
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
+import TonightSkyView from "@/components/tonight/TonightSkyView";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages } from "@/i18n";
 import type { MoonDiscState, Verdict } from "@/lib/engine";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
-import type {
-  TonightDarkWindow,
-  TonightEntry,
-  TonightExplanation,
-  TonightNight,
-  TonightPlanetEntry,
-  TonightView,
+import type { ForecastResult } from "@/lib/forecast/service";
+import type { SiteRecord } from "@/lib/gear/store";
+import {
+  buildTonight,
+  type TonightDarkWindow,
+  type TonightEntry,
+  type TonightExplanation,
+  type TonightNight,
+  type TonightPlanetEntry,
+  type TonightView,
 } from "@/lib/tonight/build";
 import { createFormatter, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
@@ -109,6 +113,15 @@ const tokenGroups = [
       { name: "star-accent", swatch: "bg-star-accent" },
       { name: "zenith", swatch: "bg-zenith" },
       { name: "horizon", swatch: "bg-horizon" },
+    ],
+  },
+  {
+    title: "Dusk (the live sky's sunset and twilight mix)",
+    tokens: [
+      { name: "dusk-glow", swatch: "bg-dusk-glow" },
+      { name: "dusk-glow-horizon", swatch: "bg-dusk-glow-horizon" },
+      { name: "dusk-twilight", swatch: "bg-dusk-twilight" },
+      { name: "dusk-twilight-horizon", swatch: "bg-dusk-twilight-horizon" },
     ],
   },
 ];
@@ -398,6 +411,7 @@ const summaryView: TonightView = {
     faintText: null,
     target: null,
   },
+  skyView: null,
 };
 // One band only (the Moon band is left out so its disc's clip id stays unique on the page).
 const targetsOnlyView: TonightView = {
@@ -417,6 +431,65 @@ const noTargetsView: TonightView = {
   explanation: weatherNoGo,
 };
 const nullBarsView: TonightView = { ...targetsOnlyView, nights: sampleNights([88, null, 40, 12, null, 65, 95]) };
+
+/*
+ * The live sky (interactive-sky): a real `skyView` from `buildTonight` for a fixed site and night (Warsaw, the night of
+ * 10 October 2026, a clear forecast), shown at three Sun altitudes by starting the slider at the frame nearest each.
+ * Built server-side on every load of this dev page, never hand-written.
+ */
+const PANORAMA_SITE: SiteRecord = {
+  id: "sample-site",
+  name: "Back garden",
+  latitudeDeg: 52.23,
+  longitudeDeg: 21.01,
+  bortle: 4,
+  minAltitudeDeg: 15,
+  timeZone: SAMPLE_ZONE,
+  timeZoneSource: "auto",
+  createdAt: "2026-09-01T00:00:00Z",
+};
+const PANORAMA_NOW = new Date("2026-10-10T18:00:00Z");
+const panoramaForecast: ForecastResult = {
+  forecast: {
+    hours: Array.from({ length: 48 }, (_, i) => ({
+      start: new Date(Date.UTC(2026, 9, 10) + i * 60 * MINUTE_MS),
+      cloudCoverPct: 5,
+      humidityPct: 60,
+    })),
+  },
+  fetchedAt: new Date(PANORAMA_NOW.getTime() - 20 * MINUTE_MS),
+  fallback: false,
+};
+const panoramaView = buildTonight(
+  {
+    site: PANORAMA_SITE,
+    telescope: { id: "sample-telescope", name: "150 mm reflector", apertureMm: 150, focalLengthMm: 750, createdAt: "" },
+    eyepieces: [],
+    forecast: panoramaForecast,
+    now: PANORAMA_NOW,
+  },
+  locale,
+  { withSkyView: true },
+);
+const panoramaSky = panoramaView.skyView;
+const frameNearestSun = (altitudeDeg: number) =>
+  panoramaSky
+    ? panoramaSky.sunAltDeg.reduce(
+        (best, alt, i) =>
+          Math.abs(alt - altitudeDeg) < Math.abs(panoramaSky.sunAltDeg[best] - altitudeDeg) ? i : best,
+        0,
+      )
+    : 0;
+const panoramas = panoramaSky
+  ? [
+      { label: "sunset · Sun near 0°, full glow", index: frameNearestSun(0) },
+      { label: "mid-twilight · Sun near −9°", index: frameNearestSun(-9) },
+      { label: "deep night · the Sun at its lowest", index: frameNearestSun(-90) },
+    ].map((sample) => ({
+      label: `${sample.label} (${String(panoramaSky.sunAltDeg[sample.index])}°)`,
+      view: { ...panoramaSky, initialIndex: sample.index },
+    }))
+  : [];
 
 /*
  * The tiles are links inside TonightTiles, so the specimens reach them from a wrapper with the
@@ -497,6 +570,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class="font-display text-display font-semibold break-words text-heading">text-display · My gear</p>
             <p class="font-display text-title font-semibold text-heading">text-title · M31 · Andromeda Galaxy</p>
             <p class="text-label font-semibold text-heading">text-label · Field label, button, row meta</p>
+            <p class="text-caption font-semibold text-heading">
+              text-caption · M31 · Jupiter · <span class="font-normal text-muted-foreground">Vega, Deneb</span> (the
+              live sky's body and star labels)
+            </p>
             <p class="text-body text-foreground">
               text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
               <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
@@ -1053,6 +1130,42 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               hover, focus-visible, disabled — N/A (not interactive) · error — a failed island keeps the skeleton's
               reload hint · empty — the no-dark-window sky · loading — see TonightSkeleton
+            </p>
+          </section>
+
+          <!-- TonightSkyView -->
+          <section class:list={block} aria-labelledby="c-tonight-sky-view">
+            <h3 id="c-tonight-sky-view" class:list={blockTitle}>
+              TonightSkyView (the live sky)
+            </h3>
+            <div class="flex flex-col gap-6">
+              {panoramas.map((panorama, i) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>{panorama.label}</p>
+                  <div class="overflow-hidden rounded-lg">
+                    <TonightSkyView view={panorama.view} locale={locale} client:load>
+                      <VerdictCard
+                        level={panoramaView.verdict.level}
+                        dateLabel={panoramaView.dateLabel}
+                        headline={panoramaView.headline}
+                        text={panoramaView.verdictText}
+                        darkWindow={panoramaView.darkWindow}
+                        timeZone={panoramaView.timeZone}
+                        forecastStatus={panoramaView.forecastStatus}
+                        explanation={panoramaView.explanation}
+                        headingId={`verdict-heading-panorama-${String(i)}`}
+                      />
+                    </TonightSkyView>
+                  </div>
+                </div>
+              ))}
+              {panoramas.length === 0 && <p class:list={notApplicable}>The sky view failed to build.</p>}
+            </div>
+            <p class:list={notApplicable}>
+              hover — a marker's label underlines · focus-visible — Tab to a marker for its ring circle, or to the strip
+              and the slider for their outlines · disabled — N/A · error — without a sky view the dashboard keeps the
+              static TonightSky · empty — no deep-sky markers on a no-go night (planets and the Moon stay) · loading —
+              see TonightSkeleton (it reserves the strip and the slider row)
             </p>
           </section>
 

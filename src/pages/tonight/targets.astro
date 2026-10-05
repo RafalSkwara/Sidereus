@@ -70,47 +70,23 @@ const restOpen = Astro.url.searchParams.has("sort");
 </GearShell>
 
 <script>
+  import { fragmentTarget, scrollToWhenRendered } from "@/lib/tonight/hash-scroll";
+
   // The list streams in through the server island after the browser has already tried the URL's fragment (the Moon
-  // page's washed-out link and old /tonight/all#washed-out bookmarks land on #washed-out, a sort link on #more), so
-  // scroll to the target once the island has inserted it. A target that is a closed <details> (#more) opens first.
-  // Without a fragment, a return from "Mark observed" on one of the rest brings that row into view instead
-  // (TargetsPageContent opens the list for it and names it in `data-logged-row`).
-  function findTarget(): { target: Element; block: ScrollLogicalPosition } | null {
-    if (location.hash) {
-      let id: string;
-      try {
-        id = decodeURIComponent(location.hash.slice(1));
-      } catch {
-        return null; // A malformed fragment (`#%E0`) names nothing.
+  // page's washed-out link and old /tonight/all#washed-out bookmarks land on #washed-out, a sort link on #more, the
+  // live sky's markers on #object-<id>), so scroll to the target once the island has inserted it. A target that is a
+  // closed <details> (#more) opens first. Without a fragment, a return from "Mark observed" on one of the rest brings
+  // that row into view instead (TargetsPageContent opens the list for it and names it in `data-logged-row`).
+  if (location.hash || new URLSearchParams(location.search).has("logged")) {
+    scrollToWhenRendered(() => {
+      if (location.hash) {
+        const target = fragmentTarget();
+        return target ? { target, block: "start" } : null;
       }
-      const target = id ? document.getElementById(id) : null;
-      if (target instanceof HTMLDetailsElement) target.open = true;
-      return target ? { target, block: "start" } : null;
-    }
-    const list = document.querySelector<HTMLElement>("[data-logged-row]");
-    const key = list?.dataset.loggedRow;
-    const row = key ? list.querySelector(`[data-object="${CSS.escape(key)}"]`) : null;
-    return row ? { target: row, block: "center" } : null;
-  }
-  function scrollToTarget(): boolean {
-    const found = findTarget();
-    found?.target.scrollIntoView({ block: found.block });
-    return found !== null;
-  }
-  const userInput = ["wheel", "touchmove", "keydown"] as const;
-  if ((location.hash || new URLSearchParams(location.search).has("logged")) && !scrollToTarget()) {
-    const observer = new MutationObserver(() => {
-      if (scrollToTarget()) stop();
+      const list = document.querySelector<HTMLElement>("[data-logged-row]");
+      const key = list?.dataset.loggedRow;
+      const row = key ? list.querySelector(`[data-object="${CSS.escape(key)}"]`) : null;
+      return row ? { target: row, block: "center" } : null;
     });
-    // Stop once the target is shown, once the visitor scrolls or types (never move the page under them), or after
-    // 10 s if the target never arrives (an empty night, or a stale link).
-    const timer = window.setTimeout(stop, 10_000);
-    function stop() {
-      observer.disconnect();
-      window.clearTimeout(timer);
-      for (const type of userInput) window.removeEventListener(type, stop);
-    }
-    observer.observe(document.body, { childList: true, subtree: true });
-    for (const type of userInput) window.addEventListener(type, stop, { passive: true });
   }
 </script>

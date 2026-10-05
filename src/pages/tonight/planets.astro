@@ -54,3 +54,16 @@ const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
     </div>
   </div>
 </GearShell>
+
+<script>
+  import { fragmentTarget, scrollToWhenRendered } from "@/lib/tonight/hash-scroll";
+
+  // The list streams in through the server island after the browser has already tried the URL's fragment (the live
+  // sky's planet markers link to #planet-<key>, interactive-sky), so scroll to the row once the island has inserted it.
+  if (location.hash) {
+    scrollToWhenRendered(() => {
+      const target = fragmentTarget();
+      return target ? { target, block: "start" } : null;
+    });
+  }
+</script>
