@@ -1,10 +1,10 @@
 ---
 change_id: session-plan-timeline
 title: Session plan page — Tonight as a timeline of the night
-status: impl_reviewed
+status: archived
 created: 2026-10-05
 updated: 2026-10-05
-archived_at: null
+archived_at: 2026-10-05T18:13:02Z
 ---
 
 ## Notes
