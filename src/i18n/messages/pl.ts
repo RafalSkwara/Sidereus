@@ -705,6 +705,7 @@ export const pl = {
 
     attribution: {
       objectData: "Dane obiektów:",
+      starData: "Dane gwiazd:",
       weather: "Pogoda:",
     },
 

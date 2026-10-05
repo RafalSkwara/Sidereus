@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/astronexus/HYG-Database",
+  "url": "https://raw.githubusercontent.com/astronexus/HYG-Database/c7f7f883fe678cc7680169a50ccd7dcc49b060ce/hyg/CURRENT/hygdata_v41.csv",
+  "file": "hyg/CURRENT/hygdata_v41.csv",
+  "commit": "c7f7f883fe678cc7680169a50ccd7dcc49b060ce",
+  "commitDate": "2025-02-14",
+  "licence": "CC BY-SA 4.0",
+  "attribution": "HYG database, David Nash / astronexus",
+  "filter": "mag <= 4.5, Sol (id 0) excluded",
+  "count": 925,
+  "namedCount": 41,
+  "normalisations": [
+    "Sorted by mag, then HYG id",
+    "ra (hours) / dec (degrees) -> J2000 unit vector x, y, z, rounded to 5 dp",
+    "name: HYG proper, kept only for the 40 brightest stars that have one, plus Polaris",
+    "All other HYG columns dropped"
+  ]
+}

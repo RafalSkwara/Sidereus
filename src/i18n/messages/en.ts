@@ -755,6 +755,7 @@ export const en = {
 
     attribution: {
       objectData: "Object data:",
+      starData: "Star data:",
       weather: "Weather:",
     },
 
