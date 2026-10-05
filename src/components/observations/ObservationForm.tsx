@@ -69,11 +69,13 @@ const FIELD_NAMES: readonly string[] = ["target", "night", "rating", "siteId", "
 const RATINGS = [1, 2, 3, 4, 5] as const;
 
 // The rating scale as a row of radio "keys": the shared --ring outline on focus, the selected fill once chosen
-// (as a pressed sky answer, SkyAnswerForm).
+// (as a pressed sky answer, SkyAnswerForm). Forced colors flatten the fill, so there the checked key keeps a
+// thick border and an underlined number instead.
 const ratingOption = cn(
   "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface font-mono text-body font-semibold text-heading transition-colors",
   "hover:bg-accent has-[:checked]:border-selected has-[:checked]:bg-selected has-[:checked]:text-selected-foreground has-[:checked]:hover:bg-selected",
   "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+  "forced-colors:has-[:checked]:border-4 forced-colors:has-[:checked]:underline forced-colors:has-[:checked]:decoration-2 forced-colors:has-[:checked]:underline-offset-4",
 );
 
 export default function ObservationForm({
@@ -188,9 +190,7 @@ export default function ObservationForm({
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <div role="alert">
-            <FieldError id="siteId-error" message={errors.siteId} />
-          </div>
+          <FieldError id="siteId-error" message={errors.siteId} />
         </div>
         <div>
           <Label htmlFor="telescopeId" className="mb-1.5">
@@ -216,9 +216,7 @@ export default function ObservationForm({
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <div role="alert">
-            <FieldError id="telescopeId-error" message={errors.telescopeId} />
-          </div>
+          <FieldError id="telescopeId-error" message={errors.telescopeId} />
         </div>
       </div>
 
@@ -249,9 +247,7 @@ export default function ObservationForm({
             {t.ratingHigh}
           </span>
         </div>
-        <div role="alert">
-          <FieldError id="rating-error" message={errors.rating} />
-        </div>
+        <FieldError id="rating-error" message={errors.rating} />
         <p id="rating-hint" className="text-muted-foreground mt-2 text-sm">
           {t.ratingHint}
         </p>

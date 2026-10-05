@@ -1,10 +1,10 @@
 ---
 change_id: ui-log
 title: Log views in Nightfall (/10x-ui pass)
-status: impl_reviewed
+status: archived
 created: 2026-10-05
 updated: 2026-10-05
-archived_at: null
+archived_at: 2026-10-05T15:05:23Z
 ---
 
 ## Notes

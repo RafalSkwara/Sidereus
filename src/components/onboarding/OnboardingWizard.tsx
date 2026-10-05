@@ -372,7 +372,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
             </details>
 
             {errors.where && !manualOpen ? (
-              <div role="alert" className="-mt-2">
+              <div className="-mt-2">
                 <FieldError id="where-error" message={errors.where} />
               </div>
             ) : null}
@@ -631,11 +631,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
                     {t.kit.eyepieceLimit}
                   </p>
                 ) : null}
-                {errors.eyepieces ? (
-                  <div role="alert">
-                    <FieldError message={errors.eyepieces} />
-                  </div>
-                ) : null}
+                {errors.eyepieces ? <FieldError message={errors.eyepieces} /> : null}
               </div>
             </div>
           </div>
