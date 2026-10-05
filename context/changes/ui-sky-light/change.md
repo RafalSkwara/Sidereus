@@ -1,7 +1,7 @@
 ---
 change_id: ui-sky-light
 title: Tonight's skies stay navy in the light theme, and the panorama shows it scrolls
-status: implementing
+status: implemented
 created: 2026-10-05
 updated: 2026-10-05
 archived_at: null

@@ -313,10 +313,10 @@ The kitchen sink, the screenshot evidence and the agent rule.
 
 #### Automated
 
-- [x] 4.1 The full unit suite and the Tonight e2e specs pass
-- [x] 4.2 The hardcoded-value scan on the touched view files has 0 new hits
+- [x] 4.1 The full unit suite and the Tonight e2e specs pass — 8447641
+- [x] 4.2 The hardcoded-value scan on the touched view files has 0 new hits — 8447641
 
 #### Manual
 
-- [x] 4.3 Screenshots: EN/PL × dark/light/red × 390/1280 for `/tonight` and `/tonight/moon`, plus chevron hover, focus and end states, and the light-theme popover
-- [x] 4.4 7-state matrix for the chevron: default, hover and focus shown; disabled shown as the hidden end state; error and empty N/A (no data dependency); loading is the skeleton's static navy sky
+- [x] 4.3 Screenshots: EN/PL × dark/light/red × 390/1280 for `/tonight` and `/tonight/moon`, plus chevron hover, focus and end states, and the light-theme popover — 8447641
+- [x] 4.4 7-state matrix for the chevron: default, hover and focus shown; disabled shown as the hidden end state; error and empty N/A (no data dependency); loading is the skeleton's static navy sky — 8447641
