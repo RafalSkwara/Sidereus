@@ -6,7 +6,7 @@ import { getMessages } from "@/i18n";
 import type { Verdict } from "@/lib/engine";
 import { createFormatter } from "@/lib/tonight/format";
 
-const { user, locale } = Astro.locals;
+const { locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.landing;
 const { skyHeadline } = createFormatter(locale);
@@ -81,20 +81,12 @@ const secondaryCta =
     </section>
 
     <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-      {user ? (
-        <a href="/tonight" class:list={[primaryCta]}>
-          {t.openTonight}
-        </a>
-      ) : (
-        <>
-          <a href="/auth/signup" class:list={[primaryCta]}>
-            {t.getStarted}
-          </a>
-          <a href="/auth/signin" class:list={[secondaryCta]}>
-            {t.signIn}
-          </a>
-        </>
-      )}
+      <a href="/auth/signup" class:list={[primaryCta]}>
+        {t.getStarted}
+      </a>
+      <a href="/auth/signin" class:list={[secondaryCta]}>
+        {t.signIn}
+      </a>
     </div>
 
     <figure class="mt-12 w-full overflow-hidden rounded-2xl border border-border bg-surface sm:mt-16">
