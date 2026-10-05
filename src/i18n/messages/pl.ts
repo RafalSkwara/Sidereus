@@ -813,6 +813,7 @@ export const pl = {
       updated: (p) => `Zaktualizowano obserwację: ${p.object}.`,
       deleted: (p) => `Usunięto z dziennika obserwację: ${p.object}.`,
     },
+    deleteHeading: "Usuwanie",
   },
 
   skyChecks: {
@@ -843,6 +844,7 @@ export const pl = {
       notAnswered: "Jeszcze bez odpowiedzi",
       answers: "Co było widać",
       answersFor: (p) => `Co było widać w nocy ${p.night} (${p.site})`,
+      nightsHeading: "Noce",
     },
     tally: {
       title: "Jak często prognoza się sprawdzała",

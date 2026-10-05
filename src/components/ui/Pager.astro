@@ -1,0 +1,42 @@
+---
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+/*
+ * Newer / older page navigation for a paged list (ui-log): the log and the sky checks. Newer sits at the start, older
+ * at the end; a missing href leaves that side empty, and with neither the pager renders nothing. Hrefs are fixed app
+ * paths with a page number, chosen by the page. The labels are catalogue copy (they carry their own arrows). `class`
+ * is merged last; `/design` uses `linkClass` to pin the hover and focus looks as specimens.
+ */
+interface Props {
+  /** The nav's accessible name, e.g. "Log pages". */
+  label: string;
+  newerHref?: string;
+  newerLabel: string;
+  olderHref?: string;
+  olderLabel: string;
+  class?: string;
+  linkClass?: string;
+}
+
+const { label, newerHref, newerLabel, olderHref, olderLabel, class: className, linkClass } = Astro.props;
+const show = Boolean(newerHref) || Boolean(olderHref);
+const link = cn(buttonVariants({ variant: "link" }), "px-3", linkClass);
+---
+
+{show && (
+  <nav aria-label={label} class:list={cn("flex justify-between gap-4", className)}>
+    {newerHref ? (
+      <a href={newerHref} class:list={link}>
+        {newerLabel}
+      </a>
+    ) : (
+      <span />
+    )}
+    {olderHref && (
+      <a href={olderHref} class:list={link}>
+        {olderLabel}
+      </a>
+    )}
+  </nav>
+)}
