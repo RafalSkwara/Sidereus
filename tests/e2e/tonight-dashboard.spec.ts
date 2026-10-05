@@ -7,7 +7,7 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import { onboardInMadrid } from "./helpers";
 
 /*
- * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, four tiles each open a focused
+ * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, five tiles each open a focused
  * page under /tonight/*, never an anchor on the dashboard, and each page leads back to Tonight. Same setup as the
  * other specs: a production preview on local Supabase with the all-clear forecast fixture, so the Moon card and the
  * planets tile are both shown, and place search stubbed with Madrid. The clock is real, so the spec never asserts
@@ -18,6 +18,7 @@ const t = en.tonight;
 /** Each tile: its heading, the page it opens and that page's title ("Open …" joins the name only where they differ). */
 const TILES = [
   { heading: t.summary.targets, href: "/tonight/targets", page: t.pages.targets },
+  { heading: t.summary.plan, href: "/tonight/plan", page: t.summary.plan },
   { heading: t.summary.moon, href: "/tonight/moon", page: t.summary.moon },
   { heading: t.summary.planets, href: "/tonight/planets", page: t.summary.planets },
   {
@@ -62,4 +63,21 @@ test("Tonight's tiles open their pages, and each page leads back", async ({ page
   await expect(page).toHaveURL(/\/tonight$/);
   await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
   await expect(page.locator("[data-tonight-tiles]")).toBeVisible();
+});
+
+test("The Session plan page lists rows that lead to their targets", async ({ page }) => {
+  await onboardInMadrid(page, "e2e-plan");
+  await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
+
+  await page.locator("[data-tonight-tiles]").getByRole("link", { name: t.summary.plan, exact: true }).click();
+  await expect(page).toHaveURL(/\/tonight\/plan$/);
+  await expect(page).toHaveTitle(en.common.pageTitle({ title: t.summary.plan }));
+
+  // The plan page is a server island: the skeleton carries the title, so wait for the timeline's text line.
+  await expect(page.locator("[data-session-plan-text]")).toBeVisible();
+  const rows = page.locator("[data-session-plan-row]");
+  await expect(rows.first()).toBeVisible();
+  for (const href of await rows.evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
+    expect(href).toMatch(/^\/tonight\/(targets#object-|planets#planet-|moon)/);
+  }
 });

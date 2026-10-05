@@ -2,7 +2,7 @@
 // The data-dependent part of /tonight, rendered as a server island (`server:defer` in pages/tonight.astro) so the
 // page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives. Since
 // tonight-dashboard it is the dashboard: the sky, then tiles that open the focused pages under /tonight/*, the sky
-// check, the gear and the setup prompts. The detail lives on those pages; only this island records the sky verdict.
+// check, the gear and the setup prompts (the tiles include the Session plan, loaded with `withSessionPlan`). The detail lives on those pages; only this island records the sky verdict.
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -59,7 +59,13 @@ const NOTHING_LOADED: TonightLoad = {
   tonightError: null,
   openSkyChecks: [],
 };
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, withSkyChecks: true, withSkyView: true });
+const load = await loadTonightFor(Astro.locals, {
+  siteId,
+  telescopeId,
+  withSkyChecks: true,
+  withSkyView: true,
+  withSessionPlan: true,
+});
 const supabase = load ? Astro.locals.supabase : null;
 const {
   sites,

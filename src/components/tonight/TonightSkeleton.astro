@@ -1,7 +1,7 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
 // strip and slider row reserved, interactive-sky) with bars where the date, the giant word and the headline lines go,
-// then four ruled rows standing for the dashboard's tiles (TonightTiles), so
+// then five ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
 import { SLIDER_ROW_CLASS } from "@/components/tonight/sky-band";
@@ -54,6 +54,12 @@ const tile = "border-b border-border px-4 py-4";
             <div class:list={[bar, "w-2/3 text-title"]}>&nbsp;</div>
           ))}
         </div>
+      </div>
+
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-3 h-4 w-full rounded-full"]}></div>
+        <div class:list={[bar, "mt-3 w-2/3 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>

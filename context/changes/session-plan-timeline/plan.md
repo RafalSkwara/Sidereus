@@ -259,10 +259,10 @@ One extra Moon track over the axis (the sky view already samples the same interv
 
 #### Automated
 
-- [ ] 3.1 Type check, lint, unit tests and build pass
-- [ ] 3.2 Dashboard e2e passes against a local preview
+- [x] 3.1 Type check, lint, unit tests and build pass
+- [x] 3.2 Dashboard e2e passes against a local preview
 
 #### Manual
 
-- [ ] 3.3 Dashboard screenshot matrix with the Session plan tile
-- [ ] 3.4 Keyboard: tile and plan rows reachable with visible focus
+- [x] 3.3 Dashboard screenshot matrix with the Session plan tile
+- [x] 3.4 Keyboard: tile and plan rows reachable with visible focus
