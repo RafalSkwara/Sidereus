@@ -483,11 +483,11 @@ The user asked for modest tests: pin only what screenshots can't show.
 
 #### Automated
 
-- [x] 4.1 `npm run test:e2e` passes against the local preview, including `tonight-sky.spec.ts` and the existing Tonight and Moon specs
-- [x] 4.2 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 4.1 `npm run test:e2e` passes against the local preview, including `tonight-sky.spec.ts` and the existing Tonight and Moon specs — e00de9c
+- [x] 4.2 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass — e00de9c
 
 #### Manual
 
-- [x] 4.3 Keyboard only: Tab reaches each marker with a visible ring in all three themes, and Enter opens its page
-- [x] 4.4 VoiceOver announces the slider's time and each marker's name, altitude and direction in EN and PL
-- [x] 4.5 Polish labels fit at 390 px without clipping
+- [x] 4.3 Keyboard only: Tab reaches each marker with a visible ring in all three themes, and Enter opens its page — e00de9c
+- [x] 4.4 VoiceOver announces the slider's time and each marker's name, altitude and direction in EN and PL — e00de9c
+- [x] 4.5 Polish labels fit at 390 px without clipping — e00de9c
