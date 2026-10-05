@@ -25,13 +25,14 @@ Product code so far: the pure sky engine in `src/lib/engine/` and the generated 
 - **A 302 has no response body in DevTools.** To see a route's error, read the `Location` header, and enable Preserve log so the redirect is not cleared.
 - **`npm audit` needs `--registry https://registry.npmjs.org`** on this machine: the default registry is a private Nexus mirror that rejects the advisories endpoint.
 - **Node ≥ 24.16** (`.nvmrc` pins 24.21.0, `package.json` engines enforce it). Two ESLint Astro packages declare narrow `engines.node` ranges; mismatch warnings at install are upstream noise, not blockers.
+- **Always build with `npm run build`, never `npx astro build` alone.** npm's `postbuild` (`scripts/build-sw.mjs`) bundles the service worker into `dist/client/sw.js` (S-06); a bare `astro build` deploys without it, and installed clients keep their old worker.
 - **Deploy target is Cloudflare Workers** (with static assets), never Pages: `@astrojs/cloudflare` v13+ dropped Pages support. `name` is `sidereus` in `package.json` and `wrangler.jsonc`; `tech-stack.md` says `cloudflare-workers`. Platform decision and risk register: `context/foundation/infrastructure.md`.
 
 ## Commands
 
 ```bash
 npm run dev          # Astro dev server on the Cloudflare workerd runtime, http://localhost:4321
-npm run build        # production SSR build (@astrojs/cloudflare adapter)
+npm run build        # production SSR build (@astrojs/cloudflare adapter), then postbuild bundles dist/client/sw.js
 npm run preview      # serve the production build
 npm run lint         # ESLint (type-checked); lint:fix to auto-fix
 npm run format       # Prettier (astro + tailwind plugins)

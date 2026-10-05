@@ -41,18 +41,21 @@ function isStandalone(): boolean {
   return iosStandalone || window.matchMedia("(display-mode: standalone)").matches;
 }
 
-/** iPhone, iPod or iPad (iPadOS reports itself as a Mac with touch). */
-function isIos(): boolean {
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  );
+/**
+ * An iOS browser that can add to the home screen: iPhone, iPod or iPad (iPadOS reports itself as a Mac with touch),
+ * with a `Safari/` token, which Safari, Chrome and Firefox on iOS carry and in-app webviews (Instagram, Gmail) don't.
+ */
+function isIosBrowser(): boolean {
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return ios && ua.includes("Safari/");
 }
 
 export function installState(): InstallState {
   if (typeof window === "undefined") return "none";
   if (installed || isStandalone()) return "installed";
   if (deferredPrompt) return "prompt";
-  return isIos() ? "ios" : "none";
+  return isIosBrowser() ? "ios" : "none";
 }
 
 /** For `useSyncExternalStore`: called whenever the prompt arrives or the app gets installed. */
@@ -63,15 +66,20 @@ export function subscribeInstallState(listener: () => void): () => void {
   };
 }
 
-/** Opens the browser's install dialog; the event can be used once, so it is dropped either way. */
+/** Opens the browser's install dialog; the event can be used once, so it is dropped (and the entry hidden) at once. */
 export async function promptInstall(): Promise<void> {
   const event = deferredPrompt;
   if (!event) return;
   deferredPrompt = null;
-  await event.prompt();
-  const { outcome } = await event.userChoice;
-  if (outcome === "accepted") {
-    installed = true;
-  }
   notify();
+  try {
+    await event.prompt();
+    const { outcome } = await event.userChoice;
+    if (outcome === "accepted") {
+      installed = true;
+      notify();
+    }
+  } catch {
+    // A prompt the browser refuses (already shown, or gone) only means no install this time.
+  }
 }
