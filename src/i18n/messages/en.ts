@@ -126,6 +126,7 @@ export const en = {
       noAccount: "Don't have an account?",
       signUpLink: "Sign up",
       continueNote: "Sign in to continue.",
+      subtitle: "Your sites, gear and observing log, on any device.",
     },
     signUp: {
       title: "Sign up",
@@ -140,6 +141,7 @@ export const en = {
         one: (p) => `${p.count} more character needed`,
         other: (p) => `${p.count} more characters needed`,
       } as PluralForms<Count>,
+      subtitle: "Tell Sidereus where you observe from, and it tells you whether tonight is worth setting up for.",
     },
     validation: {
       emailRequired: "Email is required",
@@ -314,18 +316,15 @@ export const en = {
     submit: "Show me tonight",
     locationRequired: "Set a location above to continue.",
     where: {
-      kicker: "1 · Where",
       heading: "Where do you observe from?",
       hint: "Your home, or wherever you usually set up. It is saved to about 1 km, never more precisely.",
       manualToggle: "Enter coordinates instead",
     },
     sky: {
-      kicker: "2 · Sky",
       heading: "How dark is your sky?",
       hint: "Pick the scene closest to a clear, moonless night where you observe.",
     },
     kit: {
-      kicker: "3 · Kit",
       heading: "What's in your kit?",
       telescope: "Telescope",
       telescopeHint:
@@ -868,7 +867,6 @@ export const en = {
     manualTitle: "Add an observation",
     manualIntro:
       "Pick a Messier object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
-    backToLog: "← Log",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
     saveChanges: "Save changes",
@@ -901,6 +899,7 @@ export const en = {
       updated: (p: { object: string }) => `${p.object} updated.`,
       deleted: (p: { object: string }) => `${p.object} deleted from the log.`,
     },
+    deleteHeading: "Delete",
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
@@ -931,6 +930,7 @@ export const en = {
       notAnswered: "Not answered yet",
       answers: "What you saw",
       answersFor: (p: { night: string; site: string }) => `What you saw on ${p.night} at ${p.site}`,
+      nightsHeading: "Nights",
     },
     tally: {
       title: "How often the forecast was right",

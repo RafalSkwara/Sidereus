@@ -18,8 +18,11 @@ import PageHeader from "@/components/ui/PageHeader.astro";
 import Band from "@/components/ui/Band.astro";
 import BackLink from "@/components/ui/BackLink.astro";
 import Notice from "@/components/ui/Notice.astro";
+import Pager from "@/components/ui/Pager.astro";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
+import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
@@ -837,6 +840,67 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
             </section>
 
+            <!-- Pager (ui-log) -->
+            <section class:list={block} aria-labelledby="c-pager">
+              <h3 id="c-pager" class:list={blockTitle}>
+                Pager
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · live · newer and older</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderHref="#c-pager"
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · first page (older only)</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerLabel={m.log.list.newer}
+                    olderHref="#c-pager"
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · last page (newer only)</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                    linkClass="underline"
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                    linkClass={focusRing}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                one page — renders nothing · disabled — N/A (a missing side is left empty, never a dead link) · error,
+                empty, loading — N/A (the list owns them)
+              </p>
+            </section>
+
             <!-- Notice -->
             <section class:list={block} aria-labelledby="c-notice">
               <h3 id="c-notice" class:list={blockTitle}>
@@ -1008,6 +1072,105 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
               <p class:list={notApplicable}>
                 hover, focus-visible, disabled — the field is Input (rows above) · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- ChoiceCard (ui-onboarding) -->
+            <section class:list={block} aria-labelledby="c-choice-card">
+              <h3 id="c-choice-card" class:list={blockTitle}>
+                ChoiceCard
+              </h3>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <ChoiceCard
+                    name="c-cc-live"
+                    value="city"
+                    checked={false}
+                    onChange={() => undefined}
+                    title={m.onboarding.scenes.city.title}
+                    description={m.onboarding.scenes.city.description}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <div inert>
+                    <ChoiceCard
+                      name="c-cc-hover"
+                      value="suburb"
+                      checked={false}
+                      onChange={() => undefined}
+                      title={m.onboarding.scenes.suburb.title}
+                      description={m.onboarding.scenes.suburb.description}
+                      className="bg-accent"
+                    />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>checked</p>
+                  <div inert>
+                    <ChoiceCard
+                      name="c-cc-checked"
+                      value="n150"
+                      checked
+                      onChange={() => undefined}
+                      title={m.onboarding.telescopes.n150}
+                      description={m.gear.telescopes.aperture({ mm: "150" })}
+                    />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible + checked · specimen</p>
+                  <div inert>
+                    <ChoiceCard
+                      name="c-cc-focus"
+                      value="pair"
+                      checked
+                      onChange={() => undefined}
+                      title={m.onboarding.eyepieceKits.pair}
+                      description="25 mm Plössl · 10 mm Plössl"
+                      className="outline-ring outline-2 outline-offset-2"
+                    />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <ChoiceCard
+                    name="c-cc-disabled"
+                    value="none"
+                    checked={false}
+                    disabled
+                    onChange={() => undefined}
+                    title={m.onboarding.eyepieceKits.none}
+                    description={m.onboarding.kit.emptyKit}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                error — a choice always has a default, so the group never errors · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- Band, React twin (ui-onboarding) -->
+            <section class:list={block} aria-labelledby="c-band-react">
+              <h3 id="c-band-react" class:list={blockTitle}>
+                Band (React, ui/band.tsx)
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default — two stacked, as onboarding's steps; matches Band above</p>
+                  <div>
+                    <ReactBand headingId="sample-where-heading" heading={m.onboarding.where.heading}>
+                      <p class="text-body text-muted-foreground">{m.onboarding.where.hint}</p>
+                    </ReactBand>
+                    <ReactBand headingId="sample-sky-heading" heading={m.onboarding.sky.heading}>
+                      <p class="text-body text-muted-foreground">{m.onboarding.sky.hint}</p>
+                    </ReactBand>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive) · error, empty, loading — the content's own
               </p>
             </section>
 

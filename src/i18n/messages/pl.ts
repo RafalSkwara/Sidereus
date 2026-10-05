@@ -108,6 +108,7 @@ export const pl = {
       noAccount: "Nie masz konta?",
       signUpLink: "Załóż konto",
       continueNote: "Zaloguj się, aby kontynuować.",
+      subtitle: "Twoje miejsca, sprzęt i dziennik obserwacji na każdym urządzeniu.",
     },
     signUp: {
       title: "Rejestracja",
@@ -124,6 +125,7 @@ export const pl = {
         many: (p) => `Wpisz jeszcze ${p.count} znaków`,
         other: (p) => `Wpisz jeszcze ${p.count} znaku`,
       },
+      subtitle: "Powiedz, skąd obserwujesz, a Sidereus podpowie, czy tej nocy warto rozstawiać sprzęt.",
     },
     validation: {
       emailRequired: "Podaj adres e-mail",
@@ -301,18 +303,15 @@ export const pl = {
     submit: "Pokaż mi dzisiejszą noc",
     locationRequired: "Najpierw ustaw lokalizację powyżej.",
     where: {
-      kicker: "1 · Miejsce",
       heading: "Skąd obserwujesz?",
       hint: "Twój dom albo miejsce, w którym zwykle rozstawiasz sprzęt. Zapisujemy je z dokładnością do ok. 1 km, nigdy dokładniej.",
       manualToggle: "Wpisz współrzędne ręcznie",
     },
     sky: {
-      kicker: "2 · Niebo",
       heading: "Jak ciemne jest Twoje niebo?",
       hint: "Wybierz opis najbliższy pogodnej, bezksiężycowej nocy tam, gdzie obserwujesz.",
     },
     kit: {
-      kicker: "3 · Sprzęt",
       heading: "Jaki masz sprzęt?",
       telescope: "Teleskop",
       telescopeHint:
@@ -780,7 +779,6 @@ export const pl = {
     manualTitle: "Dodaj obserwację",
     manualIntro:
       "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
-    backToLog: "← Dziennik",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
     saveChanges: "Zapisz zmiany",
@@ -813,6 +811,7 @@ export const pl = {
       updated: (p) => `Zaktualizowano obserwację: ${p.object}.`,
       deleted: (p) => `Usunięto z dziennika obserwację: ${p.object}.`,
     },
+    deleteHeading: "Usuwanie",
   },
 
   skyChecks: {
@@ -843,6 +842,7 @@ export const pl = {
       notAnswered: "Jeszcze bez odpowiedzi",
       answers: "Co było widać",
       answersFor: (p) => `Co było widać w nocy ${p.night} (${p.site})`,
+      nightsHeading: "Noce",
     },
     tally: {
       title: "Jak często prognoza się sprawdzała",

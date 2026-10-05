@@ -1,7 +1,9 @@
 ---
 import AuthShell from "@/components/AuthShell.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 // `?error=` carries a message key; the form translates it.
 const error = Astro.url.searchParams.get("error");
@@ -9,11 +11,11 @@ const { locale } = Astro.locals;
 const t = getMessages(locale).auth.signUp;
 ---
 
-<AuthShell title={t.title}>
+<AuthShell title={t.title} subtitle={t.subtitle}>
   <SignUpForm serverError={error} locale={locale} client:load />
-  <p class="mt-4 text-center text-sm text-muted-foreground">
+  <p class="mt-8 border-t border-border pt-4 text-body text-muted-foreground">
     {t.haveAccount}{" "}
-    <a href="/auth/signin" class="font-semibold text-primary hover:underline">
+    <a href="/auth/signin" class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
       {t.signInLink}
     </a>
   </p>

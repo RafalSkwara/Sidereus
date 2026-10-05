@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { CalendarDays, Save } from "lucide-react";
-import { FormField } from "@/components/forms/FormField";
+import { FieldError, FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import type { TargetOption } from "@/lib/observations/target-search";
@@ -66,29 +68,13 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 const FIELD_NAMES: readonly string[] = ["target", "night", "rating", "siteId", "telescopeId"];
 const RATINGS = [1, 2, 3, 4, 5] as const;
 
-const selectBase =
-  "w-full rounded-lg border bg-surface px-3 py-2 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
-
+// The rating scale as a row of radio "keys": the shared --ring outline on focus, the selected fill once chosen
+// (as a pressed sky answer, SkyAnswerForm).
 const ratingOption = cn(
-  "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface font-mono text-lg font-semibold text-heading transition-colors",
-  "hover:bg-accent has-[:checked]:border-selected has-[:checked]:bg-selected/15 has-[:checked]:ring-1 has-[:checked]:ring-selected",
-  "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50",
+  "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface font-mono text-body font-semibold text-heading transition-colors",
+  "hover:bg-accent has-[:checked]:border-selected has-[:checked]:bg-selected has-[:checked]:text-selected-foreground has-[:checked]:hover:bg-selected",
+  "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
 );
-
-function FieldError({ id, message }: { id?: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="text-destructive mt-1 text-xs">
-      {message}
-    </p>
-  );
-}
-
-function fieldBorder(error?: string): string {
-  return error
-    ? "border-destructive focus-visible:ring-destructive/20"
-    : "border-input focus-visible:border-ring focus-visible:ring-ring/50";
-}
 
 export default function ObservationForm({
   action,
@@ -174,15 +160,15 @@ export default function ObservationForm({
         }}
         error={errors.night}
         icon={<CalendarDays className="size-4" />}
-        hint={<p className="text-muted-foreground mt-1 text-xs">{t.nightHint}</p>}
+        hint={<p className="text-muted-foreground mt-1.5 text-sm">{t.nightHint}</p>}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="siteId" className="text-heading mb-1 block text-sm font-semibold">
+          <Label htmlFor="siteId" className="mb-1.5">
             {t.site}
-          </label>
-          <select
+          </Label>
+          <NativeSelect
             id="siteId"
             name="siteId"
             value={siteId}
@@ -190,22 +176,27 @@ export default function ObservationForm({
               setSiteId(e.target.value);
               clearError("siteId");
             }}
-            className={cn(selectBase, fieldBorder(errors.siteId))}
+            aria-invalid={errors.siteId ? true : undefined}
+            aria-describedby={errors.siteId ? "siteId-error" : undefined}
           >
-            {deletedSite !== undefined && <option value="">{t.list.deletedGear({ name: deletedSite })}</option>}
+            {deletedSite !== undefined && (
+              <NativeSelectOption value="">{t.list.deletedGear({ name: deletedSite })}</NativeSelectOption>
+            )}
             {sites.map((site) => (
-              <option key={site.id} value={site.id}>
+              <NativeSelectOption key={site.id} value={site.id}>
                 {site.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-          <FieldError message={errors.siteId} />
+          </NativeSelect>
+          <div role="alert">
+            <FieldError id="siteId-error" message={errors.siteId} />
+          </div>
         </div>
         <div>
-          <label htmlFor="telescopeId" className="text-heading mb-1 block text-sm font-semibold">
+          <Label htmlFor="telescopeId" className="mb-1.5">
             {t.telescope}
-          </label>
-          <select
+          </Label>
+          <NativeSelect
             id="telescopeId"
             name="telescopeId"
             value={telescopeId}
@@ -213,23 +204,26 @@ export default function ObservationForm({
               setTelescopeId(e.target.value);
               clearError("telescopeId");
             }}
-            className={cn(selectBase, fieldBorder(errors.telescopeId))}
+            aria-invalid={errors.telescopeId ? true : undefined}
+            aria-describedby={errors.telescopeId ? "telescopeId-error" : undefined}
           >
             {deletedTelescope !== undefined && (
-              <option value="">{t.list.deletedGear({ name: deletedTelescope })}</option>
+              <NativeSelectOption value="">{t.list.deletedGear({ name: deletedTelescope })}</NativeSelectOption>
             )}
             {telescopes.map((telescope) => (
-              <option key={telescope.id} value={telescope.id}>
+              <NativeSelectOption key={telescope.id} value={telescope.id}>
                 {telescope.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-          <FieldError message={errors.telescopeId} />
+          </NativeSelect>
+          <div role="alert">
+            <FieldError id="telescopeId-error" message={errors.telescopeId} />
+          </div>
         </div>
       </div>
 
       <fieldset aria-describedby={cn("rating-low rating-high rating-hint", errors.rating && "rating-error")}>
-        <legend className="text-heading mb-2 block text-sm font-semibold">{t.rating}</legend>
+        <legend className="text-label text-heading mb-2 font-semibold">{t.rating}</legend>
         <div className="flex gap-2">
           {RATINGS.map((value) => (
             <label key={value} className={ratingOption}>
@@ -249,14 +243,16 @@ export default function ObservationForm({
             </label>
           ))}
         </div>
-        <div className="text-muted-foreground mt-1 flex justify-between gap-4 text-xs">
+        <div className="text-muted-foreground mt-1.5 flex justify-between gap-4 text-sm">
           <span id="rating-low">{t.ratingLow}</span>
           <span id="rating-high" className="text-right">
             {t.ratingHigh}
           </span>
         </div>
-        <FieldError id="rating-error" message={errors.rating} />
-        <p id="rating-hint" className="text-muted-foreground mt-2 text-xs">
+        <div role="alert">
+          <FieldError id="rating-error" message={errors.rating} />
+        </div>
+        <p id="rating-hint" className="text-muted-foreground mt-2 text-sm">
           {t.ratingHint}
         </p>
       </fieldset>

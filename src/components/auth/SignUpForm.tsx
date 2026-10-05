@@ -64,7 +64,7 @@ export default function SignUpForm({ serverError, locale }: Props) {
   const missing = MIN_PASSWORD_LENGTH - password.length;
   const passwordHint =
     !errors.password && password.length > 0 && missing > 0 ? (
-      <p className="text-muted-foreground mt-1 text-xs">
+      <p className="text-muted-foreground mt-1.5 text-sm">
         {plural(locale, missing, t.moreCharacters)({ count: String(missing) })}
       </p>
     ) : undefined;
