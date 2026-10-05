@@ -15,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
+import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal } from "@/lib/compass";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
 import { nearestFrame } from "@/lib/sky-view/frames";
 import { bodyLabelRects, labelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
@@ -37,6 +38,9 @@ import { cn } from "@/lib/utils";
  * another body's label is there, with a leader line back to the dot when the label sits far from it.
  * Stars are one path (hidden in the light theme, `hidden dark:block`); a marker is an SVG link named for the body, its
  * altitude and direction at the slider's time, with a 24 px hit area and a `--ring` focus circle.
+ * Along the field's top edge a compass row names the 16 points (compass-labels), international in every locale
+ * (`@/lib/compass`), cardinals stronger. It sits just under the verdict's text, wherever that ends: the island measures
+ * it (the verdict's slot is `display: contents`, so through a `Range`), and the row stays invisible until measured.
  *
  * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, the star catalogue (`stars.ts`, `star-names.ts`),
  * `sky-band`, `range-classes`, `@/i18n`, `cn` and `buttonVariants`, never astronomy-engine or the engine
@@ -63,6 +67,11 @@ const HIT_PX = 12;
 /** The focus ring's radius; its centre stays this far plus half its 2 px stroke inside the strip, so it never clips. */
 const RING_PX = HIT_PX + 1;
 const RING_INSET_PX = RING_PX + 1;
+/** The compass row's gap under the verdict's text, and its highest place in the field. */
+const COMPASS_GAP_PX = 8;
+const COMPASS_MIN_TOP_PX = 4;
+/** The caption role's line: a label's top to its baseline. */
+const CAPTION_BASELINE_PX = 11;
 
 const nowButtonClass = buttonVariants({ variant: "outline", size: "sm" });
 
@@ -105,6 +114,10 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   const [index, setIndex] = useState(() => Math.min(Math.max(view.initialIndex, 0), last));
   const [viewport, setViewport] = useState(DEFAULT_VIEWPORT_PX);
   const scroller = useRef<HTMLDivElement>(null);
+  const verdict = useRef<HTMLDivElement>(null);
+  const field = useRef<SVGSVGElement>(null);
+  // The compass row's top in the field, once the verdict's text has been measured.
+  const [compassTop, setCompassTop] = useState<number | null>(null);
 
   // Measure the strip's viewport before the first paint (so a desktop doesn't flash the 390 px default), and keep
   // `facing` in the middle of it after every resize. React 19 runs layout effects only in the browser, without an SSR
@@ -126,6 +139,27 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     const element = scroller.current;
     if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
   }, [viewport]);
+
+  // Where the verdict's text ends, relative to the star field's top: the compass row goes just under it, never higher
+  // than the field's top edge and never lower than the overlap's foot. Re-measured when the verdict reflows.
+  useLayoutEffect(() => {
+    const box = verdict.current;
+    const svg = field.current;
+    if (!box || !svg) return;
+    const measure = () => {
+      const range = document.createRange();
+      range.selectNodeContents(box);
+      const textBottom = range.getBoundingClientRect().bottom - svg.getBoundingClientRect().top;
+      const top = Math.min(Math.max(textBottom + COMPASS_GAP_PX, COMPASS_MIN_TOP_PX), STRIP_OVERLAP_PX);
+      setCompassTop(Math.round(top));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const time = view.timeLabels[index] ?? "";
   const stripWidth = viewport * 2;
@@ -166,6 +200,16 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     [view.bodies, view.facing, index, viewport, height],
   );
 
+  // The 16 points across the 360° strip; the one on the wrap edge (opposite `facing`) is drawn at both ends.
+  const compass = useMemo(
+    () =>
+      COMPASS_POINTS.flatMap((point, i) => {
+        const { x } = placeAt({ altDeg: 0, azDeg: i * COMPASS_STEP_DEG }, view.facing, viewport, height);
+        return (x < 1 ? [x, x + stripWidth] : [x]).map((at) => ({ point, x: at }));
+      }),
+    [view.facing, viewport, height, stripWidth],
+  );
+
   const labels = useMemo(() => {
     const items: LabelItem[] = bodies.map(({ body, x, y }) => ({
       id: body.key,
@@ -193,7 +237,10 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
          * swipes anywhere over the overlap reach the panorama's markers and scroll. A link in the verdict would need
          * its own `pointer-events-auto`.
          */}
-        <div className={cn(VERDICT_CONTAINER_CLASS, VERDICT_MIN_HEIGHT_CLASS, "pointer-events-none z-10")}>
+        <div
+          ref={verdict}
+          className={cn(VERDICT_CONTAINER_CLASS, VERDICT_MIN_HEIGHT_CLASS, "pointer-events-none z-10")}
+        >
           {children}
         </div>
 
@@ -209,12 +256,29 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           data-sky-strip
         >
           <svg
+            ref={field}
             width={stripWidth}
             height={height}
             viewBox={`0 0 ${String(stripWidth)} ${String(height)}`}
             className="block"
             data-sky-frame={index}
           >
+            <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
+              {compass.map(({ point, x }) => (
+                <text
+                  key={`${point}-${String(x)}`}
+                  x={x}
+                  y={(compassTop ?? 0) + CAPTION_BASELINE_PX}
+                  textAnchor="middle"
+                  className={cn(
+                    "text-caption",
+                    isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",
+                  )}
+                >
+                  {point}
+                </text>
+              ))}
+            </g>
             <g className="hidden dark:block" aria-hidden="true">
               <path d={stars.path} className="fill-star" />
               {stars.named.map((star) => {
@@ -236,7 +300,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
             </g>
             {bodies.map(({ body, x, y, altDeg, azDeg }) => {
               const rect = labels.get(body.key);
-              const direction = m.compass[Math.round(azDeg / 22.5) % 16];
+              const direction = compassPoint(azDeg);
               const hitY = Math.min(Math.max(y - HIT_PX, 0), height - 2 * HIT_PX);
               const ringX = Math.min(Math.max(x, RING_INSET_PX), stripWidth - RING_INSET_PX);
               const ringY = Math.min(Math.max(y, RING_INSET_PX), height - RING_INSET_PX);

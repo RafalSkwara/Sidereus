@@ -370,26 +370,6 @@ export const pl = {
     },
   },
 
-  /** Kompas 16-kierunkowy, zgodnie z ruchem wskazówek zegara od północy (W = wschód, Z = zachód). */
-  compass: [
-    "Pn",
-    "PnPnW",
-    "PnW",
-    "WPnW",
-    "W",
-    "WPdW",
-    "PdW",
-    "PdPdW",
-    "Pd",
-    "PdPdZ",
-    "PdZ",
-    "ZPdZ",
-    "Z",
-    "ZPnZ",
-    "PnZ",
-    "PnPnZ",
-  ],
-
   tonight: {
     title: "Dziś w nocy",
     kicker: "Twoje niebo dziś w nocy",

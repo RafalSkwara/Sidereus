@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * Import guard for Tonight's live sky (interactive-sky): the island runs in the browser, so it, the sky-view maths
  * it composes and the star catalogue it draws may import only React, `@/lib/sky-view/*`, the island-safe star
  * catalogue (`stars.ts` with its JSON, `star-names.ts` with the `Locale` type), the shared `sky-band` and
- * `range-classes`, the message catalogue, `cn` and `buttonVariants`. Never astronomy-engine, the engine barrel or an engine module,
+ * `range-classes`, the international compass (`@/lib/compass`), the message catalogue, `cn` and `buttonVariants`. Never astronomy-engine, the engine barrel or an engine module,
  * `@/lib/tonight/format`, or `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser).
  */
 
@@ -20,6 +20,7 @@ const SOURCES = [
     .map((name) => SKY_VIEW_DIR + name),
   fileURLToPath(new URL("../../lib/catalogue/stars.ts", import.meta.url)),
   fileURLToPath(new URL("../../lib/catalogue/star-names.ts", import.meta.url)),
+  fileURLToPath(new URL("../../lib/compass.ts", import.meta.url)),
 ];
 
 /** Module specifiers of every static import, re-export and dynamic import in `source`. */
@@ -34,6 +35,7 @@ function isAllowedImport(specifier: string): boolean {
     /^@\/lib\/sky-view\/[\w-]+$/.test(specifier) ||
     specifier === "@/lib/catalogue/stars" ||
     specifier === "@/lib/catalogue/star-names" ||
+    specifier === "@/lib/compass" ||
     // `stars.ts` reads its generated JSON; `star-names.ts` takes the `Locale` type from the island-safe preferences.
     specifier === "./bright-stars.json" ||
     specifier === "@/lib/preferences" ||

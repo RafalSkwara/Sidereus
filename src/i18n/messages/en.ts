@@ -383,9 +383,6 @@ export const en = {
     },
   },
 
-  /** The 16-wind compass rose, clockwise from north. */
-  compass: ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"],
-
   tonight: {
     title: "Tonight",
     kicker: "Your sky, tonight",
@@ -765,7 +762,7 @@ export const en = {
       darkWindow: "Dark window",
       /**
        * A marker's accessible name at the slider's time: `alt` is whole degrees, pre-formatted; `direction` a compass
-       * point (`compass`); `time` the frame's "23:40".
+       * point (`@/lib/compass`, international in every locale); `time` the frame's "23:40".
        */
       bodyLabel: (p: { name: string; alt: string; direction: string; time: string }) =>
         `${p.name}, ${p.alt}° up in the ${p.direction} at ${p.time}`,
