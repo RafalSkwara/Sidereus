@@ -53,7 +53,8 @@ const objectId = label?.id ?? "";
 const commonName = label?.name ?? null;
 // Only a hint for the date picker; the store checks the chosen site's own night.
 const maxNight = latestNightBound(sites, new Date());
-const title = entry ? t.editTitle({ object: objectId }) : t.notFound;
+// "Entry not found" only when the entry is really missing; a load error or a missing database keeps a neutral title.
+const title = entry ? t.editTitle({ object: objectId }) : supabase && !loadError ? t.notFound : t.kicker;
 ---
 
 <GearShell title={title}>
@@ -69,7 +70,7 @@ const title = entry ? t.editTitle({ object: objectId }) : t.notFound;
     <ServerError message={translateKey(m, loadError, "errors.generic")} />
   ) : entry ? (
     <div>
-      <Band headingId="entry-heading" heading={title} headingHidden>
+      <div class="pb-8">
         <p class="mb-6 text-body text-muted-foreground">{t.editIntro}</p>
         <ObservationForm
           action={`/api/log/${encodeURIComponent(entry.id)}`}
@@ -91,7 +92,7 @@ const title = entry ? t.editTitle({ object: objectId }) : t.notFound;
           locale={locale}
           client:load
         />
-      </Band>
+      </div>
       <Band headingId="delete-heading" heading={t.deleteHeading}>
         <DeleteButton
           action={`/api/log/${encodeURIComponent(entry.id)}/delete`}

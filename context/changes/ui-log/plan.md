@@ -241,6 +241,18 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 - Contract: `src/styles/global.css`, `src/components/ui/`, `src/components/forms/`, CLAUDE.md "UI (Nightfall)"
 - Pattern: `src/pages/gear/sites/[id].astro`, `src/pages/gear/index.astro`
 
+## Addendum (implementation and review, 2026-10-05)
+
+- **Tally figure**: it ships as `text-body font-semibold text-heading`, not `font-display text-title`. At `text-title` it matched the band title's size and weight, so the hierarchy collapsed (screenshot `sky-filled-notice-pl-red-390`). Impl review F2.
+- **Form block**: on `/log/new` and `/log/[id]` the form is a plain block under the header, not a `Band` with a hidden heading, because that heading repeated the h1 for screen readers (impl review F3). The Delete band keeps its visible heading.
+- **Small extras**:
+  - Pager's `linkClass` prop (only for the `/design` specimens).
+  - A Plus icon on "Add entry", as on gear's add buttons.
+  - `pointer-events-none` on the picker's search icon.
+  - `role="alert"` wrappers that keep the old announcement of the site, telescope and rating errors.
+- **`log.backToLog` removal** moved from Phase 1 to Phase 3, so each phase's `astro check` stayed green while pages still read the key.
+- **Row 1.3**: open. `astro dev` failed to start in this worktree, so `/design` could not be screenshotted. The Pager's states are shown live on `/log` (see `manual-checks.md`).
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

@@ -4,7 +4,6 @@ import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
 import BackLink from "@/components/ui/BackLink.astro";
-import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
@@ -102,7 +101,7 @@ const actionLink = cn(buttonVariants(), "mt-4");
       </a>
     </div>
   ) : (
-    <Band headingId="entry-heading" heading={title} headingHidden>
+    <div>
       <p class="mb-6 text-body text-muted-foreground">{manual ? t.manualIntro : t.intro}</p>
       <ObservationForm
         action="/api/log"
@@ -117,6 +116,6 @@ const actionLink = cn(buttonVariants(), "mt-4");
         locale={locale}
         client:load
       />
-    </Band>
+    </div>
   )}
 </GearShell>

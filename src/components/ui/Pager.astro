@@ -31,7 +31,7 @@ const link = cn(buttonVariants({ variant: "link" }), "px-3", linkClass);
         {newerLabel}
       </a>
     ) : (
-      <span />
+      <span aria-hidden="true" />
     )}
     {olderHref && (
       <a href={olderHref} class:list={link}>
