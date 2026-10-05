@@ -217,22 +217,22 @@ Close C4, cover the state matrix and leave the rule.
 
 #### Automated
 
-- [x] 2.1 Hardcoded-value scan on the three view files finds no arbitrary values and no `rounded-xl`/`rounded-2xl`
-- [x] 2.2 `npm run lint`, `npx astro check` and `npm test` pass
-- [x] 2.3 `tests/e2e/onboarding.spec.ts` passes against the local preview
+- [x] 2.1 Hardcoded-value scan on the three view files finds no arbitrary values and no `rounded-xl`/`rounded-2xl` — eeb1d77
+- [x] 2.2 `npm run lint`, `npx astro check` and `npm test` pass — eeb1d77
+- [x] 2.3 `tests/e2e/onboarding.spec.ts` passes against the local preview — eeb1d77
 
 #### Manual
 
-- [x] 2.4 `/onboarding` screenshots EN/PL × dark/light/red × 390/1280 show the sky header and ruled bands, no Polish overflow at 390 px
+- [x] 2.4 `/onboarding` screenshots EN/PL × dark/light/red × 390/1280 show the sky header and ruled bands, no Polish overflow at 390 px — eeb1d77
 
 ### Phase 3: States, picker and rule
 
 #### Automated
 
-- [ ] 3.1 `npm run lint`, `npx astro check` and `npm test` pass
-- [ ] 3.2 e2e `onboarding.spec.ts` and `site-location.spec.ts` pass against the local preview
+- [x] 3.1 `npm run lint`, `npx astro check` and `npm test` pass
+- [x] 3.2 e2e `onboarding.spec.ts` and `site-location.spec.ts` pass against the local preview
 
 #### Manual
 
-- [ ] 3.3 State screenshots in EN dark/light/red and PL dark at 390 px read correctly, with errors carrying the icon
-- [ ] 3.4 `/gear/sites/new` screenshots EN/PL × dark/light/red × 390/1280 (plus a picked state at 390) still look right
+- [x] 3.3 State screenshots in EN dark/light/red and PL dark at 390 px read correctly, with errors carrying the icon
+- [x] 3.4 `/gear/sites/new` screenshots EN/PL × dark/light/red × 390/1280 (plus a picked state at 390) still look right

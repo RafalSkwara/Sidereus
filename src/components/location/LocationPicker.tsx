@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LocateFixed, MapPin, Search } from "lucide-react";
+import { CircleAlert, LocateFixed, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,9 +211,11 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
           aria-live="polite"
           className={cn(
             "mt-1.5 text-sm empty:mt-0",
-            searchStatus === "failed" ? "text-destructive" : "text-muted-foreground",
+            searchStatus === "failed" ? "text-destructive flex items-start gap-1.5" : "text-muted-foreground",
           )}
         >
+          {/* The failure is an error: the icon carries it with the colour, as FieldError does (red mode). */}
+          {searchStatus === "failed" ? <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : null}
           {searchMessage}
         </p>
         {results.length > 0 ? (
