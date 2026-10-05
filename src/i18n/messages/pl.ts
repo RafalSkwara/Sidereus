@@ -108,6 +108,7 @@ export const pl = {
       noAccount: "Nie masz konta?",
       signUpLink: "Załóż konto",
       continueNote: "Zaloguj się, aby kontynuować.",
+      subtitle: "Twoje miejsca, sprzęt i dziennik obserwacji na każdym urządzeniu.",
     },
     signUp: {
       title: "Rejestracja",
@@ -124,6 +125,7 @@ export const pl = {
         many: (p) => `Wpisz jeszcze ${p.count} znaków`,
         other: (p) => `Wpisz jeszcze ${p.count} znaku`,
       },
+      subtitle: "Powiedz, skąd obserwujesz, a Sidereus podpowie, czy tej nocy warto rozstawiać sprzęt.",
     },
     validation: {
       emailRequired: "Podaj adres e-mail",
