@@ -190,4 +190,12 @@ test("the edge chevrons pan the panorama and hide at its ends", async ({ page })
   });
   await expect(left).toBeHidden();
   await expect(right).toBeVisible();
+
+  // Reaching the right end with the right chevron focused hands the focus to the left one, not to the page.
+  await right.focus();
+  await strip.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  await expect(right).toBeHidden();
+  await expect(left).toBeFocused();
 });

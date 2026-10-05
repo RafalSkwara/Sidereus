@@ -151,16 +151,28 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   // Whether the strip sits at its left or right end: that edge's chevron hides (both do when nothing overflows).
   const [edges, setEdges] = useState({ start: true, end: true });
   const panButtons = useRef<Record<"left" | "right", HTMLButtonElement | null>>({ left: null, right: null });
+  const pendingFocus = useRef<"left" | "right" | "strip" | null>(null);
+  useLayoutEffect(() => {
+    const target = pendingFocus.current;
+    if (!target) return;
+    pendingFocus.current = null;
+    (target === "strip" ? scroller.current : panButtons.current[target])?.focus();
+  }, [edges]);
   const readEdges = () => {
     const element = scroller.current;
     if (!element) return;
     const max = element.scrollWidth - element.clientWidth;
     const next = { start: element.scrollLeft <= 1, end: element.scrollLeft >= max - 1 };
-    // A chevron that just reached its end hides: hand keyboard focus to the other one rather than drop it on the page.
+    // A chevron that just reached its end hides: hand keyboard focus to the other one, or to the strip when both hide
+    // (nothing overflows any more), rather than drop it on the page. Applied after the render (the effect above), since the
+    // other chevron may still be hidden until then.
     const { left, right } = panButtons.current;
-    if (next.end && !next.start && document.activeElement === right) left?.focus();
-    if (next.start && !next.end && document.activeElement === left) right?.focus();
-    setEdges(next);
+    const focused = document.activeElement;
+    if (next.start && next.end && (focused === left || focused === right)) pendingFocus.current = "strip";
+    else if (next.end && focused === right) pendingFocus.current = "left";
+    else if (next.start && focused === left) pendingFocus.current = "right";
+    // Scroll events fire every frame of a swipe: keep the same state object unless an edge actually changed.
+    setEdges((prev) => (prev.start === next.start && prev.end === next.end ? prev : next));
   };
   // A chevron pans most of a viewport, keeping a strip of overlap so the eye keeps its place.
   const pan = (direction: -1 | 1) => {

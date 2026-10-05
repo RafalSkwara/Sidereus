@@ -138,6 +138,9 @@
 
   --star: rgb(255 255 255 / 0.55);
   --star-accent: rgb(253 230 138 / 0.3);
+
+  /* The ground stays the page's, so `--faint` is mixed towards the sky instead: dimmer than muted, as elsewhere. */
+  --faint: color-mix(in srgb, var(--muted-foreground) 75%, var(--zenith));
 }
 
 /*
