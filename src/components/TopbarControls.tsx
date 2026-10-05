@@ -138,7 +138,9 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
         type="button"
         aria-label={p.cycle({ current: current.short, next: upcoming.short })}
         title={p.cycle({ current: current.short, next: upcoming.short })}
-        className={iconButton}
+        // Signed out, the Topbar also carries the sign-in link, and in Polish the row overflows a 320 px phone; the
+        // theme stays one tap away in the settings panel there. Signed in, the button stays (red mode at the eyepiece).
+        className={cn(iconButton, !email && "max-sm:hidden")}
         onClick={() => {
           chooseTheme(nextTheme(theme));
         }}

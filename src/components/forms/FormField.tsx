@@ -22,11 +22,14 @@ interface FormFieldProps {
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
 }
 
-/** The one field error style. Give it the `id` the control names in `aria-describedby`. */
+/**
+ * The one field error style. Give it the `id` the control names in `aria-describedby`. It is an alert, so a
+ * screen reader announces it when it appears; never wrap it in another `role="alert"`.
+ */
 export function FieldError({ id, message }: { id?: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} className="text-destructive mt-1.5 flex items-start gap-1.5 text-sm">
+    <p id={id} role="alert" className="text-destructive mt-1.5 flex items-start gap-1.5 text-sm">
       <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       {message}
     </p>
@@ -80,7 +83,7 @@ export function FormField({
           inputMode={inputMode}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cn(icon && "pl-10", endContent && "pr-10")}
+          className={cn(icon && "pl-10", endContent && "pr-11")}
         />
         {endContent}
       </div>
