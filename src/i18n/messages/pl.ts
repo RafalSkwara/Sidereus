@@ -634,14 +634,6 @@ export const pl = {
     },
 
     all: {
-      title: "Wszystkie obiekty",
-      heading: {
-        one: (p) => `${p.count} obiekt wart dziś uwagi`,
-        few: (p) => `Wszystkie ${p.count} obiekty warte dziś uwagi`,
-        many: (p) => `Wszystkie ${p.count} obiektów wartych dziś uwagi`,
-        other: (p) => `Wszystkie ${p.count} obiektu wartego dziś uwagi`,
-      },
-      back: "Dziś w nocy",
       sortLabel: "Kolejność",
       byRank: "Według oceny",
       byTime: "Według najlepszej pory",
@@ -741,7 +733,7 @@ export const pl = {
     pages: {
       targets: "Cele",
       skyVerdict: (p) => `Niebo: ${p.headline}.`,
-      noGear: "Dodaj miejsce obserwacji i teleskop, aby zobaczyć tę stronę.",
+      noGear: "Dodaj stanowisko i teleskop, aby zobaczyć tę stronę.",
       toTonight: "Przejdź do Dziś w nocy",
       moonUnavailable: "Szczegóły Księżyca są teraz niedostępne.",
       noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",

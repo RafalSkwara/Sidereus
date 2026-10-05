@@ -687,12 +687,6 @@ export const en = {
     },
 
     all: {
-      title: "All objects",
-      heading: {
-        one: (p) => `The ${p.count} object that cleared the bar`,
-        other: (p) => `All ${p.count} objects that cleared the bar`,
-      } as PluralForms<Count>,
-      back: "Tonight",
       sortLabel: "Order",
       byRank: "By rank",
       byTime: "By best time",

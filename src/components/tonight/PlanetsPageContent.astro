@@ -4,6 +4,7 @@
 // solar system (no planet window, a no-go for the planets, or a failure) one line says so, never an empty page. It
 // loads through the same loadTonight as Tonight and never records the sky verdict (only Tonight shows it).
 import { ServerError } from "@/components/forms/ServerError";
+import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -70,6 +71,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 
       {view && load.eyepiecesError && <ServerError message={translate(load.eyepiecesError)} />}
       {view && load.logError && <ServerError message={translate(load.logError)} />}
+      {view && !view.hasEyepieces && !load.eyepiecesError && <EyepiecesPrompt />}
 
       {view && (
         <div>

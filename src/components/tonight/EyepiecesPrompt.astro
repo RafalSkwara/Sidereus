@@ -1,0 +1,18 @@
+---
+// The "add eyepieces" line for a kit with none (tonight-dashboard review F2): without it an object's or planet's
+// eyepiece advice is simply missing. Shown on Tonight and on each focused page that gives eyepiece advice
+// (Targets, Planets), since a focused page is often opened directly or returned to after a log.
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages } from "@/i18n";
+import { cn } from "@/lib/utils";
+
+const t = getMessages(Astro.locals.locale).tonight;
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+<p class="text-label text-muted-foreground">
+  {t.noEyepiecesPrompt}{" "}
+  <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
+    {t.addEyepieces}
+  </a>
+</p>

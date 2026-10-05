@@ -8,13 +8,13 @@ import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
+import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { cn } from "@/lib/utils";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
@@ -102,8 +102,7 @@ const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null :
 const addSite = !needsSetup && !sitesError && !site;
 const addTelescope = !needsSetup && !telescopesError && !telescope;
 const showPrompts = needsSetup || addSite || addTelescope;
-// The add-eyepieces link: the link style at 44 px, with the ring focus; it may wrap.
-const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+// The gear line's link to /gear: 44 px, with the ring focus.
 const gearLink =
   "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
@@ -215,14 +214,7 @@ const gearLink =
 
         {showNotices && (
           <div class="space-y-4">
-            {noEyepieces && (
-              <p class="text-label text-muted-foreground">
-                {t.noEyepiecesPrompt}{" "}
-                <a href="/gear/eyepieces/new" class:list={[inlineLink]}>
-                  {t.addEyepieces}
-                </a>
-              </p>
-            )}
+            {noEyepieces && <EyepiecesPrompt />}
             {logError && <ServerError message={translate(logError)} />}
           </div>
         )}

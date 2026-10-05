@@ -78,6 +78,8 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
 
   await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${object}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object }) })).toBeVisible();
+  // The row just logged is on screen: the page opens the rest of the list for it and scrolls it into view.
+  await expect(page.locator(`[data-object="${object}"]`)).toBeInViewport();
 });
 
 test("an old /tonight/all link with a fragment lands on that place on Targets once the list streams in", async ({

@@ -521,6 +521,13 @@ None for data. Links:
 - All objects: `src/pages/tonight/all.astro`, `src/components/tonight/AllObjectsContent.astro`
 - Lessons: `context/foundation/lessons.md` (Tonight needs JavaScript; the no-console lint for coordinate modules)
 
+## Deviations (recorded at impl review, 2026-10-05)
+
+- **Tile names (Phase 4 contract):** only the targets tile adds the "Open …" suffix to its accessible name. The Moon, Planets and Nights headings already match their page titles, so a suffix would read "The Moon, Open The Moon" (`TonightTiles.astro` header comment).
+- **Targets count (Phase 3):** the "N cleared" count sits under the "Point here first" band on the page, not in `TonightPageSky`, which follows from the best-5 layout the user asked for at the gate.
+- **Skeleton status (Phase 1 contract, review F8):** `role="status"` sits on the sr-only loading line only, without `aria-busy`, in both `TonightPageSkeleton` and `TonightSkeleton`, so the back and reload links stay outside a busy region.
+- **Review fixes F1–F8** are in `reviews/impl-review.md`. They landed on `fix/tonight-dashboard-review` after #94 merged.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
@@ -591,4 +598,4 @@ None for data. Links:
 #### Manual
 
 - [x] 5.2 `/design` shows the tile rows and page sky in the 7-state matrix across themes — 3a8fb60
-- [ ] 5.3 The user approves the screenshot gate
+- [x] 5.3 The user approves the screenshot gate — approved by merging #94 (confirmed 2026-10-05)

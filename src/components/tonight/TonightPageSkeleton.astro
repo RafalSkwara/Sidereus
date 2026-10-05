@@ -26,8 +26,12 @@ const t = m.tonight;
 const bar = "rounded bg-border motion-safe:animate-pulse";
 ---
 
-<div role="status" aria-busy="true">
-  <span class="sr-only">{t.loading}</span>
+<!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
+     reaches them if the island never arrives (tonight-dashboard review F8). -->
+<div>
+  <span role="status" class="sr-only">
+    {t.loading}
+  </span>
   <TonightSky>
     <BackLink href="/tonight" label={m.nav.tonight} />
     <div class="mt-2">
