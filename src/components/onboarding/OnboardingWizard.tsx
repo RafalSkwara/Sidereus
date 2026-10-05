@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { FormField } from "@/components/forms/FormField";
+import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import { FieldError, FormField } from "@/components/forms/FormField";
 import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
 import { ServerError } from "@/components/forms/ServerError";
+import { Band } from "@/components/ui/band";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { roundCoordinate } from "@/lib/gear/coordinates";
@@ -68,21 +72,9 @@ interface Errors {
 
 const NO_ERRORS: Errors = { rows: {} };
 
-const selectBase =
-  "h-11 w-full rounded-lg border bg-surface px-3 text-foreground outline-none transition-shadow focus-visible:ring-[3px]";
-const inputOk = "border-input focus-visible:border-ring focus-visible:ring-ring/50";
-const inputBad = "border-destructive focus-visible:ring-destructive/20";
-
-/** A radio card: the native radio is visually hidden, the label shows its checked and focus state. */
-const radioCard = cn(
-  "group relative flex min-h-11 cursor-pointer flex-col gap-1 rounded-xl border border-border bg-surface px-4 py-3 transition-colors",
-  "hover:bg-accent has-[:checked]:border-selected has-[:checked]:ring-1 has-[:checked]:ring-selected",
-  "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50",
-);
-
-const sectionClass = "flex flex-col gap-4 rounded-2xl border border-border bg-surface/40 p-4 sm:p-6";
-const kickerClass = "text-xs font-semibold tracking-[0.18em] text-primary uppercase";
-const headingClass = "font-display text-2xl font-semibold text-heading";
+/** A step's hint under its band heading, and a sub-group's legend inside the kit band. */
+const stepHint = "text-body text-muted-foreground";
+const groupLegend = "text-label text-heading font-semibold";
 
 function telescopePreset(id: TelescopePresetId) {
   return TELESCOPE_PRESETS.find((preset) => preset.id === id) ?? TELESCOPE_PRESETS[0];
@@ -115,27 +107,6 @@ function kitRow(eyepiece: EyepieceKitItem, key: number): EyepieceRow {
 
 function presetLabel(presets: Messages["eyepiecePresets"], option: AfovPreset): string {
   return option === "other" ? presets.other : presets[option].long;
-}
-
-/** The radio mark in a card's corner; filled while the card's radio is checked. */
-function CheckDot() {
-  return (
-    <span
-      aria-hidden="true"
-      className="border-border group-has-[:checked]:border-selected absolute top-3 right-3 flex size-4 items-center justify-center rounded-full border"
-    >
-      <span className="bg-selected hidden size-2 rounded-full group-has-[:checked]:block" />
-    </span>
-  );
-}
-
-function FieldError({ id, message }: { id?: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="text-destructive mt-1 text-xs">
-      {message}
-    </p>
-  );
 }
 
 export default function OnboardingWizard({ action, serverError, locale }: Props) {
@@ -325,365 +296,351 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
     Object.values(errors.rows).some((row) => row && Object.values(row).some(Boolean));
 
   return (
-    <form method="POST" action={action} className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+    <form method="POST" action={action} onSubmit={handleSubmit} noValidate>
       {Object.entries(payload).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
 
       {serverError ? (
-        <div role="alert">
+        <div role="alert" className="mb-8">
           <ServerError message={translateKey(m, serverError, "errors.generic")} />
         </div>
       ) : null}
 
-      {/* 1 · Where ------------------------------------------------------------------------- */}
-      <section aria-labelledby="where-heading" className={sectionClass}>
-        <div className="flex flex-col gap-1">
-          <p className={kickerClass}>{t.where.kicker}</p>
-          <h2 id="where-heading" className={headingClass}>
-            {t.where.heading}
-          </h2>
-          <p className="text-muted-foreground text-sm">{t.where.hint}</p>
-        </div>
+      <div>
+        {/* 1 · Where ----------------------------------------------------------------------- */}
+        <Band headingId="where-heading" heading={t.where.heading}>
+          <div className="flex flex-col gap-4">
+            <p className={stepHint}>{t.where.hint}</p>
 
-        <LocationPicker
-          locale={locale}
-          onPick={pickLocation}
-          summary={whereSummary}
-          invalid={Boolean(errors.where) && !manualOpen}
-        />
-
-        <details
-          open={manualOpen}
-          onToggle={(e) => {
-            setManualOpen(e.currentTarget.open);
-          }}
-          className="group"
-        >
-          <summary className="text-primary-strong hover:text-heading flex min-h-11 cursor-pointer items-center text-sm font-semibold underline-offset-4 hover:underline">
-            {t.where.manualToggle}
-          </summary>
-          <div className="mt-2 flex flex-col gap-2">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                id="manual-latitude"
-                name=""
-                label={m.siteForm.latitude}
-                type="number"
-                step={0.01}
-                min={-90}
-                max={90}
-                inputMode="decimal"
-                value={latitude}
-                onChange={(v) => {
-                  changeManual("latitude", v);
-                }}
-                placeholder="52.23"
-                error={errors.where}
-              />
-              <FormField
-                id="manual-longitude"
-                name=""
-                label={m.siteForm.longitude}
-                type="number"
-                step={0.01}
-                min={-180}
-                max={180}
-                inputMode="decimal"
-                value={longitude}
-                onChange={(v) => {
-                  changeManual("longitude", v);
-                }}
-                placeholder="21.01"
-              />
-            </div>
-            <p className="text-muted-foreground text-xs">{m.siteForm.coordinatesHint}</p>
-          </div>
-        </details>
-
-        {errors.where && !manualOpen ? (
-          <p role="alert" className="text-destructive text-sm">
-            {errors.where}
-          </p>
-        ) : null}
-      </section>
-
-      {/* 2 · Sky --------------------------------------------------------------------------- */}
-      <section aria-labelledby="sky-heading" className={sectionClass}>
-        <div className="flex flex-col gap-1">
-          <p className={kickerClass}>{t.sky.kicker}</p>
-          <h2 id="sky-heading" className={headingClass}>
-            {t.sky.heading}
-          </h2>
-          <p id="sky-hint" className="text-muted-foreground text-sm">
-            {t.sky.hint}
-          </p>
-        </div>
-        <fieldset aria-labelledby="sky-heading" aria-describedby="sky-hint" className="flex flex-col gap-2">
-          {SKY_SCENES.map((scene) => (
-            <label key={scene.id} className={radioCard}>
-              <input
-                type="radio"
-                name="skyScene"
-                value={scene.id}
-                checked={sceneId === scene.id}
-                onChange={() => {
-                  setSceneId(scene.id);
-                }}
-                className="peer sr-only"
-              />
-              <span className="text-heading pr-6 text-[15px] font-semibold">{t.scenes[scene.id].title}</span>
-              <span className="text-muted-foreground text-sm">{t.scenes[scene.id].description}</span>
-              <CheckDot />
-            </label>
-          ))}
-        </fieldset>
-      </section>
-
-      {/* 3 · Kit --------------------------------------------------------------------------- */}
-      <section aria-labelledby="kit-heading" className={sectionClass}>
-        <div className="flex flex-col gap-1">
-          <p className={kickerClass}>{t.kit.kicker}</p>
-          <h2 id="kit-heading" className={headingClass}>
-            {t.kit.heading}
-          </h2>
-        </div>
-
-        <fieldset className="flex flex-col gap-3" aria-describedby="telescope-hint">
-          <legend className="text-heading mb-1 text-[15px] font-semibold">{t.kit.telescope}</legend>
-          <p id="telescope-hint" className="text-muted-foreground -mt-1 text-sm">
-            {t.kit.telescopeHint}
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {TELESCOPE_PRESETS.map((preset) => (
-              <label key={preset.id} className={radioCard}>
-                <input
-                  type="radio"
-                  name="telescopePreset"
-                  value={preset.id}
-                  checked={telescopeId === preset.id}
-                  onChange={() => {
-                    chooseTelescope(preset.id);
-                  }}
-                  className="peer sr-only"
-                />
-                <span className="text-heading pr-6 text-[15px] font-semibold">{t.telescopes[preset.id]}</span>
-                <span className="text-muted-foreground text-sm">
-                  {m.gear.telescopes.aperture({ mm: number.format(preset.apertureMm) })} ·{" "}
-                  {m.gear.telescopes.focalLength({ mm: number.format(preset.focalLengthMm) })}
-                </span>
-                <CheckDot />
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="border-border flex flex-col gap-4 rounded-xl border p-4">
-          <FormField
-            id="telescope-name"
-            name=""
-            label={m.common.name}
-            value={telescopeName}
-            onChange={(v) => {
-              setTelescopeName(v);
-              setErrors((prev) => ({ ...prev, telescopeName: undefined }));
-            }}
-            error={errors.telescopeName}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              id="telescope-aperture"
-              name=""
-              label={m.telescopeForm.aperture}
-              type="number"
-              step={1}
-              min={20}
-              max={1000}
-              inputMode="decimal"
-              value={aperture}
-              onChange={(v) => {
-                setAperture(v);
-                setErrors((prev) => ({ ...prev, apertureMm: undefined }));
-              }}
-              error={errors.apertureMm}
+            <LocationPicker
+              locale={locale}
+              onPick={pickLocation}
+              summary={whereSummary}
+              invalid={Boolean(errors.where) && !manualOpen}
             />
-            <FormField
-              id="telescope-focal-length"
-              name=""
-              label={m.common.focalLengthMm}
-              type="number"
-              step={1}
-              min={100}
-              max={5000}
-              inputMode="decimal"
-              value={focalLength}
-              onChange={(v) => {
-                setFocalLength(v);
-                setErrors((prev) => ({ ...prev, focalLengthMm: undefined }));
+
+            <details
+              open={manualOpen}
+              onToggle={(e) => {
+                setManualOpen(e.currentTarget.open);
               }}
-              error={errors.focalLengthMm}
-            />
-          </div>
-        </div>
-
-        <fieldset className="flex flex-col gap-3" aria-describedby="eyepieces-hint">
-          <legend className="text-heading mb-1 text-[15px] font-semibold">{t.kit.eyepieces}</legend>
-          <p id="eyepieces-hint" className="text-muted-foreground -mt-1 text-sm">
-            {t.kit.eyepiecesHint}
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {EYEPIECE_KIT_PRESETS.map((kit) => (
-              <label key={kit.id} className={radioCard}>
-                <input
-                  type="radio"
-                  name="eyepieceKit"
-                  value={kit.id}
-                  checked={kitId === kit.id}
-                  onChange={() => {
-                    chooseKit(kit.id);
-                  }}
-                  className="peer sr-only"
-                />
-                <span className="text-heading pr-6 text-[15px] font-semibold">{t.eyepieceKits[kit.id]}</span>
-                <span className="text-muted-foreground text-sm">
-                  {kit.eyepieces.length > 0
-                    ? kit.eyepieces.map((eyepiece) => eyepiece.name).join(" · ")
-                    : t.kit.emptyKit}
-                </span>
-                <CheckDot />
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {rows.length === 0 ? <p className="text-muted-foreground text-sm">{t.kit.noEyepieces}</p> : null}
-
-        <ol className="flex flex-col gap-3">
-          {rows.map((row, index) => {
-            const rowErrors = errors.rows[row.key] ?? {};
-            const label = number.format(index + 1);
-            const typeId = `eyepiece-${row.key}-afovPreset`;
-            return (
-              <li key={row.key} className="border-border relative rounded-xl border p-4">
-                <fieldset className="flex flex-col gap-3">
-                  <legend className="text-heading flex min-h-11 items-center pr-12 text-sm font-semibold">
-                    {t.kit.eyepieceLegend({ number: label })}
-                  </legend>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive absolute top-4 right-3 size-11"
-                    aria-label={t.kit.removeEyepiece({ number: label })}
-                    onClick={() => {
-                      removeRow(row.key);
-                    }}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+              className="group"
+            >
+              <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+                {t.where.manualToggle}
+              </summary>
+              <div className="mt-2 flex flex-col gap-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
-                    id={`eyepiece-${row.key}-name`}
+                    id="manual-latitude"
                     name=""
-                    label={m.common.name}
-                    value={row.name}
+                    label={m.siteForm.latitude}
+                    type="number"
+                    step={0.01}
+                    min={-90}
+                    max={90}
+                    inputMode="decimal"
+                    value={latitude}
                     onChange={(v) => {
-                      updateRow(row.key, { name: v }, ["name"]);
+                      changeManual("latitude", v);
                     }}
-                    placeholder={m.eyepieceForm.namePlaceholder}
-                    error={rowErrors.name}
+                    placeholder="52.23"
+                    error={errors.where}
                   />
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <FormField
-                      id={`eyepiece-${row.key}-focalLengthMm`}
-                      name=""
-                      label={m.common.focalLengthMm}
-                      type="number"
-                      step={0.1}
-                      min={2}
-                      max={60}
-                      inputMode="decimal"
-                      value={row.focalLength}
-                      onChange={(v) => {
-                        updateRow(row.key, { focalLength: v }, ["focalLengthMm"]);
+                  <FormField
+                    id="manual-longitude"
+                    name=""
+                    label={m.siteForm.longitude}
+                    type="number"
+                    step={0.01}
+                    min={-180}
+                    max={180}
+                    inputMode="decimal"
+                    value={longitude}
+                    onChange={(v) => {
+                      changeManual("longitude", v);
+                    }}
+                    placeholder="21.01"
+                  />
+                </div>
+                <p className="text-muted-foreground text-sm">{m.siteForm.coordinatesHint}</p>
+              </div>
+            </details>
+
+            {errors.where && !manualOpen ? (
+              <div role="alert" className="-mt-2">
+                <FieldError message={errors.where} />
+              </div>
+            ) : null}
+          </div>
+        </Band>
+
+        {/* 2 · Sky ------------------------------------------------------------------------- */}
+        <Band headingId="sky-heading" heading={t.sky.heading}>
+          <div className="flex flex-col gap-4">
+            <p id="sky-hint" className={stepHint}>
+              {t.sky.hint}
+            </p>
+            <fieldset aria-labelledby="sky-heading" aria-describedby="sky-hint" className="flex flex-col gap-2">
+              {SKY_SCENES.map((scene) => (
+                <ChoiceCard
+                  key={scene.id}
+                  name="skyScene"
+                  value={scene.id}
+                  checked={sceneId === scene.id}
+                  onChange={() => {
+                    setSceneId(scene.id);
+                  }}
+                  title={t.scenes[scene.id].title}
+                  description={t.scenes[scene.id].description}
+                />
+              ))}
+            </fieldset>
+          </div>
+        </Band>
+
+        {/* 3 · Kit ------------------------------------------------------------------------- */}
+        <Band headingId="kit-heading" heading={t.kit.heading}>
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-4">
+              <fieldset className="flex flex-col gap-3" aria-describedby="telescope-hint">
+                <legend className={groupLegend}>{t.kit.telescope}</legend>
+                <p id="telescope-hint" className="text-muted-foreground text-sm">
+                  {t.kit.telescopeHint}
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {TELESCOPE_PRESETS.map((preset) => (
+                    <ChoiceCard
+                      key={preset.id}
+                      name="telescopePreset"
+                      value={preset.id}
+                      checked={telescopeId === preset.id}
+                      onChange={() => {
+                        chooseTelescope(preset.id);
                       }}
-                      placeholder="25"
-                      error={rowErrors.focalLengthMm}
+                      title={t.telescopes[preset.id]}
+                      description={
+                        <>
+                          {m.gear.telescopes.aperture({ mm: number.format(preset.apertureMm) })} ·{" "}
+                          {m.gear.telescopes.focalLength({ mm: number.format(preset.focalLengthMm) })}
+                        </>
+                      }
                     />
-                    <div>
-                      <label htmlFor={typeId} className="text-heading mb-1 block text-sm font-semibold">
-                        {m.eyepieceForm.type}
-                      </label>
-                      <select
-                        id={typeId}
-                        name=""
-                        value={row.afovPreset}
-                        onChange={(e) => {
-                          updateRow(row.key, { afovPreset: e.target.value as AfovPreset }, ["afovPreset", "afovDeg"]);
-                        }}
-                        aria-invalid={rowErrors.afovPreset ? true : undefined}
-                        className={cn(selectBase, rowErrors.afovPreset ? inputBad : inputOk)}
-                      >
-                        {AFOV_PRESET_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {presetLabel(m.eyepiecePresets, option)}
-                          </option>
-                        ))}
-                      </select>
-                      <FieldError message={rowErrors.afovPreset} />
-                    </div>
+                  ))}
+                </div>
+              </fieldset>
+
+              <FormField
+                id="telescope-name"
+                name=""
+                label={m.common.name}
+                value={telescopeName}
+                onChange={(v) => {
+                  setTelescopeName(v);
+                  setErrors((prev) => ({ ...prev, telescopeName: undefined }));
+                }}
+                error={errors.telescopeName}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  id="telescope-aperture"
+                  name=""
+                  label={m.telescopeForm.aperture}
+                  type="number"
+                  step={1}
+                  min={20}
+                  max={1000}
+                  inputMode="decimal"
+                  value={aperture}
+                  onChange={(v) => {
+                    setAperture(v);
+                    setErrors((prev) => ({ ...prev, apertureMm: undefined }));
+                  }}
+                  error={errors.apertureMm}
+                />
+                <FormField
+                  id="telescope-focal-length"
+                  name=""
+                  label={m.common.focalLengthMm}
+                  type="number"
+                  step={1}
+                  min={100}
+                  max={5000}
+                  inputMode="decimal"
+                  value={focalLength}
+                  onChange={(v) => {
+                    setFocalLength(v);
+                    setErrors((prev) => ({ ...prev, focalLengthMm: undefined }));
+                  }}
+                  error={errors.focalLengthMm}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <fieldset className="flex flex-col gap-3" aria-describedby="eyepieces-hint">
+                <legend className={groupLegend}>{t.kit.eyepieces}</legend>
+                <p id="eyepieces-hint" className="text-muted-foreground text-sm">
+                  {t.kit.eyepiecesHint}
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {EYEPIECE_KIT_PRESETS.map((kit) => (
+                    <ChoiceCard
+                      key={kit.id}
+                      name="eyepieceKit"
+                      value={kit.id}
+                      checked={kitId === kit.id}
+                      onChange={() => {
+                        chooseKit(kit.id);
+                      }}
+                      title={t.eyepieceKits[kit.id]}
+                      description={
+                        kit.eyepieces.length > 0
+                          ? kit.eyepieces.map((eyepiece) => eyepiece.name).join(" · ")
+                          : t.kit.emptyKit
+                      }
+                    />
+                  ))}
+                </div>
+              </fieldset>
+
+              {rows.length === 0 ? <p className="text-body text-muted-foreground">{t.kit.noEyepieces}</p> : null}
+
+              {/* Ruled rows, as the gear hub's lists: no box inside the band. */}
+              <ol className="divide-border border-border flex flex-col divide-y border-y empty:hidden">
+                {rows.map((row, index) => {
+                  const rowErrors = errors.rows[row.key] ?? {};
+                  const label = number.format(index + 1);
+                  const typeId = `eyepiece-${row.key}-afovPreset`;
+                  const typeErrorId = `${typeId}-error`;
+                  return (
+                    <li key={row.key} className="relative py-4">
+                      <fieldset className="flex flex-col gap-3">
+                        <legend className={cn(groupLegend, "flex min-h-11 items-center pr-12")}>
+                          {t.kit.eyepieceLegend({ number: label })}
+                        </legend>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive absolute top-4 -right-3"
+                          aria-label={t.kit.removeEyepiece({ number: label })}
+                          onClick={() => {
+                            removeRow(row.key);
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                        <FormField
+                          id={`eyepiece-${row.key}-name`}
+                          name=""
+                          label={m.common.name}
+                          value={row.name}
+                          onChange={(v) => {
+                            updateRow(row.key, { name: v }, ["name"]);
+                          }}
+                          placeholder={m.eyepieceForm.namePlaceholder}
+                          error={rowErrors.name}
+                        />
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <FormField
+                            id={`eyepiece-${row.key}-focalLengthMm`}
+                            name=""
+                            label={m.common.focalLengthMm}
+                            type="number"
+                            step={0.1}
+                            min={2}
+                            max={60}
+                            inputMode="decimal"
+                            value={row.focalLength}
+                            onChange={(v) => {
+                              updateRow(row.key, { focalLength: v }, ["focalLengthMm"]);
+                            }}
+                            placeholder="25"
+                            error={rowErrors.focalLengthMm}
+                          />
+                          <div>
+                            <Label htmlFor={typeId} className="mb-1.5">
+                              {m.eyepieceForm.type}
+                            </Label>
+                            <NativeSelect
+                              id={typeId}
+                              name=""
+                              value={row.afovPreset}
+                              onChange={(e) => {
+                                updateRow(row.key, { afovPreset: e.target.value as AfovPreset }, [
+                                  "afovPreset",
+                                  "afovDeg",
+                                ]);
+                              }}
+                              aria-invalid={rowErrors.afovPreset ? true : undefined}
+                              aria-describedby={rowErrors.afovPreset ? typeErrorId : undefined}
+                            >
+                              {AFOV_PRESET_OPTIONS.map((option) => (
+                                <NativeSelectOption key={option} value={option}>
+                                  {presetLabel(m.eyepiecePresets, option)}
+                                </NativeSelectOption>
+                              ))}
+                            </NativeSelect>
+                            <FieldError id={typeErrorId} message={rowErrors.afovPreset} />
+                          </div>
+                        </div>
+                        {row.afovPreset === "other" ? (
+                          <FormField
+                            id={`eyepiece-${row.key}-afovDeg`}
+                            name=""
+                            label={m.eyepieceForm.afov}
+                            type="number"
+                            step={1}
+                            min={30}
+                            max={120}
+                            inputMode="numeric"
+                            value={row.afovDeg}
+                            onChange={(v) => {
+                              updateRow(row.key, { afovDeg: v }, ["afovDeg"]);
+                            }}
+                            placeholder="100"
+                            error={rowErrors.afovDeg}
+                          />
+                        ) : null}
+                      </fieldset>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  id="add-eyepiece"
+                  type="button"
+                  variant="outline"
+                  className="w-full sm:w-auto sm:self-start"
+                  disabled={rows.length >= MAX_ONBOARDING_EYEPIECES}
+                  aria-describedby={rows.length >= MAX_ONBOARDING_EYEPIECES ? "eyepiece-limit" : undefined}
+                  onClick={addRow}
+                >
+                  <Plus className="size-4" />
+                  {m.gear.eyepieces.add}
+                </Button>
+                {rows.length >= MAX_ONBOARDING_EYEPIECES ? (
+                  <p id="eyepiece-limit" className="text-muted-foreground text-sm">
+                    {t.kit.eyepieceLimit}
+                  </p>
+                ) : null}
+                {errors.eyepieces ? (
+                  <div role="alert">
+                    <FieldError message={errors.eyepieces} />
                   </div>
-                  {row.afovPreset === "other" ? (
-                    <FormField
-                      id={`eyepiece-${row.key}-afovDeg`}
-                      name=""
-                      label={m.eyepieceForm.afov}
-                      type="number"
-                      step={1}
-                      min={30}
-                      max={120}
-                      inputMode="numeric"
-                      value={row.afovDeg}
-                      onChange={(v) => {
-                        updateRow(row.key, { afovDeg: v }, ["afovDeg"]);
-                      }}
-                      placeholder="100"
-                      error={rowErrors.afovDeg}
-                    />
-                  ) : null}
-                </fieldset>
-              </li>
-            );
-          })}
-        </ol>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </Band>
+      </div>
 
-        <div className="flex flex-col gap-2">
-          <Button
-            id="add-eyepiece"
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-11 w-full rounded-lg text-[15px] font-semibold sm:w-auto sm:self-start"
-            disabled={rows.length >= MAX_ONBOARDING_EYEPIECES}
-            aria-describedby={rows.length >= MAX_ONBOARDING_EYEPIECES ? "eyepiece-limit" : undefined}
-            onClick={addRow}
-          >
-            <Plus className="size-4" />
-            {m.gear.eyepieces.add}
-          </Button>
-          {rows.length >= MAX_ONBOARDING_EYEPIECES ? (
-            <p id="eyepiece-limit" className="text-muted-foreground text-xs">
-              {t.kit.eyepieceLimit}
-            </p>
-          ) : null}
-          {errors.eyepieces ? (
-            <p role="alert" className="text-destructive text-sm">
-              {errors.eyepieces}
-            </p>
-          ) : null}
-        </div>
-      </section>
-
-      <div className="flex flex-col gap-3">
+      {/* The one primary action, ruled off from the last band. */}
+      <div className="border-border mt-8 flex flex-col gap-3 border-t pt-8">
         {showSummary && hasErrors ? (
           <div role="alert">
             <ServerError message={m.errors.checkFields} />
@@ -692,13 +649,13 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
         <Button
           type="submit"
           size="lg"
-          className="h-12 w-full rounded-lg text-base font-semibold"
+          className="w-full"
           disabled={!hasLocation || submitting}
           aria-describedby={hasLocation ? undefined : "location-required"}
         >
           {submitting ? (
             <>
-              <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
+              <span className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
               {m.common.saving}
             </>
           ) : (

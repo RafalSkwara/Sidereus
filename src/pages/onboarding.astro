@@ -2,6 +2,7 @@
 import GearShell from "@/components/gear/GearShell.astro";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
 import { hasAnyGear } from "@/lib/onboarding/store";
 
@@ -23,12 +24,13 @@ if (supabase) {
   }
 }
 
-const link = "underline decoration-border underline-offset-2 transition-colors hover:text-heading";
+// Inline links in a credit line (exempt from the 44 px target); they still take the shared focus ring (Attribution.astro).
+const link =
+  "rounded-sm underline decoration-border underline-offset-2 transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 <GearShell title={t.title}>
-  <h1 class="mb-2 font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-  <p class="mb-8 text-[15px] text-muted-foreground">{t.intro}</p>
+  <PageHeader slot="header" title={t.title} subtitle={t.intro} />
   {supabase ? (
     <OnboardingWizard action="/api/onboarding" serverError={error} locale={locale} client:load />
   ) : (

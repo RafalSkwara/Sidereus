@@ -205,25 +205,25 @@ Close C4, cover the state matrix and leave the rule.
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm test` passes (includes no-hardcoded-colors and red-theme)
+- [x] 1.1 `npm run lint` passes — 0734a62
+- [x] 1.2 `npx astro check` passes — 0734a62
+- [x] 1.3 `npm test` passes (includes no-hardcoded-colors and red-theme) — 0734a62
 
 #### Manual
 
-- [x] 1.4 `/design` shows ChoiceCard and React Band states in dark, light and red (screenshot)
+- [x] 1.4 `/design` shows ChoiceCard and React Band states in dark, light and red (screenshot) — 0734a62
 
 ### Phase 2: The view
 
 #### Automated
 
-- [ ] 2.1 Hardcoded-value scan on the three view files finds no arbitrary values and no `rounded-xl`/`rounded-2xl`
-- [ ] 2.2 `npm run lint`, `npx astro check` and `npm test` pass
-- [ ] 2.3 `tests/e2e/onboarding.spec.ts` passes against the local preview
+- [x] 2.1 Hardcoded-value scan on the three view files finds no arbitrary values and no `rounded-xl`/`rounded-2xl`
+- [x] 2.2 `npm run lint`, `npx astro check` and `npm test` pass
+- [x] 2.3 `tests/e2e/onboarding.spec.ts` passes against the local preview
 
 #### Manual
 
-- [ ] 2.4 `/onboarding` screenshots EN/PL × dark/light/red × 390/1280 show the sky header and ruled bands, no Polish overflow at 390 px
+- [x] 2.4 `/onboarding` screenshots EN/PL × dark/light/red × 390/1280 show the sky header and ruled bands, no Polish overflow at 390 px
 
 ### Phase 3: States, picker and rule
 

@@ -301,18 +301,15 @@ export const pl = {
     submit: "Pokaż mi dzisiejszą noc",
     locationRequired: "Najpierw ustaw lokalizację powyżej.",
     where: {
-      kicker: "1 · Miejsce",
       heading: "Skąd obserwujesz?",
       hint: "Twój dom albo miejsce, w którym zwykle rozstawiasz sprzęt. Zapisujemy je z dokładnością do ok. 1 km, nigdy dokładniej.",
       manualToggle: "Wpisz współrzędne ręcznie",
     },
     sky: {
-      kicker: "2 · Niebo",
       heading: "Jak ciemne jest Twoje niebo?",
       hint: "Wybierz opis najbliższy pogodnej, bezksiężycowej nocy tam, gdzie obserwujesz.",
     },
     kit: {
-      kicker: "3 · Sprzęt",
       heading: "Jaki masz sprzęt?",
       telescope: "Teleskop",
       telescopeHint:

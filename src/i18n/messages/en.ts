@@ -314,18 +314,15 @@ export const en = {
     submit: "Show me tonight",
     locationRequired: "Set a location above to continue.",
     where: {
-      kicker: "1 · Where",
       heading: "Where do you observe from?",
       hint: "Your home, or wherever you usually set up. It is saved to about 1 km, never more precisely.",
       manualToggle: "Enter coordinates instead",
     },
     sky: {
-      kicker: "2 · Sky",
       heading: "How dark is your sky?",
       hint: "Pick the scene closest to a clear, moonless night where you observe.",
     },
     kit: {
-      kicker: "3 · Kit",
       heading: "What's in your kit?",
       telescope: "Telescope",
       telescopeHint:
