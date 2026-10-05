@@ -58,7 +58,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done        |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
-| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | in-progress |
+| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done        |
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
@@ -201,7 +201,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Do overlapping best windows need sequencing (one target at a time), or is showing windows side by side enough? Candidate: side by side, sorted by window start. — Owner: user. Block: no.
   > Note (2026-10-04): re-scoped against S-11. The timeline was planned as a second view of the single Tonight page; it is now a page reached from the dashboard, so it waits for S-11.
 - **Risk:** Mostly presentation over data Tonight already computes, which makes it a safe slice; the risk is a layout that doesn't work on a phone in red night mode, which is exactly where it will be read.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-06: Offline night plan
 
@@ -320,3 +320,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-10: user sees Sidereus in a distinct, deliberate visual identity in light and dark — its own palette, typography, spacing rhythm, surfaces and component shapes — on every screen, so that a screenshot of any page reads as Sidereus rather than a template; the red night mode keeps its function (no green or blue light) and may adopt the new shapes and type.** — Archived 2026-10-05 → `context/archive/2026-10-04-visual-redesign/`. Lesson: —.
 - **S-08: user adding or editing a site sees a "Use my location" button; only when they click it does the browser ask for location permission, and on success the coordinates are filled in, rounded to about 1 km before anything else sees them; a refusal or failure leaves the form usable with a plain message and the manual fields.** — Archived 2026-10-04 → `context/archive/2026-10-03-site-use-my-location/`. Lesson: —.
 - **S-11: user who signs in lands on a dashboard of tiles — tonight's verdict, the Moon, the planets, the deep-sky targets, the forecast for the next nights and the sky check — each tile giving a one-glance summary and opening its own focused page, instead of one long Tonight page; the chosen site and telescope carry across the dashboard and every page.** — Archived 2026-10-05 → `context/archive/2026-10-04-tonight-dashboard/`. Lesson: —.
+- **S-05: user can open the session plan from the dashboard (S-11) as its own page: a timeline of the night for the selected site and telescope: the dark window, moonrise and moonset, and each recommended target placed at its best observing window, ordered by time, so they can follow it from the first target to the last.** — Archived 2026-10-05 → `context/archive/2026-10-05-session-plan-timeline/`. Lesson: —.
