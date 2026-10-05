@@ -9,7 +9,11 @@ import { signUp } from "./helpers";
  * what they can't show: where the two calls to action lead, and that a signed-in user is sent on to Tonight.
  */
 
-test("signed out, the landing page offers sign-up first and sign-in second", async ({ page, context, baseURL }) => {
+test("signed out, the landing page offers sign-up and sign-in under the question", async ({
+  page,
+  context,
+  baseURL,
+}) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
   await page.goto("/");
 

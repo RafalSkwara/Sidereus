@@ -195,25 +195,25 @@ dashboard. Adjust the spec only if it no longer reaches a settled dashboard (e.g
 
 #### Automated
 
-- [x] 1.1 `npx astro check` passes and the i18n parity test passes (`npm test`)
-- [x] 1.2 New e2e `tests/e2e/landing.spec.ts`: a signed-up user opening `/` lands on `/tonight`
+- [x] 1.1 `npx astro check` passes and the i18n parity test passes (`npm test`) — 81a1d58
+- [x] 1.2 New e2e `tests/e2e/landing.spec.ts`: a signed-up user opening `/` lands on `/tonight` — 81a1d58
 
 #### Manual
 
-- [x] 1.3 In the preview, a throwaway signed-in user's `GET /` returns 302 to `/tonight` (evidence: harness `ONLY_SIGNEDIN=1` → 302 Location /tonight, landed on /tonight)
+- [x] 1.3 In the preview, a throwaway signed-in user's `GET /` returns 302 to `/tonight` (evidence: harness `ONLY_SIGNEDIN=1` → 302 Location /tonight, landed on /tonight) — 81a1d58
 
 ### Phase 2: The view in Nightfall
 
 #### Automated
 
-- [ ] 2.1 Hardcoded-value scan on `Welcome.astro` + `index.astro` returns 0
-- [ ] 2.2 `npm run lint`, `npx astro check`, `npm test` (incl. `no-hardcoded-colors`, `red-theme`, `contrast`) pass
-- [ ] 2.3 `tests/e2e/landing.spec.ts`: signed out, `/` shows the `h1` and both CTAs with their hrefs
-- [ ] 2.4 `tests/e2e/red-night-mode.spec.ts` (runs on `/`) passes
+- [x] 2.1 Hardcoded-value scan on `Welcome.astro` + `index.astro` returns 0 (0 hits)
+- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` (incl. `no-hardcoded-colors`, `red-theme`, `contrast`) pass
+- [x] 2.3 `tests/e2e/landing.spec.ts`: signed out, `/` shows the `h1` and both CTAs with their hrefs
+- [x] 2.4 `tests/e2e/red-night-mode.spec.ts` (runs on `/`) passes
 
 #### Manual
 
-- [ ] 2.5 Screenshots EN/PL × dark/light/red × 390/1280 read as Nightfall (sky band, ruled bands), no horizontal overflow, PL wraps cleanly at 390 px
+- [x] 2.5 Screenshots EN/PL × dark/light/red × 390/1280 read as Nightfall (sky band, ruled bands), no horizontal overflow, PL wraps cleanly at 390 px (evidence: scratchpad `shots/p2/{en,pl}-{dark,light,red}-{390,1280}.png`; scrollWidth overflow 0 at 390/1280; at 320 px PL the shared Topbar overflows by 22 px, pre-existing, see review notes)
 
 ### Phase 3: Screenshot, states and guard
 
