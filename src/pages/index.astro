@@ -1,6 +1,12 @@
 ---
 import Welcome from "@/components/Welcome.astro";
 import Layout from "@/layouts/Layout.astro";
+
+// `/` is for signed-out visitors only (S-10, decided 2026-10-04): a signed-in user goes straight to Tonight.
+// A 302, since the answer depends on the session. Without Supabase there is never a user, so the page renders.
+if (Astro.locals.user) {
+  return Astro.redirect("/tonight");
+}
 ---
 
 <Layout>

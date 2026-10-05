@@ -83,6 +83,9 @@ const CHECKS: Check[] = [
   // The sky's base stops (zenith, horizon) carry the compass row's muted letters as well.
   { themes: ["red"], fg: ["heading"], bg: [...DUSK, "zenith", "horizon"], floor: 4.5 },
   { themes: ["red"], fg: ["muted-foreground"], bg: [...DUSK, "zenith", "horizon"], floor: 3 },
+  // Buttons on the sky (ui-landing's calls to action): the outline border (`primary`) and the focus ring
+  // (`primary-strong`) as non-text indicators over the band's stops, in every theme.
+  { themes: [...DARK_LIGHT, "red"], fg: ["primary", "primary-strong"], bg: ["zenith", "horizon"], floor: 3 },
 ];
 
 const pairs = CHECKS.flatMap(({ themes: names, fg, bg, floor }) =>

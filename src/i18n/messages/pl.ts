@@ -86,9 +86,9 @@ export const pl = {
     },
     getStarted: "Zacznij",
     signIn: "Zaloguj się",
-    openTonight: "Przejdź do „Dziś w nocy”",
+    previewHeading: "Tak wygląda „Dziś w nocy”",
     screenshotAlt:
-      "Widok „Dziś w nocy” w Sidereusie: pogodne niebo z oknem ciemności, a pod nim uszeregowane obiekty Messiera, każdy z kierunkiem na niebie i podpowiedzią okularu.",
+      "Panel „Dziś w nocy” w Sidereusie: werdykt nocy nad panoramą dzisiejszego nieba z jasnymi gwiazdami i planetami, suwak przez całą noc i pierwsze cele z godziną, o której każdy stoi najwyżej.",
     footerPrefix: "Nazwa pochodzi od dzieła Galileusza",
     footerWork: "Sidereus Nuncius",
     footerSuffix: " z 1610 roku.",

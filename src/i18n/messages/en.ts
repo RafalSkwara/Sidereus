@@ -104,9 +104,9 @@ export const en = {
     },
     getStarted: "Get started",
     signIn: "Sign in",
-    openTonight: "Open Tonight",
+    previewHeading: "What Tonight looks like",
     screenshotAlt:
-      "Sidereus Tonight view: a clear sky tonight, with the night's dark window, then the ranked Messier objects, each with where to look and which eyepiece to use.",
+      "The Sidereus Tonight dashboard: the night's verdict over a live panorama of tonight's sky with the bright stars and planets, a slider across the night, and the first targets with the time each stands highest.",
     footerPrefix: "Named after Galileo's",
     footerWork: "Sidereus Nuncius",
     footerSuffix: ", 1610.",

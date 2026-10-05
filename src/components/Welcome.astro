@@ -1,12 +1,21 @@
 ---
-import TabBar from "@/components/TabBar.astro";
+/*
+ * The landing page's shell (ui-landing), signed-out visitors only (`src/pages/index.astro` redirects a signed-in user
+ * to Tonight). Nightfall composition, as GearShell's sky-flow mode: the Topbar on a zenith strip that Tonight's sky
+ * band (`TonightSky`) continues, holding the question as the page title, the two calls to action and the verdict
+ * legend; then the ruled bands in the shared `max-w-3xl px-4` column.
+ */
+import Band from "@/components/ui/Band.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { buttonVariants } from "@/components/ui/button";
+import TonightSky from "@/components/tonight/TonightSky.astro";
 import Topbar from "@/components/Topbar.astro";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import { getMessages } from "@/i18n";
 import type { Verdict } from "@/lib/engine";
 import { createFormatter } from "@/lib/tonight/format";
 
-const { user, locale } = Astro.locals;
+const { locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.landing;
 const { skyHeadline } = createFormatter(locale);
@@ -22,97 +31,76 @@ const verdicts = examples.map((verdict) => ({ headline: skyHeadline(verdict), do
 const steps = [t.steps.where, t.steps.kit, t.steps.tonight];
 
 /** Intrinsic size of `public/landing/tonight.png` (captured by `tests/e2e/landing-screenshot.spec.ts`). */
-const SCREENSHOT = { width: 1280, height: 800 };
-
-const primaryCta =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
-const secondaryCta =
-  "inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 font-semibold text-heading transition-colors hover:bg-accent";
+const SCREENSHOT = { width: 1280, height: 1160 };
 ---
 
-<div class="relative flex min-h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-  <!-- Star field -->
-  <div
-    class="pointer-events-none absolute inset-0"
-    style="background-image: radial-gradient(circle, var(--star) 1px, transparent 1.5px), radial-gradient(circle, color-mix(in srgb, var(--star) 50%, transparent) 1px, transparent 1px), radial-gradient(circle, var(--star-accent) 1px, transparent 1px); background-size: 230px 230px, 130px 130px, 310px 310px; background-position: 0 0, 50px 80px, 140px 40px;"
-  ></div>
-  <!-- Faint glow along the horizon -->
-  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface via-surface/40 to-transparent"></div>
-
-  <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
-    <Topbar />
+<div class="flex min-h-screen w-full flex-col bg-background text-foreground">
+  <div class="bg-zenith">
+    <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+      <Topbar />
+    </div>
   </div>
 
-  <main class="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:py-24">
-    <p class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase sm:tracking-[0.3em]">{t.kicker}</p>
-    <h1 class="mb-6 font-display text-5xl leading-tight font-semibold text-heading sm:text-7xl">{m.common.appName}</h1>
-    <p class="mb-3 font-display text-xl text-heading italic sm:text-2xl">{t.tagline}</p>
-    <p class="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{t.lead}</p>
-
-    <ul class="mb-10 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground" aria-label={t.verdictsLabel}>
-      {verdicts.map((v) => (
-        <li
-          class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1"
-          data-sky-headline={v.headline.key}
-        >
-          <span class:list={["size-2 rounded-full", v.dot]} aria-hidden="true" />
-          {v.headline.text}
-        </li>
-      ))}
-    </ul>
-
-    <section aria-labelledby="how-it-works" class="mb-10 w-full">
-      <h2 id="how-it-works" class="mb-4 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-        {t.howItWorks}
-      </h2>
-      <ol class="grid gap-3 text-left sm:grid-cols-3">
-        {steps.map((step, i) => (
-          <li class="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4">
-            <span
-              class="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border font-display font-semibold text-primary"
-              aria-hidden="true"
-            >
-              {i + 1}
-            </span>
-            <span class="text-sm leading-relaxed text-foreground">{step}</span>
-          </li>
-        ))}
-      </ol>
-    </section>
-
-    <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-      {user ? (
-        <a href="/tonight" class:list={[primaryCta]}>
-          {t.openTonight}
-        </a>
-      ) : (
-        <>
-          <a href="/auth/signup" class:list={[primaryCta]}>
+  <main class="w-full flex-1">
+    <TonightSky>
+      <p class="mb-3 text-label break-words text-muted-foreground">{t.kicker}</p>
+      <PageHeader title={t.tagline} subtitle={t.lead}>
+        <Fragment slot="actions">
+          <a href="/auth/signup" class:list={buttonVariants({ size: "lg" })}>
             {t.getStarted}
           </a>
-          <a href="/auth/signin" class:list={[secondaryCta]}>
+          <a href="/auth/signin" class:list={buttonVariants({ variant: "outline", size: "lg" })}>
             {t.signIn}
           </a>
-        </>
-      )}
-    </div>
+        </Fragment>
+      </PageHeader>
+      <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2" aria-label={t.verdictsLabel}>
+        {verdicts.map((v) => (
+          <li
+            class="inline-flex items-center gap-2 text-label text-muted-foreground"
+            data-sky-headline={v.headline.key}
+          >
+            <span class:list={["size-2.5 shrink-0 rounded-full", v.dot]} aria-hidden="true" />
+            {v.headline.text}
+          </li>
+        ))}
+      </ul>
+    </TonightSky>
 
-    <figure class="mt-12 w-full overflow-hidden rounded-2xl border border-border bg-surface sm:mt-16">
-      <img
-        src="/landing/tonight.png"
-        alt={t.screenshotAlt}
-        width={SCREENSHOT.width}
-        height={SCREENSHOT.height}
-        loading="lazy"
-        decoding="async"
-        class="block h-auto w-full"
-      />
-    </figure>
+    <div class="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+      <Band headingId="how-it-works" heading={t.howItWorks}>
+        <ol class="divide-y divide-border">
+          {steps.map((step, i) => (
+            <li class="flex items-baseline gap-4 py-3">
+              <span class="w-5 shrink-0 font-mono text-label font-semibold text-muted-foreground" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span class="text-body break-words text-foreground">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </Band>
+
+      <Band headingId="preview-heading" heading={t.previewHeading}>
+        <figure class="overflow-hidden rounded-lg border border-border bg-surface">
+          <img
+            src="/landing/tonight.png"
+            alt={t.screenshotAlt}
+            width={SCREENSHOT.width}
+            height={SCREENSHOT.height}
+            loading="lazy"
+            decoding="async"
+            class="block h-auto w-full"
+          />
+        </figure>
+      </Band>
+    </div>
   </main>
 
-  <footer class="relative z-10 px-4 pb-6 text-center text-xs text-faint">
-    {t.footerPrefix} <em>{t.footerWork}</em>
-    {t.footerSuffix}
+  <footer class="mx-auto w-full max-w-3xl px-4 pb-8">
+    <p class="border-t border-border pt-6 text-label text-muted-foreground">
+      {t.footerPrefix} <em>{t.footerWork}</em>
+      {t.footerSuffix}
+    </p>
   </footer>
-  <TabBar />
 </div>
