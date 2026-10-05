@@ -265,7 +265,7 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Manual
 
-- [x] 2.3 The log form matches a gear form side by side: 44 px fields, same focus ring, same error line (submit empty on `/log/new?from=log`)
+- [x] 2.3 The log form matches a gear form side by side: 44 px fields, same focus ring, same error line (submit empty on `/log/new?from=log`) — 57a7e58
 
 ### Phase 3: The four pages in Nightfall
 
@@ -277,17 +277,17 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Manual
 
-- [x] 3.4 Each of the four pages reads as a sibling of `/gear` (sky header, ruled bands, one primary) in EN dark at 390 and 1280
+- [x] 3.4 Each of the four pages reads as a sibling of `/gear` (sky header, ruled bands, one primary) in EN dark at 390 and 1280 — 57a7e58
 
 ### Phase 4: States, gate and the rule
 
 #### Automated
 
-- [x] 4.1 `npm run lint`, `npx astro check`, `npm test` pass after the CLAUDE.md edit
-- [x] 4.2 Red-mode screenshots pass a pixel check (no G or B channel above 8 outside images)
+- [x] 4.1 `npm run lint`, `npx astro check`, `npm test` pass after the CLAUDE.md edit — 57a7e58
+- [x] 4.2 Red-mode screenshots pass a pixel check (no G or B channel above 8 outside images) — 57a7e58
 
 #### Manual
 
-- [x] 4.3 7-state matrix covered on the log views: default, hover, focus-visible, disabled, error, empty, loading (pending submit), each with a screenshot path or N/A with a reason
-- [x] 4.4 PL at 390 px: no overflow or clipped text on any log view
-- [x] 4.5 Contrast reads in dark, light and red (headings, muted meta, rating dots, outcome dots)
+- [x] 4.3 7-state matrix covered on the log views: default, hover, focus-visible, disabled, error, empty, loading (pending submit), each with a screenshot path or N/A with a reason — 57a7e58
+- [x] 4.4 PL at 390 px: no overflow or clipped text on any log view — 57a7e58
+- [x] 4.5 Contrast reads in dark, light and red (headings, muted meta, rating dots, outcome dots) — 57a7e58
