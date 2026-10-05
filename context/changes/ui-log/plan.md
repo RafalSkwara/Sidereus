@@ -249,8 +249,8 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Automated
 
-- [x] 1.1 `npm run lint` and `npx astro check` pass
-- [x] 1.2 `npm test` passes (i18n parity, colour guard, red theme)
+- [x] 1.1 `npm run lint` and `npx astro check` pass — 7a9b5cd
+- [x] 1.2 `npm test` passes (i18n parity, colour guard, red theme) — 7a9b5cd
 
 #### Manual
 
@@ -260,8 +260,8 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Automated
 
-- [ ] 2.1 Hardcoded-value scan on `src/components/observations/*.tsx`: 0 hits
-- [ ] 2.2 `npm run lint`, `npx astro check`, `npm test` pass
+- [x] 2.1 Hardcoded-value scan on `src/components/observations/*.tsx`: 0 hits
+- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` pass
 
 #### Manual
 

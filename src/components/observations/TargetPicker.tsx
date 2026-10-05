@@ -1,5 +1,8 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { CircleAlert, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { FieldError } from "@/components/forms/FormField";
+import { fieldClass } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { filterTargets, type TargetOption } from "@/lib/observations/target-search";
 import type { TargetKey } from "@/lib/targets";
 import { cn } from "@/lib/utils";
@@ -19,9 +22,6 @@ interface Props {
 
 /** No option is highlighted: the list is open for browsing, and Enter submits the form rather than choosing. */
 const NONE = -1;
-
-const inputBase =
-  "w-full rounded-lg border bg-surface py-2 pr-3 pl-10 text-foreground placeholder:text-faint outline-none transition-shadow focus-visible:ring-[3px]";
 
 /**
  * The object picker (roadmap S-07, FR-022; planets since M-2 S-01): an ARIA 1.2 combobox with a list of matches for
@@ -87,11 +87,14 @@ export function TargetPicker({ id, options, initial, label, placeholder, noMatch
 
   return (
     <div>
-      <label htmlFor={id} className="text-heading mb-1 block text-sm font-semibold">
+      <Label htmlFor={id} className="mb-1.5">
         {label}
-      </label>
+      </Label>
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
+        <Search
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+          aria-hidden="true"
+        />
         <input
           id={id}
           type="text"
@@ -124,12 +127,7 @@ export function TargetPicker({ id, options, initial, label, placeholder, noMatch
             setOpen(false);
           }}
           onKeyDown={handleKeyDown}
-          className={cn(
-            inputBase,
-            error
-              ? "border-destructive focus-visible:ring-destructive/20"
-              : "border-input focus-visible:border-ring focus-visible:ring-ring/50",
-          )}
+          className={cn(fieldClass, "pl-10")}
         />
         <input type="hidden" name="target" value={selected?.key ?? ""} />
         <ul
@@ -162,8 +160,8 @@ export function TargetPicker({ id, options, initial, label, placeholder, noMatch
                 index === active && "bg-accent",
               )}
             >
-              <span className="text-heading text-sm font-semibold">{option.label}</span>
-              <span className="text-muted-foreground text-xs">{option.detail}</span>
+              <span className="text-label text-heading font-semibold">{option.label}</span>
+              <span className="text-muted-foreground text-sm">{option.detail}</span>
             </li>
           ))}
         </ul>
@@ -179,12 +177,7 @@ export function TargetPicker({ id, options, initial, label, placeholder, noMatch
           {open && matches.length === 0 ? noMatch : ""}
         </p>
       </div>
-      {error ? (
-        <p id={`${id}-error`} className="text-destructive mt-1 flex items-center gap-1 text-xs">
-          <CircleAlert className="size-3" />
-          {error}
-        </p>
-      ) : null}
+      <FieldError id={`${id}-error`} message={error} />
     </div>
   );
 }
