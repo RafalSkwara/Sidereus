@@ -286,28 +286,28 @@ The kitchen sink, the screenshot evidence and the agent rule.
 
 #### Automated
 
-- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [x] 2.2 `tests/e2e/tonight-sky.spec.ts` and `red-night-mode.spec.ts` pass against the local preview
+- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass — ef17eb0
+- [x] 2.2 `tests/e2e/tonight-sky.spec.ts` and `red-night-mode.spec.ts` pass against the local preview — ef17eb0
 
 #### Manual
 
-- [x] 2.3 Light theme `/tonight` at 390 and 1280: a navy band from the Topbar to the silhouette, stars and names visible, verdict, markers and compass legible, and the slider row on the light ground
-- [x] 2.4 Light theme `/tonight/moon` (page sky plus skeleton): navy, back link legible with visible focus
-- [x] 2.5 Light theme: the settings popover opens on a Tonight page with the light panel
-- [x] 2.6 Dark and red `/tonight` look unchanged; the light `/gear` and `/` headers stay pale
+- [x] 2.3 Light theme `/tonight` at 390 and 1280: a navy band from the Topbar to the silhouette, stars and names visible, verdict, markers and compass legible, and the slider row on the light ground — ef17eb0
+- [x] 2.4 Light theme `/tonight/moon` (page sky plus skeleton): navy, back link legible with visible focus — ef17eb0
+- [x] 2.5 Light theme: the settings popover opens on a Tonight page with the light panel — ef17eb0
+- [x] 2.6 Dark and red `/tonight` look unchanged; the light `/gear` and `/` headers stay pale — ef17eb0
 
 ### Phase 3: Pan chevrons
 
 #### Automated
 
-- [ ] 3.1 `npm test`, `npm run lint` and `npx astro check` pass, including i18n parity
-- [ ] 3.2 `tests/e2e/tonight-sky.spec.ts` passes, including the new check
+- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass, including i18n parity
+- [x] 3.2 `tests/e2e/tonight-sky.spec.ts` passes, including the new check
 
 #### Manual
 
-- [ ] 3.3 At 390 and 1280 in all three themes, the chevrons are visible, don't hide a label at load, and pan
-- [ ] 3.4 Each chevron hides at its end
-- [ ] 3.5 Keyboard: tab reaches both, Enter pans, and the focus ring is visible
+- [x] 3.3 At 390 and 1280 in all three themes, the chevrons are visible, don't hide a label at load, and pan
+- [x] 3.4 Each chevron hides at its end
+- [x] 3.5 Keyboard: tab reaches both, Enter pans, and the focus ring is visible
 
 ### Phase 4: States, gate and rule
 

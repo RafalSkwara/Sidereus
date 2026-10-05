@@ -765,6 +765,9 @@ export const en = {
        */
       bodyLabel: (p: { name: string; alt: string; direction: string; time: string }) =>
         `${p.name}, ${p.alt}° up in the ${p.direction} at ${p.time}`,
+      /** The panorama's edge chevrons (ui-sky-light): each pans the strip that way. */
+      panLeft: "Scroll the sky left",
+      panRight: "Scroll the sky right",
     },
 
     attribution: {

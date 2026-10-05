@@ -688,6 +688,8 @@ export const pl = {
       now: "Teraz",
       darkWindow: "Ciemne niebo",
       bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
+      panLeft: "Przewiń niebo w lewo",
+      panRight: "Przewiń niebo w prawo",
     },
 
     attribution: {
