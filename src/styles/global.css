@@ -34,6 +34,10 @@
   --primary-foreground: #070a12;
   --primary-strong: #c3d0ff;
 
+  /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
+  --plan-twilight: #2a3450;
+  --plan-night: #10162a;
+
   --go: #7ee2b0;
   --marginal: #f1cf6b;
   --no-go: #ff9b8c;
@@ -76,6 +80,10 @@
   --primary: #0b1428;
   --primary-foreground: #fbfcfd;
   --primary-strong: #23439f;
+
+  /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
+  --plan-twilight: #e3e8f0;
+  --plan-night: #b9c3d4;
 
   --go: #17784c;
   --marginal: #8f6100;
@@ -161,6 +169,10 @@
   --primary: #ff0000;
   --primary-foreground: #000000;
   --primary-strong: #ff0000;
+
+  /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
+  --plan-twilight: #3a0000;
+  --plan-night: #1a0000;
 
   --go: #ff0000;
   --marginal: #d60000;
@@ -444,6 +456,8 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-strong: var(--primary-strong);
+  --color-plan-twilight: var(--plan-twilight);
+  --color-plan-night: var(--plan-night);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);

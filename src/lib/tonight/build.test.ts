@@ -10,6 +10,7 @@ import {
   MAX_RANKED_OBJECTS,
   MOON_DISC_STEP_MINUTES,
   moonDiscState,
+  moonState,
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
@@ -154,6 +155,17 @@ function result(
   fetchedAt = new Date(NOW.getTime() - 20 * 60_000),
 ): ForecastResult {
   return { forecast, fetchedAt, fallback };
+}
+
+/** Whether the `HH:mm` label lies from `from` to `to` inclusive on the clock, across midnight. */
+function isBetween(label: string | undefined, from: string, to: string): boolean {
+  const minutes = (text: string): number => {
+    const [h, m] = text.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const day = 24 * 60;
+  const offset = (text: string): number => (minutes(text) - minutes(from) + day) % day;
+  return label !== undefined && offset(label) <= offset(to);
 }
 
 function rankingOf(view: TonightView): TonightRanking {
@@ -1012,11 +1024,15 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
       const view = buildTonight(clearNight("2026-10-20"), "en");
       expect(rankingOf(view).washedOutCount).toBe(0);
       const card = moonCardOf(view);
-      // Up at dusk, down from the first 10-minute sample after it sets.
+      // Up at dusk, down from the set time, refined between the 10-minute samples it falls between.
       const sets = /^Sets (\d{2}:\d{2})$/.exec(card.upText ?? "")?.[1];
       expect(sets).toBeDefined();
       expect(card.faintText).toBe(`Moon up ${card.window?.start}–${sets} · no faint objects washed out`);
-      expect(card.timeLabels).toContain(sets);
+      const down = card.states.findIndex(
+        (state) => moonState(toEngineSite(WARSAW), new Date(state.time)).altitudeDeg < 0,
+      );
+      expect(down).toBeGreaterThan(0);
+      expect(isBetween(sets, card.timeLabels[down - 1], card.timeLabels[down])).toBe(true);
       expect(moonCardOf(buildTonight(clearNight("2026-10-20"), "pl")).faintText).toBe(
         `Księżyc nad horyzontem w godz. ${card.window?.start}–${sets} · żaden słaby obiekt nie ginie`,
       );
@@ -1026,10 +1042,15 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
       const view = buildTonight(clearNight("2026-10-06"), "en");
       expect(rankingOf(view).washedOutCount).toBe(0);
       const card = moonCardOf(view);
-      // Down at dusk, up from the first 10-minute sample after it rises, then up to the window's end.
+      // Down at dusk, up from the rise time, refined between the 10-minute samples it falls between, then up to the
+      // window's end.
       const rises = /^Up (\d{2}:\d{2})–(\d{2}:\d{2})$/.exec(card.upText ?? "");
       expect(rises?.[2]).toBe(card.window?.end);
-      expect(card.timeLabels.slice(1)).toContain(rises?.[1]);
+      const up = card.states.findIndex(
+        (state) => moonState(toEngineSite(WARSAW), new Date(state.time)).altitudeDeg >= 0,
+      );
+      expect(up).toBeGreaterThan(0);
+      expect(isBetween(rises?.[1], card.timeLabels[up - 1], card.timeLabels[up])).toBe(true);
       expect(card.faintText).toBe(`Moon up ${rises?.[1]}–${rises?.[2]} · no faint objects washed out`);
     });
 
@@ -1458,5 +1479,88 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     expect(view.skyView).toBeNull();
     expect(intact.skyView).not.toBeNull();
     expect(view).toEqual({ ...intact, skyView: null });
+  });
+});
+
+describe("buildTonight's Session plan (session-plan-timeline)", () => {
+  function build(
+    overrides: Partial<Parameters<typeof buildTonight>[0]> = {},
+    options: Parameters<typeof buildTonight>[2] = { withSessionPlan: true },
+  ) {
+    return buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+        ...overrides,
+      },
+      "en",
+      options,
+    );
+  }
+
+  function planOf(view: TonightView): NonNullable<TonightView["sessionPlan"]> {
+    if (view.sessionPlan === null) {
+      throw new Error("expected a session plan");
+    }
+    return view.sessionPlan;
+  }
+
+  it("is null without the option, and picks the tile line by the time of day with it", () => {
+    expect(build({}, {}).sessionPlan).toBeNull();
+    // Local noon, before sunset: the first row.
+    const before = planOf(build({ now: new Date("2026-10-10T10:00:00Z") }));
+    expect(before.rows.length).toBeGreaterThan(0);
+    expect(before.nextUp).toEqual({ kind: "first", index: 0 });
+    // During the night: the first row whose best window has not ended, never past the rows.
+    const during = planOf(build());
+    expect(during.nextUp?.kind).toBe("next");
+    expect(during.nextUp !== null && during.nextUp.kind === "next" && during.nextUp.index < during.rows.length).toBe(
+      true,
+    );
+  });
+
+  it("puts the ticks on the site's whole hours in a :30 zone", () => {
+    const kolkata: SiteRecord = {
+      ...WARSAW,
+      latitudeDeg: 22.57,
+      longitudeDeg: 88.36,
+      bortle: 5,
+      timeZone: "Asia/Kolkata",
+    };
+    const plan = planOf(build({ site: kolkata, now: new Date("2026-10-10T12:00:00Z") }));
+    expect(plan.ticks.length).toBeGreaterThan(8);
+    expect(plan.ticks.every((tick) => tick.label.endsWith(":00"))).toBe(true);
+  });
+
+  it("keeps the ticks an hour apart across the autumn clock change (Madrid, night of 24 to 25 Oct)", () => {
+    const madrid: SiteRecord = {
+      ...WARSAW,
+      latitudeDeg: 40.42,
+      longitudeDeg: -3.7,
+      timeZone: "Europe/Madrid",
+    };
+    const now = new Date("2026-10-24T18:00:00Z");
+    const plan = planOf(
+      build({ site: madrid, forecast: result(uniformForecast("2026-10-24T00:00:00Z", 5), false, now), now }),
+    );
+    const { sunset, sunrise } = sunEvents(toEngineSite(madrid), observingNight("2026-10-24", madrid.timeZone));
+    const axisMs = (sunrise?.getTime() ?? 0) - (sunset?.getTime() ?? 0);
+    const gaps = plan.ticks.slice(1).map((tick, i) => (tick.at - plan.ticks[i].at) * axisMs);
+    expect(gaps.length).toBeGreaterThan(8);
+    expect(gaps.every((gap) => Math.abs(gap - HOUR_MS) < 1)).toBe(true);
+    expect(plan.ticks.filter((tick) => tick.label === "02:00")).toHaveLength(2);
+  });
+
+  it("has no sunset or sunrise text when the Sun does not cross the horizon (87° N in October)", () => {
+    const pole: SiteRecord = { ...WARSAW, latitudeDeg: 87, longitudeDeg: 0, timeZone: "UTC" };
+    const now = new Date("2026-10-05T12:00:00Z");
+    const plan = planOf(
+      build({ site: pole, forecast: result(uniformForecast("2026-10-05T00:00:00Z", 5), false, now), now }),
+    );
+    expect(plan.sunsetText).toBeNull();
+    expect(plan.sunriseText).toBeNull();
   });
 });

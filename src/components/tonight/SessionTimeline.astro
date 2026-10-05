@@ -1,0 +1,189 @@
+---
+/*
+ * The Session plan's timeline (session-plan-timeline): the night from sunset to sunrise on one axis, with the dark
+ * window shaded and bracketed by two 1 px marks, the Moon's up span as a thin band and its rise and set as marked
+ * events, then (size "full") one row
+ * per target by best time: name and best time above a bar for its window, with a dot at the best time. Each row is a
+ * full-width link to the target's own row on its page. A text line above the axis states the dark window and the
+ * Moon's events, so the drawing is never the only carrier of a fact; the bars and marks are decorative (`aria-hidden`)
+ * and each row link names the target, its best time, window and direction. Marks differ by shape as well as colour
+ * (a dot for the best time, a bar for a window, up and down arrows for rise and set), so red mode keeps them apart:
+ * there the dark window is only 1.13:1 against the twilight, so the two heading-ink marks at its ends carry it, and the
+ * Moon's band is heading ink too (about 4.5:1 on the red twilight, covered by the contrast test's plan row).
+ * The "mini" size is the dashboard tile's: the axis band, the Moon's span and the first three best-time dots, with
+ * no text, ticks or rows. Positions are the plan's fractions as inline percentages.
+ */
+import { ArrowDown, ArrowUp, Moon } from "lucide-react";
+
+import { getMessages } from "@/i18n";
+import type { TonightSessionPlan } from "@/lib/tonight/build";
+
+interface Props {
+  plan: TonightSessionPlan;
+  size?: "full" | "mini";
+}
+
+const { plan, size = "full" } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).tonight.pages.plan;
+
+const MINI_DOTS = 3;
+/** How close to an axis end (as a fraction) a tick label anchors inward instead of centring on its tick. */
+const EDGE = 0.04;
+const pct = (fraction: number): string => `${(fraction * 100).toFixed(2)}%`;
+const span = (from: number, to: number): string => `left:${pct(from)};width:${pct(Math.max(0, to - from))}`;
+const at = (fraction: number): string => `left:${pct(fraction)}`;
+const mini = size === "mini";
+
+// Hour labels thin out with the night's length so neighbours never touch (an "HH:mm" caption is ~32 px): every hour
+// up to 13 ticks, every 2nd up to 19, every 3rd beyond (a 24 h polar axis); a phone shows half of those.
+const stride = plan.ticks.length <= 13 ? 1 : plan.ticks.length <= 19 ? 2 : 3;
+/** Fraction of the axis under which two Moon events would draw over each other; the later one drops a line. */
+const MOON_CLASH = 0.12;
+const moonEvents = plan.moonEvents.map((event, index, all) => ({
+  ...event,
+  lowered: index > 0 && event.at - all[index - 1].at < MOON_CLASH,
+}));
+const anyLowered = moonEvents.some((event) => event.lowered);
+
+// A bar's track is the twilight (sunset to sunrise), the dark window a darker stretch of it, in every theme.
+const track = "relative h-4 rounded-full bg-plan-twilight";
+const dark = "absolute inset-y-0 bg-plan-night";
+const darkMark = "absolute inset-y-0 w-px bg-heading";
+const moonBand = "absolute bottom-0 h-1 bg-heading";
+const row =
+  "block min-h-11 border-b border-border px-4 py-3 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring-2 ring-background";
+---
+
+{mini ? (
+  <div aria-hidden="true" class="relative h-4">
+    <div class:list={[track, "overflow-hidden"]}>
+      {plan.dark && <span class:list={[dark]} style={span(plan.dark.from, plan.dark.to)} />}
+      {plan.moonUp.map((up) => (
+        <span class:list={[moonBand]} style={span(up.from, up.to)} />
+      ))}
+      {plan.dark && (
+        <>
+          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.from)} />
+          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.to)} />
+        </>
+      )}
+    </div>
+    {plan.rows.slice(0, MINI_DOTS).map((target) => (
+      <span class:list={[dot]} style={at(target.best)} />
+    ))}
+  </div>
+) : (
+  <div class="overflow-x-clip">
+    <p class="px-4 text-label text-muted-foreground" data-session-plan-text>
+      {plan.sunsetText && (
+        <>
+          <span>{plan.sunsetText}</span>
+          <span aria-hidden="true"> · </span>
+        </>
+      )}
+      <span class="font-semibold text-heading">{plan.darkText}</span>
+      <span aria-hidden="true"> · </span>
+      <span>{plan.moonText}</span>
+      {plan.sunriseText && (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>{plan.sunriseText}</span>
+        </>
+      )}
+    </p>
+
+    <div aria-hidden="true" class="px-4 pt-4" data-session-plan-axis>
+      <div class="relative h-5">
+        {plan.ticks.map((tick, index) => (
+          <span
+            class:list={[
+              "absolute top-0 text-caption text-muted-foreground tabular-nums",
+              // Labels near the axis ends anchor inward, so they stay inside the page gutter.
+              tick.at < EDGE ? "translate-x-0" : tick.at > 1 - EDGE ? "-translate-x-full" : "-translate-x-1/2",
+              index % stride !== 0 ? "hidden" : index % (2 * stride) !== 0 && "max-sm:hidden",
+            ]}
+            style={at(tick.at)}
+          >
+            {tick.label}
+          </span>
+        ))}
+      </div>
+      <div class:list={[track, "overflow-hidden"]}>
+        {plan.dark && <span class:list={[dark]} style={span(plan.dark.from, plan.dark.to)} />}
+        {plan.moonUp.map((up) => (
+          <span class:list={[moonBand]} style={span(up.from, up.to)} />
+        ))}
+        {plan.ticks.map((tick) => (
+          <span class="absolute inset-y-0 w-px bg-background" style={at(tick.at)} />
+        ))}
+        {plan.dark && (
+          <>
+            <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.from)} />
+            <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.to)} />
+          </>
+        )}
+      </div>
+      <div class:list={["relative", anyLowered ? "h-20" : "h-12"]}>
+        {moonEvents.map((event) => (
+          <span
+            class:list={[
+              "absolute flex flex-col gap-0.5 text-caption text-muted-foreground tabular-nums",
+              event.lowered ? "top-9" : "top-1",
+              event.at < EDGE
+                ? "translate-x-0 items-start"
+                : event.at > 1 - EDGE
+                  ? "-translate-x-full items-end"
+                  : "-translate-x-1/2 items-center",
+            ]}
+            style={at(event.at)}
+          >
+            <span class="flex items-center">
+              <Moon className="size-4" aria-hidden="true" />
+              {event.kind === "rise" ? (
+                <ArrowUp className="size-3" aria-hidden="true" />
+              ) : (
+                <ArrowDown className="size-3" aria-hidden="true" />
+              )}
+            </span>
+            {event.timeText}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    {plan.rows.length > 0 && (
+      <ol aria-label={t.listLabel} class="mt-2 border-t border-border">
+        {plan.rows.map((target) => (
+          <li>
+            <a
+              href={target.href}
+              class:list={[row]}
+              aria-label={t.rowLabel({
+                name: target.name,
+                best: target.bestTime,
+                window: target.windowText,
+                direction: target.bestDirection,
+              })}
+              data-session-plan-row={target.key}
+            >
+              <span class="flex items-baseline justify-between gap-3">
+                <span class="min-w-0 font-display text-title font-semibold break-words">{target.name}</span>
+                <span class="shrink-0 font-mono text-label tabular-nums">{target.bestTime}</span>
+              </span>
+              <span aria-hidden="true" class:list={[track, "mt-2 block"]}>
+                {plan.dark && <span class:list={[dark, "rounded-full"]} style={span(plan.dark.from, plan.dark.to)} />}
+                <span
+                  class="absolute inset-y-1 min-w-1 rounded-full bg-primary-strong"
+                  style={span(target.from, target.to)}
+                />
+                <span class:list={[dot]} style={at(target.best)} />
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    )}
+  </div>
+)}

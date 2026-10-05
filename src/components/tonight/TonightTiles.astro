@@ -1,16 +1,20 @@
 ---
 /*
- * Tonight's tiles under the sky (tonight-dashboard): what to point at first, the Moon, the planets and the week, each a
- * ruled, full-width row that opens its own page (`/tonight/targets`, `/tonight/moon`, `/tonight/planets`,
- * `/tonight/nights`), never an anchor on the dashboard. A tile only restates the view at a glance; the pages keep every
- * number and action. Tiles with nothing to say are left out (no Moon card, no solar system, no nights); "Point here
- * first" always shows and always opens Targets, with "no targets" when nothing ranks (the page says why). Each link is
+ * Tonight's tiles under the sky (tonight-dashboard): what to point at first, the Session plan, the Moon, the planets and
+ * the week, each a ruled, full-width row that opens its own page (`/tonight/targets`, `/tonight/plan`, `/tonight/moon`,
+ * `/tonight/planets`, `/tonight/nights`), never an anchor on the dashboard. A tile only restates the view at a glance;
+ * the pages keep every number and action. Tiles with nothing to say are left out (no Session plan, no Moon card, no
+ * solar system, no nights); "Point here first" always shows and always opens Targets, with "no targets" when nothing
+ * ranks (the page says why). The Session plan tile draws the mini timeline (`SessionTimeline size="mini"`) over the
+ * server's `nextUp` line: "First up: <target> <time>" before sunset, "Next: <target> <time>" during the night, "Nothing
+ * left on tonight's plan." once every window has ended, or the empty line when nothing is planned. Each link is
  * named by its heading only (`aria-labelledby`), not by the whole tile; "Point here first" adds "Open Targets", since
  * its heading does not name the page it opens. The → says it opens a page.
  */
 import { ArrowRight } from "lucide-react";
 
 import MoonDisc from "@/components/tonight/MoonDisc";
+import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import { getMessages, plural } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { OUTLOOK_NIGHTS, VERDICT_NIGHTS } from "@/lib/engine/parameters";
@@ -43,6 +47,19 @@ const targets = view.summaryTargets.map((entry) => ({
   name: localCommonName(entry.messier, entry.commonName, locale) ?? entry.id,
   bestTime: entry.bestTime,
 }));
+
+// Session plan: the row the server's `nextUp` points at (by best time, named as the live sky's markers name it).
+const plan = view.sessionPlan;
+const nextUp = plan?.nextUp ?? null;
+const nextRow = plan && nextUp && nextUp.kind !== "done" ? (plan.rows[nextUp.index] ?? null) : null;
+const planLine =
+  nextUp === null
+    ? t.planEmpty
+    : nextUp.kind === "done"
+      ? t.planDone
+      : nextRow
+        ? (nextUp.kind === "first" ? t.planFirst : t.planNext)({ name: nextRow.name, time: nextRow.bestTime })
+        : t.planEmpty;
 
 // The Moon at the page-load moment: the card's own initial state, so the tile and the Moon page's slider agree.
 const moonCard = view.moonCard;
@@ -115,6 +132,19 @@ const nightsSummary = view.nights
       {open(m.tonight.pages.targets)}
     </span>
   </a>
+
+  {plan && (
+    <a href="/tonight/plan" class:list={[tile]} aria-labelledby="tile-plan-heading">
+      <h2 id="tile-plan-heading" class:list={[heading]}>
+        {t.plan}
+        <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
+      </h2>
+      <div class="mt-3">
+        <SessionTimeline plan={plan} size="mini" />
+      </div>
+      <span class="mt-3 block text-body font-semibold">{planLine}</span>
+    </a>
+  )}
 
   {moonCard && (
     <a href="/tonight/moon" class:list={[tile]} aria-labelledby="tile-moon-heading">

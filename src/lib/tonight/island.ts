@@ -16,6 +16,8 @@ export interface TonightIslandLoad {
   withSkyChecks?: boolean;
   /** Also build the interactive sky; only the dashboard sets it. */
   withSkyView?: boolean;
+  /** Also build the Session plan; the dashboard and the plan page set it. */
+  withSessionPlan?: boolean;
 }
 
 /** Runs work after the response is sent (the Worker's `waitUntil`): the forecast's KV write, the sky check's record. */
@@ -47,5 +49,6 @@ export async function loadTonightFor(locals: App.Locals, options: TonightIslandL
     limit: options.limit,
     withSkyChecks: options.withSkyChecks,
     withSkyView: options.withSkyView,
+    withSessionPlan: options.withSessionPlan,
   });
 }

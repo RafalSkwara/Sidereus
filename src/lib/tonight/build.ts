@@ -12,6 +12,7 @@ import {
   MOON_DISC_STEP_MINUTES,
   moonDiscState,
   moonDiscStates,
+  moonState,
   moonTarget,
   moonTrack,
   nextNightInOutlook,
@@ -36,8 +37,10 @@ import {
   type LogEntry,
   type MoonDiscState,
   type MoonPhaseBand,
+  type MoonState,
   type PlanetKey,
   type RankedEntry,
+  type Site,
   type Verdict,
   type VerdictLevel,
 } from "@/lib/engine";
@@ -50,6 +53,12 @@ import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
 import { createFormatter, type ForecastStatus, type MoonUp, type SkyHeadline } from "./format";
+import {
+  layoutSessionPlan,
+  type SessionPlanMoonEvent,
+  type SessionPlanRow,
+  type SessionPlanRowInput,
+} from "./session-plan";
 
 /**
  * Composes the Tonight view: the stored gear, the forecast and `now` in, a view model the page
@@ -314,6 +323,58 @@ export type TonightNight = {
   | { kind: "outlook"; cloudText: string | null }
 );
 
+/** One target on the Session plan, worded for the page; the layout's fractions place it on the axis. */
+export interface TonightSessionPlanRowInput extends SessionPlanRowInput {
+  /** "M31", "Jupiter", "Moon": the short name. */
+  label: string;
+  /** "M31 · Andromeda Galaxy": the full name, as the live sky's markers name it. */
+  name: string;
+  /** The target's row on its focused page, as the live sky's markers link: Targets, Planets or the Moon page. */
+  href: string;
+  /** Peak time, `HH:mm` in the site's time zone. */
+  bestTime: string;
+  /** Best window, "21:40–23:10" in the site's time zone. */
+  windowText: string;
+  /** Direction at the peak, "SW, 45°". */
+  bestDirection: string;
+}
+
+export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput>;
+
+/**
+ * The Session plan (session-plan-timeline): the night from sunset to sunrise (the live sky's range) on one axis, with
+ * the dark window, the Moon's rise and set and one row per recommended target (the ranking's entries, the planets and
+ * the Moon when it is a target) ordered by best time. Positions are fractions of the axis; every time is the server's.
+ */
+export interface TonightSessionPlan {
+  /**
+   * "Sunset 18:47" and "Sunrise 07:48", the axis ends, in the site's time zone; `null` when the axis is the whole
+   * observing night instead (polar day or night: no sunset or no sunrise).
+   */
+  sunsetText: string | null;
+  sunriseText: string | null;
+  /** The dark window on the axis; `null` without one. */
+  dark: { from: number; to: number } | null;
+  /** "Dark 21:40–05:10", or the no-dark-window line. */
+  darkText: string;
+  /** Moonrises and moonsets inside the axis, each with its time, `HH:mm` in the site's time zone. */
+  moonEvents: (SessionPlanMoonEvent & { timeText: string })[];
+  /** "Moonset 01:30 · Moonrise 04:50", "Moon up all night" or "Moon not up tonight". */
+  moonText: string;
+  /** When the Moon is up over the axis, as fractions of it (clamped to [0, 1]); empty when it never is. */
+  moonUp: { from: number; to: number }[];
+  /** The hours as ticks: fraction of the axis and `HH:mm` in the site's time zone. */
+  ticks: { at: number; label: string }[];
+  /** By best time, earliest first; empty when nothing is recommended tonight. */
+  rows: TonightSessionPlanRow[];
+  /**
+   * The tile's "what next" line, decided on the server from `now` (the page reads no clock): before sunset the first
+   * row (`first`), during the night the first row, by best time, whose best window has not ended (`next`), and `done`
+   * once every window has; `index` is into `rows`. `null` when there are no rows.
+   */
+  nextUp: { kind: "first" | "next"; index: number } | { kind: "done" } | null;
+}
+
 /** The interactive sky's data (interactive-sky); declared island-safe in `@/lib/sky-view/view`. */
 export type { TonightSkyBody, TonightSkyView };
 
@@ -372,7 +433,16 @@ export interface TonightView {
    * it, or when working it out fails, which never takes the rest of the view down.
    */
   skyView: TonightSkyView | null;
+  /**
+   * The Session plan (session-plan-timeline), built only with the `withSessionPlan` option; `null` without it, or
+   * when working it out fails, which never takes the rest of the view down.
+   */
+  sessionPlan: TonightSessionPlan | null;
 }
+
+type RankedObjects = RankedEntry<MessierObject, EyepieceRecord>[];
+type RankedPlanets = ReturnType<typeof rankPlanets>;
+type MoonTargetEntry = NonNullable<ReturnType<typeof moonTarget>>;
 
 function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): EyepieceLine {
   return { name: eyepiece.name, magnification: Math.round(eyepieceOptics(telescope, eyepiece).magnification) };
@@ -395,19 +465,44 @@ function toPair(
   };
 }
 
+/** How close, in ms, a refined Moon crossing is bracketed: bisection stops once the bracket is this narrow. */
+const MOON_CROSSING_PRECISION_MS = 30_000;
+
+/**
+ * The instant the Moon's apparent altitude crosses 0° (`moonState`'s sense: at or above 0° is up) between two samples
+ * that disagree on it, found by bisection to `MOON_CROSSING_PRECISION_MS`. Returns the first instant on the later
+ * sample's side, so a rise gives the first up instant and a set the first down one.
+ */
+function refineMoonCrossing(site: Site, earlier: Date, later: Date): Date {
+  const upAtLater = moonState(site, later).altitudeDeg >= 0;
+  let lo = earlier.getTime();
+  let hi = later.getTime();
+  while (hi - lo > MOON_CROSSING_PRECISION_MS) {
+    const mid = lo + (hi - lo) / 2;
+    if (moonState(site, new Date(mid)).altitudeDeg >= 0 === upAtLater) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return new Date(hi);
+}
+
 /**
  * When the Moon is up across a track (`moonState`'s sense: its apparent altitude at or above 0°). A span runs from
- * the first sample up to the first sample down again, or to the last sample; times are only as fine as the track.
+ * the first sample up to the first sample down again, or to the last sample. Every boundary that is a real crossing
+ * (not the track's first or last sample) is refined between its bracketing samples (`refineMoonCrossing`), so the
+ * Moon card and the Session plan read the same rise and set whatever grid their tracks use.
  */
-function moonUpOf(track: readonly Pick<HorizontalPosition, "time" | "altitudeDeg">[]): MoonUp {
+function moonUpOf(site: Site, track: readonly Pick<HorizontalPosition, "time" | "altitudeDeg">[]): MoonUp {
   const spans: Interval[] = [];
   let start: Date | null = null;
-  for (const sample of track) {
+  for (const [index, sample] of track.entries()) {
     const up = sample.altitudeDeg >= 0;
     if (up && start === null) {
-      start = sample.time;
+      start = index === 0 ? sample.time : refineMoonCrossing(site, track[index - 1].time, sample.time);
     } else if (!up && start !== null) {
-      spans.push({ start, end: sample.time });
+      spans.push({ start, end: refineMoonCrossing(site, track[index - 1].time, sample.time) });
       start = null;
     }
   }
@@ -446,6 +541,18 @@ function packTrack(track: readonly Pick<HorizontalPosition, "altitudeDeg" | "azi
   ]);
 }
 
+/**
+ * The live sky's and the Session plan's axis: sunset to sunrise (`fromSun`), or the whole observing night without
+ * either.
+ */
+function skyAxis(site: Site, date: string, timeZone: string): { range: Interval; fromSun: boolean } {
+  const night = observingNight(date, timeZone);
+  const { sunset, sunrise } = sunEvents(site, night);
+  return sunset !== null && sunrise !== null
+    ? { range: { start: sunset, end: sunrise }, fromSun: true }
+    : { range: night, fromSun: false };
+}
+
 /** The index of the time in `times` (epoch ms, ascending) nearest `ms`; the earlier one on a tie. */
 function nearestIndex(times: readonly number[], ms: number): number {
   let best = 0;
@@ -461,12 +568,12 @@ function nearestIndex(times: readonly number[], ms: number): number {
 /**
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
  * Targets page). `withSkyView`: also build the interactive sky (the dashboard only); without it `skyView` is
- * `null` and nothing of it is computed.
+ * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan.
  */
 export function buildTonight(
   input: TonightInput,
   locale: Locale,
-  options: { limit?: number; withSkyView?: boolean } = {},
+  options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean } = {},
 ): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
@@ -562,6 +669,11 @@ export function buildTonight(
   // The verdict card passes the night: a go or marginal verdict over a dark window.
   const cardPasses = (tonight.level === "go" || tonight.level === "marginal") && window.kind === "window";
 
+  // The Session plan's raw inputs, kept as the targets are built; only `options.withSessionPlan` maps them into rows.
+  let planObjects: RankedObjects = [];
+  let planPlanets: RankedPlanets = [];
+  let planMoon: MoonTargetEntry | null = null;
+
   let ranking: TonightRanking | null = null;
   // The interactive sky's deep-sky targets: the ranking's first `MAX_RANKED_OBJECTS`, the Targets page's top band.
   let skyObjects: MessierObject[] = [];
@@ -580,6 +692,7 @@ export function buildTonight(
     });
     skyObjects = ranked.entries.slice(0, MAX_RANKED_OBJECTS).map((entry) => entry.object);
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
+    planObjects = ranked.entries;
     ranking = {
       clearedCount: ranked.clearedCount,
       clearedText: clearedLine(ranked.clearedCount),
@@ -656,6 +769,7 @@ export function buildTonight(
         seen,
         ...(clear === null ? {} : { visibleIntervals: clear }),
       });
+      planPlanets = ranked;
       solarSystem = {
         windowText: planetWindowText(civil, timeZone),
         // The verdict card already speaks for the planet window when it passes the night at the same level.
@@ -687,6 +801,7 @@ export function buildTonight(
     }
   } catch {
     solarSystem = null;
+    planPlanets = [];
   }
   // Why the Planets page has nothing to list: the window, then its weather; anything else is a failure.
   const planetsAbsentText =
@@ -732,9 +847,11 @@ export function buildTonight(
             note: messages.tonight.moon.note[entry.facts.band],
             seenText: entry.seen ? seenLine(entry.seen) : null,
           };
+          planMoon = entry;
         }
       } catch {
         target = null;
+        planMoon = null;
       }
     }
 
@@ -762,7 +879,7 @@ export function buildTonight(
       const { interval } = cardWindow;
       const states = moonDiscStates(interval, MOON_DISC_STEP_MINUTES);
       // The same instants as the states, so the up spans read on the slider's own grid.
-      const up = moonUpOf(moonTrack(engineSite, interval, MOON_DISC_STEP_MINUTES));
+      const up = moonUpOf(engineSite, moonTrack(engineSite, interval, MOON_DISC_STEP_MINUTES));
       const initialIndex = nearestStateIndex(states, now.getTime());
       const shown = states[initialIndex];
       moonCard = {
@@ -786,12 +903,20 @@ export function buildTonight(
   // The interactive sky (interactive-sky), on the dashboard only: sunset to sunrise, or the whole observing night
   // when either is missing (polar day or night). Frames and every track share one interval and step, so index `i` is
   // the same instant everywhere. Planets show whatever the planet weather; a failure drops only the sky view.
+  // The axis and the Moon's track over it are worked out once, for whichever of the two asks first, and shared.
+  let axisMoon: { range: Interval; fromSun: boolean; moon: MoonState[] } | null = null;
+  const skyAxisWithMoon = (): { range: Interval; fromSun: boolean; moon: MoonState[] } => {
+    if (axisMoon === null) {
+      const { range, fromSun } = skyAxis(engineSite, date, timeZone);
+      axisMoon = { range, fromSun, moon: moonTrack(engineSite, range) };
+    }
+    return axisMoon;
+  };
+
   let skyView: TonightSkyView | null = null;
   if (options.withSkyView) {
     try {
-      const night = observingNight(date, timeZone);
-      const { sunset, sunrise } = sunEvents(engineSite, night);
-      const range: Interval = sunset !== null && sunrise !== null ? { start: sunset, end: sunrise } : night;
+      const { range, moon } = skyAxisWithMoon();
       const frames = skyFrames(engineSite, range);
       const times = frames.map((frame) => frame.time.getTime());
       const startMs = range.start.getTime();
@@ -836,7 +961,7 @@ export function buildTonight(
         label: messages.targets.moon,
         name: messages.targets.moon,
         href: "/tonight/moon",
-        track: packTrack(moonTrack(engineSite, range)),
+        track: packTrack(moon),
       };
 
       skyView = {
@@ -856,6 +981,135 @@ export function buildTonight(
       };
     } catch {
       skyView = null;
+    }
+  }
+
+  // The Session plan (session-plan-timeline): the targets above on the live sky's axis. A failure drops only the plan.
+  let sessionPlan: TonightSessionPlan | null = null;
+  if (options.withSessionPlan) {
+    try {
+      const { range, fromSun, moon } = skyAxisWithMoon();
+      const up = moonUpOf(engineSite, moon);
+      const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
+      const rowOf = (
+        kind: TonightSessionPlanRowInput["kind"],
+        key: string,
+        label: string,
+        name: string,
+        href: string,
+        window: Interval,
+        peak: HorizontalPosition,
+      ): TonightSessionPlanRowInput => ({
+        kind,
+        key,
+        window,
+        bestAt: peak.time.getTime(),
+        label,
+        name,
+        href,
+        bestTime: formatTime(peak.time, timeZone),
+        windowText: `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`,
+        bestDirection: formatDirection(peak),
+      });
+      const planRows: TonightSessionPlanRowInput[] = [
+        ...(planMoon === null
+          ? []
+          : [
+              rowOf(
+                "moon",
+                MOON_TARGET_KEY,
+                messages.targets.moon,
+                messages.targets.moon,
+                "/tonight/moon",
+                planMoon.window,
+                planMoon.peak,
+              ),
+            ]),
+        ...planPlanets.map((entry) => {
+          const name = messages.targets.planet[entry.key];
+          return rowOf(
+            "planet",
+            entry.key,
+            name,
+            name,
+            `/tonight/planets#planet-${entry.key}`,
+            entry.window,
+            entry.peak,
+          );
+        }),
+        ...planObjects.map(({ object, score, peak }) => {
+          const commonName = localCommonName(object.messier, object.commonName, locale);
+          return rowOf(
+            "object",
+            object.id,
+            object.id,
+            commonName ? `${object.id} · ${commonName}` : object.id,
+            `/tonight/targets#object-${object.id}`,
+            score.window,
+            peak,
+          );
+        }),
+      ];
+      const layout = layoutSessionPlan({
+        axis: range,
+        dark: window.kind === "window" ? window : null,
+        moonSpans,
+        rows: planRows,
+        isWholeHour: (ms) => formatTime(new Date(ms), timeZone).endsWith(":00"),
+      });
+      // The tile's line, by the raw window ends (the layout's rows are clamped to the axis and carry no window).
+      const windowEnds = new Map(planRows.map((row) => [row.key, row.window.end.getTime()]));
+      const nowMs = now.getTime();
+      const nextIndex = layout.rows.findIndex((row) => (windowEnds.get(row.key) ?? 0) > nowMs);
+      const nextUp: TonightSessionPlan["nextUp"] =
+        layout.rows.length === 0
+          ? null
+          : nowMs < layout.axis.start
+            ? { kind: "first", index: 0 }
+            : nextIndex >= 0
+              ? { kind: "next", index: nextIndex }
+              : { kind: "done" };
+      const text = messages.tonight.pages.plan;
+      const axisMs = layout.axis.end - layout.axis.start;
+      const hourAt = (hour: number): number => (axisMs > 0 ? (hour - layout.axis.start) / axisMs : 0);
+      const clampAt = (ms: number): number => Math.min(1, Math.max(0, hourAt(ms)));
+      const moonEvents = layout.moonEvents.map((event) => ({
+        ...event,
+        timeText: formatTime(new Date(event.time), timeZone),
+      }));
+      sessionPlan = {
+        sunsetText: fromSun ? text.sunset({ time: formatTime(range.start, timeZone) }) : null,
+        sunriseText: fromSun ? text.sunrise({ time: formatTime(range.end, timeZone) }) : null,
+        dark: layout.dark,
+        darkText:
+          window.kind === "window"
+            ? text.dark({ start: formatTime(window.start, timeZone), end: formatTime(window.end, timeZone) })
+            : text.noDark,
+        moonEvents,
+        moonText:
+          moonEvents.length > 0
+            ? moonEvents
+                .map((event) =>
+                  event.kind === "rise"
+                    ? text.moonrise({ time: event.timeText })
+                    : text.moonset({ time: event.timeText }),
+                )
+                .join(" · ")
+            : // No rise or set strictly inside the axis: up at its start means up throughout (a "part" Moon that
+              // rises or sets only at the last sample counts as what it was before).
+              up.kind === "all" || (up.kind === "part" && up.upAtStart)
+              ? text.moonAll
+              : text.moonNever,
+        moonUp: moonSpans.map((span) => ({ from: clampAt(span.start.getTime()), to: clampAt(span.end.getTime()) })),
+        ticks: layout.hours.map((hour) => ({
+          at: hourAt(hour),
+          label: formatTime(new Date(hour), timeZone),
+        })),
+        rows: layout.rows,
+        nextUp,
+      };
+    } catch {
+      sessionPlan = null;
     }
   }
 
@@ -891,5 +1145,6 @@ export function buildTonight(
     planetsAbsentText,
     moonCard,
     skyView,
+    sessionPlan,
   };
 }

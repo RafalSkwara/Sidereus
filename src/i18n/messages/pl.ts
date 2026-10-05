@@ -712,6 +712,11 @@ export const pl = {
       },
       moon: "Księżyc",
       planets: "Planety",
+      plan: "Plan sesji",
+      planFirst: (p) => `Na początek: ${p.name} ${p.time}`,
+      planNext: (p) => `Następny: ${p.name} ${p.time}`,
+      planDone: "Na dziś plan już się skończył.",
+      planEmpty: "Dziś nie ma czego planować.",
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       nights: (p) => `Najbliższe ${p.count} nocy`,
       // "noce" fits counts 2-4, which covers VERDICT_NIGHTS = 3; switch to plural() if it changes.
@@ -744,6 +749,20 @@ export const pl = {
       },
       // The colon keeps the page title in its base form.
       open: (p) => `Otwórz: ${p.page}`,
+      plan: {
+        dark: (p) => `Ciemna noc ${p.start}–${p.end}`,
+        noDark: "Dziś bez ciemnej nocy",
+        sunset: (p) => `Zachód Słońca ${p.time}`,
+        sunrise: (p) => `Wschód Słońca ${p.time}`,
+        moonrise: (p) => `Wschód Księżyca ${p.time}`,
+        moonset: (p) => `Zachód Księżyca ${p.time}`,
+        moonAll: "Księżyc nad horyzontem przez całą noc",
+        moonNever: "Księżyc pod horyzontem przez całą noc",
+        listLabel: "Cele według najlepszej godziny",
+        rowLabel: (p) => `${p.name}: najlepiej o ${p.best}, okno ${p.window}, kierunek ${p.direction}`,
+        empty: "Brak polecanych obiektów na dzisiejszą noc.",
+        unavailable: "Plan sesji jest teraz niedostępny.",
+      },
     },
   },
 
