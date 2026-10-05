@@ -780,7 +780,6 @@ export const pl = {
     manualTitle: "Dodaj obserwację",
     manualIntro:
       "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
-    backToLog: "← Dziennik",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
     saveChanges: "Zapisz zmiany",

@@ -4,6 +4,9 @@ import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
 import BackLink from "@/components/ui/BackLink.astro";
+import Band from "@/components/ui/Band.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { observingNightDateFor } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
@@ -13,6 +16,7 @@ import { targetOptions } from "@/lib/observations/target-options";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
+import { cn } from "@/lib/utils";
 
 // Mark observed (roadmap S-06, FR-016). Tonight links here with the ranking's object, night, site and
 // telescope; `POST /api/log` sends a failed save back with the same prefill and a `?error=` message key.
@@ -67,51 +71,52 @@ const night = isCalendarDate(nightParam) ? nightParam : site ? observingNightDat
 const commonName = label && !manual ? label.name : null;
 const title = manual ? t.manualTitle : label ? t.title({ object: label.id }) : t.kicker;
 const options = manual ? targetOptions(locale) : [];
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
+const actionLink = cn(buttonVariants(), "mt-4");
 ---
 
 <GearShell title={title}>
-  <BackLink href={back.href} label={back.label} class="mb-4" />
-  <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
-  <h1 class="mb-2 font-display text-3xl font-semibold text-heading sm:text-4xl">
-    {title}
-    {commonName && <span class="text-2xl text-foreground sm:text-3xl"> · {commonName}</span>}
-  </h1>
+  <Fragment slot="header">
+    <BackLink href={back.href} label={back.label} />
+    <div class="mt-2">
+      <PageHeader title={title} subtitle={commonName ?? undefined} />
+    </div>
+  </Fragment>
 
   {!supabase ? (
     <DatabaseMissing />
   ) : !object && !manual ? (
-    <p class="mt-6 text-foreground">{t.objectNotFound}</p>
-  ) : loadError ? (
-    <div class="mt-6">
-      <ServerError message={translateKey(m, loadError, "errors.generic")} />
+    // A stale or edited link: the object is unknown, so offer to pick it by hand rather than end here.
+    <div>
+      <p class="text-body text-foreground">{t.objectNotFound}</p>
+      <a href="/log/new?from=log" class:list={actionLink}>
+        {t.manualTitle}
+      </a>
     </div>
+  ) : loadError ? (
+    <ServerError message={translateKey(m, loadError, "errors.generic")} />
   ) : !site || !telescope ? (
-    <div class="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-6">
-      <p class="mb-4 text-foreground">{t.needsGear}</p>
-      <a href="/gear" class:list={[primaryLink]}>
+    <div>
+      <p class="text-body text-foreground">{t.needsGear}</p>
+      <a href="/gear" class:list={actionLink}>
         {t.addGear}
       </a>
     </div>
   ) : (
-    <>
-      <p class="mb-6 text-sm text-muted-foreground">{manual ? t.manualIntro : t.intro}</p>
-      <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-        <ObservationForm
-          action="/api/log"
-          mode={manual ? "manual" : "ranking"}
-          initial={{ target: object ?? undefined, night, siteId: site.id, telescopeId: telescope.id }}
-          targetOptions={options}
-          sites={sites.map(({ id, name }) => ({ id, name }))}
-          telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
-          maxNight={maxNight}
-          serverError={error}
-          returnTo={from}
-          locale={locale}
-          client:load
-        />
-      </div>
-    </>
+    <Band headingId="entry-heading" heading={title} headingHidden>
+      <p class="mb-6 text-body text-muted-foreground">{manual ? t.manualIntro : t.intro}</p>
+      <ObservationForm
+        action="/api/log"
+        mode={manual ? "manual" : "ranking"}
+        initial={{ target: object ?? undefined, night, siteId: site.id, telescopeId: telescope.id }}
+        targetOptions={options}
+        sites={sites.map(({ id, name }) => ({ id, name }))}
+        telescopes={telescopes.map(({ id, name }) => ({ id, name }))}
+        maxNight={maxNight}
+        serverError={error}
+        returnTo={from}
+        locale={locale}
+        client:load
+      />
+    </Band>
   )}
 </GearShell>

@@ -4,12 +4,17 @@ import DeleteButton from "@/components/gear/DeleteButton";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ObservationForm from "@/components/observations/ObservationForm";
+import BackLink from "@/components/ui/BackLink.astro";
+import Band from "@/components/ui/Band.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 import { LOG_LIST } from "@/lib/observations/redirect";
 import { latestNightBound, observationStore, type ObservationRecord } from "@/lib/observations/store";
 import { targetOptions } from "@/lib/observations/target-options";
 import { targetLabel } from "@/lib/targets/labels";
+import { cn } from "@/lib/utils";
 
 // One log entry (roadmap S-07, FR-017): the form to edit every field and a delete button. An entry whose site or
 // telescope was deleted since keeps it as a "(deleted)" option (FR-021). `POST /api/log/<id>` sends a failed
@@ -48,25 +53,24 @@ const objectId = label?.id ?? "";
 const commonName = label?.name ?? null;
 // Only a hint for the date picker; the store checks the chosen site's own night.
 const maxNight = latestNightBound(sites, new Date());
+const title = entry ? t.editTitle({ object: objectId }) : t.notFound;
 ---
 
-<GearShell title={entry ? t.editTitle({ object: objectId }) : t.notFound}>
-  <a href={LOG_LIST} class="mb-4 inline-block text-sm text-muted-foreground transition-colors hover:text-heading">
-    {t.backToLog}
-  </a>
+<GearShell title={title}>
+  <Fragment slot="header">
+    <BackLink href={LOG_LIST} label={m.nav.log} />
+    <div class="mt-2">
+      <PageHeader title={title} subtitle={commonName ?? undefined} />
+    </div>
+  </Fragment>
   {!supabase ? (
     <DatabaseMissing />
   ) : loadError ? (
     <ServerError message={translateKey(m, loadError, "errors.generic")} />
   ) : entry ? (
-    <>
-      <p class="mb-2 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.kicker}</p>
-      <h1 class="mb-2 font-display text-3xl font-semibold text-heading sm:text-4xl">
-        {t.editTitle({ object: objectId })}
-        {commonName && <span class="text-2xl text-foreground sm:text-3xl"> · {commonName}</span>}
-      </h1>
-      <p class="mb-6 text-sm text-muted-foreground">{t.editIntro}</p>
-      <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
+    <div>
+      <Band headingId="entry-heading" heading={title} headingHidden>
+        <p class="mb-6 text-body text-muted-foreground">{t.editIntro}</p>
         <ObservationForm
           action={`/api/log/${encodeURIComponent(entry.id)}`}
           mode="edit"
@@ -87,8 +91,8 @@ const maxNight = latestNightBound(sites, new Date());
           locale={locale}
           client:load
         />
-      </div>
-      <div class="mt-6">
+      </Band>
+      <Band headingId="delete-heading" heading={t.deleteHeading}>
         <DeleteButton
           action={`/api/log/${encodeURIComponent(entry.id)}/delete`}
           label={t.delete}
@@ -96,13 +100,12 @@ const maxNight = latestNightBound(sites, new Date());
           cancelLabel={m.common.cancel}
           client:load
         />
-      </div>
-    </>
+      </Band>
+    </div>
   ) : (
-    <div class="rounded-2xl border border-border bg-surface p-6">
-      <h1 class="font-display text-3xl font-semibold text-heading">{t.notFound}</h1>
-      <p class="mt-2 text-sm text-muted-foreground">{t.notFoundText}</p>
-      <a href={LOG_LIST} class="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
+    <div>
+      <p class="text-body text-muted-foreground">{t.notFoundText}</p>
+      <a href={LOG_LIST} class:list={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
         {t.backToLogLink}
       </a>
     </div>

@@ -260,8 +260,8 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Automated
 
-- [x] 2.1 Hardcoded-value scan on `src/components/observations/*.tsx`: 0 hits
-- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` pass
+- [x] 2.1 Hardcoded-value scan on `src/components/observations/*.tsx`: 0 hits — f10d475
+- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` pass — f10d475
 
 #### Manual
 
@@ -271,9 +271,9 @@ Cover the 7-state matrix on the real views, take the screenshot set, and leave t
 
 #### Automated
 
-- [ ] 3.1 Hardcoded-value scan on `src/pages/log/*.astro` and `src/components/sky-checks/SkyTally.astro`: 0 hits; `grep rounded-2xl` on the log files: 0
-- [ ] 3.2 `npm run lint`, `npx astro check`, `npm test` pass
-- [ ] 3.3 e2e: `observation-log.spec.ts`, `observation-log-management.spec.ts`, `sky-checks.spec.ts` pass against the local preview
+- [x] 3.1 Hardcoded-value scan on `src/pages/log/*.astro` and `src/components/sky-checks/SkyTally.astro`: 0 hits; `grep rounded-2xl` on the log files: 0
+- [x] 3.2 `npm run lint`, `npx astro check`, `npm test` pass
+- [x] 3.3 e2e: `observation-log.spec.ts`, `observation-log-management.spec.ts`, `sky-checks.spec.ts` pass against the local preview
 
 #### Manual
 

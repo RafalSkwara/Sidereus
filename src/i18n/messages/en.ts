@@ -868,7 +868,6 @@ export const en = {
     manualTitle: "Add an observation",
     manualIntro:
       "Pick a Messier object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
-    backToLog: "← Log",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
     saveChanges: "Save changes",
