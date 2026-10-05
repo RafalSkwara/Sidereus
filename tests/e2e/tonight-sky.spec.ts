@@ -1,6 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { STRIP_OVERLAP_PX } from "@/components/tonight/sky-band";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
@@ -54,8 +53,8 @@ function markers(page: Page, kind?: string) {
 }
 
 /**
- * Steps from the first frame until a marker of `kind` is up below the overlap behind the verdict (where nothing
- * covers it), and returns it; `null` when none is in any frame.
+ * Steps from the first frame until a marker of `kind` is up, and returns it; `null` when none is in any frame. A
+ * marker in the overlap behind the verdict counts too: the verdict passes pointer events through to the panorama.
  */
 async function findMarker(page: Page, slider: Locator, max: number, kind: string) {
   await slider.focus();
@@ -63,7 +62,7 @@ async function findMarker(page: Page, slider: Locator, max: number, kind: string
   await expect(slider).toHaveValue("0");
   for (let index = 0; index <= max; index++) {
     if (index > 0) await stepTo(page, slider, index, index - 1);
-    const found = (await markers(page, kind)).find((marker) => marker.cy >= STRIP_OVERLAP_PX + 12);
+    const found = (await markers(page, kind)).at(0);
     if (found) return found;
   }
   return null;

@@ -42,8 +42,11 @@ export interface TonightSkyView {
   initialIndex: number;
   /** The panorama's centre: south, or north for a southern-hemisphere site. */
   facing: "south" | "north";
-  /** The site's zone, for the island to format frame times with `Intl`. */
-  timeZone: string;
+  /**
+   * Each frame's time, `HH:mm` in the site's time zone, formatted on the server (`createFormatter`) as the Moon
+   * slider's are, so the browser never formats one and hydration can't disagree with it.
+   */
+  timeLabels: string[];
   /** The range's ends, `HH:mm` in the site's time zone. */
   startLabel: string;
   endLabel: string;

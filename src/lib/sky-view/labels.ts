@@ -7,10 +7,16 @@
  * A body whose rectangles all collide keeps its first one inside the bounds. With `bounds.top`, no star label sits
  * above it (the panorama's overlap behind the verdict, which shows stars only).
  *
+ * `labelRects` and `bodyLabelRects` build the candidates; `leaderLine` says when a placed body label sits far enough
+ * from its dot to need a line back to it (a body high in the overlap, its label clamped below the overlap).
+ *
  * Pure and island-safe.
  */
 
 export const MAX_STAR_LABELS = 15;
+
+/** A label's height on the strip: the caption role's line, with a little air. */
+export const LABEL_HEIGHT_PX = 14;
 
 export interface Rect {
   x: number;
@@ -83,4 +89,66 @@ export function placeLabels(
     }
   }
   return placed;
+}
+
+/** A label's candidate rectangles beside a dot at (x, y): right, left, then above and below with `withVertical`. */
+export function labelRects(x: number, y: number, width: number, gap: number, withVertical: boolean): Rect[] {
+  const middle = y - LABEL_HEIGHT_PX / 2;
+  const rects = [
+    { x: x + gap, y: middle, width, height: LABEL_HEIGHT_PX },
+    { x: x - gap - width, y: middle, width, height: LABEL_HEIGHT_PX },
+  ];
+  if (withVertical) {
+    rects.push(
+      { x: x - width / 2, y: y - gap - LABEL_HEIGHT_PX, width, height: LABEL_HEIGHT_PX },
+      { x: x - width / 2, y: y + gap, width, height: LABEL_HEIGHT_PX },
+    );
+  }
+  return rects;
+}
+
+/** The gap between a body's dot and its label. */
+const BODY_GAP_PX = 8;
+/** The gap between a high body's sideways label and the centred slot under its dot. */
+const SIDE_GAP_PX = 4;
+
+/**
+ * A body's label candidates: beside its dot as usual, then below it but never higher than `overlap` (the strip's
+ * band behind the verdict, which shows stars only). A dot inside the overlap gets only the clamped row below it:
+ * centred on the dot, then just right of that centred slot, then just left of it, so two or three high bodies in one
+ * column sit side by side instead of stacking.
+ */
+export function bodyLabelRects(x: number, y: number, width: number, overlap: number): Rect[] {
+  const belowY = Math.max(y + BODY_GAP_PX, overlap);
+  const below = { x: x - width / 2, y: belowY, width, height: LABEL_HEIGHT_PX };
+  if (y < overlap) {
+    return [
+      below,
+      { x: x + width / 2 + SIDE_GAP_PX, y: belowY, width, height: LABEL_HEIGHT_PX },
+      { x: x - width / 2 - SIDE_GAP_PX - width, y: belowY, width, height: LABEL_HEIGHT_PX },
+    ];
+  }
+  return [...labelRects(x, y, width, BODY_GAP_PX, true), below];
+}
+
+/** How far from a dot's centre its leader line starts, clear of the largest marker (the Moon's 5.5 px disc). */
+const LEADER_START_PX = 7;
+
+/**
+ * The line from a dot at (x, y) to the nearest point of its label, when the label sits more than one label height
+ * away (so the pair still reads as one); `null` when it is close enough to need none. It starts just outside the dot.
+ * Ends are rounded to 0.1 px, as the island's points are, so the server and the browser render the same attributes.
+ */
+export function leaderLine(
+  x: number,
+  y: number,
+  rect: Rect,
+): { x1: number; y1: number; x2: number; y2: number } | null {
+  const x2 = Math.min(Math.max(x, rect.x), rect.x + rect.width);
+  const y2 = Math.min(Math.max(y, rect.y), rect.y + rect.height);
+  const length = Math.hypot(x2 - x, y2 - y);
+  if (length <= LABEL_HEIGHT_PX) return null;
+  const k = LEADER_START_PX / length;
+  const tenth = (value: number) => Math.round(value * 10) / 10;
+  return { x1: tenth(x + (x2 - x) * k), y1: tenth(y + (y2 - y) * k), x2: tenth(x2), y2: tenth(y2) };
 }

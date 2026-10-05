@@ -24,7 +24,8 @@ export const STRIP_HEIGHT_PX = 208;
 /**
  * The live panorama's star field reaches this far up behind the verdict's empty lower area (`-mt-24`, 96 px), so no
  * blank sky sits between the verdict and the strip. The band's total height is unchanged: the skeleton's `h-52`
- * still matches. Altitude 0–90° spans the strip plus the overlap; the overlap holds stars only, never a label.
+ * still matches. Altitude 0–90° spans the strip plus the overlap; the overlap holds stars only, never a label. The
+ * verdict above it takes no pointer events, so a marker in the overlap stays tappable and a swipe there scrolls.
  */
 export const STRIP_OVERLAP_CLASS = "-mt-24";
 export const STRIP_OVERLAP_PX = 96;

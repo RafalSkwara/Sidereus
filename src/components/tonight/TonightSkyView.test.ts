@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 /**
  * Import guard for Tonight's live sky (interactive-sky): the island runs in the browser, so it, the sky-view maths
  * it composes and the star catalogue it draws may import only React, `@/lib/sky-view/*`, the island-safe star
- * catalogue (`stars.ts` with its JSON, `star-names.ts` with the `Locale` type), the shared `sky-band`, the message
- * catalogue, `cn` and `buttonVariants`. Never astronomy-engine, the engine barrel or an engine module,
+ * catalogue (`stars.ts` with its JSON, `star-names.ts` with the `Locale` type), the shared `sky-band` and
+ * `range-classes`, the message catalogue, `cn` and `buttonVariants`. Never astronomy-engine, the engine barrel or an engine module,
  * `@/lib/tonight/format`, or `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser).
  */
 
@@ -14,6 +14,7 @@ const SKY_VIEW_DIR = fileURLToPath(new URL("../../lib/sky-view/", import.meta.ur
 
 const SOURCES = [
   fileURLToPath(new URL("./TonightSkyView.tsx", import.meta.url)),
+  fileURLToPath(new URL("./range-classes.ts", import.meta.url)),
   ...readdirSync(SKY_VIEW_DIR)
     .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
     .map((name) => SKY_VIEW_DIR + name),
@@ -37,6 +38,7 @@ function isAllowedImport(specifier: string): boolean {
     specifier === "./bright-stars.json" ||
     specifier === "@/lib/preferences" ||
     specifier === "@/components/tonight/sky-band" ||
+    specifier === "@/components/tonight/range-classes" ||
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
     specifier === "@/components/ui/button"
@@ -49,7 +51,7 @@ describe("TonightSkyView import guard", () => {
     expect(SOURCES.some((source) => source.endsWith("rotate.ts"))).toBe(true);
   });
 
-  it("imports only React, the sky-view maths, the star catalogue, sky-band, i18n, cn and buttonVariants", () => {
+  it("imports only React, the sky-view maths, the star catalogue, sky-band, range-classes, i18n, cn and buttonVariants", () => {
     const specifiers = SOURCES.flatMap((source) => importSpecifiers(readFileSync(source, "utf8")));
     expect(specifiers).toContain("@/lib/sky-view/rotate");
     expect(specifiers).toContain("@/lib/catalogue/stars");

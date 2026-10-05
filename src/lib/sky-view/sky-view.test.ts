@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { skyMix, mixPercentages } from "@/lib/sky-view/colour";
 import { frameTime, nearestFrame } from "@/lib/sky-view/frames";
-import { placeLabels, type LabelItem } from "@/lib/sky-view/labels";
+import { bodyLabelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
 import { project, starRadius } from "@/lib/sky-view/projection";
 import { rotateToHorizon } from "@/lib/sky-view/rotate";
 
@@ -130,6 +130,36 @@ describe("placeLabels", () => {
       ["M57", 90],
       ["deneb", 120],
     ]);
+  });
+});
+
+describe("bodyLabelRects and leaderLine", () => {
+  const overlap = 96;
+  const bounds = { width: 800, height: 304, top: overlap };
+
+  it("sets two high bodies in one column side by side below the overlap, each with a leader back to its dot", () => {
+    const items: LabelItem[] = [
+      { id: "M31", kind: "body", rects: bodyLabelRects(400, 10, 30, overlap) },
+      { id: "M34", kind: "body", rects: bodyLabelRects(402, 30, 30, overlap) },
+    ];
+    const placed = placeLabels(items, bounds);
+    const m31 = placed.find((label) => label.id === "M31")?.rect;
+    const m34 = placed.find((label) => label.id === "M34")?.rect;
+    // M31 takes the centred rect clamped to the overlap's edge; M34 moves to the right of its dot instead of stacking.
+    expect(m31).toEqual({ x: 385, y: overlap, width: 30, height: 14 });
+    expect(m34).toEqual({ x: 421, y: overlap, width: 30, height: 14 });
+    // The left alternative is offered too.
+    expect(bodyLabelRects(400, 10, 30, overlap).map((rect) => rect.x)).toEqual([385, 419, 351]);
+
+    if (!m31 || !m34) throw new Error("expected both labels placed");
+    expect(leaderLine(400, 10, m31)).toEqual({ x1: 400, y1: 17, x2: 400, y2: overlap });
+    expect(leaderLine(402, 30, m34)).not.toBeNull();
+  });
+
+  it("needs no leader for a label beside its dot", () => {
+    const [beside] = bodyLabelRects(400, 200, 30, overlap);
+    expect(beside).toEqual({ x: 408, y: 193, width: 30, height: 14 });
+    expect(leaderLine(400, 200, beside)).toBeNull();
   });
 });
 

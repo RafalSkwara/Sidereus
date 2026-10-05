@@ -849,7 +849,7 @@ export function buildTonight(
         darkSpan,
         initialIndex,
         facing: site.latitudeDeg < 0 ? "north" : "south",
-        timeZone,
+        timeLabels: frames.map((frame) => formatTime(frame.time, timeZone)),
         startLabel: formatTime(range.start, timeZone),
         endLabel: formatTime(range.end, timeZone),
         bodies: [...objectBodies, ...planetBodies, moonBody],

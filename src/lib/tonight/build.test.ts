@@ -35,9 +35,13 @@ import {
 import { logHref } from "./load";
 import { tonightDateForSite } from "./tonight-date";
 
-/** Lets a test make the planet ranking or the Moon throw; `false` (the default) leaves the engine untouched. */
+/**
+ * Lets a test make the planet ranking, the Moon or the sky view's frames throw; `false` (the default) leaves the
+ * engine untouched.
+ */
 const planetRanking = vi.hoisted(() => ({ throws: false }));
 const moonTargeting = vi.hoisted(() => ({ throws: false }));
+const skyFraming = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -55,12 +59,19 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.moonTarget(...args);
     },
+    skyFrames: (...args: Parameters<typeof actual.skyFrames>) => {
+      if (skyFraming.throws) {
+        throw new Error("sky frames failed");
+      }
+      return actual.skyFrames(...args);
+    },
   };
 });
 
 afterEach(() => {
   planetRanking.throws = false;
   moonTargeting.throws = false;
+  skyFraming.throws = false;
 });
 
 const WARSAW: SiteRecord = {
@@ -1336,7 +1347,11 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     expect(sky.rotations).toHaveLength(sky.frameCount * 9);
     expect(sky.sunAltDeg).toHaveLength(sky.frameCount);
     expect(sky.facing).toBe("south");
-    expect(sky.timeZone).toBe("Europe/Warsaw");
+    // Every frame's time, formatted on the server like the range's ends, so the island never formats one.
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
+    expect(sky.timeLabels.every((label) => /^\d{2}:\d{2}$/.test(label))).toBe(true);
+    expect(sky.timeLabels[0]).toBe(sky.startLabel);
+    expect(sky.timeLabels.at(-1)).toBe(sky.endLabel);
     expect(sky.startLabel).toMatch(/^\d{2}:\d{2}$/);
     for (const body of sky.bodies) {
       expect(body.track).toHaveLength(sky.frameCount * 2);
@@ -1414,6 +1429,34 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     const now = new Date("2026-12-21T12:00:00Z");
     const sky = skyViewOf(build({ forecast: result(uniformForecast("2026-12-21T00:00:00Z", 5), false, now), now }));
     expect(sky.bodies.some((body) => body.kind === "object")).toBe(true);
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
     expect(JSON.stringify(sky).length).toBeLessThan(30_000);
+  });
+
+  it("covers the whole observing night when the Sun doesn't set (Tromsø at midsummer)", () => {
+    const night = observingNight("2026-06-21", TROMSO_SITE.timeZone);
+    const { sunset, sunrise } = sunEvents(toEngineSite(TROMSO_SITE), night);
+    expect(sunset === null || sunrise === null).toBe(true);
+    const sky = skyViewOf(
+      build({
+        site: TROMSO_SITE,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T10:00:00Z"),
+      }),
+    );
+    expect(sky.startMs).toBe(night.start.getTime());
+    expect(sky.endMs).toBe(night.end.getTime());
+    expect(sky.darkSpan).toBeNull();
+    expect(sky.timeLabels).toHaveLength(sky.frameCount);
+    expect(sky.rotations).toHaveLength(sky.frameCount * 9);
+  });
+
+  it("drops only the sky view when building it fails", () => {
+    const intact = build();
+    skyFraming.throws = true;
+    const view = build();
+    expect(view.skyView).toBeNull();
+    expect(intact.skyView).not.toBeNull();
+    expect(view).toEqual({ ...intact, skyView: null });
   });
 });

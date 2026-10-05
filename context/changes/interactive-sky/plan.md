@@ -426,6 +426,31 @@ The user asked for modest tests: pin only what screenshots can't show.
 - **Per slider step.** About 925 3×3 multiplications, which is trivial. One SVG re-render per input event, with no per-star React components: one `<path>` of circles, or a keyed list, whichever measures faster at 390 px.
 - **Server.** Three track calls plus `skyFrames`, on the dashboard only (`withSkyView`), within Workers Paid limits.
 
+## As built (2026-10-05)
+
+Where the shipped code differs from the phases above (the phases and Progress are left as written):
+
+- **Star names.** The catalogue names 41 stars: the 40 brightest named ones plus Polaris (`bright-stars.meta.json`, `namedCount: 41`; `LICENSE-DATA.md` says so).
+- **Body labels.** A body's visible `label` is the Messier number ("M13") or the planet's or the Moon's name; `name` ("M13 · Hercules Cluster") is only the marker's accessible name.
+- **Types.** `TonightSkyView` and `TonightSkyBody` live in `src/lib/sky-view/view.ts` (island-safe, re-exported by `build.ts`). Since the review the view carries `timeLabels` (each frame's `HH:mm` from the server's `createFormatter`) instead of `timeZone`.
+- **Strip.** The strip is 208 px (`h-52`) plus a 96 px overlap behind the verdict's empty lower area (`-mt-24`); altitude 0–90° spans both, and the overlap shows stars only.
+- **Import guard.** Besides the planned list, `TonightSkyView.test.ts` allows `./bright-stars.json` (read by `stars.ts`) and `@/lib/preferences` (the `Locale` type in `star-names.ts`), and since the review `@/components/tonight/range-classes`.
+- **Type role.** A new `text-caption` role (12 px) for the star and body labels, with a specimen on `/design`.
+- **telescope-selector e2e.** Its "site · telescope" gear-link locator now skips the sky's markers (`main a:not([data-sky-body])`), whose names also contain "·".
+- **Evidence for 3.6.** The panorama was checked against Skyfield and the real sky, plus the engine comparison test, not against Stellarium.
+- **Evidence for 4.4.** Checked through the accessible names Playwright reads (slider `aria-valuetext`, marker `aria-label`, EN and PL); a real VoiceOver pass stays with the user after merge.
+- **Review fixes** (`reviews/impl-review.md`, F1–F10):
+  - F1: the verdict over the panorama takes no pointer events, so markers and swipes in the overlap work; the e2e accepts markers there.
+  - F2: `labelRects` / `bodyLabelRects` moved to `labels.ts`; a body in the overlap gets centred, right and left candidates below it, and a 1 px muted leader line when its label sits more than one label height away (`leaderLine`), with a unit test.
+  - F3: server-formatted `timeLabels` replace the browser's `Intl` formatter; the strip is measured in `useLayoutEffect`.
+  - F4: the NaN-safe `!(altDeg > 0)` guard for stars and bodies.
+  - F5: the range is hidden with a single frame; both sliders share `src/components/tonight/range-classes.ts`.
+  - F6: the red dusk contrast row checks `heading` too (it passes at 4.5:1, no token change).
+  - F7: the focus ring's centre is clamped inside the strip.
+  - F8: these docs, the CLAUDE.md token line, the `/design` caption specimen and unique verdict heading ids there (`VerdictCard`'s `headingId`).
+  - F9: one hash-scroll helper, `src/lib/tonight/hash-scroll.ts`, for the Targets and Planets pages.
+  - F10: build tests for the polar fallback (Tromsø at midsummer covers the observing night) and for a failing sky build that drops only `skyView`.
+
 ## References
 
 - Roadmap: `context/foundation/roadmap.md` (S-11, Interactive sky, 2026-10-04)

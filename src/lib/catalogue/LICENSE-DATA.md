@@ -39,5 +39,5 @@ HYG is licensed under the
 Changes made to the source data are listed under `filter` and `normalisations` in
 `bright-stars.meta.json`. In short: the database is filtered to stars of magnitude 4.5 or brighter
 (the Sun excluded), right ascension and declination are converted to J2000 unit vectors, proper names
-are kept only for the 40 brightest named stars, and every other column is dropped. Polish star names
-are not part of the derived files; they live in `star-names.ts`.
+are kept only for the 40 brightest named stars plus Polaris (41 names), and every other column is
+dropped. Polish star names are not part of the derived files; they live in `star-names.ts`.

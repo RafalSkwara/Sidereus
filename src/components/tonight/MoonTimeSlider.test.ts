@@ -5,13 +5,15 @@ import { describe, expect, it } from "vitest";
 /**
  * Import guard for the Moon card's time slider (moonlight-and-the-verdict): it runs in the browser, so it may import
  * only React, the browser-safe Moon-disc drawing (`@/lib/moon-disc/*`), the engine's island-safe `parameters`, the
- * message catalogue, `cn`, the shared `buttonVariants` (for "Now", tonight-nightfall) and its extracted `MoonDisc`,
- * held to the same list. Never astronomy-engine, the engine barrel or another engine module, which would pull
+ * message catalogue, `cn`, the shared `buttonVariants` (for "Now", tonight-nightfall), its extracted `MoonDisc` and
+ * the range styling it shares with the live sky (`range-classes.ts`, interactive-sky), both held to the same list. Never astronomy-engine, the engine barrel or another engine module, which would pull
  * the sky maths into the client bundle.
  */
 
-/** The slider and the disc it hydrates (extracted for the Moon summary band, tonight-nightfall). */
-const SOURCES = ["./MoonTimeSlider.tsx", "./MoonDisc.tsx"].map((path) => fileURLToPath(new URL(path, import.meta.url)));
+/** The slider, the disc it hydrates (extracted for the Moon summary band, tonight-nightfall) and its range styling. */
+const SOURCES = ["./MoonTimeSlider.tsx", "./MoonDisc.tsx", "./range-classes.ts"].map((path) =>
+  fileURLToPath(new URL(path, import.meta.url)),
+);
 
 /** Module specifiers of every static import, re-export and dynamic import in `source`. */
 function importSpecifiers(source: string): string[] {
@@ -27,12 +29,13 @@ function isAllowedImport(specifier: string): boolean {
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
     specifier === "@/components/ui/button" ||
-    specifier === "@/components/tonight/MoonDisc"
+    specifier === "@/components/tonight/MoonDisc" ||
+    specifier === "@/components/tonight/range-classes"
   );
 }
 
 describe("MoonTimeSlider import guard", () => {
-  it("imports only React, the Moon-disc drawing, engine parameters, i18n, cn, buttonVariants and MoonDisc", () => {
+  it("imports only React, the Moon-disc drawing, engine parameters, i18n, cn, buttonVariants, MoonDisc and range-classes", () => {
     const specifiers = SOURCES.flatMap((source) => importSpecifiers(readFileSync(source, "utf8")));
     expect(specifiers).toContain("@/lib/moon-disc/geometry");
     expect(specifiers.filter((specifier) => !isAllowedImport(specifier))).toEqual([]);

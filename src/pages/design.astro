@@ -570,6 +570,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class="font-display text-display font-semibold break-words text-heading">text-display · My gear</p>
             <p class="font-display text-title font-semibold text-heading">text-title · M31 · Andromeda Galaxy</p>
             <p class="text-label font-semibold text-heading">text-label · Field label, button, row meta</p>
+            <p class="text-caption font-semibold text-heading">
+              text-caption · M31 · Jupiter · <span class="font-normal text-muted-foreground">Vega, Deneb</span> (the
+              live sky's body and star labels)
+            </p>
             <p class="text-body text-foreground">
               text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
               <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
@@ -1135,7 +1139,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               TonightSkyView (the live sky)
             </h3>
             <div class="flex flex-col gap-6">
-              {panoramas.map((panorama) => (
+              {panoramas.map((panorama, i) => (
                 <div class:list={cell}>
                   <p class:list={stateLabel}>{panorama.label}</p>
                   <div class="overflow-hidden rounded-lg">
@@ -1149,6 +1153,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         timeZone={panoramaView.timeZone}
                         forecastStatus={panoramaView.forecastStatus}
                         explanation={panoramaView.explanation}
+                        headingId={`verdict-heading-panorama-${String(i)}`}
                       />
                     </TonightSkyView>
                   </div>

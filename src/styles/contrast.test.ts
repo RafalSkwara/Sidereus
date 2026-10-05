@@ -79,6 +79,8 @@ const CHECKS: Check[] = [
   { themes: ["red"], fg: ["foreground", "heading"], bg: ["background", "surface"], floor: 4.5 },
   { themes: ["red"], fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: ["red"], fg: ["muted-foreground", "no-go"], bg: ["background", "surface"], floor: 3 },
+  // The verdict and the body labels are heading ink over the red dusk too, held to heading's red floor.
+  { themes: ["red"], fg: ["heading"], bg: DUSK, floor: 4.5 },
   { themes: ["red"], fg: ["muted-foreground"], bg: DUSK, floor: 3 },
 ];
 

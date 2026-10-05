@@ -1,9 +1,9 @@
-import type { Locale } from "@/lib/preferences";
 import type { TonightSkyView } from "@/lib/sky-view/view";
 
 /**
  * The interactive sky's frame times (interactive-sky): frame `i` is at `startMs + i × stepMs`, capped at `endMs`
- * (the last frame can be less than a step after the one before it).
+ * (the last frame can be less than a step after the one before it). The times shown are the server's
+ * (`TonightSkyView.timeLabels`), so the browser never formats one; these only find the frame for "Now".
  *
  * Pure and island-safe.
  */
@@ -29,17 +29,4 @@ export function nearestFrame(view: FrameTiming, nowMs: number): number {
     }
   }
   return best;
-}
-
-const LOCALE_TAGS: Record<Locale, string> = { en: "en-GB", pl: "pl-PL" };
-
-/** `HH:mm` in `timeZone`, 24-hour, as Tonight's formatter writes times. */
-export function timeFormatter(locale: Locale, timeZone: string): (ms: number) => string {
-  const format = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-  return (ms) => format.format(new Date(ms));
 }
