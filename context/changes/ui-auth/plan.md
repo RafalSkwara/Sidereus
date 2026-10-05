@@ -166,15 +166,15 @@ C4, the sign-up hint size, the 7-state matrix across the applicable states, the 
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm test` passes (includes no-hardcoded-colors, red-theme, contrast and i18n parity)
-- [x] 1.4 Hardcoded-value scan on the auth files returns 0 hits
+- [x] 1.1 `npm run lint` passes — ca96ebb
+- [x] 1.2 `npx astro check` passes — ca96ebb
+- [x] 1.3 `npm test` passes (includes no-hardcoded-colors, red-theme, contrast and i18n parity) — ca96ebb
+- [x] 1.4 Hardcoded-value scan on the auth files returns 0 hits — ca96ebb
 
 #### Manual
 
-- [x] 1.5 Sign-in and sign-up idle at 390 px and 1280 in dark/light/red, EN and PL, read as Nightfall, with no horizontal overflow
-- [x] 1.6 `?next=` shows the info notice; confirm-email shows a token-coloured icon in red mode
+- [x] 1.5 Sign-in and sign-up idle at 390 px and 1280 in dark/light/red, EN and PL, read as Nightfall, with no horizontal overflow — ca96ebb
+- [x] 1.6 `?next=` shows the info notice; confirm-email shows a token-coloured icon in red mode — ca96ebb
 
 Evidence (scratchpad `…/scratchpad/ui-auth-after/`, not committed): 1.5 `sheet-signin-390-0.png`, `sheet-signup-390-1.png`, `sheet-signin-1280-0.png`, `sheet-signup-1280-0.png` (the script reports no horizontal overflow on any shot); 1.6 `sheet-signin-390-1.png` (the `next` rows) and `sheet-confirm-390-0.png`. Baseline before the change: `…/scratchpad/before/sheet-signin-390-0.png`.
 
@@ -182,12 +182,14 @@ Evidence (scratchpad `…/scratchpad/ui-auth-after/`, not committed): 1.5 `sheet
 
 #### Automated
 
-- [ ] 2.1 `npm run lint`, `npx astro check`, `npm test` pass
-- [ ] 2.2 Auth e2e specs pass against the local preview
-- [ ] 2.3 `npm run smoke` passes against the local preview
+- [x] 2.1 `npm run lint`, `npx astro check`, `npm test` pass
+- [x] 2.2 Auth e2e specs pass against the local preview
+- [x] 2.3 `npm run smoke` passes against the local preview
 
 #### Manual
 
-- [ ] 2.4 State matrix screenshotted in dark/light/red at 390, plus dark at 1280
-- [ ] 2.5 Focus visible on every control in all three themes; no Polish overflow at 390 px
-- [ ] 2.6 The eye button's hit area is 44 px
+- [x] 2.4 State matrix screenshotted in dark/light/red at 390, plus dark at 1280
+- [x] 2.5 Focus visible on every control in all three themes; no Polish overflow at 390 px
+- [x] 2.6 The eye button's hit area is 44 px
+
+Evidence (scratchpad `…/scratchpad/ui-auth-after/`, 116 shots, not committed): 2.1 lint 0 errors (2 pre-existing warnings in `determinism.test.ts`), astro check 0/0/0, vitest 63 files / 648 passed / 6 todo; 2.2 the full e2e suite against the preview on 4322 with the fixture on 4401: 23 passed, 2 skipped (the known bright-Moon skip and one other pre-existing skip), including `sign-in-continue` and every spec that signs up through `helpers.ts`; 2.3 smoke "All smoke steps passed"; 2.4 `sheet-signin-390-{0,1,2}.png`, `sheet-signup-390-{0,1,2}.png`, `sheet-signin-1280-0..`, `sheet-signup-1280-0..` (idle, next, server error, client validation, focus on the eye button and the switch link, submitting/disabled, sign-up hint, long PL subtitle); 2.5 the `focus-toggle` and `focus-link` shots show the `--ring` outline in dark, light and red, and the script reports no horizontal overflow on any 390 px shot; 2.6 measured at 390 px: "Show password" 44×44 on both pages, "Sign up" 60×44, "Sign in" 55×44 (`scratchpad/ui-auth-measure.mjs`). Hover is token-driven (`hover:underline`, `hover:text-heading`) and not screenshotted; empty is N/A (no data); loading is the submitting state.
