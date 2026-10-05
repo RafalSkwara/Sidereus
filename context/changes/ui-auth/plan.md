@@ -182,14 +182,14 @@ Evidence (scratchpad `…/scratchpad/ui-auth-after/`, not committed): 1.5 `sheet
 
 #### Automated
 
-- [x] 2.1 `npm run lint`, `npx astro check`, `npm test` pass
-- [x] 2.2 Auth e2e specs pass against the local preview
-- [x] 2.3 `npm run smoke` passes against the local preview
+- [x] 2.1 `npm run lint`, `npx astro check`, `npm test` pass — dc055ff
+- [x] 2.2 Auth e2e specs pass against the local preview — dc055ff
+- [x] 2.3 `npm run smoke` passes against the local preview — dc055ff
 
 #### Manual
 
-- [x] 2.4 State matrix screenshotted in dark/light/red at 390, plus dark at 1280
-- [x] 2.5 Focus visible on every control in all three themes; no Polish overflow at 390 px
-- [x] 2.6 The eye button's hit area is 44 px
+- [x] 2.4 State matrix screenshotted in dark/light/red at 390, plus dark at 1280 — dc055ff
+- [x] 2.5 Focus visible on every control in all three themes; no Polish overflow at 390 px — dc055ff
+- [x] 2.6 The eye button's hit area is 44 px — dc055ff
 
 Evidence (scratchpad `…/scratchpad/ui-auth-after/`, 116 shots, not committed): 2.1 lint 0 errors (2 pre-existing warnings in `determinism.test.ts`), astro check 0/0/0, vitest 63 files / 648 passed / 6 todo; 2.2 the full e2e suite against the preview on 4322 with the fixture on 4401: 23 passed, 2 skipped (the known bright-Moon skip and one other pre-existing skip), including `sign-in-continue` and every spec that signs up through `helpers.ts`; 2.3 smoke "All smoke steps passed"; 2.4 `sheet-signin-390-{0,1,2}.png`, `sheet-signup-390-{0,1,2}.png`, `sheet-signin-1280-0..`, `sheet-signup-1280-0..` (idle, next, server error, client validation, focus on the eye button and the switch link, submitting/disabled, sign-up hint, long PL subtitle); 2.5 the `focus-toggle` and `focus-link` shots show the `--ring` outline in dark, light and red, and the script reports no horizontal overflow on any 390 px shot; 2.6 measured at 390 px: "Show password" 44×44 on both pages, "Sign up" 60×44, "Sign in" 55×44 (`scratchpad/ui-auth-measure.mjs`). Hover is token-driven (`hover:underline`, `hover:text-heading`) and not screenshotted; empty is N/A (no data); loading is the submitting state.

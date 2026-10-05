@@ -1,7 +1,7 @@
 ---
 change_id: ui-auth
 title: Auth views in Nightfall (/10x-ui pass on sign-in and sign-up)
-status: implementing
+status: implemented
 created: 2026-10-05
 updated: 2026-10-05
 archived_at: null
