@@ -37,7 +37,8 @@ import { cn } from "@/lib/utils";
  * takes no pointer events (it has nothing interactive), so taps and swipes over the overlap reach the panorama. The
  * overlap holds stars only: no star label, and a body there has its label below the overlap, beside the column if
  * another body's label is there, with a leader line back to the dot when the label sits far from it.
- * Stars are one path (hidden in the light theme, `hidden dark:block`); a marker is an SVG link named for the body, its
+ * Stars are one path, shown under a night sky (`hidden night:block`): the band is a `night-sky` scope, so in the light
+ * theme it stays a navy night with its stars (ui-sky-light); a marker is an SVG link named for the body, its
  * altitude and direction at the slider's time, with a 24 px hit area and a `--ring` focus circle.
  * Along the field's top edge a compass row names the 16 points (compass-labels), international in every locale
  * (`@/lib/compass`), cardinals stronger. It sits just under the verdict's text, wherever that ends: the island measures
@@ -268,7 +269,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
 
   return (
     <div>
-      <div className="dusk-band relative overflow-hidden" style={bandStyle} data-sky-band>
+      <div className="dusk-band night-sky relative overflow-hidden" style={bandStyle} data-sky-band>
         {/*
          * Above the strip's overlap, and transparent to the pointer: the verdict has no links or buttons, so taps and
          * swipes anywhere over the overlap reach the panorama's markers and scroll. A link in the verdict would need
@@ -316,7 +317,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
                 </text>
               ))}
             </g>
-            <g className="hidden dark:block" aria-hidden="true">
+            <g className="night:block hidden" aria-hidden="true">
               <path d={stars.path} className="fill-star" />
               {stars.named.map((star) => {
                 const rect = labels.get(star.id);

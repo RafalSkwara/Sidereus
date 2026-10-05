@@ -155,7 +155,18 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
         <SlidersIcon />
       </button>
 
-      <div id={SETTINGS_ID} popover="auto" role="dialog" aria-label={m.nav.settings} className={panelClass}>
+      {/*
+       * The panel carries the page theme itself (ui-sky-light): on Tonight the Topbar sits in the `night-sky` scope, and
+       * the settings sheet should still look like the rest of the page, not like the navy sky behind it.
+       */}
+      <div
+        id={SETTINGS_ID}
+        popover="auto"
+        role="dialog"
+        aria-label={m.nav.settings}
+        data-theme={theme}
+        className={panelClass}
+      >
         <div className="bg-border mx-auto mb-4 h-1 w-10 rounded-full sm:hidden" aria-hidden="true" />
         {/* The phone sheet clears the home indicator (`pb-safe-area`, global.css). */}
         <div className="pb-safe-area grid gap-4 sm:pb-0">

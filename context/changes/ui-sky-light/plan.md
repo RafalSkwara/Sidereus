@@ -279,22 +279,22 @@ The kitchen sink, the screenshot evidence and the agent rule.
 
 #### Automated
 
-- [x] 1.1 `npm test` passes, including contrast, red-theme and no-hardcoded-colors
-- [x] 1.2 `npm run lint` and `npx astro check` report 0 errors
+- [x] 1.1 `npm test` passes, including contrast, red-theme and no-hardcoded-colors — 1278f6a
+- [x] 1.2 `npm run lint` and `npx astro check` report 0 errors — 1278f6a
 
 ### Phase 2: Apply the night sky to Tonight
 
 #### Automated
 
-- [ ] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [ ] 2.2 `tests/e2e/tonight-sky.spec.ts` and `red-night-mode.spec.ts` pass against the local preview
+- [x] 2.1 `npm test`, `npm run lint` and `npx astro check` pass
+- [x] 2.2 `tests/e2e/tonight-sky.spec.ts` and `red-night-mode.spec.ts` pass against the local preview
 
 #### Manual
 
-- [ ] 2.3 Light theme `/tonight` at 390 and 1280: a navy band from the Topbar to the silhouette, stars and names visible, verdict, markers and compass legible, and the slider row on the light ground
-- [ ] 2.4 Light theme `/tonight/moon` (page sky plus skeleton): navy, back link legible with visible focus
-- [ ] 2.5 Light theme: the settings popover opens on a Tonight page with the light panel
-- [ ] 2.6 Dark and red `/tonight` look unchanged; the light `/gear` and `/` headers stay pale
+- [x] 2.3 Light theme `/tonight` at 390 and 1280: a navy band from the Topbar to the silhouette, stars and names visible, verdict, markers and compass legible, and the slider row on the light ground
+- [x] 2.4 Light theme `/tonight/moon` (page sky plus skeleton): navy, back link legible with visible focus
+- [x] 2.5 Light theme: the settings popover opens on a Tonight page with the light panel
+- [x] 2.6 Dark and red `/tonight` look unchanged; the light `/gear` and `/` headers stay pale
 
 ### Phase 3: Pan chevrons
 

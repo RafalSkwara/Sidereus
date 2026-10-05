@@ -9,7 +9,8 @@ interface Props {
   /**
    * Sky-flow mode (tonight-nightfall): for a page whose sky depends on island data. The Topbar sits on a zenith strip
    * with no rule and `<main>` is full width with no top padding, so the sky band the page draws first (TonightSky)
-   * continues the strip as one sky. The page then puts its own content in the `max-w-3xl px-4` container.
+   * continues the strip as one sky. The page then puts its own content in the `max-w-3xl px-4` container. The strip
+   * sits in the `night-sky` scope (ui-sky-light), so in the light theme it stays the navy night the band continues.
    */
   skyFlow?: boolean;
 }
@@ -24,7 +25,7 @@ const skyHeader = Astro.slots.has("header");
 <Layout title={m.common.pageTitle({ title })}>
   <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
     {skyFlow ? (
-      <div class="bg-zenith">
+      <div class="night-sky bg-zenith">
         <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
           <Topbar />
         </div>
