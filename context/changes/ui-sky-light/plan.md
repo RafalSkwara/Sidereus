@@ -300,23 +300,23 @@ The kitchen sink, the screenshot evidence and the agent rule.
 
 #### Automated
 
-- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass, including i18n parity
-- [x] 3.2 `tests/e2e/tonight-sky.spec.ts` passes, including the new check
+- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass, including i18n parity — d03e463
+- [x] 3.2 `tests/e2e/tonight-sky.spec.ts` passes, including the new check — d03e463
 
 #### Manual
 
-- [x] 3.3 At 390 and 1280 in all three themes, the chevrons are visible, don't hide a label at load, and pan
-- [x] 3.4 Each chevron hides at its end
-- [x] 3.5 Keyboard: tab reaches both, Enter pans, and the focus ring is visible
+- [x] 3.3 At 390 and 1280 in all three themes, the chevrons are visible, don't hide a label at load, and pan — d03e463
+- [x] 3.4 Each chevron hides at its end — d03e463
+- [x] 3.5 Keyboard: tab reaches both, Enter pans, and the focus ring is visible — d03e463
 
 ### Phase 4: States, gate and rule
 
 #### Automated
 
-- [ ] 4.1 The full unit suite and the Tonight e2e specs pass
-- [ ] 4.2 The hardcoded-value scan on the touched view files has 0 new hits
+- [x] 4.1 The full unit suite and the Tonight e2e specs pass
+- [x] 4.2 The hardcoded-value scan on the touched view files has 0 new hits
 
 #### Manual
 
-- [ ] 4.3 Screenshots: EN/PL × dark/light/red × 390/1280 for `/tonight` and `/tonight/moon`, plus chevron hover, focus and end states, and the light-theme popover
-- [ ] 4.4 7-state matrix for the chevron: default, hover and focus shown; disabled shown as the hidden end state; error and empty N/A (no data dependency); loading is the skeleton's static navy sky
+- [x] 4.3 Screenshots: EN/PL × dark/light/red × 390/1280 for `/tonight` and `/tonight/moon`, plus chevron hover, focus and end states, and the light-theme popover
+- [x] 4.4 7-state matrix for the chevron: default, hover and focus shown; disabled shown as the hidden end state; error and empty N/A (no data dependency); loading is the skeleton's static navy sky
