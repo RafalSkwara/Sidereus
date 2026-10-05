@@ -777,7 +777,6 @@ export const pl = {
     manualTitle: "Dodaj obserwację",
     manualIntro:
       "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
-    backToLog: "← Dziennik",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
     saveChanges: "Zapisz zmiany",
@@ -810,6 +809,7 @@ export const pl = {
       updated: (p) => `Zaktualizowano obserwację: ${p.object}.`,
       deleted: (p) => `Usunięto z dziennika obserwację: ${p.object}.`,
     },
+    deleteHeading: "Usuwanie",
   },
 
   skyChecks: {
@@ -840,6 +840,7 @@ export const pl = {
       notAnswered: "Jeszcze bez odpowiedzi",
       answers: "Co było widać",
       answersFor: (p) => `Co było widać w nocy ${p.night} (${p.site})`,
+      nightsHeading: "Noce",
     },
     tally: {
       title: "Jak często prognoza się sprawdzała",

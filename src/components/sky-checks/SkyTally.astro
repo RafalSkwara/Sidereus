@@ -1,6 +1,8 @@
 ---
 // The verdict check's tally (verdict-check): how many answered nights matched what Tonight said, which way the
-// misses went (too optimistic is the costlier one), and the same per word the headline used.
+// misses went (too optimistic is the costlier one), and the same per word the headline used. A Nightfall band
+// (ui-log); `data-sky-tally` marks its content for e2e.
+import Band from "@/components/ui/Band.astro";
 import { getMessages, plural } from "@/i18n";
 import { SKY_ANSWERS, type Tally } from "@/lib/sky-checks/claim";
 import { answerLabel } from "@/lib/sky-checks/labels";
@@ -16,46 +18,41 @@ const t = m.skyChecks.tally;
 const words = SKY_ANSWERS.filter((claim) => tally.byClaim[claim].answered > 0);
 ---
 
-<section
-  aria-labelledby="sky-tally-heading"
-  class="rounded-2xl border border-border bg-surface p-4 sm:p-6"
-  data-sky-tally
->
-  <h2 id="sky-tally-heading" class="mb-2 font-display text-xl font-semibold text-heading">
-    {t.title}
-  </h2>
-  {tally.answered === 0 ? (
-    <p class="text-sm text-foreground">{t.none}</p>
-  ) : (
-    <>
-      <p class="font-display text-3xl font-semibold text-heading">
-        {plural(
-          locale,
-          tally.answered,
-          t.matched,
-        )({
-          matched: String(tally.matched),
-          answered: String(tally.answered),
-        })}
-      </p>
-      <p class="mt-1 text-sm text-foreground">
-        {t.misses({ optimistic: String(tally.optimistic), pessimistic: String(tally.pessimistic) })}
-      </p>
-      <h3 class="mt-4 mb-1 text-xs font-semibold tracking-[0.18em] text-primary uppercase">{t.byWord}</h3>
-      <dl class="grid max-w-xs grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
-        {words.map((claim) => (
-          <>
-            <dt class="text-foreground">{answerLabel(m, claim)}</dt>
-            <dd class="text-right font-mono text-heading">
-              {t.word({
-                matched: String(tally.byClaim[claim].matched),
-                answered: String(tally.byClaim[claim].answered),
-              })}
-            </dd>
-          </>
-        ))}
-      </dl>
-      <p class="mt-3 text-xs text-muted-foreground">{t.hint}</p>
-    </>
-  )}
-</section>
+<Band headingId="sky-tally-heading" heading={t.title}>
+  <div data-sky-tally>
+    {tally.answered === 0 ? (
+      <p class="text-body text-foreground">{t.none}</p>
+    ) : (
+      <>
+        <p class="text-body font-semibold text-heading">
+          {plural(
+            locale,
+            tally.answered,
+            t.matched,
+          )({
+            matched: String(tally.matched),
+            answered: String(tally.answered),
+          })}
+        </p>
+        <p class="mt-1 text-body text-foreground">
+          {t.misses({ optimistic: String(tally.optimistic), pessimistic: String(tally.pessimistic) })}
+        </p>
+        <h3 class="mt-6 mb-2 text-label font-semibold text-heading">{t.byWord}</h3>
+        <dl class="grid max-w-xs grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-body">
+          {words.map((claim) => (
+            <>
+              <dt class="text-foreground">{answerLabel(m, claim)}</dt>
+              <dd class="text-right font-mono text-heading">
+                {t.word({
+                  matched: String(tally.byClaim[claim].matched),
+                  answered: String(tally.byClaim[claim].answered),
+                })}
+              </dd>
+            </>
+          ))}
+        </dl>
+        <p class="mt-4 text-label text-muted-foreground">{t.hint}</p>
+      </>
+    )}
+  </div>
+</Band>

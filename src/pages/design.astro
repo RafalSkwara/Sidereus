@@ -18,6 +18,7 @@ import PageHeader from "@/components/ui/PageHeader.astro";
 import Band from "@/components/ui/Band.astro";
 import BackLink from "@/components/ui/BackLink.astro";
 import Notice from "@/components/ui/Notice.astro";
+import Pager from "@/components/ui/Pager.astro";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
@@ -837,6 +838,67 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 </div>
               </div>
               <p class:list={notApplicable}>disabled — N/A (a link is never disabled) · error, empty, loading — N/A</p>
+            </section>
+
+            <!-- Pager (ui-log) -->
+            <section class:list={block} aria-labelledby="c-pager">
+              <h3 id="c-pager" class:list={blockTitle}>
+                Pager
+              </h3>
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>default · live · newer and older</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderHref="#c-pager"
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · first page (older only)</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerLabel={m.log.list.newer}
+                    olderHref="#c-pager"
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · last page (newer only)</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover · specimen</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                    linkClass="underline"
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <Pager
+                    label={m.log.list.pages}
+                    newerHref="#c-pager"
+                    newerLabel={m.log.list.newer}
+                    olderLabel={m.log.list.older}
+                    linkClass={focusRing}
+                  />
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                one page — renders nothing · disabled — N/A (a missing side is left empty, never a dead link) · error,
+                empty, loading — N/A (the list owns them)
+              </p>
             </section>
 
             <!-- Notice -->

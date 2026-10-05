@@ -865,7 +865,6 @@ export const en = {
     manualTitle: "Add an observation",
     manualIntro:
       "Pick a Messier object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
-    backToLog: "← Log",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
     saveChanges: "Save changes",
@@ -898,6 +897,7 @@ export const en = {
       updated: (p: { object: string }) => `${p.object} updated.`,
       deleted: (p: { object: string }) => `${p.object} deleted from the log.`,
     },
+    deleteHeading: "Delete",
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
@@ -928,6 +928,7 @@ export const en = {
       notAnswered: "Not answered yet",
       answers: "What you saw",
       answersFor: (p: { night: string; site: string }) => `What you saw on ${p.night} at ${p.site}`,
+      nightsHeading: "Nights",
     },
     tally: {
       title: "How often the forecast was right",

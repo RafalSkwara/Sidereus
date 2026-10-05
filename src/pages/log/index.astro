@@ -1,14 +1,20 @@
 ---
+import { Plus } from "lucide-react";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
+import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import Pager from "@/components/ui/Pager.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
 import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
+import { cn } from "@/lib/utils";
 
 // The observation log (roadmap S-07, FR-017 / FR-021): the user's entries grouped by observing night, newest first,
 // one page at a time. Writes elsewhere come back here with `?saved=`, `?updated=` or `?deleted=<target key>` (a bare
@@ -50,36 +56,34 @@ const format = createFormatter(locale);
 const RATING_DOTS = [1, 2, 3, 4, 5] as const;
 const gearName = (name: string, id: string | null) => (id ? name : t.deletedGear({ name }));
 const pageHref = (n: number) => (n === 1 ? LOG_LIST : `${LOG_LIST}?page=${n}`);
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90";
-const pageLink =
-  "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-primary-strong transition-colors hover:text-heading";
+// One primary action per screen (Nightfall): "Add entry" while the page lists entries. With nothing listed the
+// body's own way on is the primary (Tonight's "Mark observed" is how most entries arrive), and "Add entry" turns
+// outline.
+const nothingListed = !loadError && nights.length === 0;
+const rowLink =
+  "-mx-2 flex min-h-11 items-center justify-between gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
 
 <GearShell title={t.title}>
+  <PageHeader slot="header" title={t.title} subtitle={t.intro}>
+    {supabase && (
+      <Fragment slot="actions">
+        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "ghost" })}>
+          {t.skyChecks}
+        </a>
+        <a href="/log/new?from=log" class:list={buttonVariants({ variant: nothingListed ? "outline" : "default" })}>
+          <Plus aria-hidden="true" />
+          {t.add}
+        </a>
+      </Fragment>
+    )}
+  </PageHeader>
+
   {notice && (
     <div class="mb-6">
       <Notice tone="success">{notice}</Notice>
     </div>
   )}
-
-  <div class="mb-2 flex flex-wrap items-end justify-between gap-3">
-    <h1 class="font-display text-4xl font-semibold text-heading sm:text-5xl">{t.title}</h1>
-    {supabase && (
-      <div class="flex flex-wrap gap-3">
-        <a
-          href={SKY_CHECKS_PAGE}
-          class="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-        >
-          {t.skyChecks}
-        </a>
-        <a href={`/log/new?from=log`} class:list={[primaryLink]}>
-          {t.add}
-        </a>
-      </div>
-    )}
-  </div>
-  <p class="mb-6 text-sm text-muted-foreground">{t.intro}</p>
 
   <div class="mb-6 empty:hidden">
     <ServerError message={error ? translateKey(m, error, "errors.generic") : null} />
@@ -91,50 +95,36 @@ const pageLink =
     <ServerError message={translateKey(m, loadError, "errors.generic")} />
   ) : nights.length === 0 && page > 1 ? (
     // Past the last page (a stale or edited link): the log is not empty, so say so and lead back to its start.
-    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-      <p class="mb-4 text-foreground">{t.pageEmpty}</p>
-      <a href={LOG_LIST} class:list={[primaryLink]}>
+    <div>
+      <p class="text-body text-foreground">{t.pageEmpty}</p>
+      <a href={LOG_LIST} class:list={cn(buttonVariants(), "mt-4")}>
         {t.toNewest}
       </a>
     </div>
   ) : nights.length === 0 ? (
-    <div class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-      <p class="mb-4 text-foreground">{t.empty}</p>
-      <div class="flex flex-wrap gap-3">
-        <a href="/tonight" class:list={[primaryLink]}>
-          {t.toTonight}
-        </a>
-        <a
-          href="/log/new?from=log"
-          class="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-heading transition-colors hover:bg-accent"
-        >
-          {t.add}
-        </a>
-      </div>
+    <div>
+      <p class="text-body text-foreground">{t.empty}</p>
+      <a href="/tonight" class:list={cn(buttonVariants(), "mt-4")}>
+        {t.toTonight}
+      </a>
     </div>
   ) : (
     <>
-      <div class="space-y-6">
+      <div>
         {nights.map((group, index) => (
-          <section aria-labelledby={`night-${index}`} class="rounded-2xl border border-border bg-surface p-4 sm:p-6">
-            <h2 id={`night-${index}`} class="mb-2 font-display text-xl font-semibold text-heading">
-              {format.formatNightDate(group.night)}
-            </h2>
+          <Band headingId={`night-${index}`} heading={format.formatNightDate(group.night)}>
             <ul class="divide-y divide-border">
               {group.entries.map((entry) => {
                 const { id, name: commonName } = targetLabel(entry.target, locale);
                 return (
                   <li>
-                    <a
-                      href={`${LOG_LIST}/${entry.id}`}
-                      class="-mx-2 flex items-center justify-between gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-accent"
-                    >
+                    <a href={`${LOG_LIST}/${entry.id}`} class:list={rowLink}>
                       <span class="min-w-0">
-                        <span class="block font-semibold break-words text-heading">
+                        <span class="block text-body font-semibold break-words text-heading">
                           {id}
                           {commonName && <span class="font-normal text-foreground"> · {commonName}</span>}
                         </span>
-                        <span class="mt-1 block text-sm break-words text-muted-foreground">
+                        <span class="mt-1 block text-label break-words text-muted-foreground">
                           {gearName(entry.siteName, entry.siteId)} · {gearName(entry.telescopeName, entry.telescopeId)}
                         </span>
                       </span>
@@ -150,33 +140,25 @@ const pageLink =
                           ))}
                         </span>
                         <span class="sr-only">{t.rated({ rating: String(entry.rating) })}</span>
-                        <span class="text-sm font-semibold text-primary-strong">{t.edit}</span>
+                        <span class="text-label font-semibold text-primary-strong">{t.edit}</span>
                       </span>
                     </a>
                   </li>
                 );
               })}
             </ul>
-          </section>
+          </Band>
         ))}
       </div>
 
-      {(page > 1 || hasOlder) && (
-        <nav aria-label={t.pages} class="mt-6 flex justify-between gap-4">
-          {page > 1 ? (
-            <a href={pageHref(page - 1)} class:list={[pageLink]}>
-              {t.newer}
-            </a>
-          ) : (
-            <span />
-          )}
-          {hasOlder && (
-            <a href={pageHref(page + 1)} class:list={[pageLink]}>
-              {t.older}
-            </a>
-          )}
-        </nav>
-      )}
+      <Pager
+        class="mt-8"
+        label={t.pages}
+        newerHref={page > 1 ? pageHref(page - 1) : undefined}
+        newerLabel={t.newer}
+        olderHref={hasOlder ? pageHref(page + 1) : undefined}
+        olderLabel={t.older}
+      />
     </>
   )}
 </GearShell>
