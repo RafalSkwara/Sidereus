@@ -1,21 +1,21 @@
 # Handoff — 2026-10-05
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #86. (This replaces the earlier handoffs, which are in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #69. (This replaces the earlier handoffs, which are in git history.)
 
 ## State of play
 
 - **Milestone M-2 "First real nights"** is open. Two user-requested slices came ahead of everything else on 2026-10-04:
-  - **S-10 `visual-redesign`** (#86): the Nightfall contract and `/gear` merged (#89) and deployed; Tonight in Nightfall merged (#91, #92) and archived (`context/archive/2026-10-04-tonight-nightfall/`). The `visual-redesign` change folder is still unarchived: it waits until the remaining views (log, auth, onboarding, landing) get their `/10x-ui` passes, or the user says otherwise.
+  - **S-10 `visual-redesign`** (#86) is **done**: Nightfall on every screen. The contract and `/gear` (#89), Tonight (#91, #92), the light-theme night sky (#106) and the four last `/10x-ui` passes (landing #102, onboarding #103, auth #104, log #105) are merged; all five change folders are archived (`context/archive/2026-10-04-visual-redesign/`, `2026-10-05-ui-{auth,landing,log,onboarding}/`). The passes' follow-ups (FieldError as the one alert, FormField `pr-11`, a forced-colors marker on the rating keys, the logo to `/tonight` when signed in, the Polish Topbar at 320 px) landed with the close-out. Still deferred from ui-auth: D1 (signed-in visitors still see the auth forms) and D2 (sign-up does not carry `next`); and ui-log's manual check 1.3 (the Pager block on `/design`) was never screenshotted.
   - **S-11 `tonight-dashboard`** (#87) is **done**: merged (#94), review fixes merged (#95), deployed, archived (`context/archive/2026-10-04-tonight-dashboard/`). `/tonight` is the sky verdict plus four ruled tiles that open `/tonight/targets` (which replaced `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets` and `/tonight/nights`. "Mark observed" returns to the page it came from, and on Targets it reopens "the other N" at the logged row.
   - **S-11 follow-up `interactive-sky`** (#97) is **done**: merged (#98, review fixes included) and archived (`context/archive/2026-10-05-interactive-sky/`); the dashboard's sky is a live horizon panorama (the `TonightSkyView` island) with the real bright stars from HYG v4.1 (`npm run stars:build`), the top five targets, the planets and the Moon, a sunset-to-sunrise slider with the dark window marked and a Now button, and the band's colour following the Sun (`--dusk-*` tokens). A marker opens its row on `/tonight/targets` or `/tonight/planets`, or `/tonight/moon`. Pinned by `tests/e2e/tonight-sky.spec.ts`.
-- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location", S-11 the Tonight dashboard and its interactive sky. Follow-up `compass-labels` (#100, archived `context/archive/2026-10-05-compass-labels/`): compass points are the international 16-wind abbreviations in both languages, never translated (`src/lib/compass.ts`), and the live sky shows a 16-point compass row along its top edge.
+- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location", S-10 the Nightfall redesign, S-11 the Tonight dashboard and its interactive sky. Follow-up `compass-labels` (#100, archived `context/archive/2026-10-05-compass-labels/`): compass points are the international 16-wind abbreviations in both languages, never translated (`src/lib/compass.ts`), and the live sky shows a 16-point compass row along its top edge.
 - **Unblocked by S-11:** S-05 session timeline (#69) becomes another `/tonight/*` page (and maybe a tile); S-06 offline (#70) caches the dashboard pages. Both still need re-scoping against the dashboard before planning.
 - **Still open behind them:** S-03 deep sky beyond Messier (`ready`, #67); S-04 double stars (`blocked`: data source and licence, #68); S-09 map picker (`blocked`: map-tile privacy decision, #73).
 
 ## Suggested next step
 
-1. The remaining `/10x-ui` passes (log, auth, onboarding, landing), which close S-10 (`visual-redesign`).
-2. Then S-05 → S-06 (re-scoped as dashboard pages), then S-03.
+1. S-05 session timeline (#69): re-scope it as a `/tonight/*` page (and maybe a tile), then plan it through the ordinary chain.
+2. Then S-06 (offline dashboard pages), then S-03.
 
 **Hard constraints (all UI work):**
 
@@ -59,5 +59,5 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 - **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#86:** the remaining top-priority slice (S-10), labelled `priority:top`. #87 (S-11) is closed; #97 (interactive sky) is closed. A real VoiceOver pass over the live sky is still with the user (names were checked through Playwright).
+- **#86 (S-10)** closes with the S-10 close-out PR; #87 (S-11) and #97 (interactive sky) are closed. A real VoiceOver pass over the live sky is still with the user (names were checked through Playwright).
 - **#67–#70, #73:** the other remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.
