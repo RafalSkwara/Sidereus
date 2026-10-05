@@ -5,8 +5,9 @@
  * `/tonight/planets`, `/tonight/nights`), never an anchor on the dashboard. A tile only restates the view at a glance;
  * the pages keep every number and action. Tiles with nothing to say are left out (no Session plan, no Moon card, no
  * solar system, no nights); "Point here first" always shows and always opens Targets, with "no targets" when nothing
- * ranks (the page says why). The Session plan tile draws the mini timeline (`SessionTimeline size="mini"`) over "First
- * up: <target> <time>", or the empty line when nothing is planned. Each link is
+ * ranks (the page says why). The Session plan tile draws the mini timeline (`SessionTimeline size="mini"`) over the
+ * server's `nextUp` line: "First up: <target> <time>" before sunset, "Next: <target> <time>" during the night, "Nothing
+ * left on tonight's plan." once every window has ended, or the empty line when nothing is planned. Each link is
  * named by its heading only (`aria-labelledby`), not by the whole tile; "Point here first" adds "Open Targets", since
  * its heading does not name the page it opens. The → says it opens a page.
  */
@@ -47,9 +48,18 @@ const targets = view.summaryTargets.map((entry) => ({
   bestTime: entry.bestTime,
 }));
 
-// Session plan: the first row by best time, named as the live sky's markers name it.
+// Session plan: the row the server's `nextUp` points at (by best time, named as the live sky's markers name it).
 const plan = view.sessionPlan;
-const firstUp = plan?.rows[0] ?? null;
+const nextUp = plan?.nextUp ?? null;
+const nextRow = plan && nextUp && nextUp.kind !== "done" ? (plan.rows[nextUp.index] ?? null) : null;
+const planLine =
+  nextUp === null
+    ? t.planEmpty
+    : nextUp.kind === "done"
+      ? t.planDone
+      : nextRow
+        ? (nextUp.kind === "first" ? t.planFirst : t.planNext)({ name: nextRow.name, time: nextRow.bestTime })
+        : t.planEmpty;
 
 // The Moon at the page-load moment: the card's own initial state, so the tile and the Moon page's slider agree.
 const moonCard = view.moonCard;
@@ -132,9 +142,7 @@ const nightsSummary = view.nights
       <div class="mt-3">
         <SessionTimeline plan={plan} size="mini" />
       </div>
-      <span class="mt-3 block text-body font-semibold">
-        {firstUp ? t.planFirst({ name: firstUp.name, time: firstUp.bestTime }) : t.planEmpty}
-      </span>
+      <span class="mt-3 block text-body font-semibold">{planLine}</span>
     </a>
   )}
 

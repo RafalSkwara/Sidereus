@@ -1,12 +1,15 @@
 ---
 /*
  * The Session plan's timeline (session-plan-timeline): the night from sunset to sunrise on one axis, with the dark
- * window shaded, the Moon's up span as a thin band and its rise and set as marked events, then (size "full") one row
+ * window shaded and bracketed by two 1 px marks, the Moon's up span as a thin band and its rise and set as marked
+ * events, then (size "full") one row
  * per target by best time: name and best time above a bar for its window, with a dot at the best time. Each row is a
  * full-width link to the target's own row on its page. A text line above the axis states the dark window and the
  * Moon's events, so the drawing is never the only carrier of a fact; the bars and marks are decorative (`aria-hidden`)
  * and each row link names the target, its best time, window and direction. Marks differ by shape as well as colour
- * (a dot for the best time, a bar for a window, up and down arrows for rise and set), so red mode keeps them apart.
+ * (a dot for the best time, a bar for a window, up and down arrows for rise and set), so red mode keeps them apart:
+ * there the dark window is only 1.13:1 against the twilight, so the two heading-ink marks at its ends carry it, and the
+ * Moon's band is heading ink too (about 4.5:1 on the red twilight, covered by the contrast test's plan row).
  * The "mini" size is the dashboard tile's: the axis band, the Moon's span and the first three best-time dots, with
  * no text, ticks or rows. Positions are the plan's fractions as inline percentages.
  */
@@ -46,6 +49,8 @@ const anyLowered = moonEvents.some((event) => event.lowered);
 // A bar's track is the twilight (sunset to sunrise), the dark window a darker stretch of it, in every theme.
 const track = "relative h-4 rounded-full bg-plan-twilight";
 const dark = "absolute inset-y-0 bg-plan-night";
+const darkMark = "absolute inset-y-0 w-px bg-heading";
+const moonBand = "absolute bottom-0 h-1 bg-heading";
 const row =
   "block min-h-11 border-b border-border px-4 py-3 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring-2 ring-background";
@@ -56,8 +61,14 @@ const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring
     <div class:list={[track, "overflow-hidden"]}>
       {plan.dark && <span class:list={[dark]} style={span(plan.dark.from, plan.dark.to)} />}
       {plan.moonUp.map((up) => (
-        <span class="absolute bottom-0 h-1 bg-muted-foreground" style={span(up.from, up.to)} />
+        <span class:list={[moonBand]} style={span(up.from, up.to)} />
       ))}
+      {plan.dark && (
+        <>
+          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.from)} />
+          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.to)} />
+        </>
+      )}
     </div>
     {plan.rows.slice(0, MINI_DOTS).map((target) => (
       <span class:list={[dot]} style={at(target.best)} />
@@ -102,11 +113,17 @@ const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring
       <div class:list={[track, "overflow-hidden"]}>
         {plan.dark && <span class:list={[dark]} style={span(plan.dark.from, plan.dark.to)} />}
         {plan.moonUp.map((up) => (
-          <span class="absolute bottom-0 h-1 bg-muted-foreground" style={span(up.from, up.to)} />
+          <span class:list={[moonBand]} style={span(up.from, up.to)} />
         ))}
         {plan.ticks.map((tick) => (
           <span class="absolute inset-y-0 w-px bg-background" style={at(tick.at)} />
         ))}
+        {plan.dark && (
+          <>
+            <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.from)} />
+            <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.to)} />
+          </>
+        )}
       </div>
       <div class:list={["relative", anyLowered ? "h-20" : "h-12"]}>
         {moonEvents.map((event) => (

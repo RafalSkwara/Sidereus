@@ -714,6 +714,8 @@ export const pl = {
       planets: "Planety",
       plan: "Plan sesji",
       planFirst: (p) => `Na początek: ${p.name} ${p.time}`,
+      planNext: (p) => `Następny: ${p.name} ${p.time}`,
+      planDone: "Na dziś plan już się skończył.",
       planEmpty: "Dziś nie ma czego planować.",
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       nights: (p) => `Najbliższe ${p.count} nocy`,

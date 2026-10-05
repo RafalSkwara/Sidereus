@@ -792,8 +792,12 @@ export const en = {
       planets: "Planets",
       /** The Session plan: the page's title and the dashboard tile's heading. */
       plan: "Session plan",
-      /** The tile's line under its timeline: the first target by best time. */
+      /** The tile's line under its timeline before sunset: the first target by best time. */
       planFirst: (p: { name: string; time: string }) => `First up: ${p.name} ${p.time}`,
+      /** The tile's line during the night: the first target by best time whose window has not ended. */
+      planNext: (p: { name: string; time: string }) => `Next: ${p.name} ${p.time}`,
+      /** The tile's line once every target's window has ended. */
+      planDone: "Nothing left on tonight's plan.",
       /** The tile when nothing is recommended tonight. */
       planEmpty: "Nothing to plan tonight.",
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
