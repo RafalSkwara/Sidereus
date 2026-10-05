@@ -140,7 +140,7 @@ Recapture the product image (C5), walk the 7-state matrix, leave the rule.
 **Intent**: Re-run the capture tool against the local preview + forecast fixture so the image is the Nightfall
 dashboard. Adjust the spec only if it no longer reaches a settled dashboard (e.g. wait for the live sky).
 
-**Contract**: 1280×800 PNG, dark, English, no coordinates visible.
+**Contract**: 1280×800 PNG, dark, English, no coordinates visible. (Amended in implementation: 1280×1160, so the first tile shows under the live sky; spec `VIEWPORT` and `Welcome` `SCREENSHOT` agree.)
 
 #### 2. Rule
 

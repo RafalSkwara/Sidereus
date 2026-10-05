@@ -26,6 +26,10 @@ test("signed out, the landing page offers sign-up and sign-in under the question
 test("signed in, `/` redirects to Tonight", async ({ page }) => {
   await signUp(page, "e2e-landing");
 
+  // The server answers `/` itself with the redirect (not a client-side hop), then the browser lands on Tonight.
+  const response = await page.request.get("/", { maxRedirects: 0 });
+  expect(response.status()).toBe(302);
+  expect(response.headers().location).toBe("/tonight");
   await page.goto("/");
   await expect(page).toHaveURL(/\/tonight$/);
 });

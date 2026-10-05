@@ -1,7 +1,7 @@
 ---
 change_id: ui-landing
 title: Landing page in Nightfall, signed-out only
-status: implemented
+status: impl_reviewed
 created: 2026-10-05
 updated: 2026-10-05
 archived_at: null
