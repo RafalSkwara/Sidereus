@@ -15,7 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
-import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal } from "@/lib/compass";
+import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal, type CompassPoint } from "@/lib/compass";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
 import { nearestFrame } from "@/lib/sky-view/frames";
 import { bodyLabelRects, labelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
@@ -31,7 +31,8 @@ import { cn } from "@/lib/utils";
  * time slider from sunset to sunrise with the dark window marked on its track. The band's gradient follows the Sun
  * (`skyMix`, the `dusk-band` utility); its top stays `--zenith`, so it continues the Topbar's strip without a seam.
  *
- * The panorama is twice the viewport wide and covers 360°, scrolled at load to centre `facing`; swipe for the rest.
+ * The panorama covers 360° on a strip about twice the viewport wide (a little narrower, `EDGE_INSET_PX`, so E and W
+ * show whole at load), scrolled at load to centre `facing`; swipe for the rest.
  * Its star field reaches `STRIP_OVERLAP_PX` up behind the verdict's empty lower area. The verdict stays on top but
  * takes no pointer events (it has nothing interactive), so taps and swipes over the overlap reach the panorama. The
  * overlap holds stars only: no star label, and a body there has its label below the overlap, beside the column if
@@ -42,7 +43,7 @@ import { cn } from "@/lib/utils";
  * (`@/lib/compass`), cardinals stronger. It sits just under the verdict's text, wherever that ends: the island measures
  * it (the verdict's slot is `display: contents`, so through a `Range`), and the row stays invisible until measured.
  *
- * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, the star catalogue (`stars.ts`, `star-names.ts`),
+ * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, `@/lib/compass`, the star catalogue (`stars.ts`, `star-names.ts`),
  * `sky-band`, `range-classes`, `@/i18n`, `cn` and `buttonVariants`, never astronomy-engine or the engine
  * (`TonightSkyView.test.ts`). Every time shown is the server's (`view.timeLabels`), so hydration never re-formats one.
  * JavaScript is required here, as everywhere in the Tonight island.
@@ -70,6 +71,13 @@ const RING_INSET_PX = RING_PX + 1;
 /** The compass row's gap under the verdict's text, and its highest place in the field. */
 const COMPASS_GAP_PX = 8;
 const COMPASS_MIN_TOP_PX = 4;
+/** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
+const COMPASS_ROW_PX = 16;
+/**
+ * How far inside the viewport's edges the 180° view's ends sit at load: the field is drawn this much narrower per side,
+ * so the first view shows a little more than 180° and E and W (W and E facing north) are whole, not cut in half.
+ */
+const EDGE_INSET_PX = 8;
 /** The caption role's line: a label's top to its baseline. */
 const CAPTION_BASELINE_PX = 11;
 
@@ -97,6 +105,13 @@ function placeAt(
 ) {
   const { x, y } = project(point, facing, viewport, height);
   return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+}
+
+/** One compass label on the row: its point, x and which way its text extends from x. */
+interface CompassLabel {
+  point: CompassPoint;
+  x: number;
+  anchor: "start" | "middle" | "end";
 }
 
 interface PlacedBody {
@@ -149,20 +164,35 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     const measure = () => {
       const range = document.createRange();
       range.selectNodeContents(box);
-      const textBottom = range.getBoundingClientRect().bottom - svg.getBoundingClientRect().top;
-      const top = Math.min(Math.max(textBottom + COMPASS_GAP_PX, COMPASS_MIN_TOP_PX), STRIP_OVERLAP_PX);
+      const rect = range.getBoundingClientRect();
+      // No laid-out text (an empty slot) gives a zero rect at the viewport's origin: keep the row at the top edge.
+      const textBottom = rect.height > 0 ? rect.bottom - svg.getBoundingClientRect().top : 0;
+      const top = Math.min(
+        Math.max(textBottom + COMPASS_GAP_PX, COMPASS_MIN_TOP_PX),
+        STRIP_OVERLAP_PX - COMPASS_ROW_PX,
+      );
       setCompassTop(Math.round(top));
     };
     measure();
+    // The box keeps its minimum height while its text reflows (the display font swapping in, say), so watch the
+    // slot's elements too, and measure again once the fonts are in.
     const observer = new ResizeObserver(measure);
     observer.observe(box);
+    for (const child of box.querySelectorAll(":scope > astro-slot > *, :scope > *")) observer.observe(child);
+    let live = true;
+    void document.fonts.ready.then(() => {
+      if (live) measure();
+    });
     return () => {
+      live = false;
       observer.disconnect();
     };
   }, []);
 
   const time = view.timeLabels[index] ?? "";
-  const stripWidth = viewport * 2;
+  // Half the field: the viewport less the edge insets, so the 180° view's ends sit inside the screen at load.
+  const half = Math.max(viewport - 2 * EDGE_INSET_PX, 1);
+  const stripWidth = half * 2;
   // The star field: the strip plus the overlap behind the verdict; altitude 0–90° spans all of it.
   const height = STRIP_HEIGHT_PX + STRIP_OVERLAP_PX;
 
@@ -175,7 +205,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       const point = rotateToHorizon(view.rotations, index, star.vector);
       // `!(> 0)` also skips NaN, which would otherwise put `MNaN` into the one path and blank the whole field.
       if (!(point.altDeg > 0)) continue;
-      const { x, y } = placeAt(point, view.facing, viewport, height);
+      const { x, y } = placeAt(point, view.facing, half, height);
       const r = starRadius(star.mag);
       path += `M${(x - r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2 * r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2 * r).toFixed(2)} 0`;
       if (star.name) {
@@ -186,7 +216,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       }
     }
     return { path, named, names };
-  }, [view.rotations, view.facing, index, viewport, height, locale]);
+  }, [view.rotations, view.facing, index, half, height, locale]);
 
   // Bodies above the horizon at this frame, from the server's refracted tracks.
   const bodies = useMemo(
@@ -195,19 +225,26 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
         const altDeg = (body.track[2 * index] ?? 0) / 10;
         const azDeg = (body.track[2 * index + 1] ?? 0) / 10;
         if (!(altDeg > 0)) return [];
-        return [{ body, altDeg, azDeg, ...placeAt({ altDeg, azDeg }, view.facing, viewport, height) }];
+        return [{ body, altDeg, azDeg, ...placeAt({ altDeg, azDeg }, view.facing, half, height) }];
       }),
-    [view.bodies, view.facing, index, viewport, height],
+    [view.bodies, view.facing, index, half, height],
   );
 
   // The 16 points across the 360° strip; the one on the wrap edge (opposite `facing`) is drawn at both ends.
   const compass = useMemo(
     () =>
-      COMPASS_POINTS.flatMap((point, i) => {
-        const { x } = placeAt({ altDeg: 0, azDeg: i * COMPASS_STEP_DEG }, view.facing, viewport, height);
-        return (x < 1 ? [x, x + stripWidth] : [x]).map((at) => ({ point, x: at }));
+      COMPASS_POINTS.flatMap((point, i): CompassLabel[] => {
+        const { x } = placeAt({ altDeg: 0, azDeg: i * COMPASS_STEP_DEG }, view.facing, half, height);
+        // The point opposite `facing` sits on the strip's two real ends: anchor each copy inwards so it shows whole.
+        if (x < 1) {
+          return [
+            { point, x: 0, anchor: "start" },
+            { point, x: stripWidth, anchor: "end" },
+          ];
+        }
+        return [{ point, x, anchor: "middle" }];
       }),
-    [view.facing, viewport, height, stripWidth],
+    [view.facing, half, height, stripWidth],
   );
 
   const labels = useMemo(() => {
@@ -264,12 +301,12 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
             data-sky-frame={index}
           >
             <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
-              {compass.map(({ point, x }) => (
+              {compass.map(({ point, x, anchor }) => (
                 <text
                   key={`${point}-${String(x)}`}
                   x={x}
                   y={(compassTop ?? 0) + CAPTION_BASELINE_PX}
-                  textAnchor="middle"
+                  textAnchor={anchor}
                   className={cn(
                     "text-caption",
                     isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",

@@ -655,7 +655,6 @@ export function createFormatter(locale: Locale) {
     moonLine,
     cloudOutlookText,
     formatDuration,
-    compassPoint,
     formatDirection,
     reasonLine,
     skyHeadline,

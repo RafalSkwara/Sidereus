@@ -36,7 +36,9 @@ export function compassPoint(azimuthDeg: number): CompassPoint {
   return COMPASS_POINTS[Math.round(normalized / COMPASS_STEP_DEG) % COMPASS_POINTS.length];
 }
 
+const CARDINALS: ReadonlySet<CompassPoint> = new Set(["N", "E", "S", "W"]);
+
 /** The four cardinal points, which the live sky draws stronger than the rest. */
 export function isCardinal(point: CompassPoint): boolean {
-  return point.length === 1;
+  return CARDINALS.has(point);
 }
