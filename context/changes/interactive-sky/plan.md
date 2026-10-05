@@ -469,25 +469,25 @@ The user asked for modest tests: pin only what screenshots can't show.
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, including the sky-view tests, the import guard, contrast, red-theme, no-hardcoded-colors and i18n parity
-- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 3.3 The island's gzipped client chunks (`gzip -c | wc -c`) are under 60 KB
+- [x] 3.1 `npm test` passes, including the sky-view tests, the import guard, contrast, red-theme, no-hardcoded-colors and i18n parity — 8fd6205
+- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass — 8fd6205
+- [x] 3.3 The island's gzipped client chunks (`gzip -c | wc -c`) are under 60 KB — 8fd6205
 
 #### Manual
 
-- [x] 3.4 Screenshots at sunset, mid-twilight and deep night in dark, light and red, at 390 px and desktop: verdict unchanged, no seam, no label overlap, red pure
-- [x] 3.5 At 390 px the strip swipes through 360° and the slider's drag, keys and Now move every body
-- [x] 3.6 The panorama matches Stellarium for the fixture night and site at two times
+- [x] 3.4 Screenshots at sunset, mid-twilight and deep night in dark, light and red, at 390 px and desktop: verdict unchanged, no seam, no label overlap, red pure — 8fd6205
+- [x] 3.5 At 390 px the strip swipes through 360° and the slider's drag, keys and Now move every body — 8fd6205
+- [x] 3.6 The panorama matches Stellarium for the fixture night and site at two times — 8fd6205
 
 ### Phase 4: Links, accessibility, e2e and docs
 
 #### Automated
 
-- [ ] 4.1 `npm run test:e2e` passes against the local preview, including `tonight-sky.spec.ts` and the existing Tonight and Moon specs
-- [ ] 4.2 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 4.1 `npm run test:e2e` passes against the local preview, including `tonight-sky.spec.ts` and the existing Tonight and Moon specs
+- [x] 4.2 `npm test`, `npm run lint`, `npx astro check` and `npm run build` pass
 
 #### Manual
 
-- [ ] 4.3 Keyboard only: Tab reaches each marker with a visible ring in all three themes, and Enter opens its page
-- [ ] 4.4 VoiceOver announces the slider's time and each marker's name, altitude and direction in EN and PL
-- [ ] 4.5 Polish labels fit at 390 px without clipping
+- [x] 4.3 Keyboard only: Tab reaches each marker with a visible ring in all three themes, and Enter opens its page
+- [x] 4.4 VoiceOver announces the slider's time and each marker's name, altitude and direction in EN and PL
+- [x] 4.5 Polish labels fit at 390 px without clipping

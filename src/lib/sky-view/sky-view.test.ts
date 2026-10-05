@@ -116,6 +116,21 @@ describe("placeLabels", () => {
     );
     expect(flipped.find((label) => label.id === "altair")?.rect.x).toBe(440);
   });
+
+  it("keeps every label below `top`, the overlap behind the verdict that shows stars only", () => {
+    const placed = placeLabels(
+      [
+        { id: "M57", kind: "body", rects: [rect(100, 30), rect(100, 90)] },
+        { id: "vega", kind: "star", mag: 0.03, rects: [rect(300, 40)] },
+        { id: "deneb", kind: "star", mag: 1.25, rects: [rect(400, 40), rect(400, 120)] },
+      ],
+      { ...bounds, top: 80 },
+    );
+    expect(placed.map((label) => [label.id, label.rect.y])).toEqual([
+      ["M57", 90],
+      ["deneb", 120],
+    ]);
+  });
 });
 
 describe("frames", () => {

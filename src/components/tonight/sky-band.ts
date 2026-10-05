@@ -21,5 +21,13 @@ export const SILHOUETTE_CLASS = "relative block h-8 w-full fill-background sm:h-
 export const STRIP_HEIGHT_CLASS = "h-52";
 export const STRIP_HEIGHT_PX = 208;
 
+/**
+ * The live panorama's star field reaches this far up behind the verdict's empty lower area (`-mt-24`, 96 px), so no
+ * blank sky sits between the verdict and the strip. The band's total height is unchanged: the skeleton's `h-52`
+ * still matches. Altitude 0–90° spans the strip plus the overlap; the overlap holds stars only, never a label.
+ */
+export const STRIP_OVERLAP_CLASS = "-mt-24";
+export const STRIP_OVERLAP_PX = 96;
+
 /** The slider row on the ground under the silhouette, at a fixed height so the skeleton can reserve it. */
 export const SLIDER_ROW_CLASS = "mx-auto h-32 w-full max-w-3xl px-4 pt-2";

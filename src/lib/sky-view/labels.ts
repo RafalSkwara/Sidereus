@@ -4,7 +4,8 @@
  * marker) or leave the strip, and capped at `MAX_STAR_LABELS`.
  *
  * Each item offers its rectangles in order of preference (right of its dot, then left, …); the first that fits wins.
- * A body whose rectangles all collide keeps its first one.
+ * A body whose rectangles all collide keeps its first one inside the bounds. With `bounds.top`, no star label sits
+ * above it (the panorama's overlap behind the verdict, which shows stars only).
  *
  * Pure and island-safe.
  */
@@ -37,13 +38,25 @@ function overlaps(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 }
 
-function inside(rect: Rect, bounds: { width: number; height: number }): boolean {
-  return rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= bounds.width && rect.y + rect.height <= bounds.height;
+/** The strip a label may sit in: `top` (default 0) keeps labels below a band where only stars are drawn. */
+export interface LabelBounds {
+  width: number;
+  height: number;
+  top?: number;
+}
+
+function inside(rect: Rect, bounds: LabelBounds): boolean {
+  return (
+    rect.x >= 0 &&
+    rect.y >= (bounds.top ?? 0) &&
+    rect.x + rect.width <= bounds.width &&
+    rect.y + rect.height <= bounds.height
+  );
 }
 
 export function placeLabels(
   items: readonly LabelItem[],
-  bounds: { width: number; height: number },
+  bounds: LabelBounds,
   obstacles: readonly Rect[] = [],
   maxStars = MAX_STAR_LABELS,
 ): PlacedLabel[] {
@@ -52,7 +65,10 @@ export function placeLabels(
 
   for (const item of items) {
     if (item.kind !== "body" || item.rects.length === 0) continue;
-    const rect = item.rects.find((r) => inside(r, bounds) && free(r)) ?? item.rects[0];
+    const rect =
+      item.rects.find((r) => inside(r, bounds) && free(r)) ??
+      item.rects.find((r) => inside(r, bounds)) ??
+      item.rects[0];
     placed.push({ id: item.id, kind: "body", rect });
   }
 

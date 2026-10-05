@@ -54,3 +54,39 @@ const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
     </div>
   </div>
 </GearShell>
+
+<script>
+  // The list streams in through the server island after the browser has already tried the URL's fragment (the live
+  // sky's planet markers link to #planet-<key>, interactive-sky), so scroll to the row once the island has inserted it.
+  // The same script as the Targets page's, without its return-from-log case.
+  function findTarget(): Element | null {
+    let id: string;
+    try {
+      id = decodeURIComponent(location.hash.slice(1));
+    } catch {
+      return null; // A malformed fragment (`#%E0`) names nothing.
+    }
+    return id ? document.getElementById(id) : null;
+  }
+  function scrollToTarget(): boolean {
+    const target = findTarget();
+    target?.scrollIntoView({ block: "start" });
+    return target !== null;
+  }
+  const userInput = ["wheel", "touchmove", "keydown"] as const;
+  if (location.hash && !scrollToTarget()) {
+    const observer = new MutationObserver(() => {
+      if (scrollToTarget()) stop();
+    });
+    // Stop once the row is shown, once the visitor scrolls or types (never move the page under them), or after 10 s
+    // if the row never arrives (the planet set, or a stale link).
+    const timer = window.setTimeout(stop, 10_000);
+    function stop() {
+      observer.disconnect();
+      window.clearTimeout(timer);
+      for (const type of userInput) window.removeEventListener(type, stop);
+    }
+    observer.observe(document.body, { childList: true, subtree: true });
+    for (const type of userInput) window.addEventListener(type, stop, { passive: true });
+  }
+</script>

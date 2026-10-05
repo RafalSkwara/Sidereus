@@ -5,6 +5,8 @@ import {
   SILHOUETTE_VIEWBOX,
   SLIDER_ROW_CLASS,
   STRIP_HEIGHT_PX,
+  STRIP_OVERLAP_CLASS,
+  STRIP_OVERLAP_PX,
   VERDICT_CONTAINER_CLASS,
   VERDICT_MIN_HEIGHT_CLASS,
 } from "@/components/tonight/sky-band";
@@ -28,6 +30,8 @@ import { cn } from "@/lib/utils";
  * (`skyMix`, the `dusk-band` utility); its top stays `--zenith`, so it continues the Topbar's strip without a seam.
  *
  * The panorama is twice the viewport wide and covers 360°, scrolled at load to centre `facing`; swipe for the rest.
+ * Its star field reaches `STRIP_OVERLAP_PX` up behind the verdict's empty lower area (the verdict stays on top and
+ * keeps its clicks); that overlap holds stars only: no star label, and a body there has its label below its dot.
  * Stars are one path (hidden in the light theme, `hidden dark:block`); a marker is an SVG link named for the body, its
  * altitude and direction at the slider's time, with a 24 px hit area and a `--ring` focus circle.
  *
@@ -106,6 +110,16 @@ function labelRects(x: number, y: number, width: number, gap: number, withVertic
   return rects;
 }
 
+/**
+ * A body's label candidates: beside its dot as usual, then below it but never higher than the overlap's lower edge,
+ * which is the only one offered for a dot inside the overlap, so a body label never sits behind the verdict.
+ */
+function bodyLabelRects(x: number, y: number, width: number): Rect[] {
+  const gap = 8;
+  const below = { x: x - width / 2, y: Math.max(y + gap, STRIP_OVERLAP_PX), width, height: LABEL_HEIGHT_PX };
+  return y < STRIP_OVERLAP_PX ? [below] : [...labelRects(x, y, width, gap, true), below];
+}
+
 interface PlacedBody {
   body: TonightSkyBody;
   x: number;
@@ -144,7 +158,8 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   const formatTime = useMemo(() => timeFormatter(locale, view.timeZone), [locale, view.timeZone]);
   const time = formatTime(frameTime(view, index));
   const stripWidth = viewport * 2;
-  const height = STRIP_HEIGHT_PX;
+  // The star field: the strip plus the overlap behind the verdict; altitude 0–90° spans all of it.
+  const height = STRIP_HEIGHT_PX + STRIP_OVERLAP_PX;
 
   // Every star above the horizon as one path of circles, plus the named ones as label candidates.
   const stars = useMemo(() => {
@@ -183,10 +198,11 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     const items: LabelItem[] = bodies.map(({ body, x, y }) => ({
       id: body.key,
       kind: "body",
-      rects: labelRects(x, y, body.label.length * BODY_CHAR_PX + 2, 8, true),
+      rects: bodyLabelRects(x, y, body.label.length * BODY_CHAR_PX + 2),
     }));
     const obstacles = bodies.map(({ x, y }) => ({ x: x - 6, y: y - 6, width: 12, height: 12 }));
-    const placed = placeLabels([...items, ...stars.named], { width: stripWidth, height }, obstacles);
+    const bounds = { width: stripWidth, height, top: STRIP_OVERLAP_PX };
+    const placed = placeLabels([...items, ...stars.named], bounds, obstacles);
     return new Map(placed.map((label) => [label.id, label.rect]));
   }, [bodies, stars.named, stripWidth, height]);
 
@@ -200,14 +216,26 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   return (
     <div>
       <div className="dusk-band relative overflow-hidden" style={bandStyle} data-sky-band>
-        <div className={cn(VERDICT_CONTAINER_CLASS, VERDICT_MIN_HEIGHT_CLASS)}>{children}</div>
+        {/* Above the strip's overlap; only the verdict's own content takes clicks, the empty area passes them on. */}
+        <div
+          className={cn(
+            VERDICT_CONTAINER_CLASS,
+            VERDICT_MIN_HEIGHT_CLASS,
+            "pointer-events-none z-10 *:pointer-events-auto",
+          )}
+        >
+          {children}
+        </div>
 
         <div
           ref={scroller}
           role="region"
           aria-label={t.panorama}
           tabIndex={0}
-          className="scrollbar-strip focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
+          className={cn(
+            "scrollbar-strip focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2",
+            STRIP_OVERLAP_CLASS,
+          )}
           data-sky-strip
         >
           <svg
@@ -340,14 +368,14 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           className="text-muted-foreground text-label flex items-center justify-between gap-3 font-mono"
           aria-hidden="true"
         >
-          <span>{view.startLabel}</span>
+          <span data-sky-start>{view.startLabel}</span>
           {darkSpan && (
             <span className="flex items-center gap-1.5 font-sans">
               <span className="bg-primary-strong h-1.5 w-4 rounded-full" />
               {t.darkWindow}
             </span>
           )}
-          <span>{view.endLabel}</span>
+          <span data-sky-end>{view.endLabel}</span>
         </div>
       </div>
     </div>
