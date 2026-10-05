@@ -7,6 +7,9 @@
 /* `dark:` follows the resolved theme on <html data-theme>, never the OS setting. */
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
+/* `night:` is "under a night sky": a dark or red page, or inside a `.night-sky` scope in the light theme (ui-sky-light). */
+@custom-variant night (&:where(:root:not([data-theme="light"]) *, .night-sky, .night-sky *));
+
 /*
  * Nightfall palette (direction "C · Nightfall", values in context/changes/visual-redesign/tokens-nightfall.md).
  * Dark is the default; light ("day") is opt-in via data-theme="light", and red night mode (S-10, FR-024) via
@@ -99,6 +102,45 @@
 }
 
 /*
+ * Tonight's night sky in the light theme (ui-sky-light): the sky depicts the night, so Tonight's bands and the
+ * sky-flow Topbar strip (`.night-sky`) keep a navy sky with light inks while the page around them stays light.
+ * A little brighter than the dark theme's sky; the inks are the dark theme's, with a lighter muted so labels clear
+ * 4.5:1 on the dusk horizon too (contrast.test.ts, "night"). `--background` is left alone: the silhouette and the
+ * slider row stand on the page's light ground. In the dark and red themes the class changes nothing.
+ */
+[data-theme="light"] .night-sky {
+  color-scheme: dark;
+
+  --surface: #121d3d;
+  --border: #2c3a62;
+  --foreground: #dfe3ec;
+  --muted-foreground: #b4bccf;
+  --heading: #f2f4f8;
+
+  --primary: #f2f4f8;
+  --primary-foreground: #070a12;
+  --primary-strong: #c3d0ff;
+
+  --go: #7ee2b0;
+  --marginal: #f1cf6b;
+  --no-go: #ff9b8c;
+
+  --zenith: #0d1836;
+  --horizon: #263d7a;
+
+  --dusk-glow: #43304f;
+  --dusk-glow-horizon: #6c3a2c;
+  --dusk-twilight: #1d2c5e;
+  --dusk-twilight-horizon: #34376b;
+
+  --verdict-surface-alpha: 10%;
+  --verdict-border-alpha: 35%;
+
+  --star: rgb(255 255 255 / 0.55);
+  --star-accent: rgb(253 230 138 / 0.3);
+}
+
+/*
  * Red night mode: only long-wavelength light keeps the observer's dark adaptation, so every colour here
  * has zero green and zero blue (src/styles/red-theme.test.ts). Verdicts differ by brightness only; their
  * text labels carry the meaning.
@@ -146,7 +188,8 @@
  * (a nested [data-theme] block gets its own derived colours, not the root's inherited ones).
  */
 :root,
-[data-theme] {
+[data-theme],
+.night-sky {
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface);
