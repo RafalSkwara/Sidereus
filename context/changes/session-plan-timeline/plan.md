@@ -239,21 +239,21 @@ One extra Moon track over the axis (the sky view already samples the same interv
 
 #### Automated
 
-- [x] 1.1 Layout tests pass: `npm test -- session-plan`
-- [x] 1.2 Full unit suite, type check and lint pass
+- [x] 1.1 Layout tests pass: `npm test -- session-plan` — dbdfef4
+- [x] 1.2 Full unit suite, type check and lint pass — dbdfef4
 
 ### Phase 2: The /tonight/plan page
 
 #### Automated
 
-- [ ] 2.1 Type check, lint and unit tests pass
-- [ ] 2.2 Production build succeeds
+- [x] 2.1 Type check, lint and unit tests pass
+- [x] 2.2 Production build succeeds
 
 #### Manual
 
-- [ ] 2.3 /tonight/plan shows axis, dark window, Moon events and rows by best time; rows open their targets
-- [ ] 2.4 Empty state explains itself and links to the nights
-- [ ] 2.5 Screenshot matrix for the page (390 px/desktop, dark/light/red, EN/PL)
+- [x] 2.3 /tonight/plan shows axis, dark window, Moon events and rows by best time; rows open their targets
+- [x] 2.4 Empty state explains itself and links to the nights
+- [x] 2.5 Screenshot matrix for the page (390 px/desktop, dark/light/red, EN/PL)
 
 ### Phase 3: Dashboard tile and verification
 

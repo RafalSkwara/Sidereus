@@ -1,0 +1,40 @@
+---
+// The Session plan focused page (session-plan-timeline): tonight's targets on one night axis, for the site and
+// telescope picked on Tonight. The shell reads the gear and paints at once; PlanPageContent streams the timeline in
+// under the slim page sky. The page has no "Mark observed", so it has no log notice.
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import Attribution from "@/components/tonight/Attribution.astro";
+import PlanPageContent from "@/components/tonight/PlanPageContent.astro";
+import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import { getMessages } from "@/i18n";
+import { requestedGear } from "@/lib/tonight/requested-gear";
+
+const { supabase, locale } = Astro.locals;
+const title = getMessages(locale).tonight.summary.plan;
+
+// The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
+const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+---
+
+<GearShell title={title} skyFlow>
+  {supabase ? (
+    <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId}>
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/plan" rows={4} />
+    </PlanPageContent>
+  ) : (
+    <>
+      <TonightPageSky title={title} view={null} />
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <DatabaseMissing />
+      </div>
+    </>
+  )}
+
+  <div class="mx-auto w-full max-w-3xl px-4">
+    <div class="mt-10 border-t border-border pt-4">
+      <Attribution />
+    </div>
+  </div>
+</GearShell>

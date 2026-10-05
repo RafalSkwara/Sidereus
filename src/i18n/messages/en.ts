@@ -790,6 +790,12 @@ export const en = {
       } as PluralForms<Count>,
       moon: "The Moon",
       planets: "Planets",
+      /** The Session plan: the page's title and the dashboard tile's heading. */
+      plan: "Session plan",
+      /** The tile's line under its timeline: the first target by best time. */
+      planFirst: (p: { name: string; time: string }) => `First up: ${p.name} ${p.time}`,
+      /** The tile when nothing is recommended tonight. */
+      planEmpty: "Nothing to plan tonight.",
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       nights: (p: { count: string }) => `Next ${p.count} nights`,
       /** `count` is `VERDICT_NIGHTS`, pre-formatted; the wording assumes more than one night. */
@@ -843,6 +849,15 @@ export const en = {
         moonAll: "Moon up all night",
         /** Below the horizon from sunset to sunrise. */
         moonNever: "Moon not up tonight",
+        /** The target list's accessible name. */
+        listLabel: "Targets by best time",
+        /** A row link's accessible name: the bar and dot are decorative, so the row says it all. */
+        rowLabel: (p: { name: string; best: string; window: string; direction: string }) =>
+          `${p.name}: best at ${p.best}, window ${p.window}, direction ${p.direction}`,
+        /** No target to place on the night (the view's explanation, when there is one, comes first). */
+        empty: "No target is recommended tonight, so there is no plan to draw.",
+        /** The view has no plan (only when building it failed). */
+        unavailable: "The session plan isn't available right now.",
       },
     },
   },

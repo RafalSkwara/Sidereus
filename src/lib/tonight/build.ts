@@ -359,6 +359,8 @@ export interface TonightSessionPlan {
   moonEvents: (SessionPlanMoonEvent & { timeText: string })[];
   /** "Moonset 01:30 · Moonrise 04:50", "Moon up all night" or "Moon not up tonight". */
   moonText: string;
+  /** When the Moon is up over the axis, as fractions of it (clamped to [0, 1]); empty when it never is. */
+  moonUp: { from: number; to: number }[];
   /** Epoch ms of the whole hours on the axis. */
   hours: number[];
   /** The hours as ticks: fraction of the axis and `HH:mm` in the site's time zone. */
@@ -986,16 +988,18 @@ export function buildTonight(
     try {
       const { range, moon } = skyAxisWithMoon();
       const up = moonUpOf(moon);
+      const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
       const layout = layoutSessionPlan({
         axis: range,
         dark: window.kind === "window" ? window : null,
-        moonSpans: up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [],
+        moonSpans,
         rows: [...planMoon, ...planPlanets, ...planObjects],
         isWholeHour: (ms) => formatTime(new Date(ms), timeZone).endsWith(":00"),
       });
       const text = messages.tonight.pages.plan;
       const axisMs = layout.axis.end - layout.axis.start;
       const hourAt = (hour: number): number => (axisMs > 0 ? (hour - layout.axis.start) / axisMs : 0);
+      const clampAt = (ms: number): number => Math.min(1, Math.max(0, hourAt(ms)));
       const moonEvents = layout.moonEvents.map((event) => ({
         ...event,
         timeText: formatTime(new Date(event.time), timeZone),
@@ -1022,6 +1026,7 @@ export function buildTonight(
             : up.kind === "never"
               ? text.moonNever
               : text.moonAll,
+        moonUp: moonSpans.map((span) => ({ from: clampAt(span.start.getTime()), to: clampAt(span.end.getTime()) })),
         hours: layout.hours,
         ticks: layout.hours.map((hour) => ({
           at: hourAt(hour),
