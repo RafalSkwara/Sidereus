@@ -76,11 +76,11 @@ Compass points read the same everywhere, in English and Polish: the internationa
 
 #### Automated
 
-- [x] 1.1 `npm test` passes, including `compass.test.ts`, `format.test.ts`, the i18n parity test and the import guard
-- [x] 1.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 1.3 `npm run test:e2e` passes against the local preview
+- [x] 1.1 `npm test` passes, including `compass.test.ts`, `format.test.ts`, the i18n parity test and the import guard — 58d9f1b
+- [x] 1.2 `npm run lint`, `npx astro check` and `npm run build` pass — 58d9f1b
+- [x] 1.3 `npm run test:e2e` passes against the local preview — 58d9f1b
 
 #### Manual
 
-- [x] 1.4 Screenshots of `/tonight` at 390 px and desktop in EN and PL, dark and red: the 16 points sit along the top edge of the sky without touching the verdict, cardinals stand out, and PL shows the same abbreviations as EN
-- [x] 1.5 A PL marker's accessible name and a PL Targets best direction read with international points
+- [x] 1.4 Screenshots of `/tonight` at 390 px and desktop in EN and PL, dark and red: the 16 points sit along the top edge of the sky without touching the verdict, cardinals stand out, and PL shows the same abbreviations as EN — 58d9f1b
+- [x] 1.5 A PL marker's accessible name and a PL Targets best direction read with international points — 58d9f1b
