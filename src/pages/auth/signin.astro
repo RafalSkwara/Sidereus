@@ -23,7 +23,7 @@ const t = getMessages(locale).auth.signIn;
   <SignInForm serverError={error} locale={locale} next={next} client:load />
   <p class="mt-8 border-t border-border pt-4 text-body text-muted-foreground">
     {t.noAccount}{" "}
-    <a href="/auth/signup" class:list={cn(buttonVariants({ variant: "link" }), "px-1")}>
+    <a href="/auth/signup" class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
       {t.signUpLink}
     </a>
   </p>
