@@ -7,20 +7,7 @@ import type { DarkWindow, Verdict } from "@/lib/engine";
 
 import { createFormatter, type MoonUp, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
 
-const { compassPoint, darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } =
-  createFormatter("en");
-
-describe("compassPoint", () => {
-  it("maps azimuths to 16 points, wrapping and splitting at the half-sector boundary", () => {
-    expect(compassPoint(0)).toBe("N");
-    expect(compassPoint(22.5)).toBe("NNE");
-    expect(compassPoint(225)).toBe("SW");
-    expect(compassPoint(348.75)).toBe("N");
-    expect(compassPoint(348.74)).toBe("NNW");
-    expect(compassPoint(-45)).toBe("NW");
-    expect(compassPoint(720)).toBe("N");
-  });
-});
+const { darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } = createFormatter("en");
 
 describe("times in the site's zone (NFR daylight-saving)", () => {
   const zone = "Europe/Warsaw";

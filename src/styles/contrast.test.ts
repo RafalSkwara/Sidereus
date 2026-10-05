@@ -80,8 +80,9 @@ const CHECKS: Check[] = [
   { themes: ["red"], fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: ["red"], fg: ["muted-foreground", "no-go"], bg: ["background", "surface"], floor: 3 },
   // The verdict and the body labels are heading ink over the red dusk too, held to heading's red floor.
-  { themes: ["red"], fg: ["heading"], bg: DUSK, floor: 4.5 },
-  { themes: ["red"], fg: ["muted-foreground"], bg: DUSK, floor: 3 },
+  // The sky's base stops (zenith, horizon) carry the compass row's muted letters as well.
+  { themes: ["red"], fg: ["heading"], bg: [...DUSK, "zenith", "horizon"], floor: 4.5 },
+  { themes: ["red"], fg: ["muted-foreground"], bg: [...DUSK, "zenith", "horizon"], floor: 3 },
 ];
 
 const pairs = CHECKS.flatMap(({ themes: names, fg, bg, floor }) =>

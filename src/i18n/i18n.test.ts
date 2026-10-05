@@ -6,7 +6,7 @@ import { pl } from "./messages/pl";
 
 type Kind = "string" | "function";
 
-/** Every leaf of a catalogue as `dotted.path → kind`. Arrays (the compass) are walked by index. */
+/** Every leaf of a catalogue as `dotted.path → kind`. Arrays are walked by index. */
 function leaves(node: unknown, prefix = ""): Map<string, Kind> {
   const out = new Map<string, Kind>();
   if (typeof node === "string") {

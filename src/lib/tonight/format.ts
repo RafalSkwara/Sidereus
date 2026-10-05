@@ -16,6 +16,7 @@ import type {
   SeenSummary,
   Verdict,
 } from "@/lib/engine";
+import { compassPoint } from "@/lib/compass";
 import type { Locale } from "@/lib/preferences";
 
 /**
@@ -223,12 +224,6 @@ export function createFormatter(locale: Locale) {
     return minutes === 0
       ? m.tonight.time.hours({ hours: num(hours) })
       : m.tonight.time.hoursMinutes({ hours: num(hours), minutes: num(minutes) });
-  }
-
-  /** The 16-wind compass point for an azimuth in degrees clockwise from north. */
-  function compassPoint(azimuthDeg: number): string {
-    const normalized = ((azimuthDeg % 360) + 360) % 360;
-    return m.compass[Math.round(normalized / 22.5) % m.compass.length];
   }
 
   /** "SW, 45°": compass point and altitude in whole degrees. */
@@ -660,7 +655,6 @@ export function createFormatter(locale: Locale) {
     moonLine,
     cloudOutlookText,
     formatDuration,
-    compassPoint,
     formatDirection,
     reasonLine,
     skyHeadline,
