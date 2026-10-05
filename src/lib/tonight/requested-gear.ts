@@ -31,3 +31,12 @@ export function requestedGear(url: URL, cookies: AstroCookies): { siteId?: strin
     telescopeId: requested(url, cookies, "telescope", TELESCOPE_COOKIE),
   };
 }
+
+/**
+ * The night a Tonight page is asked for (offline-night-plan): `?night=next` is the evening after tonight, the copy
+ * the service worker fetches in the background for offline use; anything else means tonight. Shells pass it to their
+ * island as a prop (the island's own request carries no page query).
+ */
+export function requestedNight(url: URL): "tonight" | "next" {
+  return url.searchParams.get("night") === "next" ? "next" : "tonight";
+}

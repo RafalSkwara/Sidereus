@@ -11,7 +11,7 @@ import { hasSkyCheckedNotice } from "@/lib/sky-checks/redirect";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { pickTonightNotice } from "@/lib/tonight/notice";
-import { requestedGear } from "@/lib/tonight/requested-gear";
+import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
@@ -35,12 +35,14 @@ const notice = pickTonightNotice({
 
 // The site and telescope picked in a selector (or remembered on this device); see requested-gear.ts.
 const { siteId: requestedSite, telescopeId: requestedTelescope } = requestedGear(Astro.url, Astro.cookies);
+// `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
+const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={t.title} skyFlow>
   {supabase ? (
     // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in, sky first.
-    <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope} notice={notice}>
+    <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope} notice={notice} night={night}>
       <TonightSkeleton slot="fallback" />
     </TonightContent>
   ) : (

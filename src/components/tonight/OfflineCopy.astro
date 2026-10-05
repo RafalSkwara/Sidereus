@@ -1,0 +1,53 @@
+---
+// The metadata and offline warnings of one stored Tonight page (offline-night-plan), at the top of every Tonight
+// island. The service worker and the page script read `[data-offline-copy]` (which site, which night, when the copy
+// was prepared and when it stops being the night to show); the three notices stay hidden online and are shown by the
+// page script from the real offline state or the stored copy's age. Their text is formatted here, in the site's time
+// zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates.
+import Notice from "@/components/ui/Notice.astro";
+import { getMessages } from "@/i18n";
+import type { TonightView } from "@/lib/tonight/build";
+import { createFormatter } from "@/lib/tonight/format";
+
+interface Props {
+  view: TonightView;
+  /** Which night the view is for: `"next"` is the background copy of the evening after tonight. */
+  night: "tonight" | "next";
+}
+
+const { locale } = Astro.locals;
+const { view, night } = Astro.props;
+const t = getMessages(locale).offline.notice;
+const { formatDayTime, formatShortNightDate } = createFormatter(locale);
+
+// The copy is prepared when this HTML is rendered; the forecast behind it may be older.
+const preparedAt = new Date();
+const prepared = formatDayTime(preparedAt, view.timeZone);
+const nightText = formatShortNightDate(view.date);
+const forecast = view.forecastFetchedAt;
+---
+
+<div
+  hidden
+  data-offline-copy
+  data-site-id={view.siteId}
+  data-site-name={view.siteName}
+  data-night-date={view.date}
+  data-kind={night}
+  data-prepared-at={preparedAt.toISOString()}
+  data-valid-until={view.validUntil.toISOString()}
+  data-forecast-fetched-at={forecast ? forecast.toISOString() : undefined}
+></div>
+<div class="mx-auto w-full max-w-3xl px-4">
+  <div hidden class="pt-4" data-offline-notice="prepared">
+    <Notice tone="warning">{t.prepared({ when: prepared })}</Notice>
+  </div>
+  <div hidden class="pt-4" data-offline-notice="old-forecast">
+    <Notice tone="warning">
+      {t.oldForecast({ when: forecast ? formatDayTime(forecast, view.timeZone) : prepared, night: nightText })}
+    </Notice>
+  </div>
+  <div hidden class="pt-4" data-offline-notice="stale">
+    <Notice tone="warning">{t.stale({ night: nightText, when: prepared })}</Notice>
+  </div>
+</div>

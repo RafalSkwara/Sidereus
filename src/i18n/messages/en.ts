@@ -948,6 +948,26 @@ export const en = {
       action: "Install app",
       iosHint: "Tap Share, then Add to Home Screen.",
     },
+    /** A saved Tonight page's warnings, shown only offline (hidden online); the times arrive pre-formatted. */
+    notice: {
+      prepared: (p: { when: string }) => `Offline · prepared ${p.when}`,
+      oldForecast: (p: { when: string; night: string }) => `Old forecast from ${p.when} · plan for ${p.night}`,
+      stale: (p: { night: string; when: string }) =>
+        `This plan is for ${p.night} (prepared ${p.when}) — the night is over`,
+    },
+    /** The /offline page the worker serves for a request that needs the network. */
+    page: {
+      title: "You're offline",
+      subtitle: "Tonight pages you opened recently are still here.",
+      needsConnection: {
+        heading: "This needs a connection",
+        text: "This page can't load without a network. Try again once you're back online.",
+      },
+      saved: {
+        heading: "Saved on this device",
+        empty: "Nothing saved yet — open Tonight while online.",
+      },
+    },
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */

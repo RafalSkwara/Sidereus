@@ -10,6 +10,7 @@ import { ServerError } from "@/components/forms/ServerError";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -36,17 +37,19 @@ interface Props {
   restOpen?: boolean;
   /** The target key from `?logged=`, after "Mark observed" here; `null` when none. */
   logged?: string | null;
+  /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
+  night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, sort, notice = null, restOpen = false, logged = null } = Astro.props;
+const { siteId, telescopeId, night = "tonight", sort, notice = null, restOpen = false, logged = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const a = t.all;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
 // Signed out, `load` is null and the island renders nothing. Every cleared object gets a full entry.
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, limit: Number.POSITIVE_INFINITY });
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, limit: Number.POSITIVE_INFINITY });
 const view = load?.view ?? null;
 const failures = load
   ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
@@ -84,6 +87,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 {load && (
   <>
     <TonightPageSky title={t.pages.targets} view={view} />
+    {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
       {notice &&

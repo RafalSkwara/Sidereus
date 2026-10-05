@@ -1564,3 +1564,74 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     expect(plan.sunriseText).toBeNull();
   });
 });
+
+describe("buildTonight's next night and validUntil (offline-night-plan)", () => {
+  const engineSite = toEngineSite(WARSAW);
+  const forecast = result(uniformForecast("2026-10-10T00:00:00Z", 5), false, new Date(NOW.getTime() - 20 * 60_000));
+  const input = { site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW };
+
+  it("builds the evening after tonight with the same forecast, and tonight stays the default", () => {
+    const tonight = buildTonight(input, "en");
+    const next = buildTonight(input, "en", { night: "next" });
+    expect(tonight.date).toBe("2026-10-10");
+    expect(next.date).toBe("2026-10-11");
+    expect(next.nights[0].date).toBe("2026-10-11");
+    expect(buildTonight(input, "en", { night: "tonight" })).toEqual(tonight);
+    // The next night's verdict reads that night's own forecast hours: cloud over it alone turns the verdict.
+    const cloudyNext = hourlyForecast("2026-10-10T00:00:00Z", 72, (start) =>
+      start.getTime() >= Date.parse("2026-10-11T12:00:00Z") ? 100 : 5,
+    );
+    const cloudy = buildTonight({ ...input, forecast: result(cloudyNext) }, "en", { night: "next" });
+    expect(cloudy.verdict.level).toBe("no-go");
+    expect(buildTonight({ ...input, forecast: result(cloudyNext) }, "en").verdict.level).toBe("go");
+    // The forecast age still reads the real clock.
+    expect(next.forecastFetchedAt?.toISOString()).toBe(forecast.fetchedAt.toISOString());
+    expect(next.forecastStatus).toEqual(tonight.forecastStatus);
+  });
+
+  it("reads the time-driven initial selections as at that night's sunset", () => {
+    const late = new Date("2026-10-11T00:00:00Z");
+    const withLate = { ...input, now: late };
+    const view = buildTonight(withLate, "en", { night: "next", withSkyView: true, withSessionPlan: true });
+    const sunset = sunEvents(engineSite, observingNight("2026-10-11", WARSAW.timeZone)).sunset;
+    expect(sunset).not.toBeNull();
+    // Before the night's sunset, so the plan tile reads "first up" and the sky starts at the dark window or sunset.
+    expect(view.sessionPlan?.nextUp?.kind).not.toBe("done");
+    expect(view.skyView).not.toBeNull();
+  });
+
+  it("ends the night at the civil dawn after it", () => {
+    const civil = darkWindow(engineSite, observingNight("2026-10-10", WARSAW.timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    if (civil.kind !== "window") {
+      throw new Error("expected a planet window on 2026-10-10 in Warsaw");
+    }
+    expect(buildTonight(input, "en").validUntil.toISOString()).toBe(civil.end.toISOString());
+    const civilNext = darkWindow(
+      engineSite,
+      observingNight("2026-10-11", WARSAW.timeZone),
+      PLANET_WINDOW_SUN_ALTITUDE_DEG,
+    );
+    if (civilNext.kind !== "window") {
+      throw new Error("expected a planet window on 2026-10-11 in Warsaw");
+    }
+    expect(buildTonight(input, "en", { night: "next" }).validUntil.toISOString()).toBe(civilNext.end.toISOString());
+  });
+
+  it("ends the night with the observing night where there is no civil window (87° N in June)", () => {
+    const pole: SiteRecord = { ...WARSAW, latitudeDeg: 87, longitudeDeg: 0, timeZone: "UTC" };
+    const now = new Date("2026-06-20T12:00:00Z");
+    const view = buildTonight(
+      {
+        site: pole,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-06-20T00:00:00Z", 5), false, now),
+        now,
+      },
+      "en",
+    );
+    const civil = darkWindow(toEngineSite(pole), observingNight(view.date, "UTC"), PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    expect(civil.kind).not.toBe("window");
+    expect(view.validUntil.toISOString()).toBe(observingNight(view.date, "UTC").end.toISOString());
+  });
+});

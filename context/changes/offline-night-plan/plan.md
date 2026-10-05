@@ -388,16 +388,16 @@ None: no database change. The first deploy installs the worker on the next visit
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including the next-night and validUntil (incl. polar) build tests
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 i18n parity holds
+- [x] 2.1 Unit tests pass, including the next-night and validUntil (incl. polar) build tests
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 i18n parity holds
 
 #### Manual
 
-- [ ] 2.5 night=next renders the following evening with no sky-check card or record
-- [ ] 2.6 Island HTML carries the offline-copy metadata without coordinates; notices hidden online
-- [ ] 2.7 /offline renders in EN/PL × three themes at 390 px
+- [x] 2.5 night=next renders the following evening with no sky-check card or record
+- [x] 2.6 Island HTML carries the offline-copy metadata without coordinates; notices hidden online
+- [x] 2.7 /offline renders in EN/PL × three themes at 390 px
 
 ### Phase 3: Service-worker caching
 

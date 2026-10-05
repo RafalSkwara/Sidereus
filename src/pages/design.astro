@@ -373,6 +373,8 @@ const summaryView: TonightView = {
   verdictText: fmt.verdictReasonText(goVerdict),
   darkWindow: sampleWindow,
   darkStart: null,
+  validUntil: new Date(`${SAMPLE_DATE}T23:59:00Z`),
+  forecastFetchedAt: null,
   ranking: {
     clearedCount: 14,
     clearedText: fmt.clearedLine(14),

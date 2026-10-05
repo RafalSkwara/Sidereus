@@ -9,18 +9,20 @@ import PlanPageContent from "@/components/tonight/PlanPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import { getMessages } from "@/i18n";
-import { requestedGear } from "@/lib/tonight/requested-gear";
+import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
 const title = getMessages(locale).tonight.summary.plan;
 
 // The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+// `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
+const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={title} skyFlow>
   {supabase ? (
-    <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId}>
+    <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night}>
       <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/plan" rows={4} />
     </PlanPageContent>
   ) : (
