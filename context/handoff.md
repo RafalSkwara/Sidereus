@@ -1,21 +1,21 @@
-# Handoff — 2026-10-04 (night)
+# Handoff — 2026-10-05
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #86 / #87. (This replaces the earlier 2026-10-04 handoffs, which are in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #86. (This replaces the earlier handoffs, which are in git history.)
 
 ## State of play
 
 - **Milestone M-2 "First real nights"** is open. Two user-requested slices came ahead of everything else on 2026-10-04:
   - **S-10 `visual-redesign`** (#86): the Nightfall contract and `/gear` merged (#89) and deployed; Tonight in Nightfall merged (#91, #92) and archived (`context/archive/2026-10-04-tonight-nightfall/`). The `visual-redesign` change folder is still unarchived: it waits until the remaining views (log, auth, onboarding, landing) get their `/10x-ui` passes, or the user says otherwise.
-  - **S-11 `tonight-dashboard`** (#87, `in-progress`): implemented on branch `feat/tonight-dashboard` (change folder `context/changes/tonight-dashboard/`). `/tonight` is now the sky verdict plus four ruled tiles that open `/tonight/targets` (which replaced `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets` and `/tonight/nights`; "Mark observed" returns to the page it came from. Next: the user approves the screenshot gate, then impl review, PR, merge, archive.
-- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location".
-- **Waiting on S-11:** S-05 session timeline (#69) becomes another `/tonight/*` page (and maybe a tile); S-06 offline (#70) caches the dashboard pages.
+  - **S-11 `tonight-dashboard`** (#87) is **done**: merged (#94), review fixes merged (#95), deployed, archived (`context/archive/2026-10-04-tonight-dashboard/`). `/tonight` is the sky verdict plus four ruled tiles that open `/tonight/targets` (which replaced `/tonight/all`, now a 301), `/tonight/moon`, `/tonight/planets` and `/tonight/nights`. "Mark observed" returns to the page it came from, and on Targets it reopens "the other N" at the logged row.
+- **Done in M-2:** S-01 planets, S-02 the Moon, S-07 verdict check, S-08 "Use my location", S-11 the Tonight dashboard.
+- **Unblocked by S-11:** S-05 session timeline (#69) becomes another `/tonight/*` page (and maybe a tile); S-06 offline (#70) caches the dashboard pages. Both still need re-scoping against the dashboard before planning.
 - **Still open behind them:** S-03 deep sky beyond Messier (`ready`, #67); S-04 double stars (`blocked`: data source and licence, #68); S-09 map picker (`blocked`: map-tile privacy decision, #73).
 
 ## Suggested next step
 
-1. Finish S-11: screenshot gate → `/10x-impl-review tonight-dashboard` → PR from `feat/tonight-dashboard` → merge (user OK) → `/10x-archive tonight-dashboard`.
-2. S-11's remaining unknown, the **interactive sky** (a slider moving real target positions across the dashboard sky; real or decorative stars), is a follow-up change of its own.
-3. Then the remaining `/10x-ui` passes (log, auth, onboarding, landing), and S-05 → S-06, S-03.
+1. S-11's remaining unknown, the **interactive sky** (a slider moving real target positions across the dashboard sky), is a follow-up change of its own. It needs the user's call on real background stars (a bright-star catalogue and its licence) or decorative ones.
+2. The remaining `/10x-ui` passes (log, auth, onboarding, landing), which close S-10 (`visual-redesign`).
+3. Then S-05 → S-06 (re-scoped as dashboard pages), then S-03.
 
 **Hard constraints (all UI work):**
 
@@ -26,7 +26,7 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 - Coordinates never go into URLs or logs. The site and telescope choice travels as ids (`?site=`, `?telescope=` plus the cookies).
 - Tonight's pages are server islands and need JavaScript (lessons.md).
 
-**Also still open:** post-merge checks from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider. The same bright Moon will exercise tonight-dashboard's `/tonight/all#washed-out` → Targets scroll (its e2e test skips until the Moon washes out an object).
+**Also still open:** post-merge checks from moonlight-and-the-verdict (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider. The same bright Moon will exercise the `/tonight/all#washed-out` → Targets scroll (its e2e test skips until the Moon washes out an object).
 
 ## Things a new session should know
 
@@ -59,5 +59,5 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 - **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#86, #87:** the two top-priority slices (S-10, S-11), labelled `priority:top`; #87 is `in-progress` on `feat/tonight-dashboard`.
+- **#86:** the remaining top-priority slice (S-10), labelled `priority:top`. #87 (S-11) is closed.
 - **#67–#70, #73:** the other remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.
