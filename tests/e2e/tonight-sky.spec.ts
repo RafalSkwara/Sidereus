@@ -167,3 +167,35 @@ test("a planet marker opens Planets", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1, name: en.tonight.summary.planets })).toBeVisible();
   }
 });
+
+test("the edge chevrons pan the panorama and hide at its ends", async ({ page }) => {
+  // Reduced motion pans at once, so the next step never races a smooth scroll still under way.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openSky(page, "e2e-sky-pan");
+  const strip = page.locator("[data-sky-strip]");
+  const left = page.getByRole("button", { name: t.panLeft });
+  const right = page.getByRole("button", { name: t.panRight });
+  const scrollLeft = () => strip.evaluate((element) => element.scrollLeft);
+
+  // Centred at load, so both ways are open.
+  await expect(left).toBeVisible();
+  await expect(right).toBeVisible();
+  const start = await scrollLeft();
+  await right.click();
+  await expect.poll(scrollLeft).toBeGreaterThan(start);
+
+  // At the left end the left chevron hides and the right one stays.
+  await strip.evaluate((element) => {
+    element.scrollLeft = 0;
+  });
+  await expect(left).toBeHidden();
+  await expect(right).toBeVisible();
+
+  // Reaching the right end with the right chevron focused hands the focus to the left one, not to the page.
+  await right.focus();
+  await strip.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  await expect(right).toBeHidden();
+  await expect(left).toBeFocused();
+});

@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   SILHOUETTE_CLASS,
@@ -32,12 +33,14 @@ import { cn } from "@/lib/utils";
  * (`skyMix`, the `dusk-band` utility); its top stays `--zenith`, so it continues the Topbar's strip without a seam.
  *
  * The panorama covers 360° on a strip about twice the viewport wide (a little narrower, `EDGE_INSET_PX`, so E and W
- * show whole at load), scrolled at load to centre `facing`; swipe for the rest.
+ * show whole at load), scrolled at load to centre `facing`; swipe for the rest, or use the chevron at each edge
+ * (ui-sky-light), which pans most of a viewport and hides once its end is reached.
  * Its star field reaches `STRIP_OVERLAP_PX` up behind the verdict's empty lower area. The verdict stays on top but
  * takes no pointer events (it has nothing interactive), so taps and swipes over the overlap reach the panorama. The
  * overlap holds stars only: no star label, and a body there has its label below the overlap, beside the column if
  * another body's label is there, with a leader line back to the dot when the label sits far from it.
- * Stars are one path (hidden in the light theme, `hidden dark:block`); a marker is an SVG link named for the body, its
+ * Stars are one path, shown under a night sky (`hidden night:block`): the band is a `night-sky` scope, so in the light
+ * theme it stays a navy night with its stars (ui-sky-light); a marker is an SVG link named for the body, its
  * altitude and direction at the slider's time, with a 24 px hit area and a `--ring` focus circle.
  * Along the field's top edge a compass row names the 16 points (compass-labels), international in every locale
  * (`@/lib/compass`), cardinals stronger. It sits just under the verdict's text, wherever that ends: the island measures
@@ -71,6 +74,18 @@ const RING_INSET_PX = RING_PX + 1;
 /** The compass row's gap under the verdict's text, and its highest place in the field. */
 const COMPASS_GAP_PX = 8;
 const COMPASS_MIN_TOP_PX = 4;
+/** How far a chevron pans the strip, as a share of the visible width (ui-sky-light). */
+const PAN_SHARE = 0.6;
+
+/**
+ * The panorama's edge chevrons (ui-sky-light): a 44 px target over the strip's middle, above the verdict's layer, with
+ * a smaller translucent zenith face so the sky shows through; `--ring` focus outline on the target.
+ */
+const PAN_BUTTON_CLASS =
+  "group focus-visible:outline-ring absolute z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2";
+const PAN_FACE_CLASS =
+  "bg-zenith/70 border-border text-heading group-hover:bg-zenith group-hover:border-muted-foreground flex size-8 items-center justify-center rounded-full border backdrop-blur-sm transition-colors motion-reduce:transition-none";
+
 /** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
 const COMPASS_ROW_PX = 16;
 /**
@@ -133,6 +148,39 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   const field = useRef<SVGSVGElement>(null);
   // The compass row's top in the field, once the verdict's text has been measured.
   const [compassTop, setCompassTop] = useState<number | null>(null);
+  // Whether the strip sits at its left or right end: that edge's chevron hides (both do when nothing overflows).
+  const [edges, setEdges] = useState({ start: true, end: true });
+  const panButtons = useRef<Record<"left" | "right", HTMLButtonElement | null>>({ left: null, right: null });
+  const pendingFocus = useRef<"left" | "right" | "strip" | null>(null);
+  useLayoutEffect(() => {
+    const target = pendingFocus.current;
+    if (!target) return;
+    pendingFocus.current = null;
+    (target === "strip" ? scroller.current : panButtons.current[target])?.focus();
+  }, [edges]);
+  const readEdges = () => {
+    const element = scroller.current;
+    if (!element) return;
+    const max = element.scrollWidth - element.clientWidth;
+    const next = { start: element.scrollLeft <= 1, end: element.scrollLeft >= max - 1 };
+    // A chevron that just reached its end hides: hand keyboard focus to the other one, or to the strip when both hide
+    // (nothing overflows any more), rather than drop it on the page. Applied after the render (the effect above), since the
+    // other chevron may still be hidden until then.
+    const { left, right } = panButtons.current;
+    const focused = document.activeElement;
+    if (next.start && next.end && (focused === left || focused === right)) pendingFocus.current = "strip";
+    else if (next.end && focused === right) pendingFocus.current = "left";
+    else if (next.start && focused === left) pendingFocus.current = "right";
+    // Scroll events fire every frame of a swipe: keep the same state object unless an edge actually changed.
+    setEdges((prev) => (prev.start === next.start && prev.end === next.end ? prev : next));
+  };
+  // A chevron pans most of a viewport, keeping a strip of overlap so the eye keeps its place.
+  const pan = (direction: -1 | 1) => {
+    const element = scroller.current;
+    if (!element) return;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    element.scrollBy({ left: direction * element.clientWidth * PAN_SHARE, behavior: smooth ? "smooth" : "auto" });
+  };
 
   // Measure the strip's viewport before the first paint (so a desktop doesn't flash the 390 px default), and keep
   // `facing` in the middle of it after every resize. React 19 runs layout effects only in the browser, without an SSR
@@ -153,6 +201,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   useLayoutEffect(() => {
     const element = scroller.current;
     if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
+    readEdges();
   }, [viewport]);
 
   // Where the verdict's text ends, relative to the star field's top: the compass row goes just under it, never higher
@@ -268,7 +317,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
 
   return (
     <div>
-      <div className="dusk-band relative overflow-hidden" style={bandStyle} data-sky-band>
+      <div className="dusk-band night-sky relative overflow-hidden" style={bandStyle} data-sky-band>
         {/*
          * Above the strip's overlap, and transparent to the pointer: the verdict has no links or buttons, so taps and
          * swipes anywhere over the overlap reach the panorama's markers and scroll. A link in the verdict would need
@@ -281,114 +330,138 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           {children}
         </div>
 
-        <div
-          ref={scroller}
-          role="region"
-          aria-label={t.panorama}
-          tabIndex={0}
-          className={cn(
-            "scrollbar-strip focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2",
-            STRIP_OVERLAP_CLASS,
-          )}
-          data-sky-strip
-        >
-          <svg
-            ref={field}
-            width={stripWidth}
-            height={height}
-            viewBox={`0 0 ${String(stripWidth)} ${String(height)}`}
-            className="block"
-            data-sky-frame={index}
+        <div className={cn("relative", STRIP_OVERLAP_CLASS)}>
+          <div
+            ref={scroller}
+            role="region"
+            aria-label={t.panorama}
+            tabIndex={0}
+            className="scrollbar-strip focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
+            onScroll={readEdges}
+            data-sky-strip
           >
-            <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
-              {compass.map(({ point, x, anchor }) => (
-                <text
-                  key={`${point}-${String(x)}`}
-                  x={x}
-                  y={(compassTop ?? 0) + CAPTION_BASELINE_PX}
-                  textAnchor={anchor}
-                  className={cn(
-                    "text-caption",
-                    isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",
-                  )}
-                >
-                  {point}
-                </text>
-              ))}
-            </g>
-            <g className="hidden dark:block" aria-hidden="true">
-              <path d={stars.path} className="fill-star" />
-              {stars.named.map((star) => {
-                const rect = labels.get(star.id);
+            <svg
+              ref={field}
+              width={stripWidth}
+              height={height}
+              viewBox={`0 0 ${String(stripWidth)} ${String(height)}`}
+              className="block"
+              data-sky-frame={index}
+            >
+              <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
+                {compass.map(({ point, x, anchor }) => (
+                  <text
+                    key={`${point}-${String(x)}`}
+                    x={x}
+                    y={(compassTop ?? 0) + CAPTION_BASELINE_PX}
+                    textAnchor={anchor}
+                    className={cn(
+                      "text-caption",
+                      isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",
+                    )}
+                  >
+                    {point}
+                  </text>
+                ))}
+              </g>
+              <g className="night:block hidden" aria-hidden="true">
+                <path d={stars.path} className="fill-star" />
+                {stars.named.map((star) => {
+                  const rect = labels.get(star.id);
+                  return (
+                    rect && (
+                      <text
+                        key={star.id}
+                        x={rect.x}
+                        y={rect.y + 11}
+                        className="fill-muted-foreground text-caption"
+                        data-star-label
+                      >
+                        {stars.names.get(star.id)}
+                      </text>
+                    )
+                  );
+                })}
+              </g>
+              {bodies.map(({ body, x, y, altDeg, azDeg }) => {
+                const rect = labels.get(body.key);
+                const direction = compassPoint(azDeg);
+                const hitY = Math.min(Math.max(y - HIT_PX, 0), height - 2 * HIT_PX);
+                const ringX = Math.min(Math.max(x, RING_INSET_PX), stripWidth - RING_INSET_PX);
+                const ringY = Math.min(Math.max(y, RING_INSET_PX), height - RING_INSET_PX);
+                const leader = rect ? leaderLine(x, y, rect) : null;
                 return (
-                  rect && (
-                    <text
-                      key={star.id}
-                      x={rect.x}
-                      y={rect.y + 11}
-                      className="fill-muted-foreground text-caption"
-                      data-star-label
-                    >
-                      {stars.names.get(star.id)}
-                    </text>
-                  )
+                  <a
+                    key={body.key}
+                    href={body.href}
+                    aria-label={t.bodyLabel({ name: body.name, alt: String(Math.round(altDeg)), direction, time })}
+                    className="group cursor-pointer outline-none"
+                    data-sky-body={body.kind}
+                    data-key={body.key}
+                  >
+                    <rect x={x - HIT_PX} y={hitY} width={2 * HIT_PX} height={2 * HIT_PX} className="fill-transparent" />
+                    {leader && (
+                      <line
+                        {...leader}
+                        strokeWidth={1}
+                        aria-hidden="true"
+                        className="stroke-muted-foreground"
+                        data-sky-leader
+                      />
+                    )}
+                    {body.kind === "object" && (
+                      <circle cx={x} cy={y} r={4} strokeWidth={1.5} className="stroke-primary-strong fill-none" />
+                    )}
+                    {body.kind === "planet" && <circle cx={x} cy={y} r={3} className="fill-heading" />}
+                    {body.kind === "moon" && (
+                      <circle cx={x} cy={y} r={5.5} strokeWidth={1} className="fill-moon-lit stroke-moon-limb" />
+                    )}
+                    <circle
+                      cx={ringX}
+                      cy={ringY}
+                      r={RING_PX}
+                      strokeWidth={2}
+                      className="stroke-ring hidden fill-none group-focus-visible:block"
+                    />
+                    {rect && (
+                      <text
+                        x={rect.x}
+                        y={rect.y + 11}
+                        aria-hidden="true"
+                        className="fill-heading text-caption font-semibold group-hover:underline"
+                      >
+                        {body.label}
+                      </text>
+                    )}
+                  </a>
                 );
               })}
-            </g>
-            {bodies.map(({ body, x, y, altDeg, azDeg }) => {
-              const rect = labels.get(body.key);
-              const direction = compassPoint(azDeg);
-              const hitY = Math.min(Math.max(y - HIT_PX, 0), height - 2 * HIT_PX);
-              const ringX = Math.min(Math.max(x, RING_INSET_PX), stripWidth - RING_INSET_PX);
-              const ringY = Math.min(Math.max(y, RING_INSET_PX), height - RING_INSET_PX);
-              const leader = rect ? leaderLine(x, y, rect) : null;
-              return (
-                <a
-                  key={body.key}
-                  href={body.href}
-                  aria-label={t.bodyLabel({ name: body.name, alt: String(Math.round(altDeg)), direction, time })}
-                  className="group cursor-pointer outline-none"
-                  data-sky-body={body.kind}
-                  data-key={body.key}
-                >
-                  <rect x={x - HIT_PX} y={hitY} width={2 * HIT_PX} height={2 * HIT_PX} className="fill-transparent" />
-                  {leader && (
-                    <line
-                      {...leader}
-                      strokeWidth={1}
-                      aria-hidden="true"
-                      className="stroke-muted-foreground"
-                      data-sky-leader
-                    />
-                  )}
-                  {body.kind === "object" && (
-                    <circle cx={x} cy={y} r={4} strokeWidth={1.5} className="stroke-primary-strong fill-none" />
-                  )}
-                  {body.kind === "planet" && <circle cx={x} cy={y} r={3} className="fill-heading" />}
-                  {body.kind === "moon" && (
-                    <circle cx={x} cy={y} r={5.5} strokeWidth={1} className="fill-moon-lit stroke-moon-limb" />
-                  )}
-                  <circle
-                    cx={ringX}
-                    cy={ringY}
-                    r={RING_PX}
-                    strokeWidth={2}
-                    className="stroke-ring hidden fill-none group-focus-visible:block"
-                  />
-                  {rect && (
-                    <text
-                      x={rect.x}
-                      y={rect.y + 11}
-                      aria-hidden="true"
-                      className="fill-heading text-caption font-semibold group-hover:underline"
-                    >
-                      {body.label}
-                    </text>
-                  )}
-                </a>
-              );
-            })}
-          </svg>
+            </svg>
+          </div>
+          {(["left", "right"] as const).map((side) => {
+            const atEdge = side === "left" ? edges.start : edges.end;
+            const Icon = side === "left" ? ChevronLeft : ChevronRight;
+            return (
+              <button
+                key={side}
+                ref={(element) => {
+                  panButtons.current[side] = element;
+                }}
+                type="button"
+                aria-label={side === "left" ? t.panLeft : t.panRight}
+                className={cn(PAN_BUTTON_CLASS, side === "left" ? "left-1" : "right-1", atEdge && "invisible")}
+                style={{ top: STRIP_OVERLAP_PX + STRIP_HEIGHT_PX / 2 }}
+                onClick={() => {
+                  pan(side === "left" ? -1 : 1);
+                }}
+                data-sky-pan={side}
+              >
+                <span className={PAN_FACE_CLASS}>
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <svg

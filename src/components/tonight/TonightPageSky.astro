@@ -23,7 +23,7 @@ const m = getMessages(Astro.locals.locale);
 const context = view ? [view.dateLabel, view.siteName, view.telescopeName].join(" · ") : null;
 ---
 
-<TonightSky>
+<TonightSky night>
   <BackLink href="/tonight" label={m.nav.tonight} />
   <div class="mt-2">
     <PageHeader title={title} />

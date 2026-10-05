@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
  * Import guard for Tonight's live sky (interactive-sky): the island runs in the browser, so it, the sky-view maths
  * it composes and the star catalogue it draws may import only React, `@/lib/sky-view/*`, the island-safe star
  * catalogue (`stars.ts` with its JSON, `star-names.ts` with the `Locale` type), the shared `sky-band` and
- * `range-classes`, the international compass (`@/lib/compass`), the message catalogue, `cn` and `buttonVariants`. Never astronomy-engine, the engine barrel or an engine module,
+ * `range-classes`, the international compass (`@/lib/compass`), the message catalogue, `cn`, `buttonVariants` and the
+ * `lucide-react` icons (the pan chevrons, ui-sky-light). Never astronomy-engine, the engine barrel or an engine module,
  * `@/lib/tonight/format`, or `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser).
  */
 
@@ -43,7 +44,9 @@ function isAllowedImport(specifier: string): boolean {
     specifier === "@/components/tonight/range-classes" ||
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
-    specifier === "@/components/ui/button"
+    specifier === "@/components/ui/button" ||
+    // The pan chevrons' icons (ui-sky-light): browser-safe SVG components, as in the other islands.
+    specifier === "lucide-react"
   );
 }
 
@@ -53,7 +56,7 @@ describe("TonightSkyView import guard", () => {
     expect(SOURCES.some((source) => source.endsWith("rotate.ts"))).toBe(true);
   });
 
-  it("imports only React, the sky-view maths, the star catalogue, sky-band, range-classes, i18n, cn and buttonVariants", () => {
+  it("imports only React, the sky-view maths, the star catalogue, sky-band, range-classes, i18n, cn, buttonVariants and icons", () => {
     const specifiers = SOURCES.flatMap((source) => importSpecifiers(readFileSync(source, "utf8")));
     expect(specifiers).toContain("@/lib/sky-view/rotate");
     expect(specifiers).toContain("@/lib/catalogue/stars");

@@ -4,7 +4,8 @@
  * horizon silhouette in the page's ground colour. Under GearShell's sky-flow mode it continues the Topbar's zenith
  * strip, so the page reads as one sky. The slot (the date, the verdict and its reason) sits in the shared
  * `max-w-3xl px-4` container. Stars and horizon are inline SVG filled from tokens, so red mode stays pure red;
- * the stars are hidden in the light theme (`dark:` means "not light").
+ * the stars show under a night sky (`night:`). Tonight's callers pass `night` (ui-sky-light): the band joins the
+ * `night-sky` scope, so in the light theme it stays a navy night with its stars; the landing page leaves it out.
  */
 
 import {
@@ -27,9 +28,11 @@ interface Props {
    * skeleton sets it, so the live band (`TonightSkyView`) swaps in at the same height.
    */
   strip?: boolean;
+  /** A Tonight sky: the band joins the `night-sky` scope and stays a navy night in the light theme (ui-sky-light). */
+  night?: boolean;
 }
 
-const { verdict = false, strip = false } = Astro.props;
+const { verdict = false, strip = false, night = false } = Astro.props;
 
 // A fixed, seeded field (the canvas's Lehmer generator), so every render draws the same sky. Positions are
 // percentages of the band, so the field spans any width while each star keeps its size; more stars sit high.
@@ -46,8 +49,8 @@ const stars = Array.from({ length: STAR_COUNT }, () => ({
 }));
 ---
 
-<div class="relative overflow-hidden bg-linear-to-b from-zenith to-horizon">
-  <svg aria-hidden="true" focusable="false" class="absolute inset-0 hidden size-full fill-star dark:block">
+<div class:list={["relative overflow-hidden bg-linear-to-b from-zenith to-horizon", night && "night-sky"]}>
+  <svg aria-hidden="true" focusable="false" class="absolute inset-0 hidden size-full fill-star night:block">
     {stars.map((star) => (
       <circle cx={star.x} cy={star.y} r={star.r} />
     ))}
