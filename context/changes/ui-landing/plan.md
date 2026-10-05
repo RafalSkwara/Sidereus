@@ -206,24 +206,24 @@ dashboard. Adjust the spec only if it no longer reaches a settled dashboard (e.g
 
 #### Automated
 
-- [x] 2.1 Hardcoded-value scan on `Welcome.astro` + `index.astro` returns 0 (0 hits)
-- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` (incl. `no-hardcoded-colors`, `red-theme`, `contrast`) pass
-- [x] 2.3 `tests/e2e/landing.spec.ts`: signed out, `/` shows the `h1` and both CTAs with their hrefs
-- [x] 2.4 `tests/e2e/red-night-mode.spec.ts` (runs on `/`) passes
+- [x] 2.1 Hardcoded-value scan on `Welcome.astro` + `index.astro` returns 0 (0 hits) — d25c767
+- [x] 2.2 `npm run lint`, `npx astro check`, `npm test` (incl. `no-hardcoded-colors`, `red-theme`, `contrast`) pass — d25c767
+- [x] 2.3 `tests/e2e/landing.spec.ts`: signed out, `/` shows the `h1` and both CTAs with their hrefs — d25c767
+- [x] 2.4 `tests/e2e/red-night-mode.spec.ts` (runs on `/`) passes — d25c767
 
 #### Manual
 
-- [x] 2.5 Screenshots EN/PL × dark/light/red × 390/1280 read as Nightfall (sky band, ruled bands), no horizontal overflow, PL wraps cleanly at 390 px (evidence: scratchpad `shots/p2/{en,pl}-{dark,light,red}-{390,1280}.png`; scrollWidth overflow 0 at 390/1280; at 320 px PL the shared Topbar overflows by 22 px, pre-existing, see review notes)
+- [x] 2.5 Screenshots EN/PL × dark/light/red × 390/1280 read as Nightfall (sky band, ruled bands), no horizontal overflow, PL wraps cleanly at 390 px (evidence: scratchpad `shots/p2/{en,pl}-{dark,light,red}-{390,1280}.png`; scrollWidth overflow 0 at 390/1280; at 320 px PL the shared Topbar overflows by 22 px, pre-existing, see review notes) — d25c767
 
 ### Phase 3: Screenshot, states and guard
 
 #### Automated
 
-- [ ] 3.1 e2e specs touching `/` pass against the 4324 preview (`landing.spec.ts`, `red-night-mode.spec.ts`)
-- [ ] 3.2 `npm run lint`, `npx astro check`, `npm test` pass after the final edit
+- [x] 3.1 e2e specs touching `/` pass against the 4324 preview (`landing.spec.ts`, `red-night-mode.spec.ts`)
+- [x] 3.2 `npm run lint`, `npx astro check`, `npm test` pass after the final edit
 
 #### Manual
 
-- [ ] 3.3 `public/landing/tonight.png` shows the Nightfall dashboard (live sky, tiles)
-- [ ] 3.4 7-state matrix covered with screenshots
-- [ ] 3.5 Contrast and focus checked by eye in all three themes
+- [x] 3.3 `public/landing/tonight.png` shows the Nightfall dashboard (live sky, tiles) (evidence: `public/landing/tonight.png`, 1280×1160: Go verdict, live sky, slider, "Point here first")
+- [x] 3.4 7-state matrix covered with screenshots (evidence, scratchpad `shots/p3/`: default `{en,pl}-{dark,light,red}-{390,1280}.png`; hover `en-*-1280-hover-{getstarted,signin}.png`; focus `en-{dark,red}-1280-tab5.png`, `pl-light-390-tab5.png` (Get started), `*-tab3/4` (Topbar controls); unconfigured banner `en-*-1280-unconfigured.png`, `pl-*-390-unconfigured.png` (EN copy, 390 px); long PL `pl-*-390.png`, `pl-dark-320.png`; reduced motion `en-dark-390-reduced.png` (no motion on this page); disabled, error, empty, loading: N/A, static page with two links and no data)
+- [x] 3.5 Contrast and focus checked by eye in all three themes (heading and muted-foreground on zenith/horizon are pinned by contrast.test.ts; footer moved off `faint`; CTA focus is the offset `--ring` outline, visible on the filled ink in red; checked in the p3 shots)

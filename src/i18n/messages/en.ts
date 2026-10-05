@@ -106,7 +106,7 @@ export const en = {
     signIn: "Sign in",
     previewHeading: "What Tonight looks like",
     screenshotAlt:
-      "The Sidereus Tonight dashboard: the verdict Clear over a live panorama of tonight's sky with the top targets, the planets and the Moon marked, then tiles for the targets, the Moon, the planets and the next nights.",
+      "The Sidereus Tonight dashboard: the night's verdict over a live panorama of tonight's sky with the bright stars and planets, a slider across the night, and the first targets with the time each stands highest.",
     footerPrefix: "Named after Galileo's",
     footerWork: "Sidereus Nuncius",
     footerSuffix: ", 1610.",

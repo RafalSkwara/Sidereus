@@ -88,7 +88,7 @@ export const pl = {
     signIn: "Zaloguj się",
     previewHeading: "Tak wygląda „Dziś w nocy”",
     screenshotAlt:
-      "Panel „Dziś w nocy” w Sidereusie: ocena „Pogodnie” nad panoramą dzisiejszego nieba z zaznaczonymi najlepszymi celami, planetami i Księżycem, a pod nią kafelki celów, Księżyca, planet i kolejnych nocy.",
+      "Panel „Dziś w nocy” w Sidereusie: werdykt nocy nad panoramą dzisiejszego nieba z jasnymi gwiazdami i planetami, suwak przez całą noc i pierwsze cele z godziną, o której każdy stoi najwyżej.",
     footerPrefix: "Nazwa pochodzi od dzieła Galileusza",
     footerWork: "Sidereus Nuncius",
     footerSuffix: " z 1610 roku.",
