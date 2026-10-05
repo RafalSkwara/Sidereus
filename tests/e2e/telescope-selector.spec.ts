@@ -147,6 +147,8 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await expect(firstTarget(page)).toBeVisible();
   await expect(ranking(page)).not.toContainText(t.object.findWith);
   await expect(ranking(page)).not.toContainText(t.object.noneFit({ name: "" }).split("(")[0] ?? "");
+  // Targets is often opened directly, so it says why the pairs are missing too.
+  await expect(page.locator("main").getByText(t.noEyepiecesPrompt)).toBeVisible();
   await openTonight(page);
   await expect(page.locator("main").getByText(t.noEyepiecesPrompt)).toBeVisible();
   await expect(page.locator("main").getByText(t.noEyepiecesPrompt)).toHaveCount(1);

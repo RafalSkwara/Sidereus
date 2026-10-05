@@ -15,9 +15,13 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
 const tile = "border-b border-border px-4 py-4";
 ---
 
-<div role="status" aria-busy="true">
+<!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
+     reaches them if the island never arrives (tonight-dashboard review F8). -->
+<div>
   <h1 class="sr-only">{t.title}</h1>
-  <span class="sr-only">{t.loading}</span>
+  <span role="status" class="sr-only">
+    {t.loading}
+  </span>
   <TonightSky verdict>
     <div aria-hidden="true">
       <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>

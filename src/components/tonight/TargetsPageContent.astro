@@ -7,6 +7,7 @@
 import { ChevronDown } from "lucide-react";
 
 import { ServerError } from "@/components/forms/ServerError";
+import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
@@ -33,10 +34,12 @@ interface Props {
   notice?: TonightNotice | null;
   /** The rest of the list starts open: the page came with a `?sort=` (a sort link inside it was followed). */
   restOpen?: boolean;
+  /** The target key from `?logged=`, after "Mark observed" here; `null` when none. */
+  logged?: string | null;
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, sort, notice = null, restOpen = false } = Astro.props;
+const { siteId, telescopeId, sort, notice = null, restOpen = false, logged = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const a = t.all;
@@ -57,6 +60,9 @@ const ranking = view?.ranking ?? null;
 const href = (id: string) => (view ? logHref(view, id, "targets") : "");
 const best = ranking ? ranking.entries.slice(0, MAX_RANKED_OBJECTS) : [];
 const rest = ranking ? sortEntries(ranking.entries.slice(MAX_RANKED_OBJECTS), sort) : [];
+// Back from logging one of the rest: open the list, and the page's script brings that row into view
+// (`data-logged-row`), so the seen tag the notice speaks of is on screen.
+const loggedInRest = logged !== null && rest.some((entry) => entry.id === logged);
 // Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
 // Tonight is never unexplained.
 const washedOut = ranking?.washedOutEntries ?? [];
@@ -104,6 +110,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 
       {view && load.eyepiecesError && <ServerError message={translate(load.eyepiecesError)} />}
       {view && load.logError && <ServerError message={translate(load.logError)} />}
+      {view && !view.hasEyepieces && !load.eyepiecesError && <EyepiecesPrompt />}
 
       {view && !ranking && (
         /* No ranking (a weather no-go or no darkness): why, from the view, and the way to a better night. */
@@ -147,7 +154,12 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 
               {rest.length > 0 && (
                 /* Native <details>: the button needs no script of its own, and a sort link reopens it (restOpen). */
-                <details id="more" open={restOpen} class="group mt-6 scroll-mt-4">
+                <details
+                  id="more"
+                  open={restOpen || loggedInRest}
+                  data-logged-row={loggedInRest ? logged : undefined}
+                  class="group mt-6 scroll-mt-4"
+                >
                   <summary
                     class:list={[
                       buttonVariants({ variant: "outline" }),
@@ -183,7 +195,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                   <div
                     role="region"
                     aria-label={t.pages.restLabel}
-                    class="max-h-128 overflow-y-auto overscroll-contain rounded-lg border border-border px-3"
+                    class="max-h-128 overflow-y-auto overscroll-contain rounded-lg border border-border px-3 py-1"
                   >
                     <ul class="divide-y divide-border">
                       {rest.map((entry) => (
