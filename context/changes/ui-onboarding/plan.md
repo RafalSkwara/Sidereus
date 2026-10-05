@@ -229,10 +229,10 @@ Close C4, cover the state matrix and leave the rule.
 
 #### Automated
 
-- [x] 3.1 `npm run lint`, `npx astro check` and `npm test` pass
-- [x] 3.2 e2e `onboarding.spec.ts` and `site-location.spec.ts` pass against the local preview
+- [x] 3.1 `npm run lint`, `npx astro check` and `npm test` pass — b725ce5
+- [x] 3.2 e2e `onboarding.spec.ts` and `site-location.spec.ts` pass against the local preview — b725ce5
 
 #### Manual
 
-- [x] 3.3 State screenshots in EN dark/light/red and PL dark at 390 px read correctly, with errors carrying the icon
-- [x] 3.4 `/gear/sites/new` screenshots EN/PL × dark/light/red × 390/1280 (plus a picked state at 390) still look right
+- [x] 3.3 State screenshots in EN dark/light/red and PL dark at 390 px read correctly, with errors carrying the icon — b725ce5
+- [x] 3.4 `/gear/sites/new` screenshots EN/PL × dark/light/red × 390/1280 (plus a picked state at 390) still look right — b725ce5

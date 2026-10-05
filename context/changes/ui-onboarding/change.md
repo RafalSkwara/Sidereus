@@ -1,7 +1,7 @@
 ---
 change_id: ui-onboarding
 title: Onboarding in Nightfall (/10x-ui pass)
-status: implementing
+status: implemented
 created: 2026-10-05
 updated: 2026-10-05
 archived_at: null
