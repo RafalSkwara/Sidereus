@@ -1,21 +1,26 @@
 ---
+import { CircleCheck, MailCheck } from "lucide-react";
 import AuthShell from "@/components/AuthShell.astro";
+import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 const isAutoConfirmed = import.meta.env.DEV;
 const t = getMessages(Astro.locals.locale).auth.confirmEmail;
 
+// Icons, not emoji: an emoji keeps its own colours, which red night mode cannot reach.
 const content = isAutoConfirmed
-  ? { emoji: "✅", heading: t.registered.heading, description: t.registered.description, linkText: t.registered.link }
-  : { emoji: "📧", heading: t.checkEmail.heading, description: t.checkEmail.description, linkText: t.checkEmail.link };
+  ? { Icon: CircleCheck, tone: "text-go", ...t.registered }
+  : { Icon: MailCheck, tone: "text-primary-strong", ...t.checkEmail };
+const { Icon } = content;
 ---
 
-<AuthShell title={content.heading} centered>
-  <div slot="icon" class="mb-4 text-5xl">
-    {content.emoji}
+<AuthShell title={content.heading}>
+  <div slot="icon" class="mb-4">
+    <Icon className={cn("size-10", content.tone)} aria-hidden="true" />
   </div>
-  <p class="mb-6 text-foreground">{content.description}</p>
-  <a href="/auth/signin" class="text-sm font-semibold text-primary hover:underline">
-    {content.linkText}
+  <p class="text-body text-foreground">{content.description}</p>
+  <a href="/auth/signin" class:list={cn(buttonVariants({ variant: "link" }), "mt-4 -ml-1 px-1")}>
+    {content.link}
   </a>
 </AuthShell>

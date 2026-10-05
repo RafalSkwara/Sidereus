@@ -126,6 +126,7 @@ export const en = {
       noAccount: "Don't have an account?",
       signUpLink: "Sign up",
       continueNote: "Sign in to continue.",
+      subtitle: "Your sites, gear and observing log, on any device.",
     },
     signUp: {
       title: "Sign up",
@@ -140,6 +141,7 @@ export const en = {
         one: (p) => `${p.count} more character needed`,
         other: (p) => `${p.count} more characters needed`,
       } as PluralForms<Count>,
+      subtitle: "Tell Sidereus where you observe from, and it tells you whether tonight is worth setting up for.",
     },
     validation: {
       emailRequired: "Email is required",
