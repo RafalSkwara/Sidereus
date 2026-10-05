@@ -942,6 +942,14 @@ export const en = {
     deleteHeading: "Delete",
   },
 
+  /** Installing the app and using it offline (S-06, offline-night-plan). */
+  offline: {
+    install: {
+      action: "Install app",
+      iosHint: "Tap Share, then Add to Home Screen.",
+    },
+  },
+
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
   skyChecks: {
     card: {

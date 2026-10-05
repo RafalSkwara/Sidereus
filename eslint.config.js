@@ -105,6 +105,9 @@ const gearConfig = defineConfig({
     "src/components/gear/**",
     // The interactive sky's rotation matrices encode the site's coordinates (interactive-sky).
     "src/lib/sky-view/**",
+    // S-06: the offline store keeps Tonight pages (and site ids) on the device.
+    "src/lib/offline/**",
+    "src/sw.ts",
   ],
   rules: { "no-console": "error" },
 });

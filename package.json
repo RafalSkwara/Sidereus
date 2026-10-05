@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "node scripts/build-sw.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
@@ -17,6 +18,7 @@
     "test:db": "vitest run --config vitest.db.config.ts",
     "catalogue:build": "node scripts/build-catalogue.mjs",
     "stars:build": "node scripts/build-stars.mjs",
+    "icons:build": "pwa-assets-generator",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
     "cf:types": "wrangler types"
   },
@@ -51,6 +53,7 @@
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.55.0",
+    "@vite-pwa/assets-generator": "^2.0.0",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-astro": "^3.1.0",
@@ -67,6 +70,11 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^5.0.1",
+    "workbox-build": "^7.4.1",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-strategies": "^7.4.1",
     "wrangler": "^4.131.1"
   },
   "lint-staged": {

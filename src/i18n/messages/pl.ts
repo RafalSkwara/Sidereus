@@ -835,6 +835,13 @@ export const pl = {
     deleteHeading: "Usuwanie",
   },
 
+  offline: {
+    install: {
+      action: "Zainstaluj aplikację",
+      iosHint: "Stuknij Udostępnij, a potem „Do ekranu początkowego”.",
+    },
+  },
+
   skyChecks: {
     card: {
       titleLastNight: "Jakie było niebo ostatniej nocy?",

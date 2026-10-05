@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { getMessages } from "@/i18n";
+import { installState, promptInstall, subscribeInstallState } from "@/lib/offline/install";
 import { LOCALE_COOKIE, THEME_COOKIE, nextTheme, preferenceCookie, type Locale, type Theme } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,11 @@ const segmentClass = cn(
   "disabled:cursor-progress",
 );
 const sectionLabel = "text-label font-semibold text-muted-foreground";
+/** A quiet text button in the panel: Install app, Sign out. */
+const textAction = cn(
+  "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
+  focusRing,
+);
 
 /*
  * Native popover (`popover` + `popovertarget`): it opens before hydration, closes on Esc or an outside tap and
@@ -96,7 +102,7 @@ function reloadInLocale(next: Locale) {
 
 /**
  * The stateful end of the top bar: the theme button (cycles dark → light → red, shows the current theme) and the
- * settings popover (who is signed in, theme, language, sign out). One island, so the button and the settings theme
+ * settings popover (who is signed in, theme, language, install, sign out). One island, so the button and the settings theme
  * control never disagree. The server already rendered
  * the resolved theme on <html data-theme>; this island mirrors choices into the attribute and the cookies.
  */
@@ -106,6 +112,9 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
   const [theme, setTheme] = useState<Theme>(initialTheme);
   // Set once a language is picked: the reload can take a moment, so the tap is acknowledged at once.
   const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
+  // S-06: "Install app" shows only where it can do something; the server renders it hidden ("none").
+  const install = useSyncExternalStore(subscribeInstallState, installState, () => "none" as const);
+  const [iosHintOpen, setIosHintOpen] = useState(false);
 
   function chooseTheme(next: Theme) {
     if (next === theme) return;
@@ -240,15 +249,34 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
             </div>
           </div>
 
+          {(install === "prompt" || install === "ios") && (
+            <div className="border-border grid gap-1 border-t pt-3">
+              <button
+                type="button"
+                className={textAction}
+                aria-expanded={install === "ios" ? iosHintOpen : undefined}
+                aria-controls={install === "ios" ? "settings-install-hint" : undefined}
+                onClick={() => {
+                  if (install === "prompt") {
+                    void promptInstall();
+                  } else {
+                    setIosHintOpen((open) => !open);
+                  }
+                }}
+              >
+                {m.offline.install.action}
+              </button>
+              {install === "ios" && (
+                <p id="settings-install-hint" hidden={!iosHintOpen} className="text-foreground text-sm">
+                  {m.offline.install.iosHint}
+                </p>
+              )}
+            </div>
+          )}
+
           {email && (
             <form method="POST" action="/api/auth/signout" className="border-border border-t pt-3">
-              <button
-                type="submit"
-                className={cn(
-                  "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
-                  focusRing,
-                )}
-              >
+              <button type="submit" className={textAction}>
                 {m.nav.signOut}
               </button>
             </form>

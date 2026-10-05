@@ -19,6 +19,9 @@ const { title = m.common.appName } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    {/* S-06: installable. The theme colour lives in the manifest (literal hex is not allowed under src/). */}
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <title>{title}</title>
   </head>
   <body>
@@ -45,6 +48,14 @@ const { title = m.common.appName } = Astro.props;
     </svg>
   </body>
 </html>
+
+<script>
+  // S-06: the service worker, and an early listener for the install prompt (the settings entry offers it later).
+  import "@/lib/offline/install";
+  import { registerServiceWorker } from "@/lib/offline/register";
+
+  registerServiceWorker();
+</script>
 
 <style>
   html,

@@ -59,7 +59,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done        |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done        |
-| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
+| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | in-progress |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
 | S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked     |
@@ -216,7 +216,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What gets cached: only the last-viewed site, or every site's tonight? Candidate: each site the user opened in the last day, with stored plans cleared on sign-out. — Owner: user. Block: no.
   - Can the log be written offline and synced later? Candidate: no in this slice; logging shows "needs a connection". — Owner: user. Block: no.
 - **Risk:** Caching is easy to get subtly wrong (stale plans shown as current, a signed-out user's plan left on the device, auth pages cached); the "prepared at" stamp and the sign-out purge are the guardrails. Site coordinates stay on the user's own device, which the privacy guardrail allows.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-07: Verdict check
 
