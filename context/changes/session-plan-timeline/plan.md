@@ -264,5 +264,5 @@ One extra Moon track over the axis (the sky view already samples the same interv
 
 #### Manual
 
-- [x] 3.3 Dashboard screenshot matrix with the Session plan tile
+- [x] 3.3 Dashboard screenshot matrix with the Session plan tile — 8983abc
 - [x] 3.4 Keyboard: tile and plan rows reachable with visible focus — 8983abc
