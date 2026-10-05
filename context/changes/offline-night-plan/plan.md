@@ -388,34 +388,34 @@ None: no database change. The first deploy installs the worker on the next visit
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including the next-night and validUntil (incl. polar) build tests
-- [x] 2.2 Type check passes
-- [x] 2.3 Lint passes
-- [x] 2.4 i18n parity holds
+- [x] 2.1 Unit tests pass, including the next-night and validUntil (incl. polar) build tests — 86661f1
+- [x] 2.2 Type check passes — 86661f1
+- [x] 2.3 Lint passes — 86661f1
+- [x] 2.4 i18n parity holds — 86661f1
 
 #### Manual
 
-- [x] 2.5 night=next renders the following evening with no sky-check card or record
-- [x] 2.6 Island HTML carries the offline-copy metadata without coordinates; notices hidden online
-- [x] 2.7 /offline renders in EN/PL × three themes at 390 px
+- [x] 2.5 night=next renders the following evening with no sky-check card or record — 86661f1
+- [x] 2.6 Island HTML carries the offline-copy metadata without coordinates; notices hidden online — 86661f1
+- [x] 2.7 /offline renders in EN/PL × three themes at 390 px — 86661f1
 
 ### Phase 3: Service-worker caching
 
 #### Automated
 
-- [ ] 3.1 Offline logic unit tests pass
-- [ ] 3.2 Type check passes
-- [ ] 3.3 Lint passes
-- [ ] 3.4 Build passes
+- [x] 3.1 Offline logic unit tests pass
+- [x] 3.2 Type check passes
+- [x] 3.3 Lint passes
+- [x] 3.4 Build passes
 
 #### Manual
 
-- [ ] 3.5 Dashboard and plan replay offline styled; cache holds pairs, index, /offline and assets
-- [ ] 3.6 Offline site switching and last-site default work
-- [ ] 3.7 Network-only and never-opened pages show /offline with the stored list
-- [ ] 3.8 Sign-out and sign-in as another user purge the cache
-- [ ] 3.9 Clock past validUntil serves the next copy, else the stale copy
-- [ ] 3.10 A pair stored before a rebuild still renders styled with its live sky
+- [x] 3.5 Dashboard and plan replay offline styled; cache holds pairs, index, /offline and assets
+- [x] 3.6 Offline site switching and last-site default work
+- [x] 3.7 Network-only and never-opened pages show /offline with the stored list
+- [x] 3.8 Sign-out and sign-in as another user purge the cache
+- [x] 3.9 Clock past validUntil serves the next copy, else the stale copy
+- [x] 3.10 A pair stored before a rebuild still renders styled with its live sky
 
 ### Phase 4: Offline state in the page, tests and docs
 
