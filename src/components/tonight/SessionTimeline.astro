@@ -32,9 +32,20 @@ const span = (from: number, to: number): string => `left:${pct(from)};width:${pc
 const at = (fraction: number): string => `left:${pct(fraction)}`;
 const mini = size === "mini";
 
-// A bar's track is a rounded groove on the surface colour, the dark window a darker (border) stretch of it.
-const track = "relative h-4 rounded-full bg-surface";
-const dark = "absolute inset-y-0 bg-border";
+// Hour labels thin out with the night's length so neighbours never touch (an "HH:mm" caption is ~32 px): every hour
+// up to 13 ticks, every 2nd up to 19, every 3rd beyond (a 24 h polar axis); a phone shows half of those.
+const stride = plan.ticks.length <= 13 ? 1 : plan.ticks.length <= 19 ? 2 : 3;
+/** Fraction of the axis under which two Moon events would draw over each other; the later one drops a line. */
+const MOON_CLASH = 0.12;
+const moonEvents = plan.moonEvents.map((event, index, all) => ({
+  ...event,
+  lowered: index > 0 && event.at - all[index - 1].at < MOON_CLASH,
+}));
+const anyLowered = moonEvents.some((event) => event.lowered);
+
+// A bar's track is the twilight (sunset to sunrise), the dark window a darker stretch of it, in every theme.
+const track = "relative h-4 rounded-full bg-plan-twilight";
+const dark = "absolute inset-y-0 bg-plan-night";
 const row =
   "block min-h-11 border-b border-border px-4 py-3 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring-2 ring-background";
@@ -55,9 +66,21 @@ const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring
 ) : (
   <div class="overflow-x-clip">
     <p class="px-4 text-label text-muted-foreground" data-session-plan-text>
+      {plan.sunsetText && (
+        <>
+          <span>{plan.sunsetText}</span>
+          <span aria-hidden="true"> · </span>
+        </>
+      )}
       <span class="font-semibold text-heading">{plan.darkText}</span>
       <span aria-hidden="true"> · </span>
       <span>{plan.moonText}</span>
+      {plan.sunriseText && (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span>{plan.sunriseText}</span>
+        </>
+      )}
     </p>
 
     <div aria-hidden="true" class="px-4 pt-4" data-session-plan-axis>
@@ -68,7 +91,7 @@ const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring
               "absolute top-0 text-caption text-muted-foreground tabular-nums",
               // Labels near the axis ends anchor inward, so they stay inside the page gutter.
               tick.at < EDGE ? "translate-x-0" : tick.at > 1 - EDGE ? "-translate-x-full" : "-translate-x-1/2",
-              index % 2 === 1 && "max-sm:hidden",
+              index % stride !== 0 ? "hidden" : index % (2 * stride) !== 0 && "max-sm:hidden",
             ]}
             style={at(tick.at)}
           >
@@ -85,11 +108,12 @@ const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring
           <span class="absolute inset-y-0 w-px bg-background" style={at(tick.at)} />
         ))}
       </div>
-      <div class="relative h-12">
-        {plan.moonEvents.map((event) => (
+      <div class:list={["relative", anyLowered ? "h-20" : "h-12"]}>
+        {moonEvents.map((event) => (
           <span
             class:list={[
-              "absolute top-1 flex flex-col gap-0.5 text-caption text-muted-foreground tabular-nums",
+              "absolute flex flex-col gap-0.5 text-caption text-muted-foreground tabular-nums",
+              event.lowered ? "top-9" : "top-1",
               event.at < EDGE
                 ? "translate-x-0 items-start"
                 : event.at > 1 - EDGE

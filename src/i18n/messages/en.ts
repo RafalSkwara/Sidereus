@@ -843,6 +843,9 @@ export const en = {
         /** The dark window over the plan's axis. */
         dark: (p: { start: string; end: string }) => `Dark ${p.start}–${p.end}`,
         noDark: "No dark window tonight",
+        /** The axis ends, when the night has a sunset and a sunrise. */
+        sunset: (p: { time: string }) => `Sunset ${p.time}`,
+        sunrise: (p: { time: string }) => `Sunrise ${p.time}`,
         moonrise: (p: { time: string }) => `Moonrise ${p.time}`,
         moonset: (p: { time: string }) => `Moonset ${p.time}`,
         /** Up from sunset to sunrise, with no rise or set between. */

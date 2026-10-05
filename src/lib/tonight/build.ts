@@ -348,9 +348,12 @@ export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput>;
 export interface TonightSessionPlan {
   /** The axis, epoch ms. */
   axis: { start: number; end: number };
-  /** The axis ends, `HH:mm` in the site's time zone. */
-  axisStart: string;
-  axisEnd: string;
+  /**
+   * "Sunset 18:47" and "Sunrise 07:48", the axis ends, in the site's time zone; `null` when the axis is the whole
+   * observing night instead (polar day or night: no sunset or no sunrise).
+   */
+  sunsetText: string | null;
+  sunriseText: string | null;
   /** The dark window on the axis; `null` without one. */
   dark: { from: number; to: number } | null;
   /** "Dark 21:40–05:10", or the no-dark-window line. */
@@ -506,11 +509,16 @@ function packTrack(track: readonly Pick<HorizontalPosition, "altitudeDeg" | "azi
   ]);
 }
 
-/** The live sky's and the Session plan's axis: sunset to sunrise, or the whole observing night without either. */
-function skyAxis(site: Site, date: string, timeZone: string): Interval {
+/**
+ * The live sky's and the Session plan's axis: sunset to sunrise (`fromSun`), or the whole observing night without
+ * either.
+ */
+function skyAxis(site: Site, date: string, timeZone: string): { range: Interval; fromSun: boolean } {
   const night = observingNight(date, timeZone);
   const { sunset, sunrise } = sunEvents(site, night);
-  return sunset !== null && sunrise !== null ? { start: sunset, end: sunrise } : night;
+  return sunset !== null && sunrise !== null
+    ? { range: { start: sunset, end: sunrise }, fromSun: true }
+    : { range: night, fromSun: false };
 }
 
 /** The index of the time in `times` (epoch ms, ascending) nearest `ms`; the earlier one on a tie. */
@@ -902,11 +910,11 @@ export function buildTonight(
   // when either is missing (polar day or night). Frames and every track share one interval and step, so index `i` is
   // the same instant everywhere. Planets show whatever the planet weather; a failure drops only the sky view.
   // The axis and the Moon's track over it are worked out once, for whichever of the two asks first, and shared.
-  let axisMoon: { range: Interval; moon: MoonState[] } | null = null;
-  const skyAxisWithMoon = (): { range: Interval; moon: MoonState[] } => {
+  let axisMoon: { range: Interval; fromSun: boolean; moon: MoonState[] } | null = null;
+  const skyAxisWithMoon = (): { range: Interval; fromSun: boolean; moon: MoonState[] } => {
     if (axisMoon === null) {
-      const range = skyAxis(engineSite, date, timeZone);
-      axisMoon = { range, moon: moonTrack(engineSite, range) };
+      const { range, fromSun } = skyAxis(engineSite, date, timeZone);
+      axisMoon = { range, fromSun, moon: moonTrack(engineSite, range) };
     }
     return axisMoon;
   };
@@ -986,7 +994,7 @@ export function buildTonight(
   let sessionPlan: TonightSessionPlan | null = null;
   if (options.withSessionPlan) {
     try {
-      const { range, moon } = skyAxisWithMoon();
+      const { range, fromSun, moon } = skyAxisWithMoon();
       const up = moonUpOf(moon);
       const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
       const layout = layoutSessionPlan({
@@ -1006,8 +1014,8 @@ export function buildTonight(
       }));
       sessionPlan = {
         axis: layout.axis,
-        axisStart: formatTime(range.start, timeZone),
-        axisEnd: formatTime(range.end, timeZone),
+        sunsetText: fromSun ? text.sunset({ time: formatTime(range.start, timeZone) }) : null,
+        sunriseText: fromSun ? text.sunrise({ time: formatTime(range.end, timeZone) }) : null,
         dark: layout.dark,
         darkText:
           window.kind === "window"
@@ -1023,9 +1031,11 @@ export function buildTonight(
                     : text.moonset({ time: event.timeText }),
                 )
                 .join(" · ")
-            : up.kind === "never"
-              ? text.moonNever
-              : text.moonAll,
+            : // No rise or set strictly inside the axis: up at its start means up throughout (a "part" Moon that
+              // rises or sets only at the last sample counts as what it was before).
+              up.kind === "all" || (up.kind === "part" && up.upAtStart)
+              ? text.moonAll
+              : text.moonNever,
         moonUp: moonSpans.map((span) => ({ from: clampAt(span.start.getTime()), to: clampAt(span.end.getTime()) })),
         hours: layout.hours,
         ticks: layout.hours.map((hour) => ({

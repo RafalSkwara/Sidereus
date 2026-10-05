@@ -6,6 +6,7 @@
 import { ServerError } from "@/components/forms/ServerError";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import Band from "@/components/ui/Band.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
@@ -35,6 +36,10 @@ const failures = load
 // No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
 const noGear =
   load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+// Nothing to place on the night: the page says why instead of drawing an empty axis.
+const empty = view !== null && (plan === null || plan.rows.length === 0);
+// The message column renders only with something in it, so a normal night has one gap under the sky, not two.
+const hasMessages = failures.length > 0 || noGear || empty;
 const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
 ---
 
@@ -42,56 +47,60 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
   <>
     <TonightPageSky title={t.summary.plan} view={view} />
 
-    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
-      {failures.map((key) => (
-        <ServerError message={translate(key)} />
-      ))}
+    {hasMessages && (
+      <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+        {failures.map((key) => (
+          <ServerError message={translate(key)} />
+        ))}
 
-      {noGear && (
-        <p class="text-body text-foreground">
-          {t.pages.noGear}{" "}
-          <a href="/tonight" class:list={[inlineLink]}>
-            {t.pages.toTonight}
-          </a>
-        </p>
-      )}
+        {noGear && (
+          <p class="text-body text-foreground">
+            {t.pages.noGear}{" "}
+            <a href="/tonight" class:list={[inlineLink]}>
+              {t.pages.toTonight}
+            </a>
+          </p>
+        )}
 
-      {view && (!plan || plan.rows.length === 0) && (
-        /* Nothing to place on the night: why, from the view, and the way to a better night. */
-        <div class="space-y-3">
-          {plan ? (
-            <>
-              {view.explanation?.kind === "weather-no-go" && (
-                <>
-                  <p class="font-display text-title font-semibold text-heading">
-                    <span data-sky-headline={view.headline.key}>{view.headline.text}</span>
-                    <span class="font-normal text-muted-foreground"> — {view.verdictText}</span>
-                  </p>
-                  <p class="text-body text-foreground">{view.explanation.nextText}</p>
-                </>
-              )}
-              {view.explanation?.kind === "no-darkness" && (
-                <>
-                  <p class="text-body text-foreground">{view.explanation.causeText}</p>
-                  <p class="text-body text-foreground">{view.explanation.returnText}</p>
-                </>
-              )}
-              <p class="text-body text-muted-foreground">{t.pages.plan.empty}</p>
-            </>
-          ) : (
-            <p class="text-body text-foreground">{t.pages.plan.unavailable}</p>
-          )}
-          <a href="/tonight/nights" class:list={[buttonVariants({ variant: "outline" })]}>
-            {t.pages.seeNights({ count: String(OUTLOOK_NIGHTS) })}
-            <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      )}
-    </div>
+        {empty && (
+          /* Nothing to place on the night: why, from the view, and the way to a better night. */
+          <div class="space-y-3">
+            {plan ? (
+              <>
+                {view.explanation?.kind === "weather-no-go" && (
+                  <>
+                    <p class="font-display text-title font-semibold text-heading">
+                      <span data-sky-headline={view.headline.key}>{view.headline.text}</span>
+                      <span class="font-normal text-muted-foreground"> — {view.verdictText}</span>
+                    </p>
+                    <p class="text-body text-foreground">{view.explanation.nextText}</p>
+                  </>
+                )}
+                {view.explanation?.kind === "no-darkness" && (
+                  <>
+                    <p class="text-body text-foreground">{view.explanation.causeText}</p>
+                    <p class="text-body text-foreground">{view.explanation.returnText}</p>
+                  </>
+                )}
+                <p class="text-body text-muted-foreground">{t.pages.plan.empty}</p>
+              </>
+            ) : (
+              <p class="text-body text-foreground">{t.pages.plan.unavailable}</p>
+            )}
+            <a href="/tonight/nights" class:list={[buttonVariants({ variant: "outline" })]}>
+              {t.pages.seeNights({ count: String(OUTLOOK_NIGHTS) })}
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        )}
+      </div>
+    )}
 
-    {view && plan && plan.rows.length > 0 && (
+    {plan && !empty && (
       <div class="mx-auto w-full max-w-3xl pt-8">
-        <SessionTimeline plan={plan} />
+        <Band headingId="plan-heading" heading={t.summary.plan} headingHidden>
+          <SessionTimeline plan={plan} />
+        </Band>
       </div>
     )}
   </>
