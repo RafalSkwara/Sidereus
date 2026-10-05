@@ -457,27 +457,27 @@ The user asked for modest tests: pin only what screenshots can't show.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including `sky-frames.test.ts`, the new `build.test.ts` cases and `purity.test.ts`
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.3 `JSON.stringify(view.skyView)` for a December night at 52°N is under 30 KB
+- [x] 2.1 `npm test` passes, including `sky-frames.test.ts`, the new `build.test.ts` cases and `purity.test.ts` — d8eb626
+- [x] 2.2 `npm run lint` and `npx astro check` pass — d8eb626
+- [x] 2.3 `JSON.stringify(view.skyView)` for a December night at 52°N is under 30 KB — d8eb626
 
 #### Manual
 
-- [x] 2.4 M13's and Jupiter's alt/az at two frames match Stellarium within 0.5°
+- [x] 2.4 M13's and Jupiter's alt/az at two frames match Stellarium within 0.5° — d8eb626
 
 ### Phase 3: The panorama island and dusk tokens
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes, including the sky-view tests, the import guard, contrast, red-theme, no-hardcoded-colors and i18n parity
-- [ ] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 3.3 The island's gzipped client chunks (`gzip -c | wc -c`) are under 60 KB
+- [x] 3.1 `npm test` passes, including the sky-view tests, the import guard, contrast, red-theme, no-hardcoded-colors and i18n parity
+- [x] 3.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 3.3 The island's gzipped client chunks (`gzip -c | wc -c`) are under 60 KB
 
 #### Manual
 
-- [ ] 3.4 Screenshots at sunset, mid-twilight and deep night in dark, light and red, at 390 px and desktop: verdict unchanged, no seam, no label overlap, red pure
-- [ ] 3.5 At 390 px the strip swipes through 360° and the slider's drag, keys and Now move every body
-- [ ] 3.6 The panorama matches Stellarium for the fixture night and site at two times
+- [x] 3.4 Screenshots at sunset, mid-twilight and deep night in dark, light and red, at 390 px and desktop: verdict unchanged, no seam, no label overlap, red pure
+- [x] 3.5 At 390 px the strip swipes through 360° and the slider's drag, keys and Now move every body
+- [x] 3.6 The panorama matches Stellarium for the fixture night and site at two times
 
 ### Phase 4: Links, accessibility, e2e and docs
 

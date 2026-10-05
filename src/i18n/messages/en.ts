@@ -753,6 +753,24 @@ export const en = {
         `The dark window returns on the night of ${p.date} (${p.start}–${p.end})`,
     },
 
+    /** The interactive sky on the dashboard (interactive-sky): the panorama strip and its time slider. */
+    sky: {
+      /** The swipeable panorama's accessible name. */
+      panorama: "Tonight's sky, swipe to look around",
+      /** The time slider's accessible name; its value reads as the time shown. */
+      slider: "Time of night",
+      /** Moves the sky to the frame nearest the current time (clamped into the range). */
+      now: "Now",
+      /** The legend for the dark window's span on the slider's track. */
+      darkWindow: "Dark window",
+      /**
+       * A marker's accessible name at the slider's time: `alt` is whole degrees, pre-formatted; `direction` a compass
+       * point (`compass`); `time` the frame's "23:40".
+       */
+      bodyLabel: (p: { name: string; alt: string; direction: string; time: string }) =>
+        `${p.name}, ${p.alt}° up in the ${p.direction} at ${p.time}`,
+    },
+
     attribution: {
       objectData: "Object data:",
       starData: "Star data:",

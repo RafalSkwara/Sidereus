@@ -7,15 +7,29 @@
  * the stars are hidden in the light theme (`dark:` means "not light").
  */
 
+import {
+  SILHOUETTE_CLASS,
+  SILHOUETTE_PATH,
+  SILHOUETTE_VIEWBOX,
+  STRIP_HEIGHT_CLASS,
+  VERDICT_CONTAINER_CLASS,
+  VERDICT_MIN_HEIGHT_CLASS,
+} from "@/components/tonight/sky-band";
+
 interface Props {
   /**
    * The sky holds a verdict (or the skeleton standing in for one): it keeps the verdict's minimum height. The setup,
    * add-site and no-view states leave it out, so their title-only sky stays short.
    */
   verdict?: boolean;
+  /**
+   * Reserve the interactive sky's panorama strip between the verdict and the silhouette (interactive-sky): the
+   * skeleton sets it, so the live band (`TonightSkyView`) swaps in at the same height.
+   */
+  strip?: boolean;
 }
 
-const { verdict = false } = Astro.props;
+const { verdict = false, strip = false } = Astro.props;
 
 // A fixed, seeded field (the canvas's Lehmer generator), so every render draws the same sky. Positions are
 // percentages of the band, so the field spans any width while each star keeps its size; more stars sit high.
@@ -39,21 +53,17 @@ const stars = Array.from({ length: STAR_COUNT }, () => ({
     ))}
   </svg>
   <!-- The minimum height is the go/clear verdict's content, so the skeleton paints the same sky and nothing jumps. -->
-  <div
-    class:list={[
-      "relative mx-auto w-full max-w-3xl px-4 pt-6 pb-10 sm:pt-12 sm:pb-14",
-      verdict && "min-h-109 sm:min-h-111",
-    ]}
-  >
+  <div class:list={[VERDICT_CONTAINER_CLASS, verdict && VERDICT_MIN_HEIGHT_CLASS]}>
     <slot />
   </div>
+  {strip && <div class:list={["relative", STRIP_HEIGHT_CLASS]} />}
   <svg
     aria-hidden="true"
     focusable="false"
-    viewBox="0 0 390 40"
+    viewBox={SILHOUETTE_VIEWBOX}
     preserveAspectRatio="none"
-    class="relative block h-8 w-full fill-background sm:h-12"
+    class:list={[SILHOUETTE_CLASS]}
   >
-    <path d="M0 40V22C40 14 72 28 112 21C152 14 182 3 232 12C282 21 324 8 390 17V40Z"></path>
+    <path d={SILHOUETTE_PATH}></path>
   </svg>
 </div>

@@ -1349,9 +1349,18 @@ describe("buildTonight's sky view (interactive-sky)", () => {
         .map((entry) => entry.id),
     );
     expect(objects[0].href).toBe(`/tonight/targets#object-${objects[0].key}`);
+    // The strip shows the Messier number only; the full name is the marker's accessible name.
+    expect(objects.every((body) => body.label === body.key && body.name.startsWith(body.key))).toBe(true);
+    expect(objects.some((body) => body.name.startsWith(`${body.key} · `))).toBe(true);
     expect(sky.bodies.filter((body) => body.kind === "planet").map((body) => body.key)).toEqual([...PLANET_KEYS]);
     expect(sky.bodies.find((body) => body.key === "saturn")?.href).toBe("/tonight/planets#planet-saturn");
-    expect(sky.bodies.at(-1)).toMatchObject({ kind: "moon", key: "moon", label: "Moon", href: "/tonight/moon" });
+    expect(sky.bodies.at(-1)).toMatchObject({
+      kind: "moon",
+      key: "moon",
+      label: "Moon",
+      name: "Moon",
+      href: "/tonight/moon",
+    });
     expect(sky.darkSpan).not.toBeNull();
   });
 
@@ -1385,7 +1394,10 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     const planets = sky.bodies.filter((body) => body.kind === "planet");
     expect(planets).toHaveLength(PLANET_KEYS.length);
     expect(planets.every((body) => body.href === "/tonight/planets")).toBe(true);
-    expect(planets.find((body) => body.key === "jupiter")?.label).toBe(pl.targets.planet.jupiter);
+    expect(planets.find((body) => body.key === "jupiter")).toMatchObject({
+      label: pl.targets.planet.jupiter,
+      name: pl.targets.planet.jupiter,
+    });
     expect(sky.bodies.at(-1)?.label).toBe(pl.targets.moon);
   });
 

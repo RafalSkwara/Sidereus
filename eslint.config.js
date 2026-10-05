@@ -103,6 +103,8 @@ const gearConfig = defineConfig({
     "src/lib/location/**",
     "src/components/location/**",
     "src/components/gear/**",
+    // The interactive sky's rotation matrices encode the site's coordinates (interactive-sky).
+    "src/lib/sky-view/**",
   ],
   rules: { "no-console": "error" },
 });

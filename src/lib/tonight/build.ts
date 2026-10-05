@@ -44,6 +44,7 @@ import {
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 import { localCommonName } from "@/lib/catalogue/common-names";
+import type { TonightSkyBody, TonightSkyView } from "@/lib/sky-view/view";
 import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
@@ -313,47 +314,8 @@ export type TonightNight = {
   | { kind: "outlook"; cloudText: string | null }
 );
 
-/** One body on the interactive sky (interactive-sky): its track on the sky view's frames. */
-export interface TonightSkyBody {
-  kind: "object" | "planet" | "moon";
-  /** The catalogue id ("M31"), the planet key ("jupiter") or "moon". */
-  key: string;
-  /** The localised name. */
-  label: string;
-  /** The focused page (and row) the marker opens. */
-  href: string;
-  /** `frameCount × 2` integers: altitude then azimuth of each frame, in tenths of a degree (refracted). */
-  track: number[];
-}
-
-/**
- * The dashboard's interactive sky (interactive-sky), columnar to stay small: sunset to sunrise (the observing night
- * without either) every `DEFAULT_TRACK_STEP_MINUTES`. Frame `i` is at `startMs + i × stepMs`, capped at `endMs`, and
- * indexes `rotations`, `sunAltDeg` and every body's track alike. The rotations let a reader recover the site's
- * coordinates; they are rounded to 4 decimals (about 600 m), and the view never goes into a URL or a log.
- */
-export interface TonightSkyView {
-  startMs: number;
-  stepMs: number;
-  endMs: number;
-  frameCount: number;
-  /** `frameCount × 9`: each frame's J2000→horizon rotation, `SkyFrame.rotation`'s layout, 4 decimals. */
-  rotations: number[];
-  /** The Sun's altitude per frame, degrees, 1 decimal. */
-  sunAltDeg: number[];
-  /** The frames inside the dark window, as indices; `null` without a dark window. */
-  darkSpan: { from: number; to: number } | null;
-  /** The frame nearest `now` when it is inside the range, else the dark span's start, else 0. */
-  initialIndex: number;
-  /** The panorama's centre: south, or north for a southern-hemisphere site. */
-  facing: "south" | "north";
-  /** The site's zone, for the island to format frame times with `Intl`. */
-  timeZone: string;
-  /** The range's ends, `HH:mm` in the site's time zone. */
-  startLabel: string;
-  endLabel: string;
-  bodies: TonightSkyBody[];
-}
+/** The interactive sky's data (interactive-sky); declared island-safe in `@/lib/sky-view/view`. */
+export type { TonightSkyBody, TonightSkyView };
 
 export interface TonightView {
   /** The site and telescope the ranking is for; the log form is prefilled with them (FR-016). */
@@ -851,7 +813,8 @@ export function buildTonight(
         return {
           kind: "object",
           key: object.id,
-          label: commonName ? `${object.id} · ${commonName}` : object.id,
+          label: object.id,
+          name: commonName ? `${object.id} · ${commonName}` : object.id,
           href: `/tonight/targets#object-${object.id}`,
           track: packTrack(track),
         };
@@ -862,6 +825,7 @@ export function buildTonight(
           kind: "planet",
           key,
           label: messages.targets.planet[key],
+          name: messages.targets.planet[key],
           href: listed.has(key) ? `/tonight/planets#planet-${key}` : "/tonight/planets",
           track: packTrack(track),
         };
@@ -870,6 +834,7 @@ export function buildTonight(
         kind: "moon",
         key: MOON_TARGET_KEY,
         label: messages.targets.moon,
+        name: messages.targets.moon,
         href: "/tonight/moon",
         track: packTrack(moonTrack(engineSite, range)),
       };

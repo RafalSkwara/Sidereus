@@ -38,6 +38,15 @@
   --zenith: #050916;
   --horizon: #1b2a55;
 
+  /*
+   * The interactive sky's dusk (interactive-sky): what the band's middle and horizon stops mix towards while the Sun
+   * is up or in twilight (`skyMix`, the `dusk-band` utility below). Glow at sunset, twilight at the Sun's -6°.
+   */
+  --dusk-glow: #3a2547;
+  --dusk-glow-horizon: #6a3226;
+  --dusk-twilight: #17224f;
+  --dusk-twilight-horizon: #2b2c5e;
+
   --verdict-surface-alpha: 10%;
   --verdict-border-alpha: 35%;
 
@@ -71,6 +80,11 @@
 
   --zenith: #a9c3e6;
   --horizon: #e9f0f8;
+
+  --dusk-glow: #e7d3e6;
+  --dusk-glow-horizon: #f6cfae;
+  --dusk-twilight: #c3cdeb;
+  --dusk-twilight-horizon: #dccfe6;
 
   --verdict-surface-alpha: 8%;
 
@@ -109,6 +123,11 @@
 
   --zenith: #000000;
   --horizon: #240000;
+
+  --dusk-glow: #1c0000;
+  --dusk-glow-horizon: #2c0000;
+  --dusk-twilight: #120000;
+  --dusk-twilight-horizon: #280000;
 
   --verdict-surface-alpha: 10%;
   --verdict-border-alpha: 35%;
@@ -284,6 +303,39 @@
   right: max(2rem, calc((100vw - 64rem) / 2 + 2rem));
 }
 
+/* The panorama strip's horizontal scrollbar: thin and token-coloured over the sky, so red mode stays red. */
+@utility scrollbar-strip {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/*
+ * The interactive sky's band (interactive-sky): zenith at the top in every frame (so no seam opens under the Topbar's
+ * zenith strip), the middle and horizon stops mixed from the night tokens towards the dusk tokens. The island sets
+ * `--dusk-glow-share` (glow over the rest) and `--dusk-twilight-share` (twilight over night) from `mixPercentages`;
+ * both default to 0%, the static night sky.
+ */
+@utility dusk-band {
+  background-image: linear-gradient(
+    to bottom,
+    var(--zenith),
+    color-mix(
+      in oklab,
+      var(--dusk-glow) var(--dusk-glow-share, 0%),
+      color-mix(
+        in oklab,
+        var(--dusk-twilight) var(--dusk-twilight-share, 0%),
+        color-mix(in oklab, var(--zenith), var(--horizon))
+      )
+    ),
+    color-mix(
+      in oklab,
+      var(--dusk-glow-horizon) var(--dusk-glow-share, 0%),
+      color-mix(in oklab, var(--dusk-twilight-horizon) var(--dusk-twilight-share, 0%), var(--horizon))
+    )
+  );
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -302,6 +354,9 @@
   --text-label--line-height: 1.25rem;
   --text-body: 1rem;
   --text-body--line-height: 1.5rem;
+  /* The interactive sky's star and body labels (interactive-sky): small enough for 15 stars and 13 bodies at 390 px. */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
   /*
    * The giant verdict word over Tonight's sky (tonight-nightfall), with `font-display font-extrabold`, sized by word
    * length so each word is as large as fits a 360 px screen (measured widths at wdth 125 / 800 / -0.035em: Go 1.72em,
@@ -377,6 +432,10 @@
   --color-star-accent: var(--star-accent);
   --color-zenith: var(--zenith);
   --color-horizon: var(--horizon);
+  --color-dusk-glow: var(--dusk-glow);
+  --color-dusk-glow-horizon: var(--dusk-glow-horizon);
+  --color-dusk-twilight: var(--dusk-twilight);
+  --color-dusk-twilight-horizon: var(--dusk-twilight-horizon);
 }
 
 @layer base {

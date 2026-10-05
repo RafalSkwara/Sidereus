@@ -64,10 +64,13 @@ interface Check {
 }
 
 const DARK_LIGHT: Theme[] = ["dark", "light"];
+const DUSK = ["dusk-glow", "dusk-glow-horizon", "dusk-twilight", "dusk-twilight-horizon"];
 
 const CHECKS: Check[] = [
   { themes: DARK_LIGHT, fg: ["foreground", "heading", "muted-foreground"], bg: ["background", "surface"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["heading", "muted-foreground"], bg: ["zenith", "horizon"], floor: 4.5 },
+  // The interactive sky's dusk colours (interactive-sky): the verdict and the labels stay readable at sunset.
+  { themes: DARK_LIGHT, fg: ["heading", "muted-foreground"], bg: DUSK, floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["go", "marginal", "no-go"], bg: ["background"], floor: 4.5 },
@@ -76,6 +79,7 @@ const CHECKS: Check[] = [
   { themes: ["red"], fg: ["foreground", "heading"], bg: ["background", "surface"], floor: 4.5 },
   { themes: ["red"], fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: ["red"], fg: ["muted-foreground", "no-go"], bg: ["background", "surface"], floor: 3 },
+  { themes: ["red"], fg: ["muted-foreground"], bg: DUSK, floor: 3 },
 ];
 
 const pairs = CHECKS.flatMap(({ themes: names, fg, bg, floor }) =>
