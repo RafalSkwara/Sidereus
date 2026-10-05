@@ -829,6 +829,21 @@ export const en = {
       } as PluralForms<Count>,
       /** A summary tile's accessible suffix after its heading; `page` is the page's title. */
       open: (p: { page: string }) => `Open ${p.page}`,
+      /**
+       * session-plan-timeline: the Session plan's lines, sunset to sunrise. Times are "21:40" in the site's time zone;
+       * Moon events are read off a 10-minute track and joined with " · ".
+       */
+      plan: {
+        /** The dark window over the plan's axis. */
+        dark: (p: { start: string; end: string }) => `Dark ${p.start}–${p.end}`,
+        noDark: "No dark window tonight",
+        moonrise: (p: { time: string }) => `Moonrise ${p.time}`,
+        moonset: (p: { time: string }) => `Moonset ${p.time}`,
+        /** Up from sunset to sunrise, with no rise or set between. */
+        moonAll: "Moon up all night",
+        /** Below the horizon from sunset to sunrise. */
+        moonNever: "Moon not up tonight",
+      },
     },
   },
 

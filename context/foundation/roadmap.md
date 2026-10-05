@@ -58,7 +58,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done        |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
-| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | proposed    |
+| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | in-progress |
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
@@ -201,7 +201,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Do overlapping best windows need sequencing (one target at a time), or is showing windows side by side enough? Candidate: side by side, sorted by window start. — Owner: user. Block: no.
   > Note (2026-10-04): re-scoped against S-11. The timeline was planned as a second view of the single Tonight page; it is now a page reached from the dashboard, so it waits for S-11.
 - **Risk:** Mostly presentation over data Tonight already computes, which makes it a safe slice; the risk is a layout that doesn't work on a phone in red night mode, which is exactly where it will be read.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-06: Offline night plan
 

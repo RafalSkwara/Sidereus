@@ -53,6 +53,8 @@ export interface LoadTonightInput {
   withSkyChecks?: boolean;
   /** Also build the interactive sky (interactive-sky); see `buildTonight`. Only the dashboard asks for it. */
   withSkyView?: boolean;
+  /** Also build the Session plan (session-plan-timeline); see `buildTonight`. The dashboard and the plan page ask for it. */
+  withSessionPlan?: boolean;
 }
 
 export interface TonightLoad {
@@ -144,6 +146,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
       view = buildTonight({ site, telescope, eyepieces, forecast: result, now, log }, locale, {
         limit: input.limit,
         withSkyView: input.withSkyView,
+        withSessionPlan: input.withSessionPlan,
       });
     } catch {
       tonightError = TONIGHT_FAILED;

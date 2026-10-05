@@ -744,6 +744,14 @@ export const pl = {
       },
       // The colon keeps the page title in its base form.
       open: (p) => `Otwórz: ${p.page}`,
+      plan: {
+        dark: (p) => `Ciemno ${p.start}–${p.end}`,
+        noDark: "Dziś bez ciemnej nocy",
+        moonrise: (p) => `Wschód Księżyca ${p.time}`,
+        moonset: (p) => `Zachód Księżyca ${p.time}`,
+        moonAll: "Księżyc nad horyzontem przez całą noc",
+        moonNever: "Księżyc dziś w nocy pod horyzontem",
+      },
     },
   },
 
