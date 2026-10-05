@@ -219,11 +219,11 @@ dashboard. Adjust the spec only if it no longer reaches a settled dashboard (e.g
 
 #### Automated
 
-- [x] 3.1 e2e specs touching `/` pass against the 4324 preview (`landing.spec.ts`, `red-night-mode.spec.ts`)
-- [x] 3.2 `npm run lint`, `npx astro check`, `npm test` pass after the final edit
+- [x] 3.1 e2e specs touching `/` pass against the 4324 preview (`landing.spec.ts`, `red-night-mode.spec.ts`) — e1ea6e0
+- [x] 3.2 `npm run lint`, `npx astro check`, `npm test` pass after the final edit — e1ea6e0
 
 #### Manual
 
-- [x] 3.3 `public/landing/tonight.png` shows the Nightfall dashboard (live sky, tiles) (evidence: `public/landing/tonight.png`, 1280×1160: Go verdict, live sky, slider, "Point here first")
-- [x] 3.4 7-state matrix covered with screenshots (evidence, scratchpad `shots/p3/`: default `{en,pl}-{dark,light,red}-{390,1280}.png`; hover `en-*-1280-hover-{getstarted,signin}.png`; focus `en-{dark,red}-1280-tab5.png`, `pl-light-390-tab5.png` (Get started), `*-tab3/4` (Topbar controls); unconfigured banner `en-*-1280-unconfigured.png`, `pl-*-390-unconfigured.png` (EN copy, 390 px); long PL `pl-*-390.png`, `pl-dark-320.png`; reduced motion `en-dark-390-reduced.png` (no motion on this page); disabled, error, empty, loading: N/A, static page with two links and no data)
-- [x] 3.5 Contrast and focus checked by eye in all three themes (heading and muted-foreground on zenith/horizon are pinned by contrast.test.ts; footer moved off `faint`; CTA focus is the offset `--ring` outline, visible on the filled ink in red; checked in the p3 shots)
+- [x] 3.3 `public/landing/tonight.png` shows the Nightfall dashboard (live sky, tiles) (evidence: `public/landing/tonight.png`, 1280×1160: Go verdict, live sky, slider, "Point here first") — e1ea6e0
+- [x] 3.4 7-state matrix covered with screenshots (evidence, scratchpad `shots/p3/`: default `{en,pl}-{dark,light,red}-{390,1280}.png`; hover `en-*-1280-hover-{getstarted,signin}.png`; focus `en-{dark,red}-1280-tab5.png`, `pl-light-390-tab5.png` (Get started), `*-tab3/4` (Topbar controls); unconfigured banner `en-*-1280-unconfigured.png`, `pl-*-390-unconfigured.png` (EN copy, 390 px); long PL `pl-*-390.png`, `pl-dark-320.png`; reduced motion `en-dark-390-reduced.png` (no motion on this page); disabled, error, empty, loading: N/A, static page with two links and no data) — e1ea6e0
+- [x] 3.5 Contrast and focus checked by eye in all three themes (heading and muted-foreground on zenith/horizon are pinned by contrast.test.ts; footer moved off `faint`; CTA focus is the offset `--ring` outline, visible on the filled ink in red; checked in the p3 shots) — e1ea6e0
