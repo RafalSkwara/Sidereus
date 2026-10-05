@@ -6,19 +6,26 @@ import {
   darknessThresholdDegForBortle,
   darkWindow,
   darkWindowReturn,
+  DEFAULT_TRACK_STEP_MINUTES,
   eyepieceOptics,
+  MAX_RANKED_OBJECTS,
   MOON_DISC_STEP_MINUTES,
   moonDiscState,
   moonDiscStates,
   moonTarget,
   moonTrack,
   nextNightInOutlook,
+  objectTracks,
   observingNight,
+  PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
+  planetTracks,
   rankObjects,
   rankPlanets,
   seenSummaries,
   sevenNightOutlook,
+  skyFrames,
+  sunEvents,
   TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG,
   tonightDateFor,
   verdict,
@@ -36,6 +43,7 @@ import {
 } from "@/lib/engine";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import { localCommonName } from "@/lib/catalogue/common-names";
 import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
@@ -305,6 +313,48 @@ export type TonightNight = {
   | { kind: "outlook"; cloudText: string | null }
 );
 
+/** One body on the interactive sky (interactive-sky): its track on the sky view's frames. */
+export interface TonightSkyBody {
+  kind: "object" | "planet" | "moon";
+  /** The catalogue id ("M31"), the planet key ("jupiter") or "moon". */
+  key: string;
+  /** The localised name. */
+  label: string;
+  /** The focused page (and row) the marker opens. */
+  href: string;
+  /** `frameCount × 2` integers: altitude then azimuth of each frame, in tenths of a degree (refracted). */
+  track: number[];
+}
+
+/**
+ * The dashboard's interactive sky (interactive-sky), columnar to stay small: sunset to sunrise (the observing night
+ * without either) every `DEFAULT_TRACK_STEP_MINUTES`. Frame `i` is at `startMs + i × stepMs`, capped at `endMs`, and
+ * indexes `rotations`, `sunAltDeg` and every body's track alike. The rotations let a reader recover the site's
+ * coordinates; they are rounded to 4 decimals (about 600 m), and the view never goes into a URL or a log.
+ */
+export interface TonightSkyView {
+  startMs: number;
+  stepMs: number;
+  endMs: number;
+  frameCount: number;
+  /** `frameCount × 9`: each frame's J2000→horizon rotation, `SkyFrame.rotation`'s layout, 4 decimals. */
+  rotations: number[];
+  /** The Sun's altitude per frame, degrees, 1 decimal. */
+  sunAltDeg: number[];
+  /** The frames inside the dark window, as indices; `null` without a dark window. */
+  darkSpan: { from: number; to: number } | null;
+  /** The frame nearest `now` when it is inside the range, else the dark span's start, else 0. */
+  initialIndex: number;
+  /** The panorama's centre: south, or north for a southern-hemisphere site. */
+  facing: "south" | "north";
+  /** The site's zone, for the island to format frame times with `Intl`. */
+  timeZone: string;
+  /** The range's ends, `HH:mm` in the site's time zone. */
+  startLabel: string;
+  endLabel: string;
+  bodies: TonightSkyBody[];
+}
+
 export interface TonightView {
   /** The site and telescope the ranking is for; the log form is prefilled with them (FR-016). */
   siteId: string;
@@ -355,6 +405,11 @@ export interface TonightView {
   planetsAbsentText: string | null;
   /** The Moon card; `null` only when working it out fails, which never takes the rest of the view down. */
   moonCard: TonightMoonCard | null;
+  /**
+   * The interactive sky (interactive-sky), built only with the `withSkyView` option (the dashboard); `null` without
+   * it, or when working it out fails, which never takes the rest of the view down.
+   */
+  skyView: TonightSkyView | null;
 }
 
 function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): EyepieceLine {
@@ -415,12 +470,42 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
   return forecast.fallback ? { kind: "fallback", ageMs } : { kind: "fresh", ageMs };
 }
 
+/** `x` rounded to `decimals` places; `-0` reads as 0. */
+function roundTo(x: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round(x * factor) / factor || 0;
+}
+
+/** A track as interleaved altitude and azimuth in whole tenths of a degree, azimuth in [0, 3600). */
+function packTrack(track: readonly Pick<HorizontalPosition, "altitudeDeg" | "azimuthDeg">[]): number[] {
+  return track.flatMap((sample) => [
+    Math.round(sample.altitudeDeg * 10) || 0,
+    ((Math.round(sample.azimuthDeg * 10) % 3600) + 3600) % 3600 || 0,
+  ]);
+}
+
+/** The index of the time in `times` (epoch ms, ascending) nearest `ms`; the earlier one on a tie. */
+function nearestIndex(times: readonly number[], ms: number): number {
+  let best = 0;
+  for (let i = 1; i < times.length; i++) {
+    if (Math.abs(times[i] - ms) < Math.abs(times[best] - ms)) {
+      best = i;
+    }
+  }
+  return best;
+}
+
 /** Every text field of the view is worded for `locale`; the rest of the view does not depend on it. */
 /**
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
- * Targets page).
+ * Targets page). `withSkyView`: also build the interactive sky (the dashboard only); without it `skyView` is
+ * `null` and nothing of it is computed.
  */
-export function buildTonight(input: TonightInput, locale: Locale, options: { limit?: number } = {}): TonightView {
+export function buildTonight(
+  input: TonightInput,
+  locale: Locale,
+  options: { limit?: number; withSkyView?: boolean } = {},
+): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
     clearedLine,
@@ -516,6 +601,8 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
   const cardPasses = (tonight.level === "go" || tonight.level === "marginal") && window.kind === "window";
 
   let ranking: TonightRanking | null = null;
+  // The interactive sky's deep-sky targets: the ranking's first `MAX_RANKED_OBJECTS`, the Targets page's top band.
+  let skyObjects: MessierObject[] = [];
   if (cardPasses) {
     const ranked = rankObjects({
       site: engineSite,
@@ -529,6 +616,7 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
       seen,
       limit: options.limit,
     });
+    skyObjects = ranked.entries.slice(0, MAX_RANKED_OBJECTS).map((entry) => entry.object);
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
     ranking = {
       clearedCount: ranked.clearedCount,
@@ -733,6 +821,79 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     moonCard = null;
   }
 
+  // The interactive sky (interactive-sky), on the dashboard only: sunset to sunrise, or the whole observing night
+  // when either is missing (polar day or night). Frames and every track share one interval and step, so index `i` is
+  // the same instant everywhere. Planets show whatever the planet weather; a failure drops only the sky view.
+  let skyView: TonightSkyView | null = null;
+  if (options.withSkyView) {
+    try {
+      const night = observingNight(date, timeZone);
+      const { sunset, sunrise } = sunEvents(engineSite, night);
+      const range: Interval = sunset !== null && sunrise !== null ? { start: sunset, end: sunrise } : night;
+      const frames = skyFrames(engineSite, range);
+      const times = frames.map((frame) => frame.time.getTime());
+      const startMs = range.start.getTime();
+      const endMs = range.end.getTime();
+
+      let darkSpan: TonightSkyView["darkSpan"] = null;
+      if (window.kind === "window") {
+        const from = times.findIndex((t) => t >= window.start.getTime());
+        const to = times.findLastIndex((t) => t <= window.end.getTime());
+        darkSpan = from >= 0 && to >= from ? { from, to } : null;
+      }
+      const nowMs = now.getTime();
+      const initialIndex = nowMs >= startMs && nowMs <= endMs ? nearestIndex(times, nowMs) : (darkSpan?.from ?? 0);
+
+      const listed = new Set(solarSystem?.entries.map((entry) => entry.key) ?? []);
+      const objectBodies = objectTracks(engineSite, range, skyObjects).map((track, i): TonightSkyBody => {
+        const object = skyObjects[i];
+        const commonName = localCommonName(object.messier, object.commonName, locale);
+        return {
+          kind: "object",
+          key: object.id,
+          label: commonName ? `${object.id} · ${commonName}` : object.id,
+          href: `/tonight/targets#object-${object.id}`,
+          track: packTrack(track),
+        };
+      });
+      const planetBodies = planetTracks(engineSite, range, PLANET_KEYS).map((track, i): TonightSkyBody => {
+        const key = PLANET_KEYS[i];
+        return {
+          kind: "planet",
+          key,
+          label: messages.targets.planet[key],
+          href: listed.has(key) ? `/tonight/planets#planet-${key}` : "/tonight/planets",
+          track: packTrack(track),
+        };
+      });
+      const moonBody: TonightSkyBody = {
+        kind: "moon",
+        key: MOON_TARGET_KEY,
+        label: messages.targets.moon,
+        href: "/tonight/moon",
+        track: packTrack(moonTrack(engineSite, range)),
+      };
+
+      skyView = {
+        startMs,
+        stepMs: DEFAULT_TRACK_STEP_MINUTES * 60_000,
+        endMs,
+        frameCount: frames.length,
+        rotations: frames.flatMap((frame) => frame.rotation.map((value) => roundTo(value, 4))),
+        sunAltDeg: frames.map((frame) => roundTo(frame.sunAltitudeDeg, 1)),
+        darkSpan,
+        initialIndex,
+        facing: site.latitudeDeg < 0 ? "north" : "south",
+        timeZone,
+        startLabel: formatTime(range.start, timeZone),
+        endLabel: formatTime(range.end, timeZone),
+        bodies: [...objectBodies, ...planetBodies, moonBody],
+      };
+    } catch {
+      skyView = null;
+    }
+  }
+
   return {
     siteId: site.id,
     telescopeId: telescope.id,
@@ -764,5 +925,6 @@ export function buildTonight(input: TonightInput, locale: Locale, options: { lim
     solarSystem,
     planetsAbsentText,
     moonCard,
+    skyView,
   };
 }

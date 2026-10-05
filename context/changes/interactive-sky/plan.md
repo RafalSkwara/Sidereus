@@ -445,25 +445,25 @@ The user asked for modest tests: pin only what screenshots can't show.
 
 #### Automated
 
-- [x] 1.1 `npm run stars:build` run twice gives the same `shasum` for `bright-stars.json` and `bright-stars.meta.json`
-- [x] 1.2 `npm test` passes, including `stars.test.ts` and the i18n parity test
-- [x] 1.3 `npm run lint` and `npx astro check` pass
+- [x] 1.1 `npm run stars:build` run twice gives the same `shasum` for `bright-stars.json` and `bright-stars.meta.json` — 738f178
+- [x] 1.2 `npm test` passes, including `stars.test.ts` and the i18n parity test — 738f178
+- [x] 1.3 `npm run lint` and `npx astro check` pass — 738f178
 
 #### Manual
 
-- [x] 1.4 Spot-check five stars against Stellarium's J2000 RA/Dec within 0.01°
+- [x] 1.4 Spot-check five stars against Stellarium's J2000 RA/Dec within 0.01° — 738f178
 
 ### Phase 2: Engine frames and the sky view data
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes, including `sky-frames.test.ts`, the new `build.test.ts` cases and `purity.test.ts`
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.3 `JSON.stringify(view.skyView)` for a December night at 52°N is under 30 KB
+- [x] 2.1 `npm test` passes, including `sky-frames.test.ts`, the new `build.test.ts` cases and `purity.test.ts`
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.3 `JSON.stringify(view.skyView)` for a December night at 52°N is under 30 KB
 
 #### Manual
 
-- [ ] 2.4 M13's and Jupiter's alt/az at two frames match Stellarium within 0.5°
+- [x] 2.4 M13's and Jupiter's alt/az at two frames match Stellarium within 0.5°
 
 ### Phase 3: The panorama island and dusk tokens
 

@@ -58,7 +58,7 @@ const NOTHING_LOADED: TonightLoad = {
   tonightError: null,
   openSkyChecks: [],
 };
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, withSkyChecks: true });
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, withSkyChecks: true, withSkyView: true });
 const supabase = load ? Astro.locals.supabase : null;
 const {
   sites,

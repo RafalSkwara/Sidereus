@@ -47,6 +47,8 @@ export type {
   WashedOutEntry,
 } from "./ranking";
 export { PLANET_KEYS, planetFacts, planetTracks } from "./planets";
+export { skyFrames } from "./sky-frames";
+export type { SkyFrame } from "./sky-frames";
 export type { PlanetFacts, PlanetKey } from "./planets";
 export { rankPlanets } from "./planet-ranking";
 export type { PlanetEntry, PlanetPlacement, PlanetRankInput, PlanetScore, PlanetTiming } from "./planet-ranking";
