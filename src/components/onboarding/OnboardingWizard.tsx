@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
 import { FieldError, FormField } from "@/components/forms/FormField";
 import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
@@ -318,6 +318,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
               onPick={pickLocation}
               summary={whereSummary}
               invalid={Boolean(errors.where) && !manualOpen}
+              errorId="where-error"
             />
 
             <details
@@ -327,8 +328,10 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
               }}
               className="group"
             >
-              <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+              <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
                 {t.where.manualToggle}
+                {/* The open/closed cue the inline-flex summary loses with its native marker. */}
+                <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
               </summary>
               <div className="mt-2 flex flex-col gap-2">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -370,7 +373,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
 
             {errors.where && !manualOpen ? (
               <div role="alert" className="-mt-2">
-                <FieldError message={errors.where} />
+                <FieldError id="where-error" message={errors.where} />
               </div>
             ) : null}
           </div>

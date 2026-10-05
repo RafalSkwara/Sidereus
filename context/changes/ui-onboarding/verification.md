@@ -1,6 +1,6 @@
 # ui-onboarding — verification evidence
 
-Screenshots were taken with scratch Playwright scripts (not committed) against a local production preview on port 4323 (local Supabase, forecast fixture on 4402), with a throwaway user `ui-onboarding-<random>@example.com` that has no gear. Files live in the session scratchpad: `…/scratchpad/before/` and `…/scratchpad/after/` (`/private/tmp/claude-501/-Users-rafalskwara-projects/03f9276d-350c-4903-b6f8-0c2d7d395bdd/scratchpad/`). Geolocation and place search were stubbed (Playwright context geolocation, an init-script `navigator.geolocation`, and a route mock for `geocoding-api.open-meteo.com`), so no real coordinates left the browser.
+Screenshots were taken with scratch Playwright scripts (not committed) against a local production preview on port 4323 (local Supabase, forecast fixture on 4402), with a throwaway user `ui-onboarding-<random>@example.com` that has no gear. Files live in the session scratchpad: `…/scratchpad/before/`, `…/scratchpad/after/` and, after the review fixes, `…/scratchpad/after2/` (same file names) (`/private/tmp/claude-501/-Users-rafalskwara-projects/03f9276d-350c-4903-b6f8-0c2d7d395bdd/scratchpad/`). Geolocation and place search were stubbed (Playwright context geolocation, an init-script `navigator.geolocation`, and a route mock for `geocoding-api.open-meteo.com`), so no real coordinates left the browser.
 
 ## Manual checks
 

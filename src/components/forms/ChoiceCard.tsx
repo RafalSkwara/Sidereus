@@ -47,7 +47,7 @@ export function ChoiceCard({
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="peer sr-only"
+        className="sr-only"
       />
       <span className="text-label text-heading group-has-disabled:text-muted-foreground pr-6 font-semibold">
         {title}
@@ -57,7 +57,8 @@ export function ChoiceCard({
         aria-hidden="true"
         className="border-border group-has-checked:border-selected absolute top-3.5 right-3 flex size-4 items-center justify-center rounded-full border"
       >
-        <span className="bg-selected hidden size-2 rounded-full group-has-checked:block" />
+        {/* Keeps its fill in forced-colors mode, where the border, ring and background would all flatten. */}
+        <span className="bg-selected hidden size-2 rounded-full group-has-checked:block forced-colors:forced-color-adjust-none" />
       </span>
     </label>
   );

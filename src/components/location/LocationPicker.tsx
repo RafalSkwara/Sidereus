@@ -36,6 +36,8 @@ interface Props {
   summary: string | null;
   /** Marks the search box invalid when the host has a location error to show. */
   invalid?: boolean;
+  /** The id of the host's location error, so the invalid search box names it (`aria-describedby`). */
+  errorId?: string;
 }
 
 type GeoStatus = "idle" | "locating" | "denied" | "unavailable";
@@ -43,7 +45,7 @@ type SearchStatus = "idle" | "searching" | "done" | "failed";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-export default function LocationPicker({ locale, onPick, summary, invalid = false }: Props) {
+export default function LocationPicker({ locale, onPick, summary, invalid = false, errorId }: Props) {
   const m = getMessages(locale);
   const t = m.location;
   const number = new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 1 });
@@ -190,7 +192,7 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
             spellCheck={false}
             value={query}
             placeholder={t.searchPlaceholder}
-            aria-describedby="place-search-status"
+            aria-describedby={invalid && errorId ? `place-search-status ${errorId}` : "place-search-status"}
             aria-invalid={invalid ? true : undefined}
             onChange={(e) => {
               changeQuery(e.target.value);
