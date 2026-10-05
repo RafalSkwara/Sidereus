@@ -1,10 +1,10 @@
 ---
 change_id: tonight-dashboard
 title: Tonight as a dashboard of tiles leading to focused pages
-status: impl_reviewed
+status: archived
 created: 2026-10-04
 updated: 2026-10-05
-archived_at: null
+archived_at: 2026-10-05T06:10:14Z
 ---
 
 ## Notes

@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-10-04
+updated: 2026-10-05
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -57,7 +57,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready       |
 | S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | in-progress |
-| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | in-progress |
+| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | proposed    |
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | proposed    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
@@ -186,7 +186,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - ~~How each page loads and fails~~ Settled 2026-10-04: each page has its own server island calling `loadTonight` (JavaScript still required), with its own no-setup, unavailable and error states. — Owner: team.
   - ~~One change or several~~ Settled 2026-10-04: one change (`tonight-dashboard`) for the dashboard and the four pages; the interactive sky above is a follow-up change. — Owner: team.
 - **Risk:** The largest navigation change since M-1: every end-to-end test that walks Tonight moves, and a dashboard that computes every page's content for every tile would slow the landing page, so tiles should show only their summary. S-05 and S-06 were re-scoped on top of it (2026-10-04), so it goes before them. GitHub #87.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-05: Session plan timeline
 
@@ -318,3 +318,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-02: user can see the Moon on Tonight as a target in its own right — its phase, when it is up and how high, and a plain-language note on what is worth looking at in this phase (the terminator and craters near it, or "too full for detail, try filter or low power") — and can log it as observed; on nights when moonlight makes faint deep-sky objects a poor bet, Tonight says so and points at the Moon and planets instead.** — Archived 2026-10-02 → `context/archive/2026-10-01-moon-as-target/`. Lesson: —.
 - **S-07: user can, for a past night at one of their sites, answer "how was the sky?" (for example clear as promised, partly cloudy, clouded out) against the verdict Sidereus showed for that night, and see a running tally of how often go, marginal and no-go verdicts matched what they saw.** — Archived 2026-10-03 → `context/archive/2026-10-03-verdict-check/`. Lesson: —.
 - **S-08: user adding or editing a site sees a "Use my location" button; only when they click it does the browser ask for location permission, and on success the coordinates are filled in, rounded to about 1 km before anything else sees them; a refusal or failure leaves the form usable with a plain message and the manual fields.** — Archived 2026-10-04 → `context/archive/2026-10-03-site-use-my-location/`. Lesson: —.
+- **S-11: user who signs in lands on a dashboard of tiles — tonight's verdict, the Moon, the planets, the deep-sky targets, the forecast for the next nights and the sky check — each tile giving a one-glance summary and opening its own focused page, instead of one long Tonight page; the chosen site and telescope carry across the dashboard and every page.** — Archived 2026-10-05 → `context/archive/2026-10-04-tonight-dashboard/`. Lesson: —.
