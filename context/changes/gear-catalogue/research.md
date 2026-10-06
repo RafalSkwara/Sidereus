@@ -9,6 +9,7 @@ tags: [research, gear, onboarding, combobox, catalogue-data, i18n]
 status: complete
 last_updated: 2026-10-06
 last_updated_by: Claude (Opus 5.5)
+last_updated_note: "Recorded the user's answers to open questions 1-3"
 ---
 
 # Research: S-12 gear catalogue
@@ -215,3 +216,11 @@ No archived change mentions a gear catalogue, autocomplete or a combobox for gea
    - A `discontinued` flag.
    - Which brands. Delta Optical, a Polish brand, was weakly covered by the search.
 6. **Data licence note (team):** where to state the data's provenance and licence (a `LICENSE-DATA.md` next to the data, as `src/lib/catalogue/` does), plus a trademark/nominative-use line.
+
+## Decisions after research (user, 2026-10-06)
+
+Answers to Open Questions 1–3. Questions 4–6 stay team decisions for `/10x-plan`.
+
+1. **Onboarding telescope:** the combobox comes first. Under it, a "Not sure of the model? Pick a type" disclosure keeps the five generic presets as a fallback, and the editable fields sit below both. PRD FR-006 gets an amendment note, and `onboarding.spec.ts:43-45` gets new selectors.
+2. **Onboarding eyepieces:** when the chosen telescope ships with known eyepieces, a first kit option says "The eyepieces that came with <model>" and pre-fills them. Each eyepiece row also gets its own search box, and the generic kits stay.
+3. **/gear forms:** the combobox at the top, the fields always visible below it ("Not listed? Fill in below."), editable after a pick. The existing ids `#name`, `#apertureMm` and `#focalLengthMm` stay.
