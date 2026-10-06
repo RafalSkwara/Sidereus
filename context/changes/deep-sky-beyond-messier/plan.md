@@ -541,7 +541,7 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 - [x] 3.1 `npm test`, `npx astro check` and `npm run lint` pass — 9d48a79
 - [x] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes — 9d48a79
-- [ ] 3.3 The existing e2e Tonight specs pass against the local preview
+- [x] 3.3 The existing e2e Tonight specs pass against the local preview
 
 #### Manual
 
@@ -552,16 +552,16 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [ ] 4.1 `npm run test:db` passes with the new migration applied
-- [ ] 4.2 `npm run db:types` produces no diff
-- [ ] 4.3 `npm test`, `npx astro check` and `npm run lint` pass
-- [ ] 4.4 `npm run test:e2e` passes, including the new log case
-- [ ] 4.5 `npm run smoke` passes against local Supabase
+- [x] 4.1 `npm run test:db` passes with the new migration applied
+- [x] 4.2 `npm run db:types` produces no diff
+- [x] 4.3 `npm test`, `npx astro check` and `npm run lint` pass
+- [x] 4.4 `npm run test:e2e` passes, including the new log case
+- [x] 4.5 `npm run smoke` passes against local Supabase
 
 #### Manual
 
-- [ ] 4.6 Screenshots of picker queries, the `/log` row and the landing kicker in EN/PL × three themes × phone/desktop
-- [ ] 4.7 "Mark observed" on a Caldwell row saves and returns with its "seen" tag
+- [x] 4.6 Screenshots of picker queries, the `/log` row and the landing kicker in EN/PL × three themes × phone/desktop
+- [x] 4.7 "Mark observed" on a Caldwell row saves and returns with its "seen" tag
 
 ### Phase 5: Contract migration and docs
 

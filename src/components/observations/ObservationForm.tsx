@@ -37,7 +37,7 @@ interface Props {
    * object and the likeliest night. The rating always starts empty.
    */
   initial: { target?: TargetKey; night: string; siteId: string; telescopeId: string; rating?: number };
-  /** Every target (Messier objects, then planets) for the picker; required in `manual` and `edit` modes. */
+  /** Every target (Messier and Caldwell objects, the Moon, then planets) for the picker; required in `manual` and `edit` modes. */
   targetOptions?: readonly TargetOption[];
   /**
    * `edit` only: the name snapshot of the entry's site or telescope when that gear has been deleted since (FR-021).

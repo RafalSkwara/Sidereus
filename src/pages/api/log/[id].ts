@@ -4,6 +4,7 @@ import type { MessageKey } from "@/i18n";
 import { editRedirect, logNotice } from "@/lib/observations/redirect";
 import { observationUpdateSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
+import { isKnownTarget } from "@/lib/targets/labels";
 
 /*
  * Saves an edited log entry (roadmap S-07, FR-017) and returns to the log, which confirms it. A failure goes
@@ -22,6 +23,10 @@ export const POST: APIRoute = async (context) => {
   const parsed = observationUpdateSchema.safeParse(Object.fromEntries(await context.request.formData()));
   if (!parsed.success) {
     return fail(issueKey(parsed.error));
+  }
+  // The schema checks the key's shape; a well-formed key the catalogue lacks ("NGC1") is as invalid as a typo.
+  if (!isKnownTarget(parsed.data.target)) {
+    return fail("errors.observation.objectInvalid");
   }
 
   const result = await observationStore.update(supabase, id, parsed.data, new Date());

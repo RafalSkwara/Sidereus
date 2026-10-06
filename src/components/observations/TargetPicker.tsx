@@ -23,8 +23,8 @@ const getDetail = (option: TargetOption) => option.detail;
 const noStatus = { loading: "", unavailable: "", more: () => "", keepTyping: "" };
 
 /**
- * The object picker (roadmap S-07, FR-022; planets since M-2 S-01): the shared `Combobox` over the Messier search
- * for a number ("31", "m31") or a name. The choice is posted as the hidden `target` field (a target key); typed text
+ * The object picker (roadmap S-07, FR-022; planets since M-2 S-01): the shared `Combobox` over the object search
+ * for a number ("31", "m31", "ngc 7000", "c 20") or a name. The choice is posted as the hidden `target` field (a target key); typed text
  * alone never is, so a half-typed name reads as "no object chosen".
  */
 export function TargetPicker({ id, options, initial, label, placeholder, noMatch, error, onChange }: Props) {

@@ -28,15 +28,19 @@ test("marking a target observed on the Targets page saves it and tags its row th
   // shown in full, so "Mark observed" is right there.
   const firstRow = page.locator("li[data-object]").first();
   await expect(firstRow).toBeVisible();
+  // The real clock decides the ranking, so the first row can be a Messier or a Caldwell object: the key ("M31",
+  // "NGC7000") is the row's `data-object` and the link's `object`, the label ("M31", "NGC 7000") is what pages name it by.
   const id = await firstRow.getAttribute("data-object");
-  if (!id || !/^M\d{1,3}$/.test(id)) throw new Error(`no Messier id on the first row: ${id}`);
+  if (!id || !/^(M\d{1,3}|(NGC|IC)\d{1,4})$/.test(id)) throw new Error(`no catalogue key on the first row: ${id}`);
+  const label = await firstRow.getAttribute("data-label");
+  if (!label) throw new Error("the first row has no data-label");
 
   await firstRow.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
 
-  // The form arrives prefilled from the row (the object by its target key, "M31"), with the rating left to the user,
+  // The form arrives prefilled from the row (the object by its target key, "M31" or "NGC7000"), with the rating left to the user,
   // and returns to the Targets page (`from=targets`).
   await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${id}&night=\\d{4}-\\d{2}-\\d{2}&site=.*&from=targets$`));
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(en.log.title({ object: id }));
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(en.log.title({ object: label }));
   await waitForHydration(page, LOG_FORM);
   const form = page.locator(LOG_FORM);
   await expect(form.locator("#night")).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
@@ -53,7 +57,7 @@ test("marking a target observed on the Targets page saves it and tags its row th
   await form.locator('button[type="submit"]').click();
 
   await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${id}$`));
-  await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: id }) })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
 
   // Rated 4, the object moves down the list (maybe behind "Show the other …") but still cleared the bar, so its row
   // is there with the "seen" tag (the tag's wording up to the date, taken from the catalogue).
@@ -61,11 +65,35 @@ test("marking a target observed on the Targets page saves it and tags its row th
   await expect(loggedRow).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));
 });
 
-test("the log form turns away an object outside the Messier catalogue", async ({ page }) => {
+test("the log form turns away an object outside the catalogue", async ({ page }) => {
   await onboardInMadrid(page, "e2e-log");
 
-  await page.goto("/log/new?object=111");
+  // 111 is past M110; NGC1 is a well-formed key the catalogue does not list.
+  for (const object of ["111", "NGC1"]) {
+    await page.goto(`/log/new?object=${object}`);
 
-  await expect(page.getByText(en.log.objectNotFound)).toBeVisible();
-  await expect(page.locator(LOG_FORM)).toHaveCount(0);
+    await expect(page.getByText(en.log.objectNotFound)).toBeVisible();
+    await expect(page.locator(LOG_FORM)).toHaveCount(0);
+  }
+});
+
+test("a Caldwell object is found in the manual picker by its number and shows in the log", async ({ page }) => {
+  await onboardInMadrid(page, "e2e-log-caldwell");
+
+  await page.goto("/log/new?from=log");
+  await waitForHydration(page, LOG_FORM);
+  const form = page.locator(LOG_FORM);
+  const picker = form.getByRole("combobox", { name: en.log.picker.label });
+  await picker.fill("c 20");
+  await expect(form.getByRole("option").first()).toContainText("NGC 7000");
+  await picker.press("Enter");
+  await expect(picker).toHaveValue(/^NGC 7000 · /);
+  await form.locator("label").filter({ hasText: /^4$/ }).click();
+  await form.locator('button[type="submit"]').click();
+
+  await expect(page).toHaveURL(/\/log\?saved=NGC7000$/);
+  await expect(page.getByRole("status")).toHaveText(en.log.list.saved({ object: "NGC 7000" }));
+  await expect(page.locator('main a[href^="/log/"]').filter({ hasText: "NGC 7000" })).toContainText(
+    en.log.list.rated({ rating: "4" }),
+  );
 });

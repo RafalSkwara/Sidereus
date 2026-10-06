@@ -10,6 +10,7 @@ import {
 } from "@/lib/engine";
 import { WARSAW } from "@/lib/engine/fixtures";
 import {
+  isDeepSkyKey,
   isTargetKey,
   messierKey,
   messierNumber,
@@ -45,8 +46,23 @@ describe("MOON_TARGET_KEY", () => {
 });
 
 describe("isTargetKey", () => {
-  it("accepts M1 to M110, the seven planets and the Moon", () => {
-    for (const key of ["M1", "M9", "M10", "M99", "M100", "M109", "M110", ...PLANET_TARGET_KEYS, "moon"]) {
+  it("accepts M1 to M110, NGC and IC keys, the seven planets and the Moon", () => {
+    for (const key of [
+      "M1",
+      "M9",
+      "M10",
+      "M99",
+      "M100",
+      "M109",
+      "M110",
+      "NGC1",
+      "NGC7000",
+      "NGC9999",
+      "IC405",
+      "IC4715",
+      ...PLANET_TARGET_KEYS,
+      "moon",
+    ]) {
       expect(isTargetKey(key)).toBe(true);
     }
   });
@@ -58,6 +74,13 @@ describe("isTargetKey", () => {
     ["m31"],
     ["31"],
     ["M 31"],
+    ["NGC0"],
+    ["NGC07000"],
+    ["NGC10000"],
+    ["NGC 7000"],
+    ["ngc7000"],
+    ["IC"],
+    ["IC0"],
     ["Jupiter"],
     ["pluto"],
     ["Moon"],
@@ -78,12 +101,25 @@ describe("messierKey and messierNumber", () => {
     expect(messierNumber("M110")).toBe(110);
     expect(messierNumber("jupiter")).toBeNull();
     expect(messierNumber("moon")).toBeNull();
+    expect(messierNumber("NGC7000")).toBeNull();
+  });
+});
+
+describe("isDeepSkyKey", () => {
+  it("checks the NGC / IC shape only, never a Messier key", () => {
+    expect(isDeepSkyKey("NGC7000")).toBe(true);
+    expect(isDeepSkyKey("IC405")).toBe(true);
+    expect(isDeepSkyKey("M31")).toBe(false);
+    expect(isDeepSkyKey("NGC0")).toBe(false);
+    expect(isDeepSkyKey("ngc7000")).toBe(false);
   });
 });
 
 describe("targetKind", () => {
-  it("tells Messier keys, planet keys and the Moon's key apart", () => {
+  it("tells Messier keys, deep-sky keys, planet keys and the Moon's key apart", () => {
     expect(targetKind("M31")).toBe("messier");
+    expect(targetKind("NGC7000")).toBe("deep-sky");
+    expect(targetKind("IC405")).toBe("deep-sky");
     expect(targetKind("saturn")).toBe("planet");
     expect(targetKind("moon")).toBe("moon");
   });
@@ -94,6 +130,8 @@ describe("parseTargetParam", () => {
     expect(parseTargetParam("M31")).toBe("M31");
     expect(parseTargetParam("jupiter")).toBe("jupiter");
     expect(parseTargetParam("moon")).toBe("moon");
+    expect(parseTargetParam("NGC869")).toBe("NGC869");
+    expect(parseTargetParam("IC405")).toBe("IC405");
   });
 
   it("reads the bare Messier number of an older link as its key", () => {
@@ -110,6 +148,9 @@ describe("parseTargetParam", () => {
       "111",
       "1234",
       "m31",
+      "ngc869",
+      "NGC 869",
+      "NGC0",
       "Jupiter",
       "Moon",
       "luna",

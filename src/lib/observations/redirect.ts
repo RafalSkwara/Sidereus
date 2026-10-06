@@ -1,5 +1,6 @@
 import type { MessageKey } from "@/i18n";
 import { parseTargetParam, type TargetKey } from "@/lib/targets";
+import { isKnownTarget } from "@/lib/targets/labels";
 import { observationInputSchema, returnTargetSchema, type TonightReturnPage } from "./schemas";
 
 /** The log form's path; `POST /api/log` sends the user back here on failure. */
@@ -27,6 +28,9 @@ export function tonightReturnPath(from: unknown): string {
   return target && target !== "log" ? TONIGHT_PAGES[target] : TONIGHT;
 }
 
+/** A value that already passed the target schema is a well-formed key; this asks whether the catalogue has it. */
+const isKnown = (value: string) => isKnownTarget(value as TargetKey);
+
 const { target, night, siteId, telescopeId } = observationInputSchema.shape;
 
 /** Form field → query parameter of the form page, with the schema field that must accept the value. */
@@ -39,14 +43,17 @@ const PREFILL = [
 
 /**
  * Where a failed save goes: back to the form with its prefill and a fixed message key. Each value is
- * carried only when it parses on its own as a target key, a calendar date or a uuid, so nothing
- * typed by hand (and never a coordinate) ends up in the URL. The rating is never carried.
+ * carried only when it parses on its own as a target key the catalogue knows (a well-formed "NGC1" is dropped), a
+ * calendar date or a uuid, so nothing typed by hand (and never a coordinate) ends up in the URL. The rating is
+ * never carried.
+ *
+ * Server-side: `isKnownTarget` reads the catalogue, and only routes import this module (no island may).
  */
 export function formRedirect(raw: Record<string, unknown>, error: MessageKey): string {
   const query = new URLSearchParams();
   for (const [field, param, schema] of PREFILL) {
     const value = raw[field];
-    if (typeof value === "string" && schema.safeParse(value).success) {
+    if (typeof value === "string" && schema.safeParse(value).success && (field !== "target" || isKnown(value))) {
       query.set(param, value);
     }
   }
