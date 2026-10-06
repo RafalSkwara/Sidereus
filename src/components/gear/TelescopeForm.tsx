@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Save, Telescope } from "lucide-react";
+import { Combobox } from "@/components/forms/Combobox";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
-import { getMessages, translateKey } from "@/i18n";
+import { getMessages, plural, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import { telescopeFill } from "@/lib/gear/catalogue/fill";
+import { loadTelescopes } from "@/lib/gear/catalogue/load";
+import { searchCatalogue } from "@/lib/gear/catalogue/search";
+import type { TelescopeEntry } from "@/lib/gear/catalogue/types";
 import { telescopeInputSchema } from "@/lib/gear/schemas";
 
 /** Stored values used to prefill the edit form. */
@@ -36,6 +41,9 @@ function focalRatio(aperture: string, focalLength: string): string | null {
   return (f / a).toFixed(1).replace(/\.0$/, "");
 }
 
+const getKey = (entry: TelescopeEntry) => entry.id;
+const getLabel = (entry: TelescopeEntry) => entry.name;
+
 export default function TelescopeForm({ action, initial, serverError, locale }: Props) {
   const m = getMessages(locale);
   const t = m.telescopeForm;
@@ -43,6 +51,47 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
   const [aperture, setAperture] = useState(initial ? String(initial.apertureMm) : "");
   const [focalLength, setFocalLength] = useState(initial ? String(initial.focalLengthMm) : "");
   const [errors, setErrors] = useState<FieldErrors>({});
+  // The catalogue loads after mount, in its own chunk; until then (or if it fails) the fields below work on their own.
+  const [catalogue, setCatalogue] = useState<readonly TelescopeEntry[]>([]);
+  const [catalogueState, setCatalogueState] = useState<"loading" | "ready" | "unavailable">("loading");
+  const [catalogueText, setCatalogueText] = useState("");
+  const c = m.gearCatalogue;
+  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTelescopes().then(
+      (entries) => {
+        if (cancelled) return;
+        setCatalogue(entries);
+        setCatalogueState("ready");
+      },
+      () => {
+        if (!cancelled) setCatalogueState("unavailable");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function detail(entry: TelescopeEntry) {
+    const line = c.detail.telescope({
+      aperture: number.format(entry.apertureMm),
+      focalLength: number.format(entry.focalLengthMm),
+      ratio: number.format(entry.focalLengthMm / entry.apertureMm),
+    });
+    return entry.discontinued ? `${line} · ${c.detail.discontinued}` : line;
+  }
+
+  function select(entry: TelescopeEntry) {
+    const fill = telescopeFill(entry);
+    setName(fill.name);
+    setAperture(fill.apertureMm);
+    setFocalLength(fill.focalLengthMm);
+    setCatalogueText(entry.name);
+    setErrors((prev) => ({ ...prev, name: undefined, apertureMm: undefined, focalLengthMm: undefined }));
+  }
 
   const ratio = focalRatio(aperture, focalLength);
 
@@ -73,6 +122,28 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
 
   return (
     <form method="POST" action={action} className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <Combobox
+        id="catalogue"
+        label={c.telescope.label}
+        placeholder={c.telescope.placeholder}
+        options={catalogue}
+        state={catalogueState}
+        text={catalogueText}
+        onTextChange={setCatalogueText}
+        filter={searchCatalogue}
+        getKey={getKey}
+        getLabel={getLabel}
+        getDetail={detail}
+        onSelect={select}
+        hint={c.telescope.hint}
+        status={{
+          noMatch: c.telescope.noMatch,
+          loading: c.telescope.loading,
+          unavailable: c.telescope.unavailable,
+          more: (hidden) => plural(locale, hidden, c.telescope.more)({ count: number.format(hidden) }),
+        }}
+      />
+
       <FormField
         id="name"
         label={m.common.name}

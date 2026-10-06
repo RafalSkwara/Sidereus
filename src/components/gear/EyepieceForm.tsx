@@ -1,12 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, Save } from "lucide-react";
+import { Combobox } from "@/components/forms/Combobox";
 import { FieldError, FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { getMessages, translateKey, type Messages } from "@/i18n";
+import { getMessages, plural, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import { eyepieceFill } from "@/lib/gear/catalogue/fill";
+import { loadEyepieces } from "@/lib/gear/catalogue/load";
+import { searchCatalogue } from "@/lib/gear/catalogue/search";
+import type { EyepieceEntry } from "@/lib/gear/catalogue/types";
 import { eyepieceInputSchema } from "@/lib/gear/schemas";
 import { AFOV_PRESET_OPTIONS, presetForAfov, type AfovPreset } from "@/lib/gear/eyepiece-presets";
 
@@ -34,6 +39,9 @@ function presetLabel(presets: Messages["eyepiecePresets"], option: AfovPreset): 
   return option === "other" ? presets.other : presets[option].long;
 }
 
+const getKey = (entry: EyepieceEntry) => entry.id;
+const getLabel = (entry: EyepieceEntry) => entry.name;
+
 export default function EyepieceForm({ action, initial, serverError, locale }: Props) {
   const m = getMessages(locale);
   const t = m.eyepieceForm;
@@ -44,6 +52,52 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
   const [preset, setPreset] = useState<AfovPreset | "">(initialPreset);
   const [afov, setAfov] = useState(initial && initialPreset === "other" ? String(initial.afovDeg) : "");
   const [errors, setErrors] = useState<FieldErrors>({});
+  // The catalogue loads after mount, in its own chunk; until then (or if it fails) the fields below work on their own.
+  const [catalogue, setCatalogue] = useState<readonly EyepieceEntry[]>([]);
+  const [catalogueState, setCatalogueState] = useState<"loading" | "ready" | "unavailable">("loading");
+  const [catalogueText, setCatalogueText] = useState("");
+  const c = m.gearCatalogue;
+  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+
+  useEffect(() => {
+    let cancelled = false;
+    loadEyepieces().then(
+      (entries) => {
+        if (cancelled) return;
+        setCatalogue(entries);
+        setCatalogueState("ready");
+      },
+      () => {
+        if (!cancelled) setCatalogueState("unavailable");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function detail(entry: EyepieceEntry) {
+    const params = { focalLength: number.format(entry.focalLengthMm), afov: number.format(entry.afovDeg) };
+    const line = entry.afovEstimated ? c.detail.eyepieceEstimated(params) : c.detail.eyepiece(params);
+    return entry.discontinued ? `${line} · ${c.detail.discontinued}` : line;
+  }
+
+  function select(entry: EyepieceEntry) {
+    const fill = eyepieceFill(entry);
+    setName(fill.name);
+    setFocalLength(fill.focalLengthMm);
+    setPreset(fill.afovPreset);
+    // The exact degrees show only for "other"; a named preset carries its own.
+    setAfov(fill.afovPreset === "other" ? fill.afovDeg : "");
+    setCatalogueText(entry.name);
+    setErrors((prev) => ({
+      ...prev,
+      name: undefined,
+      focalLengthMm: undefined,
+      afovPreset: undefined,
+      afovDeg: undefined,
+    }));
+  }
 
   const isOther = preset === "other";
 
@@ -79,6 +133,28 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
 
   return (
     <form method="POST" action={action} className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <Combobox
+        id="catalogue"
+        label={c.eyepiece.label}
+        placeholder={c.eyepiece.placeholder}
+        options={catalogue}
+        state={catalogueState}
+        text={catalogueText}
+        onTextChange={setCatalogueText}
+        filter={searchCatalogue}
+        getKey={getKey}
+        getLabel={getLabel}
+        getDetail={detail}
+        onSelect={select}
+        hint={c.eyepiece.hint}
+        status={{
+          noMatch: c.eyepiece.noMatch,
+          loading: c.eyepiece.loading,
+          unavailable: c.eyepiece.unavailable,
+          more: (hidden) => plural(locale, hidden, c.eyepiece.more)({ count: number.format(hidden) }),
+        }}
+      />
+
       <FormField
         id="name"
         label={m.common.name}

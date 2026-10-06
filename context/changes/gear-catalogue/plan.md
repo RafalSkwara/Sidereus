@@ -506,7 +506,7 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 #### Automated
 
 - [x] 1.1 search.test.ts covers tokens, separators, diacritics, aliases, ranking, empty query — cfbefa9
-- [ ] 1.2 Existing log picker tests still pass (target-search.test.ts, observation-log-management.spec.ts)
+- [x] 1.2 Existing log picker tests still pass (target-search.test.ts, observation-log-management.spec.ts)
 - [x] 1.3 npm run lint, npx astro check and npm test pass (i18n parity, colour and red-theme tests) — cfbefa9
 
 #### Manual
@@ -518,9 +518,9 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Automated
 
-- [x] 2.1 catalogue.test.ts and fill tests pass (52° → other + 52, 68° → wide, unknown bundled id fails)
-- [x] 2.2 npm run lint, npx astro check and npm test pass
-- [ ] 2.3 npm run build emits separate chunks for the two catalogue JSON files
+- [x] 2.1 catalogue.test.ts and fill tests pass (52° → other + 52, 68° → wide, unknown bundled id fails) — 23f0af8
+- [x] 2.2 npm run lint, npx astro check and npm test pass — 23f0af8
+- [x] 2.3 npm run build emits separate chunks for the two catalogue JSON files
 
 #### Manual
 
@@ -530,10 +530,10 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Automated
 
-- [ ] 3.1 tests/e2e/gear-catalogue.spec.ts passes against the local preview
-- [ ] 3.2 telescope-selector.spec.ts and observation-log-management.spec.ts pass unchanged
-- [ ] 3.3 npm run lint, npx astro check and npm test pass
-- [ ] 3.8 Build lists separate telescopes/eyepieces chunks and the form chunk holds no catalogue data
+- [x] 3.1 tests/e2e/gear-catalogue.spec.ts passes against the local preview
+- [x] 3.2 telescope-selector.spec.ts and observation-log-management.spec.ts pass unchanged
+- [x] 3.3 npm run lint, npx astro check and npm test pass
+- [x] 3.8 Build lists separate telescopes/eyepieces chunks and the form chunk holds no catalogue data
 
 #### Manual
 
