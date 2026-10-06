@@ -13,7 +13,7 @@ import { LOG_LIST, tonightReturnPath } from "@/lib/observations/redirect";
 import { isCalendarDate, returnTargetSchema, type TonightReturnPage } from "@/lib/observations/schemas";
 import { targetOptions } from "@/lib/observations/target-options";
 import { parseTargetParam } from "@/lib/targets";
-import { targetLabel } from "@/lib/targets/labels";
+import { isKnownTarget, targetLabel } from "@/lib/targets/labels";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 // telescope; `POST /api/log` sends a failed save back with the same prefill and a `?error=` message key.
 // With `?from=log` it is the log's manual entry instead (S-07, FR-022): any object, chosen in a picker, and the
 // save returns to the log; `?object=` then only preselects the picker. `?object=` is a target key ("M31",
-// "jupiter"), or the bare Messier number older links carry. A focused Tonight page's "Mark observed" adds
+// "NGC7000", "jupiter"), or the bare Messier number older links carry; a key the catalogue lacks is not found. A focused Tonight page's "Mark observed" adds
 // `?from=targets|moon|planets` (tonight-dashboard): the form posts it on, so the save and the back link return there.
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
@@ -41,7 +41,9 @@ const back =
   from === "log"
     ? { href: LOG_LIST, label: m.nav.log }
     : { href: tonightReturnPath(from), label: from ? PAGE_TITLES[from] : m.nav.tonight };
-const object = parseTargetParam(params.get("object"));
+// A well-formed key the catalogue lacks ("NGC1") reads as an unknown object, like a malformed one.
+const parsedObject = parseTargetParam(params.get("object"));
+const object = parsedObject && isKnownTarget(parsedObject) ? parsedObject : null;
 const label = object ? targetLabel(object, locale) : null;
 
 let sites: SiteRecord[] = [];

@@ -1,20 +1,24 @@
 # Catalogue data licence
 
-## Messier catalogue (OpenNGC)
+## Messier and Caldwell catalogues (OpenNGC)
 
-`messier.json` and `messier.meta.json` in this directory are **Adapted Material** derived from
+`messier.json`, `messier.meta.json`, `caldwell.json` and `caldwell.meta.json` in this directory are **Adapted Material** derived from
 [OpenNGC](https://github.com/mattiaverga/OpenNGC) by Mattia Verga, at commit
-`da90466031b0372c896588b85be6016c617e205b` (2026-07-26), via `scripts/build-catalogue.mjs`.
+`da90466031b0372c896588b85be6016c617e205b` (2026-07-26), via `scripts/build-catalogue.mjs` (one run writes both pairs).
 
 OpenNGC is licensed under the
 [Creative Commons Attribution-ShareAlike 4.0 International licence](https://creativecommons.org/licenses/by-sa/4.0/)
-(CC BY-SA 4.0). Under its ShareAlike condition, the two generated files are themselves licensed
+(CC BY-SA 4.0). Under its ShareAlike condition, the four generated files are themselves licensed
 **CC BY-SA 4.0**, independently of the licence that applies to the application code in this repository.
 
 Changes made to the source data are listed under `overrides` and `normalisations` in
-`messier.meta.json`. In short: the catalogue is filtered to the 110 Messier objects, NGC 5866 is
-listed as M102 (OpenNGC treats M102 as a duplicate of M101), sexagesimal coordinates are converted to
-decimal, and the Serpens constellation codes are merged.
+`messier.meta.json` and `caldwell.meta.json`. In short: `messier.json` is filtered to the 110 Messier
+objects (NGC 5866 is listed as M102, because OpenNGC treats M102 as a duplicate of M101);
+`caldwell.json` is filtered to the rows of OpenNGC's `NGC.csv` and `addendum.csv` that carry a Caldwell
+identifier, are not Messier objects and lie at declination -23 degrees or north (61 objects, with the
+Double Cluster's two rows NGC 869 and NGC 884 merged into one entry; a missing V magnitude is taken
+from the B magnitude); in both, sexagesimal coordinates are converted to decimal and the Serpens
+constellation codes are merged.
 
 OpenNGC asks that the following acknowledgements accompany derived work:
 

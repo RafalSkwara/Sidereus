@@ -56,7 +56,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------- |
 | S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done    |
 | S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done    |
-| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready   |
+| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | in-progress |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done    |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done    |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done    |
@@ -142,7 +142,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Does the wider list crowd Messier out of the top 5 for a beginner? Candidate: rank together, but tie-break towards Messier and show the catalogue label on each row. — Owner: user. Block: no.
   - The manual log entry picker lists Messier numbers only; it needs search by catalogue name. — Owner: team. Block: no.
 - **Risk:** The scoring was calibrated only against Messier objects; faint objects with missing surface brightness fall back to type-based penalties, so check the new objects' ranks against published seasonal lists as the S-02 checkpoint of M-1 did.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-10: A visual identity of its own
 

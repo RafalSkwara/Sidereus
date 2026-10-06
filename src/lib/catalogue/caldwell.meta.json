@@ -1,0 +1,93 @@
+{
+  "source": "https://github.com/mattiaverga/OpenNGC",
+  "files": [
+    "database_files/NGC.csv",
+    "database_files/addendum.csv"
+  ],
+  "commit": "da90466031b0372c896588b85be6016c617e205b",
+  "retrievedAt": "2026-07-26",
+  "licence": "CC BY-SA 4.0",
+  "count": 61,
+  "selection": "Rows of NGC.csv/addendum.csv whose Identifiers column holds a 'C <n>' token, whose M column is empty and whose declination is >= -23 deg (38 + dec >= 15 at 52 N with the 15 deg default minimum altitude); plus C 14 (NGC 869 + NGC 884) merged into one entry",
+  "excluded": [
+    {
+      "caldwell": 9,
+      "name": "Cave Nebula (Sh2-155)",
+      "reason": "Not in OpenNGC's NGC/IC rows (Sh2-155 has no NGC or IC number)"
+    },
+    {
+      "caldwell": 41,
+      "name": "Hyades (Mel 25)",
+      "reason": "Not in OpenNGC's NGC/IC identifiers (Mel 25 carries no C token)"
+    },
+    {
+      "caldwell": 99,
+      "name": "Coalsack Nebula",
+      "reason": "No OpenNGC row"
+    },
+    {
+      "reason": "Below dec -23 deg, not reachable from 52 N",
+      "count": 45
+    }
+  ],
+  "overrides": [
+    {
+      "caldwell": 14,
+      "action": "merge",
+      "sourceName": "NGC0869 + NGC0884",
+      "id": "NGC869",
+      "reason": "OpenNGC has no Caldwell token for the Double Cluster; its notes say 'Caldwell 14 refers to both NGC869 and NGC884'. The two rows are merged into one entry: RA/Dec are the midpoint, the major axis covers both clusters, V-Mag and B-Mag are the brighter of the two, surface brightness is null, the common name is 'Double Cluster'.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "caldwell": 49,
+      "action": "designation",
+      "sourceName": "NGC2238",
+      "id": "NGC2237",
+      "designation": "NGC 2237",
+      "reason": "OpenNGC puts the 'C 049' token on NGC2238, its row for the whole Rosette Nebula (HII). Caldwell lists, Stellarium and atlases call the Rosette NGC 2237, so the entry keeps NGC2238's data under that designation.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "caldwell": 50,
+      "action": "designation",
+      "sourceName": "NGC2239",
+      "id": "NGC2244",
+      "designation": "NGC 2244",
+      "reason": "OpenNGC puts the 'C 050' token on NGC2239 and lists NGC2244 as its duplicate (type Dup). The Rosette's cluster is known as NGC 2244 in Caldwell lists and observing guides, so the entry keeps NGC2239's data under that designation.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    }
+  ],
+  "normalisations": [
+    "RA HH:MM:SS.ss -> decimal hours (6 dp); Dec ±DD:MM:SS.s -> decimal degrees (6 dp), sign taken from the string",
+    "Constellation codes Se1/Se2 -> Ser",
+    "Empty numeric fields -> null",
+    "Designations: NGC0224 -> NGC 224, IC4715 -> IC 4715; ids drop the space: NGC7000, IC405",
+    "commonName: first entry of the Common names column, or null",
+    "vMag: the V-Mag column, else the B-Mag column (listed below), else a documented override",
+    "IC0342 (C 5): vMag taken from B-Mag 9.68 (V-Mag empty)",
+    "IC0405 (C 31): vMag taken from B-Mag 10.00 (V-Mag empty)",
+    "NGC2238 (C 49): vMag taken from B-Mag 6.00 (V-Mag empty)",
+    "NGC4039 (C 61): vMag taken from B-Mag 11.04 (V-Mag empty)",
+    "NGC6888 (C 27): vMag taken from B-Mag 7.44 (V-Mag empty)",
+    "NGC6960 (C 34): vMag taken from B-Mag 7.00 (V-Mag empty)",
+    "NGC6992 (C 33): vMag taken from B-Mag 7.00 (V-Mag empty)",
+    "NGC7000 (C 20): vMag taken from B-Mag 4.00 (V-Mag empty)",
+    "NGC7023 (C 4): vMag taken from B-Mag 7.20 (V-Mag empty)",
+    "NGC7635 (C 11): vMag taken from B-Mag 11.00 (V-Mag empty)"
+  ],
+  "typeMap": {
+    "G": "galaxy",
+    "GCl": "globular-cluster",
+    "OCl": "open-cluster",
+    "PN": "planetary-nebula",
+    "Neb": "nebula",
+    "HII": "emission-nebula",
+    "RfN": "reflection-nebula",
+    "SNR": "supernova-remnant",
+    "Cl+N": "cluster-with-nebula",
+    "*Ass": "asterism",
+    "**": "double-star",
+    "Other": "other"
+  }
+}

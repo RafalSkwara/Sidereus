@@ -74,7 +74,7 @@ export const pl = {
   },
 
   landing: {
-    kicker: "Messier 1 – 110 · Twoje niebo, Twój sprzęt",
+    kicker: "Messier i Caldwell · Twoje niebo, Twój sprzęt",
     tagline: "Czy dziś warto rozstawiać teleskop?",
     lead: "Jasna ocena nocy i krótka, uzasadniona lista obiektów, na które warto skierować teleskop — z okularami, które już masz.",
     verdictsLabel: "Prognozy nieba",
@@ -475,6 +475,7 @@ export const pl = {
 
     object: {
       inConstellation: (p) => `gwiazdozbiór ${p.constellation}`,
+      caldwell: (p) => `Caldwell ${p.n}`,
       window: "Widoczność",
       best: "Najlepiej",
       findWith: "Do szukania:",
@@ -851,7 +852,7 @@ export const pl = {
     addGear: "Przejdź do sprzętu",
     manualTitle: "Dodaj obserwację",
     manualIntro:
-      "Wybierz obiekt Messiera, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
+      "Wybierz obiekt głębokiego nieba, Księżyc albo planetę, potwierdź noc, stanowisko i teleskop, a potem oceń, jak poszło.",
     editTitle: (p) => `Edycja wpisu: ${p.object}`,
     editIntro: "Popraw obiekt, noc, stanowisko, teleskop lub ocenę albo usuń wpis.",
     saveChanges: "Zapisz zmiany",
@@ -862,7 +863,7 @@ export const pl = {
     backToLogLink: "Wróć do dziennika",
     picker: {
       label: "Obiekt",
-      placeholder: "np. 31, Andromeda albo Jowisz",
+      placeholder: "np. 31, NGC 7000, Andromeda albo Jowisz",
       noMatch: "Żaden obiekt nie pasuje.",
     },
     list: {
@@ -992,7 +993,7 @@ export const pl = {
       eyepiecesTooMany: "Dodaj najwyżej 10 okularów.",
     },
     observation: {
-      objectInvalid: "Wybierz obiekt Messiera od M1 do M110.",
+      objectInvalid: "Wybierz obiekt z listy.",
       nightInvalid: "Podaj noc obserwacji jako datę.",
       nightInFuture: "Noc obserwacji nie może być późniejsza niż dzisiejsza.",
       nightTooEarly: "Podaj noc obserwacji od 1900 roku.",

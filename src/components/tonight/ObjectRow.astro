@@ -1,11 +1,11 @@
 ---
 // One object on the Targets page (tonight-all-objects, Nightfall since tonight-dashboard): a ruled row in the list's
 // `divide-y`, which expands into the same details as Tonight's card. Native <details>, so opening a row needs no
-// script of its own. `data-object` (the target key) and `data-best-at` (the peak instant) are what the e2e reads.
+// script of its own. `data-object` (the space-free target key, never the label) and `data-best-at` (the peak instant) are what the e2e reads.
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
-import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightEntry } from "@/lib/tonight/build";
+import { createFormatter } from "@/lib/tonight/format";
 
 interface Props {
   entry: TonightEntry;
@@ -15,11 +15,12 @@ interface Props {
 
 const { entry, logHref } = Astro.props;
 const { locale } = Astro.locals;
-const t = getMessages(locale).tonight.object;
-const commonName = localCommonName(entry.messier, entry.commonName, locale);
+const { objectDetailLine } = createFormatter(locale);
+const commonName = localCommonName(entry.id, entry.commonName, locale);
+const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
 ---
 
-<li data-object={entry.id} data-best-at={entry.bestAt}>
+<li data-object={entry.id} data-label={entry.label} data-best-at={entry.bestAt}>
   <details class="group">
     <!-- At least 44 px; the hover tint and the ring run a little past the text, inside the list's width. -->
     <summary
@@ -31,7 +32,7 @@ const commonName = localCommonName(entry.messier, entry.commonName, locale);
     >
       <span class="w-7 shrink-0 text-right font-mono text-label text-muted-foreground">{entry.rank}.</span>
       <span class="min-w-0 flex-1">
-        <span class="font-display text-title font-semibold break-words text-heading">{entry.id}</span>
+        <span class="font-display text-title font-semibold break-words text-heading">{entry.label}</span>
         {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
         {entry.seenText && <span class="block text-label text-muted-foreground">{entry.seenText}</span>}
       </span>
@@ -53,7 +54,7 @@ const commonName = localCommonName(entry.messier, entry.commonName, locale);
       </svg>
     </summary>
     <div class="pb-4 pl-10">
-      <p class="text-label text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</p>
+      <p class="text-label text-muted-foreground">{detailLine}</p>
       <ObjectDetails entry={entry} logHref={logHref} />
     </div>
   </details>

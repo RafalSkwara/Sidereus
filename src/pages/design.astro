@@ -292,18 +292,20 @@ const skies = skySamples.map((sample) => ({
   },
 }));
 
-// The best three targets, already in best-time order, as `summaryTargets` holds them.
+// The best targets, already in best-time order, as `summaryTargets` holds them: Messier objects and one Caldwell
+// object (the Double Cluster, whose label is "NGC 869 / 884" while its key stays the space-free "NGC869").
 const sampleTarget = (
   rank: number,
-  messier: number,
+  object: { id: string; label: string; caldwell: number | null },
   commonName: string,
   constellation: string,
   bestTime: string,
   bestAt: number,
 ): TonightEntry => ({
   rank,
-  id: `M${messier}`,
-  messier,
+  id: object.id,
+  label: object.label,
+  caldwell: object.caldwell,
   commonName,
   constellation,
   windowStart: "19:42",
@@ -315,11 +317,29 @@ const sampleTarget = (
   reason: "",
   seenText: null,
 });
+const messierSample = (n: number) => ({ id: `M${n}`, label: `M${n}`, caldwell: null });
 const sampleTargets = [
-  sampleTarget(3, 13, "Great Globular Cluster in Hercules", "Her", "19:55", Date.UTC(2026, 9, 10, 17, 55)),
-  sampleTarget(1, 31, "Andromeda Galaxy", "And", "23:40", Date.UTC(2026, 9, 10, 21, 40)),
-  sampleTarget(2, 45, "Pleiades", "Tau", "02:15", Date.UTC(2026, 9, 11, 0, 15)),
+  sampleTarget(
+    3,
+    messierSample(13),
+    "Great Globular Cluster in Hercules",
+    "Her",
+    "19:55",
+    Date.UTC(2026, 9, 10, 17, 55),
+  ),
+  sampleTarget(1, messierSample(31), "Andromeda Galaxy", "And", "23:40", Date.UTC(2026, 9, 10, 21, 40)),
+  sampleTarget(2, messierSample(45), "Pleiades", "Tau", "02:15", Date.UTC(2026, 9, 11, 0, 15)),
+  sampleTarget(
+    4,
+    { id: "NGC869", label: "NGC 869 / 884", caldwell: 14 },
+    "Double Cluster",
+    "Per",
+    "03:30",
+    Date.UTC(2026, 9, 11, 1, 30),
+  ),
 ];
+// The dashboard tile holds SUMMARY_TARGETS (3): the Double Cluster takes the place of M13.
+const sampleSummaryTargets = sampleTargets.filter((entry) => entry.id !== "M13");
 
 const sampleMoon: MoonDiscState = {
   time: "2026-10-10T21:40:00Z",
@@ -384,7 +404,7 @@ const summaryView: TonightView = {
     washedOutText: null,
     washedOutEntries: [],
   },
-  summaryTargets: sampleTargets,
+  summaryTargets: sampleSummaryTargets,
   hasEyepieces: false,
   forecastStatus: { kind: freshForecast.kind, text: fmt.forecastStatusText(freshForecast) },
   explanation: null,

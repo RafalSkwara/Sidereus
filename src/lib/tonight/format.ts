@@ -667,6 +667,14 @@ export function createFormatter(locale: Locale) {
     return listFormat.format(names);
   }
 
+  /** An object's secondary line: "Caldwell 14 · in Per" for a Caldwell object, else "in And". */
+  function objectDetailLine(caldwell: number | null, constellation: string): string {
+    const inConstellation = m.tonight.object.inConstellation({ constellation });
+    return caldwell === null
+      ? inConstellation
+      : `${m.tonight.object.caldwell({ n: String(caldwell) })} · ${inConstellation}`;
+  }
+
   return {
     formatTime,
     formatDayTime,
@@ -697,6 +705,7 @@ export function createFormatter(locale: Locale) {
     moonUpText,
     moonFaintText,
     listOf,
+    objectDetailLine,
   };
 }
 

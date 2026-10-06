@@ -59,7 +59,6 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
-          messier: number | null;
           night: string;
           rating: number;
           site_id: string | null;
@@ -72,7 +71,6 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
-          messier?: number | null;
           night: string;
           rating: number;
           site_id?: string | null;
@@ -85,7 +83,6 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
-          messier?: number | null;
           night?: string;
           rating?: number;
           site_id?: string | null;

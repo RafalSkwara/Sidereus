@@ -32,6 +32,16 @@ describe("formRedirect", () => {
     });
   });
 
+  it("carries a Caldwell key the catalogue lists and drops a well-formed one it lacks", () => {
+    expect(params(formRedirect({ target: "NGC7000" }, "errors.generic"))).toEqual({
+      object: "NGC7000",
+      error: "errors.generic",
+    });
+    expect(params(formRedirect({ target: "NGC1" }, "errors.observation.objectInvalid"))).toEqual({
+      error: "errors.observation.objectInvalid",
+    });
+  });
+
   it("drops any value that is not a target key, uuid or calendar date, so free text never reaches the URL", () => {
     const url = formRedirect(
       { target: "M13 at 52.23N", night: "tomorrow", siteId: "52.23,21.01", telescopeId: "<script>" },

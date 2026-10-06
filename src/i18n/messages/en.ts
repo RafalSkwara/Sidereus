@@ -92,7 +92,7 @@ export const en = {
   },
 
   landing: {
-    kicker: "Messier 1 – 110 · your sky, your kit",
+    kicker: "Messier & Caldwell · your sky, your kit",
     tagline: "Is tonight worth setting up for?",
     lead: "A clear verdict for the night and a short, explained list of what to point your telescope at, with the eyepieces you already own.",
     verdictsLabel: "Sky forecasts",
@@ -501,6 +501,7 @@ export const en = {
 
     object: {
       inConstellation: (p: { constellation: string }) => `in ${p.constellation}`,
+      caldwell: (p: { n: string }) => `Caldwell ${p.n}`,
       window: "Window",
       best: "Best",
       findWith: "Find with",
@@ -928,7 +929,7 @@ export const en = {
     },
   },
 
-  /** How the log names a target that is not a Messier object (M-2 S-01): by its localised name. */
+  /** How the log names a target that is not a catalogue object (M-2 S-01): by its localised name. */
   targets: {
     planet: {
       mercury: "Mercury",
@@ -965,7 +966,7 @@ export const en = {
     addGear: "Go to my gear",
     manualTitle: "Add an observation",
     manualIntro:
-      "Pick a Messier object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
+      "Pick a deep-sky object, the Moon or a planet, then confirm the night, site and telescope and rate how it went.",
     editTitle: (p: { object: string }) => `Edit ${p.object}`,
     editIntro: "Fix the object, night, site, telescope or rating, or delete the entry.",
     saveChanges: "Save changes",
@@ -976,7 +977,7 @@ export const en = {
     backToLogLink: "Back to the log",
     picker: {
       label: "Object",
-      placeholder: "e.g. 31, Andromeda or Jupiter",
+      placeholder: "e.g. 31, NGC 7000, Andromeda or Jupiter",
       noMatch: "No object matches.",
     },
     list: {
@@ -1113,7 +1114,7 @@ export const en = {
       eyepiecesTooMany: "Add at most 10 eyepieces.",
     },
     observation: {
-      objectInvalid: "Choose a Messier object from M1 to M110.",
+      objectInvalid: "Choose an object from the list.",
       nightInvalid: "Enter the observing night as a date.",
       nightInFuture: "The observing night cannot be later than tonight.",
       nightTooEarly: "Enter an observing night from 1900 onwards.",

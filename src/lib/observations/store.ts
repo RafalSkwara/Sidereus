@@ -35,8 +35,8 @@ export const LOG_PAGE_SIZE = 50;
 /**
  * One log entry as the log pages show it. A `null` gear id means that site or telescope has been deleted.
  *
- * Only `target` is read and written here. The table still has `messier`, filled from a Messier target by a
- * trigger for the app version deployed before target keys; a later migration drops it.
+ * Only `target` is read and written here; the table's old `messier` column and its sync trigger were dropped once
+ * no app version from before target keys could be running.
  */
 export interface ObservationRecord {
   id: string;

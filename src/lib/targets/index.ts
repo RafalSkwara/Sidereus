@@ -1,10 +1,14 @@
 import type { PlanetKey } from "@/lib/engine/planets";
 
 /**
- * Target keys (M-2 S-01, the Moon since S-02): what the observation log, its URLs and the ranking's "seen" tag call
- * an object. The grammar is closed and matches the `observations_target_key` check in the database:
+ * Target keys (M-2 S-01, the Moon since S-02, Caldwell objects since deep-sky-beyond-messier): what the observation
+ * log, its URLs and the ranking's "seen" tag call an object. The grammar is closed and matches the
+ * `observations_target_key` check in the database:
  *
  * - Messier: `M1`…`M110`, the catalogue's `id`;
+ * - deep-sky (the Caldwell objects): `NGC1`…`NGC9999` and `IC1`…`IC9999`, the catalogue's `id` (space-free, no
+ *   leading zero). The grammar only checks the shape; whether the catalogue lists the object is
+ *   `isKnownTarget` in `./labels` (server-side), because this module stays free of the catalogue;
  * - planets: `mercury`, `venus`, `mars`, `jupiter`, `saturn`, `uranus`, `neptune`;
  * - the Moon: `moon`, its own kind (never a Messier key, so it has no Messier number).
  *
@@ -32,14 +36,25 @@ export const MOON_TARGET_KEY = "moon";
 
 export type MessierKey = `M${number}`;
 export type MoonKey = typeof MOON_TARGET_KEY;
-export type TargetKey = MessierKey | PlanetKey | MoonKey;
-export type TargetKind = "messier" | "planet" | "moon";
+export type DeepSkyKey = `NGC${number}` | `IC${number}`;
+export type TargetKey = MessierKey | DeepSkyKey | PlanetKey | MoonKey;
+export type TargetKind = "messier" | "deep-sky" | "planet" | "moon";
 
 const MESSIER_KEY = /^M([1-9]|[1-9][0-9]|10[0-9]|110)$/;
+// The same pattern as the database's `observations_target_key` check.
+const DEEP_SKY_KEY = /^(NGC|IC)[1-9][0-9]{0,3}$/;
 const PLANETS: ReadonlySet<string> = new Set(PLANET_TARGET_KEYS);
 
 export function isTargetKey(value: unknown): value is TargetKey {
-  return typeof value === "string" && (MESSIER_KEY.test(value) || isPlanetKey(value) || isMoonKey(value));
+  return (
+    typeof value === "string" &&
+    (MESSIER_KEY.test(value) || isDeepSkyKey(value) || isPlanetKey(value) || isMoonKey(value))
+  );
+}
+
+/** An NGC or IC key by shape only ("NGC7000", "IC405"); the catalogue decides whether it exists. */
+export function isDeepSkyKey(value: unknown): value is DeepSkyKey {
+  return typeof value === "string" && DEEP_SKY_KEY.test(value);
 }
 
 export function isPlanetKey(value: unknown): value is PlanetKey {
@@ -55,7 +70,7 @@ export function messierKey(n: number): MessierKey {
   return `M${n}`;
 }
 
-/** "M31" → 31; a planet key or the Moon's → `null`. */
+/** "M31" → 31; a deep-sky key, a planet key or the Moon's → `null`. */
 export function messierNumber(key: TargetKey): number | null {
   return MESSIER_KEY.test(key) ? Number(key.slice(1)) : null;
 }
@@ -64,7 +79,17 @@ export function targetKind(key: TargetKey): TargetKind {
   if (isPlanetKey(key)) {
     return "planet";
   }
-  return isMoonKey(key) ? "moon" : "messier";
+  if (isMoonKey(key)) {
+    return "moon";
+  }
+  if (isDeepSkyKey(key)) {
+    return "deep-sky";
+  }
+  if (MESSIER_KEY.test(key)) {
+    return "messier";
+  }
+  // A `TargetKey` is always one of the four; a value that is not (a cast) must not read as Messier.
+  throw new Error("Not a target key");
 }
 
 /**

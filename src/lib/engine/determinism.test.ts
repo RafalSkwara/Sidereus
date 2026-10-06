@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { MESSIER } from "@/lib/catalogue";
+import { DEEP_SKY } from "@/lib/catalogue";
 
 import {
   darkWindow,
@@ -51,10 +51,10 @@ function fullRun(): FullRun {
   const tracks = objectTracks(
     WARSAW,
     dark,
-    MESSIER.map((o) => ({ raHours: o.raHours, decDeg: o.decDeg })),
+    DEEP_SKY.map((o) => ({ raHours: o.raHours, decDeg: o.decDeg })),
   );
   const objects: Record<string, HorizontalPosition[]> = {};
-  MESSIER.forEach((object, i) => {
+  DEEP_SKY.forEach((object, i) => {
     objects[object.id] = tracks[i];
   });
   return { dark, moon, objects };
@@ -82,7 +82,7 @@ describe("engine determinism and budget", () => {
   it(`samples the dark window for the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
     const { first, second } = getRuns();
     console.info(
-      `engine full run (dark window + moon + 110 object tracks): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
+      `engine full run (dark window + moon + ${DEEP_SKY.length} object tracks): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
     );
     expect(Number.isFinite(second.ms)).toBe(true);
     if (process.env.CI === undefined) {
@@ -110,7 +110,7 @@ function fullRanking(log: readonly LogEntry[] = [], date = "2026-10-10"): Rankin
       { id: "e25", focalLengthMm: 25, afovDeg: 50 },
       { id: "e10", focalLengthMm: 10, afovDeg: 50 },
     ],
-    catalogue: MESSIER,
+    catalogue: DEEP_SKY,
     seen: seenSummaries(log, date),
   });
 }
@@ -148,7 +148,7 @@ describe("ranking determinism and budget", () => {
   it(`runs dark window + rankObjects over the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
     const { first, second } = getRuns();
     console.info(
-      `ranking full run (dark window + rankObjects, 110 objects): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
+      `ranking full run (dark window + rankObjects, ${DEEP_SKY.length} objects): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
     );
     expect(Number.isFinite(second.ms)).toBe(true);
     if (process.env.CI === undefined) {
@@ -172,7 +172,7 @@ describe("ranking determinism with a non-empty observation log", () => {
 
     const once = fullRanking(log);
     expect(fullRanking(log)).toEqual(once);
-    expect(once.entries.map((e) => e.object.messier)).not.toEqual(unlogged.entries.map((e) => e.object.messier));
+    expect(once.entries.map((e) => e.object.id)).not.toEqual(unlogged.entries.map((e) => e.object.id));
     expect(once.clearedCount).toBe(unlogged.clearedCount);
   });
 });

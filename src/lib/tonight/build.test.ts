@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { findMessier, MESSIER } from "@/lib/catalogue";
+import { findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import {
@@ -210,7 +210,7 @@ describe("buildTonight", () => {
     expect(ranking.clearedText).toBe(`${ranking.clearedCount} objects cleared the bar tonight`);
     expect(ranking.entries.length).toBe(Math.min(ranking.clearedCount, MAX_RANKED_OBJECTS));
     for (const entry of ranking.entries) {
-      expect(entry.id).toMatch(/^M\d+$/);
+      expect(entry.id).toMatch(/^(M|NGC|IC)\d+$/);
       expect(entry.constellation).toMatch(/^[A-Z][a-z]{2}$/);
       expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
       expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
@@ -220,6 +220,30 @@ describe("buildTonight", () => {
     }
     const m31 = ranking.entries.find((entry) => entry.id === "M31");
     expect(m31).toMatchObject({ commonName: findMessier(31)?.commonName, constellation: "And" });
+  });
+
+  it("ranks a Caldwell object with its label, Caldwell number and a space-free key", () => {
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+      },
+      "en",
+      { withSkyView: true },
+    );
+
+    // The Double Cluster ranks near the top in October (evidence/calibration.md).
+    const double = rankingOf(view).entries.find((entry) => entry.id === "NGC869");
+    expect(double).toMatchObject({ label: "NGC 869 / 884", caldwell: 14, constellation: "Per" });
+    const query = new URL(logHref(view, "NGC869"), "http://localhost").searchParams;
+    expect(query.get("object")).toBe("NGC869");
+    // The live sky's marker lands on the space-free anchor and is named by the label.
+    const marker = view.skyView?.bodies.find((body) => body.key === "NGC869");
+    expect(marker).toMatchObject({ kind: "object", label: "NGC 869 / 884", href: "/tonight/targets#object-NGC869" });
+    expect(marker?.name.startsWith("NGC 869 / 884")).toBe(true);
   });
 
   it("leaves the pair out when the kit has no eyepieces", () => {
@@ -644,7 +668,18 @@ describe("buildTonight's summary fields (tonight-nightfall)", () => {
   });
 
   it("lists the ranking's best three by best time", () => {
-    const view = build(result(uniformForecast("2026-10-10T00:00:00Z", 5)));
+    // Narrowed to the Messier objects: this night's order below is a property of that catalogue, not of the sort.
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+        catalogue: MESSIER,
+      },
+      "en",
+    );
     const best = rankingOf(view).entries.slice(0, 3);
     expect(view.summaryTargets).toHaveLength(3);
     expect(view.summaryTargets.map((entry) => entry.id).sort()).toEqual(best.map((entry) => entry.id).sort());
@@ -1013,7 +1048,8 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
     });
 
     it("calls a Moon up the whole window without washed-out objects a moonlit sky (1 September)", () => {
-      const view = buildTonight(clearNight("2026-09-01"), "en");
+      // Messier objects only: with the Caldwell objects a faint one is washed out on this night.
+      const view = buildTonight(clearNight("2026-09-01", { catalogue: MESSIER }), "en");
       expect(rankingOf(view).washedOutCount).toBe(0);
       const card = moonCardOf(view);
       expect(card.upText).toBe("Up all night");
@@ -1385,9 +1421,11 @@ describe("buildTonight's sky view (interactive-sky)", () => {
         .map((entry) => entry.id),
     );
     expect(objects[0].href).toBe(`/tonight/targets#object-${objects[0].key}`);
-    // The strip shows the Messier number only; the full name is the marker's accessible name.
-    expect(objects.every((body) => body.label === body.key && body.name.startsWith(body.key))).toBe(true);
-    expect(objects.some((body) => body.name.startsWith(`${body.key} · `))).toBe(true);
+    // The strip shows the catalogue label only ("M13", "NGC 7000"); the full name is the marker's accessible name.
+    expect(
+      objects.every((body) => body.label === findDeepSky(body.key)?.label && body.name.startsWith(body.label)),
+    ).toBe(true);
+    expect(objects.some((body) => body.name.startsWith(`${body.label} · `))).toBe(true);
     expect(sky.bodies.filter((body) => body.kind === "planet").map((body) => body.key)).toEqual([...PLANET_KEYS]);
     expect(sky.bodies.find((body) => body.key === "saturn")?.href).toBe("/tonight/planets#planet-saturn");
     expect(sky.bodies.at(-1)).toMatchObject({

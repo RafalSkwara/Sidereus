@@ -4,6 +4,7 @@ import type { MessageKey } from "@/i18n";
 import { formRedirect, logNotice, tonightReturnPath } from "@/lib/observations/redirect";
 import { observationInputSchema, returnTargetSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
+import { isKnownTarget } from "@/lib/targets/labels";
 
 /*
  * Saves one observation log entry (roadmap S-06) and returns to the Tonight page that linked to the form (`from`
@@ -24,6 +25,10 @@ export const POST: APIRoute = async (context) => {
   const parsed = observationInputSchema.safeParse(raw);
   if (!parsed.success) {
     return fail(issueKey(parsed.error));
+  }
+  // The schema checks the key's shape; a well-formed key the catalogue lacks ("NGC1") is as invalid as a typo.
+  if (!isKnownTarget(parsed.data.target)) {
+    return fail("errors.observation.objectInvalid");
   }
 
   const result = await observationStore.create(supabase, parsed.data, new Date());

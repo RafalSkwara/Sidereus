@@ -1,18 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { CATALOGUE_META, MESSIER, MESSIER_TYPES, findMessier } from "./index";
+import { CATALOGUE_META, DEEP_SKY_TYPES, MESSIER, findDeepSky, findMessier } from "./index";
 
 const PINNED_SHA = "da90466031b0372c896588b85be6016c617e205b";
 
 describe("Messier catalogue", () => {
   it("numbers M1..M110 once each, with well-formed coordinates, magnitudes and types", () => {
     expect(MESSIER.map((o) => o.messier)).toEqual(Array.from({ length: 110 }, (_, i) => i + 1));
-    const known: readonly string[] = MESSIER_TYPES;
+    const known: readonly string[] = DEEP_SKY_TYPES;
     for (const o of MESSIER) {
       expect(o.id).toBe(`M${o.messier}`);
       expect(o.raHours >= 0 && o.raHours < 24 && o.decDeg >= -90 && o.decDeg <= 90).toBe(true);
       expect(Number.isFinite(o.vMag)).toBe(true);
       expect(known).toContain(o.type);
+    }
+  });
+
+  it("gives every Messier object a caldwell of null and a label equal to its id", () => {
+    for (const o of MESSIER) {
+      expect(o.caldwell).toBeNull();
+      expect(o.label).toBe(o.id);
+      expect(findDeepSky(o.id)).toBe(o);
     }
   });
 
