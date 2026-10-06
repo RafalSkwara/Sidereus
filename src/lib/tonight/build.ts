@@ -1,6 +1,7 @@
 import { getMessages } from "@/i18n";
 import { MESSIER, type MessierObject } from "@/lib/catalogue";
 import {
+  addDays,
   clearIntervals,
   cloudOutlook,
   darknessThresholdDegForBortle,
@@ -386,6 +387,12 @@ export interface TonightView {
   telescopeName: string;
   /** Evening date of the observing night, `YYYY-MM-DD`, site-local. */
   date: string;
+  /**
+   * When this view stops being the night to show: the night's civil-dawn rollover (the planet window's end, the
+   * same -6 degrees as `TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG`), or the observing night's end where there is no civil
+   * window (polar summer, where the date changes instead). Offline-night-plan.
+   */
+  validUntil: Date;
   /** "Saturday, 10 October 2026" */
   dateLabel: string;
   timeZone: string;
@@ -408,6 +415,8 @@ export interface TonightView {
    */
   summaryTargets: TonightEntry[];
   hasEyepieces: boolean;
+  /** When the forecast behind the view was fetched, `null` without one (offline-night-plan's copy metadata). */
+  forecastFetchedAt: Date | null;
   /** Always present: how fresh the forecast behind the verdict is. */
   forecastStatus: TonightForecastStatus;
   /** Set on a weather no-go or a no-darkness night, `null` otherwise. */
@@ -568,12 +577,14 @@ function nearestIndex(times: readonly number[], ms: number): number {
 /**
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
  * Targets page). `withSkyView`: also build the interactive sky (the dashboard only); without it `skyView` is
- * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan.
+ * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan. `night`: `"next"` builds the
+ * evening after the one `tonightDateFor(now)` returns (offline-night-plan), from the same forecast; the forecast's age
+ * keeps the real `now`, the time-driven initial selections read as at that night's sunset.
  */
 export function buildTonight(
   input: TonightInput,
   locale: Locale,
-  options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean } = {},
+  options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean; night?: "tonight" | "next" } = {},
 ): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
   const {
@@ -612,7 +623,14 @@ export function buildTonight(
   const thresholdDeg = darknessThresholdDegForBortle(site.bortle);
   // Once civil dawn has passed, "tonight" is the evening ahead (see `tonightDateFor`). Until then the night in
   // progress stays on screen, dark window and ranking included, so morning planets and their log date belong to it.
-  const date = tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG);
+  const tonightDate = tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG);
+  const date = options.night === "next" ? addDays(tonightDate, 1) : tonightDate;
+  // The instant the time-driven initial selections (Moon slider, live sky frame, plan tile) read: the real clock for
+  // tonight, the start of the night (sunset, else the observing night's start) for the next night.
+  const selectionNow =
+    options.night === "next"
+      ? (sunEvents(engineSite, observingNight(date, timeZone)).sunset ?? observingNight(date, timeZone).start)
+      : now;
   // One computation for the strip and the verdict card: night 1 of the outlook is tonight, so the two
   // can never disagree on the same screen.
   const outlook = sevenNightOutlook({ site: engineSite, thresholdDeg, date, forecast: hourly, fallback });
@@ -880,7 +898,7 @@ export function buildTonight(
       const states = moonDiscStates(interval, MOON_DISC_STEP_MINUTES);
       // The same instants as the states, so the up spans read on the slider's own grid.
       const up = moonUpOf(engineSite, moonTrack(engineSite, interval, MOON_DISC_STEP_MINUTES));
-      const initialIndex = nearestStateIndex(states, now.getTime());
+      const initialIndex = nearestStateIndex(states, selectionNow.getTime());
       const shown = states[initialIndex];
       moonCard = {
         window: { start: formatTime(interval.start, timeZone), end: formatTime(interval.end, timeZone) },
@@ -928,7 +946,7 @@ export function buildTonight(
         const to = times.findLastIndex((t) => t <= window.end.getTime());
         darkSpan = from >= 0 && to >= from ? { from, to } : null;
       }
-      const nowMs = now.getTime();
+      const nowMs = selectionNow.getTime();
       const initialIndex = nowMs >= startMs && nowMs <= endMs ? nearestIndex(times, nowMs) : (darkSpan?.from ?? 0);
 
       const listed = new Set(solarSystem?.entries.map((entry) => entry.key) ?? []);
@@ -1059,7 +1077,7 @@ export function buildTonight(
       });
       // The tile's line, by the raw window ends (the layout's rows are clamped to the axis and carry no window).
       const windowEnds = new Map(planRows.map((row) => [row.key, row.window.end.getTime()]));
-      const nowMs = now.getTime();
+      const nowMs = selectionNow.getTime();
       const nextIndex = layout.rows.findIndex((row) => (windowEnds.get(row.key) ?? 0) > nowMs);
       const nextUp: TonightSessionPlan["nextUp"] =
         layout.rows.length === 0
@@ -1119,6 +1137,7 @@ export function buildTonight(
     siteName: site.name,
     telescopeName: telescope.name,
     date,
+    validUntil: planetWindow?.kind === "window" ? planetWindow.end : observingNight(date, timeZone).end,
     dateLabel: formatNightDate(date),
     timeZone,
     verdict: tonight,
@@ -1138,6 +1157,7 @@ export function buildTonight(
             .slice(0, SUMMARY_TARGETS)
             .sort((a, b) => a.bestAt - b.bestAt),
     hasEyepieces: eyepieces.length > 0,
+    forecastFetchedAt: forecast?.fetchedAt ?? null,
     forecastStatus: { kind: status.kind, text: forecastStatusText(status) },
     explanation,
     nights,

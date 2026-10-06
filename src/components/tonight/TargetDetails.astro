@@ -47,7 +47,8 @@ const markClass = cn(buttonVariants({ variant: "link", size: "sm" }), "-ml-3");
 <slot />
 
 <div class="mt-2">
-  <a href={logHref} aria-label={ariaLabel} class:list={[markClass]}>
+  {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
+  <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
     {t.markObserved}
     {srSuffix !== undefined && <span class="sr-only"> {srSuffix}</span>}
   </a>

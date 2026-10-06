@@ -22,3 +22,10 @@
 - **Problem**: The server island is fetched by a browser script, so with JavaScript off Tonight stays on `TonightSkeleton`. S-08 and S-05 both planned a "works without JavaScript" check for the selectors (S-05 Progress 3.7), which could never be exercised, and a component comment claimed no-JS support (S-05 impl review F2).
 - **Rule**: Treat JavaScript as required for everything inside the Tonight island. Don't promise or plan no-JS behaviour there, and don't write success criteria that need it. Controls may still be plain links and GET forms, which keeps them simple, but a no-JS fallback for Tonight is its own change (render the island inline or add a `<noscript>` path) and must be planned as one.
 - **Applies to**: plan, plan-review, implement, impl-review
+
+## Make the server unreachable to test a service worker offline
+
+- **Context**: E2E specs that check what the Sidereus service worker (`src/sw.ts`) serves offline: stored Tonight pages, the `/offline` fallback, anything keyed on the network failing.
+- **Problem**: Playwright 1.55's `context.setOffline(true)` does not reliably cut the service worker's own fetches, even with `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS=1`: in offline-night-plan Phase 3, `/log` still rendered from the server under emulation and a never-opened Tonight page was fetched and stored, so an "offline" assertion could pass on a network response.
+- **Rule**: Make the server genuinely unreachable for the worker (run the test through a proxy and close it, as `tests/e2e/offline.spec.ts` does, or stop the server), use `setOffline` only for the page's `navigator.onLine`, and assert a marker that only storage can produce (`html[data-from-device]`) before trusting any offline result.
+- **Applies to**: plan, implement, impl-review

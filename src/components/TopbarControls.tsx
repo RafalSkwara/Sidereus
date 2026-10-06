@@ -1,6 +1,15 @@
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { getMessages } from "@/i18n";
-import { LOCALE_COOKIE, THEME_COOKIE, nextTheme, preferenceCookie, type Locale, type Theme } from "@/lib/preferences";
+import { installState, promptInstall, subscribeInstallState } from "@/lib/offline/install";
+import {
+  LOCALE_COOKIE,
+  THEME_COOKIE,
+  isTheme,
+  nextTheme,
+  preferenceCookie,
+  type Locale,
+  type Theme,
+} from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 interface TopbarControlsProps {
@@ -11,6 +20,7 @@ interface TopbarControlsProps {
 }
 
 const SETTINGS_ID = "settings-panel";
+const SIGN_OUT_CAPTION_ID = "settings-signout-offline";
 
 // Focus is a `--ring` outline offset from the control, so it shows on a pressed (filled) control too.
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -29,6 +39,11 @@ const segmentClass = cn(
   "disabled:cursor-progress",
 );
 const sectionLabel = "text-label font-semibold text-muted-foreground";
+/** A quiet text button in the panel: Install app, Sign out. */
+const textAction = cn(
+  "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
+  focusRing,
+);
 
 /*
  * Native popover (`popover` + `popovertarget`): it opens before hydration, closes on Esc or an outside tap and
@@ -88,6 +103,11 @@ const SlidersIcon = () => (
   </Icon>
 );
 
+/** The page's applied theme changes only through this island, which keeps its own state for that. */
+function subscribeNever(): () => void {
+  return () => undefined;
+}
+
 /** Remembers the language and reloads: copy is rendered on the server, so a language change needs a fresh page. */
 function reloadInLocale(next: Locale) {
   document.cookie = preferenceCookie(LOCALE_COOKIE, next);
@@ -96,16 +116,30 @@ function reloadInLocale(next: Locale) {
 
 /**
  * The stateful end of the top bar: the theme button (cycles dark → light → red, shows the current theme) and the
- * settings popover (who is signed in, theme, language, sign out). One island, so the button and the settings theme
+ * settings popover (who is signed in, theme, language, install, sign out). One island, so the button and the settings theme
  * control never disagree. The server already rendered
  * the resolved theme on <html data-theme>; this island mirrors choices into the attribute and the cookies.
  */
 export default function TopbarControls({ theme: initialTheme, locale, email }: TopbarControlsProps) {
   const m = getMessages(locale);
   const p = m.preferences;
-  const [theme, setTheme] = useState<Theme>(initialTheme);
+  // S-06: a page served from the device was rendered with the theme of its day; the layout's head script has already
+  // applied the current cookie to <html data-theme>, so after hydration the controls start from that, not the prop.
+  const appliedTheme = useSyncExternalStore(
+    subscribeNever,
+    () => {
+      const applied = document.documentElement.dataset.theme;
+      return isTheme(applied) ? applied : initialTheme;
+    },
+    () => initialTheme,
+  );
+  const [chosenTheme, setTheme] = useState<Theme | null>(null);
+  const theme = chosenTheme ?? appliedTheme;
   // Set once a language is picked: the reload can take a moment, so the tap is acknowledged at once.
   const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
+  // S-06: "Install app" shows only where it can do something; the server renders it hidden ("none").
+  const install = useSyncExternalStore(subscribeInstallState, installState, () => "none" as const);
+  const [iosHintOpen, setIosHintOpen] = useState(false);
 
   function chooseTheme(next: Theme) {
     if (next === theme) return;
@@ -240,17 +274,40 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
             </div>
           </div>
 
+          {(install === "prompt" || install === "ios") && (
+            <div className="border-border grid gap-1 border-t pt-3">
+              <button
+                type="button"
+                className={textAction}
+                aria-expanded={install === "ios" ? iosHintOpen : undefined}
+                aria-controls={install === "ios" ? "settings-install-hint" : undefined}
+                onClick={() => {
+                  if (install === "prompt") {
+                    void promptInstall();
+                  } else {
+                    setIosHintOpen((open) => !open);
+                  }
+                }}
+              >
+                {m.offline.install.action}
+              </button>
+              {install === "ios" && (
+                <p id="settings-install-hint" hidden={!iosHintOpen} className="text-foreground text-sm">
+                  {m.offline.install.iosHint}
+                </p>
+              )}
+            </div>
+          )}
+
           {email && (
             <form method="POST" action="/api/auth/signout" className="border-border border-t pt-3">
-              <button
-                type="submit"
-                className={cn(
-                  "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
-                  focusRing,
-                )}
-              >
+              {/* Signing out needs the network (S-06): disabled offline, with the caption under it (page-state.ts). */}
+              <button type="submit" className={textAction} data-needs-network={SIGN_OUT_CAPTION_ID}>
                 {m.nav.signOut}
               </button>
+              <p id={SIGN_OUT_CAPTION_ID} className="text-muted-foreground offline:block hidden text-sm">
+                {m.offline.needsConnection}
+              </p>
             </form>
           )}
         </div>

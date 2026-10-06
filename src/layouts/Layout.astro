@@ -3,23 +3,47 @@ import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
 import { getMessages, translateKey } from "@/i18n";
 import { missingConfigs } from "@/lib/config-status";
+import { NEEDS_CONNECTION_ID } from "@/lib/offline/page-state";
+import { THEMES, THEME_COOKIE } from "@/lib/preferences";
 
 interface Props {
   title?: string;
 }
 
-const { theme, locale } = Astro.locals;
+const { theme, locale, user } = Astro.locals;
 const m = getMessages(locale);
 const { title = m.common.appName } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={locale} data-theme={theme}>
+{/* S-06: a page rendered for no user asks the service worker to purge any stored copies (page-state.ts). */}
+<html lang={locale} data-theme={theme} data-signed-out={user ? undefined : true}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    {/* S-06: installable. The theme colour lives in the manifest (literal hex is not allowed under src/). */}
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <title>{title}</title>
+    {/*
+     * S-06: a stored page carries the theme it was prepared with; the theme cookie (set by TopbarControls, readable
+     * by JS) is the current choice, applied before paint so a theme switched offline holds across stored pages.
+     * Inline (a processed script is a deferred module, too late for paint), so the themes come in by define:vars.
+     * No valid cookie: the server's data-theme stays.
+     */}
+    <script is:inline define:vars={{ themes: THEMES, themeCookie: THEME_COOKIE }}>
+      const match = document.cookie.match(new RegExp("(?:^|;\\s*)" + themeCookie + "=([^;]*)"));
+      let chosen = null;
+      try {
+        chosen = match ? decodeURIComponent(match[1]) : null;
+      } catch {
+        // A malformed cookie: the server's data-theme stays.
+      }
+      if (chosen && themes.includes(chosen) && document.documentElement.dataset.theme !== chosen) {
+        document.documentElement.dataset.theme = chosen;
+      }
+    </script>
   </head>
   <body>
     {missingConfigs.map((cfg) => (
@@ -37,6 +61,10 @@ const { title = m.common.appName } = Astro.props;
       </Banner>
     ))}
     <slot />
+    {/* S-06: what a network-only control says while offline, as its description (src/lib/offline/page-state.ts). */}
+    <span id={NEEDS_CONNECTION_ID} hidden>
+      {m.offline.needsConnection}
+    </span>
     {/* Red night mode (S-10): maps each pixel's luminance to red only, for raster images. */}
     <svg aria-hidden="true" focusable="false" width="0" height="0" class="absolute">
       <filter id="red-only" color-interpolation-filters="sRGB">
@@ -45,6 +73,17 @@ const { title = m.common.appName } = Astro.props;
     </svg>
   </body>
 </html>
+
+<script>
+  // S-06: the service worker, an early listener for the install prompt (the settings entry offers it later), and the
+  // page's offline state (notices on stored copies, network-only controls disabled while offline).
+  import "@/lib/offline/install";
+  import { startOfflinePageState } from "@/lib/offline/page-state";
+  import { registerServiceWorker } from "@/lib/offline/register";
+
+  registerServiceWorker();
+  startOfflinePageState();
+</script>
 
 <style>
   html,

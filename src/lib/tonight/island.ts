@@ -18,6 +18,8 @@ export interface TonightIslandLoad {
   withSkyView?: boolean;
   /** Also build the Session plan; the dashboard and the plan page set it. */
   withSessionPlan?: boolean;
+  /** `"next"` renders the evening after tonight, from the same forecast, and never reads sky checks. */
+  night?: "tonight" | "next";
 }
 
 /** Runs work after the response is sent (the Worker's `waitUntil`): the forecast's KV write, the sky check's record. */
@@ -47,8 +49,10 @@ export async function loadTonightFor(locals: App.Locals, options: TonightIslandL
     forecastBaseUrl: FORECAST_BASE_URL,
     defer: islandDefer(locals),
     limit: options.limit,
-    withSkyChecks: options.withSkyChecks,
+    // The next-night copy is a background fetch for offline use: it must not read the open sky checks.
+    withSkyChecks: options.night === "next" ? false : options.withSkyChecks,
     withSkyView: options.withSkyView,
     withSessionPlan: options.withSessionPlan,
+    night: options.night,
   });
 }

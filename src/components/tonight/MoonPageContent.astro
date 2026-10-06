@@ -4,6 +4,7 @@
 // same loadTonight as Tonight, so both always agree; it never records the sky verdict (only Tonight shows it).
 import { ServerError } from "@/components/forms/ServerError";
 import MoonCard from "@/components/tonight/MoonCard.astro";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,16 +22,18 @@ interface Props {
   telescopeId?: string;
   /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
   notice?: TonightNotice | null;
+  /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
+  night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, notice = null } = Astro.props;
+const { siteId, telescopeId, night = "tonight", notice = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
 // Signed out, `load` is null and the island renders nothing.
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId });
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night });
 const view = load?.view ?? null;
 const failures = load
   ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
@@ -53,6 +56,7 @@ const washedOut =
 {load && (
   <>
     <TonightPageSky title={t.summary.moon} view={view} />
+    {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
       {notice &&

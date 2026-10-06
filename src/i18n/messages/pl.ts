@@ -835,6 +835,31 @@ export const pl = {
     deleteHeading: "Usuwanie",
   },
 
+  offline: {
+    install: {
+      action: "Zainstaluj aplikację",
+      iosHint: "Stuknij Udostępnij, a potem „Do ekranu początkowego”.",
+    },
+    needsConnection: "Wymaga połączenia z siecią",
+    notice: {
+      prepared: (p) => `Zapisana kopia · przygotowano ${p.when}`,
+      oldForecast: (p) => `Stara prognoza z ${p.when} · plan na ${p.night}`,
+      stale: (p) => `Ten plan dotyczy nocy ${p.night} (przygotowano ${p.when}) — ta noc już minęła`,
+    },
+    page: {
+      title: "Jesteś offline",
+      subtitle: "Strony „Dziś w nocy” otwarte niedawno są nadal tutaj.",
+      needsConnection: {
+        heading: "Potrzebne jest połączenie",
+        text: "Ta strona nie wczyta się bez sieci. Spróbuj ponownie, gdy wrócisz online.",
+      },
+      saved: {
+        heading: "Zapisane na tym urządzeniu",
+        empty: "Nic jeszcze nie zapisano — otwórz „Dziś w nocy”, gdy masz sieć.",
+      },
+    },
+  },
+
   skyChecks: {
     card: {
       titleLastNight: "Jakie było niebo ostatniej nocy?",

@@ -11,6 +11,7 @@ import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
@@ -34,10 +35,15 @@ interface Props {
    * island's own Astro.url carries no page query). Shown under the sky; `null` when there is none.
    */
   notice?: TonightNotice | null;
+  /**
+   * `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy for offline use):
+   * it neither records the sky verdict nor asks the sky question, and loads no open sky checks.
+   */
+  night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, notice = null } = Astro.props;
+const { siteId, telescopeId, notice = null, night = "tonight" } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
@@ -64,6 +70,7 @@ const load = await loadTonightFor(Astro.locals, {
   siteId,
   telescopeId,
   withSkyChecks: true,
+  night,
   withSkyView: true,
   withSessionPlan: true,
 });
@@ -87,7 +94,7 @@ const {
 
 // Record the headline this view shows for the sky check (verdict-check). Fire and forget: it runs after the
 // response, and a failure is swallowed (never logged, never shown) so the check can never cost Tonight its render.
-const recordable = supabase ? recordableVerdict(view) : null;
+const recordable = supabase && night === "tonight" ? recordableVerdict(view) : null;
 if (supabase && recordable) {
   islandDefer(Astro.locals)(
     skyCheckStore.record(supabase, recordable).then(
@@ -97,7 +104,7 @@ if (supabase && recordable) {
   );
 }
 // The sky question for a recent night at the shown site (verdict-check); `null` when there is nothing to ask.
-const skyCheck = site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;
+const skyCheck = night === "tonight" && site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;
 // No eyepieces in the kit: the dashboard says how to add them, with the other setup prompts (the pages show only the
 // eyepiece-load error). The log-load error shows here too, since "Point here first" depends on the log.
 const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
@@ -153,6 +160,8 @@ const gearLink =
         )}
       </TonightSky>
     )}
+
+    {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl pt-8">
       {notice && (

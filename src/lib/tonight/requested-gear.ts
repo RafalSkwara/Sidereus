@@ -11,6 +11,9 @@ import { isGearId, SITE_COOKIE, TELESCOPE_COOKIE } from "@/lib/tonight/gear-choi
 function requested(url: URL, cookies: AstroCookies, param: string, cookie: string): string | undefined {
   const value = url.searchParams.get(param);
   if (isGearId(value)) {
+    // The service worker's background next-night fetch (`?night=next`) only reads: remembering its site here would
+    // undo a site switched in another tab meanwhile.
+    if (requestedNight(url) === "next") return value;
     cookies.set(cookie, value, {
       path: "/",
       maxAge: PREFERENCE_COOKIE_MAX_AGE,
@@ -24,10 +27,22 @@ function requested(url: URL, cookies: AstroCookies, param: string, cookie: strin
   return isGearId(remembered) ? remembered : undefined;
 }
 
-/** The site and telescope ids the page asks for: the query first (and remembered), else the remembered cookies. */
+/**
+ * The site and telescope ids the page asks for: the query first (remembered, except on a `?night=next` request), else
+ * the remembered cookies.
+ */
 export function requestedGear(url: URL, cookies: AstroCookies): { siteId?: string; telescopeId?: string } {
   return {
     siteId: requested(url, cookies, "site", SITE_COOKIE),
     telescopeId: requested(url, cookies, "telescope", TELESCOPE_COOKIE),
   };
+}
+
+/**
+ * The night a Tonight page is asked for (offline-night-plan): `?night=next` is the evening after tonight, the copy
+ * the service worker fetches in the background for offline use; anything else means tonight. Shells pass it to their
+ * island as a prop (the island's own request carries no page query).
+ */
+export function requestedNight(url: URL): "tonight" | "next" {
+  return url.searchParams.get("night") === "next" ? "next" : "tonight";
 }

@@ -14,7 +14,7 @@ import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { parseSort } from "@/lib/tonight/all-objects";
 import { pickTonightNotice } from "@/lib/tonight/notice";
-import { requestedGear } from "@/lib/tonight/requested-gear";
+import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
@@ -34,6 +34,8 @@ const notice = pickTonightNotice({
 
 // The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+// `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
+const night = requestedNight(Astro.url);
 // A fixed enum ("rank" | "time"), so it travels to the island as is.
 const sort = parseSort(Astro.url.searchParams.get("sort"));
 // A sort link sits inside the rest of the list, so a page that came with one opens it again.
@@ -46,6 +48,7 @@ const restOpen = Astro.url.searchParams.has("sort");
       server:defer
       siteId={siteId}
       telescopeId={telescopeId}
+      night={night}
       sort={sort}
       notice={notice}
       restOpen={restOpen}

@@ -12,7 +12,7 @@ import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { pickTonightNotice } from "@/lib/tonight/notice";
-import { requestedGear } from "@/lib/tonight/requested-gear";
+import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
@@ -32,11 +32,13 @@ const notice = pickTonightNotice({
 
 // The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+// `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
+const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={title} skyFlow>
   {supabase ? (
-    <PlanetsPageContent server:defer siteId={siteId} telescopeId={telescopeId} notice={notice}>
+    <PlanetsPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night} notice={notice}>
       <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/planets" rows={4} />
     </PlanetsPageContent>
   ) : (

@@ -5,6 +5,7 @@
 // the same loadTonight as Tonight (with the plan) and never records the sky verdict (only Tonight shows it).
 import { ServerError } from "@/components/forms/ServerError";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Band from "@/components/ui/Band.astro";
 import { buttonVariants } from "@/components/ui/button";
@@ -18,16 +19,18 @@ interface Props {
   siteId?: string;
   /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
   telescopeId?: string;
+  /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
+  night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId } = Astro.props;
+const { siteId, telescopeId, night = "tonight" } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
 // Signed out, `load` is null and the island renders nothing.
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, withSessionPlan: true });
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, withSessionPlan: true });
 const view = load?.view ?? null;
 const plan = view?.sessionPlan ?? null;
 const failures = load
@@ -46,6 +49,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 {load && (
   <>
     <TonightPageSky title={t.summary.plan} view={view} />
+    {view && <OfflineCopy view={view} night={night} />}
 
     {hasMessages && (
       <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">

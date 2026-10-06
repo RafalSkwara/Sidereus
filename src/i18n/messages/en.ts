@@ -942,6 +942,36 @@ export const en = {
     deleteHeading: "Delete",
   },
 
+  /** Installing the app and using it offline (S-06, offline-night-plan). */
+  offline: {
+    install: {
+      action: "Install app",
+      iosHint: "Tap Share, then Add to Home Screen.",
+    },
+    /** Under (or describing) a control that cannot work offline: Mark observed, sky checks, Log, Gear, sign-out. */
+    needsConnection: "Needs a connection",
+    /** A saved Tonight page's warnings, shown on a copy served from the device or offline; times arrive pre-formatted. */
+    notice: {
+      prepared: (p: { when: string }) => `Saved copy · prepared ${p.when}`,
+      oldForecast: (p: { when: string; night: string }) => `Old forecast from ${p.when} · plan for ${p.night}`,
+      stale: (p: { night: string; when: string }) =>
+        `This plan is for ${p.night} (prepared ${p.when}) — the night is over`,
+    },
+    /** The /offline page the worker serves for a request that needs the network. */
+    page: {
+      title: "You're offline",
+      subtitle: "Tonight pages you opened recently are still here.",
+      needsConnection: {
+        heading: "This needs a connection",
+        text: "This page can't load without a network. Try again once you're back online.",
+      },
+      saved: {
+        heading: "Saved on this device",
+        empty: "Nothing saved yet — open Tonight while online.",
+      },
+    },
+  },
+
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */
   skyChecks: {
     card: {

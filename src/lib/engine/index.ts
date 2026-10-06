@@ -5,7 +5,7 @@
 
 export type * from "./types";
 export * from "./parameters";
-export { observingNight, observingNightDateFor } from "./night";
+export { addDays, observingNight, observingNightDateFor } from "./night";
 export { darkWindow, sunAltitudeDeg, sunEvents, tonightDateFor } from "./sun";
 export {
   moonElongationDeg,

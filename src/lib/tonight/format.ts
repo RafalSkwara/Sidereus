@@ -201,6 +201,26 @@ export function createFormatter(locale: Locale) {
     return format.format(date);
   }
 
+  const dayTimeFormats = new Map<string, Intl.DateTimeFormat>();
+
+  /** An instant as "Sat 10 Oct, 21:30", as the wall clock reads in `timeZone` (an offline copy's prepared time). */
+  function formatDayTime(date: Date, timeZone: string): string {
+    let format = dayTimeFormats.get(timeZone);
+    if (!format) {
+      format = new Intl.DateTimeFormat(tag, {
+        timeZone,
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+      dayTimeFormats.set(timeZone, format);
+    }
+    return format.format(date);
+  }
+
   /** The evening date `YYYY-MM-DD` as "Saturday, 10 October 2026". It is a calendar date, not an instant. */
   function formatNightDate(date: string): string {
     const [year, month, day] = date.split("-").map(Number);
@@ -649,6 +669,7 @@ export function createFormatter(locale: Locale) {
 
   return {
     formatTime,
+    formatDayTime,
     formatNightDate,
     formatShortNightDate,
     darkSpanText,

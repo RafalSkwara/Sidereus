@@ -1,0 +1,106 @@
+---
+// The page the service worker serves for a request that needs the network while the device is offline
+// (offline-night-plan). Not gated: it renders no user data on the server, so it works signed in and out (GearShell's
+// Topbar and TabBar adapt). The list of stored Tonight pages is filled in the browser from the worker's copies
+// (`list-copies` over a MessageChannel); with no worker controlling the page, or no reply in time, the empty state
+// stays. Not precached (it is rendered per locale and theme from cookies); the worker stores it at runtime.
+import GearShell from "@/components/gear/GearShell.astro";
+import Band from "@/components/ui/Band.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { getMessages } from "@/i18n";
+import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+
+const { locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.offline.page;
+// The title of each stored Tonight page, by path, for the script's links; from the catalogue like the pages' own.
+const titles = {
+  "/tonight": m.tonight.title,
+  "/tonight/targets": m.tonight.pages.targets,
+  "/tonight/plan": m.tonight.summary.plan,
+  "/tonight/moon": m.tonight.summary.moon,
+  "/tonight/planets": m.tonight.summary.planets,
+  "/tonight/nights": m.tonight.summary.nights({ count: String(OUTLOOK_NIGHTS) }),
+};
+---
+
+<GearShell title={t.title}>
+  <PageHeader slot="header" title={t.title} subtitle={t.subtitle} />
+
+  <Band headingId="offline-needs-heading" heading={t.needsConnection.heading}>
+    <p class="text-body text-muted-foreground">{t.needsConnection.text}</p>
+  </Band>
+
+  <Band headingId="offline-saved-heading" heading={t.saved.heading}>
+    <div data-offline-saved data-titles={JSON.stringify(titles)}>
+      <p data-offline-empty class="text-body text-muted-foreground">
+        {t.saved.empty}
+      </p>
+      <ul data-offline-list hidden class="divide-y divide-border border-y border-border"></ul>
+    </div>
+  </Band>
+</GearShell>
+
+<script>
+  // One stored copy as the worker reports it (Phase 3): the site and the Tonight page path it was stored for.
+  interface StoredCopy {
+    siteId: string;
+    siteName: string;
+    page: string;
+  }
+
+  const REPLY_TIMEOUT_MS = 1500;
+  const LINK_CLASS =
+    "flex min-h-11 flex-wrap items-center justify-between gap-x-4 py-2 text-body text-heading transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+  const root = document.querySelector<HTMLElement>("[data-offline-saved]");
+  const empty = root?.querySelector<HTMLElement>("[data-offline-empty]");
+  const list = root?.querySelector<HTMLElement>("[data-offline-list]");
+  const titles: Record<string, string> = JSON.parse(root?.dataset.titles ?? "{}");
+
+  function isCopy(value: unknown): value is StoredCopy {
+    if (typeof value !== "object" || value === null) return false;
+    const copy = value as Record<string, unknown>;
+    return typeof copy.siteId === "string" && typeof copy.siteName === "string" && typeof copy.page === "string";
+  }
+
+  function show(copies: StoredCopy[]) {
+    if (!empty || !list) return;
+    const known = copies.filter((copy) => copy.page in titles);
+    if (known.length === 0) return;
+    list.replaceChildren(
+      ...known.map((copy) => {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `${copy.page}?site=${encodeURIComponent(copy.siteId)}`;
+        link.className = LINK_CLASS;
+        const title = document.createElement("span");
+        title.className = "font-semibold";
+        title.textContent = titles[copy.page];
+        const site = document.createElement("span");
+        site.className = "text-muted-foreground";
+        site.textContent = copy.siteName;
+        link.appendChild(title);
+        link.appendChild(site);
+        item.appendChild(link);
+        return item;
+      }),
+    );
+    empty.hidden = true;
+    list.hidden = false;
+  }
+
+  // No worker controlling the page (first visit, or no service worker support), or no reply in time: the empty state.
+  const worker = "serviceWorker" in navigator ? navigator.serviceWorker.controller : null;
+  if (worker) {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => channel.port1.close(), REPLY_TIMEOUT_MS);
+    channel.port1.onmessage = (event: MessageEvent<{ copies?: unknown }>) => {
+      clearTimeout(timer);
+      channel.port1.close();
+      const copies = event.data?.copies;
+      if (Array.isArray(copies)) show(copies.filter(isCopy));
+    };
+    worker.postMessage({ type: "list-copies" }, [channel.port2]);
+  }
+</script>
