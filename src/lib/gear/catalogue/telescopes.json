@@ -538,6 +538,17 @@
     "source": "https://www.highpointscientific.com/celestron-astromaster-70az-70mm-refractor-telescope-21061"
   },
   {
+    "id": "celestron-firstscope-76",
+    "brand": "Celestron",
+    "model": "FirstScope 76",
+    "name": "Celestron FirstScope 76",
+    "apertureMm": 76,
+    "focalLengthMm": 300,
+    "aliases": ["Celestron Cometron FirstScope 76", "FirstScope 76 DOB", "FirstScope Dobsonian 76/300"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/celestron-dobson-telescope-n-76-300-cometron-firstscope-dob/p,33281"
+  },
+  {
     "id": "celestron-firstscope-76eq",
     "brand": "Celestron",
     "model": "FirstScope 76EQ",
@@ -591,6 +602,18 @@
     "aliases": ["Inspire 80", "Inspire 80 AZ"],
     "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
     "source": "https://www.celestron.com/products/inspire-80az-refractor-telescope"
+  },
+  {
+    "id": "celestron-nexstar-80gtl",
+    "brand": "Celestron",
+    "model": "NexStar 80GTL",
+    "name": "Celestron NexStar 80GTL",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["Celestron NexStar 80GT", "NexStar 80 GT", "NexStar 80 GTL"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "discontinued": true,
+    "source": "https://s3.amazonaws.com/celestron-site-support-files/support_files/NexStar_80GTL_22085-SA.pdf"
   },
   {
     "id": "celestron-starsense-explorer-lt-80az",
@@ -817,6 +840,17 @@
     "focalLengthMm": 650,
     "aliases": ["AstroMaster 130 EQ"],
     "source": "https://www.celestron.com/products/astromaster-130eq-telescope-with-phone-adapter-t-adapter-barlow-lens"
+  },
+  {
+    "id": "celestron-nexstar-130gt",
+    "brand": "Celestron",
+    "model": "NexStar 130GT",
+    "name": "Celestron NexStar 130GT",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["NexStar 130 GT"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/celestron-telescope-n-130-650-nexstar-130-gt-goto-set/p,18013"
   },
   {
     "id": "celestron-nexstar-130slt",
@@ -2354,6 +2388,39 @@
     "source": "https://www.saxon.com.au/saxon-16-deepsky-truss-dobsonian-telescope.html"
   },
   {
+    "id": "seben-60-900",
+    "brand": "Seben",
+    "model": "60/900",
+    "name": "Seben 60/900",
+    "apertureMm": 60,
+    "focalLengthMm": 900,
+    "aliases": ["Seben 60-900", "Seben 60-900 Big Pack"],
+    "bundledEyepieces": ["seben-bundled-20mm", "seben-bundled-12-5mm", "seben-bundled-6mm", "seben-bundled-4mm"],
+    "source": "https://www.astroshop.eu/telescopes/seben-60-900-refractor-telescope-smartphone-adapter-holder-mount-dka5/p,59853"
+  },
+  {
+    "id": "seben-76-700",
+    "brand": "Seben",
+    "model": "76/700",
+    "name": "Seben 76/700",
+    "apertureMm": 76,
+    "focalLengthMm": 700,
+    "aliases": ["Seben 76-700", "Seben 76-700 Big Pack"],
+    "bundledEyepieces": ["seben-bundled-20mm", "seben-bundled-12-5mm", "seben-bundled-6mm", "seben-bundled-4mm"],
+    "source": "https://www.astroshop.eu/telescopes/seben-76-700-reflector-telescope-scope-astronomy-astronomical/p,59859"
+  },
+  {
+    "id": "seben-star-sheriff-114-1000",
+    "brand": "Seben",
+    "model": "Star Sheriff 114/1000",
+    "name": "Seben Star Sheriff 114/1000",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["Seben Star Sheriff 114-1000", "Seben 114/1000 EQ3"],
+    "bundledEyepieces": ["seben-bundled-20mm", "seben-bundled-12-5mm", "seben-bundled-6mm", "seben-bundled-4mm"],
+    "source": "https://www.astroshop.eu/telescopes/seben-star-sheriff-114-1000-eq3-reflector-telescope-astronomy-scope/p,59851"
+  },
+  {
     "id": "sharpstar-61edph-iii",
     "brand": "Sharpstar",
     "model": "61EDPH III",
@@ -3290,6 +3357,26 @@
     "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-photoline-60-mm-f-6-fpl53-apo-2-r-p-focuser-red-line-10095"
   },
   {
+    "id": "ts-optics-starscope-60-900",
+    "brand": "TS-Optics",
+    "model": "Starscope 60/900",
+    "name": "TS-Optics Starscope 60/900",
+    "apertureMm": 60,
+    "focalLengthMm": 900,
+    "aliases": ["TS Optics AC 60/900 Starscope", "Teleskop-Service Starscope 60/900"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-ac-60-900-starscope-eq2-1/p,56528"
+  },
+  {
+    "id": "ts-optics-starscope-70-700",
+    "brand": "TS-Optics",
+    "model": "Starscope 70/700",
+    "name": "TS-Optics Starscope 70/700",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["TS Optics AC 70/700 Starscope", "Teleskop-Service Starscope 70/700"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-ac-70-700-starscope-az-2/p,56947"
+  },
+  {
     "id": "ts-optics-photoline-72-432",
     "brand": "TS-Optics",
     "model": "Photoline 72/432",
@@ -3298,6 +3385,17 @@
     "focalLengthMm": 432,
     "aliases": ["TS-Optics Doublet SD Apo 72 mm f/6", "TSAPO72F6"],
     "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-doublet-sd-apo-72-mm-f-6-fpl53-lanthanum-glass-objective-8866"
+  },
+  {
+    "id": "ts-optics-starscope-76-700",
+    "brand": "TS-Optics",
+    "model": "Starscope 76/700",
+    "name": "TS-Optics Starscope 76/700",
+    "apertureMm": 76,
+    "focalLengthMm": 700,
+    "aliases": ["TS Optics N 76/700 Starscope", "Teleskop-Service Starscope 76/700"],
+    "bundledEyepieces": ["ts-optics-bundled-20mm", "ts-optics-bundled-12-5mm", "ts-optics-bundled-4mm"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-76-700-starscope-az-1/p,4966"
   },
   {
     "id": "ts-optics-photoline-80-480",
@@ -3320,6 +3418,27 @@
     "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-80-mm-f-7-fpl-53-lanthanum-sd-apo-with-2-5-inch-rap-focuser-8637"
   },
   {
+    "id": "ts-optics-starscope-80-900",
+    "brand": "TS-Optics",
+    "model": "Starscope 80/900",
+    "name": "TS-Optics Starscope 80/900",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["TS Optics AC 80/900 Starscope", "Teleskop-Service Starscope 80/900"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-ac-80-900-starscope-eq3-1/p,56949"
+  },
+  {
+    "id": "ts-optics-starscope-114-900",
+    "brand": "TS-Optics",
+    "model": "Starscope 114/900",
+    "name": "TS-Optics Starscope 114/900",
+    "apertureMm": 114,
+    "focalLengthMm": 900,
+    "aliases": ["TS Optics N 114/900 Starscope", "Teleskop-Service Starscope 114/900"],
+    "bundledEyepieces": ["ts-optics-bundled-25mm", "ts-optics-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-114-900-starscope-eq3-1/p,4926"
+  },
+  {
     "id": "ts-optics-photoline-115-800",
     "brand": "TS-Optics",
     "model": "Photoline 115/800",
@@ -3328,6 +3447,26 @@
     "focalLengthMm": 800,
     "aliases": ["TS-Optics 115 mm f/7 Triplet", "Apo115f7"],
     "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-115-mm-f-7-edt-triplet-apo-2-5-rap-focuser-with-optical-test-3041"
+  },
+  {
+    "id": "ts-optics-starscope-130-650",
+    "brand": "TS-Optics",
+    "model": "Starscope 130/650",
+    "name": "TS-Optics Starscope 130/650",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["TS Optics N 130/650 Starscope", "Teleskop-Service Starscope 130/650"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-130-650-starscope-eq3-1/p,56526"
+  },
+  {
+    "id": "ts-optics-starscope-150-750",
+    "brand": "TS-Optics",
+    "model": "Starscope 150/750",
+    "name": "TS-Optics Starscope 150/750",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["TS Optics N 150/750 Starscope", "Teleskop-Service Starscope 150/750"],
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-150-750-starscope-eq3-1/p,56527"
   },
   {
     "id": "unistellar-odyssey",

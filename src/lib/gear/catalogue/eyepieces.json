@@ -2447,6 +2447,54 @@
     "source": "https://www.saxon.com.au/saxon-8-deepsky-dobsonian-telescope.html.html"
   },
   {
+    "id": "seben-bundled-4mm",
+    "brand": "Seben",
+    "line": "Bundled",
+    "name": "Seben 4 mm",
+    "focalLengthMm": 4,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/seben-76-700-reflector-telescope-scope-astronomy-astronomical/p,59859"
+  },
+  {
+    "id": "seben-bundled-6mm",
+    "brand": "Seben",
+    "line": "Bundled",
+    "name": "Seben 6 mm",
+    "focalLengthMm": 6,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/seben-76-700-reflector-telescope-scope-astronomy-astronomical/p,59859"
+  },
+  {
+    "id": "seben-bundled-12-5mm",
+    "brand": "Seben",
+    "line": "Bundled",
+    "name": "Seben 12.5 mm",
+    "focalLengthMm": 12.5,
+    "afovDeg": 40,
+    "design": "huygens",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/seben-76-700-reflector-telescope-scope-astronomy-astronomical/p,59859"
+  },
+  {
+    "id": "seben-bundled-20mm",
+    "brand": "Seben",
+    "line": "Bundled",
+    "name": "Seben 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 40,
+    "design": "huygens",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/seben-76-700-reflector-telescope-scope-astronomy-astronomical/p,59859"
+  },
+  {
     "id": "skywatcher-aero-ed-35mm",
     "brand": "Sky-Watcher",
     "line": "Aero ED",
@@ -3449,6 +3497,66 @@
     "afovDeg": 50,
     "design": "plossl",
     "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "ts-optics-bundled-4mm",
+    "brand": "TS-Optics",
+    "line": "Bundled",
+    "name": "TS-Optics 4 mm",
+    "focalLengthMm": 4,
+    "afovDeg": 40,
+    "design": "huygens",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-76-700-starscope-az-1/p,4966"
+  },
+  {
+    "id": "ts-optics-bundled-10mm",
+    "brand": "TS-Optics",
+    "line": "Bundled",
+    "name": "TS-Optics 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-114-900-starscope-eq3-1/p,4926"
+  },
+  {
+    "id": "ts-optics-bundled-12-5mm",
+    "brand": "TS-Optics",
+    "line": "Bundled",
+    "name": "TS-Optics 12.5 mm",
+    "focalLengthMm": 12.5,
+    "afovDeg": 40,
+    "design": "huygens",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-76-700-starscope-az-1/p,4966"
+  },
+  {
+    "id": "ts-optics-bundled-20mm",
+    "brand": "TS-Optics",
+    "line": "Bundled",
+    "name": "TS-Optics 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 40,
+    "design": "huygens",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-76-700-starscope-az-1/p,4966"
+  },
+  {
+    "id": "ts-optics-bundled-25mm",
+    "brand": "TS-Optics",
+    "line": "Bundled",
+    "name": "TS-Optics 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "source": "https://www.astroshop.eu/telescopes/ts-optics-telescope-n-114-900-starscope-eq3-1/p,4926"
   },
   {
     "id": "vixen-bundled-6-3mm",
