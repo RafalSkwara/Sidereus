@@ -219,7 +219,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
               <p class="mb-4 text-label text-muted-foreground">{t.washedOut.intro}</p>
               <ul class="divide-y divide-border">
                 {washedOut.map((entry) => {
-                  const commonName = localCommonName(entry.messier, entry.commonName, locale);
+                  const commonName = localCommonName(entry.id, entry.commonName, locale);
                   return (
                     <li data-washed-out-object={entry.id} class="flex min-h-11 items-center gap-3 py-3">
                       <span class="min-w-0 flex-1">

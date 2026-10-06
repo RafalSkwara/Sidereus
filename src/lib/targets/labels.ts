@@ -30,6 +30,6 @@ export function targetLabel(key: TargetKey, locale: Locale): TargetLabel {
   const object = messier === null ? undefined : findMessier(messier);
   return {
     id: object?.id ?? key,
-    name: object ? localCommonName(object.messier, object.commonName, locale) : null,
+    name: object ? localCommonName(object.id, object.commonName, locale) : null,
   };
 }

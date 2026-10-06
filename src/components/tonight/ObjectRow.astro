@@ -16,7 +16,7 @@ interface Props {
 const { entry, logHref } = Astro.props;
 const { locale } = Astro.locals;
 const t = getMessages(locale).tonight.object;
-const commonName = localCommonName(entry.messier, entry.commonName, locale);
+const commonName = localCommonName(entry.id, entry.commonName, locale);
 ---
 
 <li data-object={entry.id} data-best-at={entry.bestAt}>

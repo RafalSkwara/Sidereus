@@ -13,7 +13,7 @@ import type { TargetOption } from "./target-search";
  */
 export function targetOptions(locale: Locale): TargetOption[] {
   const messier = MESSIER.map((object): TargetOption => {
-    const local = localCommonName(object.messier, object.commonName, locale);
+    const local = localCommonName(object.id, object.commonName, locale);
     return {
       key: messierKey(object.messier),
       id: object.id,

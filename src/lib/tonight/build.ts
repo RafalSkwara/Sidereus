@@ -952,7 +952,7 @@ export function buildTonight(
       const listed = new Set(solarSystem?.entries.map((entry) => entry.key) ?? []);
       const objectBodies = objectTracks(engineSite, range, skyObjects).map((track, i): TonightSkyBody => {
         const object = skyObjects[i];
-        const commonName = localCommonName(object.messier, object.commonName, locale);
+        const commonName = localCommonName(object.id, object.commonName, locale);
         return {
           kind: "object",
           key: object.id,
@@ -1056,7 +1056,7 @@ export function buildTonight(
           );
         }),
         ...planObjects.map(({ object, score, peak }) => {
-          const commonName = localCommonName(object.messier, object.commonName, locale);
+          const commonName = localCommonName(object.id, object.commonName, locale);
           return rowOf(
             "object",
             object.id,

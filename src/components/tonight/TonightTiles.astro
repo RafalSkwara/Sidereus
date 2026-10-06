@@ -44,7 +44,7 @@ const caption = "mt-2 block text-label text-muted-foreground";
 // opens Targets, which gives the reason and the way to the week.
 const targets = view.summaryTargets.map((entry) => ({
   id: entry.id,
-  name: localCommonName(entry.messier, entry.commonName, locale) ?? entry.id,
+  name: localCommonName(entry.id, entry.commonName, locale) ?? entry.id,
   bestTime: entry.bestTime,
 }));
 

@@ -18,7 +18,7 @@ interface Props {
 const { entry, rank, logHref } = Astro.props;
 const { locale } = Astro.locals;
 const t = getMessages(locale).tonight.object;
-const commonName = localCommonName(entry.messier, entry.commonName, locale);
+const commonName = localCommonName(entry.id, entry.commonName, locale);
 ---
 
 <li id={`object-${entry.id}`} data-object={entry.id} class="scroll-mt-4 py-4 first:pt-0 last:pb-0">
