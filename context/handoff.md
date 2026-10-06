@@ -1,4 +1,4 @@
-# Handoff — 2026-10-06 (updated: S-12 implemented, awaiting the user's testing)
+# Handoff — 2026-10-06 (updated: S-12 archived, PR open)
 
 Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #67. (This replaces the earlier handoffs, which are in git history.)
 
@@ -13,11 +13,10 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
   - **Clearing:** on sign-in, sign-up or sign-out; on the sign-in bounce; on any page rendered signed out; and when a different user commits (`data-owner` = SHA-256 of the user id).
   - **Deploys:** the `/_astro` files that stored pages use are kept across deploys.
 - **Still open in M-2:**
-  - **S-12 gear catalogue** (`in-progress`, #113, branch `feat/gear-catalogue`, change `context/changes/gear-catalogue/`): all 5 phases are implemented and pushed, every automated row is green, and the impl review of phases 1–3 has had its fixes applied. Pending: the user's manual testing (every Manual row in plan.md), then the PR, merge and archive.
-    - **What it does:** a "Find your model" `forms/Combobox` on the `/gear` telescope and eyepiece forms and in onboarding. In onboarding, the generic types sit behind "Not sure of the model?", and a "Came with <model>" kit comes from the telescope's bundled eyepieces.
-    - **The catalogue:** 340 telescopes and 338 eyepieces, hand-entered from manufacturer and retailer pages (`src/lib/gear/catalogue/`, CC0).
-    - **Spot check:** `reviews/catalogue-spot-check.md`, with 0 mismatches.
-    - **Follow-up:** Delta Optical is uncovered, because deltaoptical.pl answered 503 all day.
+  - **S-12 gear catalogue** (#113): implemented and archived at `context/archive/2026-10-06-gear-catalogue/` (roadmap: done). The PR from `feat/gear-catalogue` is open and awaits the user's merge.
+    - **What it does:** a "Find your model" combobox on the `/gear` forms and in onboarding, over 340 telescopes and 338 eyepieces in `src/lib/gear/catalogue/`. Details are in CLAUDE.md, "Gear catalogue (S-12)".
+    - **Still open:** the plan's 12 Manual rows (the user's joint test, not run yet). The impl review covers phases 1–3; phases 4–5 are unreviewed.
+    - **Follow-up:** Delta Optical has no entries (deltaoptical.pl returned 503).
   - **S-03 deep sky beyond Messier** (`ready`, #67): next after S-12.
   - **S-09 map picker** (`blocked`, #73): the privacy decision on map tiles must be made.
   - **S-04 double stars** was **parked** by the user on 2026-10-06 (#68 closed as not planned; roadmap → Parked).
@@ -25,9 +24,9 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 ## Suggested next step
 
 1. **S-12 (#113):**
-   - The user tests the manual rows in `context/changes/gear-catalogue/plan.md`.
-   - Then open the PR from `feat/gear-catalogue`, merge and deploy.
-   - Then `/10x-archive gear-catalogue`, the roadmap S-12 → done and board #113 → done.
+   - The user runs the manual checks: the Progress rows marked `[ ]` in the archived plan.md, plus screenshots.
+   - Then merge the PR (which deploys) and set board #113 to done.
+   - Optional: `/10x-impl-review` of phases 4–5 as a new change, if wanted.
 2. **S-03 (#67):** then plan it through the ordinary chain. The catalogue is already generated from the pinned OpenNGC commit, and S-01 settled target identity by kind.
 3. **Unblock S-09:** the map-tile privacy question is the last user decision M-2 needs.
 
