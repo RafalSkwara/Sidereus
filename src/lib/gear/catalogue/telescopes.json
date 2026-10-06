@@ -1202,6 +1202,46 @@
     "source": "https://explorescientific.com/products/10-inch-dobsonian-reflector-telescope"
   },
   {
+    "id": "gskyer-70-explore",
+    "brand": "Gskyer",
+    "model": "70 Explore",
+    "name": "Gskyer 70 Explore",
+    "apertureMm": 70,
+    "focalLengthMm": 400,
+    "aliases": ["Gskyer 70/400", "AZ70400", "Gskyer 70mm AZ"],
+    "source": "https://www.gskyer.com/products/gskyer-70mm-astronomical-refractor-telescope"
+  },
+  {
+    "id": "gskyer-80-explore",
+    "brand": "Gskyer",
+    "model": "80 Explore",
+    "name": "Gskyer 80 Explore",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["Gskyer 80/400", "Gskyer 80mm AZ"],
+    "source": "https://www.gskyer.com/products/gskyer-80mm-az-space-astronomical-refractor-telescope"
+  },
+  {
+    "id": "gskyer-90-explore",
+    "brand": "Gskyer",
+    "model": "90 Explore",
+    "name": "Gskyer 90 Explore",
+    "apertureMm": 90,
+    "focalLengthMm": 600,
+    "aliases": ["Gskyer 90/600", "Gskyer 600x90", "Gskyer 90mm AZ"],
+    "source": "https://www.gskyer.com/products/gskyer-90mm-astronomical-refractor-telescope"
+  },
+  {
+    "id": "gskyer-130-deep-sky-explore",
+    "brand": "Gskyer",
+    "model": "130 Deep-Sky Explore",
+    "name": "Gskyer 130 Deep-Sky Explore",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Gskyer 130EQ", "Gskyer 130/650", "Gskyer EQ130650"],
+    "source": "https://www.gskyer.com/products/gskyer-130eq-professional-astronomical-reflector-telescope"
+  },
+  {
     "id": "gso-gsd580",
     "brand": "GSO",
     "model": "GSD580",
@@ -2314,6 +2354,16 @@
     "source": "https://www.saxon.com.au/saxon-16-deepsky-truss-dobsonian-telescope.html"
   },
   {
+    "id": "sharpstar-61edph-iii",
+    "brand": "Sharpstar",
+    "model": "61EDPH III",
+    "name": "Sharpstar 61EDPH III",
+    "apertureMm": 61,
+    "focalLengthMm": 360,
+    "aliases": ["Sharpstar 61 EDPH III", "61EDPH", "Sharpstar 61EDPH"],
+    "source": "https://www.firstlightoptics.com/sharpstar-telescopes/sharpstar-61edph-iii-f59-triplet-ed-apo-telescope.html"
+  },
+  {
     "id": "skywatcher-mercury-607",
     "brand": "Sky-Watcher",
     "model": "Mercury-607",
@@ -2920,6 +2970,316 @@
     "source": "https://www.firstlightoptics.com/stellalyra-telescopes/stellalyra-12-f5-dobsonian.html"
   },
   {
+    "id": "stellarvue-svx090t",
+    "brand": "Stellarvue",
+    "model": "SVX090T",
+    "name": "Stellarvue SVX090T",
+    "apertureMm": 90,
+    "focalLengthMm": 540,
+    "aliases": ["SVX 90T", "Stellarvue 90mm f/6 triplet"],
+    "source": "https://www.stellarvue.com/product/svx090t"
+  },
+  {
+    "id": "stellarvue-svx102t",
+    "brand": "Stellarvue",
+    "model": "SVX102T",
+    "name": "Stellarvue SVX102T",
+    "apertureMm": 101.5,
+    "focalLengthMm": 714,
+    "aliases": ["SVX 102T", "SVX102T-RA Raptor", "Stellarvue 102mm f/7 triplet"],
+    "source": "https://www.stellarvue.com/product/svx102t"
+  },
+  {
+    "id": "stellarvue-svx130t",
+    "brand": "Stellarvue",
+    "model": "SVX130T",
+    "name": "Stellarvue SVX130T",
+    "apertureMm": 130,
+    "focalLengthMm": 910,
+    "aliases": ["SVX 130T"],
+    "source": "https://www.stellarvue.com/product/svx130t"
+  },
+  {
+    "id": "stellarvue-svx140t",
+    "brand": "Stellarvue",
+    "model": "SVX140T",
+    "name": "Stellarvue SVX140T",
+    "apertureMm": 140,
+    "focalLengthMm": 938,
+    "aliases": ["SVX 140T"],
+    "source": "https://www.stellarvue.com/product/svx140t"
+  },
+  {
+    "id": "stellarvue-svx152t",
+    "brand": "Stellarvue",
+    "model": "SVX152T",
+    "name": "Stellarvue SVX152T",
+    "apertureMm": 152,
+    "focalLengthMm": 1200,
+    "aliases": ["SVX 152T"],
+    "source": "https://www.stellarvue.com/product/svx152t"
+  },
+  {
+    "id": "stellarvue-svx180t-2",
+    "brand": "Stellarvue",
+    "model": "SVX180T-2",
+    "name": "Stellarvue SVX180T-2",
+    "apertureMm": 180,
+    "focalLengthMm": 1260,
+    "aliases": ["SVX180T", "SVX 180T"],
+    "source": "https://www.stellarvue.com/product/svx180t-2"
+  },
+  {
+    "id": "svbony-sv503-70",
+    "brand": "Svbony",
+    "model": "SV503 70",
+    "name": "Svbony SV503 70",
+    "apertureMm": 70,
+    "focalLengthMm": 474,
+    "aliases": ["SV503 70ED", "SV503 70mm flat field", "Svbony 70/474"],
+    "source": "https://www.svbony.com/products/sv503-70mm-flatfield-refractor-telescope"
+  },
+  {
+    "id": "svbony-sv530-80",
+    "brand": "Svbony",
+    "model": "SV530 80",
+    "name": "Svbony SV530 80",
+    "apertureMm": 80,
+    "focalLengthMm": 480,
+    "aliases": ["SV530 80ED", "Svbony 80/480"],
+    "source": "https://www.svbony.com/products/sv530-80mm-ed-refractor-telescope-ota-480mm-f6-astro"
+  },
+  {
+    "id": "svbony-sv550-80",
+    "brand": "Svbony",
+    "model": "SV550 80",
+    "name": "Svbony SV550 80",
+    "apertureMm": 80,
+    "focalLengthMm": 480,
+    "aliases": ["SV550 80mm triplet", "Svbony SV550 80APO", "Svbony 80/480 APO"],
+    "source": "https://www.svbony.com/products/sv550-triplet-refractor-80mm-ota"
+  },
+  {
+    "id": "svbony-sv503-80",
+    "brand": "Svbony",
+    "model": "SV503 80",
+    "name": "Svbony SV503 80",
+    "apertureMm": 80,
+    "focalLengthMm": 560,
+    "aliases": ["SV503 80ED", "Svbony 80/560"],
+    "source": "https://www.svbony.com/products/sv503-80ed-f7-doublet-telescope"
+  },
+  {
+    "id": "svbony-sv48p-90",
+    "brand": "Svbony",
+    "model": "SV48P 90",
+    "name": "Svbony SV48P 90",
+    "apertureMm": 90,
+    "focalLengthMm": 500,
+    "aliases": ["SV48P 90mm", "Svbony 90/500"],
+    "source": "https://www.svbony.com/products/sv48p-90mm-refractor-telescope"
+  },
+  {
+    "id": "svbony-sv48p-102",
+    "brand": "Svbony",
+    "model": "SV48P 102",
+    "name": "Svbony SV48P 102",
+    "apertureMm": 102,
+    "focalLengthMm": 663,
+    "aliases": ["SV48P 102mm", "Svbony 102/663"],
+    "source": "https://www.svbony.com/products/sv48p-telescope-refractor-102mm"
+  },
+  {
+    "id": "svbony-sv503-102",
+    "brand": "Svbony",
+    "model": "SV503 102",
+    "name": "Svbony SV503 102",
+    "apertureMm": 102,
+    "focalLengthMm": 714,
+    "aliases": ["SV503 102ED", "Svbony 102/714"],
+    "source": "https://www.svbony.com/products/sv503-102f7-ed-doublet-refractor"
+  },
+  {
+    "id": "svbony-mk105",
+    "brand": "Svbony",
+    "model": "MK105",
+    "name": "Svbony MK105",
+    "apertureMm": 105,
+    "focalLengthMm": 1365,
+    "aliases": ["SVBONY MK105 Maksutov", "MK105 105/1365"],
+    "source": "https://www.svbony.com/products/mk105"
+  },
+  {
+    "id": "svbony-sv550-122",
+    "brand": "Svbony",
+    "model": "SV550 122",
+    "name": "Svbony SV550 122",
+    "apertureMm": 122,
+    "focalLengthMm": 854,
+    "aliases": ["SV550 122mm triplet", "Svbony 122/854"],
+    "source": "https://www.svbony.com/products/sv550-apo-refractor-122mm"
+  },
+  {
+    "id": "svbony-mk127",
+    "brand": "Svbony",
+    "model": "MK127",
+    "name": "Svbony MK127",
+    "apertureMm": 127,
+    "focalLengthMm": 1500,
+    "aliases": ["SVBONY MK127 Maksutov", "MK127 127/1500"],
+    "source": "https://www.svbony.com/products/mk127-maksutov-cassegrain-telescope"
+  },
+  {
+    "id": "takahashi-fs-60cb",
+    "brand": "Takahashi",
+    "model": "FS-60CB",
+    "name": "Takahashi FS-60CB",
+    "apertureMm": 60,
+    "focalLengthMm": 355,
+    "aliases": ["FS-60", "Takahashi FS-60C", "FS-60CP"],
+    "source": "https://www.firstlightoptics.com/takahashi-fs-60-series-refractor-telescopes/takahashi-fs-60cb-f5-9-doublet-fluorite-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-fs-60q",
+    "brand": "Takahashi",
+    "model": "FS-60Q",
+    "name": "Takahashi FS-60Q",
+    "apertureMm": 60,
+    "focalLengthMm": 600,
+    "aliases": ["Takahashi FS-60 with Q extender"],
+    "source": "https://www.firstlightoptics.com/takahashi-fs-60-series-refractor-telescopes/takahashi-fs-60q-f10-doublet-fluorite-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-fc-76dcu",
+    "brand": "Takahashi",
+    "model": "FC-76DCU",
+    "name": "Takahashi FC-76DCU",
+    "apertureMm": 76,
+    "focalLengthMm": 570,
+    "aliases": ["FC-76D", "FC-76", "FC-76DS", "FC-76DP", "Takahashi FC-76DC"],
+    "source": "https://www.firstlightoptics.com/takahashi-fc-76-series-refractor-telescopes/takahashi-fc-76dcu-f75-doublet-fluorite-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-fsq-85edx",
+    "brand": "Takahashi",
+    "model": "FSQ-85EDX",
+    "name": "Takahashi FSQ-85EDX",
+    "apertureMm": 85,
+    "focalLengthMm": 450,
+    "aliases": ["FSQ-85", "FSQ-85ED", "FSQ-85EDP"],
+    "source": "https://www.firstlightoptics.com/takahashi-fsq-85-series-refractor-telescopes/takahashi-fsq-85edx-f5-3-quadruplet-petzval-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-fc-100dc",
+    "brand": "Takahashi",
+    "model": "FC-100DC",
+    "name": "Takahashi FC-100DC",
+    "apertureMm": 100,
+    "focalLengthMm": 740,
+    "aliases": ["FC-100D", "FC-100DF", "FC-100DL", "FC-100DZ", "Takahashi FC-100"],
+    "source": "https://www.firstlightoptics.com/takahashi-fc-100-series-refractor-telescopes/takahashi-fc-100dc-f7-4-doublet-fluorite-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-fsq-106edx4",
+    "brand": "Takahashi",
+    "model": "FSQ-106EDX4",
+    "name": "Takahashi FSQ-106EDX4",
+    "apertureMm": 106,
+    "focalLengthMm": 530,
+    "aliases": ["FSQ-106", "FSQ-106ED", "FSQ-106EDX", "FSQ-106N"],
+    "source": "https://www.firstlightoptics.com/takahashi-fsq-106-series-refractor-telescopes/takahashi-fsq-106edx4-f5-quadruplet-petzval-apo-refractor.html"
+  },
+  {
+    "id": "takahashi-tsa-120",
+    "brand": "Takahashi",
+    "model": "TSA-120",
+    "name": "Takahashi TSA-120",
+    "apertureMm": 120,
+    "focalLengthMm": 900,
+    "aliases": ["Takahashi TSA120"],
+    "source": "https://www.firstlightoptics.com/takahashi-tsa-120-series-refractor-telescopes/tak_ttk12010.html"
+  },
+  {
+    "id": "takahashi-toa-130ns",
+    "brand": "Takahashi",
+    "model": "TOA-130NS",
+    "name": "Takahashi TOA-130NS",
+    "apertureMm": 130,
+    "focalLengthMm": 1000,
+    "aliases": ["TOA-130", "TOA-130NFB", "TOA-130F"],
+    "source": "https://www.firstlightoptics.com/takahashi-toa-130-series-refractor-telescopes/tak_tok13010.html"
+  },
+  {
+    "id": "takahashi-toa-150b",
+    "brand": "Takahashi",
+    "model": "TOA-150B",
+    "name": "Takahashi TOA-150B",
+    "apertureMm": 150,
+    "focalLengthMm": 1100,
+    "aliases": ["TOA-150"],
+    "source": "https://www.firstlightoptics.com/takahashi-toa-150-series-refractor-telescopes/takahashi-toa-150b-ota-tube-only-with-5083175-adapter.html"
+  },
+  {
+    "id": "takahashi-mewlon-180c",
+    "brand": "Takahashi",
+    "model": "Mewlon 180C",
+    "name": "Takahashi Mewlon 180C",
+    "apertureMm": 180,
+    "focalLengthMm": 2160,
+    "aliases": ["Mewlon-180", "Mewlon 180", "Takahashi Mewlon-180C Dall-Kirkham"],
+    "source": "https://www.firstlightoptics.com/takahashi-mewlon-reflector-telescopes/takahashi-mewlon-180c-f12-dall-kirkham-reflector.html"
+  },
+  {
+    "id": "takahashi-mewlon-210",
+    "brand": "Takahashi",
+    "model": "Mewlon 210",
+    "name": "Takahashi Mewlon 210",
+    "apertureMm": 210,
+    "focalLengthMm": 2415,
+    "aliases": ["Mewlon-210", "Takahashi Mewlon-210 Dall-Kirkham"],
+    "source": "https://www.firstlightoptics.com/takahashi-mewlon-reflector-telescopes/takahashi-mewlon-210-f11-5-dall-kirkham-reflector.html"
+  },
+  {
+    "id": "televue-60",
+    "brand": "Tele Vue",
+    "model": "60",
+    "name": "Tele Vue 60",
+    "apertureMm": 60,
+    "focalLengthMm": 360,
+    "aliases": ["Tele Vue-60", "TV-60", "Televue 60mm f/6"],
+    "source": "https://www.firstlightoptics.com/tele-vue-telescopes/tele-vue-60mm-f6-apo-refractor.html"
+  },
+  {
+    "id": "televue-76",
+    "brand": "Tele Vue",
+    "model": "76",
+    "name": "Tele Vue 76",
+    "apertureMm": 76,
+    "focalLengthMm": 480,
+    "aliases": ["Tele Vue-76", "TV-76", "Televue 76mm f/6.3"],
+    "source": "https://www.firstlightoptics.com/tele-vue-telescopes/tele-vue-76mm-f6-3-apo-refractor.html"
+  },
+  {
+    "id": "televue-85",
+    "brand": "Tele Vue",
+    "model": "85",
+    "name": "Tele Vue 85",
+    "apertureMm": 85,
+    "focalLengthMm": 600,
+    "aliases": ["Tele Vue-85", "TV-85", "Televue 85mm f/7"],
+    "source": "https://www.firstlightoptics.com/tele-vue-telescopes/tele-vue-85mm-f7-apo-doublet-refractor.html"
+  },
+  {
+    "id": "televue-np101is",
+    "brand": "Tele Vue",
+    "model": "NP101is",
+    "name": "Tele Vue NP101is",
+    "apertureMm": 101,
+    "focalLengthMm": 540,
+    "aliases": ["Tele Vue NP101", "NP101", "NP-101is", "Televue NP101is f/5.4"],
+    "source": "https://www.firstlightoptics.com/tele-vue-telescopes/tele-vue-np101is-f54-flat-field-apo-refractor-ota.html"
+  },
+  {
     "id": "ts-optics-photoline-60-360",
     "brand": "TS-Optics",
     "model": "Photoline 60/360",
@@ -2968,6 +3328,56 @@
     "focalLengthMm": 800,
     "aliases": ["TS-Optics 115 mm f/7 Triplet", "Apo115f7"],
     "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-115-mm-f-7-edt-triplet-apo-2-5-rap-focuser-with-optical-test-3041"
+  },
+  {
+    "id": "unistellar-odyssey",
+    "brand": "Unistellar",
+    "model": "Odyssey",
+    "name": "Unistellar Odyssey",
+    "apertureMm": 85,
+    "focalLengthMm": 320,
+    "aliases": ["Unistellar Odyssey Pro", "Odyssey Pro", "smart telescope"],
+    "source": "https://www.unistellar.com/odyssey/"
+  },
+  {
+    "id": "unistellar-equinox-2",
+    "brand": "Unistellar",
+    "model": "eQuinox 2",
+    "name": "Unistellar eQuinox 2",
+    "apertureMm": 114,
+    "focalLengthMm": 450,
+    "aliases": ["Unistellar Equinox 2", "smart telescope"],
+    "source": "https://www.unistellar.com/expert/"
+  },
+  {
+    "id": "unistellar-evscope-2",
+    "brand": "Unistellar",
+    "model": "eVscope 2",
+    "name": "Unistellar eVscope 2",
+    "apertureMm": 114,
+    "focalLengthMm": 450,
+    "aliases": ["Unistellar eVscope2", "Unistellar eVscope", "smart telescope"],
+    "source": "https://www.unistellar.com/expert/"
+  },
+  {
+    "id": "vaonis-vespera-ii",
+    "brand": "Vaonis",
+    "model": "Vespera II",
+    "name": "Vaonis Vespera II",
+    "apertureMm": 50,
+    "focalLengthMm": 250,
+    "aliases": ["Vespera 2", "smart telescope"],
+    "source": "https://vaonis.com/pages/product/vespera-ii"
+  },
+  {
+    "id": "vaonis-stellina",
+    "brand": "Vaonis",
+    "model": "Stellina",
+    "name": "Vaonis Stellina",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["Vaonis Stellina observation station", "smart telescope"],
+    "source": "https://vaonis.com/pages/stellina-observation-station"
   },
   {
     "id": "vixen-ed80sf",
@@ -3066,5 +3476,25 @@
     "focalLengthMm": 559,
     "aliases": ["Zenithstar 81", "ZS81"],
     "source": "https://williamoptics.com/products/zenithstar-81"
+  },
+  {
+    "id": "zwo-seestar-s30",
+    "brand": "ZWO",
+    "model": "Seestar S30",
+    "name": "ZWO Seestar S30",
+    "apertureMm": 30,
+    "focalLengthMm": 150,
+    "aliases": ["Seestar S30", "S30", "smart telescope"],
+    "source": "https://seestar.com/products/seestar-s30-all-in-one-smart-telescope"
+  },
+  {
+    "id": "zwo-seestar-s50",
+    "brand": "ZWO",
+    "model": "Seestar S50",
+    "name": "ZWO Seestar S50",
+    "apertureMm": 50,
+    "focalLengthMm": 250,
+    "aliases": ["Seestar S50", "S50", "smart telescope"],
+    "source": "https://seestar.com/products/seestar-s50"
   }
 ]
