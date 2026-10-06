@@ -33,6 +33,16 @@ const MIN_DEC_DEG = -23;
 const EXPECTED_CALDWELL_COUNT = 61;
 const CALDWELL_SELECTION_RULE =
   "Rows of NGC.csv/addendum.csv whose Identifiers column holds a 'C <n>' token, whose M column is empty and whose declination is >= -23 deg (38 + dec >= 15 at 52 N with the 15 deg default minimum altitude); plus C 14 (NGC 869 + NGC 884) merged into one entry";
+/** Caldwell numbers reachable from 52 N that the pinned OpenNGC cannot supply, recorded in caldwell.meta.json. */
+const CALDWELL_EXCLUDED = [
+  {
+    caldwell: 9,
+    name: "Cave Nebula (Sh2-155)",
+    reason: "Not in OpenNGC's NGC/IC rows (Sh2-155 has no NGC or IC number)",
+  },
+  { caldwell: 41, name: "Hyades (Mel 25)", reason: "Not in OpenNGC's NGC/IC identifiers (Mel 25 carries no C token)" },
+  { caldwell: 99, name: "Coalsack Nebula", reason: "No OpenNGC row" },
+];
 /** Index of the "Common names" column: the last one this script reads. */
 const LAST_READ_COLUMN = "Common names";
 
@@ -110,8 +120,20 @@ function parseSemicolonCsv(text) {
     header.forEach((name, i) => {
       row[name] = cells[i] ?? "";
     });
+    // Set after the columns so the header's key order (and lastReadIndex) is unchanged.
+    row._quoted = cells.slice(0, header.indexOf(LAST_READ_COLUMN) + 1).some((cell) => cell.includes('"'));
     return row;
   });
+}
+
+/**
+ * This parser splits on every ';' and knows nothing of quoting. A '"' in any column the generator reads
+ * (up to "Common names") could hide a ';' that mis-splits the row, so it fails the build instead.
+ */
+function assertNoQuotedCells(row, where) {
+  if (row._quoted) {
+    throw new Error(`${row.Name} (${where}) has a '"' in a read column; the naive ';' split cannot be trusted`);
+  }
 }
 
 function parseRaHours(value) {
@@ -267,8 +289,20 @@ function buildDoubleCluster(rows) {
   if (!a || !b) {
     throw new Error("NGC0869 / NGC0884 rows missing for C 14");
   }
+  assertNoQuotedCells(a, "C 14");
+  assertNoQuotedCells(b, "C 14");
   const oa = toCaldwellObject(a, 14, nullableNumber(a["V-Mag"]));
   const ob = toCaldwellObject(b, 14, nullableNumber(b["V-Mag"]));
+  for (const [name, o] of [
+    ["NGC0869", oa],
+    ["NGC0884", ob],
+  ]) {
+    for (const field of ["raHours", "decDeg", "vMag", "bMag", "majorAxisArcmin"]) {
+      if (o[field] === null || o[field] === undefined) {
+        throw new Error(`${name} has no ${field}; the Double Cluster merge needs it`);
+      }
+    }
+  }
   const mid = {
     raHours: round((oa.raHours + ob.raHours) / 2, 6),
     decDeg: round((oa.decDeg + ob.decDeg) / 2, 6),
@@ -298,6 +332,7 @@ function buildCaldwell(rows) {
   const usedOverrides = new Set();
   const bMagFallbacks = [];
   const objects = [];
+  let belowDecLimit = 0;
 
   for (const row of rows) {
     const caldwell = caldwellNumber(row.Identifiers);
@@ -308,9 +343,11 @@ function buildCaldwell(rows) {
       throw new Error(`Malformed RA/Dec on ${row.Name} (C ${caldwell}): "${row.RA}" "${row.Dec}"`);
     }
     if (parseDecDegrees(row.Dec) < MIN_DEC_DEG) {
+      belowDecLimit++;
       continue;
     }
-    // A ';' inside a quoted note splits late columns; a row short of the last column we read is a mis-split.
+    assertNoQuotedCells(row, `C ${caldwell}`);
+    // A truncated row (short of the last column we read) is also a bad row.
     if (row._fieldCount < lastReadIndex + 1) {
       throw new Error(
         `${row.Name} (C ${caldwell}) has ${row._fieldCount} fields, fewer than the ${lastReadIndex + 1} read columns`,
@@ -352,7 +389,7 @@ function buildCaldwell(rows) {
       `Expected ${EXPECTED_CALDWELL_COUNT} distinct Caldwell objects, got ${objects.length} (${numbers.size} numbers, ${ids.size} ids)`,
     );
   }
-  return { objects, bMagFallbacks };
+  return { objects, bMagFallbacks, belowDecLimit };
 }
 
 function assertDisjoint(messierObjects, caldwellObjects) {
@@ -368,7 +405,7 @@ async function main() {
   const texts = await Promise.all(SOURCE_FILES.map(fetchCsv));
   const rows = texts.flatMap(parseSemicolonCsv);
   const objects = buildCatalogue(rows);
-  const { objects: caldwellObjects, bMagFallbacks } = buildCaldwell(rows);
+  const { objects: caldwellObjects, bMagFallbacks, belowDecLimit } = buildCaldwell(rows);
   assertDisjoint(objects, caldwellObjects);
 
   const meta = {
@@ -401,6 +438,10 @@ async function main() {
     licence: "CC BY-SA 4.0",
     count: caldwellObjects.length,
     selection: CALDWELL_SELECTION_RULE,
+    excluded: [
+      ...CALDWELL_EXCLUDED,
+      { reason: `Below dec ${MIN_DEC_DEG} deg, not reachable from 52 N`, count: belowDecLimit },
+    ],
     overrides: CALDWELL_OVERRIDES,
     normalisations: [
       "RA HH:MM:SS.ss -> decimal hours (6 dp); Dec ±DD:MM:SS.s -> decimal degrees (6 dp), sign taken from the string",

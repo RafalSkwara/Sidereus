@@ -1,7 +1,7 @@
 ---
 change_id: deep-sky-beyond-messier
 title: Rank bright non-Messier deep-sky objects alongside Messier and log them (S-03)
-status: implementing
+status: impl_reviewed
 created: 2026-10-06
 updated: 2026-10-06
 archived_at: null

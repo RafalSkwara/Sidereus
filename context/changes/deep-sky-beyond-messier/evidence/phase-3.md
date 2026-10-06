@@ -20,3 +20,7 @@ Run on 2026-10-06 against the local preview (build of this phase), local Supabas
   - **Plan:** the row "NGC 869 / 884 · Gromada podwójna w Perseuszu" wraps over 3 lines at 390 px in PL and stays readable.
   - **Red mode:** no colour leaks.
 - **3.5:** on the dashboard, the Caldwell sky marker `#object-NGC869` opened `/tonight/targets#object-NGC869`, and the row scrolled into the viewport (`marker-scroll-NGC869.png`).
+
+## Behaviour change
+
+On 1 Sep 2026 (Warsaw, the night `build.test.ts` uses), the Moon card on the real catalogue now reads "Bright Moon: 1 faint object washed out tonight" (one washed-out object, NGC 4236, C 3, a diffuse galaxy at V 9.77) instead of "Moonlit sky · no faint objects lost". This is the correct consequence of the bigger catalogue, not a regression. The build test at `build.test.ts:1050-1057` is pinned to `catalogue: MESSIER` so the "Moonlit sky" copy branch stays covered. Production's catalogue is therefore not tested for that night. Verified with a scratch run (since deleted) of the same night against the full catalogue.

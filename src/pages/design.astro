@@ -338,6 +338,8 @@ const sampleTargets = [
     Date.UTC(2026, 9, 11, 1, 30),
   ),
 ];
+// The dashboard tile holds SUMMARY_TARGETS (3): the Double Cluster takes the place of M13.
+const sampleSummaryTargets = sampleTargets.filter((entry) => entry.id !== "M13");
 
 const sampleMoon: MoonDiscState = {
   time: "2026-10-10T21:40:00Z",
@@ -402,7 +404,7 @@ const summaryView: TonightView = {
     washedOutText: null,
     washedOutEntries: [],
   },
-  summaryTargets: sampleTargets,
+  summaryTargets: sampleSummaryTargets,
   hasEyepieces: false,
   forecastStatus: { kind: freshForecast.kind, text: fmt.forecastStatusText(freshForecast) },
   explanation: null,

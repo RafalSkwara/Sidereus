@@ -9,6 +9,27 @@
   "licence": "CC BY-SA 4.0",
   "count": 61,
   "selection": "Rows of NGC.csv/addendum.csv whose Identifiers column holds a 'C <n>' token, whose M column is empty and whose declination is >= -23 deg (38 + dec >= 15 at 52 N with the 15 deg default minimum altitude); plus C 14 (NGC 869 + NGC 884) merged into one entry",
+  "excluded": [
+    {
+      "caldwell": 9,
+      "name": "Cave Nebula (Sh2-155)",
+      "reason": "Not in OpenNGC's NGC/IC rows (Sh2-155 has no NGC or IC number)"
+    },
+    {
+      "caldwell": 41,
+      "name": "Hyades (Mel 25)",
+      "reason": "Not in OpenNGC's NGC/IC identifiers (Mel 25 carries no C token)"
+    },
+    {
+      "caldwell": 99,
+      "name": "Coalsack Nebula",
+      "reason": "No OpenNGC row"
+    },
+    {
+      "reason": "Below dec -23 deg, not reachable from 52 N",
+      "count": 45
+    }
+  ],
   "overrides": [
     {
       "caldwell": 14,

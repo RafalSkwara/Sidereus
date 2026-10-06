@@ -4,9 +4,9 @@
 // where the live sky's markers land (`/tonight/targets#object-M31` or `#object-NGC7000`, interactive-sky).
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
-import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightEntry } from "@/lib/tonight/build";
+import { createFormatter } from "@/lib/tonight/format";
 
 interface Props {
   entry: TonightEntry;
@@ -17,18 +17,17 @@ interface Props {
 
 const { entry, rank, logHref } = Astro.props;
 const { locale } = Astro.locals;
-const t = getMessages(locale).tonight.object;
+const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
-// The secondary line: "Caldwell 14 · in Per" for a Caldwell object, else "in And".
-const detailLine = [
-  entry.caldwell !== null ? t.caldwell({ n: String(entry.caldwell) }) : null,
-  t.inConstellation({ constellation: entry.constellation }),
-]
-  .filter((part) => part !== null)
-  .join(" · ");
+const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
 ---
 
-<li id={`object-${entry.id}`} data-object={entry.id} class="scroll-mt-4 py-4 first:pt-0 last:pb-0">
+<li
+  id={`object-${entry.id}`}
+  data-object={entry.id}
+  data-label={entry.label}
+  class="scroll-mt-4 py-4 first:pt-0 last:pb-0"
+>
   <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
     <h3 class="font-display text-title font-semibold break-words text-heading">
       <span class="mr-2 font-mono text-label font-normal text-muted-foreground">{rank}.</span>

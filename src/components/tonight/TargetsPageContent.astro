@@ -19,6 +19,7 @@ import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { MAX_RANKED_OBJECTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
+import { createFormatter } from "@/lib/tonight/format";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
@@ -45,6 +46,7 @@ const { locale } = Astro.locals;
 const { siteId, telescopeId, night = "tonight", sort, notice = null, restOpen = false, logged = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
+const { objectDetailLine } = createFormatter(locale);
 const a = t.all;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
@@ -221,15 +223,18 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                 {washedOut.map((entry) => {
                   const commonName = localCommonName(entry.id, entry.commonName, locale);
                   return (
-                    <li data-washed-out-object={entry.id} class="flex min-h-11 items-center gap-3 py-3">
+                    <li
+                      data-washed-out-object={entry.id}
+                      data-label={entry.label}
+                      class="flex min-h-11 items-center gap-3 py-3"
+                    >
                       <span class="min-w-0 flex-1">
                         <span class="font-display text-title font-semibold break-words text-muted-foreground">
                           {entry.label}
                         </span>
                         {commonName && <span class="text-body text-muted-foreground"> · {commonName}</span>}
                         <span class="block text-label text-muted-foreground">
-                          {entry.caldwell !== null && `${t.object.caldwell({ n: String(entry.caldwell) })} · `}
-                          {t.object.inConstellation({ constellation: entry.constellation })}
+                          {objectDetailLine(entry.caldwell, entry.constellation)}
                         </span>
                       </span>
                       <span class="shrink-0 text-right font-mono text-label text-muted-foreground">

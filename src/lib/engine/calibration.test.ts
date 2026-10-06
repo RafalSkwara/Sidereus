@@ -41,6 +41,25 @@ describe("deep-sky ranking calibration (Warsaw, Bortle 5, 150/750)", () => {
       );
     }
   });
+  // Opt-in: `CALIBRATION_SNAPSHOT=1 npx vitest run src/lib/engine/calibration.test.ts --reporter=verbose` (the default reporter hides console output) prints each night's top ten,
+  // the table recorded in evidence/calibration.md. The default run stays silent.
+  it.skipIf(process.env.CALIBRATION_SNAPSHOT !== "1")("prints the top ten per night (snapshot)", () => {
+    for (const date of NIGHTS) {
+      const rows = entriesOn(date)
+        .slice(0, 10)
+        .map(({ object, score, rankScore }, i) => ({
+          rank: i + 1,
+          id: object.id,
+          label: object.label,
+          type: object.type,
+          vMag: object.vMag,
+          total: score.total,
+          rankScore,
+        }));
+      console.log(`calibration snapshot ${date}\n${JSON.stringify(rows, null, 1)}`);
+    }
+  });
+
   const entriesOn = (date: Night) => {
     const ranking = rankings.get(date);
     if (ranking === undefined) {

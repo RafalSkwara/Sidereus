@@ -68,7 +68,8 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
   // label ("M31", "NGC 7000"), which is what the notice names. Any season's rows can be Caldwell objects.
   const object = await third.getAttribute("data-object");
   if (!object) throw new Error("the third row has no data-object");
-  const label = (await third.locator("summary .font-display").first().innerText()).trim();
+  const label = await third.getAttribute("data-label");
+  if (!label) throw new Error("the third row has no data-label");
   await third.locator("summary").click();
   await third.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
   await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${object}&.*&from=targets$`));

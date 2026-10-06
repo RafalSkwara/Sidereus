@@ -3,9 +3,9 @@
 // `divide-y`, which expands into the same details as Tonight's card. Native <details>, so opening a row needs no
 // script of its own. `data-object` (the space-free target key, never the label) and `data-best-at` (the peak instant) are what the e2e reads.
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
-import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightEntry } from "@/lib/tonight/build";
+import { createFormatter } from "@/lib/tonight/format";
 
 interface Props {
   entry: TonightEntry;
@@ -15,18 +15,12 @@ interface Props {
 
 const { entry, logHref } = Astro.props;
 const { locale } = Astro.locals;
-const t = getMessages(locale).tonight.object;
+const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
-// The secondary line: "Caldwell 14 · in Per" for a Caldwell object, else "in And".
-const detailLine = [
-  entry.caldwell !== null ? t.caldwell({ n: String(entry.caldwell) }) : null,
-  t.inConstellation({ constellation: entry.constellation }),
-]
-  .filter((part) => part !== null)
-  .join(" · ");
+const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
 ---
 
-<li data-object={entry.id} data-best-at={entry.bestAt}>
+<li data-object={entry.id} data-label={entry.label} data-best-at={entry.bestAt}>
   <details class="group">
     <!-- At least 44 px; the hover tint and the ring run a little past the text, inside the list's width. -->
     <summary

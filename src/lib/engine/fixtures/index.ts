@@ -1,4 +1,4 @@
-import { findDeepSky, findMessier } from "@/lib/catalogue";
+import { findMessier } from "@/lib/catalogue";
 
 import { observingNight } from "../night";
 import { darknessThresholdDegForBortle } from "../parameters";
@@ -363,15 +363,6 @@ export function messierTarget(id: string): EquatorialJ2000 {
   const object = findMessier(Number(id.slice(1)));
   if (object === undefined) {
     throw new Error(`fixture references ${id}, which is not in the Messier catalogue`);
-  }
-  return { raHours: object.raHours, decDeg: object.decDeg };
-}
-
-/** J2000 coordinates of a deep-sky object by catalogue key ("M31", "NGC869"); throws for an unknown key. */
-export function deepSkyTarget(id: string): EquatorialJ2000 {
-  const object = findDeepSky(id);
-  if (object === undefined) {
-    throw new Error(`fixture references ${id}, which is not in the deep-sky catalogue`);
   }
   return { raHours: object.raHours, decDeg: object.decDeg };
 }
