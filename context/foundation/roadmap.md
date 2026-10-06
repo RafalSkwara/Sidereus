@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-10-05
+updated: 2026-10-06
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -59,7 +59,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done        |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done        |
-| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | in-progress |
+| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | done        |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
 | S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked     |
@@ -216,7 +216,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - What gets cached: only the last-viewed site, or every site's tonight? Candidate: each site the user opened in the last day, with stored plans cleared on sign-out. — Owner: user. Block: no.
   - Can the log be written offline and synced later? Candidate: no in this slice; logging shows "needs a connection". — Owner: user. Block: no.
 - **Risk:** Caching is easy to get subtly wrong (stale plans shown as current, a signed-out user's plan left on the device, auth pages cached); the "prepared at" stamp and the sign-out purge are the guardrails. Site coordinates stay on the user's own device, which the privacy guardrail allows.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-07: Verdict check
 
@@ -321,3 +321,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-08: user adding or editing a site sees a "Use my location" button; only when they click it does the browser ask for location permission, and on success the coordinates are filled in, rounded to about 1 km before anything else sees them; a refusal or failure leaves the form usable with a plain message and the manual fields.** — Archived 2026-10-04 → `context/archive/2026-10-03-site-use-my-location/`. Lesson: —.
 - **S-11: user who signs in lands on a dashboard of tiles — tonight's verdict, the Moon, the planets, the deep-sky targets, the forecast for the next nights and the sky check — each tile giving a one-glance summary and opening its own focused page, instead of one long Tonight page; the chosen site and telescope carry across the dashboard and every page.** — Archived 2026-10-05 → `context/archive/2026-10-04-tonight-dashboard/`. Lesson: —.
 - **S-05: user can open the session plan from the dashboard (S-11) as its own page: a timeline of the night for the selected site and telescope: the dark window, moonrise and moonset, and each recommended target placed at its best observing window, ordered by time, so they can follow it from the first target to the last.** — Archived 2026-10-05 → `context/archive/2026-10-05-session-plan-timeline/`. Lesson: —.
+- **S-06: user can install Sidereus on their phone's home screen and, at a site with no network, open the dashboard pages they last loaded for that site — verdict, dark window, targets and timeline — clearly marked with when it was prepared, while screens that need the network say so instead of failing.** — Archived 2026-10-06 → `context/archive/2026-10-05-offline-night-plan/`. Lesson: Make the server unreachable to test a service worker offline (lessons.md).

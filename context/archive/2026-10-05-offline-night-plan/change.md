@@ -1,10 +1,10 @@
 ---
 change_id: offline-night-plan
 title: Offline night plan — installable app with cached dashboard pages per site
-status: impl_reviewed
+status: archived
 created: 2026-10-05
 updated: 2026-10-06
-archived_at: null
+archived_at: 2026-10-06T08:29:46Z
 ---
 
 ## Notes
