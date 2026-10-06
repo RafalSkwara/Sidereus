@@ -331,13 +331,15 @@ Widen the target grammar and DB check to NGC/IC keys, label and offer Caldwell o
 **Contract**:
 - **`targetLabel`:** a `"deep-sky"` branch via `findDeepSky`, returning `{ id: label, name: localised }`.
 - **`targetOptions`:** order is Messier, then Caldwell (by C number), then the Moon, then the planets.
+  - *Amended after implementation (impl review F3):* the shipped order is Messier, the Moon, the planets, then Caldwell, so a planet's name finds the planet before a nebula named after it ("jupiter" vs NGC 3242 "Jupiter's Ghost"). Recorded in `evidence/phase-4.md`.
   - A Caldwell option is `label` "NGC 7000 · Mgławica Ameryka Północna", `detail` "Caldwell 20 · Cyg".
   - Its `names` are [localised, English, designation, "C 20", "Caldwell 20"].
 - **`NUMBER_QUERY`** becomes `^(m|ngc|ic|c|caldwell)?\s*(\d{1,4})$` (case- and space-insensitive after normalisation):
   - Bare or `m` matches Messier numbers, as today.
   - `ngc` / `ic` match the designation number across all options (so "ngc 224" finds M31 and "ngc 7000" finds C 20). For the Double Cluster both 869 and 884 match.
   - `c` / `caldwell` match the Caldwell number.
-  - Ordering on the `ngc`/`ic`/`c` paths: the exact number first, then numbers that start with the query, in ascending order. So "ngc 224" gives M31 (NGC 224) first, then NGC 2244 (C 50).
+  - Ordering on the `ngc`/`ic`/`c` paths: the exact number first, then numbers that start with the query, in ascending order. So "ngc 224" gives M31 (NGC 224) first, then NGC 2244 (C 50; the catalogue relabels OpenNGC's NGC 2239 row, impl review F2).
+  - *Added by impl review F1:* a bare number that no Messier number starts ("7000", "869") falls back to NGC and IC designation numbers.
 
 #### 4. Server-side existence check
 

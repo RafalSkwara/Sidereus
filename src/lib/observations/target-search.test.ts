@@ -89,9 +89,9 @@ describe("filterTargets", () => {
   });
 
   it("routes a number query by its prefix: ngc and ic by designation, c and caldwell by Caldwell number", () => {
-    // Exact number first, then the numbers it starts, ascending: NGC 224 is M31, NGC 2239 is C 50.
-    expect(keys("ngc 224")[0]).toBe("M31");
-    expect(keys("ngc 22").slice(0, 4)).toEqual(["M32", "M31", "NGC2238", "NGC2239"]);
+    // Exact number first, then the numbers it starts, ascending: NGC 224 is M31, NGC 2237 is C 49, NGC 2244 is C 50.
+    expect(keys("ngc 224")).toEqual(["M31", "NGC2244"]);
+    expect(keys("ngc 22").slice(0, 4)).toEqual(["M32", "M31", "NGC2237", "NGC2244"]);
     expect(keys("ngc 7000")).toEqual(["NGC7000"]);
     expect(keys("IC405")).toEqual(["IC405"]);
     // IC and NGC numbers are separate: IC 405 is not NGC 405.
@@ -102,9 +102,18 @@ describe("filterTargets", () => {
     // The Double Cluster answers to both of its numbers.
     expect(keys("ngc 869")).toContain("NGC869");
     expect(keys("ngc 884")).toEqual(["NGC869"]);
-    // A bare number or "m" stays Messier-only.
+    // A bare number or "m" stays Messier-only while a Messier number matches.
     expect(keys("20")).not.toContain("NGC7000");
     expect(keys("m 7")).not.toContain("NGC7000");
+  });
+
+  it("falls back to NGC and IC numbers for a bare number no Messier number starts", () => {
+    expect(keys("7000")).toEqual(["NGC7000"]);
+    expect(keys("5194")).toEqual(["M51"]);
+    expect(keys("869")).toEqual(["NGC869"]);
+    expect(keys("405")).toEqual(["IC405"]);
+    // "m" never falls back.
+    expect(keys("m 7000")).toEqual([]);
   });
 
   it("ranks names that start with the query before names that merely contain it", () => {

@@ -736,10 +736,10 @@
     "surfaceBrightness": 22.88
   },
   {
-    "id": "NGC2238",
+    "id": "NGC2237",
     "messier": null,
     "caldwell": 49,
-    "designation": "NGC 2238",
+    "designation": "NGC 2237",
     "commonName": "Rosette Nebula",
     "type": "emission-nebula",
     "raHours": 6.511214,
@@ -752,10 +752,10 @@
     "surfaceBrightness": null
   },
   {
-    "id": "NGC2239",
+    "id": "NGC2244",
     "messier": null,
     "caldwell": 50,
-    "designation": "NGC 2239",
+    "designation": "NGC 2244",
     "commonName": null,
     "type": "cluster-with-nebula",
     "raHours": 6.5321,

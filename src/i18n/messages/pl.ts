@@ -74,7 +74,7 @@ export const pl = {
   },
 
   landing: {
-    kicker: "Messier i Caldwell · twoje niebo, twój sprzęt",
+    kicker: "Messier i Caldwell · Twoje niebo, Twój sprzęt",
     tagline: "Czy dziś warto rozstawiać teleskop?",
     lead: "Jasna ocena nocy i krótka, uzasadniona lista obiektów, na które warto skierować teleskop — z okularami, które już masz.",
     verdictsLabel: "Prognozy nieba",

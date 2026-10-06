@@ -35,6 +35,12 @@ describe("Caldwell catalogue", () => {
     expect(CALDWELL.some((o) => o.id === "NGC884")).toBe(false);
   });
 
+  it("labels the Rosette objects as observing guides do, not by OpenNGC's duplicate rows", () => {
+    const byNumber = (n: number) => CALDWELL.find((o) => o.caldwell === n);
+    expect(byNumber(49)).toMatchObject({ id: "NGC2237", label: "NGC 2237", commonName: "Rosette Nebula" });
+    expect(byNumber(50)).toMatchObject({ id: "NGC2244", label: "NGC 2244" });
+  });
+
   it("reads Caldwell numbers past a quoted ';' (NGC 7331 is C 30)", () => {
     const c30 = CALDWELL.find((o) => o.caldwell === 30);
     expect(c30?.id).toBe("NGC7331");

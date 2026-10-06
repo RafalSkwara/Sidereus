@@ -85,7 +85,9 @@ const OVERRIDES = [
 ];
 
 /**
- * Deviations from the source, recorded in caldwell.meta.json: the merged Double Cluster and any
+ * Deviations from the source, recorded in caldwell.meta.json: the merged Double Cluster, any
+ * `action: "designation"` entry `{ caldwell, action, sourceName, id, designation, reason, source }` that
+ * relabels an object with the designation observing guides use (the row's data is kept), and any
  * `action: "vMag"` entry `{ caldwell, action, id, vMag, reason, source }` for an object with neither a
  * V-Mag nor a B-Mag in OpenNGC. The pinned commit has a B-Mag for every reachable object that lacks a
  * V-Mag, so there are none today. Every entry carries the https page its value was read from.
@@ -98,6 +100,26 @@ const CALDWELL_OVERRIDES = [
     id: "NGC869",
     reason:
       "OpenNGC has no Caldwell token for the Double Cluster; its notes say 'Caldwell 14 refers to both NGC869 and NGC884'. The two rows are merged into one entry: RA/Dec are the midpoint, the major axis covers both clusters, V-Mag and B-Mag are the brighter of the two, surface brightness is null, the common name is 'Double Cluster'.",
+    source: `${SOURCE_REPO}/blob/${PINNED_SHA}/database_files/NGC.csv`,
+  },
+  {
+    caldwell: 49,
+    action: "designation",
+    sourceName: "NGC2238",
+    id: "NGC2237",
+    designation: "NGC 2237",
+    reason:
+      "OpenNGC puts the 'C 049' token on NGC2238, its row for the whole Rosette Nebula (HII). Caldwell lists, Stellarium and atlases call the Rosette NGC 2237, so the entry keeps NGC2238's data under that designation.",
+    source: `${SOURCE_REPO}/blob/${PINNED_SHA}/database_files/NGC.csv`,
+  },
+  {
+    caldwell: 50,
+    action: "designation",
+    sourceName: "NGC2239",
+    id: "NGC2244",
+    designation: "NGC 2244",
+    reason:
+      "OpenNGC puts the 'C 050' token on NGC2239 and lists NGC2244 as its duplicate (type Dup). The Rosette's cluster is known as NGC 2244 in Caldwell lists and observing guides, so the entry keeps NGC2239's data under that designation.",
     source: `${SOURCE_REPO}/blob/${PINNED_SHA}/database_files/NGC.csv`,
   },
 ];
@@ -329,7 +351,9 @@ function buildDoubleCluster(rows) {
 function buildCaldwell(rows) {
   const lastReadIndex = Object.keys(rows[0]).indexOf(LAST_READ_COLUMN) - 1; // minus _fieldCount
   const overrides = new Map(CALDWELL_OVERRIDES.filter((o) => o.action === "vMag").map((o) => [o.id, o]));
+  const renames = new Map(CALDWELL_OVERRIDES.filter((o) => o.action === "designation").map((o) => [o.caldwell, o]));
   const usedOverrides = new Set();
+  const usedRenames = new Set();
   const bMagFallbacks = [];
   const objects = [];
   let belowDecLimit = 0;
@@ -367,7 +391,21 @@ function buildCaldwell(rows) {
         throw new Error(`Missing V-Mag and B-Mag on ${row.Name} (C ${caldwell}) and no override`);
       }
     }
-    objects.push(toCaldwellObject(row, caldwell, vMag));
+    const object = toCaldwellObject(row, caldwell, vMag);
+    const rename = renames.get(caldwell);
+    if (rename) {
+      if (row.Name !== rename.sourceName) {
+        throw new Error(`C ${caldwell} designation override expects ${rename.sourceName}, found ${row.Name}`);
+      }
+      object.id = idFromDesignation(rename.designation);
+      object.designation = rename.designation;
+      usedRenames.add(caldwell);
+    }
+    objects.push(object);
+  }
+  const unusedRenames = [...renames.keys()].filter((n) => !usedRenames.has(n));
+  if (unusedRenames.length > 0) {
+    throw new Error(`Unused designation overrides: C ${unusedRenames.join(", C ")}`);
   }
   const unused = [...overrides.keys()].filter((id) => !usedOverrides.has(id));
   if (unused.length > 0) {

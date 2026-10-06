@@ -129,3 +129,5 @@ Findings:
 - `npx vitest run`: 74 files, 792 passed, 6 todo (was 775 passed before this phase).
 - `npx astro check`: 0 errors.
 - `npx eslint src/lib/engine src/lib/catalogue`: 0 errors, the 2 old `no-console` warnings in `determinism.test.ts`.
+
+> **Note (impl review F2, 2026-10-06):** C 49 and C 50 were relabelled after this snapshot: C 49 is now `NGC2237` (data from OpenNGC's NGC 2238 row) and C 50 is `NGC2244` (data from NGC 2239). Only the id and designation changed, so the scores and ranks above still hold; read `NGC2238` above as `NGC2237`.

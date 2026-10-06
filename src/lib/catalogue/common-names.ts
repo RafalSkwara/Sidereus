@@ -58,7 +58,7 @@ export const COMMON_NAMES: Record<Exclude<Locale, "en">, Readonly<Partial<Record
     NGC2392: "Mgławica Eskimos",
     NGC7009: "Mgławica Saturn",
     NGC6826: "Mgławica Mrugająca",
-    NGC2238: "Mgławica Rozeta",
+    NGC2237: "Mgławica Rozeta",
     NGC3115: "Galaktyka Wrzeciono",
     NGC6822: "Galaktyka Barnarda",
     NGC3242: "Duch Jowisza",

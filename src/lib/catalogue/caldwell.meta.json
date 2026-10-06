@@ -38,6 +38,24 @@
       "id": "NGC869",
       "reason": "OpenNGC has no Caldwell token for the Double Cluster; its notes say 'Caldwell 14 refers to both NGC869 and NGC884'. The two rows are merged into one entry: RA/Dec are the midpoint, the major axis covers both clusters, V-Mag and B-Mag are the brighter of the two, surface brightness is null, the common name is 'Double Cluster'.",
       "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "caldwell": 49,
+      "action": "designation",
+      "sourceName": "NGC2238",
+      "id": "NGC2237",
+      "designation": "NGC 2237",
+      "reason": "OpenNGC puts the 'C 049' token on NGC2238, its row for the whole Rosette Nebula (HII). Caldwell lists, Stellarium and atlases call the Rosette NGC 2237, so the entry keeps NGC2238's data under that designation.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "caldwell": 50,
+      "action": "designation",
+      "sourceName": "NGC2239",
+      "id": "NGC2244",
+      "designation": "NGC 2244",
+      "reason": "OpenNGC puts the 'C 050' token on NGC2239 and lists NGC2244 as its duplicate (type Dup). The Rosette's cluster is known as NGC 2244 in Caldwell lists and observing guides, so the entry keeps NGC2239's data under that designation.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
     }
   ],
   "normalisations": [

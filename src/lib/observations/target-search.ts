@@ -63,14 +63,16 @@ function queryNumbers(option: TargetOption, prefix: string): number[] {
 /**
  * The options matching `query`, best first. A number query is a number with an optional prefix, matched as a
  * prefix of the object's numbers in ascending order, so the exact one comes first (M3 before M30-M39):
- * - none or `m` ("31", "m31", "M 31"): Messier numbers, as before; never the Moon, a planet or a Caldwell object;
- * - `ngc` / `ic` ("ngc 7000", "IC405"): NGC / IC designation numbers across every option, so "ngc 224" finds M31
- *   (NGC 224) first, then NGC 2244 (C 50), and either number of the Double Cluster ("ngc 884") finds it;
+ * - `m` ("m31", "M 31"): Messier numbers; never the Moon, a planet or a Caldwell object;
+ * - none ("31", "7000"): Messier numbers too, and only when no Messier number matches ("869", "7000"), NGC and IC
+ *   designation numbers, so a bare NGC number still finds its object;
+ * - `ngc` / `ic` ("ngc 7000", "IC405"): NGC / IC designation numbers across every option, so "ngc 22" finds M32
+ *   (NGC 221), then M31 (NGC 224), then NGC 2237 (C 49), and either number of the Double Cluster ("ngc 884") finds it;
  * - `c` / `caldwell` ("c 20"): Caldwell numbers.
  *
  * Anything else matches names by substring, ignoring case, accents and spaces, with names that start with the
- * query first and ties in the options' order (Messier objects by number, then the Caldwell objects by C number,
- * then the Moon, then the planets). An empty query returns every option.
+ * query first and ties in the options' order (Messier objects by number, then the Moon, then the planets, then the
+ * Caldwell objects by C number). An empty query returns every option.
  */
 export function filterTargets(options: readonly TargetOption[], query: string): TargetOption[] {
   const q = normalizeQuery(query);
@@ -82,15 +84,23 @@ export function filterTargets(options: readonly TargetOption[], query: string): 
   if (number) {
     const prefix = number.at(1) ?? ""; // the prefix group is optional
     const digits = number[2];
-    // In number order the exact match always comes first: it is the shortest number with these leading digits.
-    return options
-      .map((option) => ({
-        option,
-        number: Math.min(...queryNumbers(option, prefix).filter((n) => String(n).startsWith(digits))),
-      }))
-      .filter((entry) => Number.isFinite(entry.number))
-      .sort((a, b) => a.number - b.number)
-      .map(({ option }) => option);
+    const byNumber = (prefixes: readonly string[]): TargetOption[] =>
+      // In number order the exact match always comes first: it is the shortest number with these leading digits.
+      options
+        .map((option) => ({
+          option,
+          number: Math.min(
+            ...prefixes.flatMap((p) => queryNumbers(option, p)).filter((n) => String(n).startsWith(digits)),
+          ),
+        }))
+        .filter((entry) => Number.isFinite(entry.number))
+        .sort((a, b) => a.number - b.number)
+        .map(({ option }) => option);
+    if (prefix !== "") {
+      return byNumber([prefix]);
+    }
+    const messier = byNumber(["m"]);
+    return messier.length > 0 ? messier : byNumber(["ngc", "ic"]);
   }
 
   const compact = q.replace(/ /g, "");
