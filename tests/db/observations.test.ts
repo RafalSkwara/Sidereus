@@ -161,68 +161,25 @@ describe("an entry outlives its gear", () => {
   });
 });
 
-describe("target and messier stay in sync (the app deployed before target keys writes messier only)", () => {
-  /** A row as that app inserts it: no target. The generated types require one, which the trigger supplies. */
-  function oldAppEntry(messier: number) {
-    const { target: _target, ...row } = entry(gearA);
-    return { ...row, messier } as unknown as TablesInsert<"observations">;
-  }
-
+describe("the target key (the log's closed grammar; the app validates the catalogue, the database the shape)", () => {
   async function row(id: string) {
-    const { data } = await a.client.from("observations").select("target, messier").eq("id", id).single();
+    const { data } = await a.client.from("observations").select("target").eq("id", id).single();
     return data;
   }
 
-  it("fills target from messier on an insert without target", async () => {
-    const { data, error } = await a.client.from("observations").insert(oldAppEntry(31)).select("id").single();
-    expect(error).toBeNull();
-    if (!data) throw new Error("A could not insert");
-    expect(await row(data.id)).toEqual({ target: "M31", messier: 31 });
-  });
-
-  it("fills messier from a Messier target on an insert without messier", async () => {
-    const { data, error } = await a.client
-      .from("observations")
-      .insert({ ...entry(gearA), target: "M57" })
-      .select("id")
-      .single();
-    expect(error).toBeNull();
-    if (!data) throw new Error("A could not insert");
-    expect(await row(data.id)).toEqual({ target: "M57", messier: 57 });
-  });
-
-  it("stores a planet with no Messier number", async () => {
-    const { data, error } = await a.client
-      .from("observations")
-      .insert({ ...entry(gearA), target: "jupiter" })
-      .select("id")
-      .single();
-    expect(error).toBeNull();
-    if (!data) throw new Error("A could not insert");
-    expect(await row(data.id)).toEqual({ target: "jupiter", messier: null });
-  });
-
-  it("stores the Moon with no Messier number", async () => {
-    const { data, error } = await a.client
-      .from("observations")
-      .insert({ ...entry(gearA), target: "moon" })
-      .select("id")
-      .single();
-    expect(error).toBeNull();
-    if (!data) throw new Error("A could not insert");
-    expect(await row(data.id)).toEqual({ target: "moon", messier: null });
-  });
-
-  it.each([["NGC7000"], ["IC405"]])("stores the Caldwell key %j with no Messier number", async (target) => {
-    const { data, error } = await a.client
-      .from("observations")
-      .insert({ ...entry(gearA), target })
-      .select("id")
-      .single();
-    expect(error).toBeNull();
-    if (!data) throw new Error("A could not insert");
-    expect(await row(data.id)).toEqual({ target, messier: null });
-  });
+  it.each([["M31"], ["M57"], ["M1"], ["M110"], ["jupiter"], ["moon"], ["NGC7000"], ["IC405"]])(
+    "stores the target %j as given",
+    async (target) => {
+      const { data, error } = await a.client
+        .from("observations")
+        .insert({ ...entry(gearA), target })
+        .select("id")
+        .single();
+      expect(error).toBeNull();
+      if (!data) throw new Error("A could not insert");
+      expect(await row(data.id)).toEqual({ target });
+    },
+  );
 
   it.each([
     ["M0"],
@@ -247,60 +204,20 @@ describe("target and messier stay in sync (the app deployed before target keys w
     expect(error).not.toBeNull();
   });
 
-  it("rejects a row with neither target nor messier", async () => {
-    const { target: _target, ...row } = entry(gearA);
-    const { error } = await a.client.from("observations").insert(row as TablesInsert<"observations">);
+  it("rejects a row with no target", async () => {
+    const { target: _target, ...rest } = entry(gearA);
+    const { error } = await a.client.from("observations").insert(rest as TablesInsert<"observations">);
     expect(error).not.toBeNull();
   });
 
-  it("rejects a target and messier that disagree", async () => {
-    for (const pair of [
-      { target: "M31", messier: 13 },
-      { target: "jupiter", messier: 13 },
-    ]) {
-      const { error } = await a.client.from("observations").insert({ ...entry(gearA), ...pair });
-      expect(error).not.toBeNull();
+  it("follows a target edit across Messier, planet, Moon and Caldwell keys", async () => {
+    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
+    if (!data) throw new Error("A could not insert");
+
+    for (const target of ["M42", "saturn", "moon", "NGC7000", "M31", "IC405", "M1"]) {
+      expect((await a.client.from("observations").update({ target }).eq("id", data.id)).error).toBeNull();
+      expect(await row(data.id)).toEqual({ target });
     }
-  });
-
-  it("follows a target edit: messier is re-derived, and cleared for a planet", async () => {
-    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
-    if (!data) throw new Error("A could not insert");
-
-    expect((await a.client.from("observations").update({ target: "M42" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M42", messier: 42 });
-
-    expect((await a.client.from("observations").update({ target: "saturn" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "saturn", messier: null });
-
-    expect((await a.client.from("observations").update({ target: "M1" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M1", messier: 1 });
-  });
-
-  it("follows a target edit to and from the Moon: messier is cleared, then re-derived", async () => {
-    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
-    if (!data) throw new Error("A could not insert");
-
-    expect((await a.client.from("observations").update({ target: "moon" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "moon", messier: null });
-
-    expect((await a.client.from("observations").update({ target: "M42" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M42", messier: 42 });
-  });
-
-  it("follows a target edit to a Caldwell key and back: messier is cleared, then re-derived", async () => {
-    const { data } = await a.client
-      .from("observations")
-      .insert({ ...entry(gearA), target: "M31" })
-      .select("id")
-      .single();
-    if (!data) throw new Error("A could not insert");
-
-    expect((await a.client.from("observations").update({ target: "NGC7000" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "NGC7000", messier: null });
-
-    expect((await a.client.from("observations").update({ target: "M31" }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M31", messier: 31 });
   });
 
   it.each([["Moon"], ["luna"], ["sun"], ["NGC 7000"], ["ngc7000"]])(
@@ -309,25 +226,9 @@ describe("target and messier stay in sync (the app deployed before target keys w
       const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
       if (!data) throw new Error("A could not insert");
       expect((await a.client.from("observations").update({ target }).eq("id", data.id)).error).not.toBeNull();
+      expect(await row(data.id)).toEqual({ target: "M13" });
     },
   );
-
-  it("follows a messier edit (the old app's): target is re-derived", async () => {
-    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
-    if (!data) throw new Error("A could not insert");
-
-    expect((await a.client.from("observations").update({ messier: 92, rating: 2 }).eq("id", data.id)).error).toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M92", messier: 92 });
-  });
-
-  it("rejects an edit that sets a disagreeing pair", async () => {
-    const { data } = await a.client.from("observations").insert(entry(gearA)).select("id").single();
-    if (!data) throw new Error("A could not insert");
-
-    const { error } = await a.client.from("observations").update({ target: "M31", messier: 57 }).eq("id", data.id);
-    expect(error).not.toBeNull();
-    expect(await row(data.id)).toEqual({ target: "M13", messier: 13 });
-  });
 });
 
 describe("observationStore", () => {
@@ -342,13 +243,11 @@ describe("observationStore", () => {
 
     const { data } = await a.client
       .from("observations")
-      .select("target, messier, night, rating, site_id, telescope_id, site_name, telescope_name")
+      .select("target, night, rating, site_id, telescope_id, site_name, telescope_name")
       .eq("site_id", gear.siteId);
     expect(data).toEqual([
       {
         target: "M31",
-        // Filled by the sync trigger for the app version that still reads it.
-        messier: 31,
         night: "2026-09-26",
         rating: 5,
         site_id: gear.siteId,

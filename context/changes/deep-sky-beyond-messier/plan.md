@@ -541,7 +541,7 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 - [x] 3.1 `npm test`, `npx astro check` and `npm run lint` pass — 9d48a79
 - [x] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes — 9d48a79
-- [x] 3.3 The existing e2e Tonight specs pass against the local preview
+- [x] 3.3 The existing e2e Tonight specs pass against the local preview — c8e4e21
 
 #### Manual
 
@@ -552,26 +552,26 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [x] 4.1 `npm run test:db` passes with the new migration applied
-- [x] 4.2 `npm run db:types` produces no diff
-- [x] 4.3 `npm test`, `npx astro check` and `npm run lint` pass
-- [x] 4.4 `npm run test:e2e` passes, including the new log case
-- [x] 4.5 `npm run smoke` passes against local Supabase
+- [x] 4.1 `npm run test:db` passes with the new migration applied — c8e4e21
+- [x] 4.2 `npm run db:types` produces no diff — c8e4e21
+- [x] 4.3 `npm test`, `npx astro check` and `npm run lint` pass — c8e4e21
+- [x] 4.4 `npm run test:e2e` passes, including the new log case — c8e4e21
+- [x] 4.5 `npm run smoke` passes against local Supabase — c8e4e21
 
 #### Manual
 
-- [x] 4.6 Screenshots of picker queries, the `/log` row and the landing kicker in EN/PL × three themes × phone/desktop
-- [x] 4.7 "Mark observed" on a Caldwell row saves and returns with its "seen" tag
+- [x] 4.6 Screenshots of picker queries, the `/log` row and the landing kicker in EN/PL × three themes × phone/desktop — c8e4e21
+- [x] 4.7 "Mark observed" on a Caldwell row saves and returns with its "seen" tag — c8e4e21
 
 ### Phase 5: Contract migration and docs
 
 #### Automated
 
-- [ ] 5.1 `npx supabase db reset` applies all migrations cleanly and `npm run test:db` passes
-- [ ] 5.2 Regenerated `database.types.ts` is committed with no drift
-- [ ] 5.3 `grep` shows only intended `messier` references in migrations, db tests and observations
-- [ ] 5.4 `npm test`, `npx astro check`, `npm run lint` and `npm run smoke` pass
+- [x] 5.1 `npx supabase db reset` applies all migrations cleanly and `npm run test:db` passes
+- [x] 5.2 Regenerated `database.types.ts` is committed with no drift
+- [x] 5.3 `grep` shows only intended `messier` references in migrations, db tests and observations
+- [x] 5.4 `npm test`, `npx astro check`, `npm run lint` and `npm run smoke` pass
 
 #### Manual
 
-- [ ] 5.5 Existing log entries of every kind list and edit correctly after `db reset` plus seed data
+- [x] 5.5 Existing log entries of every kind list and edit correctly after `db reset` plus seed data

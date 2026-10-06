@@ -89,7 +89,7 @@ const TABLES = [
       site_name: "Home",
       telescope_name: "Dobsonian 8in",
     },
-    // Changing the target also exercises the target/messier sync trigger under RLS.
+    // Changing the target also exercises the target key check on update under RLS.
     change: { target: "jupiter", rating: 2 },
   } satisfies TableCase<"observations">,
   {
