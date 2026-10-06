@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Save, Telescope } from "lucide-react";
 import { Combobox } from "@/components/forms/Combobox";
 import { FormField } from "@/components/forms/FormField";
@@ -56,7 +56,7 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
   const [catalogueState, setCatalogueState] = useState<"loading" | "ready" | "unavailable">("loading");
   const [catalogueText, setCatalogueText] = useState("");
   const c = m.gearCatalogue;
-  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const number = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }), [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,12 +76,12 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
   }, []);
 
   function detail(entry: TelescopeEntry) {
-    const line = c.detail.telescope({
+    return c.detail.telescope({
       aperture: number.format(entry.apertureMm),
       focalLength: number.format(entry.focalLengthMm),
       ratio: number.format(entry.focalLengthMm / entry.apertureMm),
+      discontinued: entry.discontinued === true,
     });
-    return entry.discontinued ? `${line} · ${c.detail.discontinued}` : line;
   }
 
   function select(entry: TelescopeEntry) {
@@ -141,6 +141,7 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
           loading: c.telescope.loading,
           unavailable: c.telescope.unavailable,
           more: (hidden) => plural(locale, hidden, c.telescope.more)({ count: number.format(hidden) }),
+          keepTyping: c.keepTyping,
         }}
       />
 

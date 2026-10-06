@@ -336,13 +336,31 @@ export const en = {
         other: (p) => `${p.count} more results: keep typing to narrow them down`,
       } as PluralForms<Count>,
     },
-    /** Option detail lines; every number arrives formatted for the locale ("f/4.9" / "f/4,9"). */
+    /** Read by a screen reader under a capped list; the same for every keystroke, so it is announced once. */
+    keepTyping: "More results: keep typing",
+    /** Option detail lines; every number arrives formatted for the locale ("f/4.9" / "f/4,9"). The markers are optional. */
     detail: {
-      telescope: (p: { aperture: string; focalLength: string; ratio: string }) =>
-        `${p.aperture} mm · ${p.focalLength} mm · f/${p.ratio}`,
-      eyepiece: (p: { focalLength: string; afov: string }) => `${p.focalLength} mm · ${p.afov}°`,
-      eyepieceEstimated: (p: { focalLength: string; afov: string }) => `${p.focalLength} mm · ≈${p.afov}° (estimated)`,
-      discontinued: "discontinued",
+      telescope: (p: { aperture: string; focalLength: string; ratio: string; discontinued?: boolean }) =>
+        [`${p.aperture} mm`, `${p.focalLength} mm`, `f/${p.ratio}`, ...(p.discontinued ? ["discontinued"] : [])].join(
+          " · ",
+        ),
+      /** `zoomMin` / `zoomMax` are set on a zoom's click stops (the focal length is the stop). */
+      eyepiece: (p: {
+        focalLength: string;
+        afov: string;
+        estimated?: boolean;
+        bundled?: boolean;
+        zoomMin?: string;
+        zoomMax?: string;
+        discontinued?: boolean;
+      }) =>
+        [
+          `${p.focalLength} mm`,
+          p.estimated ? `≈${p.afov}° (estimated)` : `${p.afov}°`,
+          ...(p.bundled ? ["bundled"] : []),
+          ...(p.zoomMin !== undefined && p.zoomMax !== undefined ? [`zoom ${p.zoomMin}-${p.zoomMax} mm`] : []),
+          ...(p.discontinued ? ["discontinued"] : []),
+        ].join(" · "),
     },
   },
 

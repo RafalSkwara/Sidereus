@@ -10,7 +10,8 @@ let eyepieces: Promise<readonly EyepieceEntry[]> | undefined;
 
 export function loadTelescopes(): Promise<readonly TelescopeEntry[]> {
   telescopes ??= import("./telescopes.json").then((module) => module.default as unknown as readonly TelescopeEntry[]);
-  // A failed fetch must not be remembered, or the page could never retry.
+  // A failed load is not memoised, so a later call (another form mounting, say) tries again. Nothing in the UI retries
+  // by itself, and the browser may cache a failed `import()`, so a reload can be what recovers.
   telescopes.catch(() => {
     telescopes = undefined;
   });

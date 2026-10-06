@@ -20,7 +20,7 @@ const getKey = (option: TargetOption) => option.key;
 const getLabel = (option: TargetOption) => option.label;
 const getDetail = (option: TargetOption) => option.detail;
 // The log never loads or caps its list, so only the no-match line is ever shown.
-const noStatus = { loading: "", unavailable: "", more: () => "" };
+const noStatus = { loading: "", unavailable: "", more: () => "", keepTyping: "" };
 
 /**
  * The object picker (roadmap S-07, FR-022; planets since M-2 S-01): the shared `Combobox` over the Messier search
@@ -60,6 +60,7 @@ export function TargetPicker({ id, options, initial, label, placeholder, noMatch
         initialLabel={initialOption?.label}
         status={{ noMatch, ...noStatus }}
         maxResults={Infinity}
+        submitOnEnter
         error={error}
       />
       <input type="hidden" name="target" value={selected?.key ?? ""} />

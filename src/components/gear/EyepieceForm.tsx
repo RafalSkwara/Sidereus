@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Eye, Save } from "lucide-react";
 import { Combobox } from "@/components/forms/Combobox";
 import { FieldError, FormField } from "@/components/forms/FormField";
@@ -57,7 +57,7 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
   const [catalogueState, setCatalogueState] = useState<"loading" | "ready" | "unavailable">("loading");
   const [catalogueText, setCatalogueText] = useState("");
   const c = m.gearCatalogue;
-  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const number = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }), [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,9 +77,15 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
   }, []);
 
   function detail(entry: EyepieceEntry) {
-    const params = { focalLength: number.format(entry.focalLengthMm), afov: number.format(entry.afovDeg) };
-    const line = entry.afovEstimated ? c.detail.eyepieceEstimated(params) : c.detail.eyepiece(params);
-    return entry.discontinued ? `${line} · ${c.detail.discontinued}` : line;
+    return c.detail.eyepiece({
+      focalLength: number.format(entry.focalLengthMm),
+      afov: number.format(entry.afovDeg),
+      estimated: entry.afovEstimated === true,
+      bundled: entry.bundled === true,
+      zoomMin: entry.zoom ? number.format(entry.zoom.minMm) : undefined,
+      zoomMax: entry.zoom ? number.format(entry.zoom.maxMm) : undefined,
+      discontinued: entry.discontinued === true,
+    });
   }
 
   function select(entry: EyepieceEntry) {
@@ -152,6 +158,7 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
           loading: c.eyepiece.loading,
           unavailable: c.eyepiece.unavailable,
           more: (hidden) => plural(locale, hidden, c.eyepiece.more)({ count: number.format(hidden) }),
+          keepTyping: c.keepTyping,
         }}
       />
 

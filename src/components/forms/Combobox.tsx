@@ -12,8 +12,10 @@ export interface ComboboxStatus {
   loading: string;
   /** Shown when the options could not be loaded. */
   unavailable: string;
-  /** Shown under a capped list; `hidden` is how many matches are not listed. Numbers are formatted by the host. */
+  /** Shown (visibly) under a capped list; `hidden` is how many matches are not listed. Numbers are formatted by the host. */
   more: (hidden: number) => string;
+  /** What a screen reader hears for a capped list: stable text with no count, so typing does not re-announce it. */
+  keepTyping: string;
 }
 
 interface Props<T> {
@@ -47,18 +49,23 @@ interface Props<T> {
   /** For the `/design` state cells: start open, with this row highlighted. */
   defaultOpen?: boolean;
   defaultActive?: number;
+  /**
+   * Whether Enter in the input may submit the host form when no option is highlighted (default false: a search box
+   * that never posts never saves by accident). The log's target picker sets it, as its tested flow submits that way.
+   */
+  submitOnEnter?: boolean;
   /** Extra classes for the input, for the `/design` focus specimen. */
   inputClassName?: string;
 }
 
-/** No option is highlighted: the list is open for browsing, and Enter submits the form rather than choosing. */
+/** No option is highlighted: the list is open for browsing, and Enter chooses nothing. */
 const NONE = -1;
 
 /**
  * The shared ARIA 1.2 combobox (gear-catalogue; generalised from the log's object picker): an input with
  * `role="combobox"` and a listbox of matches. Arrow keys move through the list, Enter chooses, Escape closes. The
- * input has no `name`, so typed text never posts; the host's own fields carry the form. Enter only chooses while an
- * option is highlighted, otherwise the form submits as usual.
+ * input has no `name`, so typed text never posts; the host's own fields carry the form. Enter chooses the highlighted
+ * option; with none highlighted it does nothing, unless the host opts in with `submitOnEnter` (then the form submits).
  */
 export function Combobox<T>({
   id,
@@ -81,6 +88,7 @@ export function Combobox<T>({
   disabled,
   defaultOpen = false,
   defaultActive = NONE,
+  submitOnEnter = false,
   inputClassName,
 }: Props<T>) {
   const listId = useId();
@@ -100,12 +108,18 @@ export function Combobox<T>({
   const chosenIndex = chosenLabel === undefined ? NONE : shown.findIndex((option) => getLabel(option) === chosenLabel);
   const showList = open && shown.length > 0;
 
+  // `message` is what the live region holds. A capped list announces only that it is capped (the same text for every
+  // keystroke, so it is read once); the changing count is `visibleMore`, outside the live region.
   let message = "";
+  let visibleMore = "";
   if (open) {
     if (state === "loading") message = status.loading;
     else if (state === "unavailable") message = status.unavailable;
     else if (matches.length === 0) message = status.noMatch;
-    else if (hidden > 0) message = status.more(hidden);
+    else if (hidden > 0) {
+      message = status.keepTyping;
+      visibleMore = status.more(hidden);
+    }
   }
 
   useEffect(() => {
@@ -129,13 +143,16 @@ export function Combobox<T>({
         break;
       case "ArrowUp":
         e.preventDefault();
-        setActive((i) => (i === NONE ? Math.max(chosenIndex, 0) : Math.max(i - 1, 0)));
+        setOpen(true);
+        setActive((i) => (!open || i === NONE ? Math.max(chosenIndex, 0) : Math.max(i - 1, 0)));
         break;
       case "Enter":
-        // Enter chooses the highlighted option; with none highlighted, the form submits as usual.
+        // Enter chooses the highlighted option; with none highlighted it submits only for a host that asked for that.
         if (activeOption) {
           e.preventDefault();
           choose(activeOption);
+        } else if (!submitOnEnter) {
+          e.preventDefault();
         }
         break;
       case "Escape":
@@ -188,6 +205,10 @@ export function Combobox<T>({
             setOpen(true);
             setActive(NONE);
           }}
+          onClick={() => {
+            // A click on the focused input (after Escape, say) reopens the list; focus alone does not fire again.
+            setOpen(true);
+          }}
           onBlur={() => {
             setOpen(false);
           }}
@@ -197,7 +218,7 @@ export function Combobox<T>({
         {/* The status line sits outside the listbox (which may only hold options) and is always present, so a change is announced. */}
         <div
           className={cn(
-            message || showList
+            message || visibleMore || showList
               ? "border-border bg-surface absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
               : "sr-only",
           )}
@@ -242,13 +263,21 @@ export function Combobox<T>({
           <p
             role="status"
             className={cn(
-              "text-muted-foreground text-sm",
-              message && "px-3 py-2",
-              showList && message && "border-border border-t",
+              visibleMore ? "sr-only" : "text-muted-foreground text-sm",
+              message && !visibleMore && "px-3 py-2",
+              showList && message && !visibleMore && "border-border border-t",
             )}
           >
             {message}
           </p>
+          {visibleMore && (
+            <p
+              aria-hidden="true"
+              className={cn("text-muted-foreground px-3 py-2 text-sm", showList && "border-border border-t")}
+            >
+              {visibleMore}
+            </p>
+          )}
         </div>
       </div>
       {hint && (

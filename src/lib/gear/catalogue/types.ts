@@ -12,7 +12,7 @@ export interface TelescopeEntry {
   id: string;
   brand: string;
   model: string;
-  /** What fills the form: starts with the brand, at most 60 characters. */
+  /** What fills the form: the brand, model and numbers only (no descriptive words), at most 60 characters. */
   name: string;
   apertureMm: number;
   /** The effective focal length for catadioptrics. */
@@ -31,14 +31,16 @@ export interface EyepieceEntry {
   id: string;
   brand: string;
   line: string;
-  /** What fills the form: starts with the brand, at most 60 characters. */
+  /** What fills the form: the brand, model and numbers only (no descriptive words), at most 60 characters. */
   name: string;
   focalLengthMm: number;
   /** Whole degrees. */
   afovDeg: number;
   design?: EyepieceDesign;
-  /** The AFOV is the typical value for the design, or interpolated for a zoom click stop, not a published figure. */
+  /** The AFOV is the typical value for the design, or interpolated for a zoom click stop between its endpoints, not a published figure. */
   afovEstimated?: true;
+  /** Ships with a telescope (listed in its `bundledEyepieces`); the detail line says so, the name does not. */
+  bundled?: true;
   /** Set on the click stops of a zoom: the published range of the whole eyepiece. */
   zoom?: { minMm: number; maxMm: number };
   aliases?: string[];

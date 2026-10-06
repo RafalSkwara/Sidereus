@@ -21,13 +21,15 @@ are in `LICENSE-DATA.md`.
    agree.
 3. `id` is a stable kebab slug (`skywatcher-heritage-130p`). It never changes once shipped.
 4. `name` is what fills the form: it starts with the brand, is at most 60 characters, and is unique within its file.
-   To shorten a name: "Mak" for Maksutov-Cassegrain, "SCT" for Schmidt-Cassegrain, drop the brand's tagline and the
-   mount (the mount goes in `aliases`). Put the focal length in the name when two models share a name and differ only
-   in it (Explorer 130/900 and 130/650).
+   Brand, model and numbers only: the name is copied into the user's own data in any language, so no descriptive
+   words ("bundled", "Tabletop Dobsonian", "Maksutov", "SCT"), no parentheses, no brand tagline and no mount. Those
+   go in `aliases`, where search still finds them. Put the focal length in the name only when two models share a
+   name and differ only in it (Explorer 130/900 and 130/650).
 5. Numbers: at most one decimal. Telescope aperture 20-1000 mm, focal length 100-5000 mm (the effective focal length
    for a catadioptric), focal ratio f/3-f/16. Eyepiece focal length 2-60 mm, AFOV a whole number of degrees, 30-120.
 6. One entry per optical tube; mount variants go in `aliases`. Barlows are out of scope.
-7. A telescope that ships with eyepieces lists their ids in `bundledEyepieces` (add them to `eyepieces.json` too).
+7. A telescope that ships with eyepieces lists their ids in `bundledEyepieces` (add them to `eyepieces.json` too, with
+   `"bundled": true`; the localised detail line says "bundled", the name does not).
 8. Keep exactly one "Heritage 130" in the telescopes: the e2e search relies on it.
 
 ## Estimated AFOV
@@ -44,7 +46,7 @@ A manufacturer who does not publish an AFOV gets the typical value for the eyepi
 ## Zoom eyepieces
 
 A form stores one focal length and one AFOV, so a zoom becomes one entry per click stop, each with `zoom: { minMm,
-maxMm }` and a name that says where it is set ("Baader Hyperion Zoom 8-24 mm (at 12 mm)"). The AFOV at a click stop is
-interpolated linearly between the published values at the two ends, rounded to whole degrees, and flagged
-`afovEstimated`. For the Baader Hyperion Zoom Mark IV that is 68° at 8 mm down to 50° at 24 mm, which gives 68, 64, 59,
+maxMm }` and a name that says where it is set ("Baader Hyperion Zoom 8-24 mm @ 12 mm"); the detail line says it is a
+zoom. The AFOV at a click stop is interpolated linearly between the published values at the two ends, rounded to whole
+degrees, and flagged `afovEstimated`; the two endpoint stops carry the published figure and are not flagged. For the Baader Hyperion Zoom Mark IV that is 68° at 8 mm down to 50° at 24 mm, which gives 68, 64, 59,
 55 and 50 degrees at 8, 12, 16, 20 and 24 mm.

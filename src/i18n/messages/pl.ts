@@ -325,11 +325,23 @@ export const pl = {
         other: (p) => `Jest jeszcze ${p.count} wyniku: wpisz więcej, aby zawęzić listę`,
       },
     },
+    keepTyping: "Są kolejne wyniki: wpisz więcej",
     detail: {
-      telescope: (p) => `${p.aperture} mm · ${p.focalLength} mm · f/${p.ratio}`,
-      eyepiece: (p) => `${p.focalLength} mm · ${p.afov}°`,
-      eyepieceEstimated: (p) => `${p.focalLength} mm · ok. ${p.afov}° (szacunkowo)`,
-      discontinued: "wycofany z produkcji",
+      telescope: (p) =>
+        [
+          `${p.aperture} mm`,
+          `${p.focalLength} mm`,
+          `f/${p.ratio}`,
+          ...(p.discontinued ? ["wycofany z produkcji"] : []),
+        ].join(" · "),
+      eyepiece: (p) =>
+        [
+          `${p.focalLength} mm`,
+          p.estimated ? `ok. ${p.afov}° (szacunkowo)` : `${p.afov}°`,
+          ...(p.bundled ? ["w zestawie"] : []),
+          ...(p.zoomMin !== undefined && p.zoomMax !== undefined ? [`zoom ${p.zoomMin}-${p.zoomMax} mm`] : []),
+          ...(p.discontinued ? ["wycofany z produkcji"] : []),
+        ].join(" · "),
     },
   },
 

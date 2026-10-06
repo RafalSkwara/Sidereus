@@ -3,6 +3,7 @@ import { z } from "zod";
 import { eyepieceInputSchema, telescopeInputSchema } from "../schemas";
 import eyepieceData from "./eyepieces.json";
 import { eyepieceFill, telescopeFill } from "./fill";
+import { searchCatalogue } from "./search";
 import telescopeData from "./telescopes.json";
 import { EYEPIECE_DESIGNS, type EyepieceEntry, type TelescopeEntry } from "./types";
 
@@ -32,6 +33,7 @@ const eyepieceSchema = z.strictObject({
   afovDeg: z.number().int(),
   design: z.enum(EYEPIECE_DESIGNS).optional(),
   afovEstimated: z.literal(true).optional(),
+  bundled: z.literal(true).optional(),
   zoom: z.strictObject({ minMm: z.number(), maxMm: z.number() }).optional(),
   aliases: z.array(z.string().min(1)).optional(),
   discontinued: z.literal(true).optional(),
@@ -67,6 +69,13 @@ describe("gear catalogue data", () => {
     }
   });
 
+  it("keeps names to brand, model and numbers: descriptive words belong in the aliases", () => {
+    for (const entry of [...telescopes, ...eyepieces]) {
+      expect(entry.name, entry.id).not.toMatch(/[()]/);
+      expect(entry.name, entry.id).not.toMatch(/bundled|tabletop|dobsonian|maksutov|schmidt|\bSCT\b/i);
+    }
+  });
+
   it("fills every telescope into something the telescope schema accepts", () => {
     for (const entry of telescopes) {
       expect(telescopeInputSchema.safeParse(telescopeFill(entry)).success, entry.id).toBe(true);
@@ -87,6 +96,13 @@ describe("gear catalogue data", () => {
       for (const id of entry.bundledEyepieces ?? []) {
         expect(ids.has(id), `${entry.id} -> ${id}`).toBe(true);
       }
+    }
+  });
+
+  it("flags exactly the eyepieces that a telescope bundles", () => {
+    const bundled = new Set(telescopes.flatMap((entry) => entry.bundledEyepieces ?? []));
+    for (const entry of eyepieces) {
+      expect(entry.bundled === true, entry.id).toBe(bundled.has(entry.id));
     }
   });
 
@@ -122,12 +138,15 @@ describe("gear catalogue data", () => {
     }
   });
 
-  it("estimates an AFOV only as the README's typical value for the design, or for a zoom click stop", () => {
+  it("estimates an AFOV only as the README's typical value for the design, or for a zoom stop between its endpoints", () => {
     for (const entry of eyepieces) {
-      if (!entry.afovEstimated) {
+      if (entry.zoom) {
+        // The endpoints' AFOV is published; only the stops between them are interpolated.
+        const endpoint = entry.focalLengthMm === entry.zoom.minMm || entry.focalLengthMm === entry.zoom.maxMm;
+        expect(entry.afovEstimated === true, entry.id).toBe(!endpoint);
         continue;
       }
-      if (entry.zoom) {
+      if (!entry.afovEstimated) {
         continue;
       }
       const design = entry.design;
@@ -139,11 +158,7 @@ describe("gear catalogue data", () => {
   });
 
   it("matches exactly one telescope for 'heritage 130'", () => {
-    const hits = telescopes.filter((entry) =>
-      ["heritage", "130"].every((word) =>
-        [entry.name, ...(entry.aliases ?? [])].join(" ").toLowerCase().replace(/[-/.]/g, " ").includes(word),
-      ),
-    );
+    const hits = searchCatalogue(telescopes, "heritage 130");
     expect(hits.map((entry) => entry.id)).toEqual(["skywatcher-heritage-130p"]);
   });
 });

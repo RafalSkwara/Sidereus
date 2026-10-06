@@ -79,6 +79,7 @@ export default function ComboboxDemo({ id, kind, locale, error }: Props) {
           loading: t.telescope.loading,
           unavailable: t.telescope.unavailable,
           more: (hidden) => plural(locale, hidden, t.telescope.more)({ count: number.format(hidden) }),
+          keepTyping: t.keepTyping,
         }}
         maxResults={kind === "more" ? 2 : 50}
         error={kind === "error" ? error : undefined}
