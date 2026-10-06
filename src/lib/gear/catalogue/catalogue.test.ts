@@ -51,9 +51,9 @@ function hasAtMostOneDecimal(value: number): boolean {
 }
 
 describe("gear catalogue data", () => {
-  it("has the seed's size", () => {
-    expect(telescopes.length).toBeGreaterThanOrEqual(20);
-    expect(eyepieces.length).toBeGreaterThanOrEqual(19);
+  it("keeps the curated size floors (≥ 300 telescopes, ≥ 250 eyepieces)", () => {
+    expect(telescopes.length).toBeGreaterThanOrEqual(300);
+    expect(eyepieces.length).toBeGreaterThanOrEqual(250);
   });
 
   it("gives every entry a unique id, and a unique name within its file", () => {
