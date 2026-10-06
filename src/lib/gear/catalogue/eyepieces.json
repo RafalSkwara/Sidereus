@@ -2054,6 +2054,55 @@
     "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-130p-flextube.html"
   },
   {
+    "id": "skywatcher-bundled-12-5mm-swa",
+    "brand": "Sky-Watcher",
+    "line": "Bundled",
+    "name": "Sky-Watcher 12.5 mm SWA",
+    "focalLengthMm": 12.5,
+    "afovDeg": 70,
+    "design": "other",
+    "bundled": true,
+    "aliases": ["Sky-Watcher bundled 12.5 mm 70 degree", "Skyliner 12.5 mm"],
+    "source": "https://www.skywatcher.com/product/dob-8-traditional/"
+  },
+  {
+    "id": "skywatcher-bundled-20mm",
+    "brand": "Sky-Watcher",
+    "line": "Bundled",
+    "name": "Sky-Watcher 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Sky-Watcher bundled 20 mm", "Super 20 mm"],
+    "source": "https://www.skywatcher.com/product/bk-mak90-eq1/"
+  },
+  {
+    "id": "skywatcher-bundled-20mm-swa",
+    "brand": "Sky-Watcher",
+    "line": "Bundled",
+    "name": "Sky-Watcher 20 mm SWA",
+    "focalLengthMm": 20,
+    "afovDeg": 70,
+    "design": "other",
+    "bundled": true,
+    "aliases": ["Sky-Watcher bundled 20 mm 70 degree", "Skyliner 20 mm"],
+    "source": "https://www.skywatcher.com/product/dob-8-traditional/"
+  },
+  {
+    "id": "skywatcher-bundled-22mm",
+    "brand": "Sky-Watcher",
+    "line": "Bundled",
+    "name": "Sky-Watcher 22 mm",
+    "focalLengthMm": 22,
+    "afovDeg": 70,
+    "design": "other",
+    "bundled": true,
+    "aliases": ["Sky-Watcher bundled 22 mm", "Quattro 22 mm", "Ultra Wide 22 mm"],
+    "source": "https://www.skywatcher.com/product/quattro-150p/"
+  },
+  {
     "id": "skywatcher-bundled-25mm",
     "brand": "Sky-Watcher",
     "line": "Bundled",

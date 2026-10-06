@@ -835,15 +835,123 @@
     "source": "https://optcorp.com/products/orion-starblast-4-5-reflector-telescope-10015"
   },
   {
+    "id": "skywatcher-mercury-607",
+    "brand": "Sky-Watcher",
+    "model": "Mercury-607",
+    "name": "Sky-Watcher Mercury-607",
+    "apertureMm": 60,
+    "focalLengthMm": 700,
+    "aliases": ["Mercury 607", "60/700", "Mercury-607 AZ"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/sky-watcher-mercury-607-refractor-telescope.html"
+  },
+  {
+    "id": "skywatcher-mercury-705",
+    "brand": "Sky-Watcher",
+    "model": "Mercury-705",
+    "name": "Sky-Watcher Mercury-705",
+    "apertureMm": 70,
+    "focalLengthMm": 500,
+    "aliases": ["Mercury 705", "70/500", "BK 705AZ3", "Mercury-705 AZ3"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-705az3/"
+  },
+  {
+    "id": "skywatcher-mercury-707",
+    "brand": "Sky-Watcher",
+    "model": "Mercury-707",
+    "name": "Sky-Watcher Mercury-707",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["Mercury 707", "70/700", "BK 707AZ2", "Mercury-707 AZ2"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-707az2/"
+  },
+  {
+    "id": "skywatcher-evostar-72ed",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 72ED",
+    "name": "Sky-Watcher Evostar 72ED",
+    "apertureMm": 72,
+    "focalLengthMm": 420,
+    "aliases": ["Evostar-72ED", "Evostar 72ED DS-Pro", "72ED", "Evostar 72EDX"],
+    "source": "https://www.skywatcher.com/product/evostar-72ed/"
+  },
+  {
+    "id": "skywatcher-76-700",
+    "brand": "Sky-Watcher",
+    "model": "76/700",
+    "name": "Sky-Watcher 76/700",
+    "apertureMm": 76,
+    "focalLengthMm": 700,
+    "aliases": ["BK 767AZ1", "767AZ1", "Astrolux 76/700", "76/700 Newtonian"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-767az1/"
+  },
+  {
+    "id": "skywatcher-esprit-80edx",
+    "brand": "Sky-Watcher",
+    "model": "Esprit 80EDX",
+    "name": "Sky-Watcher Esprit 80EDX",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["Esprit-80ED", "Esprit 80ED", "Esprit 80"],
+    "source": "https://www.skywatcher.com/product/esprit-80edx/"
+  },
+  {
+    "id": "skywatcher-startravel-80",
+    "brand": "Sky-Watcher",
+    "model": "StarTravel 80",
+    "name": "Sky-Watcher StarTravel 80",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["Startravel-80", "StarTravel 80/400", "BK 804AZ3", "StarTravel 80 AZ3"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-804az3/"
+  },
+  {
     "id": "skywatcher-evostar-80ed",
     "brand": "Sky-Watcher",
     "model": "Evostar 80ED",
     "name": "Sky-Watcher Evostar 80ED",
     "apertureMm": 80,
     "focalLengthMm": 600,
-    "aliases": ["Evostar-80ED", "80ED"],
+    "aliases": ["80ED", "Evostar 80EDX", "Evostar-80ED", "Evostar-80EDX"],
     "discontinued": true,
     "source": "https://astronomics.com/products/sky-watcher-evostar-80ed-80mm-f-7-5-ed-doublet-apochromatic-refractor"
+  },
+  {
+    "id": "skywatcher-evostar-90-660",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 90/660",
+    "name": "Sky-Watcher Evostar 90/660",
+    "apertureMm": 90,
+    "focalLengthMm": 660,
+    "aliases": ["Evostar-90", "Evostar 90/660 AZ Pronto", "90/660"],
+    "bundledEyepieces": ["skywatcher-bundled-10mm", "skywatcher-bundled-25mm"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/achromatic-refractor-54/skywatcher-telescope-refractor-evostar-90-660-on-mount-az-pronto-12685"
+  },
+  {
+    "id": "skywatcher-evostar-90-900",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 90/900",
+    "name": "Sky-Watcher Evostar 90/900",
+    "apertureMm": 90,
+    "focalLengthMm": 900,
+    "aliases": ["Evostar-90/900", "90/900", "BK 909AZ3", "Evostar 90 AZ3"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-909az3/"
+  },
+  {
+    "id": "skywatcher-skymax-90",
+    "brand": "Sky-Watcher",
+    "model": "Skymax 90",
+    "name": "Sky-Watcher Skymax 90",
+    "apertureMm": 90,
+    "focalLengthMm": 1250,
+    "aliases": ["Skymax-90", "Skymax-90 Mak", "Heritage-90", "BK MAK90", "Maksutov 90/1250"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-mak90-eq1/"
   },
   {
     "id": "skywatcher-heritage-100p",
@@ -857,14 +965,55 @@
     "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-100p-tabletop-dobsonian.html"
   },
   {
+    "id": "skywatcher-esprit-100edx",
+    "brand": "Sky-Watcher",
+    "model": "Esprit 100EDX",
+    "name": "Sky-Watcher Esprit 100EDX",
+    "apertureMm": 100,
+    "focalLengthMm": 550,
+    "aliases": ["Esprit-100ED", "Esprit 100ED", "Esprit 100"],
+    "source": "https://www.skywatcher.com/product/esprit-100edx/"
+  },
+  {
+    "id": "skywatcher-evostar-100edx",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 100EDX",
+    "name": "Sky-Watcher Evostar 100EDX",
+    "apertureMm": 100,
+    "focalLengthMm": 700,
+    "aliases": ["Evostar-100EDX", "100EDX"],
+    "source": "https://www.skywatcher.com/product/evostar-100edx/"
+  },
+  {
+    "id": "skywatcher-evostar-100ed",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 100ED",
+    "name": "Sky-Watcher Evostar 100ED",
+    "apertureMm": 100,
+    "focalLengthMm": 900,
+    "aliases": ["Evostar-100ED", "Evostar 100ED DS-Pro", "100ED", "100/900"],
+    "source": "https://astronomics.com/products/sky-watcher-evostar-100ed-100mm-f-9-ed-doublet-apochromatic-refractor"
+  },
+  {
     "id": "skywatcher-startravel-102",
     "brand": "Sky-Watcher",
     "model": "StarTravel 102",
     "name": "Sky-Watcher StarTravel 102",
     "apertureMm": 102,
     "focalLengthMm": 500,
-    "aliases": ["Startravel-102", "StarTravel 102/500", "StarTravel 102 AZ3"],
+    "aliases": ["BK 1025AZ3", "Evostar 102/500", "StarTravel 102 AZ3", "StarTravel 102/500", "Startravel-102"],
     "source": "https://astronomics.com/products/sky-watcher-startravel-102-az3-refractor-telescope"
+  },
+  {
+    "id": "skywatcher-evostar-102-1000",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 102/1000",
+    "name": "Sky-Watcher Evostar 102/1000",
+    "apertureMm": 102,
+    "focalLengthMm": 1000,
+    "aliases": ["Evostar-102", "102/1000", "BK 1021", "BK 1021 OTA"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-1021-ota/"
   },
   {
     "id": "skywatcher-skymax-102",
@@ -877,13 +1026,73 @@
     "source": "https://astronomics.com/products/sky-watcher-skymax-102-102mm-f-12-75-maksutov-cassegrain-optical-tube"
   },
   {
+    "id": "skywatcher-skyhawk-1145p",
+    "brand": "Sky-Watcher",
+    "model": "SkyHawk 1145P",
+    "name": "Sky-Watcher SkyHawk 1145P",
+    "apertureMm": 114,
+    "focalLengthMm": 500,
+    "aliases": ["SkyHawk-1145P", "114/500", "BK P1145EQ1", "P1145", "StarQuest P114"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-p1145eq1/"
+  },
+  {
+    "id": "skywatcher-startravel-120",
+    "brand": "Sky-Watcher",
+    "model": "StarTravel 120",
+    "name": "Sky-Watcher StarTravel 120",
+    "apertureMm": 120,
+    "focalLengthMm": 600,
+    "aliases": ["Startravel-120", "StarTravel 120/600", "Evostar 120/600", "BK 1206AZ3"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.skywatcher.com/product/bk-1206az3/"
+  },
+  {
+    "id": "skywatcher-esprit-120edx",
+    "brand": "Sky-Watcher",
+    "model": "Esprit 120EDX",
+    "name": "Sky-Watcher Esprit 120EDX",
+    "apertureMm": 120,
+    "focalLengthMm": 840,
+    "aliases": ["Esprit-120ED", "Esprit 120ED", "Esprit 120"],
+    "source": "https://www.skywatcher.com/product/esprit-120edx/"
+  },
+  {
+    "id": "skywatcher-evostar-120ed",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 120ED",
+    "name": "Sky-Watcher Evostar 120ED",
+    "apertureMm": 120,
+    "focalLengthMm": 900,
+    "aliases": ["Evostar-120ED", "Evostar 120ED DS-Pro", "Evostar 120EDX", "120/900"],
+    "source": "https://www.skywatcher.com/product/evostar-120edx/"
+  },
+  {
+    "id": "skywatcher-evostar-120",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 120/1000",
+    "name": "Sky-Watcher Evostar 120/1000",
+    "apertureMm": 120,
+    "focalLengthMm": 1000,
+    "aliases": ["Evostar-120", "Evostar 120", "120/1000"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.firstlightoptics.com/evostar/skywatcher-evostar-120-ota.html"
+  },
+  {
     "id": "skywatcher-skymax-127",
     "brand": "Sky-Watcher",
     "model": "Skymax 127",
     "name": "Sky-Watcher Skymax 127",
     "apertureMm": 127,
     "focalLengthMm": 1500,
-    "aliases": ["Skymax-127", "Skymax 127 Mak", "Skymax 127 AZ-GTi", "Maksutov 127/1500"],
+    "aliases": [
+      "MC127 Virtuoso GTi",
+      "Maksutov 127/1500",
+      "Skymax 127 AZ-GTi",
+      "Skymax 127 Mak",
+      "Skymax-127",
+      "Virtuoso GTi 127"
+    ],
     "source": "https://astronomics.com/products/sky-watcher-skymax-127-127mm-f-11-8-maksutov-cassegrain-optical-tube"
   },
   {
@@ -893,7 +1102,7 @@
     "name": "Sky-Watcher Explorer-130PDS",
     "apertureMm": 130,
     "focalLengthMm": 650,
-    "aliases": ["Explorer 130PDS", "130/650", "130PDS"],
+    "aliases": ["130/650", "130PDS", "BK P13065", "Explorer 130PDS", "Explorer-130P", "P130NEQ2"],
     "source": "https://www.firstlightoptics.com/reflectors/skywatcher-explorer-130p-ds-ota.html"
   },
   {
@@ -903,9 +1112,38 @@
     "name": "Sky-Watcher Heritage-130P FlexTube",
     "apertureMm": 130,
     "focalLengthMm": 650,
-    "aliases": ["Heritage 130P", "Heritage 130 Dobsonian"],
+    "aliases": [
+      "DOB130 Virtuoso GTi",
+      "Heritage 130 Dobsonian",
+      "Heritage 130P",
+      "Heritage P130",
+      "P130 Virtuoso GTi",
+      "Virtuoso GTi 130P"
+    ],
     "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
     "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-130p-flextube.html"
+  },
+  {
+    "id": "skywatcher-explorer-130-900",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-130/900",
+    "name": "Sky-Watcher Explorer-130/900",
+    "apertureMm": 130,
+    "focalLengthMm": 900,
+    "aliases": ["Explorer 130", "Explorer-130", "Explorer 130 EQ2", "Explorer-130 EQ2", "130/900"],
+    "bundledEyepieces": ["skywatcher-bundled-10mm", "skywatcher-bundled-25mm"],
+    "source": "https://www.firstlightoptics.com/telescopes-in-stock/skywatcher-explorer-130.html"
+  },
+  {
+    "id": "skywatcher-quattro-150p",
+    "brand": "Sky-Watcher",
+    "model": "Quattro 150P",
+    "name": "Sky-Watcher Quattro 150P",
+    "apertureMm": 150,
+    "focalLengthMm": 600,
+    "aliases": ["Quattro-150P", "Quattro 150", "150/600"],
+    "bundledEyepieces": ["skywatcher-bundled-22mm"],
+    "source": "https://www.skywatcher.com/product/quattro-150p/"
   },
   {
     "id": "skywatcher-explorer-150p",
@@ -918,14 +1156,244 @@
     "source": "https://www.firstlightoptics.com/telescopes-in-stock/skywatcher-explorer-150p-ota.html"
   },
   {
+    "id": "skywatcher-explorer-150pds",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-150PDS",
+    "name": "Sky-Watcher Explorer-150PDS",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Explorer 150PDS", "150PDS", "BK150PDS", "150/750 PDS"],
+    "source": "https://www.skywatcher.com/product/bkp-150-ds/"
+  },
+  {
     "id": "skywatcher-heritage-150p",
     "brand": "Sky-Watcher",
     "model": "Heritage-150P FlexTube",
     "name": "Sky-Watcher Heritage-150P FlexTube",
     "apertureMm": 150,
     "focalLengthMm": 750,
-    "aliases": ["Heritage 150P"],
+    "aliases": ["DOB150 Virtuoso GTi", "Heritage 150P", "Virtuoso GTi 150P"],
     "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
     "source": "https://www.telescoop.nl/en/sky-watcher-heritage-150p-flextube-dobson/"
+  },
+  {
+    "id": "skywatcher-startravel-150",
+    "brand": "Sky-Watcher",
+    "model": "StarTravel 150",
+    "name": "Sky-Watcher StarTravel 150",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Startravel-150", "StarTravel 150/750", "150/750 StarTravel"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/achromatic-refractor-54/skywatcher-telescope-startravel-150-ota-rich-field-refractror-150-750mm-1032"
+  },
+  {
+    "id": "skywatcher-esprit-150edx",
+    "brand": "Sky-Watcher",
+    "model": "Esprit 150EDX",
+    "name": "Sky-Watcher Esprit 150EDX",
+    "apertureMm": 150,
+    "focalLengthMm": 1050,
+    "aliases": ["Esprit-150ED", "Esprit 150ED", "Esprit 150"],
+    "source": "https://www.skywatcher.com/product/esprit-150edx/"
+  },
+  {
+    "id": "skywatcher-evostar-150ed",
+    "brand": "Sky-Watcher",
+    "model": "Evostar 150ED",
+    "name": "Sky-Watcher Evostar 150ED",
+    "apertureMm": 150,
+    "focalLengthMm": 1200,
+    "aliases": ["Evostar-150ED", "Evostar 150ED DS-Pro", "Evostar 150EDX", "150/1200 ED"],
+    "source": "https://www.skywatcher.com/product/evostar-150edx/"
+  },
+  {
+    "id": "skywatcher-explorer-150pl",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-150PL",
+    "name": "Sky-Watcher Explorer-150PL",
+    "apertureMm": 150,
+    "focalLengthMm": 1200,
+    "aliases": ["Explorer 150PL", "Explorer 150/1200", "150/1200", "Explorer-150PL EQ3-2"],
+    "bundledEyepieces": ["skywatcher-bundled-10mm", "skywatcher-bundled-25mm"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/newtonian-telescopes-315/newtonians-other-313/skywatcher-explorer-150pl-newton-teleskop-150-mm-f-8-optischer-tubus-2892"
+  },
+  {
+    "id": "skywatcher-skymax-150",
+    "brand": "Sky-Watcher",
+    "model": "Skymax 150",
+    "name": "Sky-Watcher Skymax 150",
+    "apertureMm": 150,
+    "focalLengthMm": 1800,
+    "aliases": ["Skymax-150", "Skymax-150 Pro", "BK MAK150", "Maksutov 150/1800"],
+    "source": "https://www.skywatcher.com/product/bk-mak150-otaw/"
+  },
+  {
+    "id": "skywatcher-skyliner-150p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-150P",
+    "name": "Sky-Watcher Skyliner-150P",
+    "apertureMm": 153,
+    "focalLengthMm": 1200,
+    "aliases": ["Skyliner 150P", "Classic 150P", "DOB 6 Traditional", "150/1200 Skyliner"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/dob-6-traditional/"
+  },
+  {
+    "id": "skywatcher-skymax-180",
+    "brand": "Sky-Watcher",
+    "model": "Skymax 180",
+    "name": "Sky-Watcher Skymax 180",
+    "apertureMm": 180,
+    "focalLengthMm": 2700,
+    "aliases": ["Skymax-180", "Skymax-180 Pro", "BK MAK180", "Maksutov 180/2700"],
+    "source": "https://www.skywatcher.com/product/bk-mak180-otaw/"
+  },
+  {
+    "id": "skywatcher-mn190",
+    "brand": "Sky-Watcher",
+    "model": "MN190",
+    "name": "Sky-Watcher MN190",
+    "apertureMm": 190,
+    "focalLengthMm": 1000,
+    "aliases": ["BK MN190 DS", "Explorer-190MN", "Explorer 190MN DS-Pro", "MN-190", "Mak-Newtonian 190/1000"],
+    "source": "https://www.skywatcher.com/product/bk-mn190-ds/"
+  },
+  {
+    "id": "skywatcher-explorer-200p",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-200P",
+    "name": "Sky-Watcher Explorer-200P",
+    "apertureMm": 200,
+    "focalLengthMm": 1000,
+    "aliases": ["Explorer 200P", "200/1000", "BKP200"],
+    "bundledEyepieces": ["skywatcher-bundled-10mm", "skywatcher-bundled-25mm"],
+    "source": "https://www.firstlightoptics.com/reflectors/skywatcher-explorer-200p-ota.html"
+  },
+  {
+    "id": "skywatcher-explorer-200pds",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-200PDS",
+    "name": "Sky-Watcher Explorer-200PDS",
+    "apertureMm": 200,
+    "focalLengthMm": 1000,
+    "aliases": ["Explorer 200PDS", "200PDS", "BK200PDS", "200P-DS", "200/1000 PDS"],
+    "source": "https://www.skywatcher.com/product/bkp-p200-ds/"
+  },
+  {
+    "id": "skywatcher-skyliner-200p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-200P",
+    "name": "Sky-Watcher Skyliner-200P",
+    "apertureMm": 203,
+    "focalLengthMm": 1200,
+    "aliases": ["Skyliner 200P", "Classic 200P", "DOB 8 Traditional", "FlexTube 200P", "200/1200 Skyliner"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/dob-8-traditional/"
+  },
+  {
+    "id": "skywatcher-quattro-200",
+    "brand": "Sky-Watcher",
+    "model": "Quattro 200 ST",
+    "name": "Sky-Watcher Quattro 200 ST",
+    "apertureMm": 205,
+    "focalLengthMm": 800,
+    "aliases": ["Quattro 200P", "Quattro-200P", "Quattro 200", "200/800"],
+    "source": "https://www.skywatcher.com/product/quattro-200-st/"
+  },
+  {
+    "id": "skywatcher-explorer-250pds",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-250PDS",
+    "name": "Sky-Watcher Explorer-250PDS",
+    "apertureMm": 250,
+    "focalLengthMm": 1200,
+    "aliases": ["Explorer 250PDS", "250PDS", "BK250PDS", "250/1200 PDS"],
+    "source": "https://www.skywatcher.com/product/bkp-250-ds/"
+  },
+  {
+    "id": "skywatcher-quattro-250",
+    "brand": "Sky-Watcher",
+    "model": "Quattro 250 ST",
+    "name": "Sky-Watcher Quattro 250 ST",
+    "apertureMm": 254,
+    "focalLengthMm": 1000,
+    "aliases": ["Quattro 250P", "Quattro-250P", "Quattro 250", "250/1000"],
+    "source": "https://www.skywatcher.com/product/quattro-250-st/"
+  },
+  {
+    "id": "skywatcher-skyliner-250p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-250P",
+    "name": "Sky-Watcher Skyliner-250P",
+    "apertureMm": 254,
+    "focalLengthMm": 1200,
+    "aliases": ["Skyliner 250P", "Classic 250P", "FlexTube 250P", "DOB 10 Collapsible", "250/1200 Skyliner"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/bk-dob-10-collapsible/"
+  },
+  {
+    "id": "skywatcher-skyliner-300p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-300P FlexTube",
+    "name": "Sky-Watcher Skyliner-300P FlexTube",
+    "apertureMm": 305,
+    "focalLengthMm": 1500,
+    "aliases": ["Skyliner 300P", "FlexTube 300P", "DOB 12 Collapsible", "300P"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/bk-dob-12-collapsible/"
+  },
+  {
+    "id": "skywatcher-skyliner-350p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-350P FlexTube",
+    "name": "Sky-Watcher Skyliner-350P FlexTube",
+    "apertureMm": 355,
+    "focalLengthMm": 1650,
+    "aliases": ["Skyliner 350P", "FlexTube 350P", "DOB 14 Collapsible", "350P"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/bk-dob-14-collapsible/"
+  },
+  {
+    "id": "skywatcher-stargate-16",
+    "brand": "Sky-Watcher",
+    "model": "StarGate 16",
+    "name": "Sky-Watcher StarGate 16",
+    "apertureMm": 406,
+    "focalLengthMm": 1650,
+    "aliases": ["Stargate 16 inch", "StarGate 16 SynScan", "16 inch Stargate"],
+    "source": "https://www.skywatcher.com/product/stargate-16-synscan/"
+  },
+  {
+    "id": "skywatcher-skyliner-400p",
+    "brand": "Sky-Watcher",
+    "model": "Skyliner-400P FlexTube",
+    "name": "Sky-Watcher Skyliner-400P FlexTube",
+    "apertureMm": 406,
+    "focalLengthMm": 1800,
+    "aliases": ["Skyliner 400P", "FlexTube 400P", "DOB 16 Collapsible", "400P"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/bk-dob-16-collapsible/"
+  },
+  {
+    "id": "skywatcher-stargate-18",
+    "brand": "Sky-Watcher",
+    "model": "StarGate 18",
+    "name": "Sky-Watcher StarGate 18",
+    "apertureMm": 458,
+    "focalLengthMm": 1900,
+    "aliases": ["Stargate 18 inch", "StarGate 18 Truss Tube", "StarGate 18 SynScan"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/stargate-18-truss-tube/"
+  },
+  {
+    "id": "skywatcher-stargate-20",
+    "brand": "Sky-Watcher",
+    "model": "StarGate 20",
+    "name": "Sky-Watcher StarGate 20",
+    "apertureMm": 508,
+    "focalLengthMm": 2000,
+    "aliases": ["Stargate 20 inch", "StarGate 20 SynScan"],
+    "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
+    "source": "https://www.skywatcher.com/product/stargate-20-synscan/"
   }
 ]
