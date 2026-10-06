@@ -531,9 +531,9 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 #### Automated
 
 - [x] 3.1 tests/e2e/gear-catalogue.spec.ts passes against the local preview — 36ae3b0
-- [x] 3.2 telescope-selector.spec.ts and observation-log-management.spec.ts pass unchanged
+- [x] 3.2 telescope-selector.spec.ts and observation-log-management.spec.ts pass unchanged — 36ae3b0
 - [x] 3.3 npm run lint, npx astro check and npm test pass — 36ae3b0
-- [x] 3.8 Build lists separate telescopes/eyepieces chunks and the form chunk holds no catalogue data
+- [x] 3.8 Build lists separate telescopes/eyepieces chunks and the form chunk holds no catalogue data — 36ae3b0
 
 #### Manual
 
