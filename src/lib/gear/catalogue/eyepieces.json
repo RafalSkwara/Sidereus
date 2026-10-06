@@ -1,5 +1,135 @@
 [
   {
+    "id": "baader-classic-ortho-6mm",
+    "brand": "Baader",
+    "line": "Classic Ortho",
+    "name": "Baader Classic Ortho 6 mm",
+    "focalLengthMm": 6,
+    "afovDeg": 52,
+    "design": "orthoscopic",
+    "source": "https://www.baader-planetarium.com/en/downloads/dl/file/id/121/classic-ortho-technical-data.pdf"
+  },
+  {
+    "id": "baader-classic-ortho-10mm",
+    "brand": "Baader",
+    "line": "Classic Ortho",
+    "name": "Baader Classic Ortho 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 52,
+    "design": "orthoscopic",
+    "source": "https://www.baader-planetarium.com/en/downloads/dl/file/id/121/classic-ortho-technical-data.pdf"
+  },
+  {
+    "id": "baader-classic-ortho-18mm",
+    "brand": "Baader",
+    "line": "Classic Ortho",
+    "name": "Baader Classic Ortho 18 mm",
+    "focalLengthMm": 18,
+    "afovDeg": 52,
+    "design": "orthoscopic",
+    "source": "https://www.baader-planetarium.com/en/downloads/dl/file/id/121/classic-ortho-technical-data.pdf"
+  },
+  {
+    "id": "baader-classic-plossl-32mm",
+    "brand": "Baader",
+    "line": "Classic Plössl",
+    "name": "Baader Classic Plössl 32 mm",
+    "focalLengthMm": 32,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.baader-planetarium.com/en/downloads/dl/file/id/121/classic-ortho-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-3-5mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 3.5 mm",
+    "focalLengthMm": 3.5,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-5mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-8mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 8 mm",
+    "focalLengthMm": 8,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-10mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-13mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 13 mm",
+    "focalLengthMm": 13,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-17mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 17 mm",
+    "focalLengthMm": 17,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-24mm",
+    "brand": "Baader",
+    "line": "Hyperion",
+    "name": "Baader Hyperion 24 mm",
+    "focalLengthMm": 24,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/de/downloads/dl/file/id/92/hyperion-eyepieces-technical-data.pdf"
+  },
+  {
+    "id": "baader-hyperion-aspheric-31mm",
+    "brand": "Baader",
+    "line": "Hyperion Aspheric",
+    "name": "Baader Hyperion Aspheric 31 mm",
+    "focalLengthMm": 31,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/accessories/optical-accessories/eyepieces/31mm-hyperion-aspheric-2%22-eyepiece.html"
+  },
+  {
+    "id": "baader-hyperion-aspheric-36mm",
+    "brand": "Baader",
+    "line": "Hyperion Aspheric",
+    "name": "Baader Hyperion Aspheric 36 mm",
+    "focalLengthMm": 36,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/36mm-hyperion-aspheric-2%22-eyepiece.html"
+  },
+  {
     "id": "baader-hyperion-zoom-8-24-at-8",
     "brand": "Baader",
     "line": "Hyperion Zoom Mark IV",
@@ -76,6 +206,66 @@
     },
     "aliases": ["Hyperion Zoom Mark IV", "Baader zoom 8-24", "Hyperion Zoom 8-24 mm"],
     "source": "https://www.highpointscientific.com/baader-hyperion-8-24-click-stop-zoom-eyepiece-hyp-zoom"
+  },
+  {
+    "id": "baader-morpheus-4-5mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 4.5 mm",
+    "focalLengthMm": 4.5,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
+  },
+  {
+    "id": "baader-morpheus-6-5mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 6.5 mm",
+    "focalLengthMm": 6.5,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
+  },
+  {
+    "id": "baader-morpheus-9mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
+  },
+  {
+    "id": "baader-morpheus-12-5mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 12.5 mm",
+    "focalLengthMm": 12.5,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
+  },
+  {
+    "id": "baader-morpheus-14mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 14 mm",
+    "focalLengthMm": 14,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
+  },
+  {
+    "id": "baader-morpheus-17-5mm",
+    "brand": "Baader",
+    "line": "Morpheus",
+    "name": "Baader Morpheus 17.5 mm",
+    "focalLengthMm": 17.5,
+    "afovDeg": 76,
+    "design": "other",
+    "source": "https://www.baader-planetarium.com/en/morpheus-76degrees-eyepiece-set-complete.html"
   },
   {
     "id": "bresser-kellner-4mm",
@@ -268,6 +458,56 @@
     "source": "https://www.firstlightoptics.com/bst-starguider-eyepieces/bst-starguider-60-25mm-ed-eyepiece.html"
   },
   {
+    "id": "celestron-luminos-7mm",
+    "brand": "Celestron",
+    "line": "Luminos",
+    "name": "Celestron Luminos 7 mm",
+    "focalLengthMm": 7,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.celestron.com/products/luminos-7mm-eyepiece-125in"
+  },
+  {
+    "id": "celestron-luminos-10mm",
+    "brand": "Celestron",
+    "line": "Luminos",
+    "name": "Celestron Luminos 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.celestron.com/products/luminos-10mm-eyepiece-125in"
+  },
+  {
+    "id": "celestron-luminos-15mm",
+    "brand": "Celestron",
+    "line": "Luminos",
+    "name": "Celestron Luminos 15 mm",
+    "focalLengthMm": 15,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.celestron.com/products/luminos-15mm-eyepiece-125in"
+  },
+  {
+    "id": "celestron-luminos-19mm",
+    "brand": "Celestron",
+    "line": "Luminos",
+    "name": "Celestron Luminos 19 mm",
+    "focalLengthMm": 19,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.celestron.com/products/luminos-19mm-eyepiece-2in"
+  },
+  {
+    "id": "celestron-luminos-31mm",
+    "brand": "Celestron",
+    "line": "Luminos",
+    "name": "Celestron Luminos 31 mm",
+    "focalLengthMm": 31,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.celestron.com/products/luminos-31mm-eyepiece-2in"
+  },
+  {
     "id": "celestron-omni-plossl-4mm",
     "brand": "Celestron",
     "line": "Omni Plössl",
@@ -301,6 +541,16 @@
     "source": "https://www.celestron.com/products/omni-9-mm-eyepiece-125in"
   },
   {
+    "id": "celestron-omni-plossl-12mm",
+    "brand": "Celestron",
+    "line": "Omni Plössl",
+    "name": "Celestron Omni Plössl 12 mm",
+    "focalLengthMm": 12,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.celestron.com/products/omni-12mm-eyepiece-125in"
+  },
+  {
     "id": "celestron-omni-plossl-15mm",
     "brand": "Celestron",
     "line": "Omni Plössl",
@@ -321,6 +571,76 @@
     "design": "plossl",
     "aliases": ["Omni Plossl 32 mm", "Omni 32mm"],
     "source": "https://www.celestron.com/products/omni-32-mm-eyepiece-125in"
+  },
+  {
+    "id": "celestron-omni-plossl-40mm",
+    "brand": "Celestron",
+    "line": "Omni Plössl",
+    "name": "Celestron Omni Plössl 40 mm",
+    "focalLengthMm": 40,
+    "afovDeg": 40,
+    "design": "plossl",
+    "source": "https://www.celestron.com/products/omni-40-mm-eyepiece-125in"
+  },
+  {
+    "id": "celestron-omni-plossl-56mm",
+    "brand": "Celestron",
+    "line": "Omni Plössl",
+    "name": "Celestron Omni Plössl 56 mm",
+    "focalLengthMm": 56,
+    "afovDeg": 47,
+    "design": "plossl",
+    "source": "https://www.celestron.com/products/omni-56mm-eyepiece-2in"
+  },
+  {
+    "id": "celestron-ultima-edge-10mm",
+    "brand": "Celestron",
+    "line": "Ultima Edge",
+    "name": "Celestron Ultima Edge 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 60,
+    "design": "other",
+    "source": "https://www.celestron.com/products/ultima-edge-10mm-flat-field-eyepiece-1-25in"
+  },
+  {
+    "id": "celestron-ultima-edge-15mm",
+    "brand": "Celestron",
+    "line": "Ultima Edge",
+    "name": "Celestron Ultima Edge 15 mm",
+    "focalLengthMm": 15,
+    "afovDeg": 65,
+    "design": "other",
+    "source": "https://www.celestron.com/products/ultima-edge-15mm-flat-field-eyepiece-1-25in"
+  },
+  {
+    "id": "celestron-ultima-edge-18mm",
+    "brand": "Celestron",
+    "line": "Ultima Edge",
+    "name": "Celestron Ultima Edge 18 mm",
+    "focalLengthMm": 18,
+    "afovDeg": 65,
+    "design": "other",
+    "source": "https://www.celestron.com/products/ultima-edge-18mm-flat-field-eyepiece-1-25in"
+  },
+  {
+    "id": "celestron-ultima-edge-24mm",
+    "brand": "Celestron",
+    "line": "Ultima Edge",
+    "name": "Celestron Ultima Edge 24 mm",
+    "focalLengthMm": 24,
+    "afovDeg": 65,
+    "design": "other",
+    "source": "https://www.celestron.com/products/ultima-edge-24mm-flat-field-eyepiece-1-25in"
+  },
+  {
+    "id": "celestron-ultima-edge-30mm",
+    "brand": "Celestron",
+    "line": "Ultima Edge",
+    "name": "Celestron Ultima Edge 30 mm",
+    "focalLengthMm": 30,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.celestron.com/products/ultima-edge-30mm-flat-field-eyepiece-2in"
   },
   {
     "id": "celestron-x-cel-lx-2-3mm",
@@ -1441,6 +1761,117 @@
     "source": "https://optcorp.com/products/orion-32mm-sirius-plossl-eyepiece-1-25"
   },
   {
+    "id": "pentax-xw-3-5mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 3.5 mm",
+    "focalLengthMm": 3.5,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-5mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-7mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 7 mm",
+    "focalLengthMm": 7,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-10mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-14mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 14 mm",
+    "focalLengthMm": 14,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-16-5mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 16.5 mm",
+    "focalLengthMm": 16.5,
+    "afovDeg": 85,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-20mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-23mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 23 mm",
+    "focalLengthMm": 23,
+    "afovDeg": 85,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-30mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 30 mm",
+    "focalLengthMm": 30,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "pentax-xw-40mm",
+    "brand": "Pentax",
+    "line": "XW",
+    "name": "Pentax XW 40 mm",
+    "focalLengthMm": 40,
+    "afovDeg": 70,
+    "design": "other",
+    "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "skywatcher-aero-ed-35mm",
+    "brand": "Sky-Watcher",
+    "line": "Aero ED",
+    "name": "Sky-Watcher Aero ED 35 mm",
+    "focalLengthMm": 35,
+    "afovDeg": 68,
+    "design": "other",
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/eyepieces/skywatcher-aero-2-35mm-ed-eyepiece/p,33189"
+  },
+  {
     "id": "skywatcher-bundled-10mm",
     "brand": "Sky-Watcher",
     "line": "Bundled",
@@ -1465,6 +1896,156 @@
     "bundled": true,
     "aliases": ["Sky-Watcher bundled 25 mm", "Heritage 25 mm"],
     "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-130p-flextube.html"
+  },
+  {
+    "id": "skywatcher-planetary-uwa-2-5mm",
+    "brand": "Sky-Watcher",
+    "line": "Planetary UWA",
+    "name": "Sky-Watcher Planetary UWA 2.5 mm",
+    "focalLengthMm": 2.5,
+    "afovDeg": 58,
+    "design": "other",
+    "source": "https://www.apm-telescopes.net/en/skywatcher-planetary-58-uwa-125-eyepiece-25-mm"
+  },
+  {
+    "id": "skywatcher-planetary-uwa-4mm",
+    "brand": "Sky-Watcher",
+    "line": "Planetary UWA",
+    "name": "Sky-Watcher Planetary UWA 4 mm",
+    "focalLengthMm": 4,
+    "afovDeg": 58,
+    "design": "other",
+    "source": "https://www.apm-telescopes.net/en/skywatcher-planetary-58-uwa-125-eyepiece-4-mm"
+  },
+  {
+    "id": "skywatcher-planetary-uwa-5mm",
+    "brand": "Sky-Watcher",
+    "line": "Planetary UWA",
+    "name": "Sky-Watcher Planetary UWA 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 58,
+    "design": "other",
+    "source": "https://www.teleskop-express.de/en/skywatcher-21/eyepieces-1-25-inch-with-big-field-70/skywatcher-5-mm-planetary-uwa-1-25-eyepiece-58-fully-multi-coated-18276"
+  },
+  {
+    "id": "skywatcher-planetary-uwa-6mm",
+    "brand": "Sky-Watcher",
+    "line": "Planetary UWA",
+    "name": "Sky-Watcher Planetary UWA 6 mm",
+    "focalLengthMm": 6,
+    "afovDeg": 58,
+    "design": "other",
+    "source": "https://www.apm-telescopes.net/en/skywatcher-planetary-58-uwa-125-eyepiece-6-mm"
+  },
+  {
+    "id": "skywatcher-super-plossl-10mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-super-plossl-12-5mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 12.5 mm",
+    "focalLengthMm": 12.5,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-super-plossl-17mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 17 mm",
+    "focalLengthMm": 17,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-super-plossl-20mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-super-plossl-25mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-super-plossl-32mm",
+    "brand": "Sky-Watcher",
+    "line": "Super Plössl",
+    "name": "Sky-Watcher Super Plössl 32 mm",
+    "focalLengthMm": 32,
+    "afovDeg": 52,
+    "design": "plossl",
+    "aliases": ["SP Plössl"],
+    "source": "https://skywatcher.com/product/super-pl-10mm/"
+  },
+  {
+    "id": "skywatcher-swa-5mm",
+    "brand": "Sky-Watcher",
+    "line": "SWA 70",
+    "name": "Sky-Watcher SWA 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 70,
+    "design": "other",
+    "discontinued": true,
+    "source": "https://www.teleskop-spezialisten.de/shop/Astro-Blog-Testimonials/Sky-Watcher-5mm-SWA-70-GRAD-eyepiece-1-25-2-Dual-Fit::2446.html?language=en"
+  },
+  {
+    "id": "skywatcher-swa-13mm",
+    "brand": "Sky-Watcher",
+    "line": "SWA 70",
+    "name": "Sky-Watcher SWA 13 mm",
+    "focalLengthMm": 13,
+    "afovDeg": 70,
+    "design": "other",
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/eyepieces/skywatcher-eyepiece-swa-70d-13mm-1-25-2-/p,33492"
+  },
+  {
+    "id": "skywatcher-swa-17mm",
+    "brand": "Sky-Watcher",
+    "line": "SWA 70",
+    "name": "Sky-Watcher SWA 17 mm",
+    "focalLengthMm": 17,
+    "afovDeg": 70,
+    "design": "other",
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/eyepieces/skywatcher-eyepiece-swa-70d-17mm-1-25-2-/p,33494"
+  },
+  {
+    "id": "skywatcher-swa-32mm",
+    "brand": "Sky-Watcher",
+    "line": "SWA 70",
+    "name": "Sky-Watcher SWA 32 mm",
+    "focalLengthMm": 32,
+    "afovDeg": 70,
+    "design": "other",
+    "discontinued": true,
+    "source": "https://www.teleskop-spezialisten.de/shop/Telescope-accessories/Eyepieces/Wide-angle-eyepieces-up-to-80-GRAD/Sky-Watcher-32mm-SWA-70-GRAD-2-eyepiece::2451.html?language=en"
   },
   {
     "id": "stellalyra-68-wa-7mm",
@@ -1687,6 +2268,516 @@
     "design": "other",
     "aliases": ["SVBony 72° Wide Angle"],
     "source": "https://www.firstlightoptics.com/svbony-eyepieces/svbony-34mm-72-2-wide-angle-eyepiece.html"
+  },
+  {
+    "id": "televue-delite-3mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 3 mm",
+    "focalLengthMm": 3,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-4mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 4 mm",
+    "focalLengthMm": 4,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-5mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-7mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 7 mm",
+    "focalLengthMm": 7,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-9mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-11mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 11 mm",
+    "focalLengthMm": 11,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-13mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 13 mm",
+    "focalLengthMm": 13,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-15mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 15 mm",
+    "focalLengthMm": 15,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delite-18-2mm",
+    "brand": "Tele Vue",
+    "line": "DeLite",
+    "name": "Tele Vue DeLite 18.2 mm",
+    "focalLengthMm": 18.2,
+    "afovDeg": 62,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-3-5mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 3.5 mm",
+    "focalLengthMm": 3.5,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-4-5mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 4.5 mm",
+    "focalLengthMm": 4.5,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-6mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 6 mm",
+    "focalLengthMm": 6,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-8mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 8 mm",
+    "focalLengthMm": 8,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-10mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-12mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 12 mm",
+    "focalLengthMm": 12,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-14mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 14 mm",
+    "focalLengthMm": 14,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-17-3mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 17.3 mm",
+    "focalLengthMm": 17.3,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-delos-24mm",
+    "brand": "Tele Vue",
+    "line": "Delos",
+    "name": "Tele Vue Delos 24 mm",
+    "focalLengthMm": 24,
+    "afovDeg": 72,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-3-7mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 3.7 mm",
+    "focalLengthMm": 3.7,
+    "afovDeg": 110,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-4-7mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 4.7 mm",
+    "focalLengthMm": 4.7,
+    "afovDeg": 110,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-6mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 6 mm",
+    "focalLengthMm": 6,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-8mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 8 mm",
+    "focalLengthMm": 8,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-10mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-13mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 13 mm",
+    "focalLengthMm": 13,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-17mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 17 mm",
+    "focalLengthMm": 17,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-ethos-21mm",
+    "brand": "Tele Vue",
+    "line": "Ethos",
+    "name": "Tele Vue Ethos 21 mm",
+    "focalLengthMm": 21,
+    "afovDeg": 100,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t4-22mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 4",
+    "name": "Tele Vue Nagler Type 4 22 mm",
+    "focalLengthMm": 22,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t5-16mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 5",
+    "name": "Tele Vue Nagler Type 5 16 mm",
+    "focalLengthMm": 16,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t5-31mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 5",
+    "name": "Tele Vue Nagler Type 5 31 mm",
+    "focalLengthMm": 31,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t6-3-5mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 6",
+    "name": "Tele Vue Nagler Type 6 3.5 mm",
+    "focalLengthMm": 3.5,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t6-5mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 6",
+    "name": "Tele Vue Nagler Type 6 5 mm",
+    "focalLengthMm": 5,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t6-7mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 6",
+    "name": "Tele Vue Nagler Type 6 7 mm",
+    "focalLengthMm": 7,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t6-9mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 6",
+    "name": "Tele Vue Nagler Type 6 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t6-13mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 6",
+    "name": "Tele Vue Nagler Type 6 13 mm",
+    "focalLengthMm": 13,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t7-5-5mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 7",
+    "name": "Tele Vue Nagler Type 7 5.5 mm",
+    "focalLengthMm": 5.5,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t7-9mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 7",
+    "name": "Tele Vue Nagler Type 7 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t7-14mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 7",
+    "name": "Tele Vue Nagler Type 7 14 mm",
+    "focalLengthMm": 14,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-nagler-t7-19mm",
+    "brand": "Tele Vue",
+    "line": "Nagler Type 7",
+    "name": "Tele Vue Nagler Type 7 19 mm",
+    "focalLengthMm": 19,
+    "afovDeg": 82,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-panoptic-19mm",
+    "brand": "Tele Vue",
+    "line": "Panoptic",
+    "name": "Tele Vue Panoptic 19 mm",
+    "focalLengthMm": 19,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-panoptic-24mm",
+    "brand": "Tele Vue",
+    "line": "Panoptic",
+    "name": "Tele Vue Panoptic 24 mm",
+    "focalLengthMm": 24,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-panoptic-27mm",
+    "brand": "Tele Vue",
+    "line": "Panoptic",
+    "name": "Tele Vue Panoptic 27 mm",
+    "focalLengthMm": 27,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-panoptic-35mm",
+    "brand": "Tele Vue",
+    "line": "Panoptic",
+    "name": "Tele Vue Panoptic 35 mm",
+    "focalLengthMm": 35,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-panoptic-41mm",
+    "brand": "Tele Vue",
+    "line": "Panoptic",
+    "name": "Tele Vue Panoptic 41 mm",
+    "focalLengthMm": 41,
+    "afovDeg": 68,
+    "design": "other",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-8mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 8 mm",
+    "focalLengthMm": 8,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-11mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 11 mm",
+    "focalLengthMm": 11,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-15mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 15 mm",
+    "focalLengthMm": 15,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-20mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-25mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-32mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 32 mm",
+    "focalLengthMm": 32,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-40mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 40 mm",
+    "focalLengthMm": 40,
+    "afovDeg": 43,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "televue-plossl-55mm",
+    "brand": "Tele Vue",
+    "line": "Plössl",
+    "name": "Tele Vue Plössl 55 mm",
+    "focalLengthMm": 55,
+    "afovDeg": 50,
+    "design": "plossl",
+    "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
   },
   {
     "id": "vixen-npl-4mm",
