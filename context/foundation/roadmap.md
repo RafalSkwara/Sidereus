@@ -26,12 +26,13 @@ milestone_status: open
 - **Source materials:** user description, 2026-09-30 (verbatim below), building on `context/foundation/prd.md` (v2). No real usage evidence exists yet: the author has no equipment and no observing experience, so scope and judgment calls are made on judgment ("we really need to go on vibes here – which is fine, this is mostly a learning project").
 - **User description (verbatim, condensed from the conversation):** "I like option 1 – all these improvements sound great [session plan, offline at a dark site, 'was the verdict right?' in the log, Moon and planets]. Plan 2 – moon, planets etc – yes, this also we need to plan for, I want this. And third thing – I need to improve the add site functionality. First – we need to ask user if he wants to use his current location, of course we prompt him via the browser to allow for location info. This can be only after he click a button (use my location or sth like this). Also we need to give him opportunity to point at a location on a map. So another option of locating the site he wants to add is 'Pick from map' or sth like this. That sounds like a lot of features but we don't have to implement them all at once."
 - **User description, 2026-10-04 (verbatim):** "we make two more tasks that need our attention. First is UI redesign. Both light and dark themes are very generic and look very much like coming from an LLM. This needs to be properly redesigned. Second task is dashboard page and pages after it. What I mean is - tonight page is super crowded right now and it.s really difficult to find anything there. We need a dashboard with cards/tiles that will lead to separate pages for tonight's verdict, tonight's moon, verdict judgement, planets and forecast. Maybe even more or separated differently. […] Both are more Important than anything else"
+- **User description, 2026-10-06 (verbatim):** "I need to add a task which would involve modifying how we add gear, we should provide some list of gear to choose from and not only expect a beginner to be able to type this in. I need a long list for each type of gear added and user should be able to choose from this (via select or something more complex) and the fields would fill in for him after he chooses". Same day the user parked S-04 (double stars): "I really fail to see the value in s-04, at least at this point."
 - **Done when:** every S-NN below is `done`, or explicitly moved to Parked by the user.
 - **Scope anchors:**
   - MS-01: The planets appear on Tonight as targets alongside the Messier objects, with a reason and an eyepiece, and can be logged.
   - MS-02: The Moon appears on Tonight as a target in its own right, not only as interference for faint objects, and can be logged.
   - MS-03: Bright deep-sky objects beyond the Messier catalogue can appear on Tonight ("moon, planets etc").
-  - MS-04: Double stars can appear on Tonight ("etc").
+  - MS-04: Double stars can appear on Tonight ("etc"). Parked 2026-10-06 with S-04.
   - MS-05: Tonight can be read as a plan for the session: a timeline ordered by when each target is best.
   - MS-06: Sidereus is installable and still shows tonight's plan at a dark site with no network.
   - MS-07: After a night, the user can say whether the sky matched the verdict, and see how often the verdicts were right.
@@ -39,6 +40,7 @@ milestone_status: open
   - MS-09: Adding or editing a site offers "Pick from map": the user points at the location on a map.
   - MS-10: The light and dark themes are properly redesigned so they no longer look generic or LLM-made (added 2026-10-04, top priority).
   - MS-11: A dashboard of cards/tiles replaces the crowded Tonight page and leads to separate pages for tonight's verdict, the Moon, the verdict judgement (sky check), planets and the forecast, "maybe even more or separated differently" (added 2026-10-04, top priority).
+  - MS-12: Adding a telescope or eyepiece offers a long list of real models to choose from, and choosing one fills in the fields (added 2026-10-06).
 
 ## Vision recap
 
@@ -50,31 +52,32 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 
 ## At a glance
 
-| ID   | Change ID               | Outcome (user can …)                                                                                                                | Prerequisites | PRD refs | Status      |
-| ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ----------- |
-| S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done        |
-| S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done        |
-| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready       |
-| S-04 | double-stars            | see well-placed double stars on Tonight with an eyepiece that splits them, and log them                                             | S-01          | MS-04    | blocked     |
-| S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done        |
-| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done        |
-| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done        |
-| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | done        |
-| S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done        |
-| S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done        |
-| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked     |
+| ID   | Change ID               | Outcome (user can …)                                                                                                                | Prerequisites | PRD refs | Status  |
+| ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------- |
+| S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done    |
+| S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done    |
+| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | ready   |
+| S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done    |
+| S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done    |
+| S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done    |
+| S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | done    |
+| S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
+| S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
+| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked |
+| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | ready   |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme                 | Chain                             | Note                                                                                                                                                                                                                                                        |
-| ------ | --------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A      | More of the sky       | `S-01` → `S-02` → `S-03` → `S-04` | North-star stream; `S-01` establishes how a non-Messier target is ranked and logged, the rest reuse it. `S-02`, `S-03`, `S-04` may run in parallel once `S-01` lands.                                                                                       |
-| B      | Tonight, page by page | `S-11` → `S-05` → `S-06`          | Top priority (2026-10-04): the dashboard splits Tonight into focused pages; the timeline becomes one of them and the offline slice caches them.                                                                                                             |
-| C      | Checking the verdict  | `S-07`                            | Standalone; needs no equipment to use, only a look out of the window, so it is the one source of real evidence this milestone can collect.                                                                                                                  |
-| D      | Adding a site         | `S-08` → `S-09`                   | Standalone; the smallest user-visible wins, good for interleaving between the heavier Stream A slices.                                                                                                                                                      |
-| E      | The look              | `S-10`                            | Top priority (2026-10-04): a visual identity of its own. Not a prerequisite of `S-11`, but the recommended order is to settle the direction and the shared tokens and components first, so the dashboard pages are built on them (Open Roadmap Question 4). |
+| Stream | Theme                 | Chain                    | Note                                                                                                                                                                                                                                                        |
+| ------ | --------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | More of the sky       | `S-01` → `S-02` → `S-03` | North-star stream; `S-01` establishes how a non-Messier target is ranked and logged, the rest reuse it. `S-02` and `S-03` may run in parallel once `S-01` lands; `S-04` (double stars) parked 2026-10-06.                                                   |
+| B      | Tonight, page by page | `S-11` → `S-05` → `S-06` | Top priority (2026-10-04): the dashboard splits Tonight into focused pages; the timeline becomes one of them and the offline slice caches them.                                                                                                             |
+| C      | Checking the verdict  | `S-07`                   | Standalone; needs no equipment to use, only a look out of the window, so it is the one source of real evidence this milestone can collect.                                                                                                                  |
+| D      | Adding a site         | `S-08` → `S-09`          | Standalone; the smallest user-visible wins, good for interleaving between the heavier Stream A slices.                                                                                                                                                      |
+| E      | The look              | `S-10`                   | Top priority (2026-10-04): a visual identity of its own. Not a prerequisite of `S-11`, but the recommended order is to settle the direction and the shared tokens and components first, so the dashboard pages are built on them (Open Roadmap Question 4). |
+| F      | Adding gear           | `S-12`                   | Added 2026-10-06, ordered before `S-03`: the beginner's first hurdle is typing in specs they don't know.                                                                                                                                                    |
 
 ## Baseline
 
@@ -91,7 +94,7 @@ What's already in place in the codebase as of `2026-09-30` (probed after M-1; ev
 
 ## Foundations
 
-None this milestone. The one cross-cutting change M-2 needs — identifying a target by kind (Messier, planet, Moon, other deep-sky, double star) instead of by Messier number, in the ranking and in the observation log — is folded into S-01, the first slice that consumes it, so it is exercised end to end from the start rather than built ahead of use. S-02, S-03 and S-04 reuse it.
+None this milestone. The one cross-cutting change M-2 needs — identifying a target by kind (Messier, planet, Moon, other deep-sky, double star) instead of by Messier number, in the ranking and in the observation log — is folded into S-01, the first slice that consumes it, so it is exercised end to end from the start rather than built ahead of use. S-02 and S-03 reuse it (S-04 parked 2026-10-06).
 
 ## Slices
 
@@ -118,7 +121,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** moon-as-target
 - **PRD refs:** MS-02
 - **Prerequisites:** S-01 (target identity in the ranking and the log; twilight window for solar-system targets)
-- **Parallel with:** S-03, S-04, S-05, S-06, S-07, S-08, S-09
+- **Parallel with:** S-03, S-05, S-06, S-07, S-08, S-09
 - **Blockers:** —
 - **Unknowns:**
   - What counts as "a Moon night"? Candidate: illumination above 70% and the Moon up for most of the dark window. — Owner: user. Block: no.
@@ -132,7 +135,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** deep-sky-beyond-messier
 - **PRD refs:** MS-03
 - **Prerequisites:** S-01 (target identity)
-- **Parallel with:** S-02, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11
+- **Parallel with:** S-02, S-05, S-06, S-07, S-08, S-09, S-10, S-11
 - **Blockers:** —
 - **Unknowns:**
   - Which objects? Candidate: a curated list of roughly 50–100 bright NGC/IC objects suited to 100–200 mm (the Caldwell selection as a guide, with members too far south for the user's latitudes dropped), taken from the same pinned catalogue source as Messier. — Owner: user. Block: no.
@@ -141,27 +144,13 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Risk:** The scoring was calibrated only against Messier objects; faint objects with missing surface brightness fall back to type-based penalties, so check the new objects' ranks against published seasonal lists as the S-02 checkpoint of M-1 did.
 - **Status:** ready
 
-### S-04: Double stars
-
-- **Outcome:** user can see well-placed double stars on Tonight — which suit suburban skies and moonlit nights — each with its separation, colours where notable, and the lowest-power eyepiece from their own kit that splits it given the telescope's resolving power, and can log them.
-- **Change ID:** double-stars
-- **PRD refs:** MS-04
-- **Prerequisites:** S-01 (target identity)
-- **Parallel with:** S-02, S-03, S-05, S-06, S-07, S-08, S-09, S-10, S-11
-- **Blockers:** —
-- **Unknowns:**
-  - Data source and licence: the current catalogue source has no double stars. Which curated list (with separation, magnitudes and positions) can be redistributed? — Owner: user. Block: yes.
-  - Where do doubles appear: in the main ranking, or as an alternative list promoted on bright-moon or light-polluted nights? Candidate: their own group, promoted when deep-sky scores are poor. — Owner: user. Block: no.
-- **Risk:** Needs new scoring rules (separation against aperture, magnification to split) with no calibration reference; kept last in Stream A so it can be parked cleanly if the data source question has no good answer.
-- **Status:** blocked
-
 ### S-10: A visual identity of its own
 
 - **Outcome:** user sees Sidereus in a distinct, deliberate visual identity in light and dark — its own palette, typography, spacing rhythm, surfaces and component shapes — on every screen, so that a screenshot of any page reads as Sidereus rather than a template; the red night mode keeps its function (no green or blue light) and may adopt the new shapes and type.
 - **Change ID:** visual-redesign
 - **PRD refs:** MS-10
 - **Prerequisites:** —
-- **Parallel with:** S-03, S-04, S-09, S-11
+- **Parallel with:** S-03, S-09, S-11
 - **Blockers:** —
 - **Unknowns:**
   - ~~Which design direction?~~ Settled 2026-10-04: **C · Nightfall** (canvas https://claude.ai/artifact/8VZbxuqAVU1RntyMQ8u6vu): the sky at this hour is the page, a horizon splits the answer from full-width detail bands, no boxed cards, one huge verdict word. — Owner: user.
@@ -176,7 +165,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** tonight-dashboard
 - **PRD refs:** MS-11
 - **Prerequisites:** — (reuses the content Tonight already shows; the recommended order puts it after S-10's direction and tokens, see Open Roadmap Question 4)
-- **Parallel with:** S-03, S-04, S-09, S-10
+- **Parallel with:** S-03, S-09, S-10
 - **Blockers:** —
 - **Unknowns:**
   - ~~Interactive sky (user, 2026-10-04)~~ Settled 2026-10-05: real stars, the 925 naked-eye stars (mag ≤ 4.5) of HYG v4.1 (CC BY-SA 4.0), user 2026-10-05. The dashboard's sky is a horizon panorama with a slider from sunset to sunrise: the top five targets, the planets and the Moon at their real altitude and azimuth, the sky colour following the Sun, and a tap opening the body's page; the server sends the rotations and the tracks, the browser only draws them. Change `interactive-sky`, GitHub #97. — Owner: user (stars), team (how positions reach the island).
@@ -194,7 +183,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** session-plan-timeline
 - **PRD refs:** MS-05
 - **Prerequisites:** S-11 (the timeline becomes one of the dashboard's pages, and possibly a tile)
-- **Parallel with:** S-03, S-04, S-07, S-08, S-09, S-10
+- **Parallel with:** S-03, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:**
   - Is the timeline a second view of Tonight's ranking or a separate plan the user can adjust (reorder, drop, add from the all-objects page)? Candidate: a read-only view first; adjusting is a later change. — Owner: user. Block: no.
@@ -209,7 +198,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** offline-night-plan
 - **PRD refs:** MS-06
 - **Prerequisites:** S-05 (the plan being cached), S-11 (the pages being cached)
-- **Parallel with:** S-03, S-04, S-07, S-08, S-09, S-10
+- **Parallel with:** S-03, S-07, S-08, S-09, S-10
 - **Blockers:** —
 - **Unknowns:**
   - Tonight's content is rendered on the server and fetched by a script after the page loads (see lessons.md, "Tonight's content needs JavaScript"); S-11 may change how its pages load. Can those pages be cached as-is, or does offline need a data snapshot rendered on the device? — Owner: team. Block: no (settled by `/10x-plan` research, after S-11).
@@ -224,7 +213,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** verdict-check
 - **PRD refs:** MS-07
 - **Prerequisites:** —
-- **Parallel with:** S-01, S-02, S-03, S-04, S-05, S-06, S-08, S-09
+- **Parallel with:** S-01, S-02, S-03, S-05, S-06, S-08, S-09
 - **Blockers:** —
 - **Unknowns:**
   - Which verdict is judged? The forecast changes through the evening, so Sidereus has to record the verdict it showed (per user, site and night) when Tonight was viewed. Candidate: store the last verdict shown before the dark window started. — Owner: user. Block: no.
@@ -241,7 +230,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** site-use-my-location
 - **PRD refs:** MS-08
 - **Prerequisites:** —
-- **Parallel with:** S-01, S-02, S-03, S-04, S-05, S-06, S-07
+- **Parallel with:** S-01, S-02, S-03, S-05, S-06, S-07
 - **Blockers:** —
 - **Unknowns:**
   - Should the site form also get onboarding's place-name search, so the add-site options match onboarding's? Candidate: yes, as the same set of choices (use my location · search a place · enter coordinates) shared by both surfaces. — Owner: user. Block: no.
@@ -255,13 +244,29 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **Change ID:** site-pick-from-map
 - **PRD refs:** MS-09
 - **Prerequisites:** S-08 (the shared location picker the map joins as a new option)
-- **Parallel with:** S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-10, S-11
+- **Parallel with:** S-01, S-02, S-03, S-05, S-06, S-07, S-10, S-11
 - **Blockers:** —
 - **Unknowns:**
   - Privacy: the map loads its images (tiles) from a map provider, and tiles requested around the user's home reveal roughly where they live to that provider. The PRD guardrail allows coordinates in third-party requests only for the forecast lookup. Is sending tile requests for the area the user browses acceptable, and under what limits (for example tiles only while the picker is open, no zoom closer than neighbourhood level, a provider that doesn't log or sell requests)? — Owner: user. Block: yes.
   - Which map provider, given its terms, attribution, free-tier limits and the red night theme? Owner: team. Block: no (settled by `/10x-plan` once the privacy question is answered).
 - **Risk:** The only M-2 slice that sends location-revealing requests to a new third party, so it waits for an explicit privacy decision. It also adds the heaviest new client-side dependency in the app, which may affect page weight on onboarding.
 - **Status:** blocked
+
+### S-12: Pick gear from a catalogue
+
+- **Outcome:** user adding a telescope or eyepiece — on the gear pages and in onboarding — can type into a searchable combobox over a long, curated list of real models (telescopes by brand and model; eyepieces by brand, line and focal length); choosing one fills in the form's fields (telescope: name, aperture, focal length; eyepiece: name, focal length, apparent field), which stay editable before saving; "Not listed? Enter manually" keeps today's manual entry.
+- **Change ID:** gear-catalogue
+- **PRD refs:** MS-12
+- **Prerequisites:** —
+- **Parallel with:** S-03, S-09
+- **Blockers:** —
+- **Unknowns:**
+  - ~~How is a model picked?~~ Settled 2026-10-06: a searchable combobox with a "Not listed? Enter manually" escape. — Owner: user.
+  - Catalogue source: no open, redistributable gear database is known, so the candidate is a hand-curated list in the repo (published specs are facts), a few hundred entries across the brands beginners actually buy (Sky-Watcher, Celestron, Bresser, Levenhuk, Orion, Explore Scientific, Baader, SVBony …), each with its source noted. — Owner: team. Block: no.
+  - Does onboarding's five generic telescope presets and two eyepiece kits (`src/lib/onboarding/presets.ts`) give way to the catalogue, or stay as a "not sure what I have" shortcut next to it? Candidate: the combobox replaces the generic telescope choice; the starter-kit shortcut for eyepieces stays, because many scopes ship with a known pair. — Owner: user (UI). Block: no.
+  - Is the chosen catalogue model remembered with the saved gear (a model id), or are only the filled-in numbers stored? Candidate: numbers only, so no migration and no dependency on the list staying stable. — Owner: team. Block: no.
+- **Risk:** Data accuracy across hundreds of hand-entered specs; the plan should validate the list (plausible ranges, unique ids, focal ratio consistent) in a unit test and keep it data, not code. A long list on a phone needs a combobox that stays accessible (keyboard, screen reader, red theme) and small enough not to bloat the gear pages' bundle.
+- **Status:** ready
 
 ## Backlog Handoff
 
@@ -270,7 +275,6 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 | S-01       | planets-on-tonight      | Planets on Tonight: rank, explain, recommend an eyepiece and log  | yes                   | North star; run `/10x-plan planets-on-tonight` · GitHub #65                         |
 | S-02       | moon-as-target          | The Moon as a target on Tonight, with phase notes and logging     | no                    | After S-01 · GitHub #66                                                             |
 | S-03       | deep-sky-beyond-messier | Bright non-Messier deep-sky objects on Tonight                    | no                    | After S-01 · GitHub #67                                                             |
-| S-04       | double-stars            | Double stars on Tonight with a splitting eyepiece                 | no                    | Blocked: data source and licence · GitHub #68                                       |
 | S-10       | visual-redesign         | UI redesign: a distinct visual identity for light and dark themes | yes                   | Top priority; restyle of existing screens, so run it through `/10x-ui` · GitHub #86 |
 | S-11       | tonight-dashboard       | Tonight dashboard: tiles leading to focused pages                 | yes                   | Top priority; new pages, so the ordinary chain from `/10x-new` · GitHub #87         |
 | S-05       | session-plan-timeline   | Session plan: the night as a timeline page                        | no                    | After S-11 (re-scoped 2026-10-04) · GitHub #69                                      |
@@ -278,6 +282,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 | S-07       | verdict-check           | Verdict check: was the sky what Sidereus promised?                | yes                   | Feeds calibration #21 · GitHub #71                                                  |
 | S-08       | site-use-my-location    | "Use my location" on the add/edit site form                       | yes                   | Smallest win · GitHub #72                                                           |
 | S-09       | site-pick-from-map      | "Pick from map" when adding or editing a site                     | no                    | Blocked: map-tile privacy decision · GitHub #73                                     |
+| S-12       | gear-catalogue          | Pick telescopes and eyepieces from a catalogue                    | yes                   | Added 2026-10-06, before S-03; run `/10x-new gear-catalogue` · GitHub #113          |
 
 ## Open Roadmap Questions
 
@@ -288,6 +293,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 
 ## Parked
 
+- **Double stars (was S-04, `double-stars`, GitHub #68, MS-04)** — Why parked: by the user, 2026-10-06. The Moon and planets already give bright-Moon and light-polluted nights something to point at, while doubles need a redistributable data source and new splitting rules with no calibration reference. Kept for a later milestone; the original slice text is in git history.
 - **Finding the object** (star-hopping, sky charts, finder views, named anchor stars) — Why parked: PRD §Non-Goals; floated during M-2 scoping but not chosen. The strongest candidate for a later milestone, because a beginner who can't find a target gives up.
 - **Comets and other transient objects** — Why parked: need regularly refreshed orbital elements from an external feed; outside M-2's "etc".
 - **Adjustable session plan** (reorder, drop, add targets to the timeline) — Why parked: S-05 ships a read-only timeline first.

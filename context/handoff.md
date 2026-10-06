@@ -1,4 +1,4 @@
-# Handoff — 2026-10-06
+# Handoff — 2026-10-06 (updated: S-12 added, S-04 parked)
 
 Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #67. (This replaces the earlier handoffs, which are in git history.)
 
@@ -13,14 +13,16 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
   - **Clearing:** on sign-in, sign-up or sign-out; on the sign-in bounce; on any page rendered signed out; and when a different user commits (`data-owner` = SHA-256 of the user id).
   - **Deploys:** the `/_astro` files that stored pages use are kept across deploys.
 - **Still open in M-2:**
-  - **S-03 deep sky beyond Messier** (`ready`, #67): the next slice to plan.
-  - **S-04 double stars** (`blocked`, #68): the data source and its licence must be decided.
+  - **S-12 gear catalogue** (`ready`, #113, added 2026-10-06): pick telescopes and eyepieces from a long curated list via a searchable combobox that fills in the fields. Ordered **before** S-03.
+  - **S-03 deep sky beyond Messier** (`ready`, #67): next after S-12.
   - **S-09 map picker** (`blocked`, #73): the privacy decision on map tiles must be made.
+  - **S-04 double stars** was **parked** by the user on 2026-10-06 (#68 closed as not planned; roadmap → Parked).
 
 ## Suggested next step
 
-1. **S-03 (#67):** plan it through the ordinary chain (`/10x-new deep-sky-beyond-messier` → `/10x-plan` → `/10x-plan-review` → implement). The catalogue is already generated from the pinned OpenNGC commit that carries the NGC/IC objects (roadmap Baseline, "Engine"), and S-01 settled target identity by kind, so S-03 mostly reuses both.
-2. **Unblock S-04 and S-09:** both need a decision from the user (the double-star data source and licence; the map-tile privacy question). Ask early, since they're the last two slices of M-2 after S-03.
+1. **S-12 (#113):** `/10x-new gear-catalogue` → `/10x-plan` → `/10x-plan-review` → implement. Settled: a searchable combobox with "Not listed? Enter manually"; filled fields stay editable. The roadmap's S-12 entry lists the open candidates (hand-curated list as repo data, numbers-only storage, what happens to onboarding's generic presets in `src/lib/onboarding/presets.ts`).
+2. **S-03 (#67):** then plan it through the ordinary chain. The catalogue is already generated from the pinned OpenNGC commit, and S-01 settled target identity by kind.
+3. **Unblock S-09:** the map-tile privacy question is the last user decision M-2 needs.
 
 **Hard constraints (all UI work):**
 
