@@ -439,4 +439,4 @@ None: no database change. The first deploy installs the worker on the next visit
 - [x] 4.6 Offline notice screenshots in EN/PL × three themes, phone and desktop — d256137
 - [x] 4.7 Disabled controls read "Needs a connection" with visible focus and AA contrast — d256137
 - [x] 4.8 Theme switched offline holds across stored pages — d256137
-- [ ] 4.9 Real-phone install and airplane-mode check
+- [x] 4.9 Real-phone install and airplane-mode check
