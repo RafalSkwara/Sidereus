@@ -1,5 +1,5 @@
 import { getMessages } from "@/i18n";
-import { MESSIER, type MessierObject } from "@/lib/catalogue";
+import { DEEP_SKY, type DeepSkyObject } from "@/lib/catalogue";
 import {
   addDays,
   clearIntervals,
@@ -83,8 +83,8 @@ export interface TonightInput {
   now: Date;
   /** The user's observation log (FR-018); absent means empty. Only what the ranking needs of each entry. */
   log?: readonly LogEntry[];
-  /** The objects to rank; the Messier catalogue unless a test narrows it. */
-  catalogue?: readonly MessierObject[];
+  /** The objects to rank; the deep-sky catalogue (Messier and Caldwell) unless a test narrows it. */
+  catalogue?: readonly DeepSkyObject[];
 }
 
 export interface EyepieceLine {
@@ -99,11 +99,13 @@ export type TonightPair =
 export interface TonightEntry {
   /** 1-based place in the ranking; kept when the Targets page orders by best time. */
   rank: number;
-  /** "M31": the catalogue id, which is also the object's target key in the log. */
+  /** "M31" | "NGC7000": the catalogue id, space-free, which is also the object's target key in the log and its anchor. */
   id: string;
-  /** 31: the key for a localised common name (`@/lib/catalogue/common-names`). */
-  messier: number;
-  /** The catalogue's (English) common name; the page localises it by `messier`. */
+  /** What a row shows as the object's name: "M31", "NGC 7000", "NGC 869 / 884". */
+  label: string;
+  /** 14 for a Caldwell object, else `null`. */
+  caldwell: number | null;
+  /** The catalogue's (English) common name; the page localises it by `id` (`@/lib/catalogue/common-names`). */
   commonName: string | null;
   /** IAU 3-letter abbreviation. */
   constellation: string;
@@ -248,10 +250,12 @@ export interface TonightMoonCard {
 
 /** A faint object tonight's Moon washes out (moonlight-and-the-verdict): listed apart on /tonight/targets, never ranked. */
 export interface TonightWashedOutEntry {
-  /** "M33": the catalogue id. */
+  /** "M33" | "NGC253": the catalogue id. */
   id: string;
-  /** 33: the key for a localised common name. */
-  messier: number;
+  /** What a row shows as the object's name: "M33", "NGC 253". */
+  label: string;
+  /** 14 for a Caldwell object, else `null`. */
+  caldwell: number | null;
   commonName: string | null;
   constellation: string;
   /** Best window and peak, `HH:mm` in the site's time zone. */
@@ -449,7 +453,7 @@ export interface TonightView {
   sessionPlan: TonightSessionPlan | null;
 }
 
-type RankedObjects = RankedEntry<MessierObject, EyepieceRecord>[];
+type RankedObjects = RankedEntry<DeepSkyObject, EyepieceRecord>[];
 type RankedPlanets = ReturnType<typeof rankPlanets>;
 type MoonTargetEntry = NonNullable<ReturnType<typeof moonTarget>>;
 
@@ -459,7 +463,7 @@ function eyepieceLine(telescope: TelescopeRecord, eyepiece: EyepieceRecord): Eye
 
 function toPair(
   telescope: TelescopeRecord,
-  pair: RankedEntry<MessierObject, EyepieceRecord>["pair"],
+  pair: RankedEntry<DeepSkyObject, EyepieceRecord>["pair"],
 ): TonightPair | null {
   if (pair === null) {
     return null;
@@ -586,7 +590,7 @@ export function buildTonight(
   locale: Locale,
   options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean; night?: "tonight" | "next" } = {},
 ): TonightView {
-  const { site, telescope, eyepieces, forecast, now, log = [], catalogue = MESSIER } = input;
+  const { site, telescope, eyepieces, forecast, now, log = [], catalogue = DEEP_SKY } = input;
   const {
     clearedLine,
     cloudOutlookText,
@@ -681,7 +685,7 @@ export function buildTonight(
   }
 
   const status = forecastStatusOf(forecast, now);
-  // Keyed by target key: a Messier object's catalogue id ("M31") or a planet key ("jupiter").
+  // Keyed by target key: a deep-sky object's catalogue id ("M31", "NGC7000") or a planet key ("jupiter").
   const seen = seenSummaries(log, date);
 
   // The verdict card passes the night: a go or marginal verdict over a dark window.
@@ -694,7 +698,7 @@ export function buildTonight(
 
   let ranking: TonightRanking | null = null;
   // The interactive sky's deep-sky targets: the ranking's first `MAX_RANKED_OBJECTS`, the Targets page's top band.
-  let skyObjects: MessierObject[] = [];
+  let skyObjects: DeepSkyObject[] = [];
   if (cardPasses) {
     const ranked = rankObjects({
       site: engineSite,
@@ -704,7 +708,7 @@ export function buildTonight(
       telescope,
       eyepieces,
       catalogue,
-      // The ranking looks up `object.id`, which is the Messier object's target key.
+      // The ranking looks up `object.id`, which is the object's target key ("M31", "NGC7000").
       seen,
       limit: options.limit,
     });
@@ -717,7 +721,8 @@ export function buildTonight(
       entries: ranked.entries.map((entry, i) => ({
         rank: i + 1,
         id: entry.object.id,
-        messier: entry.object.messier,
+        label: entry.object.label,
+        caldwell: entry.object.caldwell,
         commonName: entry.object.commonName,
         constellation: entry.object.constellation,
         windowStart: formatTime(entry.score.window.start, timeZone),
@@ -733,7 +738,8 @@ export function buildTonight(
       washedOutText: washedOutLine(ranked.washedOutCount),
       washedOutEntries: ranked.washedOut.map(({ object, window: best, peak }) => ({
         id: object.id,
-        messier: object.messier,
+        label: object.label,
+        caldwell: object.caldwell,
         commonName: object.commonName,
         constellation: object.constellation,
         windowStart: formatTime(best.start, timeZone),
@@ -956,8 +962,8 @@ export function buildTonight(
         return {
           kind: "object",
           key: object.id,
-          label: object.id,
-          name: commonName ? `${object.id} · ${commonName}` : object.id,
+          label: object.label,
+          name: commonName ? `${object.label} · ${commonName}` : object.label,
           href: `/tonight/targets#object-${object.id}`,
           track: packTrack(track),
         };
@@ -1060,8 +1066,8 @@ export function buildTonight(
           return rowOf(
             "object",
             object.id,
-            object.id,
-            commonName ? `${object.id} · ${commonName}` : object.id,
+            object.label,
+            commonName ? `${object.label} · ${commonName}` : object.label,
             `/tonight/targets#object-${object.id}`,
             score.window,
             peak,

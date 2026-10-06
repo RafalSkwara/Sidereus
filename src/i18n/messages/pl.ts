@@ -475,6 +475,7 @@ export const pl = {
 
     object: {
       inConstellation: (p) => `gwiazdozbiór ${p.constellation}`,
+      caldwell: (p) => `Caldwell ${p.n}`,
       window: "Widoczność",
       best: "Najlepiej",
       findWith: "Do szukania:",

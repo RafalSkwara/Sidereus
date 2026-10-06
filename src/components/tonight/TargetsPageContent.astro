@@ -224,10 +224,11 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                     <li data-washed-out-object={entry.id} class="flex min-h-11 items-center gap-3 py-3">
                       <span class="min-w-0 flex-1">
                         <span class="font-display text-title font-semibold break-words text-muted-foreground">
-                          {entry.id}
+                          {entry.label}
                         </span>
                         {commonName && <span class="text-body text-muted-foreground"> · {commonName}</span>}
                         <span class="block text-label text-muted-foreground">
+                          {entry.caldwell !== null && `${t.object.caldwell({ n: String(entry.caldwell) })} · `}
                           {t.object.inConstellation({ constellation: entry.constellation })}
                         </span>
                       </span>

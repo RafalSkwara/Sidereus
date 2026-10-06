@@ -501,6 +501,7 @@ export const en = {
 
     object: {
       inConstellation: (p: { constellation: string }) => `in ${p.constellation}`,
+      caldwell: (p: { n: string }) => `Caldwell ${p.n}`,
       window: "Window",
       best: "Best",
       findWith: "Find with",

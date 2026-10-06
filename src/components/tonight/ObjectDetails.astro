@@ -21,7 +21,7 @@ const t = getMessages(Astro.locals.locale).tonight.object;
   bestTime={entry.bestTime}
   bestDirection={entry.bestDirection}
   logHref={logHref}
-  srSuffix={entry.id}
+  srSuffix={entry.label}
 >
   {entry.pair?.kind === "pair" && (
     <p class="mt-2 text-label text-foreground">

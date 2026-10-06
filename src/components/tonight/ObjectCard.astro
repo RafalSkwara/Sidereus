@@ -1,7 +1,7 @@
 ---
 // One of tonight's best objects on Targets (tonight-dashboard): a row in the top band's ruled list, its heading and
 // the shared details, open at once. The rest of the list are ObjectRow's expandable rows. Its `object-<id>` id is
-// where the live sky's markers land (`/tonight/targets#object-M31`, interactive-sky).
+// where the live sky's markers land (`/tonight/targets#object-M31` or `#object-NGC7000`, interactive-sky).
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import { getMessages } from "@/i18n";
@@ -19,16 +19,23 @@ const { entry, rank, logHref } = Astro.props;
 const { locale } = Astro.locals;
 const t = getMessages(locale).tonight.object;
 const commonName = localCommonName(entry.id, entry.commonName, locale);
+// The secondary line: "Caldwell 14 · in Per" for a Caldwell object, else "in And".
+const detailLine = [
+  entry.caldwell !== null ? t.caldwell({ n: String(entry.caldwell) }) : null,
+  t.inConstellation({ constellation: entry.constellation }),
+]
+  .filter((part) => part !== null)
+  .join(" · ");
 ---
 
 <li id={`object-${entry.id}`} data-object={entry.id} class="scroll-mt-4 py-4 first:pt-0 last:pb-0">
   <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
     <h3 class="font-display text-title font-semibold break-words text-heading">
       <span class="mr-2 font-mono text-label font-normal text-muted-foreground">{rank}.</span>
-      {entry.id}
+      {entry.label}
       {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
     </h3>
-    <span class="text-label text-muted-foreground">{t.inConstellation({ constellation: entry.constellation })}</span>
+    <span class="text-label text-muted-foreground">{detailLine}</span>
   </div>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 

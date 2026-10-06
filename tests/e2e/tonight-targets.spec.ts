@@ -64,9 +64,11 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
 
   // "Mark observed" inside a row: the form returns to this page (`from=targets`).
   const third = rows.nth(2);
-  // The log link carries the target key ("M31"), the same as the row's `data-object`.
+  // The log link carries the target key ("M31", "NGC7000"), the same as the row's `data-object`; the row shows the
+  // label ("M31", "NGC 7000"), which is what the notice names. Any season's rows can be Caldwell objects.
   const object = await third.getAttribute("data-object");
   if (!object) throw new Error("the third row has no data-object");
+  const label = (await third.locator("summary .font-display").first().innerText()).trim();
   await third.locator("summary").click();
   await third.getByRole("link", { name: new RegExp(en.tonight.object.markObserved) }).click();
   await expect(page).toHaveURL(new RegExp(`/log/new\\?object=${object}&.*&from=targets$`));
@@ -77,7 +79,7 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
   await form.locator('button[type="submit"]').click();
 
   await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${object}$`));
-  await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object }) })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
   // The row just logged is on screen: the page opens the rest of the list for it and scrolls it into view.
   await expect(page.locator(`[data-object="${object}"]`)).toBeInViewport();
 });

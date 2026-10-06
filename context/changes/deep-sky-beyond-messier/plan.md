@@ -526,10 +526,10 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including the new ranking cases and `calibration.test.ts`
-- [x] 2.2 The determinism test passes over `DEEP_SKY` within `LOCAL_BUDGET_MS` locally
-- [x] 2.3 `purity.test.ts` still passes
-- [x] 2.4 `npx astro check` and `npm run lint` pass
+- [x] 2.1 `npm test` passes, including the new ranking cases and `calibration.test.ts` — 15141e2
+- [x] 2.2 The determinism test passes over `DEEP_SKY` within `LOCAL_BUDGET_MS` locally — 15141e2
+- [x] 2.3 `purity.test.ts` still passes — 15141e2
+- [x] 2.4 `npx astro check` and `npm run lint` pass — 15141e2
 
 #### Manual
 
@@ -539,14 +539,14 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [ ] 3.1 `npm test`, `npx astro check` and `npm run lint` pass
-- [ ] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes
+- [x] 3.1 `npm test`, `npx astro check` and `npm run lint` pass
+- [x] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes
 - [ ] 3.3 The existing e2e Tonight specs pass against the local preview
 
 #### Manual
 
-- [ ] 3.4 Screenshots of Tonight surfaces with a Caldwell object in EN/PL × three themes × phone/desktop
-- [ ] 3.5 A Caldwell sky marker scrolls to its row on `/tonight/targets`
+- [x] 3.4 Screenshots of Tonight surfaces with a Caldwell object in EN/PL × three themes × phone/desktop
+- [x] 3.5 A Caldwell sky marker scrolls to its row on `/tonight/targets`
 
 ### Phase 4: Logging Caldwell objects
 

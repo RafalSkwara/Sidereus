@@ -11,7 +11,7 @@ export interface TonightSkyBody {
   kind: "object" | "planet" | "moon";
   /** The catalogue id ("M31"), the planet key ("jupiter") or "moon". */
   key: string;
-  /** The short visible label on the strip: the Messier number ("M13"), or the planet's or the Moon's name. */
+  /** The short visible label on the strip: the object's label ("M13", "NGC 7000"), or the planet's or the Moon's name. */
   label: string;
   /** The full localised name for the marker's accessible name ("M13 · Hercules Cluster"); the label otherwise. */
   name: string;
