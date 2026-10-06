@@ -36,7 +36,7 @@ jobs:
       # Pinned: `latest` asks the GitHub API for the newest release and fails the job when that call is rate-limited.
       - uses: supabase/setup-cli@v1
         with:
-          version: 2.117.0
+          version: 2.119.0
       - run: npm ci
       - name: Start local Supabase
         run: |
@@ -100,7 +100,7 @@ jobs:
       # Pinned: `latest` asks the GitHub API for the newest release and fails the job when that call is rate-limited.
       - uses: supabase/setup-cli@v1
         with:
-          version: 2.117.0
+          version: 2.119.0
       - run: supabase link --project-ref kzdovsrpyxhfduusaqlu
       - run: supabase db push
 
