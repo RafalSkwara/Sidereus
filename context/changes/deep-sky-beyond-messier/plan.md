@@ -539,14 +539,14 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [x] 3.1 `npm test`, `npx astro check` and `npm run lint` pass
-- [x] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes
+- [x] 3.1 `npm test`, `npx astro check` and `npm run lint` pass — 9d48a79
+- [x] 3.2 `npm run build` succeeds and the `TonightSkyView` import guard still passes — 9d48a79
 - [ ] 3.3 The existing e2e Tonight specs pass against the local preview
 
 #### Manual
 
-- [x] 3.4 Screenshots of Tonight surfaces with a Caldwell object in EN/PL × three themes × phone/desktop
-- [x] 3.5 A Caldwell sky marker scrolls to its row on `/tonight/targets`
+- [x] 3.4 Screenshots of Tonight surfaces with a Caldwell object in EN/PL × three themes × phone/desktop — 9d48a79
+- [x] 3.5 A Caldwell sky marker scrolls to its row on `/tonight/targets` — 9d48a79
 
 ### Phase 4: Logging Caldwell objects
 
