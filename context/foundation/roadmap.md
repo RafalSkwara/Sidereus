@@ -64,7 +64,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
 | S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked |
-| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | in-progress |
+| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | done |
 
 ## Streams
 
@@ -266,7 +266,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Does onboarding's five generic telescope presets and two eyepiece kits (`src/lib/onboarding/presets.ts`) give way to the catalogue, or stay as a "not sure what I have" shortcut next to it? Candidate: the combobox replaces the generic telescope choice; the starter-kit shortcut for eyepieces stays, because many scopes ship with a known pair. — Owner: user (UI). Block: no.
   - Is the chosen catalogue model remembered with the saved gear (a model id), or are only the filled-in numbers stored? Candidate: numbers only, so no migration and no dependency on the list staying stable. — Owner: team. Block: no.
 - **Risk:** Data accuracy across hundreds of hand-entered specs; the plan should validate the list (plausible ranges, unique ids, focal ratio consistent) in a unit test and keep it data, not code. A long list on a phone needs a combobox that stays accessible (keyboard, screen reader, red theme) and small enough not to bloat the gear pages' bundle.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -328,3 +328,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-11: user who signs in lands on a dashboard of tiles — tonight's verdict, the Moon, the planets, the deep-sky targets, the forecast for the next nights and the sky check — each tile giving a one-glance summary and opening its own focused page, instead of one long Tonight page; the chosen site and telescope carry across the dashboard and every page.** — Archived 2026-10-05 → `context/archive/2026-10-04-tonight-dashboard/`. Lesson: —.
 - **S-05: user can open the session plan from the dashboard (S-11) as its own page: a timeline of the night for the selected site and telescope: the dark window, moonrise and moonset, and each recommended target placed at its best observing window, ordered by time, so they can follow it from the first target to the last.** — Archived 2026-10-05 → `context/archive/2026-10-05-session-plan-timeline/`. Lesson: —.
 - **S-06: user can install Sidereus on their phone's home screen and, at a site with no network, open the dashboard pages they last loaded for that site — verdict, dark window, targets and timeline — clearly marked with when it was prepared, while screens that need the network say so instead of failing.** — Archived 2026-10-06 → `context/archive/2026-10-05-offline-night-plan/`. Lesson: Make the server unreachable to test a service worker offline (lessons.md).
+- **S-12: user adding a telescope or eyepiece — on the gear pages and in onboarding — can type into a searchable combobox over a long, curated list of real models (telescopes by brand and model; eyepieces by brand, line and focal length); choosing one fills in the form's fields (telescope: name, aperture, focal length; eyepiece: name, focal length, apparent field), which stay editable before saving; "Not listed? Enter manually" keeps today's manual entry.** — Archived 2026-10-06 → `context/archive/2026-10-06-gear-catalogue/`. Lesson: —.
