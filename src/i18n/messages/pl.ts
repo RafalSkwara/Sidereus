@@ -364,7 +364,10 @@ export const pl = {
       heading: "Jaki masz sprzęt?",
       telescope: "Teleskop",
       telescopeHint:
-        "Wybierz najbliższy model, a potem popraw liczby, jeśli Twój się różni. Znajdziesz je na tubusie albo w instrukcji.",
+        "Wyszukaj swój model, a potem popraw liczby, jeśli Twój się różni. Znajdziesz je na tubusie albo w instrukcji.",
+      genericToggle: "Nie wiesz, jaki to model? Wybierz typ",
+      cameWith: (p) => `W komplecie z ${p.model}`,
+      bundledList: (p) => p.sizes.map((size) => `${size} mm`).join(" + "),
       eyepieces: "Okulary",
       eyepiecesHint: "Zacznij od zestawu, a potem popraw, usuń albo dodaj okulary, żeby pasowały do tego, co masz.",
       emptyKit: "Dodasz je później w zakładce Mój sprzęt",

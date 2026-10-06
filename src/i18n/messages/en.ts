@@ -382,7 +382,12 @@ export const en = {
       heading: "What's in your kit?",
       telescope: "Telescope",
       telescopeHint:
-        "Pick the closest match, then adjust the numbers if yours differ. They are printed on the tube or in the manual.",
+        "Search for your model, then adjust the numbers if yours differ. They are printed on the tube or in the manual.",
+      genericToggle: "Not sure of the model? Pick a type",
+      /** The kit card for a catalogue telescope's own eyepieces; `model` is the telescope's catalogue name. */
+      cameWith: (p: { model: string }) => `Came with ${p.model}`,
+      /** The sizes of those eyepieces, already formatted for the locale ("25 mm + 10 mm"). */
+      bundledList: (p: { sizes: string[] }) => p.sizes.map((size) => `${size} mm`).join(" + "),
       eyepieces: "Eyepieces",
       eyepiecesHint: "Start from a set, then edit, remove or add eyepieces to match your case.",
       emptyKit: "Add them later in My gear",

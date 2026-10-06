@@ -41,6 +41,8 @@ test.describe("onboarding in English", () => {
 
     // Defaults stay: "Suburb", the 150 mm reflector and the Supplied pair.
     await expect(page.getByRole("radio", { name: new RegExp(`^${en.onboarding.scenes.suburb.title}`) })).toBeChecked();
+    // The generic telescope types sit in a collapsed disclosure, and getByRole skips a closed <details>.
+    await page.locator("summary", { hasText: en.onboarding.kit.genericToggle }).click();
     await expect(page.getByRole("radio", { name: new RegExp(`^${en.onboarding.telescopes.n150}`) })).toBeChecked();
     await expect(page.getByRole("radio", { name: new RegExp(`^${en.onboarding.eyepieceKits.pair}`) })).toBeChecked();
 
@@ -53,6 +55,44 @@ test.describe("onboarding in English", () => {
     await expect(headline).toHaveText(en.verdict.level.go);
     // The ranking lives on the Targets page (tonight-dashboard); its first object, shown in full, names a pair from
     // the default kit.
+    await page.goto("/tonight/targets");
+    const firstRow = page.locator('section[aria-labelledby="targets-heading"] li[data-object]').first();
+    await expect(firstRow).toBeVisible();
+    await expect(firstRow.getByText(/25 mm/).first()).toBeVisible();
+  });
+
+  test("a catalogue telescope brings its own eyepieces", async ({ page }) => {
+    await stubPlaceSearch(page);
+
+    await signUp(page, "e2e-catalogue");
+
+    await page.locator("#place-search").fill("Madrid");
+    const results = page.getByRole("list", { name: en.location.resultsLabel });
+    await results.getByRole("button", { name: MADRID_LABEL }).click();
+    await expect(page.getByText(en.location.usingPlace({ place: MADRID_LABEL }))).toBeVisible();
+
+    // Options load after hydration; focusing opens the full list once they have, and Enter on an empty list does nothing.
+    const combobox = page.getByRole("combobox", { name: en.gearCatalogue.telescope.label });
+    await combobox.click();
+    await expect(page.getByRole("option").first()).toBeVisible();
+    await combobox.fill("heritage 130");
+    await combobox.press("Enter");
+
+    await expect(page.locator("#telescope-name")).toHaveValue(/Heritage-130P/);
+    await expect(page.locator("#telescope-aperture")).toHaveValue("130");
+    await expect(page.locator("#telescope-focal-length")).toHaveValue("650");
+
+    // The "Came with" kit is selected, with the telescope's 25 mm and 10 mm eyepieces as rows.
+    const cameWith = page.getByRole("radio", { name: /^Came with .*Heritage-130P/ });
+    await expect(cameWith).toBeChecked();
+    const focalLengths = page.locator("[id^='eyepiece-'][id$='-focalLengthMm']");
+    await expect(focalLengths).toHaveCount(2);
+    await expect(focalLengths.nth(0)).toHaveValue("25");
+    await expect(focalLengths.nth(1)).toHaveValue("10");
+
+    await onboardingSubmit(page).click();
+
+    await expect(page).toHaveURL(/\/tonight$/);
     await page.goto("/tonight/targets");
     const firstRow = page.locator('section[aria-labelledby="targets-heading"] li[data-object]').first();
     await expect(firstRow).toBeVisible();

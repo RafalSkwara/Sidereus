@@ -546,9 +546,9 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Automated
 
-- [ ] 4.1 onboarding.spec.ts passes with the disclosure assertion and the catalogue path
-- [ ] 4.2 npm run test:db passes
-- [ ] 4.3 npm run lint, npx astro check and npm test pass
+- [x] 4.1 onboarding.spec.ts passes with the disclosure assertion and the catalogue path
+- [x] 4.2 npm run test:db passes
+- [x] 4.3 npm run lint, npx astro check and npm test pass
 
 #### Manual
 

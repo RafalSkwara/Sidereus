@@ -191,6 +191,9 @@ not yet observing, building toward their own first sessions.
   > for the under-a-minute Primary criterion, so the FR should specify how many
   > and which rather than leaving it open." Resolution: FR amended to require a
   > fixed, named preset set. The exact list is routed to Open Questions.
+  >
+  > Update (2026-10-06, M-2 S-12): a catalogue search was added in front of the
+  > fixed presets, which stay as the "Not sure" fallback.
 
 ### Sites & equipment
 - FR-007: User can create, view, update and delete observing sites (name, coordinates, Bortle class, minimum altitude). Priority: must-have
