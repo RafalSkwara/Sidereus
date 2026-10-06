@@ -32,9 +32,12 @@ const m = getMessages(Astro.locals.locale);
 const neutral = matching === undefined;
 const outlined = current ?? matching;
 const pressed = "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground";
+// Answering needs the network (S-06): offline the form's controls are disabled and this caption shows under them; the
+// page script names it as their description (src/lib/offline/page-state.ts).
+const captionId = `sky-answer-offline-${id}`;
 ---
 
-<form method="POST" action={`/api/log/sky/${encodeURIComponent(id)}`}>
+<form method="POST" action={`/api/log/sky/${encodeURIComponent(id)}`} data-needs-network={captionId}>
   <input type="hidden" name="from" value={from} />
   <div role="group" aria-label={label} class="flex flex-wrap gap-2">
     {SKY_ANSWERS.map((answer) => (
@@ -50,4 +53,7 @@ const pressed = "aria-pressed:border-selected aria-pressed:bg-selected aria-pres
     ))}
   </div>
   <slot />
+  <p id={captionId} class="mt-2 hidden text-label text-muted-foreground offline:block">
+    {m.offline.needsConnection}
+  </p>
 </form>

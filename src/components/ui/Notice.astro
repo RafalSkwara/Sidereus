@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  * The text comes from the slot (catalogue copy); the notice never builds a URL.
  * A live region announces changes, not the text it loads with, so after load the script below takes the text out
  * and puts it back, which makes screen readers read it once. Notices that arrive later (a server island's) get the
- * same once-over when they are added; a data attribute marks each one done. Without JavaScript the text is simply
- * there.
+ * same once-over when they are added, and a notice inside a hidden element gets it when it is shown (the `hidden`
+ * attribute is watched); a data attribute marks each one done. Without JavaScript the text is simply there.
  */
 interface Props {
   tone: "success" | "info" | "warning";
@@ -41,15 +41,25 @@ const { box, icon, Icon } = TONES[tone];
     setTimeout(() => text.replaceChildren(...nodes), 150);
   };
 
-  for (const text of document.querySelectorAll<HTMLElement>(SELECTOR)) announce(text);
+  // A notice inside a hidden element (a stored page's offline notice, offline-night-plan) is announced when it shows.
+  const announceShown = (root: Document | HTMLElement) => {
+    if (root instanceof HTMLElement && root.matches(SELECTOR) && !root.closest("[hidden]")) announce(root);
+    for (const text of root.querySelectorAll<HTMLElement>(SELECTOR)) {
+      if (!text.closest("[hidden]")) announce(text);
+    }
+  };
+
+  announceShown(document);
 
   new MutationObserver((records) => {
     for (const record of records) {
+      if (record.type === "attributes") {
+        if (record.target instanceof HTMLElement && !record.target.hidden) announceShown(record.target);
+        continue;
+      }
       for (const node of record.addedNodes) {
-        if (!(node instanceof HTMLElement)) continue;
-        if (node.matches(SELECTOR)) announce(node);
-        for (const text of node.querySelectorAll<HTMLElement>(SELECTOR)) announce(text);
+        if (node instanceof HTMLElement) announceShown(node);
       }
     }
-  }).observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
 </script>

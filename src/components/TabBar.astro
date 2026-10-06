@@ -31,6 +31,7 @@ const tabs = NAV_ITEMS.map((item) => ({
             <a
               href={tab.href}
               aria-current={tab.current ? "page" : undefined}
+              data-needs-network={tab.needsNetwork ? "" : undefined}
               class:list={[
                 "relative flex h-full flex-col items-center justify-center gap-1 text-xs",
                 "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",

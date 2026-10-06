@@ -7,6 +7,9 @@
 /* `dark:` follows the resolved theme on <html data-theme>, never the OS setting. */
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
+/* `offline:` applies while the device is offline (`<html data-offline>`, src/lib/offline/page-state.ts; S-06). */
+@custom-variant offline (&:where([data-offline] *));
+
 /* `night:` is "under a night sky": a dark or red page, or inside a `.night-sky` scope in the light theme (ui-sky-light). */
 @custom-variant night (&:where(:root:not([data-theme="light"]) *, .night-sky, .night-sky *));
 
@@ -359,6 +362,27 @@
 
 @utility right-topbar-edge {
   right: max(2rem, calc((100vw - 64rem) / 2 + 2rem));
+}
+
+/*
+ * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
+ * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
+ * page script adds `aria-disabled` and swallows the click; "Needs a connection" is their description, or a caption
+ * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons; the
+ * focus outline is left alone, so focus stays visible. The current page's entry keeps its pressed look.
+ */
+:root[data-offline] [data-needs-network]:not([aria-current="page"]),
+:root[data-offline] [data-needs-network] :is(a, button) {
+  cursor: not-allowed;
+  color: var(--muted-foreground);
+  background-color: transparent;
+  text-decoration-line: none;
+}
+
+:root[data-offline] [data-needs-network] button,
+:root[data-offline] button[data-needs-network] {
+  border-style: dashed;
+  border-color: var(--border);
 }
 
 /* The panorama strip's horizontal scrollbar: thin and token-coloured over the sky, so red mode stays red. */

@@ -948,6 +948,8 @@ export const en = {
       action: "Install app",
       iosHint: "Tap Share, then Add to Home Screen.",
     },
+    /** Under (or describing) a control that cannot work offline: Mark observed, sky checks, Log, Gear, sign-out. */
+    needsConnection: "Needs a connection",
     /** A saved Tonight page's warnings, shown only offline (hidden online); the times arrive pre-formatted. */
     notice: {
       prepared: (p: { when: string }) => `Offline · prepared ${p.when}`,

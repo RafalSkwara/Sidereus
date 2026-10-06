@@ -840,6 +840,7 @@ export const pl = {
       action: "Zainstaluj aplikację",
       iosHint: "Stuknij Udostępnij, a potem „Do ekranu początkowego”.",
     },
+    needsConnection: "Wymaga połączenia z siecią",
     notice: {
       prepared: (p) => `Offline · przygotowano ${p.when}`,
       oldForecast: (p) => `Stara prognoza z ${p.when} · plan na ${p.night}`,

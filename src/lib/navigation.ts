@@ -1,10 +1,11 @@
 // The app's three destinations, shared by the wide-screen pill (Topbar.astro) and the phone tab bar
-// (TabBar.astro), so both list the same pages in the same order and agree on which one is current.
+// (TabBar.astro), so both list the same pages in the same order and agree on which one is current. `needsNetwork`:
+// the page cannot be stored for offline use (S-06), so its entry is disabled while offline (`data-needs-network`).
 
 export const NAV_ITEMS = [
-  { href: "/tonight", label: "tonight", icon: "tonight" },
-  { href: "/log", label: "log", icon: "log" },
-  { href: "/gear", label: "myGear", icon: "gear" },
+  { href: "/tonight", label: "tonight", icon: "tonight", needsNetwork: false },
+  { href: "/log", label: "log", icon: "log", needsNetwork: true },
+  { href: "/gear", label: "myGear", icon: "gear", needsNetwork: true },
 ] as const;
 
 export type NavItem = (typeof NAV_ITEMS)[number];

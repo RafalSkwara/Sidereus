@@ -403,33 +403,33 @@ None: no database change. The first deploy installs the worker on the next visit
 
 #### Automated
 
-- [x] 3.1 Offline logic unit tests pass
-- [x] 3.2 Type check passes
-- [x] 3.3 Lint passes
-- [x] 3.4 Build passes
+- [x] 3.1 Offline logic unit tests pass — 32ccadf
+- [x] 3.2 Type check passes — 32ccadf
+- [x] 3.3 Lint passes — 32ccadf
+- [x] 3.4 Build passes — 32ccadf
 
 #### Manual
 
-- [x] 3.5 Dashboard and plan replay offline styled; cache holds pairs, index, /offline and assets
-- [x] 3.6 Offline site switching and last-site default work
-- [x] 3.7 Network-only and never-opened pages show /offline with the stored list
-- [x] 3.8 Sign-out and sign-in as another user purge the cache
-- [x] 3.9 Clock past validUntil serves the next copy, else the stale copy
-- [x] 3.10 A pair stored before a rebuild still renders styled with its live sky
+- [x] 3.5 Dashboard and plan replay offline styled; cache holds pairs, index, /offline and assets — 32ccadf
+- [x] 3.6 Offline site switching and last-site default work — 32ccadf
+- [x] 3.7 Network-only and never-opened pages show /offline with the stored list — 32ccadf
+- [x] 3.8 Sign-out and sign-in as another user purge the cache — 32ccadf
+- [x] 3.9 Clock past validUntil serves the next copy, else the stale copy — 32ccadf
+- [x] 3.10 A pair stored before a rebuild still renders styled with its live sky — 32ccadf
 
 ### Phase 4: Offline state in the page, tests and docs
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass
-- [ ] 4.2 Type check passes
-- [ ] 4.3 Lint passes
-- [ ] 4.4 Offline e2e spec passes
-- [ ] 4.5 Full e2e suite passes
+- [x] 4.1 Unit tests pass
+- [x] 4.2 Type check passes
+- [x] 4.3 Lint passes
+- [x] 4.4 Offline e2e spec passes
+- [x] 4.5 Full e2e suite passes
 
 #### Manual
 
-- [ ] 4.6 Offline notice screenshots in EN/PL × three themes, phone and desktop
-- [ ] 4.7 Disabled controls read "Needs a connection" with visible focus and AA contrast
-- [ ] 4.8 Theme switched offline holds across stored pages
+- [x] 4.6 Offline notice screenshots in EN/PL × three themes, phone and desktop
+- [x] 4.7 Disabled controls read "Needs a connection" with visible focus and AA contrast
+- [x] 4.8 Theme switched offline holds across stored pages
 - [ ] 4.9 Real-phone install and airplane-mode check
