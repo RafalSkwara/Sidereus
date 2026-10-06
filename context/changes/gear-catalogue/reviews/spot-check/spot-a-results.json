@@ -1,0 +1,308 @@
+[
+ {
+  "id": "skywatcher-explorer-150p",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 150,
+   "focalLengthMm": 750
+  },
+  "note": "FLO OTA page; awaiting stock, not discontinued."
+ },
+ {
+  "id": "bresser-messier-12-305-1525",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 305,
+   "focalLengthMm": 1525
+  },
+  "note": "Available."
+ },
+ {
+  "id": "levenhuk-skyline-plus-120s",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 114,
+   "focalLengthMm": 900
+  },
+  "note": "Page confirms 114mm despite '120S' name."
+ },
+ {
+  "id": "levenhuk-skyline-120x1000",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 114,
+   "focalLengthMm": 1000
+  },
+  "note": "Page confirms 114mm mirror."
+ },
+ {
+  "id": "skywatcher-skyliner-150p",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 153,
+   "focalLengthMm": 1200
+  },
+  "note": "Sky-Watcher DOB 6\" Traditional; eyepieces 20mm & 12.5mm 70deg match bundle."
+ },
+ {
+  "id": "explore-scientific-ed102-fcd100",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 102,
+   "focalLengthMm": 714
+  },
+  "note": "Sold out on ES store, no discontinuation notice; not flagged discontinued - plausible."
+ },
+ {
+  "id": "stellarvue-svx180t-2",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 180,
+   "focalLengthMm": 1260
+  },
+  "note": "In production."
+ },
+ {
+  "id": "levenhuk-skyline-travel-50",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 50,
+   "focalLengthMm": 360
+  },
+  "note": "Eyepieces H20/H8 match bundle."
+ },
+ {
+  "id": "skywatcher-explorer-250pds",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 250,
+   "focalLengthMm": 1200
+  },
+  "note": "Page is BK250PDS."
+ },
+ {
+  "id": "ts-optics-starscope-114-900",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 114,
+   "focalLengthMm": 900
+  },
+  "note": "EQ3-1 kit; K25/K10 eyepieces match bundle."
+ },
+ {
+  "id": "stellalyra-8-f6",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 203,
+   "focalLengthMm": 1200
+  },
+  "note": "9/15 Super-Plossl + 30mm 2in SuperView match bundle; awaiting stock."
+ },
+ {
+  "id": "bresser-national-geographic-76-700",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 76,
+   "focalLengthMm": 700
+  },
+  "note": "Available."
+ },
+ {
+  "id": "celestron-inspire-80az",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 80,
+   "focalLengthMm": 900
+  },
+  "note": "20/10mm match bundle; out of stock at Celestron, in stock at dealers."
+ },
+ {
+  "id": "askar-71f",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 71,
+   "focalLengthMm": 490
+  },
+  "note": "Sharpstar (Askar maker) page; quadruplet astrograph, in stock."
+ },
+ {
+  "id": "levenhuk-blitz-50-base",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 50,
+   "focalLengthMm": 600
+  },
+  "note": "Available."
+ },
+ {
+  "id": "celestron-nexstar-90slt",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 90,
+   "focalLengthMm": 1250
+  },
+  "note": "25/9mm match bundle."
+ },
+ {
+  "id": "levenhuk-skyline-plus-80s",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 76,
+   "focalLengthMm": 700
+  },
+  "note": "Page confirms 76mm despite '80S' name."
+ },
+ {
+  "id": "skywatcher-heritage-100p",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 100,
+   "focalLengthMm": 400
+  },
+  "note": "25/10mm match bundle; in stock."
+ },
+ {
+  "id": "svbony-mk105",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 105,
+   "focalLengthMm": 1365
+  },
+  "note": "In stock."
+ },
+ {
+  "id": "saxon-deepsky-10",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 254,
+   "focalLengthMm": 1200
+  },
+  "note": "Plossl 25/10mm match bundle; in stock."
+ },
+ {
+  "id": "omegon-pronewton-n-153-750",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 153,
+   "focalLengthMm": 750
+  },
+  "note": "Page: 'Product not available anymore' - discontinued:true confirmed."
+ },
+ {
+  "id": "explore-scientific-firstlight-203-1218",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 203,
+   "focalLengthMm": 1218
+  },
+  "note": "25mm Plossl matches bundle; sold out. Page model code is ESFL8, alias 'FL-DOB0806' not on page (alias unverified)."
+ },
+ {
+  "id": "apertura-ad10",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 254,
+   "focalLengthMm": 1250
+  },
+  "note": "9mm SP + 30mm SV match bundle; backorder, not discontinued."
+ },
+ {
+  "id": "celestron-powerseeker-50az",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 50,
+   "focalLengthMm": 600
+  },
+  "note": "20/12/4mm match bundle."
+ },
+ {
+  "id": "celestron-nexstar-6se",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 150,
+   "focalLengthMm": 1500
+  },
+  "note": "In stock. Alias caution: 'NexStar Evolution 6' is a different product (same C6 OTA, different mount)."
+ },
+ {
+  "id": "skywatcher-heritage-150p",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 150,
+   "focalLengthMm": 750
+  },
+  "note": "25/10mm match bundle; in stock. Alias caution: 'Virtuoso GTi 150P'/'DOB150 Virtuoso GTi' is the GoTo variant (same optics), not this page's product."
+ },
+ {
+  "id": "celestron-powerseeker-114eq",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 114,
+   "focalLengthMm": 900
+  },
+  "note": "20/4mm match bundle."
+ },
+ {
+  "id": "explore-scientific-6-inch-152-760",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 152,
+   "focalLengthMm": 760
+  },
+  "note": "25/10mm Plossl match bundle; limited stock."
+ },
+ {
+  "id": "celestron-nexstar-4se",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 102,
+   "focalLengthMm": 1325
+  },
+  "note": "25mm matches bundle."
+ },
+ {
+  "id": "celestron-advanced-vx-200-1000",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 200,
+   "focalLengthMm": 1000
+  },
+  "note": "20mm matches bundle; low stock."
+ },
+ {
+  "id": "vixen-sd81s",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 81,
+   "focalLengthMm": 625
+  },
+  "note": "Page labelled 'Discontinued items' - discontinued:true confirmed."
+ },
+ {
+  "id": "skywatcher-evostar-90-900",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 90,
+   "focalLengthMm": 900
+  },
+  "note": "BK 909AZ3; Super 25/10 match bundle."
+ },
+ {
+  "id": "bresser-messier-nt-150s-750",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 150,
+   "focalLengthMm": 750
+  },
+  "note": "OTA; 26mm Super Ploessl matches bundle."
+ },
+ {
+  "id": "bresser-sirius-70-900",
+  "verdict": "MATCH",
+  "pageValues": {
+   "apertureMm": 70,
+   "focalLengthMm": 900
+  },
+  "note": "Pre-order (delivery 28 Nov 2026), item number changed 4512001 -> 11030; refreshed, not discontinued. Not flagged - plausible."
+ }
+]

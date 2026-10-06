@@ -560,9 +560,9 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Automated
 
-- [ ] 5.1 catalogue.test.ts passes with floors of 300 telescopes and 250 eyepieces
-- [ ] 5.2 npm run lint, npx astro check, npm test and npm run build pass
-- [ ] 5.3 The full e2e suite passes on the local preview
+- [x] 5.1 catalogue.test.ts passes with floors of 300 telescopes and 250 eyepieces
+- [x] 5.2 npm run lint, npx astro check, npm test and npm run build pass
+- [x] 5.3 The full e2e suite passes on the local preview
 
 #### Manual
 

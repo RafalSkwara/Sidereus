@@ -43,10 +43,13 @@ A manufacturer who does not publish an AFOV gets the typical value for the eyepi
 | Kellner (SR) | 45°  |
 | Huygens (H)  | 40°  |
 
+A bundled eyepiece whose page gives only its focal length gets a design by its kind: the "Super" and "SR" eyepieces
+shipped with beginner scopes count as Kellner, "H" as Huygens, "PL" as Plössl.
+
 ## Zoom eyepieces
 
 A form stores one focal length and one AFOV, so a zoom becomes one entry per click stop, each with `zoom: { minMm,
 maxMm }` and a name that says where it is set ("Baader Hyperion Zoom 8-24 mm @ 12 mm"); the detail line says it is a
 zoom. The AFOV at a click stop is interpolated linearly between the published values at the two ends, rounded to whole
-degrees, and flagged `afovEstimated`; the two endpoint stops carry the published figure and are not flagged. For the Baader Hyperion Zoom Mark IV that is 68° at 8 mm down to 50° at 24 mm, which gives 68, 64, 59,
+degrees (halves round up), and flagged `afovEstimated`; the two endpoint stops carry the published figure and are not flagged. For the Baader Hyperion Zoom Mark IV that is 68° at 8 mm down to 50° at 24 mm, which gives 68, 64, 59,
 55 and 50 degrees at 8, 12, 16, 20 and 24 mm.

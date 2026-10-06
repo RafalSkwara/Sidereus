@@ -1209,7 +1209,7 @@
     "name": "Explore Scientific FirstLight 203/1218",
     "apertureMm": 203,
     "focalLengthMm": 1218,
-    "aliases": ["FirstLight 8 inch Dobsonian", "FL-DOB0806"],
+    "aliases": ["FirstLight 8 inch Dobsonian"],
     "bundledEyepieces": ["explore-scientific-bundled-25mm"],
     "source": "https://astronomics.com/products/explore-firstlight-8-f-6-dobsonian-telescope"
   },
