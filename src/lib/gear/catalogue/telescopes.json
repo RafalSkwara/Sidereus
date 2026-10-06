@@ -1,66 +1,43 @@
 [
   {
-    "id": "skywatcher-heritage-130p",
-    "brand": "Sky-Watcher",
-    "model": "Heritage-130P FlexTube",
-    "name": "Sky-Watcher Heritage-130P FlexTube",
-    "apertureMm": 130,
-    "focalLengthMm": 650,
-    "aliases": ["Heritage 130P", "Heritage 130 Dobsonian"],
-    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
-    "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-130p-flextube.html"
+    "id": "bresser-national-geographic-114-900",
+    "brand": "Bresser",
+    "model": "National Geographic 114/900",
+    "name": "Bresser National Geographic 114/900",
+    "apertureMm": 114,
+    "focalLengthMm": 900,
+    "aliases": ["National Geographic 114/900 AZ", "NatGeo 114/900", "Bresser 114/900"],
+    "source": "https://www.bresser.com/p/national-geographic-114-900-reflector-telescope-az-9011200"
   },
   {
-    "id": "skywatcher-heritage-100p",
-    "brand": "Sky-Watcher",
-    "model": "Heritage-100P",
-    "name": "Sky-Watcher Heritage-100P",
-    "apertureMm": 100,
-    "focalLengthMm": 400,
-    "aliases": ["Heritage 100P", "Heritage 100P Tabletop Dobsonian"],
-    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
-    "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-100p-tabletop-dobsonian.html"
-  },
-  {
-    "id": "skywatcher-heritage-150p",
-    "brand": "Sky-Watcher",
-    "model": "Heritage-150P FlexTube",
-    "name": "Sky-Watcher Heritage-150P FlexTube",
-    "apertureMm": 150,
-    "focalLengthMm": 750,
-    "aliases": ["Heritage 150P"],
-    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
-    "source": "https://www.telescoop.nl/en/sky-watcher-heritage-150p-flextube-dobson/"
-  },
-  {
-    "id": "celestron-starsense-explorer-dx-130az",
+    "id": "celestron-astromaster-70az",
     "brand": "Celestron",
-    "model": "StarSense Explorer DX 130AZ",
-    "name": "Celestron StarSense Explorer DX 130AZ",
-    "apertureMm": 130,
-    "focalLengthMm": 650,
-    "aliases": ["StarSense DX 130", "SSE DX 130AZ"],
-    "source": "https://www.highpointscientific.com/celestron-starsense-explorer-dx-130az-newtonian-reflector"
+    "model": "AstroMaster 70AZ",
+    "name": "Celestron AstroMaster 70AZ",
+    "apertureMm": 70,
+    "focalLengthMm": 900,
+    "aliases": ["AstroMaster 70 AZ"],
+    "source": "https://www.highpointscientific.com/celestron-astromaster-70az-70mm-refractor-telescope-21061"
   },
   {
-    "id": "skywatcher-skymax-127",
-    "brand": "Sky-Watcher",
-    "model": "Skymax 127",
-    "name": "Sky-Watcher Skymax 127",
-    "apertureMm": 127,
-    "focalLengthMm": 1500,
-    "aliases": ["Skymax-127", "Skymax 127 Mak", "Skymax 127 AZ-GTi", "Maksutov 127/1500"],
-    "source": "https://astronomics.com/products/sky-watcher-skymax-127-127mm-f-11-8-maksutov-cassegrain-optical-tube"
+    "id": "celestron-astromaster-90az",
+    "brand": "Celestron",
+    "model": "AstroMaster 90AZ",
+    "name": "Celestron AstroMaster 90AZ",
+    "apertureMm": 90,
+    "focalLengthMm": 1000,
+    "aliases": ["AstroMaster 90 AZ"],
+    "source": "https://www.celestron.com/products/astromaster-90az-telescope"
   },
   {
-    "id": "skywatcher-skymax-102",
-    "brand": "Sky-Watcher",
-    "model": "Skymax 102",
-    "name": "Sky-Watcher Skymax 102",
-    "apertureMm": 102,
-    "focalLengthMm": 1300,
-    "aliases": ["Skymax-102", "Skymax 102 Mak", "Skymax 102 AZ-GTi", "Maksutov 102/1300"],
-    "source": "https://astronomics.com/products/sky-watcher-skymax-102-102mm-f-12-75-maksutov-cassegrain-optical-tube"
+    "id": "celestron-inspire-100az",
+    "brand": "Celestron",
+    "model": "Inspire 100AZ",
+    "name": "Celestron Inspire 100AZ",
+    "apertureMm": 100,
+    "focalLengthMm": 660,
+    "aliases": ["Inspire 100 AZ"],
+    "source": "https://www.celestron.com/products/inspire-100az-refractor-telescope"
   },
   {
     "id": "celestron-nexstar-5se",
@@ -71,6 +48,36 @@
     "focalLengthMm": 1250,
     "aliases": ["NexStar 5 SE", "NexStar 5SE SCT", "5SE", "Schmidt-Cassegrain 125/1250"],
     "source": "https://www.celestron.com/products/nexstar-5se-computerized-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-127eq",
+    "brand": "Celestron",
+    "model": "PowerSeeker 127EQ",
+    "name": "Celestron PowerSeeker 127EQ",
+    "apertureMm": 127,
+    "focalLengthMm": 1000,
+    "aliases": ["PowerSeeker 127 EQ"],
+    "source": "https://www.highpointscientific.com/celestron-powerseeker-127-eq-reflecting-telescope-21049"
+  },
+  {
+    "id": "celestron-astromaster-130eq",
+    "brand": "Celestron",
+    "model": "AstroMaster 130EQ",
+    "name": "Celestron AstroMaster 130EQ",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["AstroMaster 130 EQ"],
+    "source": "https://www.celestron.com/products/astromaster-130eq-telescope-with-phone-adapter-t-adapter-barlow-lens"
+  },
+  {
+    "id": "celestron-starsense-explorer-dx-130az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer DX 130AZ",
+    "name": "Celestron StarSense Explorer DX 130AZ",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["StarSense DX 130", "SSE DX 130AZ"],
+    "source": "https://www.highpointscientific.com/celestron-starsense-explorer-dx-130az-newtonian-reflector"
   },
   {
     "id": "celestron-nexstar-6se",
@@ -103,84 +110,26 @@
     "source": "https://optcorp.com/products/orion-starblast-4-5-reflector-telescope-10015"
   },
   {
-    "id": "bresser-national-geographic-114-900",
-    "brand": "Bresser",
-    "model": "National Geographic 114/900",
-    "name": "Bresser National Geographic 114/900",
-    "apertureMm": 114,
-    "focalLengthMm": 900,
-    "aliases": ["National Geographic 114/900 AZ", "NatGeo 114/900", "Bresser 114/900"],
-    "source": "https://www.bresser.com/p/national-geographic-114-900-reflector-telescope-az-9011200"
-  },
-  {
-    "id": "skywatcher-explorer-150p",
+    "id": "skywatcher-evostar-80ed",
     "brand": "Sky-Watcher",
-    "model": "Explorer-150P",
-    "name": "Sky-Watcher Explorer-150P",
-    "apertureMm": 150,
-    "focalLengthMm": 750,
-    "aliases": ["Explorer 150P", "150/750", "Explorer-150P EQ3-2", "150P EQ3"],
-    "source": "https://www.firstlightoptics.com/telescopes-in-stock/skywatcher-explorer-150p-ota.html"
+    "model": "Evostar 80ED",
+    "name": "Sky-Watcher Evostar 80ED",
+    "apertureMm": 80,
+    "focalLengthMm": 600,
+    "aliases": ["Evostar-80ED", "80ED"],
+    "discontinued": true,
+    "source": "https://astronomics.com/products/sky-watcher-evostar-80ed-80mm-f-7-5-ed-doublet-apochromatic-refractor"
   },
   {
-    "id": "skywatcher-explorer-130pds",
+    "id": "skywatcher-heritage-100p",
     "brand": "Sky-Watcher",
-    "model": "Explorer-130PDS",
-    "name": "Sky-Watcher Explorer-130PDS",
-    "apertureMm": 130,
-    "focalLengthMm": 650,
-    "aliases": ["Explorer 130PDS", "130/650", "130PDS"],
-    "source": "https://www.firstlightoptics.com/reflectors/skywatcher-explorer-130p-ds-ota.html"
-  },
-  {
-    "id": "celestron-astromaster-70az",
-    "brand": "Celestron",
-    "model": "AstroMaster 70AZ",
-    "name": "Celestron AstroMaster 70AZ",
-    "apertureMm": 70,
-    "focalLengthMm": 900,
-    "aliases": ["AstroMaster 70 AZ"],
-    "source": "https://www.highpointscientific.com/celestron-astromaster-70az-70mm-refractor-telescope-21061"
-  },
-  {
-    "id": "celestron-astromaster-90az",
-    "brand": "Celestron",
-    "model": "AstroMaster 90AZ",
-    "name": "Celestron AstroMaster 90AZ",
-    "apertureMm": 90,
-    "focalLengthMm": 1000,
-    "aliases": ["AstroMaster 90 AZ"],
-    "source": "https://www.celestron.com/products/astromaster-90az-telescope"
-  },
-  {
-    "id": "celestron-astromaster-130eq",
-    "brand": "Celestron",
-    "model": "AstroMaster 130EQ",
-    "name": "Celestron AstroMaster 130EQ",
-    "apertureMm": 130,
-    "focalLengthMm": 650,
-    "aliases": ["AstroMaster 130 EQ"],
-    "source": "https://www.celestron.com/products/astromaster-130eq-telescope-with-phone-adapter-t-adapter-barlow-lens"
-  },
-  {
-    "id": "celestron-inspire-100az",
-    "brand": "Celestron",
-    "model": "Inspire 100AZ",
-    "name": "Celestron Inspire 100AZ",
+    "model": "Heritage-100P",
+    "name": "Sky-Watcher Heritage-100P",
     "apertureMm": 100,
-    "focalLengthMm": 660,
-    "aliases": ["Inspire 100 AZ"],
-    "source": "https://www.celestron.com/products/inspire-100az-refractor-telescope"
-  },
-  {
-    "id": "celestron-powerseeker-127eq",
-    "brand": "Celestron",
-    "model": "PowerSeeker 127EQ",
-    "name": "Celestron PowerSeeker 127EQ",
-    "apertureMm": 127,
-    "focalLengthMm": 1000,
-    "aliases": ["PowerSeeker 127 EQ"],
-    "source": "https://www.highpointscientific.com/celestron-powerseeker-127-eq-reflecting-telescope-21049"
+    "focalLengthMm": 400,
+    "aliases": ["Heritage 100P", "Heritage 100P Tabletop Dobsonian"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-100p-tabletop-dobsonian.html"
   },
   {
     "id": "skywatcher-startravel-102",
@@ -193,14 +142,65 @@
     "source": "https://astronomics.com/products/sky-watcher-startravel-102-az3-refractor-telescope"
   },
   {
-    "id": "skywatcher-evostar-80ed",
+    "id": "skywatcher-skymax-102",
     "brand": "Sky-Watcher",
-    "model": "Evostar 80ED",
-    "name": "Sky-Watcher Evostar 80ED",
-    "apertureMm": 80,
-    "focalLengthMm": 600,
-    "aliases": ["Evostar-80ED", "80ED"],
-    "discontinued": true,
-    "source": "https://astronomics.com/products/sky-watcher-evostar-80ed-80mm-f-7-5-ed-doublet-apochromatic-refractor"
+    "model": "Skymax 102",
+    "name": "Sky-Watcher Skymax 102",
+    "apertureMm": 102,
+    "focalLengthMm": 1300,
+    "aliases": ["Skymax-102", "Skymax 102 Mak", "Skymax 102 AZ-GTi", "Maksutov 102/1300"],
+    "source": "https://astronomics.com/products/sky-watcher-skymax-102-102mm-f-12-75-maksutov-cassegrain-optical-tube"
+  },
+  {
+    "id": "skywatcher-skymax-127",
+    "brand": "Sky-Watcher",
+    "model": "Skymax 127",
+    "name": "Sky-Watcher Skymax 127",
+    "apertureMm": 127,
+    "focalLengthMm": 1500,
+    "aliases": ["Skymax-127", "Skymax 127 Mak", "Skymax 127 AZ-GTi", "Maksutov 127/1500"],
+    "source": "https://astronomics.com/products/sky-watcher-skymax-127-127mm-f-11-8-maksutov-cassegrain-optical-tube"
+  },
+  {
+    "id": "skywatcher-explorer-130pds",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-130PDS",
+    "name": "Sky-Watcher Explorer-130PDS",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Explorer 130PDS", "130/650", "130PDS"],
+    "source": "https://www.firstlightoptics.com/reflectors/skywatcher-explorer-130p-ds-ota.html"
+  },
+  {
+    "id": "skywatcher-heritage-130p",
+    "brand": "Sky-Watcher",
+    "model": "Heritage-130P FlexTube",
+    "name": "Sky-Watcher Heritage-130P FlexTube",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Heritage 130P", "Heritage 130 Dobsonian"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/skywatcher-heritage-130p-flextube.html"
+  },
+  {
+    "id": "skywatcher-explorer-150p",
+    "brand": "Sky-Watcher",
+    "model": "Explorer-150P",
+    "name": "Sky-Watcher Explorer-150P",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Explorer 150P", "150/750", "Explorer-150P EQ3-2", "150P EQ3"],
+    "source": "https://www.firstlightoptics.com/telescopes-in-stock/skywatcher-explorer-150p-ota.html"
+  },
+  {
+    "id": "skywatcher-heritage-150p",
+    "brand": "Sky-Watcher",
+    "model": "Heritage-150P FlexTube",
+    "name": "Sky-Watcher Heritage-150P FlexTube",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Heritage 150P"],
+    "bundledEyepieces": ["skywatcher-bundled-25mm", "skywatcher-bundled-10mm"],
+    "source": "https://www.telescoop.nl/en/sky-watcher-heritage-150p-flextube-dobson/"
   }
 ]
