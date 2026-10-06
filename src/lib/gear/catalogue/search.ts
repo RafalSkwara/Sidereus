@@ -40,9 +40,10 @@ function prepare(entry: Searchable): Prepared {
 }
 
 /**
- * The entries matching `query`, best first: those whose name, or a word of it (the brand is the name's first word),
- * starts with the query's first word come before the rest, and ties keep the catalogue's order. An empty query
- * returns every entry.
+ * The entries matching `query`, best first: an entry scores one point for each query word that starts a word of its
+ * name (the brand is the name's first word), so "skyliner 200" puts the Skyliner-200P above a Skyliner whose aliases
+ * only contain "1200", and alias-only hits come last. Ties keep the catalogue's order. An empty query returns every
+ * entry.
  */
 export function searchCatalogue<T extends Searchable>(entries: readonly T[], query: string): T[] {
   const normalized = normalize(query);
@@ -50,16 +51,16 @@ export function searchCatalogue<T extends Searchable>(entries: readonly T[], que
     return [...entries];
   }
   const tokens = normalized.split(" ");
-  const first = tokens[0];
 
-  const ranked: { entry: T; rank: number }[] = [];
+  const ranked: { entry: T; score: number }[] = [];
   for (const entry of entries) {
     const { nameWords, haystack } = prepare(entry);
     if (!tokens.every((token) => haystack.includes(token))) {
       continue;
     }
-    ranked.push({ entry, rank: nameWords.some((word) => word.startsWith(first)) ? 0 : 1 });
+    const score = tokens.filter((token) => nameWords.some((word) => word.startsWith(token))).length;
+    ranked.push({ entry, score });
   }
-  // `sort` is stable, so equal ranks keep the catalogue's order.
-  return ranked.sort((a, b) => a.rank - b.rank).map(({ entry }) => entry);
+  // `sort` is stable, so equal scores keep the catalogue's order.
+  return ranked.sort((a, b) => b.score - a.score).map(({ entry }) => entry);
 }

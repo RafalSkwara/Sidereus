@@ -59,6 +59,20 @@ describe("searchCatalogue", () => {
     ]);
   });
 
+  it("ranks entries by how many query words start a word of their name", () => {
+    // "200" is inside the 150P's alias "150/1200" too, but it starts a word only in the 200P's name.
+    const entries = [
+      { name: "Sky-Watcher Skyliner-150P", aliases: ["150/1200"] },
+      { name: "Sky-Watcher Skyliner-200P", aliases: ["200/1200"] },
+      { name: "Sky-Watcher Skyliner-250P", aliases: ["250/1200"] },
+    ];
+    expect(searchCatalogue(entries, "skyliner 200").map((e) => e.name)).toEqual([
+      "Sky-Watcher Skyliner-200P",
+      "Sky-Watcher Skyliner-150P",
+      "Sky-Watcher Skyliner-250P",
+    ]);
+  });
+
   it("returns every entry, in order, for an empty query", () => {
     expect(names("")).toEqual(ENTRIES.map((entry) => entry.name));
     expect(names("  ")).toEqual(ENTRIES.map((entry) => entry.name));

@@ -566,6 +566,6 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Manual
 
-- [ ] 5.4 reviews/catalogue-spot-check.md records at least 10% per file plus every estimated and zoom entry, mismatches fixed
+- [x] 5.4 reviews/catalogue-spot-check.md records at least 10% per file plus every estimated and zoom entry, mismatches fixed — c10c350
 - [ ] 5.5 A handful of real beginner scopes are found on a phone-sized screen
 - [ ] 5.6 Catalogue chunk sizes noted in the PR; gear pages not visibly slower
