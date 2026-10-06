@@ -5,7 +5,11 @@
  * types. Island-safe: imports only the target key grammar, so the catalogue JSON never reaches the browser bundle.
  */
 
+import { normalizeQuery } from "@/lib/text/normalize";
 import { messierNumber, type TargetKey } from "@/lib/targets";
+
+// The rule moved to `lib/text` so the gear catalogue need not depend on the log; existing imports keep working.
+export { normalizeQuery };
 
 export interface TargetOption {
   /** The target key the form posts: "M31", "moon", "jupiter". */
@@ -18,11 +22,6 @@ export interface TargetOption {
   detail: string;
   /** Every name the target can be found by (localised, English, designation). */
   names: readonly string[];
-}
-
-/** Lower case, accents stripped (Polish ł has no decomposition, so it is mapped by hand), spaces collapsed. */
-export function normalizeQuery(value: string): string {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/ł/g, "l").replace(/\s+/g, " ").trim();
 }
 
 const NUMBER_QUERY = /^m?\s*(\d{1,3})$/;

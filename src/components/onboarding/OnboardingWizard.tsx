@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import { Combobox } from "@/components/forms/Combobox";
 import { FieldError, FormField } from "@/components/forms/FormField";
 import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
 import { ServerError } from "@/components/forms/ServerError";
@@ -8,10 +9,14 @@ import { Band } from "@/components/ui/band";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { getMessages, translateKey, type Messages } from "@/i18n";
+import { getMessages, plural, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { roundCoordinate } from "@/lib/gear/coordinates";
 import { AFOV_PRESET_OPTIONS, type AfovPreset } from "@/lib/gear/eyepiece-presets";
+import { bundledEyepieces, eyepieceFill, telescopeFill } from "@/lib/gear/catalogue/fill";
+import { loadEyepieces, loadTelescopes } from "@/lib/gear/catalogue/load";
+import { searchCatalogue } from "@/lib/gear/catalogue/search";
+import type { EyepieceEntry, TelescopeEntry } from "@/lib/gear/catalogue/types";
 import {
   DEFAULT_EYEPIECE_KIT_ID,
   DEFAULT_SKY_SCENE_ID,
@@ -56,7 +61,15 @@ interface EyepieceRow {
   focalLength: string;
   afovPreset: AfovPreset;
   afovDeg: string;
+  /** The row's catalogue search text; a pick (or a bundled row) shows the entry's name there. */
+  modelText: string;
 }
+
+/** The kit card for the chosen catalogue telescope's own eyepieces. It lives outside `EYEPIECE_KIT_PRESETS`. */
+const BUNDLED_KIT = "bundled";
+type KitChoice = EyepieceKitPresetId | typeof BUNDLED_KIT;
+
+type CatalogueState = "loading" | "ready" | "unavailable";
 
 type EyepieceField = "name" | "focalLengthMm" | "afovPreset" | "afovDeg";
 type RowErrors = Partial<Record<EyepieceField, string>>;
@@ -102,8 +115,28 @@ function kitRow(eyepiece: EyepieceKitItem, key: number): EyepieceRow {
     focalLength: String(eyepiece.focalLengthMm),
     afovPreset: eyepiece.afovPreset,
     afovDeg: "",
+    modelText: "",
   };
 }
+
+/** A row filled from a catalogue eyepiece (a pick, or a telescope's bundled one). */
+function catalogueRow(entry: EyepieceEntry, key: number): EyepieceRow {
+  const fill = eyepieceFill(entry);
+  return {
+    key,
+    name: fill.name,
+    focalLength: fill.focalLengthMm,
+    afovPreset: fill.afovPreset,
+    // The exact degrees show only for "other"; a named preset carries its own.
+    afovDeg: fill.afovPreset === "other" ? fill.afovDeg : "",
+    modelText: entry.name,
+  };
+}
+
+const getTelescopeKey = (entry: TelescopeEntry) => entry.id;
+const getTelescopeLabel = (entry: TelescopeEntry) => entry.name;
+const getEyepieceKey = (entry: EyepieceEntry) => entry.id;
+const getEyepieceLabel = (entry: EyepieceEntry) => entry.name;
 
 function presetLabel(presets: Messages["eyepiecePresets"], option: AfovPreset): string {
   return option === "other" ? presets.other : presets[option].long;
@@ -125,11 +158,21 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
 
   // Kit --------------------------------------------------------------------------------------
   const initialTelescope = telescopePreset(DEFAULT_TELESCOPE_PRESET_ID);
-  const [telescopeId, setTelescopeId] = useState<TelescopePresetId>(DEFAULT_TELESCOPE_PRESET_ID);
+  // `null` once a catalogue telescope is picked (and the generic radios show no choice).
+  const [telescopeId, setTelescopeId] = useState<TelescopePresetId | null>(DEFAULT_TELESCOPE_PRESET_ID);
+  const [chosenTelescope, setChosenTelescope] = useState<TelescopeEntry | null>(null);
+  const [telescopeText, setTelescopeText] = useState("");
   const [telescopeName, setTelescopeName] = useState<string>(t.telescopes[DEFAULT_TELESCOPE_PRESET_ID]);
   const [aperture, setAperture] = useState(String(initialTelescope.apertureMm));
   const [focalLength, setFocalLength] = useState(String(initialTelescope.focalLengthMm));
-  const [kitId, setKitId] = useState<EyepieceKitPresetId>(DEFAULT_EYEPIECE_KIT_ID);
+  const [kitId, setKitId] = useState<KitChoice>(DEFAULT_EYEPIECE_KIT_ID);
+  // Set when the user picks any kit card; a catalogue telescope then never swaps the kit for its own eyepieces.
+  const [kitTouched, setKitTouched] = useState(false);
+  // The catalogues load after mount, each in its own chunk; until then (or if one fails) the fields work on their own.
+  const [telescopeCatalogue, setTelescopeCatalogue] = useState<readonly TelescopeEntry[]>([]);
+  const [telescopeState, setTelescopeState] = useState<CatalogueState>("loading");
+  const [eyepieceCatalogue, setEyepieceCatalogue] = useState<readonly EyepieceEntry[]>([]);
+  const [eyepieceState, setEyepieceState] = useState<CatalogueState>("loading");
   const [rows, setRows] = useState<EyepieceRow[]>(() =>
     kitPreset(DEFAULT_EYEPIECE_KIT_ID).eyepieces.map((eyepiece, index) => kitRow(eyepiece, index)),
   );
@@ -151,6 +194,44 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    loadTelescopes().then(
+      (entries) => {
+        if (cancelled) return;
+        setTelescopeCatalogue(entries);
+        setTelescopeState("ready");
+      },
+      () => {
+        if (!cancelled) setTelescopeState("unavailable");
+      },
+    );
+    loadEyepieces().then(
+      (entries) => {
+        if (cancelled) return;
+        setEyepieceCatalogue(entries);
+        setEyepieceState("ready");
+      },
+      () => {
+        if (!cancelled) setEyepieceState("unavailable");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // A telescope picked before the eyepieces chunk arrived gets its "Came with" kit once it does, on the same terms as
+  // a pick made afterwards (only while the user has not chosen a kit). Runs once per load; later picks go through
+  // `selectTelescope`.
+  useEffect(() => {
+    if (eyepieceState !== "ready" || !chosenTelescope || kitTouched || kitId === BUNDLED_KIT) return;
+    const bundled = bundledEyepieces(chosenTelescope, eyepieceCatalogue);
+    if (bundled.length > 0) applyBundled(bundled);
+    // Only the chunk's arrival should trigger this; picks and kit changes are handled where they happen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eyepieceState]);
+
   const hasLocation = latitude.trim() !== "" && longitude.trim() !== "";
 
   function pickLocation(pick: LocationPick) {
@@ -167,19 +248,70 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
     setErrors((prev) => ({ ...prev, where: undefined }));
   }
 
+  /** A generic type: clears the catalogue pick, and a "Came with" kit gives way to the supplied pair. */
   function chooseTelescope(id: TelescopePresetId) {
     const preset = telescopePreset(id);
     setTelescopeId(id);
+    setChosenTelescope(null);
+    setTelescopeText("");
     setTelescopeName(t.telescopes[id]);
     setAperture(String(preset.apertureMm));
     setFocalLength(String(preset.focalLengthMm));
     setErrors((prev) => ({ ...prev, telescopeName: undefined, apertureMm: undefined, focalLengthMm: undefined }));
+    if (kitId === BUNDLED_KIT) applyKit(DEFAULT_EYEPIECE_KIT_ID);
   }
 
-  function chooseKit(id: EyepieceKitPresetId) {
+  /** A catalogue telescope: clears the generic radios, fills the fields and, where it applies, offers its own eyepieces. */
+  function selectTelescope(entry: TelescopeEntry) {
+    const fill = telescopeFill(entry);
+    setTelescopeId(null);
+    setChosenTelescope(entry);
+    setTelescopeText(entry.name);
+    setTelescopeName(fill.name);
+    setAperture(fill.apertureMm);
+    setFocalLength(fill.focalLengthMm);
+    setErrors((prev) => ({ ...prev, telescopeName: undefined, apertureMm: undefined, focalLengthMm: undefined }));
+
+    const bundled = bundledEyepieces(entry, eyepieceCatalogue);
+    if (bundled.length > 0) {
+      // Auto-selected only while the user has not picked a kit; a "Came with" kit already chosen follows the telescope.
+      if (!kitTouched || kitId === BUNDLED_KIT) applyBundled(bundled);
+    } else if (kitId === BUNDLED_KIT) {
+      applyKit(DEFAULT_EYEPIECE_KIT_ID);
+    }
+  }
+
+  function applyKit(id: EyepieceKitPresetId) {
     setKitId(id);
     setRows(kitPreset(id).eyepieces.map((eyepiece) => kitRow(eyepiece, nextRowKey.current++)));
     setErrors((prev) => ({ ...prev, eyepieces: undefined, rows: {} }));
+  }
+
+  function applyBundled(bundled: readonly EyepieceEntry[]) {
+    setKitId(BUNDLED_KIT);
+    setRows(bundled.map((entry) => catalogueRow(entry, nextRowKey.current++)));
+    setErrors((prev) => ({ ...prev, eyepieces: undefined, rows: {} }));
+  }
+
+  function chooseKit(id: KitChoice) {
+    setKitTouched(true);
+    if (id === BUNDLED_KIT) applyBundled(bundledEntries);
+    else applyKit(id);
+  }
+
+  function selectEyepiece(key: number, entry: EyepieceEntry) {
+    const row = catalogueRow(entry, key);
+    updateRow(
+      key,
+      {
+        name: row.name,
+        focalLength: row.focalLength,
+        afovPreset: row.afovPreset,
+        afovDeg: row.afovDeg,
+        modelText: row.modelText,
+      },
+      ["name", "focalLengthMm", "afovPreset", "afovDeg"],
+    );
   }
 
   function updateRow(key: number, patch: Partial<EyepieceRow>, cleared: EyepieceField[]) {
@@ -202,7 +334,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
   function addRow() {
     if (rows.length >= MAX_ONBOARDING_EYEPIECES) return;
     const key = nextRowKey.current++;
-    setRows((prev) => [...prev, { key, name: "", focalLength: "", afovPreset: "plossl", afovDeg: "" }]);
+    setRows((prev) => [...prev, { key, name: "", focalLength: "", afovPreset: "plossl", afovDeg: "", modelText: "" }]);
     requestAnimationFrame(() => document.getElementById(`eyepiece-${key}-name`)?.focus());
   }
 
@@ -290,6 +422,33 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
         : source.kind === "place"
           ? m.location.usingPlace({ place: source.label })
           : m.location.usingCoordinates;
+
+  // The "Came with" card shows only once the eyepieces chunk has loaded and the telescope's bundled ids resolve.
+  const bundledEntries =
+    chosenTelescope && eyepieceState === "ready" ? bundledEyepieces(chosenTelescope, eyepieceCatalogue) : [];
+  const showBundled = bundledEntries.length > 0;
+  const c = m.gearCatalogue;
+
+  function telescopeDetail(entry: TelescopeEntry) {
+    return c.detail.telescope({
+      aperture: number.format(entry.apertureMm),
+      focalLength: number.format(entry.focalLengthMm),
+      ratio: number.format(entry.focalLengthMm / entry.apertureMm),
+      discontinued: entry.discontinued === true,
+    });
+  }
+
+  function eyepieceDetail(entry: EyepieceEntry) {
+    return c.detail.eyepiece({
+      focalLength: number.format(entry.focalLengthMm),
+      afov: number.format(entry.afovDeg),
+      estimated: entry.afovEstimated === true,
+      bundled: entry.bundled === true,
+      zoomMin: entry.zoom ? number.format(entry.zoom.minMm) : undefined,
+      zoomMax: entry.zoom ? number.format(entry.zoom.maxMm) : undefined,
+      discontinued: entry.discontinued === true,
+    });
+  }
 
   const hasErrors =
     [errors.where, errors.telescopeName, errors.apertureMm, errors.focalLengthMm, errors.eyepieces].some(Boolean) ||
@@ -412,26 +571,59 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
                 <p id="telescope-hint" className="text-muted-foreground text-sm">
                   {t.kit.telescopeHint}
                 </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {TELESCOPE_PRESETS.map((preset) => (
-                    <ChoiceCard
-                      key={preset.id}
-                      name="telescopePreset"
-                      value={preset.id}
-                      checked={telescopeId === preset.id}
-                      onChange={() => {
-                        chooseTelescope(preset.id);
-                      }}
-                      title={t.telescopes[preset.id]}
-                      description={
-                        <>
-                          {m.gear.telescopes.aperture({ mm: number.format(preset.apertureMm) })} ·{" "}
-                          {m.gear.telescopes.focalLength({ mm: number.format(preset.focalLengthMm) })}
-                        </>
-                      }
-                    />
-                  ))}
-                </div>
+                <Combobox
+                  id="telescope-model"
+                  label={c.telescope.label}
+                  placeholder={c.telescope.placeholder}
+                  options={telescopeCatalogue}
+                  state={telescopeState}
+                  text={telescopeText}
+                  onTextChange={setTelescopeText}
+                  filter={searchCatalogue}
+                  getKey={getTelescopeKey}
+                  getLabel={getTelescopeLabel}
+                  getDetail={telescopeDetail}
+                  onSelect={selectTelescope}
+                  hint={c.telescope.hint}
+                  status={{
+                    noMatch: c.telescope.noMatch,
+                    loading: c.telescope.loading,
+                    unavailable: c.telescope.unavailable,
+                    more: (hidden) => plural(locale, hidden, c.telescope.more)({ count: number.format(hidden) }),
+                    keepTyping: c.keepTyping,
+                  }}
+                />
+
+                {/* The fixed types stay as the fallback for a model the catalogue lacks or the user cannot name. */}
+                <details className="group">
+                  <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+                    {t.kit.genericToggle}
+                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <fieldset className="mt-2">
+                    <legend className="sr-only">{t.kit.genericToggle}</legend>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {TELESCOPE_PRESETS.map((preset) => (
+                        <ChoiceCard
+                          key={preset.id}
+                          name="telescopePreset"
+                          value={preset.id}
+                          checked={telescopeId === preset.id}
+                          onChange={() => {
+                            chooseTelescope(preset.id);
+                          }}
+                          title={t.telescopes[preset.id]}
+                          description={
+                            <>
+                              {m.gear.telescopes.aperture({ mm: number.format(preset.apertureMm) })} ·{" "}
+                              {m.gear.telescopes.focalLength({ mm: number.format(preset.focalLengthMm) })}
+                            </>
+                          }
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+                </details>
               </fieldset>
 
               <FormField
@@ -487,7 +679,22 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
                 <p id="eyepieces-hint" className="text-muted-foreground text-sm">
                   {t.kit.eyepiecesHint}
                 </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {/* Four cards read as two by two; the usual three sit in one row. */}
+                <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-3", showBundled && "sm:grid-cols-2")}>
+                  {showBundled && chosenTelescope ? (
+                    <ChoiceCard
+                      name="eyepieceKit"
+                      value={BUNDLED_KIT}
+                      checked={kitId === BUNDLED_KIT}
+                      onChange={() => {
+                        chooseKit(BUNDLED_KIT);
+                      }}
+                      title={t.kit.cameWith({ model: chosenTelescope.name })}
+                      description={t.kit.bundledList({
+                        sizes: bundledEntries.map((entry) => number.format(entry.focalLengthMm)),
+                      })}
+                    />
+                  ) : null}
                   {EYEPIECE_KIT_PRESETS.map((kit) => (
                     <ChoiceCard
                       key={kit.id}
@@ -535,6 +742,32 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
                         >
                           <Trash2 className="size-4" />
                         </Button>
+                        <Combobox
+                          id={`eyepiece-${row.key}-model`}
+                          label={c.eyepiece.label}
+                          placeholder={c.eyepiece.placeholder}
+                          options={eyepieceCatalogue}
+                          state={eyepieceState}
+                          text={row.modelText}
+                          onTextChange={(v) => {
+                            updateRow(row.key, { modelText: v }, []);
+                          }}
+                          initialLabel={row.modelText || undefined}
+                          filter={searchCatalogue}
+                          getKey={getEyepieceKey}
+                          getLabel={getEyepieceLabel}
+                          getDetail={eyepieceDetail}
+                          onSelect={(entry) => {
+                            selectEyepiece(row.key, entry);
+                          }}
+                          status={{
+                            noMatch: c.eyepiece.noMatch,
+                            loading: c.eyepiece.loading,
+                            unavailable: c.eyepiece.unavailable,
+                            more: (hidden) => plural(locale, hidden, c.eyepiece.more)({ count: number.format(hidden) }),
+                            keepTyping: c.keepTyping,
+                          }}
+                        />
                         <FormField
                           id={`eyepiece-${row.key}-name`}
                           name=""

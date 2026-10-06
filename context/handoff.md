@@ -1,4 +1,4 @@
-# Handoff — 2026-10-06 (updated: S-12 added, S-04 parked)
+# Handoff — 2026-10-06 (updated: S-12 archived, PR open)
 
 Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #67. (This replaces the earlier handoffs, which are in git history.)
 
@@ -13,14 +13,20 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
   - **Clearing:** on sign-in, sign-up or sign-out; on the sign-in bounce; on any page rendered signed out; and when a different user commits (`data-owner` = SHA-256 of the user id).
   - **Deploys:** the `/_astro` files that stored pages use are kept across deploys.
 - **Still open in M-2:**
-  - **S-12 gear catalogue** (`ready`, #113, added 2026-10-06): pick telescopes and eyepieces from a long curated list via a searchable combobox that fills in the fields. Ordered **before** S-03.
+  - **S-12 gear catalogue** (#113): implemented and archived at `context/archive/2026-10-06-gear-catalogue/` (roadmap: done). The PR from `feat/gear-catalogue` is open and awaits the user's merge.
+    - **What it does:** a "Find your model" combobox on the `/gear` forms and in onboarding, over 340 telescopes and 338 eyepieces in `src/lib/gear/catalogue/`. Details are in CLAUDE.md, "Gear catalogue (S-12)".
+    - **Still open:** the plan's 12 Manual rows (the user's joint test, not run yet). The impl review covers phases 1–3; phases 4–5 are unreviewed.
+    - **Follow-up:** Delta Optical has no entries (deltaoptical.pl returned 503).
   - **S-03 deep sky beyond Messier** (`ready`, #67): next after S-12.
   - **S-09 map picker** (`blocked`, #73): the privacy decision on map tiles must be made.
   - **S-04 double stars** was **parked** by the user on 2026-10-06 (#68 closed as not planned; roadmap → Parked).
 
 ## Suggested next step
 
-1. **S-12 (#113):** `/10x-new gear-catalogue` → `/10x-plan` → `/10x-plan-review` → implement. Settled: a searchable combobox with "Not listed? Enter manually"; filled fields stay editable. The roadmap's S-12 entry lists the open candidates (hand-curated list as repo data, numbers-only storage, what happens to onboarding's generic presets in `src/lib/onboarding/presets.ts`).
+1. **S-12 (#113):**
+   - The user runs the manual checks: the Progress rows marked `[ ]` in the archived plan.md, plus screenshots.
+   - Then merge the PR (which deploys) and set board #113 to done.
+   - Optional: `/10x-impl-review` of phases 4–5 as a new change, if wanted.
 2. **S-03 (#67):** then plan it through the ordinary chain. The catalogue is already generated from the pinned OpenNGC commit, and S-01 settled target identity by kind.
 3. **Unblock S-09:** the map-tile privacy question is the last user decision M-2 needs.
 

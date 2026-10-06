@@ -296,6 +296,55 @@ export const pl = {
     usingCoordinates: "Używam wpisanych współrzędnych, zaokrąglonych do ok. 1 km",
   },
 
+  gearCatalogue: {
+    telescope: {
+      label: "Znajdź swój teleskop",
+      placeholder: "np. Heritage 130 albo Sky-Watcher",
+      hint: "Nie ma go na liście? Uzupełnij dane poniżej.",
+      noMatch: "Brak dopasowania: uzupełnij dane poniżej",
+      loading: "Wczytuję teleskopy...",
+      unavailable: "Nie udało się wczytać listy teleskopów. Uzupełnij dane poniżej.",
+      more: {
+        one: (p) => `Jest jeszcze ${p.count} wynik: wpisz więcej, aby zawęzić listę`,
+        few: (p) => `Są jeszcze ${p.count} wyniki: wpisz więcej, aby zawęzić listę`,
+        many: (p) => `Jest jeszcze ${p.count} wyników: wpisz więcej, aby zawęzić listę`,
+        other: (p) => `Jest jeszcze ${p.count} wyniku: wpisz więcej, aby zawęzić listę`,
+      },
+    },
+    eyepiece: {
+      label: "Znajdź swój okular",
+      placeholder: "np. Plössl 25 albo Baader",
+      hint: "Nie ma go na liście? Uzupełnij dane poniżej.",
+      noMatch: "Brak dopasowania: uzupełnij dane poniżej",
+      loading: "Wczytuję okulary...",
+      unavailable: "Nie udało się wczytać listy okularów. Uzupełnij dane poniżej.",
+      more: {
+        one: (p) => `Jest jeszcze ${p.count} wynik: wpisz więcej, aby zawęzić listę`,
+        few: (p) => `Są jeszcze ${p.count} wyniki: wpisz więcej, aby zawęzić listę`,
+        many: (p) => `Jest jeszcze ${p.count} wyników: wpisz więcej, aby zawęzić listę`,
+        other: (p) => `Jest jeszcze ${p.count} wyniku: wpisz więcej, aby zawęzić listę`,
+      },
+    },
+    keepTyping: "Są kolejne wyniki: wpisz więcej",
+    detail: {
+      telescope: (p) =>
+        [
+          `${p.aperture} mm`,
+          `${p.focalLength} mm`,
+          `f/${p.ratio}`,
+          ...(p.discontinued ? ["wycofany z produkcji"] : []),
+        ].join(" · "),
+      eyepiece: (p) =>
+        [
+          `${p.focalLength} mm`,
+          p.estimated ? `ok. ${p.afov}° (szacunkowo)` : `${p.afov}°`,
+          ...(p.bundled ? ["w zestawie"] : []),
+          ...(p.zoomMin !== undefined && p.zoomMax !== undefined ? [`zoom ${p.zoomMin}-${p.zoomMax} mm`] : []),
+          ...(p.discontinued ? ["wycofany z produkcji"] : []),
+        ].join(" · "),
+    },
+  },
+
   onboarding: {
     title: "Skonfiguruj Sidereus",
     intro:
@@ -315,7 +364,10 @@ export const pl = {
       heading: "Jaki masz sprzęt?",
       telescope: "Teleskop",
       telescopeHint:
-        "Wybierz najbliższy model, a potem popraw liczby, jeśli Twój się różni. Znajdziesz je na tubusie albo w instrukcji.",
+        "Wyszukaj swój model, a potem popraw liczby, jeśli Twój się różni. Znajdziesz je na tubusie albo w instrukcji.",
+      genericToggle: "Nie wiesz, jaki to model? Wybierz typ",
+      cameWith: (p) => `W komplecie z ${p.model}`,
+      bundledList: (p) => p.sizes.map((size) => `${size} mm`).join(" + "),
       eyepieces: "Okulary",
       eyepiecesHint: "Zacznij od zestawu, a potem popraw, usuń albo dodaj okulary, żeby pasowały do tego, co masz.",
       emptyKit: "Dodasz je później w zakładce Mój sprzęt",

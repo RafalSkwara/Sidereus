@@ -1,0 +1,302 @@
+[
+  {
+    "id": "baader-hyperion-zoom-8-24-at-8",
+    "verdict": "MATCH",
+    "note": "HPS page: 'Apparent Field of View: 50º - 68º', five click stops 8/12/16/20/24 mm. Endpoint 68°, published, not flagged."
+  },
+  {
+    "id": "baader-hyperion-zoom-8-24-at-12",
+    "verdict": "MATCH",
+    "note": "HPS page: 'Apparent Field of View: 50º - 68º', five click stops 8/12/16/20/24 mm. 68-18*4/16=63.5 -> 64 (half-up). Flagged."
+  },
+  {
+    "id": "baader-hyperion-zoom-8-24-at-16",
+    "verdict": "MATCH",
+    "note": "HPS page: 'Apparent Field of View: 50º - 68º', five click stops 8/12/16/20/24 mm. 68-18*8/16=59. Flagged."
+  },
+  {
+    "id": "baader-hyperion-zoom-8-24-at-20",
+    "verdict": "MATCH",
+    "note": "HPS page: 'Apparent Field of View: 50º - 68º', five click stops 8/12/16/20/24 mm. 68-18*12/16=54.5 -> 55 (half-up; half-even would give 54). Flagged."
+  },
+  {
+    "id": "baader-hyperion-zoom-8-24-at-24",
+    "verdict": "MATCH",
+    "note": "HPS page: 'Apparent Field of View: 50º - 68º', five click stops 8/12/16/20/24 mm. Endpoint 50°, published, not flagged."
+  },
+  {
+    "id": "bresser-bundled-kellner-4mm",
+    "verdict": "MATCH",
+    "note": "NG 90/900 page lists 'SR-4mm'; SR -> Kellner 45. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-kellner-9mm",
+    "verdict": "MATCH",
+    "note": "Messier 5\" Dobson: '25 mm and 9 mm Kellner eyepieces'. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "Source URL (NT-130S OTA) now resolves to a Discontinued category listing; that listing's Space Explorer 150/750 entry says 'Plössl 10 and 25 mm eyepiece'. No AFOV. Consider a more specific source."
+  },
+  {
+    "id": "bresser-bundled-huygens-12-5mm",
+    "verdict": "MATCH",
+    "note": "NG 90/900: description '12.5mm', spec table 'H-12mm' at 72x (900/12.5=72, so 12.5 mm). H -> Huygens. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-huygens-20mm",
+    "verdict": "MATCH",
+    "note": "NG 90/900: 'H-20mm'. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "Messier 6\" Planetary: '25mm SuperPlössl'. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-kellner-25mm",
+    "verdict": "MATCH",
+    "note": "Messier 5\" Dobson: 25 mm Kellner. No AFOV."
+  },
+  {
+    "id": "bresser-bundled-26mm",
+    "verdict": "MATCH",
+    "note": "Messier AR-90/900: '26 mm Super Plössl eyepiece'. No AFOV."
+  },
+  {
+    "id": "bresser-kellner-4mm",
+    "verdict": "MATCH",
+    "note": "Astroshop: Kellner 4mm; text says Kellners have 'an apparent field of view of around 45 degrees' (generic design statement). Value 45 agrees; afovEstimated flag defensible given 'around'."
+  },
+  {
+    "id": "bresser-kellner-10mm",
+    "verdict": "MATCH",
+    "note": "Same as 4mm: Kellner 10mm, generic 'around 45 degrees'. Value agrees."
+  },
+  {
+    "id": "bresser-kellner-20mm",
+    "verdict": "MATCH",
+    "note": "Same: Kellner 20mm, generic 'around 45 degrees'. Value agrees."
+  },
+  {
+    "id": "celestron-bundled-4mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "PowerSeeker 60AZ lists 20mm and 4mm, no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "celestron-bundled-8mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "Travel Scope 50 lists 20mm and 8mm, no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "celestron-bundled-9mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "NexStar 90SLT lists 25mm and 9mm, no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "celestron-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "Inspire 80AZ: '10mm Kellner'. No AFOV."
+  },
+  {
+    "id": "celestron-bundled-12mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "PowerSeeker 50AZ lists 20/12/4mm, no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "celestron-bundled-17mm",
+    "verdict": "MATCH",
+    "note": "StarSense Explorer 114: '17mm Kellner'. No AFOV."
+  },
+  {
+    "id": "celestron-bundled-20mm",
+    "verdict": "MATCH",
+    "note": "Inspire 80AZ: '20mm Kellner'. No AFOV."
+  },
+  {
+    "id": "celestron-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "StarSense Explorer 8: '25mm Plössl'. No AFOV."
+  },
+  {
+    "id": "celestron-bundled-40mm",
+    "verdict": "MATCH",
+    "note": "EdgeHD 8 OTA: '40 mm Plössl 1.25\" eyepiece'. No AFOV."
+  },
+  {
+    "id": "explore-scientific-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "6\" tabletop Dob: 'two Plossl eyepieces (25mm and 10mm)'. No AFOV."
+  },
+  {
+    "id": "explore-scientific-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "FirstLight 80: 'One 25 mm Plössl Eyepiece'. No AFOV."
+  },
+  {
+    "id": "explore-scientific-bundled-26mm",
+    "verdict": "MATCH",
+    "note": "6\" Dob (1170mm): 'Comes with a 26 mm Plossl eyepiece', but another passage says 'a 25mm Plossl eyepiece for 47x' (1170/25=47; 1170/26=45). Page self-inconsistent; 26 mm kept per headline statement. No AFOV."
+  },
+  {
+    "id": "gso-bundled-9mm",
+    "verdict": "MATCH",
+    "note": "TS page: '9mm Super Plössl' multicoated. No AFOV on page."
+  },
+  {
+    "id": "gso-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "TS page: '25mm Super Plössl'. No AFOV on page."
+  },
+  {
+    "id": "levenhuk-bundled-4mm",
+    "verdict": "MATCH",
+    "note": "Skyline BASE 60T: 'SR4mm'; SR -> Kellner 45. No AFOV."
+  },
+  {
+    "id": "levenhuk-bundled-8mm",
+    "verdict": "MATCH",
+    "note": "Skyline Travel 50: 'H8mm'; H -> Huygens 40. No AFOV."
+  },
+  {
+    "id": "levenhuk-bundled-plossl-9mm",
+    "verdict": "MATCH",
+    "note": "Ra 150N: 'Plössl 9mm'. No AFOV."
+  },
+  {
+    "id": "levenhuk-bundled-12-5mm",
+    "verdict": "MATCH",
+    "note": "Skyline PLUS 60T: 'H12.5mm'. No AFOV."
+  },
+  {
+    "id": "levenhuk-bundled-20mm",
+    "verdict": "MATCH",
+    "note": "Skyline BASE 60T: 'H20mm'. No AFOV."
+  },
+  {
+    "id": "levenhuk-bundled-plossl-25mm",
+    "verdict": "MATCH",
+    "note": "Ra 150N: 'Plössl 25mm'. No AFOV."
+  },
+  {
+    "id": "meade-bundled-6mm",
+    "verdict": "MATCH",
+    "note": "Adventure Scope 80: 'H6mm'. No AFOV."
+  },
+  {
+    "id": "meade-bundled-9mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "StarNavigator NG 130 lists 26mm and 9mm, no design, no AFOV; Plössl assumed."
+  },
+  {
+    "id": "meade-bundled-18mm",
+    "verdict": "MATCH",
+    "note": "Adventure Scope 80: 'H18mm'. No AFOV."
+  },
+  {
+    "id": "meade-bundled-26mm",
+    "verdict": "MATCH",
+    "note": "ETX125: '26mm Ploessl eyepiece 1.25\"'. No AFOV."
+  },
+  {
+    "id": "omegon-bundled-plossl-6-5mm",
+    "verdict": "MATCH",
+    "note": "N 150/750 EQ-3: 'PL 6.5mm' ploessl. No AFOV."
+  },
+  {
+    "id": "omegon-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "Advanced 130/650: 'K 10mm' (K = Kellner). No AFOV."
+  },
+  {
+    "id": "omegon-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "Advanced 130/650: 'K 25mm' (K = Kellner). No AFOV."
+  },
+  {
+    "id": "omegon-bundled-plossl-25mm",
+    "verdict": "MATCH",
+    "note": "N 150/750 EQ-3: 'PL 25mm'. No AFOV."
+  },
+  {
+    "id": "orion-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "SpaceProbe 130 EQ-2: 'PL 10mm' (PL = Plössl). No AFOV."
+  },
+  {
+    "id": "orion-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "SpaceProbe 130 EQ-2: 'PL 25mm'. No AFOV."
+  },
+  {
+    "id": "seben-bundled-4mm",
+    "verdict": "MATCH",
+    "note": "Seben 76/700: 'SR 4mm' -> Kellner 45. No AFOV."
+  },
+  {
+    "id": "seben-bundled-6mm",
+    "verdict": "MATCH",
+    "note": "Seben 76/700: 'SR 6mm' -> Kellner 45. No AFOV."
+  },
+  {
+    "id": "seben-bundled-12-5mm",
+    "verdict": "MATCH",
+    "note": "Seben 76/700: 'H 12.5mm'. No AFOV."
+  },
+  {
+    "id": "seben-bundled-20mm",
+    "verdict": "MATCH",
+    "note": "Seben 76/700: 'H 20mm'. No AFOV."
+  },
+  {
+    "id": "skywatcher-bundled-10mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "FLO Heritage-130P: 'Eyepieces Supplied (1.25\"): 10mm & 25mm', no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "skywatcher-bundled-20mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "skywatcher.com BK MAK90 EQ1: '1.25\" Super 20 and 10'. 'Super' (Sky-Watcher Super/SMA, a modified achromat) is not in the README table; mapping to Kellner 45 is a reasonable assumption. No AFOV."
+  },
+  {
+    "id": "skywatcher-bundled-25mm",
+    "verdict": "MATCH-DESIGN-ASSUMED",
+    "note": "FLO Heritage-130P: 10mm & 25mm, no design, no AFOV; Kellner assumed."
+  },
+  {
+    "id": "ts-optics-bundled-4mm",
+    "verdict": "MATCH",
+    "note": "Starscope 76/700: 'H 4mm' -> Huygens 40. No AFOV."
+  },
+  {
+    "id": "ts-optics-bundled-10mm",
+    "verdict": "MATCH",
+    "note": "Starscope 114/900: 'K 10mm'. No AFOV."
+  },
+  {
+    "id": "ts-optics-bundled-12-5mm",
+    "verdict": "MATCH",
+    "note": "Starscope 76/700: 'H 12.5mm'. No AFOV."
+  },
+  {
+    "id": "ts-optics-bundled-20mm",
+    "verdict": "MATCH",
+    "note": "Starscope 76/700: 'H 20mm'. No AFOV."
+  },
+  {
+    "id": "ts-optics-bundled-25mm",
+    "verdict": "MATCH",
+    "note": "Starscope 114/900: 'K 25mm'. No AFOV."
+  },
+  {
+    "id": "vixen-bundled-6-3mm",
+    "verdict": "MATCH",
+    "note": "Vixen ED80Sf: 'PL6.3mm' (103x). No AFOV."
+  },
+  {
+    "id": "vixen-bundled-20mm",
+    "verdict": "MATCH",
+    "note": "Vixen ED80Sf: 'PL20mm' (33x). No AFOV."
+  }
+]

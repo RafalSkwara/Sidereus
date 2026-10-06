@@ -310,6 +310,60 @@ export const en = {
     usingCoordinates: "Using the coordinates you entered, rounded to about 1 km",
   },
 
+  /** The gear catalogue's comboboxes (gear-catalogue): find a telescope or eyepiece, or fill the form in by hand. */
+  gearCatalogue: {
+    telescope: {
+      label: "Find your telescope",
+      placeholder: "e.g. Heritage 130 or Sky-Watcher",
+      hint: "Not listed? Fill in below.",
+      noMatch: "No match: fill in below",
+      loading: "Loading telescopes...",
+      unavailable: "The telescope list could not be loaded. Fill in below.",
+      more: {
+        one: (p) => `${p.count} more result: keep typing to narrow it down`,
+        other: (p) => `${p.count} more results: keep typing to narrow them down`,
+      } as PluralForms<Count>,
+    },
+    eyepiece: {
+      label: "Find your eyepiece",
+      placeholder: "e.g. Plössl 25 or Baader",
+      hint: "Not listed? Fill in below.",
+      noMatch: "No match: fill in below",
+      loading: "Loading eyepieces...",
+      unavailable: "The eyepiece list could not be loaded. Fill in below.",
+      more: {
+        one: (p) => `${p.count} more result: keep typing to narrow it down`,
+        other: (p) => `${p.count} more results: keep typing to narrow them down`,
+      } as PluralForms<Count>,
+    },
+    /** Read by a screen reader under a capped list; the same for every keystroke, so it is announced once. */
+    keepTyping: "More results: keep typing",
+    /** Option detail lines; every number arrives formatted for the locale ("f/4.9" / "f/4,9"). The markers are optional. */
+    detail: {
+      telescope: (p: { aperture: string; focalLength: string; ratio: string; discontinued?: boolean }) =>
+        [`${p.aperture} mm`, `${p.focalLength} mm`, `f/${p.ratio}`, ...(p.discontinued ? ["discontinued"] : [])].join(
+          " · ",
+        ),
+      /** `zoomMin` / `zoomMax` are set on a zoom's click stops (the focal length is the stop). */
+      eyepiece: (p: {
+        focalLength: string;
+        afov: string;
+        estimated?: boolean;
+        bundled?: boolean;
+        zoomMin?: string;
+        zoomMax?: string;
+        discontinued?: boolean;
+      }) =>
+        [
+          `${p.focalLength} mm`,
+          p.estimated ? `≈${p.afov}° (estimated)` : `${p.afov}°`,
+          ...(p.bundled ? ["bundled"] : []),
+          ...(p.zoomMin !== undefined && p.zoomMax !== undefined ? [`zoom ${p.zoomMin}-${p.zoomMax} mm`] : []),
+          ...(p.discontinued ? ["discontinued"] : []),
+        ].join(" · "),
+    },
+  },
+
   onboarding: {
     title: "Set up Sidereus",
     intro: "Three quick choices, and tonight's verdict is ready. You can change any of it later in My gear.",
@@ -328,7 +382,12 @@ export const en = {
       heading: "What's in your kit?",
       telescope: "Telescope",
       telescopeHint:
-        "Pick the closest match, then adjust the numbers if yours differ. They are printed on the tube or in the manual.",
+        "Search for your model, then adjust the numbers if yours differ. They are printed on the tube or in the manual.",
+      genericToggle: "Not sure of the model? Pick a type",
+      /** The kit card for a catalogue telescope's own eyepieces; `model` is the telescope's catalogue name. */
+      cameWith: (p: { model: string }) => `Came with ${p.model}`,
+      /** The sizes of those eyepieces, already formatted for the locale ("25 mm + 10 mm"). */
+      bundledList: (p: { sizes: string[] }) => p.sizes.map((size) => `${size} mm`).join(" + "),
       eyepieces: "Eyepieces",
       eyepiecesHint: "Start from a set, then edit, remove or add eyepieces to match your case.",
       emptyKit: "Add them later in My gear",
