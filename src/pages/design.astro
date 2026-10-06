@@ -22,6 +22,7 @@ import Pager from "@/components/ui/Pager.astro";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import ComboboxDemo from "@/components/design/ComboboxDemo";
 import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
@@ -144,9 +145,9 @@ const stateContract = [
   { state: "hover", where: "every interactive component (specimen + real hover on the live cell)" },
   { state: "focus-visible", where: "every control (specimen + real focus by Tab on the live cell)" },
   { state: "disabled", where: "every control" },
-  { state: "error", where: "FormField invalid, Input / NativeSelect aria-invalid, ServerError" },
-  { state: "empty", where: "an empty Band" },
-  { state: "loading", where: "SubmitButton pending" },
+  { state: "error", where: "FormField invalid, Input / NativeSelect aria-invalid, Combobox, ServerError" },
+  { state: "empty", where: "an empty Band, a Combobox with no match" },
+  { state: "loading", where: "SubmitButton pending, Combobox loading" },
 ];
 
 /*
@@ -1076,6 +1077,79 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <p class:list={notApplicable}>
                 hover, focus-visible, disabled — the field is Input (rows above) · empty, loading — N/A
               </p>
+            </section>
+
+            <!-- Combobox (gear-catalogue) -->
+            <section class:list={block} aria-labelledby="c-combobox">
+              <h3 id="c-combobox" class:list={blockTitle}>
+                Combobox
+              </h3>
+              <p class:list={blockNote}>
+                forms/Combobox.tsx, shared by the log's object picker and the gear catalogue. Sample telescopes below;
+                the live cell is real: type, use the arrow keys, Enter to choose, Escape to close.
+              </p>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live</p>
+                  <div>
+                    <ComboboxDemo id="c-cb-live" kind="live" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hover row · specimen (second row highlighted)</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-hover" kind="hover" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>focus-visible · specimen</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-focus" kind="focus" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>disabled</p>
+                  <div>
+                    <ComboboxDemo id="c-cb-disabled" kind="disabled" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>error · aria-invalid</p>
+                  <div>
+                    <ComboboxDemo
+                      id="c-cb-error"
+                      kind="error"
+                      locale={locale}
+                      error={m.errors.checkFields}
+                      client:load
+                    />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>empty · no match</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-empty" kind="empty" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>loading</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-loading" kind="loading" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>unavailable (list could not load)</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-unavailable" kind="unavailable" locale={locale} client:load />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>capped list · “keep typing” (cap of 2 here)</p>
+                  <div inert>
+                    <ComboboxDemo id="c-cb-more" kind="more" locale={locale} client:load />
+                  </div>
+                </div>
+              </div>
             </section>
 
             <!-- ChoiceCard (ui-onboarding) -->

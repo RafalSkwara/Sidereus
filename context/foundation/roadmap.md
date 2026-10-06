@@ -64,7 +64,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
 | S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked |
-| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | ready   |
+| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | in-progress |
 
 ## Streams
 
@@ -266,7 +266,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Does onboarding's five generic telescope presets and two eyepiece kits (`src/lib/onboarding/presets.ts`) give way to the catalogue, or stay as a "not sure what I have" shortcut next to it? Candidate: the combobox replaces the generic telescope choice; the starter-kit shortcut for eyepieces stays, because many scopes ship with a known pair. — Owner: user (UI). Block: no.
   - Is the chosen catalogue model remembered with the saved gear (a model id), or are only the filled-in numbers stored? Candidate: numbers only, so no migration and no dependency on the list staying stable. — Owner: team. Block: no.
 - **Risk:** Data accuracy across hundreds of hand-entered specs; the plan should validate the list (plausible ranges, unique ids, focal ratio consistent) in a unit test and keep it data, not code. A long list on a phone needs a combobox that stays accessible (keyboard, screen reader, red theme) and small enough not to bloat the gear pages' bundle.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 

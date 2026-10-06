@@ -310,6 +310,42 @@ export const en = {
     usingCoordinates: "Using the coordinates you entered, rounded to about 1 km",
   },
 
+  /** The gear catalogue's comboboxes (gear-catalogue): find a telescope or eyepiece, or fill the form in by hand. */
+  gearCatalogue: {
+    telescope: {
+      label: "Find your telescope",
+      placeholder: "e.g. Heritage 130 or Sky-Watcher",
+      hint: "Not listed? Fill in below.",
+      noMatch: "No match: fill in below",
+      loading: "Loading telescopes...",
+      unavailable: "The telescope list could not be loaded. Fill in below.",
+      more: {
+        one: (p) => `${p.count} more result: keep typing to narrow it down`,
+        other: (p) => `${p.count} more results: keep typing to narrow them down`,
+      } as PluralForms<Count>,
+    },
+    eyepiece: {
+      label: "Find your eyepiece",
+      placeholder: "e.g. Plössl 25 or Baader",
+      hint: "Not listed? Fill in below.",
+      noMatch: "No match: fill in below",
+      loading: "Loading eyepieces...",
+      unavailable: "The eyepiece list could not be loaded. Fill in below.",
+      more: {
+        one: (p) => `${p.count} more result: keep typing to narrow it down`,
+        other: (p) => `${p.count} more results: keep typing to narrow them down`,
+      } as PluralForms<Count>,
+    },
+    /** Option detail lines; every number arrives formatted for the locale ("f/4.9" / "f/4,9"). */
+    detail: {
+      telescope: (p: { aperture: string; focalLength: string; ratio: string }) =>
+        `${p.aperture} mm · ${p.focalLength} mm · f/${p.ratio}`,
+      eyepiece: (p: { focalLength: string; afov: string }) => `${p.focalLength} mm · ${p.afov}°`,
+      eyepieceEstimated: (p: { focalLength: string; afov: string }) => `${p.focalLength} mm · ≈${p.afov}° (estimated)`,
+      discontinued: "discontinued",
+    },
+  },
+
   onboarding: {
     title: "Set up Sidereus",
     intro: "Three quick choices, and tonight's verdict is ready. You can change any of it later in My gear.",

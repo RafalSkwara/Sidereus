@@ -505,9 +505,9 @@ None. No schema change; saved gear is untouched. Existing users see the combobox
 
 #### Automated
 
-- [ ] 1.1 search.test.ts covers tokens, separators, diacritics, aliases, ranking, empty query
+- [x] 1.1 search.test.ts covers tokens, separators, diacritics, aliases, ranking, empty query
 - [ ] 1.2 Existing log picker tests still pass (target-search.test.ts, observation-log-management.spec.ts)
-- [ ] 1.3 npm run lint, npx astro check and npm test pass (i18n parity, colour and red-theme tests)
+- [x] 1.3 npm run lint, npx astro check and npm test pass (i18n parity, colour and red-theme tests)
 
 #### Manual
 

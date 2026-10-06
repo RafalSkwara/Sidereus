@@ -1,7 +1,7 @@
 ---
 change_id: gear-catalogue
 title: Pick telescopes and eyepieces from a curated catalogue of real models
-status: plan_reviewed
+status: implementing
 created: 2026-10-06
 updated: 2026-10-06
 archived_at: null
