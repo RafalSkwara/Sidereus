@@ -567,11 +567,11 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [x] 5.1 `npx supabase db reset` applies all migrations cleanly and `npm run test:db` passes
-- [x] 5.2 Regenerated `database.types.ts` is committed with no drift
-- [x] 5.3 `grep` shows only intended `messier` references in migrations, db tests and observations
-- [x] 5.4 `npm test`, `npx astro check`, `npm run lint` and `npm run smoke` pass
+- [x] 5.1 `npx supabase db reset` applies all migrations cleanly and `npm run test:db` passes — 5270f17
+- [x] 5.2 Regenerated `database.types.ts` is committed with no drift — 5270f17
+- [x] 5.3 `grep` shows only intended `messier` references in migrations, db tests and observations — 5270f17
+- [x] 5.4 `npm test`, `npx astro check`, `npm run lint` and `npm run smoke` pass — 5270f17
 
 #### Manual
 
-- [x] 5.5 Existing log entries of every kind list and edit correctly after `db reset` plus seed data
+- [x] 5.5 Existing log entries of every kind list and edit correctly after `db reset` plus seed data — 5270f17
