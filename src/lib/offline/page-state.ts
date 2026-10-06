@@ -6,7 +6,9 @@
 //   timeout while `navigator.onLine` is still true) or the device is offline;
 // - controls marked `data-needs-network` (Mark observed, the sky-check form, Log and Gear, sign-out) are disabled
 //   while `data-offline` is set: `aria-disabled`, "Needs a connection" as their description, clicks and submits
-//   swallowed. Their look is CSS keyed on the same attributes (global.css).
+//   swallowed. Their look is CSS keyed on the same attributes (global.css);
+// - a page the server rendered for no user (`<html data-signed-out>`, not one served from the device) asks the service
+//   worker to purge whatever an earlier user left, also after a sign-out or an expiry the worker never saw.
 // Server islands arrive after load, so every DOM insertion re-applies the state (like `hash-scroll.ts`). It reads the
 // copy's kind and validity only: never coordinates.
 import type { CopyNotice } from "@/lib/offline/copies";
@@ -75,6 +77,17 @@ function applyControls(offline: boolean) {
   }
 }
 
+// Batched to one run per frame: the live sky inserts nodes on every pan.
+let applyQueued = false;
+function applySoon() {
+  if (applyQueued) return;
+  applyQueued = true;
+  requestAnimationFrame(() => {
+    applyQueued = false;
+    apply();
+  });
+}
+
 function apply() {
   const root = document.documentElement;
   const offline = !navigator.onLine;
@@ -92,7 +105,22 @@ function swallow(event: Event) {
   event.stopPropagation();
 }
 
+function purgeIfSignedOut() {
+  const root = document.documentElement;
+  if (!root.hasAttribute("data-signed-out") || root.hasAttribute("data-from-device")) return;
+  if (!("serviceWorker" in navigator)) return;
+  const message = { type: "purge" };
+  const controller = navigator.serviceWorker.controller;
+  if (controller) {
+    controller.postMessage(message);
+  } else {
+    // A hard reload: the page has no controller, but an active worker may hold copies.
+    void navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage(message));
+  }
+}
+
 export function startOfflinePageState(): void {
+  purgeIfSignedOut();
   apply();
   window.addEventListener("online", apply);
   window.addEventListener("offline", apply);
@@ -105,6 +133,6 @@ export function startOfflinePageState(): void {
   document.addEventListener("submit", swallow, true);
   // Server islands (and their notices and Mark observed links) are inserted after load.
   new MutationObserver((records) => {
-    if (records.some((record) => record.addedNodes.length > 0)) apply();
+    if (records.some((record) => record.addedNodes.length > 0)) applySoon();
   }).observe(document.body, { childList: true, subtree: true });
 }

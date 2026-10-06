@@ -950,9 +950,9 @@ export const en = {
     },
     /** Under (or describing) a control that cannot work offline: Mark observed, sky checks, Log, Gear, sign-out. */
     needsConnection: "Needs a connection",
-    /** A saved Tonight page's warnings, shown only offline (hidden online); the times arrive pre-formatted. */
+    /** A saved Tonight page's warnings, shown on a copy served from the device or offline; times arrive pre-formatted. */
     notice: {
-      prepared: (p: { when: string }) => `Offline · prepared ${p.when}`,
+      prepared: (p: { when: string }) => `Saved copy · prepared ${p.when}`,
       oldForecast: (p: { when: string; night: string }) => `Old forecast from ${p.when} · plan for ${p.night}`,
       stale: (p: { night: string; when: string }) =>
         `This plan is for ${p.night} (prepared ${p.when}) — the night is over`,

@@ -36,9 +36,13 @@ const NOTICE_PARAMS = ["logged", SKY_CHECKED_PARAM, "error"];
 const ISLAND_PREFIX = "/_server-islands/";
 // Resolves the relative URLs found in HTML; only the path and query are ever kept.
 const BASE = "http://localhost";
+// `ownerFingerprint` (owner.ts): a SHA-256 in hex, never the user id itself.
+const OWNER = /^[0-9a-f]{64}$/;
 
 /** What the island's `[data-offline-copy]` element says about the copy (`OfflineCopy.astro`). */
 export interface IslandCopy {
+  /** Whose copy it is: a fingerprint of the user id (`ownerFingerprint`), never the id or the email. */
+  owner: string;
   siteId: string;
   siteName: string;
   kind: CopyKind;
@@ -66,6 +70,11 @@ export interface CopyIndex {
    * before it (an island in flight, the next-night fetch) sees a different scope and stores nothing.
    */
   userScope: string;
+  /**
+   * The user every stored copy belongs to (a fingerprint, as on the island); `null` until the first commit. A commit by
+   * anyone else purges every copy first (`needsReset`), whatever sign-in or sign-out the worker did not see.
+   */
+  owner: string | null;
   /** The site of the most recently committed `tonight` copy: what a bare `/tonight` means (the remembered cookie). */
   lastSiteId: string | null;
   copies: CopyMeta[];
@@ -81,7 +90,16 @@ export interface IndexChange {
 }
 
 export function emptyIndex(userScope: string): CopyIndex {
-  return { userScope, lastSiteId: null, copies: [] };
+  return { userScope, owner: null, lastSiteId: null, copies: [] };
+}
+
+/**
+ * Whether a commit by `owner` must first purge every stored copy and start a new scope: the index belongs to another
+ * user, or holds copies from before owners were recorded. A new or empty index is simply adopted.
+ */
+export function needsReset(index: CopyIndex, owner: string): boolean {
+  if (index.owner === owner) return false;
+  return index.owner !== null || index.copies.length > 0;
 }
 
 /** A URL or key reduced to path + query, the form every key and URL in the index takes. */
@@ -165,6 +183,7 @@ function isoOrUndefined(value: string | undefined): string | undefined {
 export function copyMetaFromIsland(html: string): IslandCopy | undefined {
   const element = tagsOf(html, "div").find((div) => div.has("data-offline-copy"));
   if (!element) return undefined;
+  const owner = element.get("data-owner");
   const siteId = element.get("data-site-id");
   const siteName = element.get("data-site-name");
   const kind = element.get("data-kind");
@@ -173,7 +192,9 @@ export function copyMetaFromIsland(html: string): IslandCopy | undefined {
   const validUntil = isoOrUndefined(element.get("data-valid-until"));
   if (!isGearId(siteId) || !siteName || !nightDate || !preparedAt || !validUntil) return undefined;
   if (kind !== "tonight" && kind !== "next") return undefined;
+  if (!owner || !OWNER.test(owner)) return undefined;
   return {
+    owner,
     siteId,
     siteName,
     kind,
@@ -195,6 +216,20 @@ export function assetUrlsIn(html: string): string[] {
 /** Marks a shell served from storage (`<html data-from-device …>`), so the page says it is a stored copy. */
 export function markFromDevice(html: string): string {
   return html.replace(/<html(?=[\s>])/i, "<html data-from-device");
+}
+
+/** Whether a page was rendered for no user (`<html data-signed-out>`, set by the layout). */
+export function isSignedOutPage(html: string): boolean {
+  return tagsOf(html, "html").at(0)?.has("data-signed-out") ?? false;
+}
+
+/**
+ * Whether anything a user left is on the device: an owned or non-empty index, or a stored `/offline` page rendered
+ * signed in (its Topbar shows the email). A page rendered signed out purges only then, so it does not thrash.
+ */
+export function holdsUserData(index: CopyIndex | undefined, offlinePage: string | undefined): boolean {
+  if (index && (index.owner !== null || index.copies.length > 0)) return true;
+  return offlinePage !== undefined && !isSignedOutPage(offlinePage);
 }
 
 function referencedAssets(copies: readonly CopyMeta[]): Set<string> {
@@ -223,6 +258,7 @@ export function commitPair(index: CopyIndex, meta: CopyMeta): IndexChange {
   );
   const next: CopyIndex = {
     ...index,
+    owner: meta.owner,
     // Only a page the user opened moves the remembered site; the next-night copy follows it.
     lastSiteId: meta.kind === "tonight" ? meta.siteId : (index.lastSiteId ?? meta.siteId),
     copies: [...index.copies.filter((copy) => !replaced.includes(copy)), meta],
@@ -329,12 +365,19 @@ export function referencedAssetKeys(index: CopyIndex): Set<string> {
   return referencedAssets(index.copies);
 }
 
+function isTime(value: unknown): boolean {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
 function isCopyMeta(value: unknown): value is CopyMeta {
   if (typeof value !== "object" || value === null) return false;
   const copy = value as Record<string, unknown>;
-  const strings = ["siteId", "siteName", "nightDate", "preparedAt", "validUntil", "shellKey", "islandUrl", "storedAt"];
+  const strings = ["owner", "siteId", "siteName", "nightDate", "shellKey", "islandUrl"];
+  // An unreadable time would never expire (`expire` compares numbers): such a copy is dropped instead.
+  const times = ["preparedAt", "validUntil", "storedAt"];
   return (
     strings.every((key) => typeof copy[key] === "string") &&
+    times.every((key) => isTime(copy[key])) &&
     (copy.kind === "tonight" || copy.kind === "next") &&
     TONIGHT_PAGES.includes(copy.page as TonightPage) &&
     Array.isArray(copy.assets) &&
@@ -349,6 +392,7 @@ export function parseIndex(value: unknown): CopyIndex | undefined {
   if (typeof index.userScope !== "string" || !Array.isArray(index.copies)) return undefined;
   return {
     userScope: index.userScope,
+    owner: typeof index.owner === "string" ? index.owner : null,
     lastSiteId: typeof index.lastSiteId === "string" ? index.lastSiteId : null,
     copies: index.copies.filter(isCopyMeta),
   };

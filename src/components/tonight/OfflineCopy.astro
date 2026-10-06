@@ -3,9 +3,11 @@
 // island. The service worker and the page script read `[data-offline-copy]` (which site, which night, when the copy
 // was prepared and when it stops being the night to show); the three notices stay hidden online and are shown by the
 // page script from the real offline state or the stored copy's age. Their text is formatted here, in the site's time
-// zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates.
+// zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates. `data-owner`
+// is a one-way fingerprint of the user id (owner.ts), so the worker can tell users apart without the id or the email.
 import Notice from "@/components/ui/Notice.astro";
 import { getMessages } from "@/i18n";
+import { ownerFingerprint } from "@/lib/offline/owner";
 import type { TonightView } from "@/lib/tonight/build";
 import { createFormatter } from "@/lib/tonight/format";
 
@@ -15,7 +17,7 @@ interface Props {
   night: "tonight" | "next";
 }
 
-const { locale } = Astro.locals;
+const { locale, user } = Astro.locals;
 const { view, night } = Astro.props;
 const t = getMessages(locale).offline.notice;
 const { formatDayTime, formatShortNightDate } = createFormatter(locale);
@@ -25,11 +27,14 @@ const preparedAt = new Date();
 const prepared = formatDayTime(preparedAt, view.timeZone);
 const nightText = formatShortNightDate(view.date);
 const forecast = view.forecastFetchedAt;
+// No user, no owner: the worker then stores nothing.
+const owner = user ? await ownerFingerprint(user.id) : undefined;
 ---
 
 <div
   hidden
   data-offline-copy
+  data-owner={owner}
   data-site-id={view.siteId}
   data-site-name={view.siteName}
   data-night-date={view.date}

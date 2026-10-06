@@ -21,6 +21,7 @@ import { onboardInMadrid, signOut } from "./helpers";
  */
 
 const TONIGHT_CACHE = "sidereus-tonight-v1";
+const ASSETS_CACHE = "sidereus-assets-v1";
 const INDEX_KEY = "/__offline/index.json";
 
 /** A pass-through proxy to `upstream` (method, path, headers, cookies, body, status and redirects untouched). */
@@ -59,7 +60,11 @@ class Proxy {
       this.sockets.add(socket);
       socket.on("close", () => this.sockets.delete(socket));
     });
-    await new Promise<void>((resolve) => server.listen(this.port, "localhost", resolve));
+    await new Promise<void>((resolve, reject) => {
+      // Restarting on the same port can fail (still in use): fail the test here, not on a later navigation.
+      server.once("error", reject);
+      server.listen(this.port, "localhost", resolve);
+    });
     this.port = (server.address() as AddressInfo).port;
     this.server = server;
   }
@@ -102,7 +107,7 @@ test("Tonight pages opened online are there offline, and signing out removes the
   try {
     await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: proxy.origin }]);
     const page = await context.newPage();
-    await onboardInMadrid(page, "e2e-offline");
+    const email = await onboardInMadrid(page, "e2e-offline");
 
     // Online: the worker controls the page, then both pages are opened and their pairs committed.
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
@@ -134,7 +139,11 @@ test("Tonight pages opened online are there offline, and signing out removes the
       await expect(log).toHaveAttribute("aria-disabled", "true");
       await expect(log).toHaveAccessibleDescription(en.offline.needsConnection);
       await log.click({ force: true });
+      // A navigation would land on /log, or /offline with the network gone: give it time to happen, then check.
+      await page.waitForTimeout(1000);
       await expect(page).toHaveURL(new RegExp(`${path}$`));
+      await expect(page.getByRole("heading", { level: 1, name: en.log.list.title })).toHaveCount(0);
+      await expect(page.getByRole("heading", { level: 1, name: en.offline.page.title })).toHaveCount(0);
     }
     await expect(page.getByRole("heading", { level: 1, name: en.tonight.summary.plan })).toBeVisible();
 
@@ -157,7 +166,27 @@ test("Tonight pages opened online are there offline, and signing out removes the
       const cache = await caches.open(cacheName);
       return (await cache.keys()).map((request) => new URL(request.url).pathname);
     }, TONIGHT_CACHE);
-    expect(keys.filter((key) => key !== "/offline")).toEqual([]);
+    expect(keys.filter((key) => key !== "/offline" && key !== INDEX_KEY)).toEqual([]);
+    // The /offline page stored again after the sign-out is the signed-out one: no trace of the user's email.
+    await expect
+      .poll(() =>
+        page.evaluate(async (cacheName) => {
+          const stored = await (await caches.open(cacheName)).match("/offline", { ignoreVary: true });
+          return stored ? await stored.text() : null;
+        }, TONIGHT_CACHE),
+      )
+      .toMatch(/data-signed-out/);
+    const offlinePage = await page.evaluate(async (cacheName) => {
+      const stored = await (await caches.open(cacheName)).match("/offline", { ignoreVary: true });
+      return stored ? await stored.text() : "";
+    }, TONIGHT_CACHE);
+    expect(offlinePage).not.toContain(email);
+    // And no /_astro file kept for a stored page.
+    const assets = await page.evaluate(
+      async (cacheName) => (await (await caches.open(cacheName)).keys()).length,
+      ASSETS_CACHE,
+    );
+    expect(assets).toBe(0);
   } finally {
     await context.close();
     await proxy.stop();

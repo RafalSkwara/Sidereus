@@ -11,11 +11,14 @@ import {
   copyMetaFromIsland,
   emptyIndex,
   expire,
+  holdsUserData,
   islandUrlFromShell,
+  isSignedOutPage,
   listCopies,
   markFromDevice,
   mayStoreShell,
   needsNextCopy,
+  needsReset,
   parseIndex,
   referencedAssetKeys,
   referencedKeys,
@@ -28,12 +31,15 @@ import {
 const SITE_A = "11111111-1111-4111-8111-111111111111";
 const SITE_B = "22222222-2222-4222-8222-222222222222";
 const ISLAND = "/_server-islands/TonightContent?e=abc&p=def&s=ghi";
+const OWNER_A = "a".repeat(64);
+const OWNER_B = "b".repeat(64);
 
 const url = (path: string) => new URL(path, "https://sidereus.example");
 
 function copy(overrides: Partial<CopyMeta> = {}): CopyMeta {
   const islandUrl = overrides.islandUrl ?? `/_server-islands/TonightContent?e=${Math.random()}`;
   return {
+    owner: OWNER_A,
     siteId: SITE_A,
     siteName: "Backyard",
     page: "/tonight",
@@ -51,7 +57,7 @@ function copy(overrides: Partial<CopyMeta> = {}): CopyMeta {
 }
 
 function indexOf(...copies: CopyMeta[]): CopyIndex {
-  return { ...emptyIndex("scope-1"), lastSiteId: copies.at(-1)?.siteId ?? null, copies };
+  return { ...emptyIndex("scope-1"), owner: OWNER_A, lastSiteId: copies.at(-1)?.siteId ?? null, copies };
 }
 
 describe("tonightPageOf", () => {
@@ -116,10 +122,11 @@ describe("islandUrlFromShell", () => {
 describe("copyMetaFromIsland", () => {
   const island = (attributes: string) =>
     `<link rel="stylesheet" href="/_astro/x.css"><div hidden data-offline-copy ${attributes}></div><p>…</p>`;
-  const full = `data-site-id="${SITE_A}" data-site-name="Tom &amp; &quot;Jerry&quot; > ridge" data-night-date="2026-10-05" data-kind="tonight" data-prepared-at="2026-10-05T19:00:00.000Z" data-valid-until="2026-10-06T04:30:00.000Z" data-forecast-fetched-at="2026-10-05T18:00:00.000Z"`;
+  const full = `data-owner="${OWNER_A}" data-site-id="${SITE_A}" data-site-name="Tom &amp; &quot;Jerry&quot; > ridge" data-night-date="2026-10-05" data-kind="tonight" data-prepared-at="2026-10-05T19:00:00.000Z" data-valid-until="2026-10-06T04:30:00.000Z" data-forecast-fetched-at="2026-10-05T18:00:00.000Z"`;
 
   it("parses the metadata element", () => {
     expect(copyMetaFromIsland(island(full))).toEqual({
+      owner: OWNER_A,
       siteId: SITE_A,
       siteName: 'Tom & "Jerry" > ridge',
       kind: "tonight",
@@ -143,6 +150,12 @@ describe("copyMetaFromIsland", () => {
   it("is none for an unknown kind or an unreadable time", () => {
     expect(copyMetaFromIsland(island(full.replace('data-kind="tonight"', 'data-kind="later"')))).toBeUndefined();
     expect(copyMetaFromIsland(island(full.replace("2026-10-06T04:30:00.000Z", "soon")))).toBeUndefined();
+  });
+
+  it("is none without an owner fingerprint, or with something that is not one", () => {
+    expect(copyMetaFromIsland(island(full.replace(/data-owner="[^"]*" /, "")))).toBeUndefined();
+    expect(copyMetaFromIsland(island(full.replace(OWNER_A, "user@example.com")))).toBeUndefined();
+    expect(copyMetaFromIsland(island(full.replace(OWNER_A, SITE_A)))).toBeUndefined();
   });
 });
 
@@ -174,11 +187,12 @@ describe("markFromDevice", () => {
 });
 
 describe("commitPair", () => {
-  it("adds a pair and remembers its site", () => {
+  it("adds a pair and remembers its site and owner", () => {
     const first = copy({ siteId: SITE_B });
     const { index, deleteKeys, deleteAssets } = commitPair(emptyIndex("s"), first);
     expect(index.copies).toEqual([first]);
     expect(index.lastSiteId).toBe(SITE_B);
+    expect(index.owner).toBe(OWNER_A);
     expect(deleteKeys).toEqual([]);
     expect(deleteAssets).toEqual([]);
   });
@@ -219,6 +233,44 @@ describe("commitPair", () => {
     const start = indexOf(copy({ siteId: SITE_A }));
     expect(commitPair(start, copy({ siteId: SITE_B, kind: "next" })).index.lastSiteId).toBe(SITE_A);
     expect(commitPair(start, copy({ siteId: SITE_B })).index.lastSiteId).toBe(SITE_B);
+  });
+});
+
+describe("needsReset", () => {
+  it("adopts the owner of a commit into a new or empty index", () => {
+    expect(needsReset(emptyIndex("s"), OWNER_B)).toBe(false);
+  });
+
+  it("keeps the store for the same owner", () => {
+    expect(needsReset(indexOf(copy()), OWNER_A)).toBe(false);
+  });
+
+  it("purges first for a commit by another owner, even with no copies left", () => {
+    expect(needsReset(indexOf(copy()), OWNER_B)).toBe(true);
+    expect(needsReset({ ...emptyIndex("s"), owner: OWNER_A }, OWNER_B)).toBe(true);
+  });
+
+  it("purges first when copies are there without an owner (stored before owners)", () => {
+    expect(needsReset({ ...indexOf(copy()), owner: null }, OWNER_A)).toBe(true);
+  });
+});
+
+describe("signed-out pages", () => {
+  const signedOut = '<!doctype html><html lang="en" data-theme="dark" data-signed-out><body></body></html>';
+  const signedIn = '<!doctype html><html lang="en" data-theme="dark"><body>me@example.com</body></html>';
+
+  it("reads the layout's mark on the html tag only", () => {
+    expect(isSignedOutPage(signedOut)).toBe(true);
+    expect(isSignedOutPage(signedIn)).toBe(false);
+    expect(isSignedOutPage('<html lang="en"><body data-signed-out></body></html>')).toBe(false);
+  });
+
+  it("finds user data in an owned or non-empty index, or a signed-in /offline page", () => {
+    expect(holdsUserData(undefined, undefined)).toBe(false);
+    expect(holdsUserData(emptyIndex("s"), signedOut)).toBe(false);
+    expect(holdsUserData({ ...emptyIndex("s"), owner: OWNER_A }, signedOut)).toBe(true);
+    expect(holdsUserData(indexOf(copy()), undefined)).toBe(true);
+    expect(holdsUserData(emptyIndex("s"), signedIn)).toBe(true);
   });
 });
 
@@ -360,9 +412,20 @@ describe("parseIndex", () => {
   it("reads back a stored index and drops malformed copies", () => {
     const good = copy();
     const parsed = parseIndex(
-      JSON.parse(JSON.stringify({ userScope: "s", lastSiteId: SITE_A, copies: [good, { page: "/x" }] })),
+      JSON.parse(
+        JSON.stringify({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good, { page: "/x" }] }),
+      ),
     );
-    expect(parsed).toEqual({ userScope: "s", lastSiteId: SITE_A, copies: [good] });
+    expect(parsed).toEqual({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good] });
+  });
+
+  it("reads an index stored without an owner as unowned", () => {
+    expect(parseIndex({ userScope: "s", copies: [] })?.owner).toBeNull();
+  });
+
+  it("drops a copy whose times cannot be read, which would never expire", () => {
+    const parsed = parseIndex({ userScope: "s", owner: null, lastSiteId: null, copies: [copy({ storedAt: "soon" })] });
+    expect(parsed?.copies).toEqual([]);
   });
 
   it("is none for something that is not an index", () => {

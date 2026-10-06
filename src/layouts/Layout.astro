@@ -10,13 +10,14 @@ interface Props {
   title?: string;
 }
 
-const { theme, locale } = Astro.locals;
+const { theme, locale, user } = Astro.locals;
 const m = getMessages(locale);
 const { title = m.common.appName } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={locale} data-theme={theme}>
+{/* S-06: a page rendered for no user asks the service worker to purge any stored copies (page-state.ts). */}
+<html lang={locale} data-theme={theme} data-signed-out={user ? undefined : true}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -33,7 +34,12 @@ const { title = m.common.appName } = Astro.props;
      */}
     <script is:inline define:vars={{ themes: THEMES, themeCookie: THEME_COOKIE }}>
       const match = document.cookie.match(new RegExp("(?:^|;\\s*)" + themeCookie + "=([^;]*)"));
-      const chosen = match ? decodeURIComponent(match[1]) : null;
+      let chosen = null;
+      try {
+        chosen = match ? decodeURIComponent(match[1]) : null;
+      } catch {
+        // A malformed cookie: the server's data-theme stays.
+      }
       if (chosen && themes.includes(chosen) && document.documentElement.dataset.theme !== chosen) {
         document.documentElement.dataset.theme = chosen;
       }

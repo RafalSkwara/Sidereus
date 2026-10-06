@@ -842,7 +842,7 @@ export const pl = {
     },
     needsConnection: "Wymaga połączenia z siecią",
     notice: {
-      prepared: (p) => `Offline · przygotowano ${p.when}`,
+      prepared: (p) => `Zapisana kopia · przygotowano ${p.when}`,
       oldForecast: (p) => `Stara prognoza z ${p.when} · plan na ${p.night}`,
       stale: (p) => `Ten plan dotyczy nocy ${p.night} (przygotowano ${p.when}) — ta noc już minęła`,
     },

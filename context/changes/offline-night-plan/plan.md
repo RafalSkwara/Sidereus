@@ -227,6 +227,8 @@ Store shell + island pairs per site and page, fetch the next-night twin, serve t
 
 **Contract**: Runtime caches `sidereus-tonight-v1` (shells, islands, `/offline` and the index at `/__offline/index.json`) and `sidereus-assets-v1` (the `/_astro/*` files stored pairs reference); Workbox precache for the current build's static assets. The purge empties both runtime caches. Nothing else is cached at runtime.
 
+**Implementation notes (review F9, 2026-10-06):** an island URL the worker already holds is answered from storage at once, even online, rather than network-first with the timeout. Island URLs are unique per shell render, so the stored response is exactly what that stored shell asked for. Islands it doesn't hold go to the network with no fallback.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -304,6 +306,11 @@ Show the right notice, disable network-only controls offline, keep the theme on 
 **Intent**: Document the offline contract: what is stored, `?night=next`, the `data-offline-copy` element every Tonight island must render, `data-needs-network`, the purges, and that a new Tonight page must render `OfflineCopy` and be added to `tonightPageOf`.
 
 **Contract**: A short "Offline (S-06)" paragraph under Architecture and one UI bullet.
+
+**Implementation notes (review F9, 2026-10-06):**
+
+- The e2e spec cuts the network by closing a reverse proxy that it runs in front of the preview (the test's own browser context uses the proxy's origin). No `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`: Playwright 1.55's `setOffline` leaks the worker's fetches (change.md, Phase 3; lessons.md).
+- The spec asserts the disabled Log link (aria-disabled, "Needs a connection", no navigation) rather than Mark observed, which the dashboard and the Session plan don't render.
 
 ### Success Criteria:
 
@@ -421,15 +428,15 @@ None: no database change. The first deploy installs the worker on the next visit
 
 #### Automated
 
-- [x] 4.1 Unit tests pass
-- [x] 4.2 Type check passes
-- [x] 4.3 Lint passes
-- [x] 4.4 Offline e2e spec passes
-- [x] 4.5 Full e2e suite passes
+- [x] 4.1 Unit tests pass — d256137
+- [x] 4.2 Type check passes — d256137
+- [x] 4.3 Lint passes — d256137
+- [x] 4.4 Offline e2e spec passes — d256137
+- [x] 4.5 Full e2e suite passes — d256137
 
 #### Manual
 
-- [x] 4.6 Offline notice screenshots in EN/PL × three themes, phone and desktop
-- [x] 4.7 Disabled controls read "Needs a connection" with visible focus and AA contrast
-- [x] 4.8 Theme switched offline holds across stored pages
+- [x] 4.6 Offline notice screenshots in EN/PL × three themes, phone and desktop — d256137
+- [x] 4.7 Disabled controls read "Needs a connection" with visible focus and AA contrast — d256137
+- [x] 4.8 Theme switched offline holds across stored pages — d256137
 - [ ] 4.9 Real-phone install and airplane-mode check

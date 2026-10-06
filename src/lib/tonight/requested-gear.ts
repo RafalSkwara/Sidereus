@@ -11,6 +11,9 @@ import { isGearId, SITE_COOKIE, TELESCOPE_COOKIE } from "@/lib/tonight/gear-choi
 function requested(url: URL, cookies: AstroCookies, param: string, cookie: string): string | undefined {
   const value = url.searchParams.get(param);
   if (isGearId(value)) {
+    // The service worker's background next-night fetch (`?night=next`) only reads: remembering its site here would
+    // undo a site switched in another tab meanwhile.
+    if (requestedNight(url) === "next") return value;
     cookies.set(cookie, value, {
       path: "/",
       maxAge: PREFERENCE_COOKIE_MAX_AGE,
@@ -24,7 +27,10 @@ function requested(url: URL, cookies: AstroCookies, param: string, cookie: strin
   return isGearId(remembered) ? remembered : undefined;
 }
 
-/** The site and telescope ids the page asks for: the query first (and remembered), else the remembered cookies. */
+/**
+ * The site and telescope ids the page asks for: the query first (remembered, except on a `?night=next` request), else
+ * the remembered cookies.
+ */
 export function requestedGear(url: URL, cookies: AstroCookies): { siteId?: string; telescopeId?: string } {
   return {
     siteId: requested(url, cookies, "site", SITE_COOKIE),

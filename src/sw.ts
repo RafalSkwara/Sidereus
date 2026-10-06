@@ -19,11 +19,13 @@ import {
   copyMetaFromIsland,
   emptyIndex,
   expire,
+  holdsUserData,
   islandUrlFromShell,
   listCopies,
   markFromDevice,
   mayStoreShell,
   needsNextCopy,
+  needsReset,
   parseIndex,
   pathKey,
   referencedAssetKeys,
@@ -47,6 +49,8 @@ const BACKGROUND_TIMEOUT_MS = 30_000;
 // A shell whose island has not arrived by then never will (the page was closed or the island failed).
 const PENDING_TTL_MS = 2 * 60 * 1000;
 const TRACKED_CLIENTS = 20;
+// Expiry also runs without a commit (worker start, messages, a stored copy served), at most this often.
+const SWEEP_EVERY_MS = 60 * 60 * 1000;
 // Plain HTML form POSTs; each starts a different user's (or no user's) store.
 const AUTH_POSTS = new Set(["/api/auth/signin", "/api/auth/signup", "/api/auth/signout"]);
 // The middleware adds `Vary: Cookie, Accept-Language` to every HTML response; a match must not depend on it.
@@ -111,17 +115,45 @@ function isHtml200(response: Response): boolean {
   return response.status === 200 && !response.redirected && type === "text/html";
 }
 
+/** Inside `serial` only: both runtime caches gone (the index with them, so the next one gets a new scope). */
+async function dropCaches(): Promise<void> {
+  await Promise.all([caches.delete(TONIGHT_CACHE), caches.delete(ASSETS_CACHE)]);
+}
+
 /** Signing in, up or out, or a bounce to sign-in: no copy of anyone's night stays on the device. */
 function purge(): Promise<void> {
   pending.clear();
   tonightClients.clear();
-  return serial(async () => {
-    await Promise.all([caches.delete(TONIGHT_CACHE), caches.delete(ASSETS_CACHE)]);
+  return serial(dropCaches);
+}
+
+/**
+ * A page rendered signed out asked for a purge (impl review F1: a sign-out or an expiry this worker never saw). Purges
+ * only when something a user left is still here, then stores the signed-out `/offline` in place of theirs.
+ */
+async function purgeSignedOut(): Promise<void> {
+  const purged = await serial(async () => {
+    const cache = await caches.open(TONIGHT_CACHE);
+    const offline = await cache.match(OFFLINE_PAGE, MATCH);
+    if (!holdsUserData(await readIndex(cache), offline ? await offline.text() : undefined)) return false;
+    pending.clear();
+    tonightClients.clear();
+    await dropCaches();
+    return true;
   });
+  if (purged) await storeOfflinePage();
+}
+
+let lastSweep = 0;
+
+/** `sweep`, unless one ran within the last hour. */
+function sweepSoon(): Promise<void> {
+  return Date.now() - lastSweep < SWEEP_EVERY_MS ? Promise.resolve() : sweep();
 }
 
 /** Expires old sites, then drops every entry no stored pair references (in both runtime caches). */
 function sweep(): Promise<void> {
+  lastSweep = Date.now();
   return serial(async () => {
     const cache = await caches.open(TONIGHT_CACHE);
     const stored = await readIndex(cache);
@@ -141,20 +173,26 @@ function sweep(): Promise<void> {
 
 /** `/offline` in the user's current language and theme, fetched with their cookies. */
 async function storeOfflinePage(): Promise<void> {
+  // Taken before the fetch: a page rendered with the cookies of a user signed out meanwhile (their email is in its
+  // Topbar) finds a different scope, or no index, and is not stored.
+  const scope = await currentScope();
   const response = await fetch(OFFLINE_PAGE, {
     credentials: "same-origin",
     signal: AbortSignal.timeout(BACKGROUND_TIMEOUT_MS),
   });
   if (!isHtml200(response)) return;
   const page = storable(await response.text(), response.headers.get("content-type") ?? "text/html");
-  // Queued, so a purge that starts meanwhile is not undone by a late put.
   await serial(async () => {
-    await (await caches.open(TONIGHT_CACHE)).put(OFFLINE_PAGE, page);
+    const cache = await caches.open(TONIGHT_CACHE);
+    if ((await readIndex(cache))?.userScope === scope) await cache.put(OFFLINE_PAGE, page);
   });
 }
 
+/** The stored `/offline`, marked as served from the device (so its page script never takes it for a fresh render). */
 async function storedOfflinePage(): Promise<Response | undefined> {
-  return (await caches.open(TONIGHT_CACHE)).match(OFFLINE_PAGE, MATCH);
+  const stored = await (await caches.open(TONIGHT_CACHE)).match(OFFLINE_PAGE, MATCH);
+  if (!stored) return undefined;
+  return storable(markFromDevice(await stored.text()), stored.headers.get("content-type") ?? "text/html");
 }
 
 // --- Which /_astro files a Tonight page loads ---------------------------------------------------------------------
@@ -172,6 +210,8 @@ interface TonightClient {
 }
 
 const tonightClients = new Map<string, TonightClient>();
+/** Pages known not to be Tonight pages: their asset requests skip the client lookup. */
+const otherClients = new Set<string>();
 
 function trackClient(id: string): TonightClient {
   let client = tonightClients.get(id);
@@ -185,11 +225,15 @@ function trackClient(id: string): TonightClient {
 
 /** The tracked Tonight page behind a request, also one opened before this worker started (looked up by its URL). */
 async function tonightClient(id: string): Promise<TonightClient | undefined> {
-  if (!id) return undefined;
+  if (!id || otherClients.has(id)) return undefined;
   const known = tonightClients.get(id);
   if (known) return known;
   const client = await self.clients.get(id);
-  return client && tonightPageOf(new URL(client.url)) ? trackClient(id) : undefined;
+  if (!client) return undefined;
+  if (tonightPageOf(new URL(client.url))) return trackClient(id);
+  otherClients.add(id);
+  for (const old of [...otherClients].slice(0, -TRACKED_CLIENTS)) otherClients.delete(old);
+  return undefined;
 }
 
 /** Copies the given files into the assets cache: from there already, else the precache, else the network. */
@@ -215,14 +259,15 @@ async function noteAsset(clientId: string, path: string): Promise<void> {
     const late = [...client.late];
     client.late.clear();
     const islands = [...client.islands];
-    await serial(async () => {
+    const added = await serial(async () => {
       const cache = await caches.open(TONIGHT_CACHE);
       const index = await readIndex(cache);
-      if (index?.copies.some((copy) => islands.includes(copy.islandUrl))) {
-        await writeIndex(cache, addAssets(index, islands, late));
-      }
+      if (!index?.copies.some((copy) => islands.includes(copy.islandUrl))) return false;
+      await writeIndex(cache, addAssets(index, islands, late));
+      return true;
     });
-    await keepAssets(late);
+    // Purged meanwhile, or the pairs replaced: nothing references these files.
+    if (added) await keepAssets(late);
   });
   await client.flush;
 }
@@ -240,14 +285,18 @@ interface PendingShell {
 /** Stored shells whose island has not answered yet, by the exact island URL each references. */
 const pending = new Map<string, PendingShell>();
 /** Shells still streaming in: the browser asks for the island from the head, before the shell has fully arrived. */
-const shellReads = new Set<Promise<void>>();
+const shellReads = new Set<Promise<unknown>>();
 
-function recordShell(page: TonightPage, response: Response, event: ExtendableEvent): void {
-  const scope = currentScope();
+/**
+ * Reads a Tonight shell and waits for its island; resolves to that island's URL (none when nothing was recorded).
+ * `scope` was taken when the navigation started, before the network answered (impl review F3), so a response sent
+ * with an earlier user's cookies that lands after a purge cannot commit into the new store.
+ */
+function recordShell(page: TonightPage, response: Response, scope: Promise<string>): Promise<string | undefined> {
   const read = (async () => {
     const shell = await response.text();
     const islandUrl = islandUrlFromShell(shell);
-    if (!islandUrl) return;
+    if (!islandUrl) return undefined;
     const now = Date.now();
     for (const [key, entry] of pending) if (now - entry.at > PENDING_TTL_MS) pending.delete(key);
     pending.set(islandUrl, {
@@ -257,13 +306,18 @@ function recordShell(page: TonightPage, response: Response, event: ExtendableEve
       scope: await scope,
       at: now,
     });
+    return islandUrl;
   })().catch(() => undefined);
   shellReads.add(read);
   void read.finally(() => shellReads.delete(read));
-  event.waitUntil(read);
+  return read;
 }
 
-/** Stores a pair and updates the index, unless a purge came in between or this island was already committed. */
+/**
+ * Stores a pair and updates the index, unless a purge came in between or this island was already committed. A pair
+ * from another user than the index's owner purges every copy and starts a new scope first (impl review F1), so
+ * neither a sign-in nor a sign-out the worker did not see can mix two users' copies.
+ */
 function commit(
   meta: CopyMeta,
   shell: { body: string; contentType: string },
@@ -271,8 +325,12 @@ function commit(
   scope: string,
 ): Promise<CopyIndex | undefined> {
   return serial(async () => {
-    const { cache, index } = await loadIndex();
+    let { cache, index } = await loadIndex();
     if (index.userScope !== scope) return undefined;
+    if (needsReset(index, meta.owner)) {
+      await dropCaches();
+      ({ cache, index } = await loadIndex());
+    }
     const change = commitPair(index, meta);
     if (change.index === index) return undefined;
     await cache.put(meta.shellKey, storable(shell.body, shell.contentType));
@@ -301,31 +359,39 @@ async function commitIsland(islandUrl: string, response: Response, clientId: str
   ]);
   const shell = pending.get(islandUrl);
   if (!shell) return;
-  const body = await response.text();
-  // Signed out, the island answers 200 with an empty body: nothing to store.
-  const island = copyMetaFromIsland(body);
-  if (!island) return;
-  const client = await tonightClient(clientId);
-  const meta: CopyMeta = {
-    ...island,
-    page: shell.page,
-    shellKey: shellKeyFor(islandUrl),
-    islandUrl,
-    storedAt: new Date().toISOString(),
-    assets: [...new Set([...assetUrlsIn(shell.shell), ...assetUrlsIn(body), ...(client?.assets ?? [])])].sort(),
-  };
-  const index = await commit(
-    meta,
-    { body: shell.shell, contentType: shell.contentType },
-    { body, contentType: response.headers.get("content-type") ?? "text/html" },
-    shell.scope,
-  );
+  let index: CopyIndex | undefined;
+  let meta: CopyMeta;
+  let client: TonightClient | undefined;
+  try {
+    const body = await response.text();
+    // Signed out, the island answers 200 with an empty body: nothing to store.
+    const island = copyMetaFromIsland(body);
+    if (!island) return;
+    client = await tonightClient(clientId);
+    meta = {
+      ...island,
+      page: shell.page,
+      shellKey: shellKeyFor(islandUrl),
+      islandUrl,
+      storedAt: new Date().toISOString(),
+      assets: [...new Set([...assetUrlsIn(shell.shell), ...assetUrlsIn(body), ...(client?.assets ?? [])])].sort(),
+    };
+    index = await commit(
+      meta,
+      { body: shell.shell, contentType: shell.contentType },
+      { body, contentType: response.headers.get("content-type") ?? "text/html" },
+      shell.scope,
+    );
+  } finally {
+    // Committed, refused or failed: this shell never commits later (a duplicate fetch of the island finds none).
+    pending.delete(islandUrl);
+  }
   if (!index) return;
-  pending.delete(islandUrl);
   client?.islands.add(islandUrl);
   await afterCommit(meta.assets);
   if (meta.kind === "tonight" && needsNextCopy(index, meta.siteId, meta.page, new Date())) {
-    await storeNextCopy(meta, shell.scope, client);
+    // The index's scope now: a commit that purged another user's copies started a new one.
+    await storeNextCopy(meta, index.userScope, client);
   }
 }
 
@@ -391,8 +457,10 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
 async function networkFirst(
   request: Request,
   stored: () => Promise<Response | undefined>,
-): Promise<{ response: Response; fromNetwork: boolean }> {
-  const network = fetch(request).then((response) => ({ response, fromNetwork: true }));
+): Promise<{ response: Response; fromNetwork: boolean; network: Promise<Response> }> {
+  // Also returned: when the stored copy wins, the network's late answer is still worth reading.
+  const network = fetch(request);
+  const fromNetwork = network.then((response) => ({ response, fromNetwork: true, network }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timedOut = new Promise<Response | undefined>((resolve) => {
     timer = setTimeout(() => {
@@ -403,16 +471,43 @@ async function networkFirst(
   });
   try {
     return await Promise.race([
-      network,
-      timedOut.then((response) => (response ? { response, fromNetwork: false } : network)),
+      fromNetwork,
+      timedOut.then((response) => (response ? { response, fromNetwork: false, network } : fromNetwork)),
     ]);
   } catch (error) {
     const response = await stored();
-    if (response) return { response, fromNetwork: false };
+    if (response) return { response, fromNetwork: false, network };
     throw error;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * What a Tonight navigation's network answer means for the store: a bounce to sign-in purges, a storable page waits
+ * for its island. A `late` answer (the stored copy was served after the timeout, impl review F6) has no page to ask
+ * for that island, so the worker fetches it and commits the pair itself.
+ */
+async function afterNavigation(
+  url: URL,
+  page: TonightPage,
+  response: Response,
+  scope: Promise<string>,
+  clientId: string,
+  late: boolean,
+): Promise<void> {
+  if (response.type === "opaqueredirect") {
+    await purge();
+    return;
+  }
+  if (!isHtml200(response) || !mayStoreShell(url)) return;
+  const islandUrl = await recordShell(page, response, scope);
+  if (!late || !islandUrl) return;
+  const island = await fetch(islandUrl, {
+    credentials: "same-origin",
+    signal: AbortSignal.timeout(BACKGROUND_TIMEOUT_MS),
+  });
+  await commitIsland(islandUrl, island, clientId);
 }
 
 /** The stored copy for a Tonight navigation, marked so the page says it came from the device. */
@@ -446,12 +541,20 @@ registerRoute(
     if (!target) return fetch(request);
     const fetchEvent = event as FetchEvent;
     if (fetchEvent.resultingClientId) trackClient(fetchEvent.resultingClientId);
+    // Before the network answers (impl review F3); a rejection only means nothing is stored from this navigation.
+    const scope = currentScope();
+    void scope.catch(() => undefined);
     try {
-      const { response, fromNetwork } = await networkFirst(request, () => storedTonight(target.page, target.siteId));
-      if (fromNetwork && response.type === "opaqueredirect") {
-        event.waitUntil(purge());
-      } else if (fromNetwork && isHtml200(response) && mayStoreShell(url)) {
-        recordShell(target.page, response.clone(), event);
+      const { response, fromNetwork, network } = await networkFirst(request, () =>
+        storedTonight(target.page, target.siteId),
+      );
+      const settle = (answer: Response, late: boolean) =>
+        afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(() => undefined);
+      if (fromNetwork) {
+        event.waitUntil(settle(response.type === "opaqueredirect" ? response : response.clone(), false));
+      } else {
+        event.waitUntil(sweepSoon().catch(() => undefined));
+        event.waitUntil(network.then((late) => settle(late, true)).catch(() => undefined));
       }
       return response;
     } catch (error) {
@@ -516,11 +619,21 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(sweep().catch(() => undefined));
 });
 
-// The /offline page lists the stored pages: the copy each would serve now, one per site and page.
+// A worker started after a while (the browser stops idle ones) expires what is due, even with no page opened online.
+void sweepSoon().catch(() => undefined);
+
+// Two messages: a page rendered signed out asks for a purge; the /offline page lists the stored pages (the copy each
+// would serve now, one per site and page).
 self.addEventListener("message", (event) => {
   const data: unknown = event.data;
+  event.waitUntil(sweepSoon().catch(() => undefined));
+  const type = typeof data === "object" && data !== null ? (data as { type?: unknown }).type : undefined;
+  if (type === "purge") {
+    event.waitUntil(purgeSignedOut().catch(() => undefined));
+    return;
+  }
   const port = event.ports.at(0);
-  if (typeof data !== "object" || data === null || (data as { type?: unknown }).type !== "list-copies" || !port) return;
+  if (type !== "list-copies" || !port) return;
   event.waitUntil(
     (async () => {
       const index = await readIndex(await caches.open(TONIGHT_CACHE));
