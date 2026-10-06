@@ -1,5 +1,89 @@
 [
   {
+    "id": "apertura-ad6",
+    "brand": "Apertura",
+    "model": "AD6",
+    "name": "Apertura AD6",
+    "apertureMm": 152.4,
+    "focalLengthMm": 1200,
+    "aliases": ["AD6 Dobsonian", "Apertura 6 inch Dobsonian", "Apertura AD6 Dobsonian 6"],
+    "bundledEyepieces": ["apertura-bundled-25mm", "apertura-bundled-9mm"],
+    "source": "https://www.highpointscientific.com/apertura-ad6-6-inch-dobsonian-telescope-ad6"
+  },
+  {
+    "id": "apertura-ad8",
+    "brand": "Apertura",
+    "model": "AD8",
+    "name": "Apertura AD8",
+    "apertureMm": 203.2,
+    "focalLengthMm": 1200,
+    "aliases": ["AD8 Dobsonian", "Apertura 8 inch Dobsonian", "Apertura AD8 Dobsonian 8"],
+    "bundledEyepieces": ["apertura-bundled-30mm", "apertura-bundled-9mm"],
+    "source": "https://www.highpointscientific.com/apertura-ad8-8-inch-dobsonian-telescope-ad8"
+  },
+  {
+    "id": "apertura-ad10",
+    "brand": "Apertura",
+    "model": "AD10",
+    "name": "Apertura AD10",
+    "apertureMm": 254,
+    "focalLengthMm": 1250,
+    "aliases": ["AD10 Dobsonian", "Apertura 10 inch Dobsonian", "Apertura AD10 Dobsonian 10"],
+    "bundledEyepieces": ["apertura-bundled-30mm", "apertura-bundled-9mm"],
+    "source": "https://www.highpointscientific.com/apertura-ad10-10inch-dobsonian-telescope-ad10"
+  },
+  {
+    "id": "apertura-ad12",
+    "brand": "Apertura",
+    "model": "AD12",
+    "name": "Apertura AD12",
+    "apertureMm": 305,
+    "focalLengthMm": 1520,
+    "aliases": ["AD12 Dobsonian", "Apertura 12 inch Dobsonian", "Apertura AD12 Dobsonian 12"],
+    "bundledEyepieces": ["apertura-bundled-30mm", "apertura-bundled-9mm"],
+    "source": "https://www.highpointscientific.com/apertura-ad12-12inch-dobsonian-telescope-ad12"
+  },
+  {
+    "id": "askar-fra300-pro",
+    "brand": "Askar",
+    "model": "FRA300 Pro",
+    "name": "Askar FRA300 Pro",
+    "apertureMm": 60,
+    "focalLengthMm": 300,
+    "aliases": ["FRA300PRO", "FRA300"],
+    "source": "https://www.sharpstar-optics.com/Products_1/22.html"
+  },
+  {
+    "id": "askar-71f",
+    "brand": "Askar",
+    "model": "71F",
+    "name": "Askar 71F",
+    "apertureMm": 71,
+    "focalLengthMm": 490,
+    "aliases": ["Askar 71F Flat-Field"],
+    "source": "https://www.sharpstar-optics.com/Products_1/101.html"
+  },
+  {
+    "id": "askar-fra400",
+    "brand": "Askar",
+    "model": "FRA400",
+    "name": "Askar FRA400",
+    "apertureMm": 72,
+    "focalLengthMm": 400,
+    "aliases": ["FRA 400"],
+    "source": "https://www.sharpstar-optics.com/Products_1/34.html"
+  },
+  {
+    "id": "askar-103apo",
+    "brand": "Askar",
+    "model": "103APO",
+    "name": "Askar 103APO",
+    "apertureMm": 103,
+    "focalLengthMm": 700.4,
+    "aliases": ["Askar 103 APO"],
+    "source": "https://www.sharpstar-optics.com/Products_1/79.html"
+  },
+  {
     "id": "bresser-arcturus-60-700",
     "brand": "Bresser",
     "model": "Arcturus 60/700",
@@ -1118,6 +1202,17 @@
     "source": "https://explorescientific.com/products/10-inch-dobsonian-reflector-telescope"
   },
   {
+    "id": "gso-gsd580",
+    "brand": "GSO",
+    "model": "GSD580",
+    "name": "GSO GSD580",
+    "apertureMm": 152,
+    "focalLengthMm": 1200,
+    "aliases": ["GSO Dobsonian 6 f/8", "GSO 6 inch Dobsonian", "GSO 6\" f/8 Dobsonian Deluxe", "GSO 150mm Dobsonian"],
+    "bundledEyepieces": ["gso-bundled-25mm", "gso-bundled-9mm"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/dobsonian-telescopes-2/gso-6-inch-f-8-dobsonian-telescope-deluxe-2-inch-crayford-improved-features-17340"
+  },
+  {
     "id": "levenhuk-skyline-travel-50",
     "brand": "Levenhuk",
     "model": "Skyline Travel 50",
@@ -1751,6 +1846,217 @@
     "source": "https://optcorp.com/products/meade-12-f-10-acf-uhtc-ota-me-1210-60-01"
   },
   {
+    "id": "omegon-mightymak-60",
+    "brand": "Omegon",
+    "model": "MightyMak 60",
+    "name": "Omegon MightyMak 60",
+    "apertureMm": 60,
+    "focalLengthMm": 700,
+    "aliases": ["Omegon Maksutov MightyMak 60", "MightyMak 60 Titania"],
+    "bundledEyepieces": ["omegon-bundled-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-maksutov-telescope-mightymak-60/p,46442"
+  },
+  {
+    "id": "omegon-ac-70-700",
+    "brand": "Omegon",
+    "model": "AC 70/700",
+    "name": "Omegon AC 70/700",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["Omegon AC 70/700 AZ-2", "Omegon AC 70/700 refractor"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-ac-70-700-az-2/p,20643"
+  },
+  {
+    "id": "omegon-mightymak-80",
+    "brand": "Omegon",
+    "model": "MightyMak 80",
+    "name": "Omegon MightyMak 80",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["Omegon Maksutov MightyMak 80"],
+    "bundledEyepieces": ["omegon-bundled-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-maksutov-telescope-mightymak-80/p,46443"
+  },
+  {
+    "id": "omegon-ac-90-1000",
+    "brand": "Omegon",
+    "model": "AC 90/1000",
+    "name": "Omegon AC 90/1000",
+    "apertureMm": 90,
+    "focalLengthMm": 1000,
+    "aliases": ["Omegon AC 90/1000 EQ-2", "Omegon AC 90/1000 refractor"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-ac-90-1000-eq-2/p,20277"
+  },
+  {
+    "id": "omegon-ac-102-1000",
+    "brand": "Omegon",
+    "model": "AC 102/1000",
+    "name": "Omegon AC 102/1000",
+    "apertureMm": 102,
+    "focalLengthMm": 1000,
+    "aliases": ["Omegon Advanced AC 102/1000", "Omegon AC 102/1000 EQ-300", "Omegon AC 102/1000 refractor"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-advanced-ac-102-1000-ota/p,47745"
+  },
+  {
+    "id": "omegon-n-114-900",
+    "brand": "Omegon",
+    "model": "N 114/900",
+    "name": "Omegon N 114/900",
+    "apertureMm": 114,
+    "focalLengthMm": 900,
+    "aliases": ["Omegon Telescope N 114/900 EQ-1", "Omegon N 114/900 EQ-1"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-set-n-114-900-114-eq-1/p,18007"
+  },
+  {
+    "id": "omegon-advanced-130-650",
+    "brand": "Omegon",
+    "model": "Advanced 130/650",
+    "name": "Omegon Advanced 130/650",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Omegon Advanced 130/650 EQ-320", "Omegon Advanced Telescope 130/650"],
+    "bundledEyepieces": ["omegon-bundled-25mm", "omegon-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-advanced-telescope-130-650-eq-320/p,61022"
+  },
+  {
+    "id": "omegon-n-130-920",
+    "brand": "Omegon",
+    "model": "N 130/920",
+    "name": "Omegon N 130/920",
+    "apertureMm": 130,
+    "focalLengthMm": 920,
+    "aliases": ["Omegon Telescope N 130/920 EQ-2", "Omegon N 130/920 EQ-2"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-n-130-920-eq-2-set/p,60837"
+  },
+  {
+    "id": "omegon-advanced-150-750",
+    "brand": "Omegon",
+    "model": "Advanced 150/750",
+    "name": "Omegon Advanced 150/750",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Omegon Advanced 150/750 EQ-320", "Omegon Advanced Telescope 150/750"],
+    "bundledEyepieces": ["omegon-bundled-25mm", "omegon-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-advanced-telescope-150-750-eq-320/p,61021"
+  },
+  {
+    "id": "omegon-n-150-750",
+    "brand": "Omegon",
+    "model": "N 150/750",
+    "name": "Omegon N 150/750",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Omegon Telescope N 150/750 EQ-3", "Omegon N 150/750 EQ-3"],
+    "bundledEyepieces": ["omegon-bundled-plossl-25mm", "omegon-bundled-plossl-6-5mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-n-150-750-eq-3/p,13764"
+  },
+  {
+    "id": "omegon-advanced-x-n-152-1200",
+    "brand": "Omegon",
+    "model": "Advanced X N 152/1200",
+    "name": "Omegon Advanced X N 152/1200",
+    "apertureMm": 152,
+    "focalLengthMm": 1200,
+    "aliases": ["Omegon Dobson Advanced X N 152/1200", "Omegon Advanced X 152/1200 Dobsonian"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-dobson-telescope-advanced-x-n-152-1200/p,79799"
+  },
+  {
+    "id": "omegon-pronewton-n-153-750",
+    "brand": "Omegon",
+    "model": "ProNewton N 153/750",
+    "name": "Omegon ProNewton N 153/750",
+    "apertureMm": 153,
+    "focalLengthMm": 750,
+    "aliases": ["Omegon ProNewton 153/750", "Omegon ProNewton N 153/750 OTA", "Omegon ProNewton N 153/750 EQ-500 X"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-pronewton-n-153-750-eq-500-x/p,64370"
+  },
+  {
+    "id": "omegon-pro-astrograph-203-800",
+    "brand": "Omegon",
+    "model": "Pro Astrograph 203/800",
+    "name": "Omegon Pro Astrograph 203/800",
+    "apertureMm": 203,
+    "focalLengthMm": 800,
+    "aliases": ["Omegon Advanced 203/800", "Omegon Pro Astrograph 203/800 OTA", "Omegon Newton 203/800 astrograph"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-pro-astrograph-203-800-ota/p,54740"
+  },
+  {
+    "id": "omegon-pronewton-n-203-1000",
+    "brand": "Omegon",
+    "model": "ProNewton N 203/1000",
+    "name": "Omegon ProNewton N 203/1000",
+    "apertureMm": 203,
+    "focalLengthMm": 1000,
+    "aliases": ["Omegon ProNewton 203/1000", "Omegon ProNewton N 203/1000 OTA", "Omegon ProNewton N 203/1000 EQ-500 X"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-pronewton-n-203-1000-ota-ohne-zubehoer/p,55803"
+  },
+  {
+    "id": "omegon-advanced-x-n-203-1200",
+    "brand": "Omegon",
+    "model": "Advanced X N 203/1200",
+    "name": "Omegon Advanced X N 203/1200",
+    "apertureMm": 203,
+    "focalLengthMm": 1200,
+    "aliases": ["Omegon Dobson Advanced X N 203/1200", "Omegon Advanced X 203/1200 Dobsonian"],
+    "bundledEyepieces": ["omegon-bundled-plossl-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-dobson-telescope-advanced-x-n-203-1200/p,53802"
+  },
+  {
+    "id": "omegon-advanced-x-n-254-1250",
+    "brand": "Omegon",
+    "model": "Advanced X N 254/1250",
+    "name": "Omegon Advanced X N 254/1250",
+    "apertureMm": 254,
+    "focalLengthMm": 1250,
+    "aliases": ["Omegon Dobson Advanced X N 254/1250", "Omegon Advanced X 254/1250 Dobsonian"],
+    "bundledEyepieces": ["omegon-bundled-plossl-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-dobson-telescope-advanced-x-n-254-1250/p,53803"
+  },
+  {
+    "id": "omegon-advanced-x-n-304-1500",
+    "brand": "Omegon",
+    "model": "Advanced X N 304/1500",
+    "name": "Omegon Advanced X N 304/1500",
+    "apertureMm": 304,
+    "focalLengthMm": 1500,
+    "aliases": ["Omegon Dobson Advanced X N 304/1500", "Omegon Advanced X 304/1500 Dobsonian"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-dobson-telescope-advanced-x-n-304-1500/p,53804"
+  },
+  {
+    "id": "orion-ed80t-cf",
+    "brand": "Orion",
+    "model": "ED80T CF",
+    "name": "Orion ED80T CF",
+    "apertureMm": 80,
+    "focalLengthMm": 480,
+    "aliases": ["ED80T CF Triplet Apochromatic", "Orion ED80", "AP 80/480"],
+    "source": "https://optcorp.com/products/orion-ed80t-cf-triplet-apochromatic-refractor-telescope-9534"
+  },
+  {
+    "id": "orion-astroview-90",
+    "brand": "Orion",
+    "model": "AstroView 90",
+    "name": "Orion AstroView 90",
+    "apertureMm": 90,
+    "focalLengthMm": 910,
+    "aliases": ["AstroView 90mm EQ Refractor", "AstroView 90 EQ", "AC 90/910 AstroView"],
+    "bundledEyepieces": ["orion-bundled-25mm", "orion-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-telescope-ac-90-910-astroview-eq-2/p,13894"
+  },
+  {
+    "id": "orion-apex-102",
+    "brand": "Orion",
+    "model": "Apex 102",
+    "name": "Orion Apex 102",
+    "apertureMm": 102,
+    "focalLengthMm": 1300,
+    "aliases": ["Apex 102mm Maksutov-Cassegrain", "MC 102/1300 Apex"],
+    "bundledEyepieces": ["orion-bundled-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-maksutov-telescope-mc-102-1300-apex-ota/p,14582"
+  },
+  {
     "id": "orion-starblast-4-5",
     "brand": "Orion",
     "model": "StarBlast 4.5",
@@ -1759,6 +2065,253 @@
     "focalLengthMm": 450,
     "aliases": ["StarBlast 4.5 Astro Reflector", "StarBlast 113/450", "Orion 10015"],
     "source": "https://optcorp.com/products/orion-starblast-4-5-reflector-telescope-10015"
+  },
+  {
+    "id": "orion-astroview-120st",
+    "brand": "Orion",
+    "model": "AstroView 120ST",
+    "name": "Orion AstroView 120ST",
+    "apertureMm": 120,
+    "focalLengthMm": 600,
+    "aliases": ["AstroView 120ST EQ Refractor", "AC 120/600 ST AstroView"],
+    "bundledEyepieces": ["orion-bundled-25mm", "orion-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-telescope-ac-120-600-st-astroview-eq-3/p,13896"
+  },
+  {
+    "id": "orion-apex-127",
+    "brand": "Orion",
+    "model": "Apex 127",
+    "name": "Orion Apex 127",
+    "apertureMm": 127,
+    "focalLengthMm": 1540,
+    "aliases": ["Apex 127mm Maksutov-Cassegrain", "MC 127/1540 Apex"],
+    "bundledEyepieces": ["orion-bundled-25mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-maksutov-telescope-mc-127-1540-apex-ota/p,14306"
+  },
+  {
+    "id": "orion-spaceprobe-130st",
+    "brand": "Orion",
+    "model": "SpaceProbe 130ST",
+    "name": "Orion SpaceProbe 130ST",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["SpaceProbe 130ST EQ Reflector", "SpaceProbe 130ST EQ-2", "N 130/650 SpaceProbe"],
+    "bundledEyepieces": ["orion-bundled-25mm", "orion-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-telescope-n130-650-spaceprobe-eq-2/p,25388"
+  },
+  {
+    "id": "orion-starblast-6",
+    "brand": "Orion",
+    "model": "StarBlast 6",
+    "name": "Orion StarBlast 6",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": [
+      "StarBlast 6 Astro Reflector",
+      "StarBlast 6 Tabletop Dobsonian",
+      "StarBlast 6i IntelliScope",
+      "N 150/750 StarBlast 6"
+    ],
+    "bundledEyepieces": ["orion-bundled-25mm", "orion-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-dobson-telescope-n-150-750-starblast-6-dob/p,13929"
+  },
+  {
+    "id": "orion-skyquest-xt12",
+    "brand": "Orion",
+    "model": "SkyQuest XT12",
+    "name": "Orion SkyQuest XT12",
+    "apertureMm": 305,
+    "focalLengthMm": 1500,
+    "aliases": ["SkyQuest XT12 Classic Dobsonian", "SkyQuest XT12i IntelliScope", "XT12i", "N 305/1500 SkyQuest XT12"],
+    "bundledEyepieces": ["orion-bundled-25mm", "orion-bundled-10mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-dobson-telescope-n-305-1500-skyquest-xt12i-intelliscope-dob/p,33296"
+  },
+  {
+    "id": "saxon-607",
+    "brand": "Saxon",
+    "model": "607",
+    "name": "Saxon 607",
+    "apertureMm": 60,
+    "focalLengthMm": 700,
+    "aliases": ["607AZ2", "60/700 AZ2", "Saxon 607AZ2 Refractor"],
+    "source": "https://www.saxon.com.au/saxon-607az2-refractor-telescope.html.html"
+  },
+  {
+    "id": "saxon-707",
+    "brand": "Saxon",
+    "model": "707",
+    "name": "Saxon 707",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["707AZ2", "70/700 AZ2", "Saxon 707AZ2 Refractor"],
+    "source": "https://www.saxon.com.au/saxon-707az2-refractor-telescope.html.html"
+  },
+  {
+    "id": "saxon-709",
+    "brand": "Saxon",
+    "model": "709",
+    "name": "Saxon 709",
+    "apertureMm": 70,
+    "focalLengthMm": 900,
+    "aliases": ["709AZ3", "70/900 AZ3", "Saxon 709AZ3 Refractor"],
+    "source": "https://www.saxon.com.au/saxon-709az3-refractor-telescope.html.html"
+  },
+  {
+    "id": "saxon-767",
+    "brand": "Saxon",
+    "model": "767",
+    "name": "Saxon 767",
+    "apertureMm": 76,
+    "focalLengthMm": 700,
+    "aliases": ["767AZ", "76/700 AZ", "Saxon 767AZ Reflector"],
+    "source": "https://www.saxon.com.au/saxon-767az-reflector-telescope.html.html"
+  },
+  {
+    "id": "saxon-804-pioneer",
+    "brand": "Saxon",
+    "model": "804 Pioneer",
+    "name": "Saxon 804 Pioneer",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["804AZ3", "80/400 AZ3", "Saxon 804AZ3 Pioneer Refractor"],
+    "source": "https://www.saxon.com.au/saxon-804az3-pioneer-refractor-telescope.html.html"
+  },
+  {
+    "id": "saxon-1021-hyperion",
+    "brand": "Saxon",
+    "model": "1021 Hyperion",
+    "name": "Saxon 1021 Hyperion",
+    "apertureMm": 102,
+    "focalLengthMm": 1000,
+    "aliases": ["1021EQ3", "102/1000 EQ3", "Saxon 1021EQ3 Hyperion Refractor"],
+    "source": "https://www.saxon.com.au/saxon-1021eq3-hyperion-refractor-telescope.html.html"
+  },
+  {
+    "id": "saxon-1145",
+    "brand": "Saxon",
+    "model": "1145",
+    "name": "Saxon 1145",
+    "apertureMm": 114,
+    "focalLengthMm": 500,
+    "aliases": ["1145AZ", "114/500 AZ", "Saxon 1145AZ Reflector"],
+    "source": "https://www.saxon.com.au/saxon-1145az-reflector-telescope.html"
+  },
+  {
+    "id": "saxon-1149",
+    "brand": "Saxon",
+    "model": "1149",
+    "name": "Saxon 1149",
+    "apertureMm": 114,
+    "focalLengthMm": 900,
+    "aliases": ["1149EQ", "114/900 EQ", "Saxon 1149EQ Reflector", "1149EQ with Motor Drive"],
+    "source": "https://www.saxon.com.au/saxon-1149eq-reflector-telescope.html.html"
+  },
+  {
+    "id": "saxon-1141",
+    "brand": "Saxon",
+    "model": "1141",
+    "name": "Saxon 1141",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["1141EQ", "114/1000 EQ", "Saxon 1141EQ Reflector", "1141EQ with Motor Drive"],
+    "source": "https://www.saxon.com.au/saxon-1141eq-reflector-telescope.html.html"
+  },
+  {
+    "id": "saxon-1206-pioneer",
+    "brand": "Saxon",
+    "model": "1206 Pioneer",
+    "name": "Saxon 1206 Pioneer",
+    "apertureMm": 120,
+    "focalLengthMm": 600,
+    "aliases": ["1206AZ5", "120/600 AZ5", "Saxon 1206AZ5 Pioneer Refractor"],
+    "source": "https://www.saxon.com.au/saxon-1206az5-pioneer-refractor-telescope.html"
+  },
+  {
+    "id": "saxon-12715",
+    "brand": "Saxon",
+    "model": "12715",
+    "name": "Saxon 12715",
+    "apertureMm": 127,
+    "focalLengthMm": 1500,
+    "aliases": ["127/1500", "Saxon 12715 Observatory Cassegrain", "Saxon 127 Maksutov"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-12715-observatory-cassegrain-telescope.html.html"
+  },
+  {
+    "id": "saxon-1309-velocity",
+    "brand": "Saxon",
+    "model": "1309 Velocity",
+    "name": "Saxon 1309 Velocity",
+    "apertureMm": 130,
+    "focalLengthMm": 900,
+    "aliases": ["1309EQ2", "130/900 EQ2", "Saxon 1309EQ2 Velocity Reflector"],
+    "source": "https://www.saxon.com.au/saxon-1309eq2-velocity-reflector-telescope.html.html"
+  },
+  {
+    "id": "saxon-15018",
+    "brand": "Saxon",
+    "model": "15018",
+    "name": "Saxon 15018",
+    "apertureMm": 150,
+    "focalLengthMm": 1800,
+    "aliases": ["150/1800", "Saxon 15018 Observatory Cassegrain", "Saxon 150 Maksutov"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-15019-observatory-cassegrain-telescope.html.html"
+  },
+  {
+    "id": "saxon-deepsky-6",
+    "brand": "Saxon",
+    "model": "DeepSky 6",
+    "name": "Saxon DeepSky 6",
+    "apertureMm": 153,
+    "focalLengthMm": 1200,
+    "aliases": ["Saxon 6\" DeepSky Dobsonian", "Saxon DeepSky 6 inch", "153/1200"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-6-deepsky-dobsonian-telescope.html.html"
+  },
+  {
+    "id": "saxon-deepsky-8",
+    "brand": "Saxon",
+    "model": "DeepSky 8",
+    "name": "Saxon DeepSky 8",
+    "apertureMm": 203,
+    "focalLengthMm": 1200,
+    "aliases": ["Saxon 8\" DeepSky Dobsonian", "Saxon DeepSky 8 inch", "203/1200"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-8-deepsky-dobsonian-telescope.html.html"
+  },
+  {
+    "id": "saxon-deepsky-10",
+    "brand": "Saxon",
+    "model": "DeepSky 10",
+    "name": "Saxon DeepSky 10",
+    "apertureMm": 254,
+    "focalLengthMm": 1200,
+    "aliases": ["Saxon 10\" DeepSky Dobsonian", "Saxon DeepSky 10 inch", "254/1200"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-10-deepsky-dobsonian-telescope.html.html"
+  },
+  {
+    "id": "saxon-deepsky-truss-12",
+    "brand": "Saxon",
+    "model": "DeepSky Truss 12",
+    "name": "Saxon DeepSky Truss 12",
+    "apertureMm": 300,
+    "focalLengthMm": 1525,
+    "aliases": ["Saxon 12\" DeepSky Truss Dobsonian", "Saxon DeepSky 12 inch", "300/1525"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-12-deepsky-truss-dobsonian-telescope.html"
+  },
+  {
+    "id": "saxon-deepsky-truss-16",
+    "brand": "Saxon",
+    "model": "DeepSky Truss 16",
+    "name": "Saxon DeepSky Truss 16",
+    "apertureMm": 406,
+    "focalLengthMm": 1830,
+    "aliases": ["Saxon 16\" DeepSky Truss Dobsonian", "Saxon DeepSky 16 inch", "406/1830"],
+    "bundledEyepieces": ["saxon-bundled-25mm", "saxon-bundled-10mm"],
+    "source": "https://www.saxon.com.au/saxon-16-deepsky-truss-dobsonian-telescope.html"
   },
   {
     "id": "skywatcher-mercury-607",
@@ -2321,5 +2874,197 @@
     "aliases": ["Stargate 20 inch", "StarGate 20 SynScan"],
     "bundledEyepieces": ["skywatcher-bundled-20mm-swa", "skywatcher-bundled-12-5mm-swa"],
     "source": "https://www.skywatcher.com/product/stargate-20-synscan/"
+  },
+  {
+    "id": "stellalyra-6-f8",
+    "brand": "StellaLyra",
+    "model": "6 f/8",
+    "name": "StellaLyra 6 f/8",
+    "apertureMm": 152,
+    "focalLengthMm": 1200,
+    "aliases": ["StellaLyra 6\" f/8 Planetary Dobsonian", "152/1200"],
+    "bundledEyepieces": ["stellalyra-bundled-9mm", "stellalyra-bundled-15mm", "stellalyra-bundled-30mm"],
+    "source": "https://www.firstlightoptics.com/stellalyra-telescopes/stellalyra-6-f8-planetary-dobsonian.html"
+  },
+  {
+    "id": "stellalyra-8-f6",
+    "brand": "StellaLyra",
+    "model": "8 f/6",
+    "name": "StellaLyra 8 f/6",
+    "apertureMm": 203,
+    "focalLengthMm": 1200,
+    "aliases": ["StellaLyra 8\" f/6 Dobsonian", "203/1200"],
+    "bundledEyepieces": ["stellalyra-bundled-9mm", "stellalyra-bundled-15mm", "stellalyra-bundled-30mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/stellalyra-8-f6-dobsonian.html"
+  },
+  {
+    "id": "stellalyra-10-f5",
+    "brand": "StellaLyra",
+    "model": "10 f/5",
+    "name": "StellaLyra 10 f/5",
+    "apertureMm": 254,
+    "focalLengthMm": 1250,
+    "aliases": ["StellaLyra 10\" f/5 Dobsonian", "254/1250"],
+    "bundledEyepieces": ["stellalyra-bundled-9mm", "stellalyra-bundled-15mm", "stellalyra-bundled-30mm"],
+    "source": "https://www.firstlightoptics.com/stellalyra-telescopes/stellalyra-10-f5-dobsonian.html"
+  },
+  {
+    "id": "stellalyra-12-f5",
+    "brand": "StellaLyra",
+    "model": "12 f/5",
+    "name": "StellaLyra 12 f/5",
+    "apertureMm": 304,
+    "focalLengthMm": 1520,
+    "aliases": ["StellaLyra 12\" f/5 Dobsonian", "304/1520"],
+    "bundledEyepieces": ["stellalyra-bundled-9mm", "stellalyra-bundled-15mm", "stellalyra-bundled-30mm"],
+    "source": "https://www.firstlightoptics.com/stellalyra-telescopes/stellalyra-12-f5-dobsonian.html"
+  },
+  {
+    "id": "ts-optics-photoline-60-360",
+    "brand": "TS-Optics",
+    "model": "Photoline 60/360",
+    "name": "TS-Optics Photoline 60/360",
+    "apertureMm": 60,
+    "focalLengthMm": 360,
+    "aliases": ["TS-Optics PhotoLine 60 mm f/6", "TSAPO60F6"],
+    "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-photoline-60-mm-f-6-fpl53-apo-2-r-p-focuser-red-line-10095"
+  },
+  {
+    "id": "ts-optics-photoline-72-432",
+    "brand": "TS-Optics",
+    "model": "Photoline 72/432",
+    "name": "TS-Optics Photoline 72/432",
+    "apertureMm": 72,
+    "focalLengthMm": 432,
+    "aliases": ["TS-Optics Doublet SD Apo 72 mm f/6", "TSAPO72F6"],
+    "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-doublet-sd-apo-72-mm-f-6-fpl53-lanthanum-glass-objective-8866"
+  },
+  {
+    "id": "ts-optics-photoline-80-480",
+    "brand": "TS-Optics",
+    "model": "Photoline 80/480",
+    "name": "TS-Optics Photoline 80/480",
+    "apertureMm": 80,
+    "focalLengthMm": 480,
+    "aliases": ["TS-Optics Photoline 80 mm f/6 Triplet"],
+    "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-photoline-80-mm-f-6-fpl53-triplet-apo-2-5-rap-focuser-with-optical-test-3881"
+  },
+  {
+    "id": "ts-optics-photoline-80-560",
+    "brand": "TS-Optics",
+    "model": "Photoline 80/560",
+    "name": "TS-Optics Photoline 80/560",
+    "apertureMm": 80,
+    "focalLengthMm": 560,
+    "aliases": ["TS-Optics 80 mm f/7", "TSAPO80F7"],
+    "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-80-mm-f-7-fpl-53-lanthanum-sd-apo-with-2-5-inch-rap-focuser-8637"
+  },
+  {
+    "id": "ts-optics-photoline-115-800",
+    "brand": "TS-Optics",
+    "model": "Photoline 115/800",
+    "name": "TS-Optics Photoline 115/800",
+    "apertureMm": 115,
+    "focalLengthMm": 800,
+    "aliases": ["TS-Optics 115 mm f/7 Triplet", "Apo115f7"],
+    "source": "https://www.teleskop-express.de/en/ts-teleskope-143/all-apos-and-eds-from-all-manufacturers-large-overview-223/ts-optics-115-mm-f-7-edt-triplet-apo-2-5-rap-focuser-with-optical-test-3041"
+  },
+  {
+    "id": "vixen-ed80sf",
+    "brand": "Vixen",
+    "model": "ED80Sf",
+    "name": "Vixen ED80Sf",
+    "apertureMm": 80,
+    "focalLengthMm": 600,
+    "aliases": ["Porta II ED80Sf", "Vixen PORTA II-ED80Sf", "80/600"],
+    "bundledEyepieces": ["vixen-bundled-20mm", "vixen-bundled-6-3mm"],
+    "discontinued": true,
+    "source": "https://global.vixen.co.jp/en/product/39956_7/"
+  },
+  {
+    "id": "vixen-a80mf",
+    "brand": "Vixen",
+    "model": "A80Mf",
+    "name": "Vixen A80Mf",
+    "apertureMm": 80,
+    "focalLengthMm": 910,
+    "aliases": ["Porta II A80Mf", "Vixen PORTA II-A80Mf", "80/910"],
+    "bundledEyepieces": ["vixen-bundled-20mm", "vixen-bundled-6-3mm"],
+    "discontinued": true,
+    "source": "https://global.vixen.co.jp/en/product/39952_9/"
+  },
+  {
+    "id": "vixen-sd81s",
+    "brand": "Vixen",
+    "model": "SD81S",
+    "name": "Vixen SD81S",
+    "apertureMm": 81,
+    "focalLengthMm": 625,
+    "aliases": ["SD81S OTA", "Vixen SD81S apochromatic refractor", "81/625"],
+    "discontinued": true,
+    "source": "https://global.vixen.co.jp/en/product/26146_8/"
+  },
+  {
+    "id": "vixen-vmc110l",
+    "brand": "Vixen",
+    "model": "VMC110L",
+    "name": "Vixen VMC110L",
+    "apertureMm": 110,
+    "focalLengthMm": 1035,
+    "aliases": ["Vixen VMC110L modified Cassegrain", "110/1035"],
+    "discontinued": true,
+    "source": "https://global.vixen.co.jp/en/product/26050_8/"
+  },
+  {
+    "id": "vixen-r130sf",
+    "brand": "Vixen",
+    "model": "R130Sf",
+    "name": "Vixen R130Sf",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Porta II R130Sf", "Vixen PORTA II-R130Sf", "130/650"],
+    "bundledEyepieces": ["vixen-bundled-20mm", "vixen-bundled-6-3mm"],
+    "source": "https://global.vixen.co.jp/en/product/39954_3/"
+  },
+  {
+    "id": "william-optics-redcat-51",
+    "brand": "William Optics",
+    "model": "RedCat 51",
+    "name": "William Optics RedCat 51",
+    "apertureMm": 51,
+    "focalLengthMm": 250,
+    "aliases": ["RedCat 51 Petzval", "RedCat 51 MK2.5", "RedCat 51 Gen 3"],
+    "source": "https://williamoptics.com/products/redcat-51-ii"
+  },
+  {
+    "id": "william-optics-zenithstar-61-ii",
+    "brand": "William Optics",
+    "model": "Zenithstar 61 II",
+    "name": "William Optics Zenithstar 61 II",
+    "apertureMm": 61,
+    "focalLengthMm": 360,
+    "aliases": ["Zenithstar 61", "ZS61"],
+    "source": "https://williamoptics.com/products/zenithstar-61ii"
+  },
+  {
+    "id": "william-optics-zenithstar-73-iii",
+    "brand": "William Optics",
+    "model": "Zenithstar 73 III",
+    "name": "William Optics Zenithstar 73 III",
+    "apertureMm": 73,
+    "focalLengthMm": 430,
+    "aliases": ["Zenithstar 73", "ZS73"],
+    "discontinued": true,
+    "source": "https://williamoptics.com/products/zenithstar-73-iii"
+  },
+  {
+    "id": "william-optics-zenithstar-81-wifd",
+    "brand": "William Optics",
+    "model": "Zenithstar 81 WIFD",
+    "name": "William Optics Zenithstar 81 WIFD",
+    "apertureMm": 81,
+    "focalLengthMm": 559,
+    "aliases": ["Zenithstar 81", "ZS81"],
+    "source": "https://williamoptics.com/products/zenithstar-81"
   }
 ]

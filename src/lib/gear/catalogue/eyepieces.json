@@ -1,5 +1,41 @@
 [
   {
+    "id": "apertura-bundled-9mm",
+    "brand": "Apertura",
+    "line": "Bundled",
+    "name": "Apertura 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 52,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["Apertura bundled 9 mm", "Apertura AD 9 mm Plossl"],
+    "source": "https://www.highpointscientific.com/apertura-ad6-6-inch-dobsonian-telescope-ad6"
+  },
+  {
+    "id": "apertura-bundled-25mm",
+    "brand": "Apertura",
+    "line": "Bundled",
+    "name": "Apertura 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 52,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["Apertura bundled 25 mm", "Apertura AD6 25 mm Plossl"],
+    "source": "https://www.highpointscientific.com/apertura-ad6-6-inch-dobsonian-telescope-ad6"
+  },
+  {
+    "id": "apertura-bundled-30mm",
+    "brand": "Apertura",
+    "line": "Bundled",
+    "name": "Apertura 30 mm",
+    "focalLengthMm": 30,
+    "afovDeg": 68,
+    "design": "other",
+    "bundled": true,
+    "aliases": ["Apertura bundled 30 mm", "Apertura 30 mm SuperView"],
+    "source": "https://www.highpointscientific.com/apertura-ad8-8-inch-dobsonian-telescope-ad8"
+  },
+  {
     "id": "baader-classic-ortho-6mm",
     "brand": "Baader",
     "line": "Classic Ortho",
@@ -1364,6 +1400,32 @@
     "source": "https://explorescientific.com/products/6-inch-dobsonian-reflector-telescope"
   },
   {
+    "id": "gso-bundled-9mm",
+    "brand": "GSO",
+    "line": "Bundled",
+    "name": "GSO 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["GSO bundled 9 mm", "GSO 9 mm Super Plossl"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/dobsonian-telescopes-2/gso-6-inch-f-8-dobsonian-telescope-deluxe-2-inch-crayford-improved-features-17340"
+  },
+  {
+    "id": "gso-bundled-25mm",
+    "brand": "GSO",
+    "line": "Bundled",
+    "name": "GSO 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["GSO bundled 25 mm", "GSO 25 mm Super Plossl"],
+    "source": "https://www.teleskop-express.de/en/telescopes-4/dobsonian-telescopes-2/gso-6-inch-f-8-dobsonian-telescope-deluxe-2-inch-crayford-improved-features-17340"
+  },
+  {
     "id": "levenhuk-bundled-4mm",
     "brand": "Levenhuk",
     "line": "Bundled",
@@ -1691,6 +1753,58 @@
     "afovDeg": 82,
     "design": "other",
     "source": "https://www.meadeuk.com/Meade-Series-5000-Ultra-Wide-Angle-UWA-Eyepiece-14mm.html"
+  },
+  {
+    "id": "omegon-bundled-plossl-6-5mm",
+    "brand": "Omegon",
+    "line": "Bundled",
+    "name": "Omegon Plössl 6.5 mm",
+    "focalLengthMm": 6.5,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Omegon bundled 6.5 mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-n-150-750-eq-3/p,13764"
+  },
+  {
+    "id": "omegon-bundled-10mm",
+    "brand": "Omegon",
+    "line": "Bundled",
+    "name": "Omegon 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Omegon bundled 10 mm", "Omegon K 10 mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-advanced-telescope-130-650-eq-320/p,61022"
+  },
+  {
+    "id": "omegon-bundled-25mm",
+    "brand": "Omegon",
+    "line": "Bundled",
+    "name": "Omegon 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 45,
+    "design": "kellner",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Omegon bundled 25 mm", "Omegon K 25 mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-advanced-telescope-130-650-eq-320/p,61022"
+  },
+  {
+    "id": "omegon-bundled-plossl-25mm",
+    "brand": "Omegon",
+    "line": "Bundled",
+    "name": "Omegon Plössl 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Omegon bundled Plossl 25 mm"],
+    "source": "https://www.astroshop.eu/telescopes/omegon-telescope-n-150-750-eq-3/p,13764"
   },
   {
     "id": "omegon-le-planetary-3mm",
@@ -2050,6 +2164,32 @@
     "source": "https://www.astroshop.eu/eyepieces/omegon-2-56mm-super-ploessl-eyepiece/p,47422"
   },
   {
+    "id": "orion-bundled-10mm",
+    "brand": "Orion",
+    "line": "Bundled",
+    "name": "Orion 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Orion bundled 10 mm", "Orion Sirius Plossl 10 mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-telescope-n130-650-spaceprobe-eq-2/p,25388"
+  },
+  {
+    "id": "orion-bundled-25mm",
+    "brand": "Orion",
+    "line": "Bundled",
+    "name": "Orion 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Orion bundled 25 mm", "Orion Sirius Plossl 25 mm"],
+    "source": "https://www.astroshop.eu/telescopes/orion-telescope-n130-650-spaceprobe-eq-2/p,25388"
+  },
+  {
     "id": "orion-edge-on-3mm",
     "brand": "Orion",
     "line": "Edge-On",
@@ -2281,6 +2421,30 @@
     "afovDeg": 70,
     "design": "other",
     "source": "https://www.ricoh-imaging.co.jp/english/products/binoculars/scope/xw/index.html"
+  },
+  {
+    "id": "saxon-bundled-10mm",
+    "brand": "Saxon",
+    "line": "Bundled",
+    "name": "Saxon 10 mm",
+    "focalLengthMm": 10,
+    "afovDeg": 50,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["Saxon bundled 10 mm", "Saxon Plossl 10"],
+    "source": "https://www.saxon.com.au/saxon-8-deepsky-dobsonian-telescope.html.html"
+  },
+  {
+    "id": "saxon-bundled-25mm",
+    "brand": "Saxon",
+    "line": "Bundled",
+    "name": "Saxon 25 mm",
+    "focalLengthMm": 25,
+    "afovDeg": 50,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["Saxon bundled 25 mm", "Saxon Plossl 25"],
+    "source": "https://www.saxon.com.au/saxon-8-deepsky-dobsonian-telescope.html.html"
   },
   {
     "id": "skywatcher-aero-ed-35mm",
@@ -2627,6 +2791,42 @@
     "design": "other",
     "aliases": ["StellaLyra 80° LER/UWA"],
     "source": "https://www.firstlightoptics.com/stellalyra-eyepieces/stellalyra-20mm-2-80-ler-uwa-eyepiece.html"
+  },
+  {
+    "id": "stellalyra-bundled-9mm",
+    "brand": "StellaLyra",
+    "line": "Bundled",
+    "name": "StellaLyra 9 mm",
+    "focalLengthMm": 9,
+    "afovDeg": 52,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["StellaLyra bundled 9 mm", "Super-Plossl 9 mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/stellalyra-8-f6-dobsonian.html"
+  },
+  {
+    "id": "stellalyra-bundled-15mm",
+    "brand": "StellaLyra",
+    "line": "Bundled",
+    "name": "StellaLyra 15 mm",
+    "focalLengthMm": 15,
+    "afovDeg": 52,
+    "design": "plossl",
+    "bundled": true,
+    "aliases": ["StellaLyra bundled 15 mm", "Super-Plossl 15 mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/stellalyra-8-f6-dobsonian.html"
+  },
+  {
+    "id": "stellalyra-bundled-30mm",
+    "brand": "StellaLyra",
+    "line": "Bundled",
+    "name": "StellaLyra 30 mm",
+    "focalLengthMm": 30,
+    "afovDeg": 68,
+    "design": "other",
+    "bundled": true,
+    "aliases": ["StellaLyra bundled 30 mm", "SuperView 30 mm"],
+    "source": "https://www.firstlightoptics.com/beginner-telescopes/stellalyra-8-f6-dobsonian.html"
   },
   {
     "id": "stellalyra-ultra-flat-field-10mm",
@@ -3249,6 +3449,32 @@
     "afovDeg": 50,
     "design": "plossl",
     "source": "https://www.televue.com/engine/TV3b_page.asp?id=214"
+  },
+  {
+    "id": "vixen-bundled-6-3mm",
+    "brand": "Vixen",
+    "line": "Bundled",
+    "name": "Vixen 6.3 mm",
+    "focalLengthMm": 6.3,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Vixen bundled 6.3 mm", "Vixen PL6.3"],
+    "source": "https://global.vixen.co.jp/en/product/39956_7/"
+  },
+  {
+    "id": "vixen-bundled-20mm",
+    "brand": "Vixen",
+    "line": "Bundled",
+    "name": "Vixen 20 mm",
+    "focalLengthMm": 20,
+    "afovDeg": 50,
+    "design": "plossl",
+    "afovEstimated": true,
+    "bundled": true,
+    "aliases": ["Vixen bundled 20 mm", "Vixen PL20"],
+    "source": "https://global.vixen.co.jp/en/product/39956_7/"
   },
   {
     "id": "vixen-npl-4mm",
