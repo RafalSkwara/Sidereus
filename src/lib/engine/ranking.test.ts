@@ -2,32 +2,26 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { MESSIER } from "@/lib/catalogue";
 
-import { WARSAW } from "./fixtures";
-import { observingNight } from "./night";
+import { EYEPIECES, TELESCOPE, WARSAW, warsawDarkWindow } from "./fixtures";
 import { seenSummaries } from "./log";
-import { LOG_PENALTY, MAX_RANKED_OBJECTS, MIN_OBJECT_SCORE, darknessThresholdDegForBortle } from "./parameters";
+import {
+  BRIGHTNESS_RAMP_MAG,
+  LOG_PENALTY,
+  MAX_RANKED_OBJECTS,
+  MESSIER_RANK_BONUS,
+  MIN_OBJECT_SCORE,
+  SCORE_WEIGHTS,
+} from "./parameters";
 import { rankObjects, reasonComponents } from "./ranking";
 import type { RankInput, RankableObject, Ranking } from "./ranking";
 import type { ScoreComponents } from "./score";
-import { darkWindow } from "./sun";
-import type { DarkWindow } from "./types";
 
 const BORTLE = 6;
-const TELESCOPE = { id: "t1", apertureMm: 150, focalLengthMm: 750 };
-const EYEPIECES = [
-  { id: "e25", focalLengthMm: 25, afovDeg: 50 },
-  { id: "e10", focalLengthMm: 10, afovDeg: 50 },
-];
 
-function warsawDarkWindow(date = "2026-10-10"): Extract<DarkWindow, { kind: "window" }> {
-  const dark = darkWindow(WARSAW, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(BORTLE));
-  if (dark.kind !== "window") {
-    throw new Error(`expected a dark window on ${date} in Warsaw`);
-  }
-  return dark;
-}
-
-/** A bright, compact cluster at the given declination: it scores near 1 whenever it is up. */
+/**
+ * A bright, compact cluster at the given declination: it scores near 1 whenever it is up. `M<n>` for a
+ * Messier number; pass `id` in the overrides (and `messier: null`) for a non-Messier object.
+ */
 function synthetic(messier: number, decDeg: number, overrides: Partial<RankableObject> = {}): RankableObject {
   return {
     id: `M${messier}`,
@@ -80,7 +74,52 @@ describe("rankObjects (synthetic catalogue, Warsaw 2026-10-10)", () => {
   it("breaks a tie on total by Messier number ascending", () => {
     const ranking = rank([synthetic(7, 89.9), synthetic(3, 89.9), synthetic(5, 89.9)]);
     expect(ranking.entries.map((e) => e.object.messier)).toEqual([3, 5, 7]);
-    expect(ranking.entries[0]?.score.total).toBe(ranking.entries[2]?.score.total);
+    expect(ranking.entries[0].score.total).toBe(ranking.entries[2].score.total);
+  });
+
+  it("breaks a tie between non-Messier objects by id, and puts them after a Messier object", () => {
+    const other = (id: string) => synthetic(0, 89.9, { id, messier: null });
+    const ranking = rank([other("NGC869"), other("NGC7000"), synthetic(5, 89.9), other("IC405")]);
+    // The Messier object leads on the bonus; the rest tie exactly and go by id (code-unit order).
+    expect(ranking.entries.map((e) => e.object.id)).toEqual(["M5", "IC405", "NGC7000", "NGC869"]);
+    expect(ranking.entries[1].score.total).toBe(ranking.entries[3].score.total);
+    expect(ranking.entries[1].rankScore).toBe(ranking.entries[1].score.total);
+    expect(ranking.entries[0].rankScore).toBe(ranking.entries[0].score.total + MESSIER_RANK_BONUS);
+  });
+
+  it("lets the Messier bonus break a near-tie towards the Messier object", () => {
+    // Brightness alone separates them: half a magnitude is about 0.016 of total, below the bonus.
+    const other = synthetic(0, 89.9, { id: "NGC7000", messier: null, vMag: 5 });
+    const messier = synthetic(5, 89.9, { vMag: 5.5 });
+    const ranking = rank([other, messier]);
+    const [first, second] = ranking.entries;
+    expect(first.object.id).toBe("M5");
+    expect(second.object.id).toBe("NGC7000");
+    const gap = second.score.total - first.score.total;
+    expect(gap).toBeGreaterThan(0);
+    expect(gap).toBeLessThan(MESSIER_RANK_BONUS);
+  });
+
+  it("does not let the bonus overcome a gap larger than itself", () => {
+    const other = synthetic(0, 89.9, { id: "NGC7000", messier: null, vMag: 1 });
+    const messier = synthetic(5, 89.9, { vMag: 11 });
+    expect(rank([messier, other]).entries.map((e) => e.object.id)).toEqual(["NGC7000", "M5"]);
+  });
+
+  it("never lifts an object whose own score is below the bar into the list", () => {
+    // A low-interest double star on the horizon's edge: dec 0° at vMag 10 just clears the bar, and each
+    // further 0.3 mag costs about 0.009, so at 10.3 it falls short by less than MESSIER_RANK_BONUS.
+    const faint = (vMag: number): RankableObject =>
+      synthetic(40, 0, { vMag, type: "double-star", surfaceBrightness: 22 });
+    const [reference] = rank([faint(10)]).entries;
+    expect(reference.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
+    const shortfall = (0.3 * SCORE_WEIGHTS.brightness) / BRIGHTNESS_RAMP_MAG;
+    expect(reference.score.total - shortfall).toBeLessThan(MIN_OBJECT_SCORE);
+    expect(reference.score.total - shortfall + MESSIER_RANK_BONUS).toBeGreaterThan(MIN_OBJECT_SCORE);
+
+    const ranking = rank([faint(10.3)], { limit: Number.POSITIVE_INFINITY });
+    expect(ranking.clearedCount).toBe(0);
+    expect(ranking.entries).toEqual([]);
   });
 
   it("counts every cleared object but lists at most MAX_RANKED_OBJECTS", () => {
@@ -239,7 +278,10 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
 
     const logged = rank([bright, close], { seen: seenM1 });
     expect(logged.entries.map((e) => e.object.messier)).toEqual([2, 1]);
-    expect(logged.entries[1].rankScore).toBeCloseTo(logged.entries[1].score.total - LOG_PENALTY, 12);
+    expect(logged.entries[1].rankScore).toBeCloseTo(
+      logged.entries[1].score.total - LOG_PENALTY + MESSIER_RANK_BONUS,
+      12,
+    );
   });
 
   it("keeps a seen object above an unseen one that scores more than LOG_PENALTY below it", () => {
@@ -264,7 +306,7 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
   it("carries the seen summary on a seen entry and null on the others", () => {
     const logged = rank([bright, far], { seen: seenM1 });
     expect(logged.entries.map((e) => e.seen)).toEqual([{ count: 2, lastNight: "2026-09-12" }, null]);
-    expect(logged.entries[1].rankScore).toBe(logged.entries[1].score.total);
+    expect(logged.entries[1].rankScore).toBeCloseTo(logged.entries[1].score.total + MESSIER_RANK_BONUS, 12);
   });
 
   it("ranks a log of only 1-2 ratings exactly like an empty log (invariant 4)", () => {

@@ -1,4 +1,4 @@
-import type { MessierObject } from "@/lib/catalogue";
+import type { DeepSkyObject } from "@/lib/catalogue";
 
 import { BRIGHT_CORE_OFFSET_MAG } from "./parameters";
 
@@ -101,7 +101,7 @@ export function moonBrighteningMag(sky: SkyBrightness): number {
  * round (b = a); without a major axis there is nothing to spread over, so `null`.
  */
 export function effectiveSurfaceBrightness(
-  object: Pick<MessierObject, "vMag" | "majorAxisArcmin" | "minorAxisArcmin">,
+  object: Pick<DeepSkyObject, "vMag" | "majorAxisArcmin" | "minorAxisArcmin">,
 ): number | null {
   const a = object.majorAxisArcmin;
   if (a === null) {

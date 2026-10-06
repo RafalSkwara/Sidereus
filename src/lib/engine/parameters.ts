@@ -7,7 +7,7 @@
  * downstream should hardcode these numbers.
  */
 
-import type { MessierType } from "@/lib/catalogue";
+import type { DeepSkyType } from "@/lib/catalogue";
 
 /** Throws `RangeError` unless `bortle` is an integer Bortle class 1..9. */
 function requireBortle(bortle: number): void {
@@ -114,7 +114,7 @@ export const WELL_PLACED_ALTITUDE_DEG = 40;
  * Candidate (S-02 Phase 1 calibration, 2026-09-25): object types a beginner rarely finds rewarding
  * (M40 is a faint double star, M73 an asterism), and the amount subtracted from their total.
  */
-export const LOW_INTEREST_TYPES: readonly MessierType[] = ["double-star", "asterism"];
+export const LOW_INTEREST_TYPES: readonly DeepSkyType[] = ["double-star", "asterism"];
 export const LOW_INTEREST_PENALTY = 0.15;
 
 /**
@@ -141,9 +141,9 @@ export function bortlePenaltyForBortle(bortle: number): number {
 /**
  * Candidate (PRD Open Question 5, fallback): object types that take the Bortle penalty when the
  * catalogue has no surface brightness for them (galaxies and diffuse nebulae). Type-only import of
- * `MessierType`, so this file stays free of runtime imports and safe for browser islands.
+ * `DeepSkyType`, so this file stays free of runtime imports and safe for browser islands.
  */
-export const PENALIZED_TYPES_WITHOUT_SURFACE_BRIGHTNESS: readonly MessierType[] = [
+export const PENALIZED_TYPES_WITHOUT_SURFACE_BRIGHTNESS: readonly DeepSkyType[] = [
   "galaxy",
   "nebula",
   "emission-nebula",
@@ -182,6 +182,13 @@ export const LOG_PENALTY = 0.15;
 
 /** PRD invariant 4: only entries rated at least this (of 5) count as seen; a 1-2 attempt never demotes. */
 export const LOG_PENALTY_MIN_RATING = 3;
+
+/**
+ * Candidate (S-03, deep-sky-beyond-messier): added to the rank score of a Messier object, so a near-tie
+ * goes to the better-known object. Order only: it never enters `score.total`, so it never decides whether
+ * an object clears `MIN_OBJECT_SCORE`. Tuned against `calibration.test.ts`.
+ */
+export const MESSIER_RANK_BONUS = 0.03;
 
 // Night outlook (S-04) ----------------------------------------------------------------------------
 
@@ -337,7 +344,7 @@ export const MOONLIGHT_REF_MAG = 1.5;
  * Candidate (moonlight-and-the-verdict calibration, 2026-10-02): how much moonlight hurts each object type, 0-1.
  * Diffuse objects take the full effect; star clusters keep their stars, so they take less; a double star least.
  */
-export const MOONLIGHT_SENSITIVITY: Readonly<Record<MessierType, number>> = {
+export const MOONLIGHT_SENSITIVITY: Readonly<Record<DeepSkyType, number>> = {
   galaxy: 1,
   nebula: 1,
   "emission-nebula": 1,
@@ -352,7 +359,7 @@ export const MOONLIGHT_SENSITIVITY: Readonly<Record<MessierType, number>> = {
   "double-star": 0.15,
 };
 
-export function moonlightSensitivity(type: MessierType): number {
+export function moonlightSensitivity(type: DeepSkyType): number {
   return MOONLIGHT_SENSITIVITY[type];
 }
 
@@ -375,7 +382,7 @@ export const BRIGHT_CORE_OFFSET_MAG = 1.5;
 export const MOONLIGHT_EXEMPT_IDS: readonly string[] = ["M16"];
 
 /** The diffuse types the washed-out rule applies to: every sensitivity-1 type, plus a cluster with nebulosity. */
-export const WASHED_OUT_TYPES: readonly MessierType[] = [
+export const WASHED_OUT_TYPES: readonly DeepSkyType[] = [
   "galaxy",
   "nebula",
   "emission-nebula",

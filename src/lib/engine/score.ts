@@ -1,4 +1,4 @@
-import type { MessierObject } from "@/lib/catalogue";
+import type { DeepSkyObject } from "@/lib/catalogue";
 
 import type { MoonState } from "./moon";
 import { effectiveSurfaceBrightness, moonBrighteningMag, nlToMag, skyBrightnessNL } from "./moonlight";
@@ -40,11 +40,11 @@ export type ScoreComponent = (typeof SCORE_COMPONENTS)[number];
 export type ScoreComponents = Record<ScoreComponent, number>;
 
 /**
- * What the score needs about a catalogue object. `MessierObject` is assignable to it. `id` is checked against
+ * What the score needs about a catalogue object. `DeepSkyObject` is assignable to it. `id` is checked against
  * `MOONLIGHT_EXEMPT_IDS`; the axes give the washed-out rule its surface brightness.
  */
 export type ScoredObject = Pick<
-  MessierObject,
+  DeepSkyObject,
   "id" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin" | "minorAxisArcmin"
 >;
 

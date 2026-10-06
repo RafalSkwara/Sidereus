@@ -513,23 +513,23 @@ Drop the legacy `observations.messier` column and its sync trigger, and bring CL
 
 #### Automated
 
-- [x] 1.1 `npm run catalogue:build` regenerates `messier.json` byte-identically and writes `caldwell.json` with 61 entries
-- [x] 1.2 Running `npm run catalogue:build` twice produces identical `caldwell*.json` bytes
-- [x] 1.3 `npm test` passes, including the new `caldwell.test.ts` and `common-names.test.ts`
-- [x] 1.4 `npx astro check` and `npm run lint` pass
+- [x] 1.1 `npm run catalogue:build` regenerates `messier.json` byte-identically and writes `caldwell.json` with 61 entries — b72b1df
+- [x] 1.2 Running `npm run catalogue:build` twice produces identical `caldwell*.json` bytes — b72b1df
+- [x] 1.3 `npm test` passes, including the new `caldwell.test.ts` and `common-names.test.ts` — b72b1df
+- [x] 1.4 `npx astro check` and `npm run lint` pass — b72b1df
 
 #### Manual
 
-- [x] 1.5 Spot-check 5 Caldwell entries against OpenNGC and override sources, recorded in `evidence/phase-1.md`
+- [x] 1.5 Spot-check 5 Caldwell entries against OpenNGC and override sources, recorded in `evidence/phase-1.md` — b72b1df
 
 ### Phase 2: Engine ranking over both catalogues
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes, including the new ranking cases and `calibration.test.ts`
-- [ ] 2.2 The determinism test passes over `DEEP_SKY` within `LOCAL_BUDGET_MS` locally
-- [ ] 2.3 `purity.test.ts` still passes
-- [ ] 2.4 `npx astro check` and `npm run lint` pass
+- [x] 2.1 `npm test` passes, including the new ranking cases and `calibration.test.ts`
+- [x] 2.2 The determinism test passes over `DEEP_SKY` within `LOCAL_BUDGET_MS` locally
+- [x] 2.3 `purity.test.ts` still passes
+- [x] 2.4 `npx astro check` and `npm run lint` pass
 
 #### Manual
 

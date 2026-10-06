@@ -1,8 +1,11 @@
-import { findMessier } from "@/lib/catalogue";
+import { findDeepSky, findMessier } from "@/lib/catalogue";
 
+import { observingNight } from "../night";
+import { darknessThresholdDegForBortle } from "../parameters";
 import { PLANET_KEYS } from "../planets";
 import type { PlanetKey } from "../planets";
-import type { EquatorialJ2000, Site } from "../types";
+import { darkWindow } from "../sun";
+import type { DarkWindow, EquatorialJ2000, Site } from "../types";
 import skyfieldMoonWarsaw20261024 from "./skyfield/moon-warsaw-2026-10-24.json";
 import skyfieldPlanetsWarsaw20261010 from "./skyfield/planets-warsaw-2026-10-10.json";
 import tromso20260621 from "./stellarium/tromso-2026-06-21.json";
@@ -362,6 +365,33 @@ export function messierTarget(id: string): EquatorialJ2000 {
     throw new Error(`fixture references ${id}, which is not in the Messier catalogue`);
   }
   return { raHours: object.raHours, decDeg: object.decDeg };
+}
+
+/** J2000 coordinates of a deep-sky object by catalogue key ("M31", "NGC869"); throws for an unknown key. */
+export function deepSkyTarget(id: string): EquatorialJ2000 {
+  const object = findDeepSky(id);
+  if (object === undefined) {
+    throw new Error(`fixture references ${id}, which is not in the deep-sky catalogue`);
+  }
+  return { raHours: object.raHours, decDeg: object.decDeg };
+}
+
+/** A 150/750 telescope, shared by the ranking tests. */
+export const TELESCOPE = { id: "t1", apertureMm: 150, focalLengthMm: 750 };
+
+/** A 25 mm and a 10 mm eyepiece (50° apparent field), in `created_at` order. */
+export const EYEPIECES = [
+  { id: "e25", focalLengthMm: 25, afovDeg: 50 },
+  { id: "e10", focalLengthMm: 10, afovDeg: 50 },
+];
+
+/** The dark window over Warsaw for the night of `date` at `bortle` (6 unless given); throws when there is none. */
+export function warsawDarkWindow(date = "2026-10-10", bortle = 6): Extract<DarkWindow, { kind: "window" }> {
+  const dark = darkWindow(WARSAW, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(bortle));
+  if (dark.kind !== "window") {
+    throw new Error(`expected a dark window on ${date} in Warsaw`);
+  }
+  return dark;
 }
 
 /** The engine `Site` for a fixture (shared by every fixture-driven test). */

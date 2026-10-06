@@ -1,4 +1,4 @@
-import type { MessierObject } from "@/lib/catalogue";
+import type { DeepSkyObject } from "@/lib/catalogue";
 
 import { pairEyepieces } from "./eyepieces";
 import type { SeenSummary } from "./log";
@@ -9,6 +9,7 @@ import {
   DEFAULT_TRACK_STEP_MINUTES,
   LOG_PENALTY,
   MAX_RANKED_OBJECTS,
+  MESSIER_RANK_BONUS,
   MIN_OBJECT_SCORE,
   SCORE_WEIGHTS,
 } from "./parameters";
@@ -26,11 +27,12 @@ import type { DarkWindow, HorizontalPosition, Site } from "./types";
  */
 
 /**
- * What the ranking needs about a catalogue object. `MessierObject` is assignable to it. `id` (`"M31"`)
- * is the object's target key in the log; `messier` breaks ties in the order.
+ * What the ranking needs about a catalogue object. `DeepSkyObject` (and so `MessierObject` and
+ * `CaldwellObject`) is assignable to it. `id` (`"M31"`, `"NGC7000"`) is the object's target key in the
+ * log; `messier` is null for a non-Messier object, earns `MESSIER_RANK_BONUS` and breaks ties in the order.
  */
 export type RankableObject = Pick<
-  MessierObject,
+  DeepSkyObject,
   | "id"
   | "messier"
   | "raHours"
@@ -62,7 +64,7 @@ export interface RankInput<
   /**
    * Objects already seen, by target key (`seenSummaries`, looked up by `object.id`); absent means an
    * empty log. A seen object is ordered by its score less `LOG_PENALTY`, but still clears the bar on
-   * its own score (FR-018).
+   * its own score (FR-018). Likewise the Messier bonus moves the order only, never the bar.
    */
   seen?: ReadonlyMap<string, SeenSummary>;
   /**
@@ -85,7 +87,10 @@ export interface RankedEntry<
   pair: EyepiecePair<E> | NoEyepieceFits<E> | null;
   leadComponent: ScoreComponent;
   secondComponent: ScoreComponent;
-  /** The key the ranking is ordered by: `score.total`, less `LOG_PENALTY` for a seen object. */
+  /**
+   * The key the ranking is ordered by: `score.total`, less `LOG_PENALTY` for a seen object, plus
+   * `MESSIER_RANK_BONUS` for a Messier object.
+   */
   rankScore: number;
   /** `null` unless the log counts the object as seen. */
   seen: SeenSummary | null;
@@ -107,7 +112,7 @@ export interface Ranking<
   clearedCount: number;
   /** The first `limit` cleared objects (default `MAX_RANKED_OBJECTS`), best first. */
   entries: RankedEntry<O, E>[];
-  /** Every washed-out object, by best time (ties by Messier number); not capped by `limit`. */
+  /** Every washed-out object, by best time (ties: Messier number, then id); not capped by `limit`. */
   washedOut: WashedOutEntry<O>[];
   washedOutCount: number;
   telescopeId: string;
@@ -169,6 +174,23 @@ export function reasonComponents(listed: readonly ScoreComponents[]): ReasonComp
   });
 }
 
+/**
+ * Deterministic order for objects the key leaves level: the Messier number ascending (a non-Messier
+ * object after every Messier one), then the id (`"IC405"` < `"NGC7000"`, plain code-unit order).
+ */
+function tieBreak(a: Pick<RankableObject, "id" | "messier">, b: Pick<RankableObject, "id" | "messier">): number {
+  if (a.messier !== b.messier) {
+    if (a.messier === null) {
+      return 1;
+    }
+    if (b.messier === null) {
+      return -1;
+    }
+    return a.messier - b.messier;
+  }
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
 export function rankObjects<O extends RankableObject, E extends EyepieceOpticsInput>(
   input: RankInput<O, E>,
 ): Ranking<O, E> {
@@ -203,12 +225,13 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
         object,
         score,
         seen: seenSummary,
-        rankScore: seenSummary === null ? score.total : score.total - LOG_PENALTY,
+        rankScore:
+          score.total - (seenSummary === null ? 0 : LOG_PENALTY) + (object.messier === null ? 0 : MESSIER_RANK_BONUS),
       });
     }
   });
-  // The bar reads the object's own score; only the order feels the log.
-  scored.sort((a, b) => b.rankScore - a.rankScore || a.object.messier - b.object.messier);
+  // The bar reads the object's own score; only the order feels the log and the Messier bonus.
+  scored.sort((a, b) => b.rankScore - a.rankScore || tieBreak(a.object, b.object));
 
   const cleared = scored.filter((s) => s.score.total >= MIN_OBJECT_SCORE);
   const listed = cleared.slice(0, limit);
@@ -223,7 +246,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
     rankScore,
     seen: seenSummary,
   }));
-  washedOut.sort((a, b) => a.peak.time.getTime() - b.peak.time.getTime() || a.object.messier - b.object.messier);
+  washedOut.sort((a, b) => a.peak.time.getTime() - b.peak.time.getTime() || tieBreak(a.object, b.object));
   return {
     clearedCount: cleared.length,
     entries,

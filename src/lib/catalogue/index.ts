@@ -30,10 +30,6 @@ export const DEEP_SKY_TYPES = [
 
 export type DeepSkyType = (typeof DEEP_SKY_TYPES)[number];
 
-/** Old names, kept until the engine stops importing them (deep-sky-beyond-messier phase 2). */
-export const MESSIER_TYPES = DEEP_SKY_TYPES;
-export type MessierType = DeepSkyType;
-
 export interface DeepSkyObject {
   /** The log key and DOM anchor, space-free: "M31" | "NGC7000" | "IC405" */
   id: string;
