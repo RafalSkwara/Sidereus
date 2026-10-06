@@ -10,14 +10,157 @@
     "source": "https://www.bresser.com/p/national-geographic-114-900-reflector-telescope-az-9011200"
   },
   {
+    "id": "celestron-travel-scope-50",
+    "brand": "Celestron",
+    "model": "Travel Scope 50",
+    "name": "Celestron Travel Scope 50",
+    "apertureMm": 50,
+    "focalLengthMm": 360,
+    "aliases": ["TravelScope 50"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-8mm"],
+    "source": "https://www.celestron.com/products/travel-scope-50-portable-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-50az",
+    "brand": "Celestron",
+    "model": "PowerSeeker 50AZ",
+    "name": "Celestron PowerSeeker 50AZ",
+    "apertureMm": 50,
+    "focalLengthMm": 600,
+    "aliases": ["PowerSeeker 50", "PowerSeeker 50 AZ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-12mm", "celestron-bundled-4mm"],
+    "source": "https://www.celestron.com/products/powerseeker-50az-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-60az",
+    "brand": "Celestron",
+    "model": "PowerSeeker 60AZ",
+    "name": "Celestron PowerSeeker 60AZ",
+    "apertureMm": 60,
+    "focalLengthMm": 700,
+    "aliases": ["PowerSeeker 60", "PowerSeeker 60 AZ", "PowerSeeker 60EQ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-4mm"],
+    "source": "https://www.celestron.com/products/powerseeker-60az-telescope"
+  },
+  {
+    "id": "celestron-travel-scope-70",
+    "brand": "Celestron",
+    "model": "Travel Scope 70",
+    "name": "Celestron Travel Scope 70",
+    "apertureMm": 70,
+    "focalLengthMm": 400,
+    "aliases": ["TravelScope 70"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/travel-scope-70-portable-telescope"
+  },
+  {
+    "id": "celestron-inspire-70az",
+    "brand": "Celestron",
+    "model": "Inspire 70AZ",
+    "name": "Celestron Inspire 70AZ",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["Inspire 70", "Inspire 70 AZ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/inspire-70az-refractor-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-70az",
+    "brand": "Celestron",
+    "model": "PowerSeeker 70AZ",
+    "name": "Celestron PowerSeeker 70AZ",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["PowerSeeker 70", "PowerSeeker 70 AZ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-4mm"],
+    "source": "https://www.celestron.com/products/powerseeker-70az-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-lt-70az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer LT 70AZ",
+    "name": "Celestron StarSense Explorer LT 70AZ",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["StarSense Explorer LT 70", "StarSense LT 70AZ"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-lt-70az"
+  },
+  {
     "id": "celestron-astromaster-70az",
     "brand": "Celestron",
     "model": "AstroMaster 70AZ",
     "name": "Celestron AstroMaster 70AZ",
     "apertureMm": 70,
     "focalLengthMm": 900,
-    "aliases": ["AstroMaster 70 AZ"],
+    "aliases": ["AstroMaster 70 AZ", "AstroMaster 70EQ"],
     "source": "https://www.highpointscientific.com/celestron-astromaster-70az-70mm-refractor-telescope-21061"
+  },
+  {
+    "id": "celestron-firstscope-76eq",
+    "brand": "Celestron",
+    "model": "FirstScope 76EQ",
+    "name": "Celestron FirstScope 76EQ",
+    "apertureMm": 76,
+    "focalLengthMm": 700,
+    "aliases": ["FirstScope 76", "FirstScope 76 EQ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/firstscope-76eq-telescope"
+  },
+  {
+    "id": "celestron-astromaster-80azs",
+    "brand": "Celestron",
+    "model": "AstroMaster 80AZS",
+    "name": "Celestron AstroMaster 80AZS",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["AstroMaster 80 AZS", "Popular Science AstroMaster 80AZS", "AstroMaster 80"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/astromaster-80azs-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-80azs",
+    "brand": "Celestron",
+    "model": "PowerSeeker 80AZS",
+    "name": "Celestron PowerSeeker 80AZS",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["PowerSeeker 80", "PowerSeeker 80 AZS"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-4mm"],
+    "source": "https://www.celestron.com/products/powerseeker-80azs-telescope"
+  },
+  {
+    "id": "celestron-travel-scope-80",
+    "brand": "Celestron",
+    "model": "Travel Scope 80",
+    "name": "Celestron Travel Scope 80",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["TravelScope 80"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/travel-scope-80-portable-telescope-with-smartphone-adapter"
+  },
+  {
+    "id": "celestron-inspire-80az",
+    "brand": "Celestron",
+    "model": "Inspire 80AZ",
+    "name": "Celestron Inspire 80AZ",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["Inspire 80", "Inspire 80 AZ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/inspire-80az-refractor-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-lt-80az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer LT 80AZ",
+    "name": "Celestron StarSense Explorer LT 80AZ",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["StarSense Explorer LT 80", "StarSense LT 80AZ"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-lt-80az"
   },
   {
     "id": "celestron-astromaster-90az",
@@ -26,8 +169,19 @@
     "name": "Celestron AstroMaster 90AZ",
     "apertureMm": 90,
     "focalLengthMm": 1000,
-    "aliases": ["AstroMaster 90 AZ"],
+    "aliases": ["AstroMaster 90 AZ", "AstroMaster 90EQ"],
     "source": "https://www.celestron.com/products/astromaster-90az-telescope"
+  },
+  {
+    "id": "celestron-nexstar-90slt",
+    "brand": "Celestron",
+    "model": "NexStar 90SLT",
+    "name": "Celestron NexStar 90SLT",
+    "apertureMm": 90,
+    "focalLengthMm": 1250,
+    "aliases": ["NexStar 90 SLT", "NexStar 90 Maksutov"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-9mm"],
+    "source": "https://www.celestron.com/products/nexstar-90slt-computerized-telescope"
   },
   {
     "id": "celestron-inspire-100az",
@@ -38,6 +192,127 @@
     "focalLengthMm": 660,
     "aliases": ["Inspire 100 AZ"],
     "source": "https://www.celestron.com/products/inspire-100az-refractor-telescope"
+  },
+  {
+    "id": "celestron-astromaster-102az",
+    "brand": "Celestron",
+    "model": "AstroMaster 102AZ",
+    "name": "Celestron AstroMaster 102AZ",
+    "apertureMm": 102,
+    "focalLengthMm": 660,
+    "aliases": ["AstroMaster 102", "AstroMaster 102 AZ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/astromaster-102az-telescope"
+  },
+  {
+    "id": "celestron-nexstar-102slt",
+    "brand": "Celestron",
+    "model": "NexStar 102SLT",
+    "name": "Celestron NexStar 102SLT",
+    "apertureMm": 102,
+    "focalLengthMm": 660,
+    "aliases": ["NexStar 102 SLT", "NexStar 102 refractor"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-9mm"],
+    "source": "https://www.celestron.com/products/nexstar-102slt-computerized-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-dx-102az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer DX 102AZ",
+    "name": "Celestron StarSense Explorer DX 102AZ",
+    "apertureMm": 102,
+    "focalLengthMm": 660,
+    "aliases": ["StarSense Explorer DX 102", "StarSense DX 102AZ"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-dx-102az"
+  },
+  {
+    "id": "celestron-omni-xlt-102",
+    "brand": "Celestron",
+    "model": "Omni XLT 102",
+    "name": "Celestron Omni XLT 102",
+    "apertureMm": 102,
+    "focalLengthMm": 1000,
+    "aliases": ["Omni XLT 102 refractor", "Omni XLT AZ 102"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/omni-xlt-102-telescope"
+  },
+  {
+    "id": "celestron-nexstar-4se",
+    "brand": "Celestron",
+    "model": "NexStar 4SE",
+    "name": "Celestron NexStar 4SE",
+    "apertureMm": 102,
+    "focalLengthMm": 1325,
+    "aliases": ["NexStar 4 SE", "NexStar 4SE Maksutov"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/nexstar-4se-computerized-telescope"
+  },
+  {
+    "id": "celestron-nexstar-114slt",
+    "brand": "Celestron",
+    "model": "NexStar 114SLT",
+    "name": "Celestron NexStar 114SLT",
+    "apertureMm": 114,
+    "focalLengthMm": 450,
+    "aliases": ["NexStar 114 SLT", "NexStar 114 Newtonian"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-9mm"],
+    "source": "https://www.celestron.com/products/nexstar-114slt-newtonian-computerized-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-114",
+    "brand": "Celestron",
+    "model": "StarSense Explorer 114",
+    "name": "Celestron StarSense Explorer 114",
+    "apertureMm": 114,
+    "focalLengthMm": 450,
+    "aliases": ["StarSense Explorer 114mm Tabletop Dobsonian", "StarSense Explorer Tabletop 114"],
+    "bundledEyepieces": ["celestron-bundled-17mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-114mm-smartphone-app-enabled-tabletop-dobsonian-telescope"
+  },
+  {
+    "id": "celestron-powerseeker-114eq",
+    "brand": "Celestron",
+    "model": "PowerSeeker 114EQ",
+    "name": "Celestron PowerSeeker 114EQ",
+    "apertureMm": 114,
+    "focalLengthMm": 900,
+    "aliases": ["PowerSeeker 114", "PowerSeeker 114 EQ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-4mm"],
+    "source": "https://www.celestron.com/products/powerseeker-114eq-telescope"
+  },
+  {
+    "id": "celestron-astromaster-114eq",
+    "brand": "Celestron",
+    "model": "AstroMaster 114EQ",
+    "name": "Celestron AstroMaster 114EQ",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["AstroMaster 114", "AstroMaster 114 EQ"],
+    "bundledEyepieces": ["celestron-bundled-20mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/astromaster-114eq-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-lt-114az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer LT 114AZ",
+    "name": "Celestron StarSense Explorer LT 114AZ",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["StarSense Explorer LT 114", "StarSense LT 114AZ", "Newtonian reflector"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-lt-114az"
+  },
+  {
+    "id": "celestron-omni-xlt-120",
+    "brand": "Celestron",
+    "model": "Omni XLT 120",
+    "name": "Celestron Omni XLT 120",
+    "apertureMm": 120,
+    "focalLengthMm": 1000,
+    "aliases": ["Omni XLT 120 refractor"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/omni-xlt-120-telescope"
   },
   {
     "id": "celestron-nexstar-5se",
@@ -60,6 +335,39 @@
     "source": "https://www.highpointscientific.com/celestron-powerseeker-127-eq-reflecting-telescope-21049"
   },
   {
+    "id": "celestron-starsense-explorer-lt-127az",
+    "brand": "Celestron",
+    "model": "StarSense Explorer LT 127AZ",
+    "name": "Celestron StarSense Explorer LT 127AZ",
+    "apertureMm": 127,
+    "focalLengthMm": 1000,
+    "aliases": ["StarSense Explorer LT 127", "StarSense LT 127AZ", "Newtonian reflector"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-lt-127az"
+  },
+  {
+    "id": "celestron-omni-xlt-127",
+    "brand": "Celestron",
+    "model": "Omni XLT 127",
+    "name": "Celestron Omni XLT 127",
+    "apertureMm": 127,
+    "focalLengthMm": 1250,
+    "aliases": ["Omni XLT 127 Schmidt-Cassegrain"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/omni-xlt-127-telescope"
+  },
+  {
+    "id": "celestron-nexstar-127slt",
+    "brand": "Celestron",
+    "model": "NexStar 127SLT",
+    "name": "Celestron NexStar 127SLT",
+    "apertureMm": 127,
+    "focalLengthMm": 1500,
+    "aliases": ["NexStar 127 SLT", "NexStar 127 Maksutov"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-9mm"],
+    "source": "https://www.celestron.com/products/nexstar-127slt-computerized-telescope"
+  },
+  {
     "id": "celestron-astromaster-130eq",
     "brand": "Celestron",
     "model": "AstroMaster 130EQ",
@@ -68,6 +376,17 @@
     "focalLengthMm": 650,
     "aliases": ["AstroMaster 130 EQ"],
     "source": "https://www.celestron.com/products/astromaster-130eq-telescope-with-phone-adapter-t-adapter-barlow-lens"
+  },
+  {
+    "id": "celestron-nexstar-130slt",
+    "brand": "Celestron",
+    "model": "NexStar 130SLT",
+    "name": "Celestron NexStar 130SLT",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["NexStar 130 SLT", "NexStar 130 Newtonian"],
+    "bundledEyepieces": ["celestron-bundled-25mm", "celestron-bundled-9mm"],
+    "source": "https://www.celestron.com/products/nexstar-130slt-computerized-telescope"
   },
   {
     "id": "celestron-starsense-explorer-dx-130az",
@@ -80,14 +399,80 @@
     "source": "https://www.highpointscientific.com/celestron-starsense-explorer-dx-130az-newtonian-reflector"
   },
   {
+    "id": "celestron-omni-xlt-150",
+    "brand": "Celestron",
+    "model": "Omni XLT 150",
+    "name": "Celestron Omni XLT 150",
+    "apertureMm": 150,
+    "focalLengthMm": 750,
+    "aliases": ["Omni XLT 150 Newtonian", "Advanced VX 6 Newtonian", "AVX 6 Newtonian"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/omni-xlt-150-telescope"
+  },
+  {
+    "id": "celestron-advanced-vx-150-1200",
+    "brand": "Celestron",
+    "model": "Advanced VX 150/1200",
+    "name": "Celestron Advanced VX 150/1200",
+    "apertureMm": 150,
+    "focalLengthMm": 1200,
+    "aliases": ["Advanced VX 6 refractor", "AVX 6 refractor", "Advanced VX 6"],
+    "bundledEyepieces": ["celestron-bundled-20mm"],
+    "source": "https://www.celestron.com/products/advanced-vx-6-refractor-telescope"
+  },
+  {
     "id": "celestron-nexstar-6se",
     "brand": "Celestron",
     "model": "NexStar 6SE",
     "name": "Celestron NexStar 6SE",
     "apertureMm": 150,
     "focalLengthMm": 1500,
-    "aliases": ["NexStar 6 SE", "NexStar 6SE SCT", "6SE", "Schmidt-Cassegrain 150/1500"],
+    "aliases": ["6SE", "C6", "NexStar 6 SE", "NexStar 6SE SCT", "NexStar Evolution 6", "Schmidt-Cassegrain 150/1500"],
     "source": "https://www.celestron.com/products/nexstar-6se-computerized-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-dx-6",
+    "brand": "Celestron",
+    "model": "StarSense Explorer DX 6",
+    "name": "Celestron StarSense Explorer DX 6",
+    "apertureMm": 150,
+    "focalLengthMm": 1500,
+    "aliases": ["StarSense Explorer DX 6 inch", "StarSense Explorer DX 6 Schmidt-Cassegrain", "C6"],
+    "bundledEyepieces": ["celestron-bundled-40mm", "celestron-bundled-10mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-trade-dx-6-smartphone-app-enabled-schmidt-cassegrain-telescope"
+  },
+  {
+    "id": "celestron-advanced-vx-200-1000",
+    "brand": "Celestron",
+    "model": "Advanced VX 200/1000",
+    "name": "Celestron Advanced VX 200/1000",
+    "apertureMm": 200,
+    "focalLengthMm": 1000,
+    "aliases": ["Advanced VX 8 Newtonian", "AVX 8 Newtonian", "Advanced VX 8"],
+    "bundledEyepieces": ["celestron-bundled-20mm"],
+    "source": "https://www.celestron.com/products/advanced-vx-8-newtonian-telescope"
+  },
+  {
+    "id": "celestron-starsense-explorer-8",
+    "brand": "Celestron",
+    "model": "StarSense Explorer 8",
+    "name": "Celestron StarSense Explorer 8",
+    "apertureMm": 203,
+    "focalLengthMm": 1200,
+    "aliases": ["StarSense Explorer 8 inch Dobsonian", "StarSense Explorer 8 Dob", "StarSense Explorer 8\" Dobsonian"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-8-smartphone-app-enabled-dobsonian-telescope"
+  },
+  {
+    "id": "celestron-edgehd-8",
+    "brand": "Celestron",
+    "model": "EdgeHD 8",
+    "name": "Celestron EdgeHD 8",
+    "apertureMm": 203.2,
+    "focalLengthMm": 2032,
+    "aliases": ["EdgeHD 8 optical tube", "Edge HD 8", "CPC Deluxe 800 HD"],
+    "bundledEyepieces": ["celestron-bundled-40mm"],
+    "source": "https://www.celestron.com/products/edgehd-8-optical-tube-assembly-cge-dovetail"
   },
   {
     "id": "celestron-nexstar-8se",
@@ -96,8 +481,348 @@
     "name": "Celestron NexStar 8SE",
     "apertureMm": 203.2,
     "focalLengthMm": 2032,
-    "aliases": ["NexStar 8 SE", "NexStar 8SE SCT", "8SE", "Schmidt-Cassegrain 203/2032"],
+    "aliases": [
+      "8SE",
+      "C8",
+      "CPC 800",
+      "NexStar 8 SE",
+      "NexStar 8SE SCT",
+      "NexStar Evolution 8",
+      "Schmidt-Cassegrain 203/2032"
+    ],
     "source": "https://www.celestron.com/products/nexstar-8se-computerized-telescope"
+  },
+  {
+    "id": "celestron-c9-25",
+    "brand": "Celestron",
+    "model": "C9.25",
+    "name": "Celestron C9.25",
+    "apertureMm": 235,
+    "focalLengthMm": 2350,
+    "aliases": ["C9.25 optical tube", "CPC 925", "NexStar Evolution 9.25", "Evolution 9.25", "C925"],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/c9-25-optical-tube-assembly-cge-dovetail"
+  },
+  {
+    "id": "celestron-edgehd-9-25",
+    "brand": "Celestron",
+    "model": "EdgeHD 9.25",
+    "name": "Celestron EdgeHD 9.25",
+    "apertureMm": 235,
+    "focalLengthMm": 2350,
+    "aliases": ["EdgeHD 925", "EdgeHD 9.25 optical tube", "Edge HD 9.25"],
+    "source": "https://www.celestron.com/products/edgehd-925-optical-tube-assembly-cge-dovetail"
+  },
+  {
+    "id": "celestron-starsense-explorer-10",
+    "brand": "Celestron",
+    "model": "StarSense Explorer 10",
+    "name": "Celestron StarSense Explorer 10",
+    "apertureMm": 254,
+    "focalLengthMm": 1200,
+    "aliases": [
+      "StarSense Explorer 10 inch Dobsonian",
+      "StarSense Explorer 10 Dob",
+      "StarSense Explorer 10\" Dobsonian"
+    ],
+    "bundledEyepieces": ["celestron-bundled-25mm"],
+    "source": "https://www.celestron.com/products/starsense-explorer-10-smartphone-app-enabled-dobsonian-telescope"
+  },
+  {
+    "id": "celestron-c11",
+    "brand": "Celestron",
+    "model": "C11",
+    "name": "Celestron C11",
+    "apertureMm": 279.4,
+    "focalLengthMm": 2800,
+    "aliases": ["C11 optical tube", "CPC 1100", "Celestron 11"],
+    "bundledEyepieces": ["celestron-bundled-40mm"],
+    "source": "https://www.celestron.com/products/c11-optical-tube-assembly-cge-dovetail"
+  },
+  {
+    "id": "celestron-edgehd-11",
+    "brand": "Celestron",
+    "model": "EdgeHD 11",
+    "name": "Celestron EdgeHD 11",
+    "apertureMm": 279.4,
+    "focalLengthMm": 2800,
+    "aliases": ["EdgeHD 11 optical tube", "Edge HD 11"],
+    "source": "https://www.celestron.com/products/edgehd-11-optical-tube-assembly-cge-dovetail"
+  },
+  {
+    "id": "meade-infinity-50",
+    "brand": "Meade",
+    "model": "Infinity 50",
+    "name": "Meade Infinity 50",
+    "apertureMm": 50,
+    "focalLengthMm": 600,
+    "aliases": ["Infinity 50 AZ", "AC 50/600 Infinity"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-50-600-infinity-az/p,51478"
+  },
+  {
+    "id": "meade-adventure-scope-60",
+    "brand": "Meade",
+    "model": "Adventure Scope 60",
+    "name": "Meade Adventure Scope 60",
+    "apertureMm": 60,
+    "focalLengthMm": 360,
+    "aliases": ["AC 60/360 Adventure Scope"],
+    "bundledEyepieces": ["meade-bundled-18mm", "meade-bundled-6mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-60-360-adventure-scope-60/p,59568"
+  },
+  {
+    "id": "meade-infinity-60",
+    "brand": "Meade",
+    "model": "Infinity 60",
+    "name": "Meade Infinity 60",
+    "apertureMm": 60,
+    "focalLengthMm": 800,
+    "aliases": ["Infinity 60 AZ", "AC 60/800 Infinity"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-60-800-infinity-az/p,59563"
+  },
+  {
+    "id": "meade-infinity-70",
+    "brand": "Meade",
+    "model": "Infinity 70",
+    "name": "Meade Infinity 70",
+    "apertureMm": 70,
+    "focalLengthMm": 700,
+    "aliases": ["Infinity 70 AZ", "AC 70/700 Infinity"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-70-700-infinity-az/p,51479"
+  },
+  {
+    "id": "meade-polaris-70",
+    "brand": "Meade",
+    "model": "Polaris 70",
+    "name": "Meade Polaris 70",
+    "apertureMm": 70,
+    "focalLengthMm": 900,
+    "aliases": ["Polaris 70 EQ", "AC 70/900 Polaris"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-70-900-polaris-eq/p,51481"
+  },
+  {
+    "id": "meade-adventure-scope-80",
+    "brand": "Meade",
+    "model": "Adventure Scope 80",
+    "name": "Meade Adventure Scope 80",
+    "apertureMm": 80,
+    "focalLengthMm": 400,
+    "aliases": ["AC 80/400 Adventure Scope"],
+    "bundledEyepieces": ["meade-bundled-18mm", "meade-bundled-6mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-80-400-adventure-scope-80/p,59569"
+  },
+  {
+    "id": "meade-polaris-80",
+    "brand": "Meade",
+    "model": "Polaris 80",
+    "name": "Meade Polaris 80",
+    "apertureMm": 80,
+    "focalLengthMm": 900,
+    "aliases": ["Polaris 80 EQ", "AC 80/900 Polaris"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-80-900-polaris-eq/p,59566"
+  },
+  {
+    "id": "meade-lightbridge-mini-82",
+    "brand": "Meade",
+    "model": "LightBridge Mini 82",
+    "name": "Meade LightBridge Mini 82",
+    "apertureMm": 82,
+    "focalLengthMm": 300,
+    "aliases": ["LightBridge Mini 82 Dobsonian", "Mini 82"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-dobson-telescope-n-82-300-lightbridge-mini-82-dob/p,54294"
+  },
+  {
+    "id": "meade-polaris-90",
+    "brand": "Meade",
+    "model": "Polaris 90",
+    "name": "Meade Polaris 90",
+    "apertureMm": 90,
+    "focalLengthMm": 900,
+    "aliases": ["Polaris 90 EQ", "AC 90/900 Polaris"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-90-900-polaris-eq/p,51482"
+  },
+  {
+    "id": "meade-starnavigator-ng-90-900",
+    "brand": "Meade",
+    "model": "StarNavigator NG 90/900",
+    "name": "Meade StarNavigator NG 90/900",
+    "apertureMm": 90,
+    "focalLengthMm": 900,
+    "aliases": ["StarNavigator NG 90 refractor", "StarNavigator NG 90 AZ GoTo"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-90-900-starnavigator-ng-90-az-goto/p,54316"
+  },
+  {
+    "id": "meade-etx-90",
+    "brand": "Meade",
+    "model": "ETX 90",
+    "name": "Meade ETX 90",
+    "apertureMm": 90,
+    "focalLengthMm": 1250,
+    "aliases": [
+      "ETX-90",
+      "ETX90 AT",
+      "ETX90 Observer",
+      "ETX-90 Observer",
+      "StarNavigator NG 90 Mak",
+      "StarNavigator NG 90/1250"
+    ],
+    "bundledEyepieces": ["meade-bundled-26mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-etx90-at-maksutov-cassegrain-90-1250-uhtc-goto/p,49933"
+  },
+  {
+    "id": "meade-starnavigator-ng-102",
+    "brand": "Meade",
+    "model": "StarNavigator NG 102",
+    "name": "Meade StarNavigator NG 102",
+    "apertureMm": 102,
+    "focalLengthMm": 660,
+    "aliases": ["StarNavigator NG 102 refractor", "StarNavigator NG 102 AZ GoTo"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-ac-102-660-starnavigator-ng-102-az-goto/p,54317"
+  },
+  {
+    "id": "meade-lightbridge-mini-114",
+    "brand": "Meade",
+    "model": "LightBridge Mini 114",
+    "name": "Meade LightBridge Mini 114",
+    "apertureMm": 114,
+    "focalLengthMm": 450,
+    "aliases": ["LightBridge Mini 114 Dobsonian", "Mini 114"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-dobson-telescope-n-114-450-lightbridge-mini-114-dob/p,54298"
+  },
+  {
+    "id": "meade-polaris-114",
+    "brand": "Meade",
+    "model": "Polaris 114",
+    "name": "Meade Polaris 114",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["Polaris 114 EQ", "N 114/1000 Polaris"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-n-114-1000-polaris-eq/p,54315"
+  },
+  {
+    "id": "meade-starnavigator-ng-114",
+    "brand": "Meade",
+    "model": "StarNavigator NG 114",
+    "name": "Meade StarNavigator NG 114",
+    "apertureMm": 114,
+    "focalLengthMm": 1000,
+    "aliases": ["StarNavigator NG 114 Newtonian", "StarNavigator NG 114 AZ GoTo"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-n-114-1000-starnavigator-ng-114-az-goto/p,54318"
+  },
+  {
+    "id": "meade-polaris-127",
+    "brand": "Meade",
+    "model": "Polaris 127",
+    "name": "Meade Polaris 127",
+    "apertureMm": 127,
+    "focalLengthMm": 1000,
+    "aliases": ["Polaris 127 EQ", "N 127/1000 Polaris"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-n-127-1000-polaris-eq/p,51483"
+  },
+  {
+    "id": "meade-etx-125",
+    "brand": "Meade",
+    "model": "ETX 125",
+    "name": "Meade ETX 125",
+    "apertureMm": 127,
+    "focalLengthMm": 1900,
+    "aliases": [
+      "ETX-125",
+      "ETX125 AT",
+      "ETX125 Observer",
+      "ETX-125 Observer",
+      "StarNavigator NG 125",
+      "StarNavigator NG 125 Mak"
+    ],
+    "bundledEyepieces": ["meade-bundled-26mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-etx125-at-maksutov-cassegrain-127-1900-uhtc-goto/p,54314"
+  },
+  {
+    "id": "meade-lightbridge-mini-130",
+    "brand": "Meade",
+    "model": "LightBridge Mini 130",
+    "name": "Meade LightBridge Mini 130",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["LightBridge Mini 130 Dobsonian", "Mini 130"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-dobson-telescope-n-130-650-lightbridge-mini-130-dob/p,54287"
+  },
+  {
+    "id": "meade-polaris-130",
+    "brand": "Meade",
+    "model": "Polaris 130",
+    "name": "Meade Polaris 130",
+    "apertureMm": 130,
+    "focalLengthMm": 650,
+    "aliases": ["Polaris 130 EQ", "N 130/650 Polaris"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-n-130-650-polaris-eq/p,51484"
+  },
+  {
+    "id": "meade-starnavigator-ng-130",
+    "brand": "Meade",
+    "model": "StarNavigator NG 130",
+    "name": "Meade StarNavigator NG 130",
+    "apertureMm": 130,
+    "focalLengthMm": 1000,
+    "aliases": ["StarNavigator NG 130 Newtonian", "StarNavigator NG 130 AZ GoTo"],
+    "bundledEyepieces": ["meade-bundled-26mm", "meade-bundled-9mm"],
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-n-130-1000-starnavigator-ng-130-az-goto/p,54319"
+  },
+  {
+    "id": "meade-lx65-acf-6",
+    "brand": "Meade",
+    "model": "LX65 ACF 6",
+    "name": "Meade LX65 ACF 6",
+    "apertureMm": 152,
+    "focalLengthMm": 1524,
+    "aliases": ["LX65 6 inch", "LX65 ACF 152/1524", "LX65 6 ACF"],
+    "bundledEyepieces": ["meade-bundled-26mm"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-acf-sc-152-1524-uhtc-lx65-goto/p,59572"
+  },
+  {
+    "id": "meade-lx65-acf-8",
+    "brand": "Meade",
+    "model": "LX65 ACF 8",
+    "name": "Meade LX65 ACF 8",
+    "apertureMm": 203,
+    "focalLengthMm": 2032,
+    "aliases": ["LX65 8 inch", "LX65 ACF 203/2032", "LX65 8 ACF"],
+    "bundledEyepieces": ["meade-bundled-26mm"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-acf-sc-203-2032-uhtc-lx65-goto/p,59573"
+  },
+  {
+    "id": "meade-lx200-acf-10",
+    "brand": "Meade",
+    "model": "LX200 ACF 10",
+    "name": "Meade LX200 ACF 10",
+    "apertureMm": 254,
+    "focalLengthMm": 2500,
+    "aliases": ["LX200-ACF 10", "LX200 10 inch", "LX90 ACF 10", "LX90-ACF 10", "LX90 10 inch"],
+    "discontinued": true,
+    "source": "https://www.astroshop.eu/telescopes/meade-telescope-acf-sc-254-2500-uhtc-lx200-ota/p,59558"
+  },
+  {
+    "id": "meade-lx200-acf-12",
+    "brand": "Meade",
+    "model": "LX200 ACF 12",
+    "name": "Meade LX200 ACF 12",
+    "apertureMm": 305,
+    "focalLengthMm": 3048,
+    "aliases": ["LX200-ACF 12", "LX200 12 inch", "LX90 ACF 12", "LX90-ACF 12", "LX90 12 inch"],
+    "source": "https://optcorp.com/products/meade-12-f-10-acf-uhtc-ota-me-1210-60-01"
   },
   {
     "id": "orion-starblast-4-5",
