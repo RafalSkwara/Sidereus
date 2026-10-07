@@ -1,7 +1,7 @@
 ---
 change_id: site-pick-from-map
 title: "Pick from map" for a site, with map tiles loaded only after explicit consent
-status: implemented
+status: impl_reviewed
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null

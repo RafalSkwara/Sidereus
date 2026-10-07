@@ -103,6 +103,8 @@ export default function LocationPicker({
   const [MapPanel, setMapPanel] = useState<MapPanelComponent | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
   const [recentreTo, setRecentreTo] = useState<MapPoint | null>(null);
+  // The panel's chunk can arrive before Leaflet's stylesheet: the map takes picks only once it reports ready.
+  const [mapReady, setMapReady] = useState(false);
   // Counts openings, so a device position from an earlier opening never moves a later map.
   const mapOpening = useRef(0);
   const [pinAtCentreSignal, setPinAtCentreSignal] = useState(0);
@@ -120,6 +122,7 @@ export default function LocationPicker({
   function openMap() {
     const opening = ++mapOpening.current;
     setMapView(initialMapView(current));
+    setMapReady(false);
     setRecentreTo(null);
     setMapStatus("loading");
     loadMapPanel().then(
@@ -128,7 +131,7 @@ export default function LocationPicker({
         setMapStatus((status) => (status === "loading" && mapOpening.current === opening ? "open" : status));
       },
       () => {
-        if (mapOpening.current === opening) setMapStatus("failed");
+        if (mapOpening.current === opening) failMap();
       },
     );
     if (!current) {
@@ -136,6 +139,12 @@ export default function LocationPicker({
         if (position && mapOpening.current === opening) setRecentreTo(position);
       });
     }
+  }
+
+  /** The map could not load: the button comes back for a retry, and focus returns to it (it was disabled or gone). */
+  function failMap() {
+    setMapStatus("failed");
+    requestAnimationFrame(() => pickMapRef.current?.focus());
   }
 
   function closeMap({ refocus }: { refocus: boolean }) {
@@ -362,8 +371,8 @@ export default function LocationPicker({
             className="w-full sm:w-auto sm:self-start"
             onClick={openMap}
             disabled={mapStatus === "loading"}
-            aria-expanded={false}
-            data-needs-network="map-source"
+            aria-describedby="map-source"
+            data-needs-network=""
           >
             <MapPinned className="size-4" />
             {t.pickFromMap}
@@ -380,7 +389,11 @@ export default function LocationPicker({
           )}
         >
           {mapStatus === "failed" ? <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : null}
-          {mapStatus === "loading" ? t.mapLoading : mapStatus === "failed" ? t.mapFailed : null}
+          {mapStatus === "loading" || (mapStatus === "open" && !mapReady)
+            ? t.mapLoading
+            : mapStatus === "failed"
+              ? t.mapFailed
+              : null}
         </p>
         {mapStatus === "open" && MapPanel && mapView ? (
           <>
@@ -392,8 +405,11 @@ export default function LocationPicker({
               onPick={(point) => {
                 onPick({ ...point, source: { kind: "map" } });
               }}
+              onReady={() => {
+                setMapReady(true);
+              }}
               onFailed={() => {
-                setMapStatus("failed");
+                failMap();
               }}
               pinAtCentreSignal={pinAtCentreSignal}
             />
@@ -403,6 +419,7 @@ export default function LocationPicker({
                 type="button"
                 variant="outline"
                 size="lg"
+                disabled={!mapReady}
                 onClick={() => {
                   setPinAtCentreSignal((n) => n + 1);
                 }}

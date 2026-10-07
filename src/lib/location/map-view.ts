@@ -31,8 +31,8 @@ export const POINT_ZOOM = 11;
 export const DEVICE_RECENTRE_TIMEOUT_MS = 3000;
 
 /**
- * The host form's coordinate strings as a point, or `null` unless both are non-empty, finite numbers in
- * range (latitude ±90, longitude ±180).
+ * The host form's coordinate strings as a point rounded to about 1 km (as a save would store it), or `null` unless
+ * both are non-empty, finite numbers in range (latitude ±90, longitude ±180).
  */
 export function parseCurrent(latitude: string, longitude: string): MapPoint | null {
   if (latitude.trim() === "" || longitude.trim() === "") return null;
@@ -40,7 +40,7 @@ export function parseCurrent(latitude: string, longitude: string): MapPoint | nu
   const longitudeDeg = Number(longitude);
   if (!Number.isFinite(latitudeDeg) || !Number.isFinite(longitudeDeg)) return null;
   if (Math.abs(latitudeDeg) > 90 || Math.abs(longitudeDeg) > 180) return null;
-  return { latitudeDeg, longitudeDeg };
+  return { latitudeDeg: roundCoordinate(latitudeDeg), longitudeDeg: roundCoordinate(longitudeDeg) };
 }
 
 /** Where the map opens: the host's current point with the pin, else the neutral view without one. */

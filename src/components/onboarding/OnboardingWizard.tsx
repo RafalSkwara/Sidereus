@@ -499,7 +499,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
               summary={whereSummary}
               invalid={Boolean(errors.where) && !manualOpen}
               errorId="where-error"
-              current={parseCurrent(roundedCoordinate(latitude), roundedCoordinate(longitude))}
+              current={parseCurrent(latitude, longitude)}
             />
 
             <details

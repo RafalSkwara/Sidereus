@@ -12,7 +12,7 @@ import type { Locale } from "@/lib/preferences";
  *
  * Leaflet's stylesheet comes by URL and is injected on first use, never as a plain CSS import: the build emits
  * one site-wide CSS file, and a plain import could be merged into it (and precached). `scripts/build-sw.mjs`
- * fails the build if `.leaflet-` rules reach a shared stylesheet. The theme overrides live in global.css.
+ * fails the build if leaflet.css's own rules reach a shared stylesheet. The theme overrides live in global.css.
  *
  * Privacy (PRD NFR): every pick goes through `pickFromMap`, which rounds to about 1 km before `onPick`, and the
  * pin moves to the rounded point. Tiles come straight from OpenStreetMap (cross-origin, so the service worker
@@ -31,6 +31,7 @@ const PIN_ICON = L.divIcon({
 });
 
 let leafletCss: Promise<void> | undefined;
+const LEAFLET_CSS_FAILED = "leaflet.css failed to load";
 
 /** Adds Leaflet's stylesheet to the page once and resolves when it has loaded; a failed load is retried next time. */
 function loadLeafletCss(): Promise<void> {
@@ -44,7 +45,7 @@ function loadLeafletCss(): Promise<void> {
     });
     link.addEventListener("error", () => {
       link.remove();
-      reject(new Error("leaflet.css failed to load"));
+      reject(new Error(LEAFLET_CSS_FAILED));
     });
     document.head.appendChild(link);
   });
@@ -65,15 +66,28 @@ interface Props {
   onPick: (point: MapPoint) => void;
   /** Leaflet's stylesheet could not be loaded, so there is no usable map. */
   onFailed: () => void;
+  /** The map is built and can take picks. */
+  onReady: () => void;
   /** Drops the pin at the map's centre whenever the number changes: the keyboard way to pick. */
   pinAtCentreSignal: number;
 }
 
-export default function MapPanel({ locale, view, current, recentreTo, onPick, onFailed, pinAtCentreSignal }: Props) {
+export default function MapPanel({
+  locale,
+  view,
+  current,
+  recentreTo,
+  onPick,
+  onFailed,
+  onReady,
+  pinAtCentreSignal,
+}: Props) {
   const t = getMessages(locale).location;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  // Set once the user drags, zooms or pans with the keys: a late device position then no longer moves the map.
+  const userMovedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [tilesFailed, setTilesFailed] = useState(false);
 
@@ -90,16 +104,24 @@ export default function MapPanel({ locale, view, current, recentreTo, onPick, on
   const fail = useEffectEvent(() => {
     onFailed();
   });
+  const announceReady = useEffectEvent(() => {
+    onReady();
+  });
 
   // One map per open panel: `view` is fixed at open, so this runs once and `map.remove()` cleans up.
   useEffect(() => {
     let cancelled = false;
     let observer: ResizeObserver | undefined;
-    loadLeafletCss().then(
-      () => {
+    loadLeafletCss()
+      .then(() => {
         const container = containerRef.current;
         if (cancelled || !container) return;
-        const map = L.map(container, { keyboard: true, zoomControl: true, attributionControl: true });
+        // No box zoom: its shift-drag box is drawn in Leaflet's blue and white, and a pin picker doesn't need it.
+        const map = L.map(container, { keyboard: true, zoomControl: false, attributionControl: true, boxZoom: false });
+        // Set at once, so the cleanup removes a map even if building the rest of it throws.
+        mapRef.current = map;
+        // Leaflet's own zoom titles are English; these are the catalogue's (they are also the buttons' aria-labels).
+        L.control.zoom({ zoomInTitle: t.zoomIn, zoomOutTitle: t.zoomOut }).addTo(map);
         map.setView([view.latitudeDeg, view.longitudeDeg], view.zoom);
         map.attributionControl.setPrefix(false);
         L.tileLayer(TILE_URL, {
@@ -116,6 +138,10 @@ export default function MapPanel({ locale, view, current, recentreTo, onPick, on
           keyboard: false,
         });
         if (view.pinned) marker.addTo(map);
+        // Registered after the first setView, so only the user's (or a recentre's) moves count.
+        map.once("dragstart zoomstart keydown", () => {
+          userMovedRef.current = true;
+        });
         map.on("click", (event: L.LeafletMouseEvent) => {
           place(event.latlng.lat, event.latlng.lng);
         });
@@ -127,16 +153,19 @@ export default function MapPanel({ locale, view, current, recentreTo, onPick, on
           map.invalidateSize();
         });
         observer.observe(container);
-        mapRef.current = map;
         markerRef.current = marker;
         setReady(true);
+        announceReady();
         // Leaflet made the container focusable (tabindex 0): land there, where the arrow keys pan.
         container.focus();
-      },
-      () => {
-        if (!cancelled) fail();
-      },
-    );
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // The stylesheet failed or building the map threw: the picker shows "could not be loaded", and the cause
+        // still reaches the browser's error reporting (no console here, see the no-console lint).
+        fail();
+        if (!(error instanceof Error && error.message === LEAFLET_CSS_FAILED)) reportError(error);
+      });
     return () => {
       cancelled = true;
       observer?.disconnect();
@@ -163,11 +192,11 @@ export default function MapPanel({ locale, view, current, recentreTo, onPick, on
     if (!map.hasLayer(marker)) marker.addTo(map);
   }, [ready, latitudeDeg, longitudeDeg]);
 
-  // A device position that arrives late recentres the neutral view, unless the user already placed a pin.
+  // A device position that arrives late recentres the neutral view, unless the user already placed a pin or moved.
   useEffect(() => {
     const map = mapRef.current;
     const marker = markerRef.current;
-    if (!ready || !map || !marker || !recentreTo || map.hasLayer(marker)) return;
+    if (!ready || !map || !marker || !recentreTo || map.hasLayer(marker) || userMovedRef.current) return;
     map.setView([recentreTo.latitudeDeg, recentreTo.longitudeDeg], POINT_ZOOM);
   }, [ready, recentreTo]);
 
@@ -182,7 +211,8 @@ export default function MapPanel({ locale, view, current, recentreTo, onPick, on
   return (
     <div role="region" aria-label={t.mapLabel}>
       <div className="border-border h-80 overflow-hidden rounded-lg border">
-        <div ref={containerRef} className="size-full" />
+        {/* Leaflet makes this the focus stop (tabindex 0, arrow keys pan): name it for keyboard users. */}
+        <div ref={containerRef} role="group" aria-label={t.mapKeyboardLabel} className="size-full" />
       </div>
       <p aria-live="polite" className="text-muted-foreground mt-1.5 text-sm empty:mt-0">
         {tilesFailed ? t.mapTilesFailed : null}

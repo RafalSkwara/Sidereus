@@ -7,6 +7,10 @@ describe("parseCurrent", () => {
     expect(parseCurrent("-90", "180")).toEqual({ latitudeDeg: -90, longitudeDeg: 180 });
   });
 
+  it("rounds to 2 decimals, as a save would", () => {
+    expect(parseCurrent("50.0649", "19.9451")).toEqual({ latitudeDeg: 50.06, longitudeDeg: 19.95 });
+  });
+
   it.each([
     ["", ""],
     ["50.06", ""],
