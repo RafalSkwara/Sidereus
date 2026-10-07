@@ -7,7 +7,7 @@
  */
 
 /** The slot's container over the sky: the shared `max-w-3xl px-4` column. */
-export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-6 pb-10 sm:pt-12 sm:pb-14";
+export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";
 
 /** The go/clear verdict's content height, so the skeleton paints the same sky and nothing jumps. */
 export const VERDICT_MIN_HEIGHT_CLASS = "min-h-109 sm:min-h-111";
