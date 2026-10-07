@@ -47,7 +47,7 @@ How the user wants the run:
 
 ### Token-saving reading list per phase
 
-Read `plan.md` once fully, about 430 lines; it is self-contained. Then read only these:
+Read `plan.md` once fully, about 470 lines; it is self-contained. Then read only these:
 
 - **Phase 1:**
   - `src/lib/location/locate.ts` and `locate.test.ts`, whose fake-object test style you copy;
@@ -105,7 +105,7 @@ Read `plan.md` once fully, about 430 lines; it is self-contained. Then read only
 
 - Branch `feat/site-pick-from-map`, pushed to origin. Commits:
   - `840b68f` docs(roadmap): unblock S-09 …;
-  - the session's planning commit, docs(site-pick-from-map): research, plan and plan review (research.md, plan.md, plan-brief.md, reviews/plan-review.md, change.md → plan_reviewed, roadmap → planning, this handoff).
+  - `af4202b` docs(site-pick-from-map): research, plan and plan review (research.md, plan.md, plan-brief.md, reviews/plan-review.md, change.md → plan_reviewed, roadmap → planning, this handoff).
 - Untracked and **never committed**: `.mcp.json` and `.claude/` (the user's choice).
 - `main` is at the archive-PR merge `c26f93b`. Nothing on main is pending.
 
