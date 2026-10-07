@@ -56,7 +56,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | ---- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------- |
 | S-01 | planets-on-tonight      | see the visible planets on Tonight with best time, altitude, direction, a detail eyepiece and a reason, and log one as observed     | —             | MS-01    | done    |
 | S-02 | moon-as-target          | see the Moon on Tonight as a target with its phase and what is worth looking at, and log it as observed                             | S-01          | MS-02    | done    |
-| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | in-progress |
+| S-03 | deep-sky-beyond-messier | see bright non-Messier deep-sky objects ranked alongside Messier ones, and log them                                                 | S-01          | MS-03    | done    |
 | S-10 | visual-redesign         | use Sidereus in a distinct visual identity of its own in light and dark, on every screen, with red night mode unchanged in function | —             | MS-10    | done    |
 | S-11 | tonight-dashboard       | land on a dashboard of tiles (verdict, Moon, planets, targets, forecast, sky check) that each open a focused page                   | —             | MS-11    | done    |
 | S-05 | session-plan-timeline   | open the session plan from the dashboard: a timeline ordered by when each target is best, with the dark window and moonrise/set     | S-11          | MS-05    | done    |
@@ -64,7 +64,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
 | S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | blocked |
-| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | done |
+| S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | done    |
 
 ## Streams
 
@@ -142,7 +142,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - Does the wider list crowd Messier out of the top 5 for a beginner? Candidate: rank together, but tie-break towards Messier and show the catalogue label on each row. — Owner: user. Block: no.
   - The manual log entry picker lists Messier numbers only; it needs search by catalogue name. — Owner: team. Block: no.
 - **Risk:** The scoring was calibrated only against Messier objects; faint objects with missing surface brightness fall back to type-based penalties, so check the new objects' ranks against published seasonal lists as the S-02 checkpoint of M-1 did.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-10: A visual identity of its own
 
@@ -329,3 +329,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-05: user can open the session plan from the dashboard (S-11) as its own page: a timeline of the night for the selected site and telescope: the dark window, moonrise and moonset, and each recommended target placed at its best observing window, ordered by time, so they can follow it from the first target to the last.** — Archived 2026-10-05 → `context/archive/2026-10-05-session-plan-timeline/`. Lesson: —.
 - **S-06: user can install Sidereus on their phone's home screen and, at a site with no network, open the dashboard pages they last loaded for that site — verdict, dark window, targets and timeline — clearly marked with when it was prepared, while screens that need the network say so instead of failing.** — Archived 2026-10-06 → `context/archive/2026-10-05-offline-night-plan/`. Lesson: Make the server unreachable to test a service worker offline (lessons.md).
 - **S-12: user adding a telescope or eyepiece — on the gear pages and in onboarding — can type into a searchable combobox over a long, curated list of real models (telescopes by brand and model; eyepieces by brand, line and focal length); choosing one fills in the form's fields (telescope: name, aperture, focal length; eyepiece: name, focal length, apparent field), which stay editable before saving; "Not listed? Enter manually" keeps today's manual entry.** — Archived 2026-10-06 → `context/archive/2026-10-06-gear-catalogue/`. Lesson: —.
+- **S-03: user can see bright deep-sky objects that are not in the Messier catalogue ranked on Tonight with the same scoring, reasons and eyepiece pair as Messier objects, and can log them.** — Archived 2026-10-06 → `context/archive/2026-10-06-deep-sky-beyond-messier/`. Lesson: —.

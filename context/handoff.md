@@ -1,34 +1,33 @@
-# Handoff — 2026-10-06 (updated: S-12 archived, PR open)
+# Handoff — 2026-10-07 (S-03 shipped and archived; M-2 down to S-09)
 
-Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md` and GitHub #67. (This replaces the earlier handoffs, which are in git history.)
+Where Sidereus stands, and what the next agent or session should pick up. Read this first, then `context/foundation/roadmap.md`. (This replaces the earlier handoffs, which are in git history.)
 
 ## State of play
 
-- **Milestone M-2 "First real nights"** is open, with 8 of 11 slices done: S-01 planets, S-02 the Moon, S-05 the Session plan, S-06 offline, S-07 verdict check, S-08 "Use my location", S-10 the Nightfall redesign and S-11 the Tonight dashboard (with its follow-ups `interactive-sky` and `compass-labels`). All are archived under `context/archive/`.
-- **S-06 `offline-night-plan`** (#70) is **done**. It was merged in #110, deployed on 2026-10-06 and archived at `context/archive/2026-10-05-offline-night-plan/`. The user confirmed the real-phone install and airplane-mode check. In short (details in CLAUDE.md, "Offline (S-06)"):
-  - **Installable:** a manifest, icons from the Topbar star, and an "Install app" entry in Settings, with a Share-sheet hint on iOS.
-  - **Service worker:** `src/sw.ts` with Workbox. It is built by `scripts/build-sw.mjs` as npm `postbuild`, because vite-plugin-pwa can't emit under Astro 7. Every decision is a pure function in `src/lib/offline/copies.ts`.
-  - **What it stores:** each Tonight page opened, per site, for 36 h, as a shell + server-island pair, plus a `?night=next` copy rendered from the same forecast.
-  - **Offline:** the copy is served with a "Saved copy · prepared …" / old-forecast / stale notice. Network-only controls are disabled ("Needs a connection"), and anything else falls back to `/offline`.
-  - **Clearing:** on sign-in, sign-up or sign-out; on the sign-in bounce; on any page rendered signed out; and when a different user commits (`data-owner` = SHA-256 of the user id).
-  - **Deploys:** the `/_astro` files that stored pages use are kept across deploys.
-- **Still open in M-2:**
-  - **S-12 gear catalogue** (#113): implemented and archived at `context/archive/2026-10-06-gear-catalogue/` (roadmap: done). The PR from `feat/gear-catalogue` is open and awaits the user's merge.
-    - **What it does:** a "Find your model" combobox on the `/gear` forms and in onboarding, over 340 telescopes and 338 eyepieces in `src/lib/gear/catalogue/`. Details are in CLAUDE.md, "Gear catalogue (S-12)".
-    - **Still open:** the plan's 12 Manual rows (the user's joint test, not run yet). The impl review covers phases 1–3; phases 4–5 are unreviewed.
-    - **Follow-up:** Delta Optical has no entries (deltaoptical.pl returned 503).
-  - **S-03 deep sky beyond Messier** (`ready`, #67): next after S-12.
-  - **S-09 map picker** (`blocked`, #73): the privacy decision on map tiles must be made.
-  - **S-04 double stars** was **parked** by the user on 2026-10-06 (#68 closed as not planned; roadmap → Parked).
+- **Milestone M-2 "First real nights"** has every slice done except **S-09**. Done: S-01 planets, S-02 the Moon, S-03 deep sky beyond Messier, S-05 the Session plan, S-06 offline, S-07 verdict check, S-08 "Use my location", S-10 Nightfall, S-11 the Tonight dashboard and S-12 the gear catalogue. All of them are archived under `context/archive/`. S-04 double stars is parked (#68 closed as not planned).
+- **S-03 `deep-sky-beyond-messier`** (#67) is **done**:
+  - Merged in #116 (f725dd7). Main's CI passed, which means the migrations ran and the app is deployed.
+  - Archived at `context/archive/2026-10-06-deep-sky-beyond-messier/`. The roadmap and board #1 both say done.
+  - **The archive PR #117** (`chore/archive-deep-sky-beyond-messier`, which also carries this handoff) **is waiting for the user's merge.**
+  - **Catalogue:** 61 Caldwell objects at dec ≥ −23° are added to Messier (`DEEP_SKY`, 171 objects).
+    - The Double Cluster is merged into `NGC869` "NGC 869 / 884".
+    - C 49 and C 50 are relabelled `NGC2237` / `NGC2244` through generator `action: "designation"` overrides, because OpenNGC tags duplicate rows.
+  - **Ranking:** one mixed ranking with an order-only `MESSIER_RANK_BONUS = 0.03`, guarded by `calibration.test.ts`.
+  - **Tonight:** Caldwell rows read "NGC 7000 · name" with "Caldwell n".
+  - **Log keys:** the log accepts `NGC<n>` / `IC<n>` keys. Server-side `isKnownTarget` rejects unknown ones.
+  - **Picker search:** by prefix (`m`, `ngc`, `ic`, `c` / `caldwell`). A bare number falls back to NGC/IC numbers when no Messier number matches.
+  - **Database:** `observations.messier` and its trigger are dropped (migration `20261006200000`).
+  - Details are in CLAUDE.md under "Catalogue" and in the key-grammar convention.
+  - **Still open:** Progress 2.5 is the user's sign-off on the seasonal top-10s and the bonus (`context/archive/2026-10-06-deep-sky-beyond-messier/evidence/calibration.md`). The evidence notes that NGC 188 ranks #10 in January and April, a scoring quirk that was left alone. Impl-review finding F4 was skipped: `/log?saved=NGC1` shows an unknown key in the notice, which is harmless.
+- **S-12 gear catalogue** (#113): merged (#115), deployed and archived. The plan's 12 Manual rows (the user's joint test) and an impl review of phases 4–5 were never done. Delta Optical has no entries (its site returned 503).
+- **S-09 map picker** (`blocked`, #73) is the last M-2 slice. It needs the user's privacy decision on map tiles.
 
 ## Suggested next step
 
-1. **S-12 (#113):**
-   - The user runs the manual checks: the Progress rows marked `[ ]` in the archived plan.md, plus screenshots.
-   - Then merge the PR (which deploys) and set board #113 to done.
-   - Optional: `/10x-impl-review` of phases 4–5 as a new change, if wanted.
-2. **S-03 (#67):** then plan it through the ordinary chain. The catalogue is already generated from the pinned OpenNGC commit, and S-01 settled target identity by kind.
-3. **Unblock S-09:** the map-tile privacy question is the last user decision M-2 needs.
+1. **Merge archive PR #117** (user).
+2. **Unblock S-09 or close M-2.** Ask the user to make the map-tile privacy decision for S-09. Alternatively, if they'd rather drop or park S-09, close milestone M-2 with `/10x-roadmap` and open the next milestone from the PRD.
+3. **Optional calibration work (#21):** the user reviews the S-03 calibration snapshot (Progress 2.5). Any retuning of `MESSIER_RANK_BONUS` or of the scoring for objects like NGC 188 would be a new change. Use `CALIBRATION_SNAPSHOT=1 npx vitest run src/lib/engine/calibration.test.ts --reporter=verbose` to re-snapshot.
+4. **`/10x-ui` passes** on the surfaces S-03 touched (Caldwell rows on `/tonight/targets`, the log picker) if the user wants a visual check beyond the phase screenshots.
 
 **Hard constraints (all UI work):**
 
@@ -44,6 +43,7 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
 
 - **Post-merge checks from moonlight-and-the-verdict** (`context/archive/2026-10-02-moonlight-and-the-verdict/follow-ups/review-fixes.md`): bright-Moon screenshots after 2026-10-22, and a Firefox red-mode screenshot of the Moon card slider. The same bright Moon will exercise the `/tonight/all#washed-out` → Targets scroll; its e2e test skips until the Moon washes out an object.
 - **Deferred from ui-auth:** D1 (signed-in visitors still see the auth forms) and D2 (sign-up doesn't carry `next`).
+- **S-12 manual checks** and the phase 4–5 review (see State of play).
 
 ## Things a new session should know
 
@@ -79,10 +79,13 @@ Where Sidereus stands, and what the next agent or session should pick up. Read t
   - **Supabase CLI pin:** the CLI is pinned in `ci.yml`, now **2.119.0** (#111). On 2026-10-06 the pinned 2.117.0 started failing `migrate` at `supabase link` with "FGA Authentication Error. Unauthorized", even with a new full-access token. Bumping the pin fixed it. If `migrate` fails on auth again with a valid token, try the latest stable CLI before anything else.
 - **Hosting:** Workers Paid since 2026-09-30. Production is https://sidereus.sidereus.workers.dev.
 - **Untracked `.mcp.json`:** leave it out of commits (the user's choice).
+- **Docker must be running** for `npx supabase start`, `test:db`, smoke and e2e. On 2026-10-06 it was down, so the S-03 review fixes were verified by unit tests and CI only.
+- **Lint:** `npm run lint` can run out of memory. `npx eslint . --ignore-pattern '.claude/**'` is equivalent. There are 3 known `no-console` warnings in engine test files; they are intentional (budget logs and the calibration snapshot).
+- **Background `astro preview`** looks like a hung task to the user. Stop it as soon as the screenshot or e2e step ends, and say that the task is the server.
 
 ## Open issues worth knowing
 
-- **#21:** ranking calibration. Items 1, 3 and 4 are open; the sky-check tally is the first real evidence for the verdict thresholds.
+- **#21:** ranking calibration. Items 1, 3 and 4 are open. The sky-check tally and the S-03 calibration snapshot are the evidence so far.
 - **#19:** Stellarium fixtures. The Moon and planets use Skyfield references instead.
-- **#67, #68, #73:** the remaining M-2 slices (see State of play). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.
+- **#73:** S-09, the last M-2 slice (blocked on the map-tile privacy decision). The board's Stream field has no option for S-10's stream E, so #86 has no Stream value.
 - **A real VoiceOver pass** over the live sky is still with the user; names were checked through Playwright.
