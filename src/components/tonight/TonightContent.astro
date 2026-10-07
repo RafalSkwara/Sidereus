@@ -13,6 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import GearSelector from "@/components/tonight/GearSelector.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
+import { GEAR_ROW_GAP_CLASS, TILES_GAP_CLASS } from "@/components/tonight/sky-band";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
@@ -182,10 +183,10 @@ const gearLink =
 
       {/* The gear row (ui-mobile-pass): the gear Tonight is for, right under the sky, with the gear-list load errors. */}
       {showGearRow && (
-        <div class:list={["space-y-3 px-4", view ? "pt-2 sm:pt-4" : "pt-6 sm:pt-8"]}>
+        <div class:list={["space-y-3 px-4", view ? GEAR_ROW_GAP_CLASS : "pt-6 sm:pt-8"]}>
           {site && telescope && gearLine && (
             <p>
-              <a href="/gear" class:list={[gearLink]}>
+              <a href="/gear" class:list={[gearLink]} data-needs-network="">
                 {gearLine}
               </a>
             </p>
@@ -215,7 +216,7 @@ const gearLink =
 
       {/* The tiles run the container's full width, so their rules and hover reach the phone's edges. */}
       {view && (
-        <div class="pt-3 sm:pt-6">
+        <div class:list={[TILES_GAP_CLASS]}>
           <TonightTiles view={view} />
         </div>
       )}

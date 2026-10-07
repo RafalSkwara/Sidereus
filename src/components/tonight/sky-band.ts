@@ -6,14 +6,17 @@
  * Island-safe: plain strings and numbers.
  */
 
+/** The gear row under the sky (link and selectors) and the gap before the tiles, shared with the skeleton. */
+export const GEAR_ROW_GAP_CLASS = "pt-2 sm:pt-4";
+export const TILES_GAP_CLASS = "pt-3 sm:pt-6";
+
 /** The slot's container over the sky: the shared `max-w-3xl px-4` column. */
 export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";
 
 /**
- * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps.
- * ui-mobile-pass ESTIMATE, to be re-measured on the preview: phone (360 px) pt-3 12 + three lines 60 + mt-2 8 + the
- * word at verdict-sm 54 + mt-3 12 + a two-line answer 56 + pb-10 40 = 242 px; `sm` (640 px) pt-12 48 + 60 + 8 + the
- * word at verdict-lg 129.6 + mt-6 24 + a one-line answer 28 + the fresh forecast line 12 + 20 + pb-14 56 = 385.6 px.
+ * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps. Measured
+ * (ui-mobile-pass, 2026-10-07, EN go on the all-clear fixture): 244 px at 360 px and 388 px at 640 px. Re-measure at
+ * those two widths after any change to the verdict's lines, sizes or copy; never compute it.
  */
 export const VERDICT_MIN_HEIGHT_CLASS = "min-h-61 sm:min-h-97";
 

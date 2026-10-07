@@ -492,6 +492,8 @@ export const en = {
       noDarkWindow: "No dark window",
       /** Joins the headline and its reason on the verdict's one flowing answer line. */
       separator: " · ",
+      /** The verdict's third info line (the card's own key; the nights strip has its own). */
+      timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */

@@ -85,3 +85,7 @@ The capture now ends on the first tile's rule at 1280×1145 (was 1160). The new 
 - 2.6: the tile stack is about 644 px (target ≤ 600 px).
 - 4.8: the user's approval of the phone first screen.
 - The first-screen margin at 390×844 is 3 px, so any new block above the tiles fails `tonight-phone.spec.ts` by design.
+
+## Implementation review fixes (2026-10-07)
+
+Fixed F1–F7 and F9 (`reviews/impl-review.md`); F8 skipped (dev-only, predates the change). Re-run: astro check 0 errors, eslint 0 errors, vitest 835 passed, build OK, full e2e 37 passed / 1 skipped. Break check on the revised first-screen assertion: `GEAR_ROW_GAP_CLASS` raised to `pt-12` in the worktree → "the first target's first line must sit above the TabBar at 390×844" failed (812 > 779), file restored.

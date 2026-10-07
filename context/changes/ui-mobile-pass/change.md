@@ -1,7 +1,7 @@
 ---
 change_id: ui-mobile-pass
 title: Phone-first UI pass of the Tonight dashboard
-status: implementing
+status: impl_reviewed
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null

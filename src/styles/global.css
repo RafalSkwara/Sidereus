@@ -549,12 +549,12 @@
    * length (measured widths at wdth 125 / 800 / -0.035em: Go 1.72em, Tak 2.15, Nie 1.98, Może 3.01, No-go 3.56,
    * Marginal 5.05; 328 px of content on a 360 px screen). VerdictCard picks the step (ui-mobile-pass): below `sm`
    * every word is verdict-sm, so a phone's first screen has room for the gear and the targets; from `sm`, Go, Tak,
-   * Nie take verdict-lg, Może and No-go verdict-md, and Marginal verdict-sm. verdict-xl is no longer used by Tonight.
+   * Nie take verdict-lg, Może and No-go verdict-md, and Marginal verdict-sm.
    * Each step is also capped by the viewport, so the word never clips on a narrower screen or at 400% zoom:
    * min(<size>, (100vw - 2rem) / <divisor>), where 2rem is the sky's px-4 gutters and the divisor is just above the
-   * step's widest word in em (lg and xl: Tak 2.15 -> 2.25; md: No-go 3.56 -> 3.65; sm: Marginal 5.05 -> 5.15).
+   * step's widest word in em (lg: Tak 2.15 -> 2.25; md: No-go 3.56 -> 3.65; sm: Marginal 5.05 -> 5.15).
    * The cap only bites below the size: lg 144 px from (144 * 2.25 + 32) = 356 px, md 88 px from 353 px, sm 60 px from
-   * 341 px, xl 192 px from 464 px. So 390 px keeps 144 / 88 / 60, and from `sm` (640 px) the words use lg 144 /
+   * 341 px. So 390 px keeps 144 / 88 / 60, and from `sm` (640 px) the words use lg 144 /
    * md 88 / sm 60 px; at 320 px the 288 px of content gives lg 128, md 78.9 and sm 55.9 px.
    */
   --text-verdict-sm: min(3.75rem, calc((100vw - 2rem) / 5.15));
@@ -566,9 +566,6 @@
   --text-verdict-lg: min(9rem, calc((100vw - 2rem) / 2.25));
   --text-verdict-lg--line-height: 0.9;
   --text-verdict-lg--letter-spacing: -0.035em;
-  --text-verdict-xl: min(12rem, calc((100vw - 2rem) / 2.25));
-  --text-verdict-xl--line-height: 0.9;
-  --text-verdict-xl--letter-spacing: -0.035em;
 
   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
   --font-sans: "Archivo Variable", system-ui, sans-serif;

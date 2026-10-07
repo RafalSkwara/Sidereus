@@ -485,18 +485,11 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           <span className={cn("text-heading text-title font-mono", SLIDER_TIME_CLASS)} data-sky-time>
             {time}
           </span>
-          {last > 0 && (
-            <button
-              type="button"
-              className={cn(nowButtonClass, SLIDER_NOW_CLASS)}
-              onClick={() => {
-                setIndex(nearestFrame(view, Date.now()));
-              }}
-            >
-              {t.now}
-            </button>
-          )}
-          {/* With a single frame there is nothing to slide (as on the Moon card): the row keeps its height. */}
+          {/*
+           * DOM order follows the phone row (time, slider, Now), so Tab matches what a phone shows; from `sm` the
+           * order classes lift Now onto the time's line.
+           * With a single frame there is nothing to slide (as on the Moon card): the row keeps its height.
+           */}
           <div className={cn("relative h-11", SLIDER_TRACK_CLASS)}>
             {last > 0 && (
               <>
@@ -531,6 +524,17 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               </>
             )}
           </div>
+          {last > 0 && (
+            <button
+              type="button"
+              className={cn(nowButtonClass, SLIDER_NOW_CLASS)}
+              onClick={() => {
+                setIndex(nearestFrame(view, Date.now()));
+              }}
+            >
+              {t.now}
+            </button>
+          )}
           <div
             className={cn(
               "text-muted-foreground text-label flex items-center justify-between gap-3 font-mono",

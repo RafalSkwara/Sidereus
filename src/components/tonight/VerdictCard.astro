@@ -76,7 +76,7 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
         t.noDarkWindow
       )}
     </p>
-    <p>{m.tonight.nights.timesIn({ zone: timeZone })}</p>
+    <p>{t.timesIn({ zone: timeZone })}</p>
   </div>
   <h2 id={headingId} class="mt-2 text-heading">
     <span class:list={["block font-display font-extrabold", verdictSize(m.tonight.verdict.word[level])]}>

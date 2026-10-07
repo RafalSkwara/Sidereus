@@ -11,6 +11,8 @@ import {
   SLIDER_ROW_CLASS,
   SLIDER_TIME_CLASS,
   SLIDER_TRACK_CLASS,
+  GEAR_ROW_GAP_CLASS,
+  TILES_GAP_CLASS,
 } from "@/components/tonight/sky-band";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
@@ -59,11 +61,11 @@ const tile = TILE_ROW_CLASS;
   </div>
 
   <!-- The gear row (ui-mobile-pass): one line under the slider, as the island draws it with one site and telescope. -->
-  <div class="mx-auto w-full max-w-3xl px-4 pt-2 sm:pt-4" aria-hidden="true">
+  <div class:list={["mx-auto w-full max-w-3xl px-4", GEAR_ROW_GAP_CLASS]} aria-hidden="true">
     <div class:list={[bar, "min-h-11 w-48 max-w-full"]}></div>
   </div>
 
-  <div class="mx-auto w-full max-w-3xl pt-3 sm:pt-6">
+  <div class:list={["mx-auto w-full max-w-3xl", TILES_GAP_CLASS]}>
     <div aria-hidden="true">
       <div class:list={[tile]}>
         <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>

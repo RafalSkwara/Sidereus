@@ -499,14 +499,14 @@ Not applicable. There is no data change, and offline copies stored before the de
 
 #### Automated
 
-- [x] 4.1 New spec passes: `npx playwright test tonight-phone` against the preview on local Supabase plus the forecast fixture
-- [x] 4.2 Full e2e suite passes against the same preview: `npm run test:e2e`
-- [x] 4.3 Unit tests, type check and lint pass: `npm test && npx astro check && npm run lint`
-- [x] 4.4 Build passes: `npm run build`
+- [x] 4.1 New spec passes: `npx playwright test tonight-phone` against the preview on local Supabase plus the forecast fixture — 9a16270
+- [x] 4.2 Full e2e suite passes against the same preview: `npm run test:e2e` — 9a16270
+- [x] 4.3 Unit tests, type check and lint pass: `npm test && npx astro check && npm run lint` — 9a16270
+- [x] 4.4 Build passes: `npm run build` — 9a16270
 
 #### Manual
 
-- [x] 4.5 Screenshot matrix (EN/PL × dark/light/red × 375/390/1280) of `/tonight`, saved under `context/changes/ui-mobile-pass/evidence/after/`, reviewed by the user
-- [x] 4.6 Regression screenshots of `/gear`, `/log` and `/tonight/targets` at 390 and 1280, compared with `evidence/` before
-- [x] 4.7 `verification.md` lists the 7-state matrix with every cell shown or N/A with a reason
+- [ ] 4.5 Screenshot matrix (EN/PL × dark/light/red × 375/390/1280) of `/tonight`, saved under `context/changes/ui-mobile-pass/evidence/after/`, reviewed by the user
+- [x] 4.6 Regression screenshots of `/gear`, `/log` and `/tonight/targets` at 390 and 1280, compared with `evidence/` before — 9a16270
+- [x] 4.7 `verification.md` lists the 7-state matrix with every cell shown or N/A with a reason — 9a16270
 - [ ] 4.8 The user approves the phone first screen (the S-02 list starts from here)
