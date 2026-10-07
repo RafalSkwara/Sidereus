@@ -474,11 +474,11 @@ Decided during `/10x-implement` (2026-10-07), recorded here because the phase bl
 
 #### Automated
 
-- [x] 3.1 The new e2e spec passes against a local preview: `npx playwright test site-map`
-- [x] 3.2 The full unit suite passes: `npm test`
-- [x] 3.3 The full e2e suite shows no new failures compared with `evidence/e2e-baseline.txt`: `npx playwright test`
+- [x] 3.1 The new e2e spec passes against a local preview: `npx playwright test site-map` — 0f540a1
+- [x] 3.2 The full unit suite passes: `npm test` — 0f540a1
+- [x] 3.3 The full e2e suite shows no new failures compared with `evidence/e2e-baseline.txt`: `npx playwright test` — 0f540a1
 
 #### Manual
 
-- [x] 3.4 Screenshots show legible tiles and controls with visible focus and the credit, in EN and PL, dark, light and red, at 390 px and 1280 px, with no Leaflet default white, grey or blue showing. The red-mode channel check (Chromium and WebKit) reports no green or blue light
-- [x] 3.5 Polish copy fits the button, caption and panel buttons at 390 px without overflow
+- [x] 3.4 Screenshots show legible tiles and controls with visible focus and the credit, in EN and PL, dark, light and red, at 390 px and 1280 px, with no Leaflet default white, grey or blue showing. The red-mode channel check (Chromium and WebKit) reports no green or blue light — 0f540a1
+- [x] 3.5 Polish copy fits the button, caption and panel buttons at 390 px without overflow — 0f540a1
