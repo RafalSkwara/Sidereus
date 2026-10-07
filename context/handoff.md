@@ -2,6 +2,21 @@
 
 What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first. Everything needed to implement S-09 is in this file plus `context/changes/site-pick-from-map/plan.md`. **Do not redo research or planning**: they are done, reviewed and fixed. To save tokens, read only what each step below names.
 
+## Parked: test rollout Phase 1 (resume after the UI work finishes)
+
+On 2026-10-07 `/10x-test-plan` wrote `context/foundation/test-plan.md`. It has a 6-risk map and 5 rollout phases: forecast honesty → night and date boundaries → ranking invariants and calibration oracle → access and entitlement boundary → quality-gates wiring. The interview answers it rests on are in §2 and §7; don't re-ask them. Phase 1 is `change opened` in §3, but its change folder doesn't exist yet. The user wants to start it only **after the current UI task (S-01 `ui-mobile-pass`) is implemented**. Phase 2 has a hard date: the 25-hour DST night of **25 Oct 2026**.
+
+To resume, start from `~/projects`, `cd sidereus` onto a fresh branch from `main`, and run:
+
+```
+/10x-new testing-forecast-honesty Open a change folder for rollout Phase 1 of context/foundation/test-plan.md: "Forecast honesty".
+Risks covered: #1 (Tonight shows a confident "Clear" sky when the forecast is partial, stale or missing). Test types planned: unit + integration.
+Risk response intent: #1 — with a truncated, stale, partly missing or absent forecast the sky reads marginal, "no weather data" or "last forecast, N hours old", never "Clear"; moon, twilight and altitude results stay usable; no error page. Challenge "no cloud data for an hour means no cloud" and "a 200 from the provider means a usable series". Avoid complete-series-only tests and expected verdicts copied from the verdict code.
+After creating the folder, follow the downstream continuation rule.
+```
+
+Then continue with `/10x-research` → `/10x-plan` → `/10x-implement`. Re-run `/10x-test-plan` (or `/10x-test-plan --status`) to pick the next rollout phase once one completes.
+
 ## State of play
 
 - **Milestone M-2 "First real nights"** is down to its last slice, **S-09 `site-pick-from-map`** (GitHub #73). Every other slice is done and archived (S-01–S-03, S-05–S-08, S-10–S-12; S-04 parked). Archive PR #117 is merged.
