@@ -40,3 +40,48 @@ Production preview on local Supabase + `tests/e2e/forecast-fixture.mjs` (all-cle
 | Gate fix | the slider row's track and legend sat outside the flex container (phone row overflowed onto the gear line). Moved inside (attempt 1/2), re-verified | — |
 
 Known minor: below `sm` the slider row shows time · track · Now, while the DOM order (kept for desktop) is time · Now · track, so on phones Tab reaches Now before the slider.
+
+## Phase 4: states, visual gate and guard (2026-10-07)
+
+### Gates
+
+- `npx playwright test tonight-phone`: 3/3 passed (first screen at 390×844; no sideways scroll at 320 and 375 px on 8 pages in EN and PL; panorama 304 px at 375 and 1280).
+- **Break check:** the gear row's phone top padding was raised `pt-2` → `pt-10` in the worktree only and rebuilt. The spec went red ("first target row must sit above the TabBar at 390×844": 808 > 779), and the file was restored with `git checkout`.
+- Full e2e on the restored build: 37 passed, 1 skipped (`landing-screenshot`, capture-only).
+- `npx astro check` 0 errors; eslint 0 errors (3 existing warnings in engine tests); vitest 835 passed; `npm run build` OK.
+
+### Screenshot matrix (4.5)
+
+`/tonight` in EN/PL × dark/light/red × 375/390/1280: `evidence/after/matrix/` (18 images). The scripted check over 72 page/locale/theme/viewport combinations (`/tonight`, `/tonight/targets`, `/gear`, `/log`) found 0 sideways overflow. The first target row sits above the TabBar at 390×844 in every locale and theme.
+
+### Regression (4.6), compared with `evidence/` (before)
+
+| Page | 390 px h1 top / page height | 1280 px h1 top / page height |
+| --- | --- | --- |
+| `/gear` | 104 → 88 / 988 → 897 | 128 / 948 (unchanged) |
+| `/log` | 104 → 88 / 844 | 128 / 900 (unchanged) |
+| `/tonight/targets` | 156 → 132 / 2290 → 2231 | 188 / 1878 (unchanged) |
+
+### 7-state matrix (4.7), specimens on `/design` (dev only)
+
+| State | Verdict block | Tile | Gear row |
+| --- | --- | --- | --- |
+| default | shown: go · clear | shown: default | shown: one site (link), 2 sites (pills), 4 sites (dropdown) |
+| hover | N/A, not interactive | shown: hover specimen | shown: pills hover specimen; the gear link's hover is a token text colour |
+| focus-visible | N/A, not interactive (the slider and Now button have their own focus specimens) | shown: focus-visible specimen | shown: pills and gear-link focus specimens; the dropdown uses the NativeSelect focus cell |
+| disabled | N/A, not interactive | N/A, a tile is a link that always opens its page | N/A, the links and the select always work |
+| error | shown as states: no forecast (`none`), stale forecast (`fallback`, visible on phones too); a failed island keeps the skeleton's reload hint | N/A, errors render outside tiles | gear-list load errors render as `ServerError` (its own specimen) |
+| empty | shown: no dark window (summer at 54° N) | shown: "no targets" | N/A, below two items there is no selector (captioned) |
+| loading | shown: TonightSkeleton | shown: skeleton row | shown: TonightSkeleton's one-line gear-row placeholder |
+
+Also shown: marginal and no-go verdicts, the slider and Now button (default, hover, focus-visible).
+
+### Landing (#3)
+
+The capture now ends on the first tile's rule at 1280×1145 (was 1160). The new height is set in both `landing-screenshot.spec.ts` and `Welcome.astro`, and `public/landing/tonight.png` is recaptured.
+
+### Open for the user
+
+- 2.6: the tile stack is about 644 px (target ≤ 600 px).
+- 4.8: the user's approval of the phone first screen.
+- The first-screen margin at 390×844 is 3 px, so any new block above the tiles fails `tonight-phone.spec.ts` by design.

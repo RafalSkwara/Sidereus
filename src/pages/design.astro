@@ -28,6 +28,8 @@ import ComboboxDemo from "@/components/design/ComboboxDemo";
 import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
+import GearSelector from "@/components/tonight/GearSelector.astro";
+import { rangeClasses } from "@/components/tonight/range-classes";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
@@ -233,6 +235,15 @@ const skySamples: SkySample[] = [
     explanation: null,
   },
   {
+    label: "forecast fallback · stale saved copy (shown on phones too)",
+    date: SAMPLE_DATE,
+    timeZone: SAMPLE_ZONE,
+    verdict: { level: "marginal", reason: { kind: "fallback-cap", runHours: 6, cloudPct: 12 } },
+    darkWindow: sampleWindow,
+    forecast: { kind: "fallback", ageMs: 5 * 60 * MINUTE_MS },
+    explanation: null,
+  },
+  {
     label: "marginal · partly clear",
     date: SAMPLE_DATE,
     timeZone: SAMPLE_ZONE,
@@ -279,6 +290,19 @@ const skySamples: SkySample[] = [
     },
   },
 ];
+
+// The gear row's specimens (TonightContent): the gear link, then a selector once there are two or more of a kind.
+const gearLink =
+  "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const gearItems = (count: number) =>
+  ["Back garden", "Dark-sky park", "Balcony", "Rooftop"].slice(0, count).map((name, i) => ({
+    id: `sample-site-${String(i + 1)}`,
+    name,
+  }));
+const gearRowClass = "space-y-3 px-4";
+const sampleTelescopeName = "150 mm reflector";
+const pillItems = gearItems(2);
+const dropdownItems = gearItems(4);
 
 const skies = skySamples.map((sample) => ({
   label: sample.label,
@@ -1431,6 +1455,188 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               and the slider for their outlines · disabled — N/A · error — without a sky view the dashboard keeps the
               static TonightSky · empty — no deep-sky markers on a no-go night (planets and the Moon stay) · loading —
               see TonightSkeleton (it reserves the strip and the slider row)
+            </p>
+          </section>
+
+          <!-- Gear row -->
+          <section class:list={block} aria-labelledby="c-gear-row">
+            <h3 id="c-gear-row" class:list={blockTitle}>
+              Gear row (under the sky)
+            </h3>
+            <p class:list={blockNote}>
+              TonightContent's `space-y-3 px-4` container: the gear link, then a GearSelector once there are two or more
+              sites (or telescopes). Up to three items the selector is pills, from four a dropdown. The link names only
+              what no selector already shows, so the site's name is left out where the site selector is shown.
+            </p>
+            <div class:list={grid}>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>one site · the gear link</p>
+                <div class:list={gearRowClass}>
+                  <p>
+                    <a href="/design" class:list={[gearLink]}>{`Back garden · ${sampleTelescopeName}`}</a>
+                  </p>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>2 sites · pills (the active one outlined)</p>
+                <div class:list={gearRowClass}>
+                  <p>
+                    <a href="/design" class:list={[gearLink]}>
+                      {sampleTelescopeName}
+                    </a>
+                  </p>
+                  <GearSelector
+                    items={pillItems}
+                    activeId={pillItems[0].id}
+                    param="site"
+                    label={m.tonight.siteSelector.label}
+                    show={m.tonight.siteSelector.show}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>4 sites · dropdown</p>
+                <div class:list={gearRowClass}>
+                  <p>
+                    <a href="/design" class:list={[gearLink]}>
+                      {sampleTelescopeName}
+                    </a>
+                  </p>
+                  <GearSelector
+                    items={dropdownItems}
+                    activeId={dropdownItems[0].id}
+                    param="site"
+                    label={m.tonight.siteSelector.label}
+                    show={m.tonight.siteSelector.show}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>pills · focus-visible · specimen (first pill)</p>
+                <nav aria-label="Pill focus specimen" class:list={gearRowClass}>
+                  <ul class="flex flex-wrap gap-2">
+                    {pillItems.map((item, i) => (
+                      <li class="min-w-0">
+                        <a
+                          href="/design"
+                          tabindex="-1"
+                          aria-current={i === 0 ? "page" : undefined}
+                          class:list={[
+                            cn(buttonVariants({ variant: i === 0 ? "outline" : "ghost", size: "sm" }), "max-w-full"),
+                            i === 0 && focusRing,
+                          ]}
+                        >
+                          <span class="min-w-0 truncate">{item.name}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>pills · hover · specimen (second pill)</p>
+                <nav aria-label="Pill hover specimen" class:list={gearRowClass}>
+                  <ul class="flex flex-wrap gap-2">
+                    {pillItems.map((item, i) => (
+                      <li class="min-w-0">
+                        <a
+                          href="/design"
+                          tabindex="-1"
+                          class:list={[
+                            cn(buttonVariants({ variant: i === 0 ? "outline" : "ghost", size: "sm" }), "max-w-full"),
+                            i === 1 && "bg-accent",
+                          ]}
+                        >
+                          <span class="min-w-0 truncate">{item.name}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>gear link · focus-visible · specimen</p>
+                <div class:list={gearRowClass}>
+                  <p>
+                    <a href="/design" tabindex="-1" class:list={[gearLink, focusRing]}>
+                      {`Back garden · ${sampleTelescopeName}`}
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              dropdown focus — the NativeSelect's own focus cell (above) · disabled — N/A (a link and a select that
+              always work; offline the island shows its copy) · error — the gear-list load errors are a ServerError in
+              this row (see ServerError) · empty — no gear row for one site and one telescope with no name to show, and
+              none below two items · loading — the skeleton's one-line gear row (see TonightSkeleton)
+            </p>
+          </section>
+
+          <!-- Sky slider controls -->
+          <section class:list={block} aria-labelledby="c-sky-controls">
+            <h3 id="c-sky-controls" class:list={blockTitle}>
+              Sky slider and Now button
+            </h3>
+            <p class:list={blockNote}>
+              The slider row of the live sky, as one phone row of time, track and Now. The forced focus below uses the
+              classes the controls take on `:focus-visible`; the real controls are in the TonightSkyView specimens
+              above, so Tab to them (the slider, then Now) to check the real ring.
+            </p>
+            <div class:list={grid}>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>slider · default · live</p>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value="4"
+                  aria-label={m.tonight.sky.slider}
+                  class:list={[rangeClasses("border")]}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>slider · focus-visible · specimen</p>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value="4"
+                  tabindex="-1"
+                  aria-label={`${m.tonight.sky.slider} (focus specimen)`}
+                  class:list={[rangeClasses("border"), focusRing]}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>Now button · default · live</p>
+                <div class:list={row}>
+                  <Button type="button" variant="outline" size="sm">
+                    {m.tonight.sky.now}
+                  </Button>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>Now button · hover · specimen</p>
+                <div class:list={row}>
+                  <Button type="button" variant="outline" size="sm" className="bg-accent" tabIndex={-1}>
+                    {m.tonight.sky.now}
+                  </Button>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>Now button · focus-visible · specimen</p>
+                <div class:list={row}>
+                  <Button type="button" variant="outline" size="sm" className={focusRing} tabIndex={-1}>
+                    {m.tonight.sky.now}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              slider hover — N/A (no hover style; the thumb moves on drag) · disabled — N/A (a single frame renders no
+              slider, only the time) · error, empty — N/A · loading — see TonightSkeleton (it mirrors the row)
             </p>
           </section>
 

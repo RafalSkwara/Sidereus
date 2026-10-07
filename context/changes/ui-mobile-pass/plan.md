@@ -482,31 +482,31 @@ Not applicable. There is no data change, and offline copies stored before the de
 
 #### Automated
 
-- [x] 3.1 Type check passes: `npx astro check`
-- [x] 3.2 Lint passes: `npm run lint`
-- [x] 3.3 Unit tests pass, including `i18n.test.ts` parity and `TonightSkyView.test.ts`: `npm test`
-- [x] 3.4 Production build passes: `npm run build`
-- [x] 3.5 Hardcoded-value scan on the touched files returns 0 hits
-- [x] 3.6 At 390×844 the first tile's first target row is above the TabBar (preview measurement), and at 1280 the panorama SVG height is still 304 px
+- [x] 3.1 Type check passes: `npx astro check` — 853fd72
+- [x] 3.2 Lint passes: `npm run lint` — 853fd72
+- [x] 3.3 Unit tests pass, including `i18n.test.ts` parity and `TonightSkyView.test.ts`: `npm test` — 853fd72
+- [x] 3.4 Production build passes: `npm run build` — 853fd72
+- [x] 3.5 Hardcoded-value scan on the touched files returns 0 hits — 853fd72
+- [x] 3.6 At 390×844 the first tile's first target row is above the TabBar (preview measurement), and at 1280 the panorama SVG height is still 304 px — 853fd72
 
 #### Manual
 
-- [x] 3.7 The skeleton → island swap does not jump the panorama or the tiles at 390 px and 1280 px with one site and an EN verdict (record both)
-- [x] 3.8 The compass row sits under the verdict text without overlapping it, in EN go, PL tak, marginal and no-go verdicts
-- [x] 3.9 With 2 sites, the site pills sit right under the slider, and switching site works
+- [x] 3.7 The skeleton → island swap does not jump the panorama or the tiles at 390 px and 1280 px with one site and an EN verdict (record both) — 853fd72
+- [x] 3.8 The compass row sits under the verdict text without overlapping it, in EN go, PL tak, marginal and no-go verdicts — 853fd72
+- [x] 3.9 With 2 sites, the site pills sit right under the slider, and switching site works — 853fd72
 
 ### Phase 4: States, visual gate and guard
 
 #### Automated
 
-- [ ] 4.1 New spec passes: `npx playwright test tonight-phone` against the preview on local Supabase plus the forecast fixture
-- [ ] 4.2 Full e2e suite passes against the same preview: `npm run test:e2e`
-- [ ] 4.3 Unit tests, type check and lint pass: `npm test && npx astro check && npm run lint`
-- [ ] 4.4 Build passes: `npm run build`
+- [x] 4.1 New spec passes: `npx playwright test tonight-phone` against the preview on local Supabase plus the forecast fixture
+- [x] 4.2 Full e2e suite passes against the same preview: `npm run test:e2e`
+- [x] 4.3 Unit tests, type check and lint pass: `npm test && npx astro check && npm run lint`
+- [x] 4.4 Build passes: `npm run build`
 
 #### Manual
 
-- [ ] 4.5 Screenshot matrix (EN/PL × dark/light/red × 375/390/1280) of `/tonight`, saved under `context/changes/ui-mobile-pass/evidence/after/`, reviewed by the user
-- [ ] 4.6 Regression screenshots of `/gear`, `/log` and `/tonight/targets` at 390 and 1280, compared with `evidence/` before
-- [ ] 4.7 `verification.md` lists the 7-state matrix with every cell shown or N/A with a reason
+- [x] 4.5 Screenshot matrix (EN/PL × dark/light/red × 375/390/1280) of `/tonight`, saved under `context/changes/ui-mobile-pass/evidence/after/`, reviewed by the user
+- [x] 4.6 Regression screenshots of `/gear`, `/log` and `/tonight/targets` at 390 and 1280, compared with `evidence/` before
+- [x] 4.7 `verification.md` lists the 7-state matrix with every cell shown or N/A with a reason
 - [ ] 4.8 The user approves the phone first screen (the S-02 list starts from here)
