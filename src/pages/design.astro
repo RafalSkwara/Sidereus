@@ -19,6 +19,8 @@ import Band from "@/components/ui/Band.astro";
 import BackLink from "@/components/ui/BackLink.astro";
 import Notice from "@/components/ui/Notice.astro";
 import Pager from "@/components/ui/Pager.astro";
+import Tile from "@/components/ui/Tile.astro";
+import { TILE_ROW_CLASS } from "@/components/ui/tile";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
@@ -525,6 +527,9 @@ const panoramas = panoramaSky
  */
 const summaryHover = "*:*:bg-accent";
 const summaryFocus = "*:*:outline-2 *:*:-outline-offset-2 *:*:outline-ring";
+// The Tile specimens sit one level up: wrapper > tile (the tile is the `<a>` itself).
+const tileHover = "*:bg-accent";
+const tileFocus = "*:outline-2 *:-outline-offset-2 *:outline-ring";
 
 // Shared page classes (token classes and type roles only).
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
@@ -1426,6 +1431,54 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               and the slider for their outlines · disabled — N/A · error — without a sky view the dashboard keeps the
               static TonightSky · empty — no deep-sky markers on a no-go night (planets and the Moon stay) · loading —
               see TonightSkeleton (it reserves the strip and the slider row)
+            </p>
+          </section>
+
+          <!-- Tile -->
+          <section class:list={block} aria-labelledby="c-tile">
+            <h3 id="c-tile" class:list={blockTitle}>
+              Tile
+            </h3>
+            <div class:list={grid}>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default</p>
+                <Tile href="/design" headingId="design-tile-default" heading={m.tonight.summary.plan}>
+                  <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                </Tile>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>hover · specimen</p>
+                <div class:list={tileHover} inert>
+                  <Tile href="/design" headingId="design-tile-hover" heading={m.tonight.summary.plan}>
+                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                  </Tile>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>focus-visible · specimen</p>
+                <div class:list={tileFocus} inert>
+                  <Tile href="/design" headingId="design-tile-focus" heading={m.tonight.summary.plan}>
+                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                  </Tile>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · no targets</p>
+                <Tile href="/design" headingId="design-tile-empty" heading={m.tonight.summary.targets}>
+                  <span class="mt-3 block text-body font-semibold">{m.tonight.summary.noTargets}</span>
+                </Tile>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>loading · skeleton row</p>
+                <div class:list={[TILE_ROW_CLASS]} aria-hidden="true">
+                  <div class="rounded bg-border text-label motion-safe:animate-pulse w-28">&nbsp;</div>
+                  <div class="mt-2 rounded bg-border text-body motion-safe:animate-pulse w-2/3">&nbsp;</div>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              active — N/A (no pressed style: a tile navigates to its page) · disabled — N/A (a tile is a link that
+              always opens its page) · error — N/A (errors render outside tiles)
             </p>
           </section>
 

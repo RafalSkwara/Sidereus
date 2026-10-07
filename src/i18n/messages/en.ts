@@ -879,6 +879,8 @@ export const en = {
       nightsCaption: (p: { count: string }) =>
         `Height is clear sky. Colour and mark show the verdict for the next ${p.count} nights.`,
       noTargets: "No targets to point at tonight.",
+      /** Joins the parts of a tile's one-line summary (the Moon tile: percent, phase, when it is up). */
+      separator: " · ",
     },
 
     /**

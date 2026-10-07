@@ -14,3 +14,13 @@ Production preview on local Supabase + `tests/e2e/forecast-fixture.mjs` (all-cle
 | PL titles at 320 px wrap on whole words (landing, log) | — | yes | `evidence/after/pl-dark-320x568_log.png` |
 
 `--text-display` resolves to 32/36 px at ≤ 360 px, 32.9/36.9 px at 390 px and 40/44 px from 640 px (unchanged desktop).
+
+## Phase 2 — shared Tile and compact tiles (2026-10-07)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Hand-written tile blocks left in `TonightTiles.astro` | 0 | grep |
+| Tile stack height at 390 px, EN (criterion 2.6: ≤ 600 px) | **about 644 px** (was 905): **not met**. The 7-night tile (bars, marks, days, 2-line caption, about 200 px) is most of the gap. Left open for the user's review, not cut further without a decision. | `evidence/after/p2-en-dark-390x844_tonight-full.png` |
+| "Point here first" is the heaviest tile | yes (title-size rows; Moon, Plan and Planets are one or two body lines) | same |
+| `/design` Tile states in dark, light and red | default, hover, focus-visible, empty, skeleton shown; disabled and error N/A with reason | `evidence/after/design-tile-light.png`, `design-tile-red.png` |
+| Lint after review | 2 new `prefer-class-list-directive` warnings in `Tile.astro` fixed (`class:list`) | — |

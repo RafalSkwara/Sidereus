@@ -8,13 +8,14 @@ import { SLIDER_ROW_CLASS } from "@/components/tonight/sky-band";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { buttonVariants } from "@/components/ui/button";
+import { TILE_ROW_CLASS } from "@/components/ui/tile";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 const t = getMessages(Astro.locals.locale).tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
 const bar = "rounded bg-border motion-safe:animate-pulse";
-// A tile row as TonightTiles draws it: full width, ruled below, the same padding.
-const tile = "border-b border-border px-4 py-4";
+// A tile row as TonightTiles draws it, from the same class source as `Tile`.
+const tile = TILE_ROW_CLASS;
 ---
 
 <!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
@@ -58,28 +59,28 @@ const tile = "border-b border-border px-4 py-4";
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-3 h-4 w-full rounded-full"]}></div>
-        <div class:list={[bar, "mt-3 w-2/3 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-2 w-2/3 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class="mt-3 flex items-center gap-4">
-          <div class="size-13 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
-          <div class:list={[bar, "w-24 text-display"]}>&nbsp;</div>
+        <div class="mt-2 flex items-center gap-3">
+          <div class="size-6 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
+          <div class:list={[bar, "w-3/4 text-body"]}>&nbsp;</div>
         </div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-3 w-1/2 text-title"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-2 w-1/2 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-1 w-2/3 text-label"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-36 text-label"]}>&nbsp;</div>
         <div class="mt-4 grid grid-cols-7 items-end gap-2">
           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
-            <div class="h-18 rounded bg-border motion-safe:animate-pulse" />
+            <div class="h-10 rounded bg-border motion-safe:animate-pulse sm:h-18" />
           ))}
         </div>
       </div>

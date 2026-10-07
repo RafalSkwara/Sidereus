@@ -789,6 +789,7 @@ export const pl = {
       nightsCaption: (p) =>
         `Wysokość to bezchmurne niebo. Kolor i znak pokazują werdykt na najbliższe ${p.count} noce.`,
       noTargets: "Dziś nie ma na co celować.",
+      separator: " · ",
     },
 
     pages: {

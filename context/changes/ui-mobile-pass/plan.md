@@ -453,30 +453,30 @@ Not applicable. There is no data change, and offline copies stored before the de
 
 #### Automated
 
-- [x] 1.1 Type check passes: `npx astro check`
-- [x] 1.2 Lint passes: `npm run lint`
-- [x] 1.3 Unit tests pass, including `no-hardcoded-colors`, `red-theme` and `contrast`: `npm test`
-- [x] 1.4 Hardcoded-value scan on the touched files returns 0 hits
+- [x] 1.1 Type check passes: `npx astro check` — c183e09
+- [x] 1.2 Lint passes: `npm run lint` — c183e09
+- [x] 1.3 Unit tests pass, including `no-hardcoded-colors`, `red-theme` and `contrast`: `npm test` — c183e09
+- [x] 1.4 Hardcoded-value scan on the touched files returns 0 hits — c183e09
 
 #### Manual
 
-- [x] 1.5 At 390 px the `/gear`, `/log`, `/tonight/targets`, `/tonight/moon`, landing (`/`) and `/auth/signin` headers are visibly shorter, and no title wraps mid-word in PL at 320 px
-- [x] 1.6 At 1280 px those pages look the same as before (side-by-side screenshots)
+- [x] 1.5 At 390 px the `/gear`, `/log`, `/tonight/targets`, `/tonight/moon`, landing (`/`) and `/auth/signin` headers are visibly shorter, and no title wraps mid-word in PL at 320 px — c183e09
+- [x] 1.6 At 1280 px those pages look the same as before (side-by-side screenshots) — c183e09
 
 ### Phase 2: Shared Tile and compact tiles (C4)
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro check`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Unit tests pass: `npm test`
-- [ ] 2.4 `TonightTiles.astro` contains no hand-written tile `<a class={tile}>` block (grep returns 0)
-- [ ] 2.5 Hardcoded-value scan on the touched files returns 0 hits
+- [x] 2.1 Type check passes: `npx astro check`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Unit tests pass: `npm test`
+- [x] 2.4 `TonightTiles.astro` contains no hand-written tile `<a class={tile}>` block (grep returns 0)
+- [x] 2.5 Hardcoded-value scan on the touched files returns 0 hits
 
 #### Manual
 
 - [ ] 2.6 At 390 px the tile stack is ≤ 600 px tall in EN (measured), and "Point here first" is the heaviest tile
-- [ ] 2.7 `/design` shows the Tile states in dark, light and red
+- [x] 2.7 `/design` shows the Tile states in dark, light and red
 
 ### Phase 3: The dashboard's first screen (C1, C2, C3)
 
