@@ -1,0 +1,38 @@
+# E2E baseline before phase 2 (2026-10-07, phase-1 build 6073318, local preview + local Supabase, chromium)
+
+skip [chromium] › tests/e2e/landing-screenshot.spec.ts:43:3 › landing screenshot › captures Tonight after onboarding
+pass [chromium] › tests/e2e/landing.spec.ts:11:1 › signed out, the landing page offers sign-up and sign-in under the question
+pass [chromium] › tests/e2e/moon-as-target.spec.ts:30:1 › marking the Moon observed on the Moon page saves it, tags the card and lists it in the log
+pass [chromium] › tests/e2e/gear-catalogue.spec.ts:26:1 › a catalogue pick fills the telescope form, which then saves
+pass [chromium] › tests/e2e/moon-card.spec.ts:29:1 › the Moon page's slider redraws the Moon across the window and Now restores it
+pass [chromium] › tests/e2e/observation-log-management.spec.ts:77:1 › a user adds, edits and deletes log entries, including one whose telescope was deleted
+pass [chromium] › tests/e2e/offline.spec.ts:98:1 › Tonight pages opened online are there offline, and signing out removes them
+pass [chromium] › tests/e2e/observation-log.spec.ts:26:1 › marking a target observed on the Targets page saves it and tags its row there
+pass [chromium] › tests/e2e/landing.spec.ts:33:1 › signed in, `/` redirects to Tonight
+pass [chromium] › tests/e2e/onboarding.spec.ts:37:3 › onboarding in English › place search leads to a ranked Tonight
+pass [chromium] › tests/e2e/planets-on-tonight.spec.ts:29:1 › marking a planet observed on the Planets page saves it and the log lists it by name
+pass [chromium] › tests/e2e/red-night-mode.spec.ts:28:1 › the theme button cycles dark, light and red, and red keeps its guarantees
+pass [chromium] › tests/e2e/onboarding.spec.ts:80:3 › onboarding in English › a catalogue telescope brings its own eyepieces
+pass [chromium] › tests/e2e/seven-night-planner.spec.ts:135:1 › the strip shows seven nights, and switching sites moves it to the other site and time zone
+pass [chromium] › tests/e2e/observation-log.spec.ts:90:1 › the log form turns away an object outside the catalogue
+pass [chromium] › tests/e2e/sign-in-continue.spec.ts:11:1 › a signed-out visit to the log continues to the log after sign-in
+pass [chromium] › tests/e2e/onboarding.spec.ts:129:5 › onboarding in English › with geolocation › 'Use my location' sets the location and enables submit
+pass [chromium] › tests/e2e/site-location.spec.ts:50:1 › a new site asks for the location only on click and saves it rounded
+pass [chromium] › tests/e2e/observation-log.spec.ts:102:1 › a Caldwell object is found in the manual picker by its number and shows in the log
+pass [chromium] › tests/e2e/onboarding.spec.ts:141:3 › onboarding in English › abandoned onboarding: Tonight offers the way back to setup
+pass [chromium] › tests/e2e/sky-checks.spec.ts:28:1 › a past night is asked about on Tonight, answered, tallied and changed on the sky checks page
+pass [chromium] › tests/e2e/telescope-selector.spec.ts:94:1 › the ranking follows the chosen telescope, and deleting gear leaves honest empty states
+pass [chromium] › tests/e2e/tonight-dashboard.spec.ts:52:1 › Tonight's tiles open their pages, and each page leads back
+pass [chromium] › tests/e2e/site-location.spec.ts:74:1 › editing a site: a picked location can be undone back to the saved one
+pass [chromium] › tests/e2e/tonight-sky.spec.ts:89:1 › the slider moves the bodies, and Home, End and Now reach their frames
+pass [chromium] › tests/e2e/tonight-targets.spec.ts:25:1 › Targets shows the best five, opens the rest by best time or rank, and logs from a row
+pass [chromium] › tests/e2e/observation-log-management.spec.ts:190:1 › an unknown entry reads as not found
+pass [chromium] › tests/e2e/tonight-dashboard.spec.ts:95:1 › The Session plan page lists rows that lead to their targets
+pass [chromium] › tests/e2e/tonight-sky.spec.ts:155:1 › an object marker opens Targets with its row in view
+pass [chromium] › tests/e2e/tonight-sky.spec.ts:170:1 › a planet marker opens Planets
+pass [chromium] › tests/e2e/tonight-targets.spec.ts:116:1 › an old /tonight/all link with a fragment lands on that place on Targets once the list streams in
+pass [chromium] › tests/e2e/tonight-sky.spec.ts:192:1 › the edge chevrons pan the panorama and hide at its ends
+pass [chromium] › tests/e2e/tonight-targets.spec.ts:130:1 › an old /tonight/all#washed-out bookmark lands on the washed-out group on Targets
+
+1 skipped
+32 passed (20.6s)

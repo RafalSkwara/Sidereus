@@ -10,7 +10,7 @@
  * Why not vite-plugin-pwa: Astro 7 builds through Vite environments under one top-level config with `build.ssr`
  * set, and the plugin only writes the worker when that top-level flag is off, so it never emits sw.js here.
  */
-import { access, appendFile, readFile } from "node:fs/promises";
+import { access, appendFile, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,6 +49,8 @@ const { count, size, warnings } = await injectManifest({
   swDest: swPath,
   globDirectory: clientDir,
   globPatterns: ["_astro/**/*.{js,css,woff2}"],
+  // "Pick from map" (S-09) loads Leaflet only after its click; users who never open the map never download it.
+  globIgnores: ["_astro/map-panel.*", "_astro/leaflet*"],
   // Hashed file names carry their own revision.
   dontCacheBustURLsMatching: /^_astro\//,
 });
@@ -58,6 +60,30 @@ for (const warning of warnings) {
 if (count === 0) {
   console.error("build-sw: the precache manifest is empty; no /_astro assets matched.");
   process.exit(1);
+}
+
+// injectManifest returns no entry list, so the written worker is the evidence that the map stayed out.
+if (/map-panel|leaflet/.test(await readFile(swPath, "utf8"))) {
+  console.error("build-sw: map assets leaked into the precache manifest");
+  process.exit(1);
+}
+
+// The exclusion above must still name a real file, and Leaflet's CSS must stay out of the site-wide stylesheet
+// (map-panel.tsx loads it by URL; a plain import could merge it into the one shared CSS file every page loads).
+// global.css carries its own `[data-theme] .leaflet-*` overrides, so look for rules only leaflet.css has.
+const LEAFLET_OWN_RULES = [".leaflet-pane", ".leaflet-control-layers"];
+const astroFiles = await readdir(path.join(clientDir, "_astro"));
+if (!astroFiles.some((file) => file.startsWith("map-panel.") && file.endsWith(".js"))) {
+  console.error("build-sw: no _astro/map-panel.*.js chunk; did the map's lazy import or its file name change?");
+  process.exit(1);
+}
+for (const file of astroFiles) {
+  if (!file.endsWith(".css") || file.startsWith("leaflet") || file.startsWith("map-panel")) continue;
+  const css = await readFile(path.join(clientDir, "_astro", file), "utf8");
+  if (LEAFLET_OWN_RULES.some((rule) => css.includes(rule))) {
+    console.error(`build-sw: Leaflet CSS leaked into the shared stylesheet _astro/${file}`);
+    process.exit(1);
+  }
 }
 
 const headersPath = path.join(clientDir, "_headers");

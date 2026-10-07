@@ -9,6 +9,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { getMessages, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { SITE_FORM_DEFAULTS, siteInputSchema } from "@/lib/gear/schemas";
+import { parseCurrent } from "@/lib/location/map-view";
 
 /** Stored values used to prefill the edit form. */
 export interface SiteFormValues {
@@ -30,7 +31,8 @@ interface Props {
 }
 
 /** How the shown coordinates were last set; `null` means as loaded (or restored by Undo). */
-type CoordinateSource = { kind: "device" } | { kind: "place"; label: string } | { kind: "manual" } | null;
+type CoordinateSource =
+  { kind: "device" } | { kind: "place"; label: string } | { kind: "map" } | { kind: "manual" } | null;
 
 type FieldName = "name" | "latitudeDeg" | "longitudeDeg" | "bortle" | "minAltitudeDeg" | "timeZone";
 type FieldErrors = Partial<Record<FieldName, string>>;
@@ -66,6 +68,8 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
   const [source, setSource] = useState<CoordinateSource>(null);
   // Set by any pick since the page loaded (Undo resets it): keeps the Undo note through a hand-tweak after a pick.
   const [pickerUsed, setPickerUsed] = useState(false);
+  // Bumped by Undo, which closes an open map.
+  const [mapCloseSignal, setMapCloseSignal] = useState(0);
 
   const zones = useSyncExternalStore(subscribeNever, getBrowserZones, () => null);
   const zoneOptions = zones ? [...zones] : [];
@@ -123,15 +127,24 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
     setLongitude(String(pick.longitudeDeg));
     setPickerUsed(true);
     const cleared: FieldName[] = ["latitudeDeg", "longitudeDeg"];
-    if (pick.source.kind === "place") {
-      setSource({ kind: "place", label: pick.source.label });
-      // A picked town names an unnamed site; a name the user typed is never replaced.
-      if (name.trim() === "") {
-        setName(pick.source.name);
-        cleared.push("name");
-      }
-    } else {
-      setSource({ kind: "device" });
+    switch (pick.source.kind) {
+      case "place":
+        setSource({ kind: "place", label: pick.source.label });
+        // A picked town names an unnamed site; a name the user typed is never replaced.
+        if (name.trim() === "") {
+          setName(pick.source.name);
+          cleared.push("name");
+        }
+        break;
+      case "device":
+        setSource({ kind: "device" });
+        break;
+      // A map point has no name: the site's name is never filled or changed.
+      case "map":
+        setSource({ kind: "map" });
+        break;
+      default:
+        pick.source satisfies never;
     }
     clearErrors(...cleared);
   }
@@ -142,16 +155,28 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
     setLongitude(String(initial.longitudeDeg));
     setSource(null);
     setPickerUsed(false);
+    setMapCloseSignal((n) => n + 1);
     clearErrors("latitudeDeg", "longitudeDeg");
     document.getElementById("latitudeDeg")?.focus();
   }
 
-  const locationSummary =
-    source?.kind === "device"
-      ? m.location.usingDevice
-      : source?.kind === "place"
-        ? m.location.usingPlace({ place: source.label })
-        : null;
+  function summaryFor(shown: CoordinateSource): string | null {
+    switch (shown?.kind) {
+      case "device":
+        return m.location.usingDevice;
+      case "place":
+        return m.location.usingPlace({ place: shown.label });
+      case "map":
+        return m.location.usingMap;
+      case "manual":
+      case undefined:
+        return null;
+      default:
+        shown satisfies never;
+        return null;
+    }
+  }
+  const locationSummary = summaryFor(source);
 
   // Edit only: a pick replaced the saved location, so offer the way back until Save.
   const showUndo = initial !== undefined && pickerUsed && coordinatesMoved;
@@ -180,7 +205,13 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
 
       <fieldset className="flex flex-col gap-4">
         <legend className="text-label text-heading mb-3 font-semibold">{t.location}</legend>
-        <LocationPicker locale={locale} onPick={pickLocation} summary={locationSummary} />
+        <LocationPicker
+          locale={locale}
+          onPick={pickLocation}
+          summary={locationSummary}
+          current={parseCurrent(latitude, longitude)}
+          closeSignal={mapCloseSignal}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { locateDevice } from "./locate";
+import { geolocationAlreadyGranted, locateDevice } from "./locate";
 
 const PERMISSION_DENIED = 1;
 const TIMEOUT = 3;
@@ -39,5 +39,46 @@ describe("locateDevice", () => {
 
   it("rejects with 'unavailable' when there is no geolocation API", async () => {
     await expect(locateDevice(undefined)).rejects.toThrow("unavailable");
+  });
+});
+
+describe("geolocationAlreadyGranted", () => {
+  /** A fake Permissions API whose query answers with `answer` and records the names asked about. */
+  function fakePermissions(answer: () => Promise<{ state: PermissionState }>) {
+    const names: string[] = [];
+    const permissions = {
+      query(descriptor: PermissionDescriptor) {
+        names.push(descriptor.name);
+        return answer() as Promise<PermissionStatus>;
+      },
+    };
+    return { permissions, names };
+  }
+
+  it("is true only when geolocation is granted", async () => {
+    const fake = fakePermissions(() => Promise.resolve({ state: "granted" }));
+    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(true);
+    expect(fake.names).toEqual(["geolocation"]);
+  });
+
+  it.each(["prompt", "denied"] as const)("is false when the state is %s", async (state) => {
+    const fake = fakePermissions(() => Promise.resolve({ state }));
+    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
+  });
+
+  it("is false without a Permissions API", async () => {
+    await expect(geolocationAlreadyGranted(undefined)).resolves.toBe(false);
+  });
+
+  it("is false when the query throws synchronously", async () => {
+    const fake = fakePermissions(() => {
+      throw new TypeError("unsupported");
+    });
+    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
+  });
+
+  it("is false when the query rejects", async () => {
+    const fake = fakePermissions(() => Promise.reject(new TypeError("unsupported")));
+    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
   });
 });

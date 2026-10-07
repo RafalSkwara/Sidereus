@@ -12,6 +12,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { getMessages, plural, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { roundCoordinate } from "@/lib/gear/coordinates";
+import { parseCurrent } from "@/lib/location/map-view";
 import { AFOV_PRESET_OPTIONS, type AfovPreset } from "@/lib/gear/eyepiece-presets";
 import { bundledEyepieces, eyepieceFill, telescopeFill } from "@/lib/gear/catalogue/fill";
 import { loadEyepieces, loadTelescopes } from "@/lib/gear/catalogue/load";
@@ -53,7 +54,7 @@ interface Props {
 }
 
 /** How the current coordinates were chosen; drives the confirmation line. */
-type WhereSource = { kind: "device" } | { kind: "place"; label: string } | { kind: "manual" };
+type WhereSource = { kind: "device" } | { kind: "place"; label: string } | { kind: "map" } | { kind: "manual" };
 
 interface EyepieceRow {
   key: number;
@@ -237,7 +238,19 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
   function pickLocation(pick: LocationPick) {
     setLatitude(String(pick.latitudeDeg));
     setLongitude(String(pick.longitudeDeg));
-    setSource(pick.source.kind === "device" ? { kind: "device" } : { kind: "place", label: pick.source.label });
+    switch (pick.source.kind) {
+      case "device":
+        setSource({ kind: "device" });
+        break;
+      case "place":
+        setSource({ kind: "place", label: pick.source.label });
+        break;
+      case "map":
+        setSource({ kind: "map" });
+        break;
+      default:
+        pick.source satisfies never;
+    }
     setErrors((prev) => ({ ...prev, where: undefined }));
   }
 
@@ -414,14 +427,22 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
   }
 
   // Rendering helpers ------------------------------------------------------------------------
-  const whereSummary =
-    source === null || !hasLocation
-      ? null
-      : source.kind === "device"
-        ? m.location.usingDevice
-        : source.kind === "place"
-          ? m.location.usingPlace({ place: source.label })
-          : m.location.usingCoordinates;
+  function summaryFor(shown: WhereSource): string {
+    switch (shown.kind) {
+      case "device":
+        return m.location.usingDevice;
+      case "place":
+        return m.location.usingPlace({ place: shown.label });
+      case "map":
+        return m.location.usingMap;
+      case "manual":
+        return m.location.usingCoordinates;
+      default:
+        shown satisfies never;
+        return m.location.usingCoordinates;
+    }
+  }
+  const whereSummary = source === null || !hasLocation ? null : summaryFor(source);
 
   // The "Came with" card shows only once the eyepieces chunk has loaded and the telescope's bundled ids resolve.
   const bundledEntries =
@@ -478,6 +499,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
               summary={whereSummary}
               invalid={Boolean(errors.where) && !manualOpen}
               errorId="where-error"
+              current={parseCurrent(latitude, longitude)}
             />
 
             <details

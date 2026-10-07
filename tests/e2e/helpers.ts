@@ -58,6 +58,25 @@ export async function stubPlaceSearch(page: Page) {
   );
 }
 
+// A 1×1 transparent PNG: what the stubbed map tiles answer with.
+const BLANK_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+
+/**
+ * Answers OpenStreetMap's tile requests ("Pick from map", S-09) with a blank PNG, so no spec depends on the tile
+ * servers, and counts them: `count()` is how many tiles the page asked for.
+ */
+export async function stubMapTiles(page: Page): Promise<{ count(): number }> {
+  let requests = 0;
+  await page.route("https://tile.openstreetmap.org/**", (route) => {
+    requests += 1;
+    return route.fulfill({ body: BLANK_PNG, contentType: "image/png" });
+  });
+  return { count: () => requests };
+}
+
 /** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`), lands on /onboarding and returns the email. */
 export async function signUp(page: Page, emailPrefix: string): Promise<string> {
   const email = `${emailPrefix}-${randomUUID()}@example.com`;
