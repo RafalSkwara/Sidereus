@@ -300,6 +300,98 @@
 }
 
 /*
+ * "Pick from map" (S-09). Leaflet's stylesheet (injected by map-panel.tsx) is unlayered and loads last, so it beats
+ * Tailwind's layers and same-specificity rules here: every override is unlayered and prefixed with [data-theme]
+ * (always on <html>). The colour guard tests cannot see node_modules CSS, so screenshots check these.
+ * Tiles: the pane carries the whole filter and the tile images none. A child's filter runs before its ancestor's,
+ * so the red-only img filter above, under an inverted pane, would come out cyan.
+ */
+[data-theme] .leaflet-tile-pane img {
+  filter: none;
+}
+
+[data-theme="light"] .leaflet-tile-pane {
+  filter: none;
+}
+
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.7) contrast(0.9);
+}
+
+/* One SVG filter (Layout.astro) folds inversion, dimming and luminance-to-red together: no green or blue out. */
+[data-theme="red"] .leaflet-tile-pane {
+  filter: url(#red-night-map);
+}
+
+[data-theme] .leaflet-container {
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme] .leaflet-container:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+[data-theme] .leaflet-container a {
+  color: var(--primary-strong);
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme] .leaflet-container a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+[data-theme] .leaflet-bar,
+[data-theme] .leaflet-touch .leaflet-bar {
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+[data-theme] .leaflet-bar a {
+  background-color: var(--surface);
+  border-bottom-color: var(--border);
+  color: var(--foreground);
+}
+
+[data-theme] .leaflet-bar a:hover,
+[data-theme] .leaflet-bar a:focus {
+  background-color: var(--accent);
+  color: var(--heading);
+}
+
+[data-theme] .leaflet-bar a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+[data-theme] .leaflet-bar a.leaflet-disabled {
+  background-color: var(--surface);
+  color: var(--muted-foreground);
+}
+
+[data-theme] .leaflet-container .leaflet-control-attribution {
+  background: var(--surface);
+  color: var(--muted-foreground);
+}
+
+[data-theme] .map-pin {
+  color: var(--primary);
+  background: none;
+  border: none;
+}
+
+/* A thin outline in the page colour keeps the pin readable over any tile. */
+[data-theme] .map-pin svg {
+  stroke: var(--background);
+  stroke-width: 1.5px;
+  paint-order: stroke;
+}
+
+/*
  * Navigation motion (nav-motion-theme-cycle). Every page change is a full load, so the active indicator travels
  * with cross-document view transitions (Chrome 126+, Safari 18.2+; other browsers switch instantly). The page
  * itself swaps without a cross-fade; only the named indicators move: the pressed pill segment (Topbar.astro) and the

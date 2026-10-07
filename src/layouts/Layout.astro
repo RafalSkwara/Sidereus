@@ -70,6 +70,10 @@ const { title = m.common.appName } = Astro.props;
       <filter id="red-only" color-interpolation-filters="sRGB">
         <feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
       </filter>
+      {/* S-09: the map's tiles at night: inverted, dimmed luminance in red only (global.css .leaflet-tile-pane). */}
+      <filter id="red-night-map" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="-0.1488 -0.5006 -0.0505 0 0.7  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+      </filter>
     </svg>
   </body>
 </html>

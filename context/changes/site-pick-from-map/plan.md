@@ -429,6 +429,16 @@ None: no schema or data change. A map pick is stored like any other coordinates.
 - E2E helpers: `tests/e2e/helpers.ts:55-86`, `tests/e2e/site-location.spec.ts`
 - OSM tile policy: https://operations.osmfoundation.org/policies/tiles/
 
+## Implementation decisions
+
+Decided during `/10x-implement` (2026-10-07), recorded here because the phase blocks stay as reviewed.
+
+- **p2, build guard (CSS side):** the plan's check ("no shared CSS contains `.leaflet-`") contradicts its own global.css overrides (`[data-theme] .leaflet-*`), which live in the one site-wide stylesheet. The guard instead fails when a shared CSS file contains rules that only leaflet.css has (`.leaflet-pane`, `.leaflet-control-layers`). Both guards were break-tested on a real build (map assets in the precache; leaflet.css appended to the shared CSS).
+- **p2, centre pin:** "Place pin at map centre" is a `pinAtCentreSignal` counter prop rather than an imperative handle: a `useEffectEvent` function may only be called from effects (react-hooks lint), so the panel handles the signal in an effect, like `closeSignal`.
+- **p2, pin outline:** the divIcon pin gets a thin `var(--background)` stroke (global.css) so it stays readable over any tile.
+- **p2, evidence for 2.6/2.7:** a scratch Playwright spec on the local preview with real OSM tiles (deleted after use): no tile or map-asset request before the click (12 tiles, `map-panel.*.js` and `leaflet.*.css` after); tap 47.69/20.3, drag 50.57/13.27, centre 50.01/15.03; typing moved the pin; Close returned focus to "Pick from map"; the edit form opened on 40.42/−3.7 with the pin, ArrowRight pan + centre gave 40.42/−3.65, Undo restored 40.42/−3.7, removed the map region and focused the latitude field; keyboard only: Tab reached the button, Enter focused the map, the Tab order from the map is Zoom in → Zoom out → credit → "Place pin at map centre" → "Close map", and focus returned to the button; with geolocation granted the neutral view recentred on the device (centre 52.23/21.01) without a pin.
+- A `pageerror: Failed to fetch` seen in scratch runs comes from `/tonight`'s server-island fetch being cut off when a test navigates away at once; it predates this change.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
@@ -437,25 +447,25 @@ None: no schema or data change. A map pick is stored like any other coordinates.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the new `map-view.test.ts` and `locate.test.ts` cases: `npm test`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` (`npm run lint` OOMs on this machine)
-- [x] 1.4 `npm run build` succeeds and `build-sw.mjs`'s new manifest guard runs (no `map-panel` or `leaflet` in `dist/client/sw.js`)
+- [x] 1.1 Unit tests pass, including the new `map-view.test.ts` and `locate.test.ts` cases: `npm test` — 6073318
+- [x] 1.2 Type check passes: `npx astro check` — 6073318
+- [x] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` (`npm run lint` OOMs on this machine) — 6073318
+- [x] 1.4 `npm run build` succeeds and `build-sw.mjs`'s new manifest guard runs (no `map-panel` or `leaflet` in `dist/client/sw.js`) — 6073318
 
 ### Phase 2: The map in the picker
 
 #### Automated
 
-- [ ] 2.1 Unit, i18n and style guard tests pass: `npm test`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 2.4 `npm run build` passes both guards in `build-sw.mjs`: the `map-panel` chunk exists, it is absent from `sw.js`, and no shared CSS contains `.leaflet-`
-- [ ] 2.5 The existing `tests/e2e/site-location.spec.ts` and `tests/e2e/onboarding.spec.ts` still pass (recipe under Testing Strategy)
+- [x] 2.1 Unit, i18n and style guard tests pass: `npm test`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 2.4 `npm run build` passes both guards in `build-sw.mjs`: the `map-panel` chunk exists, it is absent from `sw.js`, and no shared CSS contains `.leaflet-`
+- [x] 2.5 The existing `tests/e2e/site-location.spec.ts` and `tests/e2e/onboarding.spec.ts` still pass (recipe under Testing Strategy)
 
 #### Manual
 
-- [ ] 2.6 On a local preview, "Pick from map" opens the panel immediately. Tap, drag and "Place pin at map centre" each fill 2-decimal coordinates. Undo on the edit form restores the saved values and closes the map. Typing new coordinates while the map is open moves the pin
-- [ ] 2.7 Keyboard only: tab to the button, open the map, focus lands on the map, pan with the arrow keys, place the pin at centre, close the map, and focus returns to the button
+- [x] 2.6 On a local preview, "Pick from map" opens the panel immediately. Tap, drag and "Place pin at map centre" each fill 2-decimal coordinates. Undo on the edit form restores the saved values and closes the map. Typing new coordinates while the map is open moves the pin
+- [x] 2.7 Keyboard only: tab to the button, open the map, focus lands on the map, pan with the arrow keys, place the pin at centre, close the map, and focus returns to the button
 
 ### Phase 3: Verification and docs
 

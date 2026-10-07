@@ -1,23 +1,29 @@
 import { useEffect, useRef, useState } from "react";
-import { CircleAlert, LocateFixed, MapPin, Search } from "lucide-react";
+import { CircleAlert, Crosshair, LocateFixed, MapPin, MapPinned, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getMessages, plural, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import { GEOCODING_FAILED, PLACE_QUERY_MIN_LENGTH, searchPlaces, type PlaceResult } from "@/lib/location/geocode";
-import { locateDevice } from "@/lib/location/locate";
+import { geolocationAlreadyGranted, locateDevice } from "@/lib/location/locate";
+import { DEVICE_RECENTRE_TIMEOUT_MS, initialMapView, type MapPoint, type MapView } from "@/lib/location/map-view";
 import { cn } from "@/lib/utils";
 
 /*
- * The shared location picker (S-08): "Use my location", place search and the confirmation line, used by
- * onboarding and the add/edit site form. The host owns the coordinates (its own fields or hidden inputs),
+ * The shared location picker (S-08, S-09): "Use my location", place search, "Pick from map" and the confirmation
+ * line, used by onboarding and the add/edit site form. The host owns the coordinates (its own fields or hidden inputs),
  * validation and the confirmation text; the picker only reports picks through `onPick`.
  *
  * Privacy (PRD NFR): the browser is asked for its position only on the button click, and both
  * `locateDevice` and `searchPlaces` round to about 1 km before a pick leaves them, so a raw position
  * never reaches state. Nothing here logs, and coordinates never go into a URL. The text controls have
  * an empty `name`, so the picker never adds to the host form's payload.
+ *
+ * The map (S-09) is the third way: its code (`map-panel.tsx`, the only Leaflet importer), its CSS and its tiles
+ * load only after the "Pick from map" click, which is the user's consent. It recentres on the device only when
+ * geolocation was already granted (checked without a prompt); otherwise it starts at the host's coordinates or a
+ * neutral view of Europe.
  *
  * Island-safe imports only.
  */
@@ -26,7 +32,7 @@ import { cn } from "@/lib/utils";
 export interface LocationPick {
   latitudeDeg: number;
   longitudeDeg: number;
-  source: { kind: "device" } | { kind: "place"; label: string; name: string };
+  source: { kind: "device" } | { kind: "place"; label: string; name: string } | { kind: "map" };
 }
 
 interface Props {
@@ -38,14 +44,49 @@ interface Props {
   invalid?: boolean;
   /** The id of the host's location error, so the invalid search box names it (`aria-describedby`). */
   errorId?: string;
+  /** The host's coordinates, parsed (`parseCurrent`): where the map opens, and where its pin follows typing. */
+  current?: MapPoint | null;
+  /** Closes the map whenever the number changes (the host's Undo). */
+  closeSignal?: number;
 }
 
 type GeoStatus = "idle" | "locating" | "denied" | "unavailable";
 type SearchStatus = "idle" | "searching" | "done" | "failed";
+type MapStatus = "idle" | "loading" | "open" | "failed";
+
+type MapPanelComponent = (typeof import("./map-panel"))["default"];
+let mapPanel: Promise<MapPanelComponent> | undefined;
+
+/** The map's chunk, fetched once per page; a failed load is not memoised, so the button can retry. */
+function loadMapPanel(): Promise<MapPanelComponent> {
+  mapPanel ??= import("./map-panel").then((module) => module.default);
+  // The browser may cache a failed `import()`, so a reload can be what recovers (the failure message says so).
+  mapPanel.catch(() => {
+    mapPanel = undefined;
+  });
+  return mapPanel;
+}
+
+/** An already granted device position, or `null` if there is none within the recentre timeout. Never prompts. */
+async function grantedDevicePosition(): Promise<MapPoint | null> {
+  if (!(await geolocationAlreadyGranted(navigator.permissions))) return null;
+  // A failed or slow lookup only means the map stays on its neutral view; there is nothing to report.
+  const position = locateDevice("geolocation" in navigator ? navigator.geolocation : undefined).catch(() => null);
+  const timeout = new Promise<null>((resolve) => setTimeout(resolve, DEVICE_RECENTRE_TIMEOUT_MS, null));
+  return Promise.race([position, timeout]);
+}
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-export default function LocationPicker({ locale, onPick, summary, invalid = false, errorId }: Props) {
+export default function LocationPicker({
+  locale,
+  onPick,
+  summary,
+  invalid = false,
+  errorId,
+  current = null,
+  closeSignal = 0,
+}: Props) {
   const m = getMessages(locale);
   const t = m.location;
   const number = new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 1 });
@@ -58,6 +99,15 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
   const searchController = useRef<AbortController | undefined>(undefined);
   const summaryRef = useRef<HTMLParagraphElement>(null);
 
+  const [mapStatus, setMapStatus] = useState<MapStatus>("idle");
+  const [MapPanel, setMapPanel] = useState<MapPanelComponent | null>(null);
+  const [mapView, setMapView] = useState<MapView | null>(null);
+  const [recentreTo, setRecentreTo] = useState<MapPoint | null>(null);
+  // Counts openings, so a device position from an earlier opening never moves a later map.
+  const mapOpening = useRef(0);
+  const [pinAtCentreSignal, setPinAtCentreSignal] = useState(0);
+  const pickMapRef = useRef<HTMLButtonElement>(null);
+
   // Cancel a pending search when the island goes away.
   useEffect(
     () => () => {
@@ -66,6 +116,43 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
     },
     [],
   );
+
+  function openMap() {
+    const opening = ++mapOpening.current;
+    setMapView(initialMapView(current));
+    setRecentreTo(null);
+    setMapStatus("loading");
+    loadMapPanel().then(
+      (component) => {
+        setMapPanel(() => component);
+        setMapStatus((status) => (status === "loading" && mapOpening.current === opening ? "open" : status));
+      },
+      () => {
+        if (mapOpening.current === opening) setMapStatus("failed");
+      },
+    );
+    if (!current) {
+      void grantedDevicePosition().then((position) => {
+        if (position && mapOpening.current === opening) setRecentreTo(position);
+      });
+    }
+  }
+
+  function closeMap({ refocus }: { refocus: boolean }) {
+    mapOpening.current++;
+    setMapStatus("idle");
+    // The "Pick from map" button comes back in place of "Close map": return focus to it.
+    if (refocus) requestAnimationFrame(() => pickMapRef.current?.focus());
+  }
+
+  // The host's Undo closes the map (it moves focus itself, to the latitude field).
+  const lastCloseSignal = useRef(closeSignal);
+  useEffect(() => {
+    if (lastCloseSignal.current === closeSignal) return;
+    lastCloseSignal.current = closeSignal;
+    mapOpening.current++;
+    setMapStatus("idle");
+  }, [closeSignal]);
 
   function locateMe() {
     setGeoStatus("locating");
@@ -257,6 +344,86 @@ export default function LocationPicker({ locale, onPick, summary, invalid = fals
             </>
           ) : null}
         </p>
+      </div>
+
+      <div className="text-muted-foreground flex items-center gap-3 text-sm">
+        <span className="bg-border h-px flex-1" aria-hidden="true" />
+        {t.or}
+        <span className="bg-border h-px flex-1" aria-hidden="true" />
+      </div>
+
+      <div className="flex flex-col">
+        {mapStatus === "open" ? null : (
+          <Button
+            ref={pickMapRef}
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto sm:self-start"
+            onClick={openMap}
+            disabled={mapStatus === "loading"}
+            aria-expanded={false}
+            data-needs-network="map-source"
+          >
+            <MapPinned className="size-4" />
+            {t.pickFromMap}
+          </Button>
+        )}
+        <p id="map-source" className={cn("text-muted-foreground text-sm", mapStatus === "open" ? "mb-3" : "mt-2")}>
+          {t.mapSource}
+        </p>
+        <p
+          aria-live="polite"
+          className={cn(
+            "mt-2 text-sm empty:mt-0",
+            mapStatus === "failed" ? "text-destructive flex items-start gap-1.5" : "text-muted-foreground",
+          )}
+        >
+          {mapStatus === "failed" ? <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : null}
+          {mapStatus === "loading" ? t.mapLoading : mapStatus === "failed" ? t.mapFailed : null}
+        </p>
+        {mapStatus === "open" && MapPanel && mapView ? (
+          <>
+            <MapPanel
+              locale={locale}
+              view={mapView}
+              current={current}
+              recentreTo={recentreTo}
+              onPick={(point) => {
+                onPick({ ...point, source: { kind: "map" } });
+              }}
+              onFailed={() => {
+                setMapStatus("failed");
+              }}
+              pinAtCentreSignal={pinAtCentreSignal}
+            />
+            {/* Neither button needs the network: an open map can always be closed, offline too. */}
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  setPinAtCentreSignal((n) => n + 1);
+                }}
+              >
+                <Crosshair className="size-4" />
+                {t.pinAtCentre}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="lg"
+                onClick={() => {
+                  closeMap({ refocus: true });
+                }}
+              >
+                <X className="size-4" />
+                {t.closeMap}
+              </Button>
+            </div>
+          </>
+        ) : null}
       </div>
     </>
   );
