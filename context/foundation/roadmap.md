@@ -9,7 +9,7 @@ main_goal: learn
 top_blocker: skills
 milestone_id: first-real-nights
 milestone_seq: 2
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: Sidereus
@@ -20,7 +20,7 @@ milestone_status: open
 
 ## Milestone
 
-**M-2: First real nights** — Status: open
+**M-2: First real nights** — Status: done
 
 - **Intent:** Take Sidereus from a Messier ranking you read at home to a companion for a real night out: it covers the Moon, the planets and more of the sky than Messier, lays the night out as a plan, still opens at a dark site with no signal, asks afterwards whether the sky matched the verdict, and makes adding a site as easy as a tap or a point on a map. Extended 2026-10-04, ahead of everything still open: Sidereus gets a look of its own instead of a generic one, and the crowded Tonight page becomes a dashboard of tiles that each open a focused page.
 - **Source materials:** user description, 2026-09-30 (verbatim below), building on `context/foundation/prd.md` (v2). No real usage evidence exists yet: the author has no equipment and no observing experience, so scope and judgment calls are made on judgment ("we really need to go on vibes here – which is fine, this is mostly a learning project").
@@ -63,7 +63,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | done    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
-| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | in-progress |
+| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | done    |
 | S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | done    |
 
 ## Streams
@@ -250,7 +250,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - ~~Privacy: is sending map-tile requests for the area the user browses acceptable, and under what limits?~~ Settled 2026-10-07 by the user: yes, with explicit consent. Nothing that reveals location (map tiles included) is requested until the user has opted in, the same way "Use my location" asks only after its click. The map stays unloaded until the user chooses "Pick from map", which serves as that consent. — Owner: user.
   - Which map provider, given its terms, attribution, free-tier limits and the red night theme? Owner: team. Block: no (settled by `/10x-plan` once the privacy question is answered).
 - **Risk:** The only M-2 slice that sends location-revealing requests to a new third party, so it waits for an explicit privacy decision. It also adds the heaviest new client-side dependency in the app, which may affect page weight on onboarding.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-12: Pick gear from a catalogue
 
@@ -315,6 +315,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 (Append-only. Carried forward verbatim into each successor milestone's roadmap; empty on the very first milestone.)
 
 - **M-1: MVP night decision** (`mvp-night-decision`) — closed 2026-09-28. All 3 foundations and 10 slices shipped and deployed: a signed-in beginner gets tonight's go / marginal / no-go verdict and a ranked, explained Messier shortlist from their own site and kit, with onboarding, a seven-night planner, an observation log, light/dark/red themes, EN/PL, a 30-day session and continue-after-sign-in; password reset (FR-003) parked by cut-order #3.
+- **M-2: First real nights** (`first-real-nights`) — closed 2026-10-07. All 11 slices shipped (S-01–S-03, S-05–S-12; S-04 double stars parked by the user): the Moon, the planets and bright non-Messier objects on Tonight, a redesigned look (Nightfall) and a Tonight dashboard of focused pages with a live sky, a session-plan timeline, an installable app that opens stored Tonight pages offline, the sky check with its verdict tally, "Use my location" and "Pick from map" for sites, and a gear catalogue of real telescope and eyepiece models.
 
 ## Done
 
@@ -330,3 +331,4 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
 - **S-06: user can install Sidereus on their phone's home screen and, at a site with no network, open the dashboard pages they last loaded for that site — verdict, dark window, targets and timeline — clearly marked with when it was prepared, while screens that need the network say so instead of failing.** — Archived 2026-10-06 → `context/archive/2026-10-05-offline-night-plan/`. Lesson: Make the server unreachable to test a service worker offline (lessons.md).
 - **S-12: user adding a telescope or eyepiece — on the gear pages and in onboarding — can type into a searchable combobox over a long, curated list of real models (telescopes by brand and model; eyepieces by brand, line and focal length); choosing one fills in the form's fields (telescope: name, aperture, focal length; eyepiece: name, focal length, apparent field), which stay editable before saving; "Not listed? Enter manually" keeps today's manual entry.** — Archived 2026-10-06 → `context/archive/2026-10-06-gear-catalogue/`. Lesson: —.
 - **S-03: user can see bright deep-sky objects that are not in the Messier catalogue ranked on Tonight with the same scoring, reasons and eyepiece pair as Messier objects, and can log them.** — Archived 2026-10-06 → `context/archive/2026-10-06-deep-sky-beyond-messier/`. Lesson: —.
+- **S-09: user adding or editing a site, including onboarding's home-site step, can choose "Pick from map", pan and zoom a map and tap or drag a marker to the location; the chosen point is rounded to about 1 km, and the map starts at the device location only if the user has already allowed it, otherwise at a neutral default view.** — Archived 2026-10-07 → `context/archive/2026-10-07-site-pick-from-map/`. Lesson: —.
