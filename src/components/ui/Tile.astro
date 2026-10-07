@@ -1,0 +1,32 @@
+---
+/*
+ * One ruled, full-width link row with a muted heading and an arrow (ui-mobile-pass): the Tonight dashboard's tiles
+ * (`TonightTiles`) and nothing else shares it. The root element is the `<a>` itself, with no wrapper, because the
+ * /design specimens reach tiles by depth (`*:*:bg-accent`). The link is named by its heading (`aria-labelledby`), not
+ * by its whole content; `labelledBy` adds further element ids (the targets tile's hidden "Open Targets"). The default
+ * slot holds the content under the heading. Classes come from `tile.ts`, which the skeleton reads too.
+ */
+import { ArrowRight } from "lucide-react";
+
+import { TILE_CLASS, TILE_HEADING_CLASS } from "@/components/ui/tile";
+
+interface Props {
+  href: string;
+  /** The heading's id; the link's accessible name points at it. */
+  headingId: string;
+  heading: string;
+  /** Extra element ids (space-separated) that join the heading in the link's name. */
+  labelledBy?: string;
+}
+
+const { href, headingId, heading, labelledBy } = Astro.props;
+const names = labelledBy ? `${headingId} ${labelledBy}` : headingId;
+---
+
+<a href={href} class:list={[TILE_CLASS]} aria-labelledby={names}>
+  <h2 id={headingId} class:list={[TILE_HEADING_CLASS]}>
+    {heading}
+    <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
+  </h2>
+  <slot />
+</a>

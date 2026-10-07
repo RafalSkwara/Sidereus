@@ -43,7 +43,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | ID   | Change ID               | Outcome (user can …)                                                                                     | Prerequisites | PRD refs               | Status   |
 | ---- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- | -------- |
 | F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | ready    |
-| S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | ready    |
+| S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done |
 | S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | blocked  |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | proposed |
@@ -103,7 +103,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Which views beyond the dashboard and Tonight get the pass. Candidate: every view, audited first, the crowded ones fixed. — Owner: team. Block: no.
 - **Risk:** First by the user's order; the risk is reworking views that M-3's own slices then change again, so the pass concentrates on layout density and shared components rather than per-feature details.
-- **Status:** ready
+- **Status:** done
 
 ### S-02: The user's UI adjustments
 
@@ -249,3 +249,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 (`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's and M-2's entries live in git history and in `context/archive/`.)
+
+- **S-01: user can use every view comfortably on a phone, the dashboard and Tonight above all: each leads with its answer, nothing scrolls sideways, and the dashboard shows the sky verdict and its first tiles on the first screen.** — Archived 2026-10-07 → `context/archive/2026-10-07-ui-mobile-pass/`. Lesson: —.

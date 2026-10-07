@@ -490,7 +490,10 @@ export const en = {
       darkTo: "to",
       /** Also the sky headline of a no-darkness night, on the card and on any night of the strip. */
       noDarkWindow: "No dark window",
-      timesIn: (p: { zone: string }) => ` · times in ${p.zone}`,
+      /** Joins the headline and its reason on the verdict's one flowing answer line. */
+      separator: " · ",
+      /** The verdict's third info line (the card's own key; the nights strip has its own). */
+      timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
@@ -879,6 +882,8 @@ export const en = {
       nightsCaption: (p: { count: string }) =>
         `Height is clear sky. Colour and mark show the verdict for the next ${p.count} nights.`,
       noTargets: "No targets to point at tonight.",
+      /** Joins the parts of a tile's one-line summary (the Moon tile: percent, phase, when it is up). */
+      separator: " · ",
     },
 
     /**

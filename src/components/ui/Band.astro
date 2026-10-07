@@ -27,14 +27,14 @@ const hasAction = Astro.slots.has("action");
 <section
   id={id}
   aria-labelledby={headingId}
-  class:list={cn("border-border py-8 not-first:border-t first:pt-0 last:pb-0", className)}
+  class:list={cn("border-border py-6 not-first:border-t first:pt-0 last:pb-0 sm:py-8", className)}
 >
   {headingHidden ? (
     <h2 id={headingId} class="sr-only">
       {heading}
     </h2>
   ) : (
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
       <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
         {heading}
       </h2>

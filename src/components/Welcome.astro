@@ -31,12 +31,12 @@ const verdicts = examples.map((verdict) => ({ headline: skyHeadline(verdict), do
 const steps = [t.steps.where, t.steps.kit, t.steps.tonight];
 
 /** Intrinsic size of `public/landing/tonight.png` (captured by `tests/e2e/landing-screenshot.spec.ts`). */
-const SCREENSHOT = { width: 1280, height: 1160 };
+const SCREENSHOT = { width: 1280, height: 1145 };
 ---
 
 <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
   <div class="bg-zenith">
-    <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+    <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
       <Topbar />
     </div>
   </div>
@@ -67,7 +67,7 @@ const SCREENSHOT = { width: 1280, height: 1160 };
       </ul>
     </TonightSky>
 
-    <div class="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+    <div class="mx-auto w-full max-w-3xl px-4 py-6 sm:py-12">
       <Band headingId="how-it-works" heading={t.howItWorks}>
         <ol class="divide-y divide-border">
           {steps.map((step, i) => (

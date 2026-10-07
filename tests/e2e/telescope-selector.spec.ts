@@ -89,8 +89,8 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await expect(page.locator("[data-tonight-tiles]")).toBeVisible();
   await expect(pills(page)).toHaveCount(0);
   await expect(page.locator('form[data-gear-select="telescope"]')).toHaveCount(0);
-  // The gear link under the title ("site · telescope"); the sky's markers (`data-sky-body`) also carry "·" names.
-  const gearLink = page.locator("main a:not([data-sky-body])").filter({ hasText: "·" });
+  // The gear link under the title ("site · telescope"), found by its href: the sky's markers and the Moon tile also carry "·".
+  const gearLink = page.locator('main a[href="/gear"]');
   const onboarded = (await gearLink.textContent())?.split("·")[1]?.trim();
   if (!onboarded) throw new Error("no telescope named under the Tonight title");
   await openTargets(page);
