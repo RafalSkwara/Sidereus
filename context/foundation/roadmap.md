@@ -3,7 +3,7 @@ project: Sidereus
 version: 2
 status: draft
 created: 2026-09-30
-updated: 2026-10-06
+updated: 2026-10-07
 prd_version: —
 main_goal: learn
 top_blocker: skills
@@ -63,7 +63,7 @@ A beginner amateur astronomer with a first telescope cannot answer two questions
 | S-06 | offline-night-plan      | install Sidereus and open tonight's dashboard pages for a site with no network, seeing when they were prepared                      | S-05, S-11    | MS-06    | done    |
 | S-07 | verdict-check           | tell Sidereus whether a past night's sky matched its verdict, and see a tally of how often verdicts were right                      | —             | MS-07    | done    |
 | S-08 | site-use-my-location    | add or edit a site with a "Use my location" button that asks the browser for location only after the click                          | —             | MS-08    | done    |
-| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | ready   |
+| S-09 | site-pick-from-map      | add or edit a site by pointing at its location on a map                                                                             | S-08          | MS-09    | planning |
 | S-12 | gear-catalogue          | add a telescope or eyepiece by picking a real model from a searchable list that fills in the fields                                 | —             | MS-12    | done    |
 
 ## Streams
@@ -250,7 +250,7 @@ None this milestone. The one cross-cutting change M-2 needs — identifying a ta
   - ~~Privacy: is sending map-tile requests for the area the user browses acceptable, and under what limits?~~ Settled 2026-10-07 by the user: yes, with explicit consent. Nothing that reveals location (map tiles included) is requested until the user has opted in, the same way "Use my location" asks only after its click. The map stays unloaded until the user chooses "Pick from map", which serves as that consent. — Owner: user.
   - Which map provider, given its terms, attribution, free-tier limits and the red night theme? Owner: team. Block: no (settled by `/10x-plan` once the privacy question is answered).
 - **Risk:** The only M-2 slice that sends location-revealing requests to a new third party, so it waits for an explicit privacy decision. It also adds the heaviest new client-side dependency in the app, which may affect page weight on onboarding.
-- **Status:** ready
+- **Status:** planning
 
 ### S-12: Pick gear from a catalogue
 
