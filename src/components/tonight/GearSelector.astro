@@ -31,7 +31,7 @@ const pillClass = (active: boolean) =>
 ---
 
 {kind === "pills" && (
-  <nav aria-label={label} class="mb-6">
+  <nav aria-label={label}>
     <ul class="flex flex-wrap gap-2">
       {items.map((item) => {
         const active = item.id === activeId;
@@ -53,7 +53,7 @@ const pillClass = (active: boolean) =>
 )}
 
 {kind === "dropdown" && (
-  <form method="get" action="/tonight" class="mb-6 flex flex-wrap items-end gap-2 sm:max-w-sm" data-gear-select={param}>
+  <form method="get" action="/tonight" class="flex flex-wrap items-end gap-2 sm:max-w-sm" data-gear-select={param}>
     <GearSelectField id={selectId} name={param} label={label} items={items} activeId={activeId} />
     <button type="submit" class:list={[buttonVariants({ variant: "outline" })]}>
       {show}

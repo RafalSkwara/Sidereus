@@ -13,7 +13,7 @@ const { title, subtitle } = Astro.props;
 const hasActions = Astro.slots.has("actions");
 ---
 
-<div class="flex flex-wrap items-end justify-between gap-4">
+<div class="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
   <div class="min-w-0">
     <h1 class="font-display text-display font-semibold break-words text-heading">{title}</h1>
     {subtitle && <p class="mt-2 text-body text-muted-foreground">{subtitle}</p>}

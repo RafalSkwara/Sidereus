@@ -25,14 +25,14 @@ export function Band({ headingId, heading, id, className, headingHidden = false,
     <section
       id={id}
       aria-labelledby={headingId}
-      className={cn("border-border py-8 not-first:border-t first:pt-0 last:pb-0", className)}
+      className={cn("border-border py-6 not-first:border-t first:pt-0 last:pb-0 sm:py-8", className)}
     >
       {headingHidden ? (
         <h2 id={headingId} className="sr-only">
           {heading}
         </h2>
       ) : (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 sm:mb-4">
           <h2 id={headingId} className="font-display text-title text-heading font-semibold break-words">
             {heading}
           </h2>

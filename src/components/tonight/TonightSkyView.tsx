@@ -4,7 +4,12 @@ import {
   SILHOUETTE_CLASS,
   SILHOUETTE_PATH,
   SILHOUETTE_VIEWBOX,
+  SLIDER_LAYOUT_CLASS,
+  SLIDER_LEGEND_CLASS,
+  SLIDER_NOW_CLASS,
   SLIDER_ROW_CLASS,
+  SLIDER_TIME_CLASS,
+  SLIDER_TRACK_CLASS,
   STRIP_HEIGHT_PX,
   STRIP_OVERLAP_CLASS,
   STRIP_OVERLAP_PX,
@@ -476,14 +481,53 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       </div>
 
       <div className={SLIDER_ROW_CLASS}>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-heading text-title font-mono" data-sky-time>
+        <div className={SLIDER_LAYOUT_CLASS}>
+          <span className={cn("text-heading text-title font-mono", SLIDER_TIME_CLASS)} data-sky-time>
             {time}
           </span>
+          {/*
+           * DOM order follows the phone row (time, slider, Now), so Tab matches what a phone shows; from `sm` the
+           * order classes lift Now onto the time's line.
+           * With a single frame there is nothing to slide (as on the Moon card): the row keeps its height.
+           */}
+          <div className={cn("relative h-11", SLIDER_TRACK_CLASS)}>
+            {last > 0 && (
+              <>
+                <div
+                  aria-hidden="true"
+                  className="bg-border pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full"
+                >
+                  {darkSpan && (
+                    <span
+                      className="bg-primary-strong absolute inset-y-0 rounded-full"
+                      style={{
+                        left: trackAt(darkSpan.from / last),
+                        width: trackSpan((darkSpan.to - darkSpan.from) / last),
+                      }}
+                      data-dark-span
+                    />
+                  )}
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={last}
+                  step={1}
+                  value={index}
+                  onChange={(event) => {
+                    setIndex(Number(event.currentTarget.value));
+                  }}
+                  aria-label={t.slider}
+                  aria-valuetext={time}
+                  className={rangeClass}
+                />
+              </>
+            )}
+          </div>
           {last > 0 && (
             <button
               type="button"
-              className={nowButtonClass}
+              className={cn(nowButtonClass, SLIDER_NOW_CLASS)}
               onClick={() => {
                 setIndex(nearestFrame(view, Date.now()));
               }}
@@ -491,54 +535,22 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               {t.now}
             </button>
           )}
-        </div>
-        {/* With a single frame there is nothing to slide (as on the Moon card): the row keeps its height. */}
-        <div className="relative mt-1 h-11">
-          {last > 0 && (
-            <>
-              <div
-                aria-hidden="true"
-                className="bg-border pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full"
-              >
-                {darkSpan && (
-                  <span
-                    className="bg-primary-strong absolute inset-y-0 rounded-full"
-                    style={{
-                      left: trackAt(darkSpan.from / last),
-                      width: trackSpan((darkSpan.to - darkSpan.from) / last),
-                    }}
-                    data-dark-span
-                  />
-                )}
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={last}
-                step={1}
-                value={index}
-                onChange={(event) => {
-                  setIndex(Number(event.currentTarget.value));
-                }}
-                aria-label={t.slider}
-                aria-valuetext={time}
-                className={rangeClass}
-              />
-            </>
-          )}
-        </div>
-        <div
-          className="text-muted-foreground text-label flex items-center justify-between gap-3 font-mono"
-          aria-hidden="true"
-        >
-          <span data-sky-start>{view.startLabel}</span>
-          {darkSpan && (
-            <span className="flex items-center gap-1.5 font-sans">
-              <span className="bg-primary-strong h-1.5 w-4 rounded-full" />
-              {t.darkWindow}
-            </span>
-          )}
-          <span data-sky-end>{view.endLabel}</span>
+          <div
+            className={cn(
+              "text-muted-foreground text-label flex items-center justify-between gap-3 font-mono",
+              SLIDER_LEGEND_CLASS,
+            )}
+            aria-hidden="true"
+          >
+            <span data-sky-start>{view.startLabel}</span>
+            {darkSpan && (
+              <span className="flex items-center gap-1.5 font-sans">
+                <span className="bg-primary-strong h-1.5 w-4 rounded-full" />
+                {t.darkWindow}
+              </span>
+            )}
+            <span data-sky-end>{view.endLabel}</span>
+          </div>
         </div>
       </div>
     </div>

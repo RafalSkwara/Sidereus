@@ -26,25 +26,25 @@ const skyHeader = Astro.slots.has("header");
   <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
     {skyFlow ? (
       <div class="night-sky bg-zenith">
-        <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+        <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
           <Topbar />
         </div>
       </div>
     ) : skyHeader ? (
       <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
-        <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+        <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
           <Topbar />
         </div>
-        <div class="mx-auto w-full max-w-3xl px-4 pt-6 pb-8 sm:pt-10 sm:pb-12">
+        <div class="mx-auto w-full max-w-3xl px-4 pt-4 pb-6 sm:pt-10 sm:pb-12">
           <slot name="header" />
         </div>
       </div>
     ) : (
-      <div class="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-8 sm:pt-6">
+      <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
         <Topbar />
       </div>
     )}
-    <main class:list={[skyFlow ? "w-full flex-1 pb-8 sm:pb-12" : "mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-12"]}>
+    <main class:list={[skyFlow ? "w-full flex-1 pb-8 sm:pb-12" : "mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:py-12"]}>
       <slot />
     </main>
     <TabBar />
