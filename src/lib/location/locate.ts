@@ -46,3 +46,19 @@ export function locateDevice(geolocation: Geolocation | undefined): Promise<Devi
     );
   });
 }
+
+/**
+ * Whether geolocation is already granted, found without ever showing a prompt: "Pick from map" recentres
+ * on the device only for a user who allowed it before. `false` when there is no Permissions API, or the
+ * query throws or rejects. Never touches `navigator.geolocation`.
+ */
+export async function geolocationAlreadyGranted(permissions?: Pick<Permissions, "query">): Promise<boolean> {
+  if (!permissions) return false;
+  try {
+    const status = await permissions.query({ name: "geolocation" });
+    return status.state === "granted";
+  } catch {
+    // An unsupported or failing query only means no recentre; nothing is hidden, the map stays usable.
+    return false;
+  }
+}

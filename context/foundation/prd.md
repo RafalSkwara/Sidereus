@@ -3,6 +3,7 @@ project: "Sidereus"
 version: 2
 status: draft
 created: 2026-09-16
+updated: 2026-10-07
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -64,7 +65,11 @@ not yet observing, building toward their own first sessions.
 ### Guardrails
 - Home coordinates stay private. A site's lat/long is where the user lives; it
   never appears in a shared URL, a log line, or any third-party request beyond
-  the forecast lookup that needs it.
+  the forecast lookup that needs it. One consented exception (amended
+  2026-10-07, roadmap S-09 / GitHub #73): map tiles are requested only after the
+  user chooses "Pick from map". Those tile requests reveal the area being
+  viewed, which may start at the site's or the device's location; only the
+  rounded pick is stored.
 - Never recommends the physically impossible. No object below the site's minimum
   altitude, outside the darkness window, or below the horizon. A beginner who
   goes out and finds nothing there does not come back.
@@ -376,7 +381,10 @@ checkpoint if the engine spike is not producing a sane top 5.
   interaction, measured excluding sign-up form typing.
 - A site's coordinates are rounded to approximately 1 km at capture, are never
   written to logs, and never leave the product except in the forecast and
-  geocoding lookups that require them.
+  geocoding lookups that require them, and in the map tiles of "Pick from map"
+  (amended 2026-10-07, roadmap S-09 / GitHub #73): requested only after the user
+  chooses it, they reveal the area being viewed, which may start at the site's
+  or the device's location.
 - No user can read or modify another user's data, verified by a test that
   exercises the boundary outside the user interface.
 - With current weather data unavailable, the most recent successful forecast for

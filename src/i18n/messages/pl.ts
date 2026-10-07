@@ -294,6 +294,16 @@ export const pl = {
     usingDevice: "Używam Twojej bieżącej lokalizacji (z dokładnością do ok. 1 km)",
     usingPlace: (p) => `Używam lokalizacji: ${p.place} (z dokładnością do ok. 1 km)`,
     usingCoordinates: "Używam wpisanych współrzędnych, zaokrąglonych do ok. 1 km",
+    pickFromMap: "Wybierz na mapie",
+    mapSource: "Otwiera mapę OpenStreetMap. Oglądany obszar jest pobierany z ich serwerów.",
+    mapLabel: "Mapa: dotknij, aby postawić pinezkę",
+    mapLoading: "Wczytywanie mapy...",
+    mapFailed: "Nie udało się wczytać mapy. Sprawdź połączenie i odśwież stronę.",
+    mapTilesFailed: "Część fragmentów mapy się nie wczytała.",
+    pinAtCentre: "Postaw pinezkę na środku mapy",
+    closeMap: "Zamknij mapę",
+    mapAttribution: "© autorzy OpenStreetMap",
+    usingMap: "Używam punktu wybranego na mapie (z dokładnością do ok. 1 km)",
   },
 
   gearCatalogue: {

@@ -437,10 +437,10 @@ None: no schema or data change. A map pick is stored like any other coordinates.
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass, including the new `map-view.test.ts` and `locate.test.ts` cases: `npm test`
-- [ ] 1.2 Type check passes: `npx astro check`
-- [ ] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` (`npm run lint` OOMs on this machine)
-- [ ] 1.4 `npm run build` succeeds and `build-sw.mjs`'s new manifest guard runs (no `map-panel` or `leaflet` in `dist/client/sw.js`)
+- [x] 1.1 Unit tests pass, including the new `map-view.test.ts` and `locate.test.ts` cases: `npm test`
+- [x] 1.2 Type check passes: `npx astro check`
+- [x] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` (`npm run lint` OOMs on this machine)
+- [x] 1.4 `npm run build` succeeds and `build-sw.mjs`'s new manifest guard runs (no `map-panel` or `leaflet` in `dist/client/sw.js`)
 
 ### Phase 2: The map in the picker
 
