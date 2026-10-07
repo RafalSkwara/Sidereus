@@ -1,6 +1,6 @@
 ---
 project: "Sidereus"
-version: 2
+version: 3
 status: draft
 created: 2026-09-16
 updated: 2026-10-07
@@ -36,6 +36,16 @@ carrying the reason it was chosen and the eyepiece to use. This product does not
 claim to beat those tools; it is built primarily as a learning project, with the
 author as the reference user for judgment calls.
 
+Version 3 (2026-10-07) records what the second milestone shipped and widens the
+promise for the third. Deciding what to look at is only half of a beginner's
+night: the other half is finding it, knowing what it will look like, and having
+a reason to come back. Sidereus now covers the Moon, the planets and bright
+non-Messier objects, lays the night out as a plan, and works at a dark site
+without signal. Next it helps the user find each target from a star they can
+already see, tracks what they have seen against the classic lists, flags the
+sky events worth planning around, and lets them shape the night's plan
+themselves.
+
 ## User & Persona
 
 Beginner amateur astronomer. First telescope, typically 100-200 mm aperture.
@@ -61,6 +71,11 @@ not yet observing, building toward their own first sessions.
 ### Secondary
 - Multi-site comparison pays off: the user can see "Thursday at home is
   marginal, Saturday at the dark site is go" and make the drive decision on it.
+- Sidereus alone gets a beginner to the target: from a ranked object, the finder
+  chart leads from a star visible to the naked eye to the object, with no
+  planetarium app needed for that step (added v3).
+- A reason to come back: the user can see how far they are through the Messier
+  and Caldwell lists and which tonight's targets they have never seen (added v3).
 
 ### Guardrails
 - Home coordinates stay private. A site's lat/long is where the user lives; it
@@ -72,7 +87,11 @@ not yet observing, building toward their own first sessions.
   rounded pick is stored.
 - Never recommends the physically impossible. No object below the site's minimum
   altitude, outside the darkness window, or below the horizon. A beginner who
-  goes out and finds nothing there does not come back.
+  goes out and finds nothing there does not come back. Amended v3, recording
+  M-2: the Moon and the planets are bright enough for twilight, so their window
+  is the sun below −6° rather than the dark window; deep-sky objects keep the
+  dark window. The same rule applies to a plan the user edits: no target is
+  scheduled outside its window.
 - Never a confident "go" on a clouded-out night. A false "go" wastes a setup and
   an evening; a false "no-go" costs only a night. Where the forecast is
   uncertain, "marginal" must be reachable rather than rounding up to "go".
@@ -151,6 +170,63 @@ not yet observing, building toward their own first sessions.
   (FR-018, Business Logic invariant).
 - The user can edit or delete the entry afterwards (FR-017), and entries remain
   readable after their site or telescope is deleted (FR-021).
+
+### US-05: User finds a ranked target from a star they can see
+
+- **Given** a signed-in user looking at a ranked deep-sky object or a planet on
+  a go or marginal night
+- **When** they open the object's finder chart
+- **Then** they see the nearest star bright enough to see with the naked eye
+  from their site, the hop from that star to the object, the field of their
+  finder and of their finding eyepiece drawn to scale, and a line on what the
+  object will look like in their telescope
+
+#### Acceptance Criteria
+- The starting star is above the site's minimum altitude at the object's best
+  time (FR-037, Business Logic invariant).
+- The eyepiece circle uses the user's own finding eyepiece from FR-014.
+- The what-to-expect line reflects the object's type, size and brightness, the
+  telescope's aperture and the site's sky quality (FR-038).
+
+### US-06: User sees their progress and what they have not seen yet
+
+- **Given** a signed-in user with observation log entries
+- **When** they open their progress, or Tonight's targets
+- **Then** they see the Messier and Caldwell checklists with counts, the planets
+  and the Moon as "firsts", any milestones reached, and a "not seen yet" mark on
+  tonight's targets they have never logged
+
+#### Acceptance Criteria
+- An object counts as seen only through an entry rated 3 or above (FR-039).
+- Deleting or re-rating an entry updates the counts and the marks.
+- A milestone is shown once, when the log entry that reaches it is saved, and
+  stays listed on the progress page (FR-041).
+
+### US-07: User plans around a sky event
+
+- **Given** a signed-in user with a site
+- **When** they open the dashboard on a night with a notable event, or the
+  events page
+- **Then** they see the event on the dashboard, the next 30 days of events with
+  their times in the site's timezone and whether each is visible from the
+  site, and tonight's event named next to the sky verdict
+
+#### Acceptance Criteria
+- Events are computed by the product, with no external feed (FR-042).
+- An event below the site's horizon is shown as not visible from the site, never
+  as something to go out for.
+
+### US-08: User shapes tonight's session plan
+
+- **Given** a signed-in user looking at the session plan for a site and night
+- **When** they reorder targets, drop one, or add another visible object
+- **Then** the plan keeps their changes on every device, including the stored
+  offline copy, and can be reset to the suggested plan
+
+#### Acceptance Criteria
+- An added target is placed only within its own visibility window (Guardrails).
+- Edits are saved per user, site and night (FR-044); another user never sees
+  them.
 
 ## Functional Requirements
 
@@ -348,6 +424,43 @@ not yet observing, building toward their own first sessions.
   > infrastructure is must-have; the Polish copy itself is in the cut order
   > (position 5), so English-only can ship if time runs out.
 
+### Shipped in M-2 (recorded in v3)
+
+These record scope that M-2 ("First real nights", closed 2026-10-07) shipped
+under the roadmap charter while the PRD still said v2. Each names its roadmap
+slice; details live in the archived change folders.
+
+- FR-027: User can see the planets above the site's minimum altitude on Tonight, each with its best time, altitude and direction, a detail eyepiece and a reason, and can log one as observed (roadmap S-01). Priority: must-have
+- FR-028: User can see the Moon as a target in its own right - phase, when it is up, what is worth looking at - and can log it (roadmap S-02). Priority: must-have
+- FR-029: User can see bright deep-sky objects beyond the Messier catalogue (the Caldwell objects visible from mid-northern latitudes) ranked with the same scoring, reasons and eyepiece pair, and can log them (roadmap S-03). Priority: must-have
+- FR-030: User lands on a Tonight dashboard of tiles - verdict, Moon, planets, targets, session plan, the next nights and the sky check - each opening its own focused page, with a live sky showing what is up through the night (roadmap S-11). Priority: must-have
+- FR-031: User can open a session plan: the night from sunset to sunrise as a timeline with the dark window, the Moon's span and each recommended target at its best time (roadmap S-05). Priority: must-have
+- FR-032: User can install Sidereus and open the Tonight pages last loaded for a site with no network, marked with when they were prepared; network-only controls say so instead of failing (roadmap S-06). Priority: must-have
+- FR-033: User can say whether a past night's sky matched the verdict and see a tally of how often verdicts matched (roadmap S-07). Priority: must-have
+- FR-034: User adding or editing a site can use "Use my location", asked for only after that click, or "Pick from map", whose map loads only after that click (roadmap S-08, S-09). Priority: must-have
+- FR-035: User adding a telescope or eyepiece can pick a real model from a searchable catalogue that fills in the fields, which stay editable (roadmap S-12). Priority: must-have
+- FR-036: The interface has a distinct visual identity of its own in the light and dark themes, with red night mode unchanged in function (roadmap S-10). Priority: must-have
+
+### Finding the object (v3)
+- FR-037: User can open a finder chart for any ranked deep-sky object and any planet on Tonight: the nearest star bright enough to see with the naked eye from the site at the object's best time, the hop from it to the object through intermediate stars where needed, and two circles drawn to scale - the finder's field and the true field of the user's finding eyepiece (FR-014) - oriented as the user faces that part of the sky. Plan: full (FR-045). Priority: must-have
+- FR-038: User sees, with each ranked object, a plain-language line on what to expect in their own telescope from their site - for example "a faint grey smudge; use averted vision" or "a bright, tight ball of stars that resolves at the edge" - derived from the object's type, size and brightness, the aperture and the site's sky quality. Plan: full (FR-045). Priority: must-have
+
+### Progress and goals (v3)
+- FR-039: User can see their progress: the Messier and Caldwell checklists with a count each ("47 / 110"), and the planets and the Moon as "firsts", filled from observation log entries rated 3 or above. Priority: must-have
+- FR-040: User sees a "not seen yet" mark on tonight's targets they have never logged with a rating of 3 or above. Priority: must-have
+- FR-041: User sees a milestone celebrated when the log entry that reaches it is saved - from a fixed, named set such as first planet, first galaxy, first globular cluster, 10 / 25 / 50 / 110 Messier objects and all planets seen - and every milestone reached is listed on the progress page. Priority: must-have
+
+### Sky events (v3)
+- FR-042: User can see the sky events of the next 30 days for the selected site - meteor shower peaks, planet oppositions, Mercury and Venus greatest elongations, close Moon-planet and planet-planet pairings, and solar and lunar eclipses - each with its time in the site's timezone and whether it is visible from the site. Events are computed by the product, with no external data feed. Priority: must-have
+- FR-043: User sees the next notable event as a dashboard tile linking to the events page, and an event happening tonight named next to the sky verdict. Priority: must-have
+
+### Session plan (v3)
+- FR-044: User can adjust the session plan for a site and night - reorder targets, drop one, add another object visible that night - and reset it to the suggested plan. Edits are saved to the user's account per site and night, so they reach every device and the stored offline copy; editing needs the network. Plan: full (FR-045). Priority: must-have
+
+### Plans and entitlements (v3)
+- FR-045: Every account is on the free plan or the full plan. Everything shipped before v3, and the progress and sky-event features (FR-039 to FR-043), stay free. The features marked "Plan: full" (FR-037, FR-038, FR-044) are shown to a free account as what they do and that they need the full plan - never as an error or an empty state - and the server enforces the plan, not only the interface. Priority: must-have
+- FR-046: The operator can create a new account on the full plan, or move an existing account to it and back, with one command and no payment ("complimentary" accounts, for the author and testers). Priority: must-have
+
 ### Cut order
 
 Recorded 2026-09-15 in shape-notes. Every FR above is must-have; this is a
@@ -364,6 +477,9 @@ checkpoint if the engine spike is not producing a sane top 5.
 5. FR-026 Polish copy - added 2026-09-26 (v2). The language switch and message
    catalogue survive with English as the only language; translating every
    string into Polish is the cut.
+
+The v3 requirements (FR-037 to FR-044) carry no cut order: the M-3 roadmap
+sequences them, and its slices can be parked like M-2's.
 
 ## Non-Functional Requirements
 
@@ -397,6 +513,10 @@ checkpoint if the engine spike is not producing a sane top 5.
   the full Messier catalogue completes in under a second.
 - The interface is dark by default and usable without destroying dark
   adaptation.
+- Phone first (added v3): at 360-390 px wide, every view leads with its primary
+  answer, nothing needs horizontal scrolling, and the Tonight dashboard shows
+  the sky verdict and its first tiles on the first screen. A finder chart is
+  legible on a phone held at arm's length in red night mode.
 - Data sources whose licences require attribution are credited in the product.
 
 ## Business Logic
@@ -434,6 +554,14 @@ The user encounters both on one screen. The verdict answers whether to go out;
 the ranking answers what to do once outside, with each entry carrying the single
 factor that most distinguishes it from the others in the list.
 
+> Added v3: two more outputs follow from the same inputs. For each target, how
+> to find it - a starting star the user can see and a hop to the object, drawn
+> with the fields of their own finder and eyepiece - and what it will look like
+> through their telescope from their site. And from the log, how far the user is
+> through the classic lists. Both are deterministic: identical inputs give the
+> identical chart, hop, expectation line and counts. Sky events are computed the
+> same way, from the site and the date alone.
+
 ### Invariants
 
 Decided now. These do not vary and are not tuned.
@@ -445,6 +573,13 @@ Decided now. These do not vary and are not tuned.
   recommended for that eyepiece.
 - A log entry rated 1-2 of 5 never deprioritizes its object.
 - Nights 4-7 carry no verdict.
+- A finder chart never starts from a star below the site's minimum altitude at
+  the object's best time, and never from one too faint to see with the naked eye
+  from the site (added v3).
+- A log entry rated 1-2 of 5 never ticks a checklist or reaches a milestone
+  (added v3).
+- An event below the site's horizon is never presented as something to go out
+  for (added v3).
 
 ### Tunable parameters
 
@@ -476,6 +611,12 @@ carried into Success Criteria and Non-Functional Requirements.
 
 A read-only demo account is post-MVP.
 
+Plans (added v3): every account carries a plan, free or full (FR-045). This is
+an attribute of the account, not a role: users stay identical in what data they
+can reach, and only the full plan's features differ. The operator grants the
+full plan from the command line with the service credentials (FR-046); there is
+no admin interface. Checkout, pricing and subscriptions are not in v3.
+
 ## Non-Goals
 
 Functional:
@@ -483,19 +624,20 @@ Functional:
 - **Astrophotography.** No exposure planning, tracking, guiding or imaging
   advice. The largest adjacent scope in the hobby and the one most likely to
   arrive as one more field on the equipment form.
-- **Anything outside the Messier catalogue.** No planets, Moon, comets, double
-  stars or NGC objects, in the ranking or the log. The catalogue is a filter
-  change away, which is exactly why the boundary has to be written down.
-- **Finding the object.** No star-hopping directions, sky charts or finder
-  views. The user locates objects with other tools such as Stellarium or printed
-  charts. Accepted boundary: the product answers whether to go out and what to
-  look at, not how to find it. Partially mitigated by FR-013, which names each
-  object's constellation and its altitude and compass direction at the best
-  time. Named anchor stars remain post-MVP.
+- **Comets, double stars, variable stars and other transient objects.** Narrowed
+  in v3: the planets, the Moon and the Caldwell objects are in scope (FR-027 to
+  FR-029). Comets need a refreshed external feed, and double stars were parked by
+  the user (roadmap S-04).
+- **A sky atlas or planetarium.** Narrowed in v3 from "Finding the object": the
+  finder chart (FR-037) shows only the stretch of sky between a starting star and
+  its target. No pan-and-zoom star atlas, no stars fainter than the finder
+  shows, no camera or augmented-reality view, no plate solving.
 - **Hardware control.** No GoTo mount or telescope integration.
 - **Notifications.** No push, email or "clear tonight" alerts.
 - **Social and sharing features.** No shared sites, club accounts, public logs
-  or comparison with other observers. Keeps the flat access model honest.
+  or comparison with other observers. Keeps the flat access model honest. The v3
+  progress (FR-039 to FR-041) is private: no leaderboards, no badges to share,
+  no points beyond the fixed milestone set.
 - **AI features.** The planner chat, object descriptions and summaries are
   post-MVP. Only the scoring functions' tool-callable shape is kept.
 
@@ -504,7 +646,15 @@ Non-functional:
 - **Modelling seeing, transparency or light pollution.** No jet-stream or seeing
   forecasts, no light-pollution maps, no automatic Bortle class from
   coordinates. Sky quality stays a coarse number the user sets.
-- **Native mobile app.** Web only; a responsive layout is sufficient.
+- **Native mobile app.** Web only; a responsive layout is sufficient, installable
+  since M-2 (FR-032).
+
+Commercial (added v3):
+
+- **Payments.** No checkout, pricing, subscriptions, invoices or trials in v3.
+  Plans exist (FR-045) and the full plan is granted by hand (FR-046); taking
+  money is its own later milestone, after Open Question 21.
+- **An admin interface.** Account plans are changed from the command line only.
 
 ## Open Questions
 
@@ -550,3 +700,43 @@ milestone, approximately 2026-09-30.
     the project's team), so FR-003 is cut.
 12. **Geocoding terms** - confirm the geocoding endpoint's
     non-commercial fair-use terms before FR-004 depends on it.
+
+Added v3 (2026-10-07), for M-3. Owner: team unless marked; each is settled in
+the plan of the slice that needs it.
+
+13. **The finder's field** - the equipment model has no finder. Candidate: a
+    standard 6×30 finder (about 7° across) for every telescope, plus the
+    concentric rings of a 1× reflex finder; a later change may let the user
+    pick their finder. Owner: user.
+14. **Star depth for the chart** - the bundled stars stop at magnitude 4.5,
+    while a 6×30 finder shows stars to about magnitude 8. Candidate: a deeper,
+    redistributable subset of the same source, loaded only with the chart;
+    licence and page weight are checked in the plan.
+15. **Naked-eye limit for the starting star** - candidate (uncalibrated): by
+    Bortle class, magnitude 4.5 at Bortle 1-4, 3.5 at 5-6, 2.5 at 7-9.
+16. **Hop length** - candidate (uncalibrated): each step at most one finder
+    field, through stars the finder shows.
+17. **What-to-expect wording** - candidate: a fixed set of phrases chosen by
+    object type, surface brightness against the site's sky quality, and
+    aperture; judged without an observer, like M-2's advice (roadmap Open
+    Question 2).
+18. **The milestone set** - candidate: first planet, first galaxy, first
+    globular cluster, first nebula, the Moon's terminator, 10 / 25 / 50 / 110
+    Messier objects, all Caldwell objects in the list, all planets. Owner: user.
+19. **Meteor shower data** - a fixed table of the major showers' peak dates and
+    radiants from a public source whose terms allow reuse; checked in the plan.
+20. **Which pairings are "close"** - candidate (uncalibrated): Moon-planet and
+    planet-planet pairs within 3°, only when both are above the horizon in the
+    site's darkness or twilight window.
+
+21. **Commercial licences before charging** - the forecast and place search use
+    Open-Meteo's free API, which is for non-commercial use, and this PRD's NFR
+    keeps within those limits; OpenStreetMap's tile policy gives no service
+    guarantee and discourages heavy use. Before any payment is taken, move to a
+    commercial forecast and geocoding plan (or provider) and confirm the map
+    tiles' terms. Owner: user. Blocks: the payments milestone, not M-3.
+22. **Pricing, payment provider and the plan's name** - deferred to the
+    payments milestone. Owner: user.
+23. **Paid features in a stored offline copy** - candidate: a copy keeps what
+    the account's plan allowed when it was stored, and is purged on sign-out as
+    today.
