@@ -303,8 +303,8 @@
  * "Pick from map" (S-09). Leaflet's stylesheet (injected by map-panel.tsx) is unlayered and loads last, so it beats
  * Tailwind's layers and same-specificity rules here: every override is unlayered and prefixed with [data-theme]
  * (always on <html>). The colour guard tests cannot see node_modules CSS, so screenshots check these.
- * Tiles: the pane carries the whole filter and the tile images none. A child's filter runs before its ancestor's,
- * so the red-only img filter above, under an inverted pane, would come out cyan.
+ * Tiles: in light and dark the pane carries the whole filter and the tile images none. A child's filter runs before
+ * its ancestor's, so the red-only img filter above, under an inverted pane, would come out cyan. Red is the reverse.
  */
 [data-theme] .leaflet-tile-pane img {
   filter: none;
@@ -318,8 +318,14 @@
   filter: invert(1) hue-rotate(180deg) brightness(0.7) contrast(0.9);
 }
 
-/* One SVG filter (Layout.astro) folds inversion, dimming and luminance-to-red together: no green or blue out. */
+/* One SVG filter (Layout.astro) folds inversion, dimming and luminance-to-red together: no green or blue out.
+   It goes on the tiles, not the pane: WebKit ignores an SVG filter on Leaflet's composited (translate3d) pane,
+   and with no pane filter in red there is nothing for the tiles' filter to stack under. */
 [data-theme="red"] .leaflet-tile-pane {
+  filter: none;
+}
+
+[data-theme="red"] .leaflet-tile-pane img {
   filter: url(#red-night-map);
 }
 

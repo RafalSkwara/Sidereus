@@ -437,6 +437,9 @@ Decided during `/10x-implement` (2026-10-07), recorded here because the phase bl
 - **p2, centre pin:** "Place pin at map centre" is a `pinAtCentreSignal` counter prop rather than an imperative handle: a `useEffectEvent` function may only be called from effects (react-hooks lint), so the panel handles the signal in an effect, like `closeSignal`.
 - **p2, pin outline:** the divIcon pin gets a thin `var(--background)` stroke (global.css) so it stays readable over any tile.
 - **p2, evidence for 2.6/2.7:** a scratch Playwright spec on the local preview with real OSM tiles (deleted after use): no tile or map-asset request before the click (12 tiles, `map-panel.*.js` and `leaflet.*.css` after); tap 47.69/20.3, drag 50.57/13.27, centre 50.01/15.03; typing moved the pin; Close returned focus to "Pick from map"; the edit form opened on 40.42/−3.7 with the pin, ArrowRight pan + centre gave 40.42/−3.65, Undo restored 40.42/−3.7, removed the map region and focused the latitude field; keyboard only: Tab reached the button, Enter focused the map, the Tab order from the map is Zoom in → Zoom out → credit → "Place pin at map centre" → "Close map", and focus returned to the button; with geolocation granted the neutral view recentred on the device (centre 52.23/21.01) without a pin.
+- **p3, red filter placement:** the plan put `url(#red-night-map)` on `.leaflet-tile-pane`. WebKit ignores an SVG `url()` filter on Leaflet's composited (`translate3d`) pane, so the WebKit red capture showed full-colour tiles. In red the filter now sits on the tile images and the pane has none (no stacking, so no cyan); light and dark keep the pane filter. Both engines then report G = B = 0 (`evidence/README.md`).
+- **p3, e2e consent check:** the deliberate break (preloading the map chunk on mount) first stayed green, because the preload starts after hydration; the spec now waits for `networkidle` before counting, and goes red on that break. Undo's break (no `closeSignal` bump) went red as written.
+- **p3, 3.3:** the full suite (34 passed, 1 skipped vs the baseline's 32 + 1) ran on the build just before the red-filter CSS fix; after the fix, `site-map`, `site-location`, `onboarding` and `red-night-mode` passed again (9/9).
 - A `pageerror: Failed to fetch` seen in scratch runs comes from `/tonight`'s server-island fetch being cut off when a test navigates away at once; it predates this change.
 
 ## Progress
@@ -456,26 +459,26 @@ Decided during `/10x-implement` (2026-10-07), recorded here because the phase bl
 
 #### Automated
 
-- [x] 2.1 Unit, i18n and style guard tests pass: `npm test`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [x] 2.4 `npm run build` passes both guards in `build-sw.mjs`: the `map-panel` chunk exists, it is absent from `sw.js`, and no shared CSS contains `.leaflet-`
-- [x] 2.5 The existing `tests/e2e/site-location.spec.ts` and `tests/e2e/onboarding.spec.ts` still pass (recipe under Testing Strategy)
+- [x] 2.1 Unit, i18n and style guard tests pass: `npm test` — 5819d58
+- [x] 2.2 Type check passes: `npx astro check` — 5819d58
+- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 5819d58
+- [x] 2.4 `npm run build` passes both guards in `build-sw.mjs`: the `map-panel` chunk exists, it is absent from `sw.js`, and no shared CSS contains `.leaflet-` — 5819d58
+- [x] 2.5 The existing `tests/e2e/site-location.spec.ts` and `tests/e2e/onboarding.spec.ts` still pass (recipe under Testing Strategy) — 5819d58
 
 #### Manual
 
-- [x] 2.6 On a local preview, "Pick from map" opens the panel immediately. Tap, drag and "Place pin at map centre" each fill 2-decimal coordinates. Undo on the edit form restores the saved values and closes the map. Typing new coordinates while the map is open moves the pin
-- [x] 2.7 Keyboard only: tab to the button, open the map, focus lands on the map, pan with the arrow keys, place the pin at centre, close the map, and focus returns to the button
+- [x] 2.6 On a local preview, "Pick from map" opens the panel immediately. Tap, drag and "Place pin at map centre" each fill 2-decimal coordinates. Undo on the edit form restores the saved values and closes the map. Typing new coordinates while the map is open moves the pin — 5819d58
+- [x] 2.7 Keyboard only: tab to the button, open the map, focus lands on the map, pan with the arrow keys, place the pin at centre, close the map, and focus returns to the button — 5819d58
 
 ### Phase 3: Verification and docs
 
 #### Automated
 
-- [ ] 3.1 The new e2e spec passes against a local preview: `npx playwright test site-map`
-- [ ] 3.2 The full unit suite passes: `npm test`
-- [ ] 3.3 The full e2e suite shows no new failures compared with `evidence/e2e-baseline.txt`: `npx playwright test`
+- [x] 3.1 The new e2e spec passes against a local preview: `npx playwright test site-map`
+- [x] 3.2 The full unit suite passes: `npm test`
+- [x] 3.3 The full e2e suite shows no new failures compared with `evidence/e2e-baseline.txt`: `npx playwright test`
 
 #### Manual
 
-- [ ] 3.4 Screenshots show legible tiles and controls with visible focus and the credit, in EN and PL, dark, light and red, at 390 px and 1280 px, with no Leaflet default white, grey or blue showing. The red-mode channel check (Chromium and WebKit) reports no green or blue light
-- [ ] 3.5 Polish copy fits the button, caption and panel buttons at 390 px without overflow
+- [x] 3.4 Screenshots show legible tiles and controls with visible focus and the credit, in EN and PL, dark, light and red, at 390 px and 1280 px, with no Leaflet default white, grey or blue showing. The red-mode channel check (Chromium and WebKit) reports no green or blue light
+- [x] 3.5 Polish copy fits the button, caption and panel buttons at 390 px without overflow
