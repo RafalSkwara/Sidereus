@@ -467,7 +467,7 @@ export const pl = {
       darkFrom: "Ciemno od",
       darkTo: "do",
       noDarkWindow: "Brak ciemnej nocy",
-      timesIn: (p) => ` · czas w strefie ${p.zone}`,
+      separator: " · ",
     },
 
     nights: {

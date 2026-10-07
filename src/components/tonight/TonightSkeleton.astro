@@ -1,10 +1,17 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
-// strip and slider row reserved, interactive-sky) with bars where the date, the giant word and the headline lines go,
-// then five ruled rows standing for the dashboard's tiles (TonightTiles), so
+// strip and slider row reserved, interactive-sky) with bars where the three info lines, the giant word and the
+// answer line go, a one-line gear row, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
-import { SLIDER_ROW_CLASS } from "@/components/tonight/sky-band";
+import {
+  SLIDER_LAYOUT_CLASS,
+  SLIDER_LEGEND_CLASS,
+  SLIDER_NOW_CLASS,
+  SLIDER_ROW_CLASS,
+  SLIDER_TIME_CLASS,
+  SLIDER_TRACK_CLASS,
+} from "@/components/tonight/sky-band";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,26 +34,36 @@ const tile = TILE_ROW_CLASS;
   </span>
   <TonightSky night verdict strip>
     <div aria-hidden="true">
+      <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
       <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
-      <div class="mt-2 font-display text-verdict-lg font-extrabold sm:text-verdict-xl">
+      <div class:list={[bar, "w-48 max-w-full text-label"]}>&nbsp;</div>
+      <div class="mt-2 font-display text-verdict-sm sm:text-verdict-lg font-extrabold">
         <div class:list={[bar, "w-1/2"]}>&nbsp;</div>
       </div>
-      <div class:list={[bar, "mt-5 w-3/4 text-title sm:mt-6"]}>&nbsp;</div>
-      <div class:list={[bar, "mt-3 w-40 text-label"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-3 w-3/4 text-title sm:mt-6"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-3 w-40 text-label max-sm:hidden"]}>&nbsp;</div>
     </div>
   </TonightSky>
   <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->
   <div class:list={[SLIDER_ROW_CLASS]} aria-hidden="true">
-    <div class="flex items-center justify-between gap-3">
-      <div class:list={[bar, "w-16 text-title"]}>&nbsp;</div>
-      <div class:list={[bar, "h-11 w-20"]}></div>
-    </div>
-    <div class="flex h-11 items-center">
-      <div class:list={[bar, "mt-1 h-1.5 w-full"]}></div>
+    <div class:list={[SLIDER_LAYOUT_CLASS]}>
+      <div class:list={[bar, SLIDER_TIME_CLASS, "w-16 text-title"]}>&nbsp;</div>
+      <div class:list={[SLIDER_TRACK_CLASS, "flex h-11 items-center"]}>
+        <div class:list={[bar, "h-1.5 w-full"]}></div>
+      </div>
+      <div class:list={[bar, SLIDER_NOW_CLASS, "h-11 w-20"]}></div>
+      <div class:list={[SLIDER_LEGEND_CLASS]}>
+        <div class:list={[bar, "w-1/2 text-label"]}>&nbsp;</div>
+      </div>
     </div>
   </div>
 
-  <div class="mx-auto w-full max-w-3xl pt-8">
+  <!-- The gear row (ui-mobile-pass): one line under the slider, as the island draws it with one site and telescope. -->
+  <div class="mx-auto w-full max-w-3xl px-4 pt-2 sm:pt-4" aria-hidden="true">
+    <div class:list={[bar, "min-h-11 w-48 max-w-full"]}></div>
+  </div>
+
+  <div class="mx-auto w-full max-w-3xl pt-3 sm:pt-6">
     <div aria-hidden="true">
       <div class:list={[tile]}>
         <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>

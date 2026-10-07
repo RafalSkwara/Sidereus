@@ -467,33 +467,33 @@ Not applicable. There is no data change, and offline copies stored before the de
 
 #### Automated
 
-- [x] 2.1 Type check passes: `npx astro check`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Unit tests pass: `npm test`
-- [x] 2.4 `TonightTiles.astro` contains no hand-written tile `<a class={tile}>` block (grep returns 0)
-- [x] 2.5 Hardcoded-value scan on the touched files returns 0 hits
+- [x] 2.1 Type check passes: `npx astro check` — 775fbfc
+- [x] 2.2 Lint passes: `npm run lint` — 775fbfc
+- [x] 2.3 Unit tests pass: `npm test` — 775fbfc
+- [x] 2.4 `TonightTiles.astro` contains no hand-written tile `<a class={tile}>` block (grep returns 0) — 775fbfc
+- [x] 2.5 Hardcoded-value scan on the touched files returns 0 hits — 775fbfc
 
 #### Manual
 
 - [ ] 2.6 At 390 px the tile stack is ≤ 600 px tall in EN (measured), and "Point here first" is the heaviest tile
-- [x] 2.7 `/design` shows the Tile states in dark, light and red
+- [x] 2.7 `/design` shows the Tile states in dark, light and red — 775fbfc
 
 ### Phase 3: The dashboard's first screen (C1, C2, C3)
 
 #### Automated
 
-- [ ] 3.1 Type check passes: `npx astro check`
-- [ ] 3.2 Lint passes: `npm run lint`
-- [ ] 3.3 Unit tests pass, including `i18n.test.ts` parity and `TonightSkyView.test.ts`: `npm test`
-- [ ] 3.4 Production build passes: `npm run build`
-- [ ] 3.5 Hardcoded-value scan on the touched files returns 0 hits
-- [ ] 3.6 At 390×844 the first tile's first target row is above the TabBar (preview measurement), and at 1280 the panorama SVG height is still 304 px
+- [x] 3.1 Type check passes: `npx astro check`
+- [x] 3.2 Lint passes: `npm run lint`
+- [x] 3.3 Unit tests pass, including `i18n.test.ts` parity and `TonightSkyView.test.ts`: `npm test`
+- [x] 3.4 Production build passes: `npm run build`
+- [x] 3.5 Hardcoded-value scan on the touched files returns 0 hits
+- [x] 3.6 At 390×844 the first tile's first target row is above the TabBar (preview measurement), and at 1280 the panorama SVG height is still 304 px
 
 #### Manual
 
-- [ ] 3.7 The skeleton → island swap does not jump the panorama or the tiles at 390 px and 1280 px with one site and an EN verdict (record both)
-- [ ] 3.8 The compass row sits under the verdict text without overlapping it, in EN go, PL tak, marginal and no-go verdicts
-- [ ] 3.9 With 2 sites, the site pills sit right under the slider, and switching site works
+- [x] 3.7 The skeleton → island swap does not jump the panorama or the tiles at 390 px and 1280 px with one site and an EN verdict (record both)
+- [x] 3.8 The compass row sits under the verdict text without overlapping it, in EN go, PL tak, marginal and no-go verdicts
+- [x] 3.9 With 2 sites, the site pills sit right under the slider, and switching site works
 
 ### Phase 4: States, visual gate and guard
 

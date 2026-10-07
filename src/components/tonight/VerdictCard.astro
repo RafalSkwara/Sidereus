@@ -1,7 +1,8 @@
 ---
 /*
- * The verdict over Tonight's sky (tonight-nightfall), rendered in TonightSky's slot: the date and dark window, the
- * giant Go / Marginal / No-go word, the sky headline with its reason and next step, and how fresh the forecast is.
+ * The verdict over Tonight's sky (tonight-nightfall), rendered in TonightSky's slot: the date, the dark window and the
+ * time zone on three lines of their own, the giant Go / Marginal / No-go word, the sky headline with its reason on one
+ * flowing line, the next step, and how fresh the forecast is (a fresh forecast shows from `sm` only, ui-mobile-pass).
  * All text is heading or muted ink, the pair the contrast test pins on zenith and horizon; the verdict's colour is
  * only the small dot before the headline.
  */
@@ -43,48 +44,53 @@ const {
 
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.card;
-// The giant word is as large as its length allows on a 360 px phone (widths in global.css's verdict roles):
-// Go, Tak, Nie at verdict-lg; Może, No-go at verdict-md; Marginal at verdict-sm. One step up from `sm`.
+// The giant word (widths in global.css's verdict roles): below `sm` always verdict-sm (60 px, so the first screen has
+// room for the gear and the targets), from `sm` as large as its length allows: Go, Tak, Nie at verdict-lg; Może,
+// No-go at verdict-md; Marginal at verdict-sm.
 const verdictSize = (word: string) =>
   word.length <= 3
-    ? "text-verdict-lg sm:text-verdict-xl"
+    ? "text-verdict-sm sm:text-verdict-lg"
     : word.length <= 5
-      ? "text-verdict-md sm:text-verdict-lg"
-      : "text-verdict-sm sm:text-verdict-md";
-// A saved copy or no forecast at all stands out from the routine "Forecast updated … ago".
+      ? "text-verdict-sm sm:text-verdict-md"
+      : "text-verdict-sm";
+// A saved copy or no forecast at all stands out from the routine "Forecast updated … ago", which phones skip.
 const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
-  fresh: "text-muted-foreground",
+  fresh: "text-muted-foreground max-sm:hidden",
   fallback: "font-semibold text-heading",
   none: "font-semibold text-heading",
 };
 ---
 
 <section aria-labelledby={headingId}>
-  <p class="text-label font-medium text-muted-foreground">
-    {dateLabel}
-    {" · "}
-    {darkWindow.kind === "window" ? (
-      <>
-        {t.darkFrom} <span class="font-mono text-heading">{darkWindow.start}</span> {t.darkTo}{" "}
-        <span class="font-mono text-heading">{darkWindow.end}</span>
-      </>
-    ) : explanation?.kind === "no-darkness" ? (
-      explanation.returnText
-    ) : (
-      t.noDarkWindow
-    )}
-    {t.timesIn({ zone: timeZone })}
-  </p>
+  <div class="text-label font-medium text-muted-foreground">
+    <p>{dateLabel}</p>
+    <p>
+      {darkWindow.kind === "window" ? (
+        <>
+          {t.darkFrom} <span class="font-mono text-heading">{darkWindow.start}</span> {t.darkTo}{" "}
+          <span class="font-mono text-heading">{darkWindow.end}</span>
+        </>
+      ) : explanation?.kind === "no-darkness" ? (
+        explanation.returnText
+      ) : (
+        t.noDarkWindow
+      )}
+    </p>
+    <p>{m.tonight.nights.timesIn({ zone: timeZone })}</p>
+  </div>
   <h2 id={headingId} class="mt-2 text-heading">
     <span class:list={["block font-display font-extrabold", verdictSize(m.tonight.verdict.word[level])]}>
       {m.tonight.verdict.word[level]}
     </span>{" "}
-    <span class="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-title sm:mt-6">
+    <span class="mt-3 block text-title sm:mt-6">
       <span class="inline-flex items-center gap-2 font-display font-semibold" data-sky-headline={headline.key}>
         <span class:list={["size-2.5 shrink-0 rounded-full", VERDICT_TONES[level].dot]} aria-hidden="true"></span>
         {headline.text}
       </span>
-      <span class="font-normal text-muted-foreground">— {text}</span>
+      <span class="text-body font-normal text-muted-foreground">
+        {t.separator}
+        {text}
+      </span>
     </span>
   </h2>
   {explanation?.kind === "weather-no-go" && <p class="mt-3 text-body text-heading">{explanation.nextText}</p>}

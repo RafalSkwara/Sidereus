@@ -1,9 +1,10 @@
 ---
 // The data-dependent part of /tonight, rendered as a server island (`server:defer` in pages/tonight.astro) so the
 // page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives. Since
-// tonight-dashboard it is the dashboard: the sky, then tiles that open the focused pages under /tonight/*, the sky
-// check, the gear and the setup prompts (the tiles include the Session plan, loaded with `withSessionPlan`). The
-// detail lives on those pages; only this island records the sky verdict.
+// tonight-dashboard it is the dashboard: the sky, the save notice and the gear row right under it (ui-mobile-pass),
+// then tiles that open the focused pages under /tonight/*, the sky check and the setup prompts (the tiles include the
+// Session plan, loaded with `withSessionPlan`). The detail lives on those pages; only this island records the sky
+// verdict.
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -117,6 +118,9 @@ const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null :
 const addSite = !needsSetup && !sitesError && !site;
 const addTelescope = !needsSetup && !telescopesError && !telescope;
 const showPrompts = needsSetup || addSite || addTelescope;
+// The gear row: the gear link and the selectors (once a site and a telescope resolve) and the gear-list load errors.
+const showGearRow =
+  Boolean(site && telescope && (gearLine || multipleSites || multipleTelescopes)) || !!sitesError || !!telescopesError;
 // The gear line's link to /gear: 44 px, with the ring focus.
 const gearLink =
   "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -163,9 +167,9 @@ const gearLink =
 
     {view && <OfflineCopy view={view} night={night} />}
 
-    <div class="mx-auto w-full max-w-3xl pt-8">
+    <div class="mx-auto w-full max-w-3xl">
       {notice && (
-        <div class="mb-6 px-4">
+        <div class="px-4 pt-3 sm:pt-6">
           {notice.tone === "success" ? (
             <Notice tone="success">{notice.text}</Notice>
           ) : (
@@ -176,44 +180,48 @@ const gearLink =
         </div>
       )}
 
+      {/* The gear row (ui-mobile-pass): the gear Tonight is for, right under the sky, with the gear-list load errors. */}
+      {showGearRow && (
+        <div class:list={["space-y-3 px-4", view ? "pt-2 sm:pt-4" : "pt-6 sm:pt-8"]}>
+          {site && telescope && gearLine && (
+            <p>
+              <a href="/gear" class:list={[gearLink]}>
+                {gearLine}
+              </a>
+            </p>
+          )}
+          {site && telescope && multipleSites && (
+            <GearSelector
+              items={sites.map(({ id, name }) => ({ id, name }))}
+              activeId={site.id}
+              param="site"
+              label={t.siteSelector.label}
+              show={t.siteSelector.show}
+            />
+          )}
+          {site && telescope && multipleTelescopes && (
+            <GearSelector
+              items={telescopes.map(({ id, name }) => ({ id, name }))}
+              activeId={telescope.id}
+              param="telescope"
+              label={t.selector.label}
+              show={t.selector.show}
+            />
+          )}
+          {sitesError && <ServerError message={translate(sitesError)} />}
+          {telescopesError && <ServerError message={translate(telescopesError)} />}
+        </div>
+      )}
+
       {/* The tiles run the container's full width, so their rules and hover reach the phone's edges. */}
-      {view && <TonightTiles view={view} />}
+      {view && (
+        <div class="pt-3 sm:pt-6">
+          <TonightTiles view={view} />
+        </div>
+      )}
 
-      <div class:list={["space-y-6 px-4", view && "pt-8"]}>
+      <div class:list={["space-y-6 px-4", view ? "pt-8" : "pt-6 sm:pt-8"]}>
         {view && skyCheck && <SkyCheckCard check={skyCheck} tonightDate={view.date} />}
-
-        {site && telescope && (gearLine || multipleSites || multipleTelescopes) && (
-          <div>
-            {gearLine && (
-              <p class="mb-6">
-                <a href="/gear" class:list={[gearLink]}>
-                  {gearLine}
-                </a>
-              </p>
-            )}
-            {multipleSites && (
-              <GearSelector
-                items={sites.map(({ id, name }) => ({ id, name }))}
-                activeId={site.id}
-                param="site"
-                label={t.siteSelector.label}
-                show={t.siteSelector.show}
-              />
-            )}
-            {multipleTelescopes && (
-              <GearSelector
-                items={telescopes.map(({ id, name }) => ({ id, name }))}
-                activeId={telescope.id}
-                param="telescope"
-                label={t.selector.label}
-                show={t.selector.show}
-              />
-            )}
-          </div>
-        )}
-
-        {sitesError && <ServerError message={translate(sitesError)} />}
-        {telescopesError && <ServerError message={translate(telescopesError)} />}
 
         {showPrompts && (
           <div>

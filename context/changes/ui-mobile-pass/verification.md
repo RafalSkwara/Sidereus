@@ -24,3 +24,19 @@ Production preview on local Supabase + `tests/e2e/forecast-fixture.mjs` (all-cle
 | "Point here first" is the heaviest tile | yes (title-size rows; Moon, Plan and Planets are one or two body lines) | same |
 | `/design` Tile states in dark, light and red | default, hover, focus-visible, empty, skeleton shown; disabled and error N/A with reason | `evidence/after/design-tile-light.png`, `design-tile-red.png` |
 | Lint after review | 2 new `prefer-class-list-directive` warnings in `Tile.astro` fixed (`class:list`) | — |
+
+## Phase 3: the dashboard's first screen (2026-10-07)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Verdict content height, EN go | 244 px at 360 px and 388 px at 640 px (measured), so `min-h-61 sm:min-h-97` is exact | p3 capture |
+| First target row bottom at 390×844, EN and PL | 776 against the TabBar top at 779: **passes with 3 px to spare** | `evidence/after/p3-en-dark-390x844_tonight.png` |
+| 360×780 | row bottom 776 against the TabBar at 715: known limit, as planned | — |
+| Panorama SVG height | 304 px at every width (unchanged) | — |
+| Sideways overflow, 320/390/1280 px, EN + PL | 0 | — |
+| Skeleton → island | the panorama foot and the first tile land at identical y in the skeleton and the island at 360 (524/696), 390 (524/696) and 1280 (684/944) px, with service workers blocked and the island request held | p3c skel.json |
+| Compass row vs verdict text | clear for EN go 390/1280 and PL "Tak" 320 (3-line answer). Marginal and no-go are clear by construction: the container only grows and keeps `pb-10`, so the text foot is ≤ 56 px into the 96 px overlap while the clamp places the compass at ≥ 64 px | `evidence/after/p3-pl-dark-320x568_tonight.png` |
+| 2 telescopes: pills under the sky, switching works | pills at y = 696 above the tiles (764); click → `?telescope=<id>` and Tonight reloads | `evidence/after/p3-two-telescopes-390.png` |
+| Gate fix | the slider row's track and legend sat outside the flex container (phone row overflowed onto the gear line). Moved inside (attempt 1/2), re-verified | — |
+
+Known minor: below `sm` the slider row shows time · track · Now, while the DOM order (kept for desktop) is time · Now · track, so on phones Tab reaches Now before the slider.
