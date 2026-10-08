@@ -339,7 +339,7 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 - Lint and type check pass: `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 - `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry: `! sed -n '/^### 6.2/,/^### 6.3/p' context/foundation/test-plan.md | grep -q TBD && grep -q '\*\*Phase 2 —' context/foundation/test-plan.md` (plan review F7)
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-08): `export const __breakCheck = (): number => new Date().getHours();` appended to `src/lib/tonight/tonight-date.ts` → the guard went red (`lib/tonight/tonight-date.ts:16 local Date getter/setter`); restored. Guard on current source: 0 hits in 229 files; positive control 24 flagged / 18 allowed snippets.
 
 **Implementation Note**: Commit and push. Then run `/10x-impl-review testing-night-and-date-boundaries` and open the PR.
 
@@ -396,21 +396,21 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 #### Automated
 
-- [x] 2.1 New suites pass: `npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
-- [x] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
-- [x] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and logged
-- [x] 2.4 Full unit suite, lint and type check pass
+- [x] 2.1 New suites pass: `npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts` — b340366
+- [x] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts` — b340366
+- [x] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and logged — b340366
+- [x] 2.4 Full unit suite, lint and type check pass — b340366
 
 #### Manual
 
-- [x] 2.5 `/log/new` without a `night` parameter keeps its default night and date-picker max (local check or `new.astro` diff review)
+- [x] 2.5 `/log/new` without a `night` parameter keeps its default night and date-picker max (local check or `new.astro` diff review) — b340366
 
 ### Phase 3: Static runner-zone guard and cookbook (unit + docs)
 
 #### Automated
 
-- [ ] 3.1 The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts`
-- [ ] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and logged
-- [ ] 3.3 Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test`
-- [ ] 3.4 Lint and type check pass
-- [ ] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry (`sed`/`grep` check)
+- [x] 3.1 The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts`
+- [x] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and logged
+- [x] 3.3 Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test`
+- [x] 3.4 Lint and type check pass
+- [x] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry (`sed`/`grep` check)
