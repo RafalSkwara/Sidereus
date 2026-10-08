@@ -6,7 +6,7 @@ What Sidereus looks like now, and exactly what the next session (possibly the **
 
 The user's own UI list (M-3 S-02, #123) runs alongside the test rollout.
 
-- **Where it lives**: branch `feat/ui-user-adjustments`, in the worktree `.claude/worktrees/ui-user-adjustments`, with a draft PR to `main`.
+- **Where it lives**: branch `feat/ui-user-adjustments`, in the worktree `.claude/worktrees/ui-user-adjustments`, with draft PR #139 to `main`.
 - **Status**: Phase 1 of 6 is done and reviewed. Phase 2 (toasts) is next.
 - **Handoff**: everything is in `context/changes/ui-user-adjustments/handoff.md`. Read it instead of this file when resuming S-02.
 - **Don't collide with it**: never switch branches in the main checkout for it, and don't use preview port 4331 or fixture port 4410 here.

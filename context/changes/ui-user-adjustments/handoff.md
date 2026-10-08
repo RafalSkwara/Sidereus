@@ -5,7 +5,7 @@ Read this first, then `plan-brief.md` in this folder. **Do not redo research, pl
 ## State of play
 
 - **Change**: M-3 S-02 "The user's UI adjustments", GitHub #123. Roadmap and board (#1) are `in-progress`.
-- **Branch**: `feat/ui-user-adjustments`, rebased onto `main` 45372a4 on 2026-10-08 and force-pushed. A draft PR to `main` carries it; see the PR list.
+- **Branch**: `feat/ui-user-adjustments`, rebased onto `main` 45372a4 on 2026-10-08 and force-pushed. It is in draft PR #139 to `main`.
 - **Worktree**: the branch lives in the git worktree `sidereus/.claude/worktrees/ui-user-adjustments`. The main checkout (`sidereus/`) belongs to the parallel test-plan stream (Phase 3 `testing-ranking-invariants-and-calibration-oracle`), so never switch branches there. Run every command from the worktree. If it was cleaned up, recreate it with `git worktree add .claude/worktrees/ui-user-adjustments feat/ui-user-adjustments` from `sidereus/`, then run `npm ci` and copy `.dev.vars`.
 - **Done:**
   - `research.md`.
