@@ -14,6 +14,10 @@ import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-
  *   stale copy around for outages.
  * - When the fetch fails it serves any stored copy with matching coordinates, whatever its age,
  *   flagged as `fallback`, and returns `null` only when nothing usable exists.
+ * - A 200 whose series is not complete (`isCompleteForecast`: empty, all null, ending early or
+ *   starting late) counts as a failed refresh when the stored copy has matching coordinates and
+ *   covers the hours around now (`coversStoredWindow`): that copy is served as `fallback` and left
+ *   in KV. Without such a copy the incomplete series is returned and stored, as any other 200.
  * - Cache read and write errors behave like a miss and never throw.
  *
  * Privacy: keys use the site id, never coordinates; nothing here logs.
@@ -24,6 +28,28 @@ export const FORECAST_FRESH_MS = 60 * 60 * 1000;
 
 /** How long KV keeps an entry, so a stale copy survives an Open-Meteo outage. */
 export const FORECAST_CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * A 200 is complete when its present hours reach back at least this far before the current hour. Real responses
+ * (`past_days=1`) start at 00:00 UTC the day before, so a night in progress, started up to about 15 h earlier, is
+ * always inside. Not a PRD tunable.
+ */
+export const FORECAST_COMPLETE_BEFORE_MS = 24 * HOUR_MS;
+
+/**
+ * A 200 is complete when its present hours also reach at least this far after the current hour. Real responses
+ * (`forecast_days=8`) reach about 7 days ahead, and verdict nights 1-3 of both the tonight and the next-night builds
+ * end within 96 h.
+ */
+export const FORECAST_COMPLETE_AFTER_MS = 96 * HOUR_MS;
+
+/**
+ * On an incomplete 200, a stored copy is kept only when it reaches from `FORECAST_COMPLETE_BEFORE_MS` before the
+ * current hour to at least this far after it, so a copy that is itself degenerate never wins over a new series.
+ */
+export const FORECAST_STORED_AFTER_MS = 24 * HOUR_MS;
 
 export function forecastCacheKey(siteId: string): string {
   return `forecast:v1:site:${siteId}`;
@@ -47,8 +73,38 @@ type StoredForecast = z.infer<typeof storedSchema>;
 export interface ForecastResult {
   forecast: HourlyForecast;
   fetchedAt: Date;
-  /** True only when the fetch failed and a stored copy was served in its place. */
+  /**
+   * True only when the refresh failed or returned an incomplete series, and a stored copy was served in its place.
+   */
   fallback: boolean;
+}
+
+/**
+ * True when the series' first present hour is at or before `fromMs` and its last at or after `toMs`; holes inside
+ * don't count.
+ */
+function spans(forecast: HourlyForecast, fromMs: number, toMs: number): boolean {
+  if (forecast.hours.length === 0) {
+    return false;
+  }
+  const starts = forecast.hours.map((hour) => hour.start.getTime());
+  return Math.min(...starts) <= fromMs && Math.max(...starts) >= toMs;
+}
+
+function currentHourMs(now: Date): number {
+  return Math.floor(now.getTime() / HOUR_MS) * HOUR_MS;
+}
+
+/** A 200's series is complete when it spans the current hour − 24 h to + 96 h (see the constants above). */
+export function isCompleteForecast(forecast: HourlyForecast, now: Date): boolean {
+  const hour = currentHourMs(now);
+  return spans(forecast, hour - FORECAST_COMPLETE_BEFORE_MS, hour + FORECAST_COMPLETE_AFTER_MS);
+}
+
+/** A stored copy is worth keeping over an incomplete 200 when it spans the current hour − 24 h to + 24 h. */
+export function coversStoredWindow(forecast: HourlyForecast, now: Date): boolean {
+  const hour = currentHourMs(now);
+  return spans(forecast, hour - FORECAST_COMPLETE_BEFORE_MS, hour + FORECAST_STORED_AFTER_MS);
 }
 
 export interface GetForecastInput {
@@ -141,6 +197,14 @@ export async function getForecast({
       fetchedAt: now,
       fallback: false,
     };
+    if (usable && !isCompleteForecast(result.forecast, now)) {
+      // An incomplete 200 is a failed refresh when the stored copy still covers the hours around now: keep the copy
+      // (no write) rather than overwrite it with a series that cannot judge tonight.
+      const copy = fromStored(stored, true);
+      if (coversStoredWindow(copy.forecast, now)) {
+        return copy;
+      }
+    }
     // writeCache never rejects, so a deferred write cannot surface as an unhandled rejection.
     const write = writeCache(cache, key, toStored(result, coords));
     if (defer) {

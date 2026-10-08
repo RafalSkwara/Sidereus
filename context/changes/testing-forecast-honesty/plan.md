@@ -382,25 +382,25 @@ None. The KV value schema is unchanged and existing stored copies stay valid. No
 
 #### Automated
 
-- [x] 1.1 New suite passes: `npx vitest run src/lib/forecast/degraded-forecast.test.ts`
-- [x] 1.2 Break check, range: stash the `open-meteo.ts` change, run the new suite, see the cloud −5 / 150 and humidity 101 cases fail, restore
-- [x] 1.3 Break check, gap rule: stash the `verdict.ts` change, run the new suite, see the hidden-humid-hour, missing-hour-outside-the-run and property (a) cases fail, restore
-- [x] 1.4 Full unit suite passes: `npm test`
-- [x] 1.5 Type check passes: `npx astro check`
-- [x] 1.6 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 1.1 New suite passes: `npx vitest run src/lib/forecast/degraded-forecast.test.ts` — 81bdb70
+- [x] 1.2 Break check, range: stash the `open-meteo.ts` change, run the new suite, see the cloud −5 / 150 and humidity 101 cases fail, restore — 81bdb70
+- [x] 1.3 Break check, gap rule: stash the `verdict.ts` change, run the new suite, see the hidden-humid-hour, missing-hour-outside-the-run and property (a) cases fail, restore — 81bdb70
+- [x] 1.4 Full unit suite passes: `npm test` — 81bdb70
+- [x] 1.5 Type check passes: `npx astro check` — 81bdb70
+- [x] 1.6 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 81bdb70
 
 ### Phase 2: Service, Tonight view and loader (integration) + docs
 
 #### Automated
 
-- [ ] 2.1 Service suite passes: `npx vitest run src/lib/forecast/service.test.ts`
-- [ ] 2.2 Break check, keep-copy: stash the `service.ts` change, run the service suite, see the empty, all-null, short and night-in-progress keep-copy cases fail, restore
-- [ ] 2.3 Integration suite passes: `npx vitest run src/lib/tonight/forecast-honesty.test.ts`
-- [ ] 2.4 Loader suite passes: `npx vitest run src/lib/tonight/load.test.ts`
-- [ ] 2.5 Full unit suite passes: `npm test`
-- [ ] 2.6 Type check passes: `npx astro check`
-- [ ] 2.7 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 2.1 Service suite passes: `npx vitest run src/lib/forecast/service.test.ts`
+- [x] 2.2 Break check, keep-copy: stash the `service.ts` change, run the service suite, see the empty, all-null, short and night-in-progress keep-copy cases fail, restore
+- [x] 2.3 Integration suite passes: `npx vitest run src/lib/tonight/forecast-honesty.test.ts`
+- [x] 2.4 Loader suite passes: `npx vitest run src/lib/tonight/load.test.ts`
+- [x] 2.5 Full unit suite passes: `npm test`
+- [x] 2.6 Type check passes: `npx astro check`
+- [x] 2.7 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
 
 #### Manual
 
-- [ ] 2.8 Read `test-plan.md` §2 row #1, §6.1 and §6.6: the wording matches the PRD headline table, and the cookbook names real files and helpers
+- [x] 2.8 Read `test-plan.md` §2 row #1, §6.1 and §6.6: the wording matches the PRD headline table, and the cookbook names real files and helpers

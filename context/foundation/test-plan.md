@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-10-07
+> Last updated: 2026-10-08
 
 ## 1. Strategy
 
@@ -62,7 +62,7 @@ covered under Risk #1.
 
 | Risk | What would prove protection | Must challenge | Context `/10x-research` must ground | Likely cheapest layer | Anti-pattern to avoid |
 |------|-----------------------------|----------------|--------------------------------------|-----------------------|-----------------------|
-| #1 | With a truncated, stale, partly missing or absent forecast the sky reads marginal, "no weather data" or "last forecast, N hours old", never "Clear"; moon, twilight and altitude results stay usable; no error page | "No cloud data for an hour means no cloud" and "a 200 from the provider means a usable series" | the forecast fetch, the KV cache and its age, how the series is cut to the dark window per night, which nights 1-3 can lack hours | unit (verdict over crafted series) + integration (forecast loading with the in-memory cache and a fake HTTP edge) | only complete series in tests; expected verdict copied from the verdict code; mocking the verdict to test the loader |
+| #1 | With a truncated, stale, partly missing or absent forecast the sky reads marginal, "no weather data" or the last saved forecast with its age: level never go and headline never the bare "Clear" ("Clear (old forecast)" at marginal is PRD-sanctioned); a degenerate 200 must not replace a usable saved copy; a missing dark-window hour must not allow go; moon, twilight and altitude results stay usable; no error page. *(Research-sanctioned backport, 2026-10-08, from `testing-forecast-honesty` research "Corrections to the test-plan guidance" and its plan; §1-§5 are otherwise frozen.)* | "No cloud data for an hour means no cloud" and "a 200 from the provider means a usable series" | the forecast fetch, the KV cache and its age, how the series is cut to the dark window per night, which nights 1-3 can lack hours | unit (verdict over crafted series) + integration (forecast loading with the in-memory cache and a fake HTTP edge) | only complete series in tests; expected verdict copied from the verdict code; mocking the verdict to test the loader |
 | #2 | For a fixed instant and site, the same "tonight", dark window and plan order come out whatever zone the runner is in, across the 25-hour 24/25 Oct night, the minutes either side of the rollover, and a 31 Oct / 1 Nov night | "Pinned UTC dates in existing tests cover the edges" | where "tonight" and the observing night are decided, which zones and instants tests pin today, where the log prefill takes its date | unit, table-driven over zones and edge instants | tests that pass only in the runner's own time zone; expected night derived with the same helper under test |
 | #3 | Across many generated sites, nights, latitudes and telescopes, no ranked target, planet, Moon entry or plan row falls outside its window or under the site's minimum altitude | "The fixture nights in the suite are representative" | the window rule per target kind, how the session plan places targets, which latitudes and seasons tests cover | unit property tests over a seeded generator | asserting only the top 5 of a few fixed nights; generator that reuses engine output as its own expectation |
 | #4 | A retune that breaks a PRD invariant or the independent reference cross-check fails the suite, and regenerating the snapshot cannot turn it green | "The calibration snapshot is an oracle" | how the calibration snapshot is produced and refreshed, which reference nights and tools (Stellarium, Skyfield) exist, which invariants have tests | unit: invariant properties + independent reference fixture | snapshot regenerated from the implementation (oracle problem); brittle exact order where the PRD only fixes a rule |
@@ -129,7 +129,11 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.1 Adding a verdict test for degraded forecast data
 
-- TBD — see §3 Phase 1 (partial / stale / missing forecast never reads "Clear").
+- **Pick the layer by what can go wrong.** A provider body judged for one night: `src/lib/forecast/degraded-forecast.test.ts` (body → `mapForecastResponse` → `verdict` over a hand-built `DarkWindow`). Rule-only verdict cases: `src/lib/engine/verdict.test.ts`. What the service returns and stores (fresh hit, refresh, outage fallback, incomplete 200 against a saved copy): `src/lib/forecast/service.test.ts`. What the user sees on Tonight: `src/lib/tonight/forecast-honesty.test.ts` (`getForecast` → `buildTonight`, nothing mocked below the fetch; assert `view.verdict.level`, `view.headline.id`, `view.forecastStatus.kind`/`.text`, `view.nights[i]`, `view.moonCard`, `view.ranking`). That a forecast problem never becomes an error page: `src/lib/tonight/load.test.ts`.
+- **Helpers:** `openMeteoBody`, `fakeFetch`, `jsonResponse` and `memoryCache` from `src/lib/forecast/test-helpers.ts`; `LoadTonightInput.fetchFn` takes the fake fetch, so never stub the global. Headline ids come from `createFormatter("en").skyHeadline(verdict).id`. Seed a saved copy through a first successful `getForecast` call on the same `memoryCache`, so it has the shape the service really writes.
+- **Oracle rule:** expected levels and headlines come from the PRD thresholds (go = a run of ≥ 2 h below 30 % cloud, marginal = ≥ 1 h below 65 %, humidity above 90 % caps at marginal), the PRD headline table (`prd.md`, FR-010 resolution: Clear, Clear (old forecast), No forecast, …) and metamorphic relations (removing hours never creates a go; a fallback copy never gives go), never from values read off `verdict.ts` or `build.ts` output.
+- **Wide margins:** build provider bodies over the real request range (216 hours from 00:00 UTC the day before the fetch) and put every boundary a case depends on hours, not minutes, from the dark window's edges (trailing nulls from mid-evening; a copy whose last hour is 23:00 UTC, before night 3's post-midnight hours), and prefer half a day where the case allows, so sunset drift or a threshold retune never flips the expectation.
+- **Loader-mock gotcha:** `vi.mock("@/lib/gear/store", …)` must spread `importOriginal()` and replace only `siteStore` / `telescopeStore` / `eyepieceStore` (`build.ts` and `tonight-date.ts` import `toEngineSite` from it); wrap `buildTonight` in a `vi.fn` defaulting to the real one; keep the `vi.fn` handles in a `vi.hoisted` object (`vi.mocked(siteStore.list)` trips `@typescript-eslint/unbound-method`); never mock the verdict or the engine.
 
 ### 6.2 Adding a test that crosses a night or date boundary
 
@@ -150,6 +154,8 @@ the relevant rollout phase ships; before that, the sub-section reads
 ### 6.6 Per-rollout-phase notes
 
 (After each phase lands, `/10x-implement` appends a 2-3 line note here.)
+
+- **Phase 1 — degraded forecast never reads "Clear"** (`testing-forecast-honesty`, 2026-10-08): a go-shaped night with any dark-window hour missing now reads marginal / No forecast, the mapper rejects cloud or humidity outside 0-100, and `getForecast` keeps a usable saved copy (as `fallback`) when a 200 is not a complete series (−24 h … +96 h around now). Tests span all four layers in §6.1; the keep-copy cases were red before the service fix.
 
 ## 7. What We Deliberately Don't Test
 

@@ -44,6 +44,8 @@ export interface LoadTonightInput {
   forecastBaseUrl?: string;
   /** Runs the forecast cache write after the response (the Worker's `waitUntil`). */
   defer: (task: Promise<void>) => void;
+  /** The fetch the forecast goes through; tests pass a fake. Default: the global `fetch`. */
+  fetchFn?: typeof fetch;
   /** How many cleared objects get full entries; see `buildTonight`. */
   limit?: number;
   /**
@@ -135,9 +137,10 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
   if (site && telescope) {
     try {
       // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
-      // a saved copy served in an outage comes back flagged `fallback`, and buildTonight caps it at marginal.
+      // a saved copy served in an outage, or in place of an incomplete 200, comes back flagged `fallback`, and
+      // buildTonight caps it at marginal.
       const result = await getForecast({
-        fetchFn: globalThis.fetch.bind(globalThis),
+        fetchFn: input.fetchFn ?? globalThis.fetch.bind(globalThis),
         cache: input.cache,
         siteId: site.id,
         coords: { latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg },
