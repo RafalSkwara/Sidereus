@@ -94,6 +94,29 @@ describe("nextNightNotNoGo", () => {
     expect(nextNightNotNoGo(summer)).toEqual({ kind: "none", lastJudgedDate: "2026-06-23" });
   });
 
+  /** `forecast` without the whole UTC hour in the middle of night 2's dark window. */
+  function withoutNight2Hour(forecast: HourlyForecast): HourlyForecast {
+    const middle = night2.start.getTime() + (night2.end.getTime() - night2.start.getTime()) / 2;
+    const dropped = Math.floor(middle / HOUR_MS) * HOUR_MS;
+    return { hours: forecast.hours.filter((hour) => hour.start.getTime() !== dropped) };
+  }
+
+  it("passes over a go-shaped night 2 with a dark hour missing, judging it, and is none up to night 3", () => {
+    // Tonight overcast, night 2 clear but for one missing dark hour, night 3 a no-go: nothing to suggest, and the
+    // forecast does reach night 3, so the walk must not stop at night 2 as if it ran out.
+    const scenario = input(withoutNight2Hour(series(10, 90)));
+    expect(verdict(night2, scenario.forecast)).toEqual({ level: "marginal", reason: { kind: "missing-hours" } });
+    expect(nextNightNotNoGo(scenario)).toEqual({ kind: "none", lastJudgedDate: NIGHT_3 });
+    expect(nextNightInOutlook(sevenNightOutlook(scenario))).toEqual({ kind: "none", lastJudgedDate: NIGHT_3 });
+  });
+
+  it("finds a marginal night 3 after a night 2 with a dark hour missing", () => {
+    const scenario = input(withoutNight2Hour(series(10, 50)));
+    const expected = { kind: "found", date: NIGHT_3, verdict: { level: "marginal", reason: { kind: "clear-run" } } };
+    expect(nextNightNotNoGo(scenario)).toMatchObject(expected);
+    expect(nextNightInOutlook(sevenNightOutlook(scenario))).toMatchObject(expected);
+  });
+
   it("reads the same next night off the seven-night outlook (nextNightInOutlook)", () => {
     const scenarios = [
       input(series(50, 0)),

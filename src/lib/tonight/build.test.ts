@@ -21,7 +21,7 @@ import {
 } from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
-import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import { toEngineSite, type SiteRecord } from "@/lib/gear/store";
 
 import {
   buildTonight,
@@ -34,6 +34,7 @@ import {
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
+import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
 import { tonightDateForSite } from "./tonight-date";
 
 /**
@@ -75,18 +76,6 @@ afterEach(() => {
   skyFraming.throws = false;
 });
 
-const WARSAW: SiteRecord = {
-  id: "site-1",
-  name: "Home",
-  latitudeDeg: 52.23,
-  longitudeDeg: 21.01,
-  bortle: 6,
-  minAltitudeDeg: 15,
-  timeZone: "Europe/Warsaw",
-  timeZoneSource: "auto",
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
 /** Helsinki in midsummer: the sun never reaches -18° (Bortle 1-4), so there is no dark window. */
 const HELSINKI_DARK: SiteRecord = {
   ...WARSAW,
@@ -108,22 +97,6 @@ const TROMSO_SITE: SiteRecord = {
   bortle: 2,
   timeZone: TROMSO.timeZone,
 };
-
-const TELESCOPE: TelescopeRecord = {
-  id: "scope-1",
-  name: "Skywatcher 150P",
-  apertureMm: 150,
-  focalLengthMm: 750,
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-const EYEPIECES: EyepieceRecord[] = [
-  { id: "ep-1", name: "25 mm Plössl", focalLengthMm: 25, afovDeg: 52, createdAt: "2026-09-01T00:00:00Z" },
-  { id: "ep-2", name: "10 mm Plössl", focalLengthMm: 10, afovDeg: 52, createdAt: "2026-09-01T00:01:00Z" },
-];
-
-/** Early evening in Warsaw on 2026-10-10 (20:00 CEST). */
-const NOW = new Date("2026-10-10T18:00:00Z");
 
 const HOUR_MS = 3_600_000;
 

@@ -111,11 +111,20 @@ describe("verdict", () => {
   });
 
   it("still breaks a run at a missing hour when the series spans the window", () => {
-    expect(verdict(sixHours, forecast([20, 20, null, 20, null, 20]))).toEqual({
-      level: "go",
-      reason: { kind: "clear-run", runHours: 2, cloudPct: 20 },
+    // Three clear hours split by gaps: the longest run below 30 % is 1 h, short of a go, so a marginal on its run
+    // (not the missing-hours reason, which needs a go-length run).
+    expect(verdict(sixHours, forecast([20, null, 20, null, 20, null, 100]))).toEqual({
+      level: "marginal",
+      reason: { kind: "clear-run", runHours: 1, cloudPct: 20 },
     });
-    expect(verdict(sixHours, forecast([20, null, 20, null, 20, null, 100])).level).toBe("marginal");
+  });
+
+  it("is never a go with a dark hour missing, even with a long enough clear run elsewhere", () => {
+    // testing-forecast-honesty (plan review F1): the missing hour could hide a humid hour the cap would catch.
+    expect(verdict(sixHours, forecast([20, 20, null, 20, null, 20]))).toEqual({
+      level: "marginal",
+      reason: { kind: "missing-hours" },
+    });
   });
 
   it("has no weather data when the series ends partway through the window", () => {

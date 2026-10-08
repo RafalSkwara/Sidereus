@@ -529,11 +529,14 @@ export const pl = {
         fallbackCap: (p) =>
           `ostatnia zapisana prognoza pokazywała ${p.hours} godz. z rzędu z zachmurzeniem najwyżej ${p.cloud}% między zmierzchem a świtem, ale nie udało się jej odświeżyć`,
         noWeatherData: "brak danych pogodowych",
+        missingHours: "w prognozie brakuje godziny między zmierzchem a świtem",
         clearHours: (p) => `pogodnie w godz. ${p.hours}`,
         clearHoursHumid: (p) =>
           `pogodnie w godz. ${p.hours}, ale wilgotność sięga ${p.humidity}%, więc spodziewaj się rosy i zamglenia`,
         clearHoursFallback: (p) =>
           `pogodnie w godz. ${p.hours} według ostatniej zapisanej prognozy, której nie udało się odświeżyć`,
+        clearHoursMissing: (p) =>
+          `pogodnie w godz. ${p.hours}, ale w prognozie brakuje godziny między zmierzchem a świtem`,
       },
       magnitude: (p) => `jasność ${p.mag} mag`,
       size: (p) => `${p.arcsec}″`,
@@ -676,6 +679,7 @@ export const pl = {
       noForecast: "prognoza nie obejmuje okna ciemności",
       cloudy: (p) => `za dużo chmur: w najczystszej ciemnej godzinie zachmurzenie wynosi ${p.cloud}%`,
       noWeatherData: "brak danych pogodowych",
+      missingHours: "w prognozie brakuje godziny ciemnego okna",
       noDarkness: "dziś w nocy nie robi się wystarczająco ciemno",
     },
 

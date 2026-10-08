@@ -8,8 +8,11 @@ import type { DarkWindow, ForecastHour, HourlyForecast, Interval, Verdict } from
  * The dark window is cut into the whole UTC hours that overlap it (forecast hours start on whole
  * UTC hours). A series that does not reach from the first of those hours to the last is no weather
  * data, never a weather no-go. Inside the series, a missing hour counts as not clear, so it breaks
- * a run. Short nights scale the required run down to the number of overlapping hours, so a
- * 40-minute window inside one clear hour can still be a go.
+ * a run, and it also keeps a night from being a go: a go-shaped night with any dark hour missing is
+ * marginal with its own reason (`missing-hours`), since the missing hour could hide what the humidity
+ * cap would catch; `no-weather-data` stays for a missing forecast or a series that does not reach the
+ * night. Short nights scale the required run down to the number of overlapping hours, so a 40-minute
+ * window inside one clear hour can still be a go.
  *
  * A forecast that is a saved copy served because the refresh failed (`fallback`) can reach at
  * most marginal (PRD guardrail: an unrefreshed forecast never gives a confident go).
@@ -96,6 +99,10 @@ export function verdict(
     const maxHumidityPct = Math.max(...present.map((hour) => hour.humidityPct));
     if (maxHumidityPct > t.humidityCapPct) {
       return { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct } };
+    }
+    // A missing dark hour could hide a humid or cloudy spell the cap would have caught: not enough to call it clear.
+    if (present.length < n) {
+      return { level: "marginal", reason: { kind: "missing-hours" } };
     }
     if (options.fallback) {
       return { level: "marginal", reason: { kind: "fallback-cap", runHours: goRun.hours, cloudPct: goRun.cloudPct } };

@@ -115,6 +115,12 @@ export type VerdictReason =
    * to marginal.
    */
   | { kind: "no-weather-data" }
+  /**
+   * The series spans the dark window and the clouds allowed a go, but at least one dark hour is
+   * missing from it, so the night cannot be called clear; the verdict is marginal. Unlike
+   * `no-weather-data`, the forecast does reach this night.
+   */
+  | { kind: "missing-hours" }
   /** The sun never gets low enough tonight for a dark window. */
   | { kind: "no-darkness" };
 
