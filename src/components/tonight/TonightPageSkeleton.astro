@@ -3,7 +3,9 @@
  * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
  * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
  * ruled placeholder rows at the focused pages' rhythm (one data point per line), so nothing jumps when the island swaps in. Bars that stand for text take that text's type
- * role and hold a non-breaking space, so they have its line height.
+ * role and hold a non-breaking space, so they have its line height. `layout="plan"` stands in for the Session plan
+ * instead (ui-user-adjustments): its night lines, the legend and rows as tall as SessionTimeline's (name, line, curve,
+ * hours).
  */
 import BackLink from "@/components/ui/BackLink.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
@@ -17,9 +19,11 @@ interface Props {
   reloadHref: string;
   /** How many placeholder rows stand for the page's content. */
   rows?: number;
+  /** `plan`: the Session plan's shape (SessionTimeline) instead of the generic rows. */
+  layout?: "rows" | "plan";
 }
 
-const { title, reloadHref, rows = 5 } = Astro.props;
+const { title, reloadHref, rows = 5, layout = "rows" } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
@@ -47,17 +51,43 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
   </TonightSky>
 
   <div class="mx-auto w-full max-w-3xl px-4 pt-8">
-    <div aria-hidden="true">
-      <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
-      <div class="divide-y divide-border">
-        {Array.from({ length: rows }, () => (
-          <div class="space-y-3 py-5">
-            <div class:list={[bar, "h-6 w-1/2"]} />
-            <div class:list={[bar, "h-4 w-2/3"]} />
-          </div>
-        ))}
+    {layout === "plan" ? (
+      <div aria-hidden="true">
+        <div class="space-y-1.5">
+          {["w-32", "w-44", "w-36", "w-32"].map((width) => (
+            <div class:list={[bar, width, "text-label"]}>&nbsp;</div>
+          ))}
+        </div>
+        <div class="mt-5 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {/* Five entries, one of them two lines long on a phone. */}
+          {["w-64", "w-48", "w-72", "w-60", "w-56", "w-32"].map((width) => (
+            <div class:list={[bar, width, "max-w-full text-label"]}>&nbsp;</div>
+          ))}
+        </div>
+        <div class="mt-6 divide-y divide-border border-t border-border">
+          {Array.from({ length: rows }, () => (
+            <div class="py-6 sm:py-5">
+              <div class:list={[bar, "w-1/2 text-title"]}>&nbsp;</div>
+              <div class:list={[bar, "mt-1.5 w-2/3 text-label"]}>&nbsp;</div>
+              <div class:list={[bar, "mt-3 h-12"]} />
+              <div class="mt-1 h-4" />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    ) : (
+      <div aria-hidden="true">
+        <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
+        <div class="divide-y divide-border">
+          {Array.from({ length: rows }, () => (
+            <div class="space-y-3 py-5">
+              <div class:list={[bar, "h-6 w-1/2"]} />
+              <div class:list={[bar, "h-4 w-2/3"]} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
 
     <!-- Astro leaves this fallback in place when the island request fails, so a reload link appears after ~10 s. -->
     <p class="slow-hint mt-6 text-label text-muted-foreground">

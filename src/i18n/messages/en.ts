@@ -944,10 +944,10 @@ export const en = {
         moonNever: "Moon not up tonight",
         /** The target list's accessible name. */
         listLabel: "Targets by best time",
-        /** A row link's accessible name: the bar and dot are decorative, so the row says it all. */
-        rowLabel: (p: { name: string; best: string; window: string; direction: string }) =>
-          `${p.name}: best at ${p.best}, window ${p.window}, direction ${p.direction}`,
-        /** ui-user-adjustments: a row's visible line under the name; the curve below it is decorative. */
+        /**
+         * ui-user-adjustments: a row's visible line under the name. With the name it is the row link's accessible name;
+         * the curve below it is decorative.
+         */
         rowLine: (p: { best: string; window: string; direction: string }) =>
           `Best ${p.best} · window ${p.window} · ${p.direction}`,
         /** The legend under the night's lines: its accessible name, then one entry per mark of the curves. */

@@ -85,6 +85,8 @@ test("The Session plan page lists rows that lead to their targets", async ({ pag
   const legend = page.getByRole("list", { name: t.pages.plan.legendLabel });
   await expect(legend).toBeVisible();
   await expect(legend).toContainText(t.pages.plan.legendLine);
+  // Onboarding keeps the default minimum altitude, 15°.
+  await expect(legend).toContainText(t.pages.plan.legendMin({ deg: "15" }));
   await expect(legend).toContainText(t.pages.plan.legendWindow);
   await expect(legend).toContainText(t.pages.plan.legendBest);
   const count = await rows.count();

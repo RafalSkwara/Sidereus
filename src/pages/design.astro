@@ -1988,6 +1988,14 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 />
               </div>
             </div>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>
+                loading · layout="plan" (/tonight/plan): the night lines, the legend, 2 rows
+              </p>
+              <div class="overflow-hidden rounded-lg">
+                <TonightPageSkeleton title={m.tonight.summary.plan} reloadHref="/design" rows={2} layout="plan" />
+              </div>
+            </div>
           </section>
         </div>
       </Band>

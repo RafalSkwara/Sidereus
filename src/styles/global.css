@@ -44,6 +44,8 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #2a3450;
   --plan-night: #10162a;
+  /* The Session plan's altitude curve over that axis (ui-user-adjustments): a quiet line under the window's stroke. */
+  --plan-line: #a9b1c5;
 
   --go: #7ee2b0;
   --marginal: #f1cf6b;
@@ -94,6 +96,7 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #e3e8f0;
   --plan-night: #b9c3d4;
+  --plan-line: #3c465c;
 
   --go: #17784c;
   --marginal: #8f6100;
@@ -189,6 +192,7 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #3a0000;
   --plan-night: #1a0000;
+  --plan-line: #e00000;
 
   --go: #ff0000;
   --marginal: #d60000;
@@ -637,6 +641,7 @@
   --color-action-border: var(--action-border);
   --color-plan-twilight: var(--plan-twilight);
   --color-plan-night: var(--plan-night);
+  --color-plan-line: var(--plan-line);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);

@@ -1,8 +1,8 @@
 /**
  * The Session plan's altitude curve (ui-user-adjustments): one target's height above the horizon across the plan's
  * axis, as SVG geometry in a `width` × `height` box. x is the axis (0 at its start, `width` at its end); y runs from
- * the horizon at the bottom (`height`) to `maxAltitudeDeg` at the top (0), so every row shares one scale and a low
- * planet reads as low. Altitudes below the horizon lie on the bottom edge. Pure: no clock, no formatting.
+ * the horizon at the bottom (`height`) to the zenith, `CURVE_MAX_ALTITUDE_DEG`, at the top (0), so every row shares
+ * one scale and a low planet reads as low. Altitudes below the horizon lie on the bottom edge. Pure: no clock, no formatting.
  */
 
 /** The top of the curve's scale: the zenith, so heights compare across rows. */

@@ -52,6 +52,7 @@ import { tonightDateForSite } from "./tonight-date";
 const planetRanking = vi.hoisted(() => ({ throws: false }));
 const moonTargeting = vi.hoisted(() => ({ throws: false }));
 const skyFraming = vi.hoisted(() => ({ throws: false }));
+const planetTracking = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -75,6 +76,13 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.skyFrames(...args);
     },
+    planetTracks: (...args: Parameters<typeof actual.planetTracks>) => {
+      if (planetTracking.throws) {
+        // A message that carries a coordinate, which must never reach the log.
+        throw new RangeError("planet tracks failed at 52.23");
+      }
+      return actual.planetTracks(...args);
+    },
   };
 });
 
@@ -82,6 +90,8 @@ afterEach(() => {
   planetRanking.throws = false;
   moonTargeting.throws = false;
   skyFraming.throws = false;
+  planetTracking.throws = false;
+  vi.restoreAllMocks();
 });
 
 /** Helsinki in midsummer: the sun never reaches -18° (Bortle 1-4), so there is no dark window. */
@@ -1633,6 +1643,23 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
       expect(Math.max(...inWindow) / 10).toBeGreaterThan(row.peakAltitudeDeg - 2);
       expect(Math.max(...inWindow) / 10).toBeLessThan(row.peakAltitudeDeg + 2);
     }
+  });
+
+  it("draws the same curves when the sky view's tracks are reused (the dashboard)", () => {
+    const alone = planOf(build());
+    const withSky = planOf(build({}, { withSessionPlan: true, withSkyView: true }));
+    expect(withSky.rows.map((row) => [row.key, row.track])).toEqual(alone.rows.map((row) => [row.key, row.track]));
+  });
+
+  it("drops only the plan when its tracks fail, logging a fixed line and the error's name, never its message", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    planetTracking.throws = true;
+    const view = build();
+    expect(view.sessionPlan).toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledWith("buildTonight: the Session plan failed", "RangeError");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 
   it("has no sunset or sunrise text when the Sun does not cross the horizon (87° N in October)", () => {

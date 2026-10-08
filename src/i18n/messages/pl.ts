@@ -829,7 +829,6 @@ export const pl = {
         moonAll: "Księżyc nad horyzontem przez całą noc",
         moonNever: "Księżyc pod horyzontem przez całą noc",
         listLabel: "Cele według najlepszej godziny",
-        rowLabel: (p) => `${p.name}: najlepiej o ${p.best}, okno ${p.window}, kierunek ${p.direction}`,
         rowLine: (p) => `Najlepiej ${p.best} · okno ${p.window} · ${p.direction}`,
         legendLabel: "Jak czytać krzywe",
         legendLine: "Wysokość nad horyzontem w ciągu nocy",

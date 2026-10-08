@@ -379,8 +379,6 @@ export interface TonightSessionPlan {
   moonEvents: (SessionPlanMoonEvent & { timeText: string })[];
   /** "Moonset 01:30 · Moonrise 04:50", "Moon up all night" or "Moon not up tonight". */
   moonText: string;
-  /** When the Moon is up over the axis, as fractions of it (clamped to [0, 1]); empty when it never is. */
-  moonUp: { from: number; to: number }[];
   /** The hours as ticks: fraction of the axis and `HH:mm` in the site's time zone. */
   ticks: { at: number; label: string }[];
   /** By best time, earliest first; empty when nothing is recommended tonight. */
@@ -959,6 +957,9 @@ export function buildTonight(
   // the same instant everywhere. Planets show whatever the planet weather; a failure drops only the sky view.
   // The axis and the Moon's track over it are worked out once, for whichever of the two asks first, and shared.
   let axisMoon: { range: Interval; fromSun: boolean; moon: MoonState[] } | null = null;
+  // Tracks over that axis by object id or planet key: the sky view keeps the ones it computes, so the Session plan's
+  // curves reuse them on the dashboard instead of tracking the same targets twice.
+  const axisTracks = new Map<string, HorizontalPosition[]>();
   const skyAxisWithMoon = (): { range: Interval; fromSun: boolean; moon: MoonState[] } => {
     if (axisMoon === null) {
       const { range, fromSun } = skyAxis(engineSite, date, timeZone);
@@ -1008,6 +1009,7 @@ export function buildTonight(
       const listed = new Set(solarSystem?.entries.map((entry) => entry.key) ?? []);
       const objectBodies = objectTracks(engineSite, range, skyObjects).map((track, i): TonightSkyBody => {
         const object = skyObjects[i];
+        axisTracks.set(object.id, track);
         const commonName = localCommonName(object.id, object.commonName, locale);
         return {
           kind: "object",
@@ -1020,6 +1022,7 @@ export function buildTonight(
       });
       const planetBodies = planetTracks(engineSite, range, PLANET_KEYS).map((track, i): TonightSkyBody => {
         const key = PLANET_KEYS[i];
+        axisTracks.set(key, track);
         return {
           kind: "planet",
           key,
@@ -1067,17 +1070,23 @@ export function buildTonight(
       const { range, fromSun, moon } = skyAxisWithMoon();
       const up = moonUpOf(engineSite, moon);
       const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
-      // Each row's altitude over the axis, on the live sky's grid (every `DEFAULT_TRACK_STEP_MINUTES`, both ends).
-      const objectAltitudes = objectTracks(
-        engineSite,
-        range,
-        planObjects.map(({ object }) => object),
-      ).map(packAltitudes);
-      const planetAltitudes = planetTracks(
-        engineSite,
-        range,
-        planPlanets.map((entry) => entry.key),
-      ).map(packAltitudes);
+      // Each row's altitude over the axis, on the live sky's grid (every `DEFAULT_TRACK_STEP_MINUTES`, both ends):
+      // only the targets the sky view hasn't already tracked are tracked here.
+      const untrackedObjects = planObjects.map(({ object }) => object).filter((object) => !axisTracks.has(object.id));
+      objectTracks(engineSite, range, untrackedObjects).forEach((track, i) => {
+        axisTracks.set(untrackedObjects[i].id, track);
+      });
+      const untrackedPlanets = planPlanets.map((entry) => entry.key).filter((key) => !axisTracks.has(key));
+      planetTracks(engineSite, range, untrackedPlanets).forEach((track, i) => {
+        axisTracks.set(untrackedPlanets[i], track);
+      });
+      const altitudesOf = (key: string): number[] => {
+        const track = axisTracks.get(key);
+        if (track === undefined) {
+          throw new Error(`No track over the plan's axis for ${key}`);
+        }
+        return packAltitudes(track);
+      };
       const rowOf = (
         kind: TonightSessionPlanRowInput["kind"],
         key: string,
@@ -1116,7 +1125,7 @@ export function buildTonight(
                 packAltitudes(moon),
               ),
             ]),
-        ...planPlanets.map((entry, i) => {
+        ...planPlanets.map((entry) => {
           const name = messages.targets.planet[entry.key];
           return rowOf(
             "planet",
@@ -1126,10 +1135,10 @@ export function buildTonight(
             `/tonight/planets#planet-${entry.key}`,
             entry.window,
             entry.peak,
-            planetAltitudes[i],
+            altitudesOf(entry.key),
           );
         }),
-        ...planObjects.map(({ object, score, peak }, i) => {
+        ...planObjects.map(({ object, score, peak }) => {
           const commonName = localCommonName(object.id, object.commonName, locale);
           return rowOf(
             "object",
@@ -1139,7 +1148,7 @@ export function buildTonight(
             `/tonight/targets#object-${object.id}`,
             score.window,
             peak,
-            objectAltitudes[i],
+            altitudesOf(object.id),
           );
         }),
       ];
@@ -1165,7 +1174,6 @@ export function buildTonight(
       const text = messages.tonight.pages.plan;
       const axisMs = layout.axis.end - layout.axis.start;
       const hourAt = (hour: number): number => (axisMs > 0 ? (hour - layout.axis.start) / axisMs : 0);
-      const clampAt = (ms: number): number => Math.min(1, Math.max(0, hourAt(ms)));
       const moonEvents = layout.moonEvents.map((event) => ({
         ...event,
         timeText: formatTime(new Date(event.time), timeZone),
@@ -1193,7 +1201,6 @@ export function buildTonight(
               up.kind === "all" || (up.kind === "part" && up.upAtStart)
               ? text.moonAll
               : text.moonNever,
-        moonUp: moonSpans.map((span) => ({ from: clampAt(span.start.getTime()), to: clampAt(span.end.getTime()) })),
         ticks: layout.hours.map((hour) => ({
           at: hourAt(hour),
           label: formatTime(new Date(hour), timeZone),
@@ -1203,7 +1210,11 @@ export function buildTonight(
         trackStep: axisMs > 0 ? (DEFAULT_TRACK_STEP_MINUTES * 60_000) / axisMs : 1,
         nextUp,
       };
-    } catch {
+    } catch (error) {
+      // The page says the plan is unavailable; this leaves a trace for us. A fixed line and the error's name only:
+      // an engine message or stack could carry the site's coordinates, which never go into logs.
+      // eslint-disable-next-line no-console
+      console.error("buildTonight: the Session plan failed", error instanceof Error ? error.name : typeof error);
       sessionPlan = null;
     }
   }

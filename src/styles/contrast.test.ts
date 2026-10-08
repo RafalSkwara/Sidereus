@@ -80,8 +80,14 @@ const CHECKS: Check[] = [
   { themes: DARK_LIGHT, fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["go", "marginal", "no-go"], bg: ["background"], floor: 4.5 },
-  // The Session plan's bars (`primary-strong`) and best-time dots (`heading`) over its axis, as non-text indicators.
-  { themes: [...DARK_LIGHT, "red"], fg: ["primary-strong", "heading"], bg: ["plan-twilight", "plan-night"], floor: 3 },
+  // The Session plan's curves (`plan-line`), window stretches (`primary-strong`) and best-time dots (`heading`) over its
+  // axis, as non-text indicators.
+  {
+    themes: [...DARK_LIGHT, "red"],
+    fg: ["plan-line", "primary-strong", "heading"],
+    bg: ["plan-twilight", "plan-night"],
+    floor: 3,
+  },
   // The focus ring (`--ring: var(--primary-strong)`) as a non-text indicator.
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 3 },
   { themes: ["red"], fg: ["foreground", "heading"], bg: ["background", "surface"], floor: 4.5 },
