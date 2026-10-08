@@ -15,7 +15,7 @@ export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 p
 
 /**
  * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps.
- * Estimated 2026-10-08 (ui-user-adjustments, EN go on the all-clear fixture); re-measure at 360 px and 640 px after any
+ * Measured 2026-10-08 (ui-user-adjustments, EN and PL go on the all-clear fixture); re-measure at 360 px and 640 px after any
  * change to the verdict's lines, sizes or copy, never compute it. The arithmetic, from the type roles and spacing:
  *  - 360 px: pt-3 12 + date (`text-label`) 20 + h2 `mt-2` 8 + headline (`text-display` line, 36 px at 360 px) 36 + reason
  *    `mt-1` 4 + the reason on two `text-body` lines (24 px each: 53 characters do not fit the 328 px column) 48 + pb-10 40

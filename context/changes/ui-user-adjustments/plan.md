@@ -714,18 +714,18 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [x] 3.1 Type check passes: `npx astro sync && npx astro check`
-- [x] 3.2 Unit tests pass (build sky view fields, i18n parity, import guard, contrast): `npm test`
-- [x] 3.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [x] 3.4 Sky specs pass
-- [x] 3.5 No tonight.verdict.word or text-verdict- remains
+- [x] 3.1 Type check passes: `npx astro sync && npx astro check` — 242ecbb
+- [x] 3.2 Unit tests pass (build sky view fields, i18n parity, import guard, contrast): `npm test` — 242ecbb
+- [x] 3.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 242ecbb
+- [x] 3.4 Sky specs pass — 242ecbb
+- [x] 3.5 No tonight.verdict.word or text-verdict- remains — 242ecbb
 
 #### Manual
 
-- [x] 3.6 Headline reads as the main answer at 360, 640 and 1280 px, EN and PL
-- [x] 3.7 Overlap is 64 px and no verdict text sits in the strip's labelled area
-- [x] 3.8 Bare chevrons, no scrollbar (Chromium; Safari and Firefox in the joint check), compass marker follows the swipe
-- [x] 3.9 Dark edge times match the dark window; zone beside the current time; no label overlap at 320 px; no skeleton jump
+- [x] 3.6 Headline reads as the main answer at 360, 640 and 1280 px, EN and PL — 242ecbb
+- [x] 3.7 Overlap is 64 px and no verdict text sits in the strip's labelled area — 242ecbb
+- [x] 3.8 Bare chevrons, no scrollbar (Chromium; Safari and Firefox in the joint check), compass marker follows the swipe — 242ecbb
+- [x] 3.9 Dark edge times match the dark window; zone beside the current time; no label overlap at 320 px; no skeleton jump — 242ecbb
 
 ### Phase 4: Site and Telescope cards
 
