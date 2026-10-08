@@ -1,10 +1,10 @@
 ---
 change_id: testing-forecast-honesty
 title: "Test rollout Phase 1: forecast honesty, no false Clear on a weak forecast"
-status: impl_reviewed
+status: archived
 created: 2026-10-07
 updated: 2026-10-08
-archived_at: null
+archived_at: 2026-10-08T11:28:42Z
 ---
 
 ## Notes
