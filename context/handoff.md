@@ -1,128 +1,71 @@
-# Handoff — 2026-10-07 (S-09 "Pick from map" planned and plan-reviewed; ready for /10x-implement)
+# Handoff — 2026-10-08 (test rollout Phase 3 researched and planned; plan review and implementation pending)
 
-What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first. Everything needed to implement S-09 is in this file plus `context/changes/site-pick-from-map/plan.md`. **Do not redo research or planning**: they are done, reviewed and fixed. To save tokens, read only what each step below names.
-
-## Parked: test rollout Phase 1 (resume after the UI work finishes)
-
-On 2026-10-07 `/10x-test-plan` wrote `context/foundation/test-plan.md`. It has a 6-risk map and 5 rollout phases: forecast honesty → night and date boundaries → ranking invariants and calibration oracle → access and entitlement boundary → quality-gates wiring. The interview answers it rests on are in §2 and §7; don't re-ask them. Phase 1 is `change opened` in §3, but its change folder doesn't exist yet. The user wants to start it only **after the current UI task (S-01 `ui-mobile-pass`) is implemented**. Phase 2 has a hard date: the 25-hour DST night of **25 Oct 2026**.
-
-To resume, start from `~/projects`, `cd sidereus` onto a fresh branch from `main`, and run:
-
-```
-/10x-new testing-forecast-honesty Open a change folder for rollout Phase 1 of context/foundation/test-plan.md: "Forecast honesty".
-Risks covered: #1 (Tonight shows a confident "Clear" sky when the forecast is partial, stale or missing). Test types planned: unit + integration.
-Risk response intent: #1 — with a truncated, stale, partly missing or absent forecast the sky reads marginal, "no weather data" or "last forecast, N hours old", never "Clear"; moon, twilight and altitude results stay usable; no error page. Challenge "no cloud data for an hour means no cloud" and "a 200 from the provider means a usable series". Avoid complete-series-only tests and expected verdicts copied from the verdict code.
-After creating the folder, follow the downstream continuation rule.
-```
-
-Then continue with `/10x-research` → `/10x-plan` → `/10x-implement`. Re-run `/10x-test-plan` (or `/10x-test-plan --status`) to pick the next rollout phase once one completes.
+What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-ranking-invariants-and-calibration-oracle/plan-brief.md`. **Do not redo research or planning**: both are done and committed. To save tokens, read only what each step names.
 
 ## State of play
 
-- **Milestone M-2 "First real nights"** is down to its last slice, **S-09 `site-pick-from-map`** (GitHub #73). Every other slice is done and archived (S-01–S-03, S-05–S-08, S-10–S-12; S-04 parked). Archive PR #117 is merged.
-- **S-09 so far (2026-10-07, work account):**
-  1. The user settled the privacy question: map tiles only after explicit consent. Clicking "Pick from map" **is** the consent, mirroring "Use my location" (roadmap.md S-09 Unknowns, change.md Notes).
-  2. Commit `840b68f` unblocked the roadmap entry and opened the change folder.
-  3. `/10x-research` wrote `research.md`.
-  4. `/10x-plan` wrote `plan.md` and `plan-brief.md`, with 3 phases. The user answered the 3 UI questions; everything else was delegated and recorded.
-  5. `/10x-plan-review` found NEEDS ATTENTION (0 critical, 8 warnings, 2 observations). The user chose "apply all", so all 10 findings are **FIXED in plan.md**. Report: `reviews/plan-review.md`.
-  6. `change.md` status is **`plan_reviewed`**. The roadmap S-09 status is **`planning`** (At-a-glance row and body). The board card for #73 is **planning**.
-  7. All of this is committed on `feat/site-pick-from-map` and pushed (see "Git state" below). There is **no PR yet**, and none is needed until implementation.
-- **Not started:** no product code is written. Every Progress row in plan.md is `[ ]`.
+- **Test rollout** (`context/foundation/test-plan.md`, 5 phases):
+  - Phase 1 "Forecast honesty" and Phase 2 "Night and date boundaries" are `complete`. Both are archived: `context/archive/2026-10-07-testing-forecast-honesty/` and `context/archive/2026-10-08-testing-night-and-date-boundaries/` (PRs #134/#135 and #136/#137, all merged).
+  - Phase 3 "Ranking invariants and calibration oracle" is `planned` in §3. The change folder is `context/changes/testing-ranking-invariants-and-calibration-oracle/`, and `change.md` status is `planned`.
+- **Phase 3 so far** (2026-10-08, branch `feat/testing-ranking-invariants-and-calibration-oracle`, PR opened for the docs; see "Git state"):
+  1. **`research.md`.** Risk #3 has no violation in about 19,000 probed rows, so its tests are a regression guard.
+     - Risk #4's premise was wrong: no calibration snapshot is stored (`calibration.test.ts:44-61` only prints). The real gap is a guard that only checks the Messier bonus on 4 new-Moon nights, plus an exact top-5 order copied from engine output (`ranking.test.ts:195`).
+  2. **Test plan §2.** Rows #3 and #4 are corrected, labelled as the research backport.
+  3. **`plan.md`** (4 phases, 15 Progress rows, all `[ ]`) and **`plan-brief.md`** are written.
+  4. **Plan review: NOT done.** Two review agents were started and stopped when the user asked to wrap up. Run `/10x-plan-review testing-ranking-invariants-and-calibration-oracle` first.
+- **No product code** has changed in Phase 3.
 
-## The user's decisions for S-09 (do not re-ask)
+## The user's decisions for Phase 3 (do not re-ask)
 
 | Topic | Decision | Source |
 | --- | --- | --- |
-| Consent | The "Pick from map" click is the consent. Before it: no tile request, no map JS or CSS | User, 2026-10-07 |
-| Map look | Light: normal OSM tiles. Dark: inverted and dimmed via CSS filter. Red: red-only | User (plan Q) |
-| Layout | Inline panel inside the picker (`h-80`), with "Place pin at map centre" and "Close map" | User (plan Q) |
-| Pin | Tap to drop, drag to adjust; each drop updates the form fields immediately (rounded 0.01°) | User (plan Q) |
-| Plan review | Apply all 10 findings | User |
-| Library and tiles | Leaflet **1.9.4** (pinned) + `https://tile.openstreetmap.org/{z}/{x}/{y}.png`, no key | Delegated |
-| Everything else | See plan-brief.md › Key Decisions | Delegated |
+| §2 backport | Apply the research corrections for Risks #3 and #4 (done, commit b745359) | User |
+| Risk #4 oracle | PRD invariants as relations **plus** a committed, source-cited beginner reference list | User |
+| Overlap threshold | **k = 3**: each calibration night's top 5 must contain ≥3 reference objects (today: exactly 3 on all 4 nights) | User |
+| Short windows (target up for one 10-min sample, ~0.7% of entries) | Pin the current rule in tests, no product change; draft a GitHub #21 comment that the user posts or approves | User |
+| Phases | Approved: 1 engine visibility property suite → 2 ranking invariants as relations → 3 independent top-5 oracle + replace the order literal → 4 Tonight/Session plan property suite + docs | User |
+| Everything else (generator, tolerances, file names, oracle paths) | Delegated; recorded in plan-brief.md › Key Decisions | Plan |
 
-## Next step: implement S-09 (3 phases)
+The beginner reference is already compiled in `plan.md` › Key Discoveries and References: 9 sources, URLs, access date 2026-10-08, and the at-least-2-sources sets per night with per-object source keys. **Never edit the list to make a ranking pass.**
 
-Start the session **from `~/projects`** (the cwd where the shared project skills in `~/projects/.claude/skills/` load: `10x-implement`, `10x-impl-review`, `10x-archive`, …). Then:
+## Next steps
+
+Start the session **from `~/projects`** (where the shared `/10x-*` skills load), then:
 
 ```
-cd sidereus && git checkout feat/site-pick-from-map && git pull
-/10x-implement site-pick-from-map phase 1
+cd sidereus && git checkout feat/testing-ranking-invariants-and-calibration-oracle && git pull
+/10x-plan-review testing-ranking-invariants-and-calibration-oracle
+/10x-implement testing-ranking-invariants-and-calibration-oracle phase 1
 ```
 
-How the user wants the run:
-- Run all three phases without stopping, committing each phase with your own Conventional Commit message and no approval prompt.
-- Decide mismatches yourself and record each decision in the plan.
-- Leave manual rows the user must eyeball for the end, but run every manual check you can yourself (preview plus Playwright screenshots) and tick it with evidence.
-- Push the feature branch after each phase (pre-approved).
-- Never commit to `main` and never merge without the user's case-by-case OK.
-- Send a `PushNotification` before any question and when finished.
-- After phase 3: run `/10x-impl-review site-pick-from-map`, then open a PR ("Closes #73"), and wait for the user's merge. After the merge: `/10x-archive` on a `chore/archive-site-pick-from-map` branch with a PR, flip the board card to done, then **close M-2** with `/10x-roadmap` (the user decides the next milestone).
+What the plan review should probe first. These are the open claims; probing was cut short:
 
-### Token-saving reading list per phase
+- **Relation (g) "a larger aperture never shrinks the cleared set".** Check `score.ts` for any term that can fall with aperture. If (g) is false today, the plan says stop and ask, never weaken.
+- **Full-Moon night 2026-03-03.** Check it has `washedOutCount ≥ 1` at Warsaw, Bortle 6.
+- **Non-vacuity counts.** "≥10 cases above 60°" may be hard to reach because polar summer has no dark window. Adjust the count or the site list rather than the assertion.
+- **Phase 4's `now`.** "Case evening 18:00 local" needs a zone-safe construction, and polar cases need care.
+- **Phase 1 break check 2** edits test input, not production code. Consider replacing it.
+- **Phase 4's `cardPasses` break check** might crash rather than turn red.
 
-Read `plan.md` once fully, about 470 lines; it is self-contained. Then read only these:
+How the user wants the run (same as Phases 1 and 2):
 
-- **Phase 1:**
-  - `src/lib/location/locate.ts` and `locate.test.ts`, whose fake-object test style you copy;
-  - `src/lib/gear/coordinates.ts`;
-  - `scripts/build-sw.mjs` (about 75 lines);
-  - the `location` block of `src/i18n/messages/en.ts:291-311` and `pl.ts:275-296`;
-  - `context/foundation/prd.md:1-17,63-67,375-380`.
-- **Phase 2:**
-  - `src/components/location/LocationPicker.tsx` (about 280 lines, the whole file);
-  - `src/components/gear/SiteForm.tsx:25-160`;
-  - `src/components/onboarding/OnboardingWizard.tsx:50-60,100-110,145-160,230-250,410-490`;
-  - `src/styles/global.css:200-290`, for tokens and the red filter block;
-  - `src/layouts/Layout.astro:60-90`, for the `#red-only` filter and the offline description;
-  - `src/lib/offline/page-state.ts:60-110`;
-  - `src/lib/gear/catalogue/load.ts`, the lazy-import pattern.
-- **Phase 3:**
-  - `tests/e2e/helpers.ts`;
-  - `tests/e2e/site-location.spec.ts`, the template for the new spec;
-  - the "Location picking" paragraph in `CLAUDE.md`.
-
-### Phase cheat sheet (details and contracts are in plan.md)
-
-1. **Map foundation:**
-   - `npm i leaflet@1.9.4 -E` and `npm i -D @types/leaflet@^1.9`. Add `--registry https://registry.npmjs.org` if the Nexus mirror fails.
-   - New `src/lib/location/map-view.ts` (`NEUTRAL_VIEW` 50/15/z4, `POINT_ZOOM` 11, `DEVICE_RECENTRE_TIMEOUT_MS` 3000, `parseCurrent`, `initialMapView`, `pickFromMap`) with tests.
-   - `geolocationAlreadyGranted()` in `locate.ts`, with tests.
-   - `build-sw.mjs`: `globIgnores: ["_astro/map-panel.*", "_astro/leaflet*"]`, plus a guard that reads the written `dist/client/sw.js` and exits 1 on `/map-panel|leaflet/`. `injectManifest` returns no entry list.
-   - 10 new `location.*` i18n keys in EN and PL (exact copy is in the plan).
-   - PRD guardrail and NFR amendment with honest wording. Add `updated: 2026-10-07` to the PRD frontmatter. Cite "roadmap S-09 / GitHub #73", never a bare S-09.
-2. **Map in the picker:**
-   - **First** record the e2e baseline to `evidence/e2e-baseline.txt`.
-   - New `src/components/location/map-panel.tsx`. It is the **only** Leaflet importer, loaded by `import("./map-panel")` on click. CSS comes via `leaflet/dist/leaflet.css?url` + an injected `<link>`, awaited before `L.map`. One map per open panel (`[]` effect, `useEffectEvent` for `onPick`). It also has the divIcon `map-pin`, `keyboard: false` on the marker, an attribution link with `target="_blank" rel="noopener noreferrer"`, `setPrefix(false)`, a `tileerror` hint and a ResizeObserver.
-   - `LocationPicker`: `{kind:"map"}`, props `current` and `closeSignal`, `data-needs-network="map-source"` only on the open button. "Close map" must work offline.
-   - Edit all **four** host branch points: SiteForm `pickLocation` and summary; Onboarding `pickLocation` and `whereSummary` at `:418-424`. Undo bumps `closeSignal`.
-   - global.css: unlayered `[data-theme]`-prefixed Leaflet overrides. In `Layout.astro`, add a `#red-night-map` `feColorMatrix` filter. The tile `img` filter is `none`.
-   - `build-sw.mjs`: the chunk exists, and no shared CSS contains `.leaflet-`.
-3. **Verification and docs:**
-   - `tests/e2e/site-map.spec.ts` with a `stubMapTiles` helper. Test 1: zero tile and map-chunk requests before the click, a tap pin saves 2-decimal values. Test 2: the Madrid edit flow, with Undo closing the map.
-   - Screenshots for EN and PL × dark, light and red × 390 and 1280, plus WebKit red, plus a channel check (G = B = 0 in red). Save them under `evidence/`.
-   - Update the "Location picking" paragraph in CLAUDE.md.
-
-### Known gotchas for S-09 specifically
-
-- **The build emits one site-wide CSS file** (`_astro/TopbarControls.*.css`). A plain `import "leaflet/dist/leaflet.css"` could merge into it, which is why `?url` is used plus the build guard.
-- **Filter order:** a child's CSS filter runs before its parent's. With the global `[data-theme="red"] img { filter: url(#red-only) }` left on tiles inside an inverted pane, red comes out **cyan**. So tiles get `filter: none` and the pane carries the whole filter.
-- **leaflet.css is unlayered and loads last.** It beats Tailwind utilities and same-specificity global.css rules. Its defaults show as white, grey and blue in dark and red. The colour guard tests **cannot** see them (`node_modules`), so only screenshots catch them.
-- **Widening `source.kind`** fails the type check in only 1 of 4 places, so edit all four explicitly. A `switch` with a `never` default is preferred.
-- `roundedCoordinate()` in onboarding returns a **string**, so parse it with `parseCurrent`.
-- The e2e "edit" flow uses the **Madrid** site from `onboardInMadrid` (40.42, −3.7). There is no saved Kraków site.
-- `data-needs-network` sets `aria-disabled` and swallows clicks; it does not set `disabled`. Never put it on "Close map".
-- The lint rule for coordinates already covers `src/components/location/**` and `src/lib/location/**`, so no `eslint.config.js` change is needed.
-- `src/lib/location/map-view.ts` is island code: no server-only imports. Leaflet touches `window`, so never import it at module top level anywhere except `map-panel.tsx`.
+- Delegate each phase to a Sonnet subagent, give it the `nvm use` prefix, and keep the gates and commits in the main session.
+- Run every break check in the main session and log it in the plan's "Break-check log" notes and the commit messages.
+- Commit each phase without approval and push the feature branch; don't stop between phases.
+- After phase 4, run `/10x-impl-review` (Opus review agents) and update the PR.
+- After the user merges: run `/10x-archive` on `chore/archive-testing-ranking-invariants-and-calibration-oracle` with a PR, set §3 Phase 3 to `complete`, then `/10x-test-plan` for Phase 4 "Access and entitlement boundary".
+- **Never post to GitHub #21 without the user's OK** (Progress 4.5).
 
 ## Git state (end of this session)
 
-- Branch `feat/site-pick-from-map`, pushed to origin. Commits:
-  - `840b68f` docs(roadmap): unblock S-09 …;
-  - `af4202b` docs(site-pick-from-map): research, plan and plan review (research.md, plan.md, plan-brief.md, reviews/plan-review.md, change.md → plan_reviewed, roadmap → planning, this handoff).
+- Branch `feat/testing-ranking-invariants-and-calibration-oracle`, pushed. Commits on top of `main` ce2e7d3:
+  - fd2617e: folder;
+  - c79f904: research;
+  - b745359: §2 backport and decisions;
+  - 8227ab6: plan and brief;
+  - this handoff.
+- A PR to `main` carries these docs. It can be merged as is, or left open and extended by the implementation commits.
 - Untracked and **never committed**: `.mcp.json` and `.claude/` (the user's choice).
-- `main` is at the archive-PR merge `c26f93b`. Nothing on main is pending.
 
 ## Also still open (unchanged from before)
 
