@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { TOAST_MS, withoutParams } from "./toasts";
+import { withoutParams } from "./toasts";
 
 describe("withoutParams", () => {
   it("drops the named param and leaves a bare path", () => {
@@ -23,11 +23,5 @@ describe("withoutParams", () => {
 
   it("drops several params at once", () => {
     expect(withoutParams("/log?saved=M31&updated=M31&page=2", ["saved", "updated"])).toBe("/log?page=2");
-  });
-});
-
-describe("TOAST_MS", () => {
-  it("is ten seconds", () => {
-    expect(TOAST_MS).toBe(10_000);
   });
 });

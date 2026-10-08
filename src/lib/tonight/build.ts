@@ -406,7 +406,10 @@ export interface TonightView {
   /** "Saturday, 10 October 2026" */
   dateLabel: string;
   timeZone: string;
-  /** The zone's short name for the night ("CEST", or "GMT+2" where there is no abbreviation). */
+  /**
+   * The zone's short name at the night's start ("CEST", or "GMT+2" where there is no abbreviation), for the static
+   * verdict's dark line. The live sky carries one per frame (`skyView.zoneLabels`), which stays right across a clock change.
+   */
   zoneLabel: string;
   verdict: Verdict;
   /** The sky headline from the verdict's level and reason: "Clear", "No forecast", "No dark window", … */
@@ -652,8 +655,8 @@ export function buildTonight(
   }
   const window = first.darkWindow;
   const tonight = first.verdict;
-  // The zone's short name for the night ("CEST"), read at the observing night's start, shown beside the slider's time
-  // and on the static verdict's dark line.
+  // The zone's short name at the observing night's start ("CEST"), for the static verdict's dark line; the live sky
+  // reads the zone per frame instead.
   const zoneLabel = zoneLabelAt(observingNight(date, timeZone).start, timeZone);
 
   const nights = outlook.map((night): TonightNight => {
@@ -1028,10 +1031,10 @@ export function buildTonight(
         sunAltDeg: frames.map((frame) => roundTo(frame.sunAltitudeDeg, 1)),
         darkSpan,
         dark,
-        zoneLabel,
         initialIndex,
         facing: site.latitudeDeg < 0 ? "north" : "south",
         timeLabels: frames.map((frame) => formatTime(frame.time, timeZone)),
+        zoneLabels: frames.map((frame) => zoneLabelAt(frame.time, timeZone)),
         startLabel: formatTime(range.start, timeZone),
         endLabel: formatTime(range.end, timeZone),
         bodies: [...objectBodies, ...planetBodies, moonBody],

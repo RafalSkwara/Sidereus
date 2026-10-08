@@ -7,7 +7,7 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, MapPin, Plus, Save, Settings2 } from "lucide-react";
+import { Check, MapPin, Plus, Save, Settings2, Telescope } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -1610,19 +1610,24 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <div class:list={cell}>
                 <p class:list={stateLabel}>2 telescopes · select</p>
                 <div class:list={gearRowClass}>
-                  <GearCard kind="telescope" items={sampleTelescopes} activeId={sampleTelescopes[0].id} />
+                  <GearCard
+                    kind="telescope"
+                    items={sampleTelescopes}
+                    activeId={sampleTelescopes[0].id}
+                    selectId="telescope-select-specimen"
+                  />
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>4 sites · select</p>
                 <div class:list={gearRowClass}>
-                  <GearCard kind="site" items={fourItems} activeId={fourItems[0].id} />
+                  <GearCard kind="site" items={fourItems} activeId={fourItems[0].id} selectId="site-select-four" />
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>the row · two cards (side by side from `sm`)</p>
                 <div class:list={[gearRowClass, GEAR_ROW_GRID_CLASS]}>
-                  <GearCard kind="site" items={twoItems} activeId={twoItems[0].id} />
+                  <GearCard kind="site" items={twoItems} activeId={twoItems[0].id} selectId="site-select-row" />
                   <GearCard
                     kind="telescope"
                     items={[
@@ -1639,43 +1644,48 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <p class:list={stateLabel}>Manage · focus-visible · specimen</p>
                 <div
                   class:list={[
-                    "flex flex-col justify-between rounded-lg border border-border bg-surface p-4",
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
                     GEAR_CARD_MIN_HEIGHT_CLASS,
                   ]}
                 >
                   <p class="text-label font-semibold text-muted-foreground">{m.tonight.siteSelector.label}</p>
-                  <div class="mt-3 flex items-end justify-between gap-3">
-                    <MapPin className="size-10 shrink-0 text-primary-strong" strokeWidth={1.5} aria-hidden="true" />
-                    <a
-                      href="/design"
-                      tabindex="-1"
-                      class:list={[buttonVariants({ variant: "action", size: "sm" }), focusRing]}
-                    >
-                      <Settings2 aria-hidden="true" />
-                      {m.tonight.gear.manageSites}
-                    </a>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <MapPin
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-1 flex-col items-end gap-3">
+                      <p class="max-w-full min-w-0 truncate text-body text-heading">{oneItem[0].name}</p>
+                      <a
+                        href="/design"
+                        tabindex="-1"
+                        class:list={[buttonVariants({ variant: "action", size: "sm" }), focusRing]}
+                      >
+                        <Settings2 aria-hidden="true" />
+                        {m.tonight.gear.manageSites}
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>offline specimen (data-needs-network): Manage and the select</p>
+                <p class:list={stateLabel}>offline specimen (data-needs-network): name and Manage</p>
                 <div
                   class:list={[
-                    "flex flex-col justify-between rounded-lg border border-border bg-surface p-4",
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
                     GEAR_CARD_MIN_HEIGHT_CLASS,
                   ]}
                 >
                   <p class="text-label font-semibold text-muted-foreground">{m.tonight.selector.label}</p>
-                  <div class="mt-3 flex items-end justify-between gap-3">
-                    <div class="flex min-w-0 flex-1 flex-col items-end gap-1">
-                      <NativeSelect
-                        aria-label={`${m.tonight.selector.label} (offline specimen)`}
-                        aria-disabled="true"
-                        className={offlineAction}
-                        tabIndex={-1}
-                      >
-                        <NativeSelectOption>{sampleTelescopeName}</NativeSelectOption>
-                      </NativeSelect>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <Telescope
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-1 flex-col items-end gap-3">
+                      <p class="max-w-full min-w-0 truncate text-body text-heading">{sampleTelescopeName}</p>
                       <a
                         href="/design"
                         tabindex="-1"
@@ -1689,14 +1699,43 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   </div>
                 </div>
               </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>offline specimen (data-needs-network): the Telescope select</p>
+                <div
+                  class:list={[
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+                    GEAR_CARD_MIN_HEIGHT_CLASS,
+                  ]}
+                >
+                  <p class="text-label font-semibold text-muted-foreground">{m.tonight.selector.label}</p>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <Telescope
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <NativeSelect
+                        aria-label={`${m.tonight.selector.label} (offline specimen)`}
+                        aria-disabled="true"
+                        className={offlineAction}
+                        tabIndex={-1}
+                      >
+                        <NativeSelectOption>{sampleTelescopeName}</NativeSelectOption>
+                      </NativeSelect>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <p class:list={notApplicable}>
               hover — the Manage link's border moves to the link colour and its label underlines (the action variant's
               hover); the select takes the native hover · select focus — the NativeSelect's own focus cell (above) ·
-              disabled — N/A while online; offline the select and Manage take the dashed muted look, and a pick is
-              swallowed · error — the gear-list load errors are a ServerError under the cards (see ServerError) · empty
-              — no cards without a site and a telescope (the setup and add prompts take their place) · loading — the
-              skeleton's two bars at the cards' minimum height (see TonightSkeleton)
+              disabled — N/A while online; offline Manage and the Telescope select take the dashed muted look (a pick
+              puts the select back), while the Site select stays live and opens that site's stored copy · error — the
+              gear-list load errors are a ServerError under the cards (see ServerError) · empty — no cards without a
+              site and a telescope (the setup and add prompts take their place) · loading — the skeleton's two bars at
+              the cards' minimum height (see TonightSkeleton)
             </p>
           </section>
 

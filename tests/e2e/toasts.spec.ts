@@ -132,6 +132,8 @@ test("a toast is gone after ten seconds, unless it is hovered or focused", async
   await expect(toastOf(page)).toHaveCount(1);
   await page.keyboard.press("Enter");
   await expect(toastOf(page)).toHaveCount(0);
+  // Focus left with the toast: it lands on <main>, never on <body>, so the next Tab doesn't restart at the top.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY");
 });
 
 test("a toast in Tonight's server island is adopted when it arrives, and clears only its own param", async ({
@@ -171,7 +173,17 @@ test("a closed offline notice stays closed while the page keeps updating", async
 
   await touchDom();
   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-  await page.waitForTimeout(500);
+  // The page script re-applies its state on the next animation frame: wait for two before asserting it stayed hidden.
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            done();
+          });
+        });
+      }),
+  );
   await expect(prepared).toBeHidden();
   await expect(page.locator("[data-offline-notice]:visible")).toHaveCount(0);
 

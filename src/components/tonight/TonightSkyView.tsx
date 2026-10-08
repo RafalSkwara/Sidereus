@@ -64,7 +64,7 @@ import { cn } from "@/lib/utils";
  *
  * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, `@/lib/compass`, the star catalogue (`stars.ts`, `star-names.ts`),
  * `sky-band`, `range-classes`, `@/i18n`, `cn` and `buttonVariants`, never astronomy-engine or the engine
- * (`TonightSkyView.test.ts`). Every time shown is the server's (`view.timeLabels`), so hydration never re-formats one.
+ * (`TonightSkyView.test.ts`). Every time and zone shown is the server's (`view.timeLabels`, `view.zoneLabels`), so hydration never re-formats one.
  * JavaScript is required here, as everywhere in the Tonight island.
  */
 
@@ -98,12 +98,12 @@ const LABEL_GAP_PX = 8;
 /**
  * The panorama's edge chevrons (ui-sky-light, bare since ui-user-adjustments): a 44 px target over the strip's middle,
  * above the verdict's layer. The face is just the icon in heading ink, faint at rest (they are only a suggestion) and
- * full on hover or focus; `--ring` focus outline on the target.
+ * full on hover or focus (80% keeps the icon at 3:1 over the red sky too, pinned by `contrast.test.ts`); `--ring` focus outline on the target.
  */
 const PAN_BUTTON_CLASS =
   "group focus-visible:outline-ring absolute z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2";
 const PAN_FACE_CLASS =
-  "text-heading flex size-8 items-center justify-center opacity-60 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none";
+  "text-heading flex size-8 items-center justify-center opacity-80 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none";
 
 /** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
 const COMPASS_ROW_PX = 16;
@@ -279,6 +279,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   }, []);
 
   const time = view.timeLabels[index] ?? "";
+  const zone = view.zoneLabels[index] ?? "";
   // Half the field: the viewport less the edge insets, so the 180° view's ends sit inside the screen at load.
   const half = Math.max(viewport - 2 * EDGE_INSET_PX, 1);
   const stripWidth = half * 2;
@@ -431,7 +432,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           },
           {
             id: "darkMerged" as const,
-            text: `${dark.startLabel}–${dark.endLabel}`,
+            text: t.darkRange({ start: dark.startLabel, end: dark.endLabel }),
             className: "text-heading",
             hook: { "data-sky-dark-merged": "" },
           },
@@ -628,9 +629,9 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
             <span className="text-heading text-title font-mono" data-sky-time>
               {time}
             </span>
-            {view.zoneLabel && (
+            {zone && (
               <span className="text-muted-foreground text-label" data-sky-zone>
-                {t.zone({ zone: view.zoneLabel })}
+                {t.zone({ zone })}
               </span>
             )}
           </span>

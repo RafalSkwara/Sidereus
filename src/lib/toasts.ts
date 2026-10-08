@@ -6,6 +6,8 @@
 // A dismissible notice (`dismissible`, no `data-toast`) closes on its × too: its dismiss scope, the nearest
 // `[data-dismiss-scope]` or the notice itself, is hidden and marked `data-dismissed`, so a script that re-shows it
 // (`page-state.ts` and the offline notices) can honour the choice.
+// Closing something that holds the keyboard focus first moves focus to `<main>` (WCAG 2.4.3), so it never falls back to
+// `<body>` and sends the next Tab to the top of the page.
 // The URL param names come from the fixed set below and are never values: no coordinates, nothing from the user.
 
 /** How long a toast stays when nobody is hovering or focusing it. */
@@ -37,8 +39,19 @@ function clearParams(toast: HTMLElement) {
   if (next !== current) history.replaceState(history.state, "", next);
 }
 
+/** If `scope` holds the focus, moves it to `<main>` (made programmatically focusable, with no ring) before it goes. */
+function releaseFocus(scope: HTMLElement) {
+  if (!scope.contains(document.activeElement)) return;
+  const main = document.querySelector<HTMLElement>("main");
+  if (!main) return;
+  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+  main.classList.add("outline-none");
+  main.focus({ preventScroll: true });
+}
+
 function close(toast: HTMLElement) {
   if (toast.hasAttribute("data-closing")) return;
+  releaseFocus(toast);
   stops.get(toast)?.();
   toast.setAttribute("data-closing", "");
   const remove = () => toast.remove();
@@ -132,6 +145,7 @@ function onClose(event: Event) {
     return;
   }
   const scope = notice.closest<HTMLElement>("[data-dismiss-scope]") ?? notice;
+  releaseFocus(scope);
   scope.setAttribute("data-dismissed", "");
   scope.hidden = true;
 }

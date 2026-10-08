@@ -85,8 +85,11 @@ async function siteName(page: Page): Promise<string> {
   return name.trim();
 }
 
-/** Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog). */
-async function deleteGear(page: Page, name: string) {
+/**
+ * Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog) and
+ * expects the hub's deleted notice for its `kind`.
+ */
+async function deleteGear(page: Page, kind: "site" | "telescope" | "eyepiece", name: string) {
   await page.goto("/gear");
   await page
     .locator('main a[href^="/gear/"]')
@@ -94,13 +97,12 @@ async function deleteGear(page: Page, name: string) {
     .first()
     .click();
   await expect(page).toHaveURL(/\/gear\/\w+\/[0-9a-f-]+$/);
-  const kind = /\/gear\/(sites|telescopes|eyepieces)\//.exec(page.url())?.[1] as "sites" | "telescopes" | "eyepieces";
-  const label = en.gear[kind].delete;
+  const label = en.gear[`${kind}s`].delete;
   // DeleteButton opens its confirm dialog only once hydrated; clicked earlier it would post unconfirmed.
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
-  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.deleted[kind]);
   await expect(page).toHaveURL(/\/gear$/);
 }
 
@@ -162,7 +164,7 @@ test("the strip shows seven nights, and switching sites moves it to the other si
 
   // The remembered site is deleted: Tonight and the nights page fall back to the first, without an error or a site
   // selector.
-  await deleteGear(page, SECOND_SITE.name);
+  await deleteGear(page, "site", SECOND_SITE.name);
   await openTonight(page);
   await expect(siteCard(page).locator("[data-gear-name]")).toHaveText(first);
   await expect(siteSelect(page)).toHaveCount(0);

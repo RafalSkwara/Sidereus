@@ -3,8 +3,9 @@
  * The verdict over Tonight's sky (tonight-nightfall, reshaped by ui-user-adjustments), rendered in TonightSky's slot:
  * the date, then the sky headline as the answer ("● Cloudy", at the display role with a larger tone dot), the reason
  * on its own line, the next step, and how fresh the forecast is (a fresh forecast shows from `sm` only,
- * ui-mobile-pass). With the live sky (`withSlider`) its slider carries the dark window and the zone; without it (the
- * static fallback when the sky view fails) one muted line keeps both, so that information is never lost.
+ * ui-mobile-pass). With the live sky (`withSlider`) its slider shows the dark window and the zone, but its edge labels
+ * are `aria-hidden`, so the same dark line stays as a screen-reader-only line; without the slider (the static fallback
+ * when the sky view fails) that line is visible and muted, so the information is never lost.
  * All text is heading or muted ink, the pair the contrast test pins on zenith and horizon; the verdict's colour is
  * only the dot before the headline.
  */
@@ -27,8 +28,8 @@ interface Props {
   /** The zone's short name ("CEST"), for the static fallback's dark line. */
   zoneLabel: string;
   /**
-   * The live sky is drawn (its slider shows the dark window and the zone): only the date sits above the headline.
-   * `false` is the static fallback, which keeps one muted dark-window line.
+   * The live sky is drawn (its slider shows the dark window and the zone): only the date sits above the headline, and
+   * the dark line is `sr-only`. `false` is the static fallback, which shows one muted dark-window line.
    */
   withSlider: boolean;
   forecastStatus: TonightForecastStatus;
@@ -59,8 +60,8 @@ const FORECAST_TONES: Record<TonightForecastStatus["kind"], string> = {
   fallback: "font-semibold text-heading",
   none: "font-semibold text-heading",
 };
-// The static fallback's dark line: the window and the zone, or the no-window wording (a no-darkness night says it in
-// the headline and under it, so the line is left out there).
+// The dark line: the window and the zone, or the no-window wording (a no-darkness night says it in the headline and
+// under it, so the line is left out there). Visible in the static fallback, `sr-only` beside the live slider.
 const darkLine =
   darkWindow.kind === "window"
     ? t.darkLine({ start: darkWindow.start, end: darkWindow.end, zone: zoneLabel })
@@ -71,7 +72,7 @@ const darkLine =
 
 <section aria-labelledby={headingId}>
   <p class="text-label font-medium text-muted-foreground">{dateLabel}</p>
-  {!withSlider && darkLine && <p class="text-label font-medium text-muted-foreground">{darkLine}</p>}
+  {darkLine && <p class:list={["text-label font-medium text-muted-foreground", withSlider && "sr-only"]}>{darkLine}</p>}
   <h2 id={headingId} class="mt-2 text-heading">
     <span class="flex items-start gap-3 font-display text-display font-semibold" data-sky-headline={headline.key}>
       <span

@@ -35,8 +35,11 @@ async function addTelescope(page: Page, name: string) {
   await expect(page).toHaveURL(/\/gear$/);
 }
 
-/** Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog). */
-async function deleteGear(page: Page, name: string) {
+/**
+ * Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog) and
+ * expects the hub's deleted notice for its `kind`.
+ */
+async function deleteGear(page: Page, kind: "site" | "telescope" | "eyepiece", name: string) {
   await page.goto("/gear");
   await page
     .locator('main a[href^="/gear/"]')
@@ -44,13 +47,12 @@ async function deleteGear(page: Page, name: string) {
     .first()
     .click();
   await expect(page).toHaveURL(/\/gear\/\w+\/[0-9a-f-]+$/);
-  const kind = /\/gear\/(sites|telescopes|eyepieces)\//.exec(page.url())?.[1] as "sites" | "telescopes" | "eyepieces";
-  const label = en.gear[kind].delete;
+  const label = en.gear[`${kind}s`].delete;
   // DeleteButton opens its confirm dialog only once hydrated; clicked earlier it would post unconfirmed.
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
-  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.deleted[kind]);
   await expect(page).toHaveURL(/\/gear$/);
 }
 
@@ -132,17 +134,15 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   await openTonight(page);
   const select = telescopeSelect(page);
   await expect(select.locator("option")).toHaveCount(4);
-  await expect(
-    page.locator('form[data-gear-select="telescope"]').getByRole("button", { name: t.selector.show }),
-  ).toBeHidden();
+  await expect(page.locator('form[data-gear-select="telescope"]').getByRole("button")).toHaveCount(0);
   await select.selectOption({ label: "Third Scope" });
   await expect(page).toHaveURL(/\/tonight\?telescope=[0-9a-f-]{36}$/);
   await openTargets(page);
   await expect(ranking(page)).toContainText(t.rankingFor({ telescope: "Third Scope" }));
 
   // The remembered telescope is deleted: Tonight falls back to the oldest, without an error.
-  await deleteGear(page, "Third Scope");
-  await deleteGear(page, "Fourth Scope");
+  await deleteGear(page, "telescope", "Third Scope");
+  await deleteGear(page, "telescope", "Fourth Scope");
   await openTonight(page);
   await expect(chosenTelescope(page)).toHaveText(onboarded);
   await expect(page.getByText(t.failed)).toHaveCount(0);
@@ -153,7 +153,7 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   // No eyepieces: Targets still ranks, without pairs, and the dashboard says how to get them back, once, with the
   // other setup prompts.
   for (const eyepiece of await eyepieceNames(page)) {
-    await deleteGear(page, eyepiece);
+    await deleteGear(page, "eyepiece", eyepiece);
   }
   await openTargets(page);
   await expect(firstTarget(page)).toBeVisible();
@@ -170,18 +170,18 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   );
 
   // Back to one telescope: no selector. No telescope: the add-telescope prompt.
-  await deleteGear(page, "Second Scope");
+  await deleteGear(page, "telescope", "Second Scope");
   await openTonight(page);
   await expect(telescopeCard(page).locator("[data-gear-name]")).toHaveText(onboarded);
   await expect(telescopeSelect(page)).toHaveCount(0);
-  await deleteGear(page, onboarded);
+  await deleteGear(page, "telescope", onboarded);
   await openTonight(page);
   await expect(page.getByText(t.addTelescopePrompt)).toBeVisible();
   await expect(page.getByRole("link", { name: t.addTelescope })).toHaveAttribute("href", "/gear/telescopes/new");
   await expect(page.locator("[data-tonight-tiles]")).toHaveCount(0);
 
   // No site either: one route back to setup.
-  await deleteGear(page, await siteName(page));
+  await deleteGear(page, "site", await siteName(page));
   await openTonight(page);
   await expect(page.getByText(t.setupPrompt)).toBeVisible();
   await expect(page.getByRole("link", { name: t.setup })).toHaveAttribute("href", "/onboarding");

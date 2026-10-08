@@ -12,12 +12,13 @@ import { onboardInMadrid } from "./helpers";
  * search stubbed with Madrid. Tonight's content is a server island, so each check waits for the island's own
  * elements (and for the fonts, which change line heights) before it measures.
  *
- *  - the first screen at 390×844 (EN): the verdict's headline and both gear cards (Site and Telescope, stacked on a
- *    phone) end above the fixed TabBar, and the cards sit above the first tile. The first target no longer has to fit:
- *    the cards took that room on purpose (ui-user-adjustments, the user's decision of 2026-10-08). 360×780 and 375×667
- *    are known limits (the plan's "What we're not doing"), so they are not asserted;
+ *  - the first screen at 390×844 (EN): the verdict's headline and the Site card (the Site and Telescope cards stack on
+ *    a phone) end above the fixed TabBar, and the Telescope card's title shows above it too; the rest of the
+ *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
+ *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
+ *    known limits (the plan's "What we're not doing"), so they are not asserted;
  *  - no sideways scroll at 320×568 and 375×667 on eight pages, in EN and PL;
- *  - the panorama keeps its height (it is untouched by this change).
+ *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
 
 const LOCALES = ["en", "pl"] as const;

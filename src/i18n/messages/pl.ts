@@ -456,11 +456,9 @@ export const pl = {
     reload: "Odśwież",
     siteSelector: {
       label: "Stanowisko",
-      show: "Pokaż",
     },
     selector: {
       label: "Teleskop",
-      show: "Pokaż",
     },
     gear: {
       manageSites: "Zarządzaj miejscami",
@@ -761,6 +759,7 @@ export const pl = {
       slider: "Pora nocy",
       now: "Teraz",
       zone: (p) => p.zone,
+      darkRange: (p) => `${p.start}–${p.end}`,
       bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
       panLeft: "Przewiń niebo w lewo",
       panRight: "Przewiń niebo w prawo",

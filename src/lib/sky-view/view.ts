@@ -45,8 +45,6 @@ export interface TonightSkyView {
    * server. `null` without a dark window.
    */
   dark: { from: number; to: number; startLabel: string; endLabel: string } | null;
-  /** The time zone's short name at the night ("CEST", or "GMT+2" where there is no abbreviation), shown after the current time. */
-  zoneLabel: string;
   /** The frame nearest `now` when it is inside the range, else the dark span's start, else 0. */
   initialIndex: number;
   /** The panorama's centre: south, or north for a southern-hemisphere site. */
@@ -56,6 +54,12 @@ export interface TonightSkyView {
    * slider's are, so the browser never formats one and hydration can't disagree with it.
    */
   timeLabels: string[];
+  /**
+   * Each frame's time zone short name ("CEST", or "GMT+2" where there is no abbreviation), shown after the current
+   * time. Per frame, so a night that crosses a clock change (Europe, 25 October 2026) never pairs a time with the
+   * wrong zone; the browser still formats nothing.
+   */
+  zoneLabels: string[];
   /** The range's ends, `HH:mm` in the site's time zone. */
   startLabel: string;
   endLabel: string;

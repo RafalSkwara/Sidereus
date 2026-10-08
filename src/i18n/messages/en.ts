@@ -477,12 +477,10 @@ export const en = {
     /** FR-012: shown only to users who own two or more sites; the label must differ from `selector.label`. */
     siteSelector: {
       label: "Site",
-      show: "Show",
     },
     /** FR-019: shown only to users who own two or more telescopes. */
     selector: {
       label: "Telescope",
-      show: "Show",
     },
     /** The gear cards under the sky (ui-user-adjustments): with one site or telescope a card names it and links to /gear. */
     gear: {
@@ -848,6 +846,8 @@ export const en = {
       now: "Now",
       /** The short time zone, muted right after the slider's current time: `zone` is "CEST" or "GMT+2". */
       zone: (p: { zone: string }) => p.zone,
+      /** The slider's merged dark-window label, when the two dark times would collide: `start` and `end` are "22:30". */
+      darkRange: (p: { start: string; end: string }) => `${p.start}–${p.end}`,
       /**
        * A marker's accessible name at the slider's time: `alt` is whole degrees, pre-formatted; `direction` a compass
        * point (`@/lib/compass`, international in every locale); `time` the frame's "23:40".

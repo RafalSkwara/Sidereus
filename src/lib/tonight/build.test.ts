@@ -1405,10 +1405,39 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     const last = sky.frameCount - 1;
     expect(Math.abs(sky.dark.from * last - (sky.darkSpan?.from ?? 0))).toBeLessThanOrEqual(1);
     expect(Math.abs(sky.dark.to * last - (sky.darkSpan?.to ?? 0))).toBeLessThanOrEqual(1);
-    // Warsaw in October: central European summer time.
-    expect(sky.zoneLabel).toBe("CEST");
-    expect(view.zoneLabel).toBe(sky.zoneLabel);
-    expect(skyViewOf(build({}, "pl")).zoneLabel).toBe("CEST");
+    // Warsaw in October: central European summer time, on every frame; the static fallback's label agrees.
+    expect(sky.zoneLabels).toHaveLength(sky.frameCount);
+    expect(sky.zoneLabels.every((label) => label === "CEST")).toBe(true);
+    expect(view.zoneLabel).toBe("CEST");
+    expect(skyViewOf(build({}, "pl")).zoneLabels.every((label) => label === "CEST")).toBe(true);
+  });
+
+  it("reads the zone per frame, so a night that crosses a clock change shows CEST then CET", () => {
+    // Madrid, the night of 24-25 October 2026: clocks go back at 03:00 CEST (01:00 UTC).
+    const MADRID: SiteRecord = {
+      ...WARSAW,
+      id: "site-5",
+      name: "Madrid",
+      latitudeDeg: 40.42,
+      longitudeDeg: -3.7,
+      timeZone: "Europe/Madrid",
+    };
+    const sky = skyViewOf(
+      build({
+        site: MADRID,
+        forecast: result(uniformForecast("2026-10-24T00:00:00Z", 5)),
+        now: new Date("2026-10-24T09:00:00Z"),
+      }),
+    );
+    const changeMs = Date.UTC(2026, 9, 25, 1, 0);
+    expect(sky.zoneLabels).toHaveLength(sky.frameCount);
+    expect(sky.endMs).toBeGreaterThan(changeMs);
+    sky.zoneLabels.forEach((label, i) => {
+      const at = Math.min(sky.startMs + i * sky.stepMs, sky.endMs);
+      expect(label, `frame ${String(i)} (${sky.timeLabels[i]})`).toBe(at < changeMs ? "CEST" : "CET");
+    });
+    expect(sky.zoneLabels[0]).toBe("CEST");
+    expect(sky.zoneLabels.at(-1)).toBe("CET");
   });
 
   it("has no dark stretch without a dark window, and names a zone with no abbreviation by its offset", () => {
@@ -1420,13 +1449,13 @@ describe("buildTonight's sky view (interactive-sky)", () => {
       }),
     );
     expect(light.dark).toBeNull();
-    expect(light.zoneLabel).toMatch(/^(EEST|GMT\+3)$/);
+    expect(light.zoneLabels.every((label) => /^(EEST|GMT\+3)$/.test(label))).toBe(true);
     const sydney = build({
       site: SOUTH,
       forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
       now: new Date("2026-10-10T09:00:00Z"),
     });
-    expect(skyViewOf(sydney).zoneLabel).toMatch(/^(AEDT|GMT\+11)$/);
+    expect(skyViewOf(sydney).zoneLabels.every((label) => /^(AEDT|GMT\+11)$/.test(label))).toBe(true);
   });
 
   it("starts at the frame nearest now inside the range, else at the dark span's start, else at 0", () => {

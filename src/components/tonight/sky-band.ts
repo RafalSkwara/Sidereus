@@ -17,14 +17,17 @@ export const GEAR_ROW_GRID_CLASS = "grid gap-3 sm:grid-cols-2";
  * Every gear card's minimum height, the skeleton's bars too, so the swap doesn't jump whichever variant arrives. The
  * tallest variant is the single-item card: the title line (`text-label`) 20, then the name (`text-body`, its own line,
  * as wide as the card allows) 24 + `gap-3` 12 + the 44 px Manage link under it = 80, beside a 64 px icon (80 px from
- * `md`) (user, 2026-10-08).
- * - Below `sm`: p-3 24 + 20 + `mt-2` 8 + 80 = 132 px, `min-h-33`. Stacked on a phone, the Telescope card starts above
- *   the TabBar at 390×844 and its lower part needs a short scroll (`tonight-phone.spec.ts`).
- * - From `sm`: p-4 32 + 20 + `mt-3` 12 + 80 = 144 px, `min-h-36`.
- * The select card (title, then the 44 px select) is shorter and stretches to it. Polish "Manage telescopes" can wrap on
- * the narrowest cards (the link wraps). Measured 2026-10-08 at 390 and 640 px; re-measure after changing the card.
+ * `md`) (user, 2026-10-08). The 1 px top and bottom border count too: `min-height` is border-box, so a value below
+ * content + border leaves the real card taller than the skeleton's bars and each stacked card jumps on swap.
+ * - Below `sm`: border 2 + p-3 24 + 20 + `mt-2` 8 + 80 = 134 px of content, so `min-h-34` (136 px, the next step of the
+ *   4 px scale). Stacked on a phone, the Telescope card starts above the TabBar at 390×844 and its lower part needs a
+ *   short scroll (`tonight-phone.spec.ts`).
+ * - From `sm`: border 2 + p-4 32 + 20 + `mt-3` 12 + 80 = 146 px, so `min-h-37` (148 px).
+ * The select card (title, then the 44 px select) is shorter and stretches to it. The Polish Manage label ("Zarządzaj
+ * teleskopami") wraps at 320 and 640 px, which grows that card by about 14 px past this height; a skeleton can't know the
+ * wrap. Measured 2026-10-08 at 390 and 640 px; re-measure after changing the card.
  */
-export const GEAR_CARD_MIN_HEIGHT_CLASS = "min-h-33 sm:min-h-36";
+export const GEAR_CARD_MIN_HEIGHT_CLASS = "min-h-34 sm:min-h-37";
 
 /** The slot's container over the sky: the shared `max-w-3xl px-4` column. */
 export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";

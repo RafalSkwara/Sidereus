@@ -141,7 +141,17 @@ test("Tonight pages opened online are there offline, and signing out removes the
       await page.evaluate(() => {
         document.body.appendChild(document.createElement("div"));
       });
-      await page.waitForTimeout(500);
+      // The page script re-applies its state on the next animation frame: wait for two before asserting it stayed hidden.
+      await page.evaluate(
+        () =>
+          new Promise<void>((done) => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                done();
+              });
+            });
+          }),
+      );
       await expect(page.locator("[data-offline-notice]:visible")).toHaveCount(0);
       const log = page.getByRole("navigation", { name: en.nav.primary }).getByRole("link", { name: en.nav.log });
       await expect(log).toHaveAttribute("aria-disabled", "true");
