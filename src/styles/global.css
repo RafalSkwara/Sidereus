@@ -476,6 +476,57 @@
 }
 
 /*
+ * Toasts (ui-user-adjustments, Phase 2). `toast-region` is the fixed placement of the one toast container
+ * (ToastRegion.astro) and, until the toast script adopts it, of a server-rendered toast Notice, so that never paints
+ * inline and jumps. Below `md` it sits at the bottom, above the TabBar when one is rendered (the TabBar's
+ * `data-tabbar` marker: 4rem bar + 1rem gap) and else above the safe area; from `md` it sits at the top, 0.5rem under
+ * the Topbar's bottom edge (the Topbar is not sticky, so after scrolling the toast floats at that offset on purpose).
+ * Centred, in the content column (`max-w-3xl` less the `px-4` gutters). `toast-motion` is the entrance and the exit
+ * (`[data-closing]`); with reduced motion neither exists, and the script removes a closed toast at once.
+ */
+@utility toast-region {
+  position: fixed;
+  z-index: 50;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: calc(100% - 2rem);
+  max-width: 46rem;
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+
+  @media (width < 48rem) {
+    :root:has([data-tabbar]) & {
+      bottom: calc(env(safe-area-inset-bottom) + 5rem);
+    }
+  }
+
+  @media (width >= 48rem) {
+    top: 6rem;
+    bottom: auto;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+@utility toast-motion {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: toast-in 200ms ease-out;
+    transition:
+      opacity 150ms ease-out,
+      translate 150ms ease-out;
+  }
+}
+
+[data-toast][data-closing] {
+  opacity: 0;
+  translate: 0 0.5rem;
+}
+
+/*
  * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
  * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
  * page script adds `aria-disabled` and swallows the click; "Needs a connection" is their description, or a caption

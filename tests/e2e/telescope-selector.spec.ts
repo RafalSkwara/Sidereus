@@ -27,7 +27,8 @@ async function addTelescope(page: Page, name: string) {
   await form.locator("#apertureMm").fill("90");
   await form.locator("#focalLengthMm").fill("1250");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.telescope);
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 /** Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog). */
@@ -45,7 +46,8 @@ async function deleteGear(page: Page, name: string) {
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
-  await expect(page).toHaveURL(/\/gear\?deleted=(site|telescope|eyepiece)$/);
+  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 /** The names of the user's eyepieces, as listed on `/gear`. */

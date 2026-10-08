@@ -18,6 +18,7 @@ export const pl = {
     name: "Nazwa",
     focalLengthMm: "Ogniskowa (mm)",
     cancel: "Anuluj",
+    close: "Zamknij",
   },
 
   nav: {

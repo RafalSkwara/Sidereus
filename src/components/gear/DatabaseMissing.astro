@@ -6,7 +6,7 @@ import { getMessages } from "@/i18n";
 const t = getMessages(Astro.locals.locale).databaseMissing;
 ---
 
-<Notice tone="warning">
+<Notice tone="warning" dismissible>
   <p class="font-semibold text-heading">{t.title}</p>
   <p class="mt-1 text-muted-foreground">
     {t.bodyPrefix}

@@ -33,8 +33,9 @@ test("a past night is asked about on Tonight, answered, tallied and changed on t
   await expect(card.getByText(en.skyChecks.card.weSaid({ site: "Home", headline: en.verdict.level.go }))).toBeVisible();
 
   await card.getByRole("button", { name: en.verdict.level.marginal }).click();
-  await expect(page).toHaveURL(/\/tonight\?skyChecked=1$/);
-  await expect(page.getByText(en.skyChecks.saved)).toBeVisible();
+  // The answer shows a toast, then the toast script removes `skyChecked` from the URL.
+  await expect(page.getByRole("status").filter({ hasText: en.skyChecks.saved })).toBeVisible();
+  await expect(page).toHaveURL(/\/tonight$/);
   await expect(page.locator("[data-sky-headline]").first()).toBeVisible();
   await expect(page.locator("[data-sky-check]")).toHaveCount(0);
 
@@ -52,7 +53,8 @@ test("a past night is asked about on Tonight, answered, tallied and changed on t
 
   // Changing the answer on the page re-tallies it.
   await row.getByRole("button", { name: en.verdict.level.go, exact: true }).click();
-  await expect(page).toHaveURL(/\/log\/sky\?skyChecked=1$/);
+  await expect(page.getByRole("status").filter({ hasText: en.skyChecks.saved })).toBeVisible();
+  await expect(page).toHaveURL(/\/log\/sky$/);
   await expect(tally).toContainText(en.skyChecks.tally.matched.one({ matched: "1", answered: "1" }));
   await expect(row.getByRole("button", { name: en.verdict.level.go, exact: true })).toHaveAttribute(
     "aria-pressed",

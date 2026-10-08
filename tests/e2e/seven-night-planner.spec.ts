@@ -66,8 +66,8 @@ async function addSite(page: Page) {
   await form.locator("#longitudeDeg").fill(SECOND_SITE.longitude);
   await form.locator("#bortle").selectOption("3");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=site$/);
   await expect(page.getByRole("status").filter({ hasText: en.gear.notice.saved.site })).toBeVisible();
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 /** The name of the user's (only) site, as listed on `/gear`. */
@@ -96,7 +96,8 @@ async function deleteGear(page: Page, name: string) {
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
-  await expect(page).toHaveURL(/\/gear\?deleted=(site|telescope|eyepiece)$/);
+  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 test.beforeEach(async ({ context, baseURL }) => {

@@ -16,8 +16,10 @@ const t = getMessages(locale).auth.signIn;
 
 <AuthShell title={t.title} subtitle={t.subtitle}>
   {next && (
-    <div class="mb-6">
-      <Notice tone="info">{t.continueNote}</Notice>
+    <div class="mb-6" data-dismiss-scope>
+      <Notice tone="info" dismissible>
+        {t.continueNote}
+      </Notice>
     </div>
   )}
   <SignInForm serverError={error} locale={locale} next={next} client:load />

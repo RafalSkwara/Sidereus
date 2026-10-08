@@ -80,10 +80,10 @@ const rowLink =
     )}
   </PageHeader>
 
-  {notice && (
-    <div class="mb-6">
-      <Notice tone="success">{notice}</Notice>
-    </div>
+  {logNotice && notice && (
+    <Notice tone="success" toast param={logNotice.kind}>
+      {notice}
+    </Notice>
   )}
 
   <div class="mb-6 empty:hidden">

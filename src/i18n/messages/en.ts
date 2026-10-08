@@ -29,6 +29,7 @@ export const en = {
     name: "Name",
     focalLengthMm: "Focal length (mm)",
     cancel: "Cancel",
+    close: "Close",
   },
 
   nav: {

@@ -169,15 +169,17 @@ const gearLink =
     {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl">
-      {notice && (
+      {/* A saved observation or sky check is a toast (it floats, so nothing here reserves room); an error stays. */}
+      {notice?.tone === "success" && (
+        <Notice tone="success" toast param={notice.param}>
+          {notice.text}
+        </Notice>
+      )}
+      {notice?.tone === "error" && (
         <div class="px-4 pt-3 sm:pt-6">
-          {notice.tone === "success" ? (
-            <Notice tone="success">{notice.text}</Notice>
-          ) : (
-            <div role="alert">
-              <ServerError message={notice.text} />
-            </div>
-          )}
+          <div role="alert">
+            <ServerError message={notice.text} />
+          </div>
         </div>
       )}
 

@@ -79,8 +79,8 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
   await form.locator("label").filter({ hasText: /^4$/ }).click();
   await form.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${object}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
+  await expect(page).toHaveURL(/\/tonight\/targets$/);
   // The row just logged is on screen: the page opens the rest of the list for it and scrolls it into view.
   await expect(page.locator(`[data-object="${object}"]`)).toBeInViewport();
 });

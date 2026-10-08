@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
+import ToastRegion from "@/components/ui/ToastRegion.astro";
 import { getMessages, translateKey } from "@/i18n";
 import { missingConfigs } from "@/lib/config-status";
 import { NEEDS_CONNECTION_ID } from "@/lib/offline/page-state";
@@ -61,6 +62,8 @@ const { title = m.common.appName } = Astro.props;
       </Banner>
     ))}
     <slot />
+    {/* Toasts (ui-user-adjustments): the one fixed container; each toast Notice keeps its own live role. */}
+    <ToastRegion />
     {/* S-06: what a network-only control says while offline, as its description (src/lib/offline/page-state.ts). */}
     <span id={NEEDS_CONNECTION_ID} hidden>
       {m.offline.needsConnection}

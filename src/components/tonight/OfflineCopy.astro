@@ -2,7 +2,8 @@
 // The metadata and offline warnings of one stored Tonight page (offline-night-plan), at the top of every Tonight
 // island. The service worker and the page script read `[data-offline-copy]` (which site, which night, when the copy
 // was prepared and when it stops being the night to show); the three notices stay hidden online and are shown by the
-// page script from the real offline state or the stored copy's age. Their text is formatted here, in the site's time
+// page script from the real offline state or the stored copy's age. Each can be closed (ui-user-adjustments): its
+// wrapper then carries `data-dismissed`, which the page script honours until the next page load. Their text is formatted here, in the site's time
 // zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates. `data-owner`
 // is a one-way fingerprint of the user id (owner.ts), so the worker can tell users apart without the id or the email.
 import Notice from "@/components/ui/Notice.astro";
@@ -44,15 +45,19 @@ const owner = user ? await ownerFingerprint(user.id) : undefined;
   data-forecast-fetched-at={forecast ? forecast.toISOString() : undefined}
 ></div>
 <div class="mx-auto w-full max-w-3xl px-4">
-  <div hidden class="pt-4" data-offline-notice="prepared">
-    <Notice tone="warning">{t.prepared({ when: prepared })}</Notice>
+  <div hidden class="pt-4" data-offline-notice="prepared" data-dismiss-scope>
+    <Notice tone="warning" dismissible>
+      {t.prepared({ when: prepared })}
+    </Notice>
   </div>
-  <div hidden class="pt-4" data-offline-notice="old-forecast">
-    <Notice tone="warning">
+  <div hidden class="pt-4" data-offline-notice="old-forecast" data-dismiss-scope>
+    <Notice tone="warning" dismissible>
       {t.oldForecast({ when: forecast ? formatDayTime(forecast, view.timeZone) : prepared, night: nightText })}
     </Notice>
   </div>
-  <div hidden class="pt-4" data-offline-notice="stale">
-    <Notice tone="warning">{t.stale({ night: nightText, when: prepared })}</Notice>
+  <div hidden class="pt-4" data-offline-notice="stale" data-dismiss-scope>
+    <Notice tone="warning" dismissible>
+      {t.stale({ night: nightText, when: prepared })}
+    </Notice>
   </div>
 </div>

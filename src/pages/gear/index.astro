@@ -117,9 +117,9 @@ function eyepieceType(afovDeg: number): string {
   <PageHeader slot="header" title={t.title} subtitle={t.subtitle} />
 
   {notice && (
-    <div class="mb-6">
-      <Notice tone="success">{notice}</Notice>
-    </div>
+    <Notice tone="success" toast param={savedKind ? "saved" : "deleted"}>
+      {notice}
+    </Notice>
   )}
 
   <div class="mb-6 empty:hidden">

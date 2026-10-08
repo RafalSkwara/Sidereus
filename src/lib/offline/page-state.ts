@@ -3,7 +3,8 @@
 // - `<html data-offline>` follows `navigator.onLine` and the `online`/`offline` events (real offline only);
 // - a Tonight island's offline notice (`OfflineCopy.astro`) is revealed when the page came from the device
 //   (`<html data-from-device>`, added by the service worker to every stored shell it serves, even after a network
-//   timeout while `navigator.onLine` is still true) or the device is offline;
+//   timeout while `navigator.onLine` is still true) or the device is offline, unless the user closed it
+//   (`data-dismissed` on its wrapper, set by the toast script's ×);
 // - controls marked `data-needs-network` (Mark observed, the sky-check form, Log and Gear, sign-out) are disabled
 //   while `data-offline` is set: `aria-disabled`, "Needs a connection" as their description, clicks and submits
 //   swallowed. Their look is CSS keyed on the same attributes (global.css);
@@ -28,6 +29,19 @@ export function noticeFor(kind: string | undefined, validUntil: string | undefin
   const until = validUntil ? Date.parse(validUntil) : Number.NaN;
   if (!Number.isFinite(until) || now >= until) return "stale";
   return kind === "next" ? "old-forecast" : "prepared";
+}
+
+/**
+ * Whether one of a Tonight island's offline notices is hidden: unless it is the notice wanted now, and the user has
+ * not closed it. A closed notice stays hidden (`dismissed`, the wrapper's `data-dismissed`) however often the page
+ * re-applies its state, until the next page load.
+ */
+export function noticeHidden(options: {
+  kind: string | undefined;
+  wanted: CopyNotice | null;
+  dismissed: boolean;
+}): boolean {
+  return options.dismissed || options.kind !== options.wanted;
 }
 
 /** Adds or removes one id in an `aria-describedby` token list, keeping the others. */
@@ -56,7 +70,11 @@ function applyNotices(root: HTMLElement, offline: boolean) {
   const show = copy && (offline || root.hasAttribute("data-from-device"));
   const wanted = show ? noticeFor(copy.dataset.kind, copy.dataset.validUntil, Date.now()) : null;
   for (const notice of notices) {
-    const hidden = notice.dataset.offlineNotice !== wanted;
+    const hidden = noticeHidden({
+      kind: notice.dataset.offlineNotice,
+      wanted,
+      dismissed: notice.hasAttribute("data-dismissed"),
+    });
     if (notice.hidden !== hidden) notice.hidden = hidden;
   }
 }

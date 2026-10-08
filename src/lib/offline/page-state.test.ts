@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { noticeFor, withDescription } from "./page-state";
+import { noticeFor, noticeHidden, withDescription } from "./page-state";
 
 const UNTIL = "2026-10-06T05:30:00.000Z";
 const BEFORE = Date.parse(UNTIL) - 1;
@@ -22,6 +22,24 @@ describe("noticeFor", () => {
   it("treats a missing or malformed validUntil as stale", () => {
     expect(noticeFor("tonight", undefined, BEFORE)).toBe("stale");
     expect(noticeFor("tonight", "soon", BEFORE)).toBe("stale");
+  });
+});
+
+describe("noticeHidden", () => {
+  it("shows only the wanted notice", () => {
+    expect(noticeHidden({ kind: "prepared", wanted: "prepared", dismissed: false })).toBe(false);
+    expect(noticeHidden({ kind: "stale", wanted: "prepared", dismissed: false })).toBe(true);
+    expect(noticeHidden({ kind: "old-forecast", wanted: "stale", dismissed: false })).toBe(true);
+  });
+
+  it("hides every notice when none is wanted", () => {
+    expect(noticeHidden({ kind: "prepared", wanted: null, dismissed: false })).toBe(true);
+    expect(noticeHidden({ kind: undefined, wanted: null, dismissed: false })).toBe(true);
+  });
+
+  it("keeps a closed notice hidden, wanted or not", () => {
+    expect(noticeHidden({ kind: "prepared", wanted: "prepared", dismissed: true })).toBe(true);
+    expect(noticeHidden({ kind: "stale", wanted: "prepared", dismissed: true })).toBe(true);
   });
 });
 

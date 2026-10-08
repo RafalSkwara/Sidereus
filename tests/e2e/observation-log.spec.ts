@@ -56,8 +56,8 @@ test("marking a target observed on the Targets page saves it and tags its row th
   await expect(form.getByRole("radio", { name: "4", exact: true })).toBeChecked();
   await form.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(new RegExp(`/tonight/targets\\?logged=${id}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
+  await expect(page).toHaveURL(/\/tonight\/targets$/);
 
   // Rated 4, the object moves down the list (maybe behind "Show the other …") but still cleared the bar, so its row
   // is there with the "seen" tag (the tag's wording up to the date, taken from the catalogue).
@@ -91,8 +91,8 @@ test("a Caldwell object is found in the manual picker by its number and shows in
   await form.locator("label").filter({ hasText: /^4$/ }).click();
   await form.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(/\/log\?saved=NGC7000$/);
   await expect(page.getByRole("status")).toHaveText(en.log.list.saved({ object: "NGC 7000" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(page.locator('main a[href^="/log/"]').filter({ hasText: "NGC 7000" })).toContainText(
     en.log.list.rated({ rating: "4" }),
   );

@@ -1040,9 +1040,36 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>default · info</p>
                   <Notice tone="info">{m.gear.notice.deleted.telescope}</Notice>
                 </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>dismissible · info (inline × that sticks)</p>
+                  <Notice tone="info" dismissible>
+                    {m.gear.notice.deleted.telescope}
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>dismissible · warning (the offline notices)</p>
+                  <Notice tone="warning" dismissible>
+                    Forecast is 3 h old; the weather service could not be reached.
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>toast · success (specimen: in the flow, no timer)</p>
+                  <Notice tone="success" specimen>
+                    {m.gear.notice.saved.site}
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>toast · warning (specimen: opaque backing under the tint)</p>
+                  <Notice tone="warning" specimen>
+                    Forecast is 3 h old; the weather service could not be reached.
+                  </Notice>
+                </div>
               </div>
               <p class:list={notApplicable}>
-                hover, focus-visible, disabled — N/A (not interactive) · error — see ServerError · empty, loading — N/A
+                A real toast is fixed (above the TabBar below md, under the Topbar from md), closes after 10 s or on ×,
+                and clears its URL param: trigger one with /gear?saved=site. The specimens above keep the toast look in
+                the flow (no data-toast, so the global script leaves them alone). The × is a 44 px icon button; press
+                Tab to see its focus ring. hover, disabled — N/A · error — see ServerError · empty, loading — N/A
               </p>
             </section>
 

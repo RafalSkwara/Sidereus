@@ -64,7 +64,8 @@ test("a new site loads the map only on click and saves a tapped point rounded", 
   await form.locator("#name").fill("Map pick");
   await form.locator("#bortle").selectOption("5");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=site$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.site);
+  await expect(page).toHaveURL(/\/gear$/);
   await expect(page.getByText(`${picked.latitude.toFixed(2)}, ${picked.longitude.toFixed(2)}`)).toBeVisible();
 });
 

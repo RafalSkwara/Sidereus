@@ -29,7 +29,8 @@ async function addTelescope(page: Page, name: string) {
   await form.locator("#apertureMm").fill("80");
   await form.locator("#focalLengthMm").fill("400");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.telescope);
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 async function deleteTelescope(page: Page, name: string) {
@@ -42,7 +43,8 @@ async function deleteTelescope(page: Page, name: string) {
   await waitForHydration(page, DELETE_FORM);
   await page.locator(DELETE_FORM).getByRole("button", { name: en.gear.telescopes.delete }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: en.gear.telescopes.delete }).click();
-  await expect(page).toHaveURL(/\/gear\?deleted=telescope$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.deleted.telescope);
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 async function openEntry(page: Page, id: string) {
@@ -89,8 +91,8 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   const night = await manual.locator("#night").inputValue();
   await manual.locator('button[type="submit"]').click();
 
-  await expect(page).toHaveURL(/\/log\?saved=M31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.saved({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
   // It sits under the heading of the night it was logged for.
   await expect(page.locator("main section").filter({ hasText: "M31" }).getByRole("heading", { level: 2 })).toHaveText(
@@ -102,15 +104,16 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   let form = await openEntry(page, "M31");
   await expect(form.getByRole("radio", { name: "4", exact: true })).toBeChecked();
   await form.getByRole("combobox", { name: t.picker.label }).press("Enter");
-  await expect(page).toHaveURL(/\/log\?updated=M31$/);
+  await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
 
   // Lower the rating to 2.
   form = await openEntry(page, "M31");
   await rate(form, 2);
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/log\?updated=M31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "2" }));
 
   // Move the entry to a second telescope, then delete that telescope: the entry stays, marked "(deleted)".
@@ -118,7 +121,8 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   form = await openEntry(page, "M31");
   await form.locator("#telescopeId").selectOption({ label: "Travel refractor" });
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/log\?updated=M31$/);
+  await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await deleteTelescope(page, "Travel refractor");
 
   await page.goto("/log");
@@ -129,7 +133,8 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await expect(form.locator("#telescopeId")).toHaveValue("");
   await rate(form, 3);
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/log\?updated=M31$/);
+  await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "3" }));
   await expect(logEntry(page, "M31")).toContainText(t.list.deletedGear({ name: "Travel refractor" }));
 
@@ -138,8 +143,8 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await waitForHydration(page, DELETE_FORM);
   await page.getByRole("button", { name: t.delete }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: t.delete }).click();
-  await expect(page).toHaveURL(/\/log\?deleted=M31$/);
   await expect(page.getByRole("status")).toHaveText(t.list.deleted({ object: "M31" }));
+  await expect(page).toHaveURL(/\/log$/);
   await expect(page.getByText(t.list.empty)).toBeVisible();
 });
 
