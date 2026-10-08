@@ -1,7 +1,7 @@
 ---
 change_id: testing-ranking-invariants-and-calibration-oracle
 title: "Test rollout Phase 3: no impossible target listed, and a retune can't pass on its own snapshot"
-status: new
+status: preparing
 created: 2026-10-08
 updated: 2026-10-08
 archived_at: null
