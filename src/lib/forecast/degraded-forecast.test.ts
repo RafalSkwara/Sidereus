@@ -73,13 +73,14 @@ describe("a provider body with hours missing", () => {
       nightBody(cloud, [50, 50, 50, null, 50, 50]),
       nightBody([10, 10, 10, null, 100, 100], [50, 50, 50, 95, 50, 50]),
     ]) {
-      expect(judge(body)).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+      expect(judge(body)).toEqual({ level: "marginal", reason: { kind: "missing-hours" } });
     }
   });
 
   it("reads a go-shaped night with any dark hour missing as no forecast, not clear", () => {
     const v = judge(nightBody([10, 10, 10, 100, null, 100]));
-    expect(v).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+    // Its own reason, so the page can say an hour is missing rather than that no forecast reaches the night.
+    expect(v).toEqual({ level: "marginal", reason: { kind: "missing-hours" } });
     expect(headlineId(v)).toBe("noForecast");
   });
 
@@ -205,12 +206,16 @@ describe("removing hours from a provider body (seeded property)", () => {
     }
   });
 
-  it("raises a verdict only to marginal with no weather data (edge hours gone), never to a weather reading", () => {
+  it("raises a verdict only to marginal for missing data (edge or dark hours gone), never to a weather reading", () => {
+    const missingData: Verdict[] = [
+      { level: "marginal", reason: { kind: "no-weather-data" } },
+      { level: "marginal", reason: { kind: "missing-hours" } },
+    ];
     for (const { window, complete, partial } of cases) {
       const before = verdict(window, complete);
       const after = verdict(window, partial);
       if (RANK[after.level] > RANK[before.level]) {
-        expect(after).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
+        expect(missingData).toContainEqual(after);
       }
     }
   });

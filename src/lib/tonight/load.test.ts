@@ -5,6 +5,7 @@ import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/sto
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
 import { loadTonight } from "./load";
+import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
 
 /**
  * The loader never turns a forecast problem into an error page (PRD guardrail "forecast outage degrades, never
@@ -43,34 +44,6 @@ vi.mock("@/lib/tonight/build", async (importOriginal) => {
   return { ...actual, buildTonight: mocks.buildTonight };
 });
 
-const WARSAW: SiteRecord = {
-  id: "site-1",
-  name: "Home",
-  latitudeDeg: 52.23,
-  longitudeDeg: 21.01,
-  bortle: 6,
-  minAltitudeDeg: 15,
-  timeZone: "Europe/Warsaw",
-  timeZoneSource: "auto",
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-const TELESCOPE: TelescopeRecord = {
-  id: "scope-1",
-  name: "Skywatcher 150P",
-  apertureMm: 150,
-  focalLengthMm: 750,
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-const EYEPIECES: EyepieceRecord[] = [
-  { id: "ep-1", name: "25 mm Plössl", focalLengthMm: 25, afovDeg: 52, createdAt: "2026-09-01T00:00:00Z" },
-  { id: "ep-2", name: "10 mm Plössl", focalLengthMm: 10, afovDeg: 52, createdAt: "2026-09-01T00:01:00Z" },
-];
-
-/** Early evening in Warsaw on 2026-10-10 (20:00 CEST). */
-const NOW = new Date("2026-10-10T18:00:00Z");
-
 /** Never called: the stores are stubbed, so any non-null client will do. */
 const SUPABASE = {} as TypedSupabaseClient;
 
@@ -90,7 +63,11 @@ function load() {
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Each case starts on the real build with no calls recorded and no once-implementation left over from another.
+  const actual = await vi.importActual<typeof import("./build")>("./build");
+  mocks.buildTonight.mockReset();
+  mocks.buildTonight.mockImplementation(actual.buildTonight);
   mocks.listSites.mockResolvedValue([WARSAW]);
   mocks.listTelescopes.mockResolvedValue([TELESCOPE]);
   mocks.listEyepieces.mockResolvedValue(EYEPIECES);
@@ -100,6 +77,7 @@ beforeEach(() => {
 describe("loadTonight", () => {
   it("still builds Tonight in a forecast outage with nothing stored, as No forecast", async () => {
     const result = await load();
+    expect(mocks.buildTonight).toHaveBeenCalledTimes(1);
     expect(result.tonightError).toBeNull();
     expect(result.view).not.toBeNull();
     expect(result.view?.headline.id).toBe("noForecast");
@@ -110,7 +88,7 @@ describe("loadTonight", () => {
       throw new Error("build failed");
     });
     const result = await load();
-    expect(mocks.buildTonight).toHaveBeenCalled();
+    expect(mocks.buildTonight).toHaveBeenCalledTimes(1);
     expect(result.view).toBeNull();
     expect(result.tonightError).toBe("tonight.failed");
     expect(result.sites).toEqual([WARSAW]);

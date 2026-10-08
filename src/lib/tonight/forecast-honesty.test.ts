@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { getForecast, type ForecastResult } from "@/lib/forecast/service";
 import { fakeFetch, jsonResponse, memoryCache, openMeteoBody, type MemoryCache } from "@/lib/forecast/test-helpers";
-import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 
 import { buildTonight, type TonightView } from "./build";
+import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
 
 /**
  * Forecast honesty end to end (test-plan Risk #1): the real forecast service, its in-memory cache and a fake HTTP
@@ -13,35 +13,6 @@ import { buildTonight, type TonightView } from "./build";
  * guardrails ("never a confident go", "forecast outage degrades, never blanks": moon and twilight stay usable) and
  * calendar arithmetic with wide margins, never from reading the verdict or the builder.
  */
-
-// Fixtures copied from build.test.ts (not exported there): Warsaw, a 150/750 reflector and two Plössls.
-const WARSAW: SiteRecord = {
-  id: "site-1",
-  name: "Home",
-  latitudeDeg: 52.23,
-  longitudeDeg: 21.01,
-  bortle: 6,
-  minAltitudeDeg: 15,
-  timeZone: "Europe/Warsaw",
-  timeZoneSource: "auto",
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-const TELESCOPE: TelescopeRecord = {
-  id: "scope-1",
-  name: "Skywatcher 150P",
-  apertureMm: 150,
-  focalLengthMm: 750,
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-const EYEPIECES: EyepieceRecord[] = [
-  { id: "ep-1", name: "25 mm Plössl", focalLengthMm: 25, afovDeg: 52, createdAt: "2026-09-01T00:00:00Z" },
-  { id: "ep-2", name: "10 mm Plössl", focalLengthMm: 10, afovDeg: 52, createdAt: "2026-09-01T00:01:00Z" },
-];
-
-/** Early evening in Warsaw on 2026-10-10 (20:00 CEST), before night 1's dark window. */
-const NOW = new Date("2026-10-10T18:00:00Z");
 
 const HOUR_MS = 3_600_000;
 /** `past_days=1` + `forecast_days=8`: 216 hours from 00:00 UTC the day before the fetch. */
@@ -66,6 +37,20 @@ function clearBody(fetchedAt: Date, nullFrom?: Date): unknown {
   const cloud = Array.from({ length: REQUEST_HOURS }, (_, i) => (isNull(i) ? null : 0));
   const humidity = Array.from({ length: REQUEST_HOURS }, (_, i) => (isNull(i) ? null : 40));
   return openMeteoBody(startS, cloud, humidity);
+}
+
+/**
+ * A body over the real request range of a fetch at `fetchedAt` whose cloud cover for the hour starting at `startMs`
+ * is `cloudAt(startMs)` (humidity 40 %); `null` leaves that hour's cloud and humidity null.
+ */
+function bodyWith(fetchedAt: Date, cloudAt: (startMs: number) => number | null): unknown {
+  const startS = requestStartS(fetchedAt);
+  const cloud = Array.from({ length: REQUEST_HOURS }, (_, i) => cloudAt((startS + i * 3600) * 1000));
+  return openMeteoBody(
+    startS,
+    cloud,
+    cloud.map((value) => (value === null ? null : 40)),
+  );
 }
 
 const SITE_COORDS = { latitudeDeg: WARSAW.latitudeDeg, longitudeDeg: WARSAW.longitudeDeg };
@@ -197,5 +182,70 @@ describe("Tonight over a body whose trailing hours are null", () => {
     expect(view.verdict.level).not.toBe("no-go");
     expect(view.moonCard).not.toBeNull();
     expect(view.ranking?.entries.length).toBeGreaterThan(0);
+  });
+});
+
+/*
+ * Warsaw's windows on these nights (Bortle 6, so the dark window starts at -15°; the planets' window at civil dusk):
+ * night 1 is dark from about 17:25 UTC on 10 Oct to 03:20 UTC on 11 Oct, night 2 from 17:23 UTC on 11 Oct to
+ * 03:22 UTC on 12 Oct, night 3 from 17:21 UTC on 12 Oct to 03:24 UTC on 13 Oct. Civil dusk on 10 Oct is about
+ * 16:27 UTC. The null hours below sit hours away from either edge.
+ */
+describe("Tonight over a fresh forecast with one hour missing inside the series", () => {
+  it("reads No forecast with its own reason when one dark hour of a clear night is missing", async () => {
+    const missing = Date.parse("2026-10-10T22:00:00Z"); // midnight in Warsaw, deep in night 1's dark window
+    const forecast = await forecastAt(NOW, memoryCache(), () =>
+      jsonResponse(bodyWith(NOW, (startMs) => (startMs === missing ? null : 0))),
+    );
+    const view = buildView(forecast);
+    expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "missing-hours" } });
+    expect(view.headline.id).toBe("noForecast");
+    expect(view.verdictText).toContain("missing from the forecast");
+    expect(view.verdictText).not.toContain("no weather data");
+    // The forecast itself is fresh: one hour is missing, not the forecast.
+    expect(view.forecastStatus.kind).toBe("fresh");
+    expect(view.moonCard).not.toBeNull();
+    expect(view.ranking?.entries.length).toBeGreaterThan(0);
+    // Only night 1 lacks an hour: the strip reads it as No forecast and night 2, complete and clear, as Clear.
+    expect(nightHeadline(view, 0)).toBe("noForecast");
+    expect(nightHeadline(view, 1)).toBe("go");
+  });
+
+  it("passes over a next night with a dark hour missing instead of saying the forecast stops at tonight", async () => {
+    // Overcast everywhere except night 2's dark hours (17:00 UTC on 11 Oct to 03:00 UTC on 12 Oct, inclusive), and
+    // night 2 lacks its 22:00 UTC hour: tonight is a no-go, night 2 can't be called clear, night 3 is a no-go.
+    const night2From = Date.parse("2026-10-11T17:00:00Z");
+    const night2To = Date.parse("2026-10-12T03:00:00Z");
+    const missing = Date.parse("2026-10-11T22:00:00Z");
+    const forecast = await forecastAt(NOW, memoryCache(), () =>
+      jsonResponse(
+        bodyWith(NOW, (startMs) =>
+          startMs === missing ? null : startMs >= night2From && startMs <= night2To ? 0 : 100,
+        ),
+      ),
+    );
+    const view = degradedView(forecast);
+    expect(view.verdict.level).toBe("no-go");
+    expect(view.explanation?.kind).toBe("weather-no-go");
+    const nextText = view.explanation?.kind === "weather-no-go" ? view.explanation.nextText : "";
+    expect(nextText).not.toContain("doesn't reach");
+    expect(nextText).toMatch(/^No clear night in the forecast through /);
+  });
+
+  it("keeps a clear night Clear when only a twilight hour outside the dark window is missing", async () => {
+    // 16:00-17:00 UTC on 10 Oct overlaps the planets' window (from civil dusk, about 16:27 UTC) but not the dark
+    // window, whose first whole hour is 17:00 UTC.
+    const missing = Date.parse("2026-10-10T16:00:00Z");
+    const forecast = await forecastAt(NOW, memoryCache(), () =>
+      jsonResponse(bodyWith(NOW, (startMs) => (startMs === missing ? null : 0))),
+    );
+    const view = buildView(forecast);
+    expect(view.verdict.level).toBe("go");
+    expect(view.headline.id).toBe("go");
+    expect(view.forecastStatus.kind).toBe("fresh");
+    // The planets' window lacks that hour, so their line says so rather than claiming no weather data.
+    expect(view.solarSystem).not.toBeNull();
+    expect(view.solarSystem?.weatherText).not.toContain("no weather data");
+    expect(view.solarSystem?.weatherText).toContain("missing from the forecast");
   });
 });

@@ -17,8 +17,9 @@ type Window = Extract<DarkWindow, { kind: "window" }>;
 
 /**
  * The next night after `date` that is not a no-go, or `none`. `lastJudgedDate` is the last night
- * the search judged from data: the whole horizon when every night is a no-go, the night before a
- * forecast gap, or null when the gap starts on the first night after `date`.
+ * the search judged from data: the whole horizon when every night is a no-go (or has a dark hour
+ * missing from the forecast), the night before the forecast stops reaching, or null when it stops
+ * reaching on the first night after `date`.
  */
 export type NextNight =
   { kind: "found"; date: string; verdict: Verdict } | { kind: "none"; lastJudgedDate: string | null };
@@ -39,7 +40,10 @@ export interface NextNightInput {
 /**
  * Walks nights `date+1` … `date+(VERDICT_NIGHTS-1)` with the same forecast and fallback flag as
  * the night being explained. It never looks past the verdict horizon (invariant 5), and it stops
- * at the first night without weather data rather than guessing past it.
+ * at the first night without weather data (`no-weather-data`: the forecast does not reach it) rather
+ * than guessing past it. A night with a dark hour missing (`missing-hours`) is judged but never
+ * suggested, like a no-go, and the walk goes on: the forecast does reach it, but it cannot be called
+ * clearer.
  */
 export function nextNightNotNoGo({ site, thresholdDeg, date, forecast, fallback }: NextNightInput): NextNight {
   let lastJudgedDate: string | null = null;
@@ -50,7 +54,7 @@ export function nextNightNotNoGo({ site, thresholdDeg, date, forecast, fallback 
     if (nightVerdict.reason.kind === "no-weather-data") {
       return { kind: "none", lastJudgedDate };
     }
-    if (nightVerdict.level !== "no-go") {
+    if (nightVerdict.level !== "no-go" && nightVerdict.reason.kind !== "missing-hours") {
       return { kind: "found", date: nightDate, verdict: nightVerdict };
     }
     lastJudgedDate = nightDate;
@@ -62,7 +66,8 @@ export function nextNightNotNoGo({ site, thresholdDeg, date, forecast, fallback 
  * `nextNightNotNoGo` read off an outlook that is already computed, so a weather no-go's "next night"
  * and the strip's verdict chips come from one value and nights 2-3 are not judged twice. Walks the
  * verdict nights after night 1 with the same rules: stop at the first night without weather data,
- * return the first night that is not a no-go. Outlook nights (past the verdict horizon) are never
+ * pass over a night with a dark hour missing as over a no-go, return the first other night that is
+ * not a no-go. Outlook nights (past the verdict horizon) are never
  * considered (invariant 5).
  */
 export function nextNightInOutlook(nights: readonly OutlookNight[]): NextNight {
@@ -74,7 +79,7 @@ export function nextNightInOutlook(nights: readonly OutlookNight[]): NextNight {
     if (night.verdict.reason.kind === "no-weather-data") {
       return { kind: "none", lastJudgedDate };
     }
-    if (night.verdict.level !== "no-go") {
+    if (night.verdict.level !== "no-go" && night.verdict.reason.kind !== "missing-hours") {
       return { kind: "found", date: night.date, verdict: night.verdict };
     }
     lastJudgedDate = night.date;

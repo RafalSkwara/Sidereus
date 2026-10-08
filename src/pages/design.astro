@@ -271,6 +271,15 @@ const skySamples: SkySample[] = [
     explanation: null,
   },
   {
+    label: "forecast fresh · an hour of the dark window missing",
+    date: SAMPLE_DATE,
+    timeZone: SAMPLE_ZONE,
+    verdict: { level: "marginal", reason: { kind: "missing-hours" } },
+    darkWindow: sampleWindow,
+    forecast: freshForecast,
+    explanation: null,
+  },
+  {
     label: "no dark window · summer at 54° N",
     date: "2026-06-20",
     timeZone: SAMPLE_ZONE,

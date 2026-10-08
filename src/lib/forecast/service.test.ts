@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { ForecastCache } from "./cache";
 import { FORECAST_CACHE_TTL_SECONDS, getForecast } from "./service";
@@ -240,6 +240,51 @@ describe("getForecast with a 200 that is not a complete series", () => {
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
     expect(cache.puts).toHaveLength(0);
     expect(cache.store.get(KEY)).toBe(copy);
+  });
+
+  it("keeps a usable stored copy over a 200 that ends about 60 h after now, short of the 96 h verdict nights need", async () => {
+    // From 2026-10-09 00:00 UTC (a complete start) to 2026-10-13 06:00 UTC, which is `NOW` + 60 h: past the copy's
+    // own +24 h bar and well past tonight, but before night 3 of the next-night build ends.
+    const hoursToNowPlus60 = (NOW.getTime() + 60 * HOUR_MS - START_S * 1000) / HOUR_MS + 1;
+    const copy = usableCopy();
+    const { cache, result } = await refreshWith(
+      () => jsonResponse(openMeteoBody(START_S, Array<number>(hoursToNowPlus60).fill(5))),
+      { [KEY]: copy },
+    );
+    expect(result?.fallback).toBe(true);
+    expect(result?.fetchedAt).toEqual(COPY_FETCHED_AT);
+    expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
+    expect(cache.puts).toHaveLength(0);
+    expect(cache.store.get(KEY)).toBe(copy);
+  });
+
+  it("schedules no deferred write when it keeps the stored copy", async () => {
+    const defer = vi.fn<(task: Promise<void>) => void>();
+    const cache = memoryCache({ [KEY]: usableCopy() });
+    const result = await getForecast({
+      fetchFn: fakeFetch(() => jsonResponse(openMeteoBody(START_S, SHORT_CLOUD))).fetchFn,
+      cache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+      defer,
+    });
+    expect(result?.fallback).toBe(true);
+    expect(defer).not.toHaveBeenCalled();
+    expect(cache.puts).toHaveLength(0);
+  });
+
+  it("returns and stores an incomplete 200 when the stored copy is for other coordinates", async () => {
+    const { cache, result } = await refreshWith(() => jsonResponse(openMeteoBody(START_S, SHORT_CLOUD)), {
+      [KEY]: storedEntry(120, 42, { latitudeDeg: 50.06, longitudeDeg: 19.94 }),
+    });
+    expect(result?.fallback).toBe(false);
+    expect(result?.fetchedAt).toEqual(NOW);
+    expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(SHORT_CLOUD);
+    expect(cache.puts).toHaveLength(1);
+    const written = JSON.parse(cache.puts[0].value) as { lat: number; lon: number; hours: unknown[] };
+    expect([written.lat, written.lon]).toEqual([52.23, 21.01]);
+    expect(written.hours).toHaveLength(SHORT_CLOUD.length);
   });
 
   it("keeps a usable stored copy when the 200 starts after the night in progress began", async () => {

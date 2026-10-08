@@ -96,13 +96,13 @@ function currentHourMs(now: Date): number {
 }
 
 /** A 200's series is complete when it spans the current hour − 24 h to + 96 h (see the constants above). */
-export function isCompleteForecast(forecast: HourlyForecast, now: Date): boolean {
+function isCompleteForecast(forecast: HourlyForecast, now: Date): boolean {
   const hour = currentHourMs(now);
   return spans(forecast, hour - FORECAST_COMPLETE_BEFORE_MS, hour + FORECAST_COMPLETE_AFTER_MS);
 }
 
 /** A stored copy is worth keeping over an incomplete 200 when it spans the current hour − 24 h to + 24 h. */
-export function coversStoredWindow(forecast: HourlyForecast, now: Date): boolean {
+function coversStoredWindow(forecast: HourlyForecast, now: Date): boolean {
   const hour = currentHourMs(now);
   return spans(forecast, hour - FORECAST_COMPLETE_BEFORE_MS, hour + FORECAST_STORED_AFTER_MS);
 }

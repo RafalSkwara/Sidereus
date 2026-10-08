@@ -133,7 +133,9 @@ function skyHeadlineId(verdict: Verdict): SkyHeadlineId {
       return "humidityCap";
     case "fallback-cap":
       return "fallbackCap";
+    // An hour missing from the dark window keeps the "No forecast" headline (sky checks store it), with its own reason.
     case "no-weather-data":
+    case "missing-hours":
       return "noForecast";
     case "cloudy":
       return reason.minCloudPct === null ? "noForecast" : "no-go";
@@ -328,6 +330,8 @@ export function createFormatter(locale: Locale) {
         return reason.minCloudPct === null ? text.noForecast : text.cloudy({ cloud: num(reason.minCloudPct) });
       case "no-weather-data":
         return text.noWeatherData;
+      case "missing-hours":
+        return text.missingHours;
       case "no-darkness":
         return text.noDarkness;
     }
@@ -584,6 +588,9 @@ export function createFormatter(locale: Locale) {
         break;
       case "no-weather-data":
         phrase = text.noWeatherData;
+        break;
+      case "missing-hours":
+        phrase = hours === null ? text.missingHours : text.clearHoursMissing({ hours });
         break;
       case "cloudy":
       case "no-darkness":

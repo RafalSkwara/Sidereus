@@ -569,6 +569,8 @@ export const en = {
         fallbackCap: (p: { hours: string; cloud: string }) =>
           `the last saved forecast showed ${p.hours} h in a row with at most ${p.cloud}% cloud between dusk and dawn, but it could not be refreshed`,
         noWeatherData: "no weather data",
+        /** A forecast hour between civil dusk and dawn is missing, so the clouds alone cannot call it clear. */
+        missingHours: "an hour between dusk and dawn is missing from the forecast",
         /**
          * On a no-go or no-darkness night the planets are limited to the planet window's clear hours, named here
          * as "19:00–20:00 and 05:00–06:00" (a locale-formatted list).
@@ -578,6 +580,8 @@ export const en = {
           `clear ${p.hours}, but humidity reaches ${p.humidity}%, so expect dew and haze`,
         clearHoursFallback: (p: { hours: string }) =>
           `clear ${p.hours} in the last saved forecast, which could not be refreshed`,
+        clearHoursMissing: (p: { hours: string }) =>
+          `clear ${p.hours}, but an hour between dusk and dawn is missing from the forecast`,
       },
       magnitude: (p: { mag: string }) => `mag ${p.mag}`,
       size: (p: { arcsec: string }) => `${p.arcsec}″`,
@@ -755,6 +759,8 @@ export const en = {
       noForecast: "no forecast covers the dark window",
       cloudy: (p: { cloud: string }) => `too cloudy: the clearest dark hour has ${p.cloud}% cloud`,
       noWeatherData: "no weather data",
+      /** The forecast reaches the night, but one of its dark hours is missing, so it cannot be called clear. */
+      missingHours: "an hour of the dark window is missing from the forecast",
       noDarkness: "the sky never gets dark enough tonight",
     },
 
