@@ -947,6 +947,17 @@ export const en = {
         /** A row link's accessible name: the bar and dot are decorative, so the row says it all. */
         rowLabel: (p: { name: string; best: string; window: string; direction: string }) =>
           `${p.name}: best at ${p.best}, window ${p.window}, direction ${p.direction}`,
+        /** ui-user-adjustments: a row's visible line under the name; the curve below it is decorative. */
+        rowLine: (p: { best: string; window: string; direction: string }) =>
+          `Best ${p.best} · window ${p.window} · ${p.direction}`,
+        /** The legend under the night's lines: its accessible name, then one entry per mark of the curves. */
+        legendLabel: "How to read the curves",
+        legendLine: "Height above the horizon through the night",
+        /** `deg` is the site's minimum altitude, a whole number. */
+        legendMin: (p: { deg: string }) => `Your minimum altitude (${p.deg}°)`,
+        legendWindow: "The window: above your minimum altitude while the sky is dark enough",
+        legendBest: "Best time: the highest point in the window",
+        legendDark: "The dark window",
         /** No target to place on the night (the view's explanation, when there is one, comes first). */
         empty: "No target is recommended tonight, so there is no plan to draw.",
         /** The view has no plan (only when building it failed). */

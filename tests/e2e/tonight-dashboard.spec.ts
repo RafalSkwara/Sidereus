@@ -80,4 +80,17 @@ test("The Session plan page lists rows that lead to their targets", async ({ pag
   for (const href of await rows.evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
     expect(href).toMatch(/^\/tonight\/(targets#object-|planets#planet-|moon)/);
   }
+
+  // ui-user-adjustments: a legend explains the curves, and every row says its best time in words above its curve.
+  const legend = page.getByRole("list", { name: t.pages.plan.legendLabel });
+  await expect(legend).toBeVisible();
+  await expect(legend).toContainText(t.pages.plan.legendLine);
+  await expect(legend).toContainText(t.pages.plan.legendWindow);
+  await expect(legend).toContainText(t.pages.plan.legendBest);
+  const count = await rows.count();
+  for (let i = 0; i < count; i++) {
+    const row = rows.nth(i);
+    await expect(row.locator("[data-session-plan-line]")).toHaveText(/^Best \d\d:\d\d · window \d\d:\d\d–\d\d:\d\d · /);
+    await expect(row.locator("[data-session-plan-curve] svg path").first()).toHaveAttribute("d", /^M[\d.]+ [\d.]+ L/);
+  }
 });

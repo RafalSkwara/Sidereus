@@ -31,6 +31,7 @@ import DeleteButton from "@/components/gear/DeleteButton";
 import GearCard from "@/components/tonight/GearCard.astro";
 import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
+import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
@@ -544,9 +545,11 @@ const panoramaView = buildTonight(
     now: PANORAMA_NOW,
   },
   locale,
-  { withSkyView: true },
+  { withSkyView: true, withSessionPlan: true },
 );
 const panoramaSky = panoramaView.skyView;
+// The same night's Session plan: long deep-sky windows, short planet and Moon ones, and a planet up most of the night.
+const panoramaPlan = panoramaView.sessionPlan;
 const frameNearestSun = (altitudeDeg: number) =>
   panoramaSky
     ? panoramaSky.sunAltDeg.reduce(
@@ -1851,6 +1854,41 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               active — N/A (no pressed style: a tile navigates to its page) · disabled — N/A (a tile is a link that
               always opens its page) · error — N/A (errors render outside tiles)
+            </p>
+          </section>
+
+          <!-- SessionTimeline -->
+          <section class:list={block} aria-labelledby="c-session-timeline">
+            <h3 id="c-session-timeline" class:list={blockTitle}>
+              SessionTimeline (/tonight/plan)
+            </h3>
+            <p class:list={blockNote}>
+              The live sky's night (Warsaw, 10 October 2026, clear): the night's lines, the legend, then one row per
+              target with its altitude curve. The second copy is pinned to red mode, where only shapes (dashed minimum,
+              thicker window, dot, dark-edge marks) tell the marks apart.
+            </p>
+            {panoramaPlan ? (
+              <div class="grid gap-6 lg:grid-cols-2">
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · this page's theme</p>
+                  <div class="rounded-lg border border-border py-4">
+                    <SessionTimeline plan={panoramaPlan} />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>red mode</p>
+                  <div data-theme="red" class="rounded-lg border border-border bg-background py-4 text-foreground">
+                    <SessionTimeline plan={panoramaPlan} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p class:list={notApplicable}>The Session plan failed to build.</p>
+            )}
+            <p class:list={notApplicable}>
+              hover — a row takes the accent surface · focus-visible — Tab to a row for its inset ring · disabled — N/A
+              · error and empty — PlanPageContent says why instead of drawing (no plan, no rows) · loading — see
+              TonightPageSkeleton
             </p>
           </section>
 

@@ -14,12 +14,12 @@ import { waitForHydration } from "./helpers";
  *
  *   CAPTURE_LANDING=1 BASE_URL=http://localhost:4321 npx playwright test landing-screenshot
  *
- * Dark theme and English, 1280×1145: the verdict, the live sky, the slider and the first tile ("Point here first"),
+ * Dark theme and English, 1280×1125: the verdict, the live sky, the slider and the first tile ("Point here first"),
  * ending on that tile's rule (ui-landing). Tonight shows the site's name and time zone, never its coordinates.
  */
 
 const OUTPUT = fileURLToPath(new URL("../../public/landing/tonight.png", import.meta.url));
-const VIEWPORT = { width: 1280, height: 1145 };
+const VIEWPORT = { width: 1280, height: 1125 };
 
 const MADRID_RESULT = {
   id: 3117735,

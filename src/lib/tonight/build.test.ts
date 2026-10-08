@@ -1612,6 +1612,29 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     expect(plan.ticks.filter((tick) => tick.label === "02:00")).toHaveLength(2);
   });
 
+  it("gives every row its altitude over the axis and its peak altitude, and the plan the site's minimum (ui-user-adjustments)", () => {
+    const plan = planOf(build({ site: { ...WARSAW, minAltitudeDeg: 20 } }));
+    expect(plan.minAltitudeDeg).toBe(20);
+    expect(plan.rows.length).toBeGreaterThan(1);
+    expect(new Set(plan.rows.map((row) => row.kind)).size).toBeGreaterThan(1);
+    // One sample per step from the axis start, the last at its end (a shorter last step).
+    const samples = plan.rows[0].track.length;
+    expect(plan.trackStep * (samples - 2)).toBeLessThan(1);
+    expect(plan.trackStep * (samples - 1)).toBeGreaterThanOrEqual(1);
+    for (const row of plan.rows) {
+      expect(row.track).toHaveLength(samples);
+      expect(row.track.every(Number.isInteger)).toBe(true);
+      // The peak clears the minimum, and the track reaches it inside the window (to within a 10-minute step's drift).
+      expect(row.peakAltitudeDeg).toBeGreaterThanOrEqual(20);
+      const inWindow = row.track.filter((_, i) => {
+        const at = Math.min(i * plan.trackStep, 1);
+        return at >= row.from && at <= row.to;
+      });
+      expect(Math.max(...inWindow) / 10).toBeGreaterThan(row.peakAltitudeDeg - 2);
+      expect(Math.max(...inWindow) / 10).toBeLessThan(row.peakAltitudeDeg + 2);
+    }
+  });
+
   it("has no sunset or sunrise text when the Sun does not cross the horizon (87° N in October)", () => {
     const pole: SiteRecord = { ...WARSAW, latitudeDeg: 87, longitudeDeg: 0, timeZone: "UTC" };
     const now = new Date("2026-10-05T12:00:00Z");

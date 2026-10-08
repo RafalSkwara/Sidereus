@@ -348,6 +348,13 @@ export interface TonightSessionPlanRowInput extends SessionPlanRowInput {
   windowText: string;
   /** Direction at the peak, "SW, 45°". */
   bestDirection: string;
+  /**
+   * The target's altitude over the plan's axis, in whole tenths of a degree, one sample per `trackStep` from the axis
+   * start and the last at its end (ui-user-adjustments: the row's altitude curve).
+   */
+  track: number[];
+  /** The altitude at the peak, degrees to one decimal: where the curve's best-time dot sits. */
+  peakAltitudeDeg: number;
 }
 
 export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput>;
@@ -378,6 +385,10 @@ export interface TonightSessionPlan {
   ticks: { at: number; label: string }[];
   /** By best time, earliest first; empty when nothing is recommended tonight. */
   rows: TonightSessionPlanRow[];
+  /** The site's minimum altitude, degrees: the curves' dashed line, and what a row's window stays above. */
+  minAltitudeDeg: number;
+  /** One step of the rows' tracks as a fraction of the axis (the last step may be shorter). */
+  trackStep: number;
   /**
    * The tile's "what next" line, decided on the server from `now` (the page reads no clock): before sunset the first
    * row (`first`), during the night the first row, by best time, whose best window has not ended (`next`), and `done`
@@ -555,6 +566,11 @@ function forecastStatusOf(forecast: ForecastResult | null, now: Date): ForecastS
 function roundTo(x: number, decimals: number): number {
   const factor = 10 ** decimals;
   return Math.round(x * factor) / factor || 0;
+}
+
+/** A track's altitudes alone, in whole tenths of a degree (the Session plan's curves). */
+function packAltitudes(track: readonly Pick<HorizontalPosition, "altitudeDeg">[]): number[] {
+  return track.map((sample) => Math.round(sample.altitudeDeg * 10) || 0);
 }
 
 /** A track as interleaved altitude and azimuth in whole tenths of a degree, azimuth in [0, 3600). */
@@ -1051,6 +1067,17 @@ export function buildTonight(
       const { range, fromSun, moon } = skyAxisWithMoon();
       const up = moonUpOf(engineSite, moon);
       const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
+      // Each row's altitude over the axis, on the live sky's grid (every `DEFAULT_TRACK_STEP_MINUTES`, both ends).
+      const objectAltitudes = objectTracks(
+        engineSite,
+        range,
+        planObjects.map(({ object }) => object),
+      ).map(packAltitudes);
+      const planetAltitudes = planetTracks(
+        engineSite,
+        range,
+        planPlanets.map((entry) => entry.key),
+      ).map(packAltitudes);
       const rowOf = (
         kind: TonightSessionPlanRowInput["kind"],
         key: string,
@@ -1059,6 +1086,7 @@ export function buildTonight(
         href: string,
         window: Interval,
         peak: HorizontalPosition,
+        track: number[],
       ): TonightSessionPlanRowInput => ({
         kind,
         key,
@@ -1070,6 +1098,8 @@ export function buildTonight(
         bestTime: formatTime(peak.time, timeZone),
         windowText: `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`,
         bestDirection: formatDirection(peak),
+        track,
+        peakAltitudeDeg: roundTo(peak.altitudeDeg, 1),
       });
       const planRows: TonightSessionPlanRowInput[] = [
         ...(planMoon === null
@@ -1083,9 +1113,10 @@ export function buildTonight(
                 "/tonight/moon",
                 planMoon.window,
                 planMoon.peak,
+                packAltitudes(moon),
               ),
             ]),
-        ...planPlanets.map((entry) => {
+        ...planPlanets.map((entry, i) => {
           const name = messages.targets.planet[entry.key];
           return rowOf(
             "planet",
@@ -1095,9 +1126,10 @@ export function buildTonight(
             `/tonight/planets#planet-${entry.key}`,
             entry.window,
             entry.peak,
+            planetAltitudes[i],
           );
         }),
-        ...planObjects.map(({ object, score, peak }) => {
+        ...planObjects.map(({ object, score, peak }, i) => {
           const commonName = localCommonName(object.id, object.commonName, locale);
           return rowOf(
             "object",
@@ -1107,6 +1139,7 @@ export function buildTonight(
             `/tonight/targets#object-${object.id}`,
             score.window,
             peak,
+            objectAltitudes[i],
           );
         }),
       ];
@@ -1166,6 +1199,8 @@ export function buildTonight(
           label: formatTime(new Date(hour), timeZone),
         })),
         rows: layout.rows,
+        minAltitudeDeg: site.minAltitudeDeg,
+        trackStep: axisMs > 0 ? (DEFAULT_TRACK_STEP_MINUTES * 60_000) / axisMs : 1,
         nextUp,
       };
     } catch {

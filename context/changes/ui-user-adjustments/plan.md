@@ -759,15 +759,15 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [ ] 6.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 6.2 Unit tests pass (plan rows carry tracks and peak altitude; layout helper): `npm test`
-- [ ] 6.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 6.4 Plan and phone specs pass
-- [ ] 6.5 Production build passes with the service worker: `npm run build`
+- [x] 6.1 Type check passes: `npx astro sync && npx astro check`
+- [x] 6.2 Unit tests pass (plan rows carry tracks and peak altitude; layout helper): `npm test`
+- [x] 6.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 6.4 Plan and phone specs pass
+- [x] 6.5 Production build passes with the service worker: `npm run build`
 
 #### Manual
 
-- [ ] 6.6 Curves plausible, dot at the stated best time, dashed line at the site's minimum altitude
+- [x] 6.6 Curves plausible, dot at the stated best time, dashed line at the site's minimum altitude
 - [ ] 6.7 Legend makes the drawing understandable (user check)
-- [ ] 6.8 Curves legible at 360 px and in red mode
-- [ ] 6.9 Plan rows have clearly more room between them at 360 and 390 px
+- [x] 6.8 Curves legible at 360 px and in red mode
+- [x] 6.9 Plan rows have clearly more room between them at 360 and 390 px
