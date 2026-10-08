@@ -55,7 +55,10 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-test("the verdict and both gear cards fit one 390×844 screen", async ({ page }) => {
+// The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
+// starts on it (its title shows above the TabBar). On phones each card gives the name its own line with Manage under it,
+// so the Telescope card's lower part needs a short scroll, as the first target does.
+test("the verdict, the Site card and the Telescope card's title fit one 390×844 screen", async ({ page }) => {
   await onboardInMadrid(page, "e2e-phone");
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -73,9 +76,10 @@ test("the verdict and both gear cards fit one 390×844 screen", async ({ page })
   const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
   const site = await siteCard.boundingBox();
   const telescope = await telescopeCard.boundingBox();
+  const telescopeTitle = await telescopeCard.locator("label, p").first().boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
 
-  if (!tabBar || !headline || !site || !telescope || !firstTile) {
+  if (!tabBar || !headline || !site || !telescope || !telescopeTitle || !firstTile) {
     throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");
   }
   expect(
@@ -86,9 +90,11 @@ test("the verdict and both gear cards fit one 390×844 screen", async ({ page })
   expect(site.y + site.height, "the Site card must sit above the Telescope card at 390×844").toBeLessThanOrEqual(
     telescope.y,
   );
-  expect(telescope.y + telescope.height, "the Telescope card must end above the TabBar at 390×844").toBeLessThanOrEqual(
-    tabBar.y,
-  );
+  expect(site.y + site.height, "the Site card must end above the TabBar at 390×844").toBeLessThanOrEqual(tabBar.y);
+  expect(
+    telescopeTitle.y + telescopeTitle.height,
+    "the Telescope card's title must show above the TabBar at 390×844",
+  ).toBeLessThanOrEqual(tabBar.y);
   expect(telescope.y + telescope.height, "the cards must end above the first tile at 390×844").toBeLessThanOrEqual(
     firstTile.y,
   );
