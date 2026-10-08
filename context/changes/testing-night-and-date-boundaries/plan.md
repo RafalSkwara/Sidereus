@@ -275,7 +275,7 @@ Prove the engine's decision reaches Tonight's view, its "Mark observed" night, t
   - temporarily making `logFormNights` default to `tonightDateForSite` turns log-night (a) red.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-08): Session plan rows sorted by `bestTime` → 5 of 30 red ((b) in every runner zone); `PLANET_WINDOW_SUN_ALTITUDE_DEG` = −12 → 10 red ((c) Warsaw and Los Angeles × 5 zones); `logFormNights` defaulting to the latest night → 10 of 60 red (log-night (a) at dawn + 5 min and 11:59 CET); all restored. Manual 2.5 checked by diff review of `new.astro`: `maxNight` = `latestNightBound` (identical to the old `reduce` with `""` start for a non-empty list, `""` for none), default = `observingNightDateFor(now, site.timeZone)` as before, `?night=` override unchanged.
 
 #### Manual Verification:
 
@@ -387,23 +387,23 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 #### Automated
 
-- [x] 1.1 The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts`
-- [x] 1.2 The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts`
-- [x] 1.3 Break check (rollover constant −12 turns (b)/(c) red; `getHours` in `observingNightDateFor` under `TZ=UTC` turns (d) red), reverted and logged
-- [x] 1.4 Full unit suite, lint and type check pass
+- [x] 1.1 The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts` — 1bf7096
+- [x] 1.2 The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts` — 1bf7096
+- [x] 1.3 Break check (rollover constant −12 turns (b)/(c) red; `getHours` in `observingNightDateFor` under `TZ=UTC` turns (d) red), reverted and logged — 1bf7096
+- [x] 1.4 Full unit suite, lint and type check pass — 1bf7096
 
 ### Phase 2: Consumers and the log form's night (unit)
 
 #### Automated
 
-- [ ] 2.1 New suites pass: `npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
-- [ ] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
-- [ ] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and logged
-- [ ] 2.4 Full unit suite, lint and type check pass
+- [x] 2.1 New suites pass: `npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
+- [x] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
+- [x] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and logged
+- [x] 2.4 Full unit suite, lint and type check pass
 
 #### Manual
 
-- [ ] 2.5 `/log/new` without a `night` parameter keeps its default night and date-picker max (local check or `new.astro` diff review)
+- [x] 2.5 `/log/new` without a `night` parameter keeps its default night and date-picker max (local check or `new.astro` diff review)
 
 ### Phase 3: Static runner-zone guard and cookbook (unit + docs)
 
