@@ -93,6 +93,27 @@ Skip fixtures whose `moon.status` is `not-applicable`.
 - `captured` — real values; tests assert them.
 - `not-applicable` — the section does not apply to this fixture (a `reason` is recorded); tests skip it.
 
+## USNO references (`usno.ts`)
+
+`USNO_CIVIL_DAWN` holds civil dawn (sun at −6°) and sunrise for the five edge nights of the night-boundary
+tests, read from the U.S. Naval Observatory API: an oracle independent of the engine. Each entry is an engine
+`Site` (`elevationM: 0`, USNO's sea-level basis), the observing night's evening date and the two times as ISO
+UTC strings. Values are rounded to the minute, so compare with ±2 min (engine ends) or use ±5 min either side
+(rollover instants). To re-check or add one:
+
+```
+https://aa.usno.navy.mil/api/rstt/oneday?date=<YYYY-MM-DD>&coords=<lat>,<lon>&tz=0
+```
+
+`tz=0` returns UTC times for the UTC day `date`, so use the morning after the night's evening date (the UTC day
+before it far east of UTC); read `Begin civil twilight` and `Sunrise`. Update `USNO_CHECKED` in `usno.ts`.
+
+## Runner zones (`runner-zones.ts`)
+
+Test machinery shared by the engine, Tonight and log night-boundary tests, not a fixture: `RUNNER_ZONES`, and
+`useRunnerZone(zone)` to switch `process.env.TZ` for a `describe` and restore it afterwards. See the file's doc
+comment for the rules (engine calls inside `it`, assert the switch first).
+
 ## Skyfield references (`skyfield/`)
 
 | File                                      | Generator                     | Site                                  | Night      | What                                                                     |

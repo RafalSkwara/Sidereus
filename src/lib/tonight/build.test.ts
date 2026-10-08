@@ -15,7 +15,6 @@ import {
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
   sunEvents,
-  type HourlyForecast,
   type Interval,
   type MoonDiscState,
 } from "@/lib/engine";
@@ -34,7 +33,16 @@ import {
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
-import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
+import {
+  EYEPIECES,
+  hourlyForecast,
+  NOW,
+  result,
+  TELESCOPE,
+  uniformForecast,
+  utcWallTime,
+  WARSAW,
+} from "./test-fixtures";
 import { tonightDateForSite } from "./tonight-date";
 
 /**
@@ -99,36 +107,6 @@ const TROMSO_SITE: SiteRecord = {
 };
 
 const HOUR_MS = 3_600_000;
-
-/** `HH:mm` of the UTC wall clock `offsetHours` ahead of `instant`. */
-function utcWallTime(instant: Date, offsetHours: number): string {
-  return new Date(instant.getTime() + offsetHours * HOUR_MS).toISOString().slice(11, 16);
-}
-
-/** Hourly forecast from `fromUtc` for `hours` hours, each hour's cloud cover given by `cloudPct`. */
-function hourlyForecast(fromUtc: string, hours: number, cloudPct: (start: Date) => number): HourlyForecast {
-  const from = Date.parse(fromUtc);
-  return {
-    hours: Array.from({ length: hours }, (_, i) => {
-      const start = new Date(from + i * HOUR_MS);
-      return { start, cloudCoverPct: cloudPct(start), humidityPct: 60 };
-    }),
-  };
-}
-
-/** Hourly forecast from 00:00 UTC on `fromUtc` for 48 h, every hour at `cloudPct`. */
-function uniformForecast(fromUtc: string, cloudPct: number): HourlyForecast {
-  return hourlyForecast(fromUtc, 48, () => cloudPct);
-}
-
-/** A service result fetched 20 min before `NOW`, fresh unless `fallback`. */
-function result(
-  forecast: HourlyForecast,
-  fallback = false,
-  fetchedAt = new Date(NOW.getTime() - 20 * 60_000),
-): ForecastResult {
-  return { forecast, fetchedAt, fallback };
-}
 
 /** Whether the `HH:mm` label lies from `from` to `to` inclusive on the clock, across midnight. */
 function isBetween(label: string | undefined, from: string, to: string): boolean {
