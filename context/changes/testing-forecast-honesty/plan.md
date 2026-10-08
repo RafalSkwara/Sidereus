@@ -393,14 +393,14 @@ None. The KV value schema is unchanged and existing stored copies stay valid. No
 
 #### Automated
 
-- [x] 2.1 Service suite passes: `npx vitest run src/lib/forecast/service.test.ts`
-- [x] 2.2 Break check, keep-copy: stash the `service.ts` change, run the service suite, see the empty, all-null, short and night-in-progress keep-copy cases fail, restore
-- [x] 2.3 Integration suite passes: `npx vitest run src/lib/tonight/forecast-honesty.test.ts`
-- [x] 2.4 Loader suite passes: `npx vitest run src/lib/tonight/load.test.ts`
-- [x] 2.5 Full unit suite passes: `npm test`
-- [x] 2.6 Type check passes: `npx astro check`
-- [x] 2.7 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 2.1 Service suite passes: `npx vitest run src/lib/forecast/service.test.ts` — 5cfc1c4
+- [x] 2.2 Break check, keep-copy: stash the `service.ts` change, run the service suite, see the empty, all-null, short and night-in-progress keep-copy cases fail, restore — 5cfc1c4
+- [x] 2.3 Integration suite passes: `npx vitest run src/lib/tonight/forecast-honesty.test.ts` — 5cfc1c4
+- [x] 2.4 Loader suite passes: `npx vitest run src/lib/tonight/load.test.ts` — 5cfc1c4
+- [x] 2.5 Full unit suite passes: `npm test` — 5cfc1c4
+- [x] 2.6 Type check passes: `npx astro check` — 5cfc1c4
+- [x] 2.7 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 5cfc1c4
 
 #### Manual
 
-- [x] 2.8 Read `test-plan.md` §2 row #1, §6.1 and §6.6: the wording matches the PRD headline table, and the cookbook names real files and helpers
+- [x] 2.8 Read `test-plan.md` §2 row #1, §6.1 and §6.6: the wording matches the PRD headline table, and the cookbook names real files and helpers — 5cfc1c4
