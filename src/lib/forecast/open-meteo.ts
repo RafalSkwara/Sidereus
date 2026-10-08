@@ -24,12 +24,15 @@ export interface ForecastCoords {
   longitudeDeg: number;
 }
 
+/** A percentage the provider reports; outside 0-100 the response breaks its contract and is invalid. */
+const percent = z.number().min(0).max(100).nullable();
+
 const responseSchema = z.object({
   hourly: z
     .object({
       time: z.array(z.number().int()),
-      cloud_cover: z.array(z.number().nullable()),
-      relative_humidity_2m: z.array(z.number().nullable()),
+      cloud_cover: z.array(percent),
+      relative_humidity_2m: z.array(percent),
     })
     .refine(
       (h) => h.cloud_cover.length === h.time.length && h.relative_humidity_2m.length === h.time.length,
@@ -57,7 +60,8 @@ export function forecastUrl(site: ForecastCoords, baseUrl: string = OPEN_METEO_B
 /**
  * Maps an Open-Meteo response body into `HourlyForecast`. Hours where either value is null are
  * left out (the verdict counts them as not clear). Throws the fixed invalid-response error on a
- * schema mismatch.
+ * schema mismatch, including a cloud cover or humidity outside 0-100 (a negative cloud would
+ * otherwise read clear).
  */
 export function mapForecastResponse(body: unknown): HourlyForecast {
   const parsed = responseSchema.safeParse(body);
