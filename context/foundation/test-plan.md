@@ -77,8 +77,8 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|---------------|------------|--------|---------------|
-| 1 | Forecast honesty | Prove a partial, stale or missing forecast never yields a confident "Clear" and never blanks Tonight | #1 | unit + integration | change opened | testing-forecast-honesty |
-| 2 | Night and date boundaries | Prove the right night and times in every zone across DST, the rollover, midnight and month ends | #2 | unit | not started | — |
+| 1 | Forecast honesty | Prove a partial, stale or missing forecast never yields a confident "Clear" and never blanks Tonight | #1 | unit + integration | complete | testing-forecast-honesty (archived: context/archive/2026-10-07-testing-forecast-honesty/) |
+| 2 | Night and date boundaries | Prove the right night and times in every zone across DST, the rollover, midnight and month ends | #2 | unit | change opened | testing-night-and-date-boundaries |
 | 3 | Ranking invariants and calibration oracle | Prove no impossible target is listed and a retune cannot pass by regenerating its own expectations | #3, #4 | unit (property + reference fixture) | not started | — |
 | 4 | Access and entitlement boundary | Prove isolation and the plan are enforced on the server and coordinates stay private | #5, #6 | db integration + static gate | not started | — |
 | 5 | Quality-gates wiring | Stop CI retries from hiding flakes and lock the Phase 1-4 checks into CI and the agent loop | cross-cutting | gates + hook | not started | — |
