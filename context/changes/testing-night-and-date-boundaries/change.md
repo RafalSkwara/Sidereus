@@ -1,7 +1,7 @@
 ---
 change_id: testing-night-and-date-boundaries
 title: "Test rollout Phase 2: the right night and times in every zone, across DST and month ends"
-status: preparing
+status: planned
 created: 2026-10-08
 updated: 2026-10-08
 archived_at: null
