@@ -731,16 +731,16 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [ ] 4.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 4.2 Unit tests pass (including gear-choice): `npm test`
-- [ ] 4.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 4.4 Gear and phone specs pass
+- [x] 4.1 Type check passes: `npx astro sync && npx astro check`
+- [x] 4.2 Unit tests pass (including gear-choice): `npm test`
+- [x] 4.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 4.4 Gear and phone specs pass
 
 #### Manual
 
-- [ ] 4.5 Cards side by side from 640 px, stacked at 360/390 px, no sideways scroll, EN and PL
-- [ ] 4.6 Large icons clear in all themes; Manage looks clickable
-- [ ] 4.7 Switching from the select reloads Tonight for the pick
+- [x] 4.5 Cards side by side from 640 px, stacked at 360/390 px, no sideways scroll, EN and PL
+- [x] 4.6 Large icons clear in all themes; Manage looks clickable
+- [x] 4.7 Switching from the select reloads Tonight for the pick
 
 ### Phase 5: Spacing and data points on their own lines
 

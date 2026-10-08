@@ -529,20 +529,20 @@
 /*
  * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
  * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
- * page script adds `aria-disabled` and swallows the click; "Needs a connection" is their description, or a caption
+ * page script adds `aria-disabled` (also on the gear cards' selects) and swallows the click or submit; "Needs a connection" is their description, or a caption
  * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons and
  * `action` links (the Topbar and TabBar links have no border width, so it never shows there); the focus outline is
  * left alone, so focus stays visible. The current page's entry keeps its pressed look.
  */
 :root[data-offline] [data-needs-network]:not([aria-current="page"]),
-:root[data-offline] [data-needs-network] :is(a, button) {
+:root[data-offline] [data-needs-network] :is(a, button, select) {
   cursor: not-allowed;
   color: var(--muted-foreground);
   background-color: transparent;
   text-decoration-line: none;
 }
 
-:root[data-offline] [data-needs-network] :is(a, button),
+:root[data-offline] [data-needs-network] :is(a, button, select),
 :root[data-offline] :is(a, button)[data-needs-network] {
   border-style: dashed;
   border-color: var(--border);

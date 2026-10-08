@@ -18,8 +18,8 @@ import type { CopyNotice } from "@/lib/offline/copies";
 export const NEEDS_CONNECTION_ID = "offline-needs-connection";
 
 const NEEDS_NETWORK = "[data-needs-network]";
-// The interactive parts of a marked element: itself when it is a link or button, else the ones inside it (a form).
-const CONTROLS = "a[href], button";
+// The interactive parts of a marked element: itself when it is a link, button or select, else the ones inside it (a form).
+const CONTROLS = "a[href], button, select";
 
 /**
  * Which notice a stored copy shows: `stale` once its night is over (its server-computed `validUntil`), `old-forecast`

@@ -12,11 +12,10 @@ import { onboardInMadrid } from "./helpers";
  * search stubbed with Madrid. Tonight's content is a server island, so each check waits for the island's own
  * elements (and for the fonts, which change line heights) before it measures.
  *
- *  - the first screen at 390×844 (EN): the "Point here first" heading and the first line of its first target end
- *    above the fixed TabBar, and the gear link sits above the tiles. The margin is a few px, and the spec runs on
- *    the real clock, so it measures the target's first line: a long top name (M13's "Hercules Globular Cluster")
- *    wraps to a second line that may sit under the TabBar, while the target itself still starts on the first screen. 360×780 and 375×667 are known limits (the plan's "What we're not
- *    doing"), so they are not asserted;
+ *  - the first screen at 390×844 (EN): the verdict's headline and both gear cards (Site and Telescope, stacked on a
+ *    phone) end above the fixed TabBar, and the cards sit above the first tile. The first target no longer has to fit:
+ *    the cards took that room on purpose (ui-user-adjustments, the user's decision of 2026-10-08). 360×780 and 375×667
+ *    are known limits (the plan's "What we're not doing"), so they are not asserted;
  *  - no sideways scroll at 320×568 and 375×667 on eight pages, in EN and PL;
  *  - the panorama keeps its height (it is untouched by this change).
  */
@@ -56,44 +55,41 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-test("the verdict, the gear and the first target fit one 390×844 screen", async ({ page }) => {
+test("the verdict and both gear cards fit one 390×844 screen", async ({ page }) => {
   await onboardInMadrid(page, "e2e-phone");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/tonight");
   const tiles = page.locator("[data-tonight-tiles]");
   await expect(tiles).toBeVisible();
-  await expect(tiles.locator('a[href="/tonight/targets"] li').first()).toBeVisible();
+  const siteCard = page.locator('[data-gear-card="site"]');
+  const telescopeCard = page.locator('[data-gear-card="telescope"]');
+  await expect(siteCard, "the Site card must be visible under the sky").toBeVisible();
+  await expect(telescopeCard, "the Telescope card must be visible under the sky").toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 
   // The fixed bottom navigation: below `md` it is the only visible navigation named "Main" (the top bar's is hidden).
   const tabBar = await page.getByRole("navigation", { name: en.nav.primary }).boundingBox();
-  const heading = await page.locator("#tile-targets-heading").boundingBox();
-  // The first target's first line: the row's top plus its top padding and one line of its type role.
-  const firstLine = await tiles
-    .locator('a[href="/tonight/targets"] li')
-    .first()
-    .evaluate((row) => {
-      const style = getComputedStyle(row);
-      const top = row.getBoundingClientRect().top;
-      return { top, bottom: top + parseFloat(style.paddingTop) + parseFloat(style.lineHeight) };
-    });
+  const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
+  const site = await siteCard.boundingBox();
+  const telescope = await telescopeCard.boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
-  const gearLink = page.locator('main a[href="/gear"]');
-  await expect(gearLink, "the gear link must be visible under the sky").toBeVisible();
-  const gear = await gearLink.boundingBox();
 
-  if (!tabBar || !heading || !firstTile || !gear) {
-    throw new Error("a box to measure is missing (TabBar, tile heading, first tile or gear link)");
+  if (!tabBar || !headline || !site || !telescope || !firstTile) {
+    throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");
   }
   expect(
-    heading.y + heading.height,
-    "the 'Point here first' heading must sit above the TabBar at 390×844",
+    headline.y + headline.height,
+    "the verdict's headline must sit above the TabBar at 390×844",
   ).toBeLessThanOrEqual(tabBar.y);
-  expect(firstLine.bottom, "the first target's first line must sit above the TabBar at 390×844").toBeLessThanOrEqual(
+  // On a phone the cards stack: the Site card first, the Telescope card second.
+  expect(site.y + site.height, "the Site card must sit above the Telescope card at 390×844").toBeLessThanOrEqual(
+    telescope.y,
+  );
+  expect(telescope.y + telescope.height, "the Telescope card must end above the TabBar at 390×844").toBeLessThanOrEqual(
     tabBar.y,
   );
-  expect(gear.y + gear.height, "the gear link must end above the first tile at 390×844").toBeLessThanOrEqual(
+  expect(telescope.y + telescope.height, "the cards must end above the first tile at 390×844").toBeLessThanOrEqual(
     firstTile.y,
   );
 });

@@ -27,7 +27,11 @@ const HEADLINE = "[data-sky-headline]";
 const strip = (page: Page) => page.locator("section#nights");
 const stripGroup = (page: Page, label: string) =>
   strip(page).getByRole("heading", { level: 3, name: label, exact: true }).locator("xpath=following-sibling::ol[1]");
-const sitePills = (page: Page) => page.getByRole("navigation", { name: t.siteSelector.label, exact: true });
+/** The Site card on the dashboard (ui-user-adjustments): a select for two or more sites, else the name plus Manage. */
+const siteCard = (page: Page) => page.locator('[data-gear-card="site"]');
+/** The card's select; the card's title is its label. Exact, so no other "Site" label can match. */
+const siteSelect = (page: Page) => page.getByLabel(t.siteSelector.label, { exact: true });
+const chosenSite = (page: Page) => siteSelect(page).locator("option:checked");
 
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -111,7 +115,8 @@ test("the strip shows seven nights, and switching sites moves it to the other si
   // One site: no site selector on Tonight, and the strip for it on the nights page.
   const first = await siteName(page);
   await openTonight(page);
-  await expect(sitePills(page)).toHaveCount(0);
+  await expect(siteCard(page).locator("[data-gear-name]")).toHaveText(first);
+  await expect(siteSelect(page)).toHaveCount(0);
   await openNights(page);
   await expectStripFor(page, first, "Europe/Madrid");
 
@@ -137,35 +142,30 @@ test("the strip shows seven nights, and switching sites moves it to the other si
     }
   }
 
-  // A second site in another time zone: pills, the oldest (the onboarded one) chosen by default.
+  // A second site in another time zone: a select, the oldest (the onboarded one) chosen by default.
   await addSite(page);
   await openTonight(page);
-  await expect(sitePills(page).getByRole("link")).toHaveCount(2);
-  await expect(sitePills(page).getByRole("link", { name: first, exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(siteSelect(page).locator("option")).toHaveCount(2);
+  await expect(chosenSite(page)).toHaveText(first);
   await openNights(page);
   await expectStripFor(page, first, "Europe/Madrid");
 
   // Picking the second on Tonight moves the nights page there, in its zone; plain /tonight remembers the pick.
   await openTonight(page);
-  await sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true }).click();
+  await siteSelect(page).selectOption({ label: SECOND_SITE.name });
   await expect(page).toHaveURL(/\/tonight\?site=[0-9a-f-]{36}$/);
-  await expect(sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await expect(chosenSite(page)).toHaveText(SECOND_SITE.name);
   await openNights(page);
   await expectStripFor(page, SECOND_SITE.name, SECOND_SITE.zone);
   await openTonight(page);
-  await expect(sitePills(page).getByRole("link", { name: SECOND_SITE.name, exact: true })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await expect(chosenSite(page)).toHaveText(SECOND_SITE.name);
 
   // The remembered site is deleted: Tonight and the nights page fall back to the first, without an error or a site
   // selector.
   await deleteGear(page, SECOND_SITE.name);
   await openTonight(page);
-  await expect(sitePills(page)).toHaveCount(0);
+  await expect(siteCard(page).locator("[data-gear-name]")).toHaveText(first);
+  await expect(siteSelect(page)).toHaveCount(0);
   await expect(page.locator('form[data-gear-select="site"]')).toHaveCount(0);
   await openNights(page);
   await expectStripFor(page, first, "Europe/Madrid");

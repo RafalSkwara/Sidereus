@@ -484,6 +484,11 @@ export const en = {
       label: "Telescope",
       show: "Show",
     },
+    /** The gear cards under the sky (ui-user-adjustments): with one site or telescope a card names it and links to /gear. */
+    gear: {
+      manageSites: "Manage sites",
+      manageTelescopes: "Manage telescopes",
+    },
     rankingFor: (p: { telescope: string }) => `For your ${p.telescope}`,
 
     card: {

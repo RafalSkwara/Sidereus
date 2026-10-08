@@ -1,0 +1,90 @@
+---
+// FR-012 / FR-019: the Site and the Telescope Tonight is for, as one card each (ui-user-adjustments, replacing the
+// gear link and the pills). The title is on top, a large icon bottom-left and, bottom-right, a select for two or more
+// items or the name plus a "Manage" link to /gear for one. Below `sm` the card is compact (smaller padding and icon,
+// the name and Manage on one row) so both stacked cards end above the TabBar at 390×844 (user pick, 2026-10-08). A deliberate exception to "Bands, not boxed cards" (CLAUDE.md).
+// The select is a plain GET form that submits on change (`/tonight?<param>=<id>` remembers the pick, see
+// pages/tonight.astro); it renders inside the TonightContent server island, which the browser fetches with
+// JavaScript, so Tonight as a whole still needs JS. Only ids go into the URL, never a site's coordinates.
+import { MapPin, Settings2, Telescope } from "lucide-react";
+
+import GearSelectField from "@/components/tonight/GearSelectField";
+import { GEAR_CARD_MIN_HEIGHT_CLASS } from "@/components/tonight/sky-band";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages } from "@/i18n";
+import { selectorKind } from "@/lib/tonight/gear-choice";
+
+interface Props {
+  /** Which card; also the page query parameter the pick travels in (`?site=` / `?telescope=`). */
+  kind: "site" | "telescope";
+  /** In `created_at` order. */
+  items: { id: string; name: string }[];
+  activeId: string;
+}
+
+const { kind, items, activeId } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight;
+const title = kind === "site" ? t.siteSelector.label : t.selector.label;
+const show = kind === "site" ? t.siteSelector.show : t.selector.show;
+const manage = kind === "site" ? t.gear.manageSites : t.gear.manageTelescopes;
+const Icon = kind === "site" ? MapPin : Telescope;
+const select = selectorKind(items.length) === "select";
+const active = items.find((item) => item.id === activeId);
+const selectId = `${kind}-select`;
+const titleClass = "text-label font-semibold text-muted-foreground";
+---
+
+<div
+  class:list={[
+    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+    GEAR_CARD_MIN_HEIGHT_CLASS,
+  ]}
+  data-gear-card={kind}
+>
+  {select ? (
+    <label for={selectId} class:list={[titleClass]}>
+      {title}
+    </label>
+  ) : (
+    <p class:list={[titleClass]}>{title}</p>
+  )}
+  <div class="mt-2 flex items-center justify-between gap-3 sm:mt-3 sm:items-end">
+    <Icon className="size-8 shrink-0 text-primary-strong sm:size-10" strokeWidth={1.5} aria-hidden="true" />
+    {select ? (
+      <form method="get" action="/tonight" class="min-w-0 flex-1" data-gear-select={kind} data-needs-network="">
+        <GearSelectField id={selectId} name={kind} items={items} activeId={activeId} />
+        {/* Visually hidden until the script below drops it: without the script, it still submits. */}
+        <button type="submit" class:list={[buttonVariants({ variant: "outline" }), "sr-only"]}>
+          {show}
+        </button>
+      </form>
+    ) : (
+      <div class="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-col sm:items-end sm:gap-1">
+        <p
+          class="max-w-full min-w-0 shrink-10 truncate text-body text-heading"
+          title={active?.name}
+          data-gear-name={kind}
+        >
+          {active?.name}
+        </p>
+        <a href="/gear" class:list={[buttonVariants({ variant: "action", size: "sm" })]} data-needs-network="">
+          <Settings2 aria-hidden="true" />
+          {manage}
+        </a>
+      </div>
+    )}
+  </div>
+</div>
+
+<script>
+  // Progressive enhancement: switch as soon as an item is picked. Without it, the Show button submits.
+  function enhance(form: HTMLFormElement) {
+    if (form.dataset.enhanced) return;
+    form.dataset.enhanced = "true";
+    form.querySelector("button[type=submit]")?.setAttribute("hidden", "");
+    form.querySelector("select")?.addEventListener("change", () => {
+      form.requestSubmit();
+    });
+  }
+  document.querySelectorAll<HTMLFormElement>("form[data-gear-select]").forEach(enhance);
+</script>

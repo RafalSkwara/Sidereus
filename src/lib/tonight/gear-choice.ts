@@ -7,9 +7,6 @@ export const SITE_COOKIE = "sidereus-site";
 /** Remembers the last telescope picked on Tonight, on this device (like theme and language). */
 export const TELESCOPE_COOKIE = "sidereus-telescope";
 
-/** Up to this many items are shown as pills; more switch to a dropdown. */
-export const SELECTOR_PILL_LIMIT = 3;
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -31,8 +28,7 @@ export function chooseOwned<T extends { id: string }>(
   return items.find((item) => item.id === requestedId) ?? items.at(0);
 }
 
-/** FR-012 / FR-019: no selector for a single item; pills for a few; a dropdown beyond that. */
-export function selectorKind(count: number): "none" | "pills" | "dropdown" {
-  if (count < 2) return "none";
-  return count <= SELECTOR_PILL_LIMIT ? "pills" : "dropdown";
+/** FR-012 / FR-019: no selector for a single item; a select from two (the pills were retired in ui-user-adjustments). */
+export function selectorKind(count: number): "none" | "select" {
+  return count < 2 ? "none" : "select";
 }

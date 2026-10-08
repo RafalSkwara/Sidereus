@@ -6,9 +6,24 @@
  * Island-safe: plain strings and numbers.
  */
 
-/** The gear row under the sky (link and selectors) and the gap before the tiles, shared with the skeleton. */
+/** The gear row under the sky (the two gear cards) and the gap before the tiles, shared with the skeleton. */
 export const GEAR_ROW_GAP_CLASS = "pt-2 sm:pt-4";
 export const TILES_GAP_CLASS = "pt-3 sm:pt-6";
+
+/** The gear row's grid: the Site and Telescope cards side by side from `sm`, stacked below it. Shared with the skeleton. */
+export const GEAR_ROW_GRID_CLASS = "grid gap-3 sm:grid-cols-2";
+
+/**
+ * Every gear card's minimum height, the skeleton's bars too, so the swap doesn't jump whichever variant arrives.
+ * - Below `sm` the card is compact (user pick, 2026-10-08), so both stacked cards end above the TabBar at 390×844:
+ *   p-3 24 + the title line (`text-label`) 20 + `mt-2` 8 + one 44 px row (icon, name and Manage, or the select) = 96 px,
+ *   `min-h-24`.
+ * - From `sm` the tallest variant is the single-item card: p-4 32 + title 20 + `mt-3` 12 + the name (`text-body`) 24 +
+ *   `gap-1` 4 + the 44 px Manage link = 136 px, `min-h-34`. The select card is shorter and stretches to it. Polish
+ *   "Manage telescopes" can wrap on the narrowest cards (the link wraps).
+ * Measured 2026-10-08 at 390 px (EN); re-measure after changing the card.
+ */
+export const GEAR_CARD_MIN_HEIGHT_CLASS = "min-h-24 sm:min-h-34";
 
 /** The slot's container over the sky: the shared `max-w-3xl px-4` column. */
 export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";

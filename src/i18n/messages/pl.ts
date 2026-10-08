@@ -462,6 +462,10 @@ export const pl = {
       label: "Teleskop",
       show: "Pokaż",
     },
+    gear: {
+      manageSites: "Zarządzaj miejscami",
+      manageTelescopes: "Zarządzaj teleskopami",
+    },
     rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {

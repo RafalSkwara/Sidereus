@@ -47,7 +47,7 @@ describe("isGearId", () => {
 });
 
 describe("selectorKind", () => {
-  it("shows no selector for one item, pills for two or three and a dropdown from four", () => {
-    expect([0, 1, 2, 3, 4, 7].map(selectorKind)).toEqual(["none", "none", "pills", "pills", "dropdown", "dropdown"]);
+  it("shows no selector for one item and a select from two, however many there are", () => {
+    expect([0, 1, 2, 3, 4, 7].map(selectorKind)).toEqual(["none", "none", "select", "select", "select", "select"]);
   });
 });
