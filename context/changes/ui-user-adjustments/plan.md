@@ -683,16 +683,16 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [x] 1.1 Type check passes: `npx astro sync && npx astro check` — 6a63158
-- [x] 1.2 Unit tests pass, including the contrast, red-theme and no-hardcoded-colours tests: `npm test` — 6a63158
-- [x] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 6a63158
-- [x] 1.4 E2E specs touching Mark observed and back links pass — 6a63158
+- [x] 1.1 Type check passes: `npx astro sync && npx astro check` — d319ffc
+- [x] 1.2 Unit tests pass, including the contrast, red-theme and no-hardcoded-colours tests: `npm test` — d319ffc
+- [x] 1.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — d319ffc
+- [x] 1.4 E2E specs touching Mark observed and back links pass — d319ffc
 
 #### Manual
 
-- [x] 1.5 Mark observed, back links and Pager links read as clickable in dark, light and red — 6a63158
-- [x] 1.6 Inline links underlined; offline state of data-needs-network still looks disabled — 6a63158
-- [x] 1.7 Focused-page stars dimmer; dashboard and landing stars unchanged — 6a63158
+- [x] 1.5 Mark observed, back links and Pager links read as clickable in dark, light and red — d319ffc
+- [x] 1.6 Inline links underlined; offline state of data-needs-network still looks disabled — d319ffc
+- [x] 1.7 Focused-page stars dimmer; dashboard and landing stars unchanged — d319ffc
 
 ### Phase 2: Notifications as toasts
 
