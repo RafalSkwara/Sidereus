@@ -698,17 +698,17 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [x] 2.1 Type check passes: `npx astro sync && npx astro check`
-- [x] 2.2 Unit tests pass (including page-state, copies, i18n parity): `npm test`
-- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [x] 2.4 The new toast spec passes
-- [x] 2.5 The updated notice specs pass
+- [x] 2.1 Type check passes: `npx astro sync && npx astro check` — 354bee6
+- [x] 2.2 Unit tests pass (including page-state, copies, i18n parity): `npm test` — 354bee6
+- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 354bee6
+- [x] 2.4 The new toast spec passes — 354bee6
+- [x] 2.5 The updated notice specs pass — 354bee6
 
 #### Manual
 
-- [x] 2.6 Sky-check toast positioned per breakpoint, gone after 10 s, URL cleaned, no toast on reload
-- [x] 2.7 Offline "prepared" notice closes and stays closed
-- [x] 2.8 Toasts read well in dark, light and red without covering the settings panel's actions
+- [x] 2.6 Sky-check toast positioned per breakpoint, gone after 10 s, URL cleaned, no toast on reload — 354bee6
+- [x] 2.7 Offline "prepared" notice closes and stays closed — 354bee6
+- [x] 2.8 Toasts read well in dark, light and red without covering the settings panel's actions — 354bee6
 
 ### Phase 3: The dashboard sky band
 

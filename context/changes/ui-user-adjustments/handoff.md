@@ -1,4 +1,4 @@
-# Handoff — S-02 ui-user-adjustments (2026-10-08, Phase 1 of 6 done and reviewed)
+# Handoff — S-02 ui-user-adjustments (2026-10-08, Phases 1-2 of 6 done; Phase 1 reviewed)
 
 Read this first, then `plan-brief.md` in this folder. **Do not redo research, planning or the plan review**: all three are committed. The user's list is verbatim in `change.md`.
 
@@ -14,7 +14,8 @@ Read this first, then `plan-brief.md` in this folder. **Do not redo research, pl
   - **Phase 1**: clickable affordance and quieter subpage stars. Commit `d319ffc`; the Progress rows carry that SHA.
   - Phase 1 impl review: `reviews/impl-review-phase-1.md`, 6 findings, all fixed in `38c73e6`, listed in `follow-ups/review-fixes.md`.
 - **`change.md` status**: `impl_reviewed` (the Phase 1 review). Set it back to `implementing` when Phase 2 starts; `/10x-implement` flips only from `planned` / `plan_reviewed`.
-- **Next**: Phase 2 "Notifications as toasts". Then Phases 3 (sky band), 4 (gear cards), 5 (spacing) and 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
+- **Phase 2** (toasts): commit `354bee6`; gates green (unit 1159, full e2e 41 passed / 3 expected skips); manual rows ticked from agent screenshots. Toast logic lives in `src/lib/toasts.ts` (started by `ToastRegion.astro`); `TOAST_PARAMS` is the fixed param set; inline notices close via `data-dismiss-scope` + `data-dismissed`; Escape also closes a focused toast (small extra beyond the plan).
+- **Next**: optional `/10x-impl-review ui-user-adjustments phase 2`, then Phases 3 (sky band), 4 (gear cards), 5 (spacing) and 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
 
 ## The user's decisions (do not re-ask)
 
@@ -79,8 +80,7 @@ Delegated decisions are in `plan-brief.md` › Key Decisions:
 
 ```
 cd ~/projects/sidereus/.claude/worktrees/ui-user-adjustments && git pull
-# set change.md status back to implementing, then:
-/10x-implement ui-user-adjustments phase 2
+# /10x-implement ui-user-adjustments phase 3
 ```
 
 Before merging the PR, merge or rebase onto `main` again. The test stream keeps landing commits, mostly under `context/` and `src/lib/**` tests.
