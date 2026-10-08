@@ -1,7 +1,7 @@
 ---
 change_id: ui-user-adjustments
 title: The user's own UI adjustments to Tonight, notifications and clickable affordances
-status: preparing
+status: planned
 created: 2026-10-08
 updated: 2026-10-08
 archived_at: null
@@ -18,6 +18,7 @@ This list supersedes the S-01 decisions "never touch the panorama", "the verdict
 The user's list (2026-10-08, verbatim apart from formatting):
 
 **/tonight**
+
 - The one-word poster needs to be removed. In its place we upgrade the verdict with coloured dot (like red dot + word Cloudy) to be the main info. Should be bigger than now, not nearly as big as the poster word (No-go).
 - The top part with the date, darkness window and timezone needs changing. Date should remain on top but dark window is not necessary, it's almost repeated just under the skyline map. Let's just modify this slider to somehow show the dark window exactly, and the info about timezone can go next to the current time shown above the slider.
 - Both gear and location toggles need their own cards. They should be next to each other (50% width, a gap between them, except for the smaller screens where they can be 100% width), with top line being the card title, bottom-left part being a large icon (location icon and telescope icon, pick something fitting) and bottom right showing currently chosen option and a select input for the user to pick from existing options.
@@ -28,17 +29,21 @@ The user's list (2026-10-08, verbatim apart from formatting):
 - Browsers show the scrollbar underneath the sky map. Make it invisible and instead add an indicator in the middle of the top bar (the one with cardinal directions): it should mark the direction that is closest to the middle (both main and minor, so S and SSW alike). Can be underline, color, highlight, circle/border, whatever seems best.
 
 **/tonight/plan**
+
 - Not enough breathing room between listed objects, needs more padding.
 - On smaller screens the sunset/dark/moonrise informations should be split: each on its own line.
 - Reconsider whether the way we show visibility and best time to observe on a slider for each object is optimal. The user wants to see other options; also there is no information about what any of this means.
 
 **/tonight/targets**
+
 - Data points below the title need their own lines.
 - The Mark observed button doesn't look clickable; make it stand out more. Anything clickable, link or button, needs to be more differentiated from the rest, in both light and dark theme.
 
 **/tonight/nights** (the list said "Tonight/targets" twice; the user confirmed the second means /tonight/nights)
+
 - Data points below the title need their own lines.
 - More breathing space between lines for items on this screen.
 
 **General**
+
 - Symbolic stars on screens other than the main dashboard (only the ones in the background under subpage titles) should be dimmer, less distracting.
