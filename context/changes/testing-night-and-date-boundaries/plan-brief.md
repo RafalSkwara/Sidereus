@@ -40,10 +40,12 @@ Three new unit suites run every case under 5 runner zones, switched in-process. 
 | Rollover oracle | USNO API civil dawn (±5 min either side, ±2 min for the engine's end) | Independent of astronomy-engine; matches the engine within 0.5 min on all 5 nights | Plan (delegated) |
 | Runner zones | In-process `process.env.TZ` over UTC, Warsaw, Los Angeles, Kiritimati, Kolkata | Node 24 switches zones at runtime; no CI matrix needed | Research probe, Plan (delegated) |
 | Edge sites | Warsaw (autumn + spring), Los Angeles 31 Oct, Auckland, Kiritimati | Covers 25 h, 23 h, a month end, zones +13 and +14, both hemispheres | Plan (delegated) |
-| Log form | Extract `logFormNights` into `src/lib/observations/log-night.ts`, behaviour unchanged | The page code is untestable; the edit page already uses the store helper | Plan (delegated) |
+| Log form | Extract `logFormNights` into `src/lib/observations/log-night.ts`, with `maxNight` delegating to `latestNightBound`; behaviour unchanged | The page code is untestable, and the edit page already uses the store helper | Plan (delegated), plan review F4 |
 | `maxNight` multi-site looseness | Document with a test; don't change | The form lets the user switch site; the server stays correct | Research, Plan (delegated) |
 | Static guard | New scan of all `src/`, separate from `purity.test.ts` | Purity also bans `new Date()`, which pages need; the guard reaches pages and islands | Research, Plan (delegated) |
 | Questions | 0 beyond complexity and phase approval | Non-UI choices are delegated per the user's preference | User |
+| Zone-switch proof | Each runner-zone block asserts the switch took effect; break checks run under `TZ=UTC` | A switch that silently did nothing would otherwise pass on a Warsaw dev machine | Plan review F2 |
+| Plan review | Apply all 10 findings | All LOW impact and probe-backed | User |
 
 ## Scope
 
@@ -71,8 +73,8 @@ Tests follow the decision flow. They start at the engine's two decision function
 | Phase | What it delivers | Key risk |
 | --- | --- | --- |
 | 1. Engine night edges in every zone | Spans, −6° end vs USNO, ±5 min rollover, wall-clock traps on 5 nights × 5 runner zones | A USNO value mistyped: each row has a comment with its local time, and the break checks prove it can fail |
-| 2. Consumers and the log form's night | View date, links, strip across 1 Nov; plan order and labels on 24/25 Oct; offline hand-over; `logFormNights` | Vacuous order assertions: the plan requires rows on both sides of midnight |
-| 3. Static guard and cookbook | Runner-zone scan with a positive control; §6.2 and §6.6 | False positives: narrow the matcher, never allowlist files |
+| 2. Consumers and the log form's night | View date, `logHref` night, strip across 1 Nov; plan order and CEST/CET labels on 24/25 Oct; offline hand-over; `logFormNights` | Vacuous assertions: the plan requires rows before and after midnight and after the clock change |
+| 3. Static guard and cookbook | Runner-zone scan (including zone-less ISO strings) with a positive control; §6.2 and §6.6 | False positives: narrow the matcher, never allowlist files |
 
 **Prerequisites:** branch `feat/testing-night-and-date-boundaries` (pushed); `nvm use`; no Supabase needed for automated checks.
 **Estimated effort:** about one session across 3 small phases, finishing well before 24 Oct.

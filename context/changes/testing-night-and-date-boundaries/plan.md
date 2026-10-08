@@ -41,7 +41,7 @@ From `research.md` (this folder), verified 2026-10-08 at commit 8a11634:
 
 ## Desired End State
 
-- `npm test` contains table-driven night-boundary suites. Every case runs under 5 runner zones (UTC, Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati, Asia/Kolkata), switched in-process. The cases cover 5 sites across the edges above, and all expected values are hand-written calendar literals or published USNO times.
+- `npm test` contains table-driven night-boundary suites. Every case runs under 5 runner zones (UTC, Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati, Asia/Kolkata), switched in-process. The cases cover 4 sites across 5 edge nights, and all expected values are hand-written calendar literals or published USNO times.
 - Tonight's date, its "Mark observed" night, the seven-night strip, the Session plan order and labels, and the offline copy's hand-over are pinned on the DST and month-end nights.
 - The log form's night logic lives in a tested pure function with unchanged behaviour.
 - A static scan fails the suite if any non-test source under `src/` reads the runner's zone (local `Date` getters or setters, `toLocaleDateString`/`toLocaleTimeString`, local `new Date(y, m, …)`, or `Intl.DateTimeFormat` without `timeZone`).
@@ -111,7 +111,11 @@ Oracle rules, applied in every phase:
 
 - **Restore `process.env.TZ`.** Save the original value before switching and restore it in `afterAll`, deleting the key when it was unset, so the switch never leaks into another `describe`. Don't use `vi.stubEnv` for `TZ` unless a quick check shows it resets Node's zone cache the same way.
 - **Keep the runner-zone helper out of scanned source.** A helper that touches `process.env` must not sit in a scanned engine source file. Put it in `src/lib/engine/fixtures/` (test-only, skipped by `purity.test.ts`).
-- **Don't let the Session plan suite pass vacuously.** The order assertion is empty unless the chosen night has rows on both sides of local midnight. Assert that precondition explicitly (at least one row with `bestAt` before 2026-10-24T22:00Z, which is midnight CEST, and one after).
+- **Assert the zone switch itself.** Code in a `describe` body runs at collection under the original zone, and a default-zone `Intl.DateTimeFormat` created before the switch keeps the old zone (plan review F2). So:
+  - every call under test runs inside `it` or `beforeAll`, after the switch;
+  - each runner-zone block first asserts the switch took effect: `Intl.DateTimeFormat().resolvedOptions().timeZone` equals the zone (accept `Asia/Calcutta` for Asia/Kolkata), and `new Date("2026-10-24T18:00:00Z").getHours()` equals that zone's hand-written hour (UTC 18, Warsaw 20, Los Angeles 11, Kiritimati 8, Kolkata 23).
+- **Don't let the Session plan suite pass vacuously.** The order assertion is empty unless the chosen night has rows on both sides of local midnight, and the CET branch of the label oracle is empty without a row after the clock change. Assert both preconditions explicitly: at least one row with `bestAt` before 2026-10-24T22:00Z (midnight CEST), one after it, and one at or after 2026-10-25T01:00Z (plan review F5; today Jupiter and Mars peak at 04:43:30Z).
+- **Break checks are logged, not ticked.** Progress rows keep fixed titles. Record each break check's outcome in the phase's "Break-check log" note (below its Success Criteria) and in the phase commit message (plan review F3).
 
 ## Phase 1: Engine night edges in every zone (unit)
 
@@ -130,8 +134,8 @@ A table-driven engine suite over five edge nights, repeated under five runner zo
 **Contract**:
 - `RUNNER_ZONES` lists UTC, Europe/Warsaw, America/Los_Angeles, Pacific/Kiritimati and Asia/Kolkata.
 - `useRunnerZone(zone)` registers `beforeAll`/`afterAll` hooks that set and then restore `process.env.TZ` (or an equivalent wrapper used inside `describe.each(RUNNER_ZONES)`).
-- `USNO_CIVIL_DAWN` has one entry per edge night: `{ site (lat, lon, timeZone), night: "YYYY-MM-DD", civilDawn: ISO Z, sunrise: ISO Z }`, with the five values from Key Discoveries, plus the API URL pattern and `checked: 2026-10-08`.
-- The README gains a short "USNO references" note: what each value is, how to re-check it, and that values are minute-rounded and in UTC.
+- `USNO_CIVIL_DAWN` has one entry per edge night: `{ site: engine Site (latitudeDeg, longitudeDeg, elevationM: 0 — USNO's sea-level basis, timeZone), night: "YYYY-MM-DD", civilDawn: ISO Z, sunrise: ISO Z }`, with the five values from Key Discoveries, plus the API URL pattern and `checked: 2026-10-08`. Tests that need a `SiteRecord` (Tonight, log) build one from the entry's site with a `bortle` (plan review F9).
+- The README gains a short "USNO references" note (what each value is, how to re-check it, that values are minute-rounded and in UTC) and a line on `runner-zones.ts`: test machinery shared by engine, Tonight and log tests (plan review F10).
 
 #### 2. Night-boundary suite
 
@@ -175,9 +179,10 @@ Each table row carries a one-line comment with the local wall time, so a reader 
 - The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts`
 - The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts`
 - Break check, then reverted:
-  - temporarily passing −18 instead of the rollover constant in the suite turns groups (b) and (c) red;
-  - temporarily replacing `wall.getUTCHours()` with `wall.getHours()` in `observingNightDateFor` turns group (d) red under at least one runner zone.
-  - Record both outcomes in this plan's Progress note.
+  - temporarily setting `TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG` to −12 in `parameters.ts` turns groups (b) and (c) red (plan review F6);
+  - temporarily replacing `wall.getUTCHours()` with `wall.getHours()` in `observingNightDateFor` and running `TZ=UTC npx vitest run src/lib/engine/night-boundaries.test.ts` turns group (d) red under at least one switched runner zone. With the process in UTC, red can only come from the in-process switch (plan review F2).
+
+**Break-check log**: (filled in by `/10x-implement`: each check, the groups that went red, reverted.)
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
 **Implementation Note**: Commit and push the phase, then continue (the user's run preference: no pause between automated-only phases).
@@ -199,8 +204,8 @@ Prove the engine's decision reaches Tonight's view, its "Mark observed" night, t
 **Intent**: Make the page's night choice testable without changing it: the default night is the noon rule, and the date picker's maximum is the latest night across the user's sites.
 
 **Contract**:
-- `logFormNights(sites, site, now): { night: string; maxNight: string }`:
-  - `maxNight` is the max of `tonightDateForSite(s, now)` over `sites`, `""` when there are none;
+- `logFormNights(sites, site, now): { night: string; maxNight: string }`, documented as server-only (islands never import it; it reaches `gear/store` through `tonight-date`):
+  - `maxNight` delegates to `latestNightBound(sites, now)` (`store.ts:85-93`, the rule the edit page already uses at `src/pages/log/[id].astro:55`), except that it stays `""` when there are no sites, so behaviour is byte-for-byte unchanged (plan review F4);
   - `night` is `observingNightDateFor(now, site.timeZone)` when `site` is set, else `""`.
 - `new.astro` calls it and keeps its own `?night=` override (`isCalendarDate(nightParam) ? nightParam : night`) and the explanatory comment (moved to the helper's doc).
 - Behaviour is byte-for-byte the same as `new.astro:68-70`.
@@ -225,8 +230,8 @@ Prove the engine's decision reaches Tonight's view, its "Mark observed" night, t
   - Source: research "Consumers" (log upper bound).
   - Edge: all five edge nights.
   - Anti-pattern avoided: a single happy-path instant. (This is a relation, so it may call `tonightDateForSite`; the literals in (a) anchor it.)
-- **(c) Two sites.** With Warsaw and Los Angeles at 2026-10-25T05:00Z (after Warsaw's civil dawn, 22:00 PDT on 24 Oct in Los Angeles): `maxNight` is "2026-10-25", Los Angeles' own bound is "2026-10-24", and the Los Angeles default is "2026-10-24". With no sites, both values are `""`.
-  - Behaviour asserted: the hint is the loosest bound across sites (accepted, documented).
+- **(c) Two sites.** With Warsaw and Los Angeles at 2026-10-25T05:00Z (after Warsaw's civil dawn, 22:00 PDT on 24 Oct in Los Angeles), the Los Angeles default is "2026-10-24" while `maxNight` is "2026-10-25". With no sites, both values are `""`. The multi-site max itself is already pinned by `store.test.ts:11-18` and is not repeated (plan review F4).
+  - Behaviour asserted: a site's default follows its own zone even when the hint is set by another site; the empty-list case stays `""`.
   - Regression caught: a silent change to the hint's rule.
   - Source: research "Consumers", `ObservationForm.tsx:51-54`.
   - Edge: far-apart zones; empty list.
@@ -234,20 +239,20 @@ Prove the engine's decision reaches Tonight's view, its "Mark observed" night, t
 
 #### 3. Tonight consumers suite
 
-**File**: `src/lib/tonight/night-boundaries.test.ts` (new); reuse `src/lib/tonight/test-fixtures.ts`, and lift `uniformForecast`, `result` and `utcWallTime` from `build.test.ts` into `test-fixtures.ts` if both files need them (no behaviour change to `build.test.ts`).
+**File**: `src/lib/tonight/night-boundaries.test.ts` (new); reuse `src/lib/tonight/test-fixtures.ts`, and lift `hourlyForecast`, `uniformForecast`, `result` and `utcWallTime` from `build.test.ts` into `test-fixtures.ts` if both files need them (no behaviour change to `build.test.ts`).
 
 **Intent**: Pin what the user sees on the edge nights: the date, the log night, the strip, the plan order and labels, and the offline hand-over. Every case runs under every runner zone.
 
-**Contract**: `describe.each(RUNNER_ZONES)` over `buildTonight(..., { withSessionPlan: true })` with a clear uniform forecast covering the request range:
+**Contract**: `describe.each(RUNNER_ZONES)` over `buildTonight(..., { withSessionPlan: true })` with a clear forecast built by `hourlyForecast` over about 120 h from the case's evening, with `fetchedAt` set to the case's `now`. `uniformForecast`'s 48 h and `result()`'s default `fetchedAt` (relative to 2026-10-10) don't reach the Los Angeles + 5 min case or the strip (plan review F1):
 
 - **(a) Rollover reaches the view (Los Angeles, month end).**
-  - At USNO civil dawn − 5 min on 2026-11-01: `view.date` is "2026-10-31", and every ranking entry's log link carries `night=2026-10-31`. Precondition: assert at least one link exists. If the ranking is empty at that instant, use the planets' or Session plan rows' log links instead.
-  - At + 5 min: `view.date` is "2026-11-01" and the links carry `night=2026-11-01`.
+  - At USNO civil dawn − 5 min on 2026-11-01: `view.date` is "2026-10-31", and `logHref(view, key)` (`src/lib/tonight/load.ts:186-197`, imported as `build.test.ts:36` does) for the first ranking entry carries `night=2026-10-31`. View entries carry no link field, and Session plan rows' `href` is a focused-page link, not a log link (plan review F1).
+  - At + 5 min: `view.date` is "2026-11-01" and `logHref` carries `night=2026-11-01`.
   - `view.nights` dates run from the view's date over 7 consecutive hand-listed dates across the month end (from "2026-10-31": 31 Oct, 1–6 Nov).
 
   Behaviour asserted: the day the user sees, and the night "Mark observed" would save. Regression caught: a strip or link keyed on the UTC date, or a month-roll gap. Source: research "Consumers" (verdict date, prefill, strip). Edge: a 25 h night that is also a month end. Anti-pattern avoided: expected dates from `addDays`/`tonightDateFor`.
 - **(b) Session plan on the European DST night (Warsaw 2026-10-24, now 2026-10-24T18:00Z).**
-  - Precondition: rows exist with `bestAt` before 2026-10-24T22:00Z (midnight CEST) and after it.
+  - Precondition: rows exist with `bestAt` before 2026-10-24T22:00Z (midnight CEST), after it, and at or after 2026-10-25T01:00Z (the clock change).
   - Rows are sorted by `bestAt` ascending.
   - Each row's `bestTime` equals the hand-offset wall time: UTC + 2 h when `bestAt` < 2026-10-25T01:00Z, else UTC + 1 h, formatted `HH:mm` from `toISOString()` of the shifted instant.
 
@@ -268,8 +273,9 @@ Prove the engine's decision reaches Tonight's view, its "Mark observed" night, t
   - temporarily sorting session-plan rows by `bestTime` (the label) instead of `bestAt` turns (b) red;
   - temporarily setting `PLANET_WINDOW_SUN_ALTITUDE_DEG` to −12 turns (c) red;
   - temporarily making `logFormNights` default to `tonightDateForSite` turns log-night (a) red.
-  - Record all three outcomes in Progress.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
+
+**Break-check log**: (filled in by `/10x-implement`.)
 
 #### Manual Verification:
 
@@ -300,8 +306,10 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
   - `getTimezoneOffset`;
   - `toLocaleDateString(`, `toLocaleTimeString(`, `toDateString(`, `toTimeString(`;
   - the multi-argument local `new Date(y, m, …)` constructor (first argument not a string or a nested call);
-  - any `Intl.DateTimeFormat(` call whose argument list (to the matching `)`) contains no `timeZone`.
-- **Positive control.** A table of offending snippets, each of which the matcher must flag, and allowed snippets that it must not flag: `getUTCHours`, `new Date(Date.UTC(…))`, `new Intl.DateTimeFormat(tag, { timeZone, … })`, `Date.now()`.
+  - any `Intl.DateTimeFormat(` call whose argument list (to the matching `)`) contains no `timeZone`;
+  - a date-time string literal passed to `new Date(` or `Date.parse(` without `Z` or a `±hh:mm` offset (it parses in the runner's zone). Date-only strings parse as UTC and stay allowed (plan review F8).
+- **Positive control.** A table of offending snippets, each of which the matcher must flag, and allowed snippets that it must not flag: `getUTCHours`, `new Date(Date.UTC(…))`, `new Date(Date.UTC(2026, 9, 10) + n * HOUR_MS)` (the `design.astro:517` form), `new Date(Math.max(a, b))` (`verdict.ts:155`), `new Intl.DateTimeFormat(tag, { timeZone, … })`, `new Date("2026-10-24T20:00:00Z")`, `Date.now()`.
+- **Non-test helpers are scanned on purpose.** `test-fixtures.ts`, `test-helpers.ts` and `runner-zones.ts` are not `*.test.ts`. The first two are scanned like any source; `runner-zones.ts` sits in the excluded `fixtures/` directory.
 - **Hits on current code.** Research expects zero. A genuine zone read is a bug, fixed in this phase. A false positive is fixed by narrowing the matcher, never by a file allowlist.
 - **Known gap.** A plain `Date#toLocaleString` can't be told apart from a number's `toLocaleString`, so it is out of scope. A one-line comment says so.
 
@@ -326,10 +334,12 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 #### Automated Verification:
 
 - The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts`
-- Break check, then reverted: temporarily adding `const h = new Date().getHours();` to a non-test file under `src/lib/tonight/` turns the guard red. Record it in Progress.
+- Break check, then reverted: temporarily adding `const h = new Date().getHours();` to a non-test file under `src/lib/tonight/` turns the guard red.
 - Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test`
 - Lint and type check pass: `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
-- `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry: `grep -n "6.2" -A3 context/foundation/test-plan.md`
+- `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry: `! sed -n '/^### 6.2/,/^### 6.3/p' context/foundation/test-plan.md | grep -q TBD && grep -q '\*\*Phase 2 —' context/foundation/test-plan.md` (plan review F7)
+
+**Break-check log**: (filled in by `/10x-implement`.)
 
 **Implementation Note**: Commit and push. Then run `/10x-impl-review testing-night-and-date-boundaries` and open the PR.
 
@@ -354,7 +364,7 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 ## Performance Considerations
 
-- Each `buildTonight` call costs tens of milliseconds, and 5 runner zones multiply the count. Keep the Tonight suite to the listed cases (about 6 builds per zone), so the full suite stays well under its current runtime plus a few seconds. Engine cases are cheap.
+- Each `buildTonight` call costs tens of milliseconds, and 5 runner zones multiply the count. Keep the Tonight suite to the listed cases (about 9 builds per zone, about 15 ms each), so the full suite stays well under its current runtime plus a few seconds. Engine cases are cheap.
 
 ## Migration Notes
 
@@ -379,7 +389,7 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 - [ ] 1.1 The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts`
 - [ ] 1.2 The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts`
-- [ ] 1.3 Break check (−18 in the suite turns (b)/(c) red; `getHours` in `observingNightDateFor` turns (d) red), reverted and recorded
+- [ ] 1.3 Break check (rollover constant −12 turns (b)/(c) red; `getHours` in `observingNightDateFor` under `TZ=UTC` turns (d) red), reverted and logged
 - [ ] 1.4 Full unit suite, lint and type check pass
 
 ### Phase 2: Consumers and the log form's night (unit)
@@ -387,8 +397,8 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 #### Automated
 
 - [ ] 2.1 New suites pass: `npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
-- [ ] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run …`
-- [ ] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and recorded
+- [ ] 2.2 They pass under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/observations/log-night.test.ts src/lib/tonight/night-boundaries.test.ts`
+- [ ] 2.3 Break check (label sort, −12 planet window, `tonightDateForSite` default), reverted and logged
 - [ ] 2.4 Full unit suite, lint and type check pass
 
 #### Manual
@@ -400,7 +410,7 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 #### Automated
 
 - [ ] 3.1 The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts`
-- [ ] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and recorded
+- [ ] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and logged
 - [ ] 3.3 Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test`
 - [ ] 3.4 Lint and type check pass
-- [ ] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry
+- [ ] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry (`sed`/`grep` check)
