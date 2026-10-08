@@ -409,8 +409,8 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 #### Automated
 
-- [x] 3.1 The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts`
-- [x] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and logged
-- [x] 3.3 Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test`
-- [x] 3.4 Lint and type check pass
-- [x] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry (`sed`/`grep` check)
+- [x] 3.1 The guard passes on current source: `npx vitest run src/lib/runner-zone-guard.test.ts` — 72668c8
+- [x] 3.2 Break check (`new Date().getHours()` in `src/lib/tonight/`), reverted and logged — 72668c8
+- [x] 3.3 Full unit suite passes, also under a non-UTC runner zone: `npm test` and `TZ=Pacific/Kiritimati npm test` — 72668c8
+- [x] 3.4 Lint and type check pass — 72668c8
+- [x] 3.5 `test-plan.md` §6.2 has no "TBD" and §6.6 has a Phase 2 entry (`sed`/`grep` check) — 72668c8
