@@ -11,7 +11,7 @@ import { latestNightBound } from "./store";
  * maximum is only a hint: it is the latest night over all the user's sites, and the store checks the chosen site's
  * own night.
  *
- * Server-only: islands never import it (it reaches gear/store through tonight-date). `maxNight` is `""` when the user
+ * Server-only: islands never import it (it reaches gear/store through `./store`, the observations DB layer). `maxNight` is `""` when the user
  * has no sites, and `night` is `""` when no `site` is chosen.
  */
 export function logFormNights(

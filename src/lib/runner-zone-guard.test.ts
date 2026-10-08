@@ -14,7 +14,12 @@ import { describe, expect, it } from "vitest";
  * src/lib/engine/fixtures/ directory. Non-test helpers (test-fixtures.ts, test-helpers.ts) are scanned on
  * purpose. A false positive is fixed by narrowing the matcher below, never by a file allowlist.
  *
- * Known gap: a plain `Date#toLocaleString()` cannot be told apart from a number's `toLocaleString()`, so it is out of scope.
+ * Comments are blanked first (line breaks kept), so prose such as "the runner's zone" never opens a fake string literal.
+ *
+ * Known gaps (not flagged): a plain `Date#toLocaleString()` (cannot be told apart from a number's), implicit
+ * `Date#toString()` such as `${date}`, a date-time string built by concatenation (`new Date(d + "T20:00")`) and a
+ * spread argument (`new Date(...parts)`). A template ending in an interpolation (`${d}T20:00${offset}`) is flagged as
+ * zoneless even when the interpolation is an offset: write the offset or `Z` literally.
  */
 
 const SRC_DIR = fileURLToPath(new URL("../", import.meta.url));
@@ -33,11 +38,20 @@ const SIMPLE_RULES: { rule: string; pattern: RegExp }[] = [
     pattern: new RegExp(`\\.(?:get|set)(?:${LOCAL_ACCESSORS})\\s*\\(`, "g"),
   },
   { rule: "getTimezoneOffset", pattern: /\bgetTimezoneOffset\s*\(/g },
-  {
-    rule: "toLocaleDateString/toLocaleTimeString/toDateString/toTimeString (process zone)",
-    pattern: /\.(?:toLocaleDateString|toLocaleTimeString|toDateString|toTimeString)\s*\(/g,
-  },
+  { rule: "toDateString/toTimeString (process zone)", pattern: /\.(?:toDateString|toTimeString)\s*\(/g },
 ];
+
+/** `//`, `/* *\/` and `<!-- -->` comments replaced by spaces, line breaks kept (as no-hardcoded-colors.test.ts does). */
+function blankComments(source: string): string {
+  const blank = (match: string) => match.replace(/[^\n]/g, " ");
+  return (
+    source
+      .replace(/\/\*[\s\S]*?\*\//g, blank)
+      .replace(/<!--[\s\S]*?-->/g, blank)
+      // `//` not preceded by `:` or a quote, so URLs such as https://… are kept.
+      .replace(/(^|[^:"'`\\])(\/\/.*)$/gm, (_match, before: string, comment: string) => before + blank(comment))
+  );
+}
 
 /** Index just past the string, template or regex-free literal starting at `i` (a quote or backtick). */
 function skipLiteral(src: string, i: number): number {
@@ -120,19 +134,32 @@ function lineOf(src: string, index: number): number {
 }
 
 /** Every runner-zone read in `source`, with its 1-based line. */
-export function findRunnerZoneReads(source: string): Violation[] {
+export function findRunnerZoneReads(original: string): Violation[] {
+  const source = blankComments(original);
   const out: Violation[] = [];
   for (const { rule, pattern } of SIMPLE_RULES) {
     for (const m of source.matchAll(pattern)) out.push({ line: lineOf(source, m.index), rule });
   }
+  for (const m of source.matchAll(/\.(?:toLocaleDateString|toLocaleTimeString)\s*\(/g)) {
+    const open = m.index + m[0].length - 1;
+    const { end } = callArguments(source, open);
+    if (!/\btimeZone\b/.test(source.slice(open, end))) {
+      out.push({
+        line: lineOf(source, m.index),
+        rule: "toLocaleDateString/toLocaleTimeString without an explicit timeZone",
+      });
+    }
+  }
   for (const m of source.matchAll(/\bnew\s+Date\s*\(/g)) {
     const { args } = callArguments(source, m.index + m[0].length - 1);
-    const line = lineOf(source, m.index);
     if (args.length >= 2 && !isLiteral(args[0])) {
-      out.push({ line, rule: "multi-argument local new Date(y, m, ...) (use Date.UTC)" });
+      out.push({ line: lineOf(source, m.index), rule: "multi-argument local new Date(y, m, ...) (use Date.UTC)" });
     }
     if (args.length >= 1 && isZonelessDateTime(args[0])) {
-      out.push({ line, rule: "zoneless date-time string in new Date(...) (add Z or an offset)" });
+      out.push({
+        line: lineOf(source, m.index),
+        rule: "zoneless date-time string in new Date(...) (add Z or an offset)",
+      });
     }
   }
   for (const m of source.matchAll(/\bDate\.parse\s*\(/g)) {
@@ -209,6 +236,11 @@ describe("runner-zone guard", () => {
       ['new Date("2026-10-24 20:00")', "zoneless date-time"],
       ["new Date(`${date}T20:00:00`)", "zoneless date-time"],
       ['Date.parse("2026-10-24T20:00:00")', "zoneless date-time"],
+      [
+        'new Intl.DateTimeFormat("en", {\n  // the runner\'s zone\n  hour: "2-digit",\n});\nconst g = new Intl.DateTimeFormat("en", { timeZone: z });',
+        "apostrophe in a comment must not hide a zone-less call",
+      ],
+      ["new Date(Date.UTC(y, m) /* ) */, x)", "a ) in a comment must not hide a multi-argument call"],
     ];
     const ALLOWED: [string, string][] = [
       ["d.getUTCHours()", "getUTC*"],
@@ -229,6 +261,9 @@ describe("runner-zone guard", () => {
       ['new Date("2026-10-24")', "date-only parses as UTC"],
       ["new Date(`${date}T20:00:00Z`)", "UTC template"],
       ['Date.parse("2026-10-24T20:00:00Z")', "UTC parse"],
+      ['d.toLocaleDateString("en", { timeZone: z })', "toLocale* with an explicit zone"],
+      ["// avoid d.getHours() here: it reads the runner's zone", "a comment that mentions a getter"],
+      ["/* new Date(y, m) is local */ const t = new Date(ms);", "a block comment that mentions new Date(y, m)"],
     ];
 
     it.each(OFFENDING)("flags %s (%s)", (snippet) => {

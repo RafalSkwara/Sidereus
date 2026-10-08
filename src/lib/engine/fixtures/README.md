@@ -106,7 +106,7 @@ https://aa.usno.navy.mil/api/rstt/oneday?date=<YYYY-MM-DD>&coords=<lat>,<lon>&tz
 ```
 
 `tz=0` returns UTC times for the UTC day `date`, so use the morning after the night's evening date (the UTC day
-before it far east of UTC); read `Begin civil twilight` and `Sunrise`. Update the `checked` date in `usno.ts`.
+before it far east of UTC); read `Begin civil twilight` and `Sunrise`. Update `USNO_CHECKED` in `usno.ts`.
 
 ## Runner zones (`runner-zones.ts`)
 

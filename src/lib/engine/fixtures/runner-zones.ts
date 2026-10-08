@@ -10,7 +10,8 @@ import { afterAll, beforeAll, expect } from "vitest";
  * Usage: `describe.each(RUNNER_ZONES)("... (runner zone %s)", (zone) => { useRunnerZone(zone); ... })`.
  * Call every function under test inside `it` or `beforeAll`, never at `describe` scope: a describe body
  * runs at collection under the original zone, and a default-zone `Intl.DateTimeFormat` created before the
- * switch keeps the old zone.
+ * switch keeps the old zone. The switch needs Vitest's default `forks` pool: setting `process.env.TZ` inside a
+ * `worker_threads` worker has no effect, so under `pool: "threads"` the zone assertion fails.
  */
 export const RUNNER_ZONES = [
   "UTC",

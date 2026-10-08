@@ -3,8 +3,9 @@ import type { ForecastResult } from "@/lib/forecast/service";
 import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 
 /**
- * Shared Tonight test fixtures: Warsaw, a 150/750 reflector, two Plössls and an early-evening instant. Test-only;
- * nothing in the app imports this file.
+ * Shared Tonight test fixtures: Warsaw, a 150/750 reflector, two Plössls and an early-evening instant, plus the hourly
+ * forecast builders (`hourlyForecast`, `uniformForecast`, `result`) and `utcWallTime`. Test-only; nothing in the app
+ * imports this file.
  */
 
 export const WARSAW: SiteRecord = {
