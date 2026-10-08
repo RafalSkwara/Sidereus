@@ -32,9 +32,9 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
   <span role="status" class="sr-only">
     {t.loading}
   </span>
-  <TonightSky night>
+  <TonightSky night quiet>
     <BackLink href="/tonight" label={m.nav.tonight} />
-    <div class="mt-1 sm:mt-2">
+    <div class="mt-4 sm:mt-5">
       <PageHeader title={title} />
     </div>
     <div aria-hidden="true" class:list={[bar, "mt-2 w-72 max-w-full text-label sm:mt-3"]}>

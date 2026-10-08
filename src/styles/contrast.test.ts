@@ -105,6 +105,16 @@ const CHECKS: Check[] = [
   { themes: ["night"], fg: ["primary-strong", "go", "marginal", "no-go"], bg: ["zenith", "horizon"], floor: 4.5 },
   { themes: ["night"], fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: ["night"], fg: ["primary", "primary-strong"], bg: ["zenith", "horizon", ...DUSK], floor: 3 },
+  // Standalone clickables (ui-user-adjustments): the link colour on the `action` fill as text, and the action border
+  // as a non-text indicator over the ground, the surface and the sky stops (BackLink sits on the sky headers and in
+  // the night scope), in every theme.
+  { themes: [...DARK_LIGHT, "red", "night"], fg: ["primary-strong"], bg: ["action-surface"], floor: 4.5 },
+  {
+    themes: [...DARK_LIGHT, "red", "night"],
+    fg: ["action-border"],
+    bg: ["background", "surface", "zenith", "horizon"],
+    floor: 3,
+  },
 ];
 
 const pairs = CHECKS.flatMap(({ themes: names, fg, bg, floor }) =>

@@ -1,7 +1,7 @@
 ---
 change_id: ui-user-adjustments
 title: The user's own UI adjustments to Tonight, notifications and clickable affordances
-status: plan_reviewed
+status: implementing
 created: 2026-10-08
 updated: 2026-10-08
 archived_at: null

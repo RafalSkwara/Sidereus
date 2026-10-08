@@ -1,9 +1,10 @@
 ---
 import { ChevronLeft } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /*
- * The way back to a parent page, with a 44 px target. `href` is a fixed app path chosen by the page (ids at most,
+ * The way back to a parent page, an `action` button-link (border, tinted surface and the chevron) with a 44 px target. `href` is a fixed app path chosen by the page (ids at most,
  * encoded by the caller), never user text. `class` is merged last; `/design` uses it to pin the hover and focus
  * looks as specimens.
  */
@@ -16,13 +17,7 @@ interface Props {
 const { href, label, class: className } = Astro.props;
 ---
 
-<a
-  href={href}
-  class:list={cn(
-    "-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md pr-2 pl-1 text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    className,
-  )}
->
-  <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />
+<a href={href} class:list={cn(buttonVariants({ variant: "action", size: "sm" }), className)}>
+  <ChevronLeft aria-hidden="true" />
   {label}
 </a>

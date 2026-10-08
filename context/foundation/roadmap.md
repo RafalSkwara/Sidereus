@@ -44,7 +44,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | ---- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- | -------- |
 | F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | ready    |
 | S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done     |
-| S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | planning |
+| S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | in-progress |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | proposed |
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | proposed |
@@ -116,7 +116,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The list of things that bother the user. — Owner: user. Block: yes. Resolved 2026-10-08 (list in `context/changes/ui-user-adjustments/change.md`).
 - **Risk:** Blocked until the user writes the list after seeing S-01; may split into several changes if the list is long.
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-03: Finder chart
 

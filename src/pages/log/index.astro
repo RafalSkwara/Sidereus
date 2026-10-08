@@ -68,7 +68,7 @@ const rowLink =
   <PageHeader slot="header" title={t.title} subtitle={t.intro}>
     {supabase && (
       <Fragment slot="actions">
-        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "ghost" })}>
+        <a href={SKY_CHECKS_PAGE} class:list={cn(buttonVariants({ variant: "ghost" }), "border border-action-border")}>
           {t.skyChecks}
         </a>
         <a href="/log/new?from=log" class:list={buttonVariants({ variant: nothingListed ? "outline" : "default" })}>

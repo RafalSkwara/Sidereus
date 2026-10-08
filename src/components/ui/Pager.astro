@@ -21,7 +21,7 @@ interface Props {
 
 const { label, newerHref, newerLabel, olderHref, olderLabel, class: className, linkClass } = Astro.props;
 const show = Boolean(newerHref) || Boolean(olderHref);
-const link = cn(buttonVariants({ variant: "link" }), "px-3", linkClass);
+const link = cn(buttonVariants({ variant: "action", size: "sm" }), linkClass);
 ---
 
 {show && (

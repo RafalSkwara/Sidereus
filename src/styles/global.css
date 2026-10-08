@@ -37,6 +37,10 @@
   --primary-foreground: #070a12;
   --primary-strong: #c3d0ff;
 
+  /* Standalone clickables (ui-user-adjustments): a tinted fill and a link-coloured border, plain hex so the contrast test pins them. */
+  --action-surface: #16224a;
+  --action-border: #6b82cf;
+
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #2a3450;
   --plan-night: #10162a;
@@ -83,6 +87,9 @@
   --primary: #0b1428;
   --primary-foreground: #fbfcfd;
   --primary-strong: #23439f;
+
+  --action-surface: #e4ebfa;
+  --action-border: #3a58b8;
 
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #e3e8f0;
@@ -132,6 +139,9 @@
   --primary-foreground: #070a12;
   --primary-strong: #c3d0ff;
 
+  --action-surface: #16224a;
+  --action-border: #7389d4;
+
   --go: #7ee2b0;
   --marginal: #f1cf6b;
   --no-go: #ff9b8c;
@@ -172,6 +182,9 @@
   --primary: #ff0000;
   --primary-foreground: #000000;
   --primary-strong: #ff0000;
+
+  --action-surface: #2a0000;
+  --action-border: #d00000;
 
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #3a0000;
@@ -466,8 +479,9 @@
  * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
  * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
  * page script adds `aria-disabled` and swallows the click; "Needs a connection" is their description, or a caption
- * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons; the
- * focus outline is left alone, so focus stays visible. The current page's entry keeps its pressed look.
+ * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons and
+ * `action` links (the Topbar and TabBar links have no border width, so it never shows there); the focus outline is
+ * left alone, so focus stays visible. The current page's entry keeps its pressed look.
  */
 :root[data-offline] [data-needs-network]:not([aria-current="page"]),
 :root[data-offline] [data-needs-network] :is(a, button) {
@@ -477,8 +491,8 @@
   text-decoration-line: none;
 }
 
-:root[data-offline] [data-needs-network] button,
-:root[data-offline] button[data-needs-network] {
+:root[data-offline] [data-needs-network] :is(a, button),
+:root[data-offline] :is(a, button)[data-needs-network] {
   border-style: dashed;
   border-color: var(--border);
 }
@@ -584,6 +598,8 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-strong: var(--primary-strong);
+  --color-action-surface: var(--action-surface);
+  --color-action-border: var(--action-border);
   --color-plan-twilight: var(--plan-twilight);
   --color-plan-night: var(--plan-night);
   --color-card: var(--card);
