@@ -2,7 +2,7 @@
 /*
  * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
  * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
- * ruled placeholder rows, so nothing jumps when the island swaps in. Bars that stand for text take that text's type
+ * ruled placeholder rows at the focused pages' rhythm (one data point per line), so nothing jumps when the island swaps in. Bars that stand for text take that text's type
  * role and hold a non-breaking space, so they have its line height.
  */
 import BackLink from "@/components/ui/BackLink.astro";
@@ -37,7 +37,11 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
     <div class="mt-1 sm:mt-2">
       <PageHeader title={title} />
     </div>
-    <div aria-hidden="true" class:list={[bar, "mt-2 w-72 max-w-full text-label sm:mt-3"]}>
+    <!-- The context line: date, then "site · telescope" on the next line on a phone (TonightPageSky). -->
+    <div aria-hidden="true" class:list={[bar, "mt-2 w-40 max-w-full text-label sm:mt-3 sm:w-72"]}>
+      &nbsp;
+    </div>
+    <div aria-hidden="true" class:list={[bar, "mt-1 w-56 max-w-full text-label sm:hidden"]}>
       &nbsp;
     </div>
   </TonightSky>
@@ -47,7 +51,7 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
       <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
       <div class="divide-y divide-border">
         {Array.from({ length: rows }, () => (
-          <div class="space-y-2 py-4">
+          <div class="space-y-3 py-5">
             <div class:list={[bar, "h-6 w-1/2"]} />
             <div class:list={[bar, "h-4 w-2/3"]} />
           </div>

@@ -746,14 +746,14 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [ ] 5.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 5.2 Unit tests pass: `npm test`
-- [ ] 5.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 5.4 Focused-page specs pass, including no sideways scroll
+- [x] 5.1 Type check passes: `npx astro sync && npx astro check`
+- [x] 5.2 Unit tests pass: `npm test`
+- [x] 5.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
+- [x] 5.4 Focused-page specs pass, including no sideways scroll
 
 #### Manual
 
-- [ ] 5.5 Targets, Nights, Planets, Moon and dashboard tiles read as separated lines at 360/390 px in all themes
+- [x] 5.5 Targets, Nights, Planets, Moon and dashboard tiles read as separated lines at 360/390 px in all themes
 
 ### Phase 6: Session plan with altitude curves (option B)
 

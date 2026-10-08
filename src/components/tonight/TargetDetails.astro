@@ -1,7 +1,9 @@
 ---
 // The details every Tonight target shares (S-01 review F10): the window and best-time list, then the caller's own
 // lines (eyepieces, reason, note) in the default slot, then the "Mark observed" link. Used by ObjectDetails (ranked
-// cards and the all-objects rows), PlanetCard and the Moon card.
+// cards and the all-objects rows), PlanetCard and the Moon card. Each data point sits on its own line at every width
+// (ui-user-adjustments), and the spacing between the list, the slot's lines and the action lives here, so a caller's
+// lines carry no margins of their own.
 import { Check } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
@@ -29,7 +31,7 @@ const t = getMessages(Astro.locals.locale).tonight.object;
 const markClass = buttonVariants({ variant: "action", size: "sm" });
 ---
 
-<dl class="mt-3 grid gap-x-6 gap-y-1 text-label sm:grid-cols-2">
+<dl class="mt-4 grid gap-y-2 text-label">
   <div class="flex gap-2">
     <dt class="text-muted-foreground">{t.window}</dt>
     <dd class="font-mono text-heading">
@@ -44,9 +46,11 @@ const markClass = buttonVariants({ variant: "action", size: "sm" });
   </div>
 </dl>
 
-<slot />
+<div class="mt-4 space-y-3">
+  <slot />
+</div>
 
-<div class="mt-2">
+<div class="mt-5">
   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
     <Check aria-hidden="true" />

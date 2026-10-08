@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  */
 
 /** A tile's row: full width, at least 44 px, ruled below, the phone padding one step tighter than `sm`. */
-export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-3 sm:py-4";
+export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-4 sm:py-5";
 
 /** The tile link: the row plus the token hover and the ring focus. Rules run between the tiles. */
 export const TILE_CLASS = cn(

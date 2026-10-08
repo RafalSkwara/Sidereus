@@ -1,7 +1,8 @@
 ---
 /*
  * The slim sky at the top of a focused Tonight page (tonight-dashboard): TonightSky in its title-only mode with the
- * way back to Tonight, the page title and a context line (verdict dot · date · site · telescope). The dot's meaning
+ * way back to Tonight, the page title and a context line (verdict dot · date · site · telescope; on a phone the date
+ * is one line and "site · telescope" the next, ui-user-adjustments). The dot's meaning
  * is in screen-reader text beside it (the sky headline), so it never rests on colour alone. Without a view (setup
  * missing or a failure) the context line is left out. The island renders it, since the line needs the view;
  * TonightPageSkeleton draws the same sky while it loads.
@@ -20,7 +21,6 @@ interface Props {
 
 const { title, view } = Astro.props;
 const m = getMessages(Astro.locals.locale);
-const context = view ? [view.dateLabel, view.siteName, view.telescopeName].join(" · ") : null;
 ---
 
 <TonightSky night quiet>
@@ -30,12 +30,19 @@ const context = view ? [view.dateLabel, view.siteName, view.telescopeName].join(
   </div>
   {view && (
     <p class="mt-2 text-label sm:mt-3 break-words text-muted-foreground">
-      <span
-        class:list={["mr-2 inline-block size-2.5 rounded-full align-middle", VERDICT_TONES[view.verdict.level].dot]}
-        aria-hidden="true"
-      ></span>
-      <span class="sr-only">{m.tonight.pages.skyVerdict({ headline: view.headline.text })}</span>
-      {context}
+      <span class="block sm:inline">
+        <span
+          class:list={["mr-2 inline-block size-2.5 rounded-full align-middle", VERDICT_TONES[view.verdict.level].dot]}
+          aria-hidden="true"
+        ></span>
+        <span class="sr-only">{m.tonight.pages.skyVerdict({ headline: view.headline.text })}</span>
+        {view.dateLabel}
+      </span>
+      {/* The separator stays in the text for screen readers; a phone shows the next part on its own line instead. */}
+      <span class="max-sm:sr-only">{" · "}</span>
+      <span class="mt-1 block sm:mt-0 sm:inline">
+        {view.siteName} · {view.telescopeName}
+      </span>
     </p>
   )}
 </TonightSky>

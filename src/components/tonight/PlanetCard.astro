@@ -21,10 +21,13 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
 );
 ---
 
-<li id={`planet-${entry.key}`} class="scroll-mt-4 py-4 first:pt-0 last:pb-0">
-  <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-    <h3 class="font-display text-title font-semibold break-words text-heading">{entry.name}</h3>
-    <span class="font-mono text-label text-muted-foreground">{facts.join(" · ")}</span>
+<li id={`planet-${entry.key}`} class="scroll-mt-4 py-5 first:pt-0 last:pb-0">
+  <h3 class="font-display text-title font-semibold break-words text-heading">{entry.name}</h3>
+  {/* One fact per line under the name: magnitude, size, phase, rings. */}
+  <div class="mt-1 space-y-1 font-mono text-label text-muted-foreground">
+    {facts.map((fact) => (
+      <p>{fact}</p>
+    ))}
   </div>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 
@@ -37,13 +40,13 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
     ariaLabel={t.planets.markObserved({ planet: entry.name })}
   >
     {entry.eyepiece && (
-      <p class="mt-2 text-label text-foreground">
+      <p class="text-label text-foreground">
         {t.planets.detailWith} <span class="font-semibold text-primary-strong">{entry.eyepiece.name}</span>{" "}
         {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
       </p>
     )}
 
-    <p class="mt-2 text-label text-foreground">{entry.reason}</p>
-    <p class="mt-2 text-label text-muted-foreground">{entry.note}</p>
+    <p class="text-label text-foreground">{entry.reason}</p>
+    <p class="text-label text-muted-foreground">{entry.note}</p>
   </TargetDetails>
 </li>
