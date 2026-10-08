@@ -1,4 +1,4 @@
-# Handoff — S-02 ui-user-adjustments (2026-10-08, Phases 1-4 of 6 done; Phases 1-4 reviewed)
+# Handoff — S-02 ui-user-adjustments (2026-10-08, Phases 1-5 of 6 done; Phases 1-4 reviewed)
 
 Read this first, then `plan-brief.md` in this folder. **Do not redo research, planning or the plan review**: all three are committed. The user's list is verbatim in `change.md`.
 
@@ -18,7 +18,8 @@ Read this first, then `plan-brief.md` in this folder. **Do not redo research, pl
 - **Phase 3** (sky band): commit `242ecbb`; gates green (unit 1171, full e2e 44 passed / 3 expected skips); manual rows ticked from agent screenshots (EN/PL 320-1280, dark/light/red). `VERDICT_MIN_HEIGHT_CLASS` measured: 168 / 236 px. Slider labels: pure `placeSliderLabels` (`src/lib/sky-view/slider-labels.ts`); compass marker: pure `nearestToCentre` (`compass-marker.ts`); `zoneLabel` added to `format.ts` and `TonightView`. The reason line gets `first-letter:uppercase` (small extra). `tonight-sky.spec.ts` `findMarker` skips a marker covered by a later one (Mercury sits under Venus at 19:45 now that the overlap is 64 px). Safari/Firefox scrollbar check is left for the joint check.
 - **Phase 4** (gear cards): commit `4648b3d`; gates green (unit 1171, full e2e 44 / 3 expected skips). User follow-up 2026-10-08 (fix `a93f4bc`): on phones each card shows the **name in full on its own line with Manage under it** at the bottom (`min-h-31 sm:min-h-34`); at 390×844 the Site card and the Telescope card's title sit above the TabBar, the rest of the Telescope card needs a short scroll (`tonight-phone.spec.ts` relaxed accordingly). Offline the select gets `aria-disabled` + dashed look, not `disabled`. One site + one telescope now shows two cards (name + Manage).
 - **Phases 2-4 impl review**: `reviews/impl-review-phases-2-4.md`, NEEDS ATTENTION, 10 findings (0 critical), all fixed in `1b0e882` (user: apply all recommended; F3 Fix A, so the Site select stays live offline). Listed in `follow-ups/review-fixes.md`.
-- **Next**: Phases 5 (spacing) and 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
+- **Phase 5** (spacing): commit `411cd7d`; gates green (unit 1172, full e2e 44 / 3 expected skips); screenshots at 320/360 px EN+PL and light/red at 390, no sideways scroll. Left as planned (raise with the user if wanted): the dashboard Moon tile keeps its joined line, and a Caldwell target's line reads "Caldwell 5 · in Cepheus" on one line.
+- **Next**: Phase 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
 
 ## The user's decisions (do not re-ask)
 
@@ -83,7 +84,7 @@ Delegated decisions are in `plan-brief.md` › Key Decisions:
 
 ```
 cd ~/projects/sidereus/.claude/worktrees/ui-user-adjustments && git pull
-# /10x-implement ui-user-adjustments phase 5
+# /10x-implement ui-user-adjustments phase 6
 ```
 
 Before merging the PR, merge or rebase onto `main` again. The test stream keeps landing commits, mostly under `context/` and `src/lib/**` tests.
