@@ -204,9 +204,15 @@ These come from the workers' reading of `ranking.ts`, `score.ts` and `log.ts`; t
    Challenge "the calibration test guards the ranking" (it guards only the Messier bonus, on new-Moon nights) rather than "the calibration snapshot is an oracle".
 2. **Risk #3 likelihood.** No violation exists today (0 in about 19,000 probed rows), so the property suite is a regression guard. The "fixture nights are representative" challenge stands as a coverage claim. The anti-pattern note should add that the oracle is altitude recomputed from astronomy-engine in the test, never `bestWindow` or `objectTracks` output.
 
+## Decisions (user, 2026-10-08)
+
+- **Backport:** the corrections above go into `test-plan.md` §2 (risks #3 and #4, dated research backport).
+- **Risk #4 oracle:** PRD invariants as relations **plus** a committed, source-cited beginner reference list; each calibration night's top 5 must overlap it by at least k (the list and k are proposed in the plan for the user to confirm).
+- **Short windows:** document and pin the current rule (the target is up at or above the minimum at the shown time); no product change in this phase; the soft spot goes to GitHub #21 as a ranking follow-up.
+
 ## Open Questions
 
-- **Owner decision:** should a committed, source-cited beginner reference list (and an overlap threshold k) become the Risk #4 oracle? Or should Phase 3 limit itself to PRD invariants and relations, leaving "top 5 quality" to the manual checkpoint?
-- **Owner decision:** should zero-length and very short windows (one 10-min sample, about 0.7% of entries in the probe) be listed? This is a product rule, not a test. The test phase can document it either way.
+- ~~Owner decision: reference list as the Risk #4 oracle~~ — decided: yes (see Decisions).
+- ~~Owner decision: short windows~~ — decided: document, no change (see Decisions).
 - **Plan decision:** keep the exact-order literal at `ranking.test.ts:195` as a dated reference fixture with a citation, or replace it with rule-based assertions.
 - The weather-mask path (`clearIntervals`) was reviewed in code but not fuzzed. The probe used `forecast: null`.
