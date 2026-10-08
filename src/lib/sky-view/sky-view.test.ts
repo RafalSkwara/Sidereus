@@ -4,9 +4,11 @@ import { describe, expect, it } from "vitest";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { skyMix, mixPercentages } from "@/lib/sky-view/colour";
 import { frameTime, nearestFrame } from "@/lib/sky-view/frames";
+import { nearestToCentre } from "@/lib/sky-view/compass-marker";
 import { bodyLabelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
 import { project, starRadius } from "@/lib/sky-view/projection";
 import { rotateToHorizon } from "@/lib/sky-view/rotate";
+import { fractionToX, placeSliderLabels, samePlacement, type SliderLabelId } from "@/lib/sky-view/slider-labels";
 
 /** The interactive sky's browser maths (interactive-sky), pinned where the screenshots can't show it. */
 
@@ -178,5 +180,71 @@ describe("frames", () => {
     expect(nearestFrame(view, 1_400_000)).toBe(3);
     expect(nearestFrame(view, 1_340_000)).toBe(2);
     expect(nearestFrame(view, 9_000_000)).toBe(3);
+  });
+});
+
+describe("nearestToCentre (the compass marker)", () => {
+  it("picks the label whose x is nearest the middle, the first on a tie, and none for an empty row", () => {
+    expect(nearestToCentre([0, 100, 200, 300], 140)).toBe(1);
+    expect(nearestToCentre([0, 100, 200, 300], 150)).toBe(1);
+    expect(nearestToCentre([0, 100, 200, 300], 151)).toBe(2);
+    expect(nearestToCentre([0, 100, 200, 300], -50)).toBe(0);
+    expect(nearestToCentre([], 10)).toBe(-1);
+  });
+
+  it("lets the copy of the wrap-edge point nearest the middle win", () => {
+    // N is drawn at both ends of a 400 px strip; scrolled to the right end, the right copy is nearer the middle.
+    expect(nearestToCentre([0, 100, 200, 300, 400], 390)).toBe(4);
+    expect(nearestToCentre([0, 100, 200, 300, 400], 10)).toBe(0);
+  });
+});
+
+describe("placeSliderLabels (the slider's edge labels)", () => {
+  const widths: Record<SliderLabelId, number> = { sunset: 40, darkStart: 40, darkEnd: 40, darkMerged: 90, sunrise: 40 };
+  const base = { thumbPx: 20, gapPx: 8, widths };
+
+  it("shows all four labels when the track is wide enough, the dark ones centred under the span's edges", () => {
+    const placement = placeSliderLabels({ ...base, trackWidth: 600, dark: { from: 0.2, to: 0.8 } });
+    expect(Object.keys(placement).sort()).toEqual(["darkEnd", "darkStart", "sunrise", "sunset"]);
+    expect((placement.darkStart ?? 0) + 20).toBeCloseTo(fractionToX(0.2, 600, 20), 0);
+    expect((placement.darkEnd ?? 0) + 20).toBeCloseTo(fractionToX(0.8, 600, 20), 0);
+    expect(placement.sunset).toBe(0);
+    expect(placement.sunrise).toBe(560);
+  });
+
+  it("drops sunset and sunrise before the dark window's labels", () => {
+    // The dark start sits close to the sunset end and the dark end close to the sunrise end of a 200 px track.
+    const placement = placeSliderLabels({ ...base, trackWidth: 200, dark: { from: 0.15, to: 0.85 } });
+    expect(placement.sunset).toBeUndefined();
+    expect(placement.sunrise).toBeUndefined();
+    expect(placement.darkStart).toBeDefined();
+    expect(placement.darkEnd).toBeDefined();
+  });
+
+  it("merges the dark labels into one centred under the span when they collide, then checks the ends again", () => {
+    const placement = placeSliderLabels({ ...base, trackWidth: 120, dark: { from: 0.3, to: 0.7 } });
+    expect(placement.darkStart).toBeUndefined();
+    expect(placement.darkEnd).toBeUndefined();
+    expect(placement.darkMerged).toBe(15);
+    expect(placement.sunset).toBeUndefined();
+    expect(placement.sunrise).toBeUndefined();
+  });
+
+  it("shows only sunset and sunrise without a dark window, and nothing before the track is measured", () => {
+    expect(placeSliderLabels({ ...base, trackWidth: 300, dark: null })).toEqual({ sunset: 0, sunrise: 260 });
+    expect(placeSliderLabels({ ...base, trackWidth: 0, dark: { from: 0.2, to: 0.8 } })).toEqual({});
+  });
+
+  it("keeps a label inside the track when its edge is at the end of the axis", () => {
+    const placement = placeSliderLabels({ ...base, trackWidth: 300, dark: { from: 0, to: 1 } });
+    expect(placement.darkStart).toBe(0);
+    expect(placement.darkEnd).toBe(260);
+  });
+
+  it("compares placements by label and place", () => {
+    expect(samePlacement(null, {})).toBe(false);
+    expect(samePlacement({ sunset: 0 }, { sunset: 0 })).toBe(true);
+    expect(samePlacement({ sunset: 0 }, { sunset: 1 })).toBe(false);
+    expect(samePlacement({ sunset: 0 }, {})).toBe(false);
   });
 });

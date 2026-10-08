@@ -465,11 +465,9 @@ export const pl = {
     rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {
-      darkFrom: "Ciemno od",
-      darkTo: "do",
+      darkLine: (p) => `Ciemno ${p.start}–${p.end} · czas w strefie ${p.zone}`,
       noDarkWindow: "Brak ciemnej nocy",
       separator: " · ",
-      timesIn: (p) => `Czas w strefie ${p.zone}`,
     },
 
     nights: {
@@ -758,7 +756,7 @@ export const pl = {
       panorama: "Niebo dziś w nocy, przesuń, aby się rozejrzeć",
       slider: "Pora nocy",
       now: "Teraz",
-      darkWindow: "Ciemne niebo",
+      zone: (p) => p.zone,
       bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
       panLeft: "Przewiń niebo w lewo",
       panRight: "Przewiń niebo w prawo",
@@ -768,10 +766,6 @@ export const pl = {
       objectData: "Dane obiektów:",
       starData: "Dane gwiazd:",
       weather: "Pogoda:",
-    },
-
-    verdict: {
-      word: { go: "Tak", marginal: "Może", "no-go": "Nie" },
     },
 
     summary: {

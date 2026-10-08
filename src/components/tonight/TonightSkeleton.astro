@@ -1,7 +1,7 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
-// strip and slider row reserved, interactive-sky) with bars where the three info lines, the giant word and the
-// answer line go, a one-line gear row, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
+// strip and slider row reserved, interactive-sky) with bars where the date, the display-size headline and its reason
+// go, a one-line gear row, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
 import {
@@ -37,19 +37,15 @@ const tile = TILE_ROW_CLASS;
   <TonightSky night verdict strip>
     <div aria-hidden="true">
       <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
-      <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
-      <div class:list={[bar, "w-48 max-w-full text-label"]}>&nbsp;</div>
-      <div class="mt-2 font-display text-verdict-sm sm:text-verdict-lg font-extrabold">
-        <div class:list={[bar, "w-1/2"]}>&nbsp;</div>
-      </div>
-      <div class:list={[bar, "mt-3 w-3/4 text-title sm:mt-6"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-2 w-2/3 font-display text-display"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-1 w-3/4 text-body"]}>&nbsp;</div>
       <div class:list={[bar, "mt-3 w-40 text-label max-sm:hidden"]}>&nbsp;</div>
     </div>
   </TonightSky>
   <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->
   <div class:list={[SLIDER_ROW_CLASS]} aria-hidden="true">
     <div class:list={[SLIDER_LAYOUT_CLASS]}>
-      <div class:list={[bar, SLIDER_TIME_CLASS, "w-16 text-title"]}>&nbsp;</div>
+      <div class:list={[bar, SLIDER_TIME_CLASS, "w-28 text-title"]}>&nbsp;</div>
       <div class:list={[SLIDER_TRACK_CLASS, "flex h-11 items-center"]}>
         <div class:list={[bar, "h-1.5 w-full"]}></div>
       </div>

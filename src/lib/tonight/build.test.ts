@@ -1389,6 +1389,46 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     expect(sky.darkSpan).not.toBeNull();
   });
 
+  it("carries the dark window at its exact edges, with the server's times, and the zone's short name", () => {
+    const view = build();
+    const sky = skyViewOf(view);
+    if (view.darkWindow.kind !== "window" || sky.dark === null) {
+      throw new Error("expected a dark window");
+    }
+    // The same strings the verdict's dark window carries, so the slider's edge labels can never disagree with it.
+    expect(sky.dark.startLabel).toBe(view.darkWindow.start);
+    expect(sky.dark.endLabel).toBe(view.darkWindow.end);
+    expect(sky.dark.from).toBeGreaterThan(0);
+    expect(sky.dark.to).toBeLessThan(1);
+    expect(sky.dark.from).toBeLessThan(sky.dark.to);
+    // The fractions are the exact instants on the slider's track: within one frame of the frame-quantised span.
+    const last = sky.frameCount - 1;
+    expect(Math.abs(sky.dark.from * last - (sky.darkSpan?.from ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs(sky.dark.to * last - (sky.darkSpan?.to ?? 0))).toBeLessThanOrEqual(1);
+    // Warsaw in October: central European summer time.
+    expect(sky.zoneLabel).toBe("CEST");
+    expect(view.zoneLabel).toBe(sky.zoneLabel);
+    expect(skyViewOf(build({}, "pl")).zoneLabel).toBe("CEST");
+  });
+
+  it("has no dark stretch without a dark window, and names a zone with no abbreviation by its offset", () => {
+    const light = skyViewOf(
+      build({
+        site: HELSINKI_DARK,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T09:00:00Z"),
+      }),
+    );
+    expect(light.dark).toBeNull();
+    expect(light.zoneLabel).toMatch(/^(EEST|GMT\+3)$/);
+    const sydney = build({
+      site: SOUTH,
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+      now: new Date("2026-10-10T09:00:00Z"),
+    });
+    expect(skyViewOf(sydney).zoneLabel).toMatch(/^(AEDT|GMT\+11)$/);
+  });
+
   it("starts at the frame nearest now inside the range, else at the dark span's start, else at 0", () => {
     const inside = skyViewOf(build());
     expect(Math.abs(inside.startMs + inside.initialIndex * inside.stepMs - NOW.getTime())).toBeLessThanOrEqual(

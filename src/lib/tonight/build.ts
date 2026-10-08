@@ -53,7 +53,13 @@ import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
-import { createFormatter, type ForecastStatus, type MoonUp, type SkyHeadline } from "./format";
+import {
+  createFormatter,
+  zoneLabel as zoneLabelAt,
+  type ForecastStatus,
+  type MoonUp,
+  type SkyHeadline,
+} from "./format";
 import {
   layoutSessionPlan,
   type SessionPlanMoonEvent,
@@ -400,6 +406,8 @@ export interface TonightView {
   /** "Saturday, 10 October 2026" */
   dateLabel: string;
   timeZone: string;
+  /** The zone's short name for the night ("CEST", or "GMT+2" where there is no abbreviation). */
+  zoneLabel: string;
   verdict: Verdict;
   /** The sky headline from the verdict's level and reason: "Clear", "No forecast", "No dark window", … */
   headline: SkyHeadline;
@@ -644,6 +652,9 @@ export function buildTonight(
   }
   const window = first.darkWindow;
   const tonight = first.verdict;
+  // The zone's short name for the night ("CEST"), read at the observing night's start, shown beside the slider's time
+  // and on the static verdict's dark line.
+  const zoneLabel = zoneLabelAt(observingNight(date, timeZone).start, timeZone);
 
   const nights = outlook.map((night): TonightNight => {
     // Nights 1-3 carry a verdict, not cloud numbers, so their mean comes from `cloudOutlook` over the same hours.
@@ -952,6 +963,26 @@ export function buildTonight(
         const to = times.findLastIndex((t) => t <= window.end.getTime());
         darkSpan = from >= 0 && to >= from ? { from, to } : null;
       }
+      // The dark window at its exact edges, as fractions of the slider's track plus the same strings `darkWindow`
+      // carries. The slider moves by frame index, so a time's fraction is its continuous index over the last one: a
+      // frame's own time then lands exactly under the thumb, and only the last (shorter) step is stretched.
+      let dark: TonightSkyView["dark"] = null;
+      if (window.kind === "window" && frames.length > 1) {
+        const lastIndex = frames.length - 1;
+        const stepMs = DEFAULT_TRACK_STEP_MINUTES * 60_000;
+        const fractionOf = (ms: number) => roundTo(Math.min(Math.max((ms - startMs) / stepMs / lastIndex, 0), 1), 4);
+        const from = fractionOf(window.start.getTime());
+        const to = fractionOf(window.end.getTime());
+        dark =
+          to > from
+            ? {
+                from,
+                to,
+                startLabel: formatTime(window.start, timeZone),
+                endLabel: formatTime(window.end, timeZone),
+              }
+            : null;
+      }
       const nowMs = selectionNow.getTime();
       const initialIndex = nowMs >= startMs && nowMs <= endMs ? nearestIndex(times, nowMs) : (darkSpan?.from ?? 0);
 
@@ -996,6 +1027,8 @@ export function buildTonight(
         rotations: frames.flatMap((frame) => frame.rotation.map((value) => roundTo(value, 4))),
         sunAltDeg: frames.map((frame) => roundTo(frame.sunAltitudeDeg, 1)),
         darkSpan,
+        dark,
+        zoneLabel,
         initialIndex,
         facing: site.latitudeDeg < 0 ? "north" : "south",
         timeLabels: frames.map((frame) => formatTime(frame.time, timeZone)),
@@ -1146,6 +1179,7 @@ export function buildTonight(
     validUntil: planetWindow?.kind === "window" ? planetWindow.end : observingNight(date, timeZone).end,
     dateLabel: formatNightDate(date),
     timeZone,
+    zoneLabel,
     verdict: tonight,
     headline: skyHeadline(tonight),
     verdictText: verdictReasonText(tonight),

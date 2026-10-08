@@ -36,8 +36,17 @@ export interface TonightSkyView {
   rotations: number[];
   /** The Sun's altitude per frame, degrees, 1 decimal. */
   sunAltDeg: number[];
-  /** The frames inside the dark window, as indices; `null` without a dark window. */
+  /** The frames inside the dark window, as indices; `null` without a dark window. Drives the sky's colour, not the slider's marks. */
   darkSpan: { from: number; to: number } | null;
+  /**
+   * The dark window at its exact edges (ui-user-adjustments): `from` and `to` are where its start and end fall on the
+   * slider's track (0..1, four decimals: the time's continuous frame index over the last index, so a frame's own time
+   * sits under the thumb), and the labels are the same `HH:mm` strings as `TonightView.darkWindow`, formatted on the
+   * server. `null` without a dark window.
+   */
+  dark: { from: number; to: number; startLabel: string; endLabel: string } | null;
+  /** The time zone's short name at the night ("CEST", or "GMT+2" where there is no abbreviation), shown after the current time. */
+  zoneLabel: string;
   /** The frame nearest `now` when it is inside the range, else the dark span's start, else 0. */
   initialIndex: number;
   /** The panorama's centre: south, or north for a southern-hemisphere site. */

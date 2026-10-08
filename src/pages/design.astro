@@ -51,7 +51,7 @@ import {
   type TonightPlanetEntry,
   type TonightView,
 } from "@/lib/tonight/build";
-import { createFormatter, type ForecastStatus } from "@/lib/tonight/format";
+import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
 
 // Dev only: anywhere else the page is a bare 404 and renders nothing.
@@ -200,12 +200,12 @@ const submitIcon = createElement(Save, { className: "size-4", "aria-hidden": tru
 
 /*
  * Tonight (tonight-nightfall). Static sample verdicts and a sample view, worded through Tonight's own formatter so
- * they follow the page's language; no store, no clock, no forecast. Switch the language above to Polish to see the
- * giant word's Polish sizes (Tak, Może, Nie).
+ * they follow the page's language; no store, no clock, no forecast.
  */
 const fmt = createFormatter(locale);
 const SAMPLE_ZONE = "Europe/Warsaw";
 const SAMPLE_DATE = "2026-10-10";
+const SAMPLE_ZONE_LABEL = zoneLabel(new Date(`${SAMPLE_DATE}T12:00:00Z`), SAMPLE_ZONE);
 const MINUTE_MS = 60_000;
 
 const goVerdict = { level: "go", reason: { kind: "clear-run", runHours: 7, cloudPct: 8 } } satisfies Verdict;
@@ -328,7 +328,8 @@ const skies = skySamples.map((sample) => ({
     headline: fmt.skyHeadline(sample.verdict),
     text: fmt.verdictReasonText(sample.verdict),
     darkWindow: sample.darkWindow,
-    timeZone: sample.timeZone,
+    zoneLabel: zoneLabel(new Date(`${sample.date}T12:00:00Z`), sample.timeZone),
+    withSlider: false,
     forecastStatus: { kind: sample.forecast.kind, text: fmt.forecastStatusText(sample.forecast) },
     explanation: sample.explanation,
   },
@@ -431,6 +432,7 @@ const summaryView: TonightView = {
   date: SAMPLE_DATE,
   dateLabel: fmt.formatNightDate(SAMPLE_DATE),
   timeZone: SAMPLE_ZONE,
+  zoneLabel: SAMPLE_ZONE_LABEL,
   verdict: goVerdict,
   headline: fmt.skyHeadline(goVerdict),
   verdictText: fmt.verdictReasonText(goVerdict),
@@ -1489,9 +1491,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
       <Band headingId="tonight-heading" heading="Tonight">
         <div class="flex flex-col gap-10">
           <p class:list={blockNote}>
-            Tonight's own pieces with static sample data. The giant Go / Marginal / No-go word is Tonight's only use of
-            that vocabulary; switch the language above to Polish for its Polish sizes (Tak, Może, Nie). Each specimen
-            renders the real component, so heading ids repeat on this page.
+            Tonight's own pieces with static sample data. The verdict is the sky headline ("● Cloudy") at the display
+            role over its reason; the static specimens below are the fallback without the live sky, so they keep a muted
+            dark-window line (the live sky's slider carries it). Each specimen renders the real component, so heading
+            ids repeat on this page.
           </p>
 
           <!-- TonightSky + VerdictCard -->
@@ -1562,7 +1565,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         headline={panoramaView.headline}
                         text={panoramaView.verdictText}
                         darkWindow={panoramaView.darkWindow}
-                        timeZone={panoramaView.timeZone}
+                        zoneLabel={panoramaView.zoneLabel}
+                        withSlider
                         forecastStatus={panoramaView.forecastStatus}
                         explanation={panoramaView.explanation}
                         headingId={`verdict-heading-panorama-${String(i)}`}

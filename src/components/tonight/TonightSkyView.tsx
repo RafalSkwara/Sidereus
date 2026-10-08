@@ -1,11 +1,11 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   SILHOUETTE_CLASS,
   SILHOUETTE_PATH,
   SILHOUETTE_VIEWBOX,
+  SLIDER_LABELS_CLASS,
   SLIDER_LAYOUT_CLASS,
-  SLIDER_LEGEND_CLASS,
   SLIDER_NOW_CLASS,
   SLIDER_ROW_CLASS,
   SLIDER_TIME_CLASS,
@@ -23,10 +23,17 @@ import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
 import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal, type CompassPoint } from "@/lib/compass";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
+import { nearestToCentre } from "@/lib/sky-view/compass-marker";
 import { nearestFrame } from "@/lib/sky-view/frames";
 import { bodyLabelRects, labelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
 import { project, starRadius } from "@/lib/sky-view/projection";
 import { rotateToHorizon } from "@/lib/sky-view/rotate";
+import {
+  placeSliderLabels,
+  samePlacement,
+  type SliderLabelId,
+  type SliderLabelPlacement,
+} from "@/lib/sky-view/slider-labels";
 import type { TonightSkyBody, TonightSkyView as SkyViewData } from "@/lib/sky-view/view";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +47,7 @@ import { cn } from "@/lib/utils";
  * The panorama covers 360° on a strip about twice the viewport wide (a little narrower, `EDGE_INSET_PX`, so E and W
  * show whole at load), scrolled at load to centre `facing`; swipe for the rest, or use the chevron at each edge
  * (ui-sky-light), which pans most of a viewport and hides once its end is reached.
- * Its star field reaches `STRIP_OVERLAP_PX` up behind the verdict's empty lower area. The verdict stays on top but
+ * Its star field reaches `STRIP_OVERLAP_PX` (64 px) up behind the verdict's empty lower area. The verdict stays on top but
  * takes no pointer events (it has nothing interactive), so taps and swipes over the overlap reach the panorama. The
  * overlap holds stars only: no star label, and a body there has its label below the overlap, beside the column if
  * another body's label is there, with a leader line back to the dot when the label sits far from it.
@@ -49,7 +56,11 @@ import { cn } from "@/lib/utils";
  * altitude and direction at the slider's time, with a 24 px hit area and a `--ring` focus circle.
  * Along the field's top edge a compass row names the 16 points (compass-labels), international in every locale
  * (`@/lib/compass`), cardinals stronger. It sits just under the verdict's text, wherever that ends: the island measures
- * it (the verdict's slot is `display: contents`, so through a `Range`), and the row stays invisible until measured.
+ * it (the verdict's slot is `display: contents`, so through a `Range`), and the row stays invisible until measured. The
+ * scrollbar is hidden; instead the label nearest the middle of the view is marked (heading ink, semibold, a short bar
+ * under it), so the row says which way you are looking.
+ * The slider's track draws the dark window at its exact edges (`view.dark`), with the server's times under them and the
+ * short zone muted after the current time; the browser only measures the labels to drop any that would collide.
  *
  * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, `@/lib/compass`, the star catalogue (`stars.ts`, `star-names.ts`),
  * `sky-band`, `range-classes`, `@/i18n`, `cn` and `buttonVariants`, never astronomy-engine or the engine
@@ -81,15 +92,18 @@ const COMPASS_GAP_PX = 8;
 const COMPASS_MIN_TOP_PX = 4;
 /** How far a chevron pans the strip, as a share of the visible width (ui-sky-light). */
 const PAN_SHARE = 0.6;
+/** The least gap between two slider labels, px. */
+const LABEL_GAP_PX = 8;
 
 /**
- * The panorama's edge chevrons (ui-sky-light): a 44 px target over the strip's middle, above the verdict's layer, with
- * a smaller translucent zenith face so the sky shows through; `--ring` focus outline on the target.
+ * The panorama's edge chevrons (ui-sky-light, bare since ui-user-adjustments): a 44 px target over the strip's middle,
+ * above the verdict's layer. The face is just the icon in heading ink, faint at rest (they are only a suggestion) and
+ * full on hover or focus; `--ring` focus outline on the target.
  */
 const PAN_BUTTON_CLASS =
   "group focus-visible:outline-ring absolute z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2";
 const PAN_FACE_CLASS =
-  "bg-zenith/70 border-border text-heading group-hover:bg-zenith group-hover:border-muted-foreground flex size-8 items-center justify-center rounded-full border backdrop-blur-sm transition-colors motion-reduce:transition-none";
+  "text-heading flex size-8 items-center justify-center opacity-60 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none";
 
 /** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
 const COMPASS_ROW_PX = 16;
@@ -100,6 +114,9 @@ const COMPASS_ROW_PX = 16;
 const EDGE_INSET_PX = 8;
 /** The caption role's line: a label's top to its baseline. */
 const CAPTION_BASELINE_PX = 11;
+/** The marker's bar under the compass label nearest the middle: 3 px under the baseline, 2 px thick, so it ends at the row's foot. */
+const COMPASS_BAR_GAP_PX = 3;
+const COMPASS_BAR_PX = 2;
 
 const nowButtonClass = buttonVariants({ variant: "outline", size: "sm" });
 
@@ -134,6 +151,18 @@ interface CompassLabel {
   anchor: "start" | "middle" | "end";
 }
 
+/** A compass label's identity: the wrap-edge point is drawn twice, so its x tells the two copies apart. */
+const compassKey = ({ point, x }: CompassLabel) => `${point}-${String(x)}`;
+
+/** The key of the compass label nearest the middle of the scroller's visible part; `null` for an empty row. */
+function nearestCompassKey(scroller: HTMLElement, compass: readonly CompassLabel[]): string | null {
+  const index = nearestToCentre(
+    compass.map(({ x }) => x),
+    scroller.scrollLeft + scroller.clientWidth / 2,
+  );
+  return index < 0 ? null : compassKey(compass[index]);
+}
+
 interface PlacedBody {
   body: TonightSkyBody;
   x: number;
@@ -155,6 +184,12 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   const [compassTop, setCompassTop] = useState<number | null>(null);
   // Whether the strip sits at its left or right end: that edge's chevron hides (both do when nothing overflows).
   const [edges, setEdges] = useState({ start: true, end: true });
+  // The key of the compass label nearest the middle of the visible strip (`compassKey`); `null` before the first read.
+  const [currentCompass, setCurrentCompass] = useState<string | null>(null);
+  // The slider's edge labels: the track's box, each label's element (measured) and which fit, once measured.
+  const trackBox = useRef<HTMLDivElement>(null);
+  const labelEls = useRef<Partial<Record<SliderLabelId, HTMLSpanElement | null>>>({});
+  const [labelPlacement, setLabelPlacement] = useState<SliderLabelPlacement | null>(null);
   const panButtons = useRef<Record<"left" | "right", HTMLButtonElement | null>>({ left: null, right: null });
   const pendingFocus = useRef<"left" | "right" | "strip" | null>(null);
   useLayoutEffect(() => {
@@ -301,6 +336,59 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     [view.facing, half, height, stripWidth],
   );
 
+  // Marks the compass label whose x is nearest the middle of the visible strip. The strip's content x is the SVG's x, so
+  // the middle is `scrollLeft + clientWidth / 2`; the state changes only when the nearest label does.
+  const readCentre = () => {
+    const element = scroller.current;
+    if (!element) return;
+    const key = nearestCompassKey(element, compass);
+    setCurrentCompass((prev) => (prev === key ? prev : key));
+  };
+  // After the first layout and whenever the strip is redrawn or recentred (the earlier effect sets `scrollLeft`).
+  useLayoutEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const key = nearestCompassKey(element, compass);
+    setCurrentCompass((prev) => (prev === key ? prev : key));
+  }, [compass, viewport]);
+
+  // The slider's edge labels: measure each (the browser's text widths, in the page's font) and the track, and show
+  // those that fit. The texts are the server's; only their widths and places are decided here.
+  useLayoutEffect(() => {
+    const box = trackBox.current;
+    if (!box) return;
+    const place = () => {
+      const width = (id: SliderLabelId) => labelEls.current[id]?.offsetWidth ?? 0;
+      const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const next = placeSliderLabels({
+        trackWidth: box.clientWidth,
+        // The range thumb is 1.25 rem wide (`range-classes.ts`).
+        thumbPx: 1.25 * (rootPx > 0 ? rootPx : 16),
+        gapPx: LABEL_GAP_PX,
+        widths: {
+          sunset: width("sunset"),
+          darkStart: width("darkStart"),
+          darkEnd: width("darkEnd"),
+          darkMerged: width("darkMerged"),
+          sunrise: width("sunrise"),
+        },
+        dark: view.dark,
+      });
+      setLabelPlacement((prev) => (samePlacement(prev, next) ? prev : next));
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(box);
+    let live = true;
+    void document.fonts.ready.then(() => {
+      if (live) place();
+    });
+    return () => {
+      live = false;
+      observer.disconnect();
+    };
+  }, [view.dark, view.startLabel, view.endLabel]);
+
   const labels = useMemo(() => {
     const items: LabelItem[] = bodies.map(({ body, x, y }) => ({
       id: body.key,
@@ -318,7 +406,39 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     "--dusk-glow-share": outer,
     "--dusk-twilight-share": inner,
   };
-  const darkSpan = view.darkSpan;
+  const dark = view.dark;
+  // The labels under the slider's track, in their stacking order: texts from the server, `hook` the e2e contract.
+  const sliderLabels: {
+    id: SliderLabelId;
+    text: string;
+    className: string;
+    hook: Record<string, string>;
+  }[] = [
+    { id: "sunset", text: view.startLabel, className: "text-muted-foreground", hook: { "data-sky-start": "" } },
+    ...(dark
+      ? [
+          {
+            id: "darkStart" as const,
+            text: dark.startLabel,
+            className: "text-heading",
+            hook: { "data-sky-dark-start": "" },
+          },
+          {
+            id: "darkEnd" as const,
+            text: dark.endLabel,
+            className: "text-heading",
+            hook: { "data-sky-dark-end": "" },
+          },
+          {
+            id: "darkMerged" as const,
+            text: `${dark.startLabel}–${dark.endLabel}`,
+            className: "text-heading",
+            hook: { "data-sky-dark-merged": "" },
+          },
+        ]
+      : []),
+    { id: "sunrise", text: view.endLabel, className: "text-muted-foreground", hook: { "data-sky-end": "" } },
+  ];
 
   return (
     <div>
@@ -341,8 +461,11 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
             role="region"
             aria-label={t.panorama}
             tabIndex={0}
-            className="scrollbar-strip focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
-            onScroll={readEdges}
+            className="scrollbar-hidden focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
+            onScroll={() => {
+              readEdges();
+              readCentre();
+            }}
             data-sky-strip
           >
             <svg
@@ -354,20 +477,39 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               data-sky-frame={index}
             >
               <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
-                {compass.map(({ point, x, anchor }) => (
-                  <text
-                    key={`${point}-${String(x)}`}
-                    x={x}
-                    y={(compassTop ?? 0) + CAPTION_BASELINE_PX}
-                    textAnchor={anchor}
-                    className={cn(
-                      "text-caption",
-                      isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",
-                    )}
-                  >
-                    {point}
-                  </text>
-                ))}
+                {compass.map((entry) => {
+                  const { point, x, anchor } = entry;
+                  const current = compassKey(entry) === currentCompass;
+                  const top = compassTop ?? 0;
+                  const barWidth = Math.max(point.length * BODY_CHAR_PX - 2, 8);
+                  const barX = anchor === "start" ? x : anchor === "end" ? x - barWidth : x - barWidth / 2;
+                  return (
+                    <Fragment key={compassKey(entry)}>
+                      <text
+                        x={x}
+                        y={top + CAPTION_BASELINE_PX}
+                        textAnchor={anchor}
+                        className={cn(
+                          "text-caption",
+                          current || isCardinal(point) ? "fill-heading font-semibold" : "fill-muted-foreground",
+                        )}
+                        data-sky-compass-current={current ? point : undefined}
+                      >
+                        {point}
+                      </text>
+                      {current && (
+                        <rect
+                          x={barX}
+                          y={top + CAPTION_BASELINE_PX + COMPASS_BAR_GAP_PX}
+                          width={barWidth}
+                          height={COMPASS_BAR_PX}
+                          rx={1}
+                          className="fill-heading"
+                        />
+                      )}
+                    </Fragment>
+                  );
+                })}
               </g>
               <g className="night:block hidden" aria-hidden="true">
                 <path d={stars.path} className="fill-star" />
@@ -482,28 +624,32 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
 
       <div className={SLIDER_ROW_CLASS}>
         <div className={SLIDER_LAYOUT_CLASS}>
-          <span className={cn("text-heading text-title font-mono", SLIDER_TIME_CLASS)} data-sky-time>
-            {time}
+          <span className={cn("flex items-baseline gap-1.5", SLIDER_TIME_CLASS)}>
+            <span className="text-heading text-title font-mono" data-sky-time>
+              {time}
+            </span>
+            {view.zoneLabel && (
+              <span className="text-muted-foreground text-label" data-sky-zone>
+                {t.zone({ zone: view.zoneLabel })}
+              </span>
+            )}
           </span>
           {/*
            * DOM order follows the phone row (time, slider, Now), so Tab matches what a phone shows; from `sm` the
            * order classes lift Now onto the time's line.
            * With a single frame there is nothing to slide (as on the Moon card): the row keeps its height.
            */}
-          <div className={cn("relative h-11", SLIDER_TRACK_CLASS)}>
+          <div ref={trackBox} className={cn("relative h-11", SLIDER_TRACK_CLASS)}>
             {last > 0 && (
               <>
                 <div
                   aria-hidden="true"
                   className="bg-border pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full"
                 >
-                  {darkSpan && (
+                  {dark && (
                     <span
                       className="bg-primary-strong absolute inset-y-0 rounded-full"
-                      style={{
-                        left: trackAt(darkSpan.from / last),
-                        width: trackSpan((darkSpan.to - darkSpan.from) / last),
-                      }}
+                      style={{ left: trackAt(dark.from), width: trackSpan(dark.to - dark.from) }}
                       data-dark-span
                     />
                   )}
@@ -523,6 +669,29 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
                 />
               </>
             )}
+            {/* Under the track, in its own box so the x positions are the track's; a label that doesn't fit stays hidden. */}
+            <div aria-hidden="true" className={SLIDER_LABELS_CLASS} data-sky-labels>
+              {sliderLabels.map(({ id, text, className, hook }) => {
+                const left = labelPlacement?.[id];
+                return (
+                  <span
+                    key={id}
+                    ref={(element) => {
+                      labelEls.current[id] = element;
+                    }}
+                    className={cn(
+                      "text-label absolute top-0 font-mono whitespace-nowrap",
+                      className,
+                      left === undefined && "invisible",
+                    )}
+                    style={{ left: left ?? 0 }}
+                    {...hook}
+                  >
+                    {text}
+                  </span>
+                );
+              })}
+            </div>
           </div>
           {last > 0 && (
             <button
@@ -535,22 +704,6 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               {t.now}
             </button>
           )}
-          <div
-            className={cn(
-              "text-muted-foreground text-label flex items-center justify-between gap-3 font-mono",
-              SLIDER_LEGEND_CLASS,
-            )}
-            aria-hidden="true"
-          >
-            <span data-sky-start>{view.startLabel}</span>
-            {darkSpan && (
-              <span className="flex items-center gap-1.5 font-sans">
-                <span className="bg-primary-strong h-1.5 w-4 rounded-full" />
-                {t.darkWindow}
-              </span>
-            )}
-            <span data-sky-end>{view.endLabel}</span>
-          </div>
         </div>
       </div>
     </div>

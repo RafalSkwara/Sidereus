@@ -150,6 +150,28 @@ export function formatLocaleTag(locale: Locale): string {
 }
 
 /**
+ * The time zone's short name at `date`, as the dashboard shows it next to the slider's time: "CEST", "EDT", "GMT"; a
+ * "GMT+2"-style offset where the zone has no abbreviation. The names are international and locale-fixed (en-GB, then
+ * en-US for the zones British English only offsets, such as America/New_York), so Polish reads "CEST" too.
+ */
+export function zoneLabel(date: Date, timeZone: string): string {
+  const read = (tag: string): string =>
+    new Intl.DateTimeFormat(tag, { timeZone, timeZoneName: "short" })
+      .formatToParts(date)
+      .find((part) => part.type === "timeZoneName")?.value ?? "";
+  const isOffset = (name: string) => /^(GMT|UTC)[+\u2212-]/.test(name);
+  const british = read("en-GB");
+  if (british !== "" && !isOffset(british)) {
+    return british;
+  }
+  const american = read("en-US");
+  if (american !== "" && !isOffset(american)) {
+    return american;
+  }
+  return british || american || timeZone;
+}
+
+/**
  * The Tonight formatters for one locale. Create one per request and reuse it: the `Intl` formatters
  * are built once here.
  */
