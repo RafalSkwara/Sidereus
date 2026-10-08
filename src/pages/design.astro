@@ -7,7 +7,7 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, Plus, Save } from "lucide-react";
+import { Check, MapPin, Plus, Save, Settings2, Telescope } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -28,8 +28,10 @@ import ComboboxDemo from "@/components/design/ComboboxDemo";
 import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
-import GearSelector from "@/components/tonight/GearSelector.astro";
+import GearCard from "@/components/tonight/GearCard.astro";
+import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
+import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
@@ -51,7 +53,7 @@ import {
   type TonightPlanetEntry,
   type TonightView,
 } from "@/lib/tonight/build";
-import { createFormatter, type ForecastStatus } from "@/lib/tonight/format";
+import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
 
 // Dev only: anywhere else the page is a bare 404 and renders nothing.
@@ -200,12 +202,12 @@ const submitIcon = createElement(Save, { className: "size-4", "aria-hidden": tru
 
 /*
  * Tonight (tonight-nightfall). Static sample verdicts and a sample view, worded through Tonight's own formatter so
- * they follow the page's language; no store, no clock, no forecast. Switch the language above to Polish to see the
- * giant word's Polish sizes (Tak, Może, Nie).
+ * they follow the page's language; no store, no clock, no forecast.
  */
 const fmt = createFormatter(locale);
 const SAMPLE_ZONE = "Europe/Warsaw";
 const SAMPLE_DATE = "2026-10-10";
+const SAMPLE_ZONE_LABEL = zoneLabel(new Date(`${SAMPLE_DATE}T12:00:00Z`), SAMPLE_ZONE);
 const MINUTE_MS = 60_000;
 
 const goVerdict = { level: "go", reason: { kind: "clear-run", runHours: 7, cloudPct: 8 } } satisfies Verdict;
@@ -307,18 +309,21 @@ const skySamples: SkySample[] = [
   },
 ];
 
-// The gear row's specimens (TonightContent): the gear link, then a selector once there are two or more of a kind.
-const gearLink =
-  "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+// The gear cards' specimens (TonightContent): one card per kind, with a select once there are two or more of a kind.
 const gearItems = (count: number) =>
   ["Back garden", "Dark-sky park", "Balcony", "Rooftop"].slice(0, count).map((name, i) => ({
     id: `sample-site-${String(i + 1)}`,
     name,
   }));
-const gearRowClass = "space-y-3 px-4";
+const gearRowClass = "px-4";
 const sampleTelescopeName = "150 mm reflector";
-const pillItems = gearItems(2);
-const dropdownItems = gearItems(4);
+const oneItem = gearItems(1);
+const twoItems = gearItems(2);
+const fourItems = gearItems(4);
+const sampleTelescopes = [
+  { id: "sample-telescope-1", name: sampleTelescopeName },
+  { id: "sample-telescope-2", name: "Dobsonian 200 mm" },
+];
 
 const skies = skySamples.map((sample) => ({
   label: sample.label,
@@ -328,7 +333,8 @@ const skies = skySamples.map((sample) => ({
     headline: fmt.skyHeadline(sample.verdict),
     text: fmt.verdictReasonText(sample.verdict),
     darkWindow: sample.darkWindow,
-    timeZone: sample.timeZone,
+    zoneLabel: zoneLabel(new Date(`${sample.date}T12:00:00Z`), sample.timeZone),
+    withSlider: false,
     forecastStatus: { kind: sample.forecast.kind, text: fmt.forecastStatusText(sample.forecast) },
     explanation: sample.explanation,
   },
@@ -431,6 +437,7 @@ const summaryView: TonightView = {
   date: SAMPLE_DATE,
   dateLabel: fmt.formatNightDate(SAMPLE_DATE),
   timeZone: SAMPLE_ZONE,
+  zoneLabel: SAMPLE_ZONE_LABEL,
   verdict: goVerdict,
   headline: fmt.skyHeadline(goVerdict),
   verdictText: fmt.verdictReasonText(goVerdict),
@@ -538,9 +545,11 @@ const panoramaView = buildTonight(
     now: PANORAMA_NOW,
   },
   locale,
-  { withSkyView: true },
+  { withSkyView: true, withSessionPlan: true },
 );
 const panoramaSky = panoramaView.skyView;
+// The same night's Session plan: long deep-sky windows, short planet and Moon ones, and a planet up most of the night.
+const panoramaPlan = panoramaView.sessionPlan;
 const frameNearestSun = (altitudeDeg: number) =>
   panoramaSky
     ? panoramaSky.sunAltDeg.reduce(
@@ -1040,9 +1049,36 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>default · info</p>
                   <Notice tone="info">{m.gear.notice.deleted.telescope}</Notice>
                 </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>dismissible · info (inline × that sticks)</p>
+                  <Notice tone="info" dismissible>
+                    {m.gear.notice.deleted.telescope}
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>dismissible · warning (the offline notices)</p>
+                  <Notice tone="warning" dismissible>
+                    Forecast is 3 h old; the weather service could not be reached.
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>toast · success (specimen: in the flow, no timer)</p>
+                  <Notice tone="success" specimen>
+                    {m.gear.notice.saved.site}
+                  </Notice>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>toast · warning (specimen: opaque backing under the tint)</p>
+                  <Notice tone="warning" specimen>
+                    Forecast is 3 h old; the weather service could not be reached.
+                  </Notice>
+                </div>
               </div>
               <p class:list={notApplicable}>
-                hover, focus-visible, disabled — N/A (not interactive) · error — see ServerError · empty, loading — N/A
+                A real toast is fixed (above the TabBar below md, under the Topbar from md), closes after 10 s or on ×,
+                and clears its URL param: trigger one with /gear?saved=site. The specimens above keep the toast look in
+                the flow (no data-toast, so the global script leaves them alone). The × is a 44 px icon button; press
+                Tab to see its focus ring. hover, disabled — N/A · error — see ServerError · empty, loading — N/A
               </p>
             </section>
 
@@ -1462,9 +1498,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
       <Band headingId="tonight-heading" heading="Tonight">
         <div class="flex flex-col gap-10">
           <p class:list={blockNote}>
-            Tonight's own pieces with static sample data. The giant Go / Marginal / No-go word is Tonight's only use of
-            that vocabulary; switch the language above to Polish for its Polish sizes (Tak, Może, Nie). Each specimen
-            renders the real component, so heading ids repeat on this page.
+            Tonight's own pieces with static sample data. The verdict is the sky headline ("● Cloudy") at the display
+            role over its reason; the static specimens below are the fallback without the live sky, so they keep a muted
+            dark-window line (the live sky's slider carries it). Each specimen renders the real component, so heading
+            ids repeat on this page.
           </p>
 
           <!-- TonightSky + VerdictCard -->
@@ -1535,7 +1572,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         headline={panoramaView.headline}
                         text={panoramaView.verdictText}
                         darkWindow={panoramaView.darkWindow}
-                        timeZone={panoramaView.timeZone}
+                        zoneLabel={panoramaView.zoneLabel}
+                        withSlider
                         forecastStatus={panoramaView.forecastStatus}
                         explanation={panoramaView.explanation}
                         headingId={`verdict-heading-panorama-${String(i)}`}
@@ -1557,115 +1595,150 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
           <!-- Gear row -->
           <section class:list={block} aria-labelledby="c-gear-row">
             <h3 id="c-gear-row" class:list={blockTitle}>
-              Gear row (under the sky)
+              Gear cards (under the sky)
             </h3>
             <p class:list={blockNote}>
-              TonightContent's `space-y-3 px-4` container: the gear link, then a GearSelector once there are two or more
-              sites (or telescopes). Up to three items the selector is pills, from four a dropdown. The link names only
-              what no selector already shows, so the site's name is left out where the site selector is shown.
+              TonightContent's `px-4` gear row: one `GearCard` each for the Site and the Telescope, side by side from
+              `sm` and stacked below it (`GEAR_ROW_GRID_CLASS`). The title is on top and a large icon bottom-left. With
+              one item the bottom-right shows the name and a "Manage" action link; from two items it is a select (the
+              pills are retired) whose label is the card's title. A deliberate exception to "Bands, not boxed cards".
             </p>
             <div class:list={grid}>
               <div class:list={cell}>
-                <p class:list={stateLabel}>one site · the gear link</p>
+                <p class:list={stateLabel}>one site · name and Manage</p>
                 <div class:list={gearRowClass}>
-                  <p>
-                    <a href="/design" class:list={[gearLink]}>{`Back garden · ${sampleTelescopeName}`}</a>
-                  </p>
+                  <GearCard kind="site" items={oneItem} activeId={oneItem[0].id} />
                 </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>2 sites · pills (the active one outlined)</p>
+                <p class:list={stateLabel}>2 telescopes · select</p>
                 <div class:list={gearRowClass}>
-                  <p>
-                    <a href="/design" class:list={[gearLink]}>
-                      {sampleTelescopeName}
-                    </a>
-                  </p>
-                  <GearSelector
-                    items={pillItems}
-                    activeId={pillItems[0].id}
-                    param="site"
-                    label={m.tonight.siteSelector.label}
-                    show={m.tonight.siteSelector.show}
+                  <GearCard
+                    kind="telescope"
+                    items={sampleTelescopes}
+                    activeId={sampleTelescopes[0].id}
+                    selectId="telescope-select-specimen"
                   />
                 </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>4 sites · dropdown</p>
+                <p class:list={stateLabel}>4 sites · select</p>
                 <div class:list={gearRowClass}>
-                  <p>
-                    <a href="/design" class:list={[gearLink]}>
-                      {sampleTelescopeName}
-                    </a>
-                  </p>
-                  <GearSelector
-                    items={dropdownItems}
-                    activeId={dropdownItems[0].id}
-                    param="site"
-                    label={m.tonight.siteSelector.label}
-                    show={m.tonight.siteSelector.show}
+                  <GearCard kind="site" items={fourItems} activeId={fourItems[0].id} selectId="site-select-four" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>the row · two cards (side by side from `sm`)</p>
+                <div class:list={[gearRowClass, GEAR_ROW_GRID_CLASS]}>
+                  <GearCard kind="site" items={twoItems} activeId={twoItems[0].id} selectId="site-select-row" />
+                  <GearCard
+                    kind="telescope"
+                    items={[
+                      {
+                        id: "sample-telescope-1",
+                        name: "A long telescope name that must truncate on a phone, 1000 mm",
+                      },
+                    ]}
+                    activeId="sample-telescope-1"
                   />
                 </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>pills · focus-visible · specimen (first pill)</p>
-                <nav aria-label="Pill focus specimen" class:list={gearRowClass}>
-                  <ul class="flex flex-wrap gap-2">
-                    {pillItems.map((item, i) => (
-                      <li class="min-w-0">
-                        <a
-                          href="/design"
-                          tabindex="-1"
-                          aria-current={i === 0 ? "page" : undefined}
-                          class:list={[
-                            cn(buttonVariants({ variant: i === 0 ? "outline" : "ghost", size: "sm" }), "max-w-full"),
-                            i === 0 && focusRing,
-                          ]}
-                        >
-                          <span class="min-w-0 truncate">{item.name}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
+                <p class:list={stateLabel}>Manage · focus-visible · specimen</p>
+                <div
+                  class:list={[
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+                    GEAR_CARD_MIN_HEIGHT_CLASS,
+                  ]}
+                >
+                  <p class="text-label font-semibold text-muted-foreground">{m.tonight.siteSelector.label}</p>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <MapPin
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-1 flex-col items-end gap-3">
+                      <p class="max-w-full min-w-0 truncate text-body text-heading">{oneItem[0].name}</p>
+                      <a
+                        href="/design"
+                        tabindex="-1"
+                        class:list={[buttonVariants({ variant: "action", size: "sm" }), focusRing]}
+                      >
+                        <Settings2 aria-hidden="true" />
+                        {m.tonight.gear.manageSites}
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>pills · hover · specimen (second pill)</p>
-                <nav aria-label="Pill hover specimen" class:list={gearRowClass}>
-                  <ul class="flex flex-wrap gap-2">
-                    {pillItems.map((item, i) => (
-                      <li class="min-w-0">
-                        <a
-                          href="/design"
-                          tabindex="-1"
-                          class:list={[
-                            cn(buttonVariants({ variant: i === 0 ? "outline" : "ghost", size: "sm" }), "max-w-full"),
-                            i === 1 && "bg-accent",
-                          ]}
-                        >
-                          <span class="min-w-0 truncate">{item.name}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
+                <p class:list={stateLabel}>offline specimen (data-needs-network): name and Manage</p>
+                <div
+                  class:list={[
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+                    GEAR_CARD_MIN_HEIGHT_CLASS,
+                  ]}
+                >
+                  <p class="text-label font-semibold text-muted-foreground">{m.tonight.selector.label}</p>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <Telescope
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-1 flex-col items-end gap-3">
+                      <p class="max-w-full min-w-0 truncate text-body text-heading">{sampleTelescopeName}</p>
+                      <a
+                        href="/design"
+                        tabindex="-1"
+                        aria-disabled="true"
+                        class:list={cn(buttonVariants({ variant: "action", size: "sm" }), offlineAction)}
+                      >
+                        <Settings2 aria-hidden="true" />
+                        {m.tonight.gear.manageTelescopes}
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>gear link · focus-visible · specimen</p>
-                <div class:list={gearRowClass}>
-                  <p>
-                    <a href="/design" tabindex="-1" class:list={[gearLink, focusRing]}>
-                      {`Back garden · ${sampleTelescopeName}`}
-                    </a>
-                  </p>
+                <p class:list={stateLabel}>offline specimen (data-needs-network): the Telescope select</p>
+                <div
+                  class:list={[
+                    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+                    GEAR_CARD_MIN_HEIGHT_CLASS,
+                  ]}
+                >
+                  <p class="text-label font-semibold text-muted-foreground">{m.tonight.selector.label}</p>
+                  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+                    <Telescope
+                      className="size-16 shrink-0 text-primary-strong md:size-20"
+                      strokeWidth={1.25}
+                      aria-hidden="true"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <NativeSelect
+                        aria-label={`${m.tonight.selector.label} (offline specimen)`}
+                        aria-disabled="true"
+                        className={offlineAction}
+                        tabIndex={-1}
+                      >
+                        <NativeSelectOption>{sampleTelescopeName}</NativeSelectOption>
+                      </NativeSelect>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             <p class:list={notApplicable}>
-              dropdown focus — the NativeSelect's own focus cell (above) · disabled — N/A (a link and a select that
-              always work; offline the island shows its copy) · error — the gear-list load errors are a ServerError in
-              this row (see ServerError) · empty — no gear row for one site and one telescope with no name to show, and
-              none below two items · loading — the skeleton's one-line gear row (see TonightSkeleton)
+              hover — the Manage link's border moves to the link colour and its label underlines (the action variant's
+              hover); the select takes the native hover · select focus — the NativeSelect's own focus cell (above) ·
+              disabled — N/A while online; offline Manage and the Telescope select take the dashed muted look (a pick
+              puts the select back), while the Site select stays live and opens that site's stored copy · error — the
+              gear-list load errors are a ServerError under the cards (see ServerError) · empty — no cards without a
+              site and a telescope (the setup and add prompts take their place) · loading — the skeleton's two bars at
+              the cards' minimum height (see TonightSkeleton)
             </p>
           </section>
 
@@ -1784,6 +1857,41 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
+          <!-- SessionTimeline -->
+          <section class:list={block} aria-labelledby="c-session-timeline">
+            <h3 id="c-session-timeline" class:list={blockTitle}>
+              SessionTimeline (/tonight/plan)
+            </h3>
+            <p class:list={blockNote}>
+              The live sky's night (Warsaw, 10 October 2026, clear): the night's lines, the legend, then one row per
+              target with its altitude curve. The second copy is pinned to red mode, where only shapes (dashed minimum,
+              thicker window, dot, dark-edge marks) tell the marks apart.
+            </p>
+            {panoramaPlan ? (
+              <div class="grid gap-6 lg:grid-cols-2">
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · this page's theme</p>
+                  <div class="rounded-lg border border-border py-4">
+                    <SessionTimeline plan={panoramaPlan} />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>red mode</p>
+                  <div data-theme="red" class="rounded-lg border border-border bg-background py-4 text-foreground">
+                    <SessionTimeline plan={panoramaPlan} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p class:list={notApplicable}>The Session plan failed to build.</p>
+            )}
+            <p class:list={notApplicable}>
+              hover — a row takes the accent surface · focus-visible — Tab to a row for its inset ring · disabled — N/A
+              · error and empty — PlanPageContent says why instead of drawing (no plan, no rows) · loading — see
+              TonightPageSkeleton
+            </p>
+          </section>
+
           <!-- TonightTiles -->
           <section class:list={block} aria-labelledby="c-tonight-tiles">
             <h3 id="c-tonight-tiles" class:list={blockTitle}>
@@ -1878,6 +1986,14 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   reloadHref="/design"
                   rows={3}
                 />
+              </div>
+            </div>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>
+                loading · layout="plan" (/tonight/plan): the night lines, the legend, 2 rows
+              </p>
+              <div class="overflow-hidden rounded-lg">
+                <TonightPageSkeleton title={m.tonight.summary.plan} reloadHref="/design" rows={2} layout="plan" />
               </div>
             </div>
           </section>

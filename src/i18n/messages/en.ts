@@ -29,6 +29,7 @@ export const en = {
     name: "Name",
     focalLengthMm: "Focal length (mm)",
     cancel: "Cancel",
+    close: "Close",
   },
 
   nav: {
@@ -476,24 +477,28 @@ export const en = {
     /** FR-012: shown only to users who own two or more sites; the label must differ from `selector.label`. */
     siteSelector: {
       label: "Site",
-      show: "Show",
     },
     /** FR-019: shown only to users who own two or more telescopes. */
     selector: {
       label: "Telescope",
-      show: "Show",
+    },
+    /** The gear cards under the sky (ui-user-adjustments): with one site or telescope a card names it and links to /gear. */
+    gear: {
+      manageSites: "Manage sites",
+      manageTelescopes: "Manage telescopes",
     },
     rankingFor: (p: { telescope: string }) => `For your ${p.telescope}`,
 
     card: {
-      darkFrom: "Dark from",
-      darkTo: "to",
+      /**
+       * The static verdict's one muted line when the live sky is absent (its slider carries the dark window and the
+       * zone otherwise): `zone` is the short name ("CEST", "GMT+2"), the times `HH:mm`.
+       */
+      darkLine: (p: { start: string; end: string; zone: string }) => `Dark ${p.start}–${p.end} · times in ${p.zone}`,
       /** Also the sky headline of a no-darkness night, on the card and on any night of the strip. */
       noDarkWindow: "No dark window",
-      /** Joins the headline and its reason on the verdict's one flowing answer line. */
+      /** Joins parts of a one-line summary (the dashboard's tiles). */
       separator: " · ",
-      /** The verdict's third info line (the card's own key; the nights strip has its own). */
-      timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
     },
 
     /** FR-011: the seven-night strip. Nights 1-3 carry a verdict; nights 4-7 only an outlook (invariant 5). */
@@ -839,8 +844,10 @@ export const en = {
       slider: "Time of night",
       /** Moves the sky to the frame nearest the current time (clamped into the range). */
       now: "Now",
-      /** The legend for the dark window's span on the slider's track. */
-      darkWindow: "Dark window",
+      /** The short time zone, muted right after the slider's current time: `zone` is "CEST" or "GMT+2". */
+      zone: (p: { zone: string }) => p.zone,
+      /** The slider's merged dark-window label, when the two dark times would collide: `start` and `end` are "22:30". */
+      darkRange: (p: { start: string; end: string }) => `${p.start}–${p.end}`,
       /**
        * A marker's accessible name at the slider's time: `alt` is whole degrees, pre-formatted; `direction` a compass
        * point (`@/lib/compass`, international in every locale); `time` the frame's "23:40".
@@ -856,11 +863,6 @@ export const en = {
       objectData: "Object data:",
       starData: "Star data:",
       weather: "Weather:",
-    },
-
-    /** tonight-nightfall: the giant word over the sky. Used only there; the sky headline stays the canonical wording. */
-    verdict: {
-      word: { go: "Go", marginal: "Marginal", "no-go": "No-go" },
     },
 
     /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */
@@ -942,9 +944,20 @@ export const en = {
         moonNever: "Moon not up tonight",
         /** The target list's accessible name. */
         listLabel: "Targets by best time",
-        /** A row link's accessible name: the bar and dot are decorative, so the row says it all. */
-        rowLabel: (p: { name: string; best: string; window: string; direction: string }) =>
-          `${p.name}: best at ${p.best}, window ${p.window}, direction ${p.direction}`,
+        /**
+         * ui-user-adjustments: a row's visible line under the name. With the name it is the row link's accessible name;
+         * the curve below it is decorative.
+         */
+        rowLine: (p: { best: string; window: string; direction: string }) =>
+          `Best ${p.best} · window ${p.window} · ${p.direction}`,
+        /** The legend under the night's lines: its accessible name, then one entry per mark of the curves. */
+        legendLabel: "How to read the curves",
+        legendLine: "Height above the horizon through the night",
+        /** `deg` is the site's minimum altitude, a whole number. */
+        legendMin: (p: { deg: string }) => `Your minimum altitude (${p.deg}°)`,
+        legendWindow: "The window: above your minimum altitude while the sky is dark enough",
+        legendBest: "Best time: the highest point in the window",
+        legendDark: "The dark window",
         /** No target to place on the night (the view's explanation, when there is one, comes first). */
         empty: "No target is recommended tonight, so there is no plan to draw.",
         /** The view has no plan (only when building it failed). */

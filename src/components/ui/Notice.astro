@@ -1,34 +1,105 @@
 ---
-import { CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { CircleCheck, Info, TriangleAlert, X } from "lucide-react";
+import { getMessages } from "@/i18n";
+import type { ToastParam } from "@/lib/toasts";
 import { cn } from "@/lib/utils";
 
 /*
  * A status notice. `success` reuses the go verdict surface, `warning` the marginal one, `info` the plain surface.
  * The text comes from the slot (catalogue copy); the notice never builds a URL.
- * A live region announces changes, not the text it loads with, so after load the script below takes the text out
- * and puts it back, which makes screen readers read it once. Notices that arrive later (a server island's) get the
- * same once-over when they are added, and a notice inside a hidden element gets it when it is shown (the `hidden`
+ * Three modes (ui-user-adjustments):
+ * - `toast`: a success notice that floats. It is `position: fixed` from first paint (`toast-region`), so a
+ *   server-rendered one never paints inline and jumps; `lib/toasts.ts` (started by ToastRegion) adopts it into the
+ *   fixed container, closes it after 10 s or on its ×, and removes `param` from the URL. The tint sits over an opaque
+ *   backing, because the surfaces are translucent and the toast floats over content.
+ * - `dismissible`: an inline informational notice with an icon-only × (the same script hides it; wrap it in a
+ *   `data-dismiss-scope` element to hide that instead, and a script that re-shows it reads `data-dismissed`).
+ * - `specimen`: the toast look without `data-toast`, in the flow, for /design; the global script leaves it alone.
+ * `param` names the URL param(s) a toast clears, from the fixed set in `lib/toasts.ts`, never a value.
+ * The root keeps `role="status"` (each notice announces itself; the toast container is not a live region). A live
+ * region announces changes, not the text it loads with, so after load the script below takes the text out and puts
+ * it back, which makes screen readers read it once. Notices that arrive later (a server island's) get the same
+ * once-over when they are added, and a notice inside a hidden element gets it when it is shown (the `hidden`
  * attribute is watched); a data attribute marks each one done. Without JavaScript the text is simply there.
  */
 interface Props {
   tone: "success" | "info" | "warning";
+  /** A floating, closable, 10-second toast (implies `dismissible`). */
+  toast?: boolean;
+  /** An inline notice with a × button. */
+  dismissible?: boolean;
+  /** The toast look in the flow, with no `data-toast` (the /design specimens). */
+  specimen?: boolean;
+  /** The URL param(s) a toast clears once shown. */
+  param?: ToastParam | readonly ToastParam[];
 }
 
-const { tone } = Astro.props;
+const { tone, toast = false, dismissible = false, specimen = false, param } = Astro.props;
+const closeLabel = getMessages(Astro.locals.locale).common.close;
+const closable = toast || dismissible || specimen;
+const floating = toast || specimen;
+const params = param === undefined ? undefined : [param].flat().join(" ");
 
 const TONES = {
-  success: { box: "border-go-border bg-go-surface", icon: "text-go", Icon: CircleCheck },
-  warning: { box: "border-marginal-border bg-marginal-surface", icon: "text-marginal", Icon: TriangleAlert },
-  info: { box: "border-border bg-surface", icon: "text-primary-strong", Icon: Info },
+  success: {
+    box: "border-go-border bg-go-surface",
+    tint: "before:bg-go-surface",
+    border: "border-go-border",
+    icon: "text-go",
+    Icon: CircleCheck,
+  },
+  warning: {
+    box: "border-marginal-border bg-marginal-surface",
+    tint: "before:bg-marginal-surface",
+    border: "border-marginal-border",
+    icon: "text-marginal",
+    Icon: TriangleAlert,
+  },
+  info: {
+    box: "border-border bg-surface",
+    tint: "before:bg-surface",
+    border: "border-border",
+    icon: "text-primary-strong",
+    Icon: Info,
+  },
 } as const;
-const { box, icon, Icon } = TONES[tone];
+const { box, tint, border, icon, Icon } = TONES[tone];
 ---
 
-<div role="status" class:list={["flex items-start gap-2 rounded-lg border px-3 py-2 text-body text-foreground", box]}>
+<div
+  role="status"
+  data-notice
+  data-toast={toast ? "" : undefined}
+  data-toast-param={toast ? params : undefined}
+  data-specimen={specimen ? "" : undefined}
+  class:list={[
+    "flex items-start gap-2 rounded-lg border px-3 py-2 text-body text-foreground",
+    floating
+      ? [
+          "isolate bg-background shadow-lg before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-lg",
+          border,
+          tint,
+        ]
+      : box,
+    // A toast is fixed (a containing block for the tint already); a specimen is in the flow, so it needs `relative`.
+    specimen && "relative",
+    toast && "toast-region toast-motion",
+  ]}
+>
   <Icon className={cn("mt-1 size-4 shrink-0", icon)} aria-hidden="true" />
-  <div class="min-w-0" data-notice-text>
+  <div class="min-w-0 flex-1" data-notice-text>
     <slot />
   </div>
+  {closable && (
+    <button
+      type="button"
+      data-notice-close
+      aria-label={closeLabel}
+      class="-my-2 -mr-3 inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <X className="size-4" aria-hidden="true" />
+    </button>
+  )}
 </div>
 
 <script>

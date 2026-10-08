@@ -80,8 +80,14 @@ const CHECKS: Check[] = [
   { themes: DARK_LIGHT, fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["go", "marginal", "no-go"], bg: ["background"], floor: 4.5 },
-  // The Session plan's bars (`primary-strong`) and best-time dots (`heading`) over its axis, as non-text indicators.
-  { themes: [...DARK_LIGHT, "red"], fg: ["primary-strong", "heading"], bg: ["plan-twilight", "plan-night"], floor: 3 },
+  // The Session plan's curves (`plan-line`), window stretches (`primary-strong`) and best-time dots (`heading`) over its
+  // axis, as non-text indicators.
+  {
+    themes: [...DARK_LIGHT, "red"],
+    fg: ["plan-line", "primary-strong", "heading"],
+    bg: ["plan-twilight", "plan-night"],
+    floor: 3,
+  },
   // The focus ring (`--ring: var(--primary-strong)`) as a non-text indicator.
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 3 },
   { themes: ["red"], fg: ["foreground", "heading"], bg: ["background", "surface"], floor: 4.5 },
@@ -121,6 +127,17 @@ const pairs = CHECKS.flatMap(({ themes: names, fg, bg, floor }) =>
   names.flatMap((theme) => fg.flatMap((f) => bg.map((b) => ({ theme, fg: f, bg: b, floor })))),
 );
 
+/** `fg` at `alpha` (0..1) over `bg`, as the opaque hex the eye sees. */
+function blend(fg: string, bg: string, alpha: number): string {
+  const digits = (hex: string) => (hex.length === 4 ? hex.slice(1).replace(/./g, "$&$&") : hex.slice(1));
+  const [f, b] = [digits(fg), digits(bg)];
+  const mixed = [0, 2, 4].map((i) => {
+    const value = alpha * parseInt(f.slice(i, i + 2), 16) + (1 - alpha) * parseInt(b.slice(i, i + 2), 16);
+    return Math.round(value).toString(16).padStart(2, "0");
+  });
+  return `#${mixed.join("")}`;
+}
+
 describe("theme contrast", () => {
   it("reads every theme's base colours", () => {
     for (const tokens of Object.values(themes)) expect(tokens.size).toBeGreaterThan(10);
@@ -135,6 +152,32 @@ describe("theme contrast", () => {
       const ratio = contrast(a, b);
       return ratio >= floor ? [] : [`${theme}: --${fg} on --${bg} is ${ratio.toFixed(2)}, needs ${String(floor)}`];
     });
+    expect(failures).toEqual([]);
+  });
+
+  // The panorama's edge chevrons (ui-sky-light, bare since ui-user-adjustments) rest at the opacity their face class
+  // declares: heading ink at that opacity over the sky stops is a non-text indicator, held to 3:1 in every theme.
+  it("keeps the resting panorama chevron at 3:1 over the sky", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../components/tonight/TonightSkyView.tsx", import.meta.url)),
+      "utf8",
+    );
+    const face = /const PAN_FACE_CLASS =\s*"([^"]*)"/.exec(source)?.[1] ?? "";
+    const percent = /(?:^|\s)opacity-(\d+)(?:\s|$)/.exec(face)?.[1];
+    expect(percent, "PAN_FACE_CLASS should declare a resting opacity").toBeDefined();
+    const alpha = Number(percent) / 100;
+    const failures: string[] = [];
+    for (const theme of ["dark", "light", "red", "night"] as const) {
+      const tokens = themes[theme];
+      const ink = tokens.get("heading");
+      for (const name of ["zenith", "horizon", ...DUSK]) {
+        const sky = tokens.get(name);
+        if (!ink || !sky) continue;
+        const ratio = contrast(blend(ink, sky, alpha), sky);
+        if (ratio < 3)
+          failures.push(`${theme}: --heading at ${String(alpha)} on --${name} is ${ratio.toFixed(2)}, needs 3`);
+      }
+    }
     expect(failures).toEqual([]);
   });
 });

@@ -18,6 +18,7 @@ export const pl = {
     name: "Nazwa",
     focalLengthMm: "Ogniskowa (mm)",
     cancel: "Anuluj",
+    close: "Zamknij",
   },
 
   nav: {
@@ -455,20 +456,20 @@ export const pl = {
     reload: "Odśwież",
     siteSelector: {
       label: "Stanowisko",
-      show: "Pokaż",
     },
     selector: {
       label: "Teleskop",
-      show: "Pokaż",
+    },
+    gear: {
+      manageSites: "Zarządzaj miejscami",
+      manageTelescopes: "Zarządzaj teleskopami",
     },
     rankingFor: (p) => `Dla: ${p.telescope}`,
 
     card: {
-      darkFrom: "Ciemno od",
-      darkTo: "do",
+      darkLine: (p) => `Ciemno ${p.start}–${p.end} · czas w strefie ${p.zone}`,
       noDarkWindow: "Brak ciemnej nocy",
       separator: " · ",
-      timesIn: (p) => `Czas w strefie ${p.zone}`,
     },
 
     nights: {
@@ -757,7 +758,8 @@ export const pl = {
       panorama: "Niebo dziś w nocy, przesuń, aby się rozejrzeć",
       slider: "Pora nocy",
       now: "Teraz",
-      darkWindow: "Ciemne niebo",
+      zone: (p) => p.zone,
+      darkRange: (p) => `${p.start}–${p.end}`,
       bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
       panLeft: "Przewiń niebo w lewo",
       panRight: "Przewiń niebo w prawo",
@@ -767,10 +769,6 @@ export const pl = {
       objectData: "Dane obiektów:",
       starData: "Dane gwiazd:",
       weather: "Pogoda:",
-    },
-
-    verdict: {
-      word: { go: "Tak", marginal: "Może", "no-go": "Nie" },
     },
 
     summary: {
@@ -831,7 +829,13 @@ export const pl = {
         moonAll: "Księżyc nad horyzontem przez całą noc",
         moonNever: "Księżyc pod horyzontem przez całą noc",
         listLabel: "Cele według najlepszej godziny",
-        rowLabel: (p) => `${p.name}: najlepiej o ${p.best}, okno ${p.window}, kierunek ${p.direction}`,
+        rowLine: (p) => `Najlepiej ${p.best} · okno ${p.window} · ${p.direction}`,
+        legendLabel: "Jak czytać krzywe",
+        legendLine: "Wysokość nad horyzontem w ciągu nocy",
+        legendMin: (p) => `Twoja minimalna wysokość (${p.deg}°)`,
+        legendWindow: "Okno: powyżej minimalnej wysokości, gdy niebo jest dość ciemne",
+        legendBest: "Najlepsza pora: najwyższy punkt w oknie",
+        legendDark: "Ciemna noc",
         empty: "Brak polecanych obiektów na dzisiejszą noc.",
         unavailable: "Plan sesji jest teraz niedostępny.",
       },

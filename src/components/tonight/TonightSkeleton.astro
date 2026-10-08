@@ -1,7 +1,7 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
-// strip and slider row reserved, interactive-sky) with bars where the three info lines, the giant word and the
-// answer line go, a one-line gear row, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
+// strip and slider row reserved, interactive-sky) with bars where the date, the display-size headline and its reason
+// go, the two gear cards, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
 import {
@@ -11,7 +11,9 @@ import {
   SLIDER_ROW_CLASS,
   SLIDER_TIME_CLASS,
   SLIDER_TRACK_CLASS,
+  GEAR_CARD_MIN_HEIGHT_CLASS,
   GEAR_ROW_GAP_CLASS,
+  GEAR_ROW_GRID_CLASS,
   TILES_GAP_CLASS,
 } from "@/components/tonight/sky-band";
 import TonightSky from "@/components/tonight/TonightSky.astro";
@@ -37,19 +39,15 @@ const tile = TILE_ROW_CLASS;
   <TonightSky night verdict strip>
     <div aria-hidden="true">
       <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
-      <div class:list={[bar, "w-64 max-w-full text-label"]}>&nbsp;</div>
-      <div class:list={[bar, "w-48 max-w-full text-label"]}>&nbsp;</div>
-      <div class="mt-2 font-display text-verdict-sm sm:text-verdict-lg font-extrabold">
-        <div class:list={[bar, "w-1/2"]}>&nbsp;</div>
-      </div>
-      <div class:list={[bar, "mt-3 w-3/4 text-title sm:mt-6"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-2 w-2/3 font-display text-display"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-1 w-3/4 text-body"]}>&nbsp;</div>
       <div class:list={[bar, "mt-3 w-40 text-label max-sm:hidden"]}>&nbsp;</div>
     </div>
   </TonightSky>
   <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->
   <div class:list={[SLIDER_ROW_CLASS]} aria-hidden="true">
     <div class:list={[SLIDER_LAYOUT_CLASS]}>
-      <div class:list={[bar, SLIDER_TIME_CLASS, "w-16 text-title"]}>&nbsp;</div>
+      <div class:list={[bar, SLIDER_TIME_CLASS, "w-28 text-title"]}>&nbsp;</div>
       <div class:list={[SLIDER_TRACK_CLASS, "flex h-11 items-center"]}>
         <div class:list={[bar, "h-1.5 w-full"]}></div>
       </div>
@@ -60,30 +58,35 @@ const tile = TILE_ROW_CLASS;
     </div>
   </div>
 
-  <!-- The gear row (ui-mobile-pass): one line under the slider, as the island draws it with one site and telescope. -->
+  <!-- The gear row (ui-user-adjustments): the two cards under the slider, side by side from `sm`, at the cards' height. -->
   <div class:list={["mx-auto w-full max-w-3xl px-4", GEAR_ROW_GAP_CLASS]} aria-hidden="true">
-    <div class:list={[bar, "min-h-11 w-48 max-w-full"]}></div>
+    <div class:list={[GEAR_ROW_GRID_CLASS]}>
+      <div class:list={[bar, "rounded-lg", GEAR_CARD_MIN_HEIGHT_CLASS]}></div>
+      <div class:list={[bar, "rounded-lg", GEAR_CARD_MIN_HEIGHT_CLASS]}></div>
+    </div>
   </div>
 
   <div class:list={["mx-auto w-full max-w-3xl", TILES_GAP_CLASS]}>
     <div aria-hidden="true">
       <div class:list={[tile]}>
         <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
-        <div class="mt-3 space-y-2">
+        <div class="mt-4 space-y-3 py-1.5">
           {[1, 2, 3].map(() => (
             <div class:list={[bar, "w-2/3 text-title"]}>&nbsp;</div>
           ))}
         </div>
+        <!-- The tile's caption ("Each at the time it stands highest. N targets tonight."). -->
+        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-2 w-2/3 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-3 w-2/3 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class="mt-2 flex items-center gap-3">
+        <div class="mt-3 flex items-center gap-4">
           <div class="size-6 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
           <div class:list={[bar, "w-3/4 text-body"]}>&nbsp;</div>
         </div>
@@ -91,17 +94,25 @@ const tile = TILE_ROW_CLASS;
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-2 w-1/2 text-body"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-1 w-2/3 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-3 w-1/2 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-2 w-2/3 text-label"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-36 text-label"]}>&nbsp;</div>
-        <div class="mt-4 grid grid-cols-7 items-end gap-2">
+        <div class="mt-5 grid grid-cols-7 items-end gap-2">
           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
-            <div class="h-10 rounded bg-border motion-safe:animate-pulse sm:h-18" />
+            /* A bar, its verdict mark's room and the day under it, as in TonightTiles. */
+            <div class="flex flex-col items-center gap-2">
+              <div class="h-10 w-full rounded bg-border motion-safe:animate-pulse sm:h-18" />
+              <div class="size-3" />
+              <div class:list={[bar, "w-6 text-label"]}>&nbsp;</div>
+            </div>
           ))}
         </div>
+        <!-- The caption, two lines on a phone. -->
+        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-0 w-1/3 text-label sm:hidden"]}>&nbsp;</div>
       </div>
     </div>
 

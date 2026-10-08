@@ -45,6 +45,7 @@ test("a catalogue pick fills the telescope form, which then saves", async ({ pag
   await expect(form.locator("#focalLengthMm")).toHaveValue(String(heritage.focalLengthMm));
 
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
-  await expect(page.getByText(en.gear.notice.saved.telescope)).toBeVisible();
+  // The save shows a toast first, then the toast script removes the param from the URL.
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.telescope);
+  await expect(page).toHaveURL(/\/gear$/);
 });

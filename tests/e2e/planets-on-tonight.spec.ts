@@ -57,8 +57,8 @@ test("marking a planet observed on the Planets page saves it and the log lists i
   await form.locator('button[type="submit"]').click();
 
   // The save returns to the page it came from (`from=planets`).
-  await expect(page).toHaveURL(new RegExp(`/tonight/planets\\?logged=${key}$`));
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: name }) })).toBeVisible();
+  await expect(page).toHaveURL(/\/tonight\/planets$/);
 
   // Planets are never pushed down by the log, so the card stays and carries the "seen" tag.
   const loggedCard = planetList.getByRole("listitem").filter({ has: page.getByRole("heading", { name, exact: true }) });

@@ -135,6 +135,24 @@ test("Tonight pages opened online are there offline, and signing out removes the
       await expect(prepared).toBeVisible();
       await expect(prepared).toContainText(en.offline.notice.prepared({ when: "" }).trim());
       await expect(page.locator("[data-offline-notice]:visible")).toHaveCount(1);
+      // The notice closes with its × and stays closed while the page re-applies its state on a DOM change.
+      await prepared.getByRole("button", { name: en.common.close }).click();
+      await expect(prepared).toBeHidden();
+      await page.evaluate(() => {
+        document.body.appendChild(document.createElement("div"));
+      });
+      // The page script re-applies its state on the next animation frame: wait for two before asserting it stayed hidden.
+      await page.evaluate(
+        () =>
+          new Promise<void>((done) => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                done();
+              });
+            });
+          }),
+      );
+      await expect(page.locator("[data-offline-notice]:visible")).toHaveCount(0);
       const log = page.getByRole("navigation", { name: en.nav.primary }).getByRole("link", { name: en.nav.log });
       await expect(log).toHaveAttribute("aria-disabled", "true");
       await expect(log).toHaveAccessibleDescription(en.offline.needsConnection);

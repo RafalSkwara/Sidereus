@@ -44,6 +44,8 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #2a3450;
   --plan-night: #10162a;
+  /* The Session plan's altitude curve over that axis (ui-user-adjustments): a quiet line under the window's stroke. */
+  --plan-line: #a9b1c5;
 
   --go: #7ee2b0;
   --marginal: #f1cf6b;
@@ -94,6 +96,7 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #e3e8f0;
   --plan-night: #b9c3d4;
+  --plan-line: #3c465c;
 
   --go: #17784c;
   --marginal: #8f6100;
@@ -189,6 +192,7 @@
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #3a0000;
   --plan-night: #1a0000;
+  --plan-line: #e00000;
 
   --go: #ff0000;
   --marginal: #d60000;
@@ -476,31 +480,88 @@
 }
 
 /*
+ * Toasts (ui-user-adjustments, Phase 2). `toast-region` is the fixed placement of the one toast container
+ * (ToastRegion.astro) and, until the toast script adopts it, of a server-rendered toast Notice, so that never paints
+ * inline and jumps. Below `md` it sits at the bottom, above the TabBar when one is rendered (the TabBar's
+ * `data-tabbar` marker: 4rem bar + 1rem gap) and else above the safe area; from `md` it sits at the top, 0.5rem under
+ * the Topbar's bottom edge (the Topbar is not sticky, so after scrolling the toast floats at that offset on purpose).
+ * Centred, in the content column (`max-w-3xl` less the `px-4` gutters). `toast-motion` is the entrance and the exit
+ * (`[data-closing]`); with reduced motion neither exists, and the script removes a closed toast at once.
+ */
+@utility toast-region {
+  position: fixed;
+  z-index: 50;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: calc(100% - 2rem);
+  max-width: 46rem;
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+
+  @media (width < 48rem) {
+    :root:has([data-tabbar]) & {
+      bottom: calc(env(safe-area-inset-bottom) + 5rem);
+    }
+  }
+
+  @media (width >= 48rem) {
+    top: 6rem;
+    bottom: auto;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+@utility toast-motion {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: toast-in 200ms ease-out;
+    transition:
+      opacity 150ms ease-out,
+      translate 150ms ease-out;
+  }
+}
+
+[data-toast][data-closing] {
+  opacity: 0;
+  translate: 0 0.5rem;
+}
+
+/*
  * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
  * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
- * page script adds `aria-disabled` and swallows the click; "Needs a connection" is their description, or a caption
+ * page script adds `aria-disabled` (also on the gear cards' selects) and swallows the click or submit; "Needs a connection" is their description, or a caption
  * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons and
  * `action` links (the Topbar and TabBar links have no border width, so it never shows there); the focus outline is
  * left alone, so focus stays visible. The current page's entry keeps its pressed look.
  */
 :root[data-offline] [data-needs-network]:not([aria-current="page"]),
-:root[data-offline] [data-needs-network] :is(a, button) {
+:root[data-offline] [data-needs-network] :is(a, button, select) {
   cursor: not-allowed;
   color: var(--muted-foreground);
   background-color: transparent;
   text-decoration-line: none;
 }
 
-:root[data-offline] [data-needs-network] :is(a, button),
+:root[data-offline] [data-needs-network] :is(a, button, select),
 :root[data-offline] :is(a, button)[data-needs-network] {
   border-style: dashed;
   border-color: var(--border);
 }
 
-/* The panorama strip's horizontal scrollbar: thin and token-coloured over the sky, so red mode stays red. */
-@utility scrollbar-strip {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+/*
+ * The panorama strip's horizontal scrollbar, hidden (ui-user-adjustments): the strip still scrolls by swipe, keys and
+ * the edge chevrons, and a marker on the compass row shows which way it looks. Firefox, then the WebKit pseudo-element.
+ */
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /*
@@ -558,28 +619,6 @@
   /* The interactive sky's star and body labels (interactive-sky): small enough for 15 stars and 13 bodies at 390 px. */
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
-  /*
-   * The giant verdict word over Tonight's sky (tonight-nightfall), with `font-display font-extrabold`, sized by word
-   * length (measured widths at wdth 125 / 800 / -0.035em: Go 1.72em, Tak 2.15, Nie 1.98, Może 3.01, No-go 3.56,
-   * Marginal 5.05; 328 px of content on a 360 px screen). VerdictCard picks the step (ui-mobile-pass): below `sm`
-   * every word is verdict-sm, so a phone's first screen has room for the gear and the targets; from `sm`, Go, Tak,
-   * Nie take verdict-lg, Może and No-go verdict-md, and Marginal verdict-sm.
-   * Each step is also capped by the viewport, so the word never clips on a narrower screen or at 400% zoom:
-   * min(<size>, (100vw - 2rem) / <divisor>), where 2rem is the sky's px-4 gutters and the divisor is just above the
-   * step's widest word in em (lg: Tak 2.15 -> 2.25; md: No-go 3.56 -> 3.65; sm: Marginal 5.05 -> 5.15).
-   * The cap only bites below the size: lg 144 px from (144 * 2.25 + 32) = 356 px, md 88 px from 353 px, sm 60 px from
-   * 341 px. So 390 px keeps 144 / 88 / 60, and from `sm` (640 px) the words use lg 144 /
-   * md 88 / sm 60 px; at 320 px the 288 px of content gives lg 128, md 78.9 and sm 55.9 px.
-   */
-  --text-verdict-sm: min(3.75rem, calc((100vw - 2rem) / 5.15));
-  --text-verdict-sm--line-height: 0.9;
-  --text-verdict-sm--letter-spacing: -0.035em;
-  --text-verdict-md: min(5.5rem, calc((100vw - 2rem) / 3.65));
-  --text-verdict-md--line-height: 0.9;
-  --text-verdict-md--letter-spacing: -0.035em;
-  --text-verdict-lg: min(9rem, calc((100vw - 2rem) / 2.25));
-  --text-verdict-lg--line-height: 0.9;
-  --text-verdict-lg--letter-spacing: -0.035em;
 
   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
   --font-sans: "Archivo Variable", system-ui, sans-serif;
@@ -602,6 +641,7 @@
   --color-action-border: var(--action-border);
   --color-plan-twilight: var(--plan-twilight);
   --color-plan-night: var(--plan-night);
+  --color-plan-line: var(--plan-line);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);

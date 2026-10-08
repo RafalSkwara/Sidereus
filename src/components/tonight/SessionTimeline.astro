@@ -1,19 +1,18 @@
 ---
 /*
- * The Session plan's timeline (session-plan-timeline): the night from sunset to sunrise on one axis, with the dark
- * window shaded and bracketed by two 1 px marks, the Moon's up span as a thin band and its rise and set as marked
- * events, then one row per target by best time: name and best time above a bar for its window, with a dot at the best
- * time. Each row is a full-width link to the target's own row on its page. A text line above the axis states the dark window and the
- * Moon's events, so the drawing is never the only carrier of a fact; the bars and marks are decorative (`aria-hidden`)
- * and each row link names the target, its best time, window and direction. Marks differ by shape as well as colour
- * (a dot for the best time, a bar for a window, up and down arrows for rise and set), so red mode keeps them apart:
- * there the dark window is only 1.13:1 against the twilight, so the two heading-ink marks at its ends carry it, and the
- * Moon's band is heading ink too (about 4.5:1 on the red twilight, covered by the contrast test's plan row).
+ * The Session plan (session-plan-timeline, ui-user-adjustments): the night's facts on their own lines (sunset, the dark
+ * window, the Moon, sunrise), a legend, then one row per target by best time. Each row is a full-width link to the
+ * target's own row on its page: the name, "Best 22:40 · window 21:40–23:10 · SW, 45°", and a small altitude curve on
+ * the night's axis, sunset to sunrise. The curve (`altitude-curve.ts`) runs from the horizon at the bottom to the
+ * zenith at the top over the twilight track, with the dark window darker and bracketed by two 1 px heading-ink marks
+ * (in red mode the two shades are only 1.13:1 apart, so the marks carry it); the site's minimum altitude is a dashed
+ * line, the best window a thicker stretch of the curve and the best time a dot, so shapes as well as colour tell them
+ * apart and red mode keeps them. The text carries every fact: the curves and their hour labels are decorative
+ * (`aria-hidden`), so each row link's name is its visible name and line (target, best time, window and direction).
  * Positions are the plan's fractions as inline percentages.
  */
-import { ArrowDown, ArrowUp, Moon } from "lucide-react";
-
 import { getMessages } from "@/i18n";
+import { altitudeCurve } from "@/lib/tonight/altitude-curve";
 import type { TonightSessionPlan } from "@/lib/tonight/build";
 
 interface Props {
@@ -24,137 +23,173 @@ const { plan } = Astro.props;
 const { locale } = Astro.locals;
 const t = getMessages(locale).tonight.pages.plan;
 
-/** How close to an axis end (as a fraction) a tick label anchors inward instead of centring on its tick. */
+/** The curve's drawing box; the SVG stretches it to the row's width (`preserveAspectRatio="none"`). */
+const WIDTH = 1000;
+const HEIGHT = 100;
+/** How close to an axis end (as a fraction) an hour label anchors inward instead of centring on its tick. */
 const EDGE = 0.04;
 const pct = (fraction: number): string => `${(fraction * 100).toFixed(2)}%`;
-const span = (from: number, to: number): string => `left:${pct(from)};width:${pct(Math.max(0, to - from))}`;
 const at = (fraction: number): string => `left:${pct(fraction)}`;
 
-// Hour labels thin out with the night's length so neighbours never touch (an "HH:mm" caption is ~32 px): every hour
-// up to 13 ticks, every 2nd up to 19, every 3rd beyond (a 24 h polar axis); a phone shows half of those.
-const stride = plan.ticks.length <= 13 ? 1 : plan.ticks.length <= 19 ? 2 : 3;
-/** Fraction of the axis under which two Moon events would draw over each other; the later one drops a line. */
-const MOON_CLASH = 0.12;
-const moonEvents = plan.moonEvents.map((event, index, all) => ({
-  ...event,
-  lowered: index > 0 && event.at - all[index - 1].at < MOON_CLASH,
-}));
-const anyLowered = moonEvents.some((event) => event.lowered);
+// At most five hour labels under each curve (an "HH:mm" caption is ~32 px, so they fit a 320 px phone); every hour
+// keeps its gridline.
+const labelStride = Math.max(1, Math.ceil(plan.ticks.length / 5));
+const minDeg = String(Math.round(plan.minAltitudeDeg));
 
-// A bar's track is the twilight (sunset to sunrise), the dark window a darker stretch of it, in every theme.
-const track = "relative h-4 rounded-full bg-plan-twilight";
-const dark = "absolute inset-y-0 bg-plan-night";
-const darkMark = "absolute inset-y-0 w-px bg-heading";
-const moonBand = "absolute bottom-0 h-1 bg-heading";
+const rows = plan.rows.map((target) => ({
+  target,
+  curve: altitudeCurve({
+    track: target.track,
+    stepFraction: plan.trackStep,
+    minAltitudeDeg: plan.minAltitudeDeg,
+    window: { from: target.from, to: target.to },
+    best: target.best,
+    bestAltitudeDeg: target.peakAltitudeDeg,
+    width: WIDTH,
+    height: HEIGHT,
+  }),
+}));
+const minTop = `top:${pct((rows[0]?.curve.minY ?? 0) / HEIGHT)}`;
+
 const row =
-  "block min-h-11 border-b border-border px-4 py-3 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
-const dot = "absolute top-0 size-4 -translate-x-1/2 rounded-full bg-heading ring-2 ring-background";
+  "block min-h-11 border-b border-border px-4 py-6 text-heading transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:py-5";
+const curveBox = "relative block h-12 rounded-md bg-plan-twilight";
+const darkMark = "absolute inset-y-0 w-px bg-heading";
+const minLine = "absolute inset-x-0 border-t border-dashed border-heading";
+const dot = "absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-heading ring-2 ring-background";
+const swatch = "h-3 w-6 shrink-0 overflow-visible";
 ---
 
 <div class="overflow-x-clip">
-  <p class="px-4 text-label text-muted-foreground" data-session-plan-text>
-    {plan.sunsetText && (
-      <>
-        <span>{plan.sunsetText}</span>
-        <span aria-hidden="true"> · </span>
-      </>
-    )}
-    <span class="font-semibold text-heading">{plan.darkText}</span>
-    <span aria-hidden="true"> · </span>
-    <span>{plan.moonText}</span>
-    {plan.sunriseText && (
-      <>
-        <span aria-hidden="true"> · </span>
-        <span>{plan.sunriseText}</span>
-      </>
-    )}
-  </p>
+  <ul class="space-y-1.5 px-4 text-label text-muted-foreground" data-session-plan-text>
+    {plan.sunsetText && <li>{plan.sunsetText}</li>}
+    <li class="font-semibold text-heading">{plan.darkText}</li>
+    <li>{plan.moonText}</li>
+    {plan.sunriseText && <li>{plan.sunriseText}</li>}
+  </ul>
 
-  <div aria-hidden="true" class="px-4 pt-4" data-session-plan-axis>
-    <div class="relative h-5">
-      {plan.ticks.map((tick, index) => (
-        <span
-          class:list={[
-            "absolute top-0 text-caption text-muted-foreground tabular-nums",
-            // Labels near the axis ends anchor inward, so they stay inside the page gutter.
-            tick.at < EDGE ? "translate-x-0" : tick.at > 1 - EDGE ? "-translate-x-full" : "-translate-x-1/2",
-            index % stride !== 0 ? "hidden" : index % (2 * stride) !== 0 && "max-sm:hidden",
-          ]}
-          style={at(tick.at)}
-        >
-          {tick.label}
-        </span>
-      ))}
-    </div>
-    <div class:list={[track, "overflow-hidden"]}>
-      {plan.dark && <span class:list={[dark]} style={span(plan.dark.from, plan.dark.to)} />}
-      {plan.moonUp.map((up) => (
-        <span class:list={[moonBand]} style={span(up.from, up.to)} />
-      ))}
-      {plan.ticks.map((tick) => (
-        <span class="absolute inset-y-0 w-px bg-background" style={at(tick.at)} />
-      ))}
+  {rows.length > 0 && (
+    <ul
+      aria-label={t.legendLabel}
+      class="mt-5 grid gap-x-6 gap-y-2 px-4 text-label text-muted-foreground sm:grid-cols-2"
+      data-session-plan-legend
+    >
+      <li class="flex items-center gap-3">
+        <svg aria-hidden="true" viewBox="0 0 24 12" class:list={[swatch]}>
+          <path d="M1 11 C7 1 17 1 23 11" class="fill-none stroke-plan-line" stroke-width="1.5" />
+        </svg>
+        {t.legendLine}
+      </li>
+      <li class="flex items-center gap-3">
+        <svg aria-hidden="true" viewBox="0 0 24 12" class:list={[swatch]}>
+          <line x1="0" y1="6" x2="24" y2="6" class="stroke-heading" stroke-width="1" stroke-dasharray="3 2" />
+        </svg>
+        {t.legendMin({ deg: minDeg })}
+      </li>
+      <li class="flex items-center gap-3">
+        <svg aria-hidden="true" viewBox="0 0 24 12" class:list={[swatch]}>
+          <line x1="2" y1="6" x2="22" y2="6" class="stroke-primary-strong" stroke-width="4" stroke-linecap="round" />
+        </svg>
+        {t.legendWindow}
+      </li>
+      <li class="flex items-center gap-3">
+        <svg aria-hidden="true" viewBox="0 0 24 12" class:list={[swatch]}>
+          <circle cx="12" cy="6" r="5" class="fill-heading" />
+        </svg>
+        {t.legendBest}
+      </li>
       {plan.dark && (
-        <>
-          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.from)} />
-          <span aria-hidden="true" class:list={[darkMark]} style={at(plan.dark.to)} />
-        </>
+        <li class="flex items-center gap-3">
+          <svg aria-hidden="true" viewBox="0 0 24 12" class:list={[swatch]}>
+            <rect width="24" height="12" rx="2" class="fill-plan-twilight" />
+            <rect x="6" width="12" height="12" class="fill-plan-night" />
+            <line x1="6.5" y1="0" x2="6.5" y2="12" class="stroke-heading" stroke-width="1" />
+            <line x1="17.5" y1="0" x2="17.5" y2="12" class="stroke-heading" stroke-width="1" />
+          </svg>
+          {t.legendDark}
+        </li>
       )}
-    </div>
-    <div class:list={["relative", anyLowered ? "h-20" : "h-12"]}>
-      {moonEvents.map((event) => (
-        <span
-          class:list={[
-            "absolute flex flex-col gap-0.5 text-caption text-muted-foreground tabular-nums",
-            event.lowered ? "top-9" : "top-1",
-            event.at < EDGE
-              ? "translate-x-0 items-start"
-              : event.at > 1 - EDGE
-                ? "-translate-x-full items-end"
-                : "-translate-x-1/2 items-center",
-          ]}
-          style={at(event.at)}
-        >
-          <span class="flex items-center">
-            <Moon className="size-4" aria-hidden="true" />
-            {event.kind === "rise" ? (
-              <ArrowUp className="size-3" aria-hidden="true" />
-            ) : (
-              <ArrowDown className="size-3" aria-hidden="true" />
-            )}
-          </span>
-          {event.timeText}
-        </span>
-      ))}
-    </div>
-  </div>
+    </ul>
+  )}
 
-  {plan.rows.length > 0 && (
-    <ol aria-label={t.listLabel} class="mt-2 border-t border-border">
-      {plan.rows.map((target) => (
+  {rows.length > 0 && (
+    <ol aria-label={t.listLabel} class="mt-6 border-t border-border">
+      {rows.map(({ target, curve }) => (
         <li>
-          <a
-            href={target.href}
-            class:list={[row]}
-            aria-label={t.rowLabel({
-              name: target.name,
-              best: target.bestTime,
-              window: target.windowText,
-              direction: target.bestDirection,
-            })}
-            data-session-plan-row={target.key}
-          >
-            <span class="flex items-baseline justify-between gap-3">
-              <span class="min-w-0 font-display text-title font-semibold break-words">{target.name}</span>
-              <span class="shrink-0 font-mono text-label tabular-nums">{target.bestTime}</span>
+          <a href={target.href} class:list={[row]} data-session-plan-row={target.key}>
+            <span class="block font-display text-title font-semibold break-words">{target.name}</span>
+            <span class="mt-1.5 block text-label text-muted-foreground tabular-nums" data-session-plan-line>
+              {t.rowLine({ best: target.bestTime, window: target.windowText, direction: target.bestDirection })}
             </span>
-            <span aria-hidden="true" class:list={[track, "mt-2 block"]}>
-              {plan.dark && <span class:list={[dark, "rounded-full"]} style={span(plan.dark.from, plan.dark.to)} />}
-              <span
-                class="absolute inset-y-1 min-w-1 rounded-full bg-primary-strong"
-                style={span(target.from, target.to)}
-              />
-              <span class:list={[dot]} style={at(target.best)} />
+            <span aria-hidden="true" class="mt-3 block" data-session-plan-curve>
+              <span class:list={[curveBox]}>
+                {plan.dark && (
+                  <span
+                    class="absolute inset-y-0 bg-plan-night"
+                    style={`left:${pct(plan.dark.from)};width:${pct(Math.max(0, plan.dark.to - plan.dark.from))}`}
+                  />
+                )}
+                <svg
+                  viewBox={`0 0 ${String(WIDTH)} ${String(HEIGHT)}`}
+                  preserveAspectRatio="none"
+                  class="absolute inset-0 size-full"
+                >
+                  {plan.ticks.map((tick) => (
+                    <line
+                      x1={tick.at * WIDTH}
+                      x2={tick.at * WIDTH}
+                      y1="0"
+                      y2={HEIGHT}
+                      class="stroke-background"
+                      stroke-width="1"
+                      vector-effect="non-scaling-stroke"
+                    />
+                  ))}
+                  <path
+                    d={curve.line}
+                    class="fill-none stroke-plan-line"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                    vector-effect="non-scaling-stroke"
+                  />
+                  <path
+                    d={curve.window}
+                    class="fill-none stroke-primary-strong"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    vector-effect="non-scaling-stroke"
+                  />
+                </svg>
+                {plan.dark && (
+                  <>
+                    <span class:list={[darkMark]} style={at(plan.dark.from)} />
+                    <span class:list={[darkMark]} style={at(plan.dark.to)} />
+                  </>
+                )}
+                <span class:list={[minLine]} style={minTop} />
+                <span class:list={[dot]} style={`left:${pct(curve.dot.x / WIDTH)};top:${pct(curve.dot.y / HEIGHT)}`} />
+              </span>
+              <span class="relative mt-1 block h-4">
+                {plan.ticks.map((tick, index) =>
+                  index % labelStride === 0 ? (
+                    <span
+                      class:list={[
+                        "absolute top-0 text-caption text-muted-foreground tabular-nums",
+                        // Labels near the axis ends anchor inward, so they stay inside the page gutter.
+                        tick.at < EDGE
+                          ? "translate-x-0"
+                          : tick.at > 1 - EDGE
+                            ? "-translate-x-full"
+                            : "-translate-x-1/2",
+                      ]}
+                      style={at(tick.at)}
+                    >
+                      {tick.label}
+                    </span>
+                  ) : null,
+                )}
+              </span>
             </span>
           </a>
         </li>

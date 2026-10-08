@@ -55,7 +55,7 @@ const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
   )}
 
   {target && (
-    <div class="mt-4 border-t border-border pt-4">
+    <div class="mt-6 border-t border-border pt-6">
       {target.seenText && <SeenTag text={target.seenText} />}
 
       <TargetDetails
@@ -67,27 +67,29 @@ const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
         ariaLabel={t.moon.markObserved({ name: target.name })}
       >
         {target.wholeDisc && (
-          <p class="mt-2 text-label text-foreground">
-            {target.wholeDiscFits ? (
-              <>
-                {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{target.wholeDisc.name}</span>{" "}
-                {t.object.magnification({ magnification: String(target.wholeDisc.magnification) })}
-              </>
-            ) : (
-              t.moon.partDisc({ name: target.wholeDisc.name })
-            )}
+          <div class="space-y-2">
+            <p class="text-label text-foreground">
+              {target.wholeDiscFits ? (
+                <>
+                  {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{target.wholeDisc.name}</span>{" "}
+                  {t.object.magnification({ magnification: String(target.wholeDisc.magnification) })}
+                </>
+              ) : (
+                t.moon.partDisc({ name: target.wholeDisc.name })
+              )}
+            </p>
             {target.detail && (
-              <>
-                {" "}
-                · {t.moon.detailWith} <span class="font-semibold text-primary-strong">{target.detail.name}</span>{" "}
+              /* The message reads on after the whole-disc part in lower case: its own line starts with a capital. */
+              <p class="text-label text-foreground first-letter:uppercase">
+                {t.moon.detailWith} <span class="font-semibold text-primary-strong">{target.detail.name}</span>{" "}
                 {t.object.magnification({ magnification: String(target.detail.magnification) })}
-              </>
+              </p>
             )}
-          </p>
+          </div>
         )}
 
-        <p class="mt-2 text-label text-foreground">{target.reason}</p>
-        <p class="mt-2 text-label text-muted-foreground">{target.note}</p>
+        <p class="text-label text-foreground">{target.reason}</p>
+        <p class="text-label text-muted-foreground">{target.note}</p>
       </TargetDetails>
     </div>
   )}

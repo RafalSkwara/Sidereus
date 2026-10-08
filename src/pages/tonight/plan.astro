@@ -23,7 +23,7 @@ const night = requestedNight(Astro.url);
 <GearShell title={title} skyFlow>
   {supabase ? (
     <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night}>
-      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/plan" rows={4} />
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/plan" rows={4} layout="plan" />
     </PlanPageContent>
   ) : (
     <>

@@ -36,24 +36,36 @@ async function stepTo(page: Page, slider: Locator, index: number, from: number) 
   await expect(page.locator("svg[data-sky-frame]")).toHaveAttribute("data-sky-frame", String(index));
 }
 
-/** The markers of `kind` drawn now, with the dot's position. */
+/**
+ * The markers of `kind` drawn now, with the dot's position. `covered` marks one whose hit area's centre lies under a
+ * marker drawn later (on top), as when two planets sit close together low in the sky: a click there opens the other.
+ */
 function markers(page: Page, kind?: string) {
-  return page.locator(kind ? `[data-sky-body="${kind}"]` : "[data-sky-body]").evaluateAll((elements) =>
-    elements.map((element) => {
+  return page.locator(kind ? `[data-sky-body="${kind}"]` : "[data-sky-body]").evaluateAll((elements) => {
+    const all = [...document.querySelectorAll("[data-sky-body]")];
+    return elements.map((element) => {
       const dot = element.querySelector("circle");
+      const box = element.querySelector("rect")?.getBoundingClientRect();
+      const x = box ? box.x + box.width / 2 : 0;
+      const y = box ? box.y + box.height / 2 : 0;
+      const covered = all.slice(all.indexOf(element) + 1).some((other) => {
+        const o = other.querySelector("rect")?.getBoundingClientRect();
+        return o !== undefined && x >= o.left && x <= o.right && y >= o.top && y <= o.bottom;
+      });
       return {
         key: element.getAttribute("data-key") ?? "",
         href: element.getAttribute("href") ?? "",
         name: element.getAttribute("aria-label") ?? "",
         cx: dot?.getAttribute("cx") ?? "",
         cy: Number(dot?.getAttribute("cy") ?? "0"),
+        covered,
       };
-    }),
-  );
+    });
+  });
 }
 
 /**
- * Steps from the first frame until a marker of `kind` is up, and returns it; `null` when none is in any frame. A
+ * Steps from the first frame until an uncovered marker of `kind` is up, and returns it; `null` when none is in any frame. A
  * marker in the overlap behind the verdict counts too: the verdict passes pointer events through to the panorama.
  */
 async function findMarker(page: Page, slider: Locator, max: number, kind: string) {
@@ -62,7 +74,7 @@ async function findMarker(page: Page, slider: Locator, max: number, kind: string
   await expect(slider).toHaveValue("0");
   for (let index = 0; index <= max; index++) {
     if (index > 0) await stepTo(page, slider, index, index - 1);
-    const found = (await markers(page, kind)).at(0);
+    const found = (await markers(page, kind)).find((marker) => !marker.covered);
     if (found) return found;
   }
   return null;
@@ -198,4 +210,91 @@ test("the edge chevrons pan the panorama and hide at its ends", async ({ page })
   });
   await expect(right).toBeHidden();
   await expect(left).toBeFocused();
+});
+
+test("the slider marks the dark window at its exact edges, and the zone sits beside the current time", async ({
+  page,
+}) => {
+  // A wide track, so no edge label gives way to its neighbour.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openSky(page, "e2e-sky-dark");
+  const span = page.locator("[data-dark-span]");
+  const darkStart = page.locator("[data-sky-dark-start]");
+  const darkEnd = page.locator("[data-sky-dark-end]");
+  await expect(span).toBeVisible();
+  await expect(darkStart).toBeVisible();
+  await expect(darkEnd).toBeVisible();
+  const start = (await darkStart.textContent()) ?? "";
+  const end = (await darkEnd.textContent()) ?? "";
+  expect(start).toMatch(/^\d{2}:\d{2}$/);
+  expect(end).toMatch(/^\d{2}:\d{2}$/);
+
+  // Each time is centred under its edge of the dark stretch.
+  const spanBox = await span.boundingBox();
+  const startBox = await darkStart.boundingBox();
+  const endBox = await darkEnd.boundingBox();
+  if (!spanBox || !startBox || !endBox) throw new Error("a box to measure is missing (dark span or its labels)");
+  expect(Math.abs(startBox.x + startBox.width / 2 - spanBox.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(endBox.x + endBox.width / 2 - (spanBox.x + spanBox.width))).toBeLessThanOrEqual(2);
+
+  // The zone is muted text right after the current time, outside the element that holds the time.
+  const zone = page.locator("[data-sky-zone]");
+  await expect(zone).toBeVisible();
+  await expect(zone).toHaveText(/^(CEST|CET)$/);
+  await expect(page.locator("[data-sky-time] [data-sky-zone]")).toHaveCount(0);
+  const timeBox = await page.locator("[data-sky-time]").boundingBox();
+  const zoneBox = await zone.boundingBox();
+  if (!timeBox || !zoneBox) throw new Error("a box to measure is missing (time or zone)");
+  expect(zoneBox.x).toBeGreaterThanOrEqual(timeBox.x + timeBox.width);
+  expect(zoneBox.x - (timeBox.x + timeBox.width)).toBeLessThanOrEqual(12);
+
+  // The times are the server's: the Session plan's dark line shows the very same window.
+  await page.goto("/tonight/plan");
+  const planText = page.locator("[data-session-plan-text]");
+  await expect(planText).toBeVisible();
+  await expect(planText).toContainText(`Dark ${start}–${end}`);
+});
+
+test("the compass row marks the point nearest the middle of the view, and follows the strip", async ({ page }) => {
+  await openSky(page, "e2e-sky-compass");
+  const strip = page.locator("[data-sky-strip]");
+  const current = page.locator("[data-sky-compass-current]");
+  const bar = page.locator("[data-sky-compass] rect");
+
+  // Centred on the south at load: one point is marked, with its bar under the label.
+  await expect(current).toHaveCount(1);
+  await expect(current).toHaveAttribute("data-sky-compass-current", "S");
+  await expect(bar).toHaveCount(1);
+
+  // Scrolled to the left end, the middle of the view looks east: another point is marked.
+  await strip.evaluate((element) => {
+    element.scrollLeft = 0;
+  });
+  await expect(current).toHaveCount(1);
+  await expect.poll(() => current.getAttribute("data-sky-compass-current")).not.toBe("S");
+  const east = await current.getAttribute("data-sky-compass-current");
+
+  // And scrolled to the right end, a third: the marker follows the strip both ways.
+  await strip.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  await expect.poll(() => current.getAttribute("data-sky-compass-current")).not.toBe(east);
+  await expect(current).toHaveCount(1);
+  await expect(bar).toHaveCount(1);
+});
+
+test("the panorama shows no scrollbar, and its chevrons are bare icons", async ({ page }) => {
+  await openSky(page, "e2e-sky-bare");
+  const strip = page.locator("[data-sky-strip]");
+  await expect(strip).toHaveCSS("scrollbar-width", "none");
+  // No scrollbar thickness is left under the strip: its outer and inner heights agree.
+  const thickness = await strip.evaluate(
+    (element) => Math.round(element.getBoundingClientRect().height) - element.clientHeight,
+  );
+  expect(thickness).toBe(0);
+
+  const face = page.locator('[data-sky-pan="right"] > span');
+  await expect(face).toBeVisible();
+  await expect(face).toHaveCSS("border-top-width", "0px");
+  await expect(face).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });

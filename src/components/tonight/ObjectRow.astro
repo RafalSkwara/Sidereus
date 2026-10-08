@@ -25,7 +25,7 @@ const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
     <!-- At least 44 px; the hover tint and the ring run a little past the text, inside the list's width. -->
     <summary
       class:list={[
-        "-mx-2 flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-lg px-2 py-3 [&::-webkit-details-marker]:hidden",
+        "-mx-2 flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-lg px-2 py-4 [&::-webkit-details-marker]:hidden",
         "transition-colors hover:bg-accent motion-reduce:transition-none",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
       ]}
@@ -53,7 +53,7 @@ const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
         <path d="m6 9 6 6 6-6"></path>
       </svg>
     </summary>
-    <div class="pb-4 pl-10">
+    <div class="pb-5 pl-10">
       <p class="text-label text-muted-foreground">{detailLine}</p>
       <ObjectDetails entry={entry} logHref={logHref} />
     </div>

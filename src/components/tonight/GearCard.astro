@@ -1,0 +1,99 @@
+---
+// FR-012 / FR-019: the Site and the Telescope Tonight is for, as one card each (ui-user-adjustments, replacing the
+// gear link and the pills). The title is on top, a large icon bottom-left and, bottom-right, a select for two or more
+// items or the name plus a "Manage" link to /gear for one: the name on its own line, as wide as the card allows, and
+// Manage under it (user, 2026-10-08). The icon fills the height of the name-and-Manage block (64 px, 80 px from `md`, where the cards are wide enough).
+// The select is a plain GET form that submits on change (`/tonight?<param>=<id>` remembers the pick, see
+// pages/tonight.astro); it renders inside the TonightContent server island, which the browser fetches with
+// JavaScript, so Tonight as a whole still needs JS. Only ids go into the URL, never a site's coordinates.
+// Offline (FR-012): the Site select still navigates, to `/tonight?site=<id>`, which the service worker serves from that
+// site's stored copy or answers with `/offline` (copies are keyed by `?site=`). The Telescope select is
+// `data-needs-network`, since a stored copy ignores `?telescope=`: offline, a change puts it back to the shown pick.
+import { MapPin, Settings2, Telescope } from "lucide-react";
+
+import GearSelectField from "@/components/tonight/GearSelectField";
+import { GEAR_CARD_MIN_HEIGHT_CLASS } from "@/components/tonight/sky-band";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages } from "@/i18n";
+import { selectorKind } from "@/lib/tonight/gear-choice";
+
+interface Props {
+  /** Which card; also the page query parameter the pick travels in (`?site=` / `?telescope=`). */
+  kind: "site" | "telescope";
+  /** In `created_at` order. */
+  items: { id: string; name: string }[];
+  activeId: string;
+  /** The select's id, which the title's `<label for>` points at; `/design` gives each specimen its own so ids stay unique. */
+  selectId?: string;
+}
+
+const { kind, items, activeId, selectId = `${kind}-select` } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight;
+const title = kind === "site" ? t.siteSelector.label : t.selector.label;
+const manage = kind === "site" ? t.gear.manageSites : t.gear.manageTelescopes;
+const Icon = kind === "site" ? MapPin : Telescope;
+const select = selectorKind(items.length) === "select";
+const active = items.find((item) => item.id === activeId);
+// Only the Telescope select needs the network offline; the Site select navigates to the site's stored copy.
+const needsNetwork = kind === "telescope";
+const titleClass = "text-label font-semibold text-muted-foreground";
+---
+
+<div
+  class:list={[
+    "flex min-w-0 flex-col justify-between rounded-lg border border-border bg-surface p-3 sm:p-4",
+    GEAR_CARD_MIN_HEIGHT_CLASS,
+  ]}
+  data-gear-card={kind}
+>
+  {select ? (
+    <label for={selectId} class:list={[titleClass]}>
+      {title}
+    </label>
+  ) : (
+    <p class:list={[titleClass]}>{title}</p>
+  )}
+  <div class="mt-2 flex items-end justify-between gap-3 sm:mt-3">
+    <Icon className="size-16 shrink-0 text-primary-strong md:size-20" strokeWidth={1.25} aria-hidden="true" />
+    {select ? (
+      <form
+        method="get"
+        action="/tonight"
+        class="min-w-0 flex-1"
+        data-gear-select={kind}
+        data-needs-network={needsNetwork ? "" : undefined}
+      >
+        <GearSelectField id={selectId} name={kind} items={items} activeId={activeId} />
+      </form>
+    ) : (
+      <div class="flex min-w-0 flex-1 flex-col items-end gap-3">
+        <p class="max-w-full min-w-0 truncate text-body text-heading" title={active?.name} data-gear-name={kind}>
+          {active?.name}
+        </p>
+        <a href="/gear" class:list={[buttonVariants({ variant: "action", size: "sm" })]} data-needs-network="">
+          <Settings2 aria-hidden="true" />
+          {manage}
+        </a>
+      </div>
+    )}
+  </div>
+</div>
+
+<script>
+  // Switch as soon as an item is picked. A form that needs the network (the Telescope select) cannot offline: the
+  // select goes back to the pick the page shows, so it never claims one it did not load.
+  function enhance(form: HTMLFormElement) {
+    if (form.dataset.enhanced) return;
+    form.dataset.enhanced = "true";
+    const select = form.querySelector("select");
+    select?.addEventListener("change", () => {
+      if (form.hasAttribute("data-needs-network") && document.documentElement.hasAttribute("data-offline")) {
+        const shown = [...select.options].findIndex((option) => option.defaultSelected);
+        select.selectedIndex = Math.max(shown, 0);
+        return;
+      }
+      form.requestSubmit();
+    });
+  }
+  document.querySelectorAll<HTMLFormElement>("form[data-gear-select]").forEach(enhance);
+</script>

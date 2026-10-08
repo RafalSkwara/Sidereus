@@ -698,76 +698,76 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 2.2 Unit tests pass (including page-state, copies, i18n parity): `npm test`
-- [ ] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 2.4 The new toast spec passes
-- [ ] 2.5 The updated notice specs pass
+- [x] 2.1 Type check passes: `npx astro sync && npx astro check` — 354bee6
+- [x] 2.2 Unit tests pass (including page-state, copies, i18n parity): `npm test` — 354bee6
+- [x] 2.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 354bee6
+- [x] 2.4 The new toast spec passes — 354bee6
+- [x] 2.5 The updated notice specs pass — 354bee6
 
 #### Manual
 
-- [ ] 2.6 Sky-check toast positioned per breakpoint, gone after 10 s, URL cleaned, no toast on reload
-- [ ] 2.7 Offline "prepared" notice closes and stays closed
-- [ ] 2.8 Toasts read well in dark, light and red without covering the settings panel's actions
+- [x] 2.6 Sky-check toast positioned per breakpoint, gone after 10 s, URL cleaned, no toast on reload — 354bee6
+- [x] 2.7 Offline "prepared" notice closes and stays closed — 354bee6
+- [x] 2.8 Toasts read well in dark, light and red without covering the settings panel's actions — 354bee6
 
 ### Phase 3: The dashboard sky band
 
 #### Automated
 
-- [ ] 3.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 3.2 Unit tests pass (build sky view fields, i18n parity, import guard, contrast): `npm test`
-- [ ] 3.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 3.4 Sky specs pass
-- [ ] 3.5 No tonight.verdict.word or text-verdict- remains
+- [x] 3.1 Type check passes: `npx astro sync && npx astro check` — 242ecbb
+- [x] 3.2 Unit tests pass (build sky view fields, i18n parity, import guard, contrast): `npm test` — 242ecbb
+- [x] 3.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 242ecbb
+- [x] 3.4 Sky specs pass — 242ecbb
+- [x] 3.5 No tonight.verdict.word or text-verdict- remains — 242ecbb
 
 #### Manual
 
-- [ ] 3.6 Headline reads as the main answer at 360, 640 and 1280 px, EN and PL
-- [ ] 3.7 Overlap is 64 px and no verdict text sits in the strip's labelled area
-- [ ] 3.8 Bare chevrons, no scrollbar (Chromium; Safari and Firefox in the joint check), compass marker follows the swipe
-- [ ] 3.9 Dark edge times match the dark window; zone beside the current time; no label overlap at 320 px; no skeleton jump
+- [x] 3.6 Headline reads as the main answer at 360, 640 and 1280 px, EN and PL — 242ecbb
+- [x] 3.7 Overlap is 64 px and no verdict text sits in the strip's labelled area — 242ecbb
+- [x] 3.8 Bare chevrons, no scrollbar (Chromium; Safari and Firefox in the joint check), compass marker follows the swipe — 242ecbb
+- [x] 3.9 Dark edge times match the dark window; zone beside the current time; no label overlap at 320 px; no skeleton jump — 242ecbb
 
 ### Phase 4: Site and Telescope cards
 
 #### Automated
 
-- [ ] 4.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 4.2 Unit tests pass (including gear-choice): `npm test`
-- [ ] 4.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 4.4 Gear and phone specs pass
+- [x] 4.1 Type check passes: `npx astro sync && npx astro check` — 4648b3d
+- [x] 4.2 Unit tests pass (including gear-choice): `npm test` — 4648b3d
+- [x] 4.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 4648b3d
+- [x] 4.4 Gear and phone specs pass — 4648b3d
 
 #### Manual
 
-- [ ] 4.5 Cards side by side from 640 px, stacked at 360/390 px, no sideways scroll, EN and PL
-- [ ] 4.6 Large icons clear in all themes; Manage looks clickable
-- [ ] 4.7 Switching from the select reloads Tonight for the pick
+- [x] 4.5 Cards side by side from 640 px, stacked at 360/390 px, no sideways scroll, EN and PL — 4648b3d
+- [x] 4.6 Large icons clear in all themes; Manage looks clickable — 4648b3d
+- [x] 4.7 Switching from the select reloads Tonight for the pick — 4648b3d
 
 ### Phase 5: Spacing and data points on their own lines
 
 #### Automated
 
-- [ ] 5.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 5.2 Unit tests pass: `npm test`
-- [ ] 5.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 5.4 Focused-page specs pass, including no sideways scroll
+- [x] 5.1 Type check passes: `npx astro sync && npx astro check` — 411cd7d
+- [x] 5.2 Unit tests pass: `npm test` — 411cd7d
+- [x] 5.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 411cd7d
+- [x] 5.4 Focused-page specs pass, including no sideways scroll — 411cd7d
 
 #### Manual
 
-- [ ] 5.5 Targets, Nights, Planets, Moon and dashboard tiles read as separated lines at 360/390 px in all themes
+- [x] 5.5 Targets, Nights, Planets, Moon and dashboard tiles read as separated lines at 360/390 px in all themes — 411cd7d
 
 ### Phase 6: Session plan with altitude curves (option B)
 
 #### Automated
 
-- [ ] 6.1 Type check passes: `npx astro sync && npx astro check`
-- [ ] 6.2 Unit tests pass (plan rows carry tracks and peak altitude; layout helper): `npm test`
-- [ ] 6.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- [ ] 6.4 Plan and phone specs pass
-- [ ] 6.5 Production build passes with the service worker: `npm run build`
+- [x] 6.1 Type check passes: `npx astro sync && npx astro check` — 3ce5a0a
+- [x] 6.2 Unit tests pass (plan rows carry tracks and peak altitude; layout helper): `npm test` — 3ce5a0a
+- [x] 6.3 Lint passes: `npx eslint . --ignore-pattern '.claude/**'` — 3ce5a0a
+- [x] 6.4 Plan and phone specs pass — 3ce5a0a
+- [x] 6.5 Production build passes with the service worker: `npm run build` — 3ce5a0a
 
 #### Manual
 
-- [ ] 6.6 Curves plausible, dot at the stated best time, dashed line at the site's minimum altitude
-- [ ] 6.7 Legend makes the drawing understandable (user check)
-- [ ] 6.8 Curves legible at 360 px and in red mode
-- [ ] 6.9 Plan rows have clearly more room between them at 360 and 390 px
+- [x] 6.6 Curves plausible, dot at the stated best time, dashed line at the site's minimum altitude — 3ce5a0a
+- [x] 6.7 Legend makes the drawing understandable (user check)
+- [x] 6.8 Curves legible at 360 px and in red mode — 3ce5a0a
+- [x] 6.9 Plan rows have clearly more room between them at 360 and 390 px — 3ce5a0a

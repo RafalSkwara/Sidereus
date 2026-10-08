@@ -17,7 +17,11 @@ const TELESCOPE_FORM = 'form[action="/api/gear/telescopes"]';
 const t = en.tonight;
 const ranking = (page: Page) => page.locator('section[aria-labelledby="targets-heading"]');
 const firstTarget = (page: Page) => ranking(page).locator("li[data-object]").first();
-const pills = (page: Page) => page.getByRole("navigation", { name: t.selector.label });
+/** The Telescope card on the dashboard (ui-user-adjustments): title, icon and a select, or the name plus Manage. */
+const telescopeCard = (page: Page) => page.locator('[data-gear-card="telescope"]');
+/** The card's select; the card's title is its label. Exact, so no other "Telescope" label can match. */
+const telescopeSelect = (page: Page) => page.getByLabel(t.selector.label, { exact: true });
+const chosenTelescope = (page: Page) => telescopeSelect(page).locator("option:checked");
 
 async function addTelescope(page: Page, name: string) {
   await page.goto("/gear/telescopes/new");
@@ -27,11 +31,15 @@ async function addTelescope(page: Page, name: string) {
   await form.locator("#apertureMm").fill("90");
   await form.locator("#focalLengthMm").fill("1250");
   await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/gear\?saved=telescope$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.telescope);
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
-/** Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog). */
-async function deleteGear(page: Page, name: string) {
+/**
+ * Opens `/gear`, follows the edit link for the item named `name`, then deletes it (confirming in the dialog) and
+ * expects the hub's deleted notice for its `kind`.
+ */
+async function deleteGear(page: Page, kind: "site" | "telescope" | "eyepiece", name: string) {
   await page.goto("/gear");
   await page
     .locator('main a[href^="/gear/"]')
@@ -39,13 +47,13 @@ async function deleteGear(page: Page, name: string) {
     .first()
     .click();
   await expect(page).toHaveURL(/\/gear\/\w+\/[0-9a-f-]+$/);
-  const kind = /\/gear\/(sites|telescopes|eyepieces)\//.exec(page.url())?.[1] as "sites" | "telescopes" | "eyepieces";
-  const label = en.gear[kind].delete;
+  const label = en.gear[`${kind}s`].delete;
   // DeleteButton opens its confirm dialog only once hydrated; clicked earlier it would post unconfirmed.
   await waitForHydration(page, 'form[action$="/delete"]');
   await page.getByRole("button", { name: label }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: label }).click();
-  await expect(page).toHaveURL(/\/gear\?deleted=(site|telescope|eyepiece)$/);
+  await expect(page.getByRole("status")).toHaveText(en.gear.notice.deleted[kind]);
+  await expect(page).toHaveURL(/\/gear$/);
 }
 
 /** The names of the user's eyepieces, as listed on `/gear`. */
@@ -85,56 +93,58 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   test.setTimeout(120_000);
   await onboardInMadrid(page, "e2e-selector");
 
-  // One telescope: no selector, no "For your …" line.
+  // One telescope: the card names it and links to Manage, with no select and no "For your …" line.
   await expect(page.locator("[data-tonight-tiles]")).toBeVisible();
-  await expect(pills(page)).toHaveCount(0);
+  await expect(telescopeCard(page)).toBeVisible();
+  await expect(telescopeSelect(page)).toHaveCount(0);
   await expect(page.locator('form[data-gear-select="telescope"]')).toHaveCount(0);
-  // The gear link under the title ("site · telescope"), found by its href: the sky's markers and the Moon tile also carry "·".
-  const gearLink = page.locator('main a[href="/gear"]');
-  const onboarded = (await gearLink.textContent())?.split("·")[1]?.trim();
-  if (!onboarded) throw new Error("no telescope named under the Tonight title");
+  await expect(telescopeCard(page).getByRole("link", { name: t.gear.manageTelescopes })).toHaveAttribute(
+    "href",
+    "/gear",
+  );
+  const onboarded = (await telescopeCard(page).locator("[data-gear-name]").textContent())?.trim();
+  if (!onboarded) throw new Error("no telescope named on the Telescope card");
   await openTargets(page);
   await expect(firstTarget(page)).toBeVisible();
   await expect(ranking(page)).not.toContainText(t.rankingFor({ telescope: onboarded }));
 
-  // Two telescopes: pills, the oldest (the onboarded one) chosen by default.
+  // Two telescopes: a select (no navigation pills), the oldest (the onboarded one) chosen by default.
   await addTelescope(page, "Second Scope");
   await openTonight(page);
-  await expect(pills(page).getByRole("link")).toHaveCount(2);
-  await expect(pills(page).getByRole("link", { name: onboarded })).toHaveAttribute("aria-current", "page");
+  await expect(telescopeSelect(page).locator("option")).toHaveCount(2);
+  await expect(chosenTelescope(page)).toHaveText(onboarded);
+  await expect(page.getByRole("navigation", { name: t.selector.label })).toHaveCount(0);
+  await expect(telescopeCard(page).getByRole("link", { name: t.gear.manageTelescopes })).toHaveCount(0);
   await openTargets(page);
   await expect(ranking(page)).toContainText(t.rankingFor({ telescope: onboarded }));
 
   // Picking the second on Tonight re-ranks Targets for it, and plain /tonight remembers the pick.
   await openTonight(page);
-  await pills(page).getByRole("link", { name: "Second Scope" }).click();
+  await telescopeSelect(page).selectOption({ label: "Second Scope" });
   await expect(page).toHaveURL(/\/tonight\?telescope=[0-9a-f-]{36}$/);
-  await expect(pills(page).getByRole("link", { name: "Second Scope" })).toHaveAttribute("aria-current", "page");
+  await expect(chosenTelescope(page)).toHaveText("Second Scope");
   await openTargets(page);
   await expect(ranking(page)).toContainText(t.rankingFor({ telescope: "Second Scope" }));
   await openTonight(page);
-  await expect(pills(page).getByRole("link", { name: "Second Scope" })).toHaveAttribute("aria-current", "page");
+  await expect(chosenTelescope(page)).toHaveText("Second Scope");
 
-  // Four telescopes: a dropdown instead of pills, switching as soon as one is picked.
+  // Four telescopes: still the select, switching as soon as one is picked.
   await addTelescope(page, "Third Scope");
   await addTelescope(page, "Fourth Scope");
   await openTonight(page);
-  await expect(pills(page)).toHaveCount(0);
-  const select = page.getByLabel(t.selector.label);
+  const select = telescopeSelect(page);
   await expect(select.locator("option")).toHaveCount(4);
-  await expect(
-    page.locator('form[data-gear-select="telescope"]').getByRole("button", { name: t.selector.show }),
-  ).toBeHidden();
+  await expect(page.locator('form[data-gear-select="telescope"]').getByRole("button")).toHaveCount(0);
   await select.selectOption({ label: "Third Scope" });
   await expect(page).toHaveURL(/\/tonight\?telescope=[0-9a-f-]{36}$/);
   await openTargets(page);
   await expect(ranking(page)).toContainText(t.rankingFor({ telescope: "Third Scope" }));
 
   // The remembered telescope is deleted: Tonight falls back to the oldest, without an error.
-  await deleteGear(page, "Third Scope");
-  await deleteGear(page, "Fourth Scope");
+  await deleteGear(page, "telescope", "Third Scope");
+  await deleteGear(page, "telescope", "Fourth Scope");
   await openTonight(page);
-  await expect(pills(page).getByRole("link", { name: onboarded })).toHaveAttribute("aria-current", "page");
+  await expect(chosenTelescope(page)).toHaveText(onboarded);
   await expect(page.getByText(t.failed)).toHaveCount(0);
   await openTargets(page);
   await expect(firstTarget(page)).toBeVisible();
@@ -143,7 +153,7 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   // No eyepieces: Targets still ranks, without pairs, and the dashboard says how to get them back, once, with the
   // other setup prompts.
   for (const eyepiece of await eyepieceNames(page)) {
-    await deleteGear(page, eyepiece);
+    await deleteGear(page, "eyepiece", eyepiece);
   }
   await openTargets(page);
   await expect(firstTarget(page)).toBeVisible();
@@ -160,17 +170,18 @@ test("the ranking follows the chosen telescope, and deleting gear leaves honest 
   );
 
   // Back to one telescope: no selector. No telescope: the add-telescope prompt.
-  await deleteGear(page, "Second Scope");
+  await deleteGear(page, "telescope", "Second Scope");
   await openTonight(page);
-  await expect(pills(page)).toHaveCount(0);
-  await deleteGear(page, onboarded);
+  await expect(telescopeCard(page).locator("[data-gear-name]")).toHaveText(onboarded);
+  await expect(telescopeSelect(page)).toHaveCount(0);
+  await deleteGear(page, "telescope", onboarded);
   await openTonight(page);
   await expect(page.getByText(t.addTelescopePrompt)).toBeVisible();
   await expect(page.getByRole("link", { name: t.addTelescope })).toHaveAttribute("href", "/gear/telescopes/new");
   await expect(page.locator("[data-tonight-tiles]")).toHaveCount(0);
 
   // No site either: one route back to setup.
-  await deleteGear(page, await siteName(page));
+  await deleteGear(page, "site", await siteName(page));
   await openTonight(page);
   await expect(page.getByText(t.setupPrompt)).toBeVisible();
   await expect(page.getByRole("link", { name: t.setup })).toHaveAttribute("href", "/onboarding");

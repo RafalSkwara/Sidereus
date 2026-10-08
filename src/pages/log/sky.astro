@@ -75,9 +75,9 @@ const actionLink = cn(buttonVariants(), "mt-4");
   </Fragment>
 
   {saved && (
-    <div class="mb-6">
-      <Notice tone="success">{m.skyChecks.saved}</Notice>
-    </div>
+    <Notice tone="success" toast param="skyChecked">
+      {m.skyChecks.saved}
+    </Notice>
   )}
 
   <div class="mb-6 empty:hidden">

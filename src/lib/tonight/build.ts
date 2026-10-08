@@ -53,7 +53,13 @@ import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
 import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
 
-import { createFormatter, type ForecastStatus, type MoonUp, type SkyHeadline } from "./format";
+import {
+  createFormatter,
+  zoneLabel as zoneLabelAt,
+  type ForecastStatus,
+  type MoonUp,
+  type SkyHeadline,
+} from "./format";
 import {
   layoutSessionPlan,
   type SessionPlanMoonEvent,
@@ -342,6 +348,13 @@ export interface TonightSessionPlanRowInput extends SessionPlanRowInput {
   windowText: string;
   /** Direction at the peak, "SW, 45°". */
   bestDirection: string;
+  /**
+   * The target's altitude over the plan's axis, in whole tenths of a degree, one sample per `trackStep` from the axis
+   * start and the last at its end (ui-user-adjustments: the row's altitude curve).
+   */
+  track: number[];
+  /** The altitude at the peak, degrees to one decimal: where the curve's best-time dot sits. */
+  peakAltitudeDeg: number;
 }
 
 export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput>;
@@ -366,12 +379,14 @@ export interface TonightSessionPlan {
   moonEvents: (SessionPlanMoonEvent & { timeText: string })[];
   /** "Moonset 01:30 · Moonrise 04:50", "Moon up all night" or "Moon not up tonight". */
   moonText: string;
-  /** When the Moon is up over the axis, as fractions of it (clamped to [0, 1]); empty when it never is. */
-  moonUp: { from: number; to: number }[];
   /** The hours as ticks: fraction of the axis and `HH:mm` in the site's time zone. */
   ticks: { at: number; label: string }[];
   /** By best time, earliest first; empty when nothing is recommended tonight. */
   rows: TonightSessionPlanRow[];
+  /** The site's minimum altitude, degrees: the curves' dashed line, and what a row's window stays above. */
+  minAltitudeDeg: number;
+  /** One step of the rows' tracks as a fraction of the axis (the last step may be shorter). */
+  trackStep: number;
   /**
    * The tile's "what next" line, decided on the server from `now` (the page reads no clock): before sunset the first
    * row (`first`), during the night the first row, by best time, whose best window has not ended (`next`), and `done`
@@ -400,6 +415,11 @@ export interface TonightView {
   /** "Saturday, 10 October 2026" */
   dateLabel: string;
   timeZone: string;
+  /**
+   * The zone's short name at the night's start ("CEST", or "GMT+2" where there is no abbreviation), for the static
+   * verdict's dark line. The live sky carries one per frame (`skyView.zoneLabels`), which stays right across a clock change.
+   */
+  zoneLabel: string;
   verdict: Verdict;
   /** The sky headline from the verdict's level and reason: "Clear", "No forecast", "No dark window", … */
   headline: SkyHeadline;
@@ -546,6 +566,11 @@ function roundTo(x: number, decimals: number): number {
   return Math.round(x * factor) / factor || 0;
 }
 
+/** A track's altitudes alone, in whole tenths of a degree (the Session plan's curves). */
+function packAltitudes(track: readonly Pick<HorizontalPosition, "altitudeDeg">[]): number[] {
+  return track.map((sample) => Math.round(sample.altitudeDeg * 10) || 0);
+}
+
 /** A track as interleaved altitude and azimuth in whole tenths of a degree, azimuth in [0, 3600). */
 function packTrack(track: readonly Pick<HorizontalPosition, "altitudeDeg" | "azimuthDeg">[]): number[] {
   return track.flatMap((sample) => [
@@ -644,6 +669,9 @@ export function buildTonight(
   }
   const window = first.darkWindow;
   const tonight = first.verdict;
+  // The zone's short name at the observing night's start ("CEST"), for the static verdict's dark line; the live sky
+  // reads the zone per frame instead.
+  const zoneLabel = zoneLabelAt(observingNight(date, timeZone).start, timeZone);
 
   const nights = outlook.map((night): TonightNight => {
     // Nights 1-3 carry a verdict, not cloud numbers, so their mean comes from `cloudOutlook` over the same hours.
@@ -929,6 +957,9 @@ export function buildTonight(
   // the same instant everywhere. Planets show whatever the planet weather; a failure drops only the sky view.
   // The axis and the Moon's track over it are worked out once, for whichever of the two asks first, and shared.
   let axisMoon: { range: Interval; fromSun: boolean; moon: MoonState[] } | null = null;
+  // Tracks over that axis by object id or planet key: the sky view keeps the ones it computes, so the Session plan's
+  // curves reuse them on the dashboard instead of tracking the same targets twice.
+  const axisTracks = new Map<string, HorizontalPosition[]>();
   const skyAxisWithMoon = (): { range: Interval; fromSun: boolean; moon: MoonState[] } => {
     if (axisMoon === null) {
       const { range, fromSun } = skyAxis(engineSite, date, timeZone);
@@ -952,12 +983,33 @@ export function buildTonight(
         const to = times.findLastIndex((t) => t <= window.end.getTime());
         darkSpan = from >= 0 && to >= from ? { from, to } : null;
       }
+      // The dark window at its exact edges, as fractions of the slider's track plus the same strings `darkWindow`
+      // carries. The slider moves by frame index, so a time's fraction is its continuous index over the last one: a
+      // frame's own time then lands exactly under the thumb, and only the last (shorter) step is stretched.
+      let dark: TonightSkyView["dark"] = null;
+      if (window.kind === "window" && frames.length > 1) {
+        const lastIndex = frames.length - 1;
+        const stepMs = DEFAULT_TRACK_STEP_MINUTES * 60_000;
+        const fractionOf = (ms: number) => roundTo(Math.min(Math.max((ms - startMs) / stepMs / lastIndex, 0), 1), 4);
+        const from = fractionOf(window.start.getTime());
+        const to = fractionOf(window.end.getTime());
+        dark =
+          to > from
+            ? {
+                from,
+                to,
+                startLabel: formatTime(window.start, timeZone),
+                endLabel: formatTime(window.end, timeZone),
+              }
+            : null;
+      }
       const nowMs = selectionNow.getTime();
       const initialIndex = nowMs >= startMs && nowMs <= endMs ? nearestIndex(times, nowMs) : (darkSpan?.from ?? 0);
 
       const listed = new Set(solarSystem?.entries.map((entry) => entry.key) ?? []);
       const objectBodies = objectTracks(engineSite, range, skyObjects).map((track, i): TonightSkyBody => {
         const object = skyObjects[i];
+        axisTracks.set(object.id, track);
         const commonName = localCommonName(object.id, object.commonName, locale);
         return {
           kind: "object",
@@ -970,6 +1022,7 @@ export function buildTonight(
       });
       const planetBodies = planetTracks(engineSite, range, PLANET_KEYS).map((track, i): TonightSkyBody => {
         const key = PLANET_KEYS[i];
+        axisTracks.set(key, track);
         return {
           kind: "planet",
           key,
@@ -996,9 +1049,11 @@ export function buildTonight(
         rotations: frames.flatMap((frame) => frame.rotation.map((value) => roundTo(value, 4))),
         sunAltDeg: frames.map((frame) => roundTo(frame.sunAltitudeDeg, 1)),
         darkSpan,
+        dark,
         initialIndex,
         facing: site.latitudeDeg < 0 ? "north" : "south",
         timeLabels: frames.map((frame) => formatTime(frame.time, timeZone)),
+        zoneLabels: frames.map((frame) => zoneLabelAt(frame.time, timeZone)),
         startLabel: formatTime(range.start, timeZone),
         endLabel: formatTime(range.end, timeZone),
         bodies: [...objectBodies, ...planetBodies, moonBody],
@@ -1015,6 +1070,23 @@ export function buildTonight(
       const { range, fromSun, moon } = skyAxisWithMoon();
       const up = moonUpOf(engineSite, moon);
       const moonSpans = up.kind === "part" ? up.spans : up.kind === "all" ? [range] : [];
+      // Each row's altitude over the axis, on the live sky's grid (every `DEFAULT_TRACK_STEP_MINUTES`, both ends):
+      // only the targets the sky view hasn't already tracked are tracked here.
+      const untrackedObjects = planObjects.map(({ object }) => object).filter((object) => !axisTracks.has(object.id));
+      objectTracks(engineSite, range, untrackedObjects).forEach((track, i) => {
+        axisTracks.set(untrackedObjects[i].id, track);
+      });
+      const untrackedPlanets = planPlanets.map((entry) => entry.key).filter((key) => !axisTracks.has(key));
+      planetTracks(engineSite, range, untrackedPlanets).forEach((track, i) => {
+        axisTracks.set(untrackedPlanets[i], track);
+      });
+      const altitudesOf = (key: string): number[] => {
+        const track = axisTracks.get(key);
+        if (track === undefined) {
+          throw new Error(`No track over the plan's axis for ${key}`);
+        }
+        return packAltitudes(track);
+      };
       const rowOf = (
         kind: TonightSessionPlanRowInput["kind"],
         key: string,
@@ -1023,6 +1095,7 @@ export function buildTonight(
         href: string,
         window: Interval,
         peak: HorizontalPosition,
+        track: number[],
       ): TonightSessionPlanRowInput => ({
         kind,
         key,
@@ -1034,6 +1107,8 @@ export function buildTonight(
         bestTime: formatTime(peak.time, timeZone),
         windowText: `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`,
         bestDirection: formatDirection(peak),
+        track,
+        peakAltitudeDeg: roundTo(peak.altitudeDeg, 1),
       });
       const planRows: TonightSessionPlanRowInput[] = [
         ...(planMoon === null
@@ -1047,6 +1122,7 @@ export function buildTonight(
                 "/tonight/moon",
                 planMoon.window,
                 planMoon.peak,
+                packAltitudes(moon),
               ),
             ]),
         ...planPlanets.map((entry) => {
@@ -1059,6 +1135,7 @@ export function buildTonight(
             `/tonight/planets#planet-${entry.key}`,
             entry.window,
             entry.peak,
+            altitudesOf(entry.key),
           );
         }),
         ...planObjects.map(({ object, score, peak }) => {
@@ -1071,6 +1148,7 @@ export function buildTonight(
             `/tonight/targets#object-${object.id}`,
             score.window,
             peak,
+            altitudesOf(object.id),
           );
         }),
       ];
@@ -1096,7 +1174,6 @@ export function buildTonight(
       const text = messages.tonight.pages.plan;
       const axisMs = layout.axis.end - layout.axis.start;
       const hourAt = (hour: number): number => (axisMs > 0 ? (hour - layout.axis.start) / axisMs : 0);
-      const clampAt = (ms: number): number => Math.min(1, Math.max(0, hourAt(ms)));
       const moonEvents = layout.moonEvents.map((event) => ({
         ...event,
         timeText: formatTime(new Date(event.time), timeZone),
@@ -1124,15 +1201,20 @@ export function buildTonight(
               up.kind === "all" || (up.kind === "part" && up.upAtStart)
               ? text.moonAll
               : text.moonNever,
-        moonUp: moonSpans.map((span) => ({ from: clampAt(span.start.getTime()), to: clampAt(span.end.getTime()) })),
         ticks: layout.hours.map((hour) => ({
           at: hourAt(hour),
           label: formatTime(new Date(hour), timeZone),
         })),
         rows: layout.rows,
+        minAltitudeDeg: site.minAltitudeDeg,
+        trackStep: axisMs > 0 ? (DEFAULT_TRACK_STEP_MINUTES * 60_000) / axisMs : 1,
         nextUp,
       };
-    } catch {
+    } catch (error) {
+      // The page says the plan is unavailable; this leaves a trace for us. A fixed line and the error's name only:
+      // an engine message or stack could carry the site's coordinates, which never go into logs.
+      // eslint-disable-next-line no-console
+      console.error("buildTonight: the Session plan failed", error instanceof Error ? error.name : typeof error);
       sessionPlan = null;
     }
   }
@@ -1146,6 +1228,7 @@ export function buildTonight(
     validUntil: planetWindow?.kind === "window" ? planetWindow.end : observingNight(date, timeZone).end,
     dateLabel: formatNightDate(date),
     timeZone,
+    zoneLabel,
     verdict: tonight,
     headline: skyHeadline(tonight),
     verdictText: verdictReasonText(tonight),

@@ -32,7 +32,7 @@ const nightsTitle = t.nights({ count: String(OUTLOOK_NIGHTS) });
 const { listOf } = createFormatter(locale);
 const tag = formatLocaleTag(locale);
 
-const caption = "mt-2 block text-label text-muted-foreground";
+const caption = "mt-3 block text-label text-muted-foreground";
 
 // Point here first. Without a ranking (weather no-go or no darkness) the tile says there are no targets; it still
 // opens Targets, which gives the reason and the way to the week.
@@ -107,9 +107,9 @@ const nightsSummary = view.nights
   <Tile href="/tonight/targets" headingId="tile-targets-heading" heading={t.targets} labelledBy="tile-targets-open">
     {targets.length > 0 ? (
       <>
-        <ul class="mt-3">
+        <ul class="mt-4">
           {targets.map((target) => (
-            <li class="flex items-baseline justify-between gap-3 py-1 text-title">
+            <li class="flex items-baseline justify-between gap-3 py-1.5 text-title">
               <span class="min-w-0 font-semibold break-words">{target.name}</span>
               <span class="shrink-0 tabular-nums">{target.bestTime}</span>
             </li>
@@ -122,7 +122,7 @@ const nightsSummary = view.nights
         )}
       </>
     ) : (
-      <span class="mt-3 block text-body font-semibold">{t.noTargets}</span>
+      <span class="mt-4 block text-body font-semibold">{t.noTargets}</span>
     )}
     <span id="tile-targets-open" class="sr-only">
       {open(m.tonight.pages.targets)}
@@ -131,19 +131,19 @@ const nightsSummary = view.nights
 
   {plan && (
     <Tile href="/tonight/plan" headingId="tile-plan-heading" heading={t.plan}>
-      <span class="mt-2 block text-body font-semibold">{planLine}</span>
+      <span class="mt-3 block text-body font-semibold">{planLine}</span>
     </Tile>
   )}
 
   {moonCard && (
     <Tile href="/tonight/moon" headingId="tile-moon-heading" heading={t.moon}>
       {moonState ? (
-        <span class="mt-2 flex items-center gap-3">
+        <span class="mt-3 flex items-center gap-4">
           <MoonDisc state={moonState} clipId="moon-summary-lit" decorative className="size-6 shrink-0" />
           <span class="min-w-0 text-body">{moonLine}</span>
         </span>
       ) : (
-        <span class="mt-2 block text-body">{moonCard.phaseText}</span>
+        <span class="mt-3 block text-body">{moonCard.phaseText}</span>
       )}
     </Tile>
   )}
@@ -152,18 +152,18 @@ const nightsSummary = view.nights
     <Tile href="/tonight/planets" headingId="tile-planets-heading" heading={t.planets}>
       {solarSystem.entries.length > 0 ? (
         <>
-          <span class="mt-2 block text-body font-semibold break-words">{planetNames}</span>
-          <span class="mt-1 block text-label text-muted-foreground">{solarSystem.entries[0].reason}</span>
+          <span class="mt-3 block text-body font-semibold break-words">{planetNames}</span>
+          <span class="mt-2 block text-label text-muted-foreground">{solarSystem.entries[0].reason}</span>
         </>
       ) : (
-        solarSystem.noneText && <span class="mt-2 block text-body">{solarSystem.noneText}</span>
+        solarSystem.noneText && <span class="mt-3 block text-body">{solarSystem.noneText}</span>
       )}
     </Tile>
   )}
 
   {bars.length > 0 && (
     <Tile href="/tonight/nights" headingId="tile-nights-heading" heading={nightsTitle}>
-      <span class="mt-4 grid grid-cols-7 items-end gap-2" aria-hidden="true">
+      <span class="mt-5 grid grid-cols-7 items-end gap-2" aria-hidden="true">
         {bars.map((bar) => (
           <span class="flex flex-col items-center gap-2">
             <svg

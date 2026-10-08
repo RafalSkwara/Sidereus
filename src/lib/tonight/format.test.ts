@@ -5,7 +5,7 @@ import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import type { DarkWindow, Verdict } from "@/lib/engine";
 
-import { createFormatter, type MoonUp, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
+import { createFormatter, zoneLabel, type MoonUp, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
 
 const { darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } = createFormatter("en");
 
@@ -229,5 +229,19 @@ describe("listOf (tonight-nightfall)", () => {
   it("joins names as a locale conjunction list", () => {
     expect(createFormatter("en").listOf(["Jupiter", "Saturn", "Mars"])).toBe("Jupiter, Saturn and Mars");
     expect(createFormatter("pl").listOf(["Jowisz", "Saturn", "Mars"])).toBe("Jowisz, Saturn i Mars");
+  });
+});
+
+describe("zoneLabel (ui-user-adjustments)", () => {
+  it("names the zone by its abbreviation where it has one, in every locale's wording alike", () => {
+    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Europe/Warsaw")).toBe("CEST");
+    expect(zoneLabel(new Date("2026-12-10T12:00:00Z"), "Europe/Warsaw")).toBe("CET");
+    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Europe/London")).toBe("BST");
+    expect(zoneLabel(new Date("2026-12-10T12:00:00Z"), "Europe/London")).toBe("GMT");
+    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "America/New_York")).toBe("EDT");
+  });
+
+  it("falls back to a GMT offset where the zone has no abbreviation", () => {
+    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Asia/Tokyo")).toBe("GMT+9");
   });
 });

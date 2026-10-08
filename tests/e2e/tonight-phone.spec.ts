@@ -12,13 +12,13 @@ import { onboardInMadrid } from "./helpers";
  * search stubbed with Madrid. Tonight's content is a server island, so each check waits for the island's own
  * elements (and for the fonts, which change line heights) before it measures.
  *
- *  - the first screen at 390×844 (EN): the "Point here first" heading and the first line of its first target end
- *    above the fixed TabBar, and the gear link sits above the tiles. The margin is a few px, and the spec runs on
- *    the real clock, so it measures the target's first line: a long top name (M13's "Hercules Globular Cluster")
- *    wraps to a second line that may sit under the TabBar, while the target itself still starts on the first screen. 360×780 and 375×667 are known limits (the plan's "What we're not
- *    doing"), so they are not asserted;
+ *  - the first screen at 390×844 (EN): the verdict's headline and the Site card (the Site and Telescope cards stack on
+ *    a phone) end above the fixed TabBar, and the Telescope card's title shows above it too; the rest of the
+ *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
+ *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
+ *    known limits (the plan's "What we're not doing"), so they are not asserted;
  *  - no sideways scroll at 320×568 and 375×667 on eight pages, in EN and PL;
- *  - the panorama keeps its height (it is untouched by this change).
+ *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
 
 const LOCALES = ["en", "pl"] as const;
@@ -56,44 +56,47 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-test("the verdict, the gear and the first target fit one 390×844 screen", async ({ page }) => {
+// The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
+// starts on it (its title shows above the TabBar). On phones each card gives the name its own line with Manage under it,
+// so the Telescope card's lower part needs a short scroll, as the first target does.
+test("the verdict, the Site card and the Telescope card's title fit one 390×844 screen", async ({ page }) => {
   await onboardInMadrid(page, "e2e-phone");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/tonight");
   const tiles = page.locator("[data-tonight-tiles]");
   await expect(tiles).toBeVisible();
-  await expect(tiles.locator('a[href="/tonight/targets"] li').first()).toBeVisible();
+  const siteCard = page.locator('[data-gear-card="site"]');
+  const telescopeCard = page.locator('[data-gear-card="telescope"]');
+  await expect(siteCard, "the Site card must be visible under the sky").toBeVisible();
+  await expect(telescopeCard, "the Telescope card must be visible under the sky").toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 
   // The fixed bottom navigation: below `md` it is the only visible navigation named "Main" (the top bar's is hidden).
   const tabBar = await page.getByRole("navigation", { name: en.nav.primary }).boundingBox();
-  const heading = await page.locator("#tile-targets-heading").boundingBox();
-  // The first target's first line: the row's top plus its top padding and one line of its type role.
-  const firstLine = await tiles
-    .locator('a[href="/tonight/targets"] li')
-    .first()
-    .evaluate((row) => {
-      const style = getComputedStyle(row);
-      const top = row.getBoundingClientRect().top;
-      return { top, bottom: top + parseFloat(style.paddingTop) + parseFloat(style.lineHeight) };
-    });
+  const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
+  const site = await siteCard.boundingBox();
+  const telescope = await telescopeCard.boundingBox();
+  const telescopeTitle = await telescopeCard.locator("label, p").first().boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
-  const gearLink = page.locator('main a[href="/gear"]');
-  await expect(gearLink, "the gear link must be visible under the sky").toBeVisible();
-  const gear = await gearLink.boundingBox();
 
-  if (!tabBar || !heading || !firstTile || !gear) {
-    throw new Error("a box to measure is missing (TabBar, tile heading, first tile or gear link)");
+  if (!tabBar || !headline || !site || !telescope || !telescopeTitle || !firstTile) {
+    throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");
   }
   expect(
-    heading.y + heading.height,
-    "the 'Point here first' heading must sit above the TabBar at 390×844",
+    headline.y + headline.height,
+    "the verdict's headline must sit above the TabBar at 390×844",
   ).toBeLessThanOrEqual(tabBar.y);
-  expect(firstLine.bottom, "the first target's first line must sit above the TabBar at 390×844").toBeLessThanOrEqual(
-    tabBar.y,
+  // On a phone the cards stack: the Site card first, the Telescope card second.
+  expect(site.y + site.height, "the Site card must sit above the Telescope card at 390×844").toBeLessThanOrEqual(
+    telescope.y,
   );
-  expect(gear.y + gear.height, "the gear link must end above the first tile at 390×844").toBeLessThanOrEqual(
+  expect(site.y + site.height, "the Site card must end above the TabBar at 390×844").toBeLessThanOrEqual(tabBar.y);
+  expect(
+    telescopeTitle.y + telescopeTitle.height,
+    "the Telescope card's title must show above the TabBar at 390×844",
+  ).toBeLessThanOrEqual(tabBar.y);
+  expect(telescope.y + telescope.height, "the cards must end above the first tile at 390×844").toBeLessThanOrEqual(
     firstTile.y,
   );
 });

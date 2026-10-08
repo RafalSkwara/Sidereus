@@ -52,6 +52,7 @@ import { tonightDateForSite } from "./tonight-date";
 const planetRanking = vi.hoisted(() => ({ throws: false }));
 const moonTargeting = vi.hoisted(() => ({ throws: false }));
 const skyFraming = vi.hoisted(() => ({ throws: false }));
+const planetTracking = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -75,6 +76,13 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.skyFrames(...args);
     },
+    planetTracks: (...args: Parameters<typeof actual.planetTracks>) => {
+      if (planetTracking.throws) {
+        // A message that carries a coordinate, which must never reach the log.
+        throw new RangeError("planet tracks failed at 52.23");
+      }
+      return actual.planetTracks(...args);
+    },
   };
 });
 
@@ -82,6 +90,8 @@ afterEach(() => {
   planetRanking.throws = false;
   moonTargeting.throws = false;
   skyFraming.throws = false;
+  planetTracking.throws = false;
+  vi.restoreAllMocks();
 });
 
 /** Helsinki in midsummer: the sun never reaches -18° (Bortle 1-4), so there is no dark window. */
@@ -1389,6 +1399,75 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     expect(sky.darkSpan).not.toBeNull();
   });
 
+  it("carries the dark window at its exact edges, with the server's times, and the zone's short name", () => {
+    const view = build();
+    const sky = skyViewOf(view);
+    if (view.darkWindow.kind !== "window" || sky.dark === null) {
+      throw new Error("expected a dark window");
+    }
+    // The same strings the verdict's dark window carries, so the slider's edge labels can never disagree with it.
+    expect(sky.dark.startLabel).toBe(view.darkWindow.start);
+    expect(sky.dark.endLabel).toBe(view.darkWindow.end);
+    expect(sky.dark.from).toBeGreaterThan(0);
+    expect(sky.dark.to).toBeLessThan(1);
+    expect(sky.dark.from).toBeLessThan(sky.dark.to);
+    // The fractions are the exact instants on the slider's track: within one frame of the frame-quantised span.
+    const last = sky.frameCount - 1;
+    expect(Math.abs(sky.dark.from * last - (sky.darkSpan?.from ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs(sky.dark.to * last - (sky.darkSpan?.to ?? 0))).toBeLessThanOrEqual(1);
+    // Warsaw in October: central European summer time, on every frame; the static fallback's label agrees.
+    expect(sky.zoneLabels).toHaveLength(sky.frameCount);
+    expect(sky.zoneLabels.every((label) => label === "CEST")).toBe(true);
+    expect(view.zoneLabel).toBe("CEST");
+    expect(skyViewOf(build({}, "pl")).zoneLabels.every((label) => label === "CEST")).toBe(true);
+  });
+
+  it("reads the zone per frame, so a night that crosses a clock change shows CEST then CET", () => {
+    // Madrid, the night of 24-25 October 2026: clocks go back at 03:00 CEST (01:00 UTC).
+    const MADRID: SiteRecord = {
+      ...WARSAW,
+      id: "site-5",
+      name: "Madrid",
+      latitudeDeg: 40.42,
+      longitudeDeg: -3.7,
+      timeZone: "Europe/Madrid",
+    };
+    const sky = skyViewOf(
+      build({
+        site: MADRID,
+        forecast: result(uniformForecast("2026-10-24T00:00:00Z", 5)),
+        now: new Date("2026-10-24T09:00:00Z"),
+      }),
+    );
+    const changeMs = Date.UTC(2026, 9, 25, 1, 0);
+    expect(sky.zoneLabels).toHaveLength(sky.frameCount);
+    expect(sky.endMs).toBeGreaterThan(changeMs);
+    sky.zoneLabels.forEach((label, i) => {
+      const at = Math.min(sky.startMs + i * sky.stepMs, sky.endMs);
+      expect(label, `frame ${String(i)} (${sky.timeLabels[i]})`).toBe(at < changeMs ? "CEST" : "CET");
+    });
+    expect(sky.zoneLabels[0]).toBe("CEST");
+    expect(sky.zoneLabels.at(-1)).toBe("CET");
+  });
+
+  it("has no dark stretch without a dark window, and names a zone with no abbreviation by its offset", () => {
+    const light = skyViewOf(
+      build({
+        site: HELSINKI_DARK,
+        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
+        now: new Date("2026-06-21T09:00:00Z"),
+      }),
+    );
+    expect(light.dark).toBeNull();
+    expect(light.zoneLabels.every((label) => /^(EEST|GMT\+3)$/.test(label))).toBe(true);
+    const sydney = build({
+      site: SOUTH,
+      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+      now: new Date("2026-10-10T09:00:00Z"),
+    });
+    expect(skyViewOf(sydney).zoneLabels.every((label) => /^(AEDT|GMT\+11)$/.test(label))).toBe(true);
+  });
+
   it("starts at the frame nearest now inside the range, else at the dark span's start, else at 0", () => {
     const inside = skyViewOf(build());
     expect(Math.abs(inside.startMs + inside.initialIndex * inside.stepMs - NOW.getTime())).toBeLessThanOrEqual(
@@ -1541,6 +1620,46 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     expect(gaps.length).toBeGreaterThan(8);
     expect(gaps.every((gap) => Math.abs(gap - HOUR_MS) < 1)).toBe(true);
     expect(plan.ticks.filter((tick) => tick.label === "02:00")).toHaveLength(2);
+  });
+
+  it("gives every row its altitude over the axis and its peak altitude, and the plan the site's minimum (ui-user-adjustments)", () => {
+    const plan = planOf(build({ site: { ...WARSAW, minAltitudeDeg: 20 } }));
+    expect(plan.minAltitudeDeg).toBe(20);
+    expect(plan.rows.length).toBeGreaterThan(1);
+    expect(new Set(plan.rows.map((row) => row.kind)).size).toBeGreaterThan(1);
+    // One sample per step from the axis start, the last at its end (a shorter last step).
+    const samples = plan.rows[0].track.length;
+    expect(plan.trackStep * (samples - 2)).toBeLessThan(1);
+    expect(plan.trackStep * (samples - 1)).toBeGreaterThanOrEqual(1);
+    for (const row of plan.rows) {
+      expect(row.track).toHaveLength(samples);
+      expect(row.track.every(Number.isInteger)).toBe(true);
+      // The peak clears the minimum, and the track reaches it inside the window (to within a 10-minute step's drift).
+      expect(row.peakAltitudeDeg).toBeGreaterThanOrEqual(20);
+      const inWindow = row.track.filter((_, i) => {
+        const at = Math.min(i * plan.trackStep, 1);
+        return at >= row.from && at <= row.to;
+      });
+      expect(Math.max(...inWindow) / 10).toBeGreaterThan(row.peakAltitudeDeg - 2);
+      expect(Math.max(...inWindow) / 10).toBeLessThan(row.peakAltitudeDeg + 2);
+    }
+  });
+
+  it("draws the same curves when the sky view's tracks are reused (the dashboard)", () => {
+    const alone = planOf(build());
+    const withSky = planOf(build({}, { withSessionPlan: true, withSkyView: true }));
+    expect(withSky.rows.map((row) => [row.key, row.track])).toEqual(alone.rows.map((row) => [row.key, row.track]));
+  });
+
+  it("drops only the plan when its tracks fail, logging a fixed line and the error's name, never its message", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    planetTracking.throws = true;
+    const view = build();
+    expect(view.sessionPlan).toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledWith("buildTonight: the Session plan failed", "RangeError");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 
   it("has no sunset or sunrise text when the Sun does not cross the horizon (87° N in October)", () => {

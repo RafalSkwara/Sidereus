@@ -1,0 +1,17 @@
+---
+/*
+ * The one container toasts stack in (ui-user-adjustments): fixed, `z-50`, newest last. It sits above the TabBar below
+ * `md` (else just above the safe area) and under the Topbar from `md`, centred in the content column (`toast-region`,
+ * global.css). It has no `role` and no `aria-live`: each `Notice` keeps its own `role="status"` and announces itself
+ * once, and a live container would announce a toast twice. The script moves every `[data-toast]` notice here, now and
+ * when a server island inserts one later, and runs its timer, its × and its URL cleanup (lib/toasts.ts).
+ */
+---
+
+<div data-toast-region class="toast-region flex flex-col gap-2"></div>
+
+<script>
+  import { startToasts } from "@/lib/toasts";
+
+  startToasts();
+</script>

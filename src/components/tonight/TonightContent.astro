@@ -1,7 +1,7 @@
 ---
 // The data-dependent part of /tonight, rendered as a server island (`server:defer` in pages/tonight.astro) so the
 // page shell paints before Supabase, KV and Open-Meteo answer; TonightSkeleton stands in until it arrives. Since
-// tonight-dashboard it is the dashboard: the sky, the save notice and the gear row right under it (ui-mobile-pass),
+// tonight-dashboard it is the dashboard: the sky, the save notice and the gear cards right under it (ui-user-adjustments),
 // then tiles that open the focused pages under /tonight/*, the sky check and the setup prompts (the tiles include the
 // Session plan, loaded with `withSessionPlan`). The detail lives on those pages; only this island records the sky
 // verdict.
@@ -11,9 +11,9 @@ import Notice from "@/components/ui/Notice.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
-import GearSelector from "@/components/tonight/GearSelector.astro";
+import GearCard from "@/components/tonight/GearCard.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
-import { GEAR_ROW_GAP_CLASS, TILES_GAP_CLASS } from "@/components/tonight/sky-band";
+import { GEAR_ROW_GAP_CLASS, GEAR_ROW_GRID_CLASS, TILES_GAP_CLASS } from "@/components/tonight/sky-band";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
@@ -86,8 +86,6 @@ const {
   logError,
   site,
   telescope,
-  multipleSites,
-  multipleTelescopes,
   needsSetup,
   view,
   tonightError,
@@ -111,20 +109,13 @@ const skyCheck = night === "tonight" && site && view ? pendingCheck(openSkyCheck
 // eyepiece-load error). The log-load error shows here too, since "Point here first" depends on the log.
 const noEyepieces = view !== null && !view.hasEyepieces && !eyepiecesError;
 const showNotices = view !== null && (noEyepieces || logError !== null);
-// The line under the title names only what no selector already shows; with both selectors it is omitted.
-const gearLine = [multipleSites ? null : site?.name, multipleTelescopes ? null : telescope?.name]
-  .filter((name): name is string => Boolean(name))
-  .join(" · ");
 // The setup and add prompts, each a band with one link-button; when both add prompts show, adding a site leads.
 const addSite = !needsSetup && !sitesError && !site;
 const addTelescope = !needsSetup && !telescopesError && !telescope;
 const showPrompts = needsSetup || addSite || addTelescope;
-// The gear row: the gear link and the selectors (once a site and a telescope resolve) and the gear-list load errors.
-const showGearRow =
-  Boolean(site && telescope && (gearLine || multipleSites || multipleTelescopes)) || !!sitesError || !!telescopesError;
-// The gear line's link to /gear: 44 px, with the ring focus.
-const gearLink =
-  "inline-flex min-h-11 items-center rounded-lg text-label text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+// The gear row: the Site and Telescope cards (once a site and a telescope resolve) and the gear-list load errors.
+const gearLoadFailed = Boolean(sitesError ?? telescopesError);
+const showGearRow = Boolean(site && telescope) || gearLoadFailed;
 ---
 
 {load && (
@@ -139,7 +130,8 @@ const gearLink =
           headline={view.headline}
           text={view.verdictText}
           darkWindow={view.darkWindow}
-          timeZone={view.timeZone}
+          zoneLabel={view.zoneLabel}
+          withSlider
           forecastStatus={view.forecastStatus}
           explanation={view.explanation}
         />
@@ -155,7 +147,8 @@ const gearLink =
               headline={view.headline}
               text={view.verdictText}
               darkWindow={view.darkWindow}
-              timeZone={view.timeZone}
+              zoneLabel={view.zoneLabel}
+              withSlider={false}
               forecastStatus={view.forecastStatus}
               explanation={view.explanation}
             />
@@ -169,48 +162,39 @@ const gearLink =
     {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl">
-      {notice && (
+      {/* A saved observation or sky check is a toast (it floats, so nothing here reserves room); an error stays. */}
+      {notice?.tone === "success" && (
+        <Notice tone="success" toast param={notice.param}>
+          {notice.text}
+        </Notice>
+      )}
+      {notice?.tone === "error" && (
         <div class="px-4 pt-3 sm:pt-6">
-          {notice.tone === "success" ? (
-            <Notice tone="success">{notice.text}</Notice>
-          ) : (
-            <div role="alert">
-              <ServerError message={notice.text} />
-            </div>
-          )}
+          <div role="alert">
+            <ServerError message={notice.text} />
+          </div>
         </div>
       )}
 
-      {/* The gear row (ui-mobile-pass): the gear Tonight is for, right under the sky, with the gear-list load errors. */}
+      {/* The gear row (ui-user-adjustments): the Site and Telescope cards right under the sky, with the gear-list load errors. */}
       {showGearRow && (
-        <div class:list={["space-y-3 px-4", view ? GEAR_ROW_GAP_CLASS : "pt-6 sm:pt-8"]}>
-          {site && telescope && gearLine && (
-            <p>
-              <a href="/gear" class:list={[gearLink]} data-needs-network="">
-                {gearLine}
-              </a>
-            </p>
+        <div class:list={["px-4", view ? GEAR_ROW_GAP_CLASS : "pt-6 sm:pt-8"]}>
+          {site && telescope && (
+            <div class:list={[GEAR_ROW_GRID_CLASS]}>
+              <GearCard kind="site" items={sites.map(({ id, name }) => ({ id, name }))} activeId={site.id} />
+              <GearCard
+                kind="telescope"
+                items={telescopes.map(({ id, name }) => ({ id, name }))}
+                activeId={telescope.id}
+              />
+            </div>
           )}
-          {site && telescope && multipleSites && (
-            <GearSelector
-              items={sites.map(({ id, name }) => ({ id, name }))}
-              activeId={site.id}
-              param="site"
-              label={t.siteSelector.label}
-              show={t.siteSelector.show}
-            />
+          {gearLoadFailed && (
+            <div class:list={["space-y-3", site && telescope && "mt-3"]}>
+              {sitesError && <ServerError message={translate(sitesError)} />}
+              {telescopesError && <ServerError message={translate(telescopesError)} />}
+            </div>
           )}
-          {site && telescope && multipleTelescopes && (
-            <GearSelector
-              items={telescopes.map(({ id, name }) => ({ id, name }))}
-              activeId={telescope.id}
-              param="telescope"
-              label={t.selector.label}
-              show={t.selector.show}
-            />
-          )}
-          {sitesError && <ServerError message={translate(sitesError)} />}
-          {telescopesError && <ServerError message={translate(telescopesError)} />}
         </div>
       )}
 
