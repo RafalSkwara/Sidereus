@@ -1,4 +1,4 @@
-# Handoff — S-02 ui-user-adjustments (2026-10-08, Phases 1-3 of 6 done; Phase 1 reviewed)
+# Handoff — S-02 ui-user-adjustments (2026-10-08, Phases 1-4 of 6 done; Phase 1 reviewed)
 
 Read this first, then `plan-brief.md` in this folder. **Do not redo research, planning or the plan review**: all three are committed. The user's list is verbatim in `change.md`.
 
@@ -16,7 +16,8 @@ Read this first, then `plan-brief.md` in this folder. **Do not redo research, pl
 - **`change.md` status**: `impl_reviewed` (the Phase 1 review). Set it back to `implementing` when Phase 2 starts; `/10x-implement` flips only from `planned` / `plan_reviewed`.
 - **Phase 2** (toasts): commit `354bee6`; gates green (unit 1159, full e2e 41 passed / 3 expected skips); manual rows ticked from agent screenshots. Toast logic lives in `src/lib/toasts.ts` (started by `ToastRegion.astro`); `TOAST_PARAMS` is the fixed param set; inline notices close via `data-dismiss-scope` + `data-dismissed`; Escape also closes a focused toast (small extra beyond the plan).
 - **Phase 3** (sky band): commit `242ecbb`; gates green (unit 1171, full e2e 44 passed / 3 expected skips); manual rows ticked from agent screenshots (EN/PL 320-1280, dark/light/red). `VERDICT_MIN_HEIGHT_CLASS` measured: 168 / 236 px. Slider labels: pure `placeSliderLabels` (`src/lib/sky-view/slider-labels.ts`); compass marker: pure `nearestToCentre` (`compass-marker.ts`); `zoneLabel` added to `format.ts` and `TonightView`. The reason line gets `first-letter:uppercase` (small extra). `tonight-sky.spec.ts` `findMarker` skips a marker covered by a later one (Mercury sits under Venus at 19:45 now that the overlap is 64 px). Safari/Firefox scrollbar check is left for the joint check.
-- **Next**: optional `/10x-impl-review ui-user-adjustments phase 2` / `phase 3`, then Phases 4 (gear cards), 5 (spacing) and 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
+- **Phase 4** (gear cards): commit `4648b3d`; gates green (unit 1171, full e2e 44 / 3 expected skips). User pick 2026-10-08: **compact cards below `sm`** (p-3, size-8 icon, name + Manage on one row, `min-h-24`) so both cards end above the TabBar at 390×844 (Telescope card bottom 773 vs TabBar 779). Known trade-off: at 320 px in PL the names truncate to a letter or two (full name in `title`). Offline the select gets `aria-disabled` + dashed look, not `disabled`. One site + one telescope now shows two cards (name + Manage).
+- **Next**: optional `/10x-impl-review ui-user-adjustments phase 2` / `3` / `4`, then Phases 5 (spacing) and 6 (Session plan curves). The landing PNG is recaptured in Phase 6.
 
 ## The user's decisions (do not re-ask)
 
@@ -81,7 +82,7 @@ Delegated decisions are in `plan-brief.md` › Key Decisions:
 
 ```
 cd ~/projects/sidereus/.claude/worktrees/ui-user-adjustments && git pull
-# /10x-implement ui-user-adjustments phase 4
+# /10x-implement ui-user-adjustments phase 5
 ```
 
 Before merging the PR, merge or rebase onto `main` again. The test stream keeps landing commits, mostly under `context/` and `src/lib/**` tests.
