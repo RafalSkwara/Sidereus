@@ -182,7 +182,7 @@ Each table row carries a one-line comment with the local wall time, so a reader 
   - temporarily setting `TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG` to −12 in `parameters.ts` turns groups (b) and (c) red (plan review F6);
   - temporarily replacing `wall.getUTCHours()` with `wall.getHours()` in `observingNightDateFor` and running `TZ=UTC npx vitest run src/lib/engine/night-boundaries.test.ts` turns group (d) red under at least one switched runner zone. With the process in UTC, red can only come from the in-process switch (plan review F2).
 
-**Break-check log**: (filled in by `/10x-implement`: each check, the groups that went red, reverted.)
+**Break-check log** (2026-10-08): `TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG` = −12 → 50 of 130 red, every (b) and (c) case in all 5 runner zones; restored. `wall.getHours()` in `observingNightDateFor` under `TZ=UTC` → 22 red, (c) and (d) in the switched America/Los_Angeles and Pacific/Kiritimati blocks only; restored.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
 **Implementation Note**: Commit and push the phase, then continue (the user's run preference: no pause between automated-only phases).
@@ -387,10 +387,10 @@ A source scan that fails the suite if any non-test code under `src/` reads the r
 
 #### Automated
 
-- [ ] 1.1 The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts`
-- [ ] 1.2 The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts`
-- [ ] 1.3 Break check (rollover constant −12 turns (b)/(c) red; `getHours` in `observingNightDateFor` under `TZ=UTC` turns (d) red), reverted and logged
-- [ ] 1.4 Full unit suite, lint and type check pass
+- [x] 1.1 The new suite passes: `npx vitest run src/lib/engine/night-boundaries.test.ts`
+- [x] 1.2 The new suite passes under a far-east runner zone: `TZ=Pacific/Kiritimati npx vitest run src/lib/engine/night-boundaries.test.ts`
+- [x] 1.3 Break check (rollover constant −12 turns (b)/(c) red; `getHours` in `observingNightDateFor` under `TZ=UTC` turns (d) red), reverted and logged
+- [x] 1.4 Full unit suite, lint and type check pass
 
 ### Phase 2: Consumers and the log form's night (unit)
 
