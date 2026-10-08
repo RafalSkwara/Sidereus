@@ -166,9 +166,11 @@ const variants = [
   { variant: "secondary", label: "Secondary", hover: "bg-accent" },
   { variant: "ghost", label: "Ghost", hover: "bg-accent" },
   { variant: "destructive", label: "Destructive", hover: "bg-destructive/10" },
-  { variant: "action", label: "Action", hover: "bg-accent" },
+  { variant: "action", label: "Action", hover: "border-primary-strong underline underline-offset-4" },
   { variant: "link", label: "Link", hover: "decoration-2" },
 ] as const;
+// `action` wraps and is used at `sm` everywhere, so its specimens render at `sm` too.
+const sizeOf = (variant: (typeof variants)[number]["variant"]) => (variant === "action" ? "sm" : "default");
 const linkVariants = variants.filter(
   (v) => v.variant === "default" || v.variant === "outline" || v.variant === "ghost" || v.variant === "action",
 );
@@ -700,7 +702,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>default · live</p>
                   <div class:list={row}>
                     {variants.map((v) => (
-                      <Button type="button" variant={v.variant}>
+                      <Button type="button" variant={v.variant} size={sizeOf(v.variant)}>
                         {v.label}
                       </Button>
                     ))}
@@ -710,7 +712,13 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>hover · specimen</p>
                   <div class:list={row}>
                     {variants.map((v) => (
-                      <Button type="button" variant={v.variant} className={v.hover} tabIndex={-1}>
+                      <Button
+                        type="button"
+                        variant={v.variant}
+                        size={sizeOf(v.variant)}
+                        className={v.hover}
+                        tabIndex={-1}
+                      >
                         {v.label}
                       </Button>
                     ))}
@@ -720,7 +728,13 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>focus-visible · specimen</p>
                   <div class:list={row}>
                     {variants.map((v) => (
-                      <Button type="button" variant={v.variant} className={focusRing} tabIndex={-1}>
+                      <Button
+                        type="button"
+                        variant={v.variant}
+                        size={sizeOf(v.variant)}
+                        className={focusRing}
+                        tabIndex={-1}
+                      >
                         {v.label}
                       </Button>
                     ))}
@@ -730,7 +744,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>disabled</p>
                   <div class:list={row}>
                     {variants.map((v) => (
-                      <Button type="button" variant={v.variant} disabled>
+                      <Button type="button" variant={v.variant} size={sizeOf(v.variant)} disabled>
                         {v.label}
                       </Button>
                     ))}
@@ -750,7 +764,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <p class:list={stateLabel}>default · live</p>
                   <div class:list={row}>
                     {linkVariants.map((v) => (
-                      <a href="#c-link-button" class:list={buttonVariants({ variant: v.variant })}>
+                      <a
+                        href="#c-link-button"
+                        class:list={buttonVariants({ variant: v.variant, size: sizeOf(v.variant) })}
+                      >
                         <Plus aria-hidden="true" />
                         {v.label}
                       </a>
@@ -764,7 +781,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                       <a
                         href="#c-link-button"
                         tabindex="-1"
-                        class:list={cn(buttonVariants({ variant: v.variant }), v.hover)}
+                        class:list={cn(buttonVariants({ variant: v.variant, size: sizeOf(v.variant) }), v.hover)}
                       >
                         <Plus aria-hidden="true" />
                         {v.label}
@@ -779,7 +796,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                       <a
                         href="#c-link-button"
                         tabindex="-1"
-                        class:list={cn(buttonVariants({ variant: v.variant }), focusRing)}
+                        class:list={cn(buttonVariants({ variant: v.variant, size: sizeOf(v.variant) }), focusRing)}
                       >
                         <Plus aria-hidden="true" />
                         {v.label}

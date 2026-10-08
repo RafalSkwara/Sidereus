@@ -17,7 +17,7 @@ interface Props {
 const { href, label, class: className } = Astro.props;
 ---
 
-<a href={href} class:list={cn(buttonVariants({ variant: "action", size: "sm" }), className)}>
+<a href={href} class:list={cn(buttonVariants({ variant: "action", size: "sm" }), "mb-2 sm:mb-3", className)}>
   <ChevronLeft aria-hidden="true" />
   {label}
 </a>

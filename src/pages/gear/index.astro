@@ -84,13 +84,17 @@ if (supabase) {
 /*
  * One primary action at most: the first kind Tonight needs that is missing (a site, then a telescope; eyepieces are
  * optional). A band that failed to load is not "missing". Other empty bands get an outline action, filled ones a
- * ghost one.
+ * action one (border, tinted surface and the Plus icon).
  */
 const missingSites = !sitesError && sites.length === 0;
 const missingTelescopes = !telescopesError && telescopes.length === 0;
 const primaryKind: GearKind | null = missingSites ? "site" : missingTelescopes ? "telescope" : null;
 const addClass = (kind: GearKind, empty: boolean) =>
-  buttonVariants({ variant: kind === primaryKind ? "default" : empty ? "outline" : "ghost" });
+  kind === primaryKind
+    ? buttonVariants({ variant: "default" })
+    : empty
+      ? buttonVariants({ variant: "outline" })
+      : buttonVariants({ variant: "action", size: "sm" });
 
 const rowLink =
   "-mx-2 flex min-h-11 flex-col justify-center rounded-lg px-2 py-3 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";

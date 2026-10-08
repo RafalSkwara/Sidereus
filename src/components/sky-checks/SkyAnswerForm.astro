@@ -2,7 +2,7 @@
 // The answer buttons for one sky check (verdict-check), shared by Tonight's card and the sky checks page: a plain
 // form with one named submit button per sky word, posting to /api/log/sky/[id]. No client state, so no island. The
 // current answer, if any, is pressed (the selected fill). The default slot adds controls inside the same form (Tonight's Skip).
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants, RESTING_BORDER_CLASS } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getMessages } from "@/i18n";
 import { SKY_ANSWERS, type SkyAnswer } from "@/lib/sky-checks/claim";
@@ -32,9 +32,10 @@ const m = getMessages(Astro.locals.locale);
 // fill, so the page keeps its one primary action.
 const neutral = matching === undefined;
 const outlined = current ?? matching;
-// A ghost answer keeps a resting border in the action colour, so all three read as buttons (the outlined one is the
-// suggestion, with the ink border).
-const ghostRest = "border border-action-border";
+// A ghost answer keeps a resting border in the action colour, so all three read as buttons. The outlined one is the
+// suggestion: the ink border, thicker (`border-2`) and on the action surface, so in red (no hue to tell the borders
+// apart) it still differs from the ghost answers by shape and fill.
+const suggested = "border-2 bg-action-surface";
 const pressed = "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground";
 // Answering needs the network (S-06): offline the form's controls are disabled and this caption shows under them; the
 // page script names it as their description (src/lib/offline/page-state.ts).
@@ -52,8 +53,8 @@ const captionId = `sky-answer-offline-${id}`;
         aria-pressed={current === null ? undefined : current === answer}
         class:list={[
           neutral || answer === outlined
-            ? buttonVariants({ variant: "outline" })
-            : cn(buttonVariants({ variant: "ghost" }), ghostRest),
+            ? cn(buttonVariants({ variant: "outline" }), !neutral && suggested)
+            : cn(buttonVariants({ variant: "ghost" }), RESTING_BORDER_CLASS),
           pressed,
         ]}
       >

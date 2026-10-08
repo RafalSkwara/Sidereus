@@ -509,7 +509,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
               }}
               className="group"
             >
-              <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+              <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline decoration-1 underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2">
                 {t.where.manualToggle}
                 {/* The open/closed cue the inline-flex summary loses with its native marker. */}
                 <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -618,7 +618,7 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
 
                 {/* The fixed types stay as the fallback for a model the catalogue lacks or the user cannot name. */}
                 <details className="group">
-                  <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+                  <summary className="text-primary-strong hover:text-heading focus-visible:outline-ring text-label inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-md font-semibold underline decoration-1 underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2">
                     {t.kit.genericToggle}
                     <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
