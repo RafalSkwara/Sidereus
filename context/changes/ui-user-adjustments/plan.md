@@ -67,7 +67,7 @@ The full grounding is in `research.md` (sections A–H). In short:
 **Session plan.**
 
 - Sunset, dark and Moon are each on their own line.
-- Each target row reads "Best 22:40 · up 21:40–23:10 · 54° SW" above a small server-drawn altitude curve, with the minimum altitude dashed and a dot at best.
+- Each target row reads "Best 22:40 · window 21:40–23:10 · SW, 45°" above a small server-drawn altitude curve, with the minimum altitude dashed and a dot at best.
 - A legend explains the curve.
 
 **Verification:** unit, type, lint and e2e suites green on a local preview; screenshots at 360/390/640/1280 in EN/PL × dark/light/red reviewed by the agent; the landing PNG recaptured.
@@ -107,6 +107,16 @@ Every phase ends with the agent's own screenshots on a local preview, per the us
 
 Local environment for this worktree: preview on port 4331 and forecast fixture on 4410, against local Supabase. Only `dist/server/.dev.vars` is patched after a build. Lint with `npx eslint . --ignore-pattern '.claude/**'`. Node from `$HOME/.nvm/versions/node/v24.21.0/bin`.
 
+**Local e2e run** (every `npx playwright test …` line below means this recipe; never run against 4321, where the main checkout may serve another branch):
+
+1. `npx supabase status` (start it with `npx supabase start` if needed) and note the local API URL and anon key.
+2. `FIXTURE_PORT=4410 node tests/e2e/forecast-fixture.mjs` as a background task.
+3. `npm run build`, then patch `dist/server/.dev.vars` with the local `SUPABASE_URL` / `SUPABASE_KEY` and `FORECAST_BASE_URL=http://127.0.0.1:4410`.
+4. `ASTRO_PREVIEW_BACKGROUND=0 npx astro preview --port 4331 --ignore-lock` as a background task.
+5. `BASE_URL=http://localhost:4331 SUPABASE_URL=<local> SUPABASE_KEY=<local> npx playwright test <specs>`.
+
+Rebuild (steps 3-4) after every phase's changes before running its specs.
+
 ## Critical Implementation Details
 
 - **Timing & lifecycle.** Tonight's notices arrive inside a server island after the shell has loaded. The toast script must pick up `[data-toast]` notices added later (MutationObserver, as `Notice.astro:41-69` and `page-state.ts:151-153` already do), not only those present at load. The URL param is removed with `history.replaceState` only after the toast is shown, keeping every other query param (`site`, `telescope`, `night`). The island has already been fetched by then, so this is safe.
@@ -130,27 +140,38 @@ Add one shared look for standalone clickables (border, tinted fill, icon, link c
 
 **File**: `src/components/ui/button.tsx`, `src/styles/global.css`, `src/styles/contrast.test.ts`
 
-**Intent**: Add an `action` variant for standalone links and per-item actions. It has a border in the link colour, a tinted surface fill, link-coloured text and room for a leading or trailing icon. Make the `link` variant underlined at rest, so inline links read as links. Introduce link tokens only if `primary-strong` on the new fill fails contrast.
+**Intent**: Add an `action` variant for standalone links and per-item actions. It has a border in the link colour, a tinted surface fill, link-coloured text and room for a leading or trailing icon. It wraps (`whitespace-normal`), so long Polish labels never overflow. Make the `link` variant underlined at rest, so inline links read as links. The fill and border are opaque hex tokens, so the contrast test can pin them (it skips `color-mix` values, `contrast.test.ts:24-33`).
 
 **Contract**:
 
 - `buttonVariants` gains `variant: "action"`.
 - The `link` variant gets a resting underline (`underline decoration-1 underline-offset-4`; hover thickens it).
-- Any new colour token (for example `--action-surface`, `--action-border`) gets a value in the dark, light, red (zero G/B) and light `.night-sky` blocks, plus `CHECKS` rows: text on the fill ≥ 4.5, border on background ≥ 3.
-- The offline rule (`global.css:470-479`) must still visibly differ for `[data-needs-network]` (muted, no fill, dashed border).
+- New base tokens `--action-surface` and `--action-border`, as plain hex, in the first `:root` block (dark), light, red (zero G/B; `red-theme.test.ts:72-75` requires them there) and the light `.night-sky` block, plus `--color-action-surface` / `--color-action-border` in the `@theme inline` block.
+- `CHECKS` rows in `contrast.test.ts`: `primary-strong` on `action-surface` ≥ 4.5 in dark, light, red and night; `action-border` on `background`, `surface`, `zenith` and `horizon` ≥ 3 in every theme (BackLink sits on the sky headers and the night scope).
+- The offline dashed-border rule (`global.css:479-484`) is extended from buttons to `a`, so an offline `action` link (Mark observed, Manage) reads disabled: muted, no fill, dashed border. Topbar and TabBar links have zero border width, so they are unaffected.
 
 #### 2. Apply to standalone clickables
 
-**File**: `src/components/tonight/TargetDetails.astro`, `src/components/tonight/MoonCard.astro`, `src/components/ui/BackLink.astro`, `src/components/tonight/TonightContent.astro`, `src/components/tonight/SkyCheckCard.astro`, `src/components/tonight/EyepiecesPrompt.astro`, `src/components/ui/Pager.astro`
+**File**: `src/components/tonight/TargetDetails.astro`, `src/components/tonight/MoonCard.astro`, `src/components/ui/BackLink.astro`, `src/components/ui/Pager.astro`, `src/components/ui/Tile.astro`, `src/pages/auth/confirm-email.astro`, `src/components/sky-checks/SkyAnswerForm.astro`, `src/pages/log/index.astro`
 
 **Intent**:
 
-- "Mark observed" becomes `action` with a lucide check-type icon (no `-ml-3`).
-- The Moon's washed-out link becomes `action`.
-- `BackLink` gets the action look with its arrow.
-- Inline links inside sentences (the `inlineLink` strings in the `*PageContent` files, auth switch links) keep the `link` variant, which is now underlined.
-- Pager links become `action`.
-- The quiet actions in `SkyCheckCard` and `EyepiecesPrompt` become `action` where they stand alone.
+Every clickable, by treatment (the inventory this phase must leave true):
+
+| Clickable                                                           | Where                                                                                             | Treatment                                                              |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Mark observed                                                       | `TargetDetails.astro:29,49-54`                                                                    | `action` + lucide `Check` icon, no `-ml-3`                             |
+| Washed-out link                                                     | `MoonCard.astro:31,47-50`                                                                         | `action`, keeps wrapping, no `-ml-3`                                   |
+| Back links                                                          | `ui/BackLink.astro` (all call sites)                                                              | action look with its chevron                                           |
+| Newer / older                                                       | `ui/Pager.astro:24`                                                                               | `action`                                                               |
+| "Back to sign in"                                                   | `auth/confirm-email.astro:23`                                                                     | `action`                                                               |
+| Tile cue                                                            | `ui/Tile.astro:9,29`                                                                              | the arrow sits in a bordered, filled icon chip                         |
+| Sky-check answers (ghost)                                           | `sky-checks/SkyAnswerForm.astro:29-34`                                                            | resting border (outline look), so all three answers read as buttons    |
+| /log "Sky checks" link                                              | `log/index.astro:71`                                                                              | resting border                                                         |
+| Skip, All                                                           | `SkyCheckCard.astro:39,53-58`                                                                     | stay `link` (now underlined), quieter than the answers on purpose      |
+| Inline links in sentences                                           | `inlineLink` in the `*PageContent` files, `EyepiecesPrompt`, auth switch links, skeleton "Reload" | stay `link` (now underlined)                                           |
+| Targets `<summary>` rows, gear and log row links, Session plan rows | `ObjectRow.astro:26`, `gear/index.astro:95`, `log/index.astro:63`, `SessionTimeline.astro`        | unchanged: whole-row links with a chevron or arrow and a hover surface |
+| Tonight gear link                                                   | `TonightContent.astro:126`                                                                        | unchanged here; Phase 4 replaces it                                    |
 
 **Contract**: No change in hrefs, `aria-label`s, `data-needs-network` or `from`/`logHref`. A single `default` (primary) action per screen is kept.
 
@@ -177,7 +198,7 @@ Add one shared look for standalone clickables (border, tinted fill, icon, link c
 - Type check passes: `npx astro sync && npx astro check`
 - Unit tests pass, including the contrast, red-theme and no-hardcoded-colours tests: `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- E2E specs touching Mark observed and back links pass: `npx playwright test tonight-targets observation-log moon-as-target planets-on-tonight`
+- E2E specs touching Mark observed, back links and sideways scroll pass (local e2e run): `npx playwright test tonight-targets observation-log moon-as-target planets-on-tonight tonight-phone tonight-dashboard sky-checks`
 
 #### Manual Verification:
 
@@ -203,14 +224,15 @@ Success notices become fixed, 10-second, closable toasts that clean their URL pa
 
 **Intent**:
 
-- Add a `toast` mode, which marks the notice for the toast region with `data-toast`.
+- Add a `toast` mode, which marks the notice with `data-toast` and is `position: fixed` from first paint (the `toast-region` utility), so a server-rendered toast never paints inline and then jumps.
+- Add a `specimen` mode for `/design`: the toast look without `data-toast`, so the global script leaves it alone.
 - Add a `dismissible` mode, an inline notice with an icon-only × button.
 - The × label comes from a new catalogue key, read via `Astro.locals.locale`.
 - A toast gets an opaque backing under its tinted surface.
 
 **Contract**:
 
-- Props become `tone`, `toast?: boolean` (implies dismissible), `dismissible?: boolean`, and `param?: string`: the URL param(s) this toast clears, from a fixed set, never a value.
+- Props become `tone`, `toast?: boolean` (implies dismissible), `dismissible?: boolean`, `specimen?: boolean`, and `param?: string`: the URL param(s) this toast clears, from a fixed set, never a value.
 - Root keeps `role="status"`. `[data-notice-text]` keeps exactly the slot text, so `toHaveText` assertions still match.
 - New i18n key `common.close` (EN "Close", PL "Zamknij"), with parity in `pl.ts`.
 
@@ -220,7 +242,7 @@ Success notices become fixed, 10-second, closable toasts that clean their URL pa
 
 **Intent**: One fixed, non-live container after `<slot/>`. One script:
 
-- moves `[data-toast]` notices into it, now and when added later;
+- moves `[data-toast]` notices into it (stacking only; they are already fixed), now and when added later;
 - starts a 10 s timer that pauses on hover or focus;
 - closes on ×;
 - removes the notice's `param` from the URL with `replaceState`.
@@ -228,7 +250,7 @@ Success notices become fixed, 10-second, closable toasts that clean their URL pa
 The position comes from a `toast-region` utility:
 
 - below `md`: bottom, above the TabBar when one is rendered (`:has()` on the TabBar's marker), else just above the safe area;
-- from `md`: top, under the Topbar.
+- from `md`: top, at the Topbar's bottom edge. The Topbar is not sticky, so after scrolling the toast floats at that offset; that is intended.
 
 **Contract**:
 
@@ -253,8 +275,8 @@ The position comes from a `toast-region` utility:
 
 **Contract**:
 
-- `applyNotices` treats `[data-offline-notice][data-dismissed]` as hidden regardless of `noticeFor`.
-- A unit test covers dismissed versus shown.
+- A pure exported helper (for example `noticeHidden({ kind, wanted, dismissed })`, next to `noticeFor`) decides visibility; `applyNotices` reads `[data-dismissed]` on the wrapper and calls it.
+- `page-state.test.ts` unit-tests the helper (Vitest runs in `node`, no DOM). The DOM behaviour is covered by `toasts.spec.ts`.
 
 #### 5. Tests, design and docs
 
@@ -281,8 +303,8 @@ The position comes from a `toast-region` utility:
 - Type check passes: `npx astro sync && npx astro check`
 - Unit tests pass (including `page-state.test.ts`, `copies.test.ts`, i18n parity): `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- The new toast spec passes: `npx playwright test toasts`
-- The updated notice specs pass: `npx playwright test sky-checks planets-on-tonight tonight-targets observation-log observation-log-management moon-as-target seven-night-planner gear-catalogue site-map telescope-selector site-location offline`
+- The new toast spec passes (local e2e run): `npx playwright test toasts`
+- The updated notice specs pass (local e2e run): `npx playwright test sky-checks planets-on-tonight tonight-targets observation-log observation-log-management moon-as-target seven-night-planner gear-catalogue site-map telescope-selector site-location offline`
 
 #### Manual Verification:
 
@@ -314,24 +336,28 @@ The headline becomes the verdict and the poster word goes. The header shrinks to
 - In the no-darkness case, `explanation.returnText` moves under the headline, with the cause text.
 - Delete `tonight.verdict.word`, `card.darkFrom`, `card.darkTo`, `card.timesIn` (keys in both catalogues) and the `--text-verdict-*` tokens.
 
-**Contract**: `VerdictCard` drops the `timeZone` prop; `darkWindow` stays for the no-window fallback text only. `/design` call sites are updated.
+**Contract**:
+
+- `VerdictCard` gains `withSlider: boolean`. With the live sky (`true`) it shows only the date above the headline. Without it (the static fallback when the sky view fails, `TonightContent.astro:147-166`) it keeps one muted line with the dark window and the short zone, so that information is never lost.
+- Call sites to update: `TonightContent.astro:136,142,152,158` and `design.astro:316-328` (the spread `skies[].props`) and `:1445-1455`.
 
 #### 2. Slider: exact dark window and zone
 
-**File**: `src/lib/sky-view/view.ts`, `src/lib/tonight/build.ts`, `src/lib/tonight/build.test.ts`, `src/components/tonight/TonightSkyView.tsx`, `src/components/tonight/sky-band.ts`, `src/components/tonight/TonightSkeleton.astro`
+**File**: `src/lib/sky-view/view.ts`, `src/lib/tonight/build.ts`, `src/lib/tonight/build.test.ts`, `src/components/tonight/TonightSkyView.tsx`, `src/components/tonight/sky-band.ts`, `src/components/tonight/TonightSkeleton.astro`, `src/i18n/messages/en.ts`, `src/i18n/messages/pl.ts`
 
 **Intent**:
 
-- The server adds `dark: { from, to, startLabel, endLabel }`, the exact fractions of the axis with `HH:mm` strings, and `zoneLabel` to the sky view.
-- The island draws the dark stretch from the exact fractions and prints the two times under its edges.
-- Sunset and sunrise stay at the ends. When the edge labels would collide (a short window), one "21:40–22:05" label is centred under the span.
-- The zone sits muted after `[data-sky-time]`, outside it.
-- The slider row height constants and the skeleton follow.
+- The server adds `dark: { from, to, startLabel, endLabel }`, the exact fractions of the axis with `HH:mm` strings, and `zoneLabel`, a short server-formatted zone name ("CEST"; a "GMT+2"-style offset where the zone has no abbreviation), to the sky view.
+- The island draws the dark stretch from the exact fractions.
+- The legend becomes a label row aligned to the track's own box (on phones the track is only the middle of the time / track / Now row, so the row is offset to match it). It holds up to four labels at their positions: sunset (start), dark start, dark end, sunrise (end).
+- One collision rule over all four: a label that would overlap its neighbour is dropped, sunset and sunrise first. If dark start and dark end still collide, they merge into one "21:40–05:10" label centred under the span. Label widths are measured in the browser after render; positions come from the server's fractions, and the texts are always the server's.
+- The zone sits muted right after `[data-sky-time]`, outside it, through a new key (`tonight.sky.zone`, a function of `{ zone }`).
+- The slider row height constants (`SLIDER_ROW_CLASS`, the comment's arithmetic) and the skeleton follow, re-measured.
 
 **Contract**:
 
-- `SkyViewData.dark: { from: number; to: number; startLabel: string; endLabel: string } | null` (fractions in 0..1) replaces how the track places `darkSpan`. `darkSpan` (frame indices) stays for the sky colour and the initial index.
-- `SkyViewData.zoneLabel: string`.
+- The interface is `TonightSkyView` in `src/lib/sky-view/view.ts:30-54` (`SkyViewData` is only the island's import alias). It gains `dark: { from: number; to: number; startLabel: string; endLabel: string } | null` (fractions in 0..1), which replaces how the track places `darkSpan`. `darkSpan` (frame indices) stays for the sky colour and the initial index.
+- It also gains `zoneLabel: string`.
 - `[data-sky-time]`, `[data-sky-start]` and `[data-sky-end]` keep their text contracts (`tonight-sky.spec.ts:85-130`).
 - New hooks `[data-sky-dark-start]` and `[data-sky-dark-end]`.
 
@@ -365,7 +391,6 @@ The headline becomes the verdict and the poster word goes. The header shrinks to
   - the compass marker moves when the strip scrolls;
   - no visible scrollbar (`scrollbar-width` computed `none`).
 - CLAUDE.md drops the poster word, the three-line header and the "-mt-24 fixed" rule, and documents the headline, slider and compass marker.
-- Recapture the landing PNG.
 
 **Contract**: `tonight-phone.spec.ts:137-150` stays green through the constants.
 
@@ -376,15 +401,15 @@ The headline becomes the verdict and the poster word goes. The header shrinks to
 - Type check passes: `npx astro sync && npx astro check`
 - Unit tests pass (build sky view fields, i18n parity, import guard, contrast): `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- Sky specs pass: `npx playwright test tonight-sky tonight-dashboard tonight-phone onboarding offline`
+- Sky specs pass (local e2e run): `npx playwright test tonight-sky tonight-dashboard tonight-phone onboarding offline`
 - No `tonight.verdict.word` or `text-verdict-` remains: `grep -rn "verdict.word\|text-verdict-" src tests` returns nothing
 
 #### Manual Verification:
 
 - The headline reads as the main answer, clearly bigger than before and far smaller than the old word, in EN and PL at 360, 640 and 1280 px.
-- The forecast line no longer covers the panorama's stars at any width.
-- The chevrons are bare icons; no scrollbar shows in Chrome, Safari or Firefox; the compass marker follows the swipe.
-- The dark stretch's edge times match the dashboard's dark window; the zone sits next to the current time; there is no skeleton jump on swap.
+- The overlap is the user's 64 px (`-mt-16`), and no verdict or forecast text sits inside the strip's labelled area; the star field may still show faintly behind the verdict's bottom padding.
+- The chevrons are bare icons; no scrollbar shows in Chromium (agent); Safari and Firefox are part of the joint check; the compass marker follows the swipe.
+- The dark stretch's edge times match `TonightView.darkWindow` (asserted in `build.test.ts`) and `/tonight/plan`'s dark line; the zone sits next to the current time; labels never overlap at 320 px in EN and PL; there is no skeleton jump on swap.
 
 **Implementation Note**: Commit the phase and continue (see Phase 1).
 
@@ -400,7 +425,7 @@ Replace the gear link and pills with two cards. Each has a title, a large icon, 
 
 #### 1. Selector rule
 
-**File**: `src/lib/tonight/gear-choice.ts`, `src/lib/tonight/gear-choice.test.ts`
+**File**: `src/lib/tonight/gear-choice.ts`, `src/lib/tonight/gear-choice.test.ts`, `src/lib/tonight/load.ts` (consumer at `:172-173`, `!== "none"`, still valid)
 
 **Intent**: Pills are retired. `selectorKind` returns `none` below 2 items and `select` from 2. `SELECTOR_PILL_LIMIT` is removed.
 
@@ -417,20 +442,23 @@ Replace the gear link and pills with two cards. Each has a title, a large icon, 
   - bottom-left: a lucide `MapPin` or `Telescope` at `size-10` in a token colour;
   - bottom-right, with 2+ items: the GET select form (`data-gear-select`, submit on change, the hidden "Show" fallback);
   - bottom-right, with 1 item: the name and a "Manage" `action` link to `/gear`.
-- The select and the Manage link keep `data-needs-network`.
+- The card title is the select's `<label>` (no second visible label; `GearSelectField` takes the label as visually hidden or the card passes the title's id).
+- The Manage link is named per card ("Manage sites" / "Manage telescopes"), so two cards never give two identical link names.
+- The Manage link keeps `data-needs-network`. The select form gains `data-needs-network`, and `applyControls` in `page-state.ts` is extended from `a[href], button` to also disable `select`, so the select is disabled offline.
 - This is a deliberate exception to "Bands, not boxed cards", recorded in CLAUDE.md.
 
 **Contract**:
 
 - Props: `kind: "site" | "telescope"`, `items`, `activeId`, `param`.
 - The select keeps its label (`getByLabel(t.selector.label)` / `t.siteSelector.label`) and its `form[data-gear-select]` hook.
-- New i18n key `tonight.gear.manage` (EN "Manage", PL "Zarządzaj").
+- New i18n keys `tonight.gear.manageSites` / `tonight.gear.manageTelescopes` (EN "Manage sites" / "Manage telescopes", PL "Zarządzaj miejscami" / "Zarządzaj teleskopami").
+- Every card has the same minimum height, `GEAR_CARD_MIN_HEIGHT_CLASS` in `sky-band.ts`, shared with the skeleton.
 
 #### 3. Dashboard row and skeleton
 
-**File**: `src/components/tonight/TonightContent.astro`, `src/components/tonight/TonightSkeleton.astro`, `src/components/tonight/sky-band.ts`
+**File**: `src/components/tonight/TonightContent.astro`, `src/components/tonight/TonightSkeleton.astro`, `src/components/tonight/sky-band.ts`, `src/lib/offline/page-state.ts`
 
-**Intent**: The gear row becomes `grid gap-3 sm:grid-cols-2` of the two cards, with load errors below. `gearLine` and `gearLink` are removed. The skeleton reserves two card-sized bars with the same grid.
+**Intent**: The gear row becomes `grid gap-3 sm:grid-cols-2` of the two cards, with load errors below. `gearLine` and `gearLink` are removed. The skeleton reserves two bars of `GEAR_CARD_MIN_HEIGHT_CLASS` with the same grid, so the swap does not jump whichever card variant arrives.
 
 **Contract**: `GEAR_ROW_GAP_CLASS` stays the gap source shared with the skeleton.
 
@@ -457,7 +485,7 @@ Replace the gear link and pills with two cards. Each has a title, a large icon, 
 - Type check passes: `npx astro sync && npx astro check`
 - Unit tests pass (including `gear-choice.test.ts`): `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- Gear and phone specs pass: `npx playwright test telescope-selector seven-night-planner tonight-phone tonight-dashboard`
+- Gear and phone specs pass (local e2e run): `npx playwright test telescope-selector seven-night-planner tonight-phone tonight-dashboard offline`
 
 #### Manual Verification:
 
@@ -483,7 +511,7 @@ Give Tonight's lists room to breathe, and split flowing " · " data lines into s
 
 **Intent**:
 
-- The details `dl` uses a larger row gap on phones.
+- The details `dl` drops `sm:grid-cols-2`, so every data point is on its own line at every width, with a larger row gap.
 - The eyepiece sentence splits into "Find with …" and "Detail with …" lines.
 - The `mt-*` steps between the details, the reason and the action grow.
 - The dashboard tiles (Session plan, Moon, Planets) get more padding and gaps between their lines, especially below `sm`.
@@ -492,13 +520,14 @@ Give Tonight's lists room to breathe, and split flowing " · " data lines into s
 
 #### 2. Targets, Planets, Nights, context line
 
-**File**: `src/components/tonight/ObjectCard.astro`, `src/components/tonight/ObjectRow.astro`, `src/components/tonight/PlanetCard.astro`, `src/components/tonight/SolarSystemSection.astro`, `src/components/tonight/NightStrip.astro`, `src/components/tonight/TonightPageSky.astro`, `src/components/tonight/TonightPageSkeleton.astro`
+**File**: `src/components/tonight/ObjectCard.astro`, `src/components/tonight/ObjectRow.astro`, `src/components/tonight/PlanetCard.astro`, `src/components/tonight/SolarSystemSection.astro`, `src/components/tonight/MoonCard.astro`, `src/components/tonight/NightStrip.astro`, `src/components/tonight/TonightPageSky.astro`, `src/components/tonight/TonightPageSkeleton.astro`
 
 **Intent**:
 
 - Each data point under a title gets its own line:
   - the target's constellation or Caldwell line;
   - the planet facts (one per line, no " · " join);
+  - the Moon target's "Find with … · Detail with …" line (`MoonCard.astro:79-85`), split like the targets' eyepiece sentence;
   - the night row's date, dark window, headline, reason and Moon, with gaps between them.
 - More `py` between rows.
 - The focused pages' context line stacks the date and site · telescope on phones.
@@ -513,7 +542,7 @@ Give Tonight's lists room to breathe, and split flowing " · " data lines into s
 - Type check passes: `npx astro sync && npx astro check`
 - Unit tests pass: `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- Focused-page specs pass, including no sideways scroll: `npx playwright test tonight-targets planets-on-tonight moon-as-target seven-night-planner tonight-phone`
+- Focused-page specs pass, including no sideways scroll (local e2e run): `npx playwright test tonight-targets planets-on-tonight moon-as-target seven-night-planner tonight-phone`
 
 #### Manual Verification:
 
@@ -533,20 +562,21 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 
 #### 1. Plan data
 
-**File**: `src/lib/tonight/build.ts`, `src/lib/tonight/session-plan.ts`, `src/lib/tonight/build.test.ts`, `src/lib/tonight/session-plan.test.ts`
+**File**: `src/lib/tonight/build.ts`, `src/lib/tonight/build.test.ts`, `src/lib/tonight/altitude-curve.ts` (new), `src/lib/tonight/altitude-curve.test.ts` (new)
 
 **Intent**:
 
 - When `withSessionPlan` is set, each plan row carries its altitude series over the sunset–sunrise axis. It reuses `objectTracks`, `planetTracks` and the shared `skyAxisWithMoon()` Moon track, packed like the sky view's, altitude only.
 - Each row also carries the numeric peak altitude.
 - The plan carries `minAltitudeDeg`.
-- A failure to compute tracks leaves rows without a curve. It is recorded, not swallowed: the row still renders its text line.
+- The tracks are computed inside the existing Session plan `try` (`build.ts:~1012-1137`): no new `catch`. A failure means no plan, exactly as any other plan failure does today; there is no separate "rows without a curve" path.
+- The curve's geometry (time → x, altitude → y, the path, the minimum line, the window segment) is a pure module, `src/lib/tonight/altitude-curve.ts`, with its own unit test.
 
 **Contract**:
 
-- `TonightSessionPlanRowInput` gains `track: number[]` (tenths of degrees per 10-min step from the axis start, empty when unavailable) and `peakAltitudeDeg: number`.
-- `TonightSessionPlan` gains `minAltitudeDeg: number`.
-- No empty `catch`: an exception is reported the way `build.ts`'s other failures are, or allowed to propagate.
+- `TonightSessionPlanRowInput` (`build.ts:332-347`) gains `track: number[]` (altitude in tenths of degrees per 10-min step from the axis start) and `peakAltitudeDeg: number`.
+- `TonightSessionPlan` (`build.ts:354-385`) gains `minAltitudeDeg: number`.
+- No new `catch` anywhere in this phase.
 
 #### 2. Plan rendering
 
@@ -557,10 +587,10 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 - The top text becomes separate lines: Sunset, Dark, Moon, Sunrise. The shared top axis drawing is dropped.
 - Each row is the link with:
   - the name;
-  - "Best 22:40 · up 21:40–23:10 · 54° SW";
+  - "Best 22:40 · window 21:40–23:10 · SW, 45°" (the existing `bestTime`, `windowText` and `bestDirection` strings);
   - an inline SVG curve on the shared axis width, with the dark window shaded (`--plan-night` over `--plan-twilight`), the minimum altitude as a dashed line, the best window drawn stronger, a dot at best, and sparse hour labels.
-- A legend under the top lines: line = height above the horizon, dashed = your minimum altitude (N°), dot = best time.
-- Rows without a track show the text line only.
+- A legend under the top lines: line = height above the horizon; dashed = your minimum altitude (N°); thicker stretch = the window (above your minimum altitude while dark); dot = best time.
+- Rows get more vertical padding and a clear gap between rows, especially below `sm` (the user's "not enough breathing room between listed objects").
 
 **Contract**:
 
@@ -571,13 +601,14 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 
 #### 3. Tests, design, docs
 
-**File**: `tests/e2e/tonight-dashboard.spec.ts`, `src/pages/design.astro`, `CLAUDE.md`
+**File**: `tests/e2e/tonight-dashboard.spec.ts`, `src/pages/design.astro`, `CLAUDE.md`, `tests/e2e/landing-screenshot.spec.ts`, `src/components/Welcome.astro`, `public/landing/tonight.png`
 
 **Intent**:
 
 - The dashboard/plan spec asserts the legend and that each row shows its "Best …" line and a curve.
-- `/design` shows a row with a curve, without a curve, with a short window, and in red.
+- `/design` shows a row with a long window, a short window, an all-night planet, and in red.
 - CLAUDE.md's Session plan description is updated.
+- After Phases 3-6 have settled the dashboard, recapture `public/landing/tonight.png` (`CAPTURE_LANDING=1 … npx playwright test landing-screenshot`), re-measuring the clip and updating its size in both `landing-screenshot.spec.ts` and `Welcome.astro`.
 
 **Contract**: None beyond the above.
 
@@ -586,9 +617,9 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 #### Automated Verification:
 
 - Type check passes: `npx astro sync && npx astro check`
-- Unit tests pass (plan rows carry tracks and peak altitude; layout helper): `npm test`
+- Unit tests pass (plan rows carry tracks and peak altitude; `altitude-curve.test.ts`): `npm test`
 - Lint passes: `npx eslint . --ignore-pattern '.claude/**'`
-- Plan and phone specs pass: `npx playwright test tonight-dashboard tonight-phone offline`
+- Plan and phone specs pass (local e2e run): `npx playwright test tonight-dashboard tonight-phone offline`
 - Production build passes with the service worker: `npm run build`
 
 #### Manual Verification:
@@ -596,6 +627,7 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 - Each target's curve rises and falls plausibly, its dot sits at the stated best time, and the dashed line sits at the site's minimum altitude (spot-check two targets against the Targets page).
 - The legend makes the drawing understandable without prior knowledge (user check after Phase 6).
 - Curves stay legible at 360 px and in red mode.
+- Plan rows have clearly more room between them than before at 360 and 390 px.
 
 **Implementation Note**: After this phase, run the full e2e suite and push. Then hand the joint manual check to the user.
 
@@ -605,7 +637,8 @@ Each Session plan row becomes a sentence line plus a small server-drawn altitude
 
 ### Unit Tests:
 
-- `page-state.test.ts`: a dismissed offline notice stays hidden through `applyNotices`.
+- `page-state.test.ts`: the pure visibility helper keeps a dismissed offline notice hidden.
+- `altitude-curve.test.ts`: time → x and altitude → y mapping, the minimum line and the window segment.
 - `build.test.ts`:
   - `skyView.dark` fractions and labels match the dark window, and `zoneLabel` is the site zone;
   - plan rows carry `track` and `peakAltitudeDeg`, and the plan carries `minAltitudeDeg`;
@@ -690,9 +723,9 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 #### Manual
 
 - [ ] 3.6 Headline reads as the main answer at 360, 640 and 1280 px, EN and PL
-- [ ] 3.7 Forecast line no longer covers the panorama's stars
-- [ ] 3.8 Bare chevrons, no scrollbar, compass marker follows the swipe
-- [ ] 3.9 Dark edge times match the dark window; zone beside the current time; no skeleton jump
+- [ ] 3.7 Overlap is 64 px and no verdict text sits in the strip's labelled area
+- [ ] 3.8 Bare chevrons, no scrollbar (Chromium; Safari and Firefox in the joint check), compass marker follows the swipe
+- [ ] 3.9 Dark edge times match the dark window; zone beside the current time; no label overlap at 320 px; no skeleton jump
 
 ### Phase 4: Site and Telescope cards
 
@@ -737,3 +770,4 @@ None. No data or schema changes. The removed i18n keys and tokens have no other 
 - [ ] 6.6 Curves plausible, dot at the stated best time, dashed line at the site's minimum altitude
 - [ ] 6.7 Legend makes the drawing understandable (user check)
 - [ ] 6.8 Curves legible at 360 px and in red mode
+- [ ] 6.9 Plan rows have clearly more room between them at 360 and 390 px
