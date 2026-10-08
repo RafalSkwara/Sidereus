@@ -30,9 +30,14 @@ interface Props {
   strip?: boolean;
   /** A Tonight sky: the band joins the `night-sky` scope and stays a navy night in the light theme (ui-sky-light). */
   night?: boolean;
+  /**
+   * Dim the symbolic star field (ui-user-adjustments): the focused pages and their skeleton pass it, so their stars
+   * stay behind the content; the dashboard and the landing keep the full field. `--star` itself is unchanged.
+   */
+  quiet?: boolean;
 }
 
-const { verdict = false, strip = false, night = false } = Astro.props;
+const { verdict = false, strip = false, night = false, quiet = false } = Astro.props;
 
 // A fixed, seeded field (the canvas's Lehmer generator), so every render draws the same sky. Positions are
 // percentages of the band, so the field spans any width while each star keeps its size; more stars sit high.
@@ -50,7 +55,11 @@ const stars = Array.from({ length: STAR_COUNT }, () => ({
 ---
 
 <div class:list={["relative overflow-hidden bg-linear-to-b from-zenith to-horizon", night && "night-sky"]}>
-  <svg aria-hidden="true" focusable="false" class="absolute inset-0 hidden size-full fill-star night:block">
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    class:list={["absolute inset-0 hidden size-full fill-star night:block", quiet && "opacity-40"]}
+  >
     {stars.map((star) => (
       <circle cx={star.x} cy={star.y} r={star.r} />
     ))}

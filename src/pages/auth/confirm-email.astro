@@ -1,5 +1,5 @@
 ---
-import { CircleCheck, MailCheck } from "lucide-react";
+import { ArrowLeft, CircleCheck, MailCheck } from "lucide-react";
 import AuthShell from "@/components/AuthShell.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
@@ -20,7 +20,8 @@ const { Icon } = content;
     <Icon className={cn("size-10", content.tone)} aria-hidden="true" />
   </div>
   <p class="text-body text-foreground">{content.description}</p>
-  <a href="/auth/signin" class:list={cn(buttonVariants({ variant: "link" }), "mt-4 -ml-1 px-1 text-body")}>
+  <a href="/auth/signin" class:list={cn(buttonVariants({ variant: "action", size: "sm" }), "mt-4")}>
+    <ArrowLeft aria-hidden="true" />
     {content.link}
   </a>
 </AuthShell>

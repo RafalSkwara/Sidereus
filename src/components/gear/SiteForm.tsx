@@ -4,6 +4,7 @@ import { FieldError, FormField } from "@/components/forms/FormField";
 import LocationPicker, { type LocationPick } from "@/components/location/LocationPicker";
 import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, translateKey } from "@/i18n";
@@ -265,7 +266,7 @@ export default function SiteForm({ action, initial, serverError, locale }: Props
                 <button
                   type="button"
                   onClick={undoLocation}
-                  className="text-primary-strong hover:text-heading focus-visible:outline-ring inline-flex min-h-11 items-center rounded-md font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className={buttonVariants({ variant: "link", size: "sm" })}
                 >
                   {t.undoLocation}
                 </button>

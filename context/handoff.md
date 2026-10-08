@@ -2,6 +2,15 @@
 
 What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-ranking-invariants-and-calibration-oracle/plan-brief.md`. **Do not redo research or planning**: both are done and committed. To save tokens, read only what each step names.
 
+## Parallel stream: S-02 UI adjustments (2026-10-08)
+
+The user's own UI list (M-3 S-02, #123) runs alongside the test rollout.
+
+- **Where it lives**: branch `feat/ui-user-adjustments`, in the worktree `.claude/worktrees/ui-user-adjustments`, with draft PR #139 to `main`.
+- **Status**: Phase 1 of 6 is done and reviewed. Phase 2 (toasts) is next.
+- **Handoff**: everything is in `context/changes/ui-user-adjustments/handoff.md`. Read it instead of this file when resuming S-02.
+- **Don't collide with it**: never switch branches in the main checkout for it, and don't use preview port 4331 or fixture port 4410 here.
+
 ## State of play
 
 - **Test rollout** (`context/foundation/test-plan.md`, 5 phases):
@@ -17,14 +26,14 @@ What Sidereus looks like now, and exactly what the next session (possibly the **
 
 ## The user's decisions for Phase 3 (do not re-ask)
 
-| Topic | Decision | Source |
-| --- | --- | --- |
-| §2 backport | Apply the research corrections for Risks #3 and #4 (done, commit b745359) | User |
-| Risk #4 oracle | PRD invariants as relations **plus** a committed, source-cited beginner reference list | User |
-| Overlap threshold | **k = 3**: each calibration night's top 5 must contain ≥3 reference objects (today: exactly 3 on all 4 nights) | User |
-| Short windows (target up for one 10-min sample, ~0.7% of entries) | Pin the current rule in tests, no product change; draft a GitHub #21 comment that the user posts or approves | User |
-| Phases | Approved: 1 engine visibility property suite → 2 ranking invariants as relations → 3 independent top-5 oracle + replace the order literal → 4 Tonight/Session plan property suite + docs | User |
-| Everything else (generator, tolerances, file names, oracle paths) | Delegated; recorded in plan-brief.md › Key Decisions | Plan |
+| Topic                                                             | Decision                                                                                                                                                                                 | Source |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| §2 backport                                                       | Apply the research corrections for Risks #3 and #4 (done, commit b745359)                                                                                                                | User   |
+| Risk #4 oracle                                                    | PRD invariants as relations **plus** a committed, source-cited beginner reference list                                                                                                   | User   |
+| Overlap threshold                                                 | **k = 3**: each calibration night's top 5 must contain ≥3 reference objects (today: exactly 3 on all 4 nights)                                                                           | User   |
+| Short windows (target up for one 10-min sample, ~0.7% of entries) | Pin the current rule in tests, no product change; draft a GitHub #21 comment that the user posts or approves                                                                             | User   |
+| Phases                                                            | Approved: 1 engine visibility property suite → 2 ranking invariants as relations → 3 independent top-5 oracle + replace the order literal → 4 Tonight/Session plan property suite + docs | User   |
+| Everything else (generator, tolerances, file names, oracle paths) | Delegated; recorded in plan-brief.md › Key Decisions                                                                                                                                     | Plan   |
 
 The beginner reference is already compiled in `plan.md` › Key Discoveries and References: 9 sources, URLs, access date 2026-10-08, and the at-least-2-sources sets per night with per-object source keys. **Never edit the list to make a ranking pass.**
 
@@ -87,7 +96,7 @@ How the user wants the run (same as Phases 1 and 2):
 ## Things a new session should know
 
 - **How the user works** (also in the auto-memory):
-  - Ask only for permissions and UI decisions. Decide non-UI choices yourself and record them as delegated. **Exception seen in S-06:** for a big architectural slice the user asked for *more* questions than proposed, including technical ones. So offer a higher question budget on HIGH-complexity plans.
+  - Ask only for permissions and UI decisions. Decide non-UI choices yourself and record them as delegated. **Exception seen in S-06:** for a big architectural slice the user asked for _more_ questions than proposed, including technical ones. So offer a higher question budget on HIGH-complexity plans.
   - Send a `PushNotification` before every question.
   - Keep new tests modest ("we've got loads of them already", S-08): pin only what screenshots can't show.
   - Run manual checks yourself (a local preview against local Supabase, plus Playwright screenshots in EN/PL, dark/light/red, phone/desktop) and tick them with evidence.

@@ -1,5 +1,5 @@
 ---
-import { Plus } from "lucide-react";
+import { ListChecks, Plus } from "lucide-react";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
@@ -68,7 +68,8 @@ const rowLink =
   <PageHeader slot="header" title={t.title} subtitle={t.intro}>
     {supabase && (
       <Fragment slot="actions">
-        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "ghost" })}>
+        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "action", size: "sm" })}>
+          <ListChecks aria-hidden="true" />
           {t.skyChecks}
         </a>
         <a href="/log/new?from=log" class:list={buttonVariants({ variant: nothingListed ? "outline" : "default" })}>
