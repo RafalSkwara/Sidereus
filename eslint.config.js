@@ -80,35 +80,11 @@ const scriptsConfig = defineConfig({
   rules: { "no-console": "off" },
 });
 
-// Coordinate privacy (PRD NFR): code that handles site coordinates must never log them.
-const gearConfig = defineConfig({
-  files: [
-    "src/lib/gear/**",
-    "src/pages/api/gear/**",
-    "src/pages/gear/**",
-    "src/lib/forecast/**",
-    "src/lib/tonight/**",
-    "src/pages/tonight.astro",
-    "src/pages/tonight/**",
-    "src/lib/onboarding/**",
-    "src/components/onboarding/**",
-    "src/pages/api/onboarding.ts",
-    "src/pages/onboarding.astro",
-    "src/lib/observations/**",
-    "src/pages/api/log/**",
-    "src/pages/log/**",
-    "src/components/tonight/**",
-    "src/lib/sky-checks/**",
-    "src/components/sky-checks/**",
-    "src/lib/location/**",
-    "src/components/location/**",
-    "src/components/gear/**",
-    // The interactive sky's rotation matrices encode the site's coordinates (interactive-sky).
-    "src/lib/sky-view/**",
-    // S-06: the offline store keeps Tonight pages (and site ids) on the device.
-    "src/lib/offline/**",
-    "src/sw.ts",
-  ],
+// Coordinate privacy (PRD NFR): a site's coordinates must never reach a log. Any module may come to carry them, so
+// no source file under src may log; a deliberate log needs an inline disable that src/lib/no-console-guard.test.ts
+// allowlists by file and count. The guard also fails when this scope narrows for any file.
+const noConsoleConfig = defineConfig({
+  files: ["src/**"],
   rules: { "no-console": "error" },
 });
 
@@ -126,6 +102,6 @@ export default defineConfig(
   eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
   scriptsConfig,
-  gearConfig,
+  noConsoleConfig,
   eslintPluginPrettier,
 );

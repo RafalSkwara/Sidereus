@@ -39,8 +39,8 @@ import { EYEPIECES, NOW, result, TELESCOPE, uniformForecast, WARSAW } from "./te
  * own PRD threshold table, never from the engine's tracks or `parameters.ts`. Whether a night has darkness is
  * judged by sampling the oracle's sun over the observing night, and must agree with `darkWindow`. Failure messages
  * name the case index and inputs, so a case replays from the seed. The case array is built from the seed alone at
- * module scope; every build runs in `beforeAll`. Nothing here logs (`no-console` is an error under
- * `src/lib/tonight/**`).
+ * module scope; every build runs in `beforeAll`. Nothing here logs (`no-console` is an error in all of
+ * `src`).
  */
 
 const SEED = 20261010;

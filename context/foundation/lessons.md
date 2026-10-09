@@ -29,3 +29,10 @@
 - **Problem**: Playwright 1.55's `context.setOffline(true)` does not reliably cut the service worker's own fetches, even with `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS=1`: in offline-night-plan Phase 3, `/log` still rendered from the server under emulation and a never-opened Tonight page was fetched and stored, so an "offline" assertion could pass on a network response.
 - **Rule**: Make the server genuinely unreachable for the worker (run the test through a proxy and close it, as `tests/e2e/offline.spec.ts` does, or stop the server), use `setOffline` only for the page's `navigator.onLine`, and assert a marker that only storage can produce (`html[data-from-device]`) before trusting any offline result.
 - **Applies to**: plan, implement, impl-review
+
+## `no-console` is an error in all of `src`; a new log needs an allowlisted disable
+
+- **Context**: Any Sidereus change that adds a module, route, page, island or test under `src/`, or that wants to log anything there.
+- **Problem**: The hand-kept `gearConfig.files` glob list in `eslint.config.js` (first lesson above) left every new module outside it at `warn`, and `npm run lint` has no `--max-warnings 0`, so a `console.log` beside a site's coordinates could merge (test rollout Phase 4, Risk #6). Keeping a list of "modules that touch coordinates" complete by hand does not scale.
+- **Rule**: `no-console` is an error for every file under `src` (`noConsoleConfig`), and `src/lib/no-console-guard.test.ts` proves it file by file with ESLint's `calculateConfigForFile`. A deliberate log needs `// eslint-disable-next-line no-console -- <reason>` and an entry with its exact count in the guard's `ALLOWED_DISABLES`; never a rule-less `eslint-disable`. This supersedes the earlier "add the glob to `gearConfig.files`" lesson: there is no list to extend any more.
+- **Applies to**: plan, implement, impl-review

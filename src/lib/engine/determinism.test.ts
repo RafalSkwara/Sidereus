@@ -81,6 +81,7 @@ describe("engine determinism and budget", () => {
 
   it(`samples the dark window for the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
     const { first, second } = getRuns();
+    // eslint-disable-next-line no-console -- timing printed for CI, where the budget is not asserted; no site data.
     console.info(
       `engine full run (dark window + moon + ${DEEP_SKY.length} object tracks): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
     );
@@ -147,6 +148,7 @@ describe("ranking determinism and budget", () => {
 
   it(`runs dark window + rankObjects over the whole catalogue in under ${LOCAL_BUDGET_MS} ms (asserted locally, logged on CI)`, () => {
     const { first, second } = getRuns();
+    // eslint-disable-next-line no-console -- timing printed for CI, where the budget is not asserted; no site data.
     console.info(
       `ranking full run (dark window + rankObjects, ${DEEP_SKY.length} objects): ${first.ms.toFixed(1)} ms cold, ${second.ms.toFixed(1)} ms warm (local budget ${LOCAL_BUDGET_MS} ms)`,
     );
