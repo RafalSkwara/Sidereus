@@ -1,47 +1,54 @@
-# Handoff — 2026-10-09 (test rollout Phase 3 implemented and reviewed; PR #142 awaits merge)
+# Handoff — 2026-10-09 evening (test rollout Phase 3 merged and archived; Phase 4 research partial)
 
-What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first. To save tokens, read only what each step names.
+What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-access-and-entitlement-boundary/research.md`. To save tokens, read only what each step names.
 
 ## State of play
 
-- **S-02 UI adjustments (#123)** is done. PRs #139, #140 and the archive PR #141 are merged, and #123 is closed. Its worktree `.claude/worktrees/ui-user-adjustments` and the four old `agent-*` worktrees can be removed.
-- **Test rollout** (`context/foundation/test-plan.md`, 5 phases):
-  - Phases 1 and 2 are `complete` and archived.
-  - Phase 3, "Ranking invariants and calibration oracle", is **implemented and impl-reviewed** on branch `feat/testing-ranking-invariants-and-calibration-oracle`. **PR #142** to `main` awaits the owner's merge.
-  - `change.md` status is `impl_reviewed`. All 16 Progress rows are `[x]`.
-- **What Phase 3 added** (tests and test-only fixtures; no product change):
-  - `src/lib/engine/visibility-invariants.test.ts`: 200 seeded engine cases. Every listed object, planet and Moon entry is above the minimum and in darkness at its window start, end and best time, checked against astronomy-engine called independently.
-  - `src/lib/engine/ranking-invariants.test.ts`: the PRD rules as relations over the catalogue.
-  - `calibration.test.ts`: the top 5 overlaps the committed beginner reference (`fixtures/beginner-reference.ts`) by at least 3 objects on each night.
-  - `ranking.test.ts`: the engine-copied order is replaced by a set check against AF.
-  - `src/lib/tonight/visibility-invariants.test.ts`: 47 Tonight builds checking every Session plan row and the no-ranking gates.
-  - Shared generator and oracle helpers live in `src/lib/engine/fixtures/` (`generated.ts`, `independent-altitude.ts`).
-  - Docs: test-plan §6.3/§6.6 and one CLAUDE.md clause.
-- **Reviews:**
-  - Plan review: 10 findings, all applied (9acc4e0).
-  - Impl review: NEEDS ATTENTION, 8 findings, all fixed (fc111ef, `follow-ups/review-fixes.md`).
-  - Every break check is logged in `plan.md` and the commit messages.
-- **#21:** the short-window note (about 1% of entries are up for a single 10-min sample; the rule is pinned) was posted with the owner's OK on 2026-10-09.
+- **Test rollout Phase 3** ("Ranking invariants and calibration oracle"):
+  - Merged as **#142**, then archived to `context/archive/2026-10-08-testing-ranking-invariants-and-calibration-oracle/`.
+  - The **archive PR #143** (branch `chore/archive-testing-ranking-invariants-and-calibration-oracle`) also sets test-plan §3 Phase 3 to `complete`. **It awaits the owner's merge.**
+  - #21 got the short-window comment, posted with the owner's OK.
+- **Test rollout Phase 4** ("Access and entitlement boundary", Risks #5 and #6):
+  - Branch `feat/testing-access-and-entitlement-boundary`, cut from the archive branch, so its diff shows #143's commits until #143 merges.
+  - Change folder `context/changes/testing-access-and-entitlement-boundary/`: `change.md` (status `new`) and **`research.md` with `status: partial`**.
+  - Test-plan §3 Phase 4 is `change opened`.
+  - **No PR yet** for this branch; it is pushed.
+- **What the research found** (details and anchors in `research.md`):
+  - **Account plans (roadmap F-01) don't exist in code.** The plan half of Risk #5 is speculative today: "can't change own plan" and "free refused on full-plan routes".
+  - **Cross-user isolation holds** and is mostly tested in `tests/db/isolation.test.ts`, with positive controls.
+  - **Gaps:**
+    - anon INSERT/UPDATE/DELETE are untested;
+    - cross-user writes are asserted as "an error", not `42501`;
+    - no structural check that every table has RLS and four policies;
+    - no column-level grants anywhere, so owners can directly rewrite server-decided fields in their own rows: `sky_checks` headline, `dark_start` and answered rows; `record_sky_verdict` takes a caller-chosen `dark_start`; `observations` future nights. All of this is self-only, and verdict-check accepted anti-tamper as out of scope.
+  - This matters for F-01: a `plan` column on a user-writable table would be owner-writable by default.
+  - **Risk #6 is only partly grounded.** The no-console scope is still a hand-kept glob list (`eslint.config.js:84-109`). The code sweep that lists coordinate-touching modules outside it was **stopped unfinished**.
 
 ## Next steps
 
 Start the session **from `~/projects`** (where the shared `/10x-*` skills load).
 
-1. After the owner merges #142:
-   - `cd sidereus && git checkout main && git pull`;
-   - run `/10x-archive testing-ranking-invariants-and-calibration-oracle` on `chore/archive-testing-ranking-invariants-and-calibration-oracle` with a PR;
-   - set test-plan §3 Phase 3 to `complete` in the same PR.
-2. Then run `/10x-test-plan` for Phase 4, "Access and entitlement boundary".
-3. Run Phase 4 like Phases 1–3:
-   - delegate each phase to a Sonnet subagent with the `nvm use` prefix; keep the gates, break checks and commits in the main session;
-   - commit without approval and don't stop between phases;
-   - run `/10x-impl-review` with Opus agents at the end.
+1. `cd sidereus && git fetch && git checkout feat/testing-access-and-entitlement-boundary && git pull`. If #143 has merged, `git merge origin/main` (or rebase) first.
+2. **Finish the research.** Re-run only Open Question 1 of `research.md` (the Risk #6 code sweep) with one Opus worker. Then append its findings and set `status: complete`. Don't redo the Risk #5 or history work.
+   - The brief: trace modules that receive `SiteRecord` / `Site` / coordinates by type and import; list those outside `gearConfig.files`; audit every redirect and URL construction and the tests that pin `?error=` keys; assess an automatic check (module graph ⊆ lint scope, or a repo-wide error default with listed exceptions). Never grep for "lat".
+3. **Ask the owner** (send a PushNotification first), in Polish since these are research and plan questions:
+   - Open Question 2: keep the self-only direct writes as accepted and pinned, or harden them with column grants or a trigger (a product change)?
+   - Open Question 3: run Phase 4 now for isolation plus coordinates and defer the plan half to F-01, or wait for F-01?
+4. Run the post-research backport to test-plan §2 (Risk #5: the plan half depends on F-01; add the column-privilege challenge). Run `node <10x-research skill dir>/scripts/metadata-guard.mjs mark-researched …`, then set §3 to `researched`.
+5. `/10x-plan testing-access-and-entitlement-boundary`, then `/10x-plan-review`, then `/10x-implement`, run like Phases 1–3:
+   - delegate each phase to a Sonnet subagent with high effort and the `nvm use` prefix;
+   - keep the gates, break checks and commits in the main session; commit without approval;
+   - finish with `/10x-impl-review` using Opus agents;
+   - the tests/db suite needs Docker plus `npx supabase start`.
 
 ## Git state (end of this session)
 
-- Branch `feat/testing-ranking-invariants-and-calibration-oracle`, pushed. On top of `main` ba17469 it carries: 9acc4e0 (plan review), b0e1cc9, d2b596e, 1430649, d4bb16c (phases 1–4), 873f898 (SHA record), fc111ef (review fixes), and this handoff.
+- `main` is at baa1b1a (#142 merged).
+- `chore/archive-testing-ranking-invariants-and-calibration-oracle` (PR #143) has 3e50b4f (the archive) and the test-plan §3 Phase 3 commit.
+- `feat/testing-access-and-entitlement-boundary` has 6d65ac2 (the folder and §3 `change opened`), plus the partial research and this handoff.
 - `stash@{0}` ("Auto stash before checking out origin/main") is old and was left alone.
-- Untracked and **never committed**: `.mcp.json` and `.claude/` (the user's choice).
+- Untracked and **never committed**: `.mcp.json` and `.claude/`.
+- Five old worktrees under `.claude/worktrees/` (the S-02 one and four `agent-*` ones) can be removed, but only with the owner's OK.
 
 ## Also still open (unchanged from before)
 
