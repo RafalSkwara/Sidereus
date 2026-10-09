@@ -1,4 +1,5 @@
 <!-- IMPL-REVIEW-REPORT -->
+
 # Implementation Review: The user's UI adjustments (M-3 S-02)
 
 - **Plan**: context/changes/ui-user-adjustments/plan.md
@@ -11,16 +12,17 @@
 
 ## Verdicts
 
-| Dimension | Verdict |
-|-----------|---------|
-| Plan Adherence | PASS |
-| Scope Discipline | WARNING |
-| Safety & Quality | WARNING |
-| Architecture | PASS |
+| Dimension           | Verdict |
+| ------------------- | ------- |
+| Plan Adherence      | PASS    |
+| Scope Discipline    | WARNING |
+| Safety & Quality    | WARNING |
+| Architecture        | PASS    |
 | Pattern Consistency | WARNING |
-| Success Criteria | PASS |
+| Success Criteria    | PASS    |
 
 Success criteria were re-checked on the committed code, and they all passed:
+
 - `astro check`: 0 errors.
 - `npm test`: 882 passed.
 - eslint: 0 errors.
