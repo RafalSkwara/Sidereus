@@ -1,24 +1,31 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { DEEP_SKY } from "@/lib/catalogue";
+import { DEEP_SKY, findDeepSky } from "@/lib/catalogue";
 import type { DeepSkyObject } from "@/lib/catalogue";
 
 import { EYEPIECES, TELESCOPE, WARSAW, warsawDarkWindow } from "./fixtures";
+import { AF_FALL_LIST, BEGINNER_REFERENCE, BEGINNER_SOURCES } from "./fixtures/beginner-reference";
 import { rankObjects } from "./ranking";
 import type { Ranking } from "./ranking";
 
 /**
  * Calibration guard for the mixed Messier + Caldwell ranking (deep-sky-beyond-messier, S-03): four
  * seasonal new-Moon nights at Warsaw under a Bortle 5 sky (a −15° dark window), a 150/750 telescope.
- * The expectations are loose and come from published seasonal beginner lists; they guard
- * `MESSIER_RANK_BONUS` against being set so low that Caldwell objects crowd the top, or so high that
- * they never appear. The full top-10 per night is recorded by hand in
- * `context/changes/deep-sky-beyond-messier/evidence/calibration.md`.
+ * Two kinds of expectation. The four loose rules guard `MESSIER_RANK_BONUS` against being set so low that
+ * Caldwell objects crowd the top, or so high that they never appear. The oracle (testing-ranking-invariants)
+ * compares each night's top five with the committed, source-cited beginner reference
+ * (`fixtures/beginner-reference.ts`): at least `BEGINNER_OVERLAP_MIN` objects must match. The expectations
+ * come from that reference, never from the engine's own output. The opt-in snapshot below is a recording aid,
+ * not an oracle: regenerating it changes no assertion. The top ten per night recorded when the guard was
+ * written is in `context/archive/2026-10-06-deep-sky-beyond-messier/evidence/calibration.md`.
  */
 
 const BORTLE = 5;
 const NIGHTS = ["2026-01-15", "2026-04-15", "2026-07-15", "2026-10-15"] as const;
 type Night = (typeof NIGHTS)[number];
+// How many of a night's top five must be in the beginner reference. The user's decision of 2026-10-08,
+// chosen after the list was fixed: today every night overlaps in exactly 3.
+const BEGINNER_OVERLAP_MIN = 3;
 
 const isMessier = (object: DeepSkyObject): boolean => object.messier !== null;
 
@@ -91,5 +98,45 @@ describe("deep-sky ranking calibration (Warsaw, Bortle 5, 150/750)", () => {
         expect(object.vMag).toBeLessThanOrEqual(10);
       }
     }
+  });
+
+  it.each(NIGHTS)("shares at least three of its top five with the beginner reference on %s", (date) => {
+    const top = entriesOn(date)
+      .slice(0, 5)
+      .map((e) => e.object.id);
+    const reference = new Set(BEGINNER_REFERENCE[date].map((r) => r.id));
+    const shared = top.filter((id) => reference.has(id));
+    expect(
+      shared.length,
+      `top five [${top.join(", ")}] shares [${shared.join(", ")}] with the reference; need ${BEGINNER_OVERLAP_MIN}`,
+    ).toBeGreaterThanOrEqual(BEGINNER_OVERLAP_MIN);
+  });
+
+  it("only names catalogue objects in the beginner reference and the fall list", () => {
+    const ids = [...NIGHTS.flatMap((night) => BEGINNER_REFERENCE[night].map((r) => r.id)), ...AF_FALL_LIST];
+    expect(ids.filter((id) => findDeepSky(id) === undefined)).toEqual([]);
+  });
+
+  it("keeps the counting rule: at least two distinct, known sources per entry, and no id twice in a night", () => {
+    const known = new Set<string>(Object.keys(BEGINNER_SOURCES));
+    const problems: string[] = [];
+    for (const night of NIGHTS) {
+      const seenIds = new Set<string>();
+      for (const { id, sources } of BEGINNER_REFERENCE[night]) {
+        if (seenIds.has(id)) {
+          problems.push(`${night}: ${id} is listed twice`);
+        }
+        seenIds.add(id);
+        if (new Set(sources).size < 2) {
+          problems.push(`${night}: ${id} has fewer than 2 distinct sources [${sources.join(", ")}]`);
+        }
+        for (const source of sources) {
+          if (!known.has(source)) {
+            problems.push(`${night}: ${id} names the unknown source ${source}`);
+          }
+        }
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

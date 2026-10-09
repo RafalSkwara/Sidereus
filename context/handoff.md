@@ -1,74 +1,46 @@
-# Handoff — 2026-10-08 (test rollout Phase 3 researched and planned; plan review and implementation pending)
+# Handoff — 2026-10-09 (test rollout Phase 3 implemented and reviewed; PR #142 awaits merge)
 
-What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-ranking-invariants-and-calibration-oracle/plan-brief.md`. **Do not redo research or planning**: both are done and committed. To save tokens, read only what each step names.
-
-## S-02 UI adjustments: done (2026-10-09)
-
-The user's own UI list (M-3 S-02, #123) is shipped and archived. Phase 1 merged in #139 and phases 2-6 in #140; every phase was impl-reviewed and the findings fixed. The change is archived at `context/archive/2026-10-08-ui-user-adjustments/` (roadmap S-02 and the board are `done`, #123 closed). The worktree `.claude/worktrees/ui-user-adjustments` can be removed; ports 4331 and 4410 are free once its preview and fixture are stopped.
+What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first. To save tokens, read only what each step names.
 
 ## State of play
 
+- **S-02 UI adjustments (#123)** is done. PRs #139, #140 and the archive PR #141 are merged, and #123 is closed. Its worktree `.claude/worktrees/ui-user-adjustments` and the four old `agent-*` worktrees can be removed.
 - **Test rollout** (`context/foundation/test-plan.md`, 5 phases):
-  - Phase 1 "Forecast honesty" and Phase 2 "Night and date boundaries" are `complete`. Both are archived: `context/archive/2026-10-07-testing-forecast-honesty/` and `context/archive/2026-10-08-testing-night-and-date-boundaries/` (PRs #134/#135 and #136/#137, all merged).
-  - Phase 3 "Ranking invariants and calibration oracle" is `planned` in §3. The change folder is `context/changes/testing-ranking-invariants-and-calibration-oracle/`, and `change.md` status is `planned`.
-- **Phase 3 so far** (2026-10-08, branch `feat/testing-ranking-invariants-and-calibration-oracle`, PR opened for the docs; see "Git state"):
-  1. **`research.md`.** Risk #3 has no violation in about 19,000 probed rows, so its tests are a regression guard.
-     - Risk #4's premise was wrong: no calibration snapshot is stored (`calibration.test.ts:44-61` only prints). The real gap is a guard that only checks the Messier bonus on 4 new-Moon nights, plus an exact top-5 order copied from engine output (`ranking.test.ts:195`).
-  2. **Test plan §2.** Rows #3 and #4 are corrected, labelled as the research backport.
-  3. **`plan.md`** (4 phases, 15 Progress rows, all `[ ]`) and **`plan-brief.md`** are written.
-  4. **Plan review: NOT done.** Two review agents were started and stopped when the user asked to wrap up. Run `/10x-plan-review testing-ranking-invariants-and-calibration-oracle` first.
-- **No product code** has changed in Phase 3.
-
-## The user's decisions for Phase 3 (do not re-ask)
-
-| Topic                                                             | Decision                                                                                                                                                                                 | Source |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| §2 backport                                                       | Apply the research corrections for Risks #3 and #4 (done, commit b745359)                                                                                                                | User   |
-| Risk #4 oracle                                                    | PRD invariants as relations **plus** a committed, source-cited beginner reference list                                                                                                   | User   |
-| Overlap threshold                                                 | **k = 3**: each calibration night's top 5 must contain ≥3 reference objects (today: exactly 3 on all 4 nights)                                                                           | User   |
-| Short windows (target up for one 10-min sample, ~0.7% of entries) | Pin the current rule in tests, no product change; draft a GitHub #21 comment that the user posts or approves                                                                             | User   |
-| Phases                                                            | Approved: 1 engine visibility property suite → 2 ranking invariants as relations → 3 independent top-5 oracle + replace the order literal → 4 Tonight/Session plan property suite + docs | User   |
-| Everything else (generator, tolerances, file names, oracle paths) | Delegated; recorded in plan-brief.md › Key Decisions                                                                                                                                     | Plan   |
-
-The beginner reference is already compiled in `plan.md` › Key Discoveries and References: 9 sources, URLs, access date 2026-10-08, and the at-least-2-sources sets per night with per-object source keys. **Never edit the list to make a ranking pass.**
+  - Phases 1 and 2 are `complete` and archived.
+  - Phase 3, "Ranking invariants and calibration oracle", is **implemented and impl-reviewed** on branch `feat/testing-ranking-invariants-and-calibration-oracle`. **PR #142** to `main` awaits the owner's merge.
+  - `change.md` status is `impl_reviewed`. All 16 Progress rows are `[x]`.
+- **What Phase 3 added** (tests and test-only fixtures; no product change):
+  - `src/lib/engine/visibility-invariants.test.ts`: 200 seeded engine cases. Every listed object, planet and Moon entry is above the minimum and in darkness at its window start, end and best time, checked against astronomy-engine called independently.
+  - `src/lib/engine/ranking-invariants.test.ts`: the PRD rules as relations over the catalogue.
+  - `calibration.test.ts`: the top 5 overlaps the committed beginner reference (`fixtures/beginner-reference.ts`) by at least 3 objects on each night.
+  - `ranking.test.ts`: the engine-copied order is replaced by a set check against AF.
+  - `src/lib/tonight/visibility-invariants.test.ts`: 47 Tonight builds checking every Session plan row and the no-ranking gates.
+  - Shared generator and oracle helpers live in `src/lib/engine/fixtures/` (`generated.ts`, `independent-altitude.ts`).
+  - Docs: test-plan §6.3/§6.6 and one CLAUDE.md clause.
+- **Reviews:**
+  - Plan review: 10 findings, all applied (9acc4e0).
+  - Impl review: NEEDS ATTENTION, 8 findings, all fixed (fc111ef, `follow-ups/review-fixes.md`).
+  - Every break check is logged in `plan.md` and the commit messages.
+- **#21:** the short-window note (about 1% of entries are up for a single 10-min sample; the rule is pinned) was posted with the owner's OK on 2026-10-09.
 
 ## Next steps
 
-Start the session **from `~/projects`** (where the shared `/10x-*` skills load), then:
+Start the session **from `~/projects`** (where the shared `/10x-*` skills load).
 
-```
-cd sidereus && git checkout feat/testing-ranking-invariants-and-calibration-oracle && git pull
-/10x-plan-review testing-ranking-invariants-and-calibration-oracle
-/10x-implement testing-ranking-invariants-and-calibration-oracle phase 1
-```
-
-What the plan review should probe first. These are the open claims; probing was cut short:
-
-- **Relation (g) "a larger aperture never shrinks the cleared set".** Check `score.ts` for any term that can fall with aperture. If (g) is false today, the plan says stop and ask, never weaken.
-- **Full-Moon night 2026-03-03.** Check it has `washedOutCount ≥ 1` at Warsaw, Bortle 6.
-- **Non-vacuity counts.** "≥10 cases above 60°" may be hard to reach because polar summer has no dark window. Adjust the count or the site list rather than the assertion.
-- **Phase 4's `now`.** "Case evening 18:00 local" needs a zone-safe construction, and polar cases need care.
-- **Phase 1 break check 2** edits test input, not production code. Consider replacing it.
-- **Phase 4's `cardPasses` break check** might crash rather than turn red.
-
-How the user wants the run (same as Phases 1 and 2):
-
-- Delegate each phase to a Sonnet subagent, give it the `nvm use` prefix, and keep the gates and commits in the main session.
-- Run every break check in the main session and log it in the plan's "Break-check log" notes and the commit messages.
-- Commit each phase without approval and push the feature branch; don't stop between phases.
-- After phase 4, run `/10x-impl-review` (Opus review agents) and update the PR.
-- After the user merges: run `/10x-archive` on `chore/archive-testing-ranking-invariants-and-calibration-oracle` with a PR, set §3 Phase 3 to `complete`, then `/10x-test-plan` for Phase 4 "Access and entitlement boundary".
-- **Never post to GitHub #21 without the user's OK** (Progress 4.5).
+1. After the owner merges #142:
+   - `cd sidereus && git checkout main && git pull`;
+   - run `/10x-archive testing-ranking-invariants-and-calibration-oracle` on `chore/archive-testing-ranking-invariants-and-calibration-oracle` with a PR;
+   - set test-plan §3 Phase 3 to `complete` in the same PR.
+2. Then run `/10x-test-plan` for Phase 4, "Access and entitlement boundary".
+3. Run Phase 4 like Phases 1–3:
+   - delegate each phase to a Sonnet subagent with the `nvm use` prefix; keep the gates, break checks and commits in the main session;
+   - commit without approval and don't stop between phases;
+   - run `/10x-impl-review` with Opus agents at the end.
 
 ## Git state (end of this session)
 
-- Branch `feat/testing-ranking-invariants-and-calibration-oracle`, pushed. Commits on top of `main` ce2e7d3:
-  - fd2617e: folder;
-  - c79f904: research;
-  - b745359: §2 backport and decisions;
-  - 8227ab6: plan and brief;
-  - this handoff.
-- A PR to `main` carries these docs. It can be merged as is, or left open and extended by the implementation commits.
+- Branch `feat/testing-ranking-invariants-and-calibration-oracle`, pushed. On top of `main` ba17469 it carries: 9acc4e0 (plan review), b0e1cc9, d2b596e, 1430649, d4bb16c (phases 1–4), 873f898 (SHA record), fc111ef (review fixes), and this handoff.
+- `stash@{0}` ("Auto stash before checking out origin/main") is old and was left alone.
 - Untracked and **never committed**: `.mcp.json` and `.claude/` (the user's choice).
 
 ## Also still open (unchanged from before)

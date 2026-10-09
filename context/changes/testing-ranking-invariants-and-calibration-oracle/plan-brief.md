@@ -32,10 +32,11 @@ This phase proves both are guarded, with expectations that never come from the e
 | Reference rule | An object counts when ≥2 published sources name it for the season; list fixed before comparison | Keeps the list independent of the ranking | Plan (delegated) |
 | Overlap threshold | k = 3 of the top 5, on all four calibration nights | Today passes with exactly 3, so losing one showpiece fails, forcing a deliberate look | User |
 | Short windows (one 10-min sample) | Pin the current rule, no product change; draft a #21 comment | Keeps this phase test-only | User (research Q) |
-| Risk #3 oracle | astronomy-engine called directly in the test (`EQJ→EQD` + `Horizon`, `Equator` + `Horizon`), ε = 0.05° | Independent of `bestWindow` and the engine's tracks; far under the 1° NFR | Plan (delegated), research |
-| Generator | Seeded mulberry32, ~16 fixed sites (equator to 78° N, 65° S, +13/+14 zones), any 2026 date, Bortle 1–9, min altitude 0–60, 50–400 mm f/3–f/16 | Replayable, realistic, no library or tz lookup | Plan (delegated) |
-| Order literal (`ranking.test.ts:195`) | Replaced by "top 5 ⊆ Astronomy.com fall list, M31 present" | A published set instead of an engine-copied order | Plan (delegated) |
+| Risk #3 oracle | astronomy-engine called directly from test-only `fixtures/independent-altitude.ts` (deep sky `EQJ→EQD` + `Horizon`; bodies J2000 vector + `Rotation_EQJ_HOR`; thresholds from the test's own PRD table), ε = 0.05° | Independent of `bestWindow`, the engine's tracks and `darknessThresholdDegForBortle`; far under the 1° NFR | Plan (delegated), research, plan review F3/F5/F8 |
+| Generator | Seeded mulberry32, ~16 fixed sites (equator to 78° N, 65° S, +12/+13 and +14 zones), eyepieces 2–60 mm, any 2026 date, Bortle 1–9, min altitude 0–60, 50–400 mm f/3–f/16 | Replayable, realistic, no library or tz lookup | Plan (delegated) |
+| Order literal (`ranking.test.ts:194`) | Replaced by "top 5 ⊆ Astronomy.com fall list, M31 present" | A published set instead of an engine-copied order | Plan (delegated) |
 | Backport | Research corrections to §2 Risks #3/#4 applied | §2 had a wrong premise for #4 | User |
+| Plan review (2026-10-09) | All 10 findings applied: Session plan row windows rebuilt from the axis (rows carry only fractions); no-darkness gate broken in both guards; production threshold break; retune B as the primary break; logs via `seenSummaries`; fixed polar-summer cases | `reviews/plan-review.md` | User ("apply all") |
 
 ## Scope
 
