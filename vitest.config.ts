@@ -16,5 +16,8 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
     environment: "node",
+    // The runner-zone suites switch process.env.TZ in-process, which a worker_threads worker ignores: they need
+    // forks (src/lib/engine/fixtures/runner-zones.ts). Forks is Vitest's default; pinned so it stays a fact.
+    pool: "forks",
   },
 });

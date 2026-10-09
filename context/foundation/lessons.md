@@ -36,3 +36,10 @@
 - **Problem**: The hand-kept `gearConfig.files` glob list in `eslint.config.js` (first lesson above) left every new module outside it at `warn`, and `npm run lint` has no `--max-warnings 0`, so a `console.log` beside a site's coordinates could merge (test rollout Phase 4, Risk #6). Keeping a list of "modules that touch coordinates" complete by hand does not scale.
 - **Rule**: `no-console` is an error for every file under `src` (`noConsoleConfig`), and `src/lib/no-console-guard.test.ts` proves it file by file with ESLint's `calculateConfigForFile`. A deliberate log needs `// eslint-disable-next-line no-console -- <reason>` and an entry with its exact count in the guard's `ALLOWED_DISABLES`; never a rule-less `eslint-disable`. This supersedes the earlier "add the glob to `gearConfig.files`" lesson: there is no list to extend any more.
 - **Applies to**: plan, implement, impl-review
+
+## Resolving a rule's config is not proof the rule runs
+
+- **Context**: Any guard test or review that checks lint coverage through ESLint's `calculateConfigForFile`, or any new file kind (an `.astro` client script, a processor's virtual file, a new extension) under a lint rule the project relies on.
+- **Problem**: `calculateConfigForFile` reported `no-console` at error for every `.astro` client script while no rule ran on them: eslint-plugin-astro's virtual `X.astro/N.ts` failed the type-aware parser and the plugin dropped the parse error (testing-access-and-entitlement-boundary impl review F3, fixed in testing-quality-gates-wiring Phase 1).
+- **Rule**: Pair every config-resolution guard with one end-to-end `lintText` of a known violation per file kind it covers (a TS file, an `.astro` frontmatter, an `.astro` client script), asserting the rule's message actually appears. When a new file kind joins the lint scope, add its sample in the same change.
+- **Applies to**: plan, implement, impl-review
