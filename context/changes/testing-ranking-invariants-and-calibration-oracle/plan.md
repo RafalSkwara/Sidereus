@@ -415,7 +415,12 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 - You approve or post the drafted GitHub #21 comment on short windows.
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-09, main session):
+
+- Only the `cardPasses` window condition removed (`build.ts:720`) → stays green (49/49), as the plan review predicted: `verdict()` already blocks it.
+- Both no-darkness guards removed (`cardPasses` condition + `verdict.ts:77` branch) → 15 of 49 red, all `AssertionError`s (gate (i): "14 gate violations", plus row checks on the cases that now rank without darkness), no crash; restored.
+- `rowOf` `bestAt` + 1 h → 33 of 49 red (e.g. case 1, Quito: 30 violations); restored.
+- Observed (seed 20261010, 40 seeded + 6 fixed polar-summer cases): 33 plans with rows, 2,592 rows, 0 clamped, 0 violations, 14 no-darkness cases; about 1.2 s.
 
 **Implementation Note**: Commit and push. Then run `/10x-impl-review testing-ranking-invariants-and-calibration-oracle` and open the PR.
 
@@ -486,22 +491,22 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Automated
 
-- [x] 3.1 The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts`
-- [x] 3.2 Break checks (weight retune B, retune A logged as green; `MESSIER_RANK_BONUS` = −0.2), reverted and logged
-- [x] 3.3 Full unit suite, lint and type check pass
+- [x] 3.1 The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts` — 1430649
+- [x] 3.2 Break checks (weight retune B, retune A logged as green; `MESSIER_RANK_BONUS` = −0.2), reverted and logged — 1430649
+- [x] 3.3 Full unit suite, lint and type check pass — 1430649
 
 #### Manual
 
-- [x] 3.4 Reference fixture spot-checked against its source pages (3 entries per night), mismatches logged
+- [x] 3.4 Reference fixture spot-checked against its source pages (3 entries per night), mismatches logged — 1430649
 
 ### Phase 4: Tonight and Session plan property suite, plus docs (unit + docs)
 
 #### Automated
 
-- [ ] 4.1 The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts`
-- [ ] 4.2 Break checks (both no-darkness guards removed; `bestAt` shifted one hour), reverted and logged
-- [ ] 4.3 Full unit suite, lint and type check pass
-- [ ] 4.4 `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry (`sed`/`grep` check)
+- [x] 4.1 The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts`
+- [x] 4.2 Break checks (both no-darkness guards removed; `bestAt` shifted one hour), reverted and logged
+- [x] 4.3 Full unit suite, lint and type check pass
+- [x] 4.4 `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry (`sed`/`grep` check)
 
 #### Manual
 
