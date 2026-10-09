@@ -81,7 +81,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 2 | Night and date boundaries | Prove the right night and times in every zone across DST, the rollover, midnight and month ends | #2 | unit | complete | testing-night-and-date-boundaries (archived: context/archive/2026-10-08-testing-night-and-date-boundaries/) |
 | 3 | Ranking invariants and calibration oracle | Prove no impossible target is listed and a retune cannot pass by regenerating its own expectations | #3, #4 | unit (property + reference fixture) | complete | testing-ranking-invariants-and-calibration-oracle (archived: context/archive/2026-10-08-testing-ranking-invariants-and-calibration-oracle/) |
 | 4 | Access and entitlement boundary | Prove isolation and the plan are enforced on the server and coordinates stay private | #5, #6 | db integration + static gate | complete | testing-access-and-entitlement-boundary (archived: context/archive/2026-10-09-testing-access-and-entitlement-boundary/) |
-| 5 | Quality-gates wiring | Stop CI retries from hiding flakes and lock the Phase 1-4 checks into CI and the agent loop | cross-cutting | gates + hook | researched | testing-quality-gates-wiring |
+| 5 | Quality-gates wiring | Stop CI retries from hiding flakes and lock the Phase 1-4 checks into CI and the agent loop | cross-cutting | gates + hook | planned | testing-quality-gates-wiring |
 
 Order rationale: Phase 1 is the user's top worry and named gap. Phase 2 has
 a hard date, the DST night of 25 Oct 2026. Phase 3 protects the area the user
