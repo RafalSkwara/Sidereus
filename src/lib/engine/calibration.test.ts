@@ -63,6 +63,7 @@ describe("deep-sky ranking calibration (Warsaw, Bortle 5, 150/750)", () => {
           total: score.total,
           rankScore,
         }));
+      // eslint-disable-next-line no-console -- opt-in recording aid (CALIBRATION_SNAPSHOT=1); fixed test nights, no user site.
       console.log(`calibration snapshot ${date}\n${JSON.stringify(rows, null, 1)}`);
     }
   });

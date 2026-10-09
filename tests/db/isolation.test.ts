@@ -6,11 +6,19 @@
  * cross-user select returns [] and a cross-user update/delete returns no error and touches zero rows:
  * "B got nothing" alone would also pass for a table that rejects everyone.
  *
- * To cover a new per-user table, add an entry to `TABLES` below.
+ * Which refusals are errors: RLS hides another user's row from UPDATE and DELETE (their USING clause), so those
+ * are silent zero-row no-ops, asserted by reading the row back as its owner. A new row that fails a policy's
+ * WITH CHECK (an INSERT, or an UPDATE that hands a row over) raises `42501`, asserted on `error.code`. An anonymous
+ * caller keeps Supabase's default table grants and is refused by RLS alone (every policy is `to authenticated`):
+ * PostgREST answers its INSERT with HTTP 401 and code `42501`, so the code is what the suite pins. Its UPDATE and
+ * DELETE may be a no-op or `42501` (if its grant is ever revoked); the row read back as A is what decides.
+ *
+ * To cover a new per-user table, add an entry to `TABLES` in `tests/db/tables.ts`.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Database, TablesInsert } from "@/lib/database.types";
+import { TABLES } from "./tables";
 
 type Client = SupabaseClient<Database>;
 
@@ -43,70 +51,6 @@ async function signUp(label: string): Promise<{ client: Client; userId: string }
   }
   return { client, userId: data.user.id };
 }
-
-interface TableCase<T extends keyof Database["public"]["Tables"]> {
-  table: T;
-  /** A valid row, without user_id (the column defaults to auth.uid()). */
-  valid: TablesInsert<T>;
-  /** A valid change applied by the owner (positive control) and attempted by the other user. */
-  change: Database["public"]["Tables"][T]["Update"];
-}
-
-const TABLES = [
-  {
-    table: "sites",
-    valid: {
-      name: "Back garden",
-      latitude_deg: 52.23,
-      longitude_deg: 21.01,
-      bortle: 6,
-      min_altitude_deg: 15,
-      time_zone: "Europe/Warsaw",
-      time_zone_source: "auto",
-    },
-    change: { name: "Changed site" },
-  } satisfies TableCase<"sites">,
-  {
-    table: "telescopes",
-    valid: { name: "Dobsonian 8in", aperture_mm: 203, focal_length_mm: 1200 },
-    change: { name: "Changed telescope" },
-  } satisfies TableCase<"telescopes">,
-  {
-    table: "eyepieces",
-    valid: { name: "Plossl 25", focal_length_mm: 25, afov_deg: 52 },
-    change: { name: "Changed eyepiece" },
-  } satisfies TableCase<"eyepieces">,
-  {
-    // Gear references are nullable (an entry outlives its site and telescope), so the row needs no gear of
-    // A's; the referenced-gear guard has its own suite in observations.test.ts.
-    table: "observations",
-    valid: {
-      target: "M13",
-      night: "2026-09-26",
-      rating: 4,
-      site_id: null,
-      telescope_id: null,
-      site_name: "Home",
-      telescope_name: "Dobsonian 8in",
-    },
-    // Changing the target also exercises the target key check on update under RLS.
-    change: { target: "jupiter", rating: 2 },
-  } satisfies TableCase<"observations">,
-  {
-    // The site reference is nullable (a check outlives its site), and the unique key on (user, site, night) treats
-    // null sites as distinct, so the row can be inserted repeatedly; the site guard and the recording function have
-    // their own suite in sky-checks.test.ts.
-    table: "sky_checks",
-    valid: {
-      site_id: null,
-      site_name: "Home",
-      night: "2026-09-26",
-      headline: "go",
-      dark_start: "2026-09-26T18:30:00Z",
-    },
-    change: { answer: "clear" },
-  } satisfies TableCase<"sky_checks">,
-] as const;
 
 let a: { client: Client; userId: string };
 let b: { client: Client; userId: string };
@@ -193,7 +137,7 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
     const { data, error } = await from(b.client)
       .insert({ ...row, user_id: a.userId })
       .select("id");
-    expect(error).not.toBeNull();
+    expect(error?.code).toBe("42501");
     expect(data).toBeNull();
 
     const after = await from(a.client).select("id");
@@ -211,7 +155,7 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
 
     // No .select(): RETURNING would apply the SELECT policy to the new row and mask a missing WITH CHECK.
     const { error } = await from(b.client).update({ user_id: a.userId }).eq("id", id);
-    expect(error).not.toBeNull();
+    expect(error?.code).toBe("42501");
 
     expect(await readAsA(id)).toHaveLength(0);
     const { data: stillB } = await from(b.client).select("id, user_id").eq("id", id);
@@ -224,5 +168,44 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
 
     const { data } = await from(anon).select("*");
     expect(data ?? []).toEqual([]);
+  });
+
+  it.each([
+    ["as a row of the first user", () => ({ ...row, user_id: a.userId })],
+    ["as a row without a user", () => row],
+  ])("an anonymous client cannot insert a row %s", async (_label, anonRow) => {
+    const before = await from(a.client).select("id");
+    expect(before.error).toBeNull();
+
+    // No .select(): the refusal must come from the insert itself, not from RETURNING under the SELECT policy.
+    const { error } = await from(anon).insert(anonRow());
+    expect(error?.code).toBe("42501");
+
+    const after = await from(a.client).select("id");
+    expect(after.error).toBeNull();
+    expect(after.data).toHaveLength(before.data?.length ?? -1);
+  });
+
+  it("an anonymous client's update leaves the row unchanged", async () => {
+    const id = await insertAsA();
+    const [before] = await readAsA(id);
+    expect(before).toBeDefined();
+
+    const { error } = await from(anon).update(patch).eq("id", id);
+    // A zero-row no-op under today's default grants, or 42501 if anon's grant is ever revoked: both keep the row.
+    expect([null, "42501"]).toContain(error?.code ?? null);
+
+    expect(await readAsA(id)).toEqual([before]);
+  });
+
+  it("an anonymous client's delete leaves the row present", async () => {
+    const id = await insertAsA();
+    expect(await readAsA(id)).toHaveLength(1);
+
+    const { error } = await from(anon).delete().eq("id", id);
+    // A zero-row no-op under today's default grants, or 42501 if anon's grant is ever revoked: both keep the row.
+    expect([null, "42501"]).toContain(error?.code ?? null);
+
+    expect(await readAsA(id)).toHaveLength(1);
   });
 });

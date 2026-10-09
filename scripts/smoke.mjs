@@ -92,7 +92,7 @@ const steps = [
   [
     "invalid onboarding returns with error",
     () => request("/api/onboarding", { method: "POST", form: { ...onboarding, latitudeDeg: "95" } }),
-    { status: 302, location: "/onboarding?error=" },
+    { status: 302, location: "/onboarding?error=errors.site.latitudeRange", exact: true, absent: "95" },
   ],
   [
     "onboarding saves and opens tonight",
@@ -138,7 +138,7 @@ const steps = [
   [
     "invalid site returns to form with error",
     () => request("/api/gear/sites", { method: "POST", form: { ...site, latitudeDeg: "95" } }),
-    { status: 302, location: "/gear/sites/new?error=" },
+    { status: 302, location: "/gear/sites/new?error=errors.site.latitudeRange", exact: true, absent: "95" },
   ],
   [
     "create telescope redirects to gear",
@@ -185,6 +185,8 @@ for (const [name, run, expected] of steps) {
     actual.status === expected.status &&
     (expected.location === undefined ||
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    // A submitted value (here a coordinate) must never come back in the redirect.
+    (expected.absent === undefined || !actual.location.includes(expected.absent)) &&
     (expected.sessionMaxAge === undefined ||
       (maxAges.length > 0 && maxAges.every((maxAge) => maxAge === expected.sessionMaxAge)));
   const cookieNote = expected.sessionMaxAge === undefined ? "" : `  auth cookie max-age ${maxAges.join(",") || "none"}`;
@@ -192,6 +194,7 @@ for (const [name, run, expected] of steps) {
   if (!ok) {
     failed++;
     console.log(`      expected ${expected.status} ${expected.location ?? ""}`);
+    if (expected.absent !== undefined) console.log(`      and no "${expected.absent}" in the location`);
   }
 }
 

@@ -8,8 +8,8 @@
  * the owner reading the admin-seeded `full` row; after each refusal the admin re-reads the row to prove it is
  * unchanged.
  *
- * This table is read-only for users, so it cannot join `TABLES` in isolation.test.ts (that suite writes as the
- * owner and expects an `id` column).
+ * This table is read-only for users, so it is listed in `SERVER_OWNED` (tests/db/tables.ts), not `TABLES` (the
+ * isolation suite writes as the owner and expects an `id` column); structure.test.ts checks its privileges.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";

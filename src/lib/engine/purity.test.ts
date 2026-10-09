@@ -7,7 +7,8 @@ import { describe, expect, it } from "vitest";
  * Purity guard: the engine must not read the clock, the environment or the network, or touch the
  * filesystem. Identical inputs must give identical outputs (PRD determinism NFR), and the code
  * must run unchanged on the edge runtime. It must not log either: engine functions take a `Site`,
- * and coordinates never reach logs (the engine is outside eslint's `gearConfig.files` no-console rule).
+ * and coordinates never reach logs (eslint's `no-console` error covers all of src; this scan
+ * keeps the engine's own guard).
  *
  * Scans every source file under src/lib/engine/ and src/lib/moon-disc/ (the browser-safe Moon-disc
  * drawing, moonlight-and-the-verdict), excluding test files and the test-only fixtures directory
