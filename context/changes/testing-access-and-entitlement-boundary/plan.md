@@ -362,7 +362,7 @@ No schema migration. Scratch migrations for the break checks are deleted afterwa
 - [x] 1.3 Break check: UPDATE policy without `with check` fails the structural suite; reverted — a5e409e
 - [x] 1.4 Break check: `security definer` function fails the function check; reverted — a5e409e
 - [x] 1.5 `npm run db:types` unchanged, `npm run lint` and `npx astro check` pass — a5e409e
-- [x] 1.6 CI's `smoke` job passes on the PR with `DB_URL` wired
+- [x] 1.6 CI's `smoke` job passes on the PR with `DB_URL` wired — a5e409e
 
 #### Manual
 
@@ -372,23 +372,23 @@ No schema migration. Scratch migrations for the break checks are deleted afterwa
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including `no-console-guard.test.ts`
-- [x] 2.2 `npm run lint` and `npx astro check` pass with no new `no-console` finding
-- [x] 2.3 Break check: `console.log` in `src/lib/engine/score.ts` fails `npm run lint`; reverted
-- [x] 2.4 Break check: extra non-allowlisted `no-console` disable fails the guard test; reverted
-- [x] 2.5 Break check: narrower `files` list fails the guard test; reverted
-- [x] 2.6 `npm run smoke` passes on local Supabase with the exact keys
+- [x] 2.1 `npm test` passes, including `no-console-guard.test.ts` — 8db290a
+- [x] 2.2 `npm run lint` and `npx astro check` pass with no new `no-console` finding — 8db290a
+- [x] 2.3 Break check: `console.log` in `src/lib/engine/score.ts` fails `npm run lint`; reverted — 8db290a
+- [x] 2.4 Break check: extra non-allowlisted `no-console` disable fails the guard test; reverted — 8db290a
+- [x] 2.5 Break check: narrower `files` list fails the guard test; reverted — 8db290a
+- [x] 2.6 `npm run smoke` passes on local Supabase with the exact keys — 8db290a
 
 #### Manual
 
-- [x] 2.7 The guard test's failure output names the file and the reason
+- [x] 2.7 The guard test's failure output names the file and the reason — 8db290a
 
 ### Phase 3: Test-plan and cookbook
 
 #### Automated
 
-- [ ] 3.1 No "TBD — see §3 Phase 4" left in test-plan.md, §3 Phase 4 row done
+- [x] 3.1 No "TBD — see §3 Phase 4" left in test-plan.md, §3 Phase 4 row done
 
 #### Manual
 
-- [ ] 3.2 §6.4 is a complete recipe (per-user table, server-owned table, RPC, full-plan route) and names the S-03 follow-up
+- [x] 3.2 §6.4 is a complete recipe (per-user table, server-owned table, RPC, full-plan route) and names the S-03 follow-up
