@@ -563,11 +563,11 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, including `agent-hooks.test.ts`
-- [x] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored
-- [x] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass
-- [x] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s
-- [x] 3.5 `npm run lint` and `npx astro check` pass
+- [x] 3.1 `npm test` passes, including `agent-hooks.test.ts` — 595ddf7
+- [x] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored — 595ddf7
+- [x] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass — 595ddf7
+- [x] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s — 595ddf7
+- [x] 3.5 `npm run lint` and `npx astro check` pass — 595ddf7
 
 #### Manual
 
@@ -578,12 +578,12 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [ ] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete`
-- [ ] 4.2 No "not linted yet" left in CLAUDE.md
+- [x] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete`
+- [x] 4.2 No "not linted yet" left in CLAUDE.md
 
 #### Manual
 
-- [ ] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired
+- [x] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired
 
 ### Phase 5: Local registration (after the merge)
 
