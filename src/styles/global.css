@@ -242,6 +242,8 @@
   --faint: color-mix(in srgb, var(--muted-foreground) 75%, var(--background));
   --warning: var(--marginal);
   --success: var(--go);
+  /* The settings panel's email ink for a full-plan account (F-01): the marginal gold, held to AA by the verdict rows. */
+  --plan-full: var(--marginal);
 
   /* Pressed segment of a segmented control: the filled-action ink in every theme. */
   --selected: var(--primary);
@@ -663,6 +665,7 @@
   --color-go-surface: var(--go-surface);
   --color-go-border: var(--go-border);
   --color-marginal: var(--marginal);
+  --color-plan-full: var(--plan-full);
   --color-marginal-surface: var(--marginal-surface);
   --color-marginal-border: var(--marginal-border);
   --color-no-go: var(--no-go);

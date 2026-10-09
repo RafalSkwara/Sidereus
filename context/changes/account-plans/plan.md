@@ -318,6 +318,15 @@ Add the one command that creates a full account or moves an account between plan
 
 ---
 
+## Addendum (2026-10-09, after merge): a quiet plan sign in the settings panel
+
+The owner reversed "no visible plan in F-01" after the merge: a full account's email in the settings panel is golden, with no text, since the paid plan stays quiet for now.
+
+- `src/components/Topbar.astro` reads `getAccountPlan(Astro.locals)` for a signed-in user (one lazy query per page with the Topbar) and passes `accountPlan` to `TopbarControls`.
+- `src/components/TopbarControls.tsx` colours the email `text-plan-full` for `full` (else `text-heading`) and marks it `data-account-plan`.
+- `src/styles/global.css` adds `--plan-full: var(--marginal)` (gold in dark and light; red mode keeps its red-only ink) and `--color-plan-full`.
+- Verified on a local preview at 390 px in dark, light and red (computed colours `rgb(241, 207, 107)`, `rgb(143, 97, 0)`, `rgb(214, 0, 0)`).
+
 ## Testing Strategy
 
 ### Unit Tests:
