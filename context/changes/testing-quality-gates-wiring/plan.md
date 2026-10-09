@@ -549,11 +549,11 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with the pinned pool
-- [x] 2.2 Break check: `--pool threads` fails the night-boundaries suite
-- [x] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted
+- [x] 2.1 `npm test` passes with the pinned pool — 52f96c3
+- [x] 2.2 Break check: `--pool threads` fails the night-boundaries suite — 52f96c3
+- [x] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted — 52f96c3
 - [x] 2.4 `gh api …/branches/main/protection` lists `ci` and `smoke` as required — dropped (owner, 2026-10-09)
-- [x] 2.5 `npm run lint` and `npx astro check` pass
+- [x] 2.5 `npm run lint` and `npx astro check` pass — 52f96c3
 
 #### Manual
 
@@ -563,11 +563,11 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes, including `agent-hooks.test.ts`
-- [ ] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored
-- [ ] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass
-- [ ] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s
-- [ ] 3.5 `npm run lint` and `npx astro check` pass
+- [x] 3.1 `npm test` passes, including `agent-hooks.test.ts`
+- [x] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored
+- [x] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass
+- [x] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s
+- [x] 3.5 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
