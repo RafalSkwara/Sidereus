@@ -8,7 +8,7 @@ Test rollout Phase 5 (`context/foundation/test-plan.md` §3, cross-cutting). It 
 - **CI gates:**
   - a flaky e2e test turns CI red;
   - Vitest's `forks` pool is pinned;
-  - `ci` and `smoke` become required checks on `main`.
+  - ~~`ci` and `smoke` become required checks on `main`~~ (dropped by the owner at implementation; only a human merges PRs).
 - **Agent loop:** a Claude Code end-of-turn (Stop) hook runs the unit suite and lints the changed files, so an agent hears a regression before it finishes a turn.
 - **Docs:** test-plan §3/§5/§6 and CLAUDE.md, plus what the S-05 branch must adapt to.
 
@@ -42,7 +42,7 @@ Research: `context/changes/testing-quality-gates-wiring/research.md` (complete, 
 - `no-console-guard.test.ts` proves end to end that a `console.log` in a plain and an `is:inline` `.astro` script is reported, so the guard no longer trusts config resolution alone.
 - In CI, a test that fails then passes on retry fails the `smoke` job, and the HTML report is uploaded. Locally nothing changes (no retries).
 - `vitest.config.ts` pins `pool: "forks"`.
-- `main` requires the `ci` and `smoke` checks before a merge (admins can override knowingly).
+- ~~`main` requires the `ci` and `smoke` checks~~ (dropped, 2026-10-09). Only a human merges PRs, never an agent (deny rules in `~/projects/.claude/settings.json`), and CLAUDE.md says so.
 - In a Claude Code session that edits Sidereus, the end of every turn (and every subagent run) that changed a checkout runs the whole unit suite and ESLint (`--max-warnings 0 --no-warn-ignored`) on the changed files. Only checkouts this turn changed are swept, compared against a fingerprint taken when the turn started. On failure the agent is sent back once with the output. This holds for sessions started in `~/projects` (registered locally after the merge) and inside the repo or a worktree. A committed test proves the hook's behaviour.
 - Known limit: in a `~/projects` session (cwd not a git repo), a Sidereus file changed only through Bash is not swept. Only `Write`/`Edit` register a checkout there. Bash rewrites are swept when the session cwd is a Sidereus checkout.
 - `.claude/` is ignored except `settings.json` and `hooks/`, so `eslint .` no longer walks `.claude/worktrees/`.
@@ -69,7 +69,8 @@ Verify with `npm test`, `npm run lint`, `npx astro check`, the break checks belo
 - **Turning off e2e retries, raising timeouts, or a flake dashboard.** The retry is kept for its trace.
 - **Type-aware linting of `.astro` scripts** (depth-limited `allowDefaultProject`). Its default-project limit of 8 silently drops scripts, and `define:vars` names give false positives (research §3).
 - **New git hooks** (pre-push) and new CI jobs.
-- **Path filters or `concurrency` groups in CI**, and review requirements in branch protection.
+- **Path filters or `concurrency` groups in CI.**
+- **Branch protection / required checks on `main`.** Dropped by the owner on 2026-10-09, during Phase 2: required checks would slow them down. The owner's actual rule is that only a human merges PRs, never an LLM through `gh` or the GitHub API. The orchestrator enforces this with Claude Code deny rules in `~/projects/.claude/settings.json`, not with GitHub settings. Phase 4 records the rule in CLAUDE.md.
 - **Fixing the date-dependent e2e skips** (`moon-as-target`, `tonight-targets`, `tonight-sky`, `planets-on-tonight`, `moon-card`). They are recorded in §6.5 as a known limit.
 
 ## Implementation Approach
@@ -228,6 +229,8 @@ A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and
 - This change's PR shows `ci` and `smoke` as required on GitHub
 
 **Implementation Note**: as Phase 1. The branch-protection step waits for the owner's explicit OK.
+
+**Owner decision (2026-10-09, at implementation):** change #3 (required checks) and its `ci.yml` comment are dropped; rows 2.4 and 2.6 are marked dropped in Progress. See What We're NOT Doing.
 
 ---
 
@@ -393,7 +396,7 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
   - lint (`--max-warnings 0`, `.astro` scripts);
   - e2e flake visibility: active, `failOnFlakyTests` in CI;
   - "post-edit agent hook" becomes the end-of-turn Stop hook (active, whole unit suite plus lint of changed files);
-  - required checks named in the Where column.
+  - the Where column names CI `ci` and `smoke` (not required checks; only a human merges).
 - §6.4 Blind spots: drop the `.astro` script sentence.
 - §6.5 replaces its TBD with the e2e recipe:
   - when a journey needs the browser;
@@ -420,7 +423,8 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
     - the `~/projects` registration and its exact snippet;
     - the Bash-only limit in `~/projects` sessions;
     - a fresh worktree needs `npm ci` before the hook can pass;
-    - `.claude/` is ignored except `settings.json` and `hooks/`.
+    - `.claude/` is ignored except `settings.json` and `hooks/`;
+    - only a human merges PRs: an agent never merges through `gh pr merge` or the GitHub API (owner rule, enforced by deny rules in `~/projects/.claude/settings.json`).
 - `lessons.md` appends one entry: "Resolving a rule's config is not proof the rule runs: pair a config guard with one end-to-end lint of a known violation per file kind".
 
 ### Success Criteria:
@@ -485,7 +489,6 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 | `no-console-guard.test.ts` `.astro` case | after rebase | Keep `src/pages/offline.astro` (the sample path), or update the guard if S-05 moves it. |
 | `playwright.config.ts` `failOnFlakyTests` | after rebase | A spec that passes only on retry fails CI. Fix the cause (`waitForHydration`, isolation) rather than retrying. |
 | `vitest.config.ts` `pool: "forks"` | after rebase | None (already the default). |
-| Required checks `ci` + `smoke` on `main` | immediately, for every PR | S-05's PR cannot merge until both are green. |
 | `.claude/settings.json` + `.claude/hooks/` (UserPromptSubmit, PostToolUse, Stop, SubagentStop) | after rebase, and a restart of a session started in the worktree | ~8 s at the end of turns and subagent runs that changed the worktree; one send-back on red tests or lint (earlier WIP does not trigger it). The worktree needs `node_modules` (`npm ci`). |
 | `~/projects/.claude/settings.json` registration (Phase 5, after merge) | at the next restart of any session started in `~/projects` | The hook skips the S-05 worktree until it contains `.claude/hooks/end-of-turn.sh`. After the rebase, the same send-back applies. |
 
@@ -513,7 +516,6 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 ## Migration Notes
 
-- Branch protection can be removed with `gh api -X DELETE repos/RafalSkwara/Sidereus/branches/main/protection`.
 - The hooks can be removed by deleting their entries from both settings files.
 
 ## References
@@ -531,31 +533,31 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 1.1 `npm test` passes, including the new guard case
-- [x] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes
-- [x] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored
-- [x] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted
-- [x] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted
-- [x] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it
-- [x] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees
+- [x] 1.1 `npm test` passes, including the new guard case — 7aa8446
+- [x] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes — 7aa8446
+- [x] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored — 7aa8446
+- [x] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted — 7aa8446
+- [x] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted — 7aa8446
+- [x] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it — 7aa8446
+- [x] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees — 7aa8446
 
 #### Manual
 
-- [x] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console`
+- [x] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console` — 7aa8446
 
 ### Phase 2: CI gates
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes with the pinned pool
-- [ ] 2.2 Break check: `--pool threads` fails the night-boundaries suite
-- [ ] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted
-- [ ] 2.4 `gh api …/branches/main/protection` lists `ci` and `smoke` as required
-- [ ] 2.5 `npm run lint` and `npx astro check` pass
+- [x] 2.1 `npm test` passes with the pinned pool
+- [x] 2.2 Break check: `--pool threads` fails the night-boundaries suite
+- [x] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted
+- [x] 2.4 `gh api …/branches/main/protection` lists `ci` and `smoke` as required — dropped (owner, 2026-10-09)
+- [x] 2.5 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 2.6 This change's PR shows `ci` and `smoke` as required
+- [x] 2.6 This change's PR shows `ci` and `smoke` as required — dropped (owner, 2026-10-09)
 
 ### Phase 3: End-of-turn agent hook
 
