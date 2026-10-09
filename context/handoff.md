@@ -2,14 +2,9 @@
 
 What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-ranking-invariants-and-calibration-oracle/plan-brief.md`. **Do not redo research or planning**: both are done and committed. To save tokens, read only what each step names.
 
-## Parallel stream: S-02 UI adjustments (2026-10-08)
+## S-02 UI adjustments: done (2026-10-09)
 
-The user's own UI list (M-3 S-02, #123) runs alongside the test rollout.
-
-- **Where it lives**: branch `feat/ui-user-adjustments`, in the worktree `.claude/worktrees/ui-user-adjustments`, with draft PR #139 to `main`.
-- **Status**: Phase 1 of 6 is done and reviewed. Phase 2 (toasts) is next.
-- **Handoff**: everything is in `context/changes/ui-user-adjustments/handoff.md`. Read it instead of this file when resuming S-02.
-- **Don't collide with it**: never switch branches in the main checkout for it, and don't use preview port 4331 or fixture port 4410 here.
+The user's own UI list (M-3 S-02, #123) is shipped and archived. Phase 1 merged in #139 and phases 2-6 in #140; every phase was impl-reviewed and the findings fixed. The change is archived at `context/archive/2026-10-08-ui-user-adjustments/` (roadmap S-02 and the board are `done`, #123 closed). The worktree `.claude/worktrees/ui-user-adjustments` can be removed; ports 4331 and 4410 are free once its preview and fixture are stopped.
 
 ## State of play
 
