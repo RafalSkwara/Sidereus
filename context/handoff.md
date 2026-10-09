@@ -2,6 +2,12 @@
 
 What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-access-and-entitlement-boundary/research.md`. To save tokens, read only what each step names.
 
+## Update 2026-10-09 late evening (supersedes the Phase 4 next steps below)
+
+- Phase 4 research is **complete**: the Risk #6 sweep was re-run and found no live lint gap or URL leak. It also found that `warn` is unenforced in CI, and it recommends a repo-wide `no-console: error` plus a guard test that reads the resolved config (see `research.md`). `change.md` is `preparing`, and test-plan §2 (Risk #5/#6 guidance) is backported.
+- Owner decisions: the self-only direct writes are **accepted for now, to revisit later**, and **Phase 4 waits for F-01 `account-plans`**. Test-plan §3 Phase 4 reads `researched (waits for F-01)`.
+- **Next:** F-01 `account-plans` (roadmap, GitHub #121) via `/10x-new`. Its plan must not add an owner-writable `plan` column: it needs column grants, a trigger or a separate table. After F-01, resume Phase 4 at `/10x-plan testing-access-and-entitlement-boundary`.
+
 ## State of play
 
 - **Test rollout Phase 3** ("Ranking invariants and calibration oracle"):

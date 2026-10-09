@@ -1,7 +1,7 @@
 ---
 change_id: testing-access-and-entitlement-boundary
 title: "Test rollout Phase 4: isolation and the plan enforced on the server, coordinates kept private"
-status: new
+status: preparing
 created: 2026-10-09
 updated: 2026-10-09
 archived_at: null
@@ -15,3 +15,5 @@ Risk response intent: #5 — user B cannot read, update or delete user A's rows 
 After creating the folder, follow the downstream continuation rule.
 
 **State 2026-10-09 (session wrap-up):** `research.md` is saved as `status: partial`. Risk #5 and the history are grounded; the Risk #6 code sweep was stopped unfinished (Open Question 1). Next: finish `/10x-research testing-access-and-entitlement-boundary` (re-run only the Risk #6 sweep), ask the owner Open Questions 2–3, backport §2, then `/10x-plan`. Resume steps are in `context/handoff.md`.
+
+**State 2026-10-09 (evening):** research complete (Risk #6 sweep re-run). Owner decisions: self-only direct writes accepted for now, revisit later; **Phase 4 waits for roadmap F-01 `account-plans`**, then resumes at `/10x-plan` (re-check anchors first).

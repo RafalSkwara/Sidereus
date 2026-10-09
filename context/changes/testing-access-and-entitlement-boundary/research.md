@@ -1,12 +1,12 @@
 ---
 date: 2026-10-09T16:36:41+02:00
-researcher: Claude (Opus 5.5) with read-only workers (Opus: DB isolation; Opus: coordinate privacy, stopped before reporting; Sonnet: history)
+researcher: Claude (Opus 5.5) with read-only workers (Opus: DB isolation; Opus: coordinate privacy, re-run 2026-10-09 evening; Sonnet: history)
 git_commit: 6d65ac2
 branch: feat/testing-access-and-entitlement-boundary
 repository: Sidereus
 topic: "Ground rollout Phase 4 of context/foundation/test-plan.md: access and entitlement boundary (Risks #5, #6)"
 tags: [research, testing, security, rls, postgrest, rpc, privacy, lint]
-status: partial
+status: complete
 last_updated: 2026-10-09
 last_updated_by: Claude (Opus 5.5)
 ---
@@ -17,7 +17,8 @@ last_updated_by: Claude (Opus 5.5)
 **Researcher**: Claude (Opus 5.5) with three read-only workers.
 
 - Risk #5 (DB isolation, Opus) and the history sweep (Sonnet) completed.
-- The Risk #6 code sweep (Opus) was **stopped unfinished** when the session wrapped up, so its findings are missing (see Open Questions).
+- The Risk #6 code sweep (Opus) was stopped unfinished at the first wrap-up and **re-run to completion** the same evening (see "Risk #6: code sweep").
+- Owner decisions on Open Questions 2–3 are recorded under "Decisions (2026-10-09)".
 
 **Git Commit**: 6d65ac2 (product code identical to `main` baa1b1a plus the archive branch; only docs differ)
 **Branch**: feat/testing-access-and-entitlement-boundary (cut from `chore/archive-testing-ranking-invariants-and-calibration-oracle`, PR #143)
@@ -59,7 +60,10 @@ Ground Risks #5 and #6 of `context/foundation/test-plan.md` §2. Verify, rather 
 - **Risk #6 is partially grounded from the archive.**
   - The no-console error scope is still a hand-maintained glob list (`eslint.config.js:84-109`). It covers gear, forecast, tonight, onboarding, observations, `api/log`, `pages/log`, `components/tonight`, sky-checks, location, offline and sky-view. This is exactly the risk's "must challenge".
   - The PRD names three sanctioned third-party carriers of coordinates: the forecast lookup, geocoding, and the map tiles of "Pick from map" (`context/foundation/prd.md:81-88, 498-503`).
-  - **Not done:** the code sweep of which coordinate-touching modules sit outside that list, the redirect/URL audit, and the feasibility of an automatic module-graph check.
+  - **Code sweep (done):** 64 non-test modules under `src/` touch coordinates (traced by type plus value flow, not by name). ESLint's own `calculateConfigForFile` puts all of them under `no-console: error` except `src/lib/engine/**` (guarded by the purity test's `/\bconsole\./` regex instead), `src/i18n/messages/{en,pl}.ts` (message functions that render coordinates, never log) and the dev-only `src/pages/design.astro`. None of the four logs. **The list has no live gap, but only because directory globs happen to cover the files**: eight modules (e.g. `forecast/open-meteo.ts`, `gear/timezone.ts`, `sky-view/rotate.ts`) take coordinates structurally or as scalars, so an import walk would miss them.
+  - **`warn` protects nothing in CI:** `npm run lint` is plain `eslint .` with no `--max-warnings 0` (`package.json:11`, `.github/workflows/ci.yml:20`), so a `console.log` in any file outside `gearConfig.files` merges.
+  - **Redirects and URLs: no coordinate reaches any.** `?error=` values are `MessageKey`-typed everywhere; the smoke script's invalid-coordinate cases assert only the `?error=` prefix, not the key or the value's absence.
+  - **Recommended check:** flip `no-console` to error repo-wide and add an upkeep-free guard test (every non-test `src` file resolves `no-console` to error via `calculateConfigForFile`; `eslint-disable … no-console` only at an allowlisted line). It proves the property without knowing which modules carry coordinates.
 
 ## Detailed Findings
 
@@ -105,6 +109,51 @@ Routes: every write route uses the request-scoped JWT client (`context.locals.su
   - existing tests that pin redirect keys;
   - whether a test can derive the coordinate-touching module set automatically (TS import graph from `src/lib/gear/store.ts` / engine `Site`) and assert it ⊆ the lint error scope, or whether the lint default should flip to error repo-wide with listed exceptions.
 
+### Risk #6: code sweep (complete, 2026-10-09 evening)
+
+Method: a scratch script (TypeScript compiler API plus `@astrojs/compiler` `convertToTSX` so `.astro` files count) seeded with 24 declarations (`Site` `engine/types.ts:7`, `SiteRecord` `gear/store.ts:23`, the `sites` Row/Insert/Update types `database.types.ts:112-148`, the `gear/schemas.ts` site fields, `LocationPick` `LocationPicker.tsx:32`, `MapPoint`, `DevicePosition`, `PlaceResult`, `TonightSkyView.rotations` `sky-view/view.ts:36`, `SkyFrame.rotation`), followed to a fixpoint through variables, destructuring, contextually typed object literals, call arguments and JSX props (59 declarations), then each module's effective rule read with ESLint's `calculateConfigForFile`. Not committed; the guard test below replaces it.
+
+**Modules that touch coordinates, by rule**
+
+| Module group | How coordinates arrive | Rule | Logs |
+|---|---|---|---|
+| `gear/store.ts`, `schemas.ts`, `timezone.ts` (own `{latitudeDeg}` param :25), `coordinates.ts` | SiteRecord / schema / flow | error `src/lib/gear/**` | no |
+| `forecast/open-meteo.ts` (own `ForecastCoords` :22), `service.ts` (lat/lon in the KV value :128) | structural flow | error `src/lib/forecast/**` | no |
+| `tonight/load.ts`, `build.ts`, `island.ts`, `tonight-date.ts`, `format.ts`, `test-fixtures.ts` | SiteRecord / Site / flow | error `src/lib/tonight/**` | `build.ts:1217` (fixed text plus error name; inline disable :1216) |
+| `location/geocode.ts`, `locate.ts`, `map-view.ts` | seed types | error | no |
+| `sky-view/view.ts`, `frames.ts`, `rotate.ts`, `projection.ts` | rotations | error | no |
+| `observations/store.ts`, `log-night.ts`; `onboarding/schemas.ts`, `store.ts`; `sky-checks/record.ts` | SiteRecord / Row / TonightView | error | no |
+| `components/gear/SiteForm.tsx`, `location/LocationPicker.tsx`, `map-panel.tsx`, `onboarding/OnboardingWizard.tsx` | LocationPick / MapPoint | error | `map-panel.tsx:167` `reportError` of a Leaflet/CSS-load error (outside `no-console`'s sight; no coordinates, inferred) |
+| `components/tonight/*` (page contents, `TonightContent`, `TonightTiles`, `TonightPageSky`, `OfflineCopy`, `TonightSkyView.tsx`) | `loadTonightFor` / TonightView | error | no |
+| `pages/api/gear/sites/*`, `api/onboarding.ts`, `gear/index.astro`, `gear/sites/[id].astro`, `log/new.astro`, `log/[id].astro` | schema / siteStore | error | no |
+| **`lib/engine/**`** (11 files) | `Site` | **warn** (purity test regex `purity.test.ts:36`; aliases like `globalThis["console"]` slip past) | no |
+| **`i18n/messages/en.ts:270, :824`, `pl.ts`** | message params (rendered, rounded) | **warn** | no |
+| **`pages/design.astro:7`** | SiteRecord fixture, dev only | **warn** | no |
+| `database.types.ts` | seed types | ignored (`eslint.config.js:115`) | n/a |
+
+A name grep for "lat" also gives false positives: `moon-disc/*` uses selenographic lat/lon.
+
+**Redirects and URLs** (no coordinate reaches any; no risk found)
+
+- `?error=` routes (`api/gear/*`, `api/onboarding.ts:18`, `api/log/[id]/delete.ts:13`, `api/auth/signup.ts:13,18`) pass a `MessageKey` through `encodeURIComponent`; `issueKey` admits a zod message only if `isMessageKey` accepts it; `authErrorKey` never forwards Supabase's message.
+- `formRedirect` (`observations/redirect.ts:52-68`) echoes a field only when it parses as a target key, uuid or date; `editRedirect`, `logNotice`, `skyCheckErrorRedirect`/`skyCheckedRedirect` (`sky-checks/redirect.ts:13-20`), `targetsRedirectPath` (`tonight/all-objects.ts:18`), `logHref` (`tonight/load.ts:186`) and `tonightReturnPath` carry ids, fixed paths or fixed keys. Every template href, GearCard's GET form (`GearCard.astro:60`) and the server-island props (`tonight.astro:45`) carry ids only.
+- User input echoed (low risk, flagged): the middleware's `?next=` copies a gated GET's path and query (`middleware.ts:42`, filtered by `safeNextPath`), and sign-in echoes `next` (`api/auth/signin.ts:12-17`). No app link puts coordinates on a gated URL.
+- Service worker: the next-night URL is `site=<id>&night=next` (`sw.ts:410`); cache keys come from the island URL (`copies.ts:112`); the forecast KV key is `forecast:v1:site:<id>` (`service.ts:54`).
+- Sanctioned carriers: Open-Meteo from the server (`open-meteo.ts:48-56`, `redact_query_string` `wrangler.jsonc:18`, cause dropped on failure :93); geocoding of the typed place name from the browser (`geocode.ts:57-61`); OSM tiles after the click (`map-panel.tsx:22, 127`).
+
+**Existing tests that pin this**: `api-errors.test.ts:6, 28`; `observations/redirect.test.ts:14-103` (:45 "free text never reaches the URL"); `auth-redirect.test.ts:4-60`; `all-objects.test.ts:33`; `open-meteo.test.ts:74`; `geocode.test.ts:116`; `service.test.ts:8`; `map-view.test.ts:10, 45`; `locate.test.ts:24`; `tests/e2e/site-map.spec.ts:31-47`; `scripts/smoke.mjs:80-175` (exact `Location` headers, except the invalid-coordinate cases :92-95 and :138-141, which assert only the `?error=` prefix). **No test checks the lint scope**, and nothing asserts "no coordinates in offline metadata" (`offline/copies.test.ts:108-375` covers keys only).
+
+**Automatic check options**
+
+- (a) Type-and-flow graph test: feasible (≈3 s trace plus ≈1 s of config lookups), but needs a seed list, and the value-flow step is mandatory (a plain import walk misses 8 modules). Blind to `any`/`unknown`, FormData/JSON and new independent coordinate sources. Keep it, at most, as an audit script.
+- (b) **Recommended:** `no-console` → error repo-wide. Verified cost: three test lines (`engine/calibration.test.ts:66`, `determinism.test.ts:84, 150`) need an exception (`**/*.test.ts` or inline disables); `scripts/**` and `tests/e2e/**/*.mjs` stay off (`eslint.config.js:77-82`). Plus one upkeep-free guard test: every non-test `src` file resolves `no-console` to error via `calculateConfigForFile`, and `eslint-disable … no-console` appears only at allowlisted lines (today `build.ts:1216`). This retires the hand-kept `gearConfig.files`. Blind spots: `console` aliases, `reportError`, thrown messages, URLs.
+- URLs, cheapest upkeep-free additions: tighten the two smoke cases to exact keys and "no `95` in `Location`"; one unit per redirect builder feeding coordinate-like values (exists only for `formRedirect` today). `MessageKey` already stops a non-key reaching `?error=` at compile time.
+
+## Decisions (2026-10-09, owner)
+
+- **Open Question 2 — self-only direct writes:** not hardened now. Recorded as a known, accepted gap to revisit later ("perhaps we'll need to harden this rule in the future"). Hardening (column grants or a trigger) stays a product change for a future change, and F-01 must not add a server-owned column to an owner-writable table without it.
+- **Open Question 3 — Phase 4 scope:** **wait for F-01.** Phase 4 is planned and run as one change after roadmap F-01 `account-plans` lands, so the isolation, plan and coordinate halves are covered together. This research stays the grounding; re-check line anchors when planning.
+
 ## Code References
 
 - `supabase/migrations/20260924120000_sites_and_gear.sql:12-106`: gear tables, policies, defaults.
@@ -134,10 +183,7 @@ Routes: every write route uses the request-scoped JWT client (`context.locals.su
 
 ## Open Questions
 
-1. **Risk #6 code sweep (blocking for planning #6).** The Opus worker was stopped when the session wrapped up. Re-run it with the same brief:
-   - trace coordinate-touching modules by type and import, and list those outside `gearConfig.files`;
-   - audit redirect and URL construction and existing tests;
-   - assess an automatic module-graph or flipped-default lint check.
-2. **Owner decision:** keep the self-only direct writes on `sky_checks` / `observations` as accepted (pin and document), or harden them with column grants or a trigger (a product change)?
-3. **Scope of Phase 4 given F-01 isn't built:** run Phase 4 now for isolation plus coordinates, and defer the plan half until F-01 lands (with its tests specified for F-01's plan)? Or wait for F-01?
-4. **Post-research backport to §2:** once the above is settled, Risk #5's row and guidance should mark the plan half as dependent on F-01 and add the column-privilege challenge.
+1. ~~Risk #6 code sweep~~ — done (see "Risk #6: code sweep").
+2. ~~Self-only direct writes~~ — decided: accepted for now, revisit later (see Decisions).
+3. ~~Phase 4 scope~~ — decided: wait for F-01 (see Decisions).
+4. ~~Post-research backport to §2~~ — done 2026-10-09: Risk #5 marks the plan half as dependent on F-01 and adds the column-privilege challenge; Risk #6 records the `warn`-is-unenforced finding.
