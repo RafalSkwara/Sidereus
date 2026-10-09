@@ -1,10 +1,10 @@
 ---
 change_id: observing-progress
 title: Observing progress - Messier and Caldwell checklists, firsts and "not seen yet" marks
-status: impl_reviewed
+status: archived
 created: 2026-10-09
 updated: 2026-10-09
-archived_at: null
+archived_at: 2026-10-09T20:58:31Z
 ---
 
 ## Notes
