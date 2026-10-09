@@ -191,7 +191,11 @@ Seeded, generated sites, nights, skies and telescopes. Every listed deep-sky ent
   - in `parameters.ts`, temporarily making `darknessThresholdDegForBortle` return −12 for Bortle ≤ 4 turns (b) red, because the suite's own table still says −18 / −15. The probe saw 2,141 violations.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-09, main session):
+
+- `objects.ts` `bestWindow` returns `track[max(0, from − 1)]` / `track[min(len − 1, to + 1)]` as start/end → 184 of 202 tests red; restored with `git checkout`.
+- `parameters.ts` `darknessThresholdDegForBortle` returns −12 for Bortle ≤ 4 → 80 of 202 tests red (e.g. case 0, Kiritimati Bortle 1: 61 violations); restored.
+- Observed (seed 20261008, 200 cases): 177 with a dark window, 13,194 deep-sky entries, 73 southern and 36 above-60° cases with a window, 543 planet and 108 Moon entries, 134 single-sample windows, 0 violations; about 1.5 s.
 
 **Implementation Note**: Commit and push the phase, then continue.
 
@@ -450,9 +454,9 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Automated
 
-- [ ] 1.1 The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts`
-- [ ] 1.2 Break checks (window widened in `bestWindow`; Bortle ≤ 4 threshold → −12 in `parameters.ts`), reverted and logged
-- [ ] 1.3 Full unit suite, lint and type check pass
+- [x] 1.1 The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts`
+- [x] 1.2 Break checks (window widened in `bestWindow`; Bortle ≤ 4 threshold → −12 in `parameters.ts`), reverted and logged
+- [x] 1.3 Full unit suite, lint and type check pass
 
 ### Phase 2: Ranking invariants as relations (unit, Risk #4)
 

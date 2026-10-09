@@ -165,3 +165,23 @@ elongation when the fixture was generated (2026-10-01), so a failure is a real r
 /tmp/skyfield-venv/bin/python scripts/moon-reference.py /path/to/de421.bsp \
   src/lib/engine/fixtures/skyfield/moon-warsaw-2026-10-24.json
 ```
+
+## Generated cases (`generated.ts`, `independent-altitude.ts`)
+
+Test machinery for the property suites (Risk #3 and #4 of `context/foundation/test-plan.md`), not fixtures. Both
+modules are test-only, like everything here: the purity guard and the runner-zone guard skip this directory, and
+production code must never import them.
+
+- `generated.ts`: `seeded(seed)` (mulberry32), `GENERATED_SITES` (16 public reference points from the equator to
+  78° N and 64.8° S, with fixed IANA zones, the far-east ones included) and `generateCase(random)` (a site, a day of
+  2026, Bortle 1-9, minimum altitude 0-60, a 50-400 mm telescope at f/3-f/16 and a 0-3 eyepiece kit). The suite
+  builds its case array at module scope from the seed alone and runs every engine call inside `it` or
+  `beforeAll`; failure messages carry the case index and inputs so a case replays from the seed. The seed in
+  `src/lib/engine/visibility-invariants.test.ts` is `20261008`.
+- `independent-altitude.ts`: `deepSkyAltitudeDeg`, `bodyAltitudeDeg` and `sunAltitudeGeometricDeg` recompute a
+  position from astronomy-engine by a road the engine does not take, for any `Observer` (elevation 0 for Tonight,
+  which drops the site's elevation). `DARK_THRESHOLD_BY_BORTLE` and `PLANET_WINDOW_THRESHOLD_DEG` are the PRD's own
+  table (-18 / -15 / -12 and -6), written out on purpose. Compare with `ALTITUDE_TOLERANCE_DEG` (0.05°).
+
+Neither module may use engine output (tracks, `bestWindow`, `moonState`, `parameters.ts` thresholds): an oracle built
+from the code under test moves with it. Keep them free of imports other than `astronomy-engine` and engine types.
