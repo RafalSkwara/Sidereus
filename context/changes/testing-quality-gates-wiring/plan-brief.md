@@ -12,7 +12,7 @@ Phases 1-4 of the test rollout added the suites that protect Risks #1-#6. Phase 
 - client `<script>` blocks in `.astro` files are not linted at all (impl review F3);
 - an agent hears about a broken test only from CI.
 
-This change closes those four gaps.
+This change closes three of them; the fourth ("a PR can merge with red CI") stays open by the owner's choice: only a human merges PRs.
 
 ## Starting Point
 

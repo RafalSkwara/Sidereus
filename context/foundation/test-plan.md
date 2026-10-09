@@ -121,6 +121,8 @@ or right after roadmap F-01 (account plans). Phase 5 locks in what 1-4 add.
 | e2e flake visibility (a retried pass is reported) | CI `smoke` (`failOnFlakyTests` in `playwright.config.ts`) | required (active since §3 Phase 5) | a test that passes only on its retry: the run fails and the report is uploaded |
 | end-of-turn agent hook (Stop and SubagentStop: whole unit suite + ESLint on changed files) | local agent loop (`.claude/settings.json`, `.claude/hooks/`, proof `src/lib/agent-hooks.test.ts` in CI `ci`) | active since §3 Phase 5 | a red unit test or lint error in a checkout the turn changed, before the agent finishes; one send-back. CI `ci` and `smoke` are not required checks: only a human merges PRs |
 
+"Required" means enforced by CI and the team's policy. `main` has no GitHub required checks; only a human merges PRs (§3 Phase 5).
+
 ## 6. Cookbook Patterns
 
 How to add new tests in this project. Each sub-section is filled in once

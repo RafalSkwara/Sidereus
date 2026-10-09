@@ -48,6 +48,8 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
 
 /** An existing .astro page whose path the in-memory samples borrow: a path that does not exist fails to parse. */
 const ASTRO_SAMPLE_PATH = "src/pages/offline.astro";
+/** An existing TypeScript module whose path the in-memory TS sample borrows (type-aware lint needs a real path). */
+const TS_SAMPLE_PATH = "src/lib/utils.ts";
 
 /** Coordinate-handling modules that must be among the checked files (non-vacuity). */
 const KNOWN_COORDINATE_MODULES = ["src/lib/gear/store.ts", "src/lib/engine/index.ts", "src/i18n/messages/en.ts"];
@@ -164,7 +166,9 @@ describe("no-console guard", () => {
   it("checks the whole source tree", () => {
     expect(files.length).toBeGreaterThanOrEqual(300);
     for (const module of KNOWN_COORDINATE_MODULES) expect(files).toContain(module);
-    for (const file of [...IGNORED, ...Object.keys(ALLOWED_DISABLES), ASTRO_SAMPLE_PATH]) expect(files).toContain(file);
+    for (const file of [...IGNORED, ...Object.keys(ALLOWED_DISABLES), ASTRO_SAMPLE_PATH, TS_SAMPLE_PATH]) {
+      expect(files).toContain(file);
+    }
   });
 
   it("gives every source file no-console at error", async () => {
@@ -203,7 +207,7 @@ describe("no-console guard", () => {
     expect(violations, "a new log needs an entry in ALLOWED_DISABLES with its reason").toEqual([]);
   });
 
-  it("reports no-console inside .astro client scripts, plain and is:inline, end to end", async () => {
+  it("reports no-console end to end in .astro client scripts (plain, is:inline), frontmatter and TypeScript", async () => {
     const lint = async (script: string) => {
       const [result] = await eslint.lintText(`<div></div>\n\n${script}\n`, {
         filePath: join(REPO_ROOT, ASTRO_SAMPLE_PATH),
@@ -218,5 +222,15 @@ describe("no-console guard", () => {
     ]);
     // eslint-plugin-astro does not extract JSON scripts, so there is nothing to lint.
     expect(await lint('<script type="application/ld+json">\n  {"a": 1}\n</script>'), "JSON script").toEqual([]);
+
+    // The other file kinds the rule covers, end to end too: .astro frontmatter and a TypeScript module.
+    const [frontmatter] = await eslint.lintText("---\nconsole.log(1);\n---\n\n<div></div>\n", {
+      filePath: join(REPO_ROOT, ASTRO_SAMPLE_PATH),
+    });
+    expect(frontmatter.messages.filter((message) => message.ruleId === "no-console").map((m) => m.line)).toEqual([2]);
+    const [module] = await eslint.lintText("console.log(1);\nexport {};\n", {
+      filePath: join(REPO_ROOT, TS_SAMPLE_PATH),
+    });
+    expect(module.messages.filter((message) => message.ruleId === "no-console").map((m) => m.line)).toEqual([1]);
   }, 30_000);
 });

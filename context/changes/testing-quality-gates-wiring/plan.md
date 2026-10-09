@@ -48,7 +48,7 @@ Research: `context/changes/testing-quality-gates-wiring/research.md` (complete, 
 - `.claude/` is ignored except `settings.json` and `hooks/`, so `eslint .` no longer walks `.claude/worktrees/`.
 - The test-plan §3 Phase 5 row reads complete. §5's flake, hook and lint rows are active. §6.5 is the e2e recipe. §6.4 no longer lists the `.astro` gap. CLAUDE.md describes the gates.
 
-Verify with `npm test`, `npm run lint`, `npx astro check`, the break checks below (each reverted), `gh api` for the protection, and a live turn in a restarted session.
+Verify with `npm test`, `npm run lint`, `npx astro check`, the break checks below (each reverted), and a live turn in a restarted session. (Branch protection was dropped at implementation.)
 
 ### Key Discoveries:
 
@@ -176,7 +176,7 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
 
 ### Overview
 
-A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and `smoke`.
+A flaky e2e test fails CI, Vitest's pool is pinned. ~~`main` requires `ci` and `smoke`~~ (dropped by the owner at implementation).
 
 ### Changes Required:
 
@@ -199,7 +199,7 @@ A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and
 
 **Contract**: `test.pool: "forks"`, with a comment pointing at `src/lib/engine/fixtures/runner-zones.ts`.
 
-#### 3. Required checks on `main`
+#### 3. ~~Required checks on `main`~~ (dropped by the owner at implementation; see the decision note below)
 
 **Where**: GitHub repository settings via `gh api` (outward change). Ask the owner (push notification) right before running it.
 
@@ -228,7 +228,7 @@ A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and
 
 - This change's PR shows `ci` and `smoke` as required on GitHub
 
-**Implementation Note**: as Phase 1. The branch-protection step waits for the owner's explicit OK.
+**Implementation Note**: as Phase 1. ~~The branch-protection step waits for the owner's explicit OK.~~
 
 **Owner decision (2026-10-09, at implementation):** change #3 (required checks) and its `ci.yml` comment are dropped; rows 2.4 and 2.6 are marked dropped in Progress. See What We're NOT Doing.
 
@@ -489,7 +489,7 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 | `no-console-guard.test.ts` `.astro` case | after rebase | Keep `src/pages/offline.astro` (the sample path), or update the guard if S-05 moves it. |
 | `playwright.config.ts` `failOnFlakyTests` | after rebase | A spec that passes only on retry fails CI. Fix the cause (`waitForHydration`, isolation) rather than retrying. |
 | `vitest.config.ts` `pool: "forks"` | after rebase | None (already the default). |
-| `.claude/settings.json` + `.claude/hooks/` (UserPromptSubmit, PostToolUse, Stop, SubagentStop) | after rebase, and a restart of a session started in the worktree | ~8 s at the end of turns and subagent runs that changed the worktree; one send-back on red tests or lint (earlier WIP does not trigger it). The worktree needs `node_modules` (`npm ci`). |
+| `.claude/settings.json` + `.claude/hooks/` (UserPromptSubmit, PostToolUse, Stop, SubagentStop) | after rebase, and a restart of a session started in the worktree | ~13-15 s at the end of turns and subagent runs that changed the worktree; one send-back on red tests or lint (earlier WIP does not trigger it). The worktree needs `node_modules` (`npm ci`). |
 | `~/projects/.claude/settings.json` registration (Phase 5, after merge) | at the next restart of any session started in `~/projects` | The hook skips the S-05 worktree until it contains `.claude/hooks/end-of-turn.sh`. After the rebase, the same send-back applies. |
 
 ## Testing Strategy
@@ -507,7 +507,7 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 1. After Phase 3, restart a session in the repo and check `/hooks`. After Phase 5, do the same from `~/projects`.
 2. In that session, make a turn that breaks a unit test, and watch the Stop hook send it back.
-3. Open this change's PR and check that `ci` and `smoke` are marked required.
+3. ~~Open this change's PR and check that `ci` and `smoke` are marked required.~~ (dropped)
 
 ## Performance Considerations
 
@@ -524,6 +524,18 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 - Hook rules: `/Users/rafalskwara/projects/.claude/skills/10x-configure-hook/SKILL.md`, `references/anthropic.md`
 - F3: `context/archive/2026-10-09-testing-access-and-entitlement-boundary/follow-ups/review-fixes.md`
 - Flake history: `context/archive/2026-09-28-parallel-e2e-flakes/plan.md`
+
+## Addendum (implementation and impl review, 2026-10-09)
+
+- `.claude/hooks/lib.sh` (sourced) holds the helpers the three scripts share, so the fingerprint has one definition (an implementation ADAPT).
+- Impl review F1: all hook state is keyed by session **and agent** (`<session>.<agent_id|main>`).
+  - `turn-start.sh` also runs on `SubagentStart`, so each subagent gets its own start fingerprint.
+  - A new prompt resets only the main thread's files.
+  - A green run clears only its own agent's registry.
+  - A subagent is never judged on the parent's work in progress.
+- Impl review F2: the fingerprint hashes names, symlink targets (never followed) and blob hashes in one batched `git hash-object --stdin-paths`. No `xargs -I` (its 255-byte limit on macOS), no shell per file.
+- Impl review F3: ESLint gets `--` before the paths. Impl review F10: a documentation-only change runs nothing, even where the tools are not installed.
+- Impl review F5: the proof test shares symlinked stubs. Measured locally: hook proof ~8.5 s, whole unit suite ~10 s, so a code-changing Stop costs ~13-15 s with lint (the earlier ~8 s estimate was optimistic).
 
 ## Progress
 

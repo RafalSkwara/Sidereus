@@ -7,6 +7,7 @@
 - **Date**: 2026-10-09
 - **Verdict**: NEEDS ATTENTION
 - **Findings**: 0 critical, 7 warnings, 3 observations
+- **Triage**: all 10 fixed (F1 and F5 via Fix A), 2026-10-09
 
 ## Verdicts
 
@@ -68,7 +69,7 @@
   - Tradeoff: A subagent that edits only through Bash is not swept at its own stop.
   - Confidence: HIGH — narrow edit.
   - Blind spot: p8-style escapes through the parent sweep remain possible.
-- **Decision**: PENDING
+- **Decision**: FIXED via Fix A — state keyed by session and agent (`<session>.<agent_id|main>`), `turn-start.sh` also on SubagentStart, prompts reset only `main`, green clears only its own agent; three proof cases (parent WIP vs subagent, two subagents, prompt during a background subagent).
 
 ### F2 — The fingerprint fails silently on macOS for long paths, and is slow and unbounded on large trees
 
@@ -81,7 +82,7 @@
   - One `sh` per file: 2000 untracked files take 11.8 s, over turn-start's 10 s timeout.
   - Symlinks are followed: `ln -s /dev/zero` hangs until the timeout.
 - **Fix**: Hash the NUL-separated name list, then each file with `git hash-object -- <file>` in a bash `while read -r -d ''` loop (no `xargs -I`, no per-file `sh`), and hash a symlink by its `readlink` text. Add a proof case with a 270-byte path.
-- **Decision**: PENDING
+- **Decision**: FIXED — fingerprint from NUL-separated names, symlink targets and one batched `git hash-object --stdin-paths`; proof cases for a >255-byte path and a `/dev/zero` symlink.
 
 ### F3 — ESLint receives changed paths without `--`: a file named `-c.js` turns the lint into a false green
 
@@ -91,7 +92,7 @@
 - **Location**: .claude/hooks/end-of-turn.sh:93
 - **Detail**: Re-checked with real ESLint 10.10: `eslint --max-warnings 0 --no-warn-ignored -c.js ok.js` exits 0 (`-c` takes `.js` as a config) on a file with a `no-console` error. With `--` it reports the error and exits 1. A file named `--fix.js` makes ESLint lint `.` instead (whole type-aware repo; timeout and OOM risk).
 - **Fix**: `eslint --max-warnings 0 --no-warn-ignored -- "$@"`, plus a proof case (stub asserting `--` precedes the paths).
-- **Decision**: PENDING
+- **Decision**: FIXED — `eslint … -- "$@"`; the stub requires `--`; proof case with a root-level `-c.ts`. Break check: without `--` four cases fail.
 
 ### F4 — The proof test does not pin the fingerprint definition
 
@@ -101,7 +102,7 @@
 - **Location**: src/lib/agent-hooks.test.ts:274-285 (case 11)
 - **Detail**: Probe p14: removing `git diff HEAD --binary` from `fingerprint` leaves case 11 green, but under that mutant a turn that only edits a tracked file exits 0 (p15). That is a full gate bypass the suite would not catch. A mutant that drops the untracked-content part also survives.
 - **Fix**: Add 11b (turn-start, then edit tracked `src/a.ts` → exit 2) and 11c (an untracked file present at turn start whose content changes during the turn → exit 2).
-- **Decision**: PENDING
+- **Decision**: FIXED — cases for a tracked edit and an untracked file changed during the turn. Break check: dropping the diff from the fingerprint fails the tracked-edit case.
 
 ### F5 — The hook proof test made every agent turn ~10 s slower locally
 
@@ -123,7 +124,7 @@
   - Tradeoff: Editing a hook script no longer runs its proof at end of turn (plan review F6 asked for that).
   - Confidence: HIGH.
   - Blind spot: none.
-- **Decision**: PENDING
+- **Decision**: FIXED via Fix A — stubs written once and symlinked; proof file 12 s → 8.5 s locally (24 cases); plan numbers updated in the addendum (~13-15 s per code-changing Stop).
 
 ### F6 — Stale branch-protection wording in the plan, the brief and PR #150
 
@@ -140,7 +141,7 @@
   
   PR #150's body still promises required checks. In test-plan §5, "required" now means policy, not a GitHub required check, and the table does not say so.
 - **Fix**: Strike through or annotate the stale plan lines and change #3. Reword the brief's gap list. Add a one-line note under §5 ("required = enforced by CI and policy; no GitHub required checks, only a human merges"). Annotate plan-review F10. Update the PR #150 body.
-- **Decision**: PENDING
+- **Decision**: FIXED — stale plan lines struck through, brief now says three of four gaps, §5 note on "required", plan-review F10 annotated; PR #150 body updated at push.
 
 ### F7 — CLAUDE.md's agent-hooks bullet overclaims the fingerprint and lacks the `~/projects` snippet
 
@@ -150,7 +151,7 @@
 - **Location**: CLAUDE.md:30; .claude/hooks/turn-start.sh:2-3; end-of-turn.sh header
 - **Detail**: "so earlier work in progress never triggers it" is too strong. Once a turn changes anything in a checkout, all of its uncommitted work is linted and tested (probe p10: earlier broken `src/a.ts` plus a README-only edit gives exit 2). Registry roots have no fingerprint at all. The bullet also says "the whole unit suite" without the docs-only exception. The plan's Phase 4 contract asked for the exact `~/projects` snippet, which the bullet omits.
 - **Fix**: Reword the bullet and both script headers to "a turn that changes nothing in a checkout is not swept; a turn that changes anything is held to all of its uncommitted work", mention the docs-only exception, and add the `~/projects` snippet (with the self-guard), or state explicitly that Phase 5 adds it.
-- **Decision**: PENDING
+- **Decision**: FIXED — CLAUDE.md bullet rewritten (per-agent state, docs-only exception, held to all uncommitted work, the `~/projects` registration with its self-guard), script headers reworded.
 
 ### F8 — The new lesson's rule is not yet followed by the guard it cites
 
@@ -160,7 +161,7 @@
 - **Location**: context/foundation/lessons.md (last entry); src/lib/no-console-guard.test.ts:206-221
 - **Detail**: The lesson asks for one end-to-end `lintText` sample per file kind the guard covers (a TS file, `.astro` frontmatter, an `.astro` client script). The guard has samples only for client scripts. TS files and frontmatter still rest on `calculateConfigForFile` alone.
 - **Fix**: Add a TS sample and an `.astro` frontmatter sample to the guard's end-to-end case, each expecting one `no-console`.
-- **Decision**: PENDING
+- **Decision**: FIXED — the guard also lints an `.astro` frontmatter and a TypeScript sample end to end.
 
 ### F9 — Robustness nits in the hooks and the proof test
 
@@ -183,7 +184,7 @@
   - `-c commit.gpgsign=false -c core.hooksPath=/dev/null` and assert `code === 0` in `git()`;
   - filter every `GIT_*` variable;
   - renumber or drop the case numbers.
-- **Decision**: PENDING
+- **Decision**: FIXED — `core.quotePath=false`, state dir `mkdir -m 700` + owner check, `set --` before nvm, missing tool named, proof `git()` asserts exit 0 with gpgsign/hooksPath off and drops every `GIT_*`, cases unnumbered.
 
 ### F10 — Undocumented behaviours: lib.sh, registry reset per prompt, tool check before the docs-only rule
 
@@ -198,4 +199,4 @@
   
   All of this is acceptable, but unrecorded.
 - **Fix**: A plan addendum line for `lib.sh` and the per-prompt reset, the comment corrected, and the `npm ci` behaviour stated in CLAUDE.md, or the tool check moved after the docs-only decision.
-- **Decision**: PENDING
+- **Decision**: FIXED — plan addendum (lib.sh, per-agent state, timings); docs-only changes now run nothing even without tools (proof case).

@@ -211,4 +211,4 @@
   - Run `astro sync` in the hook when `.astro/` is missing, and name missing `node_modules` with an `npm ci` hint.
   - Add a `ci.yml` comment that `ci` and `smoke` are required-check names.
   - Update the OOM memory after Phase 1.
-- **Decision**: FIXED — output truncated to 200 lines, systemMessage when the retry pass is still red, `astro sync` when `.astro/` is missing, `npm ci` hint, ci.yml comment on required-check names, memory OOM note update after Phase 1.
+- **Decision**: FIXED — output truncated to 200 lines, systemMessage when the retry pass is still red, `astro sync` when `.astro/` is missing, `npm ci` hint, ci.yml comment on required-check names (later dropped with branch protection, 2026-10-09), memory OOM note update after Phase 1.
