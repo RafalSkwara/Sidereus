@@ -1,5 +1,5 @@
 ---
-import { ListChecks, Plus } from "lucide-react";
+import { Award, ListChecks, Plus } from "lucide-react";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
@@ -9,7 +9,7 @@ import PageHeader from "@/components/ui/PageHeader.astro";
 import Pager from "@/components/ui/Pager.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
+import { LOG_LIST, parseLogPage, PROGRESS_PAGE, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
 import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { targetLabel } from "@/lib/targets/labels";
@@ -68,6 +68,10 @@ const rowLink =
   <PageHeader slot="header" title={t.title} subtitle={t.intro}>
     {supabase && (
       <Fragment slot="actions">
+        <a href={PROGRESS_PAGE} class:list={buttonVariants({ variant: "action", size: "sm" })}>
+          <Award aria-hidden="true" />
+          {t.progress}
+        </a>
         <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "action", size: "sm" })}>
           <ListChecks aria-hidden="true" />
           {t.skyChecks}

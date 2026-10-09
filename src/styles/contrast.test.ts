@@ -88,6 +88,9 @@ const CHECKS: Check[] = [
     bg: ["plan-twilight", "plan-night"],
     floor: 3,
   },
+  // The "not seen yet" Sparkles icon (observing-progress) is `primary-strong`, a non-text indicator over the ground and
+  // the surface, in every theme (the cards and the tile sit on the page's light or dark ground, not on the night sky).
+  { themes: [...DARK_LIGHT, "red"], fg: ["primary-strong"], bg: ["background", "surface"], floor: 3 },
   // The focus ring (`--ring: var(--primary-strong)`) as a non-text indicator.
   { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 3 },
   { themes: ["red"], fg: ["foreground", "heading"], bg: ["background", "surface"], floor: 4.5 },

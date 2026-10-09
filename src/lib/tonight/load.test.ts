@@ -34,7 +34,7 @@ vi.mock("@/lib/gear/store", async (importOriginal) => {
 
 vi.mock("@/lib/observations/store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/observations/store")>();
-  return { ...actual, observationStore: { listForRanking: mocks.listLog } };
+  return { ...actual, observationStore: { listSeenEntries: mocks.listLog } };
 });
 
 // The real build unless a case says otherwise.
@@ -81,6 +81,19 @@ describe("loadTonight", () => {
     expect(result.tonightError).toBeNull();
     expect(result.view).not.toBeNull();
     expect(result.view?.headline.id).toBe("noForecast");
+  });
+
+  it("tells the build whether the log loaded, so a failed read marks nothing not seen yet", async () => {
+    await load();
+    expect(mocks.buildTonight.mock.calls[0][0]).toMatchObject({ logKnown: true });
+
+    mocks.buildTonight.mockClear();
+    mocks.listLog.mockRejectedValueOnce(new Error("log failed"));
+    const result = await load();
+    expect(result.logError).toBe("tonight.logFailed");
+    expect(mocks.buildTonight.mock.calls[0][0]).toMatchObject({ log: [], logKnown: false });
+    expect(result.view?.ranking?.entries.length).toBeGreaterThan(0);
+    expect(result.view?.ranking?.entries.every((entry) => !entry.notSeenYet)).toBe(true);
   });
 
   it("degrades a failing build to the tonight.failed notice, keeping the gear lists", async () => {

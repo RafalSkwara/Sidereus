@@ -1,0 +1,54 @@
+---
+// The progress page's checklist at a glance (observing-progress, M-3 S-05): one chip per catalogue object in
+// catalogue order, "M31" or "C14", the seen ones filled with a check in the corner. Seen is fill plus icon, never hue,
+// so red mode tells the two apart. The number sits low in a fixed-height chip and the icon high in its corner, so
+// "M110" and the icon fit a 320 px cell without overlapping. Each chip reads aloud as its Caldwell number (a Caldwell
+// chip shows "C20", so it says it too), its label, its localised common name and then "seen" or "not seen". `data-checklist-item` / `data-seen` (present only when seen) are the e2e hooks.
+import { Check } from "lucide-react";
+
+import { getMessages } from "@/i18n";
+import { localCommonName } from "@/lib/catalogue/common-names";
+import type { ChecklistItem } from "@/lib/progress/progress";
+
+interface Props {
+  items: readonly ChecklistItem[];
+  /** The number's prefix: "M" for the Messier list, "C" for Caldwell's own numbers. */
+  prefix: "M" | "C";
+  /** The list's accessible name ("Messier"). */
+  label: string;
+}
+
+const { items, prefix, label } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).progress;
+---
+
+<ul aria-label={label} class="grid grid-cols-6 gap-1.5 sm:grid-cols-10" data-checklist-grid>
+  {items.map((item) => {
+    const seen = item.seen !== null;
+    const name = localCommonName(item.id, item.commonName, locale);
+    return (
+      <li
+        data-checklist-item={item.id}
+        data-seen={seen ? "" : undefined}
+        class:list={[
+          "relative flex h-12 min-w-0 items-end justify-center rounded-lg border pb-1.5 font-mono text-label",
+          seen
+            ? "border-primary bg-primary font-semibold text-primary-foreground"
+            : "border-border bg-surface text-muted-foreground",
+        ]}
+      >
+        {seen && <Check className="absolute top-1 right-1 size-3" aria-hidden="true" />}
+        <span aria-hidden="true">
+          {prefix}
+          {item.number}
+        </span>
+        <span class="sr-only">
+          {prefix === "C" && `${prefix}${item.number}, `}
+          {item.label}
+          {name ? `, ${name}` : ""}, {seen ? t.seen : t.notSeen}
+        </span>
+      </li>
+    );
+  })}
+</ul>

@@ -376,11 +376,19 @@ export function createFormatter(locale: Locale) {
   }
 
   /**
+   * A calendar date as "12 Sept 2026" / "12 wrz 2026" (the seen tag, the progress page's first nights).
+   * `night` is `YYYY-MM-DD`, read in UTC so no time zone shifts it.
+   */
+  function formatShortDate(night: string): string {
+    return shortDateFormat.format(new Date(`${night}T00:00:00Z`));
+  }
+
+  /**
    * The tag on a ranked object the log counts as seen (FR-018): "Seen 3 times – last 12 Sept 2026".
    * `lastNight` is a calendar date (`YYYY-MM-DD`), read in UTC so no time zone shifts it.
    */
   function seenLine(seen: SeenSummary): string {
-    const date = shortDateFormat.format(new Date(`${seen.lastNight}T00:00:00Z`));
+    const date = formatShortDate(seen.lastNight);
     return plural(locale, seen.count, m.tonight.object.seen)({ count: num(seen.count), date });
   }
 
@@ -709,6 +717,7 @@ export function createFormatter(locale: Locale) {
     formatDayTime,
     formatNightDate,
     formatShortNightDate,
+    formatShortDate,
     darkSpanText,
     moonLine,
     cloudOutlookText,

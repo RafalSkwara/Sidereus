@@ -3,6 +3,8 @@
 // layout (TargetDetails) as the deep-sky rows, with the planet's facts, one detail eyepiece and a fixed "what you'll
 // see" note. Its `planet-<key>` id is where the live sky's markers land (`/tonight/planets#planet-jupiter`,
 // interactive-sky).
+import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
@@ -16,13 +18,19 @@ interface Props {
 
 const { entry, logHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight;
+const tipId = `not-seen-tip-planet-${entry.key}`;
 const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringText].filter(
   (text): text is string => text !== null,
 );
 ---
 
-<li id={`planet-${entry.key}`} class="scroll-mt-4 py-5 first:pt-0 last:pb-0">
-  <h3 class="font-display text-title font-semibold break-words text-heading">{entry.name}</h3>
+<li id={`planet-${entry.key}`} data-not-seen-scope class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0">
+  {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
+  <h3 class="font-display text-title font-semibold break-words text-heading">
+    <span data-target-name>{entry.name}</span>
+    {entry.notSeenYet && <NotSeenMark variant="tip" id={tipId} />}
+  </h3>
+  {entry.notSeenYet && <NotSeenTip id={tipId} />}
   {/* One fact per line under the name: magnitude, size, phase, rings. */}
   <div class="mt-1 space-y-1 font-mono text-label text-muted-foreground">
     {facts.map((fact) => (

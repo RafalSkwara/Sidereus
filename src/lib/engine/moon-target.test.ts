@@ -163,7 +163,7 @@ describe("moonTarget", () => {
       "2026-10-24",
     );
     const entry = moonTarget(input("2026-10-24", { seen }));
-    expect(entry?.seen).toEqual({ count: 1, lastNight: "2026-10-20" });
+    expect(entry?.seen).toEqual({ count: 1, firstNight: "2026-10-20", lastNight: "2026-10-20" });
   });
 });
 

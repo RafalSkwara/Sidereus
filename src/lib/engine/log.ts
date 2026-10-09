@@ -15,10 +15,12 @@ export interface LogEntry {
   rating: number;
 }
 
-/** What the ranking and the "seen N times – last [date]" tag know about an object already seen. */
+/** What the ranking, the "seen N times – last [date]" tag and the progress page know about an object already seen. */
 export interface SeenSummary {
   /** Distinct nights with an entry rated `LOG_PENALTY_MIN_RATING` or above. */
   count: number;
+  /** The earliest of those nights, `YYYY-MM-DD`. */
+  firstNight: string;
   /** The latest of those nights, `YYYY-MM-DD`. */
   lastNight: string;
 }
@@ -26,14 +28,14 @@ export interface SeenSummary {
 /**
  * The objects the log counts as seen by the ranked night `onOrBefore` (`YYYY-MM-DD`), keyed by target
  * key. Only entries rated `LOG_PENALTY_MIN_RATING` or above count (invariant 4), each night once,
- * so a duplicate entry never inflates the count; nights after `onOrBefore` are ignored. Objects with
- * no such entry are absent.
+ * so a duplicate entry never inflates the count; nights after `onOrBefore` are ignored, and with no
+ * `onOrBefore` no night is (the progress page asks for "ever"). Objects with no such entry are absent.
  */
-export function seenSummaries(entries: readonly LogEntry[], onOrBefore: string): ReadonlyMap<string, SeenSummary> {
+export function seenSummaries(entries: readonly LogEntry[], onOrBefore?: string): ReadonlyMap<string, SeenSummary> {
   const nights = new Map<string, Set<string>>();
   for (const { target, night, rating } of entries) {
     // ISO dates compare correctly as strings.
-    if (rating < LOG_PENALTY_MIN_RATING || night > onOrBefore) {
+    if (rating < LOG_PENALTY_MIN_RATING || (onOrBefore !== undefined && night > onOrBefore)) {
       continue;
     }
     const seen = nights.get(target) ?? new Set<string>();
@@ -43,7 +45,7 @@ export function seenSummaries(entries: readonly LogEntry[], onOrBefore: string):
   const summaries = new Map<string, SeenSummary>();
   for (const [target, seen] of nights) {
     const sorted = [...seen].sort();
-    summaries.set(target, { count: sorted.length, lastNight: sorted[sorted.length - 1] });
+    summaries.set(target, { count: sorted.length, firstNight: sorted[0], lastNight: sorted[sorted.length - 1] });
   }
   return summaries;
 }

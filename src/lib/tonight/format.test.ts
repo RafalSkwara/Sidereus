@@ -34,7 +34,18 @@ describe("times in the site's zone (NFR daylight-saving)", () => {
 
   it("reads calendar-date nights as dates, never shifted by a time zone", () => {
     expect(formatShortNightDate("2026-12-31")).toBe("Thu 31 Dec");
-    expect(seenLine({ count: 1, lastNight: "2026-12-31" })).toBe("Seen 1 time – last 31 Dec 2026");
+    expect(seenLine({ count: 1, firstNight: "2026-12-31", lastNight: "2026-12-31" })).toBe(
+      "Seen 1 time – last 31 Dec 2026",
+    );
+  });
+});
+
+describe("formatShortDate", () => {
+  it("writes a calendar date as day, short month and year in each locale, never shifted by a zone", () => {
+    expect(createFormatter("en").formatShortDate("2026-12-31")).toBe("31 Dec 2026");
+    expect(createFormatter("en").formatShortDate("2026-03-01")).toBe("1 Mar 2026");
+    expect(createFormatter("pl").formatShortDate("2026-12-31")).toBe("31 gru 2026");
+    expect(createFormatter("pl").formatShortDate("2026-03-01")).toBe("1 mar 2026");
   });
 });
 

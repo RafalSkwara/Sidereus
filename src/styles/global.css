@@ -567,6 +567,19 @@
 }
 
 /*
+ * The "not seen yet" tooltip (observing-progress). Click, Esc and outside presses are `data-open` on the tooltip
+ * (`not-seen-tip.ts`); hover and keyboard focus open it here, and only where a pointer can really hover, so a tap never
+ * leaves a stuck `:hover`. The card's `li` is the scope (`data-not-seen-scope`): the button sits in the heading and the
+ * tooltip outside it. Unlayered, so it beats the tooltip's `hidden` utility; Esc sets `data-dismissed` to override it.
+ */
+@media (hover: hover) {
+  [data-not-seen-scope]:has([data-not-seen-button]:is(:hover, :focus-visible), [data-not-seen-tooltip]:hover)
+    [data-not-seen-tooltip]:not([data-dismissed]) {
+    display: block;
+  }
+}
+
+/*
  * The interactive sky's band (interactive-sky): zenith at the top in every frame (so no seam opens under the Topbar's
  * zenith strip), the middle and horizon stops mixed from the night tokens towards the dusk tokens. The island sets
  * `--dusk-glow-share` (glow over the rest) and `--dusk-twilight-share` (twilight over night) from `mixPercentages`;

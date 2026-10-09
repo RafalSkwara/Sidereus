@@ -39,7 +39,7 @@ const TONIGHT_PAGES = [
   "/tonight/nights",
 ];
 /** The other app pages checked for sideways scroll: plain server-rendered. */
-const APP_PAGES = ["/gear", "/log"];
+const APP_PAGES = ["/gear", "/log", "/log/progress"];
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);

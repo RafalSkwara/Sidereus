@@ -32,6 +32,9 @@ const INVALID_TEXT = "22P02";
 /** Entries per page of the log (S-07). Far below PostgREST's `max_rows`, so no page is ever cut short. */
 export const LOG_PAGE_SIZE = 50;
 
+/** Rows per request when reading every seen entry: PostgREST's `max_rows` (`supabase/config.toml`). */
+export const SEEN_PAGE_SIZE = 1000;
+
 /**
  * One log entry as the log pages show it. A `null` gear id means that site or telescope has been deleted.
  *
@@ -240,21 +243,42 @@ export const observationStore = {
   },
 
   /**
-   * The caller's entries that can count as seen (rated `LOG_PENALTY_MIN_RATING` or above; lower ones
-   * never affect the ranking), newest night first, then by target key, reduced to the engine's `LogEntry`.
-   * The order makes any cut by PostgREST's `max_rows` deterministic: it drops only the oldest nights, which
-   * can undercount "seen N times" but never removes an object's penalty.
+   * Every one of the caller's entries that can count as seen (rated `LOG_PENALTY_MIN_RATING` or above; lower
+   * ones never affect the ranking or the progress page), newest night first, then by target key, then by id,
+   * reduced to the engine's `LogEntry`. PostgREST cuts a response at `max_rows` without an error, so the first
+   * request also asks for the exact total (`count: "exact"`), and the read goes on from the rows actually
+   * received until it has that many: normally one request, and still every row when the host's `max_rows` is
+   * lower than `SEEN_PAGE_SIZE` (a short page just means another request). An empty page ends the read too, so a
+   * missing count or rows deleted meanwhile can never loop forever. `id` is the last sort key so a tie (two
+   * entries for one object on one night) never straddles a page edge and loses or repeats a row. The key is
+   * ordered on but not selected.
    */
-  async listForRanking(client: TypedSupabaseClient): Promise<LogEntry[]> {
-    const { data, error } = await client
-      .from("observations")
-      .select("target, night, rating")
-      .gte("rating", LOG_PENALTY_MIN_RATING)
-      .order("night", { ascending: false })
-      .order("target", { ascending: true });
-    if (error) {
-      throw new Error(LOAD_FAILED);
+  async listSeenEntries(client: TypedSupabaseClient): Promise<LogEntry[]> {
+    const entries: LogEntry[] = [];
+    let total: number | null = null;
+    for (;;) {
+      const from = entries.length;
+      const { data, error, count } = await client
+        .from("observations")
+        .select("target, night, rating", from === 0 ? { count: "exact" } : undefined)
+        .gte("rating", LOG_PENALTY_MIN_RATING)
+        .order("night", { ascending: false })
+        .order("target", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, from + SEEN_PAGE_SIZE - 1);
+      if (error) {
+        throw new Error(LOAD_FAILED, { cause: error });
+      }
+      if (from === 0) {
+        total = count;
+      }
+      if (data.length === 0) {
+        return entries;
+      }
+      entries.push(...data);
+      if (total !== null && entries.length >= total) {
+        return entries;
+      }
     }
-    return data;
   },
 };

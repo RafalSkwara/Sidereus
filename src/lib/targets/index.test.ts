@@ -41,7 +41,7 @@ describe("MOON_TARGET_KEY", () => {
       eyepieces: [{ id: "e25", focalLengthMm: 25, afovDeg: 50 }],
       seen: seenSummaries([{ target: MOON_TARGET_KEY, night: "2026-10-20", rating: 4 }], "2026-10-24"),
     });
-    expect(entry?.seen).toEqual({ count: 1, lastNight: "2026-10-20" });
+    expect(entry?.seen).toEqual({ count: 1, firstNight: "2026-10-20", lastNight: "2026-10-20" });
   });
 });
 

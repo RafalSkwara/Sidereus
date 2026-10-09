@@ -29,6 +29,11 @@ import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
 import GearCard from "@/components/tonight/GearCard.astro";
+import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import SeenList from "@/components/progress/SeenList.astro";
+import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
+import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
@@ -53,6 +58,7 @@ import {
   type TonightPlanetEntry,
   type TonightView,
 } from "@/lib/tonight/build";
+import { observingProgress } from "@/lib/progress/progress";
 import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
 
@@ -364,6 +370,7 @@ const sampleTarget = (
   pair: null,
   reason: "",
   seenText: null,
+  notSeenYet: true,
 });
 const messierSample = (n: number) => ({ id: `M${n}`, label: `M${n}`, caldwell: null });
 const sampleTargets = [
@@ -415,6 +422,7 @@ const samplePlanet = (key: "jupiter" | "saturn", bestTime: string, bestAt: numbe
   reason: m.tonight.planets.reason.high.night({ time: bestTime }),
   note: "",
   seenText: null,
+  notSeenYet: true,
 });
 
 // Nights 1-3 carry a verdict (go, marginal, no-go), nights 4-7 an outlook; `null` is a night without a clear share.
@@ -581,6 +589,17 @@ const tileHover = "*:bg-accent";
 const tileFocus = "*:outline-2 *:-outline-offset-2 *:outline-ring";
 
 // Shared page classes (token classes and type roles only).
+// The progress checklists' specimens (observing-progress): a log with a few seen objects, and an empty one.
+const progressSome = observingProgress([
+  { target: "M1", night: "2026-08-02", rating: 3 },
+  { target: "M31", night: "2026-09-12", rating: 4 },
+  { target: "M31", night: "2026-08-20", rating: 5 },
+  { target: "M110", night: "2026-09-12", rating: 3 },
+  { target: "M13", night: "2026-09-01", rating: 2 },
+  { target: "NGC7000", night: "2026-09-05", rating: 5 },
+]);
+const progressNone = observingProgress([]);
+
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
 const blockNote = "text-sm text-muted-foreground";
@@ -1926,6 +1945,111 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               active — N/A (no pressed style: a tile navigates to its page) · disabled — N/A (a link is never disabled)
               · error — N/A (no view, no tiles) · loading — see TonightSkeleton
+            </p>
+          </section>
+
+          <!-- NotSeenMark -->
+          <section class:list={block} aria-labelledby="c-not-seen">
+            <h3 id="c-not-seen" class:list={blockTitle}>
+              NotSeenMark, NotSeenTip and NotSeenLegend
+            </h3>
+            <p class:list={blockNote}>
+              The "tip" variant is a button inside a card's heading; its tooltip is a separate part that renders after
+              the heading, placed against the card (`relative`, full width). The "static" variant is an icon with
+              screen-reader text for where a button is not allowed (the tile's link, a row's summary), explained once by
+              the legend line.
+            </p>
+            <div class:list={grid}>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · tip · live (hover, Tab or tap it; Esc closes)</p>
+                <div class="relative min-h-28" data-not-seen-scope>
+                  <h4 class="font-display text-title font-semibold text-heading">
+                    <span data-target-name>M31</span>
+                    <NotSeenMark variant="tip" id="c-nsm-live-tip" />
+                  </h4>
+                  <NotSeenTip id="c-nsm-live-tip" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>open · specimen (the open prop)</p>
+                <div class="relative min-h-28" data-not-seen-scope>
+                  <h4 class="font-display text-title font-semibold text-heading">
+                    <span data-target-name>M31</span>
+                    <NotSeenMark variant="tip" id="c-nsm-open-tip" />
+                  </h4>
+                  <NotSeenTip id="c-nsm-open-tip" open />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>hover · specimen (the button's hover fill)</p>
+                <div class="relative min-h-28" data-not-seen-scope>
+                  <h4 class="font-display text-title font-semibold text-heading">
+                    <span data-target-name>M31</span>
+                    <NotSeenMark variant="tip" id="c-nsm-hover-tip" class="bg-accent" />
+                  </h4>
+                  <NotSeenTip id="c-nsm-hover-tip" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>focus-visible · specimen (the ring)</p>
+                <div class="relative min-h-28" data-not-seen-scope>
+                  <h4 class="font-display text-title font-semibold text-heading">
+                    <span data-target-name>M31</span>
+                    <NotSeenMark variant="tip" id="c-nsm-focus-tip" class:list={[focusRing]} />
+                  </h4>
+                  <NotSeenTip id="c-nsm-focus-tip" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · static, with its legend line</p>
+                <p class="font-display text-title font-semibold text-heading">
+                  M31
+                  <NotSeenMark variant="static" />
+                </p>
+                <NotSeenLegend />
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              disabled — N/A (not a form control; it works offline, like the page it sits on) · error — N/A (it reads
+              the page's data, nothing can fail in it) · empty — N/A (a seen target renders no mark at all, only the
+              seen tag) · loading — see TonightSkeleton (the tile's legend line has a bar). Red mode: the sparkle shape
+              and the button's ring carry it, not a hue.
+            </p>
+          </section>
+
+          <!-- ChecklistGrid and SeenList -->
+          <section class:list={block} aria-labelledby="c-checklist">
+            <h3 id="c-checklist" class:list={blockTitle}>
+              ChecklistGrid and SeenList
+            </h3>
+            <p class:list={blockNote}>
+              The progress page's checklist: a chip per catalogue object (a seen chip is filled and carries a check in
+              its corner, so red mode tells it apart by fill and icon, not hue), then the seen objects as a list with
+              the night each was first logged with a rating of 3 or above.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · Messier, 3 seen (a rating of 2 ticks nothing)</p>
+                <ChecklistGrid items={progressSome.messier.items} prefix="M" label="Messier" />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · SeenList for the same checklist (catalogue order, first night)</p>
+                <SeenList items={progressSome.messier.items} label="Messier: seen so far" />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · Caldwell, 1 seen (C numbers)</p>
+                <ChecklistGrid items={progressSome.caldwell.items} prefix="C" label="Caldwell" />
+                <SeenList items={progressSome.caldwell.items} prefix="C" label="Caldwell: seen so far" />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · nothing seen (every chip outlined; SeenList renders nothing)</p>
+                <ChecklistGrid items={progressNone.messier.items} prefix="M" label="Messier" />
+                <SeenList items={progressNone.messier.items} label="Messier: seen so far" />
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (chips are not interactive: no links, no controls) · error —
+              N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
             </p>
           </section>
 

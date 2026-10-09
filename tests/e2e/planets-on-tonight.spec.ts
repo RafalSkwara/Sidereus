@@ -39,7 +39,8 @@ test("marking a planet observed on the Planets page saves it and the log lists i
   }
 
   const firstCard = cards.first();
-  const name = ((await firstCard.getByRole("heading", { level: 3 }).textContent()) ?? "").trim();
+  // The heading also holds the "not seen yet" button; the name sits in its own span.
+  const name = ((await firstCard.locator("[data-target-name]").textContent()) ?? "").trim();
   const markObserved = firstCard.getByRole("link", { name: en.tonight.object.markObserved });
   const key = new URL((await markObserved.getAttribute("href")) ?? "", "http://localhost").searchParams.get("object");
   const planetNames: Record<string, string> = en.targets.planet;

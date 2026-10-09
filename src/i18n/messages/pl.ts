@@ -505,6 +505,12 @@ export const pl = {
         other: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
       },
       markObserved: "Zapisz obserwację",
+      // Gender-neutral on purpose: the targets mix genders (galaktyka, Jowisz, Wenus), so no "Widziany/Widziana".
+      notSeen: {
+        label: "Jeszcze nie zaobserwowano",
+        legend: "Jeszcze nie zaobserwowano: brak wpisu z oceną 3 lub wyższą",
+        legendShort: "Jeszcze nie zaobserwowano",
+      },
     },
 
     // Planet names stay in the nominative: where one follows other words (the "Mark observed" link name), a colon
@@ -902,6 +908,7 @@ export const pl = {
       deletedGear: (p) => `${p.name} (usunięte)`,
       pages: "Strony dziennika",
       skyChecks: "Oceny nieba",
+      progress: "Postępy",
       newer: "← Nowsze",
       older: "Starsze →",
       saved: (p) => `Zapisano obserwację: ${p.object}.`,
@@ -934,6 +941,24 @@ export const pl = {
         empty: "Nic jeszcze nie zapisano — otwórz „Dziś w nocy”, gdy masz sieć.",
       },
     },
+  },
+
+  // Gender-neutral on purpose: the objects mix genders, so no "widziany/widziana".
+  progress: {
+    title: "Twoje postępy",
+    intro: "Obiekty zapisane z oceną 3 lub wyższą liczą się jako zaobserwowane. Niższe oceny niczego nie zaznaczają.",
+    firsts: "Pierwsze razy",
+    firstSeen: (p: { date: string }) => `Pierwsza obserwacja: ${p.date}`,
+    notYet: "Jeszcze nie",
+    messier: "Messier",
+    caldwell: "Caldwell",
+    count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
+    caldwellNote: "Lista obejmuje obiekty Caldwella widoczne ze średnich szerokości północnych.",
+    seenHeading: "Zaobserwowane do tej pory",
+    seen: "zaobserwowano",
+    notSeen: "jeszcze nie zaobserwowano",
+    empty: "Nic jeszcze nie zaobserwowano.",
+    toTonight: "Zobacz, co warto obejrzeć dziś w nocy",
   },
 
   skyChecks: {
