@@ -1,0 +1,20 @@
+---
+// The one muted legend line for the static "not seen yet" icons (observing-progress): the dashboard tile's rows and
+// the collapsed "show the other N" rows cannot hold a button, so the line explains the icon once. The caller renders
+// it only when at least one row it covers is not seen. The icon is decorative: the text carries the meaning.
+import { Sparkles } from "lucide-react";
+
+import { getMessages } from "@/i18n";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const legend = getMessages(Astro.locals.locale).tonight.object.notSeen.legendShort;
+---
+
+<p class:list={["flex items-center gap-1.5 text-label text-muted-foreground", className]} data-not-seen-legend>
+  <Sparkles className="size-4 shrink-0 text-primary-strong" aria-hidden="true" />
+  <span class="min-w-0">{legend}</span>
+</p>

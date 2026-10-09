@@ -505,6 +505,12 @@ export const pl = {
         other: (p) => `Widziany ${p.count} razy – ostatnio ${p.date}`,
       },
       markObserved: "Zapisz obserwację",
+      // Gender-neutral on purpose: the targets mix genders (galaktyka, Jowisz, Wenus), so no "Widziany/Widziana".
+      notSeen: {
+        label: "Jeszcze nie zaobserwowano",
+        legend: "Jeszcze nie zaobserwowano: brak wpisu z oceną 3 lub wyższą",
+        legendShort: "Jeszcze nie zaobserwowano",
+      },
     },
 
     // Planet names stay in the nominative: where one follows other words (the "Mark observed" link name), a colon

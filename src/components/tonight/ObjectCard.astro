@@ -2,6 +2,8 @@
 // One of tonight's best objects on Targets (tonight-dashboard): a row in the top band's ruled list, its heading and
 // the shared details, open at once. The rest of the list are ObjectRow's expandable rows. Its `object-<id>` id is
 // where the live sky's markers land (`/tonight/targets#object-M31` or `#object-NGC7000`, interactive-sky).
+import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import { localCommonName } from "@/lib/catalogue/common-names";
@@ -20,19 +22,26 @@ const { locale } = Astro.locals;
 const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
 const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
+const tipId = `not-seen-tip-${entry.id}`;
 ---
 
 <li
   id={`object-${entry.id}`}
   data-object={entry.id}
   data-label={entry.label}
-  class="scroll-mt-4 py-5 first:pt-0 last:pb-0"
+  data-not-seen-scope
+  class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0"
 >
+  {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
   <h3 class="font-display text-title font-semibold break-words text-heading">
     <span class="mr-2 font-mono text-label font-normal text-muted-foreground">{rank}.</span>
-    {entry.label}
-    {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
+    <span data-target-name>
+      {entry.label}
+      {commonName && <span class="text-body text-foreground"> · {commonName}</span>}
+    </span>
+    {entry.notSeenYet && <NotSeenMark variant="tip" id={tipId} />}
   </h3>
+  {entry.notSeenYet && <NotSeenTip id={tipId} />}
   <p class="mt-1 text-label text-muted-foreground">{detailLine}</p>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 

@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react";
 
 import { ServerError } from "@/components/forms/ServerError";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
+import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import ObjectCard from "@/components/tonight/ObjectCard.astro";
 import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
@@ -199,6 +200,8 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                     </nav>
                     <p class="text-label text-muted-foreground">{sort === "time" ? a.sortHintTime : a.sortHintRank}</p>
                   </div>
+                  {/* The rows' static "not seen yet" icons (a <summary> holds no button) are explained once, above the list. */}
+                  {rest.some((entry) => entry.notSeenYet) && <NotSeenLegend class="mb-2" />}
                   {/* Scrolls on its own, so the washed-out group below stays near; each row is focusable, and focus scrolls it into view. */}
                   <div
                     role="region"

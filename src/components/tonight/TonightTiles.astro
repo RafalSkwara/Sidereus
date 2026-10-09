@@ -12,6 +12,8 @@
  * its heading does not name the page it opens. The → says it opens a page.
  */
 import MoonDisc from "@/components/tonight/MoonDisc";
+import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
+import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import Tile from "@/components/ui/Tile.astro";
 import { getMessages, plural } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
@@ -40,7 +42,9 @@ const targets = view.summaryTargets.map((entry) => ({
   id: entry.id,
   name: localCommonName(entry.id, entry.commonName, locale) ?? entry.label,
   bestTime: entry.bestTime,
+  notSeenYet: entry.notSeenYet,
 }));
+const anyNotSeen = targets.some((target) => target.notSeenYet);
 
 // Session plan: the row the server's `nextUp` points at (by best time, named as the live sky's markers name it).
 const plan = view.sessionPlan;
@@ -110,11 +114,16 @@ const nightsSummary = view.nights
         <ul class="mt-4">
           {targets.map((target) => (
             <li class="flex items-baseline justify-between gap-3 py-1.5 text-title">
-              <span class="min-w-0 font-semibold break-words">{target.name}</span>
+              <span class="min-w-0 font-semibold break-words">
+                {target.name}
+                {/* The tile is a link: no button in it, so a static icon and one legend line under the rows. */}
+                {target.notSeenYet && <NotSeenMark variant="static" />}
+              </span>
               <span class="shrink-0 tabular-nums">{target.bestTime}</span>
             </li>
           ))}
         </ul>
+        {anyNotSeen && <NotSeenLegend class="mt-2" />}
         {view.ranking && (
           <span class:list={[caption]}>
             {plural(locale, view.ranking.clearedCount, t.targetsCaption)({ count: String(view.ranking.clearedCount) })}

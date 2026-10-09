@@ -129,6 +129,8 @@ export interface TonightEntry {
   reason: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the object as seen (FR-018), else `null`. */
   seenText: string | null;
+  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  notSeenYet: boolean;
 }
 
 /**
@@ -163,6 +165,8 @@ export interface TonightMoonEntry {
   note: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the Moon as seen, else `null`. */
   seenText: string | null;
+  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  notSeenYet: boolean;
 }
 
 /** One planet of the "Planets tonight" section (M-2 S-01). */
@@ -196,6 +200,8 @@ export interface TonightPlanetEntry {
   note: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the planet as seen, else `null`. It never reorders. */
   seenText: string | null;
+  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  notSeenYet: boolean;
 }
 
 /**
@@ -761,6 +767,7 @@ export function buildTonight(
         pair: toPair(telescope, entry.pair),
         reason: reasonLine(entry, context),
         seenText: entry.seen ? seenLine(entry.seen) : null,
+        notSeenYet: entry.seen === null,
       })),
       washedOutCount: ranked.washedOutCount,
       washedOutText: washedOutLine(ranked.washedOutCount),
@@ -842,6 +849,7 @@ export function buildTonight(
           reason: planetReasonLine(entry, timeZone),
           note: messages.tonight.planets.note[entry.key],
           seenText: entry.seen ? seenLine(entry.seen) : null,
+          notSeenYet: entry.seen === null,
         })),
         noneText:
           ranked.length === 0
@@ -898,6 +906,7 @@ export function buildTonight(
             reason: moonReasonLine(entry, timeZone),
             note: messages.tonight.moon.note[entry.facts.band],
             seenText: entry.seen ? seenLine(entry.seen) : null,
+            notSeenYet: entry.seen === null,
           };
           planMoon = entry;
         }

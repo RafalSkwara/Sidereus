@@ -1,0 +1,52 @@
+---
+// The "not seen yet" mark (observing-progress, M-3 S-05): a Sparkles icon beside a Tonight target the user has never
+// logged with a rating of 3 or above. Two variants, one icon:
+//  - `tip`: a real button for a card's heading (the one place an interactive control is valid). Its `aria-describedby`
+//    names the tooltip `NotSeenTip` renders OUTSIDE the heading, with the same `id`. The button gets a hairline ring,
+//    so red mode (no hue) tells it apart by shape as well as by the sparkle.
+//  - `static`: the icon plus an `sr-only` label, for the surfaces where a button is not allowed (the dashboard tile's
+//    link, the collapsed rows' `<summary>`); `NotSeenLegend` explains it there.
+// Behaviour lives in `not-seen-tip.ts` (one `data-open` state, delegated listeners); this block only calls it.
+import { Sparkles } from "lucide-react";
+
+import { getMessages } from "@/i18n";
+
+interface Props {
+  variant: "tip" | "static";
+  /** The tooltip's id (`tip` only): the button describes it, `NotSeenTip` carries it. */
+  id?: string;
+  /** Extra classes; `/design` uses it to show the hover and focus-visible looks. */
+  class?: string;
+}
+
+const { variant, id, class: className } = Astro.props;
+const label = getMessages(Astro.locals.locale).tonight.object.notSeen.label;
+---
+
+{variant === "tip" ? (
+  <button
+    type="button"
+    aria-label={label}
+    aria-describedby={id}
+    data-not-seen-button
+    class:list={[
+      "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border align-middle text-primary-strong",
+      "transition-colors hover:bg-accent motion-reduce:transition-none",
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+      className,
+    ]}
+  >
+    <Sparkles className="size-3.5" aria-hidden="true" />
+  </button>
+) : (
+  <span class="ml-1.5 inline-flex shrink-0 items-center align-middle text-primary-strong" data-not-seen-static>
+    <Sparkles className="size-4" aria-hidden="true" />
+    <span class="sr-only">{label}</span>
+  </span>
+)}
+
+<script>
+  import { initNotSeenTip } from "@/components/tonight/not-seen-tip";
+
+  initNotSeenTip();
+</script>

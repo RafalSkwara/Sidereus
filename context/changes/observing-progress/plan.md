@@ -461,18 +461,18 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated
 
-- [x] 1.1 `src/lib/progress/progress.test.ts` and `src/lib/engine/log.test.ts` pass under `npm test`, including a rated-1-2-never-ticks case
-- [x] 1.2 `tests/db/observations.test.ts` passes under `npm run test:db` against local Supabase, including the 1,100-entry paging case
-- [x] 1.3 `npx astro check`, `npm run lint` and the full `npm test` pass
+- [x] 1.1 `src/lib/progress/progress.test.ts` and `src/lib/engine/log.test.ts` pass under `npm test`, including a rated-1-2-never-ticks case — 44c69e0
+- [x] 1.2 `tests/db/observations.test.ts` passes under `npm run test:db` against local Supabase, including the 1,100-entry paging case — 44c69e0
+- [x] 1.3 `npx astro check`, `npm run lint` and the full `npm test` pass — 44c69e0
 
 ### Phase 2: "Not seen yet" on Tonight
 
 #### Automated
 
-- [ ] 2.1 `src/lib/tonight/build.test.ts` asserts `notSeenYet` is true for an unlogged object, planet and Moon, false after a rating ≥ 3, and true with only a rating ≤ 2
-- [ ] 2.2 `tests/e2e/observing-progress.spec.ts` Tonight cases pass (`npx playwright test observing-progress`)
-- [ ] 2.3 `tests/e2e/tonight-phone.spec.ts`, `tonight-targets.spec.ts`, `tonight-dashboard.spec.ts`, `observation-log.spec.ts`, `planets-on-tonight.spec.ts` and `moon-as-target.spec.ts` still pass
-- [ ] 2.4 `npx astro check`, `npm run lint`, `npm test` (incl. i18n parity, `no-hardcoded-colors`, `red-theme`, `contrast`) pass
+- [x] 2.1 `src/lib/tonight/build.test.ts` asserts `notSeenYet` is true for an unlogged object, planet and Moon, false after a rating ≥ 3, and true with only a rating ≤ 2
+- [x] 2.2 `tests/e2e/observing-progress.spec.ts` Tonight cases pass (`npx playwright test observing-progress`)
+- [x] 2.3 `tests/e2e/tonight-phone.spec.ts`, `tonight-targets.spec.ts`, `tonight-dashboard.spec.ts`, `observation-log.spec.ts`, `planets-on-tonight.spec.ts` and `moon-as-target.spec.ts` still pass
+- [x] 2.4 `npx astro check`, `npm run lint`, `npm test` (incl. i18n parity, `no-hardcoded-colors`, `red-theme`, `contrast`) pass
 
 #### Manual
 
@@ -481,7 +481,7 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated (added by plan review)
 
-- [ ] 2.7 `tests/e2e/observing-progress.spec.ts` touch case passes: a tap opens the tooltip, a second tap, Esc or an outside tap closes it
+- [x] 2.7 `tests/e2e/observing-progress.spec.ts` touch case passes: a tap opens the tooltip, a second tap, Esc or an outside tap closes it
 
 ### Phase 3: The progress page
 

@@ -5,6 +5,8 @@
 // gate), its observing details with the shared TargetDetails layout. Without a civil window (high-latitude summer)
 // there are no states: only the phase shows, from local noon.
 import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
+import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import Band from "@/components/ui/Band.astro";
@@ -55,8 +57,20 @@ const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
   )}
 
   {target && (
-    <div class="mt-6 border-t border-border pt-6">
-      {target.seenText && <SeenTag text={target.seenText} />}
+    <div class="relative mt-6 border-t border-border pt-6" data-not-seen-scope>
+      {/* The Moon shows no visible name, so the mark takes the seen tag's place: the two never show together. */}
+      {target.seenText ? (
+        <SeenTag text={target.seenText} />
+      ) : (
+        target.notSeenYet && (
+          <>
+            <p class="mt-3">
+              <NotSeenMark variant="tip" id="not-seen-tip-moon" />
+            </p>
+            <NotSeenTip id="not-seen-tip-moon" />
+          </>
+        )
+      )}
 
       <TargetDetails
         windowStart={target.windowStart}

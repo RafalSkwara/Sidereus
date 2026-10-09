@@ -535,6 +535,12 @@ export const en = {
         other: (p) => `Seen ${p.count} times – last ${p.date}`,
       } as PluralForms<Seen>,
       markObserved: "Mark observed",
+      /** observing-progress: the mark on a target never logged with a rating of 3 or above. */
+      notSeen: {
+        label: "Not seen yet",
+        legend: "Not seen yet: you haven't logged it with a rating of 3 or above",
+        legendShort: "Not seen yet",
+      },
     },
 
     /**
