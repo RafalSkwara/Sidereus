@@ -1,0 +1,105 @@
+---
+import { Telescope } from "lucide-react";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import GearShell from "@/components/gear/GearShell.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import SeenList from "@/components/progress/SeenList.astro";
+import BackLink from "@/components/ui/BackLink.astro";
+import Band from "@/components/ui/Band.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { LOG_LIST } from "@/lib/observations/redirect";
+import { observationStore } from "@/lib/observations/store";
+import { observingProgress, type ObservingProgress } from "@/lib/progress/progress";
+import type { TargetKey } from "@/lib/targets";
+import { targetLabel } from "@/lib/targets/labels";
+import { createFormatter } from "@/lib/tonight/format";
+
+// The progress page (observing-progress, M-3 S-05, FR-039/FR-040): the planets and the Moon as firsts, then the
+// Messier and Caldwell checklists, all from the user's entries rated 3 or above through the ranking's own "seen" rule.
+const { supabase, locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.progress;
+
+let progress: ObservingProgress | null = null;
+let loadError: MessageKey | null = null;
+if (supabase) {
+  try {
+    progress = observingProgress(await observationStore.listSeenEntries(supabase));
+  } catch {
+    loadError = "errors.load.observations";
+  }
+}
+
+const format = createFormatter(locale);
+const nothingSeen =
+  progress !== null &&
+  progress.messier.seenCount === 0 &&
+  progress.caldwell.seenCount === 0 &&
+  progress.firsts.every((first) => first.firstNight === null);
+---
+
+<GearShell title={t.title}>
+  <Fragment slot="header">
+    <BackLink href={LOG_LIST} label={m.nav.log} />
+    <div class="mt-2">
+      <PageHeader title={t.title} subtitle={t.intro} />
+    </div>
+  </Fragment>
+
+  {!supabase ? (
+    <DatabaseMissing />
+  ) : loadError ? (
+    <ServerError message={translateKey(m, loadError, "errors.generic")} />
+  ) : (
+    progress && (
+      <div>
+        {nothingSeen && (
+          <p class="mb-6" data-progress-empty>
+            <a href="/tonight" class:list={buttonVariants({ variant: "action", size: "sm" })}>
+              <Telescope aria-hidden="true" />
+              {t.empty}
+            </a>
+          </p>
+        )}
+
+        <Band headingId="progress-firsts-heading" heading={t.firsts}>
+          <ul class="divide-y divide-border" data-progress-firsts>
+            {progress.firsts.map((first) => (
+              <li
+                class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 first:pt-0 last:pb-0"
+                data-first={first.key}
+              >
+                <span class="text-body font-semibold break-words text-heading">
+                  {targetLabel(first.key as TargetKey, locale).id}
+                </span>
+                <span class="text-label text-muted-foreground">
+                  {first.firstNight ? t.firstSeen({ date: format.formatShortDate(first.firstNight) }) : t.notYet}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Band>
+
+        <Band
+          headingId="progress-messier-heading"
+          heading={`${t.messier} · ${t.count({ seen: String(progress.messier.seenCount), total: String(progress.messier.total) })}`}
+        >
+          <ChecklistGrid items={progress.messier.items} prefix="M" label={t.messier} />
+          <SeenList items={progress.messier.items} label={`${t.messier}: ${t.seenHeading}`} />
+        </Band>
+
+        <Band
+          headingId="progress-caldwell-heading"
+          heading={`${t.caldwell} · ${t.count({ seen: String(progress.caldwell.seenCount), total: String(progress.caldwell.total) })}`}
+        >
+          <p class="mb-4 text-label text-muted-foreground">{t.caldwellNote}</p>
+          <ChecklistGrid items={progress.caldwell.items} prefix="C" label={t.caldwell} />
+          <SeenList items={progress.caldwell.items} label={`${t.caldwell}: ${t.seenHeading}`} />
+        </Band>
+      </div>
+    )
+  )}
+</GearShell>

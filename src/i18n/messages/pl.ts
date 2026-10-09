@@ -908,6 +908,7 @@ export const pl = {
       deletedGear: (p) => `${p.name} (usunięte)`,
       pages: "Strony dziennika",
       skyChecks: "Oceny nieba",
+      progress: "Postępy",
       newer: "← Nowsze",
       older: "Starsze →",
       saved: (p) => `Zapisano obserwację: ${p.object}.`,
@@ -940,6 +941,23 @@ export const pl = {
         empty: "Nic jeszcze nie zapisano — otwórz „Dziś w nocy”, gdy masz sieć.",
       },
     },
+  },
+
+  // Gender-neutral on purpose: the objects mix genders, so no "widziany/widziana".
+  progress: {
+    title: "Twoje postępy",
+    intro: "Obiekty zapisane z oceną 3 lub wyższą liczą się jako zaobserwowane. Niższe oceny niczego nie zaznaczają.",
+    firsts: "Pierwsze razy",
+    firstSeen: (p: { date: string }) => `Pierwsza obserwacja: ${p.date}`,
+    notYet: "Jeszcze nie",
+    messier: "Messier",
+    caldwell: "Caldwell",
+    count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
+    caldwellNote: "Lista obejmuje obiekty Caldwella widoczne ze średnich szerokości północnych.",
+    seenHeading: "Zaobserwowane do tej pory",
+    seen: "zaobserwowano",
+    notSeen: "jeszcze nie zaobserwowano",
+    empty: "Nic jeszcze nie zaobserwowano. Zobacz, co warto obejrzeć dziś w nocy.",
   },
 
   skyChecks: {

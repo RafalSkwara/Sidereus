@@ -469,10 +469,10 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated
 
-- [x] 2.1 `src/lib/tonight/build.test.ts` asserts `notSeenYet` is true for an unlogged object, planet and Moon, false after a rating ≥ 3, and true with only a rating ≤ 2
-- [x] 2.2 `tests/e2e/observing-progress.spec.ts` Tonight cases pass (`npx playwright test observing-progress`)
-- [x] 2.3 `tests/e2e/tonight-phone.spec.ts`, `tonight-targets.spec.ts`, `tonight-dashboard.spec.ts`, `observation-log.spec.ts`, `planets-on-tonight.spec.ts` and `moon-as-target.spec.ts` still pass
-- [x] 2.4 `npx astro check`, `npm run lint`, `npm test` (incl. i18n parity, `no-hardcoded-colors`, `red-theme`, `contrast`) pass
+- [x] 2.1 `src/lib/tonight/build.test.ts` asserts `notSeenYet` is true for an unlogged object, planet and Moon, false after a rating ≥ 3, and true with only a rating ≤ 2 — 68958b8
+- [x] 2.2 `tests/e2e/observing-progress.spec.ts` Tonight cases pass (`npx playwright test observing-progress`) — 68958b8
+- [x] 2.3 `tests/e2e/tonight-phone.spec.ts`, `tonight-targets.spec.ts`, `tonight-dashboard.spec.ts`, `observation-log.spec.ts`, `planets-on-tonight.spec.ts` and `moon-as-target.spec.ts` still pass — 68958b8
+- [x] 2.4 `npx astro check`, `npm run lint`, `npm test` (incl. i18n parity, `no-hardcoded-colors`, `red-theme`, `contrast`) pass — 68958b8
 
 #### Manual
 
@@ -481,15 +481,15 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated (added by plan review)
 
-- [x] 2.7 `tests/e2e/observing-progress.spec.ts` touch case passes: a tap opens the tooltip, a second tap, Esc or an outside tap closes it
+- [x] 2.7 `tests/e2e/observing-progress.spec.ts` touch case passes: a tap opens the tooltip, a second tap, Esc or an outside tap closes it — 68958b8
 
 ### Phase 3: The progress page
 
 #### Automated
 
-- [ ] 3.1 `tests/e2e/observing-progress.spec.ts` page cases pass, including rating 2 never ticking and deletion unticking
-- [ ] 3.2 `tests/e2e/tonight-phone.spec.ts` passes with `/log/progress` in `APP_PAGES` (no sideways scroll at 320/375 px in EN and PL)
-- [ ] 3.3 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
+- [x] 3.1 `tests/e2e/observing-progress.spec.ts` page cases pass, including rating 2 never ticking and deletion unticking
+- [x] 3.2 `tests/e2e/tonight-phone.spec.ts` passes with `/log/progress` in `APP_PAGES` (no sideways scroll at 320/375 px in EN and PL)
+- [x] 3.3 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
 
 #### Manual
 

@@ -1036,6 +1036,7 @@ export const en = {
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
       pages: "Log pages",
       skyChecks: "Sky checks",
+      progress: "Progress",
       newer: "← Newer",
       older: "Older →",
       saved: (p: { object: string }) => `${p.object} logged.`,
@@ -1073,6 +1074,24 @@ export const en = {
         empty: "Nothing saved yet — open Tonight while online.",
       },
     },
+  },
+
+  /** The progress page (observing-progress, M-3 S-05): the Messier and Caldwell checklists and the firsts. */
+  progress: {
+    title: "Your progress",
+    intro: "Objects you have logged with a rating of 3 or above count as seen. Lower ratings tick nothing.",
+    firsts: "Firsts",
+    firstSeen: (p: { date: string }) => `First seen ${p.date}`,
+    notYet: "Not yet",
+    messier: "Messier",
+    caldwell: "Caldwell",
+    /** Numbers arrive pre-formatted: "47 / 110". */
+    count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
+    caldwellNote: "The list covers the Caldwell objects visible from mid-northern latitudes.",
+    seenHeading: "Seen so far",
+    seen: "seen",
+    notSeen: "not seen",
+    empty: "Nothing seen yet. See what to point at tonight.",
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */

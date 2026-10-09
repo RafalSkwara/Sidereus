@@ -9,6 +9,9 @@ export const LOG_FORM = "/log/new";
 /** The log list (roadmap S-07). */
 export const LOG_LIST = "/log";
 
+/** The progress page (observing-progress, M-3 S-05): a view of the observation log itself. */
+export const PROGRESS_PAGE = "/log/progress";
+
 /** Tonight's dashboard, where a save without a known return page lands. */
 const TONIGHT = "/tonight";
 
