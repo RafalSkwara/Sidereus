@@ -1,6 +1,6 @@
 ---
-// The seen objects of one checklist, in catalogue order (observing-progress, M-3 S-05): "M31 · Andromeda Galaxy" and
-// the night it was first logged with a rating of 3 or above. Renders nothing while none is seen. The row wraps, so
+// The seen objects of one checklist, in catalogue order (observing-progress, M-3 S-05): "M31 · Andromeda Galaxy" (a Caldwell
+// row leads with its number, "C20 · NGC 7000 · North America Nebula") and the night it was first logged with a rating of 3 or above. Renders nothing while none is seen. The row wraps, so
 // a long Polish name stays inside a 320 px column.
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
@@ -10,11 +10,13 @@ import { createFormatter } from "@/lib/tonight/format";
 interface Props {
   /** The checklist's items; only the seen ones are listed. */
   items: readonly ChecklistItem[];
+  /** "C" puts the Caldwell number first ("C20 · NGC 7000"), so a row matches its chip; "M" (default) adds nothing. */
+  prefix?: "M" | "C";
   /** The list's accessible name ("Seen so far"). */
   label: string;
 }
 
-const { items, label } = Astro.props;
+const { items, prefix = "M", label } = Astro.props;
 const { locale } = Astro.locals;
 const t = getMessages(locale).progress;
 const format = createFormatter(locale);
@@ -28,6 +30,7 @@ const seen = items.flatMap((item) => (item.seen ? [{ item, seen: item.seen }] : 
       return (
         <li class="py-3 first:pt-0 last:pb-0" data-seen-item={item.id}>
           <p class="text-body font-semibold break-words text-heading">
+            {prefix === "C" && `${prefix}${item.number} · `}
             {item.label}
             {name && <span class="font-normal text-foreground"> · {name}</span>}
             <span class="font-normal text-muted-foreground">

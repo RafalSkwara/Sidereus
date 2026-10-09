@@ -148,12 +148,16 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
         ...(input.forecastBaseUrl ? { baseUrl: input.forecastBaseUrl } : {}),
         defer: input.defer,
       });
-      view = buildTonight({ site, telescope, eyepieces, forecast: result, now, log }, locale, {
-        limit: input.limit,
-        withSkyView: input.withSkyView,
-        withSessionPlan: input.withSessionPlan,
-        night: input.night,
-      });
+      view = buildTonight(
+        { site, telescope, eyepieces, forecast: result, now, log, logKnown: logError === null },
+        locale,
+        {
+          limit: input.limit,
+          withSkyView: input.withSkyView,
+          withSessionPlan: input.withSessionPlan,
+          night: input.night,
+        },
+      );
     } catch {
       tonightError = TONIGHT_FAILED;
     }

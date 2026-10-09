@@ -6,14 +6,12 @@
  * Hover and keyboard focus open it through CSS alone, under `@media (hover: hover)` (`global.css`), so a tap never
  * leaves a stuck `:hover`; Esc also dismisses that (`data-dismissed`, cleared when the pointer or focus leaves the
  * button). The listeners are delegated on the document, so markup a server island inserts later needs no wiring, and
- * calling this more than once adds them once. It holds no `console`: client `<script>` blocks are not linted, modules
+ * calling this more than once (or from two inlined copies) adds them once. It holds no `console`: client `<script>` blocks are not linted, modules
  * like this one are.
  */
 
 const BUTTON = "[data-not-seen-button]";
 const TOOLTIP = "[data-not-seen-tooltip]";
-
-let started = false;
 
 function buttonIn(target: EventTarget | null): Element | null {
   return target instanceof Element ? target.closest(BUTTON) : null;
@@ -30,9 +28,10 @@ function isShown(tooltip: HTMLElement): boolean {
 }
 
 export function initNotSeenTip(): void {
-  if (started) return;
-  started = true;
-  // A readiness marker for e2e: a tap before the listeners exist would do nothing.
+  // The guard is the DOM marker, not a module flag: the build inlines this script into every page that uses it, so
+  // two copies are two module instances that would each add the listeners. The marker is also what e2e waits for: a
+  // tap before the listeners exist would do nothing.
+  if (document.documentElement.dataset.notSeenTip === "ready") return;
   document.documentElement.dataset.notSeenTip = "ready";
 
   document.addEventListener("click", (event) => {
@@ -79,4 +78,16 @@ export function initNotSeenTip(): void {
   };
   document.addEventListener("mouseout", forget);
   document.addEventListener("focusout", forget);
+
+  // A tooltip opened by Enter or Space must not outlive the focus: when focus moves from its button to any other
+  // element (Tab), it closes, unless it moves onto the tooltip itself. A focusout with no related target is a press
+  // on a non-focusable spot (the tooltip's own text, or the page): `pointerdown` above decides those.
+  document.addEventListener("focusout", (event) => {
+    const button = buttonIn(event.target);
+    const tooltip = button ? tooltipOf(button) : null;
+    const next = event.relatedTarget;
+    if (!button || !tooltip || !(next instanceof Node)) return;
+    if (button.contains(next) || tooltip.contains(next)) return;
+    tooltip.removeAttribute("data-open");
+  });
 }

@@ -245,29 +245,40 @@ export const observationStore = {
   /**
    * Every one of the caller's entries that can count as seen (rated `LOG_PENALTY_MIN_RATING` or above; lower
    * ones never affect the ranking or the progress page), newest night first, then by target key, then by id,
-   * reduced to the engine's `LogEntry`. PostgREST cuts a response at `max_rows` without an error, so this reads
-   * pages of `SEEN_PAGE_SIZE` until one comes back empty (a lower `max_rows` on the host still reads it all);
-   * `id` is the last sort key so a tie (two entries for one object on one night) never straddles a page edge and
-   * loses or repeats a row. The key is ordered on but not selected.
+   * reduced to the engine's `LogEntry`. PostgREST cuts a response at `max_rows` without an error, so the first
+   * request also asks for the exact total (`count: "exact"`), and the read goes on from the rows actually
+   * received until it has that many: normally one request, and still every row when the host's `max_rows` is
+   * lower than `SEEN_PAGE_SIZE` (a short page just means another request). An empty page ends the read too, so a
+   * missing count or rows deleted meanwhile can never loop forever. `id` is the last sort key so a tie (two
+   * entries for one object on one night) never straddles a page edge and loses or repeats a row. The key is
+   * ordered on but not selected.
    */
   async listSeenEntries(client: TypedSupabaseClient): Promise<LogEntry[]> {
     const entries: LogEntry[] = [];
-    for (let from = 0; ; from += SEEN_PAGE_SIZE) {
-      const { data, error } = await client
+    let total: number | null = null;
+    for (;;) {
+      const from = entries.length;
+      const { data, error, count } = await client
         .from("observations")
-        .select("target, night, rating")
+        .select("target, night, rating", from === 0 ? { count: "exact" } : undefined)
         .gte("rating", LOG_PENALTY_MIN_RATING)
         .order("night", { ascending: false })
         .order("target", { ascending: true })
         .order("id", { ascending: true })
         .range(from, from + SEEN_PAGE_SIZE - 1);
       if (error) {
-        throw new Error(LOAD_FAILED);
+        throw new Error(LOAD_FAILED, { cause: error });
+      }
+      if (from === 0) {
+        total = count;
       }
       if (data.length === 0) {
         return entries;
       }
       entries.push(...data);
+      if (total !== null && entries.length >= total) {
+        return entries;
+      }
     }
   },
 };

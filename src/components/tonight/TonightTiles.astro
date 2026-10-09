@@ -117,7 +117,7 @@ const nightsSummary = view.nights
               <span class="min-w-0 font-semibold break-words">
                 {target.name}
                 {/* The tile is a link: no button in it, so a static icon and one legend line under the rows. */}
-                {target.notSeenYet && <NotSeenMark variant="static" />}
+                {target.notSeenYet && <NotSeenMark variant="static" srLabel={false} />}
               </span>
               <span class="shrink-0 tabular-nums">{target.bestTime}</span>
             </li>

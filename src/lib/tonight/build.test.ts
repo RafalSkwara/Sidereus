@@ -421,14 +421,29 @@ describe("buildTonight with an observation log (FR-018)", () => {
     const find = (view: ReturnType<typeof buildTonight>) => rankingOf(view).entries.find((e) => e.id === top);
     expect(find(rated(2))?.notSeenYet).toBe(true);
     expect(find(rated(1))?.notSeenYet).toBe(true);
-    // Rated 3 or above pushes the object down the ranking; where it still shows, the mark is gone.
-    const seen = find(rated(3));
-    if (seen) expect(seen.notSeenYet).toBe(false);
+    // Rated 3 or above pushes the object down the ranking, out of Tonight's top five; the unlimited ranking still
+    // lists every cleared object, so the logged one is certainly there and must have lost its mark.
+    const everyone = (log: { target: string; night: string; rating: number }[]) =>
+      rankingOf(buildTonight({ ...input, log }, "en", { limit: Infinity })).entries;
+    const seen = everyone([{ target: top, night: "2026-10-01", rating: 3 }]).find((e) => e.id === top);
+    expect(seen).toBeDefined();
+    expect(seen?.notSeenYet).toBe(false);
     const entries = rankingOf(rated(4)).entries;
     expect(entries.every((e) => e.notSeenYet === (e.id !== top))).toBe(true);
     // The tile's targets carry it too.
     const tile = buildTonight({ ...input, log: [{ target: top, night: "2026-10-01", rating: 4 }] }, "en");
     expect(tile.summaryTargets.every((e) => e.notSeenYet === (e.id !== top))).toBe(true);
+  });
+
+  it("marks nothing not seen yet when the log could not be read", () => {
+    const view = buildTonight({ ...input, log: [], logKnown: false }, "en");
+    const ranking = rankingOf(view);
+    expect(ranking.entries.length).toBeGreaterThan(0);
+    expect(ranking.entries.every((e) => !e.notSeenYet && e.seenText === null)).toBe(true);
+    expect(view.summaryTargets.length).toBeGreaterThan(0);
+    expect(view.summaryTargets.every((e) => !e.notSeenYet && e.seenText === null)).toBe(true);
+    // The same night with a log that did load is where the marks come from.
+    expect(unlogged.entries.every((e) => e.notSeenYet)).toBe(true);
   });
 
   it("tags an object seen on a night rated 3 or above", () => {
@@ -906,6 +921,12 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(saturn?.notSeenYet).toBe(true);
   });
 
+  it("marks no planet not seen yet when the log could not be read", () => {
+    const planets = planetsOf(buildTonight({ ...input, log: [], logKnown: false }, "en"));
+    expect(planets.entries.length).toBeGreaterThan(0);
+    expect(planets.entries.every((entry) => !entry.notSeenYet && entry.seenText === null)).toBe(true);
+  });
+
   it("leaves the planet detail eyepiece out when the kit has none", () => {
     const planets = planetsOf(buildTonight({ ...input, eyepieces: [] }, "en"));
     expect(planets.entries.every((entry) => entry.eyepiece === null)).toBe(true);
@@ -1272,6 +1293,12 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
     );
     expect(targetOf(view).seenText).toBeNull();
     expect(targetOf(view).notSeenYet).toBe(true);
+  });
+
+  it("marks the Moon not seen yet only when the log could be read", () => {
+    const view = buildTonight(clearNight("2026-10-26", { log: [], logKnown: false }), "en");
+    expect(targetOf(view).seenText).toBeNull();
+    expect(targetOf(view).notSeenYet).toBe(false);
   });
 
   it("shows only the whole-disc eyepiece when the detail pick is no stronger, and none for an empty kit", () => {

@@ -99,7 +99,9 @@ test("the mark follows the log: shown for a new object, kept at a rating of 2, g
   await expect(anyMarkOf(seenRow)).toHaveCount(0);
 });
 
-test("on a desktop, hover opens the tooltip, and Esc keeps it closed once the pointer leaves", async ({ page }) => {
+test("on a desktop, hover opens the tooltip, the pointer can move onto it, and Esc keeps it closed once the pointer leaves", async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   await onboardInMadrid(page, "e2e-progress-desktop");
 
@@ -109,6 +111,22 @@ test("on a desktop, hover opens the tooltip, and Esc keeps it closed once the po
   const tooltip = card.getByRole("tooltip");
 
   await mark.hover();
+  await expect(tooltip).toHaveText(copy.legend);
+
+  // The pointer can travel from the icon onto the tooltip without it closing (WCAG 1.4.13 "hoverable"): straight
+  // down in small steps, across the thin strip between the 24 px button and the tooltip's top edge, then along it.
+  const markBox = await mark.boundingBox();
+  const tipBox = await tooltip.boundingBox();
+  if (!markBox || !tipBox) throw new Error("no mark or tooltip box");
+  const x = markBox.x + markBox.width / 2;
+  // The strip is under a pixel tall, so cross it in quarter-pixel moves: a coarse move would step over it. Once the
+  // tooltip is hidden the pointer can't reach it, so a lapse anywhere on the way shows in the assertion below.
+  for (let y = markBox.y + markBox.height - 1; y <= tipBox.y + 2; y += 0.25) {
+    await page.mouse.move(x, y);
+  }
+  await expect(tooltip).toBeVisible();
+  await page.mouse.move(tipBox.x + tipBox.width / 2, tipBox.y + tipBox.height / 2, { steps: 20 });
+  await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveText(copy.legend);
 
   // Clicked open and dismissed with Esc: the still-focused button now matches :focus-visible, which must not
@@ -200,7 +218,8 @@ test.describe("the progress page", () => {
     await expect(page.locator("#progress-caldwell-heading")).toContainText(count(0, 61));
     await expect(page.locator("[data-progress-firsts] li")).toHaveCount(8);
     await expect(page.locator("[data-checklist-item]")).toHaveCount(171);
-    await expect(page.getByRole("link", { name: progress.empty })).toBeVisible();
+    await expect(page.locator("[data-progress-empty]")).toContainText(progress.empty);
+    await expect(page.getByRole("link", { name: progress.toTonight })).toBeVisible();
 
     // 2. A rating of 2 ticks nothing.
     await logManually(page, "M31", 2);

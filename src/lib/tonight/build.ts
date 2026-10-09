@@ -89,6 +89,11 @@ export interface TonightInput {
   now: Date;
   /** The user's observation log (FR-018); absent means empty. Only what the ranking needs of each entry. */
   log?: readonly LogEntry[];
+  /**
+   * Whether the log was read at all (default true). A failed read arrives as an empty `log`, which must not read as
+   * "never seen": with `false`, `notSeenYet` is false everywhere and no seen text is shown.
+   */
+  logKnown?: boolean;
   /** The objects to rank; the deep-sky catalogue (Messier and Caldwell) unless a test narrows it. */
   catalogue?: readonly DeepSkyObject[];
 }
@@ -129,7 +134,7 @@ export interface TonightEntry {
   reason: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the object as seen (FR-018), else `null`. */
   seenText: string | null;
-  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  /** True when the log was read and has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
   notSeenYet: boolean;
 }
 
@@ -165,7 +170,7 @@ export interface TonightMoonEntry {
   note: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the Moon as seen, else `null`. */
   seenText: string | null;
-  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  /** True when the log was read and has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
   notSeenYet: boolean;
 }
 
@@ -200,7 +205,7 @@ export interface TonightPlanetEntry {
   note: string;
   /** "Seen 2 times – last 12 Sept 2026" when the log counts the planet as seen, else `null`. It never reorders. */
   seenText: string | null;
-  /** True when the log has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
+  /** True when the log was read and has no entry rated 3 or above for it (`seen` is null): the "not seen yet" mark (S-05). */
   notSeenYet: boolean;
 }
 
@@ -621,7 +626,7 @@ export function buildTonight(
   locale: Locale,
   options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean; night?: "tonight" | "next" } = {},
 ): TonightView {
-  const { site, telescope, eyepieces, forecast, now, log = [], catalogue = DEEP_SKY } = input;
+  const { site, telescope, eyepieces, forecast, now, log = [], logKnown = true, catalogue = DEEP_SKY } = input;
   const {
     clearedLine,
     cloudOutlookText,
@@ -767,7 +772,7 @@ export function buildTonight(
         pair: toPair(telescope, entry.pair),
         reason: reasonLine(entry, context),
         seenText: entry.seen ? seenLine(entry.seen) : null,
-        notSeenYet: entry.seen === null,
+        notSeenYet: logKnown && entry.seen === null,
       })),
       washedOutCount: ranked.washedOutCount,
       washedOutText: washedOutLine(ranked.washedOutCount),
@@ -849,7 +854,7 @@ export function buildTonight(
           reason: planetReasonLine(entry, timeZone),
           note: messages.tonight.planets.note[entry.key],
           seenText: entry.seen ? seenLine(entry.seen) : null,
-          notSeenYet: entry.seen === null,
+          notSeenYet: logKnown && entry.seen === null,
         })),
         noneText:
           ranked.length === 0
@@ -906,7 +911,7 @@ export function buildTonight(
             reason: moonReasonLine(entry, timeZone),
             note: messages.tonight.moon.note[entry.facts.band],
             seenText: entry.seen ? seenLine(entry.seen) : null,
-            notSeenYet: entry.seen === null,
+            notSeenYet: logKnown && entry.seen === null,
           };
           planMoon = entry;
         }

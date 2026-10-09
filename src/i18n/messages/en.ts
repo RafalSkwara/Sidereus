@@ -1091,7 +1091,8 @@ export const en = {
     seenHeading: "Seen so far",
     seen: "seen",
     notSeen: "not seen",
-    empty: "Nothing seen yet. See what to point at tonight.",
+    empty: "Nothing seen yet.",
+    toTonight: "See what to point at tonight",
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */

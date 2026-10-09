@@ -3,7 +3,10 @@
 // It is placed against the card's `li` (`relative`, with `data-not-seen-scope`), not against the icon, so a name that
 // wraps at 320 px never pushes it off screen; with no `top`, an absolutely placed box sits where it would have been in
 // the flow, right under the heading. Closed is `hidden` (display: none), never `invisible`, so it cannot widen the
-// page's scrollWidth. `data-open` (click, `not-seen-tip.ts`) shows it; hover and keyboard focus show it through the
+// page's scrollWidth. Its top edge meets the 24 px button with no gap a pointer can land in, so moving from the icon
+// onto the tooltip keeps it open (WCAG 1.4.13 "hoverable", pinned by observing-progress.spec.ts); only the icon opens
+// it, never the name.
+// `data-open` (click, `not-seen-tip.ts`) shows it; hover and keyboard focus show it through the
 // rule in `global.css`, under `@media (hover: hover)`. `open` renders it open, for `/design` and screenshots.
 import { getMessages } from "@/i18n";
 

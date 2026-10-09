@@ -341,7 +341,7 @@ Add `/log/progress` with the firsts and the two checklists, linked from `/log`'s
 **Intent**: Render the user's progress from the seen read, composed like `/log/sky`.
 
 **Contract**:
-- **Data:** `observationStore.listSeenEntries(supabase)`, then `seenSummaries(entries)` (no cut-off), then `observingProgress`.
+- **Data:** `observationStore.listSeenEntries(supabase)`, then `observingProgress(entries)`, which applies `seenSummaries` itself with no cut-off (plan review F4; corrected by impl review F10).
 - **Shell:**
   - `GearShell`;
   - header slot: `BackLink` to `/log` + `PageHeader` (`progress.title`, and `progress.intro` stating that entries rated 3 or above count);
@@ -443,6 +443,21 @@ Add `/log/progress` with the firsts and the two checklists, linked from `/log`'s
 ## Migration Notes
 
 None. No schema change, and nothing to backfill. The rename of `listForRanking` is internal.
+
+## Implementation Notes (impl review, 2026-10-09)
+
+Accepted deviations from the phases above, recorded by impl review F9 and F10 (`reviews/impl-review.md`, `follow-ups/review-fixes.md`):
+
+- **Three parts, not two.** The mark is split into `NotSeenMark` (the button or static icon), `NotSeenTip` (the tooltip) and `NotSeenLegend` (the one legend line shared by the tile, the rest list and `/design`). `open` lives on `NotSeenTip`.
+- **Two states, not one.**
+  - The tooltip carries `data-open` (click and tap) and `data-dismissed` (Esc overrides the CSS hover/focus open).
+  - The client logic is in `src/components/tonight/not-seen-tip.ts`, so lint and `no-console` cover it, per the orchestrator's instruction; the `.astro` script only imports it.
+  - Hover and focus-visible open the tooltip through a `:has()` rule in `global.css`, scoped to `[data-not-seen-scope]` under `@media (hover: hover)`.
+- **A readiness marker.** `html[data-not-seen-tip="ready"]` is set once the listeners exist. It also guards init (impl review F5), and e2e waits on it.
+- **The contrast pin.** `contrast.test.ts` pins `primary-strong` at 3:1 on `background` and `surface` in every theme (the icon colour). No token was added.
+- **The desktop Esc fix** (42cb867), found in manual check 2.6: a dismissal clears only once both the pointer and the focus have left the button.
+- **The skeleton** always reserves the tile's legend line (Phase 2 §3). When all three tile targets are seen, the legend doesn't render and the tile shrinks by one line on swap. This is accepted as rare, and it shrinks rather than pushing content down (F9).
+- **Paging** (impl review F2): the first page asks for `count: "exact"`, `from` advances by the rows received, and the read stops at the count. One request in the normal case, correct under any `max_rows`. This supersedes the "empty page ends the loop" wording above.
 
 ## References
 

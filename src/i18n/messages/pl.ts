@@ -957,7 +957,8 @@ export const pl = {
     seenHeading: "Zaobserwowane do tej pory",
     seen: "zaobserwowano",
     notSeen: "jeszcze nie zaobserwowano",
-    empty: "Nic jeszcze nie zaobserwowano. Zobacz, co warto obejrzeć dziś w nocy.",
+    empty: "Nic jeszcze nie zaobserwowano.",
+    toTonight: "Zobacz, co warto obejrzeć dziś w nocy",
   },
 
   skyChecks: {

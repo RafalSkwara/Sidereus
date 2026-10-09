@@ -2039,6 +2039,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <div class:list={cell}>
                 <p class:list={stateLabel}>default · Caldwell, 1 seen (C numbers)</p>
                 <ChecklistGrid items={progressSome.caldwell.items} prefix="C" label="Caldwell" />
+                <SeenList items={progressSome.caldwell.items} prefix="C" label="Caldwell: seen so far" />
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>empty · nothing seen (every chip outlined; SeenList renders nothing)</p>

@@ -16,6 +16,7 @@ import { observingProgress, type ObservingProgress } from "@/lib/progress/progre
 import type { TargetKey } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
+import { cn } from "@/lib/utils";
 
 // The progress page (observing-progress, M-3 S-05, FR-039/FR-040): the planets and the Moon as firsts, then the
 // Messier and Caldwell checklists, all from the user's entries rated 3 or above through the ranking's own "seen" rule.
@@ -57,12 +58,13 @@ const nothingSeen =
     progress && (
       <div>
         {nothingSeen && (
-          <p class="mb-6" data-progress-empty>
-            <a href="/tonight" class:list={buttonVariants({ variant: "action", size: "sm" })}>
+          <div class="mb-6" data-progress-empty>
+            <p class="text-body text-foreground">{t.empty}</p>
+            <a href="/tonight" class:list={cn(buttonVariants({ variant: "action", size: "sm" }), "mt-3")}>
               <Telescope aria-hidden="true" />
-              {t.empty}
+              {t.toTonight}
             </a>
-          </p>
+          </div>
         )}
 
         <Band headingId="progress-firsts-heading" heading={t.firsts}>
@@ -97,7 +99,7 @@ const nothingSeen =
         >
           <p class="mb-4 text-label text-muted-foreground">{t.caldwellNote}</p>
           <ChecklistGrid items={progress.caldwell.items} prefix="C" label={t.caldwell} />
-          <SeenList items={progress.caldwell.items} label={`${t.caldwell}: ${t.seenHeading}`} />
+          <SeenList items={progress.caldwell.items} prefix="C" label={`${t.caldwell}: ${t.seenHeading}`} />
         </Band>
       </div>
     )
