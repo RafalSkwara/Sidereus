@@ -35,10 +35,10 @@ import type { HorizontalPosition, Interval } from "./types";
  *     planets and the Moon), plus the same tolerance;
  * (c) start <= best time <= end, all within the dark window (deep sky) or the planet window.
  *
- * A window of a single sample (start === end, about 0.7% of entries) is the accepted rule: it still has to meet
- * (a) to (c) at that instant, and is pinned in its own test. Failure messages name the case index and its inputs,
- * so a case replays from the seed. The case array is built here from the seed alone; every engine call runs in
- * `beforeAll`.
+ * A window of a single sample (start === end, about 1% of entries: 134 of about 13,800 for seed 20261008) is the
+ * accepted rule: it still has to meet (a) to (c) at that instant, and is pinned in its own test. Failure messages
+ * name the case index and its inputs, so a case replays from the seed. The case array is built here from the seed
+ * alone; every engine call runs in `beforeAll`.
  */
 
 const SEED = 20261008;
@@ -257,8 +257,9 @@ describe("visibility invariants over generated sites, nights, skies and telescop
   });
 
   it("keeps a target listed for a single sample (start === end) inside the same guarantees", () => {
-    // About 0.7% of entries are up for one 10-minute sample and still clear the bar. That rule is accepted and
-    // pinned here: such an entry is held to (a) to (c) at its one instant, like every other.
+    // About 1% of entries (134 of about 13,800 for seed 20261008) are up for one 10-minute sample and still clear
+    // the bar. That rule is accepted and pinned here: such an entry is held to (a) to (c) at its one instant, like
+    // every other.
     expect(
       total((r) => r.shortWindows),
       "single-sample windows seen",

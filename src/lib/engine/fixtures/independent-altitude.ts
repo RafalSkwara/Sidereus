@@ -18,10 +18,12 @@ import type { EquatorialJ2000 } from "../types";
 /**
  * TEST-ONLY. The independent altitude oracle for the visibility property suites (Risk #3).
  *
- * Every helper recomputes a position straight from astronomy-engine, by a road the engine does not take, and
- * never reads the engine's own tracks, `bestWindow`, `objectTracks`, `planetTracks`, `moonState` or the
- * thresholds in `parameters.ts`: an oracle built from the code under test would move with it. Imports are
- * astronomy-engine and engine types only. Callers pass an `Observer`, so a suite at elevation 0 (Tonight, which
+ * `deepSkyAltitudeDeg` and `bodyAltitudeDeg` recompute a position straight from astronomy-engine, by a road the
+ * engine does not take; `sunAltitudeGeometricDeg` is a deliberate copy of the engine's geometric sun (`sun.ts`,
+ * the same astronomy-engine calls), which is the PRD's twilight convention itself. None of them reads the engine's
+ * own tracks, `bestWindow`, `objectTracks`, `planetTracks`, `moonState` or the thresholds in `parameters.ts`: an
+ * oracle built from the code under test would move with it. This file imports astronomy-engine and engine types
+ * only. Callers pass an `Observer`, so a suite at elevation 0 (Tonight, which
  * drops the site's elevation) builds `new Observer(lat, lon, 0)` and a suite with elevations uses the site's.
  *
  * Tolerance: the engine and these roads differ by arcseconds (the smallest margin seen was 0.0002 deg), so

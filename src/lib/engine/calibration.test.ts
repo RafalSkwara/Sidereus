@@ -4,7 +4,7 @@ import { DEEP_SKY, findDeepSky } from "@/lib/catalogue";
 import type { DeepSkyObject } from "@/lib/catalogue";
 
 import { EYEPIECES, TELESCOPE, WARSAW, warsawDarkWindow } from "./fixtures";
-import { AF_FALL_LIST, BEGINNER_REFERENCE } from "./fixtures/beginner-reference";
+import { AF_FALL_LIST, BEGINNER_REFERENCE, BEGINNER_SOURCES } from "./fixtures/beginner-reference";
 import { rankObjects } from "./ranking";
 import type { Ranking } from "./ranking";
 
@@ -115,5 +115,28 @@ describe("deep-sky ranking calibration (Warsaw, Bortle 5, 150/750)", () => {
   it("only names catalogue objects in the beginner reference and the fall list", () => {
     const ids = [...NIGHTS.flatMap((night) => BEGINNER_REFERENCE[night].map((r) => r.id)), ...AF_FALL_LIST];
     expect(ids.filter((id) => findDeepSky(id) === undefined)).toEqual([]);
+  });
+
+  it("keeps the counting rule: at least two distinct, known sources per entry, and no id twice in a night", () => {
+    const known = new Set<string>(Object.keys(BEGINNER_SOURCES));
+    const problems: string[] = [];
+    for (const night of NIGHTS) {
+      const seenIds = new Set<string>();
+      for (const { id, sources } of BEGINNER_REFERENCE[night]) {
+        if (seenIds.has(id)) {
+          problems.push(`${night}: ${id} is listed twice`);
+        }
+        seenIds.add(id);
+        if (new Set(sources).size < 2) {
+          problems.push(`${night}: ${id} has fewer than 2 distinct sources [${sources.join(", ")}]`);
+        }
+        for (const source of sources) {
+          if (!known.has(source)) {
+            problems.push(`${night}: ${id} names the unknown source ${source}`);
+          }
+        }
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

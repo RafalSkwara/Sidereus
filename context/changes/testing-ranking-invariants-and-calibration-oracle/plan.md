@@ -510,4 +510,4 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Manual
 
-- [ ] 4.5 You approve or post the drafted GitHub #21 comment on short windows
+- [x] 4.5 You approve or post the drafted GitHub #21 comment on short windows (owner approved 2026-10-09; posted https://github.com/RafalSkwara/Sidereus/issues/21#issuecomment-6082559345)

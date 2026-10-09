@@ -189,7 +189,9 @@ describe("rankObjects under moonlight (moonlight-and-the-verdict, Warsaw, Bortle
   const onNight = (date: string) => rank(MESSIER, { darkWindow: warsawDarkWindow(date) });
 
   // The top five is checked against source AF (Astronomy.com, "See fall's best Messier objects") as a set, not
-  // as the order the engine printed: a harmless reorder passes, a retune that drops a published pick fails.
+  // as the order the engine printed: a reorder within AF's fall picks passes, a retune that drops a published pick
+  // fails (the AF check is stricter than the calibration oracle's k = 3: a retune that swaps a top-5 member for
+  // another object passes the oracle but not this check).
   it("changes nothing on the new-Moon night of 2026-10-10: nothing washed out, a top five of AF's fall picks with M31", () => {
     const ranking = onNight("2026-10-10");
     expect(ranking.washedOutCount).toBe(0);

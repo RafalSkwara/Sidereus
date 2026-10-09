@@ -322,31 +322,33 @@ describe("ranking invariants as relations (Risk #4)", () => {
   });
 
   it("(d) the bar is the PRD bar: total >= MIN_OBJECT_SCORE, and the rank key moves only by the bonus and the penalty", () => {
-    const allowed = [0, MESSIER_RANK_BONUS, -LOG_PENALTY, MESSIER_RANK_BONUS - LOG_PENALTY];
-    const seenDeltas = new Set<number>();
+    // The four input combinations (Messier or not, seen or not) the half-seen runs reached, keyed by inputs, so a
+    // retune that makes two deltas coincide (bonus 0, or bonus == penalty) cannot fail the check.
+    const combinations = new Set<string>();
     for (const { scenario, base, allSeen, halfSeen } of runs) {
       for (const [name, ranking] of [
         ["no log", base],
         ["all seen", allSeen],
         ["half seen", halfSeen],
       ] as const) {
-        for (const { object, score, rankScore } of ranking.entries) {
+        for (const { object, score, rankScore, seen } of ranking.entries) {
           const where = `${scenario.label}, ${name}, ${object.id}`;
           expect(score.total, where).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
-          const delta = rankScore - score.total;
-          const match = allowed.findIndex((a) => Math.abs(delta - a) <= EPSILON);
+          const expectedDelta = (object.messier === null ? 0 : MESSIER_RANK_BONUS) - (seen === null ? 0 : LOG_PENALTY);
           expect(
-            match,
-            `${where}: rankScore - total = ${delta} is none of ${allowed.join(", ")}`,
-          ).toBeGreaterThanOrEqual(0);
+            Math.abs(rankScore - score.total - expectedDelta),
+            `${where}: rankScore - total = ${rankScore - score.total}, expected ${expectedDelta}`,
+          ).toBeLessThanOrEqual(EPSILON);
           if (name === "half seen") {
-            seenDeltas.add(match);
+            combinations.add(
+              `${object.messier === null ? "caldwell" : "messier"}/${seen === null ? "unseen" : "seen"}`,
+            );
           }
         }
       }
     }
-    // The half-seen runs must reach all four combinations, or the check proves less than it says.
-    expect([...seenDeltas].sort()).toEqual([0, 1, 2, 3]);
+    // The half-seen runs must reach all four input combinations, or the check proves less than it says.
+    expect([...combinations].sort()).toEqual(["caldwell/seen", "caldwell/unseen", "messier/seen", "messier/unseen"]);
   });
 
   it("(e) a washed-out object is never listed", () => {
