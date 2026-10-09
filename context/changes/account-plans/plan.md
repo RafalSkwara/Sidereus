@@ -393,12 +393,12 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Automated
 
-- [x] 3.1 Command tests pass against local Supabase
-- [x] 3.2 Lint passes (scripts config included)
-- [x] 3.3 Without SUPABASE_SECRET_KEY the command exits 2 with the hint
-- [x] 3.4 Unit suite and type check stay green
+- [x] 3.1 Command tests pass against local Supabase — 6ead049
+- [x] 3.2 Lint passes (scripts config included) — 6ead049
+- [x] 3.3 Without SUPABASE_SECRET_KEY the command exits 2 with the hint — 6ead049
+- [x] 3.4 Unit suite and type check stay green — 6ead049
 
 #### Manual
 
 - [ ] 3.5 Owner grants own account full on production and show reports full
-- [x] 3.6 --create prompts without echo and the new account signs in on a local preview
+- [x] 3.6 --create prompts without echo and the new account signs in on a local preview — 6ead049
