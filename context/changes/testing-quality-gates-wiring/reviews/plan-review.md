@@ -6,6 +6,7 @@
 - **Date**: 2026-10-09
 - **Verdict**: REJECTED by the rubric (one critical FAIL). Triage is recommended over re-planning, because F1 is a one-flag patch and the plan's premise holds.
 - **Findings**: 1 critical, 7 warnings, 2 observations
+- **Triage**: all 10 fixed in the plan (F2 and F4 via Fix A); post-triage verdict SOUND, ready for /10x-implement
 
 ## Verdicts
 
@@ -49,7 +50,7 @@
   - `database.types.ts` (5 commits in two weeks, one per migration) and `worker-configuration.d.ts` match lint-staged's `*.{ts,tsx,astro}` and the hook's `*.ts`.
   - After Phase 1, every migration commit fails pre-commit, and the Stop hook sends the agent back over a generated file it must not edit.
 - **Fix**: Add `--no-warn-ignored` to the lint-staged command and to the hook's ESLint call. Add a break check (a changed `database.types.ts` passes lint-staged) and a hook-test case (changed ignored file → exit 0).
-- **Decision**: PENDING
+- **Decision**: FIXED — `--no-warn-ignored` in lint-staged and the hook; criterion 1.6 and hook case 10 added.
 
 ### F2 — The Stop hook judges the checkout's dirty state, not this turn's edits
 
@@ -71,7 +72,7 @@
   - Tradeoff: Send-backs for state the agent didn't create; it learns to ignore the hook (the anti-pattern this phase names).
   - Confidence: HIGH — only documentation.
   - Blind spot: How often WIP sits uncommitted in the coder's worktree.
-- **Decision**: PENDING
+- **Decision**: FIXED via Fix A — `turn-start.sh` (UserPromptSubmit) fingerprints the cwd checkout; Stop skips unchanged roots; case 11.
 
 ### F3 — The local registration runs the main checkout's script, and double registration has no remedy
 
@@ -91,7 +92,7 @@
   - Tradeoff: The local registration's manual check moves after the merge.
   - Confidence: MED — the guard logic is simple; parent-dir loading is still unverified, but the guard makes it irrelevant.
   - Blind spot: A main checkout later sitting on an old branch still shows the one-line error until it switches.
-- **Decision**: PENDING
+- **Decision**: FIXED — local registration moved to a new post-merge Phase 5 with self-guarding commands (skip when the repo registration applies, visible error when the script is missing); 3.6 now covers repo- and worktree-started sessions, 5.4 the double-registration check.
 
 ### F4 — Subagents are not gated, and their edits are swept by the parent's Stop
 
@@ -112,7 +113,7 @@
   - Tradeoff: Delegated phases come back red more often.
   - Confidence: HIGH.
   - Blind spot: none.
-- **Decision**: PENDING
+- **Decision**: FIXED via Fix A — `end-of-turn.sh` also on SubagentStop; payload and retry flag to be checked against the live doc; case 12.
 
 ### F5 — Bash-only edits in `~/projects` sessions are never swept
 
@@ -122,7 +123,7 @@
 - **Location**: plan.md Phase 3 › Changes #1 Intent ("including edits made through Bash")
 - **Detail**: With cwd `~/projects` (not a repo), roots come only from the `Write|Edit` registry. A turn that changes Sidereus only through `sed -i` or `cat >` is invisible. Case 7 tests only cwd = repo.
 - **Fix**: State the limit in the Desired End State and in CLAUDE.md's hook bullet (Bash rewrites are swept only when the session cwd is a Sidereus checkout), and add a proof case for it.
-- **Decision**: PENDING
+- **Decision**: FIXED — limit stated in Desired End State and CLAUDE.md contract; case 15.
 
 ### F6 — The full-suite trigger list misses files the suite reads
 
@@ -135,7 +136,7 @@
   - `.gitignore` (the no-console guard depends on it through `includeIgnoreFile`);
   - `package-lock.json` and `.nvmrc`.
 - **Fix**: Invert the rule: run the whole suite unless every changed path is documentation (`*.md`, `context/**`).
-- **Decision**: PENDING
+- **Decision**: FIXED — full suite runs unless every changed path is docs (`*.md`, `context/**`).
 
 ### F7 — The proof test needs CI and macOS hardening
 
@@ -158,7 +159,7 @@
   - spawn `/bin/bash` by absolute path, with an empty `PATH` for the jq case;
   - keep the scripts bash-3.2-safe (no `mapfile`, no `set -u` with empty arrays);
   - add a permanent `bash -n` case.
-- **Decision**: PENDING
+- **Decision**: FIXED — proof-test environment hardened (git identity, per-case TMPDIR, realpath, scrubbed GIT_*, absolute /bin/bash, empty PATH for jq, bash 3.2, bash -n case).
 
 ### F8 — Four success criteria cannot fail, or check the wrong thing
 
@@ -176,7 +177,7 @@
   - 3.4: run the real script on the repo while the Phase 3 files are still uncommitted, and assert exit 0, that ESLint and Vitest ran, and the wall time.
   - 4.1: `grep -E '^\| 5 \|.*\| complete \|' context/foundation/test-plan.md`.
   - Local settings: back the file up before writing, then `jq empty` it and compare `.permissions` before and after.
-- **Decision**: PENDING
+- **Decision**: FIXED — 1.7 uses `check-ignore -q`; 3.4 is a real run with uncommitted Phase 3 files; 4.1 is a grep; local settings checks in Phase 5 (backup, jq empty, permissions compare).
 
 ### F9 — Wording slips in Critical Implementation Details and the guard samples
 
@@ -191,7 +192,7 @@
   - Run `npm run lint` only after the `.gitignore` change: locally `eslint .` still walks the 2.9 GB `.claude/worktrees` (the OOM).
   - The reference line citations are slightly off (end-of-turn script `:182-279`; merge at `:29`; timeouts at `:68`).
 - **Fix**: Reword the CID to "last **and** with `prettier/prettier: off`". Require formatted guard samples, or filter messages by `ruleId`. Order Phase 1's `.gitignore` before the lint run. Correct the citations.
-- **Decision**: PENDING
+- **Decision**: FIXED — CID reworded (last AND prettier off; generated-file and UserPromptSubmit gotchas added), prettier-clean guard samples, `.gitignore` first in Phase 1, citations corrected.
 
 ### F10 — Operational details: hook output, fresh worktrees, check names, memory
 
@@ -210,4 +211,4 @@
   - Run `astro sync` in the hook when `.astro/` is missing, and name missing `node_modules` with an `npm ci` hint.
   - Add a `ci.yml` comment that `ci` and `smoke` are required-check names.
   - Update the OOM memory after Phase 1.
-- **Decision**: PENDING
+- **Decision**: FIXED — output truncated to 200 lines, systemMessage when the retry pass is still red, `astro sync` when `.astro/` is missing, `npm ci` hint, ci.yml comment on required-check names, memory OOM note update after Phase 1.

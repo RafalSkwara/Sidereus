@@ -43,7 +43,8 @@ Research: `context/changes/testing-quality-gates-wiring/research.md` (complete, 
 - In CI, a test that fails then passes on retry fails the `smoke` job, and the HTML report is uploaded. Locally nothing changes (no retries).
 - `vitest.config.ts` pins `pool: "forks"`.
 - `main` requires the `ci` and `smoke` checks before a merge (admins can override knowingly).
-- In a Claude Code session that edits Sidereus, the end of every turn with code changes runs the whole unit suite and ESLint (`--max-warnings 0`) on the changed files. On failure the agent is sent back once with the output. This holds for sessions started in `~/projects` or inside the repo or a worktree. A committed test proves the hook's behaviour.
+- In a Claude Code session that edits Sidereus, the end of every turn (and every subagent run) that changed a checkout runs the whole unit suite and ESLint (`--max-warnings 0 --no-warn-ignored`) on the changed files. Only checkouts this turn changed are swept, compared against a fingerprint taken when the turn started. On failure the agent is sent back once with the output. This holds for sessions started in `~/projects` (registered locally after the merge) and inside the repo or a worktree. A committed test proves the hook's behaviour.
+- Known limit: in a `~/projects` session (cwd not a git repo), a Sidereus file changed only through Bash is not swept. Only `Write`/`Edit` register a checkout there. Bash rewrites are swept when the session cwd is a Sidereus checkout.
 - `.claude/` is ignored except `settings.json` and `hooks/`, so `eslint .` no longer walks `.claude/worktrees/`.
 - The test-plan §3 Phase 5 row reads complete. §5's flake, hook and lint rows are active. §6.5 is the e2e recipe. §6.4 no longer lists the `.astro` gap. CLAUDE.md describes the gates.
 
@@ -54,7 +55,7 @@ Verify with `npm test`, `npm run lint`, `npx astro check`, the break checks belo
 - `failOnFlakyTests: !!process.env.CI` keeps the retry, so the first failure's trace is retained (`trace: "retain-on-failure"`, `playwright.config.ts:13`), and it fails the job, so the existing `if: failure()` upload fires. No workflow edit is needed.
 - `includeIgnoreFile(gitignorePath)` (`eslint.config.js`, first export entry) applies `.gitignore` to ESLint. Ignoring `.claude/*` therefore also ends the lint OOM caused by `.claude/worktrees/` (project memory `sidereus-ui-sky-light-change`).
 - ESLint resolves virtual files under `files: ["src/**"]` (`noConsoleConfig`), so the existing `no-console` error applies to scripts once they parse.
-- Claude Code hook protocol (`references/anthropic.md:43-64`):
+- Claude Code hook protocol (`references/anthropic.md:29, 43-68`):
   - `Stop` with exit 2 and stderr keeps the agent working;
   - `stop_hook_active` marks the retry;
   - `PostToolUse` `Write|Edit` gets an absolute `tool_input.file_path`;
@@ -63,7 +64,7 @@ Verify with `npm test`, `npm run lint`, `npx astro check`, the break checks belo
 
 ## What We're NOT Doing
 
-- **Per-edit test or lint hooks.** The owner chose Stop only (2026-10-09). The per-edit hook below only records which checkout was edited.
+- **Per-edit test or lint hooks.** The owner chose Stop only (2026-10-09). The per-edit hook below only records which checkout was edited, and the turn-start hook only fingerprints the cwd checkout.
 - **`astro check` in the hook.** At ~22 s it was declined. It stays in CI `ci`, and lint-staged keeps per-file lint at commit.
 - **Turning off e2e retries, raising timeouts, or a flake dashboard.** The retry is kept for its trace.
 - **Type-aware linting of `.astro` scripts** (depth-limited `allowDefaultProject`). Its default-project limit of 8 silently drops scripts, and `define:vars` names give false positives (research §3).
@@ -77,8 +78,21 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
 
 ## Critical Implementation Details
 
-- **Config order:** the `.astro` script block goes **last** in the `eslint.config.js` export (after `eslintPluginPrettier`), or it sets `prettier/prettier: "off"` itself. Otherwise prettier re-enables on the virtual files and reports parse errors. A block earlier in the array loses to `baseConfig`'s `projectService: true` unless it sets `projectService: false` explicitly.
-- **Hook registration:** sessions start in `~/projects` (not a git repo), so the hook is registered both in the committed `sidereus/.claude/settings.json` (sessions started in the repo or a worktree) and in the local `~/projects/.claude/settings.json` (absolute script path). The script sweeps only checkouts that contain `.claude/hooks/end-of-turn.sh`. This skips other repositories under `~/projects` and checkouts on branches without the hook, such as S-05 until it rebases.
+- **Config order:** the `.astro` script block goes **last** in the `eslint.config.js` export (after `eslintPluginPrettier`) **and** sets `prettier/prettier: "off"`. Both are needed:
+  - placed last without the rule-off, real files get 9 prettier errors;
+  - placed just before `eslintPluginPrettier` with it off, the rule still resolves to error;
+  - placed before `baseConfig`, it loses `projectService: false`.
+- **Generated files:** an ESLint-ignored file passed by name (`src/lib/database.types.ts`, `worker-configuration.d.ts`) is a warning ("File ignored …"). Every `--max-warnings 0` invocation that receives explicit paths (lint-staged, the hook) also passes `--no-warn-ignored`; `eslint .` does not need it.
+- **UserPromptSubmit stdout:** on exit 0, this hook's stdout is added to the prompt as context. `turn-start.sh` must print nothing to stdout.
+- **Hook registration:** sessions start in `~/projects` (not a git repo), so the hook is registered in two places:
+  - the committed `sidereus/.claude/settings.json`, for sessions started in the repo or a worktree (Phase 3);
+  - the local `~/projects/.claude/settings.json`, with absolute script paths, written only after this PR merges (Phase 5).
+  
+  The local commands guard themselves:
+  - they exit 0 without running when `$CLAUDE_PROJECT_DIR` is a checkout that has its own `.claude/hooks/end-of-turn.sh`, since the repo registration covers it; this avoids a double run if parent settings also load;
+  - they print one line to stderr and exit 1 when the script file is missing (the main checkout is on a branch without it), so the user sees "hook error" and the agent is not blocked.
+  
+  The scripts sweep only checkouts that contain `.claude/hooks/end-of-turn.sh`. This skips other repositories under `~/projects` and checkouts on branches without the hook, such as S-05 until it rebases.
 
 ## Phase 1: Lint coverage
 
@@ -114,6 +128,7 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
   - `<script>` containing `console.log(1)` → exactly one message, `ruleId: "no-console"`, severity 2, on the script's line;
   - the same in `<script is:inline>` → one;
   - a `<script type="application/ld+json">` → none.
+- Samples are prettier-clean (blank line after the frontmatter, indented script body), or the assertion filters messages by `ruleId`.
 - The non-vacuity case asserts that the sample path exists.
 - The header's "Known gap" sentence about `.astro` scripts is replaced by one naming this case.
 - Behavior asserted: a log in an `.astro` client script is an error. Regression caught: a config change that silently stops script linting again. Edge cases: `is:inline`, and a JSON script that is not extracted. Anti-pattern avoided: trusting `calculateConfigForFile`.
@@ -126,7 +141,7 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
 
 **Contract**:
 - `"lint": "eslint . --max-warnings 0"`.
-- The lint-staged `*.{ts,tsx,astro}` command becomes `eslint --fix --max-warnings 0`.
+- The lint-staged `*.{ts,tsx,astro}` command becomes `eslint --fix --max-warnings 0 --no-warn-ignored`, so a regenerated `database.types.ts` (eslint-ignored, committed with every migration) still commits.
 
 #### 4. Ignore local `.claude/` content
 
@@ -134,7 +149,7 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
 
 **Intent**: Keep worktrees, local settings and stale skill copies out of git and out of `eslint .`, and keep the hook config committable.
 
-**Contract**: append `.claude/*`, `!.claude/settings.json` and `!.claude/hooks/`, with a comment. `git check-ignore -v .claude/settings.json` must print nothing, and `git check-ignore .claude/worktrees` must match.
+**Contract**: append `.claude/*`, `!.claude/settings.json` and `!.claude/hooks/`, with a comment. Apply this change first in the phase, before any `npm run lint`: until then, `eslint .` walks `.claude/worktrees` (the known OOM).
 
 ### Success Criteria:
 
@@ -145,13 +160,14 @@ The cheapest, widest gates go first: lint scope, then the CI settings. The hook 
 - Break check: without the new config block, the guard's `.astro` case fails; restored
 - Break check: a `console.log` in `src/components/ui/Notice.astro`'s `<script>` fails `npm run lint`; reverted
 - Break check: a warn-level finding (`console.log` in a `tests/db/*.ts` file) fails `npm run lint`; reverted
-- `git status --porcelain` no longer lists `.claude/`, and `git check-ignore -v .claude/settings.json` prints nothing
+- The lint-staged form `npx eslint --max-warnings 0 --no-warn-ignored src/lib/database.types.ts` exits 0, while without `--no-warn-ignored` it exits 1
+- `git status --porcelain` no longer lists `.claude/`; `git check-ignore -q .claude/settings.json` exits 1 and `git check-ignore -q .claude/worktrees` exits 0
 
 #### Manual Verification:
 
 - The guard's failure output for the first break check names the `.astro` sample and the missing `no-console`
 
-**Implementation Note**: commit the phase and continue (owner's multi-phase preference). Manual rows are verified by the agent where evidence allows, otherwise left for the joint check after the last phase.
+**Implementation Note**: commit the phase and continue (owner's multi-phase preference). Manual rows are verified by the agent where evidence allows, otherwise left for the joint check after the last phase. After this phase, update the lint-OOM workaround in memory (`sidereus-ui-sky-light-change`): it is obsolete once `.claude/*` is ignored.
 
 ---
 
@@ -195,6 +211,7 @@ A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and
   - `required_pull_request_reviews: null`;
   - `restrictions: null`.
 - Record the response in the phase notes.
+- `.github/workflows/ci.yml`: a comment above the `ci` and `smoke` jobs says their ids are required-check names on `main`. Renaming either would leave every PR "Expected — waiting".
 
 ### Success Criteria:
 
@@ -218,7 +235,11 @@ A flaky e2e test fails CI, Vitest's pool is pinned, and `main` requires `ci` and
 
 ### Overview
 
-At the end of a turn that changed code, a Claude Code Stop hook runs the unit suite and lints the changed files, then sends the agent back once with the failures. A tiny per-edit hook only records which checkout was edited, so the sweep finds it wherever the session runs. A committed test proves both scripts.
+At the end of a turn (`Stop`) or subagent run (`SubagentStop`) that changed a checkout, a Claude Code hook runs the unit suite and lints the changed files, then sends the agent back once with the failures. Two tiny helper hooks support it:
+- a per-edit hook records which checkout was edited, so the sweep finds it wherever the session runs;
+- a turn-start hook fingerprints the cwd checkout, so earlier WIP and other agents' edits do not trigger a sweep.
+
+A committed test proves all three scripts. This phase registers the hooks in the repo only; the local `~/projects` registration is Phase 5.
 
 ### Changes Required:
 
@@ -228,29 +249,47 @@ At the end of a turn that changed code, a Claude Code Stop hook runs the unit su
 
 **Intent**: Make the gates that already exist (lint, the unit suite with the Phase 1-4 guards) reach the agent before it finishes a turn, including edits made through Bash.
 
-**Contract**: follows the skill's `end-of-turn.sh` (`references/anthropic.md:180-283`) with these adaptations.
+**Contract**: follows the skill's `end-of-turn.sh` (`references/anthropic.md:182-279`) with these adaptations.
 - **Input:**
   - Stop payload on stdin.
   - Needs `jq`; without it, exit 2 with a message.
-  - If `stop_hook_active` is true or `loop_count` > 0, exit 0 (one retry).
+  - Handles `Stop` and `SubagentStop` alike; confirm the `SubagentStop` payload fields and its retry flag against the live hooks doc when implementing, and record any difference in the script header.
+  - If `stop_hook_active` is true or `loop_count` > 0, this is the retry pass. Run the checks again; if still red, print a `systemMessage` JSON on stdout naming the root, so the user sees that the turn ended red, then exit 0.
 - **Roots:**
-  - the git top-level of the payload `cwd`, plus the session registry `${TMPDIR}/claude-hooks/<session_id>.roots`;
+  - the git top-level of the payload `cwd`, plus the session registry `${TMPDIR:-/tmp}/claude-hooks/<session_id>.roots`;
   - keep only roots that contain `.claude/hooks/end-of-turn.sh`;
-  - if none remain, exit 0 silently (another repository, or a non-repo `~/projects` session with no Sidereus edits).
+  - skip a root whose current fingerprint equals the one `turn-start.sh` stored for this session at turn start (nothing changed this turn);
+  - if none remain, exit 0 silently (another repository, an unchanged checkout, or a non-repo `~/projects` session with no Sidereus edits).
+- **Fingerprint:** a hash of `git diff HEAD --binary` plus the untracked, non-ignored files' names and contents.
 - **Node:**
   - when `$NVM_DIR/nvm.sh` exists and the root has `.nvmrc`, source it and `nvm use --silent` in the root;
-  - then require `node_modules/.bin/eslint` and `node_modules/.bin/vitest` to be executable in the root, otherwise exit 2 naming the missing tool (no silent success);
+  - then require `node_modules/.bin/eslint` and `node_modules/.bin/vitest` to be executable in the root, otherwise exit 2 naming the missing tool with an `npm ci` hint (no silent success);
+  - when `.astro/` is missing, run `node_modules/.bin/astro sync` first;
   - call these local bins directly, not `npx`.
+- **Shell:** bash 3.2-safe (macOS `/bin/bash`): no `mapfile`, and no `set -u` with empty arrays.
 - **Per root:**
   - Changed files are `git diff --name-only HEAD` plus untracked, non-ignored files; with none, skip the root.
-  - **Lint** the existing changed `*.ts|*.tsx|*.astro|*.js|*.mjs|*.cjs` with `eslint --max-warnings 0` (no `--fix`).
-  - **Test:** run the whole `vitest run` when any changed path is under `src/`, or is `package.json`, `vitest.config.ts`, `eslint.config.js` or `tsconfig.json`. Docs-only turns run nothing.
+  - **Lint** the existing changed `*.ts|*.tsx|*.astro|*.js|*.mjs|*.cjs` with `eslint --max-warnings 0 --no-warn-ignored` (no `--fix`).
+  - **Test:** run the whole `vitest run` unless every changed path is documentation (`*.md` or under `context/`). This includes `.claude/hooks/**`, `.gitignore` and lockfile changes, which tests read.
 - **Output:**
   - `NO_COLOR=1 FORCE_COLOR=0`;
+  - each tool's output is cut to its last 200 lines;
   - all failures in one stderr message naming the root, then exit 2;
-  - when green, clear the registry and exit 0.
+  - when green, print a one-line summary on stdout naming what ran (debug log only; it lets the baseline check see that ESLint and Vitest ran), clear the registry, and exit 0.
 
-#### 2. Checkout registry
+#### 2. Turn-start fingerprint
+
+**File**: `.claude/hooks/turn-start.sh` (new, executable)
+
+**Intent**: Record what the cwd checkout looked like when the turn began, so the Stop sweep reacts only to this turn's changes (plan review F2).
+
+**Contract**:
+- `UserPromptSubmit` payload. If the git top-level of `cwd` contains `.claude/hooks/end-of-turn.sh`, write its fingerprint (same definition as in `end-of-turn.sh`) to `${TMPDIR:-/tmp}/claude-hooks/<session_id>.start`.
+- Prints nothing to stdout, since on exit 0 stdout becomes prompt context.
+- Always exits 0.
+- Missing `jq`, or a non-repo `cwd`, means no fingerprint, so the Stop hook sweeps as without this hook.
+
+#### 3. Checkout registry
 
 **File**: `.claude/hooks/register-checkout.sh` (new, executable)
 
@@ -263,43 +302,56 @@ At the end of a turn that changed code, a Claude Code Stop hook runs the unit su
   - always exit 0, since it checks nothing.
 - Exit 0 with no output when the path is missing, the file is outside a repository, or `jq` is missing; the Stop hook reports a missing `jq`.
 
-#### 3. Hook registration
+#### 4. Hook registration in the repo
 
-**File**: `.claude/settings.json` (new, committed); `~/projects/.claude/settings.json` (local, outside git, merged into its existing `permissions`)
+**File**: `.claude/settings.json` (new, committed)
 
-**Intent**: Load the hooks in every session that edits Sidereus.
+**Intent**: Load the hooks in sessions started in the repo or a worktree.
 
 **Contract**:
-- Repo file:
-  - `PostToolUse` matcher `Write|Edit` → `register-checkout.sh`, timeout 10;
-  - `Stop` → `end-of-turn.sh`, timeout 120;
-  - commands resolve the script through `git rev-parse --show-toplevel`, falling back to `$CLAUDE_PROJECT_DIR`, as in the reference.
-- `~/projects/.claude/settings.json`: the same two hooks with the absolute script paths `$HOME/projects/sidereus/.claude/hooks/…`.
-- Show the owner the diff of the local file before writing it.
+- `UserPromptSubmit` → `turn-start.sh`, timeout 10.
+- `PostToolUse` matcher `Write|Edit` → `register-checkout.sh`, timeout 10.
+- `Stop` and `SubagentStop` → `end-of-turn.sh`, timeout 120.
+- Commands resolve the script through `git rev-parse --show-toplevel`, falling back to `$CLAUDE_PROJECT_DIR`, as in the reference.
 
-#### 4. Proof test
+#### 5. Proof test
 
 **File**: `src/lib/agent-hooks.test.ts` (new; next to the repo's other repository guards, inside the Vitest include)
 
 **Intent**: Keep the hook proven as it changes (skill Step 7), in the unit suite CI already runs.
 
 **Contract**:
-- Each case builds a throwaway git repo in the OS temp dir. The repo holds copies of both scripts and stub `node_modules/.bin/eslint` and `vitest` shell scripts that fail when a changed file contains a `BROKEN` marker and log their calls.
-- `NVM_DIR` points at an empty dir; `git`, `jq` and `bash` are real.
+- Each case builds a throwaway git repo in the OS temp dir (compared via `realpath`). The repo holds copies of the three scripts and stub `node_modules/.bin/eslint` and `vitest` shell scripts that fail when a changed file contains a `BROKEN` marker and log their calls.
+- Environment per case:
+  - its own `TMPDIR`;
+  - `NVM_DIR` pointing at an empty dir;
+  - `CLAUDE_PROJECT_DIR` unset (except in case 8);
+  - `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` removed;
+  - commits made with `-c user.name=… -c user.email=…`, because CI runners have no git identity.
+- Scripts are spawned through `/bin/bash` by absolute path; `git` and `jq` are real.
+- Embedded stub text never contains the string `eslint-disable`, which the no-console guard counts.
 - Cases, asserting exit code and stderr:
   1. **Broken `.ts` change:** exit 2, and stderr names the file.
   2. **Clean change:** exit 0, empty stderr.
   3. **Docs-only change:** exit 0, and neither stub is called.
   4. **No change:** exit 0, and no stub is called.
   5. **Payloads:** `{}` and `not json` behave as for the process cwd.
-  6. **Retry:** `stop_hook_active: true` with a broken change gives exit 0.
+  6. **Retry:** `stop_hook_active: true` with a broken change gives exit 0 and a `systemMessage` on stdout naming the root.
   7. **Write bypassing per-edit hooks:** a broken file written to disk with no `PostToolUse` call gives exit 2.
   8. **Checkout resolution:**
      - `CLAUDE_PROJECT_DIR` pointing at a broken repo leaves the cwd's clean repo green;
      - a broken sibling `git worktree` that is registered through `register-checkout.sh` gives exit 2;
      - a registered repo without the hook script is skipped;
      - a relative `file_path` resolves against `cwd`.
-  9. **Missing tool:** with the `eslint` stub removed, exit 2 naming it; with `jq` off `PATH`, exit 2.
+  9. **Missing tool:** with the `eslint` stub removed, exit 2 naming it with the `npm ci` hint; with an empty `PATH` (no `jq`), exit 2.
+  10. **Ignored generated file:** a changed file the stub treats as ignored is passed with `--no-warn-ignored` (the stub asserts the flag), and the result is exit 0.
+  11. **Turn fingerprint:**
+      - a broken change made before `turn-start.sh` ran, untouched during the turn, is skipped (exit 0, no stub called);
+      - a further change after it is swept (exit 2).
+  12. **`SubagentStop` payload:** a broken change gives exit 2, as for `Stop`.
+  13. **`turn-start.sh`:** prints nothing on stdout, exits 0 on `{}`, `not json` and a non-repo `cwd`.
+  14. **`bash -n`** passes on all three scripts.
+  15. **Bash-limit documentation case:** cwd not a repo, empty registry, a broken change in a Sidereus-like repo → exit 0 (the documented limit).
 - Each `command` in `.claude/settings.json`, run from a worktree with `CLAUDE_PROJECT_DIR` set to a nonexistent path, reaches an executable script.
 
 ### Success Criteria:
@@ -308,16 +360,16 @@ At the end of a turn that changed code, a Claude Code Stop hook runs the unit su
 
 - `npm test` passes, including `agent-hooks.test.ts`
 - Break check: with the `stop_hook_active` guard removed from `end-of-turn.sh`, case 6 fails; restored
-- `bash -n` on both scripts, and `jq empty .claude/settings.json`, pass
-- The Stop script on the untouched tree (payload `{"cwd": "<repo>"}`) exits 0 (green baseline)
+- `bash -n` on the three scripts, and `jq empty .claude/settings.json`, pass
+- Real-run baseline: with the Phase 3 files still uncommitted, the real `end-of-turn.sh` run on this repo (payload `{"cwd": "<repo>", "session_id": "baseline"}`, no start fingerprint) exits 0, its stdout summary shows that ESLint and Vitest ran, and it finishes well under 120 s
 - `npm run lint` and `npx astro check` pass
 
 #### Manual Verification:
 
-- In a session restarted from `~/projects`, `/hooks` lists the Stop and `PostToolUse` hooks once, and no hook is listed twice
-- A live turn that writes a failing assertion is sent back by the Stop hook with the Vitest output, and the next turn ends normally after the fix
+- In a session started in the repo (and one in a worktree that contains the hooks), `/hooks` lists each of the four hooks once
+- A live turn in such a session that writes a failing assertion is sent back by the Stop hook with the Vitest output, and the next turn ends normally after the fix
 
-**Implementation Note**: as Phase 1. Writing `~/projects/.claude/settings.json` waits for the owner's OK on the shown diff. The live-turn row needs a restarted session, so it is left for the joint check.
+**Implementation Note**: as Phase 1. The manual rows need a restarted session, so they are left for the joint check.
 
 ---
 
@@ -363,14 +415,19 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 - CLAUDE.md:
   - the coordinates tripwire drops the "not linted yet" sentence and states that `.astro` scripts are linted (non-type-aware);
   - the Commands block notes `--max-warnings 0` and that a flaky e2e test fails CI;
-  - a short "Agent hooks" bullet in Tripwires covers what the Stop hook runs, the `~/projects` registration, and that `.claude/` is ignored except `settings.json` and `hooks/`.
+  - a short "Agent hooks" bullet in Tripwires covers:
+    - what the Stop and SubagentStop hook runs, and the turn fingerprint;
+    - the `~/projects` registration and its exact snippet;
+    - the Bash-only limit in `~/projects` sessions;
+    - a fresh worktree needs `npm ci` before the hook can pass;
+    - `.claude/` is ignored except `settings.json` and `hooks/`.
 - `lessons.md` appends one entry: "Resolving a rule's config is not proof the rule runs: pair a config guard with one end-to-end lint of a known violation per file kind".
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- `grep -c "TBD — see §3 Phase 5" context/foundation/test-plan.md` prints 0, and the §3 Phase 5 row reads complete
+- `grep -c "TBD — see §3 Phase 5" context/foundation/test-plan.md` prints 0, and `grep -E '^\| 5 \|.*\| complete \|' context/foundation/test-plan.md` matches the §3 row
 - `grep -c "not linted yet" CLAUDE.md` prints 0
 
 #### Manual Verification:
@@ -378,6 +435,43 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 - §6.5 reads as a complete e2e recipe, and §5 matches what is wired
 
 **Implementation Note**: as Phase 1.
+
+---
+
+## Phase 5: Local registration (after the merge)
+
+### Overview
+
+After this change's PR has merged into `main`, register the hooks for sessions started in `~/projects`. The scripts then exist on `main` and on every branch cut from it.
+
+### Changes Required:
+
+#### 1. Local settings
+
+**File**: `~/projects/.claude/settings.json` (outside git; holds both accounts' shared `permissions`)
+
+**Intent**: Make the hooks fire in the owner's usual sessions, which start in `~/projects`.
+
+**Contract**:
+- Back the file up to the scratchpad first.
+- Merge a `hooks` key next to `permissions`, with the same four hooks as the repo file. Each command uses the absolute path `$HOME/projects/sidereus/.claude/hooks/<script>` and the self-guard from Critical Implementation Details:
+  - exit 0 when `$CLAUDE_PROJECT_DIR` is a checkout with its own hook;
+  - one stderr line and exit 1 when the script is missing.
+- Show the owner the diff and wait for an explicit OK before writing.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `jq empty ~/projects/.claude/settings.json` passes, and `jq -S .permissions` equals the backup's
+- Each local command, run with `CLAUDE_PROJECT_DIR=$HOME/projects` and a `{}` payload, reaches its script and exits 0; run with `CLAUDE_PROJECT_DIR` set to the repo, it exits 0 without running the script
+
+#### Manual Verification:
+
+- In a session restarted from `~/projects`, `/hooks` lists each hook once, and a turn that breaks a unit test in Sidereus through `Edit` is sent back
+- In a session started in the repo, `/hooks` still lists each hook once (no double registration)
+
+**Implementation Note**: run after the PR merges; the archive waits for this phase.
 
 ---
 
@@ -392,15 +486,15 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 | `playwright.config.ts` `failOnFlakyTests` | after rebase | A spec that passes only on retry fails CI. Fix the cause (`waitForHydration`, isolation) rather than retrying. |
 | `vitest.config.ts` `pool: "forks"` | after rebase | None (already the default). |
 | Required checks `ci` + `smoke` on `main` | immediately, for every PR | S-05's PR cannot merge until both are green. |
-| `.claude/settings.json` + `.claude/hooks/` | after rebase, and a restart of a session started in the worktree | ~4 s Stop-hook run on turns that change code; one send-back on red tests or lint. |
-| `~/projects/.claude/settings.json` registration | at the next restart of any session started in `~/projects` | The hook skips the S-05 worktree until it contains `.claude/hooks/end-of-turn.sh`. After the rebase, the same send-back applies. |
+| `.claude/settings.json` + `.claude/hooks/` (UserPromptSubmit, PostToolUse, Stop, SubagentStop) | after rebase, and a restart of a session started in the worktree | ~8 s at the end of turns and subagent runs that changed the worktree; one send-back on red tests or lint (earlier WIP does not trigger it). The worktree needs `node_modules` (`npm ci`). |
+| `~/projects/.claude/settings.json` registration (Phase 5, after merge) | at the next restart of any session started in `~/projects` | The hook skips the S-05 worktree until it contains `.claude/hooks/end-of-turn.sh`. After the rebase, the same send-back applies. |
 
 ## Testing Strategy
 
 ### Unit Tests:
 
 - `src/lib/no-console-guard.test.ts`: end-to-end lint of `.astro` script samples (plain, `is:inline`, JSON).
-- `src/lib/agent-hooks.test.ts`: the hook scripts against throwaway repos, cases 1-9 plus the command resolution check.
+- `src/lib/agent-hooks.test.ts`: the three hook scripts against throwaway repos, cases 1-15 plus the command resolution check.
 
 ### Integration Tests:
 
@@ -408,13 +502,13 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 
 ### Manual Testing Steps:
 
-1. Restart a session from `~/projects` and check `/hooks`.
+1. After Phase 3, restart a session in the repo and check `/hooks`. After Phase 5, do the same from `~/projects`.
 2. In that session, make a turn that breaks a unit test, and watch the Stop hook send it back.
 3. Open this change's PR and check that `ci` and `smoke` are marked required.
 
 ## Performance Considerations
 
-- The Stop hook adds about 4 s (unit suite) plus about 3-5 s (ESLint on the changed files) to turns that change code, within the 120 s timeout. Docs-only and Q&A turns add a few milliseconds.
+- The Stop hook adds about 4 s (unit suite) plus about 3-5 s (ESLint on the changed files) to turns that change a checkout, within the 120 s timeout. Turns that change nothing (fingerprint unchanged) and docs-only turns add a few milliseconds, plus about 0.1 s for the turn-start fingerprint.
 - `agent-hooks.test.ts` spawns bash per case. Keep it under about 5 s with stubbed tools. Removing the `.claude/worktrees` walk speeds up `eslint .`.
 
 ## Migration Notes
@@ -442,11 +536,12 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 - [ ] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored
 - [ ] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted
 - [ ] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted
-- [ ] 1.6 `git status` no longer lists `.claude/`, and `.claude/settings.json` is not ignored
+- [ ] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it
+- [ ] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees
 
 #### Manual
 
-- [ ] 1.7 The guard's failure output names the `.astro` sample and the missing `no-console`
+- [ ] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console`
 
 ### Phase 2: CI gates
 
@@ -468,22 +563,34 @@ Close Phase 5 in the test plan, write the e2e recipe, and record the gates where
 
 - [ ] 3.1 `npm test` passes, including `agent-hooks.test.ts`
 - [ ] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored
-- [ ] 3.3 `bash -n` on both scripts and `jq empty .claude/settings.json` pass
-- [ ] 3.4 The Stop script exits 0 on the untouched tree
+- [ ] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass
+- [ ] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s
 - [ ] 3.5 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 3.6 `/hooks` in a session restarted from `~/projects` lists each hook once
+- [ ] 3.6 `/hooks` in a repo- and a worktree-started session lists each hook once
 - [ ] 3.7 A live turn with a failing assertion is sent back once, then ends normally after the fix
 
 ### Phase 4: Docs and cookbook
 
 #### Automated
 
-- [ ] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, §3 Phase 5 row complete
+- [ ] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete`
 - [ ] 4.2 No "not linted yet" left in CLAUDE.md
 
 #### Manual
 
 - [ ] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired
+
+### Phase 5: Local registration (after the merge)
+
+#### Automated
+
+- [ ] 5.1 `jq empty` on the local settings passes, and `.permissions` equals the backup's
+- [ ] 5.2 Local commands run their script from `~/projects` and skip themselves for the repo
+
+#### Manual
+
+- [ ] 5.3 `/hooks` in a `~/projects` session lists each hook once, and a broken unit test is sent back
+- [ ] 5.4 A repo-started session still lists each hook once
