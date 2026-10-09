@@ -47,7 +47,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | done        |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | proposed |
-| S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | proposed |
+| S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | planning |
 | S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | proposed |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | proposed |
 | S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | proposed |
@@ -157,7 +157,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Reads the existing log only; the one rule that matters (rated 3 or above counts) mirrors the ranking's penalty rule, so both must stay in step.
-- **Status:** proposed
+- **Status:** planning
 
 ### S-06: Observing milestones
 
