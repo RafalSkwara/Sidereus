@@ -99,6 +99,32 @@ test("the mark follows the log: shown for a new object, kept at a rating of 2, g
   await expect(anyMarkOf(seenRow)).toHaveCount(0);
 });
 
+test("on a desktop, hover opens the tooltip, and Esc keeps it closed once the pointer leaves", async ({ page }) => {
+  test.setTimeout(120_000);
+  await onboardInMadrid(page, "e2e-progress-desktop");
+
+  const { card } = await firstCard(page);
+  await expect(page.locator("html[data-not-seen-tip='ready']")).toHaveCount(1);
+  const mark = markOf(card);
+  const tooltip = card.getByRole("tooltip");
+
+  await mark.hover();
+  await expect(tooltip).toHaveText(copy.legend);
+
+  // Clicked open and dismissed with Esc: the still-focused button now matches :focus-visible, which must not
+  // bring the tooltip back when the pointer moves away.
+  await mark.click();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).toHaveCount(0);
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toHaveCount(0);
+
+  // Once both the pointer and the focus have left, hovering opens it again.
+  await page.getByRole("heading", { level: 1 }).click();
+  await mark.hover();
+  await expect(tooltip).toBeVisible();
+});
+
 test.describe("on a touch screen", () => {
   // A phone: no hover, so only a tap, Esc and a tap outside drive the tooltip.
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });

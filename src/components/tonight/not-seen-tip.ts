@@ -63,13 +63,18 @@ export function initNotSeenTip(): void {
     }
   });
 
-  // A dismissed tooltip may open again once the pointer or the focus has left its button.
+  // A dismissed tooltip may open again once both the pointer and the focus have left its button. Leaving by one
+  // alone is not enough: after Esc the still-focused button matches `:focus-visible` (a key was pressed), so
+  // clearing the dismissal when only the pointer leaves would bring the tooltip straight back.
   const forget = (event: Event) => {
     const button = buttonIn(event.target);
     const tooltip = button ? tooltipOf(button) : null;
     if (!button || !tooltip) return;
     const next = event instanceof MouseEvent || event instanceof FocusEvent ? event.relatedTarget : null;
     if (next instanceof Node && button.contains(next)) return;
+    const stillFocused = event.type === "mouseout" && document.activeElement === button;
+    const stillHovered = event.type === "focusout" && button.matches(":hover");
+    if (stillFocused || stillHovered) return;
     tooltip.removeAttribute("data-dismissed");
   };
   document.addEventListener("mouseout", forget);

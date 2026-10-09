@@ -476,8 +476,8 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Manual
 
-- [ ] 2.5 Screenshots of `/tonight` (tile), `/tonight/targets` (card with tooltip open, rest list with legend), `/tonight/planets` and `/tonight/moon` in EN/PL × dark/light/red at 390 px and desktop: the mark reads next to the name, the tooltip stays on screen at 320-390 px, red mode tells the mark apart
-- [ ] 2.6 The tooltip opens on mouse hover, on keyboard Tab focus and on a touch tap (Playwright touch emulation), and closes on Esc
+- [x] 2.5 Screenshots of `/tonight` (tile), `/tonight/targets` (card with tooltip open, rest list with legend), `/tonight/planets` and `/tonight/moon` in EN/PL × dark/light/red at 390 px and desktop: the mark reads next to the name, the tooltip stays on screen at 320-390 px, red mode tells the mark apart
+- [x] 2.6 The tooltip opens on mouse hover, on keyboard Tab focus and on a touch tap (Playwright touch emulation), and closes on Esc
 
 #### Automated (added by plan review)
 
@@ -487,11 +487,11 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated
 
-- [x] 3.1 `tests/e2e/observing-progress.spec.ts` page cases pass, including rating 2 never ticking and deletion unticking
-- [x] 3.2 `tests/e2e/tonight-phone.spec.ts` passes with `/log/progress` in `APP_PAGES` (no sideways scroll at 320/375 px in EN and PL)
-- [x] 3.3 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
+- [x] 3.1 `tests/e2e/observing-progress.spec.ts` page cases pass, including rating 2 never ticking and deletion unticking — 6828bfe
+- [x] 3.2 `tests/e2e/tonight-phone.spec.ts` passes with `/log/progress` in `APP_PAGES` (no sideways scroll at 320/375 px in EN and PL) — 6828bfe
+- [x] 3.3 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass — 6828bfe
 
 #### Manual
 
-- [ ] 3.4 Screenshots of `/log/progress` (empty log and a log with several seen objects) and `/log`'s header in EN/PL × dark/light/red at 390 px and desktop: grid chips legible, seen chips distinguishable in red mode, the Caldwell note present, at most one primary action
-- [ ] 3.5 The `/design` specimens for `NotSeenMark`, `ChecklistGrid` and `SeenList` render in all themes
+- [x] 3.4 Screenshots of `/log/progress` (empty log and a log with several seen objects) and `/log`'s header in EN/PL × dark/light/red at 390 px and desktop: grid chips legible, seen chips distinguishable in red mode, the Caldwell note present, at most one primary action
+- [x] 3.5 The `/design` specimens for `NotSeenMark`, `ChecklistGrid` and `SeenList` render in all themes
