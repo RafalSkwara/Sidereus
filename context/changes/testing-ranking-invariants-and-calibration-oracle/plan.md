@@ -23,7 +23,7 @@ From `research.md` (this folder), verified 2026-10-08 at fd2617e:
 - **Visibility.**
   - One predicate, `bestWindow` (`src/lib/engine/objects.ts:76-105`), decides the window for deep sky, planets and the Moon. It takes the longest run of 10-min samples with refracted altitude at or above the site minimum; samples cover only the dark window (deep sky) or the −6° window (planets, Moon). The peak is a sample of that run.
   - Deep-sky entries carry `score.window` (`score.ts`, `ObjectScore.window`) and `peak`. Planet and Moon entries carry `window` and `peak`.
-  - Session plan rows reuse the raw window and `peak.time` (`src/lib/tonight/build.ts:1019-1054`). `layoutSessionPlan` clamps only display fractions.
+  - Session plan rows are built from the raw window and `peak.time` (`src/lib/tonight/build.ts:1090-1153`, `rowOf` / `planRows`). The view's `SessionPlanRow` (`session-plan.ts:18`) is `Omit<R, "window">` plus the axis fractions `from`, `to` and `best`, which `layoutSessionPlan` clamps, plus `windowText` / `bestTime` (minute strings) and the exact `bestAt` (ms). No row carries its window in ms (plan review F1).
   - A worker probe found 0 violations over about 19,000 rows across 7 sites, 6 dates and 3 configurations, with altitude computed directly from astronomy-engine.
   - Every existing invariant test is fixed-case, almost all at Warsaw with a 150 mm scope.
 - **Short windows.** About 0.7% of entries are up for a single 10-min sample (`start == end`) and still clear the bar. You chose to pin this rule and document it, with no product change.
@@ -31,7 +31,7 @@ From `research.md` (this folder), verified 2026-10-08 at fd2617e:
   - `src/lib/engine/calibration.test.ts` stores no snapshot; its opt-in "snapshot" is a `console.log` (`:44-61`).
   - It asserts four loose rules on four new-Moon Warsaw nights (Bortle 5, 150/750): ≥1 Caldwell clears, ≥3 Messier in the top 5, the Double Cluster in the October top 10, and no Caldwell galaxy with V > 10 in the top 5 (`:71-94`).
   - It guards only `MESSIER_RANK_BONUS`.
-  - `src/lib/engine/ranking.test.ts:195` pins the exact top 5 `["M31","M34","M39","M45","M52"]`, which was copied from engine output.
+  - `src/lib/engine/ranking.test.ts:194` pins the exact top 5 `["M31","M34","M39","M45","M52"]`, which was copied from engine output.
 - **PRD invariants** (`context/foundation/prd.md:565-575`, FR-018 `:391`) are covered only by small synthetic cases. Each is either a relation over the cleared set or an equality between two rankings, so each is testable at catalogue scale without engine-derived expected values:
   - 1–2 ratings inert (`ranking.test.ts:312`, a 3-object catalogue);
   - the bar reads only `score.total` (`ranking.ts:229-236`);
@@ -56,15 +56,16 @@ Verify: `npm test` is green. Each phase's break checks turn its suite red and ar
 ### Key Discoveries:
 
 - **Independent oracle for Risk #3 (research "Property-test mechanics"):**
-  - Deep sky: the J2000 catalogue vector through `Rotation_EQJ_EQD(time)` and then `Horizon(time, observer, ra, dec, "normal")`. This path differs from the engine's `Rotation_EQJ_HOR`.
-  - Planets and the Moon: `Equator(body, time, observer, true, true)` then `Horizon(…, "normal")`.
+  - Deep sky: the catalogue carries `raHours` / `decDeg` (`types.ts:69-73`). `VectorFromSphere({ lat: decDeg, lon: raHours × 15, dist: 1 })` → `Rotation_EQJ_EQD(time)` → `EquatorFromVector` → `Horizon(time, observer, ra /* hours */, dec, "normal")`. This path differs from the engine's `Rotation_EQJ_HOR`.
+  - Planets and the Moon: the engine uses `Equator(body, t, obs, true, true)` + `Horizon(…, "normal")` (`planets.ts:62-63`, `moon.ts:41-42`), so the test takes the other road: the J2000 vector `Equator(body, t, obs, false, true).vec` → `Rotation_EQJ_HOR(t, obs)` → `HorizonFromVector(…, "normal")` (plan review F5).
   - Sun, geometric like `darkWindow` (`sun.ts:19-23`): `Equator(Body.Sun, …)` then `Horizon` with no refraction.
+  - Thresholds: the suites own a Bortle → threshold table from the PRD (−18 / −15 / −12, PRD OQ7) and −6° for planets and the Moon. They never read the oracle's threshold from `darknessThresholdDegForBortle`, or a production break there would move both sides (plan review F3).
   - The model differences are small (the probe's smallest margin was 0.0002°). A tolerance of ε = 0.05° in altitude covers them and is far under the 1° accuracy NFR (`prd.md:488`).
 - **Deep-sky window inputs.** `darkWindow(site, observingNight(date, tz), darknessThresholdDegForBortle(bortle))` (−18/−15/−12°). Generated cases must skip `kind: "none"` and count how many they skip.
 - **Generator ranges** (`src/lib/gear/schemas.ts`):
   - site: Bortle 1–9, min altitude 0–60;
   - telescope: aperture 20–1000 mm, focal length 100–5000 mm; use 50–400 mm at f/3–f/16 for realism (`gear/catalogue/README.md:29`);
-  - eyepieces: 2–60 mm, AFOV 30–120°; a kit of 0–3, empty allowed.
+  - eyepieces: 2–60 mm, AFOV 30–120°; a kit of 0–3, empty allowed. `eyepiece-presets.ts` holds only AFOV presets (50/68/82°), so focal lengths are drawn from 2–60 mm and the AFOV from the presets.
   - Time zones come from a fixed site list with known zones, so no tz lookup is needed.
 - **Beginner reference** (compiled 2026-10-08 by a worker that never saw the engine's output; WebFetch summaries, access date 2026-10-08). The rule, fixed before any comparison: an object counts for a night when at least 2 sources name it as a beginner target for that season. Sources, by key:
   - AW: Astronomy.com "See winter's best Messier objects", https://www.astronomy.com/observing/see-winters-best-messier-objects/ (lists spring galaxies, so it counts for April).
@@ -117,9 +118,11 @@ The phases follow cost × signal:
   - Print the case index and inputs in each assertion message so a failure can be replayed.
   - Assert non-vacuity counts first, computed from the generated inputs or totals:
     - Phase 1: at least 150 cases with a dark window, at least 3,000 object entries checked, at least 20 southern-hemisphere cases, at least 10 cases above 60°, and at least 50 planet entries;
-    - Phase 4: at least 30 Session plans with rows.
+    - Phase 2: at least one rating-2 log entry hits a cleared object;
+    - Phase 4: at least 30 Session plans with rows, and at least 3 no-darkness cases (guaranteed by fixed polar-summer cases, not by the seed).
 - **Tolerance.** Altitude is checked as `independentAltitude >= minAltitudeDeg − 0.05`. Sun altitude is checked as `independentSunAltitude <= threshold + 0.05`, where threshold is the Bortle dark threshold for deep sky and −6 for planets and the Moon. Don't tighten ε to zero: the engine and test paths differ by arcseconds.
-- **Keep shared helpers out of scanned source.** Put the shared seeded generator and site list in `src/lib/engine/fixtures/` (test-only, skipped by `purity.test.ts`). The runner-zone guard also skips that directory.
+- **Keep shared helpers out of scanned source.** Put the shared seeded generator and site list (`generated.ts`) and the independent-altitude helpers (`independent-altitude.ts`) in `src/lib/engine/fixtures/` from Phase 1 (test-only, skipped by `purity.test.ts:61` and the runner-zone guard `src/lib/runner-zone-guard.test.ts:26`). Phase 4 imports them from `@/lib/engine/fixtures/…`, as `build.test.ts` already does. Never put them in `src/lib/tonight/test-fixtures.ts`, which the runner-zone guard scans (plan review F8).
+- **Tonight runs at elevation 0.** `SiteRecord` has no elevation and `toEngineSite` drops it (`store.ts:140`), so Phase 4's helper calls use elevation 0. `no-console` is an error under `src/lib/tonight/**`: the Phase 4 suite never logs.
 - **Calibration nights.** Use the existing `warsawDarkWindow(date, 5)`, `WARSAW`, `TELESCOPE` and `EYEPIECES` from `src/lib/engine/fixtures/index.ts`, exactly as `calibration.test.ts` does, so the oracle judges the same rankings the archived evidence recorded.
 
 ## Phase 1: Engine visibility property suite (unit, Risk #3)
@@ -132,7 +135,7 @@ Seeded, generated sites, nights, skies and telescopes. Every listed deep-sky ent
 
 #### 1. Seeded generator and site list
 
-**File**: `src/lib/engine/fixtures/generated.ts` (new); `src/lib/engine/fixtures/README.md`
+**File**: `src/lib/engine/fixtures/generated.ts` (new); `src/lib/engine/fixtures/independent-altitude.ts` (new); `src/lib/engine/fixtures/README.md`
 
 **Intent**: Give every property suite one replayable generator and a realistic, varied site list.
 
@@ -141,14 +144,15 @@ Seeded, generated sites, nights, skies and telescopes. Every listed deep-sky ent
 - `GENERATED_SITES`, about 16 entries `{ label, latitudeDeg, longitudeDeg, elevationM, timeZone }` covering:
   - the equator (Quito or Singapore);
   - 20–35° N (Kolkata, Los Angeles);
-  - 45–55° N (Warsaw, Madrid);
+  - 45–55° N (Warsaw, Paris 48.9);
   - 60–70° N (Helsinki, Tromsø 69.65);
   - 78° N (Longyearbyen);
   - 20–40° S (Sydney, Santiago, Cape Town);
   - 64.8° S (Antarctic Peninsula, a fixed zone);
-  - +13/+14 zones (Auckland, Kiritimati).
-- `generateCase(random)` returns `{ site, date (any day of 2026), bortle 1–9, minAltitudeDeg 0–60, telescope {id, apertureMm 50–400, focalLengthMm = round(aperture × f/3–f/16)}, eyepieces 0–3 drawn from src/lib/gear/eyepiece-presets.ts }`.
-- The README gets a short "Generated cases" note: the seed, the sites, that the module is test-only, and that it must never use engine output.
+  - far-east zones (Auckland +12/+13, Kiritimati +14).
+- `generateCase(random)` returns `{ site, date (any day of 2026), bortle 1–9, minAltitudeDeg 0–60, telescope {id, apertureMm 50–400, focalLengthMm = round(aperture × f/3–f/16)}, eyepieces: 0–3 with focalLengthMm 2–60 and the AFOV drawn from EYEPIECE_PRESETS (src/lib/gear/eyepiece-presets.ts) }`.
+- `independent-altitude.ts` exports the oracle helpers (Key Discoveries › Independent oracle): `deepSkyAltitudeDeg(object, time, observer)`, `bodyAltitudeDeg(body, time, observer)`, `sunAltitudeGeometricDeg(time, observer)`, and `DARK_THRESHOLD_BY_BORTLE` / `PLANET_WINDOW_THRESHOLD_DEG`: the test's own PRD table, never read from `parameters.ts`. They import only `astronomy-engine` and engine types.
+- The README gets a short "Generated cases" note: the seed, the sites, that both modules are test-only, and that they must never use engine output.
 
 #### 2. Visibility property suite
 
@@ -160,11 +164,11 @@ Seeded, generated sites, nights, skies and telescopes. Every listed deep-sky ent
 - About 200 cases from a fixed seed. For each case with a dark window (`darkWindow` at the Bortle threshold, `kind: "window"`), call `rankObjects({…, catalogue: DEEP_SKY, limit: Infinity})`. With a −6° window, also call `rankPlanets` and `moonTarget`.
 - For **every** entry's `score.window` (deep sky) or `window` (planet, Moon), at `start`, `end` and `peak.time`, assert:
   - (a) the independent altitude is at least `minAltitudeDeg − 0.05`;
-  - (b) the independent geometric sun altitude is at most the threshold + 0.05;
+  - (b) the independent geometric sun altitude is at most the threshold + 0.05, with the threshold from the test's own table (`DARK_THRESHOLD_BY_BORTLE[bortle]` for deep sky, −6 for planets and the Moon);
   - (c) `start ≤ peak.time ≤ end`, and all three lie within the dark window (deep sky) or the planet window.
-- The independent helpers live in the test file:
-  - deep sky: J2000 `raDeg`/`decDeg` vector → `Rotation_EQJ_EQD` → `Horizon(…, "normal")`;
-  - planets and the Moon: `Equator(body, t, observer, true, true)` → `Horizon(…, "normal")`;
+- The independent helpers come from `fixtures/independent-altitude.ts` (see the generator above):
+  - deep sky: `raHours × 15` / `decDeg` J2000 vector → `Rotation_EQJ_EQD` → `EquatorFromVector` → `Horizon(…, "normal")`;
+  - planets and the Moon: J2000 vector from `Equator(body, t, observer, false, true)` → `Rotation_EQJ_HOR` → `HorizonFromVector(…, "normal")`, a road the engine doesn't take for bodies;
   - sun: `Equator(Body.Sun, …)` → `Horizon` with no refraction.
 - **Short-window rule (pinned).** Collect the entries with `window.start === window.end`. Assert each still meets (a)–(c) at that single instant, which documents the accepted rule. Log nothing.
 - **Non-vacuity:** the counts from "Critical Implementation Details" are asserted first.
@@ -183,8 +187,8 @@ Seeded, generated sites, nights, skies and telescopes. Every listed deep-sky ent
 
 - The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts`
 - Break checks, then reverted and logged below:
-  - in `bestWindow`, temporarily widening the window by one sample on each side turns (a) or (c) red;
-  - temporarily ranking deep sky over the −6° window instead of the Bortle threshold in the suite's call turns (b) red. This is a suite-input edit, because the threshold is passed in by the caller. The production-side equivalent is Phase 4's `cardPasses` check.
+  - in `bestWindow`, temporarily widening the window by one sample on each side (indices clamped to the track, so `track[-1]` can't crash the suite) turns (a) or (c) red. The probe saw 13,180 violations;
+  - in `parameters.ts`, temporarily making `darknessThresholdDegForBortle` return −12 for Bortle ≤ 4 turns (b) red, because the suite's own table still says −18 / −15. The probe saw 2,141 violations.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
 **Break-check log**: (filled in by `/10x-implement`.)
@@ -214,13 +218,14 @@ The PRD's ranking invariants become relations over the full catalogue, on the fo
   - about 20 generated cases from Phase 1's generator with a dark window.
 - All rankings use `DEEP_SKY` and `limit: Infinity`.
 - **Relations asserted:**
-  - **(a) 1–2 ratings inert (FR-018, invariant at `prd.md:574`).** Adding log entries rated 1 or 2 for 30 seeded-random catalogue objects gives a `Ranking` deep-equal to the empty-log ranking.
+  - **Logs go through `seenSummaries`.** (a) and (b) build `seen` with `seenSummaries(log, night)` (`log.ts:32-36`), with every log night on or before the ranked night, never as a hand-built map: the rating filter lives only there, so a hand-built map would hide the `LOG_PENALTY_MIN_RATING` break (plan review F6).
+  - **(a) 1–2 ratings inert (FR-018, invariant at `prd.md:574`).** Adding log entries rated 1 or 2 for 30 seeded-random catalogue objects gives a `Ranking` deep-equal to the empty-log ranking. Non-vacuity first: at least one rating-2 entry hits a cleared object (the probe saw 11).
   - **(b) Seen never decides the bar.** With every catalogue object logged at rating 4 (`seen` for all), `clearedCount` and the set of cleared ids equal the unseen ranking's.
   - **(c) The Messier bonus never decides the bar.** Ranking a copy of `DEEP_SKY` with `messier` set to `null` on every object gives the same `clearedCount` and cleared id set as the original. The bonus applies only when `messier !== null` (`ranking.ts:229-230`), so no constant injection is needed.
   - **(d) The bar is the PRD bar.** Every entry has `score.total >= MIN_OBJECT_SCORE`, and `rankScore − score.total` is one of {0, MESSIER_RANK_BONUS, −LOG_PENALTY, MESSIER_RANK_BONUS − LOG_PENALTY} (within 1e-9).
   - **(e) Washed out is never listed.** No `washedOut` id appears among `entries`. On both full-Moon nights `washedOutCount ≥ 1` (precondition).
   - **(f) Permutation invariance.** Ranking a seeded shuffle of `DEEP_SKY` gives the same entry id order.
-  - **(g) Aperture never shrinks the cleared set.** For each calibration night and 5 generated cases, the cleared id set at 150 mm is a subset of the set at 300 mm (same focal ratio).
+  - **(g) Aperture never shrinks the cleared set.** For each calibration night and 5 generated cases, the cleared id set at 150 mm is a subset of the set at 300 mm (same focal ratio). Today it holds by construction (aperture enters `score.ts` only through the monotone `limitingMag`), so (g) is a regression guard against a future aperture-penalising term.
 - **Behaviour asserted:** the bar reads only an object's own score; logs and the Messier bonus only reorder; low ratings are inert; a bigger telescope never hides an object.
 - **Regression caught:**
   - `LOG_PENALTY_MIN_RATING` lowered to 2;
@@ -239,8 +244,8 @@ The PRD's ranking invariants become relations over the full catalogue, on the fo
 - The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts`
 - Break checks, then reverted and logged below:
   - `LOG_PENALTY_MIN_RATING` = 2 in `parameters.ts` turns (a) red;
-  - in `ranking.ts`, filtering the bar on `rankScore` instead of `score.total` turns (b) or (c) red;
-  - removing the `washedOut` exclusion from the cleared filter turns (e) red.
+  - in `ranking.ts`, filtering the bar on `rankScore` instead of `score.total` turns (b) red ((c) may stay green on the calibration nights; the probe saw 133 → 109 cleared under (b));
+  - in `ranking.ts:220-222`, letting washed-out objects fall through into `scored` instead of the `washedOut` branch turns (e) red.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
 **Break-check log**: (filled in by `/10x-implement`.)
@@ -286,14 +291,15 @@ A committed, source-cited beginner reference judges each calibration night's top
 - A unit check that every reference id exists in `DEEP_SKY` (`findDeepSky`).
 - The header comment is updated:
   - the expectations come from the committed reference;
-  - the opt-in snapshot is a recording aid, not an oracle, and regenerating it changes no assertion.
+  - the opt-in snapshot is a recording aid, not an oracle, and regenerating it changes no assertion;
+  - the evidence path is repointed from the pre-archive `context/changes/deep-sky-beyond-messier/evidence/calibration.md` to `context/archive/2026-10-06-deep-sky-beyond-messier/evidence/calibration.md`.
 - The four existing rules stay unchanged.
 
 #### 3. Replace the engine-copied order literal
 
 **File**: `src/lib/engine/ranking.test.ts`
 
-**Intent**: Stop pinning an order copied from engine output (`:195`) while keeping the moonlight case's purpose (nothing changes on a new-Moon night).
+**Intent**: Stop pinning an order copied from engine output (`:194`) while keeping the moonlight case's purpose (nothing changes on a new-Moon night).
 
 **Contract**:
 - The 2026-10-10 Messier-only case asserts:
@@ -309,7 +315,7 @@ A committed, source-cited beginner reference judges each calibration night's top
 
 - The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts`
 - Break checks, then reverted and logged below:
-  - a weight retune `SCORE_WEIGHTS` = duration 0.10, moon 0.30, brightness 0.10, sky 0.50 in `parameters.ts` turns the overlap red on at least one night. If it doesn't, try duration 0.6 / brightness 0.05 and log both;
+  - a weight retune `SCORE_WEIGHTS` = duration 0.6, moon 0.3, brightness 0.05, sky 0.05 in `parameters.ts` turns the overlap red (the probe saw 0/2/3/2). Also run and log retune A (duration 0.10, moon 0.30, brightness 0.10, sky 0.50, probe overlap 4/3/3/3) as a known green retune: a harmless reorder the oracle rightly tolerates (plan review F4);
   - `MESSIER_RANK_BONUS` = −0.2 turns the overlap or the existing "≥3 Messier" rule red.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
@@ -335,22 +341,25 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 **File**: `src/lib/tonight/visibility-invariants.test.ts` (new)
 
-**Intent**: Prove the guardrail holds through `buildTonight` and `layoutSessionPlan`, and pin the no-ranking gates (`prd.md:571`, `build.ts:692`).
+**Intent**: Prove the guardrail holds through `buildTonight` and `layoutSessionPlan`, and pin the no-ranking gates (`prd.md:571`, `verdict.ts:77-79`, `build.ts:720`).
 
 **Contract**:
-- About 40 seeded cases from `generated.ts`. `SiteRecord`s are built with `bortle` and `minAltitudeDeg`, and the record `timeZone` comes from the site list.
-- Each case calls `buildTonight({…, forecast: null, now: <case evening 18:00 local>}, "en", { withSessionPlan: true, limit: Infinity })`.
-- For every `sessionPlan.rows` row (object, planet, Moon), check the row's `window.start`, `window.end` and `bestAt` with the Phase 1 independent helpers (shared through a small test-only export in `fixtures/generated.ts`, or duplicated minimally):
+- About 40 seeded cases from `generated.ts`, **plus fixed polar-summer cases** that guarantee the no-darkness floor regardless of seed: Tromsø and Longyearbyen on 2026-06-21, and Helsinki on 2026-06-21 at Bortle 1–4 (plan review F7). `SiteRecord`s are built with `bortle` and `minAltitudeDeg`, and the record `timeZone` comes from the site list.
+- Each case calls `buildTonight({…, forecast: null, now }, "en", { withSessionPlan: true, limit: Infinity })` with `now = observingNight(date, tz).start + 6 h` (18:00 local; DST never changes between noon and 18:00, and the probe got the right `view.date` in 40 of 40 builds, polar ones included).
+- **Row windows are rebuilt from the axis** (plan review F1). Rows carry no `window` (`session-plan.ts:18`), so the test rebuilds the plan's axis the way `skyAxis` does (`build.ts:586`: `sunEvents`, falling back to `observingNight`). It takes `start = axis.start + from × length` and `end = axis.start + to × length`, and uses `bestAt` as is.
+  - The test first asserts that no row is clamped (`from > 0` and `to < 1`), so clamping can't hide an overrun.
+- For every `sessionPlan.rows` row (object, planet, Moon), check the rebuilt `start`, `end` and `bestAt` with the helpers from `@/lib/engine/fixtures/independent-altitude` at elevation 0:
   - altitude ≥ the site minimum − 0.05;
-  - sun ≤ the row kind's threshold + 0.05.
+  - sun ≤ the row kind's threshold from the test's own table + 0.05.
 - **Gates:**
-  - (i) For generated cases whose deep-sky `darkWindow` is `none`, the view has no ranking.
-  - (ii) A cloudy forecast (`hourlyForecast` at 100% cloud over the night, built with the existing fixtures) on a Warsaw October night gives a no-go verdict and no ranking.
+  - (i) For cases whose deep-sky `darkWindow` is `none`, the view has no ranking. This gate is guarded twice in production: `verdict()` returns no-go without darkness (`verdict.ts:77-79`) and `cardPasses` requires `window.kind === "window"` (`build.ts:720`). The suite wraps each no-darkness build so that a throw counts as a failed assertion ("ranking built, or build threw, on a night without darkness") rather than a crash.
+  - (ii) A cloudy forecast (`hourlyForecast` / `uniformForecast` at 100% cloud over the night, from `src/lib/tonight/test-fixtures.ts:50-73`) on a Warsaw October night gives a no-go verdict and no ranking.
 - **Non-vacuity:** at least 30 plans with rows, and at least 3 no-darkness cases.
+- The suite never logs (`no-console` is an error under `src/lib/tonight/**`).
 - **Behaviour asserted:** what the Session plan shows is visible; no target list appears on a night that cannot be observed.
 - **Regression caught:**
   - a row built from a stale or clamped window;
-  - `cardPasses` loosened;
+  - both no-darkness guards (`verdict()` and `cardPasses`) loosened;
   - ranking built in polar summer.
 - **Anti-pattern avoided:** checking only the layout fractions; expected rows copied from build output.
 
@@ -368,7 +377,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
   - the beginner-reference rule (≥2 sources, k = 3, never edit the list to fit, how to add a dated source);
   - tolerances and non-vacuity counts.
 - §6.6 gains a note starting `- **Phase 3 —`.
-- The CLAUDE.md engine paragraph's calibration sentence gains a clause: the top 5 is checked against the committed beginner reference (overlap ≥ 3), and the opt-in snapshot is a recording aid. Keep it to one sentence.
+- The calibration sentence in CLAUDE.md's **Catalogue** paragraph (`CLAUDE.md:74`) gains a clause: the top 5 is checked against the committed beginner reference (overlap ≥ 3), and the opt-in snapshot is a recording aid. Keep it to one sentence.
 - The PR body carries a drafted comment for GitHub #21 on short windows (about 0.7% of entries up for a single 10-min sample; current rule pinned by `visibility-invariants.test.ts`). It is posted only after you OK it.
 
 ### Success Criteria:
@@ -377,8 +386,8 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 - The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts`
 - Break checks, then reverted and logged below:
-  - in `build.ts`, `cardPasses` without the `window.kind === "window"` condition turns gate (i) red;
-  - Session plan rows built with the peak shifted one hour later turn the row checks red.
+  - removing **both** no-darkness guards (the verdict's no-darkness branch at `verdict.ts:77-79` and the `window.kind === "window"` condition of `cardPasses` at `build.ts:720`) turns gate (i) red as a failed assertion, not a crash. Removing only the `cardPasses` condition stays green (the probe confirmed it); log that too;
+  - in `build.ts` `rowOf`, shifting `bestAt` one hour later turns the row checks red (the probe saw 950 violations).
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 - `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry: `! sed -n '/^### 6.3/,/^### 6.4/p' context/foundation/test-plan.md | grep -q TBD && grep -q '\*\*Phase 3 —' context/foundation/test-plan.md`
 
@@ -430,7 +439,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
   - **Apr:** M44 TA/TW/TS/SZ/AS; M51 TA/TS/LNS/AS; M81 TW/TS/AS; M82 TW/TS/AS; M3 SZ/TW/AS; M65 TS/LNS/AW; M66 TS/LNS/AW; M13 TS/AS; M104 TS/AS; M97 TS/AS; M67 TS/AS; M96 LNS/AW; M105 LNS/AW; M87 TS/AW; M84 TS/AW; M86 TS/AW; M49 TS/AW; M35 TA/AS; M42 TA/TW/AS; M45 TA/TW.
   - **Jul:** M8 TA/TW/SZ/TS/ASU/LNS; M27 TA/TW/TS/ASU/LNS; M57 TA/TW/SZ/ASU/LNS; M13 TA/TW/SZ/ASU; M11 SZ/TW/ASU; M17 SZ/ASU/TW/LNS; M20 LNS/ASU/TW; M16 TS/ASU; M7 SZ/ASU; M6 SZ/ASU; M22 ASU/TW; M4 LNS/TW; NGC7000 TS/LNS; M2 SZ/ASU; M15 SZ/ASU; M21 LNS/AF; M24 ASU/AF; M29 ASU/AF; M39 ASU/AF; M73 ASU/AF.
   - **Oct:** M31 TA/TW/TS/LNS/SZ/AF; NGC869 TS/TW/SZ/LNS; M45 TA/TW/AF; M32 TS/AF; M13 TA/TW/TS; M57 TA/TW; M27 TA/TW; M15 SZ/ASU; M2 SZ/ASU; M29 AF/ASU; M39 AF/ASU; M73 AF/ASU; M72 AF/ASU; M24 AF/ASU; M18 AF/ASU; M28 AF/ASU; M69 AF/ASU; M14 AF/ASU; M21 AF/LNS.
-- Code: `src/lib/engine/objects.ts:76-105`, `ranking.ts:181-236`, `score.ts:131-138`, `planet-ranking.ts:102-140`, `moon-target.ts:86-126`, `sun.ts:19-23`, `:52-105`, `parameters.ts:49`, `:57-65`, `:181-191`, `:221`; `src/lib/tonight/build.ts:692`, `:1019-1054`; `src/lib/engine/calibration.test.ts`; `ranking.test.ts:186-210`; `src/lib/forecast/degraded-forecast.test.ts:143-157`.
+- Code: `src/lib/engine/objects.ts:76-105`, `ranking.ts:181-236`, `score.ts:131-138`, `planet-ranking.ts:102-140`, `moon-target.ts:86-126`, `sun.ts:19-23`, `:52-105`, `parameters.ts:49`, `:57-65`, `:181-191`, `:221`; `src/lib/tonight/build.ts:586`, `:720`, `:1090-1153`, `session-plan.ts:18`, `src/lib/engine/verdict.ts:77-79`, `log.ts:32-36`; `src/lib/engine/calibration.test.ts`; `ranking.test.ts:186-210`; `src/lib/forecast/degraded-forecast.test.ts:143-157`.
 - Archive: `context/archive/2026-10-06-deep-sky-beyond-messier/evidence/calibration.md` (archived top-10s), `context/archive/2026-09-25-tonight-verdict-and-ranking/checkpoint.md` (AF list, the 2026-10-10 check), `context/archive/2026-10-02-moonlight-and-the-verdict/reviews/plan-review-rev1.md` (an engine-copied order would have encoded a bad retune).
 
 ## Progress
@@ -442,7 +451,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 #### Automated
 
 - [ ] 1.1 The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts`
-- [ ] 1.2 Break checks (window widened in `bestWindow`; deep sky over the −6° window), reverted and logged
+- [ ] 1.2 Break checks (window widened in `bestWindow`; Bortle ≤ 4 threshold → −12 in `parameters.ts`), reverted and logged
 - [ ] 1.3 Full unit suite, lint and type check pass
 
 ### Phase 2: Ranking invariants as relations (unit, Risk #4)
@@ -450,7 +459,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 #### Automated
 
 - [ ] 2.1 The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts`
-- [ ] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out exclusion removed), reverted and logged
+- [ ] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out branch bypassed), reverted and logged
 - [ ] 2.3 Full unit suite, lint and type check pass
 
 ### Phase 3: Independent top-5 oracle and calibration cleanup (unit, Risk #4)
@@ -458,7 +467,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 #### Automated
 
 - [ ] 3.1 The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts`
-- [ ] 3.2 Break checks (weight retune; `MESSIER_RANK_BONUS` = −0.2), reverted and logged
+- [ ] 3.2 Break checks (weight retune B, retune A logged as green; `MESSIER_RANK_BONUS` = −0.2), reverted and logged
 - [ ] 3.3 Full unit suite, lint and type check pass
 
 #### Manual
@@ -470,7 +479,7 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 #### Automated
 
 - [ ] 4.1 The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts`
-- [ ] 4.2 Break checks (`cardPasses` without the window condition; peak shifted one hour), reverted and logged
+- [ ] 4.2 Break checks (both no-darkness guards removed; `bestAt` shifted one hour), reverted and logged
 - [ ] 4.3 Full unit suite, lint and type check pass
 - [ ] 4.4 `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry (`sed`/`grep` check)
 
