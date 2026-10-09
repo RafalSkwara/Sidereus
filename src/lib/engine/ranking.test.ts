@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { MESSIER } from "@/lib/catalogue";
 
 import { EYEPIECES, TELESCOPE, WARSAW, warsawDarkWindow } from "./fixtures";
+import { AF_FALL_LIST } from "./fixtures/beginner-reference";
 import { seenSummaries } from "./log";
 import {
   BRIGHTNESS_RAMP_MAG,
@@ -187,11 +188,19 @@ describe("rankObjects under moonlight (moonlight-and-the-verdict, Warsaw, Bortle
   const CLUSTER_TYPES: readonly string[] = ["open-cluster", "globular-cluster", "asterism", "double-star"];
   const onNight = (date: string) => rank(MESSIER, { darkWindow: warsawDarkWindow(date) });
 
-  it("changes nothing on the new-Moon night of 2026-10-10: nothing washed out, the M-1 top five", () => {
+  // The top five is checked against source AF (Astronomy.com, "See fall's best Messier objects") as a set, not
+  // as the order the engine printed: a harmless reorder passes, a retune that drops a published pick fails.
+  it("changes nothing on the new-Moon night of 2026-10-10: nothing washed out, a top five of AF's fall picks with M31", () => {
     const ranking = onNight("2026-10-10");
     expect(ranking.washedOutCount).toBe(0);
     expect(ranking.washedOut).toEqual([]);
-    expect(ranking.entries.map((e) => e.object.id)).toEqual(["M31", "M34", "M39", "M45", "M52"]);
+    const ids = ranking.entries.map((e) => e.object.id);
+    expect(ids).toHaveLength(5);
+    for (const id of ids) {
+      expect(AF_FALL_LIST, `${id} is not in AF's fall list`).toContain(id);
+    }
+    // M31 is named by every fall source.
+    expect(ids).toContain("M31");
   });
 
   it("lists only clusters under the full Moon of 2026-10-26, and sets the washed-out galaxies apart", () => {

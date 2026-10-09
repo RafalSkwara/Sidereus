@@ -332,7 +332,18 @@ A committed, source-cited beginner reference judges each calibration night's top
 
 - Spot-check 3 reference entries per night against their source pages (the URLs in `BEGINNER_SOURCES`). Record any mismatch; fix the fixture only toward what the source says, never toward the ranking.
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-09, main session):
+
+- `SCORE_WEIGHTS` retune B (duration 0.6, moon 0.3, brightness 0.05, sky 0.05) → overlap red on 2026-01-15, 04-15 and 10-15, plus the existing "≥3 Messier" rule on 01-15; restored.
+- Retune A (0.10 / 0.30 / 0.10 / 0.50), logged as a known green retune for the oracle: the overlap stays ≥ 3 on all four nights. Other existing `ranking.test.ts` checks go red under it, and so does the new AF set check on 2026-10-10. Restored.
+- `MESSIER_RANK_BONUS` = −0.2 → overlap and "≥3 Messier" red on all four nights; restored.
+
+**Spot-check (3.4)**, done by the implementer through WebFetch:
+
+- 12 entries (3 per night, 7 sources) were confirmed against their pages.
+- One source key was corrected toward its source: Telescope Advisor gives M42 "Nov–Mar", so TA no longer counts for April's M42. M42 stays on AS and TW.
+- M44 was checked as a possible January omission. Only TS lists it for winter, so it rightly stays out.
+- Details are in the dated note in `src/lib/engine/fixtures/README.md`.
 
 **Implementation Note**: Commit and push. The manual spot-check may be done by the implementer through WebFetch and logged with evidence. Your review of the reference stays optional.
 
@@ -467,21 +478,21 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Automated
 
-- [x] 2.1 The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts`
-- [x] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out branch bypassed), reverted and logged
-- [x] 2.3 Full unit suite, lint and type check pass
+- [x] 2.1 The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts` — d2b596e
+- [x] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out branch bypassed), reverted and logged — d2b596e
+- [x] 2.3 Full unit suite, lint and type check pass — d2b596e
 
 ### Phase 3: Independent top-5 oracle and calibration cleanup (unit, Risk #4)
 
 #### Automated
 
-- [ ] 3.1 The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts`
-- [ ] 3.2 Break checks (weight retune B, retune A logged as green; `MESSIER_RANK_BONUS` = −0.2), reverted and logged
-- [ ] 3.3 Full unit suite, lint and type check pass
+- [x] 3.1 The changed suites pass: `npx vitest run src/lib/engine/calibration.test.ts src/lib/engine/ranking.test.ts`
+- [x] 3.2 Break checks (weight retune B, retune A logged as green; `MESSIER_RANK_BONUS` = −0.2), reverted and logged
+- [x] 3.3 Full unit suite, lint and type check pass
 
 #### Manual
 
-- [ ] 3.4 Reference fixture spot-checked against its source pages (3 entries per night), mismatches logged
+- [x] 3.4 Reference fixture spot-checked against its source pages (3 entries per night), mismatches logged
 
 ### Phase 4: Tonight and Session plan property suite, plus docs (unit + docs)
 

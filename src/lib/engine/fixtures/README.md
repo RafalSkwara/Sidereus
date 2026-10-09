@@ -185,3 +185,25 @@ production code must never import them.
 
 Neither module may use engine output (tracks, `bestWindow`, `moonState`, `parameters.ts` thresholds): an oracle built
 from the code under test moves with it. Keep them free of imports other than `astronomy-engine` and engine types.
+
+## Beginner reference (`beginner-reference.ts`)
+
+The independent judgment behind the calibration oracle (`src/lib/engine/calibration.test.ts`, Risk #4): published
+beginner picks for the four calibration nights, so a retune is measured against what observers recommend, not
+against the engine's own previous output. Test-only, like everything here.
+
+- `BEGINNER_SOURCES`: the nine pages (key, title, publisher, URL, access date 2026-10-08).
+- `BEGINNER_REFERENCE`: per night (2026-01-15, 04-15, 07-15, 10-15) the objects with the source keys that name
+  them. **Counting rule, fixed before any comparison with the engine:** an object counts for a night when at least
+  2 sources name it as a beginner target for that season. The calibration test requires each night's top 5 to share
+  at least 3 objects with the night's list (k = 3, the user's decision of 2026-10-08).
+- `AF_FALL_LIST`: the 20 Messier objects of source AF, used by `ranking.test.ts` for the 2026-10-10 top 5 (a set
+  check, so a harmless reorder passes).
+- The lists came from WebFetch summaries of the pages, read on 2026-10-08, not from a hand transcription of each
+  article. Spot-check an entry against its page before relying on it.
+- **Never edit a list to make a ranking pass.** If a retune moves a night below 3, the ranking is what is under
+  review. Changing the reference needs a dated note here naming the new sources (and the day they were read).
+
+Dated notes:
+
+- **2026-10-09, spot-check (plan Progress 3.4).** 3 entries per night were checked against their pages (WebFetch): Jan M42 (TS), M36 (SZ), NGC869 (TW, "h & χ Persei"); Apr M51 (LNS), M65 (AW, TS), M3 (SZ, TW); Jul M8 (ASU), NGC7000 (TS), M4 (LNS, TW); Oct M32 (AF, TS), M15 (SZ, ASU), M73 (AF, ASU). All confirmed. One key corrected toward its source: TA's table gives M42 "Nov–Mar", so TA was removed from April's M42; M42 stays on AS (lists it) and TW ("Late Fall through Early Spring"). M44 checked as a possible January omission: only TS lists it for winter (TW "spring and early summer", TA "Feb–May"), so it rightly stays out.
