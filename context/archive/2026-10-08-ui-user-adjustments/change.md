@@ -1,10 +1,10 @@
 ---
 change_id: ui-user-adjustments
 title: The user's own UI adjustments to Tonight, notifications and clickable affordances
-status: impl_reviewed
+status: archived
 created: 2026-10-08
-updated: 2026-10-08
-archived_at: null
+updated: 2026-10-09
+archived_at: 2026-10-09T07:55:10Z
 ---
 
 ## Notes
