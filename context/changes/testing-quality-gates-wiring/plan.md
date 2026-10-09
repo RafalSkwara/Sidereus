@@ -578,12 +578,12 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete`
-- [x] 4.2 No "not linted yet" left in CLAUDE.md
+- [x] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete` — d53a120
+- [x] 4.2 No "not linted yet" left in CLAUDE.md — d53a120
 
 #### Manual
 
-- [x] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired
+- [x] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired — d53a120
 
 ### Phase 5: Local registration (after the merge)
 
