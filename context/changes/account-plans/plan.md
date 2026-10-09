@@ -311,7 +311,7 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Manual Verification:
 
-- Owner runs `npm run account:plan -- <own email> full --hosted` against production with the hosted URL and secret key exported in the shell, then `show --hosted` reports `full`
+- (Done 2026-10-09 by the owner through the dashboard SQL editor, the equivalent upsert, since the agent has no hosted key; confirmed by the golden email on production after #145.) Owner runs `npm run account:plan -- <own email> full --hosted` against production with the hosted URL and secret key exported in the shell, then `show --hosted` reports `full`
 - `--create` on a local stack prompts twice without echoing the password, and the new account signs in on a local preview (verified 2026-10-09 on a pty against local Supabase: no echo, sign-in through the auth API ok, `current_plan()` = full)
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -409,5 +409,5 @@ The owner reversed "no visible plan in F-01" after the merge: a full account's e
 
 #### Manual
 
-- [ ] 3.5 Owner grants own account full on production and show reports full
+- [x] 3.5 Owner grants own account full on production and show reports full
 - [x] 3.6 --create prompts without echo and the new account signs in on a local preview — 6ead049
