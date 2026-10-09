@@ -12,10 +12,15 @@ export const accountPlanStore = {
    * without a row has `plan: undefined`. Row-level security already narrows the read to the caller's own row.
    */
   async read(client: TypedSupabaseClient, userId: string): Promise<{ plan: unknown } | { error: true }> {
-    const { data, error } = await client.from("account_plans").select("plan").eq("user_id", userId).maybeSingle();
-    if (error) {
+    try {
+      const { data, error } = await client.from("account_plans").select("plan").eq("user_id", userId).maybeSingle();
+      if (error) {
+        return { error: true };
+      }
+      return { plan: data?.plan };
+    } catch {
+      // A thrown client error is reported like a failed read; the error text stays here (see the privacy rules above).
       return { error: true };
     }
-    return { plan: data?.plan };
   },
 };

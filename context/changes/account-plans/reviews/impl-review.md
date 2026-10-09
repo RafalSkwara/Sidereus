@@ -43,7 +43,7 @@
 - **Location**: `context/deployment/deploy-plan.md` (Account plans section)
 - **Detail**: The runbook says `export SUPABASE_SECRET_KEY="sb_secret_..."`. Typing or pasting that writes the key into `~/.zsh_history`, which contradicts "never save it to a file".
 - **Fix**: Use `read -rs SUPABASE_SECRET_KEY && export SUPABASE_SECRET_KEY` (no echo, no history), then `unset` after the command.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F2 — A malformed `SUPABASE_URL` crashes with a stack trace (exit 1, not 2)
 
@@ -53,7 +53,7 @@
 - **Location**: `scripts/account-plan.mjs:256-258`
 - **Detail**: `main` calls `createClient(url, secretKey)` before `run()` validates the URL, so "Invalid supabaseUrl" escapes as an unhandled top-level rejection. The key is not in the message (verified).
 - **Fix**: Parse and validate the URL in `main` before `createClient`, exiting 2 with the usage hint.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F3 — User lookup assumes the server honours `perPage=1000`
 
@@ -63,7 +63,7 @@
 - **Location**: `scripts/account-plan.mjs:91-98`
 - **Detail**: The loop stops on a page shorter than 1000. If hosted GoTrue caps `per_page` lower, an existing account would read as unknown: exit 1, or a loud `email_exists` with `--create`. It fails safe, but wrongly.
 - **Fix**: Stop on the response's `nextPage` / `lastPage` (or `total`) instead of the page length.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F4 — Password mismatch or no TTY exits 1, the header calls them usage errors (2)
 
@@ -73,7 +73,7 @@
 - **Location**: `scripts/account-plan.mjs:183-185, 198, 235`
 - **Detail**: A short password exits 2, but a mismatch or a missing TTY ends in the generic failure path (1).
 - **Fix**: Map prompt refusals (mismatch, no TTY) to exit 2.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F5 — The per-request memo would cache a thrown read for the request
 
@@ -83,7 +83,7 @@
 - **Location**: `src/lib/account-plan/index.ts:21-42`
 - **Detail**: If `accountPlanStore.read` ever throws instead of returning `{ error: true }`, `requireFullPlan` rejects (a 500) instead of answering `needs-full`. postgrest-js reports network errors in `error`, so this is unlikely.
 - **Fix**: In `store.ts`, catch a thrown client error and return `{ error: true }`. That keeps the store's contract ("never thrown") and the fail-closed read.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F6 — The hidden prompt treats only DEL as backspace
 
@@ -93,7 +93,7 @@
 - **Location**: `scripts/account-plan.mjs:216-222`
 - **Detail**: `^H` (0x08) and escape sequences end up in the password. The confirm-twice check usually catches it.
 - **Fix**: Treat `\b` like DEL and ignore other control characters.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F7 — REFERENCES and TRIGGER are still granted on `account_plans`
 
@@ -103,7 +103,7 @@
 - **Location**: `supabase/migrations/20261009120000_account_plans.sql:29`
 - **Detail**: These can't be used through PostgREST, which has no DDL path. Least privilege says revoke them too. The migration has not reached the hosted project yet, so editing it is safe.
 - **Fix**: `revoke all on public.account_plans from anon, authenticated; grant select on public.account_plans to authenticated;`. Keep the `42501` tests.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F8 — Signed-out users get `needsFull` from `requireFullPlan`
 
@@ -113,7 +113,7 @@
 - **Location**: `src/lib/account-plan/index.ts:54-55`
 - **Detail**: This is as planned. S-03's routes should send a signed-out user to sign-in (the middleware gate) rather than show "needs the full plan".
 - **Fix**: No code change now; note it for S-03 in the roadmap's S-03 block.
-- **Decision**: PENDING
+- **Decision**: ACCEPTED — no code change; note added to roadmap S-03
 
 ### F9 — tests/db copies the setup helpers a third time
 
@@ -123,4 +123,4 @@
 - **Location**: `tests/db/account-plans.test.ts:38-58`
 - **Detail**: `newClient` / `signUp` repeat `isolation.test.ts` (as every tests/db file does today), and the emails use the `isolation-` prefix.
 - **Fix**: Leave the shared helper for test rollout Phase 4; fix the email prefix now.
-- **Decision**: PENDING
+- **Decision**: FIXED (email prefix); shared helper left for test rollout Phase 4

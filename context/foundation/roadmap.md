@@ -131,6 +131,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Star depth: bundled stars stop at magnitude 4.5, a finder shows about 8 (Open Question 14); licence and page weight checked in the plan. — Owner: team. Block: no.
   - Naked-eye limit by sky class and hop length (Open Questions 15, 16). — Owner: team. Block: no.
 - **Risk:** The milestone's riskiest slice: new star data, chart geometry and orientation, judged without an observer; placed first among the features so its lessons reach S-04 and S-08.
+- **Note from F-01 (impl review F8, 2026-10-09):** `requireFullPlan(locals)` (`src/lib/account-plan/`) answers `signed-out` with the `needsFull` key; full-plan routes should send a signed-out visitor to sign-in (the middleware gate) and show the "needs the full plan" state only to a signed-in free account.
 - **Status:** proposed
 
 ### S-04: What to expect

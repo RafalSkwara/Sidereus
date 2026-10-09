@@ -7,10 +7,12 @@
  * only through the command's output. The output is also checked for secrets: neither the secret key nor a typed
  * password may appear, except the single line `--generate` prints on purpose (asserted separately).
  */
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { Database } from "@/lib/database.types";
-import { parseArgs, run } from "../../scripts/account-plan.mjs";
+import { parseArgs, run, UsageError } from "../../scripts/account-plan.mjs";
 
 type Client = SupabaseClient<Database>;
 
@@ -342,5 +344,44 @@ describe("account-plan command", () => {
   it("a malformed URL exits 2 before any admin call", async () => {
     const { opts } = options(["someone@example.com", "show"], { url: "not a url", admin: {} });
     expect(await run(opts)).toBe(2);
+  });
+
+  it("a password prompt refused as a usage error (mismatch, no terminal) exits 2 and creates nothing", async () => {
+    const email = uniqueEmail("mismatch");
+    const { output, readPassword, opts } = options([email, "full", "--create"]);
+    readPassword.mockRejectedValue(new UsageError("the two passwords do not match"));
+
+    expect(await run(opts)).toBe(2);
+    expect(output.text()).toContain("do not match");
+    const found = await admin.auth.admin.listUsers({ perPage: 1000 });
+    expect(found.data.users.some((user) => user.email === email)).toBe(false);
+  });
+
+  it("any other failure of the password prompt still exits 1", async () => {
+    const { readPassword, opts } = options([uniqueEmail("cancel"), "full", "--create"]);
+    readPassword.mockRejectedValue(new Error("cancelled"));
+
+    expect(await run(opts)).toBe(1);
+  });
+});
+
+describe("account-plan script entry", () => {
+  it("a malformed SUPABASE_URL exits 2 with the hint and no stack trace, and never prints the key", () => {
+    const dummyKey = "sb_secret_dummy_not_a_real_key";
+    const script = fileURLToPath(new URL("../../scripts/account-plan.mjs", import.meta.url));
+    const result = spawnSync(process.execPath, [script, "someone@example.com", "show"], {
+      env: {
+        PATH: process.env.PATH ?? "",
+        SUPABASE_URL: "not a url",
+        SUPABASE_KEY: "dummy",
+        SUPABASE_SECRET_KEY: dummyKey,
+      },
+      encoding: "utf8",
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("SUPABASE_URL is not a valid URL");
+    expect(result.stderr).not.toMatch(/\bat .*\(|node:internal|Error:/);
+    expect(result.stdout + result.stderr).not.toContain(dummyKey);
   });
 });

@@ -1,10 +1,10 @@
 -- Account plans (roadmap F-01, FR-045): every account is on the free or the full plan, stored and enforced by the
 -- server. A missing row means free, so no sign-up trigger and no backfill are needed.
 --
--- The table is server-owned. A user may read their own row (the one RLS policy) and nothing else: insert, update,
--- delete and truncate are revoked from `anon` and `authenticated`. Supabase grants every new `public` table full
--- privileges to both roles, and with RLS on but no write policy a write would be a silent zero-row no-op instead
--- of an error, so the revoke is what makes a self-grant fail loudly with 42501. Writes are operator-only, through
+-- The table is server-owned. A user may read their own row (the one RLS policy) and nothing else: every privilege
+-- is revoked from `anon` and `authenticated`, then `select` is granted back to `authenticated` alone. Supabase
+-- grants every new `public` table full privileges to both roles, and with RLS on but no write policy a write would
+-- be a silent zero-row no-op instead of an error, so the revoke is what makes a self-grant fail loudly with 42501. Writes are operator-only, through
 -- the secret key (`npm run account:plan`), which bypasses RLS and grants. Proven by tests/db/account-plans.test.ts.
 --
 -- `current_plan()` is the helper future full-plan tables and RPCs call: the caller's plan, `free` without a row.
@@ -25,7 +25,8 @@ create policy "account_plans_select_own" on public.account_plans
   for select to authenticated
   using ((select auth.uid()) = user_id);
 
-revoke insert, update, delete, truncate on public.account_plans from anon, authenticated;
+revoke all on public.account_plans from anon, authenticated;
+grant select on public.account_plans to authenticated;
 
 -- The caller's plan. `stable`, so a policy that calls it as `(select public.current_plan())` evaluates it once
 -- per statement.

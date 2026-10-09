@@ -30,6 +30,9 @@ const GENERATED_PASSWORD_LENGTH = 20;
 const PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const LIST_PAGE_SIZE = 1000;
 
+/** A refusal that is the operator's to fix (a prompt answered wrongly, no terminal): `run` maps it to exit 2. */
+export class UsageError extends Error {}
+
 /**
  * @typedef {"full" | "free" | "show"} Action
  * @typedef {{ ok: true, email: string, action: Action, create: boolean, dryRun: boolean, generate: boolean, hosted: boolean }} ParsedArgs
@@ -89,12 +92,16 @@ function randomPassword(length) {
  * @param {string} email
  */
 async function findUser(admin, email) {
-  for (let page = 1; ; page++) {
+  let page = 1;
+  for (;;) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: LIST_PAGE_SIZE });
     if (error) throw new Error(`could not list users: ${error.message}`);
     const match = data.users.find((user) => user.email?.toLowerCase() === email);
     if (match) return match;
-    if (data.users.length < LIST_PAGE_SIZE) return null;
+    // The server says whether another page follows; a smaller page size than asked for does not end the walk.
+    const next = "nextPage" in data ? data.nextPage : null;
+    if (typeof next !== "number" || next <= page) return null;
+    page = next;
   }
 }
 
@@ -181,6 +188,10 @@ export async function run(options) {
     out(`${who}: ${current} → ${action}`);
     return 0;
   } catch (error) {
+    if (error instanceof UsageError) {
+      out(`${error.message}; nothing was created.`);
+      return 2;
+    }
     out(`failed: ${error instanceof Error ? error.message : String(error)}`);
     return 1;
   }
@@ -195,7 +206,7 @@ function promptHidden(label) {
   return new Promise((resolve, reject) => {
     const { stdin, stdout } = process;
     if (!stdin.isTTY) {
-      reject(new Error("no terminal to ask for a password; run it in a terminal or pass --generate"));
+      reject(new UsageError("no terminal to ask for a password; run it in a terminal or pass --generate"));
       return;
     }
     stdout.write(label);
@@ -219,7 +230,12 @@ function promptHidden(label) {
           reject(new Error("cancelled"));
           return;
         }
-        typed = char === "\u007f" ? typed.slice(0, -1) : typed + char;
+        if (char === "\u007f" || char === "\b") {
+          typed = typed.slice(0, -1);
+        } else if (char >= " ") {
+          typed += char;
+        }
+        // Other control characters (including an escape sequence's leading ESC) are ignored.
       }
     };
     stdin.setEncoding("utf8");
@@ -232,7 +248,7 @@ function promptHidden(label) {
 async function readPasswordTwice() {
   const first = await promptHidden("New account password (hidden, 12+ characters): ");
   const second = await promptHidden("Repeat the password: ");
-  if (first !== second) throw new Error("the two passwords do not match");
+  if (first !== second) throw new UsageError("the two passwords do not match");
   return first;
 }
 
@@ -250,6 +266,14 @@ async function main() {
     console.error(
       "SUPABASE_URL and SUPABASE_SECRET_KEY must be set in this shell (no .env fallback). Locally: take API_URL and SECRET_KEY\n" +
         "from `npx supabase status -o env`. For the hosted project the owner exports them for this one command only.",
+    );
+    return 2;
+  }
+  try {
+    new URL(url);
+  } catch {
+    console.error(
+      "SUPABASE_URL is not a valid URL. Locally: take API_URL from `npx supabase status -o env`; for the hosted project use the https://<ref>.supabase.co address.",
     );
     return 2;
   }

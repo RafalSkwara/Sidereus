@@ -137,7 +137,7 @@ The `account_plans` table arrives through the normal `migrate` job. Every accoun
 
 ```
 export SUPABASE_URL="https://kzdovsrpyxhfduusaqlu.supabase.co"
-export SUPABASE_SECRET_KEY="sb_secret_..."          # typed or pasted in the terminal only
+read -rs SUPABASE_SECRET_KEY && export SUPABASE_SECRET_KEY   # paste the key at the hidden prompt, then Enter: no echo, no shell history
 npm run account:plan -- you@example.com full --hosted
 npm run account:plan -- you@example.com show --hosted
 unset SUPABASE_URL SUPABASE_SECRET_KEY

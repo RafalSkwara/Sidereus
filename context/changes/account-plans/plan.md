@@ -128,7 +128,7 @@ Add the server-owned plan table and `current_plan()`, regenerate the DB types, a
   3. A's insert, update, upsert and delete on `account_plans` each fail with `error.code === "42501"`, and the admin's re-read shows A still `full` with `updated_at` unchanged.
   4. B's insert of a `full` row for B fails with `42501`.
   5. B selects A's row and gets nothing.
-  6. Anon selects nothing, and anon `rpc('current_plan')` is refused with `42501`.
+  6. Anon selects nothing, and anon `rpc('current_plan')` is refused with `42501`. (After impl review F7, `revoke all` leaves anon no privilege, so its select is refused with `42501` too.)
   7. The admin sets A back to `free`, and A's `current_plan()` reads `free` on the next call. This proves the change takes effect immediately.
 
 #### 4. CI

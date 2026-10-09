@@ -49,7 +49,7 @@ function newAdminClient(): Client {
 
 async function signUp(label: string): Promise<{ client: Client; userId: string }> {
   const client = newClient();
-  const email = `isolation-${label}-${Date.now()}-${crypto.randomUUID()}@example.com`;
+  const email = `account-plans-${label}-${Date.now()}-${crypto.randomUUID()}@example.com`;
   const { data, error } = await client.auth.signUp({ email, password: `pw-${crypto.randomUUID()}` });
   if (error) throw new Error(`sign-up for user ${label} failed: ${error.message}`);
   if (!data.session || !data.user) {
@@ -143,10 +143,11 @@ describe("account_plans", () => {
     expect(data).toEqual([]);
   });
 
-  it("an anonymous caller reads nothing and cannot call current_plan()", async () => {
+  it("an anonymous caller cannot read the table or call current_plan()", async () => {
+    // Since the F7 tightening `anon` holds no privilege at all, so the read is refused instead of returning no rows.
     const { data, error } = await anon.from("account_plans").select("*");
-    expect(error).toBeNull();
-    expect(data).toEqual([]);
+    expect(error?.code).toBe(PERMISSION_DENIED);
+    expect(data).toBeNull();
 
     const rpc = await anon.rpc("current_plan");
     expect(rpc.error?.code).toBe(PERMISSION_DENIED);
