@@ -76,4 +76,4 @@ export const TABLES = [
 ] as const;
 
 /** Server-owned tables: users may read their own row and nothing else. */
-export const SERVER_OWNED: readonly string[] = ["account_plans"];
+export const SERVER_OWNED: readonly (keyof Database["public"]["Tables"])[] = ["account_plans"];

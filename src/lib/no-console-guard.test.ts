@@ -11,17 +11,22 @@ import { beforeAll, describe, expect, it } from "vitest";
  *
  * - ESLint's own `calculateConfigForFile` must give every source file `no-console` at error. A narrower `files`
  *   list in eslint.config.js, or a later config that turns the rule down, fails here with the file's name.
- * - An `eslint-disable` comment that names `no-console` is allowed only in the files below, with an exact count
- *   and a reason. A disable that names no rule silences `no-console` too, so it fails in any file.
+ * - An `eslint-disable` comment that names `no-console` is allowed only in the files below, with an exact count,
+ *   and must give its reason after ` -- ` (split as ESLint does, so `---` counts too). A disable that names no
+ *   rule silences `no-console` too, so it fails in any file, and so does an inline config comment that sets
+ *   `no-console` (`/* eslint no-console: "off" *\/`), which turns the rule off without any disable.
  *
  * Resolving a config does not parse the file, so the whole tree stays cheap once the first config load is warm.
  * Blind spots (not a lint rule's job): `console` reached through an alias, `reportError`, thrown messages and
- * third-party request URLs; see context/foundation/test-plan.md §6.4.
+ * third-party request URLs; see context/foundation/test-plan.md §6.4. Known gap: client `<script>` blocks in
+ * .astro files are not linted at all today (eslint-plugin-astro's virtual `X.astro/1.ts` fails the type-aware
+ * parser and the plugin drops that error), although their config resolves to error here; a follow-up change
+ * lints them (impl review F3).
  */
 
 const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const SRC_DIR = join(REPO_ROOT, "src");
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".astro", ".js", ".mjs"];
+const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".astro", ".js", ".jsx", ".mjs", ".cjs"];
 const SELF = "src/lib/no-console-guard.test.ts";
 
 /** Files ESLint ignores on purpose (eslint.config.js `generatedIgnores`): they resolve to no config at all. */
@@ -52,25 +57,36 @@ function sourceFiles(dir: string): string[] {
 }
 
 const DISABLE_DIRECTIVE = /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?(?=[\s*]|$)([^\n]*)/gm;
+/** ESLint's own split between a directive's rules and its description (`@eslint/plugin-kit`), end of line included. */
+const REASON_SEPARATOR = /\s-{2,}(?:\s|$)/u;
+/** An inline config comment (`/* eslint no-console: "off" *\/`) that sets no-console, among other rules or alone. */
+const CONFIG_COMMENT = /\/\*\s*eslint\s[^*]*?\bno-console\s*:/g;
 
 export interface DisableCounts {
   noConsole: number;
+  /** no-console disables without a reason after ` -- `. */
+  unreasoned: number;
   ruleless: number;
+  configComments: number;
 }
 
-/** Counts `eslint-disable` comments naming `no-console`, and those naming no rule at all. */
+/** Counts `eslint-disable` comments naming `no-console` (and those without a reason), those naming no rule at all,
+ * and inline config comments that set `no-console`. */
 export function countDisables(source: string): DisableCounts {
-  const counts: DisableCounts = { noConsole: 0, ruleless: 0 };
+  const counts: DisableCounts = { noConsole: 0, unreasoned: 0, ruleless: 0, configComments: 0 };
   for (const match of source.matchAll(DISABLE_DIRECTIVE)) {
-    const body = match[1].split("*/")[0];
-    const rules = body
-      .split(/\s--\s|\s--$/)[0]
+    const [ruleList, ...reasonParts] = match[1].split("*/")[0].split(REASON_SEPARATOR);
+    const rules = ruleList
       .split(",")
       .map((rule) => rule.trim())
       .filter((rule) => rule !== "");
     if (rules.length === 0) counts.ruleless++;
-    else if (rules.includes("no-console")) counts.noConsole++;
+    else if (rules.includes("no-console")) {
+      counts.noConsole++;
+      if (reasonParts.join(" ").trim() === "") counts.unreasoned++;
+    }
   }
+  counts.configComments = [...source.matchAll(CONFIG_COMMENT)].length;
   return counts;
 }
 
@@ -95,13 +111,41 @@ describe("countDisables", () => {
           "// eslint-disable-next-line no-control-regex",
         ].join("\n"),
       ),
-    ).toEqual({ noConsole: 4, ruleless: 0 });
+    ).toEqual({ noConsole: 4, unreasoned: 3, ruleless: 0, configComments: 0 });
+  });
+
+  it("splits the reason as ESLint does, so a longer dash run still names the rule", () => {
+    expect(
+      countDisables(
+        [
+          "// eslint-disable-next-line no-console --- reason",
+          "x(); // eslint-disable-line no-console ---- why",
+          "/* eslint-disable no-console -- a reason */",
+          "// eslint-disable-next-line no-console --",
+        ].join("\n"),
+      ),
+    ).toEqual({ noConsole: 4, unreasoned: 1, ruleless: 0, configComments: 0 });
+  });
+
+  it("counts inline config comments that set no-console", () => {
+    expect(
+      countDisables(
+        [
+          '/* eslint no-console: "off" */',
+          "/* eslint no-console: 0 */",
+          '/* eslint eqeqeq: "error", no-console: ["off"] */',
+          '/* eslint eqeqeq: "error" */',
+        ].join("\n"),
+      ),
+    ).toEqual({ noConsole: 0, unreasoned: 0, ruleless: 0, configComments: 3 });
   });
 
   it("flags a disable that names no rule", () => {
     expect(countDisables("// eslint-disable-next-line\n/* eslint-disable */\n// eslint-disable -- why")).toEqual({
       noConsole: 0,
+      unreasoned: 0,
       ruleless: 3,
+      configComments: 0,
     });
   });
 });
@@ -111,7 +155,7 @@ describe("no-console guard", () => {
 
   beforeAll(() => {
     eslint = new ESLint({ cwd: REPO_ROOT });
-  }, 30_000);
+  });
 
   it("checks the whole source tree", () => {
     expect(files.length).toBeGreaterThanOrEqual(300);
@@ -132,18 +176,25 @@ describe("no-console guard", () => {
       if (level !== 2 && level !== "error") violations.push(`${file}: no-console is ${JSON.stringify(level ?? "off")}`);
     }
     expect(violations, "every source file under src needs no-console at error (eslint.config.js)").toEqual([]);
+    // ESLint loads its config lazily on the first lookup: ~10 s cold, then milliseconds per file.
   }, 30_000);
 
-  it("allows no-console disables only where listed, with the exact count, and no rule-less disable", () => {
+  it("allows no-console disables only where listed, with the exact count and a reason, and nothing that turns it off", () => {
     const violations: string[] = [];
     for (const file of files) {
       if (file === SELF) continue;
-      const { noConsole, ruleless } = countDisables(readFileSync(join(REPO_ROOT, file), "utf8"));
+      const { noConsole, unreasoned, ruleless, configComments } = countDisables(
+        readFileSync(join(REPO_ROOT, file), "utf8"),
+      );
       const allowed = ALLOWED_DISABLES[file]?.count ?? 0;
       if (noConsole !== allowed) {
         violations.push(`${file}: ${String(noConsole)} no-console disable(s), allowed ${String(allowed)}`);
       }
+      if (unreasoned > 0) violations.push(`${file}: ${String(unreasoned)} no-console disable(s) without a -- reason`);
       if (ruleless > 0) violations.push(`${file}: ${String(ruleless)} eslint-disable naming no rule`);
+      if (configComments > 0) {
+        violations.push(`${file}: ${String(configComments)} inline config comment(s) setting no-console`);
+      }
     }
     expect(violations, "a new log needs an entry in ALLOWED_DISABLES with its reason").toEqual([]);
   });

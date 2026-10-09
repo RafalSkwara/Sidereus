@@ -10,7 +10,8 @@
  * are silent zero-row no-ops, asserted by reading the row back as its owner. A new row that fails a policy's
  * WITH CHECK (an INSERT, or an UPDATE that hands a row over) raises `42501`, asserted on `error.code`. An anonymous
  * caller keeps Supabase's default table grants and is refused by RLS alone (every policy is `to authenticated`):
- * PostgREST answers its INSERT with HTTP 401 and code `42501`, so the code is what the suite pins.
+ * PostgREST answers its INSERT with HTTP 401 and code `42501`, so the code is what the suite pins. Its UPDATE and
+ * DELETE may be a no-op or `42501` (if its grant is ever revoked); the row read back as A is what decides.
  *
  * To cover a new per-user table, add an entry to `TABLES` in `tests/db/tables.ts`.
  */
@@ -191,7 +192,8 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
     expect(before).toBeDefined();
 
     const { error } = await from(anon).update(patch).eq("id", id);
-    expect(error).toBeNull();
+    // A zero-row no-op under today's default grants, or 42501 if anon's grant is ever revoked: both keep the row.
+    expect([null, "42501"]).toContain(error?.code ?? null);
 
     expect(await readAsA(id)).toEqual([before]);
   });
@@ -201,7 +203,8 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
     expect(await readAsA(id)).toHaveLength(1);
 
     const { error } = await from(anon).delete().eq("id", id);
-    expect(error).toBeNull();
+    // A zero-row no-op under today's default grants, or 42501 if anon's grant is ever revoked: both keep the row.
+    expect([null, "42501"]).toContain(error?.code ?? null);
 
     expect(await readAsA(id)).toHaveLength(1);
   });

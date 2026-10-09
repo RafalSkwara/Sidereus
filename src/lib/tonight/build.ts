@@ -1213,7 +1213,7 @@ export function buildTonight(
     } catch (error) {
       // The page says the plan is unavailable; this leaves a trace for us. A fixed line and the error's name only:
       // an engine message or stack could carry the site's coordinates, which never go into logs.
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console -- a fixed line and the error's name, never its message (see above).
       console.error("buildTonight: the Session plan failed", error instanceof Error ? error.name : typeof error);
       sessionPlan = null;
     }
