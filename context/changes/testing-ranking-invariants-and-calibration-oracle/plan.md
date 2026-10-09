@@ -503,10 +503,10 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Automated
 
-- [x] 4.1 The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts`
-- [x] 4.2 Break checks (both no-darkness guards removed; `bestAt` shifted one hour), reverted and logged
-- [x] 4.3 Full unit suite, lint and type check pass
-- [x] 4.4 `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry (`sed`/`grep` check)
+- [x] 4.1 The suite passes: `npx vitest run src/lib/tonight/visibility-invariants.test.ts` — d4bb16c
+- [x] 4.2 Break checks (both no-darkness guards removed; `bestAt` shifted one hour), reverted and logged — d4bb16c
+- [x] 4.3 Full unit suite, lint and type check pass — d4bb16c
+- [x] 4.4 `test-plan.md` §6.3 has no TBD and §6.6 has the Phase 3 entry (`sed`/`grep` check) — d4bb16c
 
 #### Manual
 
