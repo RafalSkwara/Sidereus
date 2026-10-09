@@ -306,7 +306,7 @@ The section also lists the blind spots: `console` aliases, `reportError`, thrown
 
 #### Automated Verification:
 
-- `npm run format` leaves the docs unchanged (Prettier clean)
+- `grep -c "TBD — see §3 Phase 4" context/foundation/test-plan.md` prints 0, and the §3 Phase 4 row reads done (the context docs are not Prettier-formatted, so no formatter run)
 
 #### Manual Verification:
 
@@ -387,7 +387,7 @@ No schema migration. Scratch migrations for the break checks are deleted afterwa
 
 #### Automated
 
-- [ ] 3.1 `npm run format` leaves the docs unchanged
+- [ ] 3.1 No "TBD — see §3 Phase 4" left in test-plan.md, §3 Phase 4 row done
 
 #### Manual
 
