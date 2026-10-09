@@ -312,7 +312,7 @@ Add the one command that creates a full account or moves an account between plan
 #### Manual Verification:
 
 - Owner runs `npm run account:plan -- <own email> full --hosted` against production with the hosted URL and secret key exported in the shell, then `show --hosted` reports `full`
-- `--create` on a local stack prompts twice without echoing the password, and the new account signs in on a local preview
+- `--create` on a local stack prompts twice without echoing the password, and the new account signs in on a local preview (verified 2026-10-09 on a pty against local Supabase: no echo, sign-in through the auth API ok, `current_plan()` = full)
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -384,21 +384,21 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Full unit suite stays green
-- [x] 2.3 Break check: planFrom returning full for a missing value turns the suite red
-- [x] 2.4 Type check and lint pass
+- [x] 2.1 Unit tests pass — 3cbfeb1
+- [x] 2.2 Full unit suite stays green — 3cbfeb1
+- [x] 2.3 Break check: planFrom returning full for a missing value turns the suite red — 3cbfeb1
+- [x] 2.4 Type check and lint pass — 3cbfeb1
 
 ### Phase 3: Operator command and documentation
 
 #### Automated
 
-- [ ] 3.1 Command tests pass against local Supabase
-- [ ] 3.2 Lint passes (scripts config included)
-- [ ] 3.3 Without SUPABASE_SECRET_KEY the command exits 2 with the hint
-- [ ] 3.4 Unit suite and type check stay green
+- [x] 3.1 Command tests pass against local Supabase
+- [x] 3.2 Lint passes (scripts config included)
+- [x] 3.3 Without SUPABASE_SECRET_KEY the command exits 2 with the hint
+- [x] 3.4 Unit suite and type check stay green
 
 #### Manual
 
 - [ ] 3.5 Owner grants own account full on production and show reports full
-- [ ] 3.6 --create prompts without echo and the new account signs in on a local preview
+- [x] 3.6 --create prompts without echo and the new account signs in on a local preview

@@ -129,6 +129,25 @@ _(filled in as steps complete)_
 | Rollback | `npx wrangler rollback <version-id> -m "<reason>" -y` (secrets and KV untouched) |
 | Skipped (out of scope) | custom domain (user will add later), KV forecast cache (no code yet), CI deploy job (PRD final week; `ci.yml` branch trigger fixed to `main` so the existing lint/check/build/smoke jobs now run), local `.env`/`.dev.vars` (human) |
 
+## Account plans (F-01)
+
+The `account_plans` table arrives through the normal `migrate` job. Every account is free until the owner grants `full`; users cannot write the table, so the only path is the operator command, run by the owner in their own terminal. The agent never holds the hosted secret key.
+
+**Grant or check a plan on production** **[HUMAN]**: take the project's API URL and the `sb_secret_...` key from Supabase dashboard → Project Settings → API Keys, export both in the shell for this one command, run it with `--hosted`, then clear them:
+
+```
+export SUPABASE_URL="https://kzdovsrpyxhfduusaqlu.supabase.co"
+export SUPABASE_SECRET_KEY="sb_secret_..."          # typed or pasted in the terminal only
+npm run account:plan -- you@example.com full --hosted
+npm run account:plan -- you@example.com show --hosted
+unset SUPABASE_URL SUPABASE_SECRET_KEY
+```
+
+- The command reads only these two shell variables (no `.env`, no `.dev.vars`) and refuses a non-local URL without `--hosted`. It prints the target host before it writes.
+- Never save the key to a file, a Worker secret, CI or a shell profile, and never paste it into an agent session. Rotate it in the dashboard if it leaks.
+- `free` demotes (the row stays with `plan = 'free'`); `--dry-run` shows the change without writing; re-running the same plan prints `no change`.
+- A new full account: `npm run account:plan -- new@example.com full --create --hosted` asks for a hidden password twice (12+ characters), or add `--generate` to print a random one once. If the account already exists, `--create` prints `account exists` and just sets `full`, so a re-run finishes an interrupted create.
+
 ## Database migrations
 
 Added with change `sites-and-gear-management` (the first schema). Migrations live in `supabase/migrations/` and reach the hosted project `kzdovsrpyxhfduusaqlu` through CI; the app deploy (`npx wrangler deploy`) stays manual until F-02.
