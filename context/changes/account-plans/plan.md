@@ -370,15 +370,15 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Automated
 
-- [ ] 1.1 Migration applies on a fresh local stack
-- [ ] 1.2 Generated types match the schema
-- [ ] 1.3 The new boundary suite passes and the existing ones stay green
-- [ ] 1.4 Break check: re-granting update to authenticated makes case 3 fail
-- [ ] 1.5 Type check and lint pass
+- [x] 1.1 Migration applies on a fresh local stack
+- [x] 1.2 Generated types match the schema
+- [x] 1.3 The new boundary suite passes and the existing ones stay green
+- [x] 1.4 Break check: re-granting update to authenticated makes case 3 fail
+- [x] 1.5 Type check and lint pass
 
 #### Manual
 
-- [ ] 1.6 The migration file reads as additive only
+- [x] 1.6 The migration file reads as additive only
 
 ### Phase 2: Server-side reader and guard
 
