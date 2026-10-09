@@ -94,7 +94,10 @@ Share the table list, add a catalog-reading structural suite, broaden the isolat
 
 **Intent**: Move `TableCase` and `TABLES` out of the isolation test into a non-test module, and add `SERVER_OWNED`, so the behavioural and structural suites read one list.
 
-**Contract**: exports `TABLES` (unchanged entries), `TableCase`, and `SERVER_OWNED: readonly string[] = ["account_plans"]`. The file header says that a new per-user table goes in `TABLES` and a server-owned one in `SERVER_OWNED`. `isolation.test.ts` imports both and keeps its `describe.each(TABLES)`.
+**Contract**: exports `TABLES` (unchanged entries), `TableCase`, and `SERVER_OWNED: readonly string[] = ["account_plans"]`. The file header says that a new per-user table goes in `TABLES` and a server-owned one in `SERVER_OWNED`. `isolation.test.ts` imports both and keeps its `describe.each(TABLES)`. Update the references that name the old location (plan review F1):
+- `tests/db/isolation.test.ts:9` ("add an entry to `TABLES` below");
+- `tests/db/account-plans.test.ts:11`;
+- the `CLAUDE.md:20` tripwire, which should now say "`TABLES` or `SERVER_OWNED` in `tests/db/tables.ts`, and the structural suite fails an unlisted table".
 
 #### 2. Structural suite
 
@@ -121,7 +124,7 @@ Share the table list, add a catalog-reading structural suite, broaden the isolat
   - `prosecdef = false`;
   - `proconfig` contains a `search_path=` entry;
   - `has_function_privilege('anon', oid, 'EXECUTE') = false`;
-  - no EXECUTE for `PUBLIC` in `proacl`.
+  - `has_function_privilege('public', oid, 'EXECUTE') = false` (a NULL `proacl` is the default ACL and grants PUBLIC, so never search `proacl` text alone; plan review F3).
 - **Failure messages** name the table or function and the property.
 - **Connection:** `DB_URL` from the environment, closed in `afterAll`.
 
@@ -133,7 +136,7 @@ Share the table list, add a catalog-reading structural suite, broaden the isolat
 
 **Contract**: new cases per `TABLES` entry:
 
-- anon INSERT (as a row of A, and as a row without a user) fails with code `42501`, and A's row count is unchanged;
+- anon INSERT (as a row of A, and as a row without a user) fails with code `42501`, and A's row count is unchanged. Assert `error.code`, not the HTTP status: PostgREST answers this one with 401, and RLS's WITH CHECK fires before the NOT NULL default on `user_id` (verified locally, plan review F4);
 - anon UPDATE with `patch` on A's row leaves it unchanged, and anon DELETE leaves it present (each reads the row back as A, before and after).
 
 Existing cases change as follows:
@@ -207,8 +210,12 @@ The header comment says which refusals are errors and which are zero-row no-ops.
 **Contract**:
 
 - **Files:** every `.ts`, `.tsx`, `.astro`, `.js` and `.mjs` file under `src/`, test files included.
-- **Rule check:** for each file, `new ESLint().calculateConfigForFile(path)` must resolve `rules["no-console"]` to severity `2`/`"error"`. A file that resolves to `undefined` (ignored) is accepted only if it is in a named ignored list (`src/lib/database.types.ts`).
+- **Setup:** one `new ESLint({ cwd: <repo root> })` built in `beforeAll` with a 30 s hook timeout. A cold first config load measured 10.5 s; warm, all 327 lookups take ~25 ms.
+- **Rule check:** for each file, `calculateConfigForFile(path)` returns the rule as an array (`[2, {}]` today). Read its first element and require `2` or `"error"`. A file that resolves to `undefined` (ignored) is accepted only if it is in a named ignored list (`src/lib/database.types.ts`).
 - **Disable comments:** every `eslint-disable` comment (line, next-line or block) naming `no-console` is counted per file, and the counts must equal an allowlist with a reason per file: `src/lib/tonight/build.ts`: 1, `calibration.test.ts`: 1, `determinism.test.ts`: 2.
+  - A rule-less `eslint-disable` (which silences every rule, `no-console` included) is a violation in any file. None exists in `src` today.
+  - The guard's own file is excluded from the count, because its pattern and messages contain the text it looks for.
+  - Plan review F2 covers this bullet and the two above.
 - **Failures** list `file` plus the effective severity or the count.
 - **Non-vacuity:** at least 300 files are checked, and the known coordinate modules (`src/lib/gear/store.ts`, `src/lib/engine/index.ts`, `src/i18n/messages/en.ts`) are among them.
 
@@ -219,9 +226,8 @@ The header comment says which refusals are errors and which are zero-row no-ops.
 **Intent**: Assert the exact `Location` for an out-of-range latitude, and that the submitted value never appears in it.
 
 **Contract**:
-- The two expectations become `location: "/onboarding?error=errors.site.latitudeRange", exact: true` and `"/gear/sites/new?error=errors.site.latitudeRange"`.
-- The runner also checks that `Location` doesn't contain `95` (a small `absent` field on the expectation, honoured by the existing checker).
-- Confirm the onboarding schema's latitude key before writing it.
+- The two expectations become `location: "/onboarding?error=errors.site.latitudeRange", exact: true` and `location: "/gear/sites/new?error=errors.site.latitudeRange", exact: true`. Both schemas fail on latitude first: gear at `src/lib/gear/schemas.ts:47`, onboarding reusing it at `src/lib/onboarding/schemas.ts:57`.
+- The runner also checks that `Location` doesn't contain `95`. This is a small `absent` field on the expectation: one more clause in the checker at `scripts/smoke.mjs:186-187`, and a line in its failure output at `:194`.
 
 #### 5. Rule records
 
@@ -231,6 +237,9 @@ The header comment says which refusals are errors and which are zero-row no-ops.
 
 **Contract**:
 - `CLAUDE.md`: the tripwire sentence changes.
+- Code comments that describe the old scope change too (plan review F1):
+  - `src/lib/engine/purity.test.ts:10` ("outside eslint's `gearConfig.files`");
+  - `src/lib/tonight/visibility-invariants.test.ts:42-43` ("error under `src/lib/tonight/**`").
 - `lessons.md`: append a new entry, "`no-console` is an error in all of `src`; a new log needs an allowlisted disable", which states that it supersedes the gearConfig lesson. Earlier entries stay untouched (append-only).
 
 ### Success Criteria:
