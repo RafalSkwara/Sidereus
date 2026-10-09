@@ -15,7 +15,7 @@ No plan code exists. Isolation is RLS-only and the app has no service role. Supa
 
 - **Storage:** a new `account_plans` table that only the secret key can write. A missing row means free. Any self-write is refused loudly with `42501`.
 - **Server:** code reads the plan through a lazy, per-request helper and refuses free accounts through `requireFullPlan`.
-- **Operator:** the owner runs `npm run account:plan -- <email> full|free|show [--create] [--dry-run]` with the hosted secret key in their shell.
+- **Operator:** the owner runs `npm run account:plan -- <email> full|free|show [--create] [--dry-run] --hosted` with the hosted URL and secret key in their shell. Without `--hosted` the command refuses any non-local project.
 - **UI:** nothing changes.
 
 ## Key Decisions Made
@@ -32,6 +32,8 @@ No plan code exists. Isolation is RLS-only and the app has no service role. Supa
 | Proving server refusal | Guard unit tests + DB boundary tests; HTTP refusal with S-03's route | No dead route in production | Plan (owner) |
 | Test split with rollout Phase 4 | F-01 tests only the plan; Phase 4 broadens isolation and the lint scope | Keeps F-01 small, as the owner prefers modest tests | Plan (owner) |
 | Demote | `plan = 'free'`, row kept | `updated_at` shows when it changed | Plan (delegated) |
+| Command target | `SUPABASE_URL` from the shell only; non-local hosts need `--hosted` | A stale exported production key can't silently change production | Plan review F1 |
+| Reader seam | `accountPlanStore.read` + `getAccountPlan` / `requireFullPlan` | Follows the repo's store pattern; the query is covered by tests/db | Plan review F3 |
 
 ## Scope
 
@@ -62,7 +64,7 @@ The database is the enforcer: `account_plans` has no write path for `anon` or `a
 | --- | --- | --- |
 | 1. Plan table, SQL helper and boundary tests | Migration, types, tests/db proof of no self-grant, CI secret key for `test:db` | Leaking the secret key into `.dev.vars` in CI |
 | 2. Server-side reader and guard | `getAccountPlan` / `requireFullPlan`, error key, unit tests | Accidentally resolving the plan in the middleware |
-| 3. Operator command and documentation | `npm run account:plan`, command tests, CLAUDE.md and deploy-plan | Printing a secret or password; wrong project targeted |
+| 3. Operator command and documentation | `npm run account:plan` (JSDoc-typed exports), command tests, CLAUDE.md and deploy-plan | Printing a secret or password (wrong-project risk closed by `--hosted`) |
 
 **Prerequisites:** Docker plus `npx supabase start` for tests/db, and the local `SECRET_KEY` from `npx supabase status -o env`.
 **Estimated effort:** about one session across 3 phases.

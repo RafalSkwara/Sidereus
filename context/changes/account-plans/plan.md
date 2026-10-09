@@ -146,7 +146,7 @@ Add the server-owned plan table and `current_plan()`, regenerate the DB types, a
 
 #### Automated Verification:
 
-- Migration applies on a fresh local stack: `npx supabase db reset` (local only)
+- Migration applies on a fresh local stack: `npx supabase db reset` once (local only; it wipes every local account and row, so iterate with `npx supabase migration up`, plan review F5)
 - Generated types match the schema: `npm run db:types && git diff --exit-code src/lib/database.types.ts` after committing the regenerated file
 - The new boundary suite passes and the existing ones stay green: `SUPABASE_URL=… SUPABASE_KEY=… SUPABASE_SECRET_KEY=… npm run test:db`
 - Break check: re-granting `update` to `authenticated` in a scratch local migration makes case 3 fail (reverted, not committed)
@@ -170,16 +170,18 @@ Add a server-only module that pages and routes use to read the account plan lazi
 
 #### 1. Account-plan module
 
-**File**: `src/lib/account-plan/index.ts` (new; tests next to it as `account-plan.test.ts`)
+**Files**: `src/lib/account-plan/store.ts` and `src/lib/account-plan/index.ts` (new; unit tests in `account-plan.test.ts` next to them)
 
-**Intent**: One place owns the rule "anything unknown is free", the per-request memo and the refusal shape. Callers never query `account_plans` themselves.
+**Intent**: One place owns the rule "anything unknown is free", the per-request memo and the refusal shape. Callers never query `account_plans` themselves. The split follows the repo's store seam (`src/lib/sky-checks/store.ts:51-63`; unit tests mock the store as `src/lib/tonight/load.test.ts:25-48` does, and the query itself is covered by tests/db) (plan review F3).
 
 **Contract**:
+- `store.ts`: `accountPlanStore.read(client: TypedSupabaseClient, userId: string): Promise<{ plan: unknown } | { error: true }>` selects the user's own row. Phase 1's tests/db already exercise this query shape.
+- `index.ts` imports the client type with `import type` only (`src/lib/supabase.ts` imports `astro:env/server`, which plain vitest can't resolve).
 - `type AccountPlan = "free" | "full"`.
 - `planFrom(raw: unknown): AccountPlan`: pure; `"full"` only for exactly `"full"`, else `"free"`.
 - `getAccountPlan(locals: App.Locals): Promise<AccountPlan>`:
   - returns `"free"` without a query when `locals.supabase` or `locals.user` is null;
-  - otherwise selects the user's own row once and memoises the promise in a module-level `WeakMap<App.Locals, …>`;
+  - otherwise calls `accountPlanStore.read` once and memoises the promise in a module-level `WeakMap<App.Locals, …>`;
   - a query error reads as `"free"` (fail closed), and the module never logs.
 - `requireFullPlan(locals): Promise<{ ok: true } | { ok: false; reason: "signed-out" | "not-configured" | "needs-full"; errorKey: MessageKey }>`:
   - `errorKey` is `NOT_CONFIGURED` for not-configured and `ACCOUNT_PLAN_NEEDS_FULL` otherwise.
@@ -211,7 +213,7 @@ Add a server-only module that pages and routes use to read the account plan lazi
   - two calls on the same locals make one query;
   - an error from the stubbed client returns `"free"`.
 - `requireFullPlan`: free → `needs-full` with `errors.accountPlan.needsFull`; full → `ok`; signed-out → `signed-out`; null client → `not-configured` with `errors.notConfigured`.
-- The client is a minimal stub with the `from().select().eq().maybeSingle()` shape. No module mocking of the module under test.
+- `accountPlanStore` is mocked with `vi.mock` and the client is `{} as TypedSupabaseClient`, as in `src/lib/tonight/load.test.ts`.
 
 ### Success Criteria:
 
@@ -238,24 +240,28 @@ Add the one command that creates a full account or moves an account between plan
 
 **File**: `scripts/account-plan.mjs` (new); `package.json` (`"account:plan": "node scripts/account-plan.mjs"`)
 
-**Intent**: Let the operator run `npm run account:plan -- <email> full|free|show [--create] [--dry-run] [--generate]`. Its logic is exported so a test can drive it with injected clients and I/O.
+**Intent**: Let the operator run `npm run account:plan -- <email> full|free|show [--create] [--dry-run] [--generate] [--hosted]`. Its logic is exported so a test can drive it with injected clients and I/O.
 
 **Contract**:
 - **Header comment:** usage and the key rule.
 - **Exports:**
   - `parseArgs(argv)`: pure; rejects unknown actions or flags and `--create` with `free`/`show`.
   - `run({ admin, email, action, create, dryRun, generate, readPassword, out })`: returns an exit code.
-- **Main:** guarded by `import.meta.url === pathToFileURL(process.argv[1]).href`.
-- **Credentials:**
-  - The URL comes from `SUPABASE_URL`, or from `.env` loaded with `process.loadEnvFile` when present.
-  - The key comes from `SUPABASE_SECRET_KEY` in the environment only. Without it, the script exits 2 with a hint and never reads `.dev.vars`.
+- **Typing (plan review F2):** `parseArgs` and `run`'s options carry JSDoc types. `parseArgs` returns a typed union, `{ ok: false, error }` or `{ ok: true, email, action, … }`, so the type-checked lint on `tests/db/**/*.ts` accepts the import. No `.d.mts` is needed.
+- **Main:** guarded by `import.meta.url === pathToFileURL(process.argv[1]).href`. Env reads happen inside `main`, never at module top level.
+- **Credentials (plan review F1):**
+  - The URL comes from `SUPABASE_URL` in the shell only. There is no `.env` fallback, because the repo's `.env` points at the hosted project.
+  - The key comes from `SUPABASE_SECRET_KEY` in the environment only. Without either variable, the script exits 2 with a hint. It never reads `.env` or `.dev.vars`.
+  - A host other than `127.0.0.1` / `localhost` is refused (exit 2) unless `--hosted` is passed.
+  - The target host is printed before any write.
 - **Look-up by email:** pages through `auth.admin.listUsers` and compares the email case-insensitively.
 - **Behaviour:**
   - `show` prints `<email> (<user id>) on <host>: free|full`.
   - `full` / `free` upsert `{ user_id, plan, updated_at: now }`. Demote keeps the row with `plan = 'free'`.
   - Re-running with the same plan prints `no change` and exits 0.
   - An unknown email without `--create` exits 1.
-  - `--create` with `full` calls `auth.admin.createUser({ email, password, email_confirm: true })` and then upserts `full`. The password comes from a hidden TTY prompt (asked twice, must match, minimum 12 characters) or, with `--generate`, a random 20-character password printed exactly once.
+  - `--create` with `full` calls `auth.admin.createUser({ email, password, email_confirm: true })` and then upserts `full`.
+  - `--create` on an email that already exists asks for no password. It prints `account exists` and continues as plain `full`, so a re-run completes a create whose upsert failed (plan review F4). The password comes from a hidden TTY prompt (asked twice, must match, minimum 12 characters) or, with `--generate`, a random 20-character password printed exactly once.
   - `--dry-run` prints the intended `old → new` and writes nothing.
 - **Output:** always names the target host. It never prints the key, tokens or a typed password.
 - **Lint:** add `crypto` / `URL` to the scripts' globals in `eslint.config.js:76-81` only if used.
@@ -273,6 +279,8 @@ Add the one command that creates a full account or moves an account between plan
   - a repeat prints `no change`;
   - `--dry-run` leaves the row unchanged;
   - an unknown email exits 1;
+  - `--create` on an existing account prints `account exists`, sets `full` and never calls `readPassword`;
+  - a non-local URL without `--hosted` exits 2 before any admin call;
   - `show` prints the plan.
 - **Output check:** no secret-key or password string appears in the output (except `--generate`'s single line, which is asserted separately).
 - **Pure unit cases:** `parseArgs` is tested in the same file.
@@ -303,7 +311,7 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Manual Verification:
 
-- Owner runs `npm run account:plan -- <own email> full` against production with the hosted secret key, then `show` reports `full`
+- Owner runs `npm run account:plan -- <own email> full --hosted` against production with the hosted URL and secret key exported in the shell, then `show --hosted` reports `full`
 - `--create` on a local stack prompts twice without echoing the password, and the new account signs in on a local preview
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -331,7 +339,7 @@ Add the one command that creates a full account or moves an account between plan
 
 1. On a local stack, run `npm run account:plan -- tester@example.com full --create`, type a password twice, and sign in with it on a local preview.
 2. Run `show`, then `free`, then `show` again. Each reflects the change immediately.
-3. On production, the owner grants their own account `full` and confirms with `show`.
+3. On production, the owner grants their own account `full` with `--hosted` and confirms with `show --hosted`.
 
 ## Performance Considerations
 
