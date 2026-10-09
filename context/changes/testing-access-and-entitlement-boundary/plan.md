@@ -387,8 +387,8 @@ No schema migration. Scratch migrations for the break checks are deleted afterwa
 
 #### Automated
 
-- [x] 3.1 No "TBD — see §3 Phase 4" left in test-plan.md, §3 Phase 4 row done
+- [x] 3.1 No "TBD — see §3 Phase 4" left in test-plan.md, §3 Phase 4 row done — 39f0da7
 
 #### Manual
 
-- [x] 3.2 §6.4 is a complete recipe (per-user table, server-owned table, RPC, full-plan route) and names the S-03 follow-up
+- [x] 3.2 §6.4 is a complete recipe (per-user table, server-owned table, RPC, full-plan route) and names the S-03 follow-up — 39f0da7
