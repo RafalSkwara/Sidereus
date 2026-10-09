@@ -42,7 +42,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 
 | ID   | Change ID               | Outcome (user can …)                                                                                     | Prerequisites | PRD refs               | Status   |
 | ---- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- | -------- |
-| F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | ready    |
+| F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | in-progress |
 | S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done     |
 | S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | done        |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
@@ -88,7 +88,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Minimal by design: the plan, its server-side check and the command only. The "needs the full plan" state each paid feature shows lands with S-03, the first slice that has a paid feature to show; no checkout (PRD Non-Goals).
-- **Status:** ready
+- **Status:** in-progress
 
 ## Slices
 
@@ -131,6 +131,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Star depth: bundled stars stop at magnitude 4.5, a finder shows about 8 (Open Question 14); licence and page weight checked in the plan. — Owner: team. Block: no.
   - Naked-eye limit by sky class and hop length (Open Questions 15, 16). — Owner: team. Block: no.
 - **Risk:** The milestone's riskiest slice: new star data, chart geometry and orientation, judged without an observer; placed first among the features so its lessons reach S-04 and S-08.
+- **Note from F-01 (impl review F8, 2026-10-09):** `requireFullPlan(locals)` (`src/lib/account-plan/`) answers `signed-out` with the `needsFull` key; full-plan routes should send a signed-out visitor to sign-in (the middleware gate) and show the "needs the full plan" state only to a signed-in free account.
 - **Status:** proposed
 
 ### S-04: What to expect

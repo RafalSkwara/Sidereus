@@ -10,6 +10,7 @@ import { isMessageKey, type MessageKey } from "@/i18n";
 export const NOT_CONFIGURED: MessageKey = "errors.notConfigured";
 export const CHECK_FIELDS: MessageKey = "errors.checkFields";
 export const AUTH_NOT_CONFIGURED: MessageKey = "errors.auth.notConfigured";
+export const ACCOUNT_PLAN_NEEDS_FULL: MessageKey = "errors.accountPlan.needsFull";
 
 /** The first issue's message when it is a catalogue key (the schemas only emit keys), else `CHECK_FIELDS`. */
 export function issueKey(error: ZodError): MessageKey {

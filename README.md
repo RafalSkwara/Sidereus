@@ -56,7 +56,8 @@ npm run dev
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Run Prettier
 - `npm test` - Run the unit tests (Vitest)
-- `npm run test:db` - Run the per-user isolation suite in `tests/db/` against a running local Supabase (`npx supabase start` first)
+- `npm run test:db` - Run the database suites in `tests/db/` (needs `SUPABASE_SECRET_KEY` too) against a running local Supabase (`npx supabase start` first)
+- `npm run account:plan -- <email> full|free|show` - Operator command that grants or removes the full plan (needs `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in the shell; see `CLAUDE.md`)
 - `npm run db:types` - Regenerate `src/lib/database.types.ts` from the local Supabase schema (never edit that file by hand)
 - `npm run smoke` - Smoke test the auth flow and the gear routes against a running server backed by local Supabase (`BASE_URL`, defaults to `http://localhost:4321`)
 

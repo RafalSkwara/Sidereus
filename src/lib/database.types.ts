@@ -28,6 +28,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      account_plans: {
+        Row: {
+          plan: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          plan: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          plan?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       eyepieces: {
         Row: {
           afov_deg: number;
@@ -249,6 +267,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      current_plan: { Args: never; Returns: string };
       record_sky_verdict: {
         Args: {
           dark_start: string;

@@ -41,11 +41,11 @@ jobs:
       - name: Start local Supabase
         run: |
           supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
-          supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+          supabase status -o env | grep -E '^(API_URL|ANON_KEY|SECRET_KEY)=' > supabase.env
       - name: Run database isolation suite
         run: |
           source supabase.env
-          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" npm run test:db
+          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" SUPABASE_SECRET_KEY="$SECRET_KEY" npm run test:db
       - name: Check generated database types are up to date
         run: npm run db:types && git diff --exit-code src/lib/database.types.ts
       # A deterministic all-clear forecast for the smoke test and the e2e spec. It must answer before the
