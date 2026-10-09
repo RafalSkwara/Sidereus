@@ -545,27 +545,27 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 1.1 `npm test` passes, including the new guard case — 7aa8446
-- [x] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes — 7aa8446
-- [x] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored — 7aa8446
-- [x] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted — 7aa8446
-- [x] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted — 7aa8446
-- [x] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it — 7aa8446
-- [x] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees — 7aa8446
+- [x] 1.1 `npm test` passes, including the new guard case — 12d59e9
+- [x] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes — 12d59e9
+- [x] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored — 12d59e9
+- [x] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted — 12d59e9
+- [x] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted — 12d59e9
+- [x] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it — 12d59e9
+- [x] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees — 12d59e9
 
 #### Manual
 
-- [x] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console` — 7aa8446
+- [x] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console` — 12d59e9
 
 ### Phase 2: CI gates
 
 #### Automated
 
-- [x] 2.1 `npm test` passes with the pinned pool — 52f96c3
-- [x] 2.2 Break check: `--pool threads` fails the night-boundaries suite — 52f96c3
-- [x] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted — 52f96c3
+- [x] 2.1 `npm test` passes with the pinned pool — c446377
+- [x] 2.2 Break check: `--pool threads` fails the night-boundaries suite — c446377
+- [x] 2.3 Break check: the flaky probe exits 1 under `CI=1` with the config, 0 without; probe deleted — c446377
 - [x] 2.4 `gh api …/branches/main/protection` lists `ci` and `smoke` as required — dropped (owner, 2026-10-09)
-- [x] 2.5 `npm run lint` and `npx astro check` pass — 52f96c3
+- [x] 2.5 `npm run lint` and `npx astro check` pass — c446377
 
 #### Manual
 
@@ -575,11 +575,11 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, including `agent-hooks.test.ts` — 595ddf7
-- [x] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored — 595ddf7
-- [x] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass — 595ddf7
-- [x] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s — 595ddf7
-- [x] 3.5 `npm run lint` and `npx astro check` pass — 595ddf7
+- [x] 3.1 `npm test` passes, including `agent-hooks.test.ts` — 918a76c
+- [x] 3.2 Break check: without the `stop_hook_active` guard, case 6 fails; restored — 918a76c
+- [x] 3.3 `bash -n` on the three scripts and `jq empty .claude/settings.json` pass — 918a76c
+- [x] 3.4 Real-run baseline exits 0, shows ESLint and Vitest ran, well under 120 s — 918a76c
+- [x] 3.5 `npm run lint` and `npx astro check` pass — 918a76c
 
 #### Manual
 
@@ -590,12 +590,12 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [x] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete` — d53a120
-- [x] 4.2 No "not linted yet" left in CLAUDE.md — d53a120
+- [x] 4.1 No "TBD — see §3 Phase 5" left in test-plan.md, and the §3 Phase 5 row matches `complete` — 33852e9
+- [x] 4.2 No "not linted yet" left in CLAUDE.md — 33852e9
 
 #### Manual
 
-- [x] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired — d53a120
+- [x] 4.3 §6.5 is a complete e2e recipe and §5 matches what is wired — 33852e9
 
 ### Phase 5: Local registration (after the merge)
 

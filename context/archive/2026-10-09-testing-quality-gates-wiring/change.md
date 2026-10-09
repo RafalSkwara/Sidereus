@@ -1,10 +1,10 @@
 ---
 change_id: testing-quality-gates-wiring
 title: "Test rollout Phase 5: quality gates wired into CI and the agent loop, flakes made visible"
-status: impl_reviewed
+status: archived
 created: 2026-10-09
 updated: 2026-10-09
-archived_at: null
+archived_at: 2026-10-09T21:14:27Z
 ---
 
 ## Notes
