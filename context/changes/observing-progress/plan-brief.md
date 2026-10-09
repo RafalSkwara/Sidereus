@@ -37,11 +37,12 @@ The log read behind it is capped by PostgREST at 1,000 rows. There is no progres
 | Entry point | Action link in `/log`'s header (like Sky checks) | No navigation or dashboard change; phone-fold spec untouched. | Plan (user) |
 | Mark surfaces | Targets cards and rows, Planets, Moon, the "Point here first" tile | Visible from the dashboard too; not on the Session plan. | Plan (user) |
 | Mark style | Sparkles icon by the name; tooltip legend (hover, tap, keyboard) | Light on the cards, explained on demand. | Plan (user) |
+| Mark placement on cards | Only the icon button in the `<h3>` (tooltip after it); the Moon card, which shows no name, uses `SeenTag`'s slot | Keeps headings' text intact (planets spec) and gives the Moon an anchor. | Plan review F2 (user) |
 | No button allowed (tile `<a>`, `<summary>`) | Static icon + `sr-only` text + one legend line | Valid HTML/a11y, with the meaning always on screen. | Plan (user) |
-| Exact counts | Page the seen read (1,000 per page, total order with `id`) instead of an SQL aggregate | No migration or RPC, and the same rows feed ranking and progress. | Plan (delegated) |
+| Exact counts | Page the seen read (1,000 per page, total order with `id`, stop on an empty page) instead of an SQL aggregate | No migration or RPC; same rows feed ranking and progress; a lower hosted `max_rows` cannot cut it. | Plan (delegated), review F6 |
 | Read name | `listForRanking` → `listSeenEntries` | It now serves progress too. | Plan (delegated) |
-| Progress model | Pure `observingProgress` in `src/lib/progress/` | Testable with hand-written fixtures; S-06 derives milestones from it. | Plan (delegated) |
-| First night | `SeenSummary.firstNight`; the cut-off becomes optional | Firsts and seen-list dates without a sentinel date. | Plan (delegated) |
+| Progress model | Pure `observingProgress(entries)` in `src/lib/progress/`, calling `seenSummaries` itself; items carry `type` | One function owns the rule, so rating tests can fail; S-06 gets types. | Plan (delegated), review F4/F9 |
+| First night | `SeenSummary.firstNight`; the cut-off becomes optional; dates via a new exported `formatShortDate` | Firsts and seen-list dates without a sentinel date, compact at 320 px. | Plan (delegated), review F7 |
 
 ## Scope
 
@@ -86,10 +87,10 @@ Everything is computed on read, so re-rating or deleting an entry updates the co
 
 **Prerequisites:**
 
-- `.env` / `.dev.vars` from the orchestrator for previews and the e2e runs.
-- The shared local Supabase must be up (no reset, no migrations).
-- Port 4329 is never used.
-- If PR #147 merges first, rebase. This slice adds no table, so nothing joins `TABLES`.
+- The branch is rebased onto `origin/main` `2a2fbf4` (PR #147: `tests/db/tables.ts`, the structure suite, `no-console` as an error in all of `src`). This slice adds no table, so nothing joins `TABLES`.
+- `npm ci` in the worktree. The worktree's own `.env` / `.dev.vars` are built from `npx supabase status -o env`, never copied and never logged.
+- The shared local Supabase is used for builds, `test:db` and e2e: no reset, no migrations.
+- Ports: forecast fixture 4400, preview 4331, never 4329 (see the plan's "Running the checks").
 
 **Estimated effort:** about 2-3 sessions across 3 phases.
 

@@ -69,13 +69,13 @@ The full evidence is in `context/changes/observing-progress/research.md`.
 ## What We're NOT Doing
 
 - Milestones and the celebration at save (FR-041): that is S-06, observing-milestones. This slice only exposes the data S-06 will need (per-object `firstNight`, per-list counts).
-- No new table, migration, RPC or view. Pagination replaces an aggregate, so nothing is added to `TABLES`, and once PR #147 merges (it adds `tests/db/tables.ts` and `tests/db/structure.test.ts`, absent on this branch) its structure test is unaffected.
+- No new table, migration, RPC or view. Pagination replaces an aggregate, so nothing is added to `TABLES` (`tests/db/tables.ts`, from PR #147, on this branch since the rebase onto `2a2fbf4`), and `tests/db/structure.test.ts` is unaffected.
 - No new navigation destination and no dashboard progress tile.
 - No "not seen yet" mark on the Session plan rows, the live sky markers or the washed-out list.
 - No type grouping or type labels in the checklists. The chips carry no links.
 - No offline storage of `/log/progress`: it is network-only like `/log`. Stored Tonight copies keep the mark they were rendered with, as the existing seen tag does.
 - No recapture of the landing screenshot: the tile gains only a small icon and a legend line, not a redesign. The next recapture (fixed 1280×1125, `landing-screenshot.spec.ts:17-22`) will show them and may need its height checked.
-- No lint config change: `src/lib/progress/**` and `src/components/progress/**` handle no site records or coordinates (lessons.md:6-10 does not apply), and PR #147 puts `no-console` on all of `src` anyway.
+- No lint config change and no new log line: `no-console` is already an error in all of `src` (`noConsoleConfig`, lessons.md:33-38, superseding the `gearConfig` lesson), so the new modules are covered and `ALLOWED_DISABLES` is unchanged.
 - No change to the ranking penalty or to `LOG_PENALTY_MIN_RATING`.
 
 ## Implementation Approach
