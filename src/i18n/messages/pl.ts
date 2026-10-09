@@ -1057,6 +1057,9 @@ export const pl = {
       observation: "Nie znaleziono obserwacji.",
       skyCheck: "Tej nocy nie można jeszcze ocenić albo już nie istnieje.",
     },
+    accountPlan: {
+      needsFull: "To wymaga pełnego planu.",
+    },
     geocoding: {
       failed: "Wyszukiwanie miejsc jest teraz niedostępne.",
     },

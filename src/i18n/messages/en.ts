@@ -1192,6 +1192,9 @@ export const en = {
       observation: "Observation not found.",
       skyCheck: "That night can't be checked yet, or it no longer exists.",
     },
+    accountPlan: {
+      needsFull: "This needs the full plan.",
+    },
     geocoding: {
       failed: "Place search is unavailable right now.",
     },

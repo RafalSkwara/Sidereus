@@ -370,24 +370,24 @@ Add the one command that creates a full account or moves an account between plan
 
 #### Automated
 
-- [x] 1.1 Migration applies on a fresh local stack
-- [x] 1.2 Generated types match the schema
-- [x] 1.3 The new boundary suite passes and the existing ones stay green
-- [x] 1.4 Break check: re-granting update to authenticated makes case 3 fail
-- [x] 1.5 Type check and lint pass
+- [x] 1.1 Migration applies on a fresh local stack — 4f00119
+- [x] 1.2 Generated types match the schema — 4f00119
+- [x] 1.3 The new boundary suite passes and the existing ones stay green — 4f00119
+- [x] 1.4 Break check: re-granting update to authenticated makes case 3 fail — 4f00119
+- [x] 1.5 Type check and lint pass — 4f00119
 
 #### Manual
 
-- [x] 1.6 The migration file reads as additive only
+- [x] 1.6 The migration file reads as additive only — 4f00119
 
 ### Phase 2: Server-side reader and guard
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Full unit suite stays green
-- [ ] 2.3 Break check: planFrom returning full for a missing value turns the suite red
-- [ ] 2.4 Type check and lint pass
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Full unit suite stays green
+- [x] 2.3 Break check: planFrom returning full for a missing value turns the suite red
+- [x] 2.4 Type check and lint pass
 
 ### Phase 3: Operator command and documentation
 
