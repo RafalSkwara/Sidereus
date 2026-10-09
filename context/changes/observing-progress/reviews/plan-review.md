@@ -6,7 +6,7 @@
 - **Phases**: 3
 - **Reviewers**: claim verification + feasibility/sequencing (Opus agents), verification commands (main session)
 - **Findings**: 0 critical, 7 warnings, 3 observations
-- **Overall**: NEEDS ATTENTION
+- **Overall**: NEEDS ATTENTION → all 10 findings fixed in plan.md (F2 by user decision: icon button in the `<h3>`, Moon in `SeenTag`'s slot)
 
 ## Verdicts
 
@@ -35,7 +35,7 @@
   - `src/lib/targets/index.test.ts:44`, `src/lib/engine/moon-target.test.ts:166` and `src/lib/engine/planet-ranking.test.ts:208`: `toEqual` on `seenSummaries` output.
   - The plan's own `log.test.ts:25,33,42,63,64`.
 - **Fix**: List these files in Phase 1 Changes Required.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F2 — The mark inside the `<h3>` breaks a planets spec, and the Moon card has no name to put it beside
 
@@ -47,7 +47,7 @@
   - `tests/e2e/planets-on-tonight.spec.ts:41-45` reads the first planet card's `<h3>` `textContent` for a fresh user and throws unless it equals the planet name. A button label or tooltip text inside the `<h3>` breaks it, yet step 2.3 claims that spec "still passes".
   - `MoonCard.astro:57-60` renders no visible Moon name: the band heading is `headingHidden`, and the target block starts with `SeenTag`. "Beside the Moon target's name" has no anchor.
 - **Fix**: This is a UI decision for the user. Option A keeps the icon by the name: only the icon button goes inside the `<h3>`, the tooltip renders outside it, the planets spec reads the name `<span>`, and the Moon's mark takes `SeenTag`'s slot. Option B puts the mark in `SeenTag`'s slot on all three cards, since the two are mutually exclusive.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F3 — The tooltip mechanics are underspecified and fight each other
 
@@ -67,7 +67,7 @@
   - the tooltip is positioned against the card's `li` (`relative`, full-width under the heading), not the icon;
   - a `specimen`/`open` prop for `/design` and the screenshots;
   - no `console` in the script (`.astro` client scripts are not linted).
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F4 — `observingProgress(seenMap)` makes its rating tests unfalsifiable
 
@@ -77,7 +77,7 @@
 - **Location**: plan.md "Phase 1 › Changes Required › 4"
 - **Detail**: A seen map carries no ratings or nights. The planned cases "rated-2-only stays unticked", "two entries on one night count once" and "removing the only qualifying entry unticks" cannot fail against a hand-built map, which test-plan §6.3 forbids. The page would also own half the rule.
 - **Fix**: Make it `observingProgress(entries: readonly LogEntry[])`, calling `seenSummaries(entries)` itself, and feed the tests raw entries.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F5 — The e2e and db runs need a recipe the plan doesn't give
 
@@ -100,7 +100,7 @@
   - the fixture and preview ports agreed with the orchestrator (never 4329);
   - rebuild after each change;
   - `npm run test:db -- tests/db/observations.test.ts`.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F6 — The paging loop and its db test miss the failure they guard
 
@@ -114,7 +114,7 @@
 - **Fix**:
   - Loop until a page comes back **empty** (one extra round-trip).
   - Seed `M1`–`M100` × 11 newer nights and `M101`–`M110` only on an older night, then assert those 10 are present along with the total.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F7 — Polish names, the date format and gender-neutral copy are unspecified
 
@@ -130,7 +130,7 @@
   - Use `localCommonName` (or `targetLabel` `.id`/`.name`) on the page.
   - Export a `formatShortDate` from `format.ts` (the "12 Sept 2026" form) for the firsts and the seen list.
   - Write gender-neutral PL copy for the mark and the chip states (a phrasing that doesn't inflect by the object's gender), checked in the PL screenshots.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F8 — e2e specifics that make the specs flaky or weak
 
@@ -150,7 +150,7 @@
   - Add `data-checklist-item`/`data-seen` hooks.
   - Use keyboard Tab.
   - Add an automated tap/Esc case to `observing-progress.spec.ts`, keeping 2.6 as the visual check.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F9 — Small gaps: skeleton, tile name, S-06 type, chip contrast, evidence
 
@@ -172,7 +172,7 @@
   - Use `selected`/`selected-foreground` or `primary` pairs already pinned by `contrast.test.ts`.
   - Evidence goes to `context/changes/observing-progress/evidence/`.
   - Note the landing recapture under NOT doing.
-- **Decision**: PENDING
+- **Decision**: FIXED
 
 ### F10 — Cosmetic anchor errors
 
@@ -185,4 +185,4 @@
   - `tests/db/structure.test.ts`/`tables.ts` don't exist on this branch until PR #147 merges.
   - `SKY_CHECKS_PAGE` lives in `src/lib/sky-checks/redirect.ts`, so `PROGRESS_PAGE` next to `LOG_LIST` departs from that precedent. That is fine, but deliberate.
 - **Fix**: Correct the anchors, and phrase the #147 note conditionally.
-- **Decision**: PENDING
+- **Decision**: FIXED
