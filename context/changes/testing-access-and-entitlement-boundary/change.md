@@ -1,7 +1,7 @@
 ---
 change_id: testing-access-and-entitlement-boundary
 title: "Test rollout Phase 4: isolation and the plan enforced on the server, coordinates kept private"
-status: preparing
+status: planned
 created: 2026-10-09
 updated: 2026-10-09
 archived_at: null
