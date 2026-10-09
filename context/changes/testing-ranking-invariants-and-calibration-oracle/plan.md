@@ -252,7 +252,12 @@ The PRD's ranking invariants become relations over the full catalogue, on the fo
   - in `ranking.ts:220-222`, letting washed-out objects fall through into `scored` instead of the `washedOut` branch turns (e) red.
 - Full unit suite, lint and type check pass: `npm test`, `npx eslint . --ignore-pattern '.claude/**'`, `npx astro check`
 
-**Break-check log**: (filled in by `/10x-implement`.)
+**Break-check log** (2026-10-09, main session):
+
+- `parameters.ts` `LOG_PENALTY_MIN_RATING` = 2 → 2 of 12 red: the non-vacuity check and (a); restored.
+- `ranking.ts` bar on `rankScore` instead of `score.total` → 3 of 12 red: (b), (c) and (d); restored.
+- `ranking.ts:220` washed-out branch bypassed (`score === undefined`) → 2 of 12 red, both (e) full-Moon preconditions (the washed-out list is empty, so the relation holds vacuously); restored. Extra: washed-out objects pushed into **both** lists → (e) "never listed" red; restored.
+- Observed: 26 scenarios (4 calibration, 2 full-Moon, 20 generated from seed 20261009); 193 rating-2 entries hit cleared objects; washedOutCount 10 (10-26) and 19 (03-03); cleared counts 150 → 300 mm never shrink (e.g. 133 → 134); about 1.0 s.
 
 **Implementation Note**: Commit and push the phase, then continue.
 
@@ -454,17 +459,17 @@ Extend the visibility proof to what the user sees: every Session plan row of gen
 
 #### Automated
 
-- [x] 1.1 The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts`
-- [x] 1.2 Break checks (window widened in `bestWindow`; Bortle ≤ 4 threshold → −12 in `parameters.ts`), reverted and logged
-- [x] 1.3 Full unit suite, lint and type check pass
+- [x] 1.1 The suite passes: `npx vitest run src/lib/engine/visibility-invariants.test.ts` — b0e1cc9
+- [x] 1.2 Break checks (window widened in `bestWindow`; Bortle ≤ 4 threshold → −12 in `parameters.ts`), reverted and logged — b0e1cc9
+- [x] 1.3 Full unit suite, lint and type check pass — b0e1cc9
 
 ### Phase 2: Ranking invariants as relations (unit, Risk #4)
 
 #### Automated
 
-- [ ] 2.1 The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts`
-- [ ] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out branch bypassed), reverted and logged
-- [ ] 2.3 Full unit suite, lint and type check pass
+- [x] 2.1 The suite passes: `npx vitest run src/lib/engine/ranking-invariants.test.ts`
+- [x] 2.2 Break checks (`LOG_PENALTY_MIN_RATING` = 2; bar on `rankScore`; washed-out branch bypassed), reverted and logged
+- [x] 2.3 Full unit suite, lint and type check pass
 
 ### Phase 3: Independent top-5 oracle and calibration cleanup (unit, Risk #4)
 
