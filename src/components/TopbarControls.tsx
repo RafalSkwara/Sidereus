@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore, type ReactNode } from "react";
+import type { AccountPlan } from "@/lib/account-plan";
 import { getMessages } from "@/i18n";
 import { installState, promptInstall, subscribeInstallState } from "@/lib/offline/install";
 import {
@@ -17,6 +18,8 @@ interface TopbarControlsProps {
   locale: Locale;
   /** The signed-in user's email, or `null` when signed out (no account section, no sign-out). */
   email: string | null;
+  /** The signed-in account's plan (F-01): a full account's email is golden; `null` when signed out. */
+  accountPlan?: AccountPlan | null;
 }
 
 const SETTINGS_ID = "settings-panel";
@@ -120,7 +123,12 @@ function reloadInLocale(next: Locale) {
  * control never disagree. The server already rendered
  * the resolved theme on <html data-theme>; this island mirrors choices into the attribute and the cookies.
  */
-export default function TopbarControls({ theme: initialTheme, locale, email }: TopbarControlsProps) {
+export default function TopbarControls({
+  theme: initialTheme,
+  locale,
+  email,
+  accountPlan = null,
+}: TopbarControlsProps) {
   const m = getMessages(locale);
   const p = m.preferences;
   // S-06: a page served from the device was rendered with the theme of its day; the layout's head script has already
@@ -209,7 +217,13 @@ export default function TopbarControls({ theme: initialTheme, locale, email }: T
           {email && (
             <div className="border-border grid gap-0.5 border-b pb-3">
               <p className="text-faint text-xs">{m.nav.signedInAs}</p>
-              <p className="text-heading truncate text-sm">{email}</p>
+              {/* A full-plan account's email is golden: the only sign of the plan for now (F-01 addendum). */}
+              <p
+                className={cn("truncate text-sm", accountPlan === "full" ? "text-plan-full" : "text-heading")}
+                data-account-plan={accountPlan ?? undefined}
+              >
+                {email}
+              </p>
             </div>
           )}
 

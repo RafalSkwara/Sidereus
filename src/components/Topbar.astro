@@ -2,9 +2,12 @@
 import NavIcon from "@/components/NavIcon.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
+import { getAccountPlan } from "@/lib/account-plan";
 import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
 
 const { user, theme, locale } = Astro.locals;
+// The account plan line in the settings panel (F-01 addendum): one lazy query per page, signed in only.
+const accountPlan = user ? await getAccountPlan(Astro.locals) : null;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
 const links = NAV_ITEMS.map((item) => ({
@@ -80,6 +83,6 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
         {m.nav.signIn}
       </a>
     )}
-    <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} client:load />
+    <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} accountPlan={accountPlan} client:load />
   </div>
 </header>
