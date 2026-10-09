@@ -18,10 +18,11 @@ import { beforeAll, describe, expect, it } from "vitest";
  *
  * Resolving a config does not parse the file, so the whole tree stays cheap once the first config load is warm.
  * Blind spots (not a lint rule's job): `console` reached through an alias, `reportError`, thrown messages and
- * third-party request URLs; see context/foundation/test-plan.md §6.4. Known gap: client `<script>` blocks in
- * .astro files are not linted at all today (eslint-plugin-astro's virtual `X.astro/1.ts` fails the type-aware
- * parser and the plugin drops that error), although their config resolves to error here; a follow-up change
- * lints them (impl review F3).
+ * third-party request URLs; see context/foundation/test-plan.md §6.4.
+ *
+ * Config resolution is not proof that a rule runs: client `<script>` blocks in .astro files resolved to error here
+ * while no rule ran on them (eslint-plugin-astro's virtual `X.astro/N.ts` failed the type-aware parser and the
+ * plugin dropped the error; impl review F3). So the last case lints in-memory .astro samples end to end.
  */
 
 const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url));
@@ -44,6 +45,9 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
   },
   "src/lib/engine/determinism.test.ts": { count: 2, reason: "engine and ranking timings printed for CI" },
 };
+
+/** An existing .astro page whose path the in-memory samples borrow: a path that does not exist fails to parse. */
+const ASTRO_SAMPLE_PATH = "src/pages/offline.astro";
 
 /** Coordinate-handling modules that must be among the checked files (non-vacuity). */
 const KNOWN_COORDINATE_MODULES = ["src/lib/gear/store.ts", "src/lib/engine/index.ts", "src/i18n/messages/en.ts"];
@@ -160,7 +164,7 @@ describe("no-console guard", () => {
   it("checks the whole source tree", () => {
     expect(files.length).toBeGreaterThanOrEqual(300);
     for (const module of KNOWN_COORDINATE_MODULES) expect(files).toContain(module);
-    for (const file of [...IGNORED, ...Object.keys(ALLOWED_DISABLES)]) expect(files).toContain(file);
+    for (const file of [...IGNORED, ...Object.keys(ALLOWED_DISABLES), ASTRO_SAMPLE_PATH]) expect(files).toContain(file);
   });
 
   it("gives every source file no-console at error", async () => {
@@ -198,4 +202,21 @@ describe("no-console guard", () => {
     }
     expect(violations, "a new log needs an entry in ALLOWED_DISABLES with its reason").toEqual([]);
   });
+
+  it("reports no-console inside .astro client scripts, plain and is:inline, end to end", async () => {
+    const lint = async (script: string) => {
+      const [result] = await eslint.lintText(`<div></div>\n\n${script}\n`, {
+        filePath: join(REPO_ROOT, ASTRO_SAMPLE_PATH),
+      });
+      return result.messages
+        .filter((message) => message.ruleId === "no-console")
+        .map((message) => ({ severity: message.severity, line: message.line }));
+    };
+    expect(await lint("<script>\n  console.log(1);\n</script>"), "plain <script>").toEqual([{ severity: 2, line: 4 }]);
+    expect(await lint("<script is:inline>\n  console.log(1);\n</script>"), "<script is:inline>").toEqual([
+      { severity: 2, line: 4 },
+    ]);
+    // eslint-plugin-astro does not extract JSON scripts, so there is nothing to lint.
+    expect(await lint('<script type="application/ld+json">\n  {"a": 1}\n</script>'), "JSON script").toEqual([]);
+  }, 30_000);
 });

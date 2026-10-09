@@ -8,7 +8,7 @@
     "postbuild": "node scripts/build-sw.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "smoke": "node scripts/smoke.mjs",
@@ -83,7 +83,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,astro}": [
-      "eslint --fix"
+      "eslint --fix --max-warnings 0 --no-warn-ignored"
     ],
     "*.{json,css,md}": [
       "prettier --write"

@@ -531,17 +531,17 @@ After this change's PR has merged into `main`, register the hooks for sessions s
 
 #### Automated
 
-- [ ] 1.1 `npm test` passes, including the new guard case
-- [ ] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes
-- [ ] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored
-- [ ] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted
-- [ ] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted
-- [ ] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it
-- [ ] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees
+- [x] 1.1 `npm test` passes, including the new guard case
+- [x] 1.2 `npm run lint` passes with `--max-warnings 0`, and `npx astro check` passes
+- [x] 1.3 Break check: without the new config block, the guard's `.astro` case fails; restored
+- [x] 1.4 Break check: `console.log` in Notice.astro's script fails `npm run lint`; reverted
+- [x] 1.5 Break check: a warn-level finding in `tests/db` fails `npm run lint`; reverted
+- [x] 1.6 `--no-warn-ignored` lets the lint-staged form pass on `database.types.ts`, failing without it
+- [x] 1.7 `.claude/` gone from `git status`; `check-ignore -q` exits 1 for settings.json, 0 for worktrees
 
 #### Manual
 
-- [ ] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console`
+- [x] 1.8 The guard's failure output names the `.astro` sample and the missing `no-console`
 
 ### Phase 2: CI gates
 

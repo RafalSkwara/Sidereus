@@ -38,3 +38,9 @@ yarn-error.log*
 .env.production
 .dev.vars
 .wrangler/
+
+# Claude Code: worktrees, local settings and skill copies stay local (and out of `eslint .`, which reads this
+# file); the project's agent hooks and their registration are committed (test rollout Phase 5).
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
