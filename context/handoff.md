@@ -1,4 +1,22 @@
-# Handoff — 2026-10-09 evening (test rollout Phase 3 merged and archived; Phase 4 research partial)
+# Handoff — 2026-10-09 night (test rollout Phase 4 merged and archived)
+
+What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context.
+
+## Update 2026-10-09 night (supersedes every next step below)
+
+- **Test rollout Phase 4** ("Access and entitlement boundary", Risks #5 and #6) is **done**: merged as **#147** (2026-10-09 19:41 UTC) and archived to `context/archive/2026-10-09-testing-access-and-entitlement-boundary/`. The archive PR (branch `chore/archive-testing-access-and-entitlement-boundary`) also points test-plan §3 Phase 4 at the archive. **It awaits the owner's merge.**
+- What landed:
+  - `tests/db/structure.test.ts` reads the catalogs over `DB_URL` and fails on any unclassified `public` table, a per-user table without RLS or its four policies, a server-owned table with more than `authenticated` SELECT (column grants included), a view without `security_invoker`, a materialized view or foreign table, and a definer, `search_path`-less or anon/PUBLIC-executable function.
+  - `tests/db/tables.ts` holds `TABLES` and `SERVER_OWNED`; isolation covers anon writes and pins cross-user inserts and hand-overs to `42501`.
+  - `no-console` is an error in all of `src`; `src/lib/no-console-guard.test.ts` proves it per file and allowlists disables by file, count and reason.
+  - Smoke pins the invalid-latitude redirects exactly. Test-plan §6.4 is the recipe for the next table, RPC or full-plan route (S-03's first route brings the HTTP refusal test).
+- **Open follow-up (impl review F3):** client `<script>` blocks in `.astro` files are not linted at all: the type-aware parser fails on the plugin's virtual file and the error is dropped. Recorded in CLAUDE.md, test-plan §6.4 and the guard header. The fix is planned in the archived `follow-ups/review-fixes.md`; open it as its own change (or fold it into test rollout Phase 5).
+- **Next:** test rollout Phase 5 ("Quality-gates wiring") via `/10x-test-plan`, or the M-3 slices; S-05 work runs in parallel in `.claude/worktrees/observing-progress`.
+- Local smoke runs need `.env`/`.dev.vars` pointed at local Supabase. Ask the owner (or the orchestrator) before switching them; they point at hosted.
+
+---
+
+## Earlier: Handoff — 2026-10-09 evening (test rollout Phase 3 merged and archived; Phase 4 research partial)
 
 What Sidereus looks like now, and exactly what the next session (possibly the **other Claude account**) should do. Read this first, then `context/changes/testing-access-and-entitlement-boundary/research.md`. To save tokens, read only what each step names.
 
