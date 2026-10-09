@@ -476,8 +476,8 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Manual
 
-- [x] 2.5 Screenshots of `/tonight` (tile), `/tonight/targets` (card with tooltip open, rest list with legend), `/tonight/planets` and `/tonight/moon` in EN/PL × dark/light/red at 390 px and desktop: the mark reads next to the name, the tooltip stays on screen at 320-390 px, red mode tells the mark apart
-- [x] 2.6 The tooltip opens on mouse hover, on keyboard Tab focus and on a touch tap (Playwright touch emulation), and closes on Esc
+- [x] 2.5 Screenshots of `/tonight` (tile), `/tonight/targets` (card with tooltip open, rest list with legend), `/tonight/planets` and `/tonight/moon` in EN/PL × dark/light/red at 390 px and desktop: the mark reads next to the name, the tooltip stays on screen at 320-390 px, red mode tells the mark apart — 42cb867
+- [x] 2.6 The tooltip opens on mouse hover, on keyboard Tab focus and on a touch tap (Playwright touch emulation), and closes on Esc — 42cb867
 
 #### Automated (added by plan review)
 
@@ -493,5 +493,5 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Manual
 
-- [x] 3.4 Screenshots of `/log/progress` (empty log and a log with several seen objects) and `/log`'s header in EN/PL × dark/light/red at 390 px and desktop: grid chips legible, seen chips distinguishable in red mode, the Caldwell note present, at most one primary action
-- [x] 3.5 The `/design` specimens for `NotSeenMark`, `ChecklistGrid` and `SeenList` render in all themes
+- [x] 3.4 Screenshots of `/log/progress` (empty log and a log with several seen objects) and `/log`'s header in EN/PL × dark/light/red at 390 px and desktop: grid chips legible, seen chips distinguishable in red mode, the Caldwell note present, at most one primary action — 42cb867
+- [x] 3.5 The `/design` specimens for `NotSeenMark`, `ChecklistGrid` and `SeenList` render in all themes — 42cb867
