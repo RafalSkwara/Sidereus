@@ -42,7 +42,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 
 | ID   | Change ID               | Outcome (user can …)                                                                                     | Prerequisites | PRD refs               | Status   |
 | ---- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- | -------- |
-| F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | in-progress |
+| F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | done |
 | S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done     |
 | S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | done        |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
@@ -88,7 +88,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Minimal by design: the plan, its server-side check and the command only. The "needs the full plan" state each paid feature shows lands with S-03, the first slice that has a paid feature to show; no checkout (PRD Non-Goals).
-- **Status:** in-progress
+- **Status:** done
 
 ## Slices
 
@@ -253,3 +253,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **S-01: user can use every view comfortably on a phone, the dashboard and Tonight above all: each leads with its answer, nothing scrolls sideways, and the dashboard shows the sky verdict and its first tiles on the first screen.** — Archived 2026-10-07 → `context/archive/2026-10-07-ui-mobile-pass/`. Lesson: —.
 - **S-02: user can see their own list of look-and-feel fixes applied across the app.** — Archived 2026-10-09 → `context/archive/2026-10-08-ui-user-adjustments/`. Lesson: —.
+- **F-01: (foundation) every account carries a free or full plan that pages and routes can read and the server enforces, and the operator can create a full account, or switch one to full and back, with one command.** — Archived 2026-10-09 → `context/archive/2026-10-09-account-plans/`. Lesson: —.

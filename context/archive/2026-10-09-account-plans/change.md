@@ -1,10 +1,10 @@
 ---
 change_id: account-plans
 title: Account plans (free or full), enforced on the server, with an operator command
-status: impl_reviewed
+status: archived
 created: 2026-10-09
 updated: 2026-10-09
-archived_at: null
+archived_at: 2026-10-09T16:29:21Z
 ---
 
 ## Notes
