@@ -357,16 +357,16 @@ No schema migration. Scratch migrations for the break checks are deleted afterwa
 
 #### Automated
 
-- [ ] 1.1 `npm run test:db` passes against local Supabase, including `structure.test.ts` and the new isolation cases
-- [ ] 1.2 Break check: unlisted or RLS-off table fails `structure.test.ts` with the table's name; reverted
-- [ ] 1.3 Break check: UPDATE policy without `with check` fails the structural suite; reverted
-- [ ] 1.4 Break check: `security definer` function fails the function check; reverted
-- [ ] 1.5 `npm run db:types` unchanged, `npm run lint` and `npx astro check` pass
+- [x] 1.1 `npm run test:db` passes against local Supabase, including `structure.test.ts` and the new isolation cases
+- [x] 1.2 Break check: unlisted or RLS-off table fails `structure.test.ts` with the table's name; reverted
+- [x] 1.3 Break check: UPDATE policy without `with check` fails the structural suite; reverted
+- [x] 1.4 Break check: `security definer` function fails the function check; reverted
+- [x] 1.5 `npm run db:types` unchanged, `npm run lint` and `npx astro check` pass
 - [ ] 1.6 CI's `smoke` job passes on the PR with `DB_URL` wired
 
 #### Manual
 
-- [ ] 1.7 A break check's failure output names the table and the property clearly
+- [x] 1.7 A break check's failure output names the table and the property clearly
 
 ### Phase 2: Coordinate privacy guard
 
