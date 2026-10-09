@@ -461,9 +461,9 @@ None. No schema change, and nothing to backfill. The rename of `listForRanking` 
 
 #### Automated
 
-- [ ] 1.1 `src/lib/progress/progress.test.ts` and `src/lib/engine/log.test.ts` pass under `npm test`, including a rated-1-2-never-ticks case
-- [ ] 1.2 `tests/db/observations.test.ts` passes under `npm run test:db` against local Supabase, including the 1,100-entry paging case
-- [ ] 1.3 `npx astro check`, `npm run lint` and the full `npm test` pass
+- [x] 1.1 `src/lib/progress/progress.test.ts` and `src/lib/engine/log.test.ts` pass under `npm test`, including a rated-1-2-never-ticks case
+- [x] 1.2 `tests/db/observations.test.ts` passes under `npm run test:db` against local Supabase, including the 1,100-entry paging case
+- [x] 1.3 `npx astro check`, `npm run lint` and the full `npm test` pass
 
 ### Phase 2: "Not seen yet" on Tonight
 

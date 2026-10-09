@@ -34,7 +34,7 @@ vi.mock("@/lib/gear/store", async (importOriginal) => {
 
 vi.mock("@/lib/observations/store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/observations/store")>();
-  return { ...actual, observationStore: { listForRanking: mocks.listLog } };
+  return { ...actual, observationStore: { listSeenEntries: mocks.listLog } };
 });
 
 // The real build unless a case says otherwise.

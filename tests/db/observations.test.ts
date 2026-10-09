@@ -310,7 +310,7 @@ describe("observationStore", () => {
     // The rating-2 entry can never count as seen, so it is not fetched. Newest night first; within a night the
     // order is by target key in the database's collation (en_US and C disagree on "jupiter" vs "M13"), which is
     // deterministic per database, so it is compared as a set here.
-    const entries = await observationStore.listForRanking(fresh.client);
+    const entries = await observationStore.listSeenEntries(fresh.client);
     expect(entries.map((entry) => entry.night)).toEqual(["2026-09-25", "2026-09-25", "2026-09-25", "2026-09-22"]);
     expect(entries).toEqual(
       expect.arrayContaining([
@@ -483,14 +483,52 @@ describe("observationStore edits and deletions (S-07)", () => {
     const gear = await addGear(user.client);
     const m13 = await created(user.client, gear, "M13", 4, "2026-09-24");
     const m31 = await created(user.client, gear, "M31", 5, "2026-09-25");
-    expect((await observationStore.listForRanking(user.client)).map((e) => e.target)).toEqual(["M31", "M13"]);
+    expect((await observationStore.listSeenEntries(user.client)).map((e) => e.target)).toEqual(["M31", "M13"]);
 
     expect(
       await observationStore.update(user.client, m13, { target: "M13", night: "2026-09-24", rating: 2, ...gear }, NOW),
     ).toEqual({ ok: true });
     expect(await observationStore.remove(user.client, m31)).toEqual({ ok: true, target: "M31" });
-    expect(await observationStore.listForRanking(user.client)).toEqual([]);
+    expect(await observationStore.listSeenEntries(user.client)).toEqual([]);
     expect(await observationStore.get(user.client, m31)).toBeNull();
+  });
+
+  it("reads every seen entry past one page: nothing above PostgREST's row cap is lost, ratings 1-2 stay out", async () => {
+    const user = await signUp("seen-pages");
+    const gear = await addGear(user.client);
+    // M1..M100 on 11 newer nights (1,100 rows, more than one page of 1,000), then M101..M110 only on one older
+    // night: a single capped read, newest night first, would return the first 1,000 rows and lose all ten.
+    const newerNights = Array.from({ length: 11 }, (_, i) => `2026-08-${String(i + 1).padStart(2, "0")}`);
+    const rows = [
+      ...newerNights.flatMap((night) =>
+        Array.from({ length: 100 }, (_, i) => ({ ...entry(gear), target: `M${i + 1}`, night, rating: 3 })),
+      ),
+      ...Array.from({ length: 10 }, (_, i) => ({
+        ...entry(gear),
+        target: `M${i + 101}`,
+        night: "2026-07-01",
+        rating: 4,
+      })),
+      // Never counted as seen, so never fetched.
+      { ...entry(gear), target: "M1", night: "2026-06-01", rating: 2 },
+      { ...entry(gear), target: "M2", night: "2026-06-02", rating: 1 },
+    ];
+    expect(rows).toHaveLength(1112);
+    for (let from = 0; from < rows.length; from += 500) {
+      expect((await user.client.from("observations").insert(rows.slice(from, from + 500))).error).toBeNull();
+    }
+
+    const entries = await observationStore.listSeenEntries(user.client);
+    expect(entries).toHaveLength(1110);
+    expect(entries.every((e) => e.rating >= 3)).toBe(true);
+    expect(
+      entries
+        .filter((e) => e.night === "2026-07-01")
+        .map((e) => e.target)
+        .sort(),
+    ).toEqual(Array.from({ length: 10 }, (_, i) => `M${i + 101}`).sort());
+    // Every (target, night) pair arrives exactly once: no row skipped or repeated across the page edge.
+    expect(new Set(entries.map((e) => `${e.target}|${e.night}`)).size).toBe(1110);
   });
 
   it("lists the log newest night first, newest entry first within a night, 50 per page", async () => {

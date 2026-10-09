@@ -205,7 +205,9 @@ describe("rankPlanets (Warsaw 2026-10-10)", () => {
     const logged = rank({ seen });
     expect(keysOf(logged)).toEqual(keysOf(unlogged));
     for (const entry of logged) {
-      expect(entry.seen).toEqual(entry.key === "jupiter" ? { count: 2, lastNight: "2026-10-01" } : null);
+      expect(entry.seen).toEqual(
+        entry.key === "jupiter" ? { count: 2, firstNight: "2026-09-12", lastNight: "2026-10-01" } : null,
+      );
     }
   });
 

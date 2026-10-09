@@ -112,7 +112,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
       load(() => siteStore.list(supabase), SITES_FAILED),
       load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
       load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
-      load(() => observationStore.listForRanking(supabase), LOG_FAILED),
+      load(() => observationStore.listSeenEntries(supabase), LOG_FAILED),
       // The question is optional, so a failed read only hides it: its error is dropped.
       input.withSkyChecks
         ? load(() => skyCheckStore.openRecent(supabase, { sinceNight: openSkyChecksSince(now) }), LOG_FAILED)

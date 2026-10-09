@@ -278,7 +278,7 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
   const bright = synthetic(1, 89.9);
   const close = synthetic(2, 89.9, { vMag: 5 });
   const far = synthetic(3, 89.9, { vMag: 11 });
-  const seenM1 = new Map([["M1", { count: 2, lastNight: "2026-09-12" }]]);
+  const seenM1 = new Map([["M1", { count: 2, firstNight: "2026-09-01", lastNight: "2026-09-12" }]]);
 
   it("moves a seen object below an unseen one that scores within LOG_PENALTY of it", () => {
     const unlogged = rank([bright, close]);
@@ -309,14 +309,19 @@ describe("rankObjects with a log (PRD FR-018, Warsaw 2026-10-10)", () => {
     expect(unlogged.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
     expect(unlogged.score.total - LOG_PENALTY).toBeLessThan(MIN_OBJECT_SCORE);
 
-    const logged = rank([borderline], { seen: new Map([["M40", { count: 1, lastNight: "2026-09-12" }]]) });
+    const logged = rank([borderline], {
+      seen: new Map([["M40", { count: 1, firstNight: "2026-09-12", lastNight: "2026-09-12" }]]),
+    });
     expect(logged.clearedCount).toBe(1);
     expect(logged.entries.map((e) => e.object.messier)).toEqual([40]);
   });
 
   it("carries the seen summary on a seen entry and null on the others", () => {
     const logged = rank([bright, far], { seen: seenM1 });
-    expect(logged.entries.map((e) => e.seen)).toEqual([{ count: 2, lastNight: "2026-09-12" }, null]);
+    expect(logged.entries.map((e) => e.seen)).toEqual([
+      { count: 2, firstNight: "2026-09-01", lastNight: "2026-09-12" },
+      null,
+    ]);
     expect(logged.entries[1].rankScore).toBeCloseTo(logged.entries[1].score.total + MESSIER_RANK_BONUS, 12);
   });
 
