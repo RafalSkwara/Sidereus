@@ -22,20 +22,22 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 | Decision | Choice | Why (1 sentence) | Source |
 | --- | --- | --- | --- |
 | Milestone set | 11: first Moon, first planet, all planets, first galaxy, first globular, first nebula (6 nebula types), 10/25/50/110 Messier, all 61 Caldwell | The PRD candidate list; "Moon's terminator" isn't derivable, so it becomes "first Moon". | Plan (default, **pending owner**) |
-| Lifetime | Derived from the log like S-05's counts: deleting the reaching entry un-reaches it, and reaching it again celebrates again | Consistent with US-06 "deleting or re-rating updates…"; needs no table. | Plan (default, **pending owner**) |
+| Lifetime | Derived from the log like S-05's counts: deleting the reaching entry un-reaches it, and reaching it again celebrates again | No table and one rule with S-05. **This departs from US-06's "shown once… stays listed"** (review F1). | Plan (default, **pending owner**) |
 | Celebration | The existing toast pattern: Award icon, names, link to progress | One notice pipeline (cleared on show, never stored offline). | Plan (default, **pending owner**) |
 | Progress band | First on the page; all 11 shown; not-yet rows muted with "x / N" | It shows what's next, matching the Firsts band's rows. | Plan (default, **pending owner**) |
 | What counts as "reached by this save" | `newlyReached(before, after)` over `milestonesOf(observingProgress(listSeenEntries))`, read around the write | One rule end to end; a 1-2 rating makes an empty diff by construction. | Plan (delegated) |
 | 1-2 guard | Also a short-circuit: no milestone reads when the rating is < 3 | An explicit, testable guard that saves two reads. | Plan (delegated) |
 | Failure handling | A failed milestone read skips the celebration and never fails the save | The save is what matters, and the celebration is extra. | Plan (delegated) |
 | Transport | `milestone` param repeated per key, from the fixed set only; added to `TOAST_PARAMS` and `NOTICE_PARAMS` | Shows once (cleared via `replaceState`), never replayed from offline copies, never carries a value. | Plan (delegated), research |
-| Render site | `MilestoneToast` in `Layout.astro` | One place for every page, the Tonight shells included. | Plan (delegated) |
+| Render site | `MilestoneToast` in `GearShell`, signed in only | The shell of every save-return page; never on signed-out pages or for a crafted link. | Plan (delegated), review F3 |
+| Read failure trace | One fixed line plus `error.name`, an allowlisted `no-console` disable | The loss is permanent, so it must leave a trace without values (the `build.ts` precedent). | Plan (delegated), review F4 |
+| One toast or two | Two stacked (save + milestone), never overlapping at first paint | The reviewer's recommendation; the user sees both outcomes. | Plan (default, **pending owner**, review F5) |
 | Interview | The agent answered the plan skill's questions with its own recommendations | The owner is away; the run's rules say so. | Plan (delegated) |
 
 ## Scope
 
 **In scope:**
-- `src/lib/progress/milestones.ts` and `celebrate.ts`, both pure and tested;
+- `src/lib/progress/milestones.ts` (pure) and `src/lib/observations/celebrate.ts` (the I/O helper with a `read` seam), both tested;
 - both save routes, plus `withMilestones` in `redirect.ts`;
 - the param in `TOAST_PARAMS` and `NOTICE_PARAMS`;
 - `MilestoneToast` in the layout and `MilestoneList` on `/log/progress`;
@@ -54,7 +56,7 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 1. A save route checks the rating.
 2. If it is ≥ 3, the route reads the seen entries, writes, and reads them again. Each read goes through `observingProgress` and then `milestonesOf`.
 3. `newlyReached` diffs the two results; the route appends `&milestone=<key>…` to its usual redirect.
-4. `Layout` validates the keys and renders `MilestoneToast`. `ToastRegion` clears the param on show, and the service worker never stores a URL that carries it.
+4. `GearShell` (signed in only) validates the keys and renders `MilestoneToast` under the save's own toast, stacked from first paint. `ToastRegion` clears the param on show, and the service worker never stores a URL that carries it.
 
 `/log/progress` reuses the `progress` it already computes and adds `milestonesOf(progress)` as its first band.
 
@@ -76,7 +78,9 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 
 - If the owner wants milestones to persist after deletion, Phase 1 gains a table, migration, RLS, a `TABLES` entry and a db test. This is a structural change to the plan.
 - Two near-simultaneous saves could both celebrate the same milestone. This is accepted as rare.
-- A save from a page that doesn't render `Layout` (none today) would lose the toast.
+- A save that returns to a page not using `GearShell` (none today) would lose the toast.
+- The derived lifetime departs from US-06's "stays listed" (review F1, owner decision 2). A stored table would add a phase with a migration and db tests.
+- A keyboard user may reach the toast's link only after its 10 s timer; `/log/progress` is the lasting record.
 
 ## Success Criteria (Summary)
 

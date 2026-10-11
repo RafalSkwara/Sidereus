@@ -20,7 +20,7 @@ Evidence: `context/changes/observing-milestones/research.md`.
   - Edit returns to `/log?updated=<key>` (`logNotice`, `src/lib/observations/redirect.ts:83`).
   - Delete can only lose milestones.
 - **Notices.** They travel as fixed query params:
-  - Tonight shells read `?logged` (`src/pages/tonight/targets.astro:23-31`, `moon.astro`, `nights.astro`).
+  - Tonight shells read `?logged`: the dashboard `src/pages/tonight.astro:22`, plus `src/pages/tonight/targets.astro:23-31`, `planets.astro:23`, `moon.astro` and `nights.astro` (plan review F9).
   - `/log` reads `readLogNotice`.
   - Toasts clear only `TOAST_PARAMS` (`src/lib/toasts.ts`).
   - Tonight URLs that carry any of `NOTICE_PARAMS` (`src/lib/offline/copies.ts:35`) are never stored offline.
@@ -70,13 +70,18 @@ These are defaults chosen by the agent because the owner owns them. The plan is 
    - „Mgławica” obejmuje typy: mgławica, emisyjna, refleksyjna, planetarna, pozostałość po supernowej oraz gromada z mgławicą.
    - Czy ten zestaw jest OK? Dodać np. pierwszą gromadę otwartą albo 10 / 25 Caldwella?
    - Zmiana dotyczy tylko `MILESTONES` w `src/lib/progress/milestones.ts` i tekstów.
-2. **Usunięcie lub obniżenie oceny wpisu.**
-   - Domyślnie kamień milowy jest wyliczany z dziennika tak samo jak liczniki S-05, więc znika, gdy znika wpis, który go osiągnął.
-   - Ponowne osiągnięcie świętujemy ponownie.
-   - Czy wolisz, żeby osiągnięty kamień milowy zostawał na zawsze? To wymaga nowej tabeli i migracji, czyli osobnej fazy.
-3. **Wygląd świętowania.**
-   - Domyślnie istniejący toast (10 s, ikona Award, „Kamień milowy osiągnięty: …”, link „Zobacz postępy”) na stronie, na którą wraca zapis.
+2. **Usunięcie lub obniżenie oceny wpisu (plan review F1).**
+   - Domyślnie kamień milowy jest wyliczany z dziennika tak samo jak liczniki S-05.
+   - **To odchodzi od US-06:** kryterium mówi, że kamień milowy jest „pokazany raz, przy zapisie wpisu, który go osiąga, i zostaje na liście na stronie postępów”.
+   - Przy wyliczaniu kamień milowy znika z listy, gdy usuniesz wpis, który go osiągnął, albo obniżysz jego ocenę do 1-2. Ponowne osiągnięcie świętujemy wtedy drugi raz.
+   - Wybrałem to, bo nie wymaga tabeli, trzyma jedną regułę z S-05 i ogranicza zakres.
+   - Alternatywa zgodna z US-06: tabela osiągniętych kamieni milowych (`observing_milestones`, RLS, wpis w `TABLES`). To nowa faza z migracją i testami bazy (`test:db`), plus zasada uzupełnienia dla istniejących dzienników. Wtedy każdy kamień milowy świętujemy dokładnie raz i zostaje na zawsze.
+   - Którą wersję wybierasz?
+3. **Wygląd świętowania (plan review F5).**
+   - Domyślnie istniejący toast (10 s, ikona Award, „Osiągnięto kamień milowy: …”, link „Zobacz postępy”) na stronie, na którą wraca zapis.
    - Czy to wystarczy, czy chcesz coś większego (np. osobna sekcja na stronie)?
+   - Zapis, który osiąga kamień milowy, pokazuje też zwykły toast („Zapisano …”). Czy pokazywać dwa toasty (zapisano + kamień milowy), czy jeden połączony?
+   - Domyślnie i zgodnie z rekomendacją recenzenta: dwa, ułożone jeden nad drugim, nigdy nie nachodzące na siebie, także przy pierwszym wyrenderowaniu strony.
 4. **Sekcja „Kamienie milowe” na `/log/progress`.**
    - Domyślnie jest pierwszą sekcją strony i pokazuje wszystkie 11.
    - Osiągnięte mają znacznik i datę nocy; nieosiągnięte są wyciszone, a liczbowe pokazują postęp („12 / 25”).
@@ -107,11 +112,11 @@ The guard "never for an entry rated 1-2" is enforced twice, independently:
 
 **Decisions delegated to the agent** (non-UI; recorded in the brief):
 
-- The pure model lives in `src/lib/progress/milestones.ts`.
+- The pure model lives in `src/lib/progress/milestones.ts`. The save-side helper, which does I/O, lives in `src/lib/observations/celebrate.ts` beside `store.ts` and `redirect.ts` (plan review F8).
 - The before/after reads in the routes reuse `listSeenEntries`, so one rule covers everything.
 - A failed milestone read never fails the save: the celebration is simply skipped.
 - The param is `milestone`, repeated once per key, with keys from the fixed set only.
-- The toast is rendered once in `Layout.astro`, for every page.
+- The toast is rendered in `GearShell`, signed-in only: the shell every save-return page uses (plan review F3).
 - Three phases.
 - The interactive planning questions were answered by the agent, as the run's rules require (the owner is away).
 
@@ -124,14 +129,19 @@ The guard "never for an entry rated 1-2" is enforced twice, independently:
   4. On success, and only if `before` succeeded, read `after`.
   5. `reached = newlyReached(milestonesOf(observingProgress(before)), milestonesOf(observingProgress(after)))`.
 
-  Either read failing means no celebration, but the redirect still confirms the save. No `console` is used: an error is swallowed only into "no celebration", which the plan accepts because the save itself is confirmed.
+  Either read failing means no celebration, but the redirect still confirms the save. The failure is not hidden (plan review F4). The helper's catch logs one fixed line plus the error's name only, following `src/lib/tonight/build.ts:1227-1231`: `console.error("milestones: the seen read failed", error.name, cause name if any)`. The message is never logged, so no coordinates or values. It takes an `eslint-disable-next-line no-console -- <reason>` and an entry in `ALLOWED_DISABLES` (`src/lib/no-console-guard.test.ts`).
 - **The param never carries a value.**
   - `milestone` values are keys from `MILESTONES`, and the readers validate them against the set.
   - The redirect appends them to the URL the route already builds: `?logged=M31&milestone=first-galaxy&milestone=messier-10`. Order follows `MILESTONES`.
 - **"Once".**
   - The toast lists `milestone` among its params, so `ToastRegion` clears it with `replaceState` when it adopts the toast. A reload doesn't replay it.
   - `milestone` joins `NOTICE_PARAMS`, so the service worker never stores a Tonight copy carrying it.
-- **Where the toast renders.** `Layout.astro` reads `Astro.url.searchParams.getAll("milestone")` and renders one `MilestoneToast` when any valid key is present. Every page gets it, the Tonight shells included: the shell is the page, and islands don't render `Layout`.
+- **Where the toast renders** (plan review F3). `GearShell.astro` reads `Astro.url.searchParams.getAll("milestone")` and renders one `MilestoneToast` only when `Astro.locals.user` is set and at least one key passes `isMilestoneKey`. Every page a save returns to (`/log`, the Tonight dashboard and focused pages) uses `GearShell`. The signed-out landing, auth pages, `/offline` and `/design` never show it, so a crafted link can't celebrate for a visitor. A future save returning to a non-`GearShell` page must render it itself.
+- **Two toasts, never overlapping** (default for owner decision 3, plan review F5).
+  - A milestone save also shows its ordinary toast (`saved`/`updated` on `/log`, `logged` on Tonight).
+  - Server-rendered toasts are each `position: fixed` at the same spot until `ToastRegion` adopts them, so the milestone toast must not overlap at first paint. `ToastRegion` and `Notice` get a small change so that toasts rendered by the server stack in one fixed wrapper from first paint, in DOM order. `MilestoneToast` renders after the save's own notice, so the milestone sits under it once adopted.
+  - The island's `logged` toast on Tonight still arrives later. The region stacks it, and the two timers run independently.
+  - Keyboard: the region comes last in the DOM, so a keyboard user may reach the toast's link only after its 10 s timer has closed it. This is accepted: `/log/progress` is the lasting record.
 
 ## Phase 1: The milestone model
 
@@ -192,15 +202,18 @@ Compute what a save reaches in both save routes, carry it to the returning page 
 
 #### 1. Routes
 
-**Files**: `src/pages/api/log/index.ts`, `src/pages/api/log/[id].ts`, `src/lib/observations/redirect.ts` (+ tests)
+**Files**: `src/pages/api/log/index.ts`, `src/pages/api/log/[id].ts`, `src/lib/observations/redirect.ts`, `src/lib/observations/celebrate.ts` (new), `src/lib/no-console-guard.test.ts` (+ tests)
 
 **Intent**: Celebrate exactly what this save reached, and only for a rating that can count.
 
 **Contract**:
-- A shared helper, `reachedBySave(client, rating, write)`, in `src/lib/progress/celebrate.ts` (new). It follows the order in Critical Implementation Details: skip when `rating < LOG_PENALTY_MIN_RATING`; read before; write; read after; diff. It returns `{ result, reached: MilestoneKey[] }`. A failed read yields `reached: []`; a failed write returns the write's failure unchanged.
+- A shared helper, `reachedBySave({ read, rating, write })`, in `src/lib/observations/celebrate.ts` (new; it does I/O, so not in the pure `src/lib/progress/`, plan review F8).
+  - `read: () => Promise<LogEntry[]>` is the seam; the routes pass `() => observationStore.listSeenEntries(supabase)`.
+  - It follows the order in Critical Implementation Details: skip when `rating < LOG_PENALTY_MIN_RATING`; read before; write; read after; diff.
+  - It returns `{ result, reached: MilestoneKey[] }`. A failed read yields `reached: []` and logs the fixed line (F4). A failed write returns the write's failure unchanged.
 - `withMilestones(url, keys)` in `redirect.ts` appends one `milestone=<key>` per key.
 - Both routes use the helper and wrap their existing success redirect in `withMilestones`. Error redirects are unchanged.
-- Tests (`src/lib/progress/celebrate.test.ts`, with a fake store):
+- Tests (`src/lib/observations/celebrate.test.ts`, with a fake `read` and `write`, no `vi.mock`):
   - a rating of 2 makes no read;
   - a failed before-read still writes and celebrates nothing;
   - a failed write celebrates nothing;
@@ -220,18 +233,22 @@ Compute what a save reaches in both save routes, carry it to the returning page 
 
 #### 3. The toast
 
-**Files**: `src/components/progress/MilestoneToast.astro` (new), `src/layouts/Layout.astro`, `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts`
+**Files**: `src/components/progress/MilestoneToast.astro` (new), `src/components/ui/Notice.astro`, `src/components/ToastRegion.astro`, `src/components/gear/GearShell.astro`, `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts`
 
 **Intent**: One celebration markup for every page (pending owner decision 3).
 
 **Contract**:
-- `MilestoneToast` takes `keys: MilestoneKey[]`. It renders a success `Notice` with `toast` and `param="milestone"`, a lucide `Award` icon (`aria-hidden`) and `progress.milestones.reached` with the milestone names joined in locale order (`Intl.ListFormat`). Below them is an `action` link `progress.milestones.see` to `/log/progress`.
-- `Layout.astro` renders it when `Astro.url.searchParams.getAll("milestone")` holds valid keys (`isMilestoneKey`). Unknown values are ignored.
+- `Notice` gains an optional `icon` prop, defaulting to the tone's icon (success = `CircleCheck`, `Notice.astro:89`), so a milestone shows `Award` instead of two icons (plan review F2).
+- `MilestoneToast` takes `keys: MilestoneKey[]` and an optional `specimen` passed through to `Notice`, for `/design`. It renders a success `Notice` with `toast`, `param="milestone"` and `icon={Award}` (`aria-hidden`).
+  - The text is `progress.milestones.reached`, a plural message (`plural(locale, n, …)`; PL impersonal: „Osiągnięto kamień milowy: …” / „Osiągnięto kamienie milowe: …”). It names the milestones, joined with the existing `createFormatter(locale).listOf` (`format.ts:703`), not a new `Intl.ListFormat` (F9).
+  - Below them is an `action` link `progress.milestones.see` to `/log/progress`.
+- `GearShell.astro` renders it after the page's own notice, signed in only, with keys validated by `isMilestoneKey` (F3). Unknown values are ignored.
+- `ToastRegion` and `Notice`: server-rendered toasts stack in one fixed wrapper from first paint, so two never overlap before adoption (F5 default).
 - Copy:
   - `progress.milestones.name.<key>` for all 11 milestones;
   - `progress.milestones.{reached, see}`.
   - EN and PL; PL is gender-neutral where it refers to objects.
-- `/design` gets a `MilestoneToast` specimen (one milestone, three milestones) in the 7-state matrix, with N/A reasons.
+- `/design` gets a `MilestoneToast` specimen (one milestone, three milestones, via `specimen`) and the `Notice` `icon` variant, in the 7-state matrix, with N/A reasons.
 
 #### 4. e2e
 
@@ -239,26 +256,26 @@ Compute what a save reaches in both save routes, carry it to the returning page 
 
 **Intent**: Prove "once, at save, never for 1-2" in the browser.
 
-**Contract** (from a fresh Madrid user on the all-clear fixture):
-1. `/log/new?object=M31&from=log` rated 2 → `/log` shows the saved toast and no milestone toast.
+**Contract**: one test, titled "celebrates a milestone once, at save, and lists it on the progress page" (the celebration half here, the page half added in Phase 3 to the same test). It runs from a fresh Madrid user on the all-clear fixture, so nothing depends on test order (plan review F6):
+1. `/log/new?object=M31&from=log` rated 2, night left at its default → `/log` shows the saved toast and no milestone toast.
 2. Editing that entry to 4 → `/log` shows one milestone toast naming exactly the first galaxy, since one Messier object reaches no count milestone.
 3. Reloading → no milestone toast, and the URL has no `milestone`.
-4. Logging `jupiter` rated 3 from the Planets page (`from=planets`) → `/tonight/planets` shows the toast naming the first planet.
-5. Logging M31 again rated 5 on another night → no milestone toast (already reached).
+4. `/log/new?object=jupiter&from=planets` rated 3. Navigating straight to the form doesn't depend on Jupiter being up tonight → `/tonight/planets` shows the toast naming the first planet.
+5. Logging M31 again rated 5 with the night pinned to `madridDateDaysAgo(3)` → no milestone toast (already reached). Because that night is now M31's earliest rated ≥ 3 night, the page half asserts `first-galaxy`'s reached night is `madridDateDaysAgo(3)`, the night the rule derives, not the edit's night.
 
-Expected copy comes from the catalogue (`en.progress.milestones.*`).
+Milestone toasts are located by `[data-toast-param="milestone"]` (or by text), never by the bare `[data-toast-region] [data-toast]`, which also matches the save's own toast (F5). Expected copy comes from the catalogue (`en.progress.milestones.*`).
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- `npx vitest run src/lib/progress/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/toasts.test.ts` passes
-- `tests/e2e/observing-milestones.spec.ts` celebration cases pass against a local preview (see "Running the checks")
+- `npx vitest run src/lib/observations/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/toasts.test.ts src/lib/no-console-guard.test.ts` passes
+- `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts -g "celebrates a milestone once"` passes (preview on 4333 and fixture on 4400 already running, `nvm use` prefix; see "Running the checks")
 - `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
 
 #### Manual Verification:
 
-- Screenshots of the milestone toast on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, the link reachable, red mode legible, nothing hidden behind the TabBar
+- Screenshots of the milestone toast on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, the link reachable, red mode legible, nothing hidden behind the TabBar; with two toasts stacked (never overlapping, also at first paint) and PL at 390 px
 
 **Implementation Note**: Commit on green without asking. Manual checks are deferred to the end and verified by the agent with screenshot evidence where possible.
 
@@ -280,7 +297,7 @@ The "Milestones" band on `/log/progress`, listing every milestone with its reach
 
 **Contract**:
 - The page computes `milestonesOf(progress)` from the `progress` it already builds; no extra read.
-- `MilestoneList` renders a `Band` (`progress.milestones.title`) placed first on the page, holding a `divide-y` list in `MILESTONES` order:
+- `MilestoneList` renders a `Band` (`progress.milestones.title`) placed first among the bands, after the page's empty-state notice (`data-progress-empty`, `progress.astro:60`) when the log is empty (F9). It holds a `divide-y` list in `MILESTONES` order:
   - **Reached:** a lucide `Check` (`aria-hidden`), the name (`text-heading`), and `progress.milestones.reachedOn({ date })` via `createFormatter(locale).formatShortDate`.
   - **Not yet:** a muted name and `progress.milestones.notYet`, or `progress.milestones.progress({ seen, total })` for count milestones.
   - Each row carries `data-milestone={key}` and `data-reached` (present only when reached) for e2e.
@@ -294,8 +311,8 @@ The "Milestones" band on `/log/progress`, listing every milestone with its reach
 **Intent**: Pin the band and document the slice.
 
 **Contract**:
-- The page half of the spec:
-  - after the Phase 2 journey, `/log/progress` shows `[data-milestone="first-galaxy"][data-reached]` with the edit's night, and `first-planet` reached;
+- The page half, appended to the same test as the Phase 2 journey (F6):
+  - `/log/progress` shows `[data-milestone="first-galaxy"][data-reached]` with `madridDateDaysAgo(3)` formatted by `formatShortDate`, and `first-planet` reached;
   - `messier-10` not reached and showing "1 / 10".
 - `/log/progress` is already in `APP_PAGES` (S-05), so the sideways-scroll check covers the band.
 - `CLAUDE.md`: a short paragraph on `src/lib/progress/milestones.ts`, `celebrate.ts`, the `milestone` param (in `TOAST_PARAMS` and `NOTICE_PARAMS`) and the Milestones band.
@@ -304,7 +321,7 @@ The "Milestones" band on `/log/progress`, listing every milestone with its reach
 
 #### Automated Verification:
 
-- `tests/e2e/observing-milestones.spec.ts` page cases pass, plus `tests/e2e/tonight-phone.spec.ts` (no sideways scroll on `/log/progress`)
+- `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes; the phone spec covers `/log/progress` for a fresh user only, so dates and PL wrapping are manual check 3.3
 - `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
 
 #### Manual Verification:
@@ -337,7 +354,7 @@ S-05's recipe, adapted to this worktree and run:
   - 1-2 ratings inert;
   - `newlyReached` empty for unchanged and rating-2 logs;
   - un-reaching on removal.
-- `celebrate.test.ts`:
+- `src/lib/observations/celebrate.test.ts`:
   - the short-circuit at rating < 3;
   - read and write failures;
   - the diff.
@@ -395,19 +412,19 @@ None, unless the owner picks stored milestones (decision 2), which would add a p
 
 #### Automated
 
-- [ ] 2.1 `npx vitest run src/lib/progress/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/toasts.test.ts` passes
-- [ ] 2.2 `tests/e2e/observing-milestones.spec.ts` celebration cases pass against a local preview (see "Running the checks")
+- [ ] 2.1 `npx vitest run src/lib/observations/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/toasts.test.ts src/lib/no-console-guard.test.ts` passes
+- [ ] 2.2 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts -g "celebrates a milestone once"` passes (preview on 4333 and fixture on 4400 already running, `nvm use` prefix; see "Running the checks")
 - [ ] 2.3 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
 
 #### Manual
 
-- [ ] 2.4 Screenshots of the milestone toast on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, the link reachable, red mode legible, nothing hidden behind the TabBar
+- [ ] 2.4 Screenshots of the milestone toast on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, the link reachable, red mode legible, nothing hidden behind the TabBar; with two toasts stacked (never overlapping, also at first paint) and PL at 390 px
 
 ### Phase 3: Milestones on the progress page
 
 #### Automated
 
-- [ ] 3.1 `tests/e2e/observing-milestones.spec.ts` page cases pass, plus `tests/e2e/tonight-phone.spec.ts` (no sideways scroll on `/log/progress`)
+- [ ] 3.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes; the phone spec covers `/log/progress` for a fresh user only, so dates and PL wrapping are manual check 3.3
 - [ ] 3.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
 
 #### Manual
