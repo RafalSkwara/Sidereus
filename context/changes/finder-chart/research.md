@@ -8,6 +8,7 @@ topic: "M-3 S-03 finder chart: data, geometry, plan gating and the roadmap's unk
 tags: [research, finder-chart, stars, hyg, licence, account-plan, tonight, engine, offline]
 status: complete
 last_updated: 2026-10-11
+last_updated_note: "§7 corrected per plan review F2: the server island URL can be replayed over HTTP"
 last_updated_by: Claude (finder-chart agent)
 ---
 
@@ -109,7 +110,7 @@ Method: four parallel workers (plan gating and Tonight pages; star pipeline, sky
 - §6.4 (`context/foundation/test-plan.md:157-167`) is written for a POST route; for a page it says "a page renders its own state instead". The check is HTTP, never the UI: free and full accounts, the same request, the free one refused, the full one as positive control.
 - `scripts/smoke.mjs`: `request(path,{method, form})` uses `redirect:"manual"` and returns `{status, location, setCookies}` only (l.32-57, 181-199) — no body. Steps assert `status`, `location` (prefix, or `exact: true`), `absent`. It signs up `smoke-<ts>@example.com` and onboards a 150/750 mm scope with 25 mm and 10 mm Plössls (l.16-29, 86-90).
 - Granting full: `npm run account:plan` / admin `upsert` with `SUPABASE_SECRET_KEY` (`tests/db/account-plans.test.ts:60-98`); CI passes that key only to `test:db` (`.github/workflows/ci.yml:48`), not to the smoke step (l.64-68). `tests/db/` never calls the app over HTTP.
-- The island's own guard cannot be hit by plain HTTP easily (server-island URLs carry encrypted props), so the island-side refusal is a unit test of the loader, and the page-level refusal is the HTTP check.
+- ~~The island's own guard cannot be hit by plain HTTP easily (server-island URLs carry encrypted props), so the island-side refusal is a unit test of the loader, and the page-level refusal is the HTTP check.~~ **Superseded (plan review F2, 2026-10-11):** the island can be hit over HTTP. Astro 7.3.2 emits `<link rel="preload" as="fetch" href="/_server-islands/<LocalName>?e=…&p=…&s=…">` in the shell when the URL is under 2048 characters (`node_modules/astro/dist/runtime/server/render/server-islands.js:26-30,141-154`); the props are encrypted with the per-build key with no session binding, nonce or expiry, so the same URL can be replayed with any cookie (the service worker already does, `src/lib/offline/copies.ts:161-171`). The href is HTML-escaped (`&amp;`). So the island-side refusal is proven both by a loader unit test and by an HTTP replay as a demoted and a signed-out user.
 
 ### 8. Colour, red mode, `/design`
 
