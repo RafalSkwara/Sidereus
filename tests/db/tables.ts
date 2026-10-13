@@ -73,6 +73,13 @@ export const TABLES = [
     },
     change: { answer: "clear" },
   } satisfies TableCase<"sky_checks">,
+  {
+    // One row per (user, key): the unique key makes the shared suite delete what A inserts after each test (see
+    // isolation.test.ts); the once-only insert and the key check have their own suite in milestones.test.ts.
+    table: "observing_milestones",
+    valid: { key: "first-moon", reached_night: "2026-09-26" },
+    change: { reached_night: "2026-09-27" },
+  } satisfies TableCase<"observing_milestones">,
 ] as const;
 
 /** Server-owned tables: users may read their own row and nothing else. */

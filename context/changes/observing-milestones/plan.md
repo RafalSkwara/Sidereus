@@ -592,16 +592,16 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Automated
 
-- [x] 1.1 `npx vitest run src/lib/progress/milestones.test.ts` passes, including the rating-2-reaches-nothing and unchanged-log-reaches-nothing cases
-- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass
+- [x] 1.1 `npx vitest run src/lib/progress/milestones.test.ts` passes, including the rating-2-reaches-nothing and unchanged-log-reaches-nothing cases — a50c543
+- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass — a50c543
 
 ### Phase 2: The milestone table
 
 #### Automated
 
-- [ ] 2.1 `npm run test:db` passes with the migration applied locally; isolation and structure cover `observing_milestones`
+- [x] 2.1 `npm run test:db` passes with the migration applied locally; isolation and structure cover `observing_milestones`
 - [ ] 2.2 `npm run db:types && git diff --exit-code src/lib/database.types.ts` is clean after commit
-- [ ] 2.3 `npx astro check`, `npm run lint` and `npm test` pass
+- [x] 2.3 `npx astro check`, `npm run lint` and `npm test` pass
 
 ### Phase 3: Recording at save
 

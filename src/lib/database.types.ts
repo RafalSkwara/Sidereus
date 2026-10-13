@@ -127,6 +127,30 @@ export type Database = {
           },
         ];
       };
+      observing_milestones: {
+        Row: {
+          created_at: string;
+          id: string;
+          key: string;
+          reached_night: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          key: string;
+          reached_night: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          key?: string;
+          reached_night?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       sites: {
         Row: {
           bortle: number;

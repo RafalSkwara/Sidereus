@@ -16,7 +16,7 @@
  * To cover a new per-user table, add an entry to `TABLES` in `tests/db/tables.ts`.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Database, TablesInsert } from "@/lib/database.types";
 import { TABLES } from "./tables";
 
@@ -68,11 +68,24 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
   const row = valid as TablesInsert<"eyepieces">;
   const patch = change as Database["public"]["Tables"]["eyepieces"]["Update"];
 
+  // The ids `insertAsA` returned during the running test. A deletes them afterwards, so a table with a per-user
+  // unique key (observing_milestones) can run the same suite: every test starts from a clean slate for A.
+  let insertedByA: string[] = [];
+
+  afterEach(async () => {
+    const ids = insertedByA;
+    insertedByA = [];
+    if (ids.length === 0) return;
+    const { error } = await from(a.client).delete().in("id", ids);
+    expect(error).toBeNull();
+  });
+
   async function insertAsA(): Promise<string> {
     const { data, error } = await from(a.client).insert(row).select("id, user_id").single();
     expect(error).toBeNull();
     expect(data?.user_id).toBe(a.userId);
     if (!data) throw new Error(`A could not insert into ${table}`);
+    insertedByA.push(data.id);
     return data.id;
   }
 
