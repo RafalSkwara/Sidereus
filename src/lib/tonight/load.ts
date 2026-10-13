@@ -16,6 +16,7 @@ import {
   type SiteRecord,
   type TelescopeRecord,
 } from "@/lib/gear/store";
+import type { FinderFrom } from "@/lib/finder/from";
 import type { TonightReturnPage } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { openSkyChecksSince } from "@/lib/sky-checks/pending";
@@ -198,4 +199,27 @@ export function logHref(tonight: TonightView, target: string, from?: TonightRetu
     query.set("from", from);
   }
   return `/log/new?${query.toString()}`;
+}
+
+/**
+ * The finder chart for one ranked object or planet, by its target key ("M31", "jupiter"), for the site, telescope and
+ * night the page shows (finder-chart). `from` is the focused page the link sits on, so the chart's back link returns
+ * there; `night` `"next"` carries the evening after tonight through. Ids and keys only, never coordinates.
+ */
+export function finderHref(
+  tonight: TonightView,
+  target: string,
+  from: FinderFrom,
+  night: "tonight" | "next" = "tonight",
+): string {
+  const query = new URLSearchParams({
+    object: target,
+    site: tonight.siteId,
+    telescope: tonight.telescopeId,
+    from,
+  });
+  if (night === "next") {
+    query.set("night", "next");
+  }
+  return `/tonight/finder?${query.toString()}`;
 }

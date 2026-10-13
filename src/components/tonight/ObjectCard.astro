@@ -15,9 +15,11 @@ interface Props {
   rank: number;
   /** The log form for this object, prefilled with the ranking's night, site and telescope (FR-016). */
   logHref: string;
+  /** The finder chart for this object (finder-chart). */
+  finderHref: string;
 }
 
-const { entry, rank, logHref } = Astro.props;
+const { entry, rank, logHref, finderHref } = Astro.props;
 const { locale } = Astro.locals;
 const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
@@ -45,5 +47,5 @@ const tipId = `not-seen-tip-${entry.id}`;
   <p class="mt-1 text-label text-muted-foreground">{detailLine}</p>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 
-  <ObjectDetails entry={entry} logHref={logHref} />
+  <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} />
 </li>

@@ -2,26 +2,32 @@
 // The service worker (S-06, offline-night-plan), bundled by scripts/build-sw.mjs (npm `postbuild`: a Vite library build
 // plus workbox-build's injectManifest) and served at /sw.js with scope /. It precaches the build's static assets and
 // stores each Tonight page the user opens as a pair (shell + server-island response, plus the next-night copy) to
-// replay offline or when the network times out. Every decision lives in src/lib/offline/copies.ts; this file only
-// wires it to Workbox routes and the Cache API. It holds site ids and names, never coordinates, and logs nothing.
+// replay offline or when the network times out; a finder chart opened online is stored the same way (per target, with
+// no next-night copy) and dropped when the account loses the full plan. Every decision lives in
+// src/lib/offline/copies.ts; this file only wires it to Workbox routes and the Cache API. It holds site ids, names and
+// target keys, never coordinates, and logs nothing.
 import { clientsClaim } from "workbox-core";
 import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import type { RouteHandlerCallbackOptions, RouteMatchCallbackOptions } from "workbox-core/types.js";
 
 import {
+  FINDER_PAGE,
   INDEX_KEY,
   OFFLINE_PAGE,
   addAssets,
+  answerTime,
   assetUrlsIn,
   chooseCopy,
   commitPair,
-  copyMetaFromIsland,
+  copyMetaFor,
+  dropFinderCopies,
   emptyIndex,
   expire,
   holdsUserData,
   islandUrlFromShell,
   listCopies,
+  lockedFinderPlan,
   markFromDevice,
   mayStoreShell,
   needsNextCopy,
@@ -31,10 +37,10 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
-  tonightPageOf,
+  storedPageOf,
   type CopyIndex,
   type CopyMeta,
-  type TonightPage,
+  type StoredPage,
 } from "@/lib/offline/copies";
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (string | { url: string; revision: string | null })[] };
@@ -198,7 +204,7 @@ async function storedOfflinePage(): Promise<Response | undefined> {
 // --- Which /_astro files a Tonight page loads ---------------------------------------------------------------------
 
 // The HTML names a page's stylesheets, entry scripts and island components, but not what those import in turn (shared
-// chunks, fonts). The page's own requests name those, so each Tonight page (client) is followed for a while.
+// chunks, fonts). The page's own requests name those, so each stored page (client) is followed for a while.
 interface TonightClient {
   /** Every `/_astro/*` path the page requested. */
   assets: Set<string>;
@@ -230,7 +236,7 @@ async function tonightClient(id: string): Promise<TonightClient | undefined> {
   if (known) return known;
   const client = await self.clients.get(id);
   if (!client) return undefined;
-  if (tonightPageOf(new URL(client.url))) return trackClient(id);
+  if (storedPageOf(new URL(client.url))) return trackClient(id);
   otherClients.add(id);
   for (const old of [...otherClients].slice(0, -TRACKED_CLIENTS)) otherClients.delete(old);
   return undefined;
@@ -275,7 +281,9 @@ async function noteAsset(clientId: string, path: string): Promise<void> {
 // --- Pairs: a shell waits for its island -------------------------------------------------------------------------
 
 interface PendingShell {
-  page: TonightPage;
+  page: StoredPage;
+  /** The shell's own path + query, so its island can be matched to its target (`copyMetaFor`). */
+  url: string;
   shell: string;
   contentType: string;
   scope: string;
@@ -288,19 +296,38 @@ const pending = new Map<string, PendingShell>();
 const shellReads = new Set<Promise<unknown>>();
 
 /**
- * Reads a Tonight shell and waits for its island; resolves to that island's URL (none when nothing was recorded).
- * `scope` was taken when the navigation started, before the network answered (impl review F3), so a response sent
- * with an earlier user's cookies that lands after a purge cannot commit into the new store.
+ * Reads a stored page's shell and waits for its island; resolves to that island's URL (none when nothing was
+ * recorded). `scope` was taken when the navigation started, before the network answered (impl review F3), so a
+ * response sent with an earlier user's cookies that lands after a purge cannot commit into the new store. A finder
+ * shell that is the locked state records nothing: for a free account (`data-plan="free"`) it also drops the stored
+ * charts, whatever its URL carries (the check runs before the notice-param gate, review F6a); an unknown plan (a
+ * failed read) drops nothing.
  */
-function recordShell(page: TonightPage, response: Response, scope: Promise<string>): Promise<string | undefined> {
+function recordShell(
+  page: StoredPage,
+  url: URL,
+  response: Response,
+  scope: Promise<string>,
+): Promise<string | undefined> {
   const read = (async () => {
     const shell = await response.text();
+    if (page === FINDER_PAGE) {
+      const locked = lockedFinderPlan(shell);
+      if (locked !== undefined) {
+        if (locked.plan === "free") {
+          await dropFinderPairs(answerTime(locked.planAt, response.headers.get("date")), await scope);
+        }
+        return undefined;
+      }
+    }
+    if (!mayStoreShell(url)) return undefined;
     const islandUrl = islandUrlFromShell(shell);
     if (!islandUrl) return undefined;
     const now = Date.now();
     for (const [key, entry] of pending) if (now - entry.at > PENDING_TTL_MS) pending.delete(key);
     pending.set(islandUrl, {
       page,
+      url: pathKey(url),
       shell,
       contentType: response.headers.get("content-type") ?? "text/html",
       scope: await scope,
@@ -314,9 +341,31 @@ function recordShell(page: TonightPage, response: Response, scope: Promise<strin
 }
 
 /**
+ * The account lost the full plan: every stored finder pair goes, and `freeSince` records when the server read the free
+ * plan, in one serialised index step, so a chart built from a plan read before it cannot be committed afterwards
+ * (reviews F12, F1). Without a server time (`undefined`) the charts go and `freeSince` stays as it is. Nothing happens
+ * if a purge started a new scope since `scope` was taken.
+ */
+function dropFinderPairs(freeSince: string | undefined, scope: string): Promise<void> {
+  return serial(async () => {
+    const { cache, index } = await loadIndex();
+    if (index.userScope !== scope) return;
+    const change = dropFinderCopies(index, freeSince);
+    if (change.index === index) return;
+    await writeIndex(cache, change.index);
+    const assets = await caches.open(ASSETS_CACHE);
+    await Promise.all([
+      ...change.deleteKeys.map((key) => cache.delete(key, MATCH)),
+      ...change.deleteAssets.map((key) => assets.delete(key, MATCH)),
+    ]);
+  });
+}
+
+/**
  * Stores a pair and updates the index, unless a purge came in between or this island was already committed. A pair
  * from another user than the index's owner purges every copy and starts a new scope first (impl review F1), so
- * neither a sign-in nor a sign-out the worker did not see can mix two users' copies.
+ * neither a sign-in nor a sign-out the worker did not see can mix two users' copies. `commitPair` also applies the
+ * island's plan in this same step: an island rendered for a free account takes the stored charts with it.
  */
 function commit(
   meta: CopyMeta,
@@ -364,8 +413,17 @@ async function commitIsland(islandUrl: string, response: Response, clientId: str
   let client: TonightClient | undefined;
   try {
     const body = await response.text();
-    // Signed out, the island answers 200 with an empty body: nothing to store.
-    const island = copyMetaFromIsland(body);
+    // A finder island that answers locked stores nothing; for a free account it also drops the stored charts.
+    const locked = shell.page === FINDER_PAGE ? lockedFinderPlan(body) : undefined;
+    if (locked !== undefined) {
+      if (locked.plan === "free") {
+        await dropFinderPairs(answerTime(locked.planAt, response.headers.get("date")), shell.scope);
+      }
+      return;
+    }
+    // Signed out, the island answers 200 with an empty body: nothing to store. A shell and island that do not belong
+    // together (a target that differs, a chart not rendered for the full plan) are refused too.
+    const island = copyMetaFor(shell.page, new URL(shell.url, "http://localhost"), body);
     if (!island) return;
     client = await tonightClient(clientId);
     meta = {
@@ -389,6 +447,7 @@ async function commitIsland(islandUrl: string, response: Response, clientId: str
   if (!index) return;
   client?.islands.add(islandUrl);
   await afterCommit(meta.assets);
+  // `needsNextCopy` is false for a finder chart: no next-night copy of a chart (D-13).
   if (meta.kind === "tonight" && needsNextCopy(index, meta.siteId, meta.page, new Date())) {
     // The index's scope now: a commit that purged another user's copies started a new one.
     await storeNextCopy(meta, index.userScope, client);
@@ -409,7 +468,8 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
   try {
     const query = new URLSearchParams({ site: tonight.siteId, night: "next" });
     const signal = AbortSignal.timeout(BACKGROUND_TIMEOUT_MS);
-    const shellResponse = await fetch(`${tonight.page}?${query.toString()}`, {
+    const shellPath = `${tonight.page}?${query.toString()}`;
+    const shellResponse = await fetch(shellPath, {
       credentials: "same-origin",
       redirect: "manual",
       signal,
@@ -421,7 +481,7 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
     const islandResponse = await fetch(islandUrl, { credentials: "same-origin", signal });
     if (!isHtml200(islandResponse)) return;
     const body = await islandResponse.text();
-    const island = copyMetaFromIsland(body);
+    const island = copyMetaFor(tonight.page, new URL(shellPath, "http://localhost"), body);
     if (island?.kind !== "next" || island.siteId !== tonight.siteId) return;
     const meta: CopyMeta = {
       ...island,
@@ -490,7 +550,7 @@ async function networkFirst(
  */
 async function afterNavigation(
   url: URL,
-  page: TonightPage,
+  page: StoredPage,
   response: Response,
   scope: Promise<string>,
   clientId: string,
@@ -500,8 +560,10 @@ async function afterNavigation(
     await purge();
     return;
   }
-  if (!isHtml200(response) || !mayStoreShell(url)) return;
-  const islandUrl = await recordShell(page, response, scope);
+  // A finder shell is read even with a notice param in its URL, so a locked answer still drops the charts;
+  // `recordShell` then stores nothing for it.
+  if (!isHtml200(response) || (page !== FINDER_PAGE && !mayStoreShell(url))) return;
+  const islandUrl = await recordShell(page, url, response, scope);
   if (!late || !islandUrl) return;
   const island = await fetch(islandUrl, {
     credentials: "same-origin",
@@ -510,11 +572,15 @@ async function afterNavigation(
   await commitIsland(islandUrl, island, clientId);
 }
 
-/** The stored copy for a Tonight navigation, marked so the page says it came from the device. */
-async function storedTonight(page: TonightPage, siteId: string | undefined): Promise<Response | undefined> {
+/** The stored copy for a navigation to a stored page, marked so the page says it came from the device. */
+async function storedPage(
+  page: StoredPage,
+  siteId: string | undefined,
+  target: string | null,
+): Promise<Response | undefined> {
   const cache = await caches.open(TONIGHT_CACHE);
   const index = await readIndex(cache);
-  const choice = index && chooseCopy(index, page, siteId, new Date());
+  const choice = index && chooseCopy(index, page, siteId, new Date(), target);
   if (!choice) return undefined;
   const shell = await cache.match(choice.copy.shellKey, MATCH);
   if (!shell) return undefined;
@@ -532,12 +598,13 @@ registerRoute(
   },
 );
 
-// Tonight navigations: the six pages exactly, so a redirect here can only be the sign-in bounce.
+// Stored-page navigations: the six Tonight pages exactly, and the finder chart with a valid `?object=` (never
+// redirects, so a redirect here can only be the sign-in bounce). A finder URL with no valid object is none of these.
 registerRoute(
   ({ request, url, sameOrigin }: RouteMatchCallbackOptions) =>
-    sameOrigin && request.mode === "navigate" && tonightPageOf(url) !== undefined,
+    sameOrigin && request.mode === "navigate" && storedPageOf(url) !== undefined,
   async ({ request, url, event }: RouteHandlerCallbackOptions) => {
-    const target = tonightPageOf(url);
+    const target = storedPageOf(url);
     if (!target) return fetch(request);
     const fetchEvent = event as FetchEvent;
     if (fetchEvent.resultingClientId) trackClient(fetchEvent.resultingClientId);
@@ -546,7 +613,7 @@ registerRoute(
     void scope.catch(() => undefined);
     try {
       const { response, fromNetwork, network } = await networkFirst(request, () =>
-        storedTonight(target.page, target.siteId),
+        storedPage(target.page, target.siteId, target.target),
       );
       const settle = (answer: Response, late: boolean) =>
         afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(() => undefined);

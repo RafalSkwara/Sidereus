@@ -20,6 +20,7 @@ import TonightSkyView from "@/components/tonight/TonightSkyView";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { getAccountPlan } from "@/lib/account-plan";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
@@ -68,6 +69,8 @@ const NOTHING_LOADED: TonightLoad = {
   tonightError: null,
   openSkyChecks: [],
 };
+// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
+void getAccountPlan(Astro.locals);
 const load = await loadTonightFor(Astro.locals, {
   siteId,
   telescopeId,

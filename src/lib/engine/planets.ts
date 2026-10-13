@@ -91,3 +91,14 @@ export function planetFacts(key: PlanetKey, time: Date): PlanetFacts {
     ringTiltDeg: key === "saturn" ? (illumination.ring_tilt ?? null) : null,
   };
 }
+
+/**
+ * Where a planet is among the stars at `time`, as a J2000 equatorial unit vector (finder chart): the topocentric
+ * apparent direction (`Equator`, J2000 frame, with aberration), normalised, so it goes through the same
+ * `Rotation_EQJ_HOR` as the catalogue's star vectors. Unrefracted, like them.
+ */
+export function planetJ2000Vector(key: PlanetKey, site: Site, time: Date): readonly [number, number, number] {
+  const { vec } = Equator(PLANETS[key].body, time, observerFor(site), false, true);
+  const length = Math.hypot(vec.x, vec.y, vec.z);
+  return [vec.x / length, vec.y / length, vec.z / length];
+}

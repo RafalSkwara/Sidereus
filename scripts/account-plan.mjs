@@ -17,6 +17,9 @@
 //   SUPABASE_URL=<api url> SUPABASE_SECRET_KEY=<secret key> npm run account:plan -- ...
 // The script reads nothing else: no `.env` (it points at the hosted project) and no `.dev.vars`. The agent never holds
 // the hosted key. It prints the target host before any write and never prints the key or a typed password.
+// Smoke and the finder e2e specs (finder-chart D-9) call it as a child process to grant and remove the full plan, with the
+// local stack's SUPABASE_URL and SUPABASE_SECRET_KEY passed inline on `npm run smoke` / the e2e command (never exported,
+// never to the preview); the local-host check below still refuses anything else.
 
 import { randomInt } from "node:crypto";
 import { pathToFileURL } from "node:url";

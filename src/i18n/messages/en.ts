@@ -868,7 +868,91 @@ export const en = {
     attribution: {
       objectData: "Object data:",
       starData: "Star data:",
+      hipparcosCredit: "Credit: ESA",
       weather: "Weather:",
+    },
+
+    /**
+     * The finder chart (finder-chart): the chart, its how-to steps and the free explainer. Numbers arrive pre-formatted;
+     * star designations (Greek letter + IAU abbreviation, "Mirach (β And)") and compass points are never translated.
+     */
+    finder: {
+      /** The page's title; `target` is the object's name ("M31", "Jupiter"). */
+      title: (p: { target: string }) => `Finder chart · ${p.target}`,
+      /** The action link beside "Mark observed", and its accessible name with the target. */
+      link: "Finder chart",
+      linkLabel: (p: { target: string }) => `Finder chart for ${p.target}`,
+      /** The context line: `direction` is the ranking's refracted "SE, 41°", `time` the object's best time. */
+      contextFacing: (p: { direction: string; time: string }) => `Facing ${p.direction} up at ${p.time}`,
+      contextOverhead: (p: { time: string }) => `Nearly overhead at ${p.time}`,
+      facingNote: "Up is up in the sky, as you face it. Both charts are drawn this way.",
+      /** One sentence for both markers: the cross where the zenith is on a chart, the edge arrow where it is not. */
+      overheadNorth:
+        "It is nearly overhead, so north is at the top of both charts. The zenith is at the cross, or in the direction of the arrow at a chart's edge.",
+      overheadSouth:
+        "It is nearly overhead, so south is at the top of both charts. The zenith is at the cross, or in the direction of the arrow at a chart's edge.",
+      zenith: "Zenith",
+      overviewHeading: "Overview",
+      finderHeading: "Finder view",
+      /** `count` is the number of moves from the starting star to the target. */
+      overviewAlt: (p: { start: string; target: string; count: string }) =>
+        `Overview chart from ${p.start} to ${p.target}. Moves: ${p.count}.`,
+      overviewAltDirect: (p: { start: string; target: string; distance: string }) =>
+        `Overview chart: ${p.target} lies ${p.distance}° from ${p.start}, with no chain of stars between them.`,
+      /** `field` is the panel's width in degrees. */
+      finderAlt: (p: { target: string; field: string }) => `Finder view: ${p.field}° of sky around ${p.target}.`,
+      stepsHeading: "How to find it",
+      /** `alt` is whole degrees, `point` a compass point (international in every language), `mag` one decimal. */
+      stepStart: (p: { name: string; mag: string; alt: string; point: string }) =>
+        `Find ${p.name}, magnitude ${p.mag}, ${p.alt}° up in the ${p.point}.`,
+      /** `way` is one of the `way` phrases below. */
+      stepMove: (p: { deg: string; way: string; name: string }) => `Move ${p.deg}° ${p.way} to ${p.name}.`,
+      stepTarget: (p: { deg: string; way: string; target: string }) => `Move ${p.deg}° ${p.way} to reach ${p.target}.`,
+      stepDirect: (p: { target: string; distance: string; way: string; start: string }) =>
+        `${p.target} lies ${p.distance}° ${p.way} of ${p.start}. No chain of stars short enough for a finder joins the two, so judge the distance with the circles on the finder view.`,
+      stepNakedEye: (p: { target: string; direction: string }) =>
+        `${p.target} is bright enough to spot without help. Look ${p.direction} up.`,
+      stepNakedEyeCentre: "Put it in the middle of your finder, then check the finder view below.",
+      noStart:
+        "No star bright enough to start from is high enough in the sky at that time. Aim by the direction above and use the circles on the finder view.",
+      /** Where a move goes on the chart, after "Move 4°". */
+      way: {
+        up: "up",
+        upRight: "up and to the right",
+        right: "to the right",
+        downRight: "down and to the right",
+        down: "down",
+        downLeft: "down and to the left",
+        left: "to the left",
+        upLeft: "up and to the left",
+      },
+      /** A star with no name or letter: `mag` one decimal. */
+      unnamedStar: (p: { mag: string }) => `the magnitude ${p.mag} star`,
+      invertedNote:
+        "A straight-through finder shows the sky upside down, and a right-angle finder shows it mirror-reversed.",
+      legendFinder: (p: { field: string }) => `Finder field, ${p.field}°`,
+      legendReflex: (p: { rings: string }) => `Reflex finder rings, ${p.rings}`,
+      eyepieceLine: (p: { name: string; field: string }) => `Eyepiece circle: ${p.name}, ${p.field}°`,
+      noEyepiece: "Add an eyepiece to your gear to see its circle on the chart.",
+      /** The states with no chart: the object is not on tonight's list (`target` is its name), or the chart failed. */
+      notRanked: (p: { target: string }) =>
+        `${p.target} is not on tonight's list for this site and telescope, so there is no chart for it.`,
+      notRankedUnknown: "That object is not on tonight's list, so there is no chart for it.",
+      failed: "The finder chart could not be drawn. Try again in a moment.",
+      /** The free explainer (a free account's view of the finder chart's link). */
+      locked: {
+        heading: "Finder chart",
+        lineStar:
+          "Finds the nearest star you can recognise from your site, above your minimum altitude at the object's best time.",
+        lineHop: "Shows the hop from that star to the object, step by step, through stars your finder shows.",
+        lineScale:
+          "Draws your finder's field and your eyepiece's field to scale, turned the way you face that part of the sky.",
+        needsFull: "Finder charts need the full plan.",
+        exampleLabel: "Example",
+        /** `eyepiece` is "25 mm Plössl". */
+        exampleCaption: (p: { target: string; eyepiece: string }) =>
+          `${p.target} from a suburban site (Bortle 7) with a 150 mm reflector and a ${p.eyepiece}. Your chart uses your own site and gear.`,
+      },
     },
 
     /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */

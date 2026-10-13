@@ -1,0 +1,64 @@
+---
+/*
+ * The finder chart for an account without the full plan (finder-chart O-5): what the chart does in three lines, the
+ * plan it needs (an informational notice, never error styling, and no way to get the plan: no payments in M-3), and a
+ * fixed, precomputed example drawn by `FinderChart` and labelled as one. Nothing of the user's is in it: no site, no
+ * gear, no star file read. The root marks the state (`data-finder-state="locked"`) and, when a host passes them,
+ * carries `plan` as `data-plan` and `planAt` (when the server read it) as `data-plan-at` (the offline copies' plan
+ * metadata, Phase 5; review F1); the example brings the data credits, so the chart itself draws none.
+ */
+import { getMessages } from "@/i18n";
+import type { FinderChartData } from "@/lib/engine";
+import type { FinderChartLabels } from "@/lib/finder/steps";
+import type { Locale } from "@/lib/preferences";
+import Attribution from "@/components/tonight/Attribution.astro";
+import Notice from "@/components/ui/Notice.astro";
+import FinderChart from "./FinderChart.astro";
+
+interface Props {
+  /** The committed example chart (`example-chart.ts`) and its labels. */
+  example: FinderChartData;
+  exampleLabels: FinderChartLabels;
+  locale: Locale;
+  /** `full` | `free` | `unknown`; rendered as `data-plan` when given (default: omitted). */
+  plan?: string;
+  /** When the server read `plan`, an ISO time; rendered as `data-plan-at` when given (default: omitted). */
+  planAt?: string;
+}
+
+const { example, exampleLabels, locale, plan, planAt } = Astro.props;
+const t = getMessages(locale).tonight.finder.locked;
+---
+
+<section
+  class="space-y-6"
+  data-finder-state="locked"
+  data-plan={plan}
+  data-plan-at={planAt}
+  aria-labelledby="finder-locked-heading"
+>
+  <div>
+    <h2 id="finder-locked-heading" class="font-display text-title font-semibold text-heading">
+      {t.heading}
+    </h2>
+    <ul class="mt-3 list-disc space-y-2 pl-6 text-body">
+      <li>{t.lineStar}</li>
+      <li>{t.lineHop}</li>
+      <li>{t.lineScale}</li>
+    </ul>
+  </div>
+
+  <Notice tone="info">{t.needsFull}</Notice>
+
+  <div class="space-y-3" data-finder-example>
+    <p class="text-label text-muted-foreground">
+      <span class="mr-2 inline-block rounded-md border border-border bg-surface px-2 py-0.5 font-semibold text-heading">
+        {t.exampleLabel}
+      </span>
+      {t.exampleCaption({ target: exampleLabels.target, eyepiece: exampleLabels.eyepiece?.name ?? "" })}
+    </p>
+    <FinderChart chart={example} labels={exampleLabels} locale={locale} attribution={false} />
+  </div>
+
+  <Attribution />
+</section>

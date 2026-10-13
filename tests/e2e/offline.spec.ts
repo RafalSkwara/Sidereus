@@ -1,12 +1,10 @@
-import { createServer, request as httpRequest, type Server } from "node:http";
-import type { AddressInfo, Socket } from "node:net";
-
 import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import { onboardInMadrid, signOut } from "./helpers";
+import { Proxy } from "./offline-proxy";
 
 /*
  * Tonight offline, end to end (S-06, offline-night-plan): the dashboard and the Session plan opened online are served
@@ -23,66 +21,6 @@ import { onboardInMadrid, signOut } from "./helpers";
 const TONIGHT_CACHE = "sidereus-tonight-v1";
 const ASSETS_CACHE = "sidereus-assets-v1";
 const INDEX_KEY = "/__offline/index.json";
-
-/** A pass-through proxy to `upstream` (method, path, headers, cookies, body, status and redirects untouched). */
-class Proxy {
-  private server: Server | null = null;
-  private readonly sockets = new Set<Socket>();
-  port = 0;
-
-  constructor(private readonly upstream: URL) {}
-
-  get origin(): string {
-    return `http://localhost:${String(this.port)}`;
-  }
-
-  async start(): Promise<void> {
-    const server = createServer((req, res) => {
-      const forward = httpRequest(
-        {
-          hostname: this.upstream.hostname,
-          port: this.upstream.port,
-          method: req.method,
-          path: req.url,
-          // The Host header stays the proxy's, so the app's redirects and origin checks see the browser's origin.
-          headers: req.headers,
-          agent: false,
-        },
-        (upstream) => {
-          res.writeHead(upstream.statusCode ?? 502, upstream.statusMessage, upstream.rawHeaders);
-          upstream.pipe(res);
-        },
-      );
-      forward.on("error", () => res.destroy());
-      req.pipe(forward);
-    });
-    server.on("connection", (socket) => {
-      this.sockets.add(socket);
-      socket.on("close", () => this.sockets.delete(socket));
-    });
-    await new Promise<void>((resolve, reject) => {
-      // Restarting on the same port can fail (still in use): fail the test here, not on a later navigation.
-      server.once("error", reject);
-      server.listen(this.port, "localhost", resolve);
-    });
-    this.port = (server.address() as AddressInfo).port;
-    this.server = server;
-  }
-
-  /** Unreachable from now on: no listener, and every open connection dropped. */
-  async stop(): Promise<void> {
-    const server = this.server;
-    if (!server) return;
-    this.server = null;
-    const closed = new Promise<void>((resolve) => {
-      server.close(() => {
-        resolve();
-      });
-    });
-    for (const socket of this.sockets) socket.destroy();
-    await closed;
-  }
-}
 
 /** The Tonight pages and kinds the worker's index holds right now (empty without an index). */
 function storedCopies(page: Page) {

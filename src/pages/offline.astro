@@ -10,6 +10,8 @@ import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
+const TARGET_PLACEHOLDER = "{target}";
+
 const { locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.offline.page;
@@ -21,6 +23,9 @@ const titles = {
   "/tonight/moon": m.tonight.summary.moon,
   "/tonight/planets": m.tonight.summary.planets,
   "/tonight/nights": m.tonight.summary.nights({ count: String(OUTLOOK_NIGHTS) }),
+  // A stored finder chart's title has its target in it ("Finder chart · M31"): the page's own title with a placeholder
+  // the script fills with the copy's target name.
+  "/tonight/finder": m.tonight.finder.title({ target: TARGET_PLACEHOLDER }),
 };
 ---
 
@@ -32,7 +37,7 @@ const titles = {
   </Band>
 
   <Band headingId="offline-saved-heading" heading={t.saved.heading}>
-    <div data-offline-saved data-titles={JSON.stringify(titles)}>
+    <div data-offline-saved data-titles={JSON.stringify(titles)} data-target-placeholder={TARGET_PLACEHOLDER}>
       <p data-offline-empty class="text-body text-muted-foreground">
         {t.saved.empty}
       </p>
@@ -42,11 +47,14 @@ const titles = {
 </GearShell>
 
 <script>
-  // One stored copy as the worker reports it (Phase 3): the site and the Tonight page path it was stored for.
+  // One stored copy as the worker reports it (Phase 3): the site and the page path it was stored for; a finder chart
+  // (Phase 5) also has its target key and the name it was rendered with.
   interface StoredCopy {
     siteId: string;
     siteName: string;
     page: string;
+    target?: string | null;
+    targetName?: string | null;
   }
 
   const REPLY_TIMEOUT_MS = 1500;
@@ -57,26 +65,49 @@ const titles = {
   const empty = root?.querySelector<HTMLElement>("[data-offline-empty]");
   const list = root?.querySelector<HTMLElement>("[data-offline-list]");
   const titles: Record<string, string> = JSON.parse(root?.dataset.titles ?? "{}");
+  const placeholder = root?.dataset.targetPlaceholder ?? "";
+  const FINDER_PATH = "/tonight/finder";
 
   function isCopy(value: unknown): value is StoredCopy {
     if (typeof value !== "object" || value === null) return false;
     const copy = value as Record<string, unknown>;
-    return typeof copy.siteId === "string" && typeof copy.siteName === "string" && typeof copy.page === "string";
+    const optional = (field: unknown) => field === undefined || field === null || typeof field === "string";
+    return (
+      typeof copy.siteId === "string" &&
+      typeof copy.siteName === "string" &&
+      typeof copy.page === "string" &&
+      optional(copy.target) &&
+      optional(copy.targetName)
+    );
+  }
+
+  // A finder chart is a link to its own object; it is listed only with a target, and its title names it.
+  function linkFor(copy: StoredCopy): string {
+    const site = encodeURIComponent(copy.siteId);
+    return copy.page === FINDER_PATH
+      ? `${FINDER_PATH}?object=${encodeURIComponent(copy.target ?? "")}&site=${site}`
+      : `${copy.page}?site=${site}`;
+  }
+
+  function titleFor(copy: StoredCopy): string {
+    const title = titles[copy.page];
+    // A function replacer: a name is text, never a replacement pattern.
+    return copy.page === FINDER_PATH ? title.replace(placeholder, () => copy.targetName ?? copy.target ?? "") : title;
   }
 
   function show(copies: StoredCopy[]) {
     if (!empty || !list) return;
-    const known = copies.filter((copy) => copy.page in titles);
+    const known = copies.filter((copy) => copy.page in titles && (copy.page !== FINDER_PATH || copy.target));
     if (known.length === 0) return;
     list.replaceChildren(
       ...known.map((copy) => {
         const item = document.createElement("li");
         const link = document.createElement("a");
-        link.href = `${copy.page}?site=${encodeURIComponent(copy.siteId)}`;
+        link.href = linkFor(copy);
         link.className = LINK_CLASS;
         const title = document.createElement("span");
         title.className = "font-semibold";
-        title.textContent = titles[copy.page];
+        title.textContent = titleFor(copy);
         const site = document.createElement("span");
         site.className = "text-muted-foreground";
         site.textContent = copy.siteName;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { findMessier } from "@/lib/catalogue";
 
-import { eyepieceOptics, pairEyepieces, planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
+import { eyepieceOptics, findingEyepiece, pairEyepieces, planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
 import { FOV_FIT_FRACTION, MOON_WHOLE_DISC_FIELD_DEG } from "./parameters";
 
 /** Shaped like the gear store's `EyepieceRecord`, to prove it passes through unchanged. */
@@ -207,5 +207,25 @@ describe("wholeDiscEyepiece", () => {
       eyepiece: narrowFirst,
       fits: false,
     });
+  });
+});
+
+describe("findingEyepiece (finder chart)", () => {
+  it("is the pairing's finding eyepiece with its true field, for a deep-sky object that fits", () => {
+    const found = findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], majorAxis(31));
+    expect(found?.eyepiece).toBe(PLOSSL_25);
+    expect(found?.trueFovDeg).toBeCloseTo(eyepieceOptics(NEWTONIAN, PLOSSL_25).trueFovDeg, 12);
+  });
+
+  it("is the widest eyepiece when none fits the object", () => {
+    // 600 arcmin is wider than any field of this kit.
+    const found = findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], 600);
+    expect(found?.eyepiece).toBe(PLOSSL_25);
+  });
+
+  it("takes an unknown size (a planet passes null) as fitting every eyepiece, and is null for an empty kit", () => {
+    expect(findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], null)?.eyepiece).toBe(PLOSSL_25);
+    expect(findingEyepiece(NEWTONIAN, [], null)).toBeNull();
+    expect(findingEyepiece(NEWTONIAN, [], majorAxis(31))).toBeNull();
   });
 });

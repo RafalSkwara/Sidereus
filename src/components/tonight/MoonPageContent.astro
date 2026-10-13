@@ -9,6 +9,7 @@ import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { getAccountPlan } from "@/lib/account-plan";
 import { MOON_TARGET_KEY } from "@/lib/targets";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
@@ -32,6 +33,8 @@ const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
+// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
+void getAccountPlan(Astro.locals);
 // Signed out, `load` is null and the island renders nothing.
 const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night });
 const view = load?.view ?? null;

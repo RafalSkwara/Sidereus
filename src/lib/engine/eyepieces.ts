@@ -172,3 +172,27 @@ export function wholeDiscEyepiece<E extends EyepieceOpticsInput>(
   const widest = maxBy(candidates, trueField);
   return widest === null ? null : { ...widest, fits: false };
 }
+
+/** The eyepiece the finder chart draws a circle for, with its true field. */
+export interface FindingEyepiece<E extends EyepieceOpticsInput = EyepieceOpticsInput> {
+  eyepiece: E;
+  trueFovDeg: number;
+}
+
+/**
+ * The eyepiece whose field the finder chart draws (finder-chart D-7): the pairing's finding eyepiece (`pair`), or the
+ * widest one when none fits the object (`none-fit`), or `null` for an empty kit. A deep-sky object passes its major
+ * axis; a planet passes `null`, which fits every eyepiece.
+ */
+export function findingEyepiece<E extends EyepieceOpticsInput>(
+  telescope: TelescopeOpticsInput,
+  eyepieces: readonly E[],
+  majorAxisArcmin: number | null,
+): FindingEyepiece<E> | null {
+  const pairing = pairEyepieces(telescope, eyepieces, majorAxisArcmin);
+  if (pairing === null) {
+    return null;
+  }
+  const eyepiece = pairing.kind === "pair" ? pairing.finding : pairing.widest;
+  return { eyepiece, trueFovDeg: eyepieceOptics(telescope, eyepiece).trueFovDeg };
+}

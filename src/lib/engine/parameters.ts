@@ -398,3 +398,78 @@ export const WASHED_OUT_TYPES: readonly DeepSkyType[] = [
  * under a pixel on the card's disc between steps.
  */
 export const MOON_DISC_STEP_MINUTES = 10;
+
+// Finder chart (M-3 S-03, finder-chart) -----------------------------------------------------------
+
+/**
+ * Candidate (S-03 planning, finder-chart, 2026-10-11, owner-confirmed O-1): the true field of the standard finder
+ * (a 6×30), degrees, for every telescope. Published 6×30 fields run 7-7.5° (iOptron, telescoop.nl), 8° (Takahashi).
+ */
+export const FINDER_FIELD_DEG = 7;
+
+/** Candidate (S-03 planning, 2026-10-11): aperture of the standard finder, mm; it sets the finder's limiting magnitude. */
+export const FINDER_APERTURE_MM = 30;
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, O-1): diameters, degrees, of the 1× reflex finder's rings (a Telrad's
+ * 0.5°, 2° and 4°), drawn around the target on the finder panel.
+ */
+export const REFLEX_RING_DEG: readonly number[] = [0.5, 2, 4];
+
+/** Candidate (S-03 planning, 2026-10-11, D-2): the faintest star the finder chart draws; HYG is evenly complete to about 7.5. */
+export const FINDER_CHART_MAX_MAG = 7.5;
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, PRD Open Question 15): the faintest star the chart may start a hop from, by
+ * Bortle class: 4.5 at 1-4, 3.5 at 5-6, 2.5 at 7-9. Kept apart from `nakedEyeLimitingMagForBortle`, which it never
+ * exceeds: a start must be a star the user recognises, not one at the edge of what they can see.
+ */
+export function startStarMaxMagForBortle(bortle: number): 4.5 | 3.5 | 2.5 {
+  requireBortle(bortle);
+  if (bortle <= 4) {
+    return 4.5;
+  }
+  if (bortle <= 6) {
+    return 3.5;
+  }
+  return 2.5;
+}
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, D-5): the faintest star the finder shows, by Bortle class: the naked-eye
+ * limit plus the finder's gain, 5·log10(`FINDER_APERTURE_MM` ÷ `EYE_PUPIL_REFERENCE_MM`), capped at
+ * `FINDER_CHART_MAX_MAG`. 7.2 at Bortle 9 up to 7.5.
+ */
+export function finderLimitingMagForBortle(bortle: number): number {
+  return Math.min(
+    FINDER_CHART_MAX_MAG,
+    nakedEyeLimitingMagForBortle(bortle) + 5 * Math.log10(FINDER_APERTURE_MM / EYE_PUPIL_REFERENCE_MM),
+  );
+}
+
+/** Candidate (S-03 planning, 2026-10-11, D-4, PRD Open Question 16): the faintest star a hop may pass through. */
+export const HOP_STAR_MAX_MAG = 6.5;
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, D-4): the longest single step of a hop, as a share of `FINDER_FIELD_DEG`, so
+ * both ends of a step sit in the finder at once (mirrors `FOV_FIT_FRACTION`): 5.6° for the standard finder.
+ */
+export const HOP_MAX_STEP_FRACTION = 0.8;
+
+/** Candidate (S-03 planning, 2026-10-11, D-4): the most steps a hop may take, the last one onto the target. */
+export const HOP_MAX_STEPS = 8;
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, O-7): how many of the nearest qualifying starting stars are tried before the
+ * chart falls back to a direct line from the nearest.
+ */
+export const START_STAR_CANDIDATES = 5;
+
+/** Candidate (S-03 planning, 2026-10-11, O-3): the width of the finder panel around the target, degrees. */
+export const FINDER_PANEL_FIELD_DEG = 10;
+
+/**
+ * Candidate (S-03 planning, 2026-10-11, review F1, O-2): when a panel's centre is at or above this altitude, or the
+ * zenith falls inside a panel, "up" would swing wildly with a small move, so the chart goes north up instead.
+ */
+export const FINDER_OVERHEAD_ALT_DEG = 80;

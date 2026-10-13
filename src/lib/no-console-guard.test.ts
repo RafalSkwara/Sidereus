@@ -43,11 +43,26 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     count: 1,
     reason: "the milestone failure trace: a fixed line and the error's and its cause's names, never a message",
   },
+  "src/lib/account-plan/index.ts": {
+    count: 1,
+    reason:
+      "the failed plan read's trace: a fixed line and the store's fixed error code or name, never a message or anything from the request",
+  },
+  "src/lib/finder/load.ts": {
+    count: 2,
+    reason:
+      "the finder chart's two failure traces (the star load, the chart build): a fixed line and the error's name only, never its message",
+  },
   "src/lib/engine/calibration.test.ts": {
     count: 1,
     reason: "the opt-in calibration snapshot (CALIBRATION_SNAPSHOT=1) over fixed test nights",
   },
   "src/lib/engine/determinism.test.ts": { count: 2, reason: "engine and ranking timings printed for CI" },
+  "src/lib/engine/finder.test.ts": {
+    count: 2,
+    reason:
+      "the opt-in finder reference routes and coverage counts (FINDER_REFERENCE_PRINT=1, FINDER_COVERAGE_PRINT=1)",
+  },
 };
 
 /** An existing .astro page whose path the in-memory samples borrow: a path that does not exist fails to parse. */
