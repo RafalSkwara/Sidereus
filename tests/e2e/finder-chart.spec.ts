@@ -21,6 +21,7 @@ import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setP
 const TARGET = "M13";
 
 const NO_DARKNESS = "no astronomical darkness (8 June to 2 July): the ranking can be empty";
+const OUTSIDE_WINDOW = "covered by the chart tests outside the no-darkness window";
 
 /**
  * M13 can culminate above the overhead rule's 80° at southern sites, so either orientation is valid; what must hold is
@@ -41,6 +42,7 @@ test.beforeEach(async ({ context, baseURL }) => {
 /** A fresh full-plan account on Targets, then M13's "Finder chart" link followed to the chart. */
 async function openChart(page: Page) {
   requirePlanGrant("finder-chart");
+  // The chart tests need a ranked M13 link on Targets; the window test below covers the page for those weeks.
   test.skip(inNoDarknessWindow(), NO_DARKNESS);
   const email = await onboardInMadrid(page, "e2e-finder-chart");
   await setPlan(email, "full");
@@ -50,6 +52,22 @@ async function openChart(page: Page) {
   await expect(page).toHaveURL(new RegExp(`/tonight/finder\\?object=${TARGET}&`));
   await expect(page.locator("[data-finder-chart]")).toBeVisible();
 }
+
+/**
+ * In the no-darkness window the page must still settle on a defined state instead of the test skipping. Smoke asserts
+ * the exact `not-ranked` there (its site is 52° N), but this spec's site is Madrid, which keeps its astronomical
+ * darkness all year, so M13 may still be ranked and a chart drawn: either state is correct, anything else
+ * (`failed`, `no-gear`, `locked`, a blank page) is not. The page is opened directly because Targets may have no row.
+ */
+test("in the no-darkness window the finder page settles on a chart or on not ranked", async ({ page }) => {
+  requirePlanGrant("finder-chart");
+  test.skip(!inNoDarknessWindow(), OUTSIDE_WINDOW);
+  const email = await onboardInMadrid(page, "e2e-finder-window");
+  await setPlan(email, "full");
+
+  await page.goto(`/tonight/finder?object=${TARGET}`);
+  await expect(page.locator('[data-finder-state="chart"], [data-finder-state="not-ranked"]')).toBeVisible();
+});
 
 test("the M13 row opens a chart with both panels, the steps and a context line that matches its orientation", async ({
   page,

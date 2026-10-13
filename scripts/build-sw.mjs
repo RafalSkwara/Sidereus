@@ -87,14 +87,21 @@ for (const file of astroFiles) {
 }
 
 // The finder chart's star file (finder-chart, D-1/D-2) is server-only: 25,791 stars that only the finder island's
-// loader may read. Fail when any client file names it or carries the unique text of its meta file (its `filter`, which
-// the bright-star meta does not share), so a browser import of it never ships silently.
+// loader may read. Fail when any client file names it, carries the unique text of its meta file (its `filter`, which
+// the bright-star meta does not share) or carries the start of its packed position column, so a browser import of it
+// never ships silently. The last marker is what catches a static import: Vite inlines the JSON into a chunk whose name
+// and text hold neither of the other two.
 const finderMeta = JSON.parse(await readFile(path.join(root, "src/lib/catalogue/finder-stars.meta.json"), "utf8"));
-const FINDER_LEAK_MARKERS = ["finder-stars", finderMeta.filter];
 if (typeof finderMeta.filter !== "string" || finderMeta.filter.length === 0) {
   console.error("build-sw: finder-stars.meta.json has no `filter` string to look for; did its shape change?");
   process.exit(1);
 }
+const finderStars = JSON.parse(await readFile(path.join(root, "src/lib/catalogue/finder-stars.json"), "utf8"));
+if (typeof finderStars.pos !== "string" || finderStars.pos.length < 40) {
+  console.error("build-sw: finder-stars.json has no `pos` string to look for; did its shape change?");
+  process.exit(1);
+}
+const FINDER_LEAK_MARKERS = ["finder-stars", finderMeta.filter, finderStars.pos.slice(0, 40)];
 async function* clientFiles(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);

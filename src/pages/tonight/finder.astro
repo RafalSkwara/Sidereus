@@ -36,9 +36,9 @@ const title = target === null ? t.finder.link : t.finder.title({ target: targetL
 const backHref = finderBackHref(from);
 const backLabel = finderBackLabel(from, m);
 const guard = await requireFullPlan(Astro.locals);
-// The locked root's `data-plan` (finder-chart Phase 5): `free`, or `unknown` when the plan read failed. The same
-// memoised read the guard made.
-const plan = guard.ok ? undefined : await accountPlanForCopy(Astro.locals);
+// The locked root's `data-plan` and `data-plan-at` (finder-chart Phase 5): `free`, or `unknown` when the plan read
+// failed, and when it was read. The same memoised read the guard made.
+const planRead = guard.ok ? undefined : await accountPlanForCopy(Astro.locals);
 ---
 
 <GearShell title={title} skyFlow>
@@ -71,7 +71,8 @@ const plan = guard.ok ? undefined : await accountPlanForCopy(Astro.locals);
           example={EXAMPLE_FINDER_CHART}
           exampleLabels={exampleLabels(locale)}
           locale={locale}
-          plan={plan}
+          plan={planRead?.plan}
+          planAt={planRead?.at.toISOString()}
         />
       </div>
     </>

@@ -16,7 +16,7 @@ import { loadFinderFor } from "./load";
  */
 
 const mocks = vi.hoisted(() => ({
-  planRead: vi.fn<(client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true }>>(),
+  planRead: vi.fn<(client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true; code: string }>>(),
   loadTonightFor: vi.fn<(locals: unknown, options: unknown) => Promise<unknown>>(),
   loadFinderStars: vi.fn<() => Promise<unknown>>(),
 }));
@@ -99,7 +99,7 @@ describe("loadFinderFor's plan guard", () => {
   });
 
   it("answers a failed plan read like a free account", async () => {
-    mocks.planRead.mockResolvedValue({ error: true });
+    mocks.planRead.mockResolvedValue({ error: true, code: "PGRST000" });
     expect(await loadFinderFor(locals(), { target: "M31" })).toEqual({ kind: "locked" });
     expect(mocks.loadTonightFor).not.toHaveBeenCalled();
   });

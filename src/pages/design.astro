@@ -2244,6 +2244,16 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 />
               </div>
               <div class:list={cell}>
+                <p class:list={stateLabel}>default · overhead, zenith outside the panels (edge arrow)</p>
+                <p class:list={blockNote}>{finder.overheadEdge.note}</p>
+                <FinderChart
+                  chart={finder.overheadEdge.chart}
+                  labels={finder.overheadEdge.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
                 <p class:list={stateLabel}>default · direct (no hop)</p>
                 <p class:list={blockNote}>{finder.direct.note}</p>
                 <FinderChart
@@ -2305,6 +2315,21 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <FinderChart
                     chart={finder.hop.chart}
                     labels={finder.hop.labels}
+                    locale={locale}
+                    attribution={false}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>red mode · overhead, zenith outside (edge arrow)</p>
+                <div
+                  data-theme="red"
+
+                  class="rounded-lg border border-border bg-background p-4 text-foreground"
+                >
+                  <FinderChart
+                    chart={finder.overheadEdge.chart}
+                    labels={finder.overheadEdge.labels}
                     locale={locale}
                     attribution={false}
                   />

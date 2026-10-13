@@ -6,8 +6,9 @@
  * token class, and the circles differ by stroke style and width so red mode (one hue) still tells them apart: the
  * finder's field long-dashed, the reflex finder's rings dotted, the eyepiece's circle solid and thick. The route is a
  * thin solid line through ringed stars, the target a gapped cross. Labels are SVG text in the viewBox's own units, so
- * they scale with the panel (about 13 px at 360 px wide), over a halo in the panel's ground. The default slot sits
- * under the picture (the legend).
+ * they scale with the panel (about 13 px at 360 px wide), over a halo in the panel's ground. The zenith is a ringed cross
+ * where it lies in the panel, and an arrow on the panel's edge toward it where it does not (shape, not colour, so red
+ * mode keeps it). The default slot sits under the picture (the legend).
  */
 import { LABEL_FONT_UNITS, panelSvg } from "@/lib/finder/chart-svg";
 import type { FinderPanel as FinderPanelData } from "@/lib/engine";
@@ -89,6 +90,15 @@ const { cx: tx, cy: ty } = svg.target;
         <line x1={svg.zenith.cx - 4.5} y1={svg.zenith.cy} x2={svg.zenith.cx + 4.5} y2={svg.zenith.cy} />
         <line x1={svg.zenith.cx} y1={svg.zenith.cy - 4.5} x2={svg.zenith.cx} y2={svg.zenith.cy + 4.5} />
       </g>
+    )}
+    {svg.zenithEdge !== null && (
+      <path
+        d={svg.zenithEdge.path}
+        class="fill-none stroke-foreground"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     )}
     {svg.labels.map((label) => (
       <text

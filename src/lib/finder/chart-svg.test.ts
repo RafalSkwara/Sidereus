@@ -19,6 +19,7 @@ const PANEL: FinderPanel = {
   ],
   target: { x: 0, y: 0 },
   zenith: { x: 2, y: -3 },
+  zenithEdge: null,
   circles: [
     { kind: "finder", r: 3.5 },
     { kind: "reflex", r: 0.25 },
@@ -138,6 +139,7 @@ describe("panelSvg", () => {
       stars: [{ index: 1, x: 4.9, y: 4.9, mag: 2 }],
       path: [],
       zenith: null,
+      zenithEdge: null,
     };
     const placed = panelSvg(crowded, { size: 200, routeStars: [1], names: { 1: "A rather long star name (ζ UMa)" } });
     const label = placed.labels[0];
@@ -146,6 +148,90 @@ describe("panelSvg", () => {
       label.anchor === "start" ? label.x - 2 : label.anchor === "end" ? label.x - width + 2 : label.x - width / 2;
     expect(x0).toBeGreaterThanOrEqual(-0.1);
     expect(x0 + width).toBeLessThanOrEqual(200.1);
+  });
+});
+
+describe("panelSvg: the zenith's arrow on the edge", () => {
+  const OUTSIDE: FinderPanel = { ...PANEL, zenith: null, stars: [], path: [] };
+  const arrowOf = (x: number, y: number, angleDeg: number, options: { size: number } = { size: 200 }) =>
+    panelSvg({ ...OUTSIDE, zenithEdge: { x, y, angleDeg } }, { ...options, zenithLabel: "Zenith" });
+
+  it("puts the tip just inside the rim, out along the zenith's direction, with the tail back toward the middle", () => {
+    // 20 units per degree: the top rim is y = 0, so the tip sits 3 units under it and the tail 16 further down.
+    const up = arrowOf(0, -5, 0).zenithEdge;
+    expect(up).toEqual({
+      tip: { cx: 100, cy: 3 },
+      tail: { cx: 100, cy: 19 },
+      angleDeg: 0,
+      path: "M100 19 L100 3 M102.5 7.3 L100 3 L97.5 7.3",
+    });
+    const right = arrowOf(5, 0, 90).zenithEdge;
+    expect(right?.tip).toEqual({ cx: 197, cy: 100 });
+    expect(right?.tail).toEqual({ cx: 181, cy: 100 });
+    // A diagonal direction meets the corner: the tip is 3 units back along the diagonal.
+    const corner = arrowOf(5, -5, 45).zenithEdge;
+    expect(corner?.tip).toEqual({ cx: 197.9, cy: 2.1 });
+    expect(corner?.tail).toEqual({ cx: 186.6, cy: 13.4 });
+  });
+
+  it("points outward: the tip is farther from the middle than the tail, on the line of angleDeg", () => {
+    for (const angleDeg of [0, 30, 90, 135, 180, 225, 270, 337.5]) {
+      const rad = (angleDeg * Math.PI) / 180;
+      // The edge point of a 10° square toward this bearing, in degrees.
+      const reach = 5 / Math.max(Math.abs(Math.sin(rad)), Math.abs(Math.cos(rad)));
+      const arrow = arrowOf(Math.sin(rad) * reach, -Math.cos(rad) * reach, angleDeg).zenithEdge;
+      expect(arrow, String(angleDeg)).not.toBeNull();
+      if (arrow === null) {
+        continue;
+      }
+      const from = (point: { cx: number; cy: number }) => Math.hypot(point.cx - 100, point.cy - 100);
+      expect(from(arrow.tip), String(angleDeg)).toBeGreaterThan(from(arrow.tail));
+      const along = Math.atan2(arrow.tip.cx - arrow.tail.cx, arrow.tail.cy - arrow.tip.cy);
+      expect(Math.abs(Math.sin(along - rad)), String(angleDeg)).toBeLessThan(0.02);
+      for (const value of [arrow.tip.cx, arrow.tip.cy, arrow.tail.cx, arrow.tail.cy]) {
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThanOrEqual(200);
+        expect(decimals(value)).toBeLessThanOrEqual(1);
+      }
+      for (const [, value] of arrow.path.matchAll(/(-?\d+(?:\.\d+)?)/g)) {
+        expect(decimals(Number(value)), value).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it("labels the arrow 'Zenith' inside the square and clear of the arrow, on every side", () => {
+    for (const [x, y, angleDeg] of [
+      [0, -5, 0],
+      [5, 0, 90],
+      [0, 5, 180],
+      [-5, 0, 270],
+      [5, -5, 45],
+      [-5, 5, 225],
+    ]) {
+      const svg = arrowOf(x, y, angleDeg);
+      const label = svg.labels.find((l) => l.text === "Zenith");
+      expect(label, String(angleDeg)).toBeDefined();
+      if (label === undefined || svg.zenithEdge === null) {
+        continue;
+      }
+      const width = labelWidth(label.text);
+      const x0 =
+        label.anchor === "start" ? label.x - 2 : label.anchor === "end" ? label.x - width + 2 : label.x - width / 2;
+      expect(x0, String(angleDeg)).toBeGreaterThanOrEqual(-0.1);
+      expect(x0 + width, String(angleDeg)).toBeLessThanOrEqual(200.1);
+      expect(label.y - 8, String(angleDeg)).toBeGreaterThanOrEqual(-0.1);
+      expect(label.y + 2, String(angleDeg)).toBeLessThanOrEqual(200.1);
+      // Clear of the shaft: the label's box does not contain the tail or the tip.
+      for (const point of [svg.zenithEdge.tail, svg.zenithEdge.tip]) {
+        const inBox = point.cx >= x0 && point.cx <= x0 + width && point.cy >= label.y - 8 && point.cy <= label.y + 2;
+        expect(inBox, `${String(angleDeg)} ${String(point.cx)},${String(point.cy)}`).toBe(false);
+      }
+    }
+  });
+
+  it("has no arrow, and no label for one, when the panel has none or its zenith is inside", () => {
+    expect(panelSvg(PANEL, { size: 200, zenithLabel: "Zenith" }).zenithEdge).toBeNull();
+    expect(panelSvg({ ...OUTSIDE }, { size: 200, zenithLabel: "Zenith" }).zenithEdge).toBeNull();
   });
 });
 

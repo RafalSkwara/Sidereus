@@ -3,9 +3,9 @@
  * The finder chart for an account without the full plan (finder-chart O-5): what the chart does in three lines, the
  * plan it needs (an informational notice, never error styling, and no way to get the plan: no payments in M-3), and a
  * fixed, precomputed example drawn by `FinderChart` and labelled as one. Nothing of the user's is in it: no site, no
- * gear, no star file read. The root marks the state (`data-finder-state="locked"`) and, when a host passes `plan`,
- * carries it as `data-plan` (the offline copies' plan metadata, Phase 5); the example brings the data credits, so the
- * chart itself draws none.
+ * gear, no star file read. The root marks the state (`data-finder-state="locked"`) and, when a host passes them,
+ * carries `plan` as `data-plan` and `planAt` (when the server read it) as `data-plan-at` (the offline copies' plan
+ * metadata, Phase 5; review F1); the example brings the data credits, so the chart itself draws none.
  */
 import { getMessages } from "@/i18n";
 import type { FinderChartData } from "@/lib/engine";
@@ -22,13 +22,21 @@ interface Props {
   locale: Locale;
   /** `full` | `free` | `unknown`; rendered as `data-plan` when given (default: omitted). */
   plan?: string;
+  /** When the server read `plan`, an ISO time; rendered as `data-plan-at` when given (default: omitted). */
+  planAt?: string;
 }
 
-const { example, exampleLabels, locale, plan } = Astro.props;
+const { example, exampleLabels, locale, plan, planAt } = Astro.props;
 const t = getMessages(locale).tonight.finder.locked;
 ---
 
-<section class="space-y-6" data-finder-state="locked" data-plan={plan} aria-labelledby="finder-locked-heading">
+<section
+  class="space-y-6"
+  data-finder-state="locked"
+  data-plan={plan}
+  data-plan-at={planAt}
+  aria-labelledby="finder-locked-heading"
+>
   <div>
     <h2 id="finder-locked-heading" class="font-display text-title font-semibold text-heading">
       {t.heading}

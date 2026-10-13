@@ -785,8 +785,10 @@ export const pl = {
       contextFacing: (p) => `Patrz w kierunku ${p.direction} nad horyzontem, o ${p.time}`,
       contextOverhead: (p) => `Prawie w zenicie, o ${p.time}`,
       facingNote: "Góra to góra nieba, tak jak ją widzisz, patrząc w tę stronę. Obie mapki są tak narysowane.",
-      overheadNorth: "Obiekt jest prawie w zenicie, więc północ jest u góry obu mapek, a krzyżyk oznacza zenit.",
-      overheadSouth: "Obiekt jest prawie w zenicie, więc południe jest u góry obu mapek, a krzyżyk oznacza zenit.",
+      overheadNorth:
+        "Obiekt jest prawie w zenicie, więc północ jest u góry obu mapek. Zenit jest w miejscu krzyżyka albo w kierunku strzałki przy krawędzi mapki.",
+      overheadSouth:
+        "Obiekt jest prawie w zenicie, więc południe jest u góry obu mapek. Zenit jest w miejscu krzyżyka albo w kierunku strzałki przy krawędzi mapki.",
       zenith: "Zenit",
       overviewHeading: "Przegląd",
       finderHeading: "Widok szukacza",

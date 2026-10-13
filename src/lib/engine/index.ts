@@ -60,6 +60,7 @@ export type {
   FinderTarget,
   PanelCircle,
   PanelPoint,
+  PanelZenithEdge,
   PanelStar,
   UnitVector,
 } from "./finder";

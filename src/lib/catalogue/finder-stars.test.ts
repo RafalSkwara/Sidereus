@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 import brightMeta from "./bright-stars.meta.json";
@@ -74,6 +75,16 @@ describe("finder star catalogue", () => {
 
   it("loads once and hands every caller the same stars", async () => {
     expect(await loadFinderStars()).toBe(stars);
+  });
+});
+
+describe("finder star file size", () => {
+  /** The generator (scripts/build-stars.mjs) points here: the file ships to the Worker, so it has a gzip budget. */
+  const GZIP_BUDGET_BYTES = 160_000;
+
+  it("gzips to under 160,000 bytes", () => {
+    const file = readFileSync(fileURLToPath(new URL("./finder-stars.json", import.meta.url)));
+    expect(gzipSync(file).length).toBeLessThan(GZIP_BUDGET_BYTES);
   });
 });
 
@@ -200,8 +211,9 @@ function importSpecifiers(source: string): string[] {
 }
 
 /**
- * The file is server-only: parsing it in the browser would ship ~680 KB of JSON to every visitor. No island (a
- * React component), no sky-view module and neither of the catalogue's island-safe entries may import it.
+ * The file is server-only: parsing it in the browser would ship ~372 KB of JSON to every visitor. No module under
+ * `src/components/` (an island may import a helper there), no sky-view module and neither of the catalogue's
+ * island-safe entries may import it. scripts/build-sw.mjs backs this up on the built output.
  */
 describe("finder-stars import guard", () => {
   const SRC = fileURLToPath(new URL("../../", import.meta.url));
@@ -217,22 +229,31 @@ describe("finder-stars import guard", () => {
   }
 
   const SOURCES = [
-    ...walk(SRC + "components/", (name) => name.endsWith(".tsx")),
+    ...walk(SRC + "components/", () => true),
     ...walk(SRC + "lib/sky-view/", () => true),
     SRC + "lib/catalogue/stars.ts",
     SRC + "lib/catalogue/index.ts",
   ];
 
-  it("scans every island, every sky-view file and the catalogue's browser-safe entries", () => {
+  it("scans every component module, every sky-view file and the catalogue's browser-safe entries", () => {
     expect(SOURCES.length).toBeGreaterThan(30);
     expect(SOURCES.some((source) => source.endsWith("/TonightSkyView.tsx"))).toBe(true);
     expect(SOURCES.some((source) => source.endsWith("/rotate.ts"))).toBe(true);
     expect(SOURCES.some((source) => source.endsWith("/catalogue/stars.ts"))).toBe(true);
   });
 
+  /**
+   * The /design specimens' sample builder reads the real star file, but only from the server-rendered design.astro
+   * (dev only); no island imports it. If an island ever does, build-sw.mjs's leak check fails the build.
+   */
+  const SERVER_ONLY = [SRC + "components/design/finder-samples.ts"];
+
   it("imports finder-stars from none of them", () => {
-    const offenders = SOURCES.filter((source) =>
-      importSpecifiers(readFileSync(source, "utf8")).some((specifier) => specifier.includes("finder-stars")),
+    expect(SOURCES).toEqual(expect.arrayContaining(SERVER_ONLY));
+    const offenders = SOURCES.filter(
+      (source) =>
+        !SERVER_ONLY.includes(source) &&
+        importSpecifiers(readFileSync(source, "utf8")).some((specifier) => specifier.includes("finder-stars")),
     );
     expect(offenders).toEqual([]);
   });

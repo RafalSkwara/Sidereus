@@ -151,6 +151,7 @@ export const EXAMPLE_FINDER_CHART: FinderChartData = {
     ],
     target: { x: -0.818, y: -8.804 },
     zenith: null,
+    zenithEdge: null,
     circles: [],
   },
   finder: {
@@ -213,6 +214,7 @@ export const EXAMPLE_FINDER_CHART: FinderChartData = {
     ],
     target: { x: 0, y: 0 },
     zenith: null,
+    zenithEdge: null,
     circles: [
       { kind: "finder", r: 3.504 },
       { kind: "reflex", r: 0.25 },

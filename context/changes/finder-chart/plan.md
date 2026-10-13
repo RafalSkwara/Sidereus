@@ -557,6 +557,15 @@ Prove the plan boundary over HTTP (test-plan §6.4), add one browser spec for th
 
 No schema change. The plan check reads the existing `account_plans` table. The worker's stored index gains optional fields: an index written before this change parses with `target: null` on every copy and no finder pairs, so no cache version bump is needed.
 
+## Deviations recorded after implementation (impl review F5, 2026-10-13)
+
+What was built differs from the contracts above in these ways; the contracts above are left as written, and this section is the record.
+
+- **D-2 / Phase 1 file format.** The columnar-integer format measured 227 KB gzip and 678 KB raw (the plan's 122 KB estimate was wrong). To keep both size budgets, `finder-stars.json` stores no HYG ids (they still order the stars at build time), packs right ascension and declination into one integer per star (`raCenti × 18001 + decCenti + 9000`, one comma-joined string so the server bundle stays compact), stores magnitudes as runs of `[tenths, count]` and designations as `[bayer, flamsteed, con, proper]` tuples: 372 KB raw, 146 KB gzip. `FinderStar` is `{ index, mag, vector, designation }` with no `id`; the loader cannot check unique ids (the build does), and the test "every bright star with the same HYG id" became a match by position (≤ 1′) and magnitude (≤ 0.05). 69 star pairs share a packed position (≤ 0.01° apart): harmless to the hop search; they may draw as overlapping dots.
+- **D-3 rounding.** Magnitudes are stored to 0.1, so the starting limits compare rounded values (4.5 admits stars up to about 4.549). The PRD invariant still holds: every starting limit stays well below the naked-eye limit for its Bortle class.
+- **D-6 overhead orientation.** "North up" is implemented as "the visible celestial pole up": `FinderChartData.poleUp` is `"south"` at southern sites, and the copy says so (latitude 0 counts as north).
+- **Progress 4.7 budget.** The absolute budget (4,290,555 bytes) was measured on the main of 2026-10-11. After the rebase onto e7b8c49, main builds to 3,881,438 bytes and this branch to 4,306,138, so the finder adds 424,700, within the +500 KB intent; the row is restated against that baseline.
+
 ## References
 
 - Research: `context/changes/finder-chart/research.md`
@@ -616,7 +625,7 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 - [x] 4.1 `npm test` passes, including the `loadFinderFor` plan-guard tests — 8442e8e
 - [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass — 8442e8e
 - [x] 4.3 `tonight-phone` and `tonight-targets` e2e specs stay green — 8442e8e
-- [x] 4.7 Bundle budget: no `finder-stars` in `dist/client`, `dist/server` JS at most 4,290,555 bytes — 8442e8e (after the rebase onto e7b8c49: main builds to 3,881,438 bytes and this branch to 4,306,138, so the finder adds 424,700, within the +500 KB intent)
+- [x] 4.7 Bundle budget: no `finder-stars` in `dist/client`, and `dist/server` JS at most main's build + 500 KB (restated after the rebase onto e7b8c49: main 3,881,438 bytes, this branch 4,306,138, finder +424,700; the original absolute 4,290,555 was measured on the older main) — 8442e8e
 
 #### Manual
 
@@ -649,4 +658,4 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 - [ ] 6.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object
 - [x] 6.5 PRD OQ21 records the ESA request and the SAO fallback; LICENSE-DATA names the upstream NC licence; credits carry HYG and "Credit: ESA" — e351b80
-- [ ] 6.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it
+- [x] 6.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it

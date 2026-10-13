@@ -57,6 +57,8 @@ function copy(overrides: Partial<CopyMeta> = {}): CopyMeta {
     target: null,
     targetName: null,
     plan: "full",
+    // The plan is read when the page starts; unless a case says otherwise it is read as it was prepared.
+    planAt: overrides.preparedAt ?? "2026-10-05T19:00:00.000Z",
     shellKey: shellKeyFor(islandUrl),
     islandUrl,
     storedAt: "2026-10-05T19:00:00.000Z",
@@ -196,7 +198,21 @@ describe("copyMetaFromIsland", () => {
       target: null,
       targetName: null,
       plan: "unknown",
+      planAt: "2026-10-05T19:00:00.000Z",
     });
+  });
+
+  it("reads when the plan was read, and takes preparedAt for a missing or unreadable time (F1)", () => {
+    expect(
+      copyMetaFromIsland(island(`${full} data-plan="full" data-plan-at="2026-10-05T18:59:58.500Z"`)),
+    ).toMatchObject({
+      planAt: "2026-10-05T18:59:58.500Z",
+      preparedAt: "2026-10-05T19:00:00.000Z",
+    });
+    expect(copyMetaFromIsland(island(`${full} data-plan="full" data-plan-at="soon"`))?.planAt).toBe(
+      "2026-10-05T19:00:00.000Z",
+    );
+    expect(copyMetaFromIsland(island(`${full} data-plan="full"`))?.planAt).toBe("2026-10-05T19:00:00.000Z");
   });
 
   it("reads the plan, and a missing or unrecognised one as unknown, never free (F11)", () => {
@@ -290,16 +306,24 @@ describe("lockedFinderPlan", () => {
     `<main><section class="space-y-6" data-finder-state="locked" ${attributes} aria-labelledby="x"><h2>…</h2></section></main>`;
 
   it("reads the plan of the locked root, in the island and in the shell alike", () => {
-    expect(lockedFinderPlan(locked('data-plan="free"'))).toBe("free");
-    expect(lockedFinderPlan('<html><body><div data-finder-state="locked" data-plan="free"></div></body></html>')).toBe(
-      "free",
-    );
+    expect(lockedFinderPlan(locked('data-plan="free"'))).toEqual({ plan: "free", planAt: null });
+    expect(
+      lockedFinderPlan('<html><body><div data-finder-state="locked" data-plan="free"></div></body></html>'),
+    ).toEqual({ plan: "free", planAt: null });
+  });
+
+  it("reads when the server read the plan, and nothing for a missing or unreadable time (F1)", () => {
+    expect(lockedFinderPlan(locked('data-plan="free" data-plan-at="2026-10-13T12:00:01.250Z"'))).toEqual({
+      plan: "free",
+      planAt: "2026-10-13T12:00:01.250Z",
+    });
+    expect(lockedFinderPlan(locked('data-plan="free" data-plan-at="soon"'))?.planAt).toBeNull();
   });
 
   it("reads a missing or other plan as unknown, which drops nothing (F11)", () => {
-    expect(lockedFinderPlan(locked(""))).toBe("unknown");
-    expect(lockedFinderPlan(locked('data-plan="unknown"'))).toBe("unknown");
-    expect(lockedFinderPlan(locked('data-plan="full"'))).toBe("unknown");
+    expect(lockedFinderPlan(locked(""))?.plan).toBe("unknown");
+    expect(lockedFinderPlan(locked('data-plan="unknown"'))?.plan).toBe("unknown");
+    expect(lockedFinderPlan(locked('data-plan="full"'))?.plan).toBe("unknown");
   });
 
   it("is none without a locked root", () => {
@@ -312,16 +336,18 @@ describe("lockedFinderPlan", () => {
 });
 
 describe("answerTime", () => {
-  it("is the server's Date header rounded up to the end of its second", () => {
-    expect(answerTime("Tue, 13 Oct 2026 12:00:03 GMT", new Date("2030-01-01T00:00:00.000Z"))).toBe(
-      "2026-10-13T12:00:03.999Z",
-    );
+  it("is the answer's own plan-read time, before its Date header (F1)", () => {
+    expect(answerTime("2026-10-13T12:00:01.250Z", "Tue, 13 Oct 2026 12:00:03 GMT")).toBe("2026-10-13T12:00:01.250Z");
+    expect(answerTime("2026-10-13T12:00:01.250Z", null)).toBe("2026-10-13T12:00:01.250Z");
   });
 
-  it("falls back to the worker's clock without a readable header", () => {
-    const now = new Date("2026-10-13T12:00:00.000Z");
-    expect(answerTime(null, now)).toBe(now.toISOString());
-    expect(answerTime("soon", now)).toBe(now.toISOString());
+  it("is the server's Date header rounded up to the end of its second when the answer has no plan-read time", () => {
+    expect(answerTime(null, "Tue, 13 Oct 2026 12:00:03 GMT")).toBe("2026-10-13T12:00:03.999Z");
+  });
+
+  it("is none without either, never the device's clock (F6b)", () => {
+    expect(answerTime(null, null)).toBeUndefined();
+    expect(answerTime(null, "soon")).toBeUndefined();
   });
 });
 
@@ -441,21 +467,45 @@ describe("commitPair for finder charts", () => {
 
   it("refuses a stale full chart after freeSince, and a newer full island clears it (F12)", () => {
     const demoted: CopyIndex = { ...indexOf(copy()), freeSince: "2026-10-05T19:30:00.000Z" };
-    const stale = chart("M31", { preparedAt: "2026-10-05T19:30:00.000Z" });
+    const stale = chart("M31", { planAt: "2026-10-05T19:30:00.000Z" });
     expect(commitPair(demoted, stale).index).toBe(demoted);
-    expect(commitPair(demoted, chart("M31", { preparedAt: "2026-10-05T19:29:59.999Z" })).index).toBe(demoted);
+    expect(commitPair(demoted, chart("M31", { planAt: "2026-10-05T19:29:59.999Z" })).index).toBe(demoted);
 
-    // The plan returns: a full chart prepared after freeSince is stored and clears it.
-    const back = commitPair(demoted, chart("M31", { preparedAt: "2026-10-05T19:30:00.001Z" })).index;
+    // The plan returns: a full chart whose plan was read after freeSince is stored and clears it.
+    const back = commitPair(demoted, chart("M31", { planAt: "2026-10-05T19:30:00.001Z" })).index;
     expect(back.freeSince).toBeNull();
     expect(back.copies.filter((c) => c.page === FINDER_PAGE)).toHaveLength(1);
   });
 
-  it("clears freeSince with a newer full Tonight island, and not with an older one", () => {
+  it("compares the plan-read time, not the render time: a chart built late from an earlier read is refused (F1)", () => {
+    // Chart read full at 19:00, a free answer read at 19:10 dropped the charts, the chart was rendered at 19:20.
+    const free = commitPair(
+      indexOf(chart("M13")),
+      copy({ page: "/tonight/targets", plan: "free", preparedAt: "2026-10-05T19:10:00.000Z" }),
+    ).index;
+    expect(free.freeSince).toBe("2026-10-05T19:10:00.000Z");
+    const late = chart("M31", { planAt: "2026-10-05T19:00:00.000Z", preparedAt: "2026-10-05T19:20:00.000Z" });
+    const refused = commitPair(free, late);
+    expect(refused.index).toBe(free);
+    expect(refused.index.freeSince).toBe("2026-10-05T19:10:00.000Z");
+    expect(refused.deleteKeys).toEqual([]);
+    // The same chart rendered from a plan read after the free answer is the plan's return.
+    const back = commitPair(free, { ...late, planAt: "2026-10-05T19:15:00.000Z" }).index;
+    expect(back.freeSince).toBeNull();
+    expect(back.copies.filter((c) => c.page === FINDER_PAGE)).toHaveLength(1);
+  });
+
+  it("clears freeSince with a Tonight island whose plan was read later, and not with an earlier one", () => {
     const demoted: CopyIndex = { ...indexOf(copy()), freeSince: "2026-10-05T19:30:00.000Z" };
     const older = commitPair(demoted, copy({ page: "/tonight/plan", preparedAt: "2026-10-05T19:00:00.000Z" })).index;
     expect(older.freeSince).toBe("2026-10-05T19:30:00.000Z");
     expect(older.copies).toHaveLength(2);
+    // Prepared later but its plan was read earlier: proves nothing.
+    const slow = commitPair(
+      demoted,
+      copy({ page: "/tonight/plan", preparedAt: "2026-10-05T19:40:00.000Z", planAt: "2026-10-05T19:20:00.000Z" }),
+    ).index;
+    expect(slow.freeSince).toBe("2026-10-05T19:30:00.000Z");
     const newer = commitPair(demoted, copy({ page: "/tonight/plan", preparedAt: "2026-10-05T19:31:00.000Z" })).index;
     expect(newer.freeSince).toBeNull();
   });
@@ -464,7 +514,12 @@ describe("commitPair for finder charts", () => {
     const m31 = chart("M31", { assets: ["/_astro/chart.js", "/_astro/shared.js"] });
     const m13 = chart("M13");
     const plan = copy({ page: "/tonight/plan", assets: ["/_astro/shared.js"] });
-    const free = copy({ page: "/tonight/targets", plan: "free", preparedAt: "2026-10-05T20:00:00.000Z" });
+    const free = copy({
+      page: "/tonight/targets",
+      plan: "free",
+      preparedAt: "2026-10-05T20:00:01.000Z",
+      planAt: "2026-10-05T20:00:00.000Z",
+    });
     const { index, deleteKeys, deleteAssets } = commitPair(indexOf(m31, m13, plan), free);
     expect(index.copies).toEqual([plan, free]);
     expect(index.freeSince).toBe("2026-10-05T20:00:00.000Z");
@@ -766,12 +821,28 @@ describe("parseIndex", () => {
     expect(parsed).toEqual({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good], freeSince: null });
   });
 
-  it("reads an index written before finder charts: no target, name, plan or freeSince", () => {
-    const { target: _target, targetName: _name, plan: _plan, ...old } = copy();
+  it("reads an index written before finder charts: no target, name, plan, plan-read time or freeSince", () => {
+    const { target: _target, targetName: _name, plan: _plan, planAt: _planAt, ...old } = copy();
     const parsed = parseIndex({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [old] });
     expect(parsed?.freeSince).toBeNull();
     expect(parsed?.copies).toEqual([copy({ ...old, plan: "unknown" })]);
-    expect(parsed?.copies[0]).toMatchObject({ target: null, targetName: null, plan: "unknown" });
+    expect(parsed?.copies[0]).toMatchObject({
+      target: null,
+      targetName: null,
+      plan: "unknown",
+      planAt: old.preparedAt,
+    });
+  });
+
+  it("keeps a stored plan-read time, and falls back to preparedAt for an unreadable one (F1)", () => {
+    const stored = copy({ planAt: "2026-10-05T18:59:00.000Z" });
+    const parsed = parseIndex({
+      userScope: "s",
+      owner: OWNER_A,
+      lastSiteId: SITE_A,
+      copies: [stored, { ...copy(), planAt: "soon" }],
+    });
+    expect(parsed?.copies.map((c) => c.planAt)).toEqual(["2026-10-05T18:59:00.000Z", "2026-10-05T19:00:00.000Z"]);
   });
 
   it("keeps a chart and a readable freeSince, and drops a chart with no target or an unreadable freeSince", () => {

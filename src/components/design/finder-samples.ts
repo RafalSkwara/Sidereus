@@ -81,6 +81,7 @@ export async function finderSamples(locale: Locale): Promise<{
   m31: FinderSample;
   noEyepiece: FinderSample;
   overhead: FinderSample;
+  overheadEdge: FinderSample;
   direct: FinderSample;
   nakedEye: FinderSample;
   noStart: FinderSample;
@@ -141,7 +142,22 @@ export async function finderSamples(locale: Locale): Promise<{
   const overhead: FinderSample = {
     chart: overheadChart,
     labels: labelsOf(overheadChart, stars, "M101", overheadTime, site, locale, true),
-    note: "M101 passing near the zenith at 52° N: north up in both panels, with the zenith marked.",
+    note: "M101 passing near the zenith at 52° N: north up in both panels, the zenith inside both and marked with a cross.",
+  };
+
+  // An hour earlier M101 is 83° up: the zenith is 7° from the finder panel's centre, outside both panels' 10° squares,
+  // so each draws an arrow on its edge toward it.
+  const overheadEdgeTime = new Date("2026-04-20T22:00:00Z");
+  const overheadEdgeChart = finderChart({
+    ...base,
+    bortle: 5,
+    time: overheadEdgeTime,
+    target: { ...m101, isPlanet: false },
+  });
+  const overheadEdge: FinderSample = {
+    chart: overheadEdgeChart,
+    labels: labelsOf(overheadEdgeChart, stars, "M101", overheadEdgeTime, site, locale, true),
+    note: "M101 an hour earlier, 83° up: north up in both panels, the zenith outside both, so each has an arrow on its edge toward it.",
   };
 
   // A thin sky (stars to magnitude 3.5 only) leaves no chain of stars short enough for the finder.
@@ -183,5 +199,5 @@ export async function finderSamples(locale: Locale): Promise<{
     note: "M13 with a minimum altitude of 89°: no starting star qualifies, so a message and the finder panel.",
   };
 
-  return { hop, m31, noEyepiece, overhead, direct, nakedEye, noStart };
+  return { hop, m31, noEyepiece, overhead, overheadEdge, direct, nakedEye, noStart };
 }

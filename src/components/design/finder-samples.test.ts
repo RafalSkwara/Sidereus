@@ -18,6 +18,16 @@ describe("the finder design samples", () => {
     expect(samples.noEyepiece.labels.eyepiece).toBeNull();
     expect(samples.overhead.chart.kind).toBe("hop");
     expect(samples.overhead.chart.orientation).toBe("overhead");
+    // The zenith inside both panels is the cross; outside, each panel has the edge arrow and no cross.
+    for (const panel of [samples.overhead.chart.finder, samples.overhead.chart.overview]) {
+      expect(panel?.zenith).not.toBeNull();
+      expect(panel?.zenithEdge).toBeNull();
+    }
+    expect(samples.overheadEdge.chart.orientation).toBe("overhead");
+    for (const panel of [samples.overheadEdge.chart.finder, samples.overheadEdge.chart.overview]) {
+      expect(panel?.zenith).toBeNull();
+      expect(panel?.zenithEdge).not.toBeNull();
+    }
     expect(samples.direct.chart.kind).toBe("direct");
     expect(samples.nakedEye.chart.kind).toBe("naked-eye");
     expect(samples.nakedEye.chart.overview).toBeNull();

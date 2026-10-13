@@ -45,7 +45,8 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
   },
   "src/lib/account-plan/index.ts": {
     count: 1,
-    reason: "the failed plan read's trace: a fixed line only, nothing from the request or the database error",
+    reason:
+      "the failed plan read's trace: a fixed line and the store's fixed error code or name, never a message or anything from the request",
   },
   "src/lib/finder/load.ts": {
     count: 2,

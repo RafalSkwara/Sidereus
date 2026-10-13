@@ -6,7 +6,8 @@
 // Every state's root carries `data-finder-state="chart|locked|not-ranked|no-gear|failed"`; only the chart state's
 // root carries `data-finder-chart`, never `FinderChart` itself (the free example renders that too).
 // Offline (Phase 5): only the chart state renders `OfflineCopy`, with the target, so only a chart is ever stored; the
-// locked root carries `data-plan` (from `accountPlanForCopy`) so the worker can tell a lost plan from a failed read.
+// locked root carries `data-plan` and `data-plan-at` (from `accountPlanForCopy`) so the worker can tell a lost plan from a failed read
+// and order it against the charts' plan reads.
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import FinderChart from "@/components/finder/FinderChart.astro";
@@ -44,7 +45,7 @@ const t = m.tonight;
 
 const loaded = await loadFinderFor(Astro.locals, { target, siteId, telescopeId, night });
 // The same memoised read the loader's guard made: no second query.
-const plan = loaded.kind === "locked" ? await accountPlanForCopy(Astro.locals) : undefined;
+const planRead = loaded.kind === "locked" ? await accountPlanForCopy(Astro.locals) : undefined;
 const name = target === null ? null : targetLabel(target, locale).id;
 const title = name === null ? t.finder.link : t.finder.title({ target: name });
 const backHref = finderBackHref(from);
@@ -66,7 +67,13 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
   <>
     <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
     <div class="mx-auto w-full max-w-3xl px-4 pt-8">
-      <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} plan={plan} />
+      <FinderLocked
+        example={EXAMPLE_FINDER_CHART}
+        exampleLabels={exampleLabels(locale)}
+        locale={locale}
+        plan={planRead?.plan}
+        planAt={planRead?.at.toISOString()}
+      />
     </div>
   </>
 )}

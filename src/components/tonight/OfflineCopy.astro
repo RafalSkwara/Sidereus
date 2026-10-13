@@ -7,8 +7,9 @@
 // zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates. `data-owner`
 // is a one-way fingerprint of the user id (owner.ts), so the worker can tell users apart without the id or the email.
 // `data-plan` says which plan the island was rendered for (finder-chart Phase 5): `full`, `free`, or `unknown` when the
-// plan read failed (`accountPlanForCopy`, the request's one memoised read). The worker drops the stored finder charts
-// only for an explicit `free`. A finder chart also passes its `target` (`data-target` / `data-target-name`: a key and a
+// plan read failed (`accountPlanForCopy`, the request's one memoised read), and `data-plan-at` is when the server read
+// it (not `data-prepared-at`: a chart is built after its plan was read, review F1). The worker drops the stored finder
+// charts only for an explicit `free` and compares the plan-read times. A finder chart also passes its `target` (`data-target` / `data-target-name`: a key and a
 // name, never coordinates), which keys its stored pair.
 import Notice from "@/components/ui/Notice.astro";
 import { getMessages } from "@/i18n";
@@ -37,7 +38,7 @@ const nightText = formatShortNightDate(view.date);
 const forecast = view.forecastFetchedAt;
 // No user, no owner: the worker then stores nothing.
 const owner = user ? await ownerFingerprint(user.id) : undefined;
-const plan = await accountPlanForCopy(Astro.locals);
+const { plan, at: planAt } = await accountPlanForCopy(Astro.locals);
 ---
 
 <div
@@ -52,6 +53,7 @@ const plan = await accountPlanForCopy(Astro.locals);
   data-valid-until={view.validUntil.toISOString()}
   data-forecast-fetched-at={forecast ? forecast.toISOString() : undefined}
   data-plan={plan}
+  data-plan-at={planAt.toISOString()}
   data-target={target?.key}
   data-target-name={target?.name}
 ></div>

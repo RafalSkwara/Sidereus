@@ -104,6 +104,15 @@ export interface PanelCircle {
   r: number;
 }
 
+/**
+ * Where the zenith lies when it is outside an overhead panel: the point of the panel's edge in its direction, and that
+ * direction, so the chart can draw an arrow there (F2).
+ */
+export interface PanelZenithEdge extends PanelPoint {
+  /** Direction from the panel's centre to the zenith, degrees clockwise from up (y down, as a bearing on the panel), 0 to under 360. */
+  angleDeg: number;
+}
+
 /** One square panel: stars, path, target, zenith marker and circles, in degrees on the tangent plane (x right, y down as in an SVG, so a higher star has the smaller y). */
 export interface FinderPanel {
   /** Width and height of the square, degrees on the tangent plane. */
@@ -114,6 +123,12 @@ export interface FinderPanel {
   target: PanelPoint;
   /** The zenith, when the chart is north up and the zenith lies inside this panel. */
   zenith: PanelPoint | null;
+  /**
+   * The chart is overhead and the zenith lies outside this panel: the point of the panel's edge (a square of `fieldDeg`,
+   * the ray from the centre toward the zenith meets it there) and the direction. Never set together with `zenith`;
+   * `null` when facing.
+   */
+  zenithEdge: PanelZenithEdge | null;
   circles: PanelCircle[];
 }
 
@@ -421,6 +436,27 @@ function zenithInsideFacing(centre: Vec, fieldDeg: number): boolean {
   return zenithAngle < MAX_PANEL_ANGLE_DEG && Math.tan(zenithAngle * RAD) * DEG <= fieldDeg / 2;
 }
 
+/**
+ * Where the great circle from a panel's centre to `point` leaves the square of half-side `half`. The direction is the
+ * point's components along the panel's axes, which is what the projection shows while the point is within 85° of the
+ * centre and the great-circle bearing beyond it, where the projection gives up. A point on the centre (no direction)
+ * reads as up.
+ */
+function edgeToward(basis: Basis, point: Vec, half: number): PanelZenithEdge {
+  const dx = dot(point, basis.right);
+  const dy = -dot(point, basis.up);
+  const length = Math.hypot(dx, dy);
+  const ux = length < 1e-12 ? 0 : dx / length;
+  const uy = length < 1e-12 ? -1 : dy / length;
+  const reach = half / Math.max(Math.abs(ux), Math.abs(uy));
+  const bearing = Math.atan2(ux, -uy) * DEG;
+  return {
+    x: round3(ux * reach),
+    y: round3(uy * reach),
+    angleDeg: roundTo(bearing < 0 ? bearing + 360 : bearing, 0.1) % 360,
+  };
+}
+
 interface PanelRequest {
   centre: Vec;
   up: Vec;
@@ -450,10 +486,13 @@ function buildPanel(request: PanelRequest, stars: readonly HorizonStar[]): Finde
     return { x: round3(p.x), y: round3(p.y) };
   };
   let zenith: PanelPoint | null = null;
+  let zenithEdge: PanelZenithEdge | null = null;
   if (request.showZenith) {
     const p = projectWith(basis, ZENITH);
     if (p !== null && Math.abs(p.x) <= half && Math.abs(p.y) <= half) {
       zenith = { x: round3(p.x), y: round3(p.y) };
+    } else {
+      zenithEdge = edgeToward(basis, ZENITH, half);
     }
   }
   return {
@@ -462,6 +501,7 @@ function buildPanel(request: PanelRequest, stars: readonly HorizonStar[]): Finde
     path: request.path.map(rounded),
     target: rounded(request.target),
     zenith,
+    zenithEdge,
     circles: request.circleDiametersDeg.map(({ kind, diameterDeg }) => ({
       kind,
       r: round3(Math.tan((diameterDeg / 2) * RAD) * DEG),
@@ -480,7 +520,8 @@ function buildPanel(request: PanelRequest, stars: readonly HorizonStar[]): Finde
  *
  * Panels are oriented as the user faces that part of the sky (up = the vertical through the panel's centre). When a
  * panel's centre is at or above `FINDER_OVERHEAD_ALT_DEG`, or the zenith falls inside a panel (judged in the facing
- * orientation), both panels go north up, toward the visible celestial pole, with a zenith marker. Positions are
+ * orientation), both panels go north up, toward the visible celestial pole, with a zenith marker (a panel that does not
+ * contain the zenith gets `zenithEdge`, the point of its edge toward the zenith). Positions are
  * rounded to 0.001° and lengths to 0.01°.
  */
 export function finderChart(input: FinderChartInput): FinderChartData {

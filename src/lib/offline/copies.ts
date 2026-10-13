@@ -65,6 +65,12 @@ export interface IslandCopy {
   targetName: string | null;
   /** Which plan the island was rendered for. Never `"free"` by default: a missing value reads as `"unknown"`. */
   plan: CopyPlan;
+  /**
+   * When the server read that plan (`data-plan-at`), not when the page was rendered: a chart built after a demotion from
+   * a plan read before it keeps the earlier time (finder-chart review F1). An island or a stored copy without it reads
+   * as `preparedAt`.
+   */
+  planAt: string;
 }
 
 /** One stored pair. Keys and URLs are path + query; times are ISO strings. */
@@ -94,10 +100,10 @@ export interface CopyIndex {
   lastSiteId: string | null;
   copies: CopyMeta[];
   /**
-   * The `preparedAt` of the newest island the device saw rendered for a free account (a server time), or the server's
-   * `Date` of a locked finder answer; `null` when none. A finder pair prepared at or before it is refused, so a chart
-   * rendered before a demotion cannot come back after the demotion cleared the charts (review F12). A newer full
-   * island clears it.
+   * The `planAt` of the newest answer the device saw for a free account (a server time: an island's `data-plan-at`, a
+   * locked finder answer's, or its `Date` header when that has none); `null` when none. A finder pair whose plan was
+   * read at or before it is refused, so a chart built from a plan read before a demotion cannot come back after the
+   * demotion cleared the charts (reviews F12, F1). A full island whose plan was read later clears it.
    */
   freeSince: string | null;
 }
@@ -252,6 +258,7 @@ export function copyMetaFromIsland(html: string): IslandCopy | undefined {
     target,
     targetName: target === null ? null : rawName !== undefined && rawName !== "" ? rawName : target,
     plan: planOf(element.get("data-plan")),
+    planAt: isoOrUndefined(element.get("data-plan-at")) ?? preparedAt,
   };
 }
 
@@ -273,25 +280,37 @@ export function copyMetaFor(shellPage: StoredPage, shellUrl: URL, islandHtml: st
   return storedPageOf(shellUrl)?.target === island.target ? island : undefined;
 }
 
-/**
- * What a locked finder state says about the plan: the `data-plan` of the element marked `data-finder-state="locked"`
- * (the shell's and the island's locked root), `undefined` when the page has no such element. Only `"free"` clears
- * the stored charts: a missing or unreadable plan (`"unknown"`) clears nothing (review F11).
- */
-export function lockedFinderPlan(html: string): "free" | "unknown" | undefined {
-  const locked = tagsOf(html, "[a-zA-Z][\\w-]*").find((tag) => tag.get("data-finder-state") === "locked");
-  if (!locked) return undefined;
-  return locked.get("data-plan") === "free" ? "free" : "unknown";
+/** What a locked finder state says: the plan, and when the server read it (`null` when it did not say). */
+export interface LockedFinder {
+  plan: "free" | "unknown";
+  planAt: string | null;
 }
 
 /**
- * The server's time of an answer from its `Date` header, rounded up to the end of its second (the header has no
- * milliseconds, so a render later in the same second is not mistaken for a later one); the worker's own clock when
- * the header is missing. Used as `freeSince` for a locked finder answer, which carries no `preparedAt`.
+ * What a locked finder state says about the plan: the `data-plan` and `data-plan-at` of the element marked
+ * `data-finder-state="locked"` (the shell's and the island's locked root), `undefined` when the page has no such
+ * element. Only `"free"` clears the stored charts: a missing or unreadable plan (`"unknown"`) clears nothing (review
+ * F11).
  */
-export function answerTime(dateHeader: string | null, now: Date): string {
+export function lockedFinderPlan(html: string): LockedFinder | undefined {
+  const locked = tagsOf(html, "[a-zA-Z][\\w-]*").find((tag) => tag.get("data-finder-state") === "locked");
+  if (!locked) return undefined;
+  return {
+    plan: locked.get("data-plan") === "free" ? "free" : "unknown",
+    planAt: isoOrUndefined(locked.get("data-plan-at")) ?? null,
+  };
+}
+
+/**
+ * The server's time for a locked finder answer, to record as `freeSince`: its own `planAt`; failing that its `Date`
+ * header rounded up to the end of its second (the header has no milliseconds, so a render later in the same second is
+ * not mistaken for a later one). With neither, `undefined`: the device's clock is not the server's, so the charts are
+ * dropped without moving `freeSince` (review F6b).
+ */
+export function answerTime(planAt: string | null, dateHeader: string | null): string | undefined {
+  if (planAt !== null) return planAt;
   const parsed = dateHeader === null ? Number.NaN : Date.parse(dateHeader);
-  return new Date(Number.isNaN(parsed) ? now.getTime() : parsed + 999).toISOString();
+  return Number.isNaN(parsed) ? undefined : new Date(parsed + 999).toISOString();
 }
 
 /**
@@ -344,15 +363,16 @@ function laterOf(a: string | null, b: string): string {
  * browser may fetch one island twice (the preload and the script), and the second commit changes nothing.
  *
  * The plan the island was rendered for moves the index's `freeSince` (finder-chart D-14): an island rendered for a free
- * account sets it and takes every stored chart with it; a full island prepared after it clears it; `unknown` changes
- * nothing. A finder pair is refused unless it is a full chart prepared after `freeSince`, so a chart rendered before
- * the device last saw a free account never comes back (review F11, F12).
+ * account sets it and takes every stored chart with it; a full island whose plan was read after it clears it;
+ * `unknown` changes nothing. A finder pair is refused unless it is a full chart whose plan was read after `freeSince`,
+ * so a chart built from a plan read before the device last saw a free account never comes back, however late it was
+ * rendered (reviews F11, F12, F1). All the times compared are `planAt`, the server's plan-read time.
  */
 export function commitPair(index: CopyIndex, meta: CopyMeta): IndexChange {
   const unchanged = { index, deleteKeys: [], deleteAssets: [] };
   if (index.copies.some((copy) => copy.islandUrl === meta.islandUrl)) return unchanged;
   if (meta.page === FINDER_PAGE) {
-    const stale = index.freeSince !== null && Date.parse(meta.preparedAt) <= Date.parse(index.freeSince);
+    const stale = index.freeSince !== null && Date.parse(meta.planAt) <= Date.parse(index.freeSince);
     if (meta.plan !== "full" || meta.target === null || stale) return unchanged;
   }
   const replaced = index.copies.filter(
@@ -360,9 +380,9 @@ export function commitPair(index: CopyIndex, meta: CopyMeta): IndexChange {
       copy.siteId === meta.siteId && copy.page === meta.page && copy.target === meta.target && copy.kind === meta.kind,
   );
   const demoted = meta.plan === "free";
-  // A full island prepared after the last free one is the plan's return; an older one proves nothing.
+  // A full island whose plan was read after the last free one is the plan's return; an older one proves nothing.
   const returned =
-    meta.plan === "full" && index.freeSince !== null && Date.parse(meta.preparedAt) > Date.parse(index.freeSince);
+    meta.plan === "full" && index.freeSince !== null && Date.parse(meta.planAt) > Date.parse(index.freeSince);
   const removed = demoted
     ? [...new Set([...replaced, ...index.copies.filter((copy) => copy.page === FINDER_PAGE)])]
     : replaced;
@@ -372,7 +392,7 @@ export function commitPair(index: CopyIndex, meta: CopyMeta): IndexChange {
     // Only a page the user opened moves the remembered site; the next-night copy follows it.
     lastSiteId: meta.kind === "tonight" ? meta.siteId : (index.lastSiteId ?? meta.siteId),
     copies: [...index.copies.filter((copy) => !removed.includes(copy)), meta],
-    freeSince: demoted ? laterOf(index.freeSince, meta.preparedAt) : returned ? null : index.freeSince,
+    freeSince: demoted ? laterOf(index.freeSince, meta.planAt) : returned ? null : index.freeSince,
   };
   return changeRemoving(removed, next);
 }
@@ -547,7 +567,10 @@ function isCopyMeta(value: unknown): value is CopyMeta {
   );
 }
 
-/** A stored copy read back; one written before finder charts has no target, name or plan (`null`, `null`, `unknown`). */
+/**
+ * A stored copy read back; one written before finder charts has no target, name or plan (`null`, `null`, `unknown`),
+ * and one written before the plan-read time has no `planAt` (it reads as `preparedAt`).
+ */
 function withDefaults(copy: CopyMeta): CopyMeta {
   const stored = copy as Partial<CopyMeta>;
   return {
@@ -555,6 +578,7 @@ function withDefaults(copy: CopyMeta): CopyMeta {
     target: typeof stored.target === "string" ? stored.target : null,
     targetName: typeof stored.targetName === "string" ? stored.targetName : null,
     plan: planOf(stored.plan),
+    planAt: typeof stored.planAt === "string" && isTime(stored.planAt) ? stored.planAt : copy.preparedAt,
   };
 }
 

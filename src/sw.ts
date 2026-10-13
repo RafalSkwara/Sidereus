@@ -300,7 +300,8 @@ const shellReads = new Set<Promise<unknown>>();
  * recorded). `scope` was taken when the navigation started, before the network answered (impl review F3), so a
  * response sent with an earlier user's cookies that lands after a purge cannot commit into the new store. A finder
  * shell that is the locked state records nothing: for a free account (`data-plan="free"`) it also drops the stored
- * charts; an unknown plan (a failed read) drops nothing.
+ * charts, whatever its URL carries (the check runs before the notice-param gate, review F6a); an unknown plan (a
+ * failed read) drops nothing.
  */
 function recordShell(
   page: StoredPage,
@@ -313,10 +314,13 @@ function recordShell(
     if (page === FINDER_PAGE) {
       const locked = lockedFinderPlan(shell);
       if (locked !== undefined) {
-        if (locked === "free") await dropFinderPairs(answerTime(response.headers.get("date"), new Date()), await scope);
+        if (locked.plan === "free") {
+          await dropFinderPairs(answerTime(locked.planAt, response.headers.get("date")), await scope);
+        }
         return undefined;
       }
     }
+    if (!mayStoreShell(url)) return undefined;
     const islandUrl = islandUrlFromShell(shell);
     if (!islandUrl) return undefined;
     const now = Date.now();
@@ -337,11 +341,12 @@ function recordShell(
 }
 
 /**
- * The account lost the full plan: every stored finder pair goes, and `freeSince` records when the free plan was seen,
- * in one serialised index step, so a chart rendered before it cannot be committed afterwards (review F12). Nothing
- * happens if a purge started a new scope since `scope` was taken.
+ * The account lost the full plan: every stored finder pair goes, and `freeSince` records when the server read the free
+ * plan, in one serialised index step, so a chart built from a plan read before it cannot be committed afterwards
+ * (reviews F12, F1). Without a server time (`undefined`) the charts go and `freeSince` stays as it is. Nothing happens
+ * if a purge started a new scope since `scope` was taken.
  */
-function dropFinderPairs(freeSince: string, scope: string): Promise<void> {
+function dropFinderPairs(freeSince: string | undefined, scope: string): Promise<void> {
   return serial(async () => {
     const { cache, index } = await loadIndex();
     if (index.userScope !== scope) return;
@@ -411,7 +416,9 @@ async function commitIsland(islandUrl: string, response: Response, clientId: str
     // A finder island that answers locked stores nothing; for a free account it also drops the stored charts.
     const locked = shell.page === FINDER_PAGE ? lockedFinderPlan(body) : undefined;
     if (locked !== undefined) {
-      if (locked === "free") await dropFinderPairs(answerTime(response.headers.get("date"), new Date()), shell.scope);
+      if (locked.plan === "free") {
+        await dropFinderPairs(answerTime(locked.planAt, response.headers.get("date")), shell.scope);
+      }
       return;
     }
     // Signed out, the island answers 200 with an empty body: nothing to store. A shell and island that do not belong
@@ -553,7 +560,9 @@ async function afterNavigation(
     await purge();
     return;
   }
-  if (!isHtml200(response) || !mayStoreShell(url)) return;
+  // A finder shell is read even with a notice param in its URL, so a locked answer still drops the charts;
+  // `recordShell` then stores nothing for it.
+  if (!isHtml200(response) || (page !== FINDER_PAGE && !mayStoreShell(url))) return;
   const islandUrl = await recordShell(page, url, response, scope);
   if (!late || !islandUrl) return;
   const island = await fetch(islandUrl, {

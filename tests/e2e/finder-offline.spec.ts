@@ -10,7 +10,8 @@ import { Proxy } from "./offline-proxy";
  * Finder charts offline, end to end (finder-chart Phase 5, O-4, D-13 to D-15): a chart a full-plan account opened
  * online is stored on the device with the Tonight copies, opens from the device offline from the same link and is
  * listed on /offline; once the account is demoted, the first Tonight page opened online clears every stored chart, and
- * offline the chart's URL lands on /offline again.
+ * offline the chart's URL lands on /offline again. A second purge path follows: after the plan is granted again and the
+ * chart is stored again, a demotion and one online visit to the finder URL itself (the locked shell) clear it too.
  *
  * Going offline: the same proxy as offline.spec.ts (`offline-proxy.ts`); closing it makes the server unreachable for
  * the worker, `setOffline` only sets `navigator.onLine`, and every offline assertion first checks
@@ -55,7 +56,7 @@ test("a chart opened online opens from the device offline, and is gone once the 
 }, testInfo) => {
   requirePlanGrant("finder-offline");
   test.skip(inNoDarknessWindow(), "no astronomical darkness (8 June to 2 July): the ranking can be empty");
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
   await proxy.start();
   // Its own context on the proxy's origin, so the service worker registers there.
@@ -100,8 +101,10 @@ test("a chart opened online opens from the device offline, and is gone once the 
     await page.goto("/tonight/targets");
     await expect(page.locator("html")).toHaveAttribute("data-from-device");
     await (await finderLink(page, TARGET)).click();
-    await expect(page.locator("html")).toHaveAttribute("data-from-device");
+    // The new page's own marker first: the Targets page just left is a stored page too, so `data-from-device` alone
+    // proves nothing right after the click.
     await expect(page.locator("[data-finder-chart]")).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-from-device");
 
     // A chart never opened online is not on the device: its URL lands on /offline.
     await page.goto("/tonight/finder?object=NGC7000");
@@ -137,6 +140,32 @@ test("a chart opened online opens from the device offline, and is gone once the 
     await expect(page.getByRole("heading", { level: 1, name: en.offline.page.title })).toBeVisible();
     await expect(page.locator("[data-finder-chart]")).toHaveCount(0);
     await expect(page.locator("[data-offline-list] a").filter({ hasText: FINDER_TITLE })).toHaveCount(0);
+
+    // The second purge path, the locked shell. The plan comes back and the chart is opened online again: stored again,
+    // because its plan was read after the demotion was seen.
+    await proxy.start();
+    await context.setOffline(false);
+    await setPlan(email, "full");
+    await page.goto(chartPath);
+    await expect(page.locator("[data-finder-chart]")).toBeVisible();
+    await expect(page.locator("[data-offline-copy]")).toHaveAttribute("data-plan", "full");
+    await expect.poll(() => storedCharts(page), { timeout: 30_000 }).toEqual([`/tonight/finder ${TARGET} tonight`]);
+
+    // Demoted again, the finder URL itself is opened online: its shell is the locked explainer (no island), and
+    // answering "free" takes the stored chart with it.
+    await setPlan(email, "free");
+    await page.goto(chartPath);
+    await expect(page.locator('[data-finder-state="locked"]')).toHaveAttribute("data-plan", "free");
+    await expect(page.locator('[data-finder-state="locked"]')).toHaveAttribute("data-plan-at", /^\d{4}-\d\d-\d\dT/);
+    await expect.poll(() => storedCharts(page), { timeout: 30_000 }).toEqual([]);
+
+    // Offline again: the chart's URL lands on /offline, as after the Tonight path.
+    await proxy.stop();
+    await context.setOffline(true);
+    await page.goto(chartPath);
+    await expect(page.getByRole("heading", { level: 1, name: en.offline.page.title })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-from-device");
+    await expect(page.locator("[data-finder-chart]")).toHaveCount(0);
   } finally {
     await context.close();
     await proxy.stop();

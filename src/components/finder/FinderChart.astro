@@ -29,6 +29,7 @@ const t = getMessages(locale).tonight.finder;
 const text = finderText(chart, labels, locale, t);
 const deg = degreesFormat(locale);
 const overhead = chart.orientation === "overhead";
+// One sentence covers both markers: a panel holding the zenith draws the cross, one that does not draws an edge arrow.
 const overheadNote = chart.poleUp === "south" ? t.overheadSouth : t.overheadNorth;
 const showEyepiece = labels.eyepiece !== null && chart.finder.circles.some((circle) => circle.kind === "eyepiece");
 

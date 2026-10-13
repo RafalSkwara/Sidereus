@@ -205,7 +205,7 @@ function centiDegrees(degrees, wrap) {
 /**
  * The finder output: stars to FINDER_MAX_MAG as columnar integers (position packed into one integer, mag as runs in 0.1),
  * and a sparse table of designations keyed by the star's index in those columns. HYG ids decide the order but are
- * not stored (the packed file has to stay small: see finder-stars.test.ts for the size budget).
+ * not stored (the packed file has to stay small: finder-stars.test.ts holds its gzip size under 160,000 bytes).
  */
 function buildFinderCatalogue(allStars) {
   // Sorted by the magnitude the file stores (tenths), so a reader can verify the order from the file alone.

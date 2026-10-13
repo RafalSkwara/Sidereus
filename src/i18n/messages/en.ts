@@ -886,8 +886,11 @@ export const en = {
       contextFacing: (p: { direction: string; time: string }) => `Facing ${p.direction} up at ${p.time}`,
       contextOverhead: (p: { time: string }) => `Nearly overhead at ${p.time}`,
       facingNote: "Up is up in the sky, as you face it. Both charts are drawn this way.",
-      overheadNorth: "It is nearly overhead, so north is at the top of both charts and the cross marks the zenith.",
-      overheadSouth: "It is nearly overhead, so south is at the top of both charts and the cross marks the zenith.",
+      /** One sentence for both markers: the cross where the zenith is on a chart, the edge arrow where it is not. */
+      overheadNorth:
+        "It is nearly overhead, so north is at the top of both charts. The zenith is at the cross, or in the direction of the arrow at a chart's edge.",
+      overheadSouth:
+        "It is nearly overhead, so south is at the top of both charts. The zenith is at the cross, or in the direction of the arrow at a chart's edge.",
       zenith: "Zenith",
       overviewHeading: "Overview",
       finderHeading: "Finder view",

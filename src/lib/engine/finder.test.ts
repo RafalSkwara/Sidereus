@@ -584,6 +584,7 @@ describe("finderChart: orientation", () => {
       expect(chart.orientation).toBe("overhead");
       expect(allFinite(chart)).toBe(true);
       expect(chart.finder.zenith).toEqual({ x: 0, y: 0 });
+      expect(chart.finder.zenithEdge).toBeNull();
       expect(chart.facing.altDeg).toBe(90);
       expect(run()).toEqual(chart);
     });
@@ -595,9 +596,98 @@ describe("finderChart: orientation", () => {
       expect(below.finder.zenith).toBeNull();
       const at80 = withTarget(FINDER_OVERHEAD_ALT_DEG, FINDER_OVERHEAD_ALT_DEG - 3);
       expect(at80.orientation).toBe("overhead");
-      // Both centres are 10° or more from the zenith, which is outside both 10° panels: no marker.
+      // Both centres are 10° or more from the zenith, which is outside both 10° panels: no cross, an edge arrow instead.
       expect(at80.finder.zenith).toBeNull();
       expect(at80.overview?.zenith).toBeNull();
+      expect(at80.finder.zenithEdge).not.toBeNull();
+      expect(at80.overview?.zenithEdge).not.toBeNull();
+    });
+
+    describe("the zenith's edge marker", () => {
+      /** The bearing, degrees clockwise from up, of the zenith on a panel at `centre` with the pole up, by the engine's own projection. */
+      const bearingOfZenith = (centre: Vec): number => {
+        const p = projectGnomonic(centre, [0, 0, 1], toHor([0, 0, 1]));
+        if (p === null) {
+          throw new Error("the zenith should project for this case");
+        }
+        const bearing = Math.atan2(p.x, -p.y) * DEG;
+        return bearing < 0 ? bearing + 360 : bearing;
+      };
+      /** The smallest difference between two bearings, degrees. */
+      const apart = (a: number, b: number): number => Math.abs(((a - b + 540) % 360) - 180);
+
+      it("sits on the rim toward the zenith: straight up for a target on the meridian south of it", () => {
+        const chart = withTarget(80, 77);
+        expect(chart.orientation).toBe("overhead");
+        const half = chart.finder.fieldDeg / 2;
+        expect(chart.finder.zenith).toBeNull();
+        // The zenith lies between the target and the pole on the meridian: up, to within the precession's tenth of a degree.
+        expect(chart.finder.zenithEdge?.y).toBeCloseTo(-half, 1);
+        expect(Math.abs(chart.finder.zenithEdge?.x ?? 1)).toBeLessThan(0.1);
+        expect(apart(chart.finder.zenithEdge?.angleDeg ?? 90, 0)).toBeLessThan(1.5);
+        const overviewHalf = (chart.overview?.fieldDeg ?? 0) / 2;
+        expect(chart.overview?.zenithEdge?.y).toBeCloseTo(-overviewHalf, 1);
+      });
+
+      it("lies on the square's edge at the zenith's bearing for every compass side of the target", () => {
+        for (const az of [0, 45, 90, 135, 180, 225, 270, 315]) {
+          const chart = withTarget(83, 80, az);
+          expect(chart.orientation, String(az)).toBe("overhead");
+          expect(chart.finder.zenith, String(az)).toBeNull();
+          const edge = chart.finder.zenithEdge;
+          expect(edge, String(az)).not.toBeNull();
+          if (edge === null) {
+            continue;
+          }
+          const half = chart.finder.fieldDeg / 2;
+          // On the rim: the larger coordinate is the half-side, the other is inside it.
+          expect(Math.max(Math.abs(edge.x), Math.abs(edge.y)), String(az)).toBeCloseTo(half, 2);
+          // Pointing at the zenith: the edge point and the angle agree, and both match the engine's projection of the zenith.
+          expect(apart((Math.atan2(edge.x, -edge.y) * DEG + 360) % 360, edge.angleDeg), String(az)).toBeLessThan(0.1);
+          expect(apart(edge.angleDeg, bearingOfZenith(hor(83, az))), String(az)).toBeLessThan(0.2);
+        }
+      });
+
+      it("falls back to the great-circle bearing when the zenith is 85° or more from the panel's centre", () => {
+        // A start at 20° in the north and a target 4° up in the south: the overview is centred about 82° up (so overhead,
+        // with the zenith inside it), while the target's panel is 86° from the zenith, where the projection gives up.
+        const chart = chartOf({
+          stars: [{ index: 0, mag: 3, vector: toJ2000(hor(20, 0)) }],
+          target: { vector: toJ2000(hor(4, 180)), magnitude: null, isPlanet: false, majorAxisArcmin: null },
+        });
+        expect(chart.orientation).toBe("overhead");
+        expect(projectGnomonic(hor(4, 180), [0, 0, 1], toHor([0, 0, 1]))).toBeNull();
+        expect(chart.finder.zenith).toBeNull();
+        expect(chart.finder.zenithEdge?.y).toBeCloseTo(-chart.finder.fieldDeg / 2, 1);
+        expect(apart(chart.finder.zenithEdge?.angleDeg ?? 90, 0)).toBeLessThan(2);
+        expect(allFinite(chart)).toBe(true);
+      });
+
+      it("is set only where the zenith is outside: inside gives the cross and no edge, facing gives neither", () => {
+        const zenithTarget = chartOf({
+          stars: [{ index: 0, mag: 3, vector: toJ2000(hor(86, 180)) }],
+          target: { vector: toJ2000([0, 0, 1]), magnitude: null, isPlanet: false, majorAxisArcmin: null },
+        });
+        expect(zenithTarget.orientation).toBe("overhead");
+        expect(zenithTarget.finder.zenith).toEqual({ x: 0, y: 0 });
+        expect(zenithTarget.finder.zenithEdge).toBeNull();
+        expect(zenithTarget.overview?.zenithEdge ?? null).toBeNull();
+        const wide = chartOf({
+          stars: [{ index: 0, mag: 3, vector: toJ2000(hor(30, 180)) }],
+          target: { vector: toJ2000(hor(60, 0)), magnitude: null, isPlanet: false, majorAxisArcmin: null },
+        });
+        // The very wide overview holds the zenith; the finder panel, 30° away, gets the edge arrow instead.
+        expect(wide.overview?.zenith).not.toBeNull();
+        expect(wide.overview?.zenithEdge).toBeNull();
+        expect(wide.finder.zenith).toBeNull();
+        expect(wide.finder.zenithEdge).not.toBeNull();
+        const facing = withTarget(60, 57);
+        expect(facing.orientation).toBe("facing");
+        for (const panel of [facing.finder, facing.overview]) {
+          expect(panel?.zenith).toBeNull();
+          expect(panel?.zenithEdge).toBeNull();
+        }
+      });
     });
 
     it("goes overhead when the zenith falls inside a panel although every centre is below 80°", () => {

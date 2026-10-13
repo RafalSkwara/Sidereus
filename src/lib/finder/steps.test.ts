@@ -12,6 +12,7 @@ const emptyPanel: FinderPanel = {
   path: [],
   target: { x: 0, y: 0 },
   zenith: null,
+  zenithEdge: null,
   circles: [],
 };
 

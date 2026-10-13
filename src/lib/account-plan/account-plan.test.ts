@@ -11,7 +11,7 @@ import { accountPlanForCopy, getAccountPlan, planFrom, requireFullPlan } from ".
  */
 
 const mocks = vi.hoisted(() => ({
-  read: vi.fn<(client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true }>>(),
+  read: vi.fn<(client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true; code: string }>>(),
 }));
 
 vi.mock("./store", () => ({ accountPlanStore: { read: mocks.read } }));
@@ -63,7 +63,7 @@ describe("getAccountPlan", () => {
   });
 
   it("reads as free when the query fails or the stored value is unknown", async () => {
-    mocks.read.mockResolvedValueOnce({ error: true });
+    mocks.read.mockResolvedValueOnce({ error: true, code: "42501" });
     expect(await getAccountPlan(locals())).toBe("free");
     mocks.read.mockResolvedValueOnce({ plan: "platinum" });
     expect(await getAccountPlan(locals())).toBe("free");
@@ -71,42 +71,44 @@ describe("getAccountPlan", () => {
 });
 
 describe("accountPlanForCopy", () => {
+  /** The plan alone, for the cases that are not about the time. */
+  async function planOf(request: App.Locals) {
+    return (await accountPlanForCopy(request)).plan;
+  }
+
   it("is the plan the read found", async () => {
     mocks.read.mockResolvedValueOnce({ plan: "full" });
-    expect(await accountPlanForCopy(locals())).toBe("full");
+    expect(await planOf(locals())).toBe("full");
     mocks.read.mockResolvedValueOnce({ plan: "free" });
-    expect(await accountPlanForCopy(locals())).toBe("free");
+    expect(await planOf(locals())).toBe("free");
     mocks.read.mockResolvedValueOnce({ plan: undefined });
-    expect(await accountPlanForCopy(locals())).toBe("free");
+    expect(await planOf(locals())).toBe("free");
     mocks.read.mockResolvedValueOnce({ plan: "platinum" });
-    expect(await accountPlanForCopy(locals())).toBe("free");
+    expect(await planOf(locals())).toBe("free");
     expect(logged).not.toHaveBeenCalled();
   });
 
   it("is free without a query when there is no database or no user", async () => {
-    expect(await accountPlanForCopy(locals({ supabase: null }))).toBe("free");
-    expect(await accountPlanForCopy(locals({ user: null }))).toBe("free");
+    expect(await planOf(locals({ supabase: null }))).toBe("free");
+    expect(await planOf(locals({ user: null }))).toBe("free");
     expect(mocks.read).not.toHaveBeenCalled();
   });
 
   it("shares the one read with getAccountPlan, in either order", async () => {
     mocks.read.mockResolvedValue({ plan: "full" });
     const first = locals();
-    expect(await Promise.all([getAccountPlan(first), accountPlanForCopy(first), getAccountPlan(first)])).toEqual([
-      "full",
-      "full",
-      "full",
-    ]);
+    const [, reading] = await Promise.all([getAccountPlan(first), accountPlanForCopy(first), getAccountPlan(first)]);
+    expect(reading.plan).toBe("full");
     const second = locals();
     await accountPlanForCopy(second);
     await getAccountPlan(second);
     expect(mocks.read).toHaveBeenCalledTimes(2);
   });
 
-  it("is unknown when the read fails, logs a fixed line once, and leaves access closed (review F11)", async () => {
-    mocks.read.mockResolvedValue({ error: true });
+  it("is unknown when the read fails, logs a fixed line and the code once, and leaves access closed (reviews F11, F4)", async () => {
+    mocks.read.mockResolvedValue({ error: true, code: "42501" });
     const request = locals();
-    expect(await accountPlanForCopy(request)).toBe("unknown");
+    expect(await planOf(request)).toBe("unknown");
     expect(await getAccountPlan(request)).toBe("free");
     expect(await requireFullPlan(request)).toEqual({
       ok: false,
@@ -115,15 +117,53 @@ describe("accountPlanForCopy", () => {
     });
     expect(mocks.read).toHaveBeenCalledOnce();
     expect(logged).toHaveBeenCalledOnce();
-    expect(logged).toHaveBeenCalledWith("getAccountPlan: the plan read failed");
+    expect(logged).toHaveBeenCalledWith("getAccountPlan: the plan read failed", "42501");
   });
 
   it("logs a failed read once however it is asked first", async () => {
-    mocks.read.mockResolvedValue({ error: true });
+    mocks.read.mockResolvedValue({ error: true, code: "TypeError" });
     const request = locals();
     expect(await requireFullPlan(request)).toMatchObject({ ok: false, reason: "needs-full" });
-    expect(await accountPlanForCopy(request)).toBe("unknown");
+    expect(await planOf(request)).toBe("unknown");
     expect(logged).toHaveBeenCalledOnce();
+  });
+
+  describe("the time the plan was read (review F1)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-10-13T12:00:00.000Z"));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("is stamped by the read, not by the later asking, and shared like the plan", async () => {
+      mocks.read.mockResolvedValue({ plan: "full" });
+      const request = locals();
+      const first = await accountPlanForCopy(request);
+      vi.setSystemTime(new Date("2026-10-13T12:00:09.000Z"));
+      const second = await accountPlanForCopy(request);
+      expect(second).toBe(first);
+      expect(first.at.toISOString()).toBe("2026-10-13T12:00:00.000Z");
+    });
+
+    it("counts a full read from before its query and any other read from after it, so a slow read errs toward refusing", async () => {
+      const slow = (plan: unknown) => () => {
+        vi.setSystemTime(new Date("2026-10-13T12:00:02.000Z"));
+        return Promise.resolve({ plan });
+      };
+      mocks.read.mockImplementationOnce(slow("full"));
+      expect((await accountPlanForCopy(locals())).at.toISOString()).toBe("2026-10-13T12:00:00.000Z");
+      vi.setSystemTime(new Date("2026-10-13T12:00:00.000Z"));
+      mocks.read.mockImplementationOnce(slow("free"));
+      expect((await accountPlanForCopy(locals())).at.toISOString()).toBe("2026-10-13T12:00:02.000Z");
+      vi.setSystemTime(new Date("2026-10-13T12:00:00.000Z"));
+      mocks.read.mockImplementationOnce(() => {
+        vi.setSystemTime(new Date("2026-10-13T12:00:02.000Z"));
+        return Promise.resolve({ error: true as const, code: "57014" });
+      });
+      expect((await accountPlanForCopy(locals())).at.toISOString()).toBe("2026-10-13T12:00:02.000Z");
+    });
   });
 });
 
