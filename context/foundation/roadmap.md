@@ -3,7 +3,7 @@ project: Sidereus
 version: 3
 status: draft
 created: 2026-09-30
-updated: 2026-10-11
+updated: 2026-10-13
 prd_version: 3
 main_goal: quality
 top_blocker: skills # and decisions: the user named both (2026-10-07)
@@ -48,7 +48,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | proposed |
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
-| S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | planning |
+| S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | in-progress |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | proposed |
 | S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | proposed |
 
@@ -170,7 +170,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The milestone set (PRD Open Question 18). — Owner: user. Block: no.
 - **Risk:** Builds on S-05's counts; the celebration must appear once, at save, and never for an entry rated 1-2.
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-07: Sky events
 

@@ -592,8 +592,8 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Automated
 
-- [ ] 1.1 `npx vitest run src/lib/progress/milestones.test.ts` passes, including the rating-2-reaches-nothing and unchanged-log-reaches-nothing cases
-- [ ] 1.2 `npx astro check`, `npm run lint` and `npm test` pass
+- [x] 1.1 `npx vitest run src/lib/progress/milestones.test.ts` passes, including the rating-2-reaches-nothing and unchanged-log-reaches-nothing cases
+- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass
 
 ### Phase 2: The milestone table
 
