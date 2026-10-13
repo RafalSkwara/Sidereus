@@ -61,18 +61,23 @@ jobs:
           printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\nFORECAST_BASE_URL=%s\n' "$API_URL" "$ANON_KEY" "http://127.0.0.1:4400" > .env
           cp .env .dev.vars
       - run: npm run build
+      # The finder-chart steps grant and remove the full plan through `scripts/account-plan.mjs`, so smoke gets the local
+      # stack's URL and secret key INLINE on its command only (finder-chart D-9): never `export` them, so the preview
+      # (started first in this step, and still running) never inherits the key; never in `.env` or `.dev.vars`.
       - name: Run smoke test against production preview
         run: |
           npm run preview -- --port 4321 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:4321/ && break; sleep 1; done
-          BASE_URL=http://localhost:4321 npm run smoke
+          source supabase.env
+          SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" BASE_URL=http://localhost:4321 npm run smoke
       - run: npx playwright install --with-deps chromium
       # The sky-checks spec seeds a past night through PostgREST as its own user, so it needs the local stack's
-      # URL and anon key (verdict-check).
+      # URL and anon key (verdict-check); the finder specs also grant the full plan, so they get the secret key, inline
+      # on this command only (finder-chart D-9).
       - name: Run e2e spec against production preview
         run: |
           source supabase.env
-          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" BASE_URL=http://localhost:4321 npm run test:e2e
+          SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" SUPABASE_SECRET_KEY="$SECRET_KEY" BASE_URL=http://localhost:4321 npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

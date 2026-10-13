@@ -628,9 +628,9 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 5.1 `npx vitest run src/lib/offline` passes, including the finder copy rules
-- [x] 5.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 5.3 `npx playwright test finder-offline offline` passes against the preview
+- [x] 5.1 `npx vitest run src/lib/offline` passes, including the finder copy rules — 137d2e3
+- [x] 5.2 `npm run lint`, `npx astro check` and `npm run build` pass — 137d2e3
+- [x] 5.3 `npx playwright test finder-offline offline` passes against the preview — 137d2e3
 
 #### Manual
 
@@ -641,8 +641,8 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [ ] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps
-- [ ] 6.2 `npx playwright test finder-chart` passes against the preview
+- [x] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps
+- [x] 6.2 `npx playwright test finder-chart` passes against the preview
 - [ ] 6.3 CI's `smoke` job passes on the PR
 
 #### Manual

@@ -1,5 +1,8 @@
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { expect, type Page } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { en } from "@/i18n/messages/en";
@@ -164,4 +167,54 @@ export function madridDateDaysAgo(days: number): string {
 function isoDateParts(date: string): [number, number, number] {
   const [year, month, day] = date.split("-").map(Number);
   return [year, month - 1, day];
+}
+
+const ACCOUNT_PLAN_SCRIPT = fileURLToPath(new URL("../../scripts/account-plan.mjs", import.meta.url));
+const execFileAsync = promisify(execFile);
+
+/**
+ * Fails under CI and skips locally when there is no way to grant the full plan (finder-chart D-9): the operator command
+ * needs the local stack's SUPABASE_URL and SUPABASE_SECRET_KEY, passed inline on the e2e command (never exported).
+ * Call it first inside a test; `spec` names the spec in the failure.
+ */
+export function requirePlanGrant(spec: string) {
+  if (process.env.SUPABASE_SECRET_KEY) return;
+  if (process.env.CI) {
+    throw new Error(
+      `${spec} needs SUPABASE_SECRET_KEY (and SUPABASE_URL) of the local stack to grant the full plan: ` +
+        "pass them inline on the e2e command.",
+    );
+  }
+  test.skip(true, "no SUPABASE_SECRET_KEY");
+}
+
+/** Grants or removes the full plan with the operator command; the key stays in the child's inherited environment. */
+export async function setPlan(email: string, plan: "full" | "free") {
+  try {
+    await execFileAsync(process.execPath, [ACCOUNT_PLAN_SCRIPT, email, plan], { env: process.env });
+  } catch (error) {
+    const stderr = error instanceof Error && "stderr" in error ? String(error.stderr).trim() : "";
+    throw new Error(`account-plan ${plan} failed${stderr ? `: ${stderr}` : ""}`, { cause: error });
+  }
+}
+
+/**
+ * Smoke's no-darkness window at its 52° N site (8 June to 2 July), where the ranking can be empty. Madrid keeps its
+ * darkness all year, so this only errs on the safe side.
+ */
+export function inNoDarknessWindow(now = new Date()): boolean {
+  const month = now.getUTCMonth() + 1;
+  const day = now.getUTCDate();
+  return (month === 6 && day >= 8) || (month === 7 && day <= 2);
+}
+
+/** The "Finder chart" link of `target`'s row on Targets: in the best five, or in the rest behind its button. */
+export async function finderLink(page: Page, target: string): Promise<Locator> {
+  const row = page.locator(`[data-object="${target}"]`);
+  await expect(row, `${target} must be on tonight's Targets list`).toHaveCount(1);
+  if ((await row.locator("xpath=ancestor::details[@id='more']").count()) > 0) {
+    await page.locator("details#more > summary").click();
+    await row.locator("summary").click();
+  }
+  return row.getByRole("link", { name: en.tonight.finder.linkLabel({ target }) });
 }

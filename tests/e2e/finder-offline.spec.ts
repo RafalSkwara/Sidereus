@@ -1,13 +1,9 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
-
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid } from "./helpers";
+import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -27,44 +23,10 @@ import { Proxy } from "./offline-proxy";
 
 const TONIGHT_CACHE = "sidereus-tonight-v1";
 const INDEX_KEY = "/__offline/index.json";
-const ACCOUNT_PLAN_SCRIPT = fileURLToPath(new URL("../../scripts/account-plan.mjs", import.meta.url));
-const run = promisify(execFile);
 
 /** M13 is a pinned target: a bright globular cluster that Madrid's all-clear fixture night ranks for most of the year. */
 const TARGET = "M13";
 const FINDER_TITLE = en.tonight.finder.title({ target: TARGET });
-
-/** Fails under CI and skips locally when there is no way to grant the plan (finder-chart D-9). */
-function requirePlanGrant() {
-  if (process.env.SUPABASE_SECRET_KEY) return;
-  if (process.env.CI) {
-    throw new Error(
-      "finder-offline needs SUPABASE_SECRET_KEY (and SUPABASE_URL) of the local stack to grant the full plan: " +
-        "pass them inline on the e2e command.",
-    );
-  }
-  test.skip(true, "no SUPABASE_SECRET_KEY");
-}
-
-/**
- * Smoke's no-darkness window at its 52° N site (8 June to 2 July), where the ranking can be empty. Madrid keeps its
- * darkness all year, so this only errs on the safe side.
- */
-function inNoDarknessWindow(now = new Date()): boolean {
-  const month = now.getUTCMonth() + 1;
-  const day = now.getUTCDate();
-  return (month === 6 && day >= 8) || (month === 7 && day <= 2);
-}
-
-/** Grants or removes the full plan with the operator command; the key stays in the child's inherited environment. */
-async function setPlan(email: string, plan: "full" | "free") {
-  try {
-    await run(process.execPath, [ACCOUNT_PLAN_SCRIPT, email, plan], { env: process.env });
-  } catch (error) {
-    const stderr = error instanceof Error && "stderr" in error ? String(error.stderr).trim() : "";
-    throw new Error(`account-plan ${plan} failed${stderr ? `: ${stderr}` : ""}`, { cause: error });
-  }
-}
 
 /** The pages (and chart targets) the worker's index holds right now: "<page> <target or -> <kind>", sorted. */
 function storedCopies(page: Page) {
@@ -84,17 +46,6 @@ async function storedCharts(page: Page) {
   return (await storedCopies(page)).filter((copy) => copy.startsWith("/tonight/finder "));
 }
 
-/** The "Finder chart" link of the M13 row on Targets: in the best five, or in the rest behind its button. */
-async function finderLink(page: Page): Promise<Locator> {
-  const row = page.locator(`[data-object="${TARGET}"]`);
-  await expect(row, `${TARGET} must be on tonight's Targets list`).toHaveCount(1);
-  if ((await row.locator("xpath=ancestor::details[@id='more']").count()) > 0) {
-    await page.locator("details#more > summary").click();
-    await row.locator("summary").click();
-  }
-  return row.getByRole("link", { name: en.tonight.finder.linkLabel({ target: TARGET }) });
-}
-
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
@@ -102,7 +53,7 @@ test.beforeEach(async ({ context, baseURL }) => {
 test("a chart opened online opens from the device offline, and is gone once the plan is lost", async ({
   browser,
 }, testInfo) => {
-  requirePlanGrant();
+  requirePlanGrant("finder-offline");
   test.skip(inNoDarknessWindow(), "no astronomical darkness (8 June to 2 July): the ranking can be empty");
   test.setTimeout(180_000);
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
@@ -119,7 +70,7 @@ test("a chart opened online opens from the device offline, and is gone once the 
     // Online: Targets, then M13's chart from its link; both pairs are committed.
     await page.goto("/tonight/targets");
     await expect(page.locator("[data-offline-copy]")).toBeAttached();
-    await (await finderLink(page)).click();
+    await (await finderLink(page, TARGET)).click();
     await expect(page.locator("[data-finder-chart]")).toBeVisible();
     await expect(page.locator("[data-offline-copy]")).toHaveAttribute("data-plan", "full");
     await expect(page.locator("[data-offline-copy]")).toHaveAttribute("data-target", TARGET);
@@ -148,7 +99,7 @@ test("a chart opened online opens from the device offline, and is gone once the 
     // The same link on the stored Targets page opens it too: the link needs no network.
     await page.goto("/tonight/targets");
     await expect(page.locator("html")).toHaveAttribute("data-from-device");
-    await (await finderLink(page)).click();
+    await (await finderLink(page, TARGET)).click();
     await expect(page.locator("html")).toHaveAttribute("data-from-device");
     await expect(page.locator("[data-finder-chart]")).toBeVisible();
 

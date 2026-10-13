@@ -708,14 +708,29 @@ the plan of the slice that needs it.
     standard 6×30 finder (about 7° across) for every telescope, plus the
     concentric rings of a 1× reflex finder; a later change may let the user
     pick their finder. Owner: user.
+    *Settled as a candidate in the S-03 plan (2026-10-13, owner confirmed):* a
+    6×30 finder, 7° field, for every telescope, with the 0.5°, 2° and 4° rings
+    of a 1× reflex finder; no choice of finder (`finder-chart/plan.md` O-1).
 14. **Star depth for the chart** - the bundled stars stop at magnitude 4.5,
     while a 6×30 finder shows stars to about magnitude 8. Candidate: a deeper,
     redistributable subset of the same source, loaded only with the chart;
     licence and page weight are checked in the plan.
+    *Settled as a candidate in the S-03 plan (2026-10-13):* a second server-only
+    file of 25,791 stars to magnitude 7.5 from the same pinned HYG v4.1 source
+    (122 KB gzip), drawn to a finder depth of 7.2-7.5 by Bortle class; the
+    licence question is open, see item 21 (`finder-chart/plan.md` D-2, D-5).
 15. **Naked-eye limit for the starting star** - candidate (uncalibrated): by
     Bortle class, magnitude 4.5 at Bortle 1-4, 3.5 at 5-6, 2.5 at 7-9.
+    *Settled as a candidate in the S-03 plan (2026-10-13):* kept as written
+    (`startStarMaxMagForBortle`), still uncalibrated against an observer, and
+    pinned never to exceed the naked-eye limit for any class (`finder-chart/plan.md`
+    D-3).
 16. **Hop length** - candidate (uncalibrated): each step at most one finder
     field, through stars the finder shows.
+    *Settled as a candidate in the S-03 plan (2026-10-13):* a step is at most
+    0.8 of the finder field (5.6°), through stars to magnitude 6.5, at most 8
+    steps, fewest steps first; checked against published hops, still not against
+    an observer (`finder-chart/plan.md` D-4, D-11).
 17. **What-to-expect wording** - candidate: a fixed set of phrases chosen by
     object type, surface brightness against the site's sky quality, and
     aperture; judged without an observer, like M-2's advice (roadmap Open
@@ -735,8 +750,31 @@ the plan of the slice that needs it.
     guarantee and discourages heavy use. Before any payment is taken, move to a
     commercial forecast and geocoding plan (or provider) and confirm the map
     tiles' terms. Owner: user. Blocks: the payments milestone, not M-3.
+    *Added by the S-03 plan (2026-10-13), star data:* every star catalogue
+    complete to magnitude 7.5 is either ESA's Hipparcos, Tycho-2 or Gaia (CC BY-NC
+    3.0 IGO, "Credit: ESA"; commercial use needs ESA's authorisation) or a
+    compilation of them (HYG, which the app uses, AT-HYG, SKY2000, UCAC4), or an
+    old file with no licence (Yale BSC5 forbids altered copies without its
+    authors' permission). The owner chose to stay on HYG v4.1 for M-3 and to ask
+    ESA (data.licences@esa.int) for a commercial licence; the request is drafted
+    in `context/changes/finder-chart/esa-licence-request.md` and is pending. If ESA refuses, SAO only replaces HYG for both star files, in
+    its own change before any payment. SAO caveat: NASA NTRS marks the 1966
+    reports and the ADC documentation "public use permitted"; no formal
+    licence for the I/131A file; confirm before switching. SAO has no Bayer or
+    Flamsteed designations, so the chart would name stars another way
+    (`finder-chart/research.md` section 9). The credit "Hipparcos, Credit: ESA"
+    stays beside HYG's in `Attribution.astro` and `LICENSE-DATA.md`. A
+    pre-existing gap outside S-03: the signed-out landing image
+    `public/landing/tonight.png` shows the live sky's Hipparcos-derived stars
+    without `Attribution`.
 22. **Pricing, payment provider and the plan's name** - deferred to the
     payments milestone. Owner: user.
 23. **Paid features in a stored offline copy** - candidate: a copy keeps what
     the account's plan allowed when it was stored, and is purged on sign-out as
     today.
+    *Settled for finder charts in the S-03 plan (2026-10-13, owner's answer):* a
+    chart opened online is stored on the device with the Tonight copies; it
+    disappears at the first online refresh after the account loses the full plan,
+    expires 36 h after its site's last refresh like the other copies, and is
+    purged on sign-out and by another user's commit (`finder-chart/plan.md` O-4,
+    D-13 to D-15). Other paid features will need their own answer.
