@@ -97,6 +97,8 @@ describe("mayStoreShell", () => {
   it.each([
     "/tonight?logged=M31",
     "/tonight?skyChecked=1",
+    "/tonight?milestone=first-galaxy",
+    "/tonight/planets?logged=jupiter&milestone=first-planet",
     "/tonight/plan?error=errors.generic",
     "/tonight/all",
     "/log",

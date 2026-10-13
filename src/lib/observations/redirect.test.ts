@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { editRedirect, formRedirect, logNotice, parseLogPage, readLogNotice, tonightReturnPath } from "./redirect";
+import {
+  editRedirect,
+  formRedirect,
+  logNotice,
+  parseLogPage,
+  readLogNotice,
+  tonightReturnPath,
+  withMilestones,
+} from "./redirect";
 
 const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
 const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
@@ -140,5 +148,31 @@ describe("parseLogPage", () => {
     for (const param of [null, "", "1", "0", "-2", "2.5", "abc", "9999999"]) {
       expect(parseLogPage(param)).toBe(1);
     }
+  });
+});
+
+describe("withMilestones", () => {
+  it("leaves the URL unchanged without keys", () => {
+    expect(withMilestones("/log?saved=M31", [])).toBe("/log?saved=M31");
+    expect(withMilestones("/tonight", [])).toBe("/tonight");
+  });
+
+  it("appends one milestone param per key to a URL that has a query, order preserved", () => {
+    expect(withMilestones("/log?saved=M31", ["first-galaxy", "messier-10"])).toBe(
+      "/log?saved=M31&milestone=first-galaxy&milestone=messier-10",
+    );
+    expect(withMilestones("/tonight/planets?logged=jupiter", ["first-planet"])).toBe(
+      "/tonight/planets?logged=jupiter&milestone=first-planet",
+    );
+  });
+
+  it("starts the query when the URL has none", () => {
+    expect(withMilestones("/tonight", ["first-moon"])).toBe("/tonight?milestone=first-moon");
+  });
+
+  it("works on the URLs the routes build", () => {
+    expect(withMilestones(logNotice("updated", "M13"), ["first-globular"])).toBe(
+      "/log?updated=M13&milestone=first-globular",
+    );
   });
 });

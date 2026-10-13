@@ -1,7 +1,10 @@
 import type { APIRoute } from "astro";
 import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
-import { editRedirect, logNotice } from "@/lib/observations/redirect";
+import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
+import { reachedBySave } from "@/lib/observations/celebrate";
+import { milestoneStore } from "@/lib/observations/milestone-store";
+import { editRedirect, logNotice, withMilestones } from "@/lib/observations/redirect";
 import { observationUpdateSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { isKnownTarget } from "@/lib/targets/labels";
@@ -9,7 +12,10 @@ import { isKnownTarget } from "@/lib/targets/labels";
 /*
  * Saves an edited log entry (roadmap S-07, FR-017) and returns to the log, which confirms it. A failure goes
  * back to the entry's page with a fixed message key only (`editRedirect`), so no typed value reaches the URL.
- * Nothing is logged.
+ * Every edit goes through `reachedBySave`: one rated `LOG_PENALTY_MIN_RATING` or above counts (it stores what it
+ * reached and carries the newly stored milestones to the log as `milestone=<key>` params, fixed keys only), a lower
+ * one stores what the log had reached before it can be lost and never celebrates. Nothing is logged except
+ * `reachedBySave`'s fixed trace of a failed milestone step, which never fails the save.
  */
 export const POST: APIRoute = async (context) => {
   const id = context.params.id ?? "";
@@ -29,9 +35,14 @@ export const POST: APIRoute = async (context) => {
     return fail("errors.observation.objectInvalid");
   }
 
-  const result = await observationStore.update(supabase, id, parsed.data, new Date());
+  const { result, celebrate } = await reachedBySave({
+    read: () => observationStore.listSeenEntries(supabase),
+    record: (states) => milestoneStore.record(supabase, states),
+    counts: parsed.data.rating >= LOG_PENALTY_MIN_RATING,
+    write: () => observationStore.update(supabase, id, parsed.data, new Date()),
+  });
   if (!result.ok) {
     return fail(result.message);
   }
-  return context.redirect(logNotice("updated", parsed.data.target));
+  return context.redirect(withMilestones(logNotice("updated", parsed.data.target), celebrate));
 };
