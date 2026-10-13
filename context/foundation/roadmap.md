@@ -48,7 +48,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | proposed |
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | proposed |
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
-| S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | in-progress |
+| S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | proposed |
 | S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | proposed |
 
@@ -170,7 +170,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The milestone set (PRD Open Question 18). — Owner: user. Block: no.
 - **Risk:** Builds on S-05's counts; the celebration must appear once, at save, and never for an entry rated 1-2.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-07: Sky events
 
@@ -255,3 +255,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-02: user can see their own list of look-and-feel fixes applied across the app.** — Archived 2026-10-09 → `context/archive/2026-10-08-ui-user-adjustments/`. Lesson: —.
 - **F-01: (foundation) every account carries a free or full plan that pages and routes can read and the server enforces, and the operator can create a full account, or switch one to full and back, with one command.** — Archived 2026-10-09 → `context/archive/2026-10-09-account-plans/`. Lesson: —.
 - **S-05: user can see the Messier and Caldwell checklists with counts, the planets and the Moon as firsts, and a "not seen yet" mark on tonight's targets.** — Archived 2026-10-09 → `context/archive/2026-10-09-observing-progress/`. Lesson: —.
+- **S-06: user can have a milestone celebrated when the log entry that reaches it is saved, and see every milestone reached on the progress page.** — Archived 2026-10-13 → `context/archive/2026-10-11-observing-milestones/`. Lesson: —.
