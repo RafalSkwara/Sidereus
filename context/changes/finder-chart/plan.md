@@ -648,5 +648,5 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 #### Manual
 
 - [ ] 6.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object
-- [ ] 6.5 PRD OQ21 records the ESA request and the SAO fallback; LICENSE-DATA names the upstream NC licence; credits carry HYG and "Credit: ESA"
+- [x] 6.5 PRD OQ21 records the ESA request and the SAO fallback; LICENSE-DATA names the upstream NC licence; credits carry HYG and "Credit: ESA" — e351b80
 - [ ] 6.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it
