@@ -637,8 +637,8 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Automated
 
-- [x] 6.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
-- [x] 6.2 `npx astro check`, `npm run lint`, `npm test`, `npm run build` and `npm run test:db` pass
+- [x] 6.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes — 4b2a799
+- [x] 6.2 `npx astro check`, `npm run lint`, `npm test`, `npm run build` and `npm run test:db` pass — 4b2a799
 
 #### Manual
 
