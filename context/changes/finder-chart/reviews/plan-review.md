@@ -7,7 +7,7 @@
 - **Reviewer**: the "reviewer" agent (Opus), independent of the plan's author
 - **Verdict**: REJECTED by the rubric (one critical FAIL, Feasibility). **Triage is recommended over re-planning.** The premise holds: a server-rendered SVG, a server-only HYG file to 7.5, a pure engine fed the star list, and a two-layer plan check. The critical finding (F1) is a bounded rule plus a test change in Phase 2, so it does not need a new plan.
 - **Findings**: 1 critical, 7 warnings, 2 observations
-- **Triage**: applied by the plan author on 2026-10-11 (see each Decision line). **Owner decisions resolved 2026-10-13**: O-2 (F1) and O-7 (F8) confirmed as planned. The owner's other answers changed the plan beyond this review: O-4 adds Phase 5 "Offline finder charts" (old Phase 5 is now Phase 6, so this review's "Phase 5" references mean Phase 6), and O-6 (star source) is blocked on a question to the owner (research §9). Those phases need a re-review. Originally not run interactively. The owner is away and the orchestrator's rules forbid asking, so each finding carries the reviewer's **Recommended resolution** and `Decision: PENDING`. The plan's author applies the accepted fixes. `change.md` was deliberately left at `planned` (the author flips it). The roadmap edit in the working tree is the author's and was not touched.
+- **Triage**: applied by the plan author on 2026-10-11 (see each Decision line). **Owner decisions resolved 2026-10-13 (all seven)**: O-1, O-3, O-5 confirmed; O-2 (F1) and O-7 (F8) confirmed as planned; O-4 changed: Phase 5 "Offline finder charts" added (old Phase 5 is now Phase 6, so this review's "Phase 5" references mean Phase 6); O-6 resolved as option (A): stay on HYG v4.1, the owner requests an ESA commercial licence, SAO-only fallback before any payment if ESA refuses (research §9, §9.1). Phase 5 and the O-6 outcome need a re-review. Originally not run interactively. The owner is away and the orchestrator's rules forbid asking, so each finding carries the reviewer's **Recommended resolution** and `Decision: PENDING`. The plan's author applies the accepted fixes. `change.md` was deliberately left at `planned` (the author flips it). The roadmap edit in the working tree is the author's and was not touched.
 
 ## Verdicts
 
@@ -40,7 +40,7 @@
 - **Commands:**
   - Resolve: `npm run stars:build`, `npm run smoke`, `npx vitest run <dir>` (include `src/**/*.test.ts`; `src/i18n/i18n.test.ts` and the three `src/styles` tests exist), `npm test`, `npm run lint`, `npx astro check`, `npm run build`, `npx playwright test <spec>`.
   - Not executed: `stars:build` rewrites the generated files in the author's checkout, and smoke and e2e need a preview, local Supabase and the fixture. The reviewer ran nothing that writes.
-- **Licence:** O-6 and D-10 are adequate for M-3; see F10 for the attribution coverage.
+- **Licence:** O-6 and D-10 are adequate for M-3; see F10 for the attribution coverage. (2026-10-13: O-6 resolved by the owner as option (A); see the Triage line.)
 
 ## Findings
 

@@ -17,7 +17,7 @@ A full-plan user taps "Finder chart" on any ranked object or planet and gets, at
 
 ## Key Decisions Made
 
-Run unattended (owner away): "Delegated" = team-owned, decided here. Owner answers of 2026-10-13: "Owner" = confirmed or decided by the owner; "Blocked" = waiting on a question to the owner.
+Run unattended (owner away): "Delegated" = team-owned, decided here. Owner answers of 2026-10-13: "Owner" = confirmed or decided by the owner.
 
 | Decision | Choice | Why (1 sentence) | Source |
 | --- | --- | --- | --- |
@@ -37,13 +37,13 @@ Run unattended (owner away): "Delegated" = team-owned, decided here. Owner answe
 | Offline | Charts opened online stored as pairs keyed by site + target; no next-night copy; 36 h expiry; dropped when any Tonight or finder answer says the plan is free | Owner's rule (settles OQ23 for this slice); worker-side and deterministic | Owner (O-4, changed) + delegated mechanics (D-13 to D-15) |
 | Free account | Same link everywhere; explainer with a precomputed example chart (no star read per view) | FR-045: show what it does, never an error (review F6) | Owner (O-5, confirmed) |
 | Departures from FR-037 wording | Start among the 5 nearest if the nearest has no hop; `direct` line; bright planet as its own start; message when no star qualifies | All keep the PRD invariant; wording differs (review F8) | Owner (O-7, confirmed) |
-| Star source / licence | Owner asked to switch both star files now to a commercially licensed source; none found complete to 7.5 (ESA's are all CC BY-NC; BSC5/SAO carry no grant). Options: ask ESA, BSC5 + SAO with permission, or stay on HYG until charging | Research §9 | Blocked (O-6, question to the owner) |
+| Star source / licence | Stay on HYG v4.1 for both star files; the owner asks ESA for a commercial licence (draft `esa-licence-request.md`); if ESA refuses, SAO only (NASA: public use permitted) before any payment | No source complete to 7.5 is clearly licensed for commercial use; ESA names a request route; BSC5 forbids altered copies (research §9) | Owner (O-6, option A) |
 
 ## Scope
 
 **In scope:** finder star file and loader; engine start/hop/projection with invariant tests; chart components and `/design` specimens; `/tonight/finder` page with the two-layer plan check and free explainer; "Finder chart" links on object and planet rows; offline storage of opened charts with the plan-loss drop; smoke and CI changes; two e2e specs (chart, offline); docs (CLAUDE.md, test-plan §6.4, PRD OQ21 and OQ23, roadmap).
 
-**Out of scope:** choosing a finder per telescope, interactive or atlas views, the Moon, washed-out rows, prefetching or next-night copies of charts, the what-to-expect line (S-04), payments or upsell, a HYG v4.2 upgrade. A star-source switch (which would change the live sky's stars) only if the owner picks it under O-6.
+**Out of scope:** choosing a finder per telescope, interactive or atlas views, the Moon, washed-out rows, prefetching or next-night copies of charts, the what-to-expect line (S-04), payments or upsell, a HYG v4.2 upgrade. A star-source switch (the SAO fallback is its own change, only if ESA refuses).
 
 ## Architecture / Approach
 
@@ -53,7 +53,7 @@ Run unattended (owner away): "Delegated" = team-owned, decided here. Owner answe
 
 | Phase | What it delivers | Key risk |
 | --- | --- | --- |
-| 1. Finder star data (blocked on O-6) | `finder-stars.json` from the pinned HYG, loader, tests, licence + ESA credit; replaced by a star-source switch if the owner picks BSC5 + SAO | Bundle growth; designation formatting; the owner's source choice |
+| 1. Finder star data | `finder-stars.json` from the pinned HYG, loader, tests, licence + ESA credit | Bundle growth; designation formatting |
 | 2. Engine | Start choice, hop search, gnomonic projection, invariants, reference hops | Hops that look unlike what an observer would choose |
 | 3. Chart rendering and the free explainer | Two legible SVG panels, chart tokens, steps, i18n, `FinderLocked` with a precomputed example, `/design` specimens | Phone legibility in red mode |
 | 4. Page behind the full plan | Route, two-layer plan check, free explainer, row links | Island left unguarded; link crowding at 320 px |
@@ -61,14 +61,15 @@ Run unattended (owner away): "Delegated" = team-owned, decided here. Owner answe
 | 6. HTTP refusal, e2e, docs | Smoke finder steps (incl. demoted and signed-out replays), inline CI key, e2e at 360 px, docs | Island URL replay depends on Astro's GET form |
 
 **Prerequisites:** F-01 and S-02 done (they are); local Supabase for smoke and e2e; the operator command for granting plans.
-**Estimated effort:** ~5-6 sessions across 6 phases (Phase 2 is the largest; +1 session if the owner picks the star-source switch).
+**Estimated effort:** ~5-6 sessions across 6 phases (Phase 2 is the largest).
 
 ## Open Risks & Assumptions
 
 - Hops are judged without an observer; the reference fixture and the owner's manual comparison are the only checks.
 - Bortle 7-9 starts can be ~26° away: long hops; `direct` is the fallback when no path exists.
-- Plan review (`reviews/plan-review.md`) applied 2026-10-11: F1-F7, F9, F10 in the plan; F8 became O-7, confirmed by the owner 2026-10-13. Phase 5 (offline) and the O-6 outcome need a re-review.
-- Star licence: no source complete to 7.5 clearly allows commercial use (research §9); the owner chooses between asking ESA, BSC5 + SAO with permission, or HYG until charging. Phase 1 waits.
+- Shared local Supabase: another branch adds `observing_milestones`; no `db:types` before it merges, and a `tests/db/structure.test.ts` failure only on that table is expected locally.
+- Plan review (`reviews/plan-review.md`) applied 2026-10-11: F1-F7, F9, F10 in the plan; F8 became O-7, confirmed by the owner 2026-10-13. Owner decisions all resolved 2026-10-13; Phase 5 (offline) and the O-6 outcome need a re-review.
+- Star licence: HYG v4.1 rests on Hipparcos (ESA CC BY-NC); the owner's ESA request is pending, and a refusal means switching to SAO only before any payment (SAO lacks Bayer/Flamsteed designations).
 - Server-island replay in smoke assumes small props (GET); the step fails loudly if Astro switches to POST.
 - The chart's star positions reveal the site roughly, like the live sky; accepted, never in URLs or logs.
 
