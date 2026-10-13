@@ -127,9 +127,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** S-05, S-07
 - **Blockers:** —
 - **Unknowns:**
-  - The finder's field: the gear has no finder (PRD Open Question 13). Candidate: a standard 6×30 finder plus reflex-finder rings. — Owner: user. Block: no. **Resolved 2026-10-13** as that candidate (6×30, 7° field, reflex rings 0.5° / 2° / 4°, no choice of finder): `context/changes/finder-chart/plan.md` O-1.
+  - The finder's field: the gear has no finder (PRD Open Question 13). Candidate: a standard 6×30 finder plus reflex-finder rings. — Owner: user. Block: no. **Resolved 2026-10-13** as that candidate (6×30, 7° field, reflex rings 0.5° / 2° / 4°, no choice of finder): `context/archive/2026-10-11-finder-chart/plan.md` O-1.
   - Star depth: bundled stars stop at magnitude 4.5, a finder shows about 8 (Open Question 14); licence and page weight checked in the plan. — Owner: team. Block: no. **Resolved 2026-10-13**: a second server-only star file to magnitude 7.5 from the same HYG pin (122 KB gzip), D-2 and D-5; the licence finding (ESA CC BY-NC upstream, request pending, SAO fallback) is recorded in PRD Open Question 21 and plan O-6.
-  - Naked-eye limit by sky class and hop length (Open Questions 15, 16). — Owner: team. Block: no. **Resolved 2026-10-13** as the PRD candidates, still uncalibrated against an observer: `context/changes/finder-chart/plan.md` D-3, D-4, D-11.
+  - Naked-eye limit by sky class and hop length (Open Questions 15, 16). — Owner: team. Block: no. **Resolved 2026-10-13** as the PRD candidates, still uncalibrated against an observer: `context/archive/2026-10-11-finder-chart/plan.md` D-3, D-4, D-11.
 - **Risk:** The milestone's riskiest slice: new star data, chart geometry and orientation, judged without an observer; placed first among the features so its lessons reach S-04 and S-08.
 - **Note from F-01 (impl review F8, 2026-10-09):** `requireFullPlan(locals)` (`src/lib/account-plan/`) answers `signed-out` with the `needsFull` key; full-plan routes should send a signed-out visitor to sign-in (the middleware gate) and show the "needs the full plan" state only to a signed-in free account.
 - **Status:** done
