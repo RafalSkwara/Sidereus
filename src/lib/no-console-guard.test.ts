@@ -48,6 +48,11 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     reason: "the opt-in calibration snapshot (CALIBRATION_SNAPSHOT=1) over fixed test nights",
   },
   "src/lib/engine/determinism.test.ts": { count: 2, reason: "engine and ranking timings printed for CI" },
+  "src/lib/engine/finder.test.ts": {
+    count: 2,
+    reason:
+      "the opt-in finder reference routes and coverage counts (FINDER_REFERENCE_PRINT=1, FINDER_COVERAGE_PRINT=1)",
+  },
 };
 
 /** An existing .astro page whose path the in-memory samples borrow: a path that does not exist fails to parse. */

@@ -576,26 +576,26 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical
-- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts`
-- [x] 1.3 `npm run lint` and `npx astro check` pass
-- [x] 1.4 `finder-stars.json` gzips under 160,000 bytes
+- [x] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical — 83ba064
+- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts` — 83ba064
+- [x] 1.3 `npm run lint` and `npx astro check` pass — 83ba064
+- [x] 1.4 `finder-stars.json` gzips under 160,000 bytes — 83ba064
 
 #### Manual
 
-- [x] 1.5 Spot-check five stars against the HYG CSV row
+- [x] 1.5 Spot-check five stars against the HYG CSV row — 83ba064
 
 ### Phase 2: Engine: starting star, hop and projection
 
 #### Automated
 
-- [ ] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts`
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here)
+- [x] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts`
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here): measured 100 % hop at Bortle 3 (373 of 373, Warsaw, four fixed nights), gate 97 %
 
 #### Manual
 
-- [ ] 2.3 Reference hops for M31, M13 and M57 look like the published routes
+- [x] 2.3 Reference hops for M31, M13 and M57 look like the published routes
 
 ### Phase 3: Chart rendering
 

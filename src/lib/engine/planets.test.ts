@@ -1,11 +1,12 @@
+import { Body, Equator, Horizon, Rotation_EQJ_HOR } from "astronomy-engine";
 import { describe, expect, it } from "vitest";
 
 import { PLANET_REFERENCES, WARSAW, circularDeltaDeg, fixtureTimeMs, siteOf } from "./fixtures";
 import { observingNight } from "./night";
 import { objectTracks } from "./objects";
 import { PLANET_WINDOW_SUN_ALTITUDE_DEG } from "./parameters";
-import { PLANET_KEYS, planetFacts, planetTracks } from "./planets";
-import { darkWindow } from "./sun";
+import { PLANET_KEYS, planetFacts, planetJ2000Vector, planetTracks } from "./planets";
+import { darkWindow, observerFor } from "./sun";
 
 /**
  * Refraction models differ near the horizon (Skyfield's depends on temperature and pressure,
@@ -88,5 +89,33 @@ describe("planetFacts", () => {
     expect(venus.phaseFraction).toBeLessThan(0.1);
     expect(venus.apparentDiameterArcsec).toBeGreaterThan(50);
     expect(planetFacts("jupiter", midnight).phaseFraction).toBeGreaterThan(0.98);
+  });
+});
+
+describe("planetJ2000Vector (finder chart)", () => {
+  const time = new Date("2026-10-15T20:00:00Z");
+
+  it("is a unit vector, and the same inputs give the same vector", () => {
+    for (const key of PLANET_KEYS) {
+      const v = planetJ2000Vector(key, WARSAW, time);
+      expect(Math.hypot(...v)).toBeCloseTo(1, 12);
+      expect(planetJ2000Vector(key, WARSAW, time)).toEqual(v);
+    }
+  });
+
+  it("lands where the of-date apparent position puts the planet, once rotated to the horizon (unrefracted)", () => {
+    const observer = observerFor(WARSAW);
+    const { rot } = Rotation_EQJ_HOR(time, observer);
+    const bodies = { jupiter: Body.Jupiter, saturn: Body.Saturn, mars: Body.Mars, venus: Body.Venus } as const;
+    for (const [key, body] of Object.entries(bodies) as [keyof typeof bodies, Body][]) {
+      const v = planetJ2000Vector(key, WARSAW, time);
+      const h = [0, 1, 2].map((j) => rot[0][j] * v[0] + rot[1][j] * v[1] + rot[2][j] * v[2]);
+      const altitude = (Math.asin(h[2]) * 180) / Math.PI;
+      const eq = Equator(body, time, observer, true, true);
+      const reference = Horizon(time, observer, eq.ra, eq.dec);
+      expect(altitude).toBeCloseTo(reference.altitude, 2);
+      const azimuth = ((Math.atan2(-h[1], h[0]) * 180) / Math.PI + 360) % 360;
+      expect(circularDeltaDeg(azimuth, reference.azimuth)).toBeLessThan(0.02);
+    }
   });
 });

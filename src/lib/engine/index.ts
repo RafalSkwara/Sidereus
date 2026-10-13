@@ -27,10 +27,11 @@ export { bestWindow, objectPosition, objectTrack, objectTracks } from "./objects
 export type { BestWindow } from "./objects";
 export { SCORE_COMPONENTS, scoreObject } from "./score";
 export type { ObjectScore, ScoreComponent, ScoreComponents, ScoreInput, ScoredObject } from "./score";
-export { eyepieceOptics, pairEyepieces, planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
+export { eyepieceOptics, findingEyepiece, pairEyepieces, planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
 export type {
   EyepieceOptics,
   EyepieceOpticsInput,
+  FindingEyepiece,
   EyepiecePair,
   NoEyepieceFits,
   TelescopeOpticsInput,
@@ -46,7 +47,22 @@ export type {
   ReasonComponents,
   WashedOutEntry,
 } from "./ranking";
-export { PLANET_KEYS, planetFacts, planetTracks } from "./planets";
+export { PLANET_KEYS, planetFacts, planetJ2000Vector, planetTracks } from "./planets";
+export { finderChart, projectGnomonic } from "./finder";
+export type {
+  FinderChartData,
+  FinderChartInput,
+  FinderHop,
+  FinderKind,
+  FinderPanel,
+  FinderStart,
+  FinderStarInput,
+  FinderTarget,
+  PanelCircle,
+  PanelPoint,
+  PanelStar,
+  UnitVector,
+} from "./finder";
 export { skyFrames } from "./sky-frames";
 export type { SkyFrame } from "./sky-frames";
 export type { PlanetFacts, PlanetKey } from "./planets";
