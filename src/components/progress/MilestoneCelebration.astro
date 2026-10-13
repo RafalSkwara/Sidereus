@@ -131,6 +131,10 @@ const CARD_STARS = [
     for (const button of dialog.querySelectorAll("[data-milestone-close]")) {
       button.addEventListener("click", () => {
         dialog.close();
+        // The dialog opened on load, so there is no earlier focus to give back: Chrome leaves focus on Continue, now
+        // hidden, and the next Tab would carry on from inside the closed dialog. Give it back to the page, as Esc does.
+        const focused = document.activeElement;
+        if (focused instanceof HTMLElement && dialog.contains(focused)) focused.blur();
       });
     }
     if (dialog.open) continue;

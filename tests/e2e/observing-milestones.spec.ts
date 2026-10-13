@@ -185,6 +185,10 @@ test("celebrates a milestone once, at save", async ({ page }) => {
   // 3. Continue closes it, and a reload shows nothing: no dialog, and no `milestone` in the URL.
   await openCelebration(page).getByRole("button", { name: celebrationCopy.continue }).click();
   await expect(openCelebration(page)).toHaveCount(0);
+  // Focus goes back to the page, as with Esc, never left on the closed dialog's hidden button (manual check 6.3).
+  expect(await page.evaluate(() => document.activeElement?.closest("dialog[data-milestone-celebration]") != null)).toBe(
+    false,
+  );
   await page.reload();
   await expectNoCelebration(page);
   await expectMilestoneParamCleared(page);
