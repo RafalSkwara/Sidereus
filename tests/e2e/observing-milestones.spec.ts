@@ -4,6 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import type { MilestoneKey } from "@/lib/progress/milestones";
 import { createFormatter } from "@/lib/tonight/format";
+import { TOAST_MS } from "@/lib/toasts";
 
 import { madridDateDaysAgo, onboardInMadrid, waitForHydration } from "./helpers";
 
@@ -170,6 +171,8 @@ test("celebrates a milestone once, at save", async ({ page }) => {
   const form = await openEntry(page, "M31");
   await expect(form.getByRole("radio", { name: "2", exact: true })).toBeChecked();
   await rate(form, 4);
+  // A fake clock from here on, so the toast's 10 s timer can be run past while the dialog covers it (impl review F1).
+  await page.clock.install();
   await form.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/log(\?|$)/);
   await expect(celebration(page)).toHaveCount(1);
@@ -183,12 +186,33 @@ test("celebrates a milestone once, at save", async ({ page }) => {
   await expectMilestoneParamCleared(page);
 
   // 3. Continue closes it, and a reload shows nothing: no dialog, and no `milestone` in the URL.
-  await openCelebration(page).getByRole("button", { name: celebrationCopy.continue }).click();
-  await expect(openCelebration(page)).toHaveCount(0);
-  // Focus goes back to the page, as with Esc, never left on the closed dialog's hidden button (manual check 6.3).
-  expect(await page.evaluate(() => document.activeElement?.closest("dialog[data-milestone-celebration]") != null)).toBe(
-    false,
+  // The toast waits behind the dialog: past its 10 s, it is still there.
+  const toast = page.locator("[data-toast]").filter({ hasText: en.log.list.updated({ object: "M31" }) });
+  await page.clock.runFor(TOAST_MS + 1_000);
+  await expect(toast).toHaveCount(1);
+  // The dialog's `close` event, which releases the toast's timer, is dispatched as a task after the click: wait for it
+  // before running the clock (the toast's listener was added first, so it has run by then).
+  const closed = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        document.querySelector("dialog[data-milestone-celebration]")?.addEventListener(
+          "close",
+          () => {
+            resolve();
+          },
+          { once: true },
+        );
+      }),
   );
+  await openCelebration(page).getByRole("button", { name: celebrationCopy.continue }).click();
+  await closed;
+  await expect(openCelebration(page)).toHaveCount(0);
+  // Focus goes to <main>, the toasts' pattern, never left on the closed dialog's hidden button or on <body>.
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("MAIN");
+  // The toast is visible once the dialog has closed, and only then does its timer run out.
+  await expect(toast).toBeVisible();
+  await page.clock.runFor(TOAST_MS + 1_000);
+  await expect(toast).toHaveCount(0);
   await page.reload();
   await expectNoCelebration(page);
   await expectMilestoneParamCleared(page);

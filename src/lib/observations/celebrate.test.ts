@@ -356,7 +356,7 @@ describe("logMilestoneFailure", () => {
       ["milestones: read failed", "RangeError"],
       ["milestones: record failed", "RangeError"],
       ["milestones: list failed", "RangeError"],
-      ["milestones: seen failed", "RangeError"],
+      ["progress: seen read failed", "RangeError"],
     ]);
     expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });
@@ -372,8 +372,8 @@ describe("logMilestoneFailure", () => {
     logMilestoneFailure("seen", new Error("load", { cause: { code: "42501", details: "52.37" } }));
 
     expect(errors.mock.calls).toEqual([
-      ["milestones: seen failed", "string"],
-      ["milestones: seen failed", "Error", "object"],
+      ["progress: seen read failed", "string"],
+      ["progress: seen read failed", "Error", "object"],
     ]);
   });
 });

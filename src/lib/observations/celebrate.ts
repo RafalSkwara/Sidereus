@@ -39,8 +39,10 @@ export type MilestoneStep = "read" | "record" | "list" | "seen";
 export function logMilestoneFailure(step: MilestoneStep, error: unknown): void {
   const nameOf = (value: unknown) => (value instanceof Error ? value.name : typeof value);
   const cause = error instanceof Error ? error.cause : undefined;
+  // The page's seen read is S-05's (observing progress), so its line names that feature, not milestones.
+  const line = step === "seen" ? "progress: seen read failed" : `milestones: ${step} failed`;
   // eslint-disable-next-line no-console -- a fixed line plus the error's and its cause's names, never a message (see above).
-  console.error(`milestones: ${step} failed`, nameOf(error), ...(cause === undefined ? [] : [nameOf(cause)]));
+  console.error(line, nameOf(error), ...(cause === undefined ? [] : [nameOf(cause)]));
 }
 
 export interface ReachedBySaveOptions<Result extends { ok: boolean }> {

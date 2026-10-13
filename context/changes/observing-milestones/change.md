@@ -1,7 +1,7 @@
 ---
 change_id: observing-milestones
 title: Observing milestones - celebrate a milestone once at save and list them on the progress page
-status: implemented
+status: impl_reviewed
 created: 2026-10-11
 updated: 2026-10-13
 archived_at: null
@@ -18,4 +18,4 @@ Sidereus M-3 slice S-06 observing-milestones (GitHub #127; roadmap "S-06: Observ
   - Continue/Dalej left focus on the hidden button; fixed in 5940599 and pinned by the e2e. Now it returns focus to the page (body) like Esc.
   - Reduced motion: 5 twinkling stars without the preference, 0 under `reduce`.
 - 6.4 `/design` specimens (dev server, toolbar hidden) in dark/light/red × 390/1280: `scratchpad/manual-6/shots/design-celebration-*.png`, `design-milestone-list-*.png`. No modal opens on `/design`.
-
+- Impl review F1 (toast behind the modal): after a real 11 s with the dialog open, the save toast is still there once Continue closes it, on desktop and phone: `scratchpad/manual-6/shots/toast-after-close-en-dark-{desktop,phone}.png`. The e2e pins the same behaviour with a fake clock.

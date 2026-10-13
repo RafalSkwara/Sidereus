@@ -122,19 +122,25 @@ const CARD_STARS = [
 </style>
 
 <script>
-  import { withoutParams } from "@/lib/toasts";
+  import { CELEBRATION_CLOSED, focusMain, withoutParams } from "@/lib/toasts";
 
   // The dialog opens over the page it returns to, once, as it loads, and takes its `milestone` params out of the URL,
   // so a reload (or a copied link) never replays it. Continue closes it; Esc does too, natively. Specimens are not
   // <dialog>s and carry no close hook, so nothing here touches them.
   for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[data-milestone-celebration]")) {
+    // The dialog opened on load, so there is no earlier focus to give back: Chrome leaves focus on Continue (now
+    // hidden) or on <body> (Esc). Either way it goes to <main>, the toasts' pattern, so the next Tab starts in the
+    // content. The mark tells a waiting toast (`celebrationHolding`, toasts.ts) that its timer may run now.
+    const release = () => {
+      dialog.setAttribute(CELEBRATION_CLOSED, "");
+      const focused = document.activeElement;
+      if (focused === null || focused === document.body || dialog.contains(focused)) focusMain();
+    };
+    dialog.addEventListener("close", release);
     for (const button of dialog.querySelectorAll("[data-milestone-close]")) {
       button.addEventListener("click", () => {
         dialog.close();
-        // The dialog opened on load, so there is no earlier focus to give back: Chrome leaves focus on Continue, now
-        // hidden, and the next Tab would carry on from inside the closed dialog. Give it back to the page, as Esc does.
-        const focused = document.activeElement;
-        if (focused instanceof HTMLElement && dialog.contains(focused)) focused.blur();
+        release();
       });
     }
     if (dialog.open) continue;
