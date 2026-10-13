@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * Planets, end to end (M-2 S-01; on the Planets page since tonight-dashboard): the "Planets tonight" section shows on
@@ -60,6 +60,8 @@ test("marking a planet observed on the Planets page saves it and the log lists i
   // The save returns to the page it came from (`from=planets`).
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: name }) })).toBeVisible();
   await expect(page).toHaveURL(/\/tonight\/planets$/);
+  // A fresh user's first planet reaches a milestone: close its celebration before using the page.
+  await dismissCelebrationIfOpen(page);
 
   // Planets are never pushed down by the log, so the card stays and carries the "seen" tag.
   const loggedCard = planetList.getByRole("listitem").filter({ has: page.getByRole("heading", { name, exact: true }) });

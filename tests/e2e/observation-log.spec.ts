@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * Mark observed from the Targets page, end to end (S-06, FR-016 / FR-018; the Targets page since tonight-dashboard),
@@ -58,6 +58,7 @@ test("marking a target observed on the Targets page saves it and tags its row th
 
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
   await expect(page).toHaveURL(/\/tonight\/targets$/);
+  await dismissCelebrationIfOpen(page);
 
   // Rated 4, the object moves down the list (maybe behind "Show the other …") but still cleared the bar, so its row
   // is there with the "seen" tag (the tag's wording up to the date, taken from the catalogue).
@@ -93,6 +94,7 @@ test("a Caldwell object is found in the manual picker by its number and shows in
 
   await expect(page.getByRole("status")).toHaveText(en.log.list.saved({ object: "NGC 7000" }));
   await expect(page).toHaveURL(/\/log$/);
+  await dismissCelebrationIfOpen(page);
   await expect(page.locator('main a[href^="/log/"]').filter({ hasText: "NGC 7000" })).toContainText(
     en.log.list.rated({ rating: "4" }),
   );

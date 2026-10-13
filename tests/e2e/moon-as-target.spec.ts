@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * The Moon as a target, end to end (M-2 S-02, moved into the Moon card by moonlight-and-the-verdict and onto the Moon
@@ -52,6 +52,8 @@ test("marking the Moon observed on the Moon page saves it, tags the card and lis
   // The save returns to the page it came from (`from=moon`).
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: name }) })).toBeVisible();
   await expect(page).toHaveURL(/\/tonight\/moon$/);
+  // A fresh user's first Moon reaches a milestone: close its celebration before using the page.
+  await dismissCelebrationIfOpen(page);
   // The log never reorders the Moon: the card stays and carries the "seen" tag.
   await expect(moonCard).toContainText(en.tonight.object.seen.one({ count: "1", date: "" }));
 

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * The Targets page (tonight-all-objects; /tonight/targets since tonight-dashboard): tonight's best objects in full,
@@ -81,6 +81,7 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
 
   await expect(page.getByRole("status").filter({ hasText: en.tonight.logged({ object: label }) })).toBeVisible();
   await expect(page).toHaveURL(/\/tonight\/targets$/);
+  await dismissCelebrationIfOpen(page);
   // The row just logged is on screen: the page opens the rest of the list for it and scrolls it into view.
   await expect(page.locator(`[data-object="${object}"]`)).toBeInViewport();
 });

@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import { createFormatter } from "@/lib/tonight/format";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * The observation log, end to end (S-07, FR-017 / FR-021 / FR-022), walked by one user from the shared
@@ -93,6 +93,8 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
 
   await expect(page.getByRole("status")).toHaveText(t.list.saved({ object: "M31" }));
   await expect(page).toHaveURL(/\/log$/);
+  // A fresh user's first galaxy reaches a milestone: close its celebration before using the page.
+  await dismissCelebrationIfOpen(page);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
   // It sits under the heading of the night it was logged for.
   await expect(page.locator("main section").filter({ hasText: "M31" }).getByRole("heading", { level: 2 })).toHaveText(
@@ -106,6 +108,7 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await form.getByRole("combobox", { name: t.picker.label }).press("Enter");
   await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
   await expect(page).toHaveURL(/\/log$/);
+  await dismissCelebrationIfOpen(page);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "4" }));
 
   // Lower the rating to 2.
@@ -135,6 +138,7 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await form.locator('button[type="submit"]').click();
   await expect(page.getByRole("status")).toHaveText(t.list.updated({ object: "M31" }));
   await expect(page).toHaveURL(/\/log$/);
+  await dismissCelebrationIfOpen(page);
   await expect(logEntry(page, "M31")).toContainText(t.list.rated({ rating: "3" }));
   await expect(logEntry(page, "M31")).toContainText(t.list.deletedGear({ name: "Travel refractor" }));
 

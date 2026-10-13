@@ -45,6 +45,24 @@ export async function waitForHydration(page: Page, selector: string) {
     .toBe(true);
 }
 
+/**
+ * Closes the milestone celebration (observing-milestones, M-3 S-06) when the page a save returned to opened one.
+ * A save rated 3 or above can reach a milestone (a fresh user's first planet, first Moon, first galaxy …), and the
+ * page then opens a modal dialog over itself that makes everything else inert, so a spec that goes on to click the
+ * page closes it first, with Continue, as a user does. The dialog is server-rendered in the page shell and its script
+ * opens it before `DOMContentLoaded`, so once the document has loaded, no dialog means no celebration. Call it after
+ * every save rated 3 or above; it does nothing when the save reached no new milestone. The celebration itself is
+ * asserted in `observing-milestones.spec.ts`.
+ */
+export async function dismissCelebrationIfOpen(page: Page) {
+  await page.waitForLoadState("domcontentloaded");
+  const dialog = page.locator("dialog[data-milestone-celebration]");
+  if ((await dialog.count()) === 0) return;
+  await expect(dialog).toHaveAttribute("open", "");
+  await dialog.locator("[data-milestone-close]").click();
+  await expect(dialog).not.toHaveAttribute("open");
+}
+
 /** Signs out through the top bar's settings popover (Sign out is no longer in the bar itself). */
 export async function signOut(page: Page) {
   await page.getByRole("button", { name: en.nav.settings }).click();
