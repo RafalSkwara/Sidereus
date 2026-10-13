@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import { createFormatter } from "@/lib/tonight/format";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
  * Observing progress (M-3 S-05, FR-039/FR-040). The Tonight half: the "not seen yet" mark on Tonight's targets follows
@@ -91,6 +91,7 @@ test("the mark follows the log: shown for a new object, kept at a rating of 2, g
   await rate(form, 4);
   await form.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/log$/);
+  await dismissCelebrationIfOpen(page);
 
   await page.goto("/tonight/targets");
   const seenRow = page.locator(`li[data-object="${key}"]`);
@@ -201,6 +202,7 @@ test.describe("the progress page", () => {
     await rate(form, rating);
     await form.locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/log$/);
+    await dismissCelebrationIfOpen(page);
     return night;
   }
 
@@ -236,6 +238,7 @@ test.describe("the progress page", () => {
     await rate(page.locator(EDIT_FORM), 4);
     await page.locator(EDIT_FORM).locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/log$/);
+    await dismissCelebrationIfOpen(page);
     await page.goto("/log/progress");
     await expect(messierHeading(page)).toContainText(count(1, 110));
     await expect(m31Chip(page)).toHaveAttribute("data-seen", "");

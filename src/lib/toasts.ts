@@ -39,14 +39,32 @@ function clearParams(toast: HTMLElement) {
   if (next !== current) history.replaceState(history.state, "", next);
 }
 
-/** If `scope` holds the focus, moves it to `<main>` (made programmatically focusable, with no ring) before it goes. */
-function releaseFocus(scope: HTMLElement) {
-  if (!scope.contains(document.activeElement)) return;
+/** Moves the focus to `<main>`, made programmatically focusable with no ring, so the next Tab starts in the content. */
+export function focusMain(): void {
   const main = document.querySelector<HTMLElement>("main");
   if (!main) return;
   if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
   main.classList.add("outline-none");
   main.focus({ preventScroll: true });
+}
+
+/** If `scope` holds the focus, moves it to `<main>` before `scope` goes. */
+function releaseFocus(scope: HTMLElement) {
+  if (!scope.contains(document.activeElement)) return;
+  focusMain();
+}
+
+/** The milestone celebration dialog (`MilestoneCelebration.astro`) marks itself with this once it has closed. */
+export const CELEBRATION_CLOSED = "data-milestone-closed";
+
+/**
+ * The milestone celebration a toast must wait for, or `null`: while the modal dialog is (or is about to be) open, a
+ * toast sits behind its backdrop, dimmed and inert, so its timer must not run (observing-milestones impl review F1).
+ * The dialog is server-rendered and opens on load, so one that has not yet closed counts.
+ */
+export function celebrationHolding(root: Pick<ParentNode, "querySelector">): EventTarget | null {
+  const dialog = root.querySelector("dialog[data-milestone-celebration]");
+  return dialog && !dialog.hasAttribute(CELEBRATION_CLOSED) ? dialog : null;
 }
 
 function close(toast: HTMLElement) {
@@ -65,14 +83,25 @@ function close(toast: HTMLElement) {
   setTimeout(remove, EXIT_FALLBACK_MS);
 }
 
-// The timer runs while nobody hovers or focuses the toast, so a keyboard user can reach the ×; it resumes with what
-// was left.
+// The timer runs while nobody hovers or focuses the toast, so a keyboard user can reach the ×, and not while a milestone
+// celebration covers it; it resumes with what was left.
 function watch(toast: HTMLElement) {
   let remaining = TOAST_MS;
   let startedAt = 0;
   let timer: number | undefined;
   let hovered = false;
   let focused = false;
+  // A milestone celebration over the page holds the timer until it closes.
+  const celebration = celebrationHolding(document);
+  let held = celebration !== null;
+  celebration?.addEventListener(
+    "close",
+    () => {
+      held = false;
+      update();
+    },
+    { once: true },
+  );
 
   const pause = () => {
     if (timer === undefined) return;
@@ -88,7 +117,7 @@ function watch(toast: HTMLElement) {
     }, remaining);
   };
   const update = () => {
-    if (hovered || focused) {
+    if (hovered || focused || held) {
       pause();
     } else {
       resume();
@@ -116,7 +145,7 @@ function watch(toast: HTMLElement) {
     if (event.key === "Escape") close(toast);
   });
   stops.set(toast, pause);
-  resume();
+  update();
 }
 
 function adopt(toast: HTMLElement) {

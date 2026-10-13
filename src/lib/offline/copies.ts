@@ -32,7 +32,7 @@ export const EXPIRY_MS = 36 * 60 * 60 * 1000;
 export const NEXT_REFRESH_MS = 60 * 60 * 1000;
 
 // Their notices are baked into the island props, so a copy stored with them would show "Saved" forever.
-const NOTICE_PARAMS = ["logged", SKY_CHECKED_PARAM, "error"];
+const NOTICE_PARAMS = ["logged", SKY_CHECKED_PARAM, "error", "milestone"];
 const ISLAND_PREFIX = "/_server-islands/";
 // Resolves the relative URLs found in HTML; only the path and query are ever kept.
 const BASE = "http://localhost";

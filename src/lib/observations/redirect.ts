@@ -1,4 +1,5 @@
 import type { MessageKey } from "@/i18n";
+import { MILESTONES, isMilestoneKey, type MilestoneKey } from "@/lib/progress/milestones";
 import { parseTargetParam, type TargetKey } from "@/lib/targets";
 import { isKnownTarget } from "@/lib/targets/labels";
 import { observationInputSchema, returnTargetSchema, type TonightReturnPage } from "./schemas";
@@ -82,6 +83,35 @@ const LOG_NOTICES: readonly LogNotice[] = ["saved", "updated", "deleted"];
 /** The log after a successful write, naming the object the notice is about by its target key only. */
 export function logNotice(kind: LogNotice, target: TargetKey): string {
   return `${LOG_LIST}?${new URLSearchParams({ [kind]: target }).toString()}`;
+}
+
+/**
+ * A relative success URL (it may already have a query, as `/log?saved=M31` does) with one `milestone=<key>` per
+ * milestone the save newly stored, in the order given (`MILESTONES` order). No keys leaves the URL unchanged. The
+ * values are keys from the fixed set, never a typed value.
+ */
+export function withMilestones(url: string, keys: readonly MilestoneKey[]): string {
+  if (keys.length === 0) {
+    return url;
+  }
+  const hash = url.indexOf("#");
+  const path = hash === -1 ? url : url.slice(0, hash);
+  const fragment = hash === -1 ? "" : url.slice(hash);
+  const query = new URLSearchParams(keys.map((key) => ["milestone", key])).toString();
+  return `${path}${path.includes("?") ? "&" : "?"}${query}${fragment}`;
+}
+
+/**
+ * The milestones a page celebrates, from its `milestone` params (`withMilestones` writes them): each value that is a
+ * key of the fixed set, once, in `MILESTONES` order. Signed out, nothing is celebrated, so a crafted link shows a
+ * visitor nothing. The values are never shown as typed: callers render catalogue copy for the keys.
+ */
+export function readMilestoneParam(url: URL, signedIn: boolean): MilestoneKey[] {
+  if (!signedIn) {
+    return [];
+  }
+  const asked = new Set(url.searchParams.getAll("milestone").filter(isMilestoneKey));
+  return MILESTONES.map(({ key }) => key).filter((key) => asked.has(key));
 }
 
 /**

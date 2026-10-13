@@ -1,0 +1,152 @@
+---
+// The milestone celebration (observing-milestones Phase 6, the owner's pick on 2026-10-13: the modal dialog). A native
+// <dialog> on a night-sky card, opened by the script below with `showModal()` as the page loads: the Award, the label
+// (plural when a save reaches several), the names joined as a list, "Continue" (closes it; Esc closes it natively and
+// focus goes back where the browser puts it) and "See your progress" (/log/progress). No timer and no date.
+// `GearShell` renders it for a signed-in user whose URL carries valid `milestone` params. When it opens, the script
+// removes every `milestone` param with `history.replaceState` (`withoutParams`, the toasts' helper), so a reload never
+// replays it.
+// `specimen` is for /design: the card sits inline in a <div>, not in a modal, and the script finds nothing to open or
+// close. `idBase` keeps ids unique when /design shows several.
+// Red mode has no hue, so the Award chip, the rules and the weight carry the look, never a colour. Colours are tokens.
+import { ArrowRight, Award } from "lucide-react";
+
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, plural } from "@/i18n";
+import { PROGRESS_PAGE } from "@/lib/observations/redirect";
+import type { MilestoneKey } from "@/lib/progress/milestones";
+import type { Locale } from "@/lib/preferences";
+import { createFormatter } from "@/lib/tonight/format";
+
+interface Props {
+  /** The milestones reached, in `MILESTONES` order; nothing renders without one. */
+  keys: readonly MilestoneKey[];
+  locale: Locale;
+  /** `/design`: the card inline, no modal, nothing to open or close. */
+  specimen?: boolean;
+  idBase?: string;
+}
+
+const { keys, locale, specimen = false, idBase = "milestone-celebration" } = Astro.props;
+const t = getMessages(locale).progress.milestones;
+const c = t.celebration;
+const names = createFormatter(locale).listOf(keys.map((key) => t.name[key]));
+const reached = plural(locale, keys.length, c.reached);
+const labelId = `${idBase}-label`;
+const namesId = `${idBase}-names`;
+const actionClass = buttonVariants({ variant: "action", size: "sm" });
+const DialogTag = specimen ? "div" : "dialog";
+
+// The dialog card's fixed star field (percent of the card), a few of them twinkling.
+const CARD_STARS = [
+  { x: "8%", y: "14%", r: "1.2", twinkle: true },
+  { x: "22%", y: "62%", r: "0.8", twinkle: false },
+  { x: "31%", y: "22%", r: "1", twinkle: true },
+  { x: "46%", y: "8%", r: "0.7", twinkle: false },
+  { x: "58%", y: "74%", r: "1.1", twinkle: true },
+  { x: "67%", y: "18%", r: "0.8", twinkle: false },
+  { x: "79%", y: "52%", r: "1.2", twinkle: true },
+  { x: "88%", y: "12%", r: "0.9", twinkle: false },
+  { x: "93%", y: "80%", r: "0.7", twinkle: true },
+  { x: "14%", y: "88%", r: "0.9", twinkle: false },
+  { x: "52%", y: "92%", r: "0.8", twinkle: false },
+] as const;
+---
+
+{keys.length > 0 && (
+  <DialogTag
+    data-milestone-celebration
+    aria-labelledby={labelId}
+    aria-describedby={namesId}
+    class:list={[
+      specimen
+        ? "w-full max-w-md"
+        : "m-auto w-full max-w-md bg-transparent p-4 text-foreground backdrop:bg-background/80",
+    ]}
+  >
+    <div class="night-sky relative overflow-hidden rounded-xl border border-border bg-linear-to-b from-zenith to-horizon px-6 py-8 text-center text-foreground">
+      <svg aria-hidden="true" focusable="false" class="absolute inset-0 size-full fill-star">
+        {CARD_STARS.map((star) => (
+          <circle cx={star.x} cy={star.y} r={star.r} class:list={[star.twinkle && "milestone-twinkle"]} />
+        ))}
+      </svg>
+      <div class="relative flex flex-col items-center">
+        <span class="flex size-20 items-center justify-center rounded-full border border-action-border bg-action-surface text-primary-strong">
+          <Award className="size-12" aria-hidden="true" />
+        </span>
+        <p id={labelId} class="mt-4 text-label font-semibold text-muted-foreground">
+          {reached}
+        </p>
+        <p id={namesId} class="mt-2 font-display text-title font-semibold break-words text-heading">
+          {names}
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+          <button type="button" data-milestone-close={specimen ? undefined : ""} class:list={[buttonVariants()]}>
+            {c.continue}
+          </button>
+          <a href={PROGRESS_PAGE} class:list={[actionClass]}>
+            <ArrowRight aria-hidden="true" />
+            {c.seeProgress}
+          </a>
+        </div>
+      </div>
+    </div>
+  </DialogTag>
+)}
+
+<style>
+  /* A subtle twinkle for a few of the dialog card's stars; none under reduced motion. */
+  @keyframes milestone-twinkle {
+    from {
+      opacity: 0.35;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .milestone-twinkle {
+      animation: milestone-twinkle 3s ease-in-out infinite alternate;
+    }
+
+    .milestone-twinkle:nth-child(2n) {
+      animation-delay: -1.2s;
+      animation-duration: 4s;
+    }
+
+    .milestone-twinkle:nth-child(3n) {
+      animation-delay: -2.1s;
+    }
+  }
+</style>
+
+<script>
+  import { CELEBRATION_CLOSED, focusMain, withoutParams } from "@/lib/toasts";
+
+  // The dialog opens over the page it returns to, once, as it loads, and takes its `milestone` params out of the URL,
+  // so a reload (or a copied link) never replays it. Continue closes it; Esc does too, natively. Specimens are not
+  // <dialog>s and carry no close hook, so nothing here touches them.
+  for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[data-milestone-celebration]")) {
+    // The dialog opened on load, so there is no earlier focus to give back: Chrome leaves focus on Continue (now
+    // hidden) or on <body> (Esc). Either way it goes to <main>, the toasts' pattern, so the next Tab starts in the
+    // content. The mark tells a waiting toast (`celebrationHolding`, toasts.ts) that its timer may run now.
+    const release = () => {
+      dialog.setAttribute(CELEBRATION_CLOSED, "");
+      const focused = document.activeElement;
+      if (focused === null || focused === document.body || dialog.contains(focused)) focusMain();
+    };
+    dialog.addEventListener("close", release);
+    for (const button of dialog.querySelectorAll("[data-milestone-close]")) {
+      button.addEventListener("click", () => {
+        dialog.close();
+        release();
+      });
+    }
+    if (dialog.open) continue;
+    dialog.showModal();
+    const current = `${location.pathname}${location.search}${location.hash}`;
+    const next = withoutParams(current, ["milestone"]);
+    if (next !== current) history.replaceState(history.state, "", next);
+  }
+</script>

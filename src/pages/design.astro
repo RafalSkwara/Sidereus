@@ -30,6 +30,8 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
 import GearCard from "@/components/tonight/GearCard.astro";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
+import MilestoneList from "@/components/progress/MilestoneList.astro";
 import SeenList from "@/components/progress/SeenList.astro";
 import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
@@ -58,6 +60,7 @@ import {
   type TonightPlanetEntry,
   type TonightView,
 } from "@/lib/tonight/build";
+import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
 import { observingProgress } from "@/lib/progress/progress";
 import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
@@ -599,6 +602,14 @@ const progressSome = observingProgress([
   { target: "NGC7000", night: "2026-09-05", rating: 5 },
 ]);
 const progressNone = observingProgress([]);
+// The milestones' specimens (observing-milestones): none reached, and some (two derived from the log, the Moon from the
+// stored record alone, as after its entry was deleted).
+const milestonesNone = milestonesOf(progressNone);
+const milestonesSome = withStored(milestonesOf(progressSome), new Map([["first-moon", "2026-08-20"]]));
+
+// The celebration dialog's specimens (Phase 6): one milestone, and three (a save that reaches several at once).
+const celebrateOne: MilestoneKey[] = ["first-galaxy"];
+const celebrateThree: MilestoneKey[] = ["first-planet", "all-planets", "messier-10"];
 
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
@@ -2050,6 +2061,74 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               hover, focus-visible, active, disabled — N/A (chips are not interactive: no links, no controls) · error —
               N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
+            </p>
+          </section>
+
+          <!-- MilestoneList -->
+          <section class:list={block} aria-labelledby="c-milestone-list">
+            <h3 id="c-milestone-list" class:list={blockTitle}>
+              MilestoneList
+            </h3>
+            <p class:list={blockNote}>
+              The progress page's first band: every milestone in its fixed order. A reached one has a check, a heavier
+              name in the heading ink and the night it was reached; one still ahead is muted, with "Not yet" or how far
+              along a count milestone is. Red mode tells them apart by the check and the weight, not by a hue. The Moon
+              here is reached from the stored record alone.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · some reached (two derived from the log, the Moon stored)</p>
+                <MilestoneList states={milestonesSome} headingId="design-milestones-some-heading" />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · none reached (every row muted, count milestones at 0)</p>
+                <MilestoneList states={milestonesNone} headingId="design-milestones-none-heading" />
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (rows are not interactive: no links, no controls) · error —
+              N/A (a failed stored read falls back to the derived states, and a failed log read shows a ServerError
+              instead of the page) · loading — N/A (server-rendered with the page)
+            </p>
+          </section>
+
+          <!-- MilestoneCelebration -->
+          <section class:list={block} aria-labelledby="c-milestone-celebration">
+            <h3 id="c-milestone-celebration" class:list={blockTitle}>
+              MilestoneCelebration
+            </h3>
+            <p class:list={blockNote}>
+              The modal dialog a save that reaches a milestone opens over the page it returns to (observing-milestones,
+              the owner's pick of 2026-10-13): the Award, the label, the names, Continue and See your progress. No timer
+              and no date. Here it is a specimen: the card sits inline instead of in the top layer, and nothing opens or
+              closes. The real pages show it for a signed-in user with ?milestone=first-galaxy in the URL, once, and its
+              script removes the param. Red mode tells the Award chip, the rules and the heavier names apart by shape
+              and weight, not by hue.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · one milestone</p>
+                <div class="overflow-hidden rounded-lg border border-border">
+                  <MilestoneCelebration keys={celebrateOne} locale={locale} specimen idBase="design-celebration-one" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · three milestones (the names joined as a list, the label plural)</p>
+                <div class="overflow-hidden rounded-lg border border-border">
+                  <MilestoneCelebration
+                    keys={celebrateThree}
+                    locale={locale}
+                    specimen
+                    idBase="design-celebration-three"
+                  />
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible — the links and buttons are the real components (Tab or hover them in either cell
+              above) · disabled — N/A (a link or a close is never disabled) · error, loading — N/A (it renders only from
+              the server's fixed keys, nothing to fail or wait for) · empty — N/A (without a milestone it renders
+              nothing)
             </p>
           </section>
 

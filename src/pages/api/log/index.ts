@@ -1,7 +1,10 @@
 import type { APIRoute } from "astro";
 import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
-import { formRedirect, logNotice, tonightReturnPath } from "@/lib/observations/redirect";
+import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
+import { reachedBySave } from "@/lib/observations/celebrate";
+import { milestoneStore } from "@/lib/observations/milestone-store";
+import { formRedirect, logNotice, tonightReturnPath, withMilestones } from "@/lib/observations/redirect";
 import { observationInputSchema, returnTargetSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { isKnownTarget } from "@/lib/targets/labels";
@@ -11,7 +14,11 @@ import { isKnownTarget } from "@/lib/targets/labels";
  * names a focused page, tonight-dashboard; missing or unknown → Tonight), which confirms it; a manual entry from
  * the log (`from=log`, S-07) returns to the log instead. Every
  * `?error=` value is a fixed message key, and the prefill carried back is filtered by `formRedirect`,
- * so no typed value (and never a coordinate) reaches the URL. Nothing is logged.
+ * so no typed value (and never a coordinate) reaches the URL. A create rated `LOG_PENALTY_MIN_RATING` or above
+ * stores the milestones it reached (`reachedBySave`) and carries the newly stored ones to the returning page as
+ * `milestone=<key>` params (fixed keys, never a value); a lower rating can neither reach nor lose one and does no
+ * milestone work at all. Nothing is logged except `reachedBySave`'s fixed trace of a failed milestone step, which
+ * never fails the save.
  */
 export const POST: APIRoute = async (context) => {
   const raw = Object.fromEntries(await context.request.formData());
@@ -31,7 +38,17 @@ export const POST: APIRoute = async (context) => {
     return fail("errors.observation.objectInvalid");
   }
 
-  const result = await observationStore.create(supabase, parsed.data, new Date());
+  const write = () => observationStore.create(supabase, parsed.data, new Date());
+  // The create short-circuit: a rating below the bar skips the milestone reads and the record entirely.
+  const { result, celebrate } =
+    parsed.data.rating >= LOG_PENALTY_MIN_RATING
+      ? await reachedBySave({
+          read: () => observationStore.listSeenEntries(supabase),
+          record: (states) => milestoneStore.record(supabase, states),
+          counts: true,
+          write,
+        })
+      : { result: await write(), celebrate: [] };
   if (!result.ok) {
     return fail(result.message);
   }
@@ -39,8 +56,11 @@ export const POST: APIRoute = async (context) => {
   const manual = from === "log";
   const { target } = parsed.data;
   return context.redirect(
-    manual
-      ? logNotice("saved", target)
-      : `${tonightReturnPath(from)}?${new URLSearchParams({ logged: target }).toString()}`,
+    withMilestones(
+      manual
+        ? logNotice("saved", target)
+        : `${tonightReturnPath(from)}?${new URLSearchParams({ logged: target }).toString()}`,
+      celebrate,
+    ),
   );
 };

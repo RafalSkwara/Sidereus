@@ -1,8 +1,10 @@
 ---
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Layout from "@/layouts/Layout.astro";
 import TabBar from "@/components/TabBar.astro";
 import Topbar from "@/components/Topbar.astro";
 import { getMessages } from "@/i18n";
+import { readMilestoneParam } from "@/lib/observations/redirect";
 
 interface Props {
   title: string;
@@ -17,6 +19,10 @@ interface Props {
 
 const { title, skyFlow = false } = Astro.props;
 const m = getMessages(Astro.locals.locale);
+// The milestone celebration (observing-milestones Phase 6): a modal dialog, so it is position-independent and lives in
+// the shell. Signed in only, with the `milestone` keys validated against the fixed set, so a crafted link shows a
+// visitor nothing. Its script opens it once and takes the param out of the URL (a reload never replays it).
+const celebrationKeys = readMilestoneParam(Astro.url, Boolean(Astro.locals.user));
 // A page that fills the `header` slot gets the sky header: a full-bleed zenith-to-horizon band behind the Topbar
 // and that slot, ending in the horizon rule. Every other page renders as before.
 const skyHeader = Astro.slots.has("header");
@@ -48,5 +54,6 @@ const skyHeader = Astro.slots.has("header");
       <slot />
     </main>
     <TabBar />
+    {celebrationKeys.length > 0 && <MilestoneCelebration keys={celebrationKeys} locale={Astro.locals.locale} />}
   </div>
 </Layout>
