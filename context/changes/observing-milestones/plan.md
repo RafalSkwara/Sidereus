@@ -642,5 +642,5 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Manual
 
-- [x] 6.3 Screenshots of the chosen celebration on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, keyboard-reachable link, red mode legible, nothing behind the TabBar, PL at 320 px
-- [x] 6.4 `/design` specimens for the celebration and `MilestoneList` render in all themes
+- [x] 6.3 Screenshots of the chosen celebration on `/log` and `/tonight/planets` in EN/PL × dark/light/red at 390 px and desktop: readable, keyboard-reachable link, red mode legible, nothing behind the TabBar, PL at 320 px — 5940599
+- [x] 6.4 `/design` specimens for the celebration and `MilestoneList` render in all themes — 5940599
