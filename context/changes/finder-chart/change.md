@@ -1,9 +1,9 @@
 ---
 change_id: finder-chart
 title: Finder chart for a chosen target
-status: planned
+status: plan_reviewed
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-10-13
 archived_at: null
 ---
 
