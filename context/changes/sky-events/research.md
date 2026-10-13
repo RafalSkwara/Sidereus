@@ -9,7 +9,7 @@ tags: [research, engine, astronomy-engine, sky-events, meteor-showers, licensing
 status: complete
 last_updated: 2026-10-13
 last_updated_by: Claude (sky-events agent)
-last_updated_note: "Rebased onto main 998b30f after finder-chart (#155) and the EPIPE fix (#156) merged; §7 rewritten; offline anchors re-checked."
+last_updated_note: "Rebased onto main 998b30f (finder-chart #155, EPIPE #156); §7 rewritten. Owner answers of 2026-10-13 recorded under Open Questions (OQ 19 option A, OQ 20 = 5°, 10° altitude, notable default, tile after Targets)."
 ---
 
 # Research: Sky events (M-3 S-07)
@@ -308,13 +308,35 @@ Before implementation, re-read the exact line anchors in §5 and §6 on main; th
 
 ## Open Questions
 
-For the plan; the owner owns the product choices.
+Resolved by the owner on 2026-10-13 (relayed by the orchestrator). Recorded in `plan.md` "Owner decisions":
 
-1. **Meteor data source** (OQ 19): option A, B or C above. Pending owner confirmation; not legal advice.
-2. **Close-pairing threshold** (OQ 20): 3° (PRD candidate, rare) or 5° (binocular field, about twice as often).
-3. **Minimum altitude for "visible"**: candidate 10°.
-4. **Which kinds count as "notable"** for the tile and the verdict line. For example: all visible events, or not penumbral eclipses and not pairings wider than X.
-5. **Penumbral lunar eclipses**: show them as "subtle", or leave them out.
-6. **Uranus and Neptune oppositions**: out (they need optics), or shown as "binoculars or telescope".
-7. **The verdict-line placement**, given the pinned verdict height and the phone first screen.
-8. **The shower peak instant** (J2000 versus of-date): needs a reference check during implementation, before the rule is fixed.
+1. **Meteor data source** (OQ 19): **option A.** A hand-written list of facts, cross-checked in two sources and documented in `LICENSE-DATA.md`, without share-alike. The optional IAU MDC email is drafted for the owner in `iau-mdc-request.md`. Not legal advice.
+2. **Close-pairing threshold** (OQ 20): **5°** (the binocular field), changed from the 3° candidate. Still topocentric, at the closest moment while both bodies are visible. Expected frequency: §3's simulated cases bracket the chosen rule (at least 10° up, Sun at or below −6°):
+   - "5° up, Sun −6°" gives 1.05 Moon-planet events per 30 days;
+   - "10° up, Sun −12°" gives 0.67.
+
+   So about 0.7–1.0 Moon-planet events per 30 nights. Planet-planet stays rare: 0.16 per 30 days in the "5° up, Sun −6°" case. Plan Phase 2 re-measures the exact rule.
+3. **Minimum altitude for "visible"**: **10°.**
+4. **Notable**: every visible event except penumbral lunar eclipses. Those are listed as "barely noticeable", never put on the tile or verdict line. Uranus and Neptune oppositions are left out.
+5. **Penumbral lunar eclipses**: listed as "barely noticeable" (see 4).
+6. **Uranus and Neptune**: left out (see 4).
+7. **Dashboard**: the events tile goes straight after the Targets tile, plus the muted verdict line on event nights. The tiles sit below the verdict and gear cards that `tonight-phone.spec.ts` pins, so only the verdict line's height needs re-checking.
+8. **The shower peak instant** (J2000 versus of-date): not an owner question. The plan searches the Sun's J2000 longitude directly and pins it with a test.
+
+**Plan review follow-ups (2026-10-13)**, superseding parts of §2 and §4:
+
+- **Eclipse altitude (F2, owner):** eclipses use their own 2° minimum, labelled "low, needs an open horizon" below 10°. The tests use future eclipses only, computed with astronomy-engine on 2026-10-13 and checked against the NASA/Espenak catalogue:
+  - the 2027-08-02 total solar eclipse: total at Cádiz with the Sun about 37° up, partial at Madrid (about 0.86) and at Warsaw (about 0.30);
+  - the 2028-12-31 total lunar eclipse;
+  - the 2028-07-06 partial lunar eclipse;
+  - the 2027-02-20 penumbral lunar eclipse.
+
+  The 2026-08 eclipses named in drafts were already past.
+- **The J2000 longitude (F1):** `Ecliptic()` also returns the longitude of date, about 0.374° (about 9 h) off. The J2000 longitude comes from `SphereFromVector(RotateVector(Rotation_EQJ_ECL(), GeoVector(Body.Sun, t, true))).lon`. §2's "gotcha" applies to both `SearchSunLongitude` and `Ecliptic()`.
+- **Meteor sourcing (F4):** option A is carried out with no field depending on the IMO:
+  - peak night and approximate rate from NASA (public domain);
+  - peak λ computed by our engine from NASA's date (a derived fact, **not taken from the IMO**);
+  - radiant and speed from the IAU MDC.
+
+  Other sources are read only to cross-check. Whether NASA lists all ten showers (the Southern Delta Aquariids and the Ursids especially) is checked in Phase 3; a shower NASA lacks is dropped.
+- **Short nights (F5):** with no dark window, events use the span with the Sun at or below −6°, flagged "short night".
