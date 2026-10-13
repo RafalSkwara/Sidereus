@@ -641,8 +641,8 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps
-- [x] 6.2 `npx playwright test finder-chart` passes against the preview
+- [x] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps — e351b80
+- [x] 6.2 `npx playwright test finder-chart` passes against the preview — e351b80
 - [ ] 6.3 CI's `smoke` job passes on the PR
 
 #### Manual
