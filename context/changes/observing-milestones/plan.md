@@ -18,7 +18,7 @@ Evidence: `context/changes/observing-milestones/research.md`.
 - **Saves.** They happen in `POST /api/log` (create; `src/pages/api/log/index.ts`) and `POST /api/log/[id]` (edit; `src/pages/api/log/[id].ts`).
   - Create returns to the Tonight page named in `from` with `?logged=<key>`, or to `/log?saved=<key>`.
   - Edit returns to `/log?updated=<key>` (`logNotice`, `src/lib/observations/redirect.ts:83`).
-  - Delete can only lose derived milestones; stored ones stay.
+  - Delete (`src/pages/api/log/[id]/delete.ts`) returns to `/log?deleted=<key>`. It can only un-reach derived milestones, so it records the before-state first (plan re-review F11).
 - **Notices.** They travel as fixed query params:
   - Tonight shells read `?logged`: the dashboard `src/pages/tonight.astro:22`, plus `src/pages/tonight/targets.astro:23-31`, `planets.astro:23`, `moon.astro` and `nights.astro` (plan review F9).
   - `/log` reads `readLogNotice`.
@@ -72,7 +72,7 @@ Answered by the owner on 2026-10-13, relayed by the orchestrator:
 
 ## What We're NOT Doing
 
-- No backfill migration. The rule lives in TypeScript, so SQL can't derive milestones without a second copy of it. A milestone reached before this change shows on `/log/progress` as derived, and is stored silently, without a celebration, by the user's next save rated 3 or above.
+- No backfill migration. The rule lives in TypeScript, so SQL can't derive milestones without a second copy of it. A milestone reached before this change shows on `/log/progress` as derived. The user's next save of any kind except a create rated 1-2 stores it silently, without a celebration: a create or edit rated 3 or above, an edit to 1-2, or a delete (F11). A delete or downgrade therefore can't lose it.
 - No write from a GET. The progress page doesn't store anything.
 - No hardening of self-only direct writes to `observing_milestones`. This is accepted and pinned (see "Self-only writes" below).
 - No celebration on delete, and no "milestone lost" notice. A stored milestone is never lost.
@@ -95,14 +95,14 @@ The work runs bottom-up in six phases:
 
 The guard "never for an entry rated 1-2" holds independently in two places:
 
-- **By the rule:** the before/after diff over `observingProgress` is empty for such an entry.
-- **By a short-circuit:** the routes skip the milestone reads and the record entirely when the saved rating is below `LOG_PENALTY_MIN_RATING`.
+- **By the rule:** the before/after diff over `observingProgress` is empty for such an entry, and only a counting save (rated ≥ 3) ever reads `after` or celebrates.
+- **By a short-circuit:** a **create** rated below `LOG_PENALTY_MIN_RATING` skips the milestone reads and the record entirely; it can neither reach nor un-reach anything. An edit to 1-2 and a delete still read and record the before-state, so a derived-only milestone is stored before it can be lost, but they never celebrate (F11).
 
 **Decisions delegated to the agent** (non-UI; recorded in the brief):
 
 - The pure model lives in `src/lib/progress/milestones.ts`. The save-side helper, which does I/O, lives in `src/lib/observations/celebrate.ts` beside `store.ts` and `redirect.ts` (plan review F8). The table's store is `src/lib/observations/milestone-store.ts`.
 - **How the row is written:** at save, by the route, through PostgREST with the request's RLS client. It is an insert that ignores duplicates on `(user_id, key)` and returns only the rows it inserted. A new RPC would add nothing: it would run as the caller (SECURITY DEFINER is banned by `structure.test.ts`), so it would need the same grants.
-- **What is stored:** every milestone reached after the save, not only the new ones, so milestones reached before this change get stored without a separate backfill.
+- **What is stored:** every milestone any read of the save showed reached, `reached(before) ∪ reached(after)` (the `after` night where both have it), not only the new ones. Milestones reached before this change, or left derived-only by a failed record, get stored without a backfill, and an edit that moves the reaching entry away (M31 → M13) can't lose one (F11).
 - **What is celebrated:** the keys this save newly reached that the insert actually stored, `newlyReached(before, after) ∩ inserted`. A backfilled milestone (stored but not newly reached) stays silent. A re-reached milestone (newly reached but already stored) stays silent.
 - **Self-only writes: accepted and pinned**, not hardened (see "Critical Implementation Details").
 - A failed milestone read or record never fails the save: the celebration is simply skipped, with a trace.
@@ -111,16 +111,24 @@ The guard "never for an entry rated 1-2" holds independently in two places:
 
 ## Critical Implementation Details
 
-- **Order inside a route.**
-  1. Parse and validate the entry.
-  2. If the rating is ≥ `LOG_PENALTY_MIN_RATING`, read `before = listSeenEntries`.
-  3. Write the entry.
-  4. On success, and only if `before` succeeded, read `after`.
-  5. `afterStates = milestonesOf(observingProgress(after))`.
-  6. Record every reached state in `afterStates` (key and `reachedNight`). The insert ignores duplicates and returns the keys it stored, `inserted`.
-  7. `celebrate = newlyReached(milestonesOf(observingProgress(before)), afterStates) ∩ inserted`, in `MILESTONES` order.
+- **Order inside a route** (F11). Every save first parses and validates the entry. Then, by kind:
+  - **A counting save** (a create or an edit rated ≥ `LOG_PENALTY_MIN_RATING`):
+    1. Read `before = listSeenEntries`. A failure is traced and `before` is treated as unknown.
+    2. Write the entry.
+    3. On success, read `after`, even if `before` failed.
+    4. Record `reached(before) ∪ reached(after)` (key and `reachedNight`, the `after` night where both have it) in one insert. The insert ignores duplicates and returns the keys it stored, `inserted`.
+    5. `celebrate = newlyReached(beforeStates, afterStates) ∩ inserted`, in `MILESTONES` order. If `before` failed, `celebrate` is empty: without `before` the save can't tell new from old.
+  - **An edit to 1-2, or a delete:**
+    1. Read `before`.
+    2. Record `reached(before)` (one insert).
+    3. Then write or delete.
 
-  A failed read or record means no celebration, but the redirect still confirms the save. The failure is not hidden (plan review F4). The helper's catch logs one fixed line plus the error's name only, following `src/lib/tonight/build.ts:1227-1231`: `console.error("milestones: <step> failed", error.name, cause name if any)`, where `<step>` is a fixed word (`read` or `record`). The message is never logged, so no coordinates or values. It takes an `eslint-disable-next-line no-console -- <reason>` and an entry in `ALLOWED_DISABLES` (`src/lib/no-console-guard.test.ts`). If the record fails, the milestone still shows on the page (derived), and the next save rated 3 or above stores it without a celebration. This is accepted: the trace says why.
+    Such a save never reads `after` and never celebrates; neither can reach anything.
+  - **A create rated 1-2:** no milestone work at all.
+
+  A failed read or record means no celebration, but the redirect still confirms the save; a failed milestone step never blocks the write. The failure is not hidden (plan review F4).
+  - **The trace.** `logMilestoneFailure(step, error)`, exported from `celebrate.ts`, is the one logging call: `console.error("milestones: <step> failed", error.name, cause name if any)`, following `src/lib/tonight/build.ts:1227-1231`. `<step>` is a fixed word: `read`, `record`, `list` (the progress page's stored read) or `seen` (the page's existing seen read, F14). The message is never logged, so no coordinates or values. Its single `eslint-disable-next-line no-console -- <reason>` gets one entry in `ALLOWED_DISABLES` (`src/lib/no-console-guard.test.ts`).
+  - **A failed record.** The milestone still shows on the page (derived), and the user's next save of any kind except a create rated 1-2 stores it without a celebration. This is accepted: the trace says why.
 - **Exactly once, by construction.**
   - The unique key `(user_id, key)` makes the insert store each milestone once per user. Two saves at the same moment can't both get the row back, so they can't both celebrate.
   - Deleting or re-rating the reaching entry touches no milestone row.
@@ -135,7 +143,16 @@ The guard "never for an entry rated 1-2" holds independently in two places:
 - **The param never carries a value.**
   - `milestone` values are keys from `MILESTONES`, and the readers validate them against the set.
   - The redirect appends them to the URL the route already builds, for example `?logged=M31&milestone=first-galaxy&milestone=messier-10`. Order follows `MILESTONES`.
-- **Where the celebration renders.** The default is `GearShell.astro`, signed in only, with keys validated by `isMilestoneKey`. Every page a save returns to (`/log`, the Tonight dashboard and its focused pages) uses `GearShell`. The signed-out landing, the auth pages, `/offline` and `/design` never show it, so a crafted link can't celebrate for a visitor (plan review F3). The screen variant (B, Phase 5) would instead redirect through its own page. Phase 6 fixes the final site.
+- **Where the celebration renders** (F3, F12). Signed in only, with keys validated by `isMilestoneKey`; the signed-out landing, the auth pages, `/offline` and `/design` (outside specimens) never show it, so a crafted link can't celebrate for a visitor. One helper, `readMilestoneParam(url, user): MilestoneKey[]` in `redirect.ts`, reads and validates the keys for every render site. Where each variant renders:
+  - **Banner (A):**
+    - On `/log`, at the top of `<main>` (the page renders it after its header).
+    - On Tonight pages, **inside the server island, right under its sky**. On those pages the sky belongs to the island: `GearShell skyFlow` starts `<main>` with it, and a shell-rendered banner would split the one sky (`GearShell.astro:9-14`).
+    - The Tonight shells (`tonight.astro`, `tonight/targets.astro`, `planets.astro`, `moon.astro`) pass the keys to their island as a `milestones` prop beside `notice`, the existing notice-key path (`planets.astro:21-31`, `pickTonightNotice`). The island's own `Astro.url` carries no page query.
+    - The islands (`TonightContent`, `TargetsPageContent`, `PlanetsPageContent`, `MoonPageContent`) render the banner after their sky. The island's encrypted props carry only fixed keys.
+  - **Dialog (C):** may stay in `GearShell`. A modal is position-independent.
+  - **Screen (B):** the routes redirect to its own page, which renders it.
+
+  Phase 6 keeps only the chosen site.
 
 ## Phase 1: The milestone model
 
@@ -249,7 +266,13 @@ A per-user `observing_milestones` table that stores each reached milestone once,
 - `npm run db:types && git diff --exit-code src/lib/database.types.ts` shows the committed types match after commit (CI's drift check)
 - `npx astro check`, `npm run lint` and `npm test` pass
 
-**Implementation Note**: The local Supabase is shared with another agent. Apply the migration with `npx supabase migration up` (additive; never `db reset`) only after the orchestrator confirms. Until this branch merges, another worktree's `npm run db:types` would pick up this table, so the orchestrator should tell the other agent to hold its type regeneration. Commit on green without asking.
+**Implementation Note** (F13). The local Supabase is shared with another agent. The orchestrator approved `npx supabase migration up` on 2026-10-13: additive only, never reset, reseed or down-migrate. The migration history records the version once, so:
+1. Write the migration, `milestones.test.ts` and the `TABLES` entry first, and review the SQL until it is final.
+2. Run `npx supabase migration list --local` and note the result. Then `npx supabase migration up` once.
+3. After that, never edit `20261013120000_observing_milestones.sql`. Any later SQL change (red-green here, impl review) goes into a **new** migration file on this branch.
+4. A local revert (dropping the table and its history row) is destructive and needs the owner's permission.
+
+Until this branch merges, other checkouts on the same stack see the table: their `db:types` drifts and their `structure.test.ts` flags `observing_milestones` as unclassified. The orchestrator tells the other agent. Commit on green without asking.
 
 ---
 
@@ -263,21 +286,29 @@ Both save routes store what the save reached, and carry the newly stored milesto
 
 #### 1. Routes
 
-**Files**: `src/pages/api/log/index.ts`, `src/pages/api/log/[id].ts`, `src/lib/observations/redirect.ts`, `src/lib/observations/celebrate.ts` (new), `src/lib/no-console-guard.test.ts` (+ tests)
+**Files**: `src/pages/api/log/index.ts`, `src/pages/api/log/[id].ts`, `src/pages/api/log/[id]/delete.ts`, `src/lib/observations/redirect.ts`, `src/lib/observations/celebrate.ts` (new), `src/lib/no-console-guard.test.ts` (+ tests)
 
 **Intent**: Store every reached milestone and celebrate exactly what this save newly stored, only for a rating that can count.
 
 **Contract**:
-- `reachedBySave({ read, record, rating, write })` in `src/lib/observations/celebrate.ts`. It does I/O, so it isn't in the pure `src/lib/progress/` (plan review F8).
+- `reachedBySave({ read, record, counts, write })` in `src/lib/observations/celebrate.ts`. It does I/O, so it isn't in the pure `src/lib/progress/` (plan review F8).
+  - `counts: boolean`: whether this save can reach something (create or edit rated ≥ 3).
   - Its seams are `read: () => Promise<LogEntry[]>` and `record: (states) => Promise<MilestoneKey[]>`. The routes pass `() => observationStore.listSeenEntries(supabase)` and `(s) => milestoneStore.record(supabase, s)`.
-  - It follows the order in Critical Implementation Details.
-  - It returns `{ result, celebrate: MilestoneKey[] }`. A failed read or record yields `celebrate: []` and logs the fixed line (F4). A failed write returns the write's failure unchanged and records nothing.
+  - It follows the order in Critical Implementation Details: counting, or before-only (`counts: false`).
+  - It returns `{ result, celebrate: MilestoneKey[] }`. A failed read or record yields `celebrate: []` and calls `logMilestoneFailure` (F4, F14). A failed write returns the write's failure unchanged.
+- `logMilestoneFailure(step: "read" | "record" | "list" | "seen", error)` in `celebrate.ts`: the one allowlisted `console.error` (F14).
+- The routes:
+  - **Create:** calls the helper only when the rating is ≥ 3 (the create short-circuit).
+  - **Edit:** always calls it, with `counts` from the new rating.
+  - **Delete:** calls it with `counts: false` around `observationStore.remove`, and its redirect is unchanged.
 - `withMilestones(url, keys)` in `redirect.ts` appends one `milestone=<key>` per key.
 - Both routes use the helper and wrap their existing success redirect in `withMilestones`. Error redirects are unchanged.
 - `src/lib/offline/copies.ts` (+ `copies.test.ts`): `"milestone"` joins `NOTICE_PARAMS`, so a Tonight URL with `?milestone=first-galaxy` is never stored.
 - Tests (`celebrate.test.ts`, with fakes for the seams, no `vi.mock`):
-  - a rating of 2 makes no read and no record;
-  - a failed before-read still writes, records nothing and celebrates nothing;
+  - the create route's short-circuit: a create rated 2 never calls the helper (a route-level unit, or the e2e step 1);
+  - `counts: false` (edit to 1-2, delete) reads and records the before-state, then writes, and celebrates nothing;
+  - an edit that moves `first-galaxy` away (M31 → M13) records `first-galaxy` from `before`;
+  - a failed before-read still writes, reads and records the after-state, and celebrates nothing;
   - a failed write records and celebrates nothing;
   - a write that reaches `first-galaxy`, which `record` inserts, celebrates it;
   - a newly reached key that `record` doesn't return (already stored) is not celebrated;
@@ -311,7 +342,9 @@ The "Milestones" band on `/log/progress`, listing every milestone with its reach
 
 **Contract**:
 - `withStored(states, stored: Map<MilestoneKey, string>): MilestoneState[]` in `milestones.ts` (pure, tested). A stored key is reached on its stored night, which wins over the derived one. Otherwise the derived state stands, so milestones reached before this change still show. `progress` comes from the derived state.
-- The page reads `milestoneStore.listReached` next to its existing seen read (one extra request) and passes `withStored(milestonesOf(progress), stored)` to the band. A failed stored read falls back to the derived states and logs the same fixed line as Phase 3, with the step `list`.
+- The page reads `milestoneStore.listReached` next to its existing seen read (one extra request) and passes `withStored(milestonesOf(progress), stored)` to the band. A failed stored read falls back to the derived states and calls `logMilestoneFailure("list", …)`.
+- The page's existing seen read has a silent `catch {}` (`progress.astro:30-32`, S-05). It now calls `logMilestoneFailure("seen", …)` too, so it leaves a trace (F14).
+- **Empty state with stored milestones:** a user who deleted every entry still has stored milestones. The page then shows the empty-state notice and the band with those milestones reached. This is intended: the notice is about the log, the band about what was reached (F14).
 - `MilestoneList` renders a `Band` (`progress.milestones.title`) placed first among the bands, after the page's empty-state notice (`data-progress-empty`, `progress.astro:60`) when the log is empty (F9). It holds a `divide-y` list in `MILESTONES` order:
   - **Reached:** a lucide `Check` (`aria-hidden`), the name (`text-heading`), and `progress.milestones.reachedOn({ date })` via `createFormatter(locale).formatShortDate`.
   - **Not yet:** a muted name and `progress.milestones.notYet`, or `progress.milestones.progress({ seen, total })` for count milestones.
@@ -330,7 +363,8 @@ The "Milestones" band on `/log/progress`, listing every milestone with its reach
 1. `/log/new?object=M31&from=log` rated 2 → `/log/progress` shows `first-galaxy` not reached.
 2. Edit that entry to 4 → `first-galaxy` reached, on the entry's night.
 3. `/log/new?object=jupiter&from=planets` rated 3. Navigating straight to the form doesn't depend on Jupiter being up tonight. → `first-planet` reached; `messier-10` not reached and showing "1 / 10".
-4. Delete the M31 entry → `first-galaxy` is still reached, on its stored night.
+4. Edit the M31 entry to M13, still rated 4 → `first-galaxy` is still reached, and `first-globular` is now reached (F11).
+5. Delete that entry → `first-galaxy` and `first-globular` are still reached, on their stored nights.
 
 Rows are located by `[data-milestone="…"]` and `[data-reached]`. Expected copy comes from the catalogue (`en.progress.milestones.*`) and dates from `formatShortDate`.
 
@@ -359,25 +393,26 @@ The owner wants something bigger than a toast (owner decision 3). This phase bui
 
 #### 1. The variants
 
-**Files**: `src/components/progress/MilestoneCelebration.astro` (new), `src/components/gear/GearShell.astro`, `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts`
+**Files**: `src/components/progress/MilestoneCelebration.astro` (new), `src/components/gear/GearShell.astro`, `src/pages/log/index.astro`, `src/lib/observations/redirect.ts` (`readMilestoneParam`), the Tonight shells (`src/pages/tonight.astro`, `tonight/targets.astro`, `planets.astro`, `moon.astro`) and islands (`TonightContent`, `TargetsPageContent`, `PlanetsPageContent`, `MoonPageContent`), `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts` (F12)
 
 **Intent**: Let the owner compare real renders, not descriptions.
 
 **Contract**: one component with a `variant` prop, so the pick keeps one branch by editing, with no file to delete:
 - **A, banner** („Baner pod nagłówkiem”):
-  - A ruled panel at the top of the page's content, under the page header (on Tonight focused pages, under `TonightPageSky`).
+  - A ruled panel at the top of the page's content: on `/log` under the page header, and on Tonight pages inside the island, right under its sky (F12; see "Where the celebration renders").
   - Contents: an `Award` icon in a chip, "Milestone reached", the names at `text-title`, the night, a "See your progress" `action` link and a × close.
   - No timer: it stays until closed or the user leaves. The save's own toast shows as usual.
 - **B, screen** („Osobny ekran gratulacji”):
-  - The save would redirect to a page of its own. It has a full night-sky header with stars (`TonightSky night`), a large `Award`, the name at `text-display`, the night, and a "what's next" line (progress toward the next count milestone, for example "Next: 25 Messier objects, 10 / 25").
+  - The save would redirect to a page of its own. It has a full night-sky header with stars (`TonightSky night`), a large `Award`, the name at `text-display`, the night, and a "what's next" line (progress toward the next count milestone, for example "Next: 25 Messier objects, 10 / 25"). The prototype uses a fixed example for that line, because `GearShell` has no progress; Phase 6's real page reads it (F14).
   - A primary "Continue" returns to the page the save named. A second link opens progress.
   - It interrupts the flow, which only happens on a milestone.
 - **C, dialog** („Okno gratulacji”):
   - A native modal `<dialog>` opened over the returning page. It is a `night-sky` card with a few CSS stars, still under `prefers-reduced-motion`, with `Award`, the names and the night.
   - "Continue" closes it and returns focus. "See your progress" opens the page. Esc closes it.
 - **Prototype wiring.** It is dev only and removed in Phase 6.
-  - `GearShell` reads `?celebration=a|b|c` through `devCelebrationVariant(params, import.meta.env.DEV)`, a pure function in `milestones.ts` that returns `null` unless dev. It reads the `milestone` keys with it and renders that variant.
-  - B is shown in place of the page content, which is what its own page would show.
+  - `devCelebrationVariant(params, import.meta.env.DEV)`, a pure function in `milestones.ts`, reads `?celebration=a|b|c` and returns `null` unless dev.
+  - The variant renders where it would in production: A through the `/log` page and the islands' `milestones` prop, with the variant passed beside the keys; C in `GearShell`.
+  - B is shown by `GearShell` in place of the page content, which is what its own page would show.
   - The production build ignores the param.
 - `/design` gets the three variants as specimens (one milestone, three milestones).
 - Copy keys under `progress.milestones.celebration.*`, EN and PL. Unused keys are removed in Phase 6.
@@ -421,13 +456,21 @@ The shape depends on the pick. Fixed regardless:
 
 #### 1. The celebration
 
-**Files**: `src/components/progress/MilestoneCelebration.astro`, `src/components/gear/GearShell.astro`, `src/lib/toasts.ts` or the variant's own clearing script, `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts` (B also: a new page under `/log` and the routes' redirect)
+**Files**: `src/components/progress/MilestoneCelebration.astro`, `src/components/gear/GearShell.astro`, `src/lib/toasts.ts` or the variant's own clearing script, `src/pages/design.astro`, `src/i18n/messages/en.ts`, `pl.ts`. Plus, by pick:
+- A: `/log`, the four Tonight shells and their islands;
+- B: a new page under `/log` and the routes' redirect;
+- C: `GearShell` only.
+
+The other variants' render sites are removed by editing (F12).
 
 **Contract**:
 - Only the chosen branch remains. The `?celebration` switch (`devCelebrationVariant` and its test) and the unused copy are removed by editing.
 - Renders signed in only, keys validated by `isMilestoneKey`, unknown values ignored (F3).
 - The `milestone` param is cleared on show with `replaceState`: through `TOAST_PARAMS` if the variant joins the toast region, else through the same `withoutParams` helper in the variant's script. A reload never replays it.
-- If the pick is B, the routes redirect to the screen with the original return path. That path goes through the same check the screen uses, so it is a same-origin path from a fixed set: `/log` or a `TONIGHT_PAGES` path. It is never a free URL.
+- If the pick is B:
+  - The routes redirect to the screen with the original return path. That path goes through the same check the screen uses, so it is a same-origin path from a fixed set: `/log` or a `TONIGHT_PAGES` path, never a free URL.
+  - The return path keeps the save's own notice param, validated with `readLogNotice` / `parseTargetParam`, so the save's toast still shows after "Continue" (F14).
+  - The screen page reads `listSeenEntries` itself for its "what's next" line.
 - Keyboard: the celebration's link and close are reachable before any timer ends, or there is no timer.
 - `/design` keeps the chosen variant's specimens.
 
@@ -472,9 +515,9 @@ S-05's recipe, adapted to this worktree and run:
 
 1. `npm ci` in the worktree, with the `nvm use` prefix.
 2. Build `.env` / `.dev.vars` from `npx supabase status -o env` in the scratchpad, then copy them into the worktree (both are gitignored). Never copy them from the main checkout, never print their values, and never point e2e at hosted Supabase.
-3. Apply this branch's migration to the shared local stack with `npx supabase migration up`, once and only after the orchestrator confirms. It is additive. Never run `db reset` and never reseed.
+3. Apply this branch's migration to the shared local stack once, as Phase 2's Implementation Note says: SQL final first, `npx supabase migration list --local`, then `npx supabase migration up`. Approved by the orchestrator, additive only. Never reset, reseed or down-migrate, and never edit the applied file; later changes go in a new migration (F13).
 4. Start the forecast fixture (`node tests/e2e/forecast-fixture.mjs`). Its port, 4400, is shared, so confirm it is free or already serving the fixture.
-5. `npm run build`, then `npm run preview -- --port 4333`. **Restart the preview after every rebuild**, or a stale build won't hydrate. Phase 5 uses `npm run dev -- --port 4333` instead.
+5. `npm run build`, then `npm run preview -- --port 4333`. **Restart the preview after every rebuild**, or a stale build won't hydrate. Phase 5 uses `npm run dev -- --port 4333` instead: stop the preview on 4333 first (F14).
 6. `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test <spec>`.
 7. `test:db`: `SUPABASE_URL="$API_URL" SUPABASE_KEY="$ANON_KEY" SUPABASE_SECRET_KEY="$SECRET_KEY" DB_URL="$DB_URL" npm run test:db`, with the values sourced from the scratchpad env file and never printed.
 8. Tests only create their own users.
@@ -493,7 +536,8 @@ S-05's recipe, adapted to this worktree and run:
 - `celebrate.test.ts`:
   - the short-circuit at rating < 3;
   - read, write and record failures;
-  - the intersection (new and inserted only, backfill silent, re-reach silent).
+  - the intersection (new and inserted only, backfill silent, re-reach silent);
+  - `before ∪ after` recording, and before-only recording on an edit to 1-2 and on a delete (F11).
 - `copies.test.ts`: the `milestone` param is not storable.
 
 ### db Tests:
@@ -504,7 +548,7 @@ S-05's recipe, adapted to this worktree and run:
 ### Integration Tests:
 
 - e2e `observing-milestones.spec.ts`:
-  - the record test (Phase 4): rating 2 isn't recorded, re-rating records, a Tonight save records, and a delete keeps the row;
+  - the record test (Phase 4): rating 2 isn't recorded, re-rating records, a Tonight save records, an edit M31 → M13 keeps `first-galaxy`, and a delete keeps the rows;
   - the celebration test (Phase 6): once, not on reload, on the Tonight page, never again after a delete and a re-log.
 
 ### Manual Testing Steps:
@@ -517,7 +561,8 @@ S-05's recipe, adapted to this worktree and run:
 ## Performance Considerations
 
 - A save rated ≥ 3 makes two `listSeenEntries` reads (normally one request each) and one insert of at most 11 rows.
-- A save rated 1-2 makes none.
+- An edit to 1-2 and a delete make one read and one insert, normally of rows already stored (F11).
+- A create rated 1-2 makes none.
 - The progress page adds one read of at most 11 rows.
 - Tonight's load is unchanged.
 

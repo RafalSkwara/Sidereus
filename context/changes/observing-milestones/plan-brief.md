@@ -28,13 +28,13 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 | Celebration | Bigger than a toast: banner, screen or dialog, chosen from screenshots in Phase 5 | The owner wants a real moment; comparing renders beats describing them. | Owner, 2026-10-13 (supersedes review F5) |
 | Progress band | First on the page; all 11; not-yet rows muted with "x / N" | It shows what's next. | Owner, 2026-10-13 |
 | How the row is written | At save, by the route, through PostgREST with the request's RLS client. The insert ignores duplicates and returns only the keys it stored. | The unique key makes "exactly once" the database's guarantee, even for two saves at once; an RPC would run as the caller and add nothing. | Plan (delegated) |
-| What is stored / celebrated | Store every milestone reached after the save; celebrate only `newlyReached(before, after) ∩ inserted` | Pre-existing milestones get stored without a backfill migration, and a backfilled or re-reached milestone stays silent. | Plan (delegated) |
+| What is stored / celebrated | Store `reached(before) ∪ reached(after)` at a counting save, and `reached(before)` at an edit to 1-2 or a delete; celebrate only `newlyReached(before, after) ∩ inserted` | Every milestone the user ever saw is stored before it can be lost, with no backfill migration, and a backfilled or re-reached milestone stays silent. | Plan (delegated), re-review F11 |
 | Self-only writes | Accepted and pinned by a db test, not hardened | The table feeds only the user's private progress page; the hardening options don't work here (no secret key in the Worker, SECURITY DEFINER banned, an invoker RPC needs the same grant). This is the same call the owner made for `sky_checks` and `observations`. | Plan (delegated), test Phase 4 lesson |
 | Isolation suite | `afterEach` deletes A's inserted rows | A per-user unique key would otherwise fail the shared suite from its second insert. | Plan (delegated) |
-| 1-2 guard | The rule, plus a short-circuit: no milestone reads or record when the rating is < 3 | An explicit, testable guard that also saves three requests. | Plan (delegated) |
-| Failure handling | A failed read or record skips the celebration, logs one fixed line plus `error.name`, and never fails the save | The save is what matters; the trace is the evidence (review F4). | Plan (delegated) |
+| 1-2 guard | The rule (only a counting save reads `after` or celebrates), plus a short-circuit for creates rated < 3: no milestone work at all | A create rated 1-2 can neither reach nor un-reach anything; an edit to 1-2 and a delete still store the before-state but never celebrate. | Plan (delegated), re-review F11 |
+| Failure handling | A failed read or record skips the celebration, and `logMilestoneFailure(step)` logs one fixed line plus `error.name` (steps `read`, `record`, `list`, `seen`); the save never fails | The save is what matters; the trace is the evidence. The page's silent seen-read catch gets the same trace. | Plan (delegated), review F4, re-review F14 |
 | Transport | `milestone` param, repeated per key, keys from the fixed set only, in `NOTICE_PARAMS` | Cleared on show, never replayed from offline copies, never carries a value. | Plan (delegated), research |
-| Render site | `GearShell`, signed in only (the screen variant would use its own page) | The shell of every save-return page; never for a visitor with a crafted link (review F3). | Plan (delegated) |
+| Render site | Signed in only, keys via `readMilestoneParam`. Banner: `/log` page, and on Tonight inside the island under its sky (a `milestones` prop beside `notice`). Dialog: `GearShell`. Screen: its own page. | Keeps Tonight's one-sky composition and the shell → island notice path; never for a visitor with a crafted link. | Plan (delegated), review F3, re-review F12 |
 | Variant prototypes | One component with a `variant` prop and a dev-only `?celebration=` switch; the capture spec lives in the scratchpad | The pick is an edit, so nothing has to be deleted from the repo. | Plan (delegated) |
 
 ## Scope
@@ -63,9 +63,9 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 
 1. A save route checks the rating.
 2. If it is ≥ 3, the route reads the seen entries, writes, and reads them again. Each read goes through `observingProgress` and then `milestonesOf`.
-3. The route records every reached milestone; the insert returns what it newly stored.
+3. The route records every milestone either read showed; the insert returns what it newly stored. An edit to 1-2 and a delete record the before-state first and never celebrate.
 4. It celebrates `newlyReached ∩ inserted` by appending `&milestone=<key>…` to its usual redirect.
-5. `GearShell` (signed in) validates the keys, renders the chosen celebration and clears the param. The service worker never stores a URL that carries it.
+5. The render site (signed in only) validates the keys, renders the chosen celebration and clears the param. On Tonight, the banner goes through the island's prop. The service worker never stores a URL that carries it.
 
 `/log/progress` merges the stored rows, whose nights win, with the derived states from the `progress` it already computes.
 
@@ -81,14 +81,16 @@ S-05 shipped a pure progress model, `observingProgress(entries)`. It holds both 
 | 6. The chosen celebration | The pick for real, the "once" e2e, CLAUDE.md | Depends on the pick (B adds a page and a redirect) |
 
 **Prerequisites:**
-- The orchestrator confirms `npx supabase migration up` on the shared local stack, and tells the other agent to hold `db:types` until this branch merges.
+- `npx supabase migration up` on the shared local stack is approved (2026-10-13, additive only). Apply it once, with the SQL final first. Any later SQL change goes into a new migration (re-review F13).
+- The orchestrator tells the other agent to hold `db:types` and to expect `structure.test.ts` to flag `observing_milestones` until this branch merges.
 - `npm ci` and a worktree env built from local Supabase; preview port 4333; fixture port 4400 (shared).
 
 **Estimated effort:** about 3 sessions across 6 phases, plus the owner's pick between Phases 5 and 6.
 
 ## Open Risks & Assumptions
 
-- A failed record loses that milestone's celebration (traced); the page still shows it, derived, and the next save stores it silently.
+- A failed record loses that milestone's celebration (traced). The page still shows it, derived, and the next save of any kind except a create rated 1-2 stores it silently.
+- A user who deleted every entry sees the empty-state notice and their stored milestones together (intended).
 - A user can forge their own milestone rows through PostgREST (accepted, pinned, private).
 - The screen variant, if picked, adds a page, a redirect and a return-path check, so Phase 6 grows.
 - A save that returns to a page not using `GearShell` (none today) would lose the celebration.

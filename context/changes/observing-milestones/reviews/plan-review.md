@@ -167,3 +167,211 @@
 - **Fix**: none.
 - **Recommended resolution**: none; recorded so a re-review doesn't re-open these questions.
 - **Decision**: N/A (no action)
+
+---
+
+## Re-review 2026-10-13
+
+- **Plan**: context/changes/observing-milestones/plan.md (commit fadf13b, branch feat/observing-milestones), now 6 phases
+- **Scope**: only what the owner's answers changed. That is Phase 2 (the `observing_milestones` table: RLS, the unique key, the accepted self-only insert and its pinning test, the `isolation.test.ts` cleanup, `structure.test.ts`), Phase 3 (insert at save, `newlyReached ∩ inserted`), Phase 4's merge of stored and derived states, Phase 5 (three variants, then stop) and Phase 6 (the chosen celebration). Phase 1 and the earlier triage (F1-F10 above) were not re-opened.
+- **Reviewer**: the "reviewer" agent (Opus), independent of the plan's author. The owner is away, so there was no interactive triage. Each finding carries a **Recommended resolution** and `Decision: PENDING`. `change.md` was left alone.
+- **Verdict**: NEEDS ATTENTION. The core of the new design is sound: the unique key plus an insert that ignores duplicates and returns only what it stored makes "celebrated exactly once" a database guarantee, and the intersection rule is right. Three warnings remain. The most important (F11) is that "stays listed forever" holds only for milestones that were stored, and the plan has paths where a derived-only milestone is never stored. No finding needs an owner decision.
+- **Findings**: 0 critical, 3 warnings, 2 observations
+- **Triage** (2026-10-13, by the plan's author on the orchestrator's instruction): F11 (Fix A), F12, F13 and F14 applied to plan.md and plan-brief.md; F15 no action. No owner decision needed.
+
+### Verdicts (re-reviewed scope)
+
+| Dimension | Verdict |
+|-----------|---------|
+| Claim Accuracy | PASS |
+| Substance | WARNING |
+| Feasibility | WARNING |
+| Sequencing | PASS |
+| Architecture Fit | WARNING |
+| Scope Discipline | PASS |
+| Verifiability | PASS |
+| Coverage | WARNING |
+
+### Grounding
+
+- **Confirmed**:
+  - `isolation.test.ts`: the users are created once in `beforeAll` (`:59-63`).
+    - `insertAsA` inserts the same `valid` row in 7 of the 11 tests (`:71-77`), and only the positive control deletes its row (`:95-98`), so a per-user unique key would fail from the second test with `23505`. The planned `afterEach` cleanup over the ids `insertAsA` returned fixes this.
+    - The hand-over test leaves one row of B's per run (`:148-163`). That is harmless: it is a single insert, and the users are fresh every run.
+    - RLS `WITH CHECK` runs before the unique index check, so the forged-owner and hand-over cases keep answering `42501`.
+  - `structure.test.ts`:
+    - Classification fails on a `public` table in neither list (`:162-177`).
+    - Each per-user table needs exactly one SELECT, INSERT, UPDATE and DELETE policy `to authenticated`, keyed on `auth.uid()` and `user_id`.
+    - No function means `KNOWN_FUNCTIONS` is untouched.
+  - The `sky_checks` migration header and policy shape the plan copies are confirmed, including `(select auth.uid()) = user_id` and the named unique constraint (`20261003120000_sky_checks.sql:1-70`).
+  - `20261013120000` sorts after the latest migration (`20261009120000_account_plans.sql`), and `feat/finder-chart` adds no migration.
+  - Rating is required, 1-5 (`schemas.ts:68`), so the `< 3` short-circuit never meets a null.
+  - The routes are `api/log/index.ts:36-46`, `[id].ts:31-36` and `[id]/delete.ts:15-24`.
+  - The offline and notice wiring:
+    - `NOTICE_PARAMS` (`copies.ts:35`), used in `mayStoreShell` (`:129`);
+    - `TOAST_PARAMS` and `withoutParams` (`toasts.ts:17-25`);
+    - `returnTargetSchema` is `log | targets | moon | planets` (`schemas.ts:96`).
+  - `test-plan.md:166` holds the accepted-gap line.
+  - `/log/progress` is in `APP_PAGES` (`tonight-phone.spec.ts:42`).
+  - `madridDateDaysAgo` exists (`tests/e2e/helpers.ts:139`).
+  - `progress.astro:60` has `data-progress-empty`.
+  - `tests/db` imports `@/` modules through `vitest.db.config.ts`, so a db test can call `milestoneStore`.
+- **Mechanics**:
+  - PostgREST's `resolution=ignore-duplicates` becomes `ON CONFLICT (user_id, key) DO NOTHING ... RETURNING`. It returns only the rows it inserted, and a second concurrent insert waits on the index and then returns nothing.
+  - `user_id` comes from its default, so the conflict target is valid without the client sending it.
+  - Phase 2's db test is the oracle for this; the reviewer did not run it.
+- **Commands**: the worktree still has no `node_modules`, so nothing was run.
+  - `test:db` (`vitest.db.config.ts`), `db:types` (`supabase gen types typescript --local`), `npx supabase migration up`, `vitest run <file>`, `playwright test <spec>`, `astro check` and `build` all resolve to real scripts and config.
+  - `migration up` mutates the shared stack, so it was not run.
+- **Sequencing**:
+  - Phase 2 → 3 → 4 → 5 → 6 has no forward dependency.
+  - Between Phase 3 and Phase 6, the routes append `milestone=` params that nothing renders or clears. That is harmless on an undeployed branch.
+
+### F11 — "Stays listed forever" holds only for stored milestones, and a derived-only milestone can still be lost
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — worth pausing; real tradeoff
+- **Dimension**: Coverage
+- **Location**: plan.md "Critical Implementation Details › Order inside a route" (steps 2, 4, 6); "Implementation Approach" (the short-circuit); "What We're NOT Doing" (no backfill); Phase 3 contract
+- **Detail**:
+  - A milestone is **derived only** (shown on the page but not stored) in three cases:
+    - it was reached before this change, until the user's next save rated 3 or above;
+    - its record failed (traced);
+    - it was reached by a save whose `before` read failed. In that case step 4 skips the `after` read, so step 6 records nothing.
+  - Three things can then remove it for good, which contradicts owner decision 2 ("stays listed forever, even if the entry that reached it is later deleted or re-rated"):
+    - **Delete.** `[id]/delete.ts` touches no milestone, and deleting the reaching entry un-reaches the derived state.
+    - **An edit to 1-2.** The short-circuit skips the reads and the record exactly when the edit can un-reach something.
+    - **An edit at 3+ that changes the target or the night.** Step 6 records only `afterStates`, so a milestone reached in `before` but not in `after` (M31 → M13 for `first-galaxy`) is never stored.
+  - The first case covers every existing user with a real log, the owner included, from deploy day until their next save rated 3 or above.
+  - Only the delete case is mentioned ("Delete can only lose derived milestones; stored ones stay"). The plan doesn't treat it as a gap.
+- **Fix A ⭐ Recommended**: Record what *any* read showed.
+  - At a save rated 3 or above, record `reached(before) ∪ reached(after)`. Where a milestone is in both, use the `after` night, which is what step 6 already stores. It's the same single insert.
+  - If `before` fails, still read `after` and record it (celebrate nothing).
+  - Delete and an edit to 1-2 read `before` and record it before writing, and celebrate nothing.
+  - Keep the short-circuit only for a **create** rated 1-2, which can't un-reach anything.
+  - Add `celebrate.test.ts` cases: an edit that moves `first-galaxy` away records it; a delete records the before-state; a failed before-read still records the after-state and celebrates nothing.
+  - Add one e2e assertion: an edit M31 → M13 keeps `first-galaxy` listed.
+  - Update the brief's "1-2 guard" row ("saves three requests" becomes "creates only").
+
+  · Strength: makes owner decision 2 true for every milestone the user ever saw on the page, with no backfill migration and no write from a GET. Celebration logic is unchanged, because before-states are never in `newlyReached`.
+  · Tradeoff: delete and edit-to-1-2 each gain one read and one insert, normally of rows already stored, and the delete route gets the helper and its failure trace.
+  · Confidence: HIGH. Traced against the order in Critical Implementation Details and the three routes.
+  · Blind spot: how many live users have derived-only milestones today (small: the app's users are few).
+- **Fix B**: Record `before ∪ after` and record `after` when `before` fails, but leave delete and edit-to-1-2 as they are. List "a milestone reached before this change, and never re-saved, is lost if its entry is deleted or downgraded first" in What We're NOT Doing and the brief's risks.
+  · Strength: no change to the delete route.
+  · Tradeoff: decision 2 is then knowingly false for pre-existing logs.
+  · Confidence: HIGH.
+  · Blind spot: the owner said "forever" without this nuance.
+- **Recommended resolution**: Fix A (delegated, non-UI). It implements what the owner already decided, so no new owner question.
+- **Decision**: APPLIED Fix A (orchestrator, 2026-10-13).
+  - A counting save records `before ∪ after` in one insert (the `after` night where both have it), and reads and records `after` even when `before` failed (celebrating nothing then).
+  - An edit to 1-2 and a delete read and record the before-state before writing, and never celebrate.
+  - The short-circuit now covers only a create rated 1-2.
+  - The delete route uses the helper.
+  - New cases: `celebrate.test.ts` covers the move-away edit, before-only recording and a failed before-read; the e2e adds the M31 → M13 edit.
+  - Brief rows updated.
+
+### F12 — `GearShell` can't render banner A "under `TonightPageSky`": on Tonight pages the sky belongs to the server island
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — worth pausing; real tradeoff
+- **Dimension**: Architecture Fit
+- **Location**: plan.md "Critical Implementation Details › Where the celebration renders"; Phase 5.1 variant A and "Prototype wiring"; Phase 6.1 files; brief "Render site"
+- **Detail**:
+  - Every Tonight page a save returns to is a `GearShell skyFlow` shell: `/tonight`, `/tonight/targets`, `/tonight/planets` and `/tonight/moon`.
+  - The sky band is drawn *inside* the server island:
+    - `TonightPageSky` is rendered by `PlanetsPageContent`, `TargetsPageContent`, `MoonPageContent` and the others;
+    - `/tonight` draws `TonightSkyView` / `TonightSky` in its island;
+    - the shell renders `TonightPageSky` only in the no-Supabase fallback (`planets.astro:46`).
+  - In skyFlow mode `GearShell` puts the Topbar on a zenith strip and `<main>` starts with the island, so "the sky band the page draws first continues the strip as one sky" (`GearShell.astro:9-14`, CLAUDE.md "Tonight's sky").
+  - A banner rendered by `GearShell` therefore lands *between* the Topbar strip and the island's sky. That splits the sky in two, and it can't be "under `TonightPageSky`" as variant A specifies.
+  - The island can't read the page's query itself ("the island's own Astro.url carries no page query", `planets.astro:21-22`). That is why the shells already resolve `?logged` into a `notice` prop for the island (`PlanetsPageContent.astro:24-31,54-57`, `pickTonightNotice`).
+  - Phase 5's screenshot matrix includes `/tonight/planets` for every variant, so the prototype would show A in the wrong place, and the owner would pick from a misleading render.
+  - Variants C (a modal `<dialog>`, position-independent) and B (it replaces the content) are unaffected.
+- **Fix** (one obvious answer):
+  - Follow the existing `notice` path:
+    - add one helper (e.g. `readMilestoneParam(url): MilestoneKey[]`, validated by `isMilestoneKey`, signed-in only);
+    - the Tonight shells (`tonight.astro`, `targets.astro`, `planets.astro`, `moon.astro`) pass the keys to their island as a `milestones` prop beside `notice`;
+    - the islands render the banner right after their sky (the targets, planets and moon page contents, plus the dashboard's `TonightContent`).
+  - `/log` renders it at the top of `<main>`, through `GearShell` or the page.
+  - C may stay in `GearShell`.
+  - Update the "Render site" decision (plan and brief) and Phase 5.1 / 6.1 file lists, and note that the island's encrypted props carry only fixed keys.
+
+  · Strength: reuses the established shell → island notice flow and keeps the one-sky composition.
+  · Tradeoff: about 8 more files touched in Phase 5, and the island prop shape grows.
+  · Confidence: HIGH. Verified in `GearShell.astro`, `planets.astro` and `PlanetsPageContent.astro`.
+  · Blind spot: whether the dashboard's live sky (`TonightSkyView`) leaves a natural slot under the verdict.
+- **Recommended resolution**: apply the fix before Phase 5 starts (delegated; it implements variant A as the plan already describes it).
+- **Decision**: APPLIED (orchestrator, 2026-10-13).
+  - `readMilestoneParam(url, user)` in `redirect.ts`.
+  - The Tonight shells pass a `milestones` prop beside `notice` to their islands, which render banner A right under their sky; `/log` renders it after its header.
+  - Dialog C stays in `GearShell`; screen B gets its own page.
+  - The prototype wiring renders each variant where it would in production.
+  - Updated: the Phase 5.1 and 6.1 file lists, "Where the celebration renders" and the brief's Render site row.
+
+### F13 — The shared local stack takes the migration once, and other checkouts see the table until the merge
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Feasibility
+- **Location**: plan.md Phase 2 "Implementation Note"; "Running the checks" step 3; brief "Prerequisites"
+- **Detail**:
+  - `npx supabase migration up` records the version in the local stack's migration history. If impl review (or Phase 2's own red-green loop) later edits `20261013120000_observing_milestones.sql`, `migration up` won't re-apply it, and `db reset` is forbidden.
+    - Local `test:db` and `db:types` would then run against stale SQL, and only CI (a fresh stack) would notice.
+  - Until this branch merges, every other checkout on the same stack sees the table:
+    - `structure.test.ts`'s classification test fails there ("unclassified: observing_milestones");
+    - `db:types` drifts.
+  - The plan covers `db:types` only.
+- **Fix**:
+  - Before applying the migration, write the db tests and review the SQL. Apply only once the SQL is final.
+  - After applying, any SQL change goes into a **new** migration file on this branch; never edit the applied one.
+  - A local revert (drop the table and its history row) is a destructive action that needs the owner's permission.
+  - The orchestrator also tells the other agent that `npm run test:db` in its checkout fails structure classification until this branch merges.
+  - Run `npx supabase migration list --local` before `up`, and note the result.
+- **Recommended resolution**: apply the fix (delegated).
+- **Decision**: APPLIED (orchestrator, 2026-10-13; the orchestrator warns finder-chart).
+  - Apply the SQL only once it is final, after `migration list --local`.
+  - Never edit the applied file: later SQL changes go into a new migration.
+  - A local revert is destructive and needs the owner.
+  - The Phase 2 note, "Running the checks" and the brief's prerequisites were updated.
+
+### F14 — Smaller gaps in Phases 4-6
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Substance
+- **Location**: Phase 4.1 contract; Phase 5.1 variant B; Phase 6.1 B branch; "Running the checks" step 5
+- **Detail**:
+  - **The `list` log has no owner.** Phase 4 logs a failed `listReached` "with the step `list`", but Critical Implementation Details names only `read` and `record`. Phase 4's files don't include `no-console-guard.test.ts`, so a `console.error` in `progress.astro` would fail the guard.
+  - **A silent catch next door.** Phase 4 edits `progress.astro`, whose existing seen read has a silent `catch {}` (`:30-32`, S-05). It shows `errors.load.observations` but leaves no trace, which the repo's "never hide the evidence" rule flags.
+  - **Empty state with stored milestones.** A user who deleted every entry still has stored milestones, so the page shows the empty-state notice ("nothing seen yet") and reached milestones together. That's acceptable, but the plan should say so.
+  - **B's "what's next" line needs data.** It needs the user's progress. In Phase 5, `GearShell` has none (prototype B renders in the shell), and in Phase 6 the screen page must read `listSeenEntries` itself.
+  - **B's return path drops the save notice.** It is "`/log` or a `TONIGHT_PAGES` path" with no query, so the save's own toast (`saved|updated|logged=<key>`) is lost after "Continue". This bears on owner question 2 (does the toast stay).
+  - **Port 4333.** Phase 5's `npm run dev -- --port 4333` needs the Phase 4 preview on 4333 stopped first.
+- **Fix**:
+  - Export one `logMilestoneFailure(step: "read" | "record" | "list", error)` from `celebrate.ts`, with the single disable, and call it from the page. Add `list` to the step words.
+  - Log the existing seen-read failure the same way (step `seen`), or record it as a known S-05 gap.
+  - Add one line on the empty state with stored milestones.
+  - Prototype B uses a fixed example "what's next"; Phase 6 B reads progress on the screen page.
+  - B's return path carries the validated notice param (`readLogNotice` / `parseTargetParam`).
+  - Stop the preview before `dev`.
+- **Recommended resolution**: apply the fix.
+- **Decision**: APPLIED (orchestrator, 2026-10-13).
+  - One `logMilestoneFailure(step)` in `celebrate.ts`, with steps `read`, `record`, `list` and `seen`.
+  - The page's silent seen-read catch now logs.
+  - The empty state with stored milestones is documented as intended.
+  - Prototype B uses a fixed "what's next"; Phase 6 B reads progress on its page, and its return path keeps the validated save-notice param.
+  - The preview stops before `dev` on 4333.
+
+### F15 — What the re-planned parts get right (no action)
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Sequencing
+- **Location**: plan.md Phases 2-3, "Self-only writes", Phase 5 stop
+- **Detail**:
+  - **Exactly once is now exact.** The unique key plus `ignoreDuplicates` with `.select("key")` returns a key to one save only, including two concurrent saves. The 2026-10-11 F10 note "double celebration accepted" no longer applies.
+  - **The intersection rule.** `newlyReached(before, after) ∩ inserted` keeps a backfilled milestone silent (stored, not newly reached) and a re-reached one silent (newly reached, already stored). Phase 6's e2e step 5 tests exactly the second case.
+  - **Isolation cleanup.** The `afterEach` cleanup is the minimal fix, and the existing tables only lose leftover rows.
+  - **The `TABLES` entry.** Its `change` (`reached_night`) gives a real positive control under the accepted self-only update.
+  - **The key check.** The test (every `MILESTONES` key accepted, unknown key refused with `23514`) keeps SQL and TypeScript in step.
+  - **Self-only writes.** Accepting them is argued correctly: no secret key in the Worker, SECURITY DEFINER banned, an invoker RPC needs the same grant. The decision is pinned by a test and joins the `test-plan.md:166` line.
+  - **Phase 5's stop.** It follows the run's rules: Polish, a "QUESTION FOR OWNER:" block, no AskUserQuestion. It asks the right two questions (which variant, and whether the save's toast stays). It keeps the capture spec out of the repo, and its 42-shot count adds up (3 × 2 × 3 × 2 + 3 × 2).
+- **Fix**: none.
+- **Recommended resolution**: none. This is recorded so the impl review doesn't re-open these questions.
+- **Decision**: N/A (no action)

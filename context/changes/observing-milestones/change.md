@@ -1,7 +1,7 @@
 ---
 change_id: observing-milestones
 title: Observing milestones - celebrate a milestone once at save and list them on the progress page
-status: planned
+status: plan_reviewed
 created: 2026-10-11
 updated: 2026-10-13
 archived_at: null
