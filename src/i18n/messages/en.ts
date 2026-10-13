@@ -1113,6 +1113,17 @@ export const en = {
         "messier-110": "All 110 Messier objects",
         "caldwell-all": "All 61 Caldwell objects",
       },
+      /** The celebration prototypes (Phase 5, removed with the losing variants in Phase 6). */
+      celebration: {
+        reached: {
+          one: "Milestone reached",
+          other: "Milestones reached",
+        } as PluralForms,
+        seeProgress: "See your progress",
+        continue: "Continue",
+        /** The screen's "what's next" line; numbers arrive pre-formatted: "Next: 25 Messier objects · 10 / 25". */
+        next: (p: { name: string; seen: string; total: string }) => `Next: ${p.name} · ${p.seen} / ${p.total}`,
+      },
     },
   },
 

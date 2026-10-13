@@ -977,6 +977,17 @@ export const pl = {
         "messier-110": "Wszystkie 110 obiektów Messiera",
         "caldwell-all": "Wszystkie 61 obiektów Caldwella",
       },
+      celebration: {
+        reached: {
+          one: "Osiągnięto kamień milowy",
+          few: "Osiągnięto kamienie milowe",
+          many: "Osiągnięto kamienie milowe",
+          other: "Osiągnięto kamienie milowe",
+        },
+        seeProgress: "Zobacz swój postęp",
+        continue: "Dalej",
+        next: (p) => `Następny: ${p.name} · ${p.seen} / ${p.total}`,
+      },
     },
   },
 

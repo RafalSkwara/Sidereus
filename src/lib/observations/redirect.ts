@@ -1,5 +1,5 @@
 import type { MessageKey } from "@/i18n";
-import type { MilestoneKey } from "@/lib/progress/milestones";
+import { MILESTONES, isMilestoneKey, type MilestoneKey } from "@/lib/progress/milestones";
 import { parseTargetParam, type TargetKey } from "@/lib/targets";
 import { isKnownTarget } from "@/lib/targets/labels";
 import { observationInputSchema, returnTargetSchema, type TonightReturnPage } from "./schemas";
@@ -99,6 +99,19 @@ export function withMilestones(url: string, keys: readonly MilestoneKey[]): stri
   const fragment = hash === -1 ? "" : url.slice(hash);
   const query = new URLSearchParams(keys.map((key) => ["milestone", key])).toString();
   return `${path}${path.includes("?") ? "&" : "?"}${query}${fragment}`;
+}
+
+/**
+ * The milestones a page celebrates, from its `milestone` params (`withMilestones` writes them): each value that is a
+ * key of the fixed set, once, in `MILESTONES` order. Signed out, nothing is celebrated, so a crafted link shows a
+ * visitor nothing. The values are never shown as typed: callers render catalogue copy for the keys.
+ */
+export function readMilestoneParam(url: URL, signedIn: boolean): MilestoneKey[] {
+  if (!signedIn) {
+    return [];
+  }
+  const asked = new Set(url.searchParams.getAll("milestone").filter(isMilestoneKey));
+  return MILESTONES.map(({ key }) => key).filter((key) => asked.has(key));
 }
 
 /**

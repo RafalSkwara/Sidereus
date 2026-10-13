@@ -1,0 +1,220 @@
+---
+// The milestone celebration, three prototypes in one component (observing-milestones Phase 5, the design step): the
+// owner compares real renders and picks one, and Phase 6 keeps that branch and deletes the rest by editing this file.
+// - "a" banner: a ruled panel at the top of a page's content (on Tonight pages inside the island, right under its sky),
+//   with an × that hides it. No timer.
+// - "b" screen: a page of its own, a night sky with a large Award, the names, a "what's next" line and a primary
+//   Continue. The prototype's "next" line is a fixed example, since the shell has no progress (Phase 6 reads it).
+// - "c" dialog: a native modal <dialog> opened over the returning page by the script below, on a night-sky card.
+// `specimen` is for /design: static, with no auto-open and no working close, so nothing hides or opens there; the
+// dialog's card then sits inline in a <div>, not in a modal. `idBase` keeps ids unique when /design shows several.
+// Red mode has no hue, so the Award chip, the rules and the weight carry the look, never a colour. Colours are tokens.
+import { ArrowRight, Award, X } from "lucide-react";
+
+import TonightSky from "@/components/tonight/TonightSky.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, plural } from "@/i18n";
+import { PROGRESS_PAGE } from "@/lib/observations/redirect";
+import type { MilestoneKey } from "@/lib/progress/milestones";
+import type { Locale } from "@/lib/preferences";
+import { createFormatter } from "@/lib/tonight/format";
+
+interface Props {
+  variant: "a" | "b" | "c";
+  /** The milestones reached, in `MILESTONES` order; nothing renders without one. */
+  keys: readonly MilestoneKey[];
+  locale: Locale;
+  /** `/design`: static, no auto-open, no working close. */
+  specimen?: boolean;
+  /** Where the screen's "Continue" goes: the page the save named. */
+  continueHref?: string;
+  idBase?: string;
+}
+
+const {
+  variant,
+  keys,
+  locale,
+  specimen = false,
+  continueHref = "/log",
+  idBase = "milestone-celebration",
+} = Astro.props;
+const t = getMessages(locale).progress.milestones;
+const c = t.celebration;
+const closeLabel = getMessages(locale).common.close;
+const names = createFormatter(locale).listOf(keys.map((key) => t.name[key]));
+const reached = plural(locale, keys.length, c.reached);
+const labelId = `${idBase}-label`;
+const namesId = `${idBase}-names`;
+const actionClass = buttonVariants({ variant: "action", size: "sm" });
+// The screen's example "what's next": the next count milestone and how far along it is.
+const nextLine = c.next({ name: t.name["messier-25"], seen: "10", total: "25" });
+const NamesTag = variant === "b" && !specimen ? "h1" : "p";
+const DialogTag = specimen ? "div" : "dialog";
+
+// The dialog card's fixed star field (percent of the card), a few of them twinkling.
+const CARD_STARS = [
+  { x: "8%", y: "14%", r: "1.2", twinkle: true },
+  { x: "22%", y: "62%", r: "0.8", twinkle: false },
+  { x: "31%", y: "22%", r: "1", twinkle: true },
+  { x: "46%", y: "8%", r: "0.7", twinkle: false },
+  { x: "58%", y: "74%", r: "1.1", twinkle: true },
+  { x: "67%", y: "18%", r: "0.8", twinkle: false },
+  { x: "79%", y: "52%", r: "1.2", twinkle: true },
+  { x: "88%", y: "12%", r: "0.9", twinkle: false },
+  { x: "93%", y: "80%", r: "0.7", twinkle: true },
+  { x: "14%", y: "88%", r: "0.9", twinkle: false },
+  { x: "52%", y: "92%", r: "0.8", twinkle: false },
+] as const;
+---
+
+{keys.length > 0 && variant === "a" && (
+  <section
+    aria-labelledby={labelId}
+    data-milestone-celebration="banner"
+    class="flex items-start gap-3 rounded-lg border border-action-border bg-action-surface px-3 py-3 sm:gap-4 sm:px-4"
+  >
+    <span class="flex size-11 shrink-0 items-center justify-center rounded-full border border-action-border bg-background text-primary-strong">
+      <Award className="size-6" aria-hidden="true" />
+    </span>
+    <div class="min-w-0 flex-1">
+      <p id={labelId} class="text-label font-semibold text-muted-foreground">
+        {reached}
+      </p>
+      <p id={namesId} class="font-display text-title font-semibold break-words text-heading">
+        {names}
+      </p>
+      <a href={PROGRESS_PAGE} class:list={[actionClass, "mt-3"]}>
+        <ArrowRight aria-hidden="true" />
+        {c.seeProgress}
+      </a>
+    </div>
+    <button
+      type="button"
+      data-milestone-close={specimen ? undefined : ""}
+      aria-label={closeLabel}
+      class="-mt-1 -mr-2 inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <X className="size-4" aria-hidden="true" />
+    </button>
+  </section>
+)}
+
+{keys.length > 0 && variant === "b" && (
+  <div data-milestone-celebration="screen">
+    <TonightSky night>
+      <div class="flex flex-col items-center py-4 text-center sm:py-6">
+        <span class="flex size-24 items-center justify-center rounded-full border border-action-border bg-action-surface text-primary-strong sm:size-28">
+          <Award className="size-16 sm:size-20" aria-hidden="true" />
+        </span>
+        <p id={labelId} class="mt-4 text-label font-semibold text-muted-foreground">
+          {reached}
+        </p>
+        <NamesTag id={namesId} class="mt-2 font-display text-display font-semibold break-words text-heading">
+          {names}
+        </NamesTag>
+      </div>
+    </TonightSky>
+    <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+      <p class="border-b border-border pb-6 text-center text-body text-muted-foreground">{nextLine}</p>
+      <div class="flex flex-wrap justify-center gap-3 pt-6">
+        <a href={continueHref} class:list={[buttonVariants()]}>
+          {c.continue}
+        </a>
+        <a href={PROGRESS_PAGE} class:list={[actionClass]}>
+          <ArrowRight aria-hidden="true" />
+          {c.seeProgress}
+        </a>
+      </div>
+    </div>
+  </div>
+)}
+
+{keys.length > 0 && variant === "c" && (
+  <DialogTag
+    data-milestone-celebration="dialog"
+    aria-labelledby={labelId}
+    aria-describedby={namesId}
+    class:list={[
+      specimen
+        ? "w-full max-w-md"
+        : "m-auto w-full max-w-md bg-transparent p-4 text-foreground backdrop:bg-background/80",
+    ]}
+  >
+    <div class="night-sky relative overflow-hidden rounded-xl border border-border bg-linear-to-b from-zenith to-horizon px-6 py-8 text-center text-foreground">
+      <svg aria-hidden="true" focusable="false" class="absolute inset-0 size-full fill-star">
+        {CARD_STARS.map((star) => (
+          <circle cx={star.x} cy={star.y} r={star.r} class:list={[star.twinkle && "milestone-twinkle"]} />
+        ))}
+      </svg>
+      <div class="relative flex flex-col items-center">
+        <span class="flex size-20 items-center justify-center rounded-full border border-action-border bg-action-surface text-primary-strong">
+          <Award className="size-12" aria-hidden="true" />
+        </span>
+        <p id={labelId} class="mt-4 text-label font-semibold text-muted-foreground">
+          {reached}
+        </p>
+        <p id={namesId} class="mt-2 font-display text-title font-semibold break-words text-heading">
+          {names}
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+          <button type="button" data-milestone-close={specimen ? undefined : ""} class:list={[buttonVariants()]}>
+            {c.continue}
+          </button>
+          <a href={PROGRESS_PAGE} class:list={[actionClass]}>
+            <ArrowRight aria-hidden="true" />
+            {c.seeProgress}
+          </a>
+        </div>
+      </div>
+    </div>
+  </DialogTag>
+)}
+
+<style>
+  /* A subtle twinkle for a few of the dialog card's stars; none under reduced motion. */
+  @keyframes milestone-twinkle {
+    from {
+      opacity: 0.35;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .milestone-twinkle {
+      animation: milestone-twinkle 3s ease-in-out infinite alternate;
+    }
+
+    .milestone-twinkle:nth-child(2n) {
+      animation-delay: -1.2s;
+      animation-duration: 4s;
+    }
+
+    .milestone-twinkle:nth-child(3n) {
+      animation-delay: -2.1s;
+    }
+  }
+</style>
+
+<script>
+  // The banner's × hides it, the dialog's Continue closes it (Esc closes it natively and focus returns to where it
+  // was). A delegated listener, so a banner a server island inserts later closes too. Specimens carry neither hook.
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest("[data-milestone-close]");
+    const celebration = button?.closest<HTMLElement>("[data-milestone-celebration]");
+    if (!celebration) return;
+    if (celebration instanceof HTMLDialogElement) {
+      celebration.close();
+    } else {
+      celebration.hidden = true;
+    }
+  });
+
+  // The dialog opens over the page it returns to, once, as it loads.
+  for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[data-milestone-celebration='dialog']")) {
+    if (!dialog.open) dialog.showModal();
+  }
+</script>

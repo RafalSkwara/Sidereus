@@ -3,14 +3,16 @@ import { Award, ListChecks, Plus } from "lucide-react";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import Pager from "@/components/ui/Pager.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { LOG_LIST, parseLogPage, PROGRESS_PAGE, readLogNotice } from "@/lib/observations/redirect";
+import { LOG_LIST, parseLogPage, PROGRESS_PAGE, readLogNotice, readMilestoneParam } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
+import { devCelebrationVariant } from "@/lib/progress/milestones";
 import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
@@ -28,6 +30,10 @@ const error = params.get("error");
 
 const logNotice = readLogNotice(params);
 const notice = logNotice ? t[logNotice.kind]({ object: targetLabel(logNotice.target, locale).id }) : null;
+
+// The celebration banner prototype (observing-milestones Phase 5, dev only): variant "a" at the top of the content.
+const milestoneKeys = readMilestoneParam(Astro.url, Boolean(Astro.locals.user));
+const showBanner = devCelebrationVariant(params, import.meta.env.DEV) === "a" && milestoneKeys.length > 0;
 
 let entries: ObservationRecord[] = [];
 let hasOlder = false;
@@ -88,6 +94,12 @@ const rowLink =
     <Notice tone="success" toast param={logNotice.kind}>
       {notice}
     </Notice>
+  )}
+
+  {showBanner && (
+    <div class="mb-6">
+      <MilestoneCelebration variant="a" keys={milestoneKeys} locale={locale} />
+    </div>
   )}
 
   <div class="mb-6 empty:hidden">

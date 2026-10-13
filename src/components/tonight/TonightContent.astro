@@ -7,6 +7,7 @@
 // verdict.
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Notice from "@/components/ui/Notice.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
 import { islandDefer, loadTonightFor } from "@/lib/tonight/island";
 import type { TonightLoad } from "@/lib/tonight/load";
+import type { CelebrationBanner } from "@/lib/progress/milestones";
 import type { TonightNotice } from "@/lib/tonight/notice";
 
 interface Props {
@@ -38,6 +40,11 @@ interface Props {
    */
   notice?: TonightNotice | null;
   /**
+   * The celebration banner prototype (observing-milestones Phase 5, dev only): the keys the save reached and the
+   * variant, resolved in the shell from `?milestone` and `?celebration`. Shown right under the sky; `null` when none.
+   */
+  milestones?: CelebrationBanner | null;
+  /**
    * `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy for offline use):
    * it neither records the sky verdict nor asks the sky question, and loads no open sky checks.
    */
@@ -45,7 +52,7 @@ interface Props {
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, notice = null, night = "tonight" } = Astro.props;
+const { siteId, telescopeId, notice = null, milestones = null, night = "tonight" } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey | null) => (key ? translateKey(m, key, "errors.generic") : null);
@@ -162,6 +169,12 @@ const showGearRow = Boolean(site && telescope) || gearLoadFailed;
     {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl">
+      {/* The celebration banner prototype (Phase 5, dev only): right under the sky, above the notice and the gear row. */}
+      {milestones && (
+        <div class="px-4 pt-3 sm:pt-6">
+          <MilestoneCelebration variant={milestones.variant} keys={milestones.keys} locale={locale} />
+        </div>
+      )}
       {/* A saved observation or sky check is a toast (it floats, so nothing here reserves room); an error stays. */}
       {notice?.tone === "success" && (
         <Notice tone="success" toast param={notice.param}>

@@ -14,6 +14,7 @@ import ObjectRow from "@/components/tonight/ObjectRow.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Band from "@/components/ui/Band.astro";
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
@@ -23,6 +24,7 @@ import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
 import { createFormatter } from "@/lib/tonight/format";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
+import type { CelebrationBanner } from "@/lib/progress/milestones";
 import type { TonightNotice } from "@/lib/tonight/notice";
 import { cn } from "@/lib/utils";
 
@@ -39,12 +41,26 @@ interface Props {
   restOpen?: boolean;
   /** The target key from `?logged=`, after "Mark observed" here; `null` when none. */
   logged?: string | null;
+  /**
+   * The celebration banner prototype (observing-milestones Phase 5, dev only): the keys the save reached and the
+   * variant, resolved in the shell from `?milestone` and `?celebration`. Shown right under the sky; `null` when none.
+   */
+  milestones?: CelebrationBanner | null;
   /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
   night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, night = "tonight", sort, notice = null, restOpen = false, logged = null } = Astro.props;
+const {
+  siteId,
+  telescopeId,
+  night = "tonight",
+  sort,
+  notice = null,
+  milestones = null,
+  restOpen = false,
+  logged = null,
+} = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const { objectDetailLine } = createFormatter(locale);
@@ -93,6 +109,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
     {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {milestones && <MilestoneCelebration variant={milestones.variant} keys={milestones.keys} locale={locale} />}
       {notice?.tone === "success" && (
         <Notice tone="success" toast param={notice.param}>
           {notice.text}

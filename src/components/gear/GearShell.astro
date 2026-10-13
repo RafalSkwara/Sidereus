@@ -1,8 +1,11 @@
 ---
+import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Layout from "@/layouts/Layout.astro";
 import TabBar from "@/components/TabBar.astro";
 import Topbar from "@/components/Topbar.astro";
 import { getMessages } from "@/i18n";
+import { readMilestoneParam } from "@/lib/observations/redirect";
+import { devCelebrationVariant } from "@/lib/progress/milestones";
 
 interface Props {
   title: string;
@@ -17,14 +20,28 @@ interface Props {
 
 const { title, skyFlow = false } = Astro.props;
 const m = getMessages(Astro.locals.locale);
+// The celebration prototypes (observing-milestones Phase 5, dev only: `devCelebrationVariant` is null in a production
+// build). Signed in only, with keys validated against the fixed set. The dialog (c) is position-independent, so it
+// lives here; the screen (b) takes the place of the page's content, as its own page would, under the same Topbar and
+// TabBar and in the sky-flow shape its night sky continues. The banner (a) renders in the pages themselves.
+const celebrationKeys = readMilestoneParam(Astro.url, Boolean(Astro.locals.user));
+const celebration =
+  celebrationKeys.length > 0 ? devCelebrationVariant(Astro.url.searchParams, import.meta.env.DEV) : null;
+const showScreen = celebration === "b";
+const showDialog = celebration === "c";
+const returnUrl = new URL(Astro.url);
+returnUrl.searchParams.delete("milestone");
+returnUrl.searchParams.delete("celebration");
+const continueHref = `${returnUrl.pathname}${returnUrl.search}`;
+const sky = skyFlow || showScreen;
 // A page that fills the `header` slot gets the sky header: a full-bleed zenith-to-horizon band behind the Topbar
-// and that slot, ending in the horizon rule. Every other page renders as before.
-const skyHeader = Astro.slots.has("header");
+// and that slot, ending in the horizon rule. Every other page renders as before (the celebration screen replaces it).
+const skyHeader = !showScreen && Astro.slots.has("header");
 ---
 
 <Layout title={m.common.pageTitle({ title })}>
   <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
-    {skyFlow ? (
+    {sky ? (
       <div class="night-sky bg-zenith">
         <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
           <Topbar />
@@ -44,9 +61,19 @@ const skyHeader = Astro.slots.has("header");
         <Topbar />
       </div>
     )}
-    <main class:list={[skyFlow ? "w-full flex-1 pb-8 sm:pb-12" : "mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:py-12"]}>
-      <slot />
+    <main class:list={[sky ? "w-full flex-1 pb-8 sm:pb-12" : "mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:py-12"]}>
+      {showScreen ? (
+        <MilestoneCelebration
+          variant="b"
+          keys={celebrationKeys}
+          locale={Astro.locals.locale}
+          continueHref={continueHref}
+        />
+      ) : (
+        <slot />
+      )}
     </main>
     <TabBar />
+    {showDialog && <MilestoneCelebration variant="c" keys={celebrationKeys} locale={Astro.locals.locale} />}
   </div>
 </Layout>

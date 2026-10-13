@@ -5,6 +5,7 @@ import {
   logNotice,
   parseLogPage,
   readLogNotice,
+  readMilestoneParam,
   tonightReturnPath,
   withMilestones,
 } from "./redirect";
@@ -174,5 +175,31 @@ describe("withMilestones", () => {
     expect(withMilestones(logNotice("updated", "M13"), ["first-globular"])).toBe(
       "/log?updated=M13&milestone=first-globular",
     );
+  });
+});
+
+describe("readMilestoneParam", () => {
+  const at = (query: string) => new URL(`https://sidereus.test/log?${query}`);
+
+  it("reads every valid milestone value in MILESTONES order, whatever order the URL has", () => {
+    expect(readMilestoneParam(at("milestone=messier-10&milestone=first-galaxy"), true)).toEqual([
+      "first-galaxy",
+      "messier-10",
+    ]);
+  });
+
+  it("drops values that are not milestone keys", () => {
+    expect(readMilestoneParam(at("milestone=first-galaxy&milestone=nope&milestone=&milestone=M31"), true)).toEqual([
+      "first-galaxy",
+    ]);
+  });
+
+  it("lists a repeated key once", () => {
+    expect(readMilestoneParam(at("milestone=first-moon&milestone=first-moon"), true)).toEqual(["first-moon"]);
+  });
+
+  it("is empty without the param, and signed out whatever the URL says", () => {
+    expect(readMilestoneParam(at("saved=M31"), true)).toEqual([]);
+    expect(readMilestoneParam(at("milestone=first-galaxy"), false)).toEqual([]);
   });
 });

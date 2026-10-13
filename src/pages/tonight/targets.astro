@@ -13,6 +13,8 @@ import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { parseSort } from "@/lib/tonight/all-objects";
+import { readMilestoneParam } from "@/lib/observations/redirect";
+import { devCelebrationVariant } from "@/lib/progress/milestones";
 import { pickTonightNotice } from "@/lib/tonight/notice";
 import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
@@ -31,6 +33,13 @@ const notice = pickTonightNotice({
   logged: logged ? t.logged({ object: logged.id }) : null,
   skyChecked: null,
 });
+
+// The celebration banner prototype (observing-milestones Phase 5, dev only): only variant "a" renders inside the
+// island, right under its sky. The island's own Astro.url carries no page query, so the shell reads the fixed keys.
+const milestoneKeys = readMilestoneParam(Astro.url, Boolean(Astro.locals.user));
+const celebration = devCelebrationVariant(Astro.url.searchParams, import.meta.env.DEV);
+const milestones =
+  celebration === "a" && milestoneKeys.length > 0 ? { keys: milestoneKeys, variant: celebration } : null;
 
 // The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
@@ -51,6 +60,7 @@ const restOpen = Astro.url.searchParams.has("sort");
       night={night}
       sort={sort}
       notice={notice}
+      milestones={milestones}
       restOpen={restOpen}
       logged={loggedTarget}
     >

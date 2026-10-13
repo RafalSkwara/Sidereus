@@ -5,6 +5,7 @@ import type { LogEntry } from "@/lib/engine";
 
 import {
   MILESTONES,
+  devCelebrationVariant,
   isMilestoneKey,
   milestonesOf,
   newlyReached,
@@ -473,5 +474,27 @@ describe("withStored", () => {
       key: "first-moon",
       reachedNight: night(2),
     });
+  });
+});
+
+describe("devCelebrationVariant (the Phase 5 prototype switch)", () => {
+  const asking = (value: string) => new URLSearchParams({ celebration: value });
+
+  it("returns the variant the param asks for in dev", () => {
+    expect(devCelebrationVariant(asking("a"), true)).toBe("a");
+    expect(devCelebrationVariant(asking("b"), true)).toBe("b");
+    expect(devCelebrationVariant(asking("c"), true)).toBe("c");
+  });
+
+  it("is null outside dev, whatever the param says", () => {
+    expect(devCelebrationVariant(asking("a"), false)).toBeNull();
+    expect(devCelebrationVariant(asking("c"), false)).toBeNull();
+  });
+
+  it("is null for a missing or unknown value", () => {
+    expect(devCelebrationVariant(new URLSearchParams(), true)).toBeNull();
+    expect(devCelebrationVariant(asking("d"), true)).toBeNull();
+    expect(devCelebrationVariant(asking("A"), true)).toBeNull();
+    expect(devCelebrationVariant(asking(""), true)).toBeNull();
   });
 });

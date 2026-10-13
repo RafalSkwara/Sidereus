@@ -614,23 +614,23 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Automated
 
-- [x] 4.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
-- [x] 4.2 `npx vitest run src/lib/progress/milestones.test.ts`, `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
+- [x] 4.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes — 4fd23eb
+- [x] 4.2 `npx vitest run src/lib/progress/milestones.test.ts`, `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — 4fd23eb
 
 #### Manual
 
-- [ ] 4.3 Screenshots of `/log/progress` (none reached; several reached) in EN/PL × dark/light/red at 390 px and desktop: the band reads first, reached vs not yet distinguishable in red mode, PL wraps at 320 px
+- [x] 4.3 Screenshots of `/log/progress` (none reached; several reached) in EN/PL × dark/light/red at 390 px and desktop: the band reads first, reached vs not yet distinguishable in red mode, PL wraps at 320 px
 
 ### Phase 5: The celebration design step
 
 #### Automated
 
-- [ ] 5.1 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
-- [ ] 5.2 `npx vitest run src/lib/progress/milestones.test.ts` passes (incl. `devCelebrationVariant` is `null` outside dev) and `npm run build` passes
+- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
+- [x] 5.2 `npx vitest run src/lib/progress/milestones.test.ts` passes (incl. `devCelebrationVariant` is `null` outside dev) and `npm run build` passes
 
 #### Manual
 
-- [ ] 5.3 The 42 variant screenshots and the contact sheet exist in the scratchpad, readable in all themes at both widths
+- [x] 5.3 The 42 variant screenshots and the contact sheet exist in the scratchpad, readable in all themes at both widths
 - [ ] 5.4 The owner picked a variant (QUESTION FOR OWNER answered)
 
 ### Phase 6: The chosen celebration
