@@ -619,18 +619,18 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Manual
 
-- [x] 4.3 Screenshots of `/log/progress` (none reached; several reached) in EN/PL × dark/light/red at 390 px and desktop: the band reads first, reached vs not yet distinguishable in red mode, PL wraps at 320 px
+- [x] 4.3 Screenshots of `/log/progress` (none reached; several reached) in EN/PL × dark/light/red at 390 px and desktop: the band reads first, reached vs not yet distinguishable in red mode, PL wraps at 320 px — c94d802
 
 ### Phase 5: The celebration design step
 
 #### Automated
 
-- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
-- [x] 5.2 `npx vitest run src/lib/progress/milestones.test.ts` passes (incl. `devCelebrationVariant` is `null` outside dev) and `npm run build` passes
+- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — c94d802
+- [x] 5.2 `npx vitest run src/lib/progress/milestones.test.ts` passes (incl. `devCelebrationVariant` is `null` outside dev) and `npm run build` passes — c94d802
 
 #### Manual
 
-- [x] 5.3 The 42 variant screenshots and the contact sheet exist in the scratchpad, readable in all themes at both widths
+- [x] 5.3 The 42 variant screenshots and the contact sheet exist in the scratchpad, readable in all themes at both widths — c94d802
 - [ ] 5.4 The owner picked a variant (QUESTION FOR OWNER answered)
 
 ### Phase 6: The chosen celebration
