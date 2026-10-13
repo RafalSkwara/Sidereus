@@ -986,7 +986,6 @@ export const pl = {
         },
         seeProgress: "Zobacz swój postęp",
         continue: "Dalej",
-        next: (p) => `Następny: ${p.name} · ${p.seen} / ${p.total}`,
       },
     },
   },

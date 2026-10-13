@@ -5,13 +5,14 @@ import { LOCALE_COOKIE } from "@/lib/preferences";
 import type { MilestoneKey } from "@/lib/progress/milestones";
 import { createFormatter } from "@/lib/tonight/format";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { madridDateDaysAgo, onboardInMadrid, waitForHydration } from "./helpers";
 
 /*
- * Observing milestones (M-3 S-06, FR-041, US-06): the record half. A milestone is stored at save, never for an entry
- * rated 1-2, and stays listed on `/log/progress` after the entry that reached it was edited away or deleted. One
- * fresh Madrid user on the all-clear forecast fixture, so nothing depends on test order. The copy is read from the
- * catalogue and the dates go through the same formatter the page uses.
+ * Observing milestones (M-3 S-06, FR-041, US-06): the record half and the celebration. A milestone is stored at save,
+ * never for an entry rated 1-2, and stays listed on `/log/progress` after the entry that reached it was edited away or
+ * deleted; the save that stores it opens the celebration dialog, once. Each test signs up its own fresh Madrid user on
+ * the all-clear forecast fixture, so nothing depends on test order. The copy is read from the catalogue and the dates
+ * go through the same formatter the page uses.
  */
 
 const copy = en.progress.milestones;
@@ -32,11 +33,21 @@ async function rate(form: Locator, rating: number) {
     .click();
 }
 
-/** Fills the new-entry form for `url`, rates it and saves; returns the night the form proposed and went on to save. */
-async function logEntry(page: Page, url: string, rating: number, returnsTo: RegExp): Promise<string> {
+/**
+ * Fills the new-entry form for `url`, rates it and saves; returns the night it saved: the one the form proposed, or
+ * `pinnedNight` when the form's night is set to it first.
+ */
+async function logEntry(
+  page: Page,
+  url: string,
+  rating: number,
+  returnsTo: RegExp,
+  pinnedNight?: string,
+): Promise<string> {
   await page.goto(url);
   await waitForHydration(page, LOG_FORM);
   const form = page.locator(LOG_FORM);
+  if (pinnedNight) await form.locator("#night").fill(pinnedNight);
   const night = await form.locator("#night").inputValue();
   expect(night).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   await rate(form, rating);
@@ -52,6 +63,21 @@ async function openEntry(page: Page, id: string): Promise<Locator> {
   await expect(page).toHaveURL(/\/log\/[0-9a-f-]{36}$/);
   await waitForHydration(page, EDIT_FORM);
   return page.locator(EDIT_FORM);
+}
+
+/** The celebration, found by its own attribute (never by the toast region): open, and the one dialog on the page. */
+const celebration = (page: Page) => page.locator("[data-milestone-celebration]");
+const openCelebration = (page: Page) => page.locator("dialog[data-milestone-celebration][open]");
+
+/** The page the save returned to has loaded, and it carries no celebration at all (none is rendered without a key). */
+async function expectNoCelebration(page: Page) {
+  await page.waitForLoadState("load");
+  await expect(celebration(page)).toHaveCount(0);
+}
+
+/** The `milestone` param is gone from the address bar (the dialog removes it as it opens). */
+async function expectMilestoneParamCleared(page: Page) {
+  await expect.poll(() => new URL(page.url()).searchParams.has("milestone")).toBe(false);
 }
 
 const row = (page: Page, key: MilestoneKey) => page.locator(`[data-milestone="${key}"]`);
@@ -128,4 +154,58 @@ test("records a milestone once, at save, and keeps it listed", async ({ page }) 
   await expectReached(page, "first-globular", galaxyNight);
   // The Messier count follows the log (nothing is seen now), while the record keeps what was reached.
   await expectAhead(page, "messier-10", copy.progress({ seen: "0", total: "10" }));
+});
+
+test("celebrates a milestone once, at save", async ({ page }) => {
+  test.setTimeout(180_000);
+  await onboardInMadrid(page, "e2e-milestones-celebration");
+  const celebrationCopy = copy.celebration;
+
+  // 1. M31 rated 2 reaches nothing: no celebration, open or not.
+  await logEntry(page, "/log/new?object=M31&from=log", 2, /\/log(\?|$)/);
+  await expectNoCelebration(page);
+
+  // 2. Edited to 4, it reaches the first galaxy: exactly one open dialog names it, and the save's own toast is there
+  // beside it. The param is already out of the address bar once the dialog is open.
+  const form = await openEntry(page, "M31");
+  await expect(form.getByRole("radio", { name: "2", exact: true })).toBeChecked();
+  await rate(form, 4);
+  await form.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  await expect(celebration(page)).toHaveCount(1);
+  await expect(openCelebration(page)).toHaveCount(1);
+  await expect(openCelebration(page)).toContainText(copy.name["first-galaxy"]);
+  await expect(openCelebration(page).getByRole("link", { name: celebrationCopy.seeProgress })).toHaveAttribute(
+    "href",
+    "/log/progress",
+  );
+  await expect(page.locator("[data-toast]")).toContainText(en.log.list.updated({ object: "M31" }));
+  await expectMilestoneParamCleared(page);
+
+  // 3. Continue closes it, and a reload shows nothing: no dialog, and no `milestone` in the URL.
+  await openCelebration(page).getByRole("button", { name: celebrationCopy.continue }).click();
+  await expect(openCelebration(page)).toHaveCount(0);
+  await page.reload();
+  await expectNoCelebration(page);
+  await expectMilestoneParamCleared(page);
+
+  // 4. Jupiter, logged from the planets page's form, reaches the first planet: the dialog names it on /tonight/planets
+  // (and not the galaxy, which was celebrated once and is stored).
+  await logEntry(page, "/log/new?object=jupiter&from=planets", 3, /\/tonight\/planets(\?|$)/);
+  await expect(openCelebration(page)).toHaveCount(1);
+  await expect(openCelebration(page)).toContainText(copy.name["first-planet"]);
+  await expect(openCelebration(page)).not.toContainText(copy.name["first-galaxy"]);
+  await expectMilestoneParamCleared(page);
+
+  // 5. Delete the M31 entry, then log M31 again rated 5 on a night three days back: the first galaxy is already stored,
+  // so the save celebrates nothing.
+  await openEntry(page, "M31");
+  await waitForHydration(page, DELETE_FORM);
+  await page.getByRole("button", { name: en.log.delete }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: en.log.delete }).click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  const night = await logEntry(page, "/log/new?object=M31&from=log", 5, /\/log(\?|$)/, madridDateDaysAgo(3));
+  expect(night).toBe(madridDateDaysAgo(3));
+  await expect(page.locator("[data-toast]")).toContainText(en.log.list.saved({ object: "M31" }));
+  await expectNoCelebration(page);
 });

@@ -631,14 +631,14 @@ S-05's recipe, adapted to this worktree and run:
 #### Manual
 
 - [x] 5.3 The 42 variant screenshots and the contact sheet exist in the scratchpad, readable in all themes at both widths — c94d802
-- [ ] 5.4 The owner picked a variant (QUESTION FOR OWNER answered)
+- [x] 5.4 The owner picked a variant (QUESTION FOR OWNER answered)
 
 ### Phase 6: The chosen celebration
 
 #### Automated
 
-- [ ] 6.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
-- [ ] 6.2 `npx astro check`, `npm run lint`, `npm test`, `npm run build` and `npm run test:db` pass
+- [x] 6.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
+- [x] 6.2 `npx astro check`, `npm run lint`, `npm test`, `npm run build` and `npm run test:db` pass
 
 #### Manual
 

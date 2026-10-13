@@ -8,13 +8,11 @@ import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import SolarSystemSection from "@/components/tonight/SolarSystemSection.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
-import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { logHref } from "@/lib/tonight/load";
-import type { CelebrationBanner } from "@/lib/progress/milestones";
 import type { TonightNotice } from "@/lib/tonight/notice";
 import { cn } from "@/lib/utils";
 
@@ -25,17 +23,12 @@ interface Props {
   telescopeId?: string;
   /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
   notice?: TonightNotice | null;
-  /**
-   * The celebration banner prototype (observing-milestones Phase 5, dev only): the keys the save reached and the
-   * variant, resolved in the shell from `?milestone` and `?celebration`. Shown right under the sky; `null` when none.
-   */
-  milestones?: CelebrationBanner | null;
   /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
   night?: "tonight" | "next";
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, night = "tonight", notice = null, milestones = null } = Astro.props;
+const { siteId, telescopeId, night = "tonight", notice = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
@@ -58,7 +51,6 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
     {view && <OfflineCopy view={view} night={night} />}
 
     <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
-      {milestones && <MilestoneCelebration variant={milestones.variant} keys={milestones.keys} locale={locale} />}
       {notice?.tone === "success" && (
         <Notice tone="success" toast param={notice.param}>
           {notice.text}

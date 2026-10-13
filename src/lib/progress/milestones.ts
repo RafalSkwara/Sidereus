@@ -62,28 +62,6 @@ export function isMilestoneKey(value: unknown): value is MilestoneKey {
   return typeof value === "string" && MILESTONE_KEYS.includes(value);
 }
 
-/** The celebration prototypes (observing-milestones Phase 5): a banner, a screen of its own, or a dialog. */
-export type CelebrationVariant = "a" | "b" | "c";
-
-/** What a Tonight shell hands its server island to render under the sky: fixed keys and a variant, nothing typed. */
-export interface CelebrationBanner {
-  keys: MilestoneKey[];
-  variant: CelebrationVariant;
-}
-
-/**
- * Dev only (Phase 5's design step, removed with the losing variants in Phase 6): the variant `?celebration=a|b|c`
- * asks for, so the owner can compare the three on real pages. `null` outside dev (a production build ignores the
- * param) and for any other value.
- */
-export function devCelebrationVariant(params: URLSearchParams, isDev: boolean): CelebrationVariant | null {
-  if (!isDev) {
-    return null;
-  }
-  const value = params.get("celebration");
-  return value === "a" || value === "b" || value === "c" ? value : null;
-}
-
 /** The Messier counts' N, from the key. */
 const MESSIER_COUNTS = { "messier-10": 10, "messier-25": 25, "messier-50": 50 } as const;
 
