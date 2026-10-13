@@ -774,6 +774,7 @@ export const pl = {
     attribution: {
       objectData: "Dane obiektów:",
       starData: "Dane gwiazd:",
+      hipparcosCredit: "Credit: ESA",
       weather: "Pogoda:",
     },
 

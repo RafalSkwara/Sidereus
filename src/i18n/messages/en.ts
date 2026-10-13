@@ -868,6 +868,7 @@ export const en = {
     attribution: {
       objectData: "Object data:",
       starData: "Star data:",
+      hipparcosCredit: "Credit: ESA",
       weather: "Weather:",
     },
 

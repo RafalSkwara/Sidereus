@@ -576,14 +576,14 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [ ] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical
-- [ ] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts`
-- [ ] 1.3 `npm run lint` and `npx astro check` pass
-- [ ] 1.4 `finder-stars.json` gzips under 160,000 bytes
+- [x] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical
+- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts`
+- [x] 1.3 `npm run lint` and `npx astro check` pass
+- [x] 1.4 `finder-stars.json` gzips under 160,000 bytes
 
 #### Manual
 
-- [ ] 1.5 Spot-check five stars against the HYG CSV row
+- [x] 1.5 Spot-check five stars against the HYG CSV row
 
 ### Phase 2: Engine: starting star, hop and projection
 
