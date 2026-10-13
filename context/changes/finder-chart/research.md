@@ -7,8 +7,8 @@ repository: RafalSkwara/Sidereus
 topic: "M-3 S-03 finder chart: data, geometry, plan gating and the roadmap's unknowns (PRD OQ13-16)"
 tags: [research, finder-chart, stars, hyg, licence, account-plan, tonight, engine, offline]
 status: complete
-last_updated: 2026-10-11
-last_updated_note: "§7 corrected per plan review F2: the server island URL can be replayed over HTTP"
+last_updated: 2026-10-13
+last_updated_note: "2026-10-13: owner answers O-4 (store finder charts offline) and O-6 (switch star source now) researched: §9 star sources for commercial use (no clearly commercial-clean source found; owner question), §10 offline finder copies. 2026-10-11: §7 corrected per plan review F2"
 last_updated_by: Claude (finder-chart agent)
 ---
 
@@ -31,13 +31,13 @@ Method: four parallel workers (plan gating and Tonight pages; star pipeline, sky
 1. **Nothing in the code draws a chart centred on a target.** The live sky's projection is a 180° equirectangular panorama (`src/lib/sky-view/projection.ts:20-27`), wrong for a 7-20° field. What can be reused: the engine's J2000-to-horizon rotation (`objectPosition`, `skyFrames`), the server-side SVG pattern of the Session plan (`src/lib/tonight/altitude-curve.ts` + `SessionTimeline.astro`), the eyepiece maths (`eyepieceOptics`, `pairEyepieces`), the star pipeline (`scripts/build-stars.mjs`) and the token-coloured SVG idiom. A gnomonic tangent-plane projection in alt/az (zenith up) and a hop search are new pure code.
 2. **Render the chart on the server.** A static SVG built in a Tonight-style `server:defer` island keeps the deeper star set out of the browser (no page weight, no precache change, no island import-guard change) and keeps the bulk star file from being served to clients; the only cost is Worker bundle size (measured below) and an interaction-free snapshot at the best time.
 3. **Star depth: HYG v4.1, same pin, to magnitude 7.5.** Measured on the pinned CSV: 25,791 stars ≤ 7.5, and the per-half-magnitude counts stop growing geometrically above ~7.5-8 (Hipparcos completeness). As columnar integers (RA and Dec in 0.01°, mag in 0.1) that is 354 KB raw / 122 KB gzip, loaded lazily on the server only by the finder route. Magnitude 8 (41,487 stars, 569 KB / 194 KB) is past HYG's even completeness.
-4. **Licence finding (new, consequential for paying, not for M-3).** ESA distributes the Hipparcos and Tycho catalogues under **CC BY-NC 3.0 IGO** with "Credit: ESA" (verified verbatim, https://www.cosmos.esa.int/web/hipparcos/catalogues); Tycho-2 and Gaia DR3 are NC too. HYG (CC BY-SA 4.0) is built from Hipparcos, so whether its derived stars can be used in a paid product is unsettled. This applies equally to the 925 bright stars already shipped. M-3 takes no money (PRD Non-Goals; roadmap Parked "Payments"), so it does not block S-03; it belongs with PRD OQ21 ("commercial licences before charging") and is an owner question. Adding "Credit: ESA" for Hipparcos is cheap and right now.
+4. **Licence finding** (2026-10-13: the owner asked to switch the star source now; §9 compares every candidate and finds none whose licence clearly allows commercial use)**.** ESA distributes the Hipparcos and Tycho catalogues under **CC BY-NC 3.0 IGO** with "Credit: ESA" (verified verbatim, https://www.cosmos.esa.int/web/hipparcos/catalogues); Tycho-2 and Gaia DR3 are NC too. HYG (CC BY-SA 4.0) is built from Hipparcos, so whether its derived stars can be used in a paid product is unsettled. This applies equally to the 925 bright stars already shipped. M-3 takes no money (PRD Non-Goals; roadmap Parked "Payments"), so it does not block S-03; it belongs with PRD OQ21 ("commercial licences before charging") and is an owner question. Adding "Credit: ESA" for Hipparcos is cheap and right now.
 5. **Finder field (OQ13):** a 6×30 finder's true field is published as 7-8° (vendors list 7-7.5°, Takahashi 8°); Telrad rings are 0.5°, 2°, 4°. The candidate (7°, plus 0.5/2/4° reflex rings) holds.
 6. **Naked-eye limit (OQ15):** the code already has `nakedEyeLimitingMagForBortle` (7.6 → 4.0, `src/lib/engine/parameters.ts:82-90`, matching Bortle's 2001 table). The PRD candidate for the *starting* star (4.5 / 3.5 / 2.5 by Bortle band) is a different, stricter quantity (a star a beginner can recognise, 1.5-2.5 mag above the limit); both can coexist, with a test that the starting limit never exceeds the naked-eye limit for any class (the PRD invariant). Measured: at 2.5 (Bortle 7-9) the nearest starting star is a median 9.9° and at most 25.7° from a catalogue object, so hops must allow several steps.
 7. **Hop length (OQ16):** no published numeric rule; practice (RASC Calgary) measures hops in finder fields through patterns obvious in the finder; a forum rule of thumb is 3-5° in a 4.5-8° finder. Measured: stars ≤ 6.5 average 8.3 per 7° field, ≤ 7.5 average 24.1.
 8. **Plan gating:** `requireFullPlan(locals)` exists and is unused (`src/lib/account-plan/index.ts:50`); `/tonight/*` is already gated by the middleware, so a signed-out visitor never reaches a `/tonight/finder` page and the page can branch on `reason`. The server island route is not gated, so the island must call the guard itself before building any chart. `scripts/smoke.mjs` cannot assert a body today and CI's smoke step has no secret key to grant a full plan; both need small changes for §6.4's HTTP check.
 9. **Data the chart needs is not in `TonightView`.** Entries carry `bestAt` (epoch ms) but no RA/Dec, no numeric alt/az and no true field (`EyepieceLine` is `{name, magnification}`); planets have no finding eyepiece. The finder loader must recompute from the catalogue, the engine and the loaded gear.
-10. **Offline:** copies are keyed by exact page path plus `?site=` (`src/lib/offline/copies.ts:10-17,120-125`); a per-object finder page would not be stored without new keying in `copies.ts` and `sw.ts`. Keeping the finder online-only in this slice avoids PRD OQ23 (paid features in stored copies) entirely.
+10. **Offline** (superseded 2026-10-13: the owner decided finder charts are stored offline; see §10)**:** copies are keyed by exact page path plus `?site=` (`src/lib/offline/copies.ts:10-17,120-125`); a per-object finder page would not be stored without new keying in `copies.ts` and `sw.ts`. Keeping the finder online-only in this slice avoids PRD OQ23 (paid features in stored copies) entirely.
 
 ## Detailed Findings
 
@@ -117,6 +117,45 @@ Method: four parallel workers (plan gating and Tonight pages; star pipeline, sky
 - Colours only from tokens (`src/styles/no-hardcoded-colors.test.ts`); star tokens `--star`, `--star-accent` exist in every theme incl. red (`global.css:69-70,115-116,163,212-213`); SVGs use token classes (`fill-heading`, `stroke-ring`, …, `TonightSkyView.tsx:495-579`). A new chart token needs a value in every theme block, zero G/B in red, and a contrast row if it carries meaning.
 - `/design` (`src/pages/design.astro`, "Components × states" from l.706) shows each shared component in the 7-state contract (l.156-165) with sample data built through `buildTonight`; nothing enforces registration beyond CLAUDE.md.
 
+### 9. Star sources for commercial use (owner O-6, 2026-10-13)
+
+The owner asked to switch both star files (the live sky's `bright-stars.json` and the new finder file) now to one source whose licence allows commercial use, complete to about 7.5. Three parallel web workers plus my own checks of the primary pages. The two non-ESA catalogues were measured against the pinned HYG CSV in the scratchpad (scripts `compare.mjs`, `merged.mjs`, `merge.mjs`, `names.mjs`; downloads from CDS FTP, SHA-256 below). Not legal advice.
+
+| Candidate | Licence (primary source) | Commercial use | Completeness, size | IDs and names | Build effort |
+| --- | --- | --- | --- | --- | --- |
+| HYG v4.1 (today) | CC BY-SA 4.0, but built from Hipparcos | No without ESA's authorisation (upstream NC) | Even to ~7.5; 25,791 ≤ 7.5 | HYG id, HIP, Bayer/Flamsteed, proper | None (pinned generator exists) |
+| Hipparcos / Tycho / Tycho-2 (ESA) | "distributed under the CC BY-NC 3.0 IGO licence", "Credit: ESA" (https://www.cosmos.esa.int/web/hipparcos/catalogues) | Only with ESA's authorisation: "Prior to any commercial use … a detailed request for authorisation/licence shall be made … data.licences@esa.int" (https://www.cosmos.esa.int/web/esdc/terms-and-conditions) | Tycho-2 to V ≈ 11 | HIP/TYC | Low |
+| Gaia DR3 (ESA) | "Gaia data are distributed under the CC BY-NC 3.0 IGO license" (https://www.cosmos.esa.int/web/gaia-users/license); same ESDC terms; credit "ESA, Gaia DPAC" | Only with ESA's authorisation | Incomplete at the bright end (brightest source G ≈ 1.7; saturation corrections below G 8); 36,663 sources G < 7.5, 62,723 G < 8 (TAP COUNT by GET) | source_id only; HIP/TYC via cross-match tables | High: G→V polynomial (σ ≈ 0.03), bright-star supplement still needed |
+| AT-HYG v4.0 | CC BY-SA 4.0 (https://codeberg.org/astronexus/athyg); upstreams Tycho-2, Gaia DR3, Hipparcos, Yale BSC | No (ESA upstreams) | To ~11 | as HYG | Low |
+| d3-celestial stars, Stellarium, SKY2000 v5, UCAC4 | Code BSD/GPL; star data from XHIP/Hipparcos/Tycho (d3-celestial README; SKY2000 ReadMe V/145; UCAC4 ReadMe I/322A: "All bright stars not observed with the astrograph have been added to UCAC4 from a set of Hipparcos and Tycho-2 stars") | No (ESA upstreams for every star brighter than ~8) | To 8 or deeper | various | Medium |
+| Yale BSC5 preliminary (Hoffleit & Warren 1991, NSSDC/ADC; VizieR V/50) | No licence in the ReadMe. Debian ships it in **non-free**: copyright Hoffleit & Warren 1991; the ADC files may be redistributed unmodified, but "the data files must NOT be altered in any way (without permission of the original authors)" (https://metadata.ftp-master.debian.org/changelogs/non-free/y/yale/stable_copyright) | Not granted; derived files are "altered" | 9,096 stars with positions, to V ≈ 6.5; 911 ≤ 4.5 after merging components closer than 30″ | HR, HD, SAO, Bayer/Flamsteed in `Name` (3,143 rows) | Medium (fixed-width parse) |
+| SAO Star Catalog J2000 (SAO Staff 1966; USNO, ADC 1990; VizieR I/131A) | No licence or copyright line in the ReadMe; same NASA ADC distribution as BSC5 | Not granted | 258,944 rows (not deleted), 26,559 with V ≤ 7.5 | SAO, HD, DM; no Bayer | Medium |
+| IAU WGSN names | No terms found (iau.org page 404) | Unknown; names are short facts, our 41 Polish forms are our own (`star-names.ts`) | n/a | n/a | n/a |
+
+CDS's own rule for VizieR data: "free of usage in a scientific context"; "The commercial usage of the data is subject to rules depending of the origin"; check the catalogue's ReadMe for a copyright (https://cds.unistra.fr/vizier-org/licences_vizier.html, via a search worker; the page did not load for me).
+
+Measured quality of the only non-ESA option (BSC5 for V ≤ 6.5 where it lists the star, else SAO; matched to HYG within 1′):
+
+- HYG ≤ 4.5 (925 stars): 100 % matched, |ΔV| median 0.01, p90 0.04.
+- HYG ≤ 6.5 (8,920): 99.91 % matched, |ΔV| median 0.01, p90 0.08.
+- HYG ≤ 7.5 (25,791): 99.49 % matched, |ΔV| median 0.06, p90 0.38, p99 0.98.
+- Merged entries ≤ 7.5: 26,584; 1,205 (4.5 %) have no HYG star brighter than 8.5 within 1′, i.e. SAO's old visual magnitudes run too bright for some faint stars. Merged ≤ 6.5 (the hop stars): 43 (0.49 %).
+- BSC5 lists close doubles as components (Acrux 1.33 instead of 0.77, Castor 1.98 instead of 1.58); merging components within 30″ gives 911 stars ≤ 4.5 (HYG: 925) and restores Acrux 0.76, Castor 1.59. α Cen A/B (Rigil Kentaurus, Toliman) merge into one naked-eye star.
+- Pins: `V/50/catalog.gz` SHA-256 `3dc44b1e…7bed`, `I/131A/sao.dat.gz` SHA-256 `5d54b348…4b7e` (full hashes in the plan's O-6 entry).
+
+**Finding:** no candidate both allows commercial use and is complete to 7.5. Every catalogue complete to 7.5 traces back to ESA's Hipparcos/Tycho (CC BY-NC 3.0 IGO, commercial use only with ESA's authorisation) or to the ADC-era BSC5/SAO files, whose terms forbid altered redistribution without the authors' permission (BSC5, per Debian) or say nothing (SAO). ESA's terms name a route (a request to data.licences@esa.int); no other source names one. Per the owner's instruction this goes back as a question, not a pick.
+
+### 10. Offline finder copies (owner O-4, 2026-10-13)
+
+The owner decided finder charts are stored offline alongside the Tonight copies, removed at the first online refresh after the account loses the full plan, expiring after 36 h like the others, with the existing owner and sign-out purges kept.
+
+- Keying: a copy is one pair keyed by `(siteId, page, kind)` (`commitPair`, `src/lib/offline/copies.ts:252-267`); `chooseCopy`/`needsNextCopy`/`listCopies` take a `TonightPage` (l.301-356); `isCopyMeta` rejects any page outside `TONIGHT_PAGES` (l.382). A finder copy needs the target in the key and in the index.
+- Pages: `tonightPageOf` matches the six exact paths (l.120-125) and drives the worker's navigation route (`src/sw.ts:536-569`), its client tracking (l.227-238) and the replacement rule. Its comment says a redirect on these paths can only be the sign-in bounce (l.535); the finder page must keep that true (an unknown object renders a 200 state, never a redirect).
+- Metadata: the island's `[data-offline-copy]` (`src/components/tonight/OfflineCopy.astro`) carries owner fingerprint, site id and name, kind, night, prepared and valid-until times, nothing about the plan; `copyMetaFromIsland` reads it (`copies.ts:183-206`). Five Tonight islands render it (`TonightContent`, `TargetsPageContent`, `PlanPageContent`, `PlanetsPageContent`, `NightsPageContent`).
+- Purges: auth POSTs purge everything (`src/sw.ts:583-594`); a signed-out page asks for a purge by message (`src/lib/offline/page-state.ts:126-138`, `src/sw.ts:631`); a commit by another owner resets the store (`needsReset`, `copies.ts:100-103`); expiry is per site, 36 h after its last refresh (`expire`, l.287-295). Nothing knows the plan today.
+- Next-night copies: every `tonight` commit may fetch `?night=next` for the same page (`src/sw.ts:392-395,405-450`); for a finder page that doubles every chart's server cost for a night the user did not ask about.
+- Offline e2e: `tests/e2e/offline.spec.ts` goes offline through a closable reverse proxy (Playwright's `setOffline` does not stop the worker's own fetches, l.16-20) and asserts `html[data-from-device]` first.
+
 ## Code References
 
 - `src/lib/account-plan/index.ts:14,19,34,43-50` — plan read, memo, guard and its reasons
@@ -161,9 +200,9 @@ Method: four parallel workers (plan gating and Tonight pages; star pipeline, sky
 
 For the plan to settle (team, delegated) or to list for the owner:
 
-1. **Commercial use of Hipparcos-derived stars** (owner, joins PRD OQ21): ESA's NC licence vs. a future paid plan; applies to the shipped bright stars too. Not blocking M-3.
+1. **Commercial use of Hipparcos-derived stars** (owner, joins PRD OQ21): ESA's NC licence vs. a future paid plan; applies to the shipped bright stars too. Not blocking M-3. **2026-10-13:** the owner asked to switch now; §9 finds no commercial-clean source to 7.5, so the choice between asking ESA, asking for permission for BSC5/SAO, or staying on HYG until then is back with the owner.
 2. **Finder field and rings** (owner, OQ13): 7° 6×30 plus 0.5/2/4° reflex rings — research supports the candidate.
 3. **Orientation** (owner, UI): naked-eye view (zenith up) with a note about inverted finders, or a flip control.
 4. **What a free account sees** (owner, UI): the explainer's content (text only, or an example chart) and whether row links differ for free accounts.
-5. **Offline** (owner, product): finder pages online-only in this slice, or stored per object (new keying in `copies.ts`/`sw.ts`, triggers OQ23).
+5. **Offline** (owner, product): finder pages online-only in this slice, or stored per object (new keying in `copies.ts`/`sw.ts`, triggers OQ23). **Answered 2026-10-13:** stored per object; §10.
 6. **Calibration without an observer** (owner, roadmap OQ1): manual comparison with published Telrad charts (Sherwood) for a handful of Messier objects, recorded in the plan.

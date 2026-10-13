@@ -4,7 +4,7 @@
 
 A full-plan user opens a finder chart for any ranked deep-sky object or planet from `/tonight/targets` or `/tonight/planets`: the nearest star they can recognise with the naked eye from their site, above the site's minimum altitude at the object's best time, the hop to the object through stars the finder shows, and the finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky (FR-037, US-05). A free account sees what the chart does and that it needs the full plan, never an error or an empty page, and the server enforces the plan (FR-045). It is the first full-plan feature, so it also brings the first "needs the full plan" state and the first HTTP refusal check (test-plan §6.4).
 
-This plan was written in an unattended run (owner away, 2026-10-11). Nobody could answer questions, so every choice below is either **delegated** (team-owned, decided and recorded) or a **default pending owner confirmation** (product or UI, owner-owned, planned on the recommended default). See "Decisions taken in this run". Revised the same day after `/10x-plan-review` (`reviews/plan-review.md`, F1-F10).
+This plan was written in an unattended run (owner away, 2026-10-11). Nobody could answer questions, so every choice below is either **delegated** (team-owned, decided and recorded) or a **default pending owner confirmation** (product or UI, owner-owned, planned on the recommended default). See "Decisions taken in this run". Revised the same day after `/10x-plan-review` (`reviews/plan-review.md`, F1-F10). Revised 2026-10-13 after the owner's answers: O-1, O-2, O-3, O-5 and O-7 confirmed as planned; O-4 changed (finder charts are stored offline, new Phase 5); O-6 changed (switch the star source now), but research §9 found no source whose licence clearly allows commercial use, so O-6 is blocked on a question to the owner.
 
 ## Current State Analysis
 
@@ -25,7 +25,8 @@ From `context/changes/finder-chart/research.md` (verified anchors there):
 - `/tonight/finder?object=<target key>&from=targets|planets` (plus the page's usual `?site=`/`?telescope=`/`?night=`) renders, for a full-plan user with the object in tonight's ranking: a context line ("Facing SE, 41° up at 22:40", or "Nearly overhead at 23:40"), an **overview panel** from the starting star to the target with the numbered hop, a **finder panel** of the finder's field around the target with stars to the finder's depth, the finder circle, the reflex rings and the finding eyepiece's circle, a short how-to list ("1. Find Mirach … 2. … 3. …"), a note on inverted finders, and the data credits. It is legible at 360 px in red mode.
 - A free account gets the same URL as a 200 page explaining what the chart does, a precomputed example chart labelled as an example, and that it needs the full plan. No user data and no star file read is involved.
 - The island itself refuses a free or signed-out request (the chart is never built for either), proven over HTTP by replaying the island URL after a downgrade and after sign-out.
-- Every `ObjectDetails` (ranked cards and rows) and `PlanetCard` has a "Finder chart" action link beside "Mark observed", for every account, disabled offline.
+- Every `ObjectDetails` (ranked cards and rows) and `PlanetCard` has a "Finder chart" action link beside "Mark observed", for every account.
+- A chart a full-plan user opened online is stored on the device with the Tonight copies and opens offline from the same link, marked as a stored copy; it expires 36 h after its site's last refresh, and disappears at the first online refresh after the account loses the full plan. Sign-out, sign-in and another user's commit purge it as they purge the Tonight copies.
 - Identical inputs give the identical chart (determinism NFR); the chart never starts from a star below the site's minimum altitude at the best time or fainter than the naked-eye starting limit for the site's Bortle class (PRD invariant), pinned by unit tests; a target near the zenith gets a valid chart.
 
 Verify: `npm test`, `npm run lint`, `npx astro check`, the extended smoke and the new e2e spec in CI; manual look at 360 px in red mode against two published hops.
@@ -37,19 +38,20 @@ Verify: `npm test`, `npm run lint`, `npx astro check`, the extended smoke and th
 - Stars ≤ 6.5 average 8.3 per 7° field, ~21 in a 5.6° disc (research §5; review F5).
 - Near-zenith targets are common: in Madrid on 2026-10-11, 24 of 131 objects clearing 15° peak above 80°; at 52° N 5-7 a season (review F1, computed with astronomy-engine). A zenith-up chart is meaningless there.
 - At 52° N over four nights, 80.1 % of object-nights have the nearest ≤ 4.5 start within one 5.6° step; the rest need the 4.5-6.5 stars of the new file (review F5).
-- A per-object page cannot join the offline copies without new keying in `copies.ts` and `sw.ts` (`src/lib/offline/copies.ts:10-17,120-125`).
+- A per-object page cannot join the offline copies without new keying in `copies.ts` and `sw.ts`: pairs are keyed by `(siteId, page, kind)` over the six `TONIGHT_PAGES`, and nothing in the store knows the account plan (`src/lib/offline/copies.ts:10-17,120-125,252-267,382`; research §10).
+- No star catalogue complete to 7.5 has a licence that clearly allows commercial use: the modern ones trace back to ESA's Hipparcos/Tycho/Gaia (CC BY-NC 3.0 IGO, commercial use only with ESA's authorisation), the old BSC5/SAO files carry no grant and BSC5's terms forbid altered copies without the authors' permission (research §9).
 
 ## What We're NOT Doing
 
 - No finder choice per telescope (roadmap Parked "Choosing your own finder"); one standard finder for every telescope.
 - No interactive chart (no pan, zoom, time slider) and no sky atlas (PRD Non-Goals); a static snapshot at the object's best time.
 - No chart for the Moon (FR-037 names deep-sky objects and planets) and no chart for washed-out rows (they have no actions today).
-- No offline copy of finder pages (O-4); the link is disabled offline.
+- No prefetching of charts the user never opened, no next-night copy of a chart, and no stored copy of a non-chart state (locked, not ranked, no gear, failed); only a chart opened online is stored (D-13).
 - No what-to-expect line (FR-038, US-05's third clause): that is S-04 `what-to-expect`, which will add it to this page.
 - No change to the live sky, its star file or its import guard; `bright-stars.json` stays byte-identical.
 - No upgrade of the HYG pin to v4.2 (minor name changes only; one pin for both star files).
 - No payment, plan badge or upsell flow (PRD Non-Goals); no plan shown on Tonight rows.
-- No settlement of the Hipparcos non-commercial question; it is recorded for the owner (PRD OQ21).
+- No star-source switch until the owner answers the O-6 question (research §9); Phase 1 is written for today's HYG pin and is blocked on that answer.
 
 ## Decisions taken in this run
 
@@ -70,29 +72,39 @@ Delegated (team-owned; decided here, change by editing the parameter or the plan
 - **D-10 Credit ESA** for Hipparcos beside HYG in `Attribution.astro` and `LICENSE-DATA.md`; every view that draws stars (the chart, the free example, `/design`) renders `Attribution`.
 - **D-11 Calibration without an observer** (roadmap OQ1, revised per review F5): a committed reference of classic published hops with their sources, each with a fixed Bortle band chosen so its limit admits the published start star and makes it the nearest qualifying start (M31 from Mirach via μ/ν And; M13 between η and ζ Her; M57 between β and γ Lyr; M81/M82 from Dubhe; M27 from γ Sge; M92 from π/η Her). The band is picked once in Phase 2 from the computed nearest starts per band and written into the fixture with the reason; review F5 shows the naive choice fails (M81 at ≤ 4.5 starts from 23 UMa, M92 from ι Her, M13 at ≤ 2.5 from Alphecca). A reference that no band reconciles is listed in the fixture as a known divergence with its computed route, never forced. The test asserts the chosen start lies in each route's star set and the path reaches the target with every step ≤ 5.6°. A reference failure is an engine finding, never a fixture edit. Coverage over all 171 objects is measured on the first Phase 2 run and its gate set 3 percentage points below the measured value (noted on Progress row 2.4).
 - **D-12 Failures are logged** (review F3): `loadFinderFor` catches a failed star load or engine error, logs a fixed line plus `error.name` only (never the message, which could carry coordinates), and renders the `failed` state. Two allowlisted disables.
+- **D-13 What is stored offline** (from O-4, 2026-10-13): a finder copy is the chart page the user opened online, stored as a pair like the Tonight pages, keyed by `(siteId, page, target, kind)`; `kind` follows the page's `?night=` as on the Tonight pages. Only the chart state stores (its island renders `[data-offline-copy]`); locked, not-ranked, no-gear and failed never do. No next-night copy of a chart (each would cost a second chart build for a night the user did not ask about) and no prefetching of charts never opened. No count cap: the 36 h per-site expiry bounds the store, and a chart's HTML is ~25 KB. Why: the existing rules, with the target added to the key; the least new behaviour.
+- **D-14 How a lost plan clears the charts** (from O-4): every Tonight island's `[data-offline-copy]` gains `data-plan="full|free"` (from `requireFullPlan`, memoised per request); the worker drops every finder pair (`dropFinderCopies`) when (a) it commits any pair whose island says `free`, (b) a finder navigation's network answer is the locked page (`data-finder-state="locked"`), or (c) a finder island answers locked. Each Tonight page opened online commits a pair, so "the first online refresh" is the first Tonight or finder page the user opens online after the change. Why: deterministic, worker-side, no new page script, no plan read on non-Tonight pages.
+- **D-15 Offline links** (from O-4): the Finder chart link carries no `data-needs-network`; offline, a stored chart opens from the device and one never stored lands on `/offline`, which lists the stored charts ("Finder chart · M31", site) below the Tonight pages.
 
-Pending owner confirmation (owner-owned; planned on this default):
+Owner decisions (planned as defaults on 2026-10-11, answered by the owner on 2026-10-13):
 
-- **O-1 Finder** (OQ13): a 6×30 finder, 7° field, for every telescope, plus a 1× reflex finder's 0.5°, 2° and 4° rings, both drawn on the finder panel around the target.
-- **O-2 Orientation**: the naked-eye view as the user faces that part of the sky ("up" = the vertical through the panel's centre), with one note line that a straight-through finder shows it upside down and a right-angle finder mirror-reversed; no flip control. When the target is nearly overhead (a panel centre ≥ 80° or the zenith inside a panel), north up with a zenith marker and "Nearly overhead" (D-6).
-- **O-3 Two panels**: an overview (start → target) and a finder panel (10° field around the target), stacked on a phone.
-- **O-4 Offline**: finder pages are online-only in this slice (the link carries `data-needs-network`); storing them would need per-object keys in the service worker and triggers PRD OQ23.
-- **O-5 Free account**: the same "Finder chart" link on every row; the page explains the chart with a fixed example (M13 from a fixed public site and date, precomputed, labelled "Example") and says it needs the full plan, without a way to get it (no payments).
-- **O-6 Licence**: Hipparcos is non-commercial (ESA); before charging, the star layer (including today's bright stars) needs ESA's authorisation or another source. Added to PRD OQ21 as a fact, owner decides later.
-- **O-7 Departures from FR-037's wording** (review F8): (a) when the nearest qualifying star has no hop, the start is one of the 5 nearest that has one; (b) when none of them has one, a direct line from the nearest with distance and direction instead of hops; (c) a planet at least as bright as the starting limit is its own starting point (no hop); (d) when no star qualifies (none bright enough above the minimum altitude), a message instead of a chart. All keep the PRD invariant.
+- **O-1 Finder** (OQ13), **confirmed**: a 6×30 finder, 7° field, for every telescope, plus a 1× reflex finder's 0.5°, 2° and 4° rings, both drawn on the finder panel around the target.
+- **O-2 Orientation**, **confirmed**: the naked-eye view as the user faces that part of the sky ("up" = the vertical through the panel's centre), with one note line that a straight-through finder shows it upside down and a right-angle finder mirror-reversed; no flip control. When the target is nearly overhead (a panel centre ≥ 80° or the zenith inside a panel), north up with a zenith marker and "Nearly overhead" (D-6).
+- **O-3 Two panels**, **confirmed**: an overview (start → target) and a finder panel (10° field around the target), stacked on a phone.
+- **O-4 Offline**, **changed by the owner**: finder charts are stored offline alongside the Tonight copies. This settles PRD OQ23 for this slice: a stored chart disappears at the first online refresh after the account loses the full plan, charts expire after 36 h like the other copies, and the owner and sign-out purges stay. Planned as Phase 5 (D-13 to D-15).
+- **O-5 Free account**, **confirmed**: the same "Finder chart" link on every row; the page explains the chart with a fixed example (M13 from a fixed public site and date, precomputed, labelled "Example") and says it needs the full plan, without a way to get it (no payments).
+- **O-6 Star source**, **changed by the owner, then BLOCKED (question for the owner, 2026-10-13)**: the owner asked to switch both star files (`bright-stars.json` and the finder file) now to one source whose licence allows commercial use. Research §9 found none complete to 7.5: Hipparcos, Tycho-2 and Gaia DR3 are ESA CC BY-NC 3.0 IGO (commercial use only with a licence requested from data.licences@esa.int), every compilation (HYG, AT-HYG, SKY2000, UCAC4, d3-celestial, Stellarium) inherits them, and the only non-ESA pair, Yale BSC5 + SAO, has no licence grant at all (BSC5's distribution terms forbid altered copies without the authors' permission). The options and their effect on this plan:
+  - **(A) Ask ESA for a commercial licence; stay on HYG meanwhile.** Phase 1 as written (HYG pin, "Credit: ESA"); no switch phase. If ESA refuses, (B) remains.
+  - **(B) Switch to BSC5 + SAO**, ideally after written permission (CDS / the catalogues' authors). A new Phase 1 "Star source switch" replaces Phase 1's build and licence parts: `scripts/build-stars.mjs` downloads `cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz` (SHA-256 `3dc44b1e90be8fbe5bcc7656032560f51275f985c7e3f783c9028e1838ec7bed`) and `…/I/131A/sao.dat.gz` (SHA-256 `5d54b3485aa25e36918ef813eb31fae87b8eccf5ffd50fd879fc136b76d84b7e`) and fails on any other hash; parses both fixed-width files per their ReadMe; merges components within 30″ (combined magnitude); `bright-stars.json` = BSC5 ≤ 4.5 (911, ids = HR numbers, the 40 names from a committed HR → name map, α Cen A/B merged so Toliman goes), `finder-stars.json` = SAO ≤ 7.5 with BSC5's V and Bayer/Flamsteed where BSC5 lists the star (26,584 measured); `stars.ts` count range, `stars.test.ts`, `star-names.ts`, `LICENSE-DATA.md`, `Attribution.astro` (BSC5, SAO, VizieR acknowledgement; HYG and ESA credits go) and CLAUDE.md follow; a live-sky regression compares the old and new bright stars (every old named star within 1′ of its new entry, ≥ 97 % of old stars matched within 1′ with |ΔV| ≤ 0.3) and `tonight-sky`, `sky-view` and `TonightSkyView` tests stay green. Quality measured in research §9; SAO's faint-end magnitudes run too bright for 4.5 % of stars ≤ 7.5.
+  - **(C) Stay on HYG and settle before charging** (the 2026-10-11 default): Phase 1 as written; the fact goes to PRD OQ21.
+  Phase 1 does not start until the owner answers.
+- **O-7 Departures from FR-037's wording** (review F8), **confirmed**: (a) when the nearest qualifying star has no hop, the start is one of the 5 nearest that has one; (b) when none of them has one, a direct line from the nearest with distance and direction instead of hops; (c) a planet at least as bright as the starting limit is its own starting point (no hop); (d) when no star qualifies (none bright enough above the minimum altitude), a message instead of a chart. All keep the PRD invariant.
 
 ## Implementation Approach
 
-Data first, then the pure engine, then rendering (including the free explainer and its precomputed example), then the route and its gate, then the HTTP proof. The engine function takes the star list as input (not an import), so tests use synthetic skies and the purity rules hold. The island loads Tonight as the other focused pages do, finds the entry, then builds the chart; the shell and the island each call `requireFullPlan`. Rendering is a pure geometry module plus Astro components with token classes only.
+Data first, then the pure engine, then rendering (including the free explainer and its precomputed example), then the route and its gate, then offline storage of the chart, then the HTTP proof. The engine function takes the star list as input (not an import), so tests use synthetic skies and the purity rules hold. The island loads Tonight as the other focused pages do, finds the entry, then builds the chart; the shell and the island each call `requireFullPlan`. Rendering is a pure geometry module plus Astro components with token classes only.
 
 ## Critical Implementation Details
 
 - **Island guard order.** The island must call `requireFullPlan` before it loads the star file or calls the engine: the shell's check does not protect `/_server-islands/*`, and the free and signed-out branches must not even build the chart. The free page's example is a committed fixture, never computed per view and never from the user's site or gear.
 - **Marker placement.** `data-finder-chart` sits only on the chart-state root in `FinderContent`, never inside `FinderChart` (the free example renders `FinderChart` too). `data-finder-state` is on every state root.
 - **Coordinates.** The chart's projected positions encode the site's latitude and the time roughly, like the live sky's rotation matrices (interactive-sky decision, `context/archive/2026-10-05-interactive-sky/plan.md:110`); they stay in the HTML, never in a URL, a `data-*` attribute meant for scripts, or a log. Round SVG coordinates to 0.1 unit.
+- **Stored charts follow the plan.** A finder pair commits only from a chart-state island (`data-plan="full"` and a target); any commit whose island says `free`, and any locked finder answer, drops every finder pair in the same serialised index step (`serial` in `src/sw.ts:68-72`), so a commit racing a demotion cannot leave a chart behind. The index holds target keys and display names, never coordinates; the stored HTML holds the chart's projected positions, as the Tonight copies hold the live sky's.
 - **Smoke ordering and shared state.** The captured island URL lives in a shared variable; it is read from the full account's shell (`<link rel="preload" as="fetch" href="/_server-islands/FinderContent…">`) with `&amp;` decoded (mirror `islandUrlFromShell` in `src/lib/offline/copies.ts`). A missing capture fails every step that needs it, loudly. Replays run after the demotion and again after sign-out. If Astro ever switches to POST for these props, the capture fails, never skips.
 
 ## Phase 1: Finder star data
+
+> **Blocked on the owner's O-6 answer (2026-10-13).** Written for options (A) and (C), today's HYG pin. If the owner picks (B), this phase's build and licence parts (1 and 4) are replaced by the "Star source switch" outlined under O-6 and re-reviewed before work starts; the loader and tests (2 and 3) keep their contracts with HR/SAO ids instead of HYG ids.
 
 ### Overview
 
@@ -321,25 +333,25 @@ The route, its shell and island, the two-layer plan check, the logged failure pa
 
 **Files**: `src/pages/tonight/finder.astro`, `src/components/finder/FinderContent.astro` (new), `src/components/tonight/TonightPageSky.astro`
 
-**Intent**: The shell parses `?object=` (`parseTargetParam`; unknown → a 200 "not on tonight's list" state, never a crash), `?from=` (`targets` | `planets`, else Tonight), `requestedGear` and `requestedNight`; calls `requireFullPlan(Astro.locals)`: `needs-full` → `FinderLocked` (no island), `not-configured` → `DatabaseMissing`, `ok` → the `FinderContent` island with `TonightPageSkeleton`. The island renders `TonightPageSky` (title "Finder chart · M31", back link to the `from` page), then by `FinderLoad.kind`: chart, locked (`FinderLocked`), not-ranked, no-gear, failed. Attribution below.
+**Intent**: The shell parses `?object=` (`parseTargetParam`; unknown → a 200 "not on tonight's list" state, never a crash), `?from=` (`targets` | `planets`, else Tonight), `requestedGear` and `requestedNight`; never redirects (the worker treats a redirect on a stored page as the sign-in bounce, `src/sw.ts:535`); calls `requireFullPlan(Astro.locals)`: `needs-full` → `FinderLocked` (no island), `not-configured` → `DatabaseMissing`, `ok` → the `FinderContent` island with `TonightPageSkeleton`. The island renders `TonightPageSky` (title "Finder chart · M31", back link to the `from` page), then by `FinderLoad.kind`: chart, locked (`FinderLocked`), not-ranked, no-gear, failed. Attribution below.
 
-**Contract**: every state root carries `data-finder-state="chart|locked|not-ranked|no-gear|failed"`; only `FinderContent`'s chart-state root carries `data-finder-chart`. `TonightPageSky` gains optional `backHref` and `backLabel` (default `/tonight` and the Tonight label). The page is not added to `TONIGHT_PAGES` (O-4).
+**Contract**: every state root carries `data-finder-state="chart|locked|not-ranked|no-gear|failed"`; only `FinderContent`'s chart-state root carries `data-finder-chart`. `TonightPageSky` gains optional `backHref` and `backLabel` (default `/tonight` and the Tonight label). Offline storage of the page arrives in Phase 5.
 
 #### 3. Links
 
 **Files**: `src/components/tonight/TargetDetails.astro`, `ObjectDetails.astro`, `PlanetCard.astro`, `SolarSystemSection.astro`, `TargetsPageContent.astro`, `PlanetsPageContent.astro`, `src/lib/tonight/load.ts`
 
-**Intent**: An optional `finderHref` on `TargetDetails` renders a second action link ("Finder chart", lucide `Crosshair`, `buttonVariants({variant:"action", size:"sm"})`, `data-needs-network`, accessible name with the target) beside "Mark observed"; ObjectDetails and PlanetCard pass it; a `finderHref(view, target, from, night)` helper next to `logHref` builds `/tonight/finder?object=…&site=…&telescope=…&from=…` plus `&night=next` when the page shows the next night (ids only).
+**Intent**: An optional `finderHref` on `TargetDetails` renders a second action link ("Finder chart", lucide `Crosshair`, `buttonVariants({variant:"action", size:"sm"})`, no `data-needs-network` (D-15), accessible name with the target) beside "Mark observed"; ObjectDetails and PlanetCard pass it; a `finderHref(view, target, from, night)` helper next to `logHref` builds `/tonight/finder?object=…&site=…&telescope=…&from=…` plus `&night=next` when the page shows the next night (ids only).
 
 **Contract**: The Moon card passes none. The two links wrap at 320 px without sideways scroll.
 
-#### 4. Lint, offline and bundle guards
+#### 4. Lint and bundle guards
 
-**Files**: `src/lib/offline/copies.test.ts`, `src/lib/no-console-guard.test.ts`, `scripts/build-sw.mjs`
+**Files**: `src/lib/no-console-guard.test.ts`, `scripts/build-sw.mjs`
 
-**Intent**: Pin O-4, allowlist the two D-12 logs, and fail the build if the star file ever reaches the browser.
+**Intent**: Allowlist the two D-12 logs, and fail the build if the star file ever reaches the browser.
 
-**Contract**: `tonightPageOf(new URL("/tonight/finder?object=M31", base))` is `undefined`; `ALLOWED_DISABLES` gains `src/lib/finder/load.ts` with count 2; `build-sw.mjs` fails when any `dist/client` file contains `finder-stars` or the meta's unique source string, like its map/leaflet leak check.
+**Contract**: `ALLOWED_DISABLES` gains `src/lib/finder/load.ts` with count 2; `build-sw.mjs` fails when any `dist/client` file contains `finder-stars` or the meta's unique source string, like its map/leaflet leak check.
 
 #### 5. Loader tests
 
@@ -362,13 +374,88 @@ The route, its shell and island, the two-layer plan check, the logged failure pa
 
 - As a full account on `npm run preview` (port 4331) with local Supabase: open the chart from a ranked object and from a planet; back link returns to the right page
 - As a free account: the same link shows the explainer with the example, no error styling
-- Offline (service worker active): the Finder chart link is disabled with the "Needs a connection" description
+- The two action links wrap at 320 px without sideways scroll in dark, light and red
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
 ---
 
-## Phase 5: HTTP refusal, e2e and docs
+## Phase 5: Offline finder charts
+
+### Overview
+
+Store a chart opened online as a pair with the Tonight copies, serve it offline from the same link, list it on `/offline`, and drop every stored chart at the first online refresh after the plan is lost (O-4, D-13 to D-15). Every rule is a pure function in `copies.ts`, unit-tested; `sw.ts` only wires them, as today.
+
+### Changes Required:
+
+#### 1. Copy rules
+
+**Files**: `src/lib/offline/copies.ts`, `src/lib/offline/copies.test.ts`
+
+**Intent**: Add the finder page with its target to the keying, the serving choice, the listing and the index check; add the plan to the island metadata and the drop rule.
+
+**Contract**:
+- `FINDER_PAGE = "/tonight/finder"`, `StoredPage = TonightPage | typeof FINDER_PAGE`. `storedPageOf(url) → { page: StoredPage; siteId: string | undefined; target: string | null } | undefined`: the six pages with `target: null`, the finder page only with an `?object=` shaped like a target key (the shape `parseTargetParam` accepts; anything else → `undefined`, so it is neither served from nor stored). `tonightPageOf` keeps its six-page meaning; `mayStoreShell` and the worker use `storedPageOf`.
+- `IslandCopy` gains `target: string | null`, `targetName: string | null` and `plan: "full" | "free"`, read from `data-target`, `data-target-name`, `data-plan`; a missing or unknown `data-plan` reads as `"free"`; a finder copy needs `plan: "full"` and a target or `copyMetaFromIsland` returns `undefined`.
+- `CopyMeta.page: StoredPage`; `commitPair` replaces the pair with the same `(siteId, page, target, kind)`; `chooseCopy(index, page, siteId, now, target = null)`; `needsNextCopy` is `false` for `FINDER_PAGE`; `listCopies` adds one entry per site and target after the six pages, ordered by `targetName`, with `target` and `targetName` on `ListedCopy`; `isCopyMeta` accepts `FINDER_PAGE` only with a string `target`, and a stored copy without `target` (an index written before this change) parses as `target: null`.
+- `dropFinderCopies(index) → IndexChange`: removes every `FINDER_PAGE` pair and returns its shell and island keys and the assets no remaining pair references (`changeRemoving`); unchanged index when there is none.
+- `isLockedFinderPage(html) → boolean`: an element carrying `data-finder-state="locked"`.
+- Tests: `storedPageOf` for each page, the finder with a valid, missing and malformed `?object=`; `copyMetaFromIsland` with and without plan and target; `commitPair` keeps M31 and M13 side by side and replaces M31's older pair; `chooseCopy` by target (prepared, stale); `needsNextCopy` false for a chart; `listCopies` order; `dropFinderCopies` removes only finder pairs and keeps an asset a Tonight pair still references; `parseIndex` on an old index; `isLockedFinderPage`.
+
+#### 2. Island metadata
+
+**Files**: `src/components/tonight/OfflineCopy.astro`, `src/components/finder/FinderContent.astro`
+
+**Intent**: Every stored island says which plan it was rendered for; a chart says which target it is.
+
+**Contract**: `OfflineCopy` renders `data-plan` from `requireFullPlan(Astro.locals)` (`ok` → `full`, otherwise `free`; one memoised read per request) and takes an optional `target: { key: string; name: string }` rendered as `data-target` / `data-target-name` (ids and names only, never coordinates). `FinderContent` renders `OfflineCopy` only in the chart state, with the page's `night` and the target; its notices sit above the chart like on the Tonight pages.
+
+#### 3. Worker
+
+**File**: `src/sw.ts`
+
+**Intent**: Serve and store finder pairs like Tonight pairs, and drop them when the plan is gone.
+
+**Contract**:
+- The navigation route matches `storedPageOf(url)`; the stored answer is `chooseCopy(index, page, siteId, now, target)`; client tracking uses `storedPageOf` too.
+- `afterNavigation`: a 200 HTML answer for `FINDER_PAGE` for which `isLockedFinderPage` holds drops the finder pairs and records no shell.
+- `commitIsland` / `commit`: inside the same `serial` step, a pair whose island says `plan: "free"` is committed (a Tonight page) and then `dropFinderCopies` runs; a finder island body that is locked drops the finder pairs and commits nothing. `storeNextCopy` never runs for a chart (`needsNextCopy`).
+- The auth-POST purge, the signed-out purge message, `needsReset` and `expire` are unchanged and cover finder pairs because they live in the same index.
+
+#### 4. The `/offline` list
+
+**Files**: `src/pages/offline.astro`, `src/i18n/messages/en.ts`, `src/i18n/messages/pl.ts`
+
+**Intent**: List stored charts as "Finder chart · M31" with the site, linking to `/tonight/finder?object=M31&site=<id>`.
+
+**Contract**: the page's `isCopy` accepts the optional `target`/`targetName` strings; the finder title comes from the existing `titles` map plus the target name; new strings in both languages.
+
+#### 5. E2E
+
+**Files**: `tests/e2e/finder-offline.spec.ts` (new), `tests/e2e/offline-proxy.ts` (new: the `Proxy` class moved out of `offline.spec.ts`, which imports it)
+
+**Intent**: Prove the owner's three rules in a browser: stored, served from the device, and gone after the plan is lost.
+
+**Contract**: through the proxy, a full account (operator command, D-9) opens M13's chart from `/tonight/targets`; the test waits until the worker's index (`/__offline/index.json` in `sidereus-tonight-v1`, read as `offline.spec.ts` does) lists a finder copy for M13; closing the proxy, the chart URL shows `html[data-from-device]` and `[data-finder-chart]` and the prepared notice, and `/offline` lists "Finder chart · M13". Reopening the proxy, the account is demoted to free and `/tonight` is opened online; the index then lists no finder copy; closing the proxy again, the chart URL shows the stored `/offline` page (`html[data-from-device]`, no `[data-finder-chart]`). In the no-darkness window (8 June to 2 July) the test is skipped with that reason, as smoke does. No retries.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `npx vitest run src/lib/offline` passes, including the new `copies.test.ts` cases
+- `npm run lint`, `npx astro check` and `npm run build` pass
+- With local Supabase, the forecast fixture and the preview on port 4331 running (as in 4.3): `SUPABASE_URL=<local API_URL> SUPABASE_KEY=<local ANON_KEY> SUPABASE_SECRET_KEY=<local SECRET_KEY> BASE_URL=http://localhost:4331 npx playwright test finder-offline offline` passes (the existing offline spec stays green after the proxy move)
+
+#### Manual Verification:
+
+- On a phone: open a chart online, switch to airplane mode, open the same chart from the stored Targets page; it shows the stored-copy notice
+- Demote the account, open Tonight online, go offline: the chart is gone and `/offline` no longer lists it
+
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
+
+---
+
+## Phase 6: HTTP refusal, e2e and docs
 
 ### Overview
 
@@ -410,7 +497,7 @@ Prove the plan boundary over HTTP (test-plan §6.4), add one browser spec for th
 
 **Files**: `CLAUDE.md`, `scripts/account-plan.mjs` (header comment), `context/foundation/test-plan.md`, `context/foundation/prd.md`, `context/foundation/roadmap.md`
 
-**Intent**: CLAUDE.md: a Finder paragraph (route, loader, two-layer plan check, star file, offline exclusion, overhead rule) and the designation exception beside compass points; the Env and Commands lines say the local stack's secret key is also passed inline to `npm run smoke` and the e2e command in CI and locally, never exported and never to the preview. `account-plan.mjs` header: smoke calls it with the local key. Test-plan §6.4: the page variant (shell state + island replay as full, demoted and signed out) as the recipe the next full-plan page follows. PRD OQ21: the Hipparcos/Tycho/Gaia NC fact (O-6); OQ13-16: "settled as candidates in S-03 plan". Roadmap S-03 unknowns: mark resolved with pointers to this plan.
+**Intent**: CLAUDE.md: a Finder paragraph (route, loader, two-layer plan check, star file, offline storage and the plan-loss drop, overhead rule) and the designation exception beside compass points; the Env and Commands lines say the local stack's secret key is also passed inline to `npm run smoke` and the e2e command in CI and locally, never exported and never to the preview. `account-plan.mjs` header: smoke calls it with the local key. Test-plan §6.4: the page variant (shell state + island replay as full, demoted and signed out) as the recipe the next full-plan page follows. PRD OQ21: the star-licence finding and the owner's O-6 answer; OQ23: settled for finder charts (stored, dropped at the first online refresh after the plan is lost, 36 h expiry); OQ13-16: "settled as candidates in S-03 plan". Roadmap S-03 unknowns: mark resolved with pointers to this plan.
 
 **Contract**: prose only. The PR description lists the D-9 key rule change for the owner.
 
@@ -420,13 +507,13 @@ Prove the plan boundary over HTTP (test-plan §6.4), add one browser spec for th
 
 - `npm run smoke` passes against local Supabase and the preview, including the finder steps: with local Supabase, the forecast fixture and the preview on port 4331 running (as in 4.3), run `BASE_URL=http://localhost:4331 SUPABASE_URL=<local API_URL> SUPABASE_SECRET_KEY=<local SECRET_KEY> npm run smoke`
 - `npx playwright test finder-chart` passes against the preview: same prerequisites, `SUPABASE_URL=<local API_URL> SUPABASE_KEY=<local ANON_KEY> SUPABASE_SECRET_KEY=<local SECRET_KEY> BASE_URL=http://localhost:4331 npx playwright test finder-chart`
-- CI's `smoke` job passes on the PR (after the push, which needs the owner's permission)
+- CI's `smoke` job passes on the PR (after the push of the feature branch at the end of implementation)
 
 #### Manual Verification:
 
 - At arm's length on a phone in red mode, the chart for one planet and one deep-sky object is legible
-- The owner reviews the pending decisions O-1 to O-6
-- The PR description calls out the `SUPABASE_SECRET_KEY` rule change (local stack only, inline on smoke and e2e, never exported) and the owner accepts it; the owner also answers O-7
+- The owner's O-6 answer is reflected in the star files, `LICENSE-DATA.md`, `Attribution.astro` and PRD OQ21
+- The PR description calls out the `SUPABASE_SECRET_KEY` rule change (local stack only, inline on smoke and e2e, never exported) and the owner accepts it
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -440,11 +527,12 @@ Prove the plan boundary over HTTP (test-plan §6.4), add one browser spec for th
 - Engine: invariants (start altitude, start limit ≤ naked-eye limit), determinism, cost tie-breaks incl. the non-additive counterexample, candidate bound, kinds, orientation along `x = 0`, overhead switch and zenith target, reference hops at fixed bands, measured 171-object coverage (Phase 2)
 - Geometry, chart tokens' contrast, example fixture deep-equality (Phase 3)
 - Loader: `locked` before any read for free and signed-out, not-configured, not-ranked, planet vs deep-sky eyepiece, logged `failed` (Phase 4)
+- Offline copy rules: finder keying by target, serving choice, listing, `dropFinderCopies`, plan and target on the island metadata, old indexes (Phase 5)
 
 ### Integration Tests:
 
-- Smoke: free shell refused, full shell and island allowed with a real chart, island replay refused after demotion and signed out, signed-out page redirect (Phase 5)
-- E2E: full account opens M13's chart from Targets at 360 px, either orientation (Phase 5)
+- Smoke: free shell refused, full shell and island allowed with a real chart, island replay refused after demotion and signed out, signed-out page redirect (Phase 6)
+- E2E: full account opens M13's chart from Targets at 360 px, either orientation (Phase 6); the chart opens from the device offline and is gone offline after a demotion and one online Tonight load (Phase 5)
 - Build: the star file never reaches `dist/client` (Phase 4)
 
 ### Manual Testing Steps:
@@ -455,22 +543,25 @@ Prove the plan boundary over HTTP (test-plan §6.4), add one browser spec for th
 4. Open a target that culminates above 80° (e.g. M31 from a 40° N site in October): the overhead variant with north up and the zenith mark.
 5. Demote the account; reload: explainer with the example, no chart.
 6. Red mode at 360 px: readable, no green or blue.
+7. Open a chart online, go offline, reopen it from the stored Targets page; demote, open Tonight online, go offline: the chart is gone.
 
 ## Performance Considerations
 
 - The star file (≈354 KB raw) is parsed once per isolate and only on the finder route (dynamic import); the free explainer never loads it. The hop search works on stars within the D-4 candidate bound: a few hundred nodes, a layered search of at most 8 layers, well under the 30 s CPU of Workers Paid.
-- The chart HTML holds at most a few hundred circles per panel (≈25 KB raw); no client JS beyond Astro's island loader.
+- The chart HTML holds at most a few hundred circles per panel (≈25 KB raw); no client JS beyond Astro's island loader. A stored chart is one more ~25 KB pair in the Tonight cache; the 36 h per-site expiry bounds how many stay.
+- `data-plan` adds one memoised `account_plans` read per Tonight island render (`requireFullPlan`, `src/lib/account-plan/index.ts:19`).
 - Budgets enforced: `finder-stars.json` under 160 KB gzip (Phase 1); no `finder-stars` in `dist/client` (build fails) and `dist/server` JS at most 4,290,555 bytes (Phase 4).
 
 ## Migration Notes
 
-None: no schema change, no stored data. The plan check reads the existing `account_plans` table.
+No schema change. The plan check reads the existing `account_plans` table. The worker's stored index gains optional fields: an index written before this change parses with `target: null` on every copy and no finder pairs, so no cache version bump is needed.
 
 ## References
 
 - Research: `context/changes/finder-chart/research.md`
 - Plan review: `context/changes/finder-chart/reviews/plan-review.md`
 - PRD: FR-037, FR-045, US-05, Invariants, OQ13-16, OQ21, OQ23 (`context/foundation/prd.md:174-188,445,461,576,707-742`)
+- Offline copies: `src/lib/offline/copies.ts`, `src/sw.ts`, `tests/e2e/offline.spec.ts`; star-source comparison: research §9
 - Roadmap S-03 and the F-01 note (`context/foundation/roadmap.md:121-136`)
 - Test-plan §6.4 (`context/foundation/test-plan.md:157-167`)
 - Similar implementation: focused page `src/pages/tonight/planets.astro`, island `src/components/tonight/PlanetsPageContent.astro`, server SVG `src/lib/tonight/altitude-curve.ts:40-79`, star pipeline `scripts/build-stars.mjs`, logged catch `src/lib/tonight/build.ts:1227-1231`, island URL parsing `src/lib/offline/copies.ts:161-171`
@@ -515,7 +606,7 @@ None: no schema change, no stored data. The plan check reads the existing `accou
 #### Manual
 
 - [ ] 3.3 `/design` FinderChart specimens read at 360 px in dark, light and red; circles distinguishable in red
-- [ ] 3.4 The M31 specimen matches a published M31 chart's star pattern, zenith up
+- [ ] 3.4 The M31 specimen matches a published M31 chart's star pattern, facing orientation
 
 ### Phase 4: The finder page behind the full plan
 
@@ -530,18 +621,31 @@ None: no schema change, no stored data. The plan check reads the existing `accou
 
 - [ ] 4.4 Full account opens charts from an object and a planet; back link returns to the right page
 - [ ] 4.5 Free account sees the explainer with the example, no error styling
-- [ ] 4.6 Offline, the Finder chart link is disabled with its description
+- [ ] 4.6 The two action links wrap at 320 px without sideways scroll
 
-### Phase 5: HTTP refusal, e2e and docs
+### Phase 5: Offline finder charts
 
 #### Automated
 
-- [ ] 5.1 `npm run smoke` passes against local Supabase and the preview, including the five finder steps
-- [ ] 5.2 `npx playwright test finder-chart` passes against the preview
-- [ ] 5.3 CI's `smoke` job passes on the PR
+- [ ] 5.1 `npx vitest run src/lib/offline` passes, including the finder copy rules
+- [ ] 5.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [ ] 5.3 `npx playwright test finder-offline offline` passes against the preview
 
 #### Manual
 
-- [ ] 5.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object
-- [ ] 5.5 Owner reviews pending decisions O-1 to O-6
-- [ ] 5.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it; owner answers O-7
+- [ ] 5.4 On a phone, a chart opened online opens offline from the stored Targets page with the stored-copy notice
+- [ ] 5.5 After a demotion and one online Tonight load, the chart is gone offline and from `/offline`
+
+### Phase 6: HTTP refusal, e2e and docs
+
+#### Automated
+
+- [ ] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps
+- [ ] 6.2 `npx playwright test finder-chart` passes against the preview
+- [ ] 6.3 CI's `smoke` job passes on the PR
+
+#### Manual
+
+- [ ] 6.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object
+- [ ] 6.5 The owner's O-6 answer is reflected in the star files, credits and PRD OQ21
+- [ ] 6.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it
