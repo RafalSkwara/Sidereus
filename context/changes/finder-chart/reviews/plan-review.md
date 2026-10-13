@@ -216,3 +216,182 @@
 - **Fix**: Write 4.3, 5.1 and 5.2 as full commands with the env and preview prerequisites. Add a scripted check for the budget, plus `! grep -rl finder-stars dist/client`. Carry `night` through `finderHref` (or note why not). Use the refracted altitude in the context line. List `Attribution` on every star-drawing view.
 - **Recommended resolution**: apply the fix.
 - **Decision**: APPLIED (plan author). 1.1 notes the network; 4.3, 5.1 and 5.2 now spell out the full commands and prerequisites (local Supabase, forecast fixture, preview on 4331), every npm/npx line behind the `nvm use` prefix; 5.3 noted as after-push. New Progress row 4.7 enforces the budget (`! grep -rl finder-stars dist/client`, `dist/server` JS ≤ 4,290,555 bytes) and `build-sw.mjs` fails on a leak. `finderHref` carries `night` (D-8). The context line uses the ranking's refracted `bestDirection`. D-10: every star-drawing view (chart, free example, `/design`) renders `Attribution`.
+
+---
+
+## Re-review 2026-10-13
+
+- **Plan**: context/changes/finder-chart/plan.md (commit 99d8c1f, branch feat/finder-chart), now 6 phases
+- **Scope**: only what the owner's answers changed:
+  - the new Phase 5 "Offline finder charts" (D-13 to D-15);
+  - the renumbered Phase 6;
+  - the O-6 outcome: stay on HYG v4.1, the ESA request (`esa-licence-request.md`), the SAO fallback and "Credit: ESA";
+  - the plan's rule for the shared local Supabase.
+
+  Phases 1-4 and the 2026-10-11 triage (F1-F10 above) were not re-opened. The roadmap edit in the working tree is the author's and was not touched.
+- **Reviewer**: the "reviewer" agent (Opus), independent of the plan's author. The owner is away, so there was no interactive triage. Each finding carries a **Recommended resolution** and `Decision: PENDING`. `change.md` was left alone. **Triage**: F11-F14 applied by the plan author on 2026-10-13 (see each Decision line); F15 needs no action.
+- **Verdict**: NEEDS ATTENTION. Phase 5 fits the existing offline design well:
+  - every rule is a pure function in `copies.ts`;
+  - the index, the purges and the expiry are reused;
+  - there is no next-night copy;
+  - the "never redirects" invariant the worker relies on is preserved.
+
+  Three warnings remain. A failed plan read deletes every stored chart (F11). The "racing demotion" guarantee is overstated (F12). The licence notice under O-6 is incomplete (F13). **No finding needs an owner decision.**
+- **Findings**: 0 critical, 3 warnings, 2 observations
+
+### Verdicts (re-reviewed scope)
+
+| Dimension | Verdict |
+|-----------|---------|
+| Claim Accuracy | WARNING |
+| Substance | PASS |
+| Feasibility | PASS |
+| Sequencing | PASS |
+| Architecture Fit | PASS |
+| Scope Discipline | PASS |
+| Verifiability | PASS |
+| Coverage | WARNING |
+
+### Grounding
+
+- **Offline machinery (read in full)**:
+  - `src/lib/offline/copies.ts`:
+    - `TONIGHT_PAGES`, `NOTICE_PARAMS` `:35`, `tonightPageOf` `:120`, `mayStoreShell` `:128-130`;
+    - `copyMetaFromIsland(html)` `:183`, which sees only the island HTML, not the page;
+    - `commitPair`, keyed `(siteId, page, kind)` and idempotent per island URL, `:252`;
+    - `expire`, per site from the newest copy of the site; `chooseCopy` `:301`; `needsNextCopy`; `listCopies`;
+    - `isCopyMeta`, which requires a `TONIGHT_PAGES` page, `:372`; `parseIndex`.
+  - `src/sw.ts`:
+    - `serial` `:68`, `NETWORK_TIMEOUT_MS = 4000` `:47`;
+    - `commit` (the `needsReset` owner purge) `:321`;
+    - `commitIsland`, which returns before committing when the island has no `[data-offline-copy]`, `:354-368`;
+    - `networkFirst` `:457`, `afterNavigation` `:491`;
+    - the navigation route's sign-in-bounce assumption `:535`;
+    - the auth-POST and signed-out purges.
+  - `OfflineCopy.astro` is rendered by six islands (`TonightContent`, `Targets`, `Plan`, `Moon`, `Planets`, `NightsPageContent`). Research §10 says five, but the plan's change is in the shared component, so this has no effect.
+  - `tests/e2e/offline.spec.ts`'s `Proxy` listens on an ephemeral port (`:28-70`), so two specs using it don't collide.
+  - CI runs the whole e2e suite with `npm run test:e2e` (`ci.yml`), so Phase 6's inline key also covers `finder-offline.spec.ts`.
+- **Plan reads**: `getAccountPlan` turns a failed `account_plans` read into `"free"` without a trace (`src/lib/account-plan/index.ts:22-28`). That is fail-closed by design for access, which matters for F11.
+- **Licence**:
+  - `LICENSE-DATA.md` declares the HYG-derived files "licensed **CC BY-SA 4.0**" with no upstream note.
+  - `Attribution.astro` credits OpenNGC, HYG and Open-Meteo, each with its licence name.
+  - The live sky's star user is `TonightSkyView` (dashboard), and `tonight.astro` renders `Attribution`.
+  - The ESA draft has only placeholders for the owner's details (no personal data), and it is the owner's to send. Agents send nothing.
+- **Shared local Supabase**: the plan's rule is correct and sufficient for this branch.
+  - No phase runs `test:db` or `db:types`.
+  - CI builds a fresh stack from this branch's migrations.
+  - A structure failure on `observing_milestones` is the other branch's table.
+  - The preview port (4331) differs from the other branch's (4333); the fixture port 4400 is shared, read-only.
+- **Commands**: they resolve to real scripts and specs (`npx vitest run src/lib/offline`, `npx playwright test finder-offline offline`, `npm run smoke`). Nothing was run: the e2e and smoke lines need a preview, local Supabase and the fixture, and the reviewer runs nothing that writes.
+- **Sequencing**: Phase 5 uses Phase 4's page, island and `requireFullPlan`. Phase 6's CI change gives the e2e step the key Phase 5's spec needs. CI runs only on the final push, so there is no red intermediate run. The Progress rows (5.1-5.5, 6.1-6.6) match the phase blocks.
+
+### F11 — A failed plan read deletes every stored chart, which the owner's rule doesn't ask for
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — worth pausing; real tradeoff
+- **Dimension**: Coverage
+- **Location**: plan.md D-14; Phase 5.2 (`OfflineCopy` renders `data-plan` from `requireFullPlan`); Phase 5.3 (drop rules a-c)
+- **Detail**:
+  - `requireFullPlan` answers `needs-full` for a free account **and for a failed `account_plans` read**: `readPlan` maps `"error" in result` to `"free"` (`account-plan/index.ts:27`), silently.
+  - That fail-closed rule is right for *showing* a chart. Under D-14 it also *deletes* charts: one failed plan read on any Tonight island render writes `data-plan="free"`, and rule (a) then drops every finder pair. A failed read in the finder shell or island renders `locked`, which triggers rules (b) and (c).
+  - The owner's rule is "disappears at the first online refresh after the account **loses the full plan**". A transient read failure on the way out of the door isn't that. The user then arrives at a dark site with no charts, and nothing records why.
+- **Fix A ⭐ Recommended**: Make the offline signal three-valued.
+  - Add `accountPlanForCopy(locals): Promise<"full" | "free" | "unknown">` to `src/lib/account-plan/` on the same memoised read, so there is still one query per request. It returns `unknown` on a read error and logs it with the fixed-line pattern (`build.ts:1227-1231`, an allowlisted disable).
+  - `OfflineCopy` renders `data-plan` from it. The locked finder shell and the locked island state carry the same value on their `data-finder-state="locked"` root.
+  - The worker drops finder pairs only on an explicit `free`. `IslandCopy.plan` gains `"unknown"`, and a finder pair still commits only on `"full"`.
+  - Tests: `copies.test.ts` (unknown neither drops nor commits a chart) and an `account-plan` unit test (a read error gives `unknown` and leaves `requireFullPlan` failing closed).
+
+  · Strength: implements the owner's rule exactly and keeps access fail-closed. The failure leaves a trace, as the repo's "never hide the evidence" rule asks.
+  · Tradeoff: a small addition to F-01's module and one allowlisted log.
+  · Confidence: HIGH. Traced through `readPlan`, D-14 and `commitIsland`.
+  · Blind spot: how often `account_plans` reads fail in production (unknown; nothing logs them today).
+- **Fix B**: Keep the drop on any non-full answer, and state in D-14, the brief and CLAUDE.md that a failed plan read also clears stored charts, which come back at the next online open.
+  · Strength: no change to F-01.
+  · Tradeoff: charts can vanish with no plan change and no trace.
+  · Confidence: HIGH.
+  · Blind spot: none significant.
+- **Recommended resolution**: Fix A (delegated). It implements the owner's O-4 rule as written, so no new owner question.
+- **Decision**: APPLIED, Fix A (delegated, plan author, 2026-10-13). `accountPlanForCopy(locals)` → `full|free|unknown` on the same memoised read; a failed read is logged once (fixed line + error code, one allowlisted disable in `src/lib/account-plan/index.ts`) and `getAccountPlan`/`requireFullPlan` still fail closed. `OfflineCopy` and both locked roots (shell and island) render `data-plan` from it; `IslandCopy.plan` gains `unknown` (also the reading of a missing value); the worker drops finder pairs only on an explicit `free` (`lockedFinderPlan` replaces the boolean check); a chart commits only on `full`. Tests in `account-plan.test.ts` and `copies.test.ts`. D-14, Phase 5.1-5.3, Critical details updated.
+
+### F12 — "A commit racing a demotion cannot leave a chart behind" is overstated
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Claim Accuracy
+- **Location**: plan.md "Critical Implementation Details › Stored charts follow the plan"; D-14; brief "Phases at a Glance" (Phase 5 key risk)
+- **Detail**:
+  - `serial` (`sw.ts:68`) orders index writes; it doesn't order *renders*. A finder island rendered `full` before the demotion can reach `commitIsland` after a `free` Tonight commit has run `dropFinderCopies`. It then commits, and the chart stays until the next online Tonight or finder answer. Two cases:
+    - two tabs;
+    - the worker's late path (`afterNavigation` with `late`, `sw.ts:491`), which fetches the island after the stored copy was served.
+  - A second, accepted-looking case the plan doesn't mention: on a network slower than `NETWORK_TIMEOUT_MS` (4 s, `sw.ts:47`), a demoted user who opens a stored chart's URL online is first **served the stored chart**. The late network answer (the locked page) drops it only afterwards.
+  - Both cases heal on the next online page, so the rule still holds "eventually", but the plan states it as a guarantee.
+- **Fix**:
+  - Give the index a `freeSince: string | null`, the `preparedAt` of the newest `free` island committed. Both times come from the server, so the clocks agree.
+  - `commitPair` refuses a finder pair whose island `preparedAt` ≤ `freeSince`, and a newer `full` island clears `freeSince`.
+  - Add `copies.test.ts` cases for the stale-full commit and the re-upgrade.
+  - Reword the critical detail to match what is guaranteed.
+  - Record the slow-network case as accepted (inherent to network-first with a timeout), in the plan and the brief's risks.
+- **Recommended resolution**: apply the fix (delegated).
+- **Decision**: APPLIED (delegated, plan author, 2026-10-13). `CopyIndex.freeSince` (the newest `free` island's `preparedAt`; `null` from older indexes): `commitPair` refuses a finder pair prepared at or before it, a newer `full` island clears it; tests for the stale commit and the re-upgrade. The critical detail now states what is guaranteed (no chart rendered before the device last saw `free` survives; gone at the latest on the first online Tonight or finder answer after the demotion) and records the slow-network case as accepted in the plan and the brief's risks.
+
+### F13 — O-6: the licence notice is incomplete, and the SAO wording is stronger than the research
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Coverage
+- **Location**: plan.md Phase 1.4 (LICENSE-DATA, Attribution), D-10, O-6, Phase 6.4 (PRD OQ21), manual 6.5; brief "Star source / licence"
+- **Detail**:
+  - **The repo's licence statement is misleading.** `LICENSE-DATA.md` says the HYG-derived files "are themselves licensed **CC BY-SA 4.0**". With Hipparcos upstream under CC BY-NC 3.0 IGO, that statement in a public repository (both star files are committed) tells third parties they may use the files commercially.
+    - Phase 1.4 only adds `finder-stars*.json` and its filter to that section.
+  - **The credit is short of what the licence asks.** Attribution gains "Hipparcos (Credit: ESA)" with no licence name or link. CC 3.0 licences ask for the licence URI with the credit (§4), and `Attribution.astro` already names each licence ("HYG (CC BY-SA 4.0)").
+  - **"SAO only (NASA NTRS: public use permitted)" is stronger than research §9.1.** That section says the NTRS marking "covers the reports and documentation, not the I/131A file by name, and there is no formal open licence". The §9 table rates SAO commercial use "Not granted". The brief and OQ21 would record a firmer fallback than the evidence supports.
+  - **The landing page (pre-existing, outside this slice).** The signed-out landing shows `public/landing/tonight.png`, a capture of the live sky's Hipparcos-derived stars, with no `Attribution`. This is noted for OQ21 only.
+- **Fix**:
+  - **LICENSE-DATA HYG section.** Add an "Upstream: Hipparcos (ESA)" paragraph:
+    - CC BY-NC 3.0 IGO with its link and "Credit: ESA";
+    - commercial use needs ESA's authorisation; the owner's request is pending;
+    - the CC BY-SA 4.0 grant can't lift the upstream non-commercial condition.
+  - **Attribution.** Render "Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO)", linking https://www.cosmos.esa.int/web/hipparcos/catalogues.
+  - **Fallback wording.** In OQ21 and the brief, write the SAO fallback as "SAO (NASA NTRS marks the reports and documentation 'public use permitted'; no formal licence for the I/131A file; confirm before switching)".
+  - **Manual check 6.5.** Add "LICENSE-DATA names the upstream NC licence".
+  - Confidence MED on the CC §4 reading. This is not legal advice.
+- **Recommended resolution**: apply the fix (delegated; it records the owner's O-6 answer accurately, no new question).
+- **Decision**: APPLIED (delegated, plan author, 2026-10-13). D-10 and Phase 1.4: `LICENSE-DATA.md` gains an "Upstream: Hipparcos (ESA)" paragraph (CC BY-NC 3.0 IGO with link, "Credit: ESA", ESA authorisation pending, the BY-SA grant cannot lift the NC condition); `Attribution` renders "Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO)" linking the ESA catalogue page. The SAO fallback is worded with the §9.1 caveat in O-6, Phase 6 (OQ21) and the brief; the landing image is noted for OQ21; manual check 6.5 includes "LICENSE-DATA names the upstream NC licence".
+
+### F14 — Smaller contract gaps in Phase 5
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Substance
+- **Location**: Phase 5.1-5.5; Phase 6.4 docs
+- **Detail**:
+  - **(a) Page ↔ target check.** "A finder copy needs `plan: "full"` and a target or `copyMetaFromIsland` returns `undefined`", but `copyMetaFromIsland(html)` sees only the island, not which page's shell is pending.
+    - Put the pairing check in one pure function, e.g. `copyMetaFor(shellPage, shellUrl, island)`. It refuses a finder shell whose island has no target, a Tonight shell whose island has one, and a target that differs from the shell URL's `?object=`.
+  - **(b) Canonical target key.** `storedPageOf` must return the canonical key, the output of `parseTargetParam`, so a link with a bare Messier number (`?object=31`, which `parseTargetParam` maps to `M31`) finds the copy stored under the island's `M31`. Test it.
+  - **(c) The extra plan read.** `OfflineCopy`'s plan read is one more sequential round trip at the end of every Tonight island. Start `getAccountPlan(locals)` (memoised) at the beginning of the island's load so it overlaps the Tonight load.
+  - **(d) Docs.** CLAUDE.md says "Full-plan routes and pages call `requireFullPlan`; nothing else queries the table". Phase 6's docs should say that every Tonight island now reads the plan for its offline metadata.
+  - **(e) Running without the key.** Phase 5 and 6 e2e specs without `SUPABASE_SECRET_KEY`: state the behaviour, mirroring D-9 (fail under `CI`, skip locally with the reason). Use a fresh user per test, since the spec demotes it.
+- **Fix**: as listed.
+- **Recommended resolution**: apply the fix.
+- **Decision**: APPLIED (plan author, 2026-10-13). (a) `copyMetaFor(shellPage, shellUrl, islandHtml)` holds the pairing check and the worker commits through it; (b) `storedPageOf` returns `parseTargetParam`'s canonical key, tested with `?object=31` → `M31`; (c) the Tonight islands start `getAccountPlan` at the beginning of their load; (d) Phase 6 docs reword CLAUDE.md's "nothing else queries the table"; (e) the Phase 5 and 6 specs fail under `CI` and skip locally without `SUPABASE_SECRET_KEY`, with a fresh user per test.
+
+### F15 — What the changed parts get right (no action)
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision, narrowly scoped
+- **Dimension**: Architecture Fit
+- **Location**: plan.md D-13 to D-15, Phase 5, Phase 6, O-6, "Shared local Supabase"
+- **Detail**:
+  - **Phase 5 keeps the worker thin.** Every decision is a pure, unit-tested function in `copies.ts`.
+  - **The finder shell never redirects.** That keeps `sw.ts:535`'s "a redirect here is the sign-in bounce" true now that the route matches `storedPageOf`.
+  - **Malformed `?object=` values stay out.** Neither served nor stored, so arbitrary values can't enter the index.
+  - **Only chart states store.** Locked, not-ranked, no-gear and failed states carry no `[data-offline-copy]`.
+  - **Old indexes still load.** They parse with `target: null`, so no cache-version bump is needed.
+  - **Owner, auth-POST, signed-out and 36 h purges cover charts** for free, because they share the index.
+  - **No next-night chart copies**, which avoids doubling the server cost.
+  - **The e2e follows the repo's offline lessons.** It uses the closable proxy, not `setOffline`; it asserts `html[data-from-device]` first; it skips in the no-darkness window; it has no retries.
+  - **Phase 6 renumbering is consistent** across the phase blocks, the Progress rows and the brief.
+  - **O-6 (A) is coherent:**
+    - Phase 1 is unchanged and there is no source-switch phase;
+    - "Credit: ESA" now carries weight;
+    - the ESA request is a draft for the owner to send, and no agent contacts ESA;
+    - the SAO fallback is its own change, before any payment.
+  - **The shared-Supabase rule is right.** No phase here runs `db:types` or `test:db`.
+- **Fix**: none.
+- **Recommended resolution**: none. This is recorded so the impl review doesn't re-open these questions.
+- **Decision**: N/A (no action)
