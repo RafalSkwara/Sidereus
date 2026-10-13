@@ -14,7 +14,7 @@ import FinderLocked from "@/components/finder/FinderLocked.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
-import { requireFullPlan } from "@/lib/account-plan";
+import { accountPlanForCopy, requireFullPlan } from "@/lib/account-plan";
 import { getMessages } from "@/i18n";
 import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
 import { finderBackHref, finderBackLabel, parseFinderFrom } from "@/lib/finder/from";
@@ -36,6 +36,9 @@ const title = target === null ? t.finder.link : t.finder.title({ target: targetL
 const backHref = finderBackHref(from);
 const backLabel = finderBackLabel(from, m);
 const guard = await requireFullPlan(Astro.locals);
+// The locked root's `data-plan` (finder-chart Phase 5): `free`, or `unknown` when the plan read failed. The same
+// memoised read the guard made.
+const plan = guard.ok ? undefined : await accountPlanForCopy(Astro.locals);
 ---
 
 <GearShell title={title} skyFlow>
@@ -64,7 +67,12 @@ const guard = await requireFullPlan(Astro.locals);
     <>
       <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
       <div class="mx-auto w-full max-w-3xl px-4 pt-8">
-        <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} />
+        <FinderLocked
+          example={EXAMPLE_FINDER_CHART}
+          exampleLabels={exampleLabels(locale)}
+          locale={locale}
+          plan={plan}
+        />
       </div>
     </>
   )}

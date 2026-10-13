@@ -4,6 +4,7 @@
 // it references by exact URL (the island URL changes on every render, so a shell replays only with its own island).
 // The index holds site ids and names, never coordinates; nothing here logs.
 import { SKY_CHECKED_PARAM } from "@/lib/sky-checks/redirect";
+import { parseTargetParam } from "@/lib/targets";
 import { isGearId } from "@/lib/tonight/gear-choice";
 
 /** The six Tonight pages, matched exactly: `/tonight/all` (a 301) and any other `/tonight/*` path are not pages. */
@@ -17,6 +18,14 @@ export const TONIGHT_PAGES = [
 ] as const;
 
 export type TonightPage = (typeof TONIGHT_PAGES)[number];
+/**
+ * The finder chart (finder-chart Phase 5): a stored page keyed by its target as well, one pair per site, target and
+ * night kind. It is not a Tonight page: it has no next-night copy and its island says which plan it was rendered for.
+ */
+export const FINDER_PAGE = "/tonight/finder";
+export type StoredPage = TonightPage | typeof FINDER_PAGE;
+/** The plan an island was rendered for (`data-plan`); `unknown` when the plan read failed or the value is missing. */
+export type CopyPlan = "full" | "free" | "unknown";
 /** `next` is the background copy of the evening after tonight (`?night=next`). */
 export type CopyKind = "tonight" | "next";
 /** Which offline notice the stored copy calls for; the page script reveals it (Phase 4). */
@@ -50,11 +59,17 @@ export interface IslandCopy {
   preparedAt: string;
   validUntil: string;
   forecastFetchedAt: string | null;
+  /** The finder chart's canonical target key (`M31`, `jupiter`); `null` on every Tonight page. */
+  target: string | null;
+  /** The target's display name as the island rendered it; `null` with no target. */
+  targetName: string | null;
+  /** Which plan the island was rendered for. Never `"free"` by default: a missing value reads as `"unknown"`. */
+  plan: CopyPlan;
 }
 
 /** One stored pair. Keys and URLs are path + query; times are ISO strings. */
 export interface CopyMeta extends IslandCopy {
-  page: TonightPage;
+  page: StoredPage;
   /** The stored shell's key in the Tonight cache (unique per pair, so a replacement never deletes the new shell). */
   shellKey: string;
   /** The exact island URL the stored shell references; the island response is stored under it. */
@@ -78,6 +93,13 @@ export interface CopyIndex {
   /** The site of the most recently committed `tonight` copy: what a bare `/tonight` means (the remembered cookie). */
   lastSiteId: string | null;
   copies: CopyMeta[];
+  /**
+   * The `preparedAt` of the newest island the device saw rendered for a free account (a server time), or the server's
+   * `Date` of a locked finder answer; `null` when none. A finder pair prepared at or before it is refused, so a chart
+   * rendered before a demotion cannot come back after the demotion cleared the charts (review F12). A newer full
+   * island clears it.
+   */
+  freeSince: string | null;
 }
 
 /** An index change and the cache entries it leaves unreferenced. */
@@ -90,7 +112,7 @@ export interface IndexChange {
 }
 
 export function emptyIndex(userScope: string): CopyIndex {
-  return { userScope, owner: null, lastSiteId: null, copies: [] };
+  return { userScope, owner: null, lastSiteId: null, copies: [], freeSince: null };
 }
 
 /**
@@ -120,13 +142,33 @@ export function shellKeyFor(islandUrl: string): string {
 export function tonightPageOf(url: URL): { page: TonightPage; siteId: string | undefined } | undefined {
   const page = TONIGHT_PAGES.find((candidate) => candidate === url.pathname);
   if (!page) return undefined;
-  const site = url.searchParams.get("site");
-  return { page, siteId: isGearId(site) ? site : undefined };
+  return { page, siteId: siteIdOf(url) };
 }
 
-/** Whether a Tonight shell may be stored: not with a notice param in its URL. */
+function siteIdOf(url: URL): string | undefined {
+  const site = url.searchParams.get("site");
+  return isGearId(site) ? site : undefined;
+}
+
+/**
+ * The stored page a URL is, with its site and target: the six Tonight pages (`target: null`) and the finder chart,
+ * the latter only with an `?object=` that `parseTargetParam` accepts, as its canonical key (`?object=31` is `M31`, so
+ * a link with a bare Messier number finds the copy stored under the island's `M31`; review F14b). Anything else is
+ * `undefined`: neither served from the store nor stored.
+ */
+export function storedPageOf(
+  url: URL,
+): { page: StoredPage; siteId: string | undefined; target: string | null } | undefined {
+  const tonight = tonightPageOf(url);
+  if (tonight) return { ...tonight, target: null };
+  if (url.pathname !== FINDER_PAGE) return undefined;
+  const target = parseTargetParam(url.searchParams.get("object"));
+  return target === null ? undefined : { page: FINDER_PAGE, siteId: siteIdOf(url), target };
+}
+
+/** Whether a shell may be stored: a stored page, not with a notice param in its URL. */
 export function mayStoreShell(url: URL): boolean {
-  return tonightPageOf(url) !== undefined && NOTICE_PARAMS.every((param) => !url.searchParams.has(param));
+  return storedPageOf(url) !== undefined && NOTICE_PARAMS.every((param) => !url.searchParams.has(param));
 }
 
 function decodeEntities(value: string): string {
@@ -193,6 +235,11 @@ export function copyMetaFromIsland(html: string): IslandCopy | undefined {
   if (!isGearId(siteId) || !siteName || !nightDate || !preparedAt || !validUntil) return undefined;
   if (kind !== "tonight" && kind !== "next") return undefined;
   if (!owner || !OWNER.test(owner)) return undefined;
+  // A target the island names must be one that parses: a chart stored under a key nothing can ask for is useless.
+  const rawTarget = element.get("data-target");
+  const rawName = element.get("data-target-name");
+  const target = rawTarget === undefined ? null : parseTargetParam(rawTarget);
+  if (rawTarget !== undefined && target === null) return undefined;
   return {
     owner,
     siteId,
@@ -202,7 +249,49 @@ export function copyMetaFromIsland(html: string): IslandCopy | undefined {
     preparedAt,
     validUntil,
     forecastFetchedAt: isoOrUndefined(element.get("data-forecast-fetched-at")) ?? null,
+    target,
+    targetName: target === null ? null : rawName !== undefined && rawName !== "" ? rawName : target,
+    plan: planOf(element.get("data-plan")),
   };
+}
+
+/** `data-plan` as a plan: only exactly `full` or `free`; a missing or unrecognised value is `unknown`, never `free`. */
+function planOf(value: string | undefined): CopyPlan {
+  return value === "full" || value === "free" ? value : "unknown";
+}
+
+/**
+ * The metadata of a pair to commit, or `undefined` when the shell and its island do not belong together (review
+ * F14a): no metadata at all (signed out), a finder shell whose island has no target or was not rendered for the full
+ * plan, a Tonight shell whose island names a target, or a target other than the shell URL's canonical `?object=`.
+ */
+export function copyMetaFor(shellPage: StoredPage, shellUrl: URL, islandHtml: string): IslandCopy | undefined {
+  const island = copyMetaFromIsland(islandHtml);
+  if (!island) return undefined;
+  if (shellPage !== FINDER_PAGE) return island.target === null ? island : undefined;
+  if (island.target === null || island.plan !== "full") return undefined;
+  return storedPageOf(shellUrl)?.target === island.target ? island : undefined;
+}
+
+/**
+ * What a locked finder state says about the plan: the `data-plan` of the element marked `data-finder-state="locked"`
+ * (the shell's and the island's locked root), `undefined` when the page has no such element. Only `"free"` clears
+ * the stored charts: a missing or unreadable plan (`"unknown"`) clears nothing (review F11).
+ */
+export function lockedFinderPlan(html: string): "free" | "unknown" | undefined {
+  const locked = tagsOf(html, "[a-zA-Z][\\w-]*").find((tag) => tag.get("data-finder-state") === "locked");
+  if (!locked) return undefined;
+  return locked.get("data-plan") === "free" ? "free" : "unknown";
+}
+
+/**
+ * The server's time of an answer from its `Date` header, rounded up to the end of its second (the header has no
+ * milliseconds, so a render later in the same second is not mistaken for a later one); the worker's own clock when
+ * the header is missing. Used as `freeSince` for a locked finder answer, which carries no `preparedAt`.
+ */
+export function answerTime(dateHeader: string | null, now: Date): string {
+  const parsed = dateHeader === null ? Number.NaN : Date.parse(dateHeader);
+  return new Date(Number.isNaN(parsed) ? now.getTime() : parsed + 999).toISOString();
 }
 
 /**
@@ -245,25 +334,63 @@ function changeRemoving(removed: readonly CopyMeta[], next: CopyIndex): IndexCha
   };
 }
 
+/** The later of two optional ISO times (`null` is no time). */
+function laterOf(a: string | null, b: string): string {
+  return a !== null && Date.parse(a) > Date.parse(b) ? a : b;
+}
+
 /**
- * Commits a pair, replacing the previous pair for the same site, page and kind. Idempotent per island URL: the
+ * Commits a pair, replacing the previous pair for the same site, page, target and kind. Idempotent per island URL: the
  * browser may fetch one island twice (the preload and the script), and the second commit changes nothing.
+ *
+ * The plan the island was rendered for moves the index's `freeSince` (finder-chart D-14): an island rendered for a free
+ * account sets it and takes every stored chart with it; a full island prepared after it clears it; `unknown` changes
+ * nothing. A finder pair is refused unless it is a full chart prepared after `freeSince`, so a chart rendered before
+ * the device last saw a free account never comes back (review F11, F12).
  */
 export function commitPair(index: CopyIndex, meta: CopyMeta): IndexChange {
-  if (index.copies.some((copy) => copy.islandUrl === meta.islandUrl)) {
-    return { index, deleteKeys: [], deleteAssets: [] };
+  const unchanged = { index, deleteKeys: [], deleteAssets: [] };
+  if (index.copies.some((copy) => copy.islandUrl === meta.islandUrl)) return unchanged;
+  if (meta.page === FINDER_PAGE) {
+    const stale = index.freeSince !== null && Date.parse(meta.preparedAt) <= Date.parse(index.freeSince);
+    if (meta.plan !== "full" || meta.target === null || stale) return unchanged;
   }
   const replaced = index.copies.filter(
-    (copy) => copy.siteId === meta.siteId && copy.page === meta.page && copy.kind === meta.kind,
+    (copy) =>
+      copy.siteId === meta.siteId && copy.page === meta.page && copy.target === meta.target && copy.kind === meta.kind,
   );
+  const demoted = meta.plan === "free";
+  // A full island prepared after the last free one is the plan's return; an older one proves nothing.
+  const returned =
+    meta.plan === "full" && index.freeSince !== null && Date.parse(meta.preparedAt) > Date.parse(index.freeSince);
+  const removed = demoted
+    ? [...new Set([...replaced, ...index.copies.filter((copy) => copy.page === FINDER_PAGE)])]
+    : replaced;
   const next: CopyIndex = {
     ...index,
     owner: meta.owner,
     // Only a page the user opened moves the remembered site; the next-night copy follows it.
     lastSiteId: meta.kind === "tonight" ? meta.siteId : (index.lastSiteId ?? meta.siteId),
-    copies: [...index.copies.filter((copy) => !replaced.includes(copy)), meta],
+    copies: [...index.copies.filter((copy) => !removed.includes(copy)), meta],
+    freeSince: demoted ? laterOf(index.freeSince, meta.preparedAt) : returned ? null : index.freeSince,
   };
-  return changeRemoving(replaced, next);
+  return changeRemoving(removed, next);
+}
+
+/**
+ * Removes every stored finder pair (the account lost the full plan) and returns its keys and the assets no remaining
+ * pair references. With `freeSince`, also records the time the free plan was seen (the later of it and the index's
+ * own), so a chart rendered before it is refused afterwards. Unchanged when there is nothing to do.
+ */
+export function dropFinderCopies(index: CopyIndex, freeSince?: string): IndexChange {
+  const removed = index.copies.filter((copy) => copy.page === FINDER_PAGE);
+  const since = freeSince === undefined ? index.freeSince : laterOf(index.freeSince, freeSince);
+  if (removed.length === 0 && since === index.freeSince) return { index, deleteKeys: [], deleteAssets: [] };
+  return changeRemoving(removed, {
+    ...index,
+    copies: index.copies.filter((copy) => copy.page !== FINDER_PAGE),
+    freeSince: since,
+  });
 }
 
 /** Adds files a page requested after its pair was committed (imports of imports, fonts) to the given pairs. */
@@ -295,20 +422,24 @@ export function expire(index: CopyIndex, now: Date): IndexChange {
 }
 
 /**
- * The copy to serve for a page at `now`: the requested site, else the last site. Tonight's copy until its
- * `validUntil`; then the next-night copy until its own; then tonight's again, as a night that is over.
+ * The copy to serve for a page at `now`: the requested site, else the last site (and, for a finder chart, the
+ * target). Tonight's copy until its `validUntil`; then the next-night copy until its own; then tonight's again, as a
+ * night that is over.
  */
 export function chooseCopy(
   index: CopyIndex,
-  page: TonightPage,
+  page: StoredPage,
   siteId: string | undefined,
   now: Date,
+  target: string | null = null,
 ): { copy: CopyMeta; notice: CopyNotice } | undefined {
   const { index: live } = expire(index, now);
   const site = siteId ?? live.lastSiteId;
   if (!site) return undefined;
   const find = (kind: CopyKind) =>
-    live.copies.find((copy) => copy.siteId === site && copy.page === page && copy.kind === kind);
+    live.copies.find(
+      (copy) => copy.siteId === site && copy.page === page && copy.target === target && copy.kind === kind,
+    );
   const isValid = (copy: CopyMeta) => now.getTime() < Date.parse(copy.validUntil);
   const tonight = find("tonight");
   const next = find("next");
@@ -318,8 +449,12 @@ export function chooseCopy(
   return stale ? { copy: stale, notice: "stale" } : undefined;
 }
 
-/** Whether committing tonight's copy of a page should also fetch its next-night copy: none, or one 1 h old or more. */
-export function needsNextCopy(index: CopyIndex, siteId: string, page: TonightPage, now: Date): boolean {
+/**
+ * Whether committing tonight's copy of a page should also fetch its next-night copy: none, or one 1 h old or more.
+ * Never for a finder chart: each would cost a second chart build for a night the user did not ask about (D-13).
+ */
+export function needsNextCopy(index: CopyIndex, siteId: string, page: StoredPage, now: Date): boolean {
+  if (page === FINDER_PAGE) return false;
   const next = index.copies.find((copy) => copy.siteId === siteId && copy.page === page && copy.kind === "next");
   return !next || now.getTime() - Date.parse(next.storedAt) >= NEXT_REFRESH_MS;
 }
@@ -328,30 +463,53 @@ export function needsNextCopy(index: CopyIndex, siteId: string, page: TonightPag
 export interface ListedCopy {
   siteId: string;
   siteName: string;
-  page: TonightPage;
+  page: StoredPage;
+  /** The finder chart's canonical target key; `null` for a Tonight page. */
+  target: string | null;
+  /** The finder chart's target name as it was rendered; `null` for a Tonight page. */
+  targetName: string | null;
   kind: CopyKind;
   nightDate: string;
   preparedAt: string;
   notice: CopyNotice;
 }
 
+const LISTED_PAGES: readonly StoredPage[] = [...TONIGHT_PAGES, FINDER_PAGE];
+
+/** The copies the `/offline` page lists: per site the six pages, then one entry per stored chart, ordered by name. */
 export function listCopies(index: CopyIndex, now: Date): ListedCopy[] {
   const { index: live } = expire(index, now);
   const sites = [...new Set(live.copies.map((copy) => copy.siteId))];
   return sites
-    .flatMap((siteId) => TONIGHT_PAGES.map((page) => chooseCopy(live, page, siteId, now)))
+    .flatMap((siteId) => {
+      const charts = [
+        ...new Set(
+          live.copies.filter((copy) => copy.siteId === siteId && copy.page === FINDER_PAGE).map((c) => c.target),
+        ),
+      ];
+      return [
+        ...TONIGHT_PAGES.map((page) => chooseCopy(live, page, siteId, now)),
+        ...charts.map((target) => chooseCopy(live, FINDER_PAGE, siteId, now, target)),
+      ];
+    })
     .filter((choice) => choice !== undefined)
     .map(({ copy, notice }) => ({
       siteId: copy.siteId,
       siteName: copy.siteName,
       page: copy.page,
+      target: copy.target,
+      targetName: copy.targetName,
       kind: copy.kind,
       nightDate: copy.nightDate,
       preparedAt: copy.preparedAt,
       notice,
     }))
     .sort(
-      (a, b) => a.siteName.localeCompare(b.siteName) || TONIGHT_PAGES.indexOf(a.page) - TONIGHT_PAGES.indexOf(b.page),
+      (a, b) =>
+        a.siteName.localeCompare(b.siteName) ||
+        LISTED_PAGES.indexOf(a.page) - LISTED_PAGES.indexOf(b.page) ||
+        (a.targetName ?? "").localeCompare(b.targetName ?? "") ||
+        (a.target ?? "").localeCompare(b.target ?? ""),
     );
 }
 
@@ -375,14 +533,29 @@ function isCopyMeta(value: unknown): value is CopyMeta {
   const strings = ["owner", "siteId", "siteName", "nightDate", "shellKey", "islandUrl"];
   // An unreadable time would never expire (`expire` compares numbers): such a copy is dropped instead.
   const times = ["preparedAt", "validUntil", "storedAt"];
+  const stored =
+    TONIGHT_PAGES.includes(copy.page as TonightPage) ||
+    // A chart is keyed by its target: without one it could never be asked for.
+    (copy.page === FINDER_PAGE && typeof copy.target === "string");
   return (
     strings.every((key) => typeof copy[key] === "string") &&
     times.every((key) => isTime(copy[key])) &&
     (copy.kind === "tonight" || copy.kind === "next") &&
-    TONIGHT_PAGES.includes(copy.page as TonightPage) &&
+    stored &&
     Array.isArray(copy.assets) &&
     copy.assets.every((asset) => typeof asset === "string")
   );
+}
+
+/** A stored copy read back; one written before finder charts has no target, name or plan (`null`, `null`, `unknown`). */
+function withDefaults(copy: CopyMeta): CopyMeta {
+  const stored = copy as Partial<CopyMeta>;
+  return {
+    ...copy,
+    target: typeof stored.target === "string" ? stored.target : null,
+    targetName: typeof stored.targetName === "string" ? stored.targetName : null,
+    plan: planOf(stored.plan),
+  };
 }
 
 /** The stored index read back, or `undefined` when it is missing or not one (the worker then starts a new one). */
@@ -394,6 +567,7 @@ export function parseIndex(value: unknown): CopyIndex | undefined {
     userScope: index.userScope,
     owner: typeof index.owner === "string" ? index.owner : null,
     lastSiteId: typeof index.lastSiteId === "string" ? index.lastSiteId : null,
-    copies: index.copies.filter(isCopyMeta),
+    copies: index.copies.filter(isCopyMeta).map(withDefaults),
+    freeSince: isTime(index.freeSince) ? (index.freeSince as string) : null,
   };
 }

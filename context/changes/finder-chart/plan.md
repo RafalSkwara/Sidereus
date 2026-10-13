@@ -576,33 +576,33 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical — 83ba064
-- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts` — 83ba064
-- [x] 1.3 `npm run lint` and `npx astro check` pass — 83ba064
-- [x] 1.4 `finder-stars.json` gzips under 160,000 bytes — 83ba064
+- [x] 1.1 `npm run stars:build` writes both star files and leaves `bright-stars*.json` byte-identical — aa14caa
+- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including `finder-stars.test.ts` — aa14caa
+- [x] 1.3 `npm run lint` and `npx astro check` pass — aa14caa
+- [x] 1.4 `finder-stars.json` gzips under 160,000 bytes — aa14caa
 
 #### Manual
 
-- [x] 1.5 Spot-check five stars against the HYG CSV row — 83ba064
+- [x] 1.5 Spot-check five stars against the HYG CSV row — aa14caa
 
 ### Phase 2: Engine: starting star, hop and projection
 
 #### Automated
 
-- [x] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts` — a7685fd
-- [x] 2.2 `npm run lint` and `npx astro check` pass — a7685fd
-- [x] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here): measured 100 % hop at Bortle 3 (373 of 373, Warsaw, four fixed nights), gate 97 % — a7685fd
+- [x] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts` — ed27879
+- [x] 2.2 `npm run lint` and `npx astro check` pass — ed27879
+- [x] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here): measured 100 % hop at Bortle 3 (373 of 373, Warsaw, four fixed nights), gate 97 % — ed27879
 
 #### Manual
 
-- [x] 2.3 Reference hops for M31, M13 and M57 look like the published routes — a7685fd
+- [x] 2.3 Reference hops for M31, M13 and M57 look like the published routes — ed27879
 
 ### Phase 3: Chart rendering
 
 #### Automated
 
-- [x] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes — 16fd3f7
-- [x] 3.2 `npm run lint` and `npx astro check` pass — 16fd3f7
+- [x] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes — 0cc2497
+- [x] 3.2 `npm run lint` and `npx astro check` pass — 0cc2497
 
 #### Manual
 
@@ -613,10 +613,10 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 4.1 `npm test` passes, including the `loadFinderFor` plan-guard tests
-- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 4.3 `tonight-phone` and `tonight-targets` e2e specs stay green
-- [x] 4.7 Bundle budget: no `finder-stars` in `dist/client`, `dist/server` JS at most 4,290,555 bytes
+- [x] 4.1 `npm test` passes, including the `loadFinderFor` plan-guard tests — 8442e8e
+- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass — 8442e8e
+- [x] 4.3 `tonight-phone` and `tonight-targets` e2e specs stay green — 8442e8e
+- [x] 4.7 Bundle budget: no `finder-stars` in `dist/client`, `dist/server` JS at most 4,290,555 bytes — 8442e8e (after the rebase onto e7b8c49: main builds to 3,881,438 bytes and this branch to 4,306,138, so the finder adds 424,700, within the +500 KB intent)
 
 #### Manual
 
@@ -628,9 +628,9 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [ ] 5.1 `npx vitest run src/lib/offline` passes, including the finder copy rules
-- [ ] 5.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 5.3 `npx playwright test finder-offline offline` passes against the preview
+- [x] 5.1 `npx vitest run src/lib/offline` passes, including the finder copy rules
+- [x] 5.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 5.3 `npx playwright test finder-offline offline` passes against the preview
 
 #### Manual
 

@@ -17,6 +17,7 @@ import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
+import { getAccountPlan } from "@/lib/account-plan";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { MAX_RANKED_OBJECTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
@@ -51,6 +52,8 @@ const { objectDetailLine } = createFormatter(locale);
 const a = t.all;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
+// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
+void getAccountPlan(Astro.locals);
 // Signed out, `load` is null and the island renders nothing. Every cleared object gets a full entry.
 const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, limit: Number.POSITIVE_INFINITY });
 const view = load?.view ?? null;

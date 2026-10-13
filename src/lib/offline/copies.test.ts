@@ -1,20 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
   EXPIRY_MS,
+  FINDER_PAGE,
   INDEX_KEY,
   NEXT_REFRESH_MS,
   OFFLINE_PAGE,
   addAssets,
+  answerTime,
   assetUrlsIn,
   chooseCopy,
   commitPair,
+  copyMetaFor,
   copyMetaFromIsland,
+  dropFinderCopies,
   emptyIndex,
   expire,
   holdsUserData,
   islandUrlFromShell,
   isSignedOutPage,
   listCopies,
+  lockedFinderPlan,
   markFromDevice,
   mayStoreShell,
   needsNextCopy,
@@ -23,6 +28,7 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
+  storedPageOf,
   tonightPageOf,
   type CopyIndex,
   type CopyMeta,
@@ -48,12 +54,20 @@ function copy(overrides: Partial<CopyMeta> = {}): CopyMeta {
     preparedAt: "2026-10-05T19:00:00.000Z",
     validUntil: "2026-10-06T04:30:00.000Z",
     forecastFetchedAt: null,
+    target: null,
+    targetName: null,
+    plan: "full",
     shellKey: shellKeyFor(islandUrl),
     islandUrl,
     storedAt: "2026-10-05T19:00:00.000Z",
     assets: [],
     ...overrides,
   };
+}
+
+/** A stored finder chart for `target` (its island URL is unique per call unless given). */
+function chart(target: string, overrides: Partial<CopyMeta> = {}): CopyMeta {
+  return copy({ page: FINDER_PAGE, target, targetName: target, ...overrides });
 }
 
 function indexOf(...copies: CopyMeta[]): CopyIndex {
@@ -84,12 +98,53 @@ describe("tonightPageOf", () => {
   });
 });
 
+describe("storedPageOf", () => {
+  it("is each Tonight page with no target", () => {
+    expect(storedPageOf(url(`/tonight/plan?site=${SITE_A}&object=M31`))).toEqual({
+      page: "/tonight/plan",
+      siteId: SITE_A,
+      target: null,
+    });
+    expect(storedPageOf(url("/tonight"))).toEqual({ page: "/tonight", siteId: undefined, target: null });
+  });
+
+  it("is the finder chart with its site and the object's key", () => {
+    expect(storedPageOf(url(`/tonight/finder?object=M31&from=targets&site=${SITE_A}&telescope=x&night=next`))).toEqual({
+      page: FINDER_PAGE,
+      siteId: SITE_A,
+      target: "M31",
+    });
+    expect(storedPageOf(url("/tonight/finder?object=jupiter"))?.target).toBe("jupiter");
+    expect(storedPageOf(url("/tonight/finder?object=NGC869"))?.target).toBe("NGC869");
+  });
+
+  it("reads a bare Messier number as the island's canonical key (F14b)", () => {
+    expect(storedPageOf(url("/tonight/finder?object=31"))?.target).toBe("M31");
+  });
+
+  it.each(["/tonight/finder", "/tonight/finder?object=", "/tonight/finder?object=M0", "/tonight/finder?object=M31x"])(
+    "is none for the finder chart without a valid object (%s)",
+    (path) => {
+      expect(storedPageOf(url(path))).toBeUndefined();
+    },
+  );
+
+  it.each(["/tonight/finder/extra?object=M31", "/tonight/all", "/log"])("is none for %s", (path) => {
+    expect(storedPageOf(url(path))).toBeUndefined();
+  });
+
+  it("leaves tonightPageOf at its six pages", () => {
+    expect(tonightPageOf(url("/tonight/finder?object=M31"))).toBeUndefined();
+  });
+});
+
 describe("mayStoreShell", () => {
   it.each([
     "/tonight",
     `/tonight/moon?site=${SITE_A}`,
     "/tonight/targets?sort=name&telescope=x",
     "/tonight?night=next",
+    "/tonight/finder?object=M13&from=targets",
   ])("stores %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(true);
   });
@@ -101,6 +156,8 @@ describe("mayStoreShell", () => {
     "/tonight/planets?logged=jupiter&milestone=first-planet",
     "/tonight/plan?error=errors.generic",
     "/tonight/all",
+    "/tonight/finder",
+    "/tonight/finder?object=M13&error=errors.generic",
     "/log",
   ])("refuses %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(false);
@@ -136,7 +193,33 @@ describe("copyMetaFromIsland", () => {
       preparedAt: "2026-10-05T19:00:00.000Z",
       validUntil: "2026-10-06T04:30:00.000Z",
       forecastFetchedAt: "2026-10-05T18:00:00.000Z",
+      target: null,
+      targetName: null,
+      plan: "unknown",
     });
+  });
+
+  it("reads the plan, and a missing or unrecognised one as unknown, never free (F11)", () => {
+    expect(copyMetaFromIsland(island(`${full} data-plan="full"`))?.plan).toBe("full");
+    expect(copyMetaFromIsland(island(`${full} data-plan="free"`))?.plan).toBe("free");
+    expect(copyMetaFromIsland(island(`${full} data-plan="platinum"`))?.plan).toBe("unknown");
+    expect(copyMetaFromIsland(island(full))?.plan).toBe("unknown");
+  });
+
+  it("reads the target and its name, and takes the key as the name when the name is missing", () => {
+    expect(copyMetaFromIsland(island(`${full} data-target="M13" data-target-name="M13"`))).toMatchObject({
+      target: "M13",
+      targetName: "M13",
+    });
+    expect(copyMetaFromIsland(island(`${full} data-target="jupiter" data-target-name="Jowisz"`))).toMatchObject({
+      target: "jupiter",
+      targetName: "Jowisz",
+    });
+    expect(copyMetaFromIsland(island(`${full} data-target="31"`))).toMatchObject({ target: "M31", targetName: "M31" });
+  });
+
+  it("is none for a target that does not parse", () => {
+    expect(copyMetaFromIsland(island(`${full} data-target="not-a-target"`))).toBeUndefined();
   });
 
   it("keeps a missing forecast time as null", () => {
@@ -158,6 +241,87 @@ describe("copyMetaFromIsland", () => {
     expect(copyMetaFromIsland(island(full.replace(/data-owner="[^"]*" /, "")))).toBeUndefined();
     expect(copyMetaFromIsland(island(full.replace(OWNER_A, "user@example.com")))).toBeUndefined();
     expect(copyMetaFromIsland(island(full.replace(OWNER_A, SITE_A)))).toBeUndefined();
+  });
+});
+
+describe("copyMetaFor", () => {
+  const attributes = (extra: string) =>
+    `data-owner="${OWNER_A}" data-site-id="${SITE_A}" data-site-name="Backyard" data-night-date="2026-10-05" data-kind="tonight" data-prepared-at="2026-10-05T19:00:00.000Z" data-valid-until="2026-10-06T04:30:00.000Z" ${extra}`;
+  const island = (extra: string) => `<div hidden data-offline-copy ${attributes(extra)}></div>`;
+  const chartIsland = island('data-plan="full" data-target="M13" data-target-name="M13"');
+  const shell = (path: string) => url(path);
+
+  it("pairs a Tonight shell with an island that has no target, whatever its plan", () => {
+    expect(copyMetaFor("/tonight/plan", shell("/tonight/plan"), island('data-plan="full"'))?.plan).toBe("full");
+    expect(copyMetaFor("/tonight/plan", shell("/tonight/plan"), island('data-plan="free"'))?.plan).toBe("free");
+    expect(copyMetaFor("/tonight/plan", shell("/tonight/plan"), island('data-plan="unknown"'))?.plan).toBe("unknown");
+  });
+
+  it("pairs a finder shell with a full chart island of the same target (also by a bare number)", () => {
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=M13&from=targets"), chartIsland)?.target).toBe("M13");
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=13"), chartIsland)?.target).toBe("M13");
+  });
+
+  it("refuses the three mismatches (F14a)", () => {
+    // A Tonight shell whose island names a target.
+    expect(copyMetaFor("/tonight/targets", shell("/tonight/targets"), chartIsland)).toBeUndefined();
+    // A finder shell whose island has no target.
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=M13"), island('data-plan="full"'))).toBeUndefined();
+    // A target other than the shell URL's.
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=M31"), chartIsland)).toBeUndefined();
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder"), chartIsland)).toBeUndefined();
+  });
+
+  it("refuses a finder island that was not rendered for the full plan (F11)", () => {
+    for (const plan of ["free", "unknown", "platinum"]) {
+      const html = island(`data-plan="${plan}" data-target="M13" data-target-name="M13"`);
+      expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=M13"), html)).toBeUndefined();
+    }
+    expect(copyMetaFor(FINDER_PAGE, shell("/tonight/finder?object=M13"), island('data-target="M13"'))).toBeUndefined();
+  });
+
+  it("is none for an island with no metadata (signed out)", () => {
+    expect(copyMetaFor("/tonight", shell("/tonight"), "")).toBeUndefined();
+  });
+});
+
+describe("lockedFinderPlan", () => {
+  const locked = (attributes: string) =>
+    `<main><section class="space-y-6" data-finder-state="locked" ${attributes} aria-labelledby="x"><h2>…</h2></section></main>`;
+
+  it("reads the plan of the locked root, in the island and in the shell alike", () => {
+    expect(lockedFinderPlan(locked('data-plan="free"'))).toBe("free");
+    expect(lockedFinderPlan('<html><body><div data-finder-state="locked" data-plan="free"></div></body></html>')).toBe(
+      "free",
+    );
+  });
+
+  it("reads a missing or other plan as unknown, which drops nothing (F11)", () => {
+    expect(lockedFinderPlan(locked(""))).toBe("unknown");
+    expect(lockedFinderPlan(locked('data-plan="unknown"'))).toBe("unknown");
+    expect(lockedFinderPlan(locked('data-plan="full"'))).toBe("unknown");
+  });
+
+  it("is none without a locked root", () => {
+    expect(
+      lockedFinderPlan('<div data-finder-state="chart" data-finder-chart data-plan="free"></div>'),
+    ).toBeUndefined();
+    expect(lockedFinderPlan('<p data-plan="free">data-finder-state="locked"</p>')).toBeUndefined();
+    expect(lockedFinderPlan("")).toBeUndefined();
+  });
+});
+
+describe("answerTime", () => {
+  it("is the server's Date header rounded up to the end of its second", () => {
+    expect(answerTime("Tue, 13 Oct 2026 12:00:03 GMT", new Date("2030-01-01T00:00:00.000Z"))).toBe(
+      "2026-10-13T12:00:03.999Z",
+    );
+  });
+
+  it("falls back to the worker's clock without a readable header", () => {
+    const now = new Date("2026-10-13T12:00:00.000Z");
+    expect(answerTime(null, now)).toBe(now.toISOString());
+    expect(answerTime("soon", now)).toBe(now.toISOString());
   });
 });
 
@@ -235,6 +399,124 @@ describe("commitPair", () => {
     const start = indexOf(copy({ siteId: SITE_A }));
     expect(commitPair(start, copy({ siteId: SITE_B, kind: "next" })).index.lastSiteId).toBe(SITE_A);
     expect(commitPair(start, copy({ siteId: SITE_B })).index.lastSiteId).toBe(SITE_B);
+  });
+});
+
+describe("commitPair for finder charts", () => {
+  it("keeps M31 and M13 side by side and replaces M31's older pair only", () => {
+    const m31 = chart("M31", { assets: ["/_astro/old.css", "/_astro/shared.js"] });
+    const m13 = chart("M13");
+    const tonight = copy({ page: "/tonight/targets" });
+    const fresh = chart("M31", { assets: ["/_astro/shared.js"] });
+    const { index, deleteKeys, deleteAssets } = commitPair(indexOf(m31, m13, tonight), fresh);
+    expect(index.copies).toEqual([m13, tonight, fresh]);
+    expect(deleteKeys).toEqual([m31.shellKey, m31.islandUrl]);
+    expect(deleteAssets).toEqual(["/_astro/old.css"]);
+  });
+
+  it("keys a chart by site and kind too", () => {
+    const base = chart("M31");
+    const { index } = commitPair(indexOf(base), chart("M31", { siteId: SITE_B }));
+    expect(index.copies).toHaveLength(2);
+    expect(commitPair(index, chart("M31", { kind: "next" })).index.copies).toHaveLength(3);
+  });
+
+  it("never lets a chart replace a Tonight page, or the other way round", () => {
+    const targets = copy({ page: "/tonight/targets" });
+    const { index } = commitPair(indexOf(targets), chart("M31"));
+    expect(index.copies).toHaveLength(2);
+    expect(commitPair(index, copy({ page: "/tonight/targets" })).index.copies).toHaveLength(2);
+  });
+
+  it("refuses a chart that is not a full one with a target", () => {
+    const start = indexOf(copy());
+    for (const refused of [
+      chart("M31", { plan: "free" }),
+      chart("M31", { plan: "unknown" }),
+      chart("M31", { target: null }),
+    ]) {
+      expect(commitPair(start, refused).index).toBe(start);
+    }
+  });
+
+  it("refuses a stale full chart after freeSince, and a newer full island clears it (F12)", () => {
+    const demoted: CopyIndex = { ...indexOf(copy()), freeSince: "2026-10-05T19:30:00.000Z" };
+    const stale = chart("M31", { preparedAt: "2026-10-05T19:30:00.000Z" });
+    expect(commitPair(demoted, stale).index).toBe(demoted);
+    expect(commitPair(demoted, chart("M31", { preparedAt: "2026-10-05T19:29:59.999Z" })).index).toBe(demoted);
+
+    // The plan returns: a full chart prepared after freeSince is stored and clears it.
+    const back = commitPair(demoted, chart("M31", { preparedAt: "2026-10-05T19:30:00.001Z" })).index;
+    expect(back.freeSince).toBeNull();
+    expect(back.copies.filter((c) => c.page === FINDER_PAGE)).toHaveLength(1);
+  });
+
+  it("clears freeSince with a newer full Tonight island, and not with an older one", () => {
+    const demoted: CopyIndex = { ...indexOf(copy()), freeSince: "2026-10-05T19:30:00.000Z" };
+    const older = commitPair(demoted, copy({ page: "/tonight/plan", preparedAt: "2026-10-05T19:00:00.000Z" })).index;
+    expect(older.freeSince).toBe("2026-10-05T19:30:00.000Z");
+    expect(older.copies).toHaveLength(2);
+    const newer = commitPair(demoted, copy({ page: "/tonight/plan", preparedAt: "2026-10-05T19:31:00.000Z" })).index;
+    expect(newer.freeSince).toBeNull();
+  });
+
+  it("an island rendered for a free account is committed, sets freeSince and takes every chart with it (D-14a)", () => {
+    const m31 = chart("M31", { assets: ["/_astro/chart.js", "/_astro/shared.js"] });
+    const m13 = chart("M13");
+    const plan = copy({ page: "/tonight/plan", assets: ["/_astro/shared.js"] });
+    const free = copy({ page: "/tonight/targets", plan: "free", preparedAt: "2026-10-05T20:00:00.000Z" });
+    const { index, deleteKeys, deleteAssets } = commitPair(indexOf(m31, m13, plan), free);
+    expect(index.copies).toEqual([plan, free]);
+    expect(index.freeSince).toBe("2026-10-05T20:00:00.000Z");
+    expect(deleteKeys).toEqual([m31.shellKey, m31.islandUrl, m13.shellKey, m13.islandUrl]);
+    expect(deleteAssets).toEqual(["/_astro/chart.js"]);
+  });
+
+  it("keeps the later freeSince when an older free island arrives", () => {
+    const start: CopyIndex = { ...indexOf(copy()), freeSince: "2026-10-05T21:00:00.000Z" };
+    const { index } = commitPair(
+      start,
+      copy({ page: "/tonight/moon", plan: "free", preparedAt: "2026-10-05T20:00:00.000Z" }),
+    );
+    expect(index.freeSince).toBe("2026-10-05T21:00:00.000Z");
+  });
+
+  it("an unknown plan commits a Tonight pair and drops nothing (F11)", () => {
+    const m31 = chart("M31");
+    const { index, deleteKeys } = commitPair(indexOf(m31), copy({ page: "/tonight/moon", plan: "unknown" }));
+    expect(index.copies).toHaveLength(2);
+    expect(index.copies).toContain(m31);
+    expect(index.freeSince).toBeNull();
+    expect(deleteKeys).toEqual([]);
+  });
+});
+
+describe("dropFinderCopies", () => {
+  it("removes only finder pairs and keeps an asset a Tonight pair still references", () => {
+    const m31 = chart("M31", { assets: ["/_astro/chart.js", "/_astro/shared.js"] });
+    const m13 = chart("M13", { siteId: SITE_B, assets: ["/_astro/chart.js"] });
+    const plan = copy({ page: "/tonight/plan", assets: ["/_astro/shared.js"] });
+    const { index, deleteKeys, deleteAssets } = dropFinderCopies(indexOf(plan, m31, m13));
+    expect(index.copies).toEqual([plan]);
+    expect(deleteKeys).toEqual([m31.shellKey, m31.islandUrl, m13.shellKey, m13.islandUrl]);
+    expect(deleteAssets).toEqual(["/_astro/chart.js"]);
+    expect(index.freeSince).toBeNull();
+  });
+
+  it("is the same index when there is no chart", () => {
+    const start = indexOf(copy());
+    const change = dropFinderCopies(start);
+    expect(change.index).toBe(start);
+    expect(change.deleteKeys).toEqual([]);
+    expect(change.deleteAssets).toEqual([]);
+  });
+
+  it("records the time the free plan was seen, never moving it back", () => {
+    const start = indexOf(copy());
+    const first = dropFinderCopies(start, "2026-10-05T20:00:00.000Z").index;
+    expect(first.freeSince).toBe("2026-10-05T20:00:00.000Z");
+    expect(dropFinderCopies(first, "2026-10-05T19:00:00.000Z").index).toBe(first);
+    expect(dropFinderCopies(first, "2026-10-05T21:00:00.000Z").index.freeSince).toBe("2026-10-05T21:00:00.000Z");
   });
 });
 
@@ -371,11 +653,53 @@ describe("chooseCopy", () => {
   });
 });
 
+describe("chooseCopy for finder charts", () => {
+  const m31 = chart("M31", { islandUrl: "/_server-islands/F?e=m31" });
+  const m13 = chart("M13", { islandUrl: "/_server-islands/F?e=m13" });
+  const before = new Date(Date.parse(m31.validUntil) - 1);
+  const after = new Date(m31.validUntil);
+
+  it("serves the chart of the asked target, prepared before its validUntil", () => {
+    expect(chooseCopy(indexOf(m31, m13), FINDER_PAGE, SITE_A, before, "M13")).toEqual({
+      copy: m13,
+      notice: "prepared",
+    });
+    expect(chooseCopy(indexOf(m31, m13), FINDER_PAGE, SITE_A, before, "M31")?.copy).toBe(m31);
+  });
+
+  it("serves the chart as stale once its night is over, as the Tonight pages do", () => {
+    expect(chooseCopy(indexOf(m31), FINDER_PAGE, SITE_A, after, "M31")).toEqual({ copy: m31, notice: "stale" });
+  });
+
+  it("is none for a target never stored, a missing target, or another site", () => {
+    expect(chooseCopy(indexOf(m31), FINDER_PAGE, SITE_A, before, "M13")).toBeUndefined();
+    expect(chooseCopy(indexOf(m31), FINDER_PAGE, SITE_A, before)).toBeUndefined();
+    expect(chooseCopy(indexOf(m31), FINDER_PAGE, SITE_B, before, "M31")).toBeUndefined();
+  });
+
+  it("never mixes charts and Tonight pages", () => {
+    const targets = copy({ page: "/tonight/targets" });
+    expect(chooseCopy(indexOf(m31, targets), "/tonight/targets", SITE_A, before)?.copy).toBe(targets);
+    expect(chooseCopy(indexOf(targets), FINDER_PAGE, SITE_A, before, "M31")).toBeUndefined();
+  });
+
+  it("never serves an expired site's chart", () => {
+    expect(
+      chooseCopy(indexOf(m31), FINDER_PAGE, SITE_A, new Date(Date.parse(m31.storedAt) + EXPIRY_MS), "M31"),
+    ).toBeUndefined();
+  });
+});
+
 describe("needsNextCopy", () => {
   const now = new Date("2026-10-05T21:00:00.000Z");
 
   it("fetches a missing next-night copy", () => {
     expect(needsNextCopy(indexOf(copy()), SITE_A, "/tonight", now)).toBe(true);
+  });
+
+  it("is false for a finder chart, whatever is stored (no next-night copy of a chart, D-13)", () => {
+    expect(needsNextCopy(indexOf(chart("M31")), SITE_A, FINDER_PAGE, now)).toBe(false);
+    expect(needsNextCopy(emptyIndex("s"), SITE_A, FINDER_PAGE, now)).toBe(false);
   });
 
   it("refreshes one 1 h old or more, not a younger one", () => {
@@ -400,6 +724,27 @@ describe("listCopies", () => {
       ["Backyard", "/tonight/plan", "tonight", "prepared"],
     ]);
   });
+
+  it("lists one entry per site and chart after the six pages, ordered by the chart's name", () => {
+    const now = new Date("2026-10-05T21:00:00.000Z");
+    const index = indexOf(
+      chart("M31", { targetName: "M31" }),
+      chart("jupiter", { targetName: "Jowisz" }),
+      chart("M13", { targetName: "M13" }),
+      chart("M13", { kind: "next", nightDate: "2026-10-06" }),
+      copy({ page: "/tonight/targets" }),
+      chart("M13", { siteId: SITE_B, siteName: "Alpine hut" }),
+    );
+    expect(
+      listCopies(index, now).map(({ siteName, page, target, targetName }) => [siteName, page, target, targetName]),
+    ).toEqual([
+      ["Alpine hut", FINDER_PAGE, "M13", "M13"],
+      ["Backyard", "/tonight/targets", null, null],
+      ["Backyard", FINDER_PAGE, "jupiter", "Jowisz"],
+      ["Backyard", FINDER_PAGE, "M13", "M13"],
+      ["Backyard", FINDER_PAGE, "M31", "M31"],
+    ]);
+  });
 });
 
 describe("referenced keys", () => {
@@ -418,7 +763,30 @@ describe("parseIndex", () => {
         JSON.stringify({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good, { page: "/x" }] }),
       ),
     );
-    expect(parsed).toEqual({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good] });
+    expect(parsed).toEqual({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [good], freeSince: null });
+  });
+
+  it("reads an index written before finder charts: no target, name, plan or freeSince", () => {
+    const { target: _target, targetName: _name, plan: _plan, ...old } = copy();
+    const parsed = parseIndex({ userScope: "s", owner: OWNER_A, lastSiteId: SITE_A, copies: [old] });
+    expect(parsed?.freeSince).toBeNull();
+    expect(parsed?.copies).toEqual([copy({ ...old, plan: "unknown" })]);
+    expect(parsed?.copies[0]).toMatchObject({ target: null, targetName: null, plan: "unknown" });
+  });
+
+  it("keeps a chart and a readable freeSince, and drops a chart with no target or an unreadable freeSince", () => {
+    const m31 = chart("M31");
+    const { target: _target, ...noTarget } = chart("M13");
+    const parsed = parseIndex({
+      userScope: "s",
+      owner: OWNER_A,
+      lastSiteId: SITE_A,
+      copies: [m31, noTarget],
+      freeSince: "2026-10-05T20:00:00.000Z",
+    });
+    expect(parsed?.copies).toEqual([m31]);
+    expect(parsed?.freeSince).toBe("2026-10-05T20:00:00.000Z");
+    expect(parseIndex({ userScope: "s", copies: [], freeSince: "soon" })?.freeSince).toBeNull();
   });
 
   it("reads an index stored without an owner as unowned", () => {

@@ -43,6 +43,10 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     count: 1,
     reason: "the milestone failure trace: a fixed line and the error's and its cause's names, never a message",
   },
+  "src/lib/account-plan/index.ts": {
+    count: 1,
+    reason: "the failed plan read's trace: a fixed line only, nothing from the request or the database error",
+  },
   "src/lib/finder/load.ts": {
     count: 2,
     reason:

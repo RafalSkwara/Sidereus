@@ -5,14 +5,18 @@
 // protect `/_server-islands/*`: a free or signed-out request gets only the locked explainer here.
 // Every state's root carries `data-finder-state="chart|locked|not-ranked|no-gear|failed"`; only the chart state's
 // root carries `data-finder-chart`, never `FinderChart` itself (the free example renders that too).
+// Offline (Phase 5): only the chart state renders `OfflineCopy`, with the target, so only a chart is ever stored; the
+// locked root carries `data-plan` (from `accountPlanForCopy`) so the worker can tell a lost plan from a failed read.
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import FinderChart from "@/components/finder/FinderChart.astro";
 import FinderLocked from "@/components/finder/FinderLocked.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
+import { accountPlanForCopy } from "@/lib/account-plan";
 import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
 import { finderBackHref, finderBackLabel, type FinderFrom } from "@/lib/finder/from";
 import { loadFinderFor } from "@/lib/finder/load";
@@ -39,6 +43,8 @@ const m = getMessages(locale);
 const t = m.tonight;
 
 const loaded = await loadFinderFor(Astro.locals, { target, siteId, telescopeId, night });
+// The same memoised read the loader's guard made: no second query.
+const plan = loaded.kind === "locked" ? await accountPlanForCopy(Astro.locals) : undefined;
 const name = target === null ? null : targetLabel(target, locale).id;
 const title = name === null ? t.finder.link : t.finder.title({ target: name });
 const backHref = finderBackHref(from);
@@ -60,7 +66,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
   <>
     <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
     <div class="mx-auto w-full max-w-3xl px-4 pt-8">
-      <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} />
+      <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} plan={plan} />
     </div>
   </>
 )}
@@ -68,6 +74,11 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 {loaded.kind === "chart" && (
   <>
     <TonightPageSky title={title} view={loaded.view} backHref={backHref} backLabel={backLabel} />
+    <OfflineCopy
+      view={loaded.view}
+      night={night}
+      target={target === null ? undefined : { key: target, name: loaded.labels.target }}
+    />
     <div class="mx-auto w-full max-w-3xl px-4 pt-8">
       <div data-finder-state="chart" data-finder-chart>
         <FinderChart chart={loaded.chart} labels={loaded.labels} locale={locale} />

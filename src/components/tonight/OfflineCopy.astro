@@ -6,8 +6,13 @@
 // wrapper then carries `data-dismissed`, which the page script honours until the next page load. Their text is formatted here, in the site's time
 // zone and the user's locale, so the browser formats nothing. Ids, names and times only: never coordinates. `data-owner`
 // is a one-way fingerprint of the user id (owner.ts), so the worker can tell users apart without the id or the email.
+// `data-plan` says which plan the island was rendered for (finder-chart Phase 5): `full`, `free`, or `unknown` when the
+// plan read failed (`accountPlanForCopy`, the request's one memoised read). The worker drops the stored finder charts
+// only for an explicit `free`. A finder chart also passes its `target` (`data-target` / `data-target-name`: a key and a
+// name, never coordinates), which keys its stored pair.
 import Notice from "@/components/ui/Notice.astro";
 import { getMessages } from "@/i18n";
+import { accountPlanForCopy } from "@/lib/account-plan";
 import { ownerFingerprint } from "@/lib/offline/owner";
 import type { TonightView } from "@/lib/tonight/build";
 import { createFormatter } from "@/lib/tonight/format";
@@ -16,10 +21,12 @@ interface Props {
   view: TonightView;
   /** Which night the view is for: `"next"` is the background copy of the evening after tonight. */
   night: "tonight" | "next";
+  /** The finder chart's object: its canonical key and its display name. Only the chart state passes it. */
+  target?: { key: string; name: string };
 }
 
 const { locale, user } = Astro.locals;
-const { view, night } = Astro.props;
+const { view, night, target } = Astro.props;
 const t = getMessages(locale).offline.notice;
 const { formatDayTime, formatShortNightDate } = createFormatter(locale);
 
@@ -30,6 +37,7 @@ const nightText = formatShortNightDate(view.date);
 const forecast = view.forecastFetchedAt;
 // No user, no owner: the worker then stores nothing.
 const owner = user ? await ownerFingerprint(user.id) : undefined;
+const plan = await accountPlanForCopy(Astro.locals);
 ---
 
 <div
@@ -43,6 +51,9 @@ const owner = user ? await ownerFingerprint(user.id) : undefined;
   data-prepared-at={preparedAt.toISOString()}
   data-valid-until={view.validUntil.toISOString()}
   data-forecast-fetched-at={forecast ? forecast.toISOString() : undefined}
+  data-plan={plan}
+  data-target={target?.key}
+  data-target-name={target?.name}
 ></div>
 <div class="mx-auto w-full max-w-3xl px-4">
   <div hidden class="pt-4" data-offline-notice="prepared" data-dismiss-scope>

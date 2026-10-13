@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 import { ACCOUNT_PLAN_NEEDS_FULL, NOT_CONFIGURED } from "@/lib/api-errors";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
-import { getAccountPlan, planFrom, requireFullPlan } from "./index";
+import { accountPlanForCopy, getAccountPlan, planFrom, requireFullPlan } from "./index";
 
 /**
  * "Anything unknown is free" (roadmap F-01): the reader and the guard fail closed. Only the store is replaced (as
@@ -25,8 +25,16 @@ function locals(overrides: Partial<Pick<App.Locals, "user" | "supabase">> = {}):
   return { user: USER, supabase: SUPABASE, ...overrides } as App.Locals;
 }
 
+/** The failed read's one log line, kept off the test output and asserted through this spy. */
+let logged: MockInstance<(...data: unknown[]) => void>;
+
 beforeEach(() => {
   mocks.read.mockReset();
+  logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("planFrom", () => {
@@ -59,6 +67,63 @@ describe("getAccountPlan", () => {
     expect(await getAccountPlan(locals())).toBe("free");
     mocks.read.mockResolvedValueOnce({ plan: "platinum" });
     expect(await getAccountPlan(locals())).toBe("free");
+  });
+});
+
+describe("accountPlanForCopy", () => {
+  it("is the plan the read found", async () => {
+    mocks.read.mockResolvedValueOnce({ plan: "full" });
+    expect(await accountPlanForCopy(locals())).toBe("full");
+    mocks.read.mockResolvedValueOnce({ plan: "free" });
+    expect(await accountPlanForCopy(locals())).toBe("free");
+    mocks.read.mockResolvedValueOnce({ plan: undefined });
+    expect(await accountPlanForCopy(locals())).toBe("free");
+    mocks.read.mockResolvedValueOnce({ plan: "platinum" });
+    expect(await accountPlanForCopy(locals())).toBe("free");
+    expect(logged).not.toHaveBeenCalled();
+  });
+
+  it("is free without a query when there is no database or no user", async () => {
+    expect(await accountPlanForCopy(locals({ supabase: null }))).toBe("free");
+    expect(await accountPlanForCopy(locals({ user: null }))).toBe("free");
+    expect(mocks.read).not.toHaveBeenCalled();
+  });
+
+  it("shares the one read with getAccountPlan, in either order", async () => {
+    mocks.read.mockResolvedValue({ plan: "full" });
+    const first = locals();
+    expect(await Promise.all([getAccountPlan(first), accountPlanForCopy(first), getAccountPlan(first)])).toEqual([
+      "full",
+      "full",
+      "full",
+    ]);
+    const second = locals();
+    await accountPlanForCopy(second);
+    await getAccountPlan(second);
+    expect(mocks.read).toHaveBeenCalledTimes(2);
+  });
+
+  it("is unknown when the read fails, logs a fixed line once, and leaves access closed (review F11)", async () => {
+    mocks.read.mockResolvedValue({ error: true });
+    const request = locals();
+    expect(await accountPlanForCopy(request)).toBe("unknown");
+    expect(await getAccountPlan(request)).toBe("free");
+    expect(await requireFullPlan(request)).toEqual({
+      ok: false,
+      reason: "needs-full",
+      errorKey: ACCOUNT_PLAN_NEEDS_FULL,
+    });
+    expect(mocks.read).toHaveBeenCalledOnce();
+    expect(logged).toHaveBeenCalledOnce();
+    expect(logged).toHaveBeenCalledWith("getAccountPlan: the plan read failed");
+  });
+
+  it("logs a failed read once however it is asked first", async () => {
+    mocks.read.mockResolvedValue({ error: true });
+    const request = locals();
+    expect(await requireFullPlan(request)).toMatchObject({ ok: false, reason: "needs-full" });
+    expect(await accountPlanForCopy(request)).toBe("unknown");
+    expect(logged).toHaveBeenCalledOnce();
   });
 });
 
