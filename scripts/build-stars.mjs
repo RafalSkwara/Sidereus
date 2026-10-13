@@ -253,9 +253,12 @@ function buildFinderCatalogue(allStars) {
   return catalogue;
 }
 
-/** One array per line and one designation per line keep a regeneration's diff reviewable. */
+/**
+ * One column per line and one designation per line keep a regeneration's diff reviewable. `pos` is one comma-joined
+ * string: the server bundle prints a number array one element per line, and 25,791 of them would add ~80 KB.
+ */
 function finderJson(catalogue) {
-  const column = (name) => `  "${name}": ${JSON.stringify(catalogue[name])}`;
+  const column = (name) => `  "${name}": ${JSON.stringify(name === "pos" ? catalogue.pos.join(",") : catalogue[name])}`;
   const designations = Object.entries(catalogue.designations)
     .map(([index, d]) => `    "${index}": ${JSON.stringify(d)}`)
     .join(",\n");
@@ -304,7 +307,7 @@ async function main() {
     designatedCount,
     normalisations: [
       "Sorted by mag (rounded to 0.1), then HYG id",
-      "pos: one integer per star, raCenti * 18001 + (decCenti + 9000), with raCenti the right ascension in 0.01 degrees (0..35999, 36000 wrapped to 0) and decCenti the declination in 0.01 degrees (-9000..9000)",
+      "pos: one comma-joined string of integers, one per star, raCenti * 18001 + (decCenti + 9000), with raCenti the right ascension in 0.01 degrees (0..35999, 36000 wrapped to 0) and decCenti the declination in 0.01 degrees (-9000..9000)",
       "mag: runs of [tenths, count] over the sorted stars, tenths being the magnitude as an integer in 0.1",
       "HYG ids order the stars but are not stored",
       "designations: sparse, keyed by star index; each a tuple [bayer, flamsteed, con, proper] with null for an absent field (HYG bayer: Greek abbreviation with a -n component suffix; flam: integer), kept only for stars that have a bayer, flam or proper",

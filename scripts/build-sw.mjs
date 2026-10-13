@@ -86,6 +86,34 @@ for (const file of astroFiles) {
   }
 }
 
+// The finder chart's star file (finder-chart, D-1/D-2) is server-only: 25,791 stars that only the finder island's
+// loader may read. Fail when any client file names it or carries the unique text of its meta file (its `filter`, which
+// the bright-star meta does not share), so a browser import of it never ships silently.
+const finderMeta = JSON.parse(await readFile(path.join(root, "src/lib/catalogue/finder-stars.meta.json"), "utf8"));
+const FINDER_LEAK_MARKERS = ["finder-stars", finderMeta.filter];
+if (typeof finderMeta.filter !== "string" || finderMeta.filter.length === 0) {
+  console.error("build-sw: finder-stars.meta.json has no `filter` string to look for; did its shape change?");
+  process.exit(1);
+}
+async function* clientFiles(dir) {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      yield* clientFiles(full);
+    } else if (/\.(m?js|css|html|json|map|txt|webmanifest)$/.test(entry.name)) {
+      yield full;
+    }
+  }
+}
+for await (const file of clientFiles(clientDir)) {
+  const text = await readFile(file, "utf8");
+  const marker = FINDER_LEAK_MARKERS.find((candidate) => text.includes(candidate));
+  if (marker !== undefined) {
+    console.error(`build-sw: the finder star file leaked into the browser bundle (${path.relative(root, file)})`);
+    process.exit(1);
+  }
+}
+
 const headersPath = path.join(clientDir, "_headers");
 const headers = await readFile(headersPath, "utf8").catch(() => "");
 if (!headers.includes("/sw.js")) {

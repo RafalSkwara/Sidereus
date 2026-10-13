@@ -4,7 +4,7 @@
 // cards and the all-objects rows), PlanetCard and the Moon card. Each data point sits on its own line at every width
 // (ui-user-adjustments), and the spacing between the list, the slot's lines and the action lives here, so a caller's
 // lines carry no margins of their own.
-import { Check } from "lucide-react";
+import { Check, Crosshair } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 
@@ -18,6 +18,13 @@ interface Props {
   /** The log form for this target, prefilled with tonight's night, site and telescope (FR-016). */
   logHref: string;
   /**
+   * The finder chart for this target (finder-chart), a second action link beside "Mark observed"; the Moon card passes
+   * none. It has no `data-needs-network`: offline, a stored chart opens from the device (D-15).
+   */
+  finderHref?: string;
+  /** The finder link's accessible name with the target ("Finder chart for M31"); required with `finderHref`. */
+  finderLabel?: string;
+  /**
    * How the link names its target for assistive tech, keeping each caller's naming: `srSuffix` appends a visually
    * hidden " M31" (the label) to the visible text (objects), `ariaLabel` replaces the name ("Mark observed: Jupiter").
    */
@@ -25,10 +32,13 @@ interface Props {
   ariaLabel?: string;
 }
 
-const { windowStart, windowEnd, bestTime, bestDirection, logHref, srSuffix, ariaLabel } = Astro.props;
-const t = getMessages(Astro.locals.locale).tonight.object;
+const { windowStart, windowEnd, bestTime, bestDirection, logHref, finderHref, finderLabel, srSuffix, ariaLabel } =
+  Astro.props;
+const tonight = getMessages(Astro.locals.locale).tonight;
+const t = tonight.object;
 // A standalone action: border, tinted surface and a check icon, 44 px tall.
 const markClass = buttonVariants({ variant: "action", size: "sm" });
+const finderClass = buttonVariants({ variant: "action", size: "sm" });
 ---
 
 <dl class="mt-4 grid gap-y-2 text-label">
@@ -50,11 +60,18 @@ const markClass = buttonVariants({ variant: "action", size: "sm" });
   <slot />
 </div>
 
-<div class="mt-5">
+<div class="mt-5 flex flex-wrap gap-3">
   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
     <Check aria-hidden="true" />
     {t.markObserved}
     {srSuffix !== undefined && <span class="sr-only"> {srSuffix}</span>}
   </a>
+  {/* The chart opens offline too when it is stored (finder-chart D-15), so no `data-needs-network`. */}
+  {finderHref !== undefined && (
+    <a href={finderHref} aria-label={finderLabel} class:list={[finderClass]}>
+      <Crosshair aria-hidden="true" />
+      {tonight.finder.link}
+    </a>
+  )}
 </div>

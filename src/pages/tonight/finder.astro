@@ -1,0 +1,71 @@
+---
+// The finder chart page (finder-chart Phase 4, FR-037): the nearest recognisable star, the hop to the object and the
+// finder's and eyepiece's fields to scale, for one ranked object or planet picked on Targets or Planets
+// (`?object=M31&from=targets`, plus the usual `?site=`, `?telescope=` and `?night=`). The shell checks the plan first
+// (`requireFullPlan`) and the island checks it again before building anything: a free account gets the explainer with
+// its fixed example and no island (nothing of the user's is read), a full account gets `FinderContent` streamed in
+// under the slim page sky. It never redirects: every state is a 200 page (the service worker reads a redirect on a
+// stored page as the sign-in bounce), and an object that does not parse or is not on tonight's list is a state, not
+// an error.
+import GearShell from "@/components/gear/GearShell.astro";
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import FinderContent from "@/components/finder/FinderContent.astro";
+import FinderLocked from "@/components/finder/FinderLocked.astro";
+import Attribution from "@/components/tonight/Attribution.astro";
+import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import { requireFullPlan } from "@/lib/account-plan";
+import { getMessages } from "@/i18n";
+import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
+import { finderBackHref, finderBackLabel, parseFinderFrom } from "@/lib/finder/from";
+import { parseTargetParam } from "@/lib/targets";
+import { targetLabel } from "@/lib/targets/labels";
+import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
+
+const { locale } = Astro.locals;
+const m = getMessages(locale);
+const t = m.tonight;
+
+// Only catalogue keys travel to the island; anything that does not parse is `null` and renders the "not on the list" state.
+const target = parseTargetParam(Astro.url.searchParams.get("object"));
+const from = parseFinderFrom(Astro.url.searchParams.get("from"));
+const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
+const night = requestedNight(Astro.url);
+
+const title = target === null ? t.finder.link : t.finder.title({ target: targetLabel(target, locale).id });
+const backHref = finderBackHref(from);
+const backLabel = finderBackLabel(from, m);
+const guard = await requireFullPlan(Astro.locals);
+---
+
+<GearShell title={title} skyFlow>
+  {guard.ok ? (
+    <FinderContent server:defer target={target} siteId={siteId} telescopeId={telescopeId} night={night} from={from}>
+      <TonightPageSkeleton
+        slot="fallback"
+        title={title}
+        reloadHref={`${Astro.url.pathname}${Astro.url.search}`}
+        rows={4}
+        backHref={backHref}
+        backLabel={backLabel}
+      />
+    </FinderContent>
+  ) : guard.reason === "not-configured" ? (
+    <>
+      <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <DatabaseMissing />
+        <div class="mt-10 border-t border-border pt-4">
+          <Attribution />
+        </div>
+      </div>
+    </>
+  ) : (
+    <>
+      <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
+      <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+        <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} />
+      </div>
+    </>
+  )}
+</GearShell>

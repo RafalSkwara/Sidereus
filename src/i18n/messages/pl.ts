@@ -821,6 +821,10 @@ export const pl = {
       legendReflex: (p) => `Kółka szukacza kolimatorowego, ${p.rings}`,
       eyepieceLine: (p) => `Kółko okularu: ${p.name}, ${p.field}°`,
       noEyepiece: "Dodaj okular do swojego sprzętu, by zobaczyć jego kółko na mapce.",
+      notRanked: (p) =>
+        `${p.target} nie ma na dzisiejszej liście dla tego miejsca i teleskopu, więc nie ma dla niego mapki.`,
+      notRankedUnknown: "Tego obiektu nie ma na dzisiejszej liście, więc nie ma dla niego mapki.",
+      failed: "Nie udało się narysować mapki znajdującej. Spróbuj za chwilę.",
       locked: {
         heading: "Mapka znajdująca",
         lineStar:

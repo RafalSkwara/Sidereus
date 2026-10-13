@@ -14,9 +14,11 @@ interface Props {
   entry: TonightPlanetEntry;
   /** The log form for this planet, prefilled with tonight's night, site and telescope (FR-016). */
   logHref: string;
+  /** The finder chart for this planet (finder-chart). */
+  finderHref: string;
 }
 
-const { entry, logHref } = Astro.props;
+const { entry, logHref, finderHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight;
 const tipId = `not-seen-tip-planet-${entry.key}`;
 const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringText].filter(
@@ -45,6 +47,8 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
     bestTime={entry.bestTime}
     bestDirection={entry.bestDirection}
     logHref={logHref}
+    finderHref={finderHref}
+    finderLabel={t.finder.linkLabel({ target: entry.name })}
     ariaLabel={t.planets.markObserved({ planet: entry.name })}
   >
     {entry.eyepiece && (

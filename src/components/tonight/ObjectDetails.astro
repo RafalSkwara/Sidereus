@@ -9,10 +9,13 @@ interface Props {
   entry: TonightEntry;
   /** The log form for this object, prefilled with the ranking's night, site and telescope (FR-016). */
   logHref: string;
+  /** The finder chart for this object (finder-chart). */
+  finderHref: string;
 }
 
-const { entry, logHref } = Astro.props;
-const t = getMessages(Astro.locals.locale).tonight.object;
+const { entry, logHref, finderHref } = Astro.props;
+const tonight = getMessages(Astro.locals.locale).tonight;
+const t = tonight.object;
 ---
 
 <TargetDetails
@@ -21,6 +24,8 @@ const t = getMessages(Astro.locals.locale).tonight.object;
   bestTime={entry.bestTime}
   bestDirection={entry.bestDirection}
   logHref={logHref}
+  finderHref={finderHref}
+  finderLabel={tonight.finder.linkLabel({ target: entry.label })}
   srSuffix={entry.label}
 >
   {entry.pair?.kind === "pair" && (

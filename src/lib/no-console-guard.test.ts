@@ -43,6 +43,11 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     count: 1,
     reason: "the milestone failure trace: a fixed line and the error's and its cause's names, never a message",
   },
+  "src/lib/finder/load.ts": {
+    count: 2,
+    reason:
+      "the finder chart's two failure traces (the star load, the chart build): a fixed line and the error's name only, never its message",
+  },
   "src/lib/engine/calibration.test.ts": {
     count: 1,
     reason: "the opt-in calibration snapshot (CALIBRATION_SNAPSHOT=1) over fixed test nights",

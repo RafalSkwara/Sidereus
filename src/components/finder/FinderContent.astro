@@ -1,0 +1,104 @@
+---
+// The data-dependent part of /tonight/finder (finder-chart Phase 4), a server island like TargetsPageContent: the slim
+// page sky ("Finder chart · M31", back link to the page the chart was opened from), then the state `loadFinderFor`
+// found. The plan guard runs inside the loader before anything else is read, because the shell's check does not
+// protect `/_server-islands/*`: a free or signed-out request gets only the locked explainer here.
+// Every state's root carries `data-finder-state="chart|locked|not-ranked|no-gear|failed"`; only the chart state's
+// root carries `data-finder-chart`, never `FinderChart` itself (the free example renders that too).
+import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
+import { ServerError } from "@/components/forms/ServerError";
+import FinderChart from "@/components/finder/FinderChart.astro";
+import FinderLocked from "@/components/finder/FinderLocked.astro";
+import Attribution from "@/components/tonight/Attribution.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages } from "@/i18n";
+import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
+import { finderBackHref, finderBackLabel, type FinderFrom } from "@/lib/finder/from";
+import { loadFinderFor } from "@/lib/finder/load";
+import type { TargetKey } from "@/lib/targets";
+import { targetLabel } from "@/lib/targets/labels";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The object from `?object=` (a target key); `null` when the URL named none that parses. */
+  target: TargetKey | null;
+  /** The site picked on Tonight (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
+  /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+  /** `"next"` renders the evening after tonight (`?night=next`). */
+  night?: "tonight" | "next";
+  /** The page the chart was opened from, for the back link; `null` for Tonight. */
+  from?: FinderFrom | null;
+}
+
+const { locale } = Astro.locals;
+const { target, siteId, telescopeId, night = "tonight", from = null } = Astro.props;
+const m = getMessages(locale);
+const t = m.tonight;
+
+const loaded = await loadFinderFor(Astro.locals, { target, siteId, telescopeId, night });
+const name = target === null ? null : targetLabel(target, locale).id;
+const title = name === null ? t.finder.link : t.finder.title({ target: name });
+const backHref = finderBackHref(from);
+const backLabel = finderBackLabel(from, m);
+const view = loaded.kind === "not-ranked" || loaded.kind === "no-gear" || loaded.kind === "failed" ? loaded.view : null;
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+{loaded.kind === "not-configured" && (
+  <>
+    <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
+    <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+      <DatabaseMissing />
+    </div>
+  </>
+)}
+
+{loaded.kind === "locked" && (
+  <>
+    <TonightPageSky title={title} view={null} backHref={backHref} backLabel={backLabel} />
+    <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+      <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} />
+    </div>
+  </>
+)}
+
+{loaded.kind === "chart" && (
+  <>
+    <TonightPageSky title={title} view={loaded.view} backHref={backHref} backLabel={backLabel} />
+    <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+      <div data-finder-state="chart" data-finder-chart>
+        <FinderChart chart={loaded.chart} labels={loaded.labels} locale={locale} />
+      </div>
+    </div>
+  </>
+)}
+
+{(loaded.kind === "not-ranked" || loaded.kind === "no-gear" || loaded.kind === "failed") && (
+  <>
+    <TonightPageSky title={title} view={view} backHref={backHref} backLabel={backLabel} />
+    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {loaded.kind === "not-ranked" && (
+        <p class="text-body text-foreground" data-finder-state="not-ranked">
+          {name === null ? t.finder.notRankedUnknown : t.finder.notRanked({ target: name })}
+        </p>
+      )}
+      {loaded.kind === "no-gear" && (
+        <p class="text-body text-foreground" data-finder-state="no-gear">
+          {t.pages.noGear}{" "}
+          <a href="/tonight" class:list={[inlineLink]}>
+            {t.pages.toTonight}
+          </a>
+        </p>
+      )}
+      {loaded.kind === "failed" && (
+        <div role="alert" data-finder-state="failed">
+          <ServerError message={t.finder.failed} />
+        </div>
+      )}
+      <Attribution />
+    </div>
+  </>
+)}

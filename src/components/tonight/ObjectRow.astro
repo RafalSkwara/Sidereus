@@ -12,9 +12,11 @@ interface Props {
   entry: TonightEntry;
   /** The log form for this object, returning to the Targets page (`from=targets`). */
   logHref: string;
+  /** The finder chart for this object (finder-chart). */
+  finderHref: string;
 }
 
-const { entry, logHref } = Astro.props;
+const { entry, logHref, finderHref } = Astro.props;
 const { locale } = Astro.locals;
 const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
@@ -58,7 +60,7 @@ const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
     </summary>
     <div class="pb-5 pl-10">
       <p class="text-label text-muted-foreground">{detailLine}</p>
-      <ObjectDetails entry={entry} logHref={logHref} />
+      <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} />
     </div>
   </details>
 </li>

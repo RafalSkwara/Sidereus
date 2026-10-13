@@ -12,7 +12,7 @@ import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { loadTonightFor } from "@/lib/tonight/island";
-import { logHref } from "@/lib/tonight/load";
+import { finderHref, logHref } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +85,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
             <SolarSystemSection
               solarSystem={view.solarSystem}
               logHref={(key: string) => logHref(view, key, "planets")}
+              finderHref={(key: string) => finderHref(view, key, "planets", night)}
             />
           ) : (
             <p class="text-body text-foreground">{view.planetsAbsentText}</p>

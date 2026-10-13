@@ -11,9 +11,11 @@ interface Props {
   solarSystem: TonightSolarSystem;
   /** The log form for a planet by its key ("jupiter"), prefilled with tonight's night, site and telescope. */
   logHref: (key: string) => string;
+  /** The finder chart for a planet by its key (finder-chart). */
+  finderHref: (key: string) => string;
 }
 
-const { solarSystem, logHref } = Astro.props;
+const { solarSystem, logHref, finderHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.planets;
 ---
 
@@ -23,7 +25,7 @@ const t = getMessages(Astro.locals.locale).tonight.planets;
   {solarSystem.entries.length > 0 && (
     <ol aria-label={t.listLabel} class="mt-5 divide-y divide-border">
       {solarSystem.entries.map((entry) => (
-        <PlanetCard entry={entry} logHref={logHref(entry.key)} />
+        <PlanetCard entry={entry} logHref={logHref(entry.key)} finderHref={finderHref(entry.key)} />
       ))}
     </ol>
   )}

@@ -22,9 +22,12 @@ interface Props {
   rows?: number;
   /** `plan`: the Session plan's shape (SessionTimeline) instead of the generic rows. */
   layout?: "rows" | "plan";
+  /** The back link, as `TonightPageSky` draws it (Tonight by default). */
+  backHref?: string;
+  backLabel?: string;
 }
 
-const { title, reloadHref, rows = 5, layout = "rows" } = Astro.props;
+const { title, reloadHref, rows = 5, layout = "rows", backHref = "/tonight", backLabel } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
@@ -38,7 +41,7 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
     {t.loading}
   </span>
   <TonightSky night quiet>
-    <BackLink href="/tonight" label={m.nav.tonight} />
+    <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />
     <div class="mt-1 sm:mt-2">
       <PageHeader title={title} />
     </div>

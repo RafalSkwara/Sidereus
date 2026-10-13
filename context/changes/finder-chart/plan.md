@@ -601,8 +601,8 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes
-- [x] 3.2 `npm run lint` and `npx astro check` pass
+- [x] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes — 16fd3f7
+- [x] 3.2 `npm run lint` and `npx astro check` pass — 16fd3f7
 
 #### Manual
 
@@ -613,10 +613,10 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [ ] 4.1 `npm test` passes, including the `loadFinderFor` plan-guard tests
-- [ ] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 4.3 `tonight-phone` and `tonight-targets` e2e specs stay green
-- [ ] 4.7 Bundle budget: no `finder-stars` in `dist/client`, `dist/server` JS at most 4,290,555 bytes
+- [x] 4.1 `npm test` passes, including the `loadFinderFor` plan-guard tests
+- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 4.3 `tonight-phone` and `tonight-targets` e2e specs stay green
+- [x] 4.7 Bundle budget: no `finder-stars` in `dist/client`, `dist/server` JS at most 4,290,555 bytes
 
 #### Manual
 

@@ -931,6 +931,11 @@ export const en = {
       legendReflex: (p: { rings: string }) => `Reflex finder rings, ${p.rings}`,
       eyepieceLine: (p: { name: string; field: string }) => `Eyepiece circle: ${p.name}, ${p.field}°`,
       noEyepiece: "Add an eyepiece to your gear to see its circle on the chart.",
+      /** The states with no chart: the object is not on tonight's list (`target` is its name), or the chart failed. */
+      notRanked: (p: { target: string }) =>
+        `${p.target} is not on tonight's list for this site and telescope, so there is no chart for it.`,
+      notRankedUnknown: "That object is not on tonight's list, so there is no chart for it.",
+      failed: "The finder chart could not be drawn. Try again in a moment.",
       /** The free explainer (a free account's view of the finder chart's link). */
       locked: {
         heading: "Finder chart",
