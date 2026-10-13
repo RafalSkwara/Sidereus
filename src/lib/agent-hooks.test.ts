@@ -106,6 +106,11 @@ function run(command: string, args: string[], options: { cwd: string; env: Env; 
     child.stdout.on("data", (chunk: Buffer) => (stdout += chunk.toString()));
     child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
     child.on("error", reject);
+    // A hook may exit without reading its payload; the write then fails with EPIPE, which says nothing about the hook
+    // (its exit code and output decide the case). Any other stdin error fails the case.
+    child.stdin.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code !== "EPIPE") reject(error);
+    });
     child.on("close", (code) => {
       resolve({ code, stdout, stderr });
     });
@@ -465,5 +470,17 @@ describe("hook scripts and registration", () => {
       const result = await run("/bin/sh", ["-c", command], { cwd: wt, env, input: "{}" });
       expect(result, command).toMatchObject({ code: 0, stderr: "" });
     }
+  });
+});
+
+describe("the run helper", () => {
+  // CI flake (runs 37992820410 and 38405588360): a hook that exits before reading its stdin closes the pipe while the
+  // payload is still being written, and `child.stdin` emits EPIPE. Without a listener on the stream that is an
+  // unhandled error and fails the run although every assertion passed. A payload larger than any pipe buffer keeps the
+  // write pending when the child exits, so this reproduces it every time.
+  it("survives a hook that exits before reading its stdin, keeping the exit code and output", async () => {
+    const payload = "x".repeat(4 * 1024 * 1024);
+    const result = await run(BASH, ["-c", "echo early; exit 3"], { cwd: SANDBOX, env: cleanEnv(), input: payload });
+    expect(result).toMatchObject({ code: 3, stdout: "early\n", stderr: "" });
   });
 });
