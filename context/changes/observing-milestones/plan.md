@@ -607,15 +607,15 @@ S-05's recipe, adapted to this worktree and run:
 
 #### Automated
 
-- [x] 3.1 `npx vitest run src/lib/observations/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes
-- [x] 3.2 `npx astro check`, `npm run lint` and `npm test` pass
+- [x] 3.1 `npx vitest run src/lib/observations/celebrate.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes — a8f345e
+- [x] 3.2 `npx astro check`, `npm run lint` and `npm test` pass — a8f345e
 
 ### Phase 4: Milestones on the progress page
 
 #### Automated
 
-- [ ] 4.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
-- [ ] 4.2 `npx vitest run src/lib/progress/milestones.test.ts`, `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
+- [x] 4.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` passes
+- [x] 4.2 `npx vitest run src/lib/progress/milestones.test.ts`, `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
 
 #### Manual
 

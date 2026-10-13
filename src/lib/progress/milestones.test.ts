@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import { CALDWELL } from "@/lib/catalogue";
 import type { LogEntry } from "@/lib/engine";
 
-import { MILESTONES, isMilestoneKey, milestonesOf, newlyReached, type MilestoneKey } from "./milestones";
+import {
+  MILESTONES,
+  isMilestoneKey,
+  milestonesOf,
+  newlyReached,
+  withStored,
+  type MilestoneKey,
+  type MilestoneState,
+} from "./milestones";
 import { observingProgress } from "./progress";
 
 /**
@@ -404,5 +412,66 @@ describe("newlyReached", () => {
 
   it("is empty when an entry is removed, which can only un-reach a derived milestone", () => {
     expect(newlyBetween([...nine, { target: "M31", night: night(20), rating: 4 }], nine)).toEqual([]);
+  });
+});
+
+describe("withStored", () => {
+  const nine = logged(["M2", "M3", "M4", "M5", "M9", "M10", "M12", "M13", "M14"]);
+  const derived = (entries: readonly LogEntry[]) => milestonesOf(observingProgress(entries));
+  const stateIn = (states: readonly MilestoneState[], key: MilestoneKey) => {
+    const state = states.find((s) => s.key === key);
+    if (!state) {
+      throw new Error(`no state for ${key}`);
+    }
+    return state;
+  };
+
+  it("returns the derived states unchanged when nothing is stored", () => {
+    expect(withStored(derived(nine), new Map())).toEqual(derived(nine));
+    expect(withStored(derived([]), new Map())).toEqual(derived([]));
+  });
+
+  it("keeps every milestone in MILESTONES order", () => {
+    const stored = new Map<MilestoneKey, string>([
+      ["caldwell-all", night(40)],
+      ["first-moon", night(2)],
+    ]);
+    expect(withStored(derived([]), stored).map((state) => state.key)).toEqual(MILESTONES.map((m) => m.key));
+  });
+
+  it("shows a stored milestone as reached even when the log no longer reaches it", () => {
+    const stored = new Map<MilestoneKey, string>([["first-galaxy", night(3)]]);
+    // The entry that reached it was deleted: the derived state has nothing, the stored night stands.
+    expect(stateIn(derived([]), "first-galaxy").reachedNight).toBeNull();
+    expect(stateIn(withStored(derived([]), stored), "first-galaxy").reachedNight).toBe(night(3));
+  });
+
+  it("lets the stored night win over the derived one", () => {
+    const entries: LogEntry[] = [{ target: "M31", night: night(9), rating: 4 }];
+    const stored = new Map<MilestoneKey, string>([["first-galaxy", night(3)]]);
+    expect(stateIn(derived(entries), "first-galaxy").reachedNight).toBe(night(9));
+    expect(stateIn(withStored(derived(entries), stored), "first-galaxy").reachedNight).toBe(night(3));
+  });
+
+  it("lets the derived state stand for a key that is not stored, so milestones from before the record still show", () => {
+    const stored = new Map<MilestoneKey, string>([["first-moon", night(2)]]);
+    const states = withStored(derived(nine), stored);
+    expect(stateIn(states, "first-globular").reachedNight).toBe(night(0));
+    expect(stateIn(states, "first-moon").reachedNight).toBe(night(2));
+  });
+
+  it("takes progress from the derived state, for a stored count milestone too", () => {
+    const stored = new Map<MilestoneKey, string>([["messier-10", night(30)]]);
+    const states = withStored(derived(nine), stored);
+    expect(stateIn(states, "messier-10")).toEqual({
+      key: "messier-10",
+      reachedNight: night(30),
+      progress: { seen: 9, total: 10 },
+    });
+    // A milestone without a count stays without one.
+    expect(stateIn(withStored(derived([]), new Map([["first-moon", night(2)]])), "first-moon")).toEqual({
+      key: "first-moon",
+      reachedNight: night(2),
+    });
   });
 });

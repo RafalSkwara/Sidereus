@@ -959,6 +959,25 @@ export const pl = {
     notSeen: "jeszcze nie zaobserwowano",
     empty: "Nic jeszcze nie zaobserwowano.",
     toTonight: "Zobacz, co warto obejrzeć dziś w nocy",
+    milestones: {
+      title: "Kamienie milowe",
+      reachedOn: (p) => `Osiągnięto: ${p.date}`,
+      notYet: "Jeszcze nie",
+      progress: (p) => `${p.seen} / ${p.total}`,
+      name: {
+        "first-moon": "Pierwszy Księżyc",
+        "first-planet": "Pierwsza planeta",
+        "all-planets": "Wszystkie planety",
+        "first-galaxy": "Pierwsza galaktyka",
+        "first-globular": "Pierwsza gromada kulista",
+        "first-nebula": "Pierwsza mgławica",
+        "messier-10": "10 obiektów Messiera",
+        "messier-25": "25 obiektów Messiera",
+        "messier-50": "50 obiektów Messiera",
+        "messier-110": "Wszystkie 110 obiektów Messiera",
+        "caldwell-all": "Wszystkie 61 obiektów Caldwella",
+      },
+    },
   },
 
   skyChecks: {

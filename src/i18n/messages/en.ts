@@ -1093,6 +1093,27 @@ export const en = {
     notSeen: "not seen",
     empty: "Nothing seen yet.",
     toTonight: "See what to point at tonight",
+    /** The milestones band (observing-milestones, M-3 S-06): the fixed set, each reached on a night or still ahead. */
+    milestones: {
+      title: "Milestones",
+      reachedOn: (p: { date: string }) => `Reached ${p.date}`,
+      notYet: "Not yet",
+      /** How far along a count milestone is; numbers arrive pre-formatted: "7 / 10". */
+      progress: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
+      name: {
+        "first-moon": "First Moon",
+        "first-planet": "First planet",
+        "all-planets": "All planets",
+        "first-galaxy": "First galaxy",
+        "first-globular": "First globular cluster",
+        "first-nebula": "First nebula",
+        "messier-10": "10 Messier objects",
+        "messier-25": "25 Messier objects",
+        "messier-50": "50 Messier objects",
+        "messier-110": "All 110 Messier objects",
+        "caldwell-all": "All 61 Caldwell objects",
+      },
+    },
   },
 
   /** The verdict check (verdict-check): asking afterwards whether the sky matched Tonight's headline. */

@@ -145,3 +145,19 @@ export function newlyReached(before: readonly MilestoneState[], after: readonly 
   const reachedAfter = new Set(after.filter((state) => state.reachedNight !== null).map((state) => state.key));
   return MILESTONES.map(({ key }) => key).filter((key) => reachedAfter.has(key) && !reachedBefore.has(key));
 }
+
+/**
+ * The page's states: the derived ones with the stored record laid over them. A stored key is reached on its stored
+ * night, which wins over the derived one (the record outlives the entry that reached it); any other key keeps its
+ * derived state, so a milestone reached before the record existed still shows. `progress` always comes from the
+ * derived state, since it counts what the log holds now. In `MILESTONES` order, like `states`.
+ */
+export function withStored(
+  states: readonly MilestoneState[],
+  stored: ReadonlyMap<MilestoneKey, string>,
+): MilestoneState[] {
+  return states.map((state) => {
+    const reachedNight = stored.get(state.key);
+    return reachedNight === undefined ? state : { ...state, reachedNight };
+  });
+}
