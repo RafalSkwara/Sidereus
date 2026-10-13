@@ -778,6 +778,62 @@ export const pl = {
       weather: "Pogoda:",
     },
 
+    finder: {
+      title: (p) => `Mapka znajdująca · ${p.target}`,
+      link: "Mapka znajdująca",
+      linkLabel: (p) => `Mapka znajdująca dla obiektu ${p.target}`,
+      contextFacing: (p) => `Patrz w kierunku ${p.direction} nad horyzontem, o ${p.time}`,
+      contextOverhead: (p) => `Prawie w zenicie, o ${p.time}`,
+      facingNote: "Góra to góra nieba, tak jak ją widzisz, patrząc w tę stronę. Obie mapki są tak narysowane.",
+      overheadNorth: "Obiekt jest prawie w zenicie, więc północ jest u góry obu mapek, a krzyżyk oznacza zenit.",
+      overheadSouth: "Obiekt jest prawie w zenicie, więc południe jest u góry obu mapek, a krzyżyk oznacza zenit.",
+      zenith: "Zenit",
+      overviewHeading: "Przegląd",
+      finderHeading: "Widok szukacza",
+      overviewAlt: (p) => `Mapka przeglądowa od ${p.start} do ${p.target}. Liczba ruchów: ${p.count}.`,
+      overviewAltDirect: (p) =>
+        `Mapka przeglądowa: ${p.target} leży ${p.distance}° od ${p.start}, bez łańcucha gwiazd pomiędzy nimi.`,
+      finderAlt: (p) => `Widok szukacza: ${p.field}° nieba wokół ${p.target}.`,
+      stepsHeading: "Jak go znaleźć",
+      stepStart: (p) => `Znajdź ${p.name}, jasność ${p.mag} mag, ${p.alt}° nad horyzontem w kierunku ${p.point}.`,
+      stepMove: (p) => `Przesuń się o ${p.deg}° ${p.way}, do ${p.name}.`,
+      stepTarget: (p) => `Przesuń się o ${p.deg}° ${p.way}, aż dojdziesz do ${p.target}.`,
+      stepDirect: (p) =>
+        `${p.target} leży ${p.distance}° ${p.way} od ${p.start}. Żaden łańcuch gwiazd na tyle krótki dla szukacza ich nie łączy, więc oceń odległość kółkami na widoku szukacza.`,
+      stepNakedEye: (p) =>
+        `${p.target} jest dość jasny, by dostrzec go bez pomocy. Patrz w kierunku ${p.direction} nad horyzontem.`,
+      stepNakedEyeCentre: "Umieść go w środku szukacza, a potem sprawdź widok szukacza poniżej.",
+      noStart:
+        "O tej porze żadna gwiazda dość jasna na start nie jest dość wysoko. Celuj według kierunku powyżej i użyj kółek na widoku szukacza.",
+      way: {
+        up: "w górę",
+        upRight: "w górę i w prawo",
+        right: "w prawo",
+        downRight: "w dół i w prawo",
+        down: "w dół",
+        downLeft: "w dół i w lewo",
+        left: "w lewo",
+        upLeft: "w górę i w lewo",
+      },
+      unnamedStar: (p) => `gwiazdy o jasności ${p.mag} mag`,
+      invertedNote: "Szukacz prostoprzelotowy pokazuje niebo do góry nogami, a kątowy w lustrzanym odbiciu.",
+      legendFinder: (p) => `Pole szukacza, ${p.field}°`,
+      legendReflex: (p) => `Kółka szukacza kolimatorowego, ${p.rings}`,
+      eyepieceLine: (p) => `Kółko okularu: ${p.name}, ${p.field}°`,
+      noEyepiece: "Dodaj okular do swojego sprzętu, by zobaczyć jego kółko na mapce.",
+      locked: {
+        heading: "Mapka znajdująca",
+        lineStar:
+          "Znajduje najbliższą gwiazdę, którą rozpoznasz z miejsca obserwacji, nad Twoją minimalną wysokością o najlepszej porze dla obiektu.",
+        lineHop: "Pokazuje skok od tej gwiazdy do obiektu, krok po kroku, przez gwiazdy widoczne w Twoim szukaczu.",
+        lineScale: "Rysuje pole szukacza i pole okularu w skali, obrócone tak, jak patrzysz na tę część nieba.",
+        needsFull: "Mapki znajdujące wymagają pełnego planu.",
+        exampleLabel: "Przykład",
+        exampleCaption: (p) =>
+          `${p.target} z miejsca podmiejskiego (Bortle 7), ze 150-milimetrowym reflektorem i okularem ${p.eyepiece}. Twoja mapka użyje Twojego miejsca i sprzętu.`,
+      },
+    },
+
     summary: {
       targets: "Zacznij od nich",
       targetsCaption: {

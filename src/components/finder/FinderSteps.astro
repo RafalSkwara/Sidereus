@@ -1,0 +1,32 @@
+---
+/*
+ * The how-to list under the panels (finder-chart): "Find Mirach (β And) … then move 4° …". The sentences come from
+ * `finderText` (`src/lib/finder/steps.ts`); this only lays them out. `no-start` has a single sentence, which reads as
+ * a paragraph, not a one-item list.
+ */
+import { getMessages } from "@/i18n";
+import type { FinderKind } from "@/lib/engine";
+import type { Locale } from "@/lib/preferences";
+
+interface Props {
+  steps: readonly string[];
+  kind: FinderKind;
+  locale: Locale;
+}
+
+const { steps, kind, locale } = Astro.props;
+const t = getMessages(locale).tonight.finder;
+---
+
+<div data-finder-steps>
+  <h3 class="font-display text-label font-semibold text-heading">{t.stepsHeading}</h3>
+  {kind === "no-start" ? (
+    <p class="mt-2 text-body">{steps[0]}</p>
+  ) : (
+    <ol class="mt-2 list-decimal space-y-2 pl-6 text-body marker:font-semibold marker:text-heading">
+      {steps.map((step) => (
+        <li>{step}</li>
+      ))}
+    </ol>
+  )}
+</div>

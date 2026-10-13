@@ -27,6 +27,7 @@ import {
   startStarMaxMagForBortle,
 } from "./parameters";
 import { darkWindow, observerFor } from "./sun";
+import type { Site } from "./types";
 
 /**
  * The finder chart's engine (finder-chart Phase 2). Synthetic skies are built around a target in the horizon frame
@@ -611,6 +612,55 @@ describe("finderChart: orientation", () => {
       expect(chart.orientation).toBe("overhead");
       expect(chart.overview?.zenith).not.toBeNull();
       expect(chart.finder.zenith).toBeNull(); // 30° from the finder panel's centre
+      // Rounded values carry no float noise (0.1 × 222 would be 22.200000000000003).
+      for (const value of [chart.overview?.fieldDeg ?? 0, chart.directionDeg ?? 0]) {
+        expect(Number(value.toFixed(1))).toBe(value);
+      }
+    });
+
+    it("says which pole is up: north from the equator northwards, south for a southern site, none when facing", () => {
+      const zenithAt = (site: Site): FinderChartData => {
+        const { rot } = Rotation_EQJ_HOR(TIME, observerFor(site));
+        const zenith: UnitVector = [rot[0][2], rot[1][2], rot[2][2]];
+        return finderChart({
+          site,
+          time: TIME,
+          bortle: 3,
+          minAltitudeDeg: MIN_ALT,
+          target: { vector: zenith, magnitude: null, isPlanet: false, majorAxisArcmin: null },
+          stars: [],
+          eyepieceFieldDeg: null,
+        });
+      };
+      expect(zenithAt(SITE).poleUp).toBe("north");
+      expect(zenithAt({ ...SITE, latitudeDeg: 0 }).poleUp).toBe("north");
+      expect(
+        zenithAt({ latitudeDeg: -33.9, longitudeDeg: 18.4, elevationM: 10, timeZone: "Africa/Johannesburg" }).poleUp,
+      ).toBe("south");
+      expect(withTarget(60, 57).poleUp).toBeNull();
+    });
+
+    it("points up to the south celestial pole at a southern site", () => {
+      const site: Site = { latitudeDeg: -33.9, longitudeDeg: 18.4, elevationM: 10, timeZone: "Africa/Johannesburg" };
+      const { rot } = Rotation_EQJ_HOR(TIME, observerFor(site));
+      const zenith: UnitVector = [rot[0][2], rot[1][2], rot[2][2]];
+      const southPole: Vec = [0, 0, -1];
+      const along = dot(zenith, southPole);
+      const perpendicular = unit([0, 1, 2].map((i) => southPole[i] - along * zenith[i]) as Vec);
+      const towardPole = unit([0, 1, 2].map((i) => zenith[i] + perpendicular[i] * 0.05) as Vec);
+      const chart = finderChart({
+        site,
+        time: TIME,
+        bortle: 3,
+        minAltitudeDeg: MIN_ALT,
+        target: { vector: zenith, magnitude: null, isPlanet: false, majorAxisArcmin: null },
+        stars: [{ index: 1, mag: 6, vector: towardPole }],
+        eyepieceFieldDeg: null,
+      });
+      expect(chart.orientation).toBe("overhead");
+      const star = chart.finder.stars.find((s) => s.index === 1);
+      expect(star?.y).toBeLessThan(-2);
+      expect(Math.abs(star?.x ?? 1)).toBeLessThan(0.05);
     });
 
     it("points up to the visible celestial pole in both panels, and the same way for each", () => {

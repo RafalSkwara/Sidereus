@@ -589,20 +589,20 @@ No schema change. The plan check reads the existing `account_plans` table. The w
 
 #### Automated
 
-- [x] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts`
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here): measured 100 % hop at Bortle 3 (373 of 373, Warsaw, four fixed nights), gate 97 %
+- [x] 2.1 `npx vitest run src/lib/engine` passes, including `finder.test.ts` and `purity.test.ts` — a7685fd
+- [x] 2.2 `npm run lint` and `npx astro check` pass — a7685fd
+- [x] 2.4 Coverage gate set 3 points below the first measured run (measured value noted here): measured 100 % hop at Bortle 3 (373 of 373, Warsaw, four fixed nights), gate 97 % — a7685fd
 
 #### Manual
 
-- [x] 2.3 Reference hops for M31, M13 and M57 look like the published routes
+- [x] 2.3 Reference hops for M31, M13 and M57 look like the published routes — a7685fd
 
 ### Phase 3: Chart rendering
 
 #### Automated
 
-- [ ] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes
-- [ ] 3.2 `npm run lint` and `npx astro check` pass
+- [x] 3.1 `npx vitest run src/lib/finder src/i18n src/styles` passes
+- [x] 3.2 `npm run lint` and `npx astro check` pass
 
 #### Manual
 

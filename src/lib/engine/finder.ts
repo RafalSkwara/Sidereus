@@ -119,8 +119,13 @@ export interface FinderPanel {
 
 export interface FinderChartData {
   kind: FinderKind;
-  /** `facing`: up is the vertical through each panel's centre. `overhead`: north up in both panels (D-6). */
+  /** `facing`: up is the vertical through each panel's centre. `overhead`: the visible celestial pole up in both panels (D-6). */
   orientation: "facing" | "overhead";
+  /**
+   * Which celestial pole is at the top of both panels when `orientation` is `overhead`: `north` for a site at or north
+   * of the equator, `south` for a southern one; `null` when facing.
+   */
+  poleUp: "north" | "south" | null;
   /** Where the target is, unrefracted (the page shows the ranking's refracted `bestDirection`). */
   facing: { azDeg: number; altDeg: number };
   start: FinderStart | null;
@@ -166,7 +171,11 @@ const angleDeg = (a: Vec, b: Vec): number => Math.atan2(norm(cross(a, b)), dot(a
 const centi = (deg: number): number => Math.round(deg * 100);
 
 /** Rounds to `step` and turns -0 into 0, so plain data compares deep-equal. */
-const roundTo = (value: number, step: number): number => Math.round(value / step) * step + 0;
+const roundTo = (value: number, step: number): number => {
+  // Divide by the reciprocal (10 for 0.1), not multiply by the step: `0.1 * 222` is 22.200000000000003.
+  const perUnit = Math.round(1 / step);
+  return Math.round(value * perUnit) / perUnit + 0;
+};
 const round3 = (value: number): number => Math.round(value * 1000) / 1000 + 0;
 const round2 = (value: number): number => Math.round(value * 100) / 100 + 0;
 
@@ -615,6 +624,7 @@ export function finderChart(input: FinderChartInput): FinderChartData {
   return {
     kind,
     orientation: overhead ? "overhead" : "facing",
+    poleUp: overhead ? (input.site.latitudeDeg < 0 ? "south" : "north") : null,
     facing,
     start:
       start === null

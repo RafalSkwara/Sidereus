@@ -1,0 +1,109 @@
+---
+/*
+ * One chart panel (finder-chart): a square SVG of the sky around the target or along the route, drawn by the pure
+ * `panelSvg` geometry (`src/lib/finder/chart-svg.ts`) from the engine's `FinderPanel`. The picture is one `role="img"`
+ * whose `aria-label` states the hop in words (the steps list carries the same facts as text); everything drawn is a
+ * token class, and the circles differ by stroke style and width so red mode (one hue) still tells them apart: the
+ * finder's field long-dashed, the reflex finder's rings dotted, the eyepiece's circle solid and thick. The route is a
+ * thin solid line through ringed stars, the target a gapped cross. Labels are SVG text in the viewBox's own units, so
+ * they scale with the panel (about 13 px at 360 px wide), over a halo in the panel's ground. The default slot sits
+ * under the picture (the legend).
+ */
+import { LABEL_FONT_UNITS, panelSvg } from "@/lib/finder/chart-svg";
+import type { FinderPanel as FinderPanelData } from "@/lib/engine";
+
+interface Props {
+  panel: FinderPanelData;
+  heading: string;
+  /** The picture's accessible name. */
+  ariaLabel: string;
+  kind: "overview" | "finder";
+  /** Star indices on the route; they are ringed and labelled when named. */
+  routeStars: readonly number[];
+  /** Display designation by star index. */
+  names: Readonly<Record<number, string | null>>;
+  targetLabel: string;
+  zenithLabel: string;
+}
+
+const { panel, heading, ariaLabel, kind, routeStars, names, targetLabel, zenithLabel } = Astro.props;
+
+/** The panel's side in viewBox units: a star of magnitude 7.5 is 1 unit across, Sirius 6.4 (`chart-svg.ts`). */
+const SIZE = 200;
+const svg = panelSvg(panel, { size: SIZE, routeStars, names, targetLabel, zenithLabel });
+
+const CIRCLE_STYLES = {
+  finder: { class: "fill-none stroke-heading", width: "0.8", dash: "5 2.5", cap: "butt" },
+  reflex: { class: "fill-none stroke-heading", width: "0.8", dash: "0.1 2.2", cap: "round" },
+  eyepiece: { class: "fill-none stroke-primary-strong", width: "1.6", dash: undefined, cap: "butt" },
+} as const;
+
+/** The target marker: four ticks round a gap, inside the reflex finder's smallest ring. */
+const TICK_FROM = 1.2;
+const TICK_TO = 4;
+const { cx: tx, cy: ty } = svg.target;
+---
+
+<div class="w-full max-w-md" data-finder-panel={kind}>
+  <h3 class="font-display text-label font-semibold text-heading">{heading}</h3>
+  <svg
+    viewBox={svg.viewBox}
+    role="img"
+    aria-label={ariaLabel}
+    class="mt-2 block w-full rounded-lg border border-border bg-surface"
+  >
+    {svg.circles.map((circle) => {
+      const style = CIRCLE_STYLES[circle.kind];
+      return (
+        <circle
+          cx={circle.cx}
+          cy={circle.cy}
+          r={circle.r}
+          class:list={[style.class]}
+          stroke-width={style.width}
+          stroke-dasharray={style.dash}
+          stroke-linecap={style.cap}
+        />
+      );
+    })}
+    {svg.path !== "" && (
+      <path d={svg.path} class="fill-none stroke-heading" stroke-width="0.8" stroke-linejoin="round" />
+    )}
+    {svg.stars.map((star) => (
+      <>
+        <circle cx={star.cx} cy={star.cy} r={star.r} class="fill-chart-star" />
+        {star.route && (
+          <circle cx={star.cx} cy={star.cy} r={star.r + 2} class="fill-none stroke-heading" stroke-width="0.6" />
+        )}
+      </>
+    ))}
+    <g class="stroke-primary-strong" stroke-width="1.2" stroke-linecap="round">
+      <line x1={tx - TICK_TO} y1={ty} x2={tx - TICK_FROM} y2={ty} />
+      <line x1={tx + TICK_FROM} y1={ty} x2={tx + TICK_TO} y2={ty} />
+      <line x1={tx} y1={ty - TICK_TO} x2={tx} y2={ty - TICK_FROM} />
+      <line x1={tx} y1={ty + TICK_FROM} x2={tx} y2={ty + TICK_TO} />
+    </g>
+    {svg.zenith !== null && (
+      <g class="fill-none stroke-foreground" stroke-width="0.8" stroke-linecap="round">
+        <circle cx={svg.zenith.cx} cy={svg.zenith.cy} r="2.5" />
+        <line x1={svg.zenith.cx - 4.5} y1={svg.zenith.cy} x2={svg.zenith.cx + 4.5} y2={svg.zenith.cy} />
+        <line x1={svg.zenith.cx} y1={svg.zenith.cy - 4.5} x2={svg.zenith.cx} y2={svg.zenith.cy + 4.5} />
+      </g>
+    )}
+    {svg.labels.map((label) => (
+      <text
+        x={label.x}
+        y={label.y}
+        text-anchor={label.anchor}
+        font-size={LABEL_FONT_UNITS}
+        class="fill-foreground stroke-surface font-sans"
+        stroke-width="2.4"
+        stroke-linejoin="round"
+        paint-order="stroke"
+      >
+        {label.text}
+      </text>
+    ))}
+  </svg>
+  <slot />
+</div>

@@ -88,6 +88,10 @@ const CHECKS: Check[] = [
     bg: ["plan-twilight", "plan-night"],
     floor: 3,
   },
+  // The finder chart's stars (`chart-star`) over the page's ground and the panel's surface, as non-text graphics. Its
+  // lines (`heading`, the finder circle, the reflex rings and the route) already clear 4.5:1 on both above, so there
+  // is no `--chart-line`; the eyepiece circle and the target marker (`primary-strong`) are held to 3:1 on both below.
+  { themes: [...DARK_LIGHT, "red"], fg: ["chart-star"], bg: ["background", "surface"], floor: 3 },
   // The "not seen yet" Sparkles icon (observing-progress) is `primary-strong`, a non-text indicator over the ground and
   // the surface, in every theme (the cards and the tile sit on the page's light or dark ground, not on the night sky).
   { themes: [...DARK_LIGHT, "red"], fg: ["primary-strong"], bg: ["background", "surface"], floor: 3 },

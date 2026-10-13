@@ -38,6 +38,10 @@ import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
+import FinderChart from "@/components/finder/FinderChart.astro";
+import FinderLocked from "@/components/finder/FinderLocked.astro";
+import { finderSamples } from "@/components/design/finder-samples";
+import Attribution from "@/components/tonight/Attribution.astro";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
@@ -60,6 +64,7 @@ import {
   type TonightPlanetEntry,
   type TonightView,
 } from "@/lib/tonight/build";
+import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
 import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
 import { observingProgress } from "@/lib/progress/progress";
 import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
@@ -131,6 +136,7 @@ const tokenGroups = [
       { name: "warning", swatch: "bg-warning" },
       { name: "success", swatch: "bg-success" },
       { name: "star", swatch: "bg-star" },
+      { name: "chart-star", swatch: "bg-chart-star" },
       { name: "star-accent", swatch: "bg-star-accent" },
       { name: "zenith", swatch: "bg-zenith" },
       { name: "horizon", swatch: "bg-horizon" },
@@ -610,6 +616,9 @@ const milestonesSome = withStored(milestonesOf(progressSome), new Map([["first-m
 // The celebration dialog's specimens (Phase 6): one milestone, and three (a save that reaches several at once).
 const celebrateOne: MilestoneKey[] = ["first-galaxy"];
 const celebrateThree: MilestoneKey[] = ["first-planet", "all-planets", "messier-10"];
+
+// The finder chart's specimens (finder-chart): real engine charts from the real star file at a fixed public point.
+const finder = await finderSamples(locale);
 
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
@@ -2199,6 +2208,115 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <TonightPageSkeleton title={m.tonight.summary.plan} reloadHref="/design" rows={2} layout="plan" />
               </div>
             </div>
+          </section>
+
+          <!-- FinderChart -->
+          <section class:list={block} aria-labelledby="c-finder-chart">
+            <h3 id="c-finder-chart" class:list={blockTitle}>
+              FinderChart (/tonight/finder)
+            </h3>
+            <p class:list={blockNote}>
+              The chart a full-plan account sees for a ranked object: the context line, the overview from the starting
+              star, the finder view with the finder's field (long dashes), the reflex finder's rings (dots) and the
+              finding eyepiece (solid, thick), the numbered steps and the inverted-finder note. Each chart is drawn by
+              the engine from the real star file at Warsaw's coordinates; the circles tell themselves apart by stroke
+              style and width, so red mode (the last cell) keeps them.
+            </p>
+            <div class="flex flex-col gap-10">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · hop, facing</p>
+                <p class:list={blockNote}>{finder.hop.note}</p>
+                <FinderChart chart={finder.hop.chart} labels={finder.hop.labels} locale={locale} attribution={false} />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · hop, facing, M31 (to compare with a published chart)</p>
+                <p class:list={blockNote}>{finder.m31.note}</p>
+                <FinderChart chart={finder.m31.chart} labels={finder.m31.labels} locale={locale} attribution={false} />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · overhead</p>
+                <p class:list={blockNote}>{finder.overhead.note}</p>
+                <FinderChart
+                  chart={finder.overhead.chart}
+                  labels={finder.overhead.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · direct (no hop)</p>
+                <p class:list={blockNote}>{finder.direct.note}</p>
+                <FinderChart
+                  chart={finder.direct.chart}
+                  labels={finder.direct.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · naked-eye planet</p>
+                <p class:list={blockNote}>{finder.nakedEye.note}</p>
+                <FinderChart
+                  chart={finder.nakedEye.chart}
+                  labels={finder.nakedEye.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · no starting star</p>
+                <p class:list={blockNote}>{finder.noStart.note}</p>
+                <FinderChart
+                  chart={finder.noStart.chart}
+                  labels={finder.noStart.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · no eyepieces</p>
+                <p class:list={blockNote}>{finder.noEyepiece.note}</p>
+                <FinderChart
+                  chart={finder.noEyepiece.chart}
+                  labels={finder.noEyepiece.labels}
+                  locale={locale}
+                  attribution={false}
+                />
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>locked · a free account, with the example</p>
+                <div class="rounded-lg border border-border p-4">
+                  <FinderLocked example={EXAMPLE_FINDER_CHART} exampleLabels={exampleLabels(locale)} locale={locale} />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>loading · the page skeleton</p>
+                <div class="overflow-hidden rounded-lg">
+                  <TonightPageSkeleton
+                    title={m.tonight.finder.title({ target: "M13" })}
+                    reloadHref="/design"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>red mode · hop, facing</p>
+                <div data-theme="red" class="rounded-lg border border-border bg-background p-4 text-foreground">
+                  <FinderChart
+                    chart={finder.hop.chart}
+                    labels={finder.hop.labels}
+                    locale={locale}
+                    attribution={false}
+                  />
+                </div>
+              </div>
+            </div>
+            <Attribution />
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (a chart is a picture with text: no control to hover, focus
+              or disable) · error — N/A (a failed build renders the page's own notice, not the chart) · empty — the
+              no-start and no-eyepieces cells · loading — the page skeleton
+            </p>
           </section>
         </div>
       </Band>

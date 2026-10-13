@@ -1,0 +1,115 @@
+---
+/*
+ * The finder chart (M-3 S-03, finder-chart): the context line, the overview panel (start to target) and the finder
+ * panel (the finder's field around the target, with the finder circle, the reflex rings and the finding eyepiece's
+ * circle), the numbered steps, the inverted-finder note and, unless the caller draws one, the data credits.
+ * The root carries `data-finder-orientation="facing|overhead"` so e2e can read which way the chart is drawn; it has no
+ * `data-finder-chart` (that marks the live chart state in `FinderContent`, and this also renders the free example).
+ * Everything the engine's data does not carry comes in `labels`, already formatted: the target's name, the stars'
+ * designations, the eyepiece, and the ranking's refracted direction and best time for the facing context line.
+ */
+import { getMessages } from "@/i18n";
+import { FINDER_FIELD_DEG, type FinderChartData } from "@/lib/engine";
+import { degreesFormat, finderText, type FinderChartLabels } from "@/lib/finder/steps";
+import type { Locale } from "@/lib/preferences";
+import Attribution from "@/components/tonight/Attribution.astro";
+import FinderPanel from "./FinderPanel.astro";
+import FinderSteps from "./FinderSteps.astro";
+
+interface Props {
+  chart: FinderChartData;
+  labels: FinderChartLabels;
+  locale: Locale;
+  /** Draw the data credits under the chart (default). A host that draws its own passes `false`. */
+  attribution?: boolean;
+}
+
+const { chart, labels, locale, attribution = true } = Astro.props;
+const t = getMessages(locale).tonight.finder;
+const text = finderText(chart, labels, locale, t);
+const deg = degreesFormat(locale);
+const overhead = chart.orientation === "overhead";
+const overheadNote = chart.poleUp === "south" ? t.overheadSouth : t.overheadNorth;
+const showEyepiece = labels.eyepiece !== null && chart.finder.circles.some((circle) => circle.kind === "eyepiece");
+
+const swatch = "h-3 w-8 shrink-0 overflow-visible";
+---
+
+<div class="space-y-6" data-finder-orientation={chart.orientation}>
+  <div>
+    <p class="text-body font-semibold text-heading" data-finder-context>
+      {overhead
+        ? t.contextOverhead({ time: labels.time })
+        : t.contextFacing({ direction: labels.direction, time: labels.time })}
+    </p>
+    <p class="mt-1 text-label text-muted-foreground">{overhead ? overheadNote : t.facingNote}</p>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    {chart.overview !== null && text.overviewAlt !== null && (
+      <FinderPanel
+        panel={chart.overview}
+        kind="overview"
+        heading={t.overviewHeading}
+        ariaLabel={text.overviewAlt}
+        routeStars={text.routeStars}
+        names={labels.stars}
+        targetLabel={labels.target}
+        zenithLabel={t.zenith}
+      />
+    )}
+    <FinderPanel
+      panel={chart.finder}
+      kind="finder"
+      heading={t.finderHeading}
+      ariaLabel={text.finderAlt}
+      routeStars={text.routeStars}
+      names={labels.stars}
+      targetLabel={labels.target}
+      zenithLabel={t.zenith}
+    >
+      <ul class="mt-3 space-y-1.5 text-label text-muted-foreground" data-finder-legend>
+        <li class="flex items-center gap-3">
+          <svg aria-hidden="true" viewBox="0 0 32 12" class:list={[swatch]}>
+            <line x1="0" y1="6" x2="32" y2="6" class="stroke-heading" stroke-width="1.5" stroke-dasharray="5 2.5" />
+          </svg>
+          {t.legendFinder({ field: deg(FINDER_FIELD_DEG) })}
+        </li>
+        <li class="flex items-center gap-3">
+          <svg aria-hidden="true" viewBox="0 0 32 12" class:list={[swatch]}>
+            <line
+              x1="1"
+              y1="6"
+              x2="31"
+              y2="6"
+              class="stroke-heading"
+              stroke-width="1.5"
+              stroke-dasharray="0.1 4"
+              stroke-linecap="round"
+            />
+          </svg>
+          {t.legendReflex({ rings: text.reflexRings })}
+        </li>
+        {showEyepiece && labels.eyepiece !== null && (
+          <li class="flex items-center gap-3">
+            <svg aria-hidden="true" viewBox="0 0 32 12" class:list={[swatch]}>
+              <line x1="0" y1="6" x2="32" y2="6" class="stroke-primary-strong" stroke-width="3" />
+            </svg>
+            {t.eyepieceLine({ name: labels.eyepiece.name, field: deg(labels.eyepiece.fieldDeg) })}
+          </li>
+        )}
+      </ul>
+      {!showEyepiece && (
+        <p class="mt-2 text-label text-muted-foreground" data-finder-no-eyepiece>
+          {t.noEyepiece}
+        </p>
+      )}
+    </FinderPanel>
+  </div>
+
+  <FinderSteps steps={text.steps} kind={chart.kind} locale={locale} />
+
+  <p class="text-label text-muted-foreground">{t.invertedNote}</p>
+
+  {attribution && <Attribution />}
+</div>
