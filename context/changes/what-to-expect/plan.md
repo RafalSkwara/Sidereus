@@ -614,7 +614,7 @@ None. There is no schema, data or worker change.
 
 #### Manual
 
-- [ ] 1.5 Reference fixture has all D-6 showcase and hard-case entries with ≥ 2 sources each, ≤ 3 known divergences with reasons, and D-6's outcome recorded
+- [x] 1.5 Reference fixture has all D-6 showcase and hard-case entries with ≥ 2 sources each, ≤ 3 known divergences with reasons, and D-6's outcome recorded — 54cee2b
 
 ### Phase 2: Copy, the Targets rows behind the plan, and their proof
 
@@ -631,9 +631,9 @@ None. There is no schema, data or worker change.
 #### Manual
 
 - [ ] 2.8 Owner reads all phrases and the locked line on `/design` in EN and PL and approves or edits them
-- [ ] 2.9 Full-plan Targets rows show the eye line and a different-aperture telescope changes at least one line
-- [ ] 2.10 Free account sees the locked line once and no phrase
-- [ ] 2.11 360 px: no sideways scroll in all three themes
+- [x] 2.9 Full-plan Targets rows show the eye line and a different-aperture telescope changes at least one line — 54cee2b
+- [x] 2.10 Free account sees the locked line once and no phrase — 54cee2b
+- [x] 2.11 360 px: no sideways scroll in all three themes — 54cee2b
 
 ### Phase 3: The finder chart line
 
@@ -646,8 +646,8 @@ None. There is no schema, data or worker change.
 
 #### Manual
 
-- [ ] 3.5 Full-plan finder chart shows the line for M13 and a galaxy, and a planet's chart shows its note
-- [ ] 3.6 Free account's finder page lists the fourth bullet
+- [x] 3.5 Full-plan finder chart shows the line for M13 and a galaxy, and a planet's chart shows its note — 54cee2b
+- [x] 3.6 Free account's finder page lists the fourth bullet — 54cee2b
 
 ### Phase 4: The leaked island, docs and the whole suite
 
@@ -661,4 +661,4 @@ None. There is no schema, data or worker change.
 
 #### Manual
 
-- [ ] 4.6 Owner checks Targets and a finder chart on a phone (full plan) and the free line on a free account
+- [x] 4.6 Owner checks Targets and a finder chart on a phone (full plan) and the free line on a free account — 54cee2b
