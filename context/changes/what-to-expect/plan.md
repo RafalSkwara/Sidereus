@@ -630,7 +630,7 @@ None. There is no schema, data or worker change.
 
 #### Manual
 
-- [ ] 2.8 Owner reads all phrases and the locked line on `/design` in EN and PL and approves or edits them
+- [x] 2.8 Owner reads all phrases and the locked line on `/design` in EN and PL and approves or edits them — 54cee2b
 - [x] 2.9 Full-plan Targets rows show the eye line and a different-aperture telescope changes at least one line — 54cee2b
 - [x] 2.10 Free account sees the locked line once and no phrase — 54cee2b
 - [x] 2.11 360 px: no sideways scroll in all three themes — 54cee2b

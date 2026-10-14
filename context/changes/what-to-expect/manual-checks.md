@@ -22,7 +22,11 @@ With the 60 mm refractor at the default Madrid site, M31's line reads "A very fa
 - The core-offset model rates M31's core low. At 150 mm / Bortle 4 the reference fixture expects `galaxyBright`, and the rule matches it.
 - Changing this would need a sourced rule change (for example, a large-galaxy core term). It is left as is, a candidate for the owner when reading 2.8.
 
-## Screenshots for 2.8 (owner)
+## 2.8 (owner)
+
+Accepted by the owner on 2026-10-14 from the four screenshots below: the EN and PL phrases and the locked line on `/design` are approved as they are.
+
+### Screenshots
 
 `/design`, section "What to expect (Targets rows)", EN and PL, dark and light:
 
