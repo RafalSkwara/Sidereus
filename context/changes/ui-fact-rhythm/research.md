@@ -300,3 +300,13 @@ For the plan, not blocking it:
 1. Polish copy for the planet labels and values (table above): the owner reviews.
 2. Best's direction on a second line in its card (as in the experiment) or one line: the experiment favours the second line at 320 px.
 3. The Nights short-reason wording (C5, deferred): the owner's call whether it is worth a copy change.
+
+## Follow-up (2026-10-14, after the plan review)
+
+Superseded by the owner's answers and the review (`reviews/plan-review.md`):
+
+- **Spacing values.** C2's "group 20 px, item 32 px" became group 24 px and item 40 px (owner, D1). `line` stays 8 px.
+- **The icon map.** It moves to `src/components/ui/fact-icons.ts`, keyed by concept (F7).
+- **The Moon pair claim.** That the Moon gets the stat pair "for free" is shown by no image here, because the experiment's Moon page had no Moon target (F3).
+- **The red stat card.** In red its fill is 1.03:1, so the faint border carries the shape, not the fill (F8).
+- **`tonight-phone.spec.ts`.** This change does not edit it (F4).

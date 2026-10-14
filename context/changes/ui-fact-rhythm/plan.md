@@ -9,11 +9,15 @@ This change gives the Tonight focused pages' item lists a fact rhythm. It is the
 - **A hairline** separates "when" from "what and how".
 - **Spacing** comes from three rhythm roles instead of per-file steps.
 - **Group labels** share one `text-overline` role.
-- **Icons** come from one shared map, which absorbs S-07's event-kind icons.
+- **Icons** come from one concept-keyed map, which absorbs S-07's event-kind icons.
 
 The views are Targets, Planets, the Moon, Sky events and Nights. The finder's what-to-expect line shares the new component.
 
-The research and its five charges are in `research.md` (C1-C5). A reverted experiment of the stat cards and fact rows, with before and after shots, is in `evidence/exp-stat-cards/` and `evidence/before/`.
+**Sources**
+- The research and its five charges: `research.md` (C1-C5).
+- The reverted experiment of the stat cards and fact rows: `evidence/exp-stat-cards/`.
+- The before matrix from main c650a8a: `evidence/before/`.
+- The plan review: `reviews/plan-review.md` (F1-F10). All its findings are applied, with the owner's answers of 2026-10-14 (see "Decisions").
 
 ## Current State Analysis
 
@@ -30,7 +34,7 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
 
 **Spacing**
 - 43 distinct spacing utilities appear across the 15 view files.
-- The "between lines" role alone has six spellings (`gap-y-2`, `space-y-3`, `space-y-2`, `space-y-1`, `space-y-1.5`, `gap-2`).
+- The "between lines" role alone has six spellings.
 - Rows are `py-5`, with groups at `mt-4`/`mt-5` inside (C2).
 
 **Group labels**
@@ -45,11 +49,11 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
 **Tooling**
 - Tailwind 4.3.3 publishes `--spacing-<name>` as `gap-<name>`, `mt-<name>`, `py-<name>`, `space-y-<name>`, and `--text-<name>` with `--line-height`, `--letter-spacing` and `--font-weight` sub-keys as a type role.
 - Tokens in `@theme inline` need no red value (`red-theme.test.ts` reads only `:root` and `[data-theme="red"]` blocks).
-- The experiment built and rendered with these utilities.
+- A `@theme inline` value cannot be overridden by a media query (`global.css:645`). The roles are therefore fixed at every width, as the owner chose.
 
 **Tests**
 - No test reads `dl`/`dt`/`dd`, the Window/Best text, planet or Moon fact text, the reason or the note. There are no screenshot baselines.
-- Seven locator families are fragile and must survive (research, "Tests that pin this markup"):
+- These locators are fragile and must survive (research, "Tests that pin this markup"):
   - `[data-expect]` text exactly the phrase;
   - `[data-event-visibility]` text exactly the sentence;
   - the event name is the row's first `h4`;
@@ -58,7 +62,9 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
   - Planets `getByRole("listitem")` cards (no `<li>` inside a card);
   - `li#object-…` and `li#planet-…` ids;
   - `tonight-phone.spec`'s no-sideways-scroll at 320/375 px.
+- `telescope-selector.spec.ts:160-161` asserts that without eyepieces the ranking does **not** contain "Find with" or the `noneFit` prefix.
 - `build.test.ts:745-766` pins the planet fact wording.
+- `npx vitest related` finds no test for `.css` or `.astro` files ("No test files found", exit 0; review F6). The colour, red and contrast guards read files with `readFileSync`. **`npm test` is the real unit gate** for every phase.
 
 ## Desired End State
 
@@ -66,12 +72,12 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
 - Each item reads in three groups:
   1. the identity (name, detail line; for a planet, its labelled facts: Brightness, Apparent size, Phase, Rings);
   2. the **stat pair** (Window "20:51–07:10"; Best "03:21" over "NNE, 87°");
-  3. after a hairline, the "what and how" facts, each with its icon: what you'll see (Eye), the eyepieces (Telescope), why (Info, muted).
+  3. after a hairline, the "what and how" facts, each with its icon: what you'll see (an Eye in the accent colour), the eyepieces (Telescope), why (Info, muted).
 - Then come the actions from ui-quiet-actions.
-- Items are 32 px apart, groups 20 px, lines 8 px.
+- Rows sit 40 px from their rule on each side, groups are 24 px apart, lines 8 px.
 
 **Moon**
-- The Moon's up and faint lines beside the disc are icon-led facts.
+- The Moon's up and faint lines beside the disc are icon-led facts, spaced inside the island's slot.
 
 **Sky events**
 - Each row keeps its kind icon, name and visible mark.
@@ -83,83 +89,78 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
 - Each night's reason, cloud and moon lines are muted icon-led facts.
 
 **Contract**
-- `/design` shows the roles, the overline, `StatCard`/`StatPair`, `Fact`/`FactList` and the icon map in dark, light and red, at 320 px and on desktop, with Polish values.
+- `/design` shows the roles, the overline, `StatCard`/`StatPair` (including the 320 px row-width measurement), `Fact`/`FactList`, the icon map, a Moon target and a Nights strip, in dark, light and red, with Polish values.
 - A guard test stops the view family from using numeric vertical spacing again.
-- CLAUDE.md names the roles, the components and the stat cards as the second boxed exception.
+- CLAUDE.md names the roles, the components, the accent-Eye and safety-icon exceptions, and the stat cards as the second boxed exception.
 
 **Verify**: the screenshot matrix (`evidence/before` vs `evidence/after`), the whole e2e suite and smoke, and the owner's look at the before/after crops.
 
 ### Key Discoveries:
 
-- `TargetDetails` already owns the spacing between its parts so callers carry none (`TargetDetails.astro:2-6`). The new components extend that, and the Moon gets the stat pair through it for free (experiment, `evidence/exp-stat-cards/moon-phone-en-dark.jpg`).
+- `TargetDetails` already owns the spacing between its parts so callers carry none (`TargetDetails.astro:2-6`). The new components extend that. The Moon target block also renders through `TargetDetails`, so it will get the pair. The experiment's Moon shot does not show that block, because the Moon was not a target that night (review F3). Phase 3 adds a Moon target specimen to `/design` to show it.
 - **Slotted text can lose a space.** "Do szczegółów:10 mm Plössl" rendered when a sentence was slotted straight into the experiment's `Fact` (`evidence/exp-stat-cards/planets-pl-dark.jpg`). Fact content must sit in its own element.
+- **`MoonTimeSlider.tsx:70` puts `space-y-2` on its children**, but Astro wraps island children in `<astro-slot>` (`display: contents`), so the margins land on a box-less element. The lines stand tight today (`evidence/before/moon-phone-en-dark.jpg`; review F3). The facts must sit in one `FactList` inside the slot.
 - **Desktop.** A half-width stat card at 1280 px floats its value in a 360 px box (`evidence/exp-stat-cards/targets-desktop-pl-light.jpg`). Cap the pair's width from `sm`.
-- `TonightTiles.astro:160,170` reads `moonCard.phaseText` and `solarSystem.entries[0].reason`. Their types and wording stay.
-- **S-08** (worktree `adjustable-session-plan`, HEAD 9bf8043, not merged) adds `id="object-<id>" scroll-mt-4` to `ObjectRow`'s root `<li>` and to the washed-out `<li>`. It touches `design.astro`, `en.ts`/`pl.ts` (`tonight.pages.plan.*`, `errors.*`), `tonight-phone.spec.ts` and CLAUDE.md, and nothing in this change's components or keys.
+- **The expanded rows are narrow at 320 px** (review F2): 288 px column − 26 px (the scroll region's border and `px-3`, `TargetsPageContent.astro:246`) − 40 px (`pl-10`) leaves about 222 px for the pair. That is about 105 px per card and about 79 px of text, against about 88-95 px for "20:51–07:10" at `text-body` and about 85 px for "Widoczność" with its icon. In the top five (`ObjectCard`) there is about 112 px of text per card. None of the current checks sees this:
+  - `tonight-phone.spec` measures the document with rows closed;
+  - `capture.mjs` shoots at 390/1280 with rows closed.
+- `TonightTiles.astro:160,170` reads `moonCard.phaseText` and `solarSystem.entries[0].reason`. Their types and wording stay, and the dashboard is not touched.
+- **Red mode** (review F8, measured from `global.css` hexes):
+  - `--surface` on `--background` is 1.03:1 in red (1.06 dark, 1.07 light), so a card's fill is practically invisible there.
+  - Its shape comes only from the faint `--border` (1.14:1 on surface), exactly like the gear cards.
+  - Every new ink pair (muted on surface 3.23:1, heading on surface 5.07:1 in red) is inside the existing `contrast.test.ts` pins.
+  - The overline in muted drops from `text-primary` (#ff0000, 5.20:1) to #c40000 (3.31:1) at 13 px: above the pinned 3:1, but quieter.
+- **S-08 adjustable-session-plan** (worktree `adjustable-session-plan`, HEAD 8bc0c1b with Phases 1-4 committed, Phase 5 uncommitted on 2026-10-14) will almost certainly merge first (review F4). Its overlap with this change:
+  - `ObjectRow`'s root `<li>`: adds `id="object-${entry.id}" class="scroll-mt-4"`.
+  - **The same washed-out `<li>` line in `TargetsPageContent.astro`** that Phase 3 edits: S-08 makes it `flex min-h-11 scroll-mt-4 items-center gap-3 py-3`. The merged result is `flex min-h-11 scroll-mt-4 items-center gap-3 py-group`.
+  - `ObjectCard`: adds `data-object-card` (Phase 5, uncommitted).
+  - `TonightPageSkeleton`: its `layout="plan"` branch (Phase 5).
+  - `FinderContent.astro:48`: the `from` prop, not the expect line.
+  - `design.astro` (+165 lines of plan specimens and `reachable: null`), `en.ts`/`pl.ts` (`tonight.pages.plan.*`, `errors.*`), `tests/e2e/helpers.ts`, `tests/e2e/tonight-phone.spec.ts`, CLAUDE.md.
+  - This plan does not edit `tonight-phone.spec.ts` (research said it did; it does not).
+  - S-08's new row ids make `what-to-expect.spec.ts:92-101` count closed and washed-out rows through `li[id^="object-"]`. That spec belongs to S-08 to narrow (to `ol > li[data-object]` of the top five, or `[data-object-card]`); the orchestrator relays it.
+  - If this change rebases onto S-08 before S-08 fixes the spec, Phase 3's run of `what-to-expect` goes red for that reason, not this change's.
 
 ## What We're NOT Doing
 
 - **The dashboard** (`/tonight`, `TonightTiles`, the verdict's S-07 event line): change 3, `ui-dashboard-tiles`.
 - **Navigation** (the Tonight sub-nav, Progress as a destination): change 4, `ui-tonight-nav`.
 - **/log, /log/progress and /gear**: change 5, `ui-log-progress-gear`.
-- **The plan page** (`/tonight/plan`, `SessionTimeline`, `PlanPageContent`): S-08 is changing it in parallel. Its "Best … · window …" line keeps its wording (`tonight-dashboard.spec.ts:142`).
-- **Splitting the targets' `reason`** into separate facts. It is one pre-joined string of two ranking components (`format.ts:328-333`), and splitting it needs view-model parts. It stays one muted "why" fact.
-- **A shorter Nights reason, or merging identical reasons (C5, deferred).** The sentence comes from seven reason variants shared with the dashboard verdict. A short form needs a parallel key family in both languages and the reason kind on `TonightNight`. With real weather the lines differ per night.
+- **The plan page** (`/tonight/plan`, `SessionTimeline`, `PlanPageContent`, the skeleton's `layout="plan"` branch): S-08 owns them. Its "Best … · window …" line keeps its wording (`tonight-dashboard.spec.ts:142`).
+- **Splitting the targets' `reason`** into separate facts. It is one pre-joined string of two ranking components (`format.ts:328-333`). It stays one muted "why" fact.
+- **A shorter Nights reason, or merging identical reasons (C5, D8, owner: deferred).** The sentence comes from seven reason variants shared with the dashboard verdict. A short form needs a parallel key family in both languages and the reason kind on `TonightNight`. With real weather the lines differ per night.
 - **Uppercase overlines.** Polish night headings ("Noc: środa, 21 października 2026") would shout.
-- **New colour tokens.** The stat card reuses the gear cards' `bg-surface` and `--border`.
-- **Changing `buttonVariants`** or the action row. That was ui-quiet-actions.
+- **Responsive roles.** The owner chose fixed values at every width.
+- **New colour tokens or contrast pins.** The stat card reuses the gear cards' `bg-surface` and `--border`, and every new ink pair is already pinned (F8).
+- **Changing `buttonVariants`** or the action row's links. That was ui-quiet-actions.
+- **Editing `tonight-phone.spec.ts`.**
 
-## Implementation Approach
+## Decisions
 
-The /10x-ui order:
+The owner's answers of 2026-10-14 (relayed by the orchestrator) to the agent's defaults D1-D8 and the review questions:
 
-1. Environment/library: nothing to add; lucide-react and Tailwind v4 are present.
-2. Token values and the shared contract: Phase 1.
-3. The copy the labels need: Phase 2.
-4. The views: Phases 3 and 4.
-5. States, the guard, rules and the gate: Phase 5.
-
-Each charge maps to a phase:
-
-| Charge | Phase(s) |
-|---|---|
-| C1 Fact/StatCard | 1, then 3 and 4 |
-| C2 rhythm roles | 1, then 3 and 4, with the guard in 5 |
-| C3 overline | 1 and 4 |
-| C4 icon map and planet labels | 1, 2 and 3 |
-| C5 Nights reason | 4 (icons and roles); the copy is deferred |
-
-**Delegation** (owner rule, 2026-10-14):
-- UI code phases go to a subagent with `model: "opus"` at high effort. That covers components, layout, tokens and styling, `/design`, UI e2e and screenshot judgement.
-- Non-UI code (copy keys with the view model's wording, a source-scan guard) goes to `model: "sonnet"` at high effort.
-- Docs and screenshot capture go to `model: "sonnet"` at medium effort.
-- Haiku is never used for code.
-
-**Every implementation brief**:
-- gives the `nvm use` prefix up front;
-- forbids web sourcing (everything needed is in `research.md` and here);
-- batches lint, types and the related tests in one command while iterating: `npx astro check && npm run lint && npx vitest related <changed files> --run`;
-- names the preview port 4331 and the fixture port 4401;
-- says keys go inline only and `test:db` is never run.
-
-The main session runs the full gates once per phase (`npm test`, `npm run build`, the phase's e2e list), commits, and judges the screenshots. Break checks, the whole e2e suite before the PR and the Opus implementation review stay as in earlier changes.
-
-**Agent decisions to confirm at plan review** (the agent cannot ask the owner directly; each is the recommended default, and the reviewer relays them in Polish):
-
-- **D1. Roles.** `line` 8 px, `group` 20 px, `item` 32 px, fixed at every width.
-  - An item that holds groups (target, planet, Moon target, event) is `py-item`.
+- **D1. Roles (owner: looser rhythm).** Fixed at every width.
+  - `line` 8 px: between the lines of one group.
+  - `group` 24 px: between the groups of one item, and the hairline's padding.
+  - `item` 40 px: the padding on each side of the rule between two items holding groups (target, planet, Moon target, event).
   - A one-group row (a night, a washed-out row) is `py-group`.
-- **D2. Overline.** 13 px / 20 px, weight 600, tracking 0.04em, sentence case, muted ink. It is used for the Nights group labels and the event night headings.
-- **D3. Stat card.**
-  - It is the gear cards' bordered `bg-surface` box, `rounded-lg`, with a caption label and its icon over a `font-mono text-body` semibold value.
-  - Best's direction sits on a second muted line, because one line wraps at 320 px.
+- **D2. Overline** (default kept): 13 px / 20 px, weight 600, tracking 0.04em, sentence case, muted ink.
+- **D3. Stat card** (default kept, with F2 and F8):
+  - The gear cards' bordered `bg-surface` box, `rounded-lg`.
+  - A caption label with its icon over a `font-mono text-body` semibold value.
+  - Best's direction on a second muted line.
   - The pair is `grid-cols-2` at every width, capped at `max-w-md` from `sm`.
-  - In red the border is faint and the fill carries the shape, the same as the gear cards.
-- **D4. Fact icons are muted.** The expect line's Eye moves from `text-primary-strong` to muted like every fact, and the line keeps its first place and foreground ink. Exceptions: the solar safety icon keeps `text-marginal`, and the event kind icon and visible mark keep heading ink.
-- **D5. Fact order.** Identity, then the stat pair, then the hairline, then "what you'll see" (expect or note), then the eyepieces, then why (muted).
-  - The Moon target's note moves above its eyepieces; today it is last and muted.
+  - The grid stretches the shorter Window card to Best's height. That is accepted; the empty room sits under Window's value.
+  - **In red the card keeps the faint border like the gear cards** (owner, F8). The border carries the shape there, not the fill.
+- **F2. Measure first** (owner). Phase 1 builds the pair on its `/design` specimen and captures it at 320 px inside a Targets expanded-row frame (EN and PL; dark, light and red), with the fallbacks beside it. **Phase 1 then stops**, and the owner chooses from the screenshot before Phase 3 starts. Fallbacks shown:
+  - (a) as planned;
+  - (b) the value at `text-label` in the row only;
+  - (c) the pair without the row's `pl-10` indent.
+- **D4. Fact icons are muted, with two exceptions** (owner, F9). The Eye on the "what you'll see" line stays `text-primary-strong`, so the line stands out as the audit asked. The solar safety icon keeps `text-marginal`. The event kind icon keeps heading ink.
+- **D5. Fact order** (default kept). Identity, then the stat pair, then the hairline, then "what you'll see" (expect or note), then the eyepieces, then why (muted).
+  - The Moon target's note moves above its eyepieces.
   - A planet's labelled facts stay under its name as identity.
-- **D6. Planet labels and values.**
+- **D6. Planet labels and values** (default kept):
 
   | Fact | EN label | EN value | PL label | PL value |
   |---|---|---|---|---|
@@ -168,24 +169,90 @@ The main session runs the full gates once per phase (`npm test`, `npm run build`
   | phase | Phase | 62% lit | Faza | 62% |
   | rings | Rings | tilted 7° | Pierścienie | nachylone o 7° |
 
-- **D7. Event rows** keep the kind icon (heading ink, `size-5`) beside the name, and their facts carry their own `size-4` muted icons. Each detail is its own line instead of being joined with " · ".
-- **D8. C5 deferred** (see What We're NOT Doing).
+  Rendered as label, a space, then the value: "Brightness mag −1.9", "Jasność −1,9 mag".
+- **D7. Event rows** (default kept). They keep the kind icon (heading ink, `size-5`) beside the name, and their facts carry their own `size-4` icons. Each detail is its own line instead of being joined with " · ".
+- **D8. C5 deferred** (default kept).
+- **F7. One concept, one icon** (owner). The map is keyed by concept, not by place.
+  - The Moon has one icon everywhere: Moon. That covers the Moon-tonight lines, the Nights moon line and the lunar-eclipse kind.
+  - The Eye means only "what you'll see".
+  - "Visible" / "Not visible" get their own pair (CircleCheck / CircleSlash).
+  - The map lives in `src/components/ui/fact-icons.ts`, beside the other presentational helpers (`ui/tile.ts`).
+
+## Implementation Approach
+
+The /10x-ui order:
+
+1. Environment/library: nothing to add; lucide-react and Tailwind v4 are present.
+2. Token values and the shared contract, ending with the owner's 320 px choice: Phase 1.
+3. The copy the labels need: Phase 2.
+4. The views: Phases 3 and 4.
+5. The guard's last step, the rules and the gate: Phase 5.
+
+**Phase 2 lands with Phase 3.** Phase 2's commit is made as the first commit of Phase 3's run (or squashed into it), so no commit shows label-free planet values without their labels (F10).
+
+**The guard grows with the work** (F1). Phase 1 creates `rhythm-roles.test.ts` covering the new `ui/` components. Phases 3 and 4 add each view file as they convert it. Phase 5 adds the break check. Every exception is listed in this plan, so no implementer has to judge what counts as vertical rhythm.
+
+Each charge maps to a phase:
+
+| Charge | Phase(s) |
+|---|---|
+| C1 Fact/StatCard | 1, then 3 and 4 |
+| C2 rhythm roles | 1, then 3 and 4; the guard from 1 to 5 |
+| C3 overline | 1 and 4 |
+| C4 icon map and planet labels | 1, 2 and 3 |
+| C5 Nights reason | 4 (icons and roles); the copy is deferred |
+
+**Delegation** (owner rule, 2026-10-14):
+- UI code phases go to a subagent with `model: "opus"` at high effort. That covers components, layout, tokens and styling, `/design`, UI e2e and the guard's exception lists.
+- Non-UI code (copy keys with the view model's wording) goes to `model: "sonnet"` at high effort.
+- Docs, the evidence README and screenshot capture go to `model: "sonnet"` at medium effort.
+- Screenshot judgement is the main session's (Opus).
+- Haiku is never used for code.
+
+**Every implementation brief**:
+- gives the `nvm use` prefix up front;
+- forbids web sourcing (everything needed is in `research.md`, `reviews/plan-review.md` and here);
+- names the preview port 4331 and the fixture port 4401;
+- says keys go inline only and `test:db` is never run;
+- batches lint, types and the related tests in one command while iterating: `npx astro check && npm run lint && npx vitest related <changed .ts files> --run`. For `.css`/`.astro` changes, `npm test` is the gate.
+
+The main session runs the full gates once per phase (`npm test`, `npm run build`, the phase's e2e list), commits, and judges the screenshots.
+
+**Running the e2e lists** (the same for every phase and Phase 5's whole suite):
+1. After `npm run build`, write `dist/server/.dev.vars` with the local Supabase URL and publishable key and `FORECAST_BASE_URL=http://127.0.0.1:4401` (the build drops it).
+2. Start `FIXTURE_PORT=4401 node tests/e2e/forecast-fixture.mjs` and `npx astro preview --port 4331`.
+3. Run `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test <specs>`, with the keys from `npx supabase status -o env`, inline only.
+
+`astro dev` for `/design` also uses 4331, so the dev server and the preview never run at the same time (F6).
 
 ## Critical Implementation Details
 
-- **Whitespace in slotted text.** `Fact` wraps its content in its own element, and callers pass sentences inside a `<p>` or `<span>`, never as bare text and expressions straight in the slot. Phase 3 adds an e2e assertion on the Polish planet eyepiece line ("Do szczegółów: " followed by the name) so the lost space cannot come back.
-- **Markers stay exact.** `data-expect`, `data-event-visibility` and `data-event-note` move onto the `Fact` root, whose only text is the sentence (the icon is an `aria-hidden` svg with no text). No visible label may enter these elements.
+- **Fact content contract** (F5):
+  - A sentence goes in a `<p>`, and always so when it needs `first-letter:uppercase`. `::first-letter` works neither on the flex root nor on an inline `<span>`. This affects `NightStrip` `reasonText`, `ObjectDetails`' detail-with line and `MoonCard`'s detail line.
+  - A short value goes in a `<span>`.
+  - `label` is used only with inline content (a `<span>` value), never before a block `<p>`, where it would land on its own line.
+  - Never bare text plus expressions straight in the slot. Phase 3 adds e2e checks so the lost space cannot come back.
+- **Markers stay exact.** `data-expect`, `data-event-visibility` and `data-event-note` move onto the `Fact` root, whose only text is the sentence. The icon is an `aria-hidden` svg with no text, and no visible label may enter these elements. CLAUDE.md's what-to-expect paragraph then describes the marker on a `div`, not a `<p>` (Phase 5).
+- **No eyepiece fact without eyepieces.** When `pair` is null, `ObjectDetails` renders no `Fact kind="eyepiece"`, so "Find with" and the `noneFit` text stay out of the DOM. `telescope-selector.spec.ts:160-161` stays as is.
 - **No nested lists.** `FactList` renders a `div`, never `ul`/`ol`/`li`, because `planets-on-tonight.spec.ts:34` counts `listitem`s and `seven-night-planner.spec.ts:126` counts `ol > li`.
-- **Island guard.** `Fact`, `FactList` and the icon map are Astro and plain TS. They must never be imported by `TonightSkyView` or `MoonTimeSlider`; the Moon's facts are passed in as the slider's server-rendered children, as today.
-- **S-08 rebase.** Whichever change merges second keeps S-08's `id="object-${entry.id}" scroll-mt-4` on `ObjectRow`'s root `<li>` and on the washed-out `<li>`, and both changes' keys in `en.ts`/`pl.ts`. This change keeps off `PlanPageContent`, `SessionTimeline`, `TonightContent` and `src/lib/offline/*`.
+- **An empty `FactList` renders nothing.** It checks `(await Astro.slots.render("default")).trim()`, because `Astro.slots.has` is true for any passed slot.
+- **Island guard.** `Fact`, `FactList` and the icon map are Astro and plain TS. They must never be imported by `TonightSkyView` or `MoonTimeSlider`; the Moon's facts reach the slider as server-rendered children.
+- **The icon map's imports.** lucide icons plus `import type { SkyEventKind } from "@/lib/engine"` for the `satisfies` check. The import is type-only and disappears at runtime.
+- **S-08 rebase** (see Key Discoveries):
+  - Keep S-08's `id`/`scroll-mt-4` on `ObjectRow`'s root `<li>`.
+  - Merge the washed-out `<li>` line to `flex min-h-11 scroll-mt-4 items-center gap-3 py-group`.
+  - Keep `data-object-card` on `ObjectCard`.
+  - Keep both changes' keys in `en.ts`/`pl.ts` and both changes' `design.astro` sections.
+  - The guard's pattern skips `scroll-mt-*`.
+  - This change keeps off `PlanPageContent`, `SessionTimeline`, `TonightContent`, the skeleton's plan branch and `src/lib/offline/*`.
 
-## Phase 1: The contract: roles, overline, icon map, Fact and StatCard, specimens
+## Phase 1: The contract, and the 320 px measurement for the owner
 
-**Delegation**: Opus subagent, high effort (tokens, shared components, `/design`).
+**Delegation**: Opus subagent, high effort (tokens, shared components, `/design`, the first guard). Capture: Sonnet subagent, medium effort. Judgement and the owner hand-off: the main session.
 
 ### Overview
 
-Add the spacing and overline roles, the shared icon map, and the four shared components, and show them in `/design`. No view changes yet, except `SkyEventList` taking its kind icons from the map, which is a pure move.
+Add the spacing and overline roles, the icon map and the four shared components. Show them in `/design`, including the stat pair at the real width of a Targets expanded row at 320 px. Start the rhythm guard on the new components. No view changes yet, except `SkyEventList` taking its kind and visibility-mark icons from the map. **The phase ends at an owner checkpoint**: the 320 px screenshots and the choice of fallback (F2).
 
 ### Changes Required:
 
@@ -193,36 +260,38 @@ Add the spacing and overline roles, the shared icon map, and the four shared com
 
 **File**: `src/styles/global.css`
 
-**Intent**: Publish the three rhythm roles and the section-label role next to the type roles, with a comment on what each is for (C2, C3).
+**Intent**: Publish the three rhythm roles and the section-label role next to the type roles, with a comment on what each is for (C2, C3; D1, D2).
 
 **Contract**: in `@theme inline`, after `--text-caption--line-height`:
 - `--text-overline: 0.8125rem`, with `--line-height: 1.25rem`, `--letter-spacing: 0.04em`, `--font-weight: 600`;
 - `--spacing-line: 0.5rem`;
-- `--spacing-group: 1.25rem`;
-- `--spacing-item: 2rem`.
+- `--spacing-group: 1.5rem`;
+- `--spacing-item: 2.5rem`.
 
 They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 
 #### 2. The icon map
 
-**File**: `src/lib/ui/fact-icons.ts` (new)
+**File**: `src/components/ui/fact-icons.ts` (new)
 
-**Intent**: One vocabulary of decorative lucide icons for facts and event kinds, so a concept has one icon everywhere (C4).
+**Intent**: One vocabulary of decorative lucide icons, keyed by concept, so a concept has one icon everywhere and an icon means one concept (C4, F7).
 
-**Contract**: `FACT_ICONS` is keyed by a `FactKind` union:
-- `window` Clock, `best` Compass;
-- `expect` Eye, `see` Eye;
-- `eyepiece` Telescope, `reason` Info;
-- `magnitude` SunDim, `size` Diameter, `phase` Contrast, `rings` Ellipse;
-- `moonUp` MoonStar, `moonFaint` CloudMoon;
-- `cloud` Cloud, `moon` Moon;
-- `detail` Ruler, `visibility` Compass, `hidden` Info, `note` Lightbulb, `safety` TriangleAlert.
-
-`EVENT_KIND_ICONS` is moved verbatim from `SkyEventList.astro:29-36` and still `satisfies Record<SkyEventKind, …>`.
-
-`VISIBILITY_MARK_ICONS` holds `{ visible: Eye, notVisible: EyeOff }`.
-
-No other imports, so it stays island-safe and tiny.
+**Contract**:
+- `FACT_ICONS: Record<FactKind, LucideIcon>`:
+  - `when` Clock: the window, the Moon's up/sets span;
+  - `best` Compass: Best, an event's best time;
+  - `see` Eye: what you'll see, i.e. the expect line and a planet's or the Moon's note;
+  - `eyepiece` Telescope;
+  - `why` Info: the targets' reason, a planet's and the Moon's reason, a night's verdict reason, an event's not-visible reason;
+  - `magnitude` SunDim, `size` Diameter, `phase` Contrast, `rings` Ellipse;
+  - `moon` Moon: the Moon-tonight faint line, the Nights moon line;
+  - `cloud` Cloud: an outlook night's cloud line;
+  - `measure` Ruler: an event's details;
+  - `tip` Lightbulb: an event's notes;
+  - `safety` TriangleAlert.
+- `EVENT_KIND_ICONS` is moved from `SkyEventList.astro:29-36` and still `satisfies Record<SkyEventKind, …>`. The lunar eclipse uses the same Moon icon as `FACT_ICONS.moon` (one Moon).
+- `VISIBILITY_MARK_ICONS` is `{ visible: CircleCheck, notVisible: CircleSlash }` (not the Eye, which now means only "what you'll see").
+- Imports: lucide-react and `import type { SkyEventKind } from "@/lib/engine"` only.
 
 #### 3. `Fact` and `FactList`
 
@@ -233,15 +302,15 @@ No other imports, so it stays island-safe and tiny.
 **Contract**:
 - `Fact` props:
   - `kind: FactKind`;
-  - `label?: string`;
+  - `label?: string` (inline values only);
   - `tone?: "default" | "muted"`;
-  - `iconClass?` (only the safety line's `text-marginal`);
+  - `iconClass?`, used only for `see` (`text-primary-strong`, D4) and `safety` (`text-marginal`);
   - any `data-*` attributes forwarded to the root.
 - `Fact` markup:
   - the root is a `div` (`flex items-start gap-2 text-label`) carrying `data-fact={kind}`;
-  - the icon is `size-4 shrink-0` muted, `aria-hidden`, aligned to the first line;
-  - then a `min-w-0` content wrapper holding the label (`text-muted-foreground`, followed by a real space) and the slot.
-- `FactList`: a `div` with `space-y-line`.
+  - the icon is `size-4 shrink-0`, `aria-hidden`, muted unless `iconClass`, with `mt-0.5` for first-line alignment;
+  - then a `min-w-0 space-y-line` content wrapper holding the label (`text-muted-foreground`, followed by a real space) and the slot.
+- `FactList`: a `div` with `space-y-line`. It renders nothing when its slot renders empty.
 - Neither renders a list element.
 
 #### 4. `StatCard` and `StatPair`
@@ -251,7 +320,7 @@ No other imports, so it stays island-safe and tiny.
 **Intent**: Window and Best as two small cards side by side at every width (decisions 2 and 5; D3).
 
 **Contract**:
-- `StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`.
+- `StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`, with an optional `class` merged last so the owner's F2 fallback can be applied by the caller.
 - `StatCard` props:
   - `label`, `kind: FactKind`;
   - the slot is the value;
@@ -259,57 +328,101 @@ No other imports, so it stays island-safe and tiny.
 - `StatCard` markup:
   - a `div` with `rounded-lg border border-border bg-surface px-3 py-2`;
   - a `<dt>` holding a `text-caption` muted label with a `size-3.5` icon;
-  - a `<dd>` holding the `font-mono text-body font-semibold text-heading` value.
+  - a `<dd>` at `mt-0.5` holding the `font-mono text-body font-semibold text-heading` value.
 
-#### 5. Event kinds from the map
+#### 5. Event icons from the map
 
 **File**: `src/components/tonight/SkyEventList.astro`
 
-**Intent**: Replace the local `ICONS` and the Eye/EyeOff imports with the map's `EVENT_KIND_ICONS` and `VISIBILITY_MARK_ICONS`. The output is unchanged.
+**Intent**: Replace the local `ICONS` and the Eye/EyeOff imports with `EVENT_KIND_ICONS` and `VISIBILITY_MARK_ICONS`.
 
-**Contract**: the same icons per kind; the `satisfies Record<SkyEventKind, …>` check lives in the map.
+**Contract**:
+- The kind icons are unchanged (the lunar eclipse already uses Moon).
+- The visible mark's icon changes from Eye/EyeOff to CircleCheck/CircleSlash. Its text and markers are unchanged.
 
 #### 6. `/design`
 
 **File**: `src/pages/design.astro`
 
-**Intent**: Show the contract in the kitchen sink, in the 7-state matrix (C1-C4).
+**Intent**: Show the contract in the kitchen sink, in the 7-state matrix, and make the owner's F2 measurement possible.
 
 **Contract**:
-- In "Type and radius": a `text-overline` sample, and a spacing strip showing `line`, `group` and `item` at their sizes.
-- In "Components × states", new sections `c-stat-pair`, `c-fact` and `c-fact-icons`:
-  - the stat pair with EN and Polish values, inside a 320 px column and at full width (the desktop cap);
-  - `Fact` with a label, with a sentence, muted, multi-line, Polish (the "Do szczegółów: …" spacing case) and the safety tone;
-  - the icon map rendered as a grid of every `FactKind` and event kind with its name.
+- In "Type and radius": a `text-overline` sample, and a spacing strip showing `line`, `group` and `item` at their sizes (each bar carries `data-role-sample="<role>"`).
+- In "Components × states", new sections:
+  - **`c-stat-pair`**:
+    - the pair in EN and PL, at full width (the desktop cap) and in a 288 px column (a top-five `ObjectCard` at 320 px);
+    - a frame that copies a Targets expanded row at 320 px: the scroll region's `rounded-lg border px-3`, then the `pl-10` body, so the pair gets about 222 px;
+    - in that frame, fallbacks (a), (b) and (c) side by side, each labelled, EN and PL, with the longest real values ("20:51–07:10", "Widoczność", "Najlepiej", "03:21" / "NNE, 87°").
+  - **`c-fact`**: `Fact` with a label and an inline value, with a sentence, muted, a two-line `<p>` block (the eyepiece pair), Polish (the "Do szczegółów: …" spacing case), the accent `see` icon and the `safety` tone.
+  - **`c-fact-icons`**: the map as a grid of every concept, event kind and visibility mark, with its name.
 - States:
   - default is shown;
   - hover, focus-visible and disabled are N/A (not interactive: no link, no control; offline leaves facts untouched);
   - error is N/A (facts show data, never an error; errors stay the page's own notices);
-  - empty: a `FactList` with no facts renders nothing (shown as an empty frame with its note);
-  - loading is N/A for the component (the focused page's `TonightPageSkeleton` stands in, unchanged).
+  - empty: a `FactList` with no facts renders nothing (an empty frame with its note);
+  - loading is N/A for the component (the focused page's `TonightPageSkeleton` stands in; Phase 3 moves it to the new rhythm).
+
+#### 7. The guard, first step
+
+**File**: `src/styles/rhythm-roles.test.ts` (new)
+
+**Intent**: A failing check beats a rule (F1). From this phase on, the guarded files cannot use numeric vertical spacing.
+
+**Contract**:
+- The source of each guarded file is read with comments blanked first, as `no-hardcoded-colors.test.ts` does.
+- It fails on every match of `(?<![\w-])-?(?:[a-z0-9-]+:)*(?:(?:m|p)[tby]?|space-y|gap-y)-\d+(?:\.\d+)?(?![\w.])` that is not:
+  - a zero value (`pt-0`, `last:pb-0`);
+  - or on that file's allowlist.
+- What the pattern leaves out, and why:
+  - `scroll-mt-*` (the lookbehind);
+  - horizontal `px`/`mx`;
+  - a bare `gap-<n>` (a flex row's horizontal gap).
+- Files and allowlists in Phase 1:
+  - `ui/Fact.astro`: `mt-0.5`;
+  - `ui/StatCard.astro`: `py-2`, `mt-0.5`;
+  - `ui/FactList.astro` and `ui/StatPair.astro`: none.
+- `src/pages/design.astro` is not guarded (its specimen frames use their own spacing).
+
+#### 8. The capture for the owner
+
+**File**: `context/changes/ui-fact-rhythm/evidence/scripts/design-sections.mjs`
+
+**Intent**: The script has ui-quiet-actions' section ids. Point it at this change's sections, add a 320 px viewport, and print the computed heights of the three `data-role-sample` bars (8/24/40 px expected), which proves the roles compile to their values.
+
+**Contract**:
+- Sections `c-stat-pair`, `c-fact`, `c-fact-icons` and the spacing strip, at 320 px (2×) and 1280 px, in dark, light and red, EN and PL.
+- Output in `evidence/design/<section>-<theme>-<locale>-<width>.png`; a curated, downscaled set is committed.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- Types, lint and the related tests pass in one run: `npx astro check && npm run lint && npx vitest related src/styles/global.css src/lib/ui/fact-icons.ts src/components/tonight/SkyEventList.astro src/pages/design.astro --run`
-- The whole unit suite passes (including `no-hardcoded-colors`, `red-theme`, `contrast`, `runner-zone-guard`, `no-console-guard`): `npm test`
-- `npm run build` succeeds, and the built CSS contains `gap-line`/`space-y-line`, `py-item` and `text-overline` rules (grep `dist/client/_astro/*.css`)
-- `sky-events.spec.ts` passes against a fresh local preview (the icon move changes nothing)
+- Types and lint pass: `npx astro check && npm run lint`
+- The whole unit suite passes, including `rhythm-roles.test.ts` and the colour, red, contrast, zone and console guards: `npm test`
+- `npm run build` succeeds
+- `sky-events.spec.ts` passes against a fresh local preview (see "Running the e2e lists"): `… npx playwright test sky-events`
+- After the preview is stopped, `/design` on `astro dev` (port 4331) renders the three role bars at 8, 24 and 40 px computed height (the capture script prints them)
 
 #### Manual Verification:
 
-- `/design` (via `astro dev` on 4331) at 390 px and 1280 px in dark, light and red: the roles read as three clearly different steps; the stat pair fits the 320 px column with "Najlepiej" and "Widoczność"; the pair is capped on desktop; the Polish fact keeps the space after the colon; every icon in the map is distinct and recognisable
+- `/design` at 320 px and 1280 px in dark, light and red, EN and PL:
+  - the roles read as three clearly different steps;
+  - the pair fits the 288 px column, and the expanded-row frame shows fallbacks (a), (b) and (c) honestly;
+  - the pair is capped on desktop;
+  - the Polish fact keeps the space after the colon;
+  - every concept in the map has one icon, and no icon serves two concepts;
+  - in red the card's faint border does not read like the hairline "Mark observed" button, and the overline stays readable
+- **Owner checkpoint (F2)**: the 320 px screenshots of `c-stat-pair` (paths listed in the report) go to the owner, who picks fallback (a), (b) or (c) for the expanded rows before Phase 3 starts. The choice is recorded under "Decisions"
 
 ---
 
 ## Phase 2: Planet fact labels and value wording
 
-**Delegation**: Sonnet subagent, high effort (copy keys plus the view model's wording and its unit test; no UI).
+**Delegation**: Sonnet subagent, high effort (copy keys plus the view model's wording and its unit test; no UI). It is committed together with Phase 3's first commit (F10).
 
 ### Overview
 
-Give each planet fact a label and make the values label-free (C4, D6), so Phase 3 can render "Brightness · mag −1.9" without the label appearing twice.
+Give each planet fact a label and make the values label-free (C4, D6), so Phase 3 can render "Brightness mag −1.9" without the label appearing twice.
 
 ### Changes Required:
 
@@ -345,18 +458,18 @@ Give each planet fact a label and make the values label-free (C4, D6), so Phase 
 
 #### Automated Verification:
 
-- One batched run passes: `npx astro check && npm run lint && npx vitest related src/i18n/messages/en.ts src/i18n/messages/pl.ts src/lib/tonight/format.ts --run`
+- Types, lint and the related tests pass in one run: `npx astro check && npm run lint && npx vitest related src/i18n/messages/en.ts src/i18n/messages/pl.ts src/lib/tonight/format.ts --run`
 - The whole unit suite passes: `npm test`
 
 ---
 
 ## Phase 3: Targets, Planets, the Moon and the finder's expect line
 
-**Delegation**: Opus subagent, high effort (layout, components, UI e2e). Screenshot capture: Sonnet subagent, medium effort. Judgement: the main session.
+**Delegation**: Opus subagent, high effort (layout, components, the guard's rows, UI e2e). Capture: Sonnet subagent, medium effort. Judgement: the main session.
 
 ### Overview
 
-Rebuild the shared target details and their three callers on the contract (C1, C2, C4; D3-D6). This is the view the owner sees most.
+Rebuild the shared target details, their three callers and the skeleton on the contract (C1, C2, C4; D3-D6; the owner's F2 choice). This is the view the owner sees most. **Precondition**: the owner's F2 choice is recorded.
 
 ### Changes Required:
 
@@ -370,34 +483,45 @@ Rebuild the shared target details and their three callers on the contract (C1, C
 - `StatPair` at `mt-group`:
   - Window: `windowStart`–`windowEnd`;
   - Best: the value `bestTime` and the sub line `bestDirection`.
+- In an expanded row, the owner's F2 fallback applies (a prop or class from `ObjectRow`; for fallback (c), `ObjectRow` places the details outside the `pl-10` indent).
 - The slot wrapper is a `FactList` with `mt-group border-t border-border pt-group`.
-- The action row moves to `mt-group`, keeping its `gap-x-5 gap-y-2` and both links unchanged.
+- The action row moves to `mt-group`, its `gap-y-2` becomes `gap-y-line`, its `gap-x-5` stays, and both links are unchanged.
 - The header comment is rewritten: Window and Best side by side at every width (decision 5); every other fact on its own line.
-- Props are unchanged.
 
 #### 2. A target's facts
 
 **File**: `src/components/tonight/ObjectDetails.astro`
 
-**Intent**: Each slot line becomes a `Fact`, in D5's order, with the eyepiece pair as one fact on two lines.
+**Intent**: Each slot line becomes a `Fact`, in D5's order.
 
 **Contract**:
-- `Fact kind="expect"` carries `data-expect={key}`, with the phrase in a `<span>`.
-- `Fact kind="eyepiece"` holds the two existing `<p>` lines (the find/detail wording, bold heading-ink names and `first-letter:uppercase` kept), or the none-fit sentence.
-- `Fact kind="reason" tone="muted"` holds `entry.reason`.
+- `Fact kind="see" iconClass="text-primary-strong"` carries `data-expect={key}`, with the phrase in a `<span>`.
+- `Fact kind="eyepiece"` is rendered only when `pair` is not null:
+  - for a pair, it holds the two existing `<p>` lines (bold heading-ink names; the detail line keeps `first-letter:uppercase` on its `<p>`);
+  - for none-fit, it holds the sentence in a `<p>`.
+- `Fact kind="why" tone="muted"` holds `entry.reason` in a `<p>`.
 - The local `Eye` import goes.
 
-#### 3. Rows
+#### 3. Rows, page spacing and the skeleton
 
-**Files**: `src/components/tonight/ObjectCard.astro`, `ObjectRow.astro`, `TargetsPageContent.astro`
+**Files**: `src/components/tonight/ObjectCard.astro`, `ObjectRow.astro`, `TargetsPageContent.astro`, `SeenTag.astro`, `TonightPageSkeleton.astro`
 
-**Intent**: Rows use the item role. Everything else in the page content stays.
+**Intent**: Rows use the item role, the page's framing spacing moves to roles, and the skeleton follows, so nothing jumps when the island swaps in (F10).
 
 **Contract**:
-- `ObjectCard` `<li>` is `py-item first:pt-0 last:pb-0`, and its detail line is `mt-line` (was `mt-1`).
-- `ObjectRow`'s body is `pb-item pl-10` (the `pl-10` aligns with the rank column), and its 44 px summary keeps `py-4`.
-- In `TargetsPageContent`, only the spacing that frames these lists moves to roles where a role fits (`mb-4` under the count line → `mb-group`). The washed-out rows are `py-group`.
-- On a rebase onto S-08, keep its `id`/`scroll-mt-4` attributes.
+- `ObjectCard`: the `<li>` is `py-item first:pt-0 last:pb-0`, and its detail line is `mt-line` (was `mt-1`).
+- `ObjectRow`: the body is `pb-item pl-10`, or no indent under fallback (c). Its 44 px summary keeps `py-4`.
+- `SeenTag`: `mt-3` → `mt-line`.
+- `TargetsPageContent`:
+  - the count line `expectLocked ? "mb-2" : "mb-4"` becomes `mb-line` / `mb-group`;
+  - the locked line `mb-4` → `mb-group`;
+  - the washed-out intro `mb-4` → `mb-group`;
+  - the washed-out `<li>` `py-3` → `py-group` (merged with S-08's `scroll-mt-4`);
+  - nothing else.
+- `TonightPageSkeleton`, default (non-plan) layout only:
+  - its placeholder rows move from `space-y-3 py-5` to the item and line roles, with bars standing for the stat pair (two `h-14` boxes side by side) and the fact lines;
+  - its header comment is updated ("one data point per line" → the new rhythm);
+  - the `layout="plan"` branch is S-08's and is not touched.
 
 #### 4. Planets
 
@@ -411,28 +535,28 @@ Rebuild the shared target details and their three callers on the contract (C1, C
   - null facts are skipped as today.
 - The `<li>` is `py-item first:pt-0 last:pb-0`.
 - The slot order:
-  1. `Fact kind="see"` with `entry.note`;
+  1. `Fact kind="see" iconClass="text-primary-strong"` with `entry.note` in a `<p>`;
   2. `Fact kind="eyepiece"` with the detail-with line in a `<p>`;
-  3. `Fact kind="reason" tone="muted"` with `entry.reason`.
-- `SolarSystemSection`'s `mt-2`/`mt-5`/`mt-4` move to `mt-line`/`mt-group`.
+  3. `Fact kind="why" tone="muted"` with `entry.reason` in a `<p>`.
+- `SolarSystemSection`'s `mt-2`/`mt-5`/`mt-4` move to `mt-line`/`mt-group`/`mt-group`.
 - The list stays `<ol aria-label>` of `<li id="planet-<key>">`.
 
 #### 5. The Moon
 
 **File**: `src/components/tonight/MoonCard.astro`
 
-**Intent**: The slider's text children become facts. The target block gets the shared pair and D5's order.
+**Intent**: The slider's text children become facts inside one `FactList` (so the spacing lands inside `<astro-slot>`, F3). The target block gets the shared pair and D5's order.
 
 **Contract**:
-- Children:
-  - `Fact kind="moonUp"` with `upText` (semibold heading ink kept);
-  - `Fact kind="moonFaint"` with `faintText`;
-  - the washed-out quiet link unchanged.
-- The target block is `mt-item border-t pt-item`.
+- Children: one `FactList` holding:
+  - `Fact kind="when"` with `upText` in a semibold heading-ink `<span>`;
+  - `Fact kind="moon"` with `faintText` in a `<p>`;
+  - the washed-out quiet link unchanged, after the list.
+- The target block is `mt-item border-t pt-item`, and the not-seen mark's `<p class="mt-3">` → `mt-line`.
 - Slot order:
-  1. `Fact kind="see"` with `target.note`;
-  2. `Fact kind="eyepiece"` with the whole-disc and detail lines (or `partDisc`), each in its `<p>`;
-  3. `Fact kind="reason" tone="muted"` with `target.reason`.
+  1. `Fact kind="see" iconClass="text-primary-strong"` with `target.note` in a `<p>`;
+  2. `Fact kind="eyepiece"` with the whole-disc and detail lines (or `partDisc`), each in its `<p>` (the detail `<p>` keeps `first-letter:uppercase`);
+  3. `Fact kind="why" tone="muted"` with `target.reason` in a `<p>`.
 - The no-states branch (`phaseText` only) is unchanged.
 
 #### 6. The finder's expect line
@@ -441,41 +565,74 @@ Rebuild the shared target details and their three callers on the contract (C1, C
 
 **Intent**: The duplicated expect markup becomes the shared `Fact` (C1). Its place above the chart and outside `[data-finder-chart]` are unchanged.
 
-**Contract**: `Fact kind="expect" data-expect={key}` with the text in a `<span>`. The local `Eye` import goes if unused.
+**Contract**: `Fact kind="see" iconClass="text-primary-strong" data-expect={key}` with the text in a `<span>`. The local `Eye` import goes if unused.
 
-#### 7. Specimen data and e2e
+#### 7. Guard rows
 
-**Files**: `src/pages/design.astro`, `tests/e2e/planets-on-tonight.spec.ts`
+**File**: `src/styles/rhythm-roles.test.ts`
 
-**Intent**: The `/design` ObjectDetails specimen shows every line. A spec pins the planet labels and the Polish spacing.
+**Intent**: Add the converted files with their exact allowlists (F1).
 
 **Contract**:
-- `design.astro`: the "What to expect" ObjectDetails specimen gets a sample with a find/detail pair and a reason. Only `expectSample` changes, or a second sample next to it, not the shared `sampleTarget` that the tiles use.
+- `TargetDetails`: none.
+- `ObjectDetails`: none.
+- `ObjectCard`: none (zeros are exempt; `scroll-mt-4` is outside the pattern).
+- `ObjectRow`: `py-4` (the 44 px summary).
+- `PlanetCard`: none.
+- `MoonCard`: none.
+- `SolarSystemSection`: none.
+- `SeenTag`: none.
+
+`TargetsPageContent` is not guarded: its other spacing (the no-ranking state, the "show the rest" controls) is outside this change, and S-08 edits it.
+
+#### 8. Specimens and e2e
+
+**Files**: `src/pages/design.astro`, `tests/e2e/planets-on-tonight.spec.ts`, `tests/e2e/what-to-expect.spec.ts`
+
+**Intent**: Show every line and the Moon target in `/design`, and pin the labels, the spacing and the narrow pair in e2e (F2, F3, F6).
+
+**Contract**:
+- `design.astro`:
+  - The "What to expect" ObjectDetails specimen gets a second sample with a find/detail pair and a reason. The shared `sampleTarget` used by the tiles is not edited.
+  - A new `c-moon-card` section renders `MoonCard` with a Moon target (the night is not guaranteed to have one at capture).
+- `what-to-expect.spec.ts`, in the existing test that opens a row at 320 px (`:104-120`):
+  - each stat pair `dt`/`dd` has `scrollWidth <= clientWidth`;
+  - in Polish on Targets (the all-clear fixture always ranks targets), no `[data-fact]` text matches `/\p{L}:\S/u`. Times like "22:10" pass, because the character before the colon is a digit.
 - `planets-on-tonight.spec.ts`:
   - each card's `[data-fact="magnitude"]` and `[data-fact="size"]` contain their `factLabel` text;
-  - in Polish, a card's `[data-fact="eyepiece"]` text matches `Do szczegółów: \S`, using a Polish context as the spec's helpers do.
+  - with the Polish locale cookie (`LOCALE_COOKIE`, set in the test, as other specs do), a card's `[data-fact="eyepiece"]` text matches `Do szczegółów: \S`. This stays date-dependent: the spec skips when no planet is up. The Targets assertion above is the date-independent one.
+
+#### 9. Before matrix
+
+**Intent**: Have the full before set ready (F10).
+
+**Contract**: the full 390/1280 × EN/PL × three-theme matrix of the five views was captured from main c650a8a on 2026-10-14. A curated set of 51 images is already in `evidence/before/`, including planet crops in light and red. Phase 3 only checks that it is there and does not recapture it from a changed tree.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- One batched run passes: `npx astro check && npm run lint && npx vitest related <the changed component and page files> --run`
-- `npm test` and `npm run build` pass
-- The affected specs pass against a fresh local preview (ports 4331/4401, keys inline): `npx playwright test tonight-phone tonight-targets what-to-expect planets-on-tonight moon-as-target moon-card observation-log observing-progress telescope-selector onboarding tonight-sky finder-chart finder-offline red-night-mode`
-- The hardcoded-value scan over the changed view files prints nothing, and their numeric vertical spacing utilities are only those this plan keeps (`ObjectRow`'s summary `py-4`, icon alignment inside `ui/`)
+- Types and lint pass: `npx astro check && npm run lint`
+- `npm test` (with the guard's new rows) and `npm run build` pass
+- The affected specs pass against a fresh local preview (see "Running the e2e lists"): `… npx playwright test tonight-phone tonight-targets what-to-expect planets-on-tonight moon-as-target moon-card observation-log observing-progress observing-milestones telescope-selector onboarding tonight-sky tonight-dashboard finder-chart finder-offline red-night-mode`
+- The hardcoded-value scan over the changed view files prints nothing: `grep -nE '#[0-9a-fA-F]{3,8}\b|rgba?\(|-\[[0-9.]+(px|rem)\]' src/components/tonight/{TargetDetails,ObjectDetails,ObjectCard,ObjectRow,PlanetCard,MoonCard,SolarSystemSection,SeenTag,TonightPageSkeleton}.astro src/components/ui/{Fact,FactList,StatCard,StatPair}.astro src/components/finder/FinderContent.astro`
 
 #### Manual Verification:
 
-- Targets, Planets and the Moon at 390 px and 1280 px, EN and PL, dark, light and red, captured with `evidence/scripts/capture.mjs` (Sonnet, medium) and judged against `evidence/before/`:
-  - three groups per item, the hairline visible, stat pair readable in red;
+- Targets (rows closed and one opened), Planets and the Moon at 390 px and 1280 px, EN and PL, dark, light and red, captured with `evidence/scripts/capture.mjs` (Sonnet, medium) and judged against `evidence/before/`:
+  - three groups per item, the hairline visible;
+  - the accent Eye on the "what you'll see" line;
+  - the stat pair readable in red, with no button look beside the hairline;
   - Best's direction on its own line, the pair capped on desktop;
-  - planet labels present, no lost spaces, no sideways scroll at 320 px
+  - the owner's fallback in the expanded rows;
+  - planet labels present, no lost spaces, no sideways scroll at 320 px;
+  - the skeleton swap without a jump
 
 ---
 
 ## Phase 4: Sky events and the Nights page
 
-**Delegation**: Opus subagent, high effort (layout, components, UI e2e). Capture: Sonnet, medium.
+**Delegation**: Opus subagent, high effort (layout, components, the guard's rows, UI e2e). Capture: Sonnet subagent, medium effort. Judgement: the main session.
 
 ### Overview
 
@@ -493,11 +650,16 @@ Bring the two list pages that are not targets onto the rhythm, the overline and 
 - The night heading `h3` is `text-overline text-muted-foreground`, keeping its id and `aria-labelledby`.
 - Rows are `py-item` (the first row after the heading at `pt-group`).
 - Nights are separated by `space-y-item`.
-- The header (kind icon `size-5`, `h4` name first, the single visible/not-visible mark, the muted "kind · when" line with `[data-event-when]`) keeps its markup and markers.
-- Under it, a `FactList` at `mt-group` holds:
-  - one `Fact kind="detail"` per entry of `event.details` (no longer joined with " · ");
-  - `Fact kind="visibility"` (visible) or `kind="hidden"` (not visible), carrying `data-event-visibility`, with only the sentence;
-  - one `Fact kind="note" tone="muted"` per note, carrying `data-event-note`;
+- The header keeps its markup and markers:
+  - the kind icon, `size-5`, `mt-0.5`;
+  - the `h4` name first;
+  - the single visible/not-visible mark;
+  - the muted "kind · when" line with `[data-event-when]`.
+- In the header, `space-y-1.5` → `space-y-line`.
+- Under the header, a `FactList` at `mt-group` holds:
+  - one `Fact kind="measure"` per entry of `event.details` (no longer joined with " · "), each in a `<span>`;
+  - `Fact kind="best"` (visible) or `kind="why"` (not visible), carrying `data-event-visibility`, with only the sentence;
+  - one `Fact kind="tip" tone="muted"` per note, carrying `data-event-note`;
   - `Fact kind="safety" iconClass="text-marginal"`, carrying `data-event-safety`, with the fixed line.
 - A not-visible row keeps its muted tone on every fact.
 
@@ -508,22 +670,25 @@ Bring the two list pages that are not targets onto the rhythm, the overline and 
 **Intent**: The group labels use the overline. The right-hand lines become muted facts. The rows use the group role. The structure stays two `h3` + `ol` groups.
 
 **Contract**:
+- "Times in" `mb-4` → `mb-group`.
 - Both group labels are `text-overline text-muted-foreground`. The outlook label keeps its dashed rule, now `mt-line border-t-2 border-dashed pt-group`.
-- Rows are `py-group`, and the cells' `gap-2` becomes `gap-line`.
+- Rows are `py-group`, and the cells' vertical `gap-2` becomes `gap-y-line`. The headline's inline `gap-2` (dot to word) stays horizontal.
 - Verdict rows:
   - the headline line (`[data-sky-headline]` with its dot) is unchanged;
-  - `Fact kind="cloud" tone="muted"` holds `reasonText` (`first-letter:uppercase` kept);
+  - `Fact kind="why" tone="muted"` holds `reasonText` in a `<p class="first-letter:uppercase">`;
   - `Fact kind="moon" tone="muted"` holds `moonText`.
-- Outlook rows: `Fact kind="cloud" tone="muted"` holds `cloudText` (the "Cloud ~NN%" string intact), and `Fact kind="moon"` holds `moonText`.
-- No list elements inside a row. The `mb-4` under "Times in" becomes `mb-group`.
+- Outlook rows: `Fact kind="cloud" tone="muted"` holds `cloudText` (the "Cloud ~NN%" string intact), and `Fact kind="moon" tone="muted"` holds `moonText`.
+- No list elements inside a row.
 
-#### 3. Page wrappers
+`NightsPageContent` and `EventsPageContent` are not changed: their shared `max-w-3xl … pt-8 space-y-6` wrapper stays, and "Times in" for Nights lives in `NightStrip`.
 
-**Files**: `src/components/tonight/EventsPageContent.astro`, `NightsPageContent.astro`
+#### 3. Guard rows
 
-**Intent**: Only the spacing that frames these lists moves to roles. The `max-w-3xl … pt-8 space-y-6` page wrapper is shared by every focused page and stays.
+**File**: `src/styles/rhythm-roles.test.ts`
 
-**Contract**: the "Times in" lines' `mb-4` → `mb-group`. Nothing else.
+**Contract**:
+- `SkyEventList`: `mt-0.5` (the kind icon's alignment), `gap-y-1` (the wrap gap between the name and the mark when they wrap).
+- `NightStrip`: none.
 
 #### 4. `/design`
 
@@ -532,7 +697,7 @@ Bring the two list pages that are not targets onto the rhythm, the overline and 
 **Intent**: Nights gets a specimen; it has none today.
 
 **Contract**:
-- A `c-night-strip` section renders `NightStrip` from fixed sample nights: two verdict nights (one go with a reason, one no-darkness night without a reason) and two outlook nights (one with a cloud range).
+- A `c-night-strip` section renders `NightStrip` from fixed sample nights: two verdict nights (one go with a reason, one no-darkness night without one) and two outlook nights (one with a cloud range).
 - States: default shown; empty is N/A, because the page renders its own "no nights" notice, not the strip; the other states are N/A (not interactive).
 - The SkyEventList specimens pick up the new rows on their own.
 
@@ -540,27 +705,28 @@ Bring the two list pages that are not targets onto the rhythm, the overline and 
 
 #### Automated Verification:
 
-- One batched run passes: `npx astro check && npm run lint && npx vitest related src/components/tonight/SkyEventList.astro src/components/tonight/NightStrip.astro src/pages/design.astro --run`
-- `npm test` and `npm run build` pass
-- The affected specs pass against a fresh local preview: `npx playwright test sky-events seven-night-planner tonight-phone offline red-night-mode`
+- Types and lint pass: `npx astro check && npm run lint`
+- `npm test` (with the guard's new rows) and `npm run build` pass
+- The affected specs pass against a fresh local preview: `… npx playwright test sky-events seven-night-planner tonight-phone tonight-dashboard offline red-night-mode`
 
 #### Manual Verification:
 
 - `/tonight/events` and `/tonight/nights` at 390 px and 1280 px, EN and PL, dark, light and red, against `evidence/before/`:
-  - the night headings and group labels read as quiet labels, not blue lines;
+  - the night headings and group labels read as quiet labels, not blue lines, and stay readable in red;
   - each event's facts read one per line under its header;
+  - the visible mark reads with its new icon;
   - the solar safety line keeps its amber icon;
   - Nights' reason and moon lines carry their icons and stay muted;
   - no sideways scroll at 320 px
 
 ---
 
-## Phase 5: The guard, the rules, the screenshot gate and the whole suite
+## Phase 5: The guard's break check, the rules, the screenshot gate and the whole suite
 
 **Delegation**:
-- Guard test: Sonnet subagent, high effort (non-UI code).
+- The break check: the main session.
 - CLAUDE.md and comments: Sonnet subagent, medium effort.
-- The before/after matrix capture: Sonnet subagent, medium effort.
+- The after-matrix capture and the evidence README: Sonnet subagent, medium effort.
 - Screenshot judgement, the whole e2e suite and smoke: the main session.
 
 ### Overview
@@ -569,54 +735,47 @@ Make the contract stick (/10x-ui "Make it stick"), record the evidence and run e
 
 ### Changes Required:
 
-#### 1. Rhythm guard
+#### 1. Break check
 
-**File**: `src/styles/rhythm-roles.test.ts` (new)
+**File**: `src/styles/rhythm-roles.test.ts`
 
-**Intent**: A failing check beats a rule. The view family may not reintroduce numeric vertical spacing steps.
+**Intent**: Prove the guard bites.
 
-**Contract**:
-- It reads the source of these files and fails on any `(m|p)(t|b|y)-<number>`, `space-y-<number>` or `gap(-y)?-<number>` class not on that file's allowlist:
-  - `TargetDetails`, `ObjectDetails`, `ObjectCard`, `ObjectRow`, `PlanetCard`, `MoonCard`, `SkyEventList`, `NightStrip`;
-  - `ui/Fact`, `ui/FactList`, `ui/StatCard`, `ui/StatPair`.
-- The allowlist holds:
-  - `ObjectRow`'s 44 px summary `py-4`;
-  - the icon alignment `mt-0.5` inside `ui/Fact`;
-  - the stat card's inner `py-2`/`mt-0.5`;
-  - horizontal and `gap-3` grid gaps where they are not vertical rhythm.
-- Comments are blanked first, as `no-hardcoded-colors.test.ts` does.
-- Break check: add `mt-4` to `PlanetCard` and see the test fail, then revert.
+**Contract**: add `mt-4` to `PlanetCard` and see `npm test` fail on it, add `space-y-3` to `SkyEventList` and see it fail, then revert both. Record the run in the evidence README.
 
 #### 2. Rules and comments
 
-**Files**: `CLAUDE.md` (the UI section; `AGENTS.md` is a symlink), the header comments of `TargetDetails`, `ObjectDetails`, `PlanetCard`, `MoonCard`, `SkyEventList` and `NightStrip`
+**Files**: `CLAUDE.md` (the UI section, the What-to-expect paragraph, the Sky events paragraph; `AGENTS.md` is a symlink), the header comments of `TargetDetails`, `ObjectDetails`, `PlanetCard`, `MoonCard`, `SkyEventList` and `NightStrip`
 
 **Intent**: The next agent finds the roles and components and keeps using them.
 
 **Contract**:
-- **Tokens bullet**: adds `text-overline` (section labels, muted, sentence case) and the rhythm roles `line`/`group`/`item` (`gap-line`, `mt-group`, `py-item`; items holding groups are `py-item`, one-group rows `py-group`), with the guard test named.
-- **Components bullet**: adds `Fact`/`FactList` (every fact line on a Tonight item; an icon from `src/lib/ui/fact-icons.ts`, content in its own element, no list elements) and `StatCard`/`StatPair` (Window and Best only).
-- **Nightfall composition**: the stat cards are the second deliberate boxed exception after the gear cards.
-- The S-07 paragraph's icon sentence points at the map.
+- **Tokens bullet**: adds `text-overline` (section labels, muted, sentence case) and the rhythm roles: `line` 8, `group` 24, `item` 40 px (`gap-line`, `mt-group`, `py-item`); items holding groups are `py-item`, one-group rows `py-group`. It names the guard test.
+- **Components bullet**: adds:
+  - `Fact`/`FactList` (every fact line on a Tonight item: an icon from `src/components/ui/fact-icons.ts`, one concept one icon; sentences in `<p>`, values in `<span>`; no list elements; the Eye in `text-primary-strong` on "what you'll see" and the amber safety icon are the two icon exceptions);
+  - `StatCard`/`StatPair` (Window and Best only).
+- **Nightfall composition**: the stat cards are the second deliberate boxed exception after the gear cards, keeping the faint border in red.
+- **What-to-expect paragraph**: the marker is `<div data-expect="<key">` (a `Fact` root), not `<p>`.
+- **Sky events paragraph**: a sentence that the kind and visibility-mark icons come from the shared map.
 
 #### 3. Evidence
 
 **Files**: `context/changes/ui-fact-rhythm/evidence/{after/,crops/,design/,README.md}`
 
-**Intent**: The screenshot gate. It is the same matrix as `evidence/before/` plus `/design`'s new sections, curated and downscaled, with a README in the style of ui-quiet-actions'.
+**Intent**: The screenshot gate. It is the same matrix as `evidence/before/` plus `/design`'s sections, curated and downscaled, with a README in the style of ui-quiet-actions'.
 
 **Contract**:
 - `scripts/capture.mjs` over targets, planets, moon, nights and events, × EN/PL × dark/light/red × 390/1280.
-- `scripts/design-sections.mjs` for `c-stat-pair`, `c-fact`, `c-fact-icons` and `c-night-strip`.
+- `scripts/design-sections.mjs` for `c-stat-pair`, `c-fact`, `c-fact-icons`, `c-moon-card` and `c-night-strip`.
 - Crops of one target, one planet and one event row in light and red, before and after.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- `npx astro check`, `npm run lint` and `npm test` pass; `rhythm-roles.test.ts` goes red on the deliberate break and green after reverting it
+- `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks and green after reverting them
 - `npm run build` succeeds
-- The whole e2e suite and smoke pass against a fresh local preview, the way CI runs them (lessons.md): `npm run test:e2e` and `npm run smoke`, with the local stack's URL and keys inline; the counts are recorded for the PR
+- The whole e2e suite and smoke pass against a fresh local preview, the way CI runs them (lessons.md): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` and the same prefix on `npm run smoke`; the counts are recorded for the PR
 
 #### Manual Verification:
 
@@ -628,31 +787,37 @@ Make the contract stick (/10x-ui "Make it stick"), record the evidence and run e
 
 ### Unit Tests:
 
-- `rhythm-roles.test.ts`: the guard, with its break check.
+- `rhythm-roles.test.ts`: from Phase 1, growing per phase, with the break check in Phase 5.
 - `build.test.ts`: the planet fact wording (Phase 2).
 - The existing guards on every phase: `no-hardcoded-colors`, `red-theme`, `contrast`, `i18n` parity, `runner-zone-guard`, `no-console-guard`.
+- `npm test` is the unit gate. `vitest related` is an iteration aid only.
 
 ### Integration Tests:
 
 - **Locators that must survive** (no edits expected):
   - `what-to-expect` (exact phrase in `[data-expect]`);
-  - `sky-events` (first `h4`, exact visibility sentence, one mark per row, safety on solar rows only);
+  - `sky-events` (first `h4`, exact visibility sentence, one mark per row with its exact text, safety on solar rows only);
   - `seven-night-planner` (`h3` + sibling `ol`, `ol > li` = 7, exact headline, "Cloud ~NN%");
   - `planets-on-tonight` (listitem cards);
-  - `tonight-targets`, `tonight-sky` (row ids), `onboarding` (`/25 mm/` in one element), `telescope-selector` (the "Find with" label stays in the DOM), `finder-chart` (`finderLink` by `aria-label`).
-- **New**: the planet label and Polish spacing assertions in `planets-on-tonight.spec.ts`.
-- **`tonight-phone.spec.ts`**: no sideways scroll at 320/375 px on every Tonight page in EN and PL. This is the stat pair's main risk.
+  - `tonight-targets`, `tonight-sky` (row ids), `onboarding` (`/25 mm/` in one element), `telescope-selector` (no eyepiece fact without eyepieces), `finder-chart` (`finderLink` by `aria-label`).
+- **New**:
+  - `planets-on-tonight`: planet labels, and the Polish eyepiece spacing;
+  - `what-to-expect`: stat pair overflow at 320 px in an opened row, and the date-independent Polish "no lost space after a colon" check.
+- **`tonight-phone.spec.ts`**: no sideways scroll at 320/375 px on every Tonight page in EN and PL (unchanged spec).
+- **S-08's id change** narrows `what-to-expect.spec.ts:92-101` on its side (relayed by the orchestrator).
 
 ### Manual Testing Steps:
 
-1. `/design` in three themes at 390 and 1280 px (Phase 1).
+1. `/design` in three themes at 320 and 1280 px, and the owner's F2 choice (Phase 1).
 2. Targets, Planets and the Moon in the full matrix against `evidence/before/` (Phase 3).
 3. Events and Nights in the full matrix (Phase 4).
 4. The owner's look at the before/after crops (Phase 5).
 
 ## Performance Considerations
 
-None material. The new components render static markup on the server, and the icons are the same lucide SVGs inlined per use. The Targets page at 390 px grows about 13% in height (experiment: 5196 to 5886 px at 2×), which is the breathing room the owner asked for. The Targets list is still capped by the scroll region for the other objects (`max-h-128`).
+None material. The new components render static markup on the server, and the icons are the same lucide SVGs inlined per use.
+
+The Targets page at 390 px grew about 13% in height in the experiment, with item 32 (5196 to 5886 px at 2×). With the owner's item 40 and group 24 it grows more, about 20%, estimated and not measured. That is the looser rhythm the owner chose. The list of the other objects is still capped by its scroll region (`max-h-128`).
 
 ## Migration Notes
 
@@ -661,65 +826,68 @@ There is no data migration. The planet fact wording changes for stored offline c
 ## References
 
 - Research and charges: `context/changes/ui-fact-rhythm/research.md`.
+- Plan review: `context/changes/ui-fact-rhythm/reviews/plan-review.md` (F1-F10, all applied).
 - The audit and the owner's decisions: `context/changes/ui-refine/audit.md:46-84,106-119,227-265`.
-- The experiment: `context/changes/ui-fact-rhythm/evidence/exp-stat-cards/` (`experiment.diff`, crops), before shots in `evidence/before/`.
-- The previous change of the split: `context/changes/ui-quiet-actions/plan.md` (action row, red-mode rules, evidence scripts).
+- The experiment: `context/changes/ui-fact-rhythm/evidence/exp-stat-cards/` (`experiment.diff`, crops); the before matrix: `evidence/before/`.
+- The previous change of the split: `context/changes/ui-quiet-actions/plan.md` (action row, red-mode rules, evidence scripts, the e2e environment line).
 - Lessons: `context/foundation/lessons.md` (the whole e2e suite before a PR; fix flakes failing-first).
 
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
-### Phase 1: The contract: roles, overline, icon map, Fact and StatCard, specimens
+### Phase 1: The contract, and the 320 px measurement for the owner
 
 #### Automated
 
-- [ ] 1.1 Types, lint and the related tests pass in one run
-- [ ] 1.2 The whole unit suite passes: `npm test`
-- [ ] 1.3 `npm run build` succeeds and the built CSS has the role utilities
+- [ ] 1.1 Types and lint pass
+- [ ] 1.2 The whole unit suite passes, including the new guard: `npm test`
+- [ ] 1.3 `npm run build` succeeds
 - [ ] 1.4 `sky-events.spec.ts` passes against a fresh local preview
+- [ ] 1.5 `/design` on `astro dev` renders the role bars at 8, 24 and 40 px (after the preview is stopped)
 
 #### Manual
 
-- [ ] 1.5 `/design` at 390 px and 1280 px in dark, light and red: three distinct roles, pair fits 320 px and is capped on desktop, Polish spacing kept, icons distinct
+- [ ] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked
+- [ ] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c)
 
 ### Phase 2: Planet fact labels and value wording
 
 #### Automated
 
-- [ ] 2.1 One batched run passes (types, lint, related tests)
+- [ ] 2.1 Types, lint and the related tests pass in one run
 - [ ] 2.2 The whole unit suite passes: `npm test`
 
 ### Phase 3: Targets, Planets, the Moon and the finder's expect line
 
 #### Automated
 
-- [ ] 3.1 One batched run passes (types, lint, related tests)
-- [ ] 3.2 `npm test` and `npm run build` pass
+- [ ] 3.1 Types and lint pass
+- [ ] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass
 - [ ] 3.3 The affected specs pass against a fresh local preview
-- [ ] 3.4 Hardcoded-value scan clean and only the kept numeric vertical spacing remains
+- [ ] 3.4 The hardcoded-value scan over the changed view files prints nothing
 
 #### Manual
 
-- [ ] 3.5 Targets, Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/`
+- [ ] 3.5 Targets (closed and opened rows), Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/`
 
 ### Phase 4: Sky events and the Nights page
 
 #### Automated
 
-- [ ] 4.1 One batched run passes (types, lint, related tests)
-- [ ] 4.2 `npm test` and `npm run build` pass
+- [ ] 4.1 Types and lint pass
+- [ ] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass
 - [ ] 4.3 The affected specs pass against a fresh local preview
 
 #### Manual
 
-- [ ] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet labels, one fact per line, safety icon kept, no sideways scroll
+- [ ] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet readable labels, one fact per line, new visible mark, safety icon kept, no sideways scroll
 
-### Phase 5: The guard, the rules, the screenshot gate and the whole suite
+### Phase 5: The guard's break check, the rules, the screenshot gate and the whole suite
 
 #### Automated
 
-- [ ] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on the deliberate break
+- [ ] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks
 - [ ] 5.2 `npm run build` succeeds
 - [ ] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded
 

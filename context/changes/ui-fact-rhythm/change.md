@@ -1,7 +1,7 @@
 ---
 change_id: ui-fact-rhythm
 title: Grouped, icon-led facts with a spacing rhythm (ui-refine split, change 2)
-status: planned
+status: plan_reviewed
 created: 2026-10-14
 updated: 2026-10-14
 archived_at: null
@@ -22,3 +22,5 @@ One view family: the Tonight focused pages' item lists (`/tonight/targets`, `/to
 Out of scope: the dashboard tiles (change 3, `ui-dashboard-tiles`), the navigation (change 4), /log, /log/progress and /gear (change 5), and the plan page (`/tonight/plan`, `SessionTimeline`), which S-08 adjustable-session-plan changes in parallel in its own worktree.
 
 Research done 2026-10-14 (`research.md`, charges C1-C5). A stat-card and fact-row experiment was built, captured and reverted; it is in `evidence/exp-stat-cards/`, with before shots in `evidence/before/`. Plan done 2026-10-14 (`plan.md`, `plan-brief.md`): 5 phases. Agent defaults D1-D8 are waiting for the owner at plan review. Next: /10x-plan-review (reviewer), then the owner's answers.
+
+Plan reviewed 2026-10-14 (`reviews/plan-review.md`, F1-F10 all applied). The owner kept D2-D8. D1 changed to the looser rhythm: line 8, group 24, item 40 px. On the review questions: F2, measure first (Phase 1 stops at the 320 px screenshots for the owner's fallback choice); F7, one concept, one icon, with the map in `src/components/ui/`; F8, the faint border stays in red; F9, the accent Eye stays. Next session: /10x-implement Phase 1 (Opus subagent, high effort), then STOP for the owner.
