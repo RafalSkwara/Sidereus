@@ -1,7 +1,7 @@
 ---
 change_id: adjustable-session-plan
 title: Adjustable session plan, saved to the account (M-3 S-08)
-status: planned
+status: plan_reviewed
 created: 2026-10-14
 updated: 2026-10-14
 archived_at: null
