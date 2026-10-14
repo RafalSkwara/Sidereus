@@ -11,7 +11,8 @@ const BASE = process.env.BASE_URL ?? `http://localhost:${process.env.PREVIEW_POR
 // so it refuses anything but localhost, and the preview must run on local Supabase (never the hosted project).
 function assertLocal(name, value) {
   const host = new URL(value).hostname;
-  if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`${name} must point at the local stack, got ${host}`);
+  if (host !== "localhost" && host !== "127.0.0.1")
+    throw new Error(`${name} must point at the local stack, got ${host}`);
 }
 assertLocal("BASE_URL", BASE);
 
@@ -44,7 +45,11 @@ let finderPath = null;
 for (const view of VIEWS) {
   for (const locale of LOCALES) {
     for (const theme of THEMES) {
-      const context = await browser.newContext({ ...VIEWPORTS[view], storageState: stateFile, serviceWorkers: "block" });
+      const context = await browser.newContext({
+        ...VIEWPORTS[view],
+        storageState: stateFile,
+        serviceWorkers: "block",
+      });
       await context.addCookies([
         { name: "sidereus-theme", value: theme, url: BASE },
         { name: "sidereus-lang", value: locale, url: BASE },

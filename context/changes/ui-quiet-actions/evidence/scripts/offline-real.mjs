@@ -16,7 +16,11 @@ if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`BASE_URL must
 const browser = await chromium.launch();
 const contexts = {};
 for (const theme of ["red", "dark"]) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, storageState: stateFile });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    storageState: stateFile,
+  });
   await context.addCookies([{ name: "sidereus-theme", value: theme, url: BASE }]);
   const page = await context.newPage();
   await page.goto(BASE + "/tonight", { waitUntil: "networkidle" });
@@ -63,7 +67,10 @@ for (const [theme, { context, page }] of Object.entries(contexts)) {
   });
   console.log(`${theme} stored /tonight/targets, Mark observed: ${JSON.stringify(markStyle)}`);
   const box = await mark.boundingBox();
-  await page.screenshot({ path: join(outDir, `offline-real-mark-observed-${theme}.png`), clip: { x: 0, y: Math.max(0, box.y - 320), width: 390, height: 420 } });
+  await page.screenshot({
+    path: join(outDir, `offline-real-mark-observed-${theme}.png`),
+    clip: { x: 0, y: Math.max(0, box.y - 320), width: 390, height: 420 },
+  });
 
   await page.goto(BASE + "/tonight");
   await page.locator("html[data-from-device]").waitFor({ state: "attached", timeout: 15000 });
@@ -74,11 +81,20 @@ for (const [theme, { context, page }] of Object.entries(contexts)) {
   await page.waitForTimeout(300);
   const manageStyle = await manage.evaluate((el) => {
     const s = getComputedStyle(el);
-    return { ariaDisabled: el.getAttribute("aria-disabled"), color: s.color, icon: getComputedStyle(el.querySelector("svg")).color, underline: s.textDecorationLine };
+    return {
+      ariaDisabled: el.getAttribute("aria-disabled"),
+      color: s.color,
+      icon: getComputedStyle(el.querySelector("svg")).color,
+      underline: s.textDecorationLine,
+    };
   });
   console.log(`${theme} stored /tonight, Manage: ${JSON.stringify(manageStyle)}`);
   const mb = await manage.boundingBox();
-  await page.screenshot({ path: join(outDir, `offline-real-manage-${theme}.png`), clip: { x: 0, y: Math.max(0, mb.y - 220), width: 390, height: 320 }, animations: "disabled" });
+  await page.screenshot({
+    path: join(outDir, `offline-real-manage-${theme}.png`),
+    clip: { x: 0, y: Math.max(0, mb.y - 220), width: 390, height: 320 },
+    animations: "disabled",
+  });
   await context.close();
 }
 await browser.close();

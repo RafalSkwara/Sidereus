@@ -12,10 +12,12 @@ const BASE = process.env.BASE_URL ?? `http://localhost:${process.env.PREVIEW_POR
 // so it refuses anything but localhost, and the preview must run on local Supabase (never the hosted project).
 function assertLocal(name, value) {
   const host = new URL(value).hostname;
-  if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`${name} must point at the local stack, got ${host}`);
+  if (host !== "localhost" && host !== "127.0.0.1")
+    throw new Error(`${name} must point at the local stack, got ${host}`);
 }
 assertLocal("BASE_URL", BASE);
-if (!process.env.SUPABASE_URL) throw new Error("set SUPABASE_URL to the local stack (API_URL from `npx supabase status -o env`)");
+if (!process.env.SUPABASE_URL)
+  throw new Error("set SUPABASE_URL to the local stack (API_URL from `npx supabase status -o env`)");
 assertLocal("SUPABASE_URL", process.env.SUPABASE_URL);
 const PASSWORD = "E2e-Test-Passw0rd!";
 const email = `ui-refine-${randomUUID()}@example.com`;
@@ -25,7 +27,11 @@ const context = await browser.newContext({ baseURL: BASE, viewport: { width: 128
 const page = await context.newPage();
 await page.route("https://geocoding-api.open-meteo.com/**", (route) =>
   route.fulfill({
-    json: { results: [{ id: 3117735, name: "Madrid", latitude: 40.4168, longitude: -3.7038, admin1: "Madrid", country: "Spain" }] },
+    json: {
+      results: [
+        { id: 3117735, name: "Madrid", latitude: 40.4168, longitude: -3.7038, admin1: "Madrid", country: "Spain" },
+      ],
+    },
     headers: { "Access-Control-Allow-Origin": "*" },
   }),
 );
@@ -34,7 +40,9 @@ async function hydrated(selector) {
   await page.waitForFunction(
     (sel) => {
       const el = document.querySelector(sel);
-      return el && !document.querySelector("astro-island[ssr]") && Object.keys(el).some((k) => k.startsWith("__reactProps$"));
+      return (
+        el && !document.querySelector("astro-island[ssr]") && Object.keys(el).some((k) => k.startsWith("__reactProps$"))
+      );
     },
     selector,
     { timeout: 20000 },

@@ -12,7 +12,8 @@ const BASE = process.env.BASE_URL ?? `http://localhost:${process.env.PREVIEW_POR
 // so it refuses anything but localhost, and the preview must run on local Supabase (never the hosted project).
 function assertLocal(name, value) {
   const host = new URL(value).hostname;
-  if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`${name} must point at the local stack, got ${host}`);
+  if (host !== "localhost" && host !== "127.0.0.1")
+    throw new Error(`${name} must point at the local stack, got ${host}`);
 }
 assertLocal("BASE_URL", BASE);
 const IDS = [
@@ -29,7 +30,10 @@ const IDS = [
 mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch();
 for (const theme of ["dark", "light", "red"]) {
-  const context = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: width < 640 ? 2 : 1 });
+  const context = await browser.newContext({
+    viewport: { width, height: 900 },
+    deviceScaleFactor: width < 640 ? 2 : 1,
+  });
   await context.addCookies([{ name: "sidereus-theme", value: theme, url: BASE }]);
   const page = await context.newPage();
   await page.goto(BASE + "/design", { waitUntil: "networkidle" });
