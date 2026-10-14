@@ -352,6 +352,17 @@ const steps = [
       bodyExcludes: ["data-finder-chart"],
     },
   ],
+  [
+    // What to expect (what-to-expect Phase 4, D-11): the Targets island route is not gated either. Signed out, a leaked
+    // URL's island loads no Tonight (the user is null), so it renders neither the lines nor the locked line.
+    "expect 3: signed out, a leaked Targets island URL renders no line",
+    () => replayTargetsIsland(),
+    {
+      status: 200,
+      needsPlanGrant: true,
+      bodyExcludes: ['data-expect="', "data-expect-locked"],
+    },
+  ],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],
   ["tonight redirects after signout", () => request("/tonight"), { status: 302, location: "/auth/signin" }],

@@ -639,10 +639,10 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [x] 3.2 `npm run build` succeeds
-- [x] 3.3 `npm run smoke` passes with 0 skipped, including the `finder 3` expectation check
-- [x] 3.4 `what-to-expect` and `finder-chart` specs pass with 0 skipped
+- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass — 91679f5
+- [x] 3.2 `npm run build` succeeds — 91679f5
+- [x] 3.3 `npm run smoke` passes with 0 skipped, including the `finder 3` expectation check — 91679f5
+- [x] 3.4 `what-to-expect` and `finder-chart` specs pass with 0 skipped — 91679f5
 
 #### Manual
 
@@ -653,11 +653,11 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [ ] 4.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [ ] 4.2 `npm run build` succeeds
-- [ ] 4.3 `npm run smoke` passes with 0 skipped, including the leaked-URL step
-- [ ] 4.4 Deliberate break (no plan check in `TargetsPageContent`) turns the smoke free step red, then reverted
-- [ ] 4.5 The whole e2e suite passes locally the way CI runs it
+- [x] 4.1 `npm test`, `npm run lint` and `npx astro check` pass
+- [x] 4.2 `npm run build` succeeds
+- [x] 4.3 `npm run smoke` passes with 0 skipped, including the leaked-URL step
+- [x] 4.4 Deliberate break (no plan check in `TargetsPageContent`) turns the smoke free step red, then reverted
+- [x] 4.5 The whole e2e suite passes locally the way CI runs it
 
 #### Manual
 
