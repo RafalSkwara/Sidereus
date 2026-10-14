@@ -7,7 +7,7 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, Lock, MapPin, Plus, Save, Settings2, Telescope } from "lucide-react";
+import { Check, Lock, MapPin, Pencil, Plus, RotateCcw, Save, Settings2, Telescope, X } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -46,6 +46,9 @@ import FinderChart from "@/components/finder/FinderChart.astro";
 import FinderLocked from "@/components/finder/FinderLocked.astro";
 import { finderSamples } from "@/components/design/finder-samples";
 import Attribution from "@/components/tonight/Attribution.astro";
+import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
+import PlanNote from "@/components/tonight/PlanNote.astro";
+import { planSamples } from "@/components/design/plan-samples";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
@@ -596,6 +599,9 @@ const panoramaView = buildTonight(
 const panoramaSky = panoramaView.skyView;
 // The same night's Session plan: long deep-sky windows, short planet and Moon ones, and a planet up most of the night.
 const panoramaPlan = panoramaView.sessionPlan;
+// The plan editor's specimens (adjustable-session-plan): the same night, suggested and with a saved list applied.
+const planSpecimens = planSamples(locale);
+const planText = m.tonight.pages.plan;
 const frameNearestSun = (altitudeDeg: number) =>
   panoramaSky
     ? panoramaSky.sunAltDeg.reduce(
@@ -2050,6 +2056,165 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
+          <!-- Session plan editor -->
+          <section class:list={block} aria-labelledby="c-plan-editor">
+            <h3 id="c-plan-editor" class:list={blockTitle}>
+              PlanEditRow, PlanEditor, PlanResetButton and PlanNote (/tonight/plan, full plan)
+            </h3>
+            <p class:list={blockNote}>
+              The same night with a saved list: the latest-peaking target moved to the top (the next row carries the
+              order hint) and M7, which never clears the 15° minimum, under "Not on tonight's plan". Each live specimen
+              is its own plan area, so opening an editor hides only its own timeline and "Edited" line. Save and Reset
+              post to the real routes, which refuse the sample site.
+            </p>
+            {planSpecimens.edited && planSpecimens.suggested ? (
+              <div class:list={grid}>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    default · live · edited: "Edited by you" with Reset (opens the real dialog), Edit plan, the timeline
+                    in the user's order with the hint and "Not on tonight's plan"
+                  </p>
+                  <div class="group rounded-lg border border-border py-4" data-session-plan-area>
+                    <div class="px-4 pb-6">
+                      <PlanEditRow
+                        siteId={planSpecimens.siteId}
+                        night={planSpecimens.night}
+                        editor={planSpecimens.edited.editor}
+                        edited
+                      />
+                    </div>
+                    <div class="group-data-[editing]:hidden">
+                      <SessionTimeline plan={planSpecimens.edited.plan} />
+                    </div>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · live · suggested: Edit plan only</p>
+                  <div class="group rounded-lg border border-border p-4" data-session-plan-area>
+                    <PlanEditRow
+                      siteId={planSpecimens.siteId}
+                      night={planSpecimens.night}
+                      editor={planSpecimens.suggested.editor}
+                      edited={false}
+                    />
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    open · live: the hint, the edge Move buttons aria-disabled (muted, still focusable), Remove on "Not
+                    on tonight's plan", the add picker (Enter never saves) and Save / Cancel
+                  </p>
+                  <div class="group rounded-lg border border-border p-4" data-session-plan-area>
+                    <PlanEditRow
+                      siteId={planSpecimens.siteId}
+                      night={planSpecimens.night}
+                      editor={planSpecimens.edited.editor}
+                      edited
+                      defaultOpen
+                    />
+                  </div>
+                </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    open · red mode: an aria-disabled Move button takes a dashed box (shape, not colour)
+                  </p>
+                  <div
+                    data-theme="red"
+                    class="group rounded-lg border border-border bg-background p-4 text-foreground"
+                    data-session-plan-area
+                  >
+                    <PlanEditRow
+                      siteId={planSpecimens.siteId}
+                      night={planSpecimens.night}
+                      editor={planSpecimens.edited.editor}
+                      edited
+                      defaultOpen
+                    />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    offline specimen (data-needs-network): Edit plan, Save and Reset mute; Cancel, Move, Remove and Add
+                    keep working
+                  </p>
+                  <div class:list={row}>
+                    <button
+                      type="button"
+                      tabindex="-1"
+                      aria-disabled="true"
+                      class:list={cn(buttonVariants({ variant: "hairline", size: "sm" }), offlineAction)}
+                    >
+                      <Pencil aria-hidden="true" />
+                      {planText.edit}
+                    </button>
+                    <button
+                      type="button"
+                      tabindex="-1"
+                      aria-disabled="true"
+                      class:list={cn(buttonVariants(), offlineAction)}
+                    >
+                      <Save aria-hidden="true" />
+                      {planText.save}
+                    </button>
+                    <Button type="button" variant="quiet" size="bare" tabIndex={-1}>
+                      <X aria-hidden="true" />
+                      {planText.cancel}
+                    </Button>
+                    <button
+                      type="button"
+                      tabindex="-1"
+                      aria-disabled="true"
+                      class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), offlineAction)}
+                    >
+                      <RotateCcw aria-hidden="true" />
+                      {planText.reset}
+                    </button>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>Reset dialog · specimen (the dialog's classes, always open)</p>
+                  <div class="flex justify-center rounded-lg bg-background/80 px-4 py-8">
+                    <div
+                      role="group"
+                      aria-label="Reset dialog specimen"
+                      class="w-full max-w-sm rounded-xl border border-border bg-surface p-5 text-foreground shadow-2xl"
+                    >
+                      <p class="text-body text-heading">{planText.resetConfirm}</p>
+                      <div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" className={focusRing} tabIndex={-1}>
+                          {planText.resetCancel}
+                        </Button>
+                        <Button type="button" variant="destructive" tabIndex={-1}>
+                          <RotateCcw aria-hidden="true" />
+                          {planText.resetConfirmYes}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    PlanNote · locked (free), held (a night that does not pass), unavailable
+                  </p>
+                  <div class="space-y-3">
+                    <PlanNote kind="locked" />
+                    <PlanNote kind="held" />
+                    <PlanNote kind="unavailable" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p class:list={notApplicable}>The sample Session plan failed to build.</p>
+            )}
+            <p class:list={notApplicable}>
+              hover, focus-visible — the Hairline, Quiet, Primary and Destructive Buttons (above), the list takes the
+              ring when it receives focus on opening · disabled — the edge Move buttons (aria-disabled) and the offline
+              specimen · error — the page's ServerError alert above the plan (?error=) · empty — an emptied list says so
+              in the editor · loading — Save and the dialog's Reset disable once submitted; the page's
+              TonightPageSkeleton has a 44 px bar for the edit row
+            </p>
+          </section>
+
           <!-- TonightTiles -->
           <section class:list={block} aria-labelledby="c-tonight-tiles">
             <h3 id="c-tonight-tiles" class:list={blockTitle}>
@@ -2404,7 +2569,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </div>
             <div class:list={cell}>
               <p class:list={stateLabel}>
-                loading · layout="plan" (/tonight/plan): the night lines, the legend, 2 rows
+                loading · layout="plan" (/tonight/plan): the edit row's 44 px bar, the night lines, the legend, 2 rows
               </p>
               <div class="overflow-hidden rounded-lg">
                 <TonightPageSkeleton title={m.tonight.summary.plan} reloadHref="/design" rows={2} layout="plan" />

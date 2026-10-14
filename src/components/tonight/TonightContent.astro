@@ -4,7 +4,9 @@
 // tonight-dashboard it is the dashboard: the sky, the save notice and the gear cards right under it (ui-user-adjustments),
 // then tiles that open the focused pages under /tonight/*, the sky check and the setup prompts (the tiles include the
 // Session plan, loaded with `withSessionPlan`). The detail lives on those pages; only this island records the sky
-// verdict.
+// verdict. The Session plan tile follows the user's saved plan (adjustable-session-plan D13): `readPlanEdits` reads it for
+// a confirmed full plan only (its own check, the request's one memoised plan read). A failed read leaves the suggested
+// plan on the tile and nothing else changes: the dashboard keeps its `OfflineCopy` (D14 is the plan page's, F8).
 import { ServerError } from "@/components/forms/ServerError";
 import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
@@ -21,6 +23,7 @@ import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { getAccountPlan } from "@/lib/account-plan";
+import { readPlanEditsFor } from "@/lib/session-plans/read";
 import { pendingCheck } from "@/lib/sky-checks/pending";
 import { recordableVerdict } from "@/lib/sky-checks/record";
 import { skyCheckStore } from "@/lib/sky-checks/store";
@@ -81,6 +84,7 @@ const load = await loadTonightFor(Astro.locals, {
   withSkyView: true,
   withSessionPlan: true,
   withSkyEvents: true,
+  readPlanEdits: readPlanEditsFor(Astro.locals),
 });
 const supabase = load ? Astro.locals.supabase : null;
 const {

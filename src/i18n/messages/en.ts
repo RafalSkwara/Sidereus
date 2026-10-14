@@ -1280,7 +1280,7 @@ export const en = {
         resetDone: "Plan reset to the suggested one",
         /** The edited plan's accessible list name: the rows are in the user's order, not by best time. */
         listLabelEdited: "Targets in your order",
-        /** The line above an edited plan's rows (the editor and its Reset button join it later). */
+        /** The line above an edited plan's rows, beside its Reset button and the editor's "Edit plan". */
         edited: "Edited by you",
         /** An edited plan with no target left in it. */
         editedEmpty: "You removed every target from this plan.",
@@ -1295,6 +1295,29 @@ export const en = {
         /** Saved targets with no window tonight: never drawn, kept until removed. */
         notTonightHeading: "Not on tonight's plan",
         notTonightHint: "They have no window tonight and stay saved until you remove them.",
+        /**
+         * The editor (full plan, Phase 5): the buttons, the add picker (outside the save form) and the list. `addFull` is
+         * the line in the picker's place once the list holds `SESSION_PLAN_MAX_TARGETS` (30).
+         */
+        edit: "Edit plan",
+        save: "Save plan",
+        cancel: "Cancel",
+        add: "Add",
+        addLabel: "Add a target",
+        addPlaceholder: "Number or name, e.g. 31 or Orion",
+        addNoMatch: "No target with a window tonight matches that.",
+        addFull: "A plan holds up to 30 targets. Remove one to add another.",
+        editorListLabel: "Targets in your plan",
+        editorEmpty: "No targets in your plan yet. Add one below.",
+        /** The icon buttons' accessible names; `name` is the row's name. */
+        moveUp: (p: { name: string }) => `Move ${p.name} up`,
+        moveDown: (p: { name: string }) => `Move ${p.name} down`,
+        remove: (p: { name: string }) => `Remove ${p.name} from the plan`,
+        /** Reset (beside "Edited by you"): the trigger and the dialog's name, then the dialog's question and buttons. */
+        reset: "Reset to suggested",
+        resetConfirm: "Reset this plan to the suggested one? Your changes for tonight will be removed.",
+        resetConfirmYes: "Reset plan",
+        resetCancel: "Keep my changes",
       },
     },
   },

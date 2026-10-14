@@ -5,8 +5,9 @@
  * ruled placeholder rows at the focused pages' rhythm (one data point per line), so nothing jumps when the island
  * swaps in. Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line
  * height. `layout="plan"` stands in for the Session plan
- * instead (ui-user-adjustments): its night lines, the legend and rows as tall as SessionTimeline's (name, line, curve,
- * hours).
+ * instead (ui-user-adjustments): one 44 px bar for the edit row above the plan (adjustable-session-plan: "Edit plan", or
+ * the free account's lock line), then its night lines, the legend and rows as tall as SessionTimeline's (name, line,
+ * curve, hours).
  */
 import BackLink from "@/components/ui/BackLink.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
@@ -57,7 +58,9 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
   <div class="mx-auto w-full max-w-3xl px-4 pt-8">
     {layout === "plan" ? (
       <div aria-hidden="true">
-        <div class="space-y-1.5">
+        {/* The edit row (PlanEditRow's collapsed "Edit plan"), 44 px, with the band's 32 px gap under it. */}
+        <div class:list={[bar, "h-11 w-32"]} />
+        <div class="mt-8 space-y-1.5">
           {["w-32", "w-44", "w-36", "w-32"].map((width) => (
             <div class:list={[bar, width, "text-label"]}>&nbsp;</div>
           ))}

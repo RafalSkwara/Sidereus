@@ -782,74 +782,87 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
+> **Resume here (paused 2026-10-14, branch rebased onto main c650a8a):** Phases 1-4 are committed. Phase 5 is complete in the WIP commit `wip(adjustable-session-plan): Phase 5 in progress (paused)`, with every gate green there: unit 2162, lint, astro check, build, the whole e2e suite (72 passed, 4 date skips), smoke and the reducer break check. The WIP commit also holds the `what-to-expect.spec` selector fix (`data-object-card`) and the post-rebase SHA re-pointing. **Next session:**
+> - squash or amend the WIP into `feat(adjustable-session-plan): editor, reset dialog and dashboard (p5)` and write its SHA onto rows 4.5 and 5.x;
+> - do the open manual rows 3.5 (the held line is not visible on the fixture's clear night; it is covered only by unit tests and smoke) and 5.7 (keyboard order is proven by e2e, the focus ring not yet inspected);
+> - then Phase 6 (docs), then the Opus `/10x-impl-review`.
+>
+> **Known issues for the review:**
+> - An `aria-disabled` Move button is muted by colour only in dark and light (#163's quiet style), which is subtle in dark; red mode adds a dashed box.
+> - A target added in the editor shows its D2 hint only after Save (no client times).
+> - `addFull` writes "30" literally.
+> - `?saved=plan` shows the toast from the URL alone, even on a free account (cosmetic).
+> - The skeleton's 44 px bar approximates the lock line (about 20 px).
+> - Two unit tests (`agent-hooks`, `runner-zone-guard`) failed once while a subagent had just finished; reruns pass (not reproduced).
+
 ### Phase 1: Table, store and isolation
 
 #### Automated
 
-- [x] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up` — d320730
-- [x] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit — d320730
-- [x] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts` — d320730
-- [x] 1.4 `npx vitest run src/lib/session-plans` passes — d320730
-- [x] 1.5 `npm run lint` and `npx astro check` pass — d320730
-- [x] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set) — d320730
+- [x] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up` — 08140c8
+- [x] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit — 08140c8
+- [x] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts` — 08140c8
+- [x] 1.4 `npx vitest run src/lib/session-plans` passes — 08140c8
+- [x] 1.5 `npm run lint` and `npx astro check` pass — 08140c8
+- [x] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set) — 08140c8
 
 #### Manual
 
-- [x] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert — d320730
+- [x] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert — 08140c8
 
 ### Phase 2: Applying edits to the night
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases — ac686bd
-- [x] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged — ac686bd
-- [x] 2.3 `npm run lint` and `npx astro check` pass — ac686bd
+- [x] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases — fb4274f
+- [x] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged — fb4274f
+- [x] 2.3 `npm run lint` and `npx astro check` pass — fb4274f
 
 #### Manual
 
-- [x] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert — ac686bd
+- [x] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert — fb4274f
 
 ### Phase 3: Full-plan routes, gated plan island and HTTP checks
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases — 9bf8043
-- [x] 3.2 `npm run lint` and `npx astro check` pass — 9bf8043
-- [x] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7 — 9bf8043
+- [x] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases — 1f43897
+- [x] 3.2 `npm run lint` and `npx astro check` pass — 1f43897
+- [x] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7 — 1f43897
 
 #### Manual
 
-- [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert — 9bf8043
+- [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert — 1f43897
 - [ ] 3.5 On a preview, the free lock line, a forced `?error=` alert and the held line read correctly in EN and PL
 
 ### Phase 4: Fresh offline copy after a save
 
 #### Automated
 
-- [x] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused) — 07d6a70
-- [x] 4.2 `npm run lint` and `npx astro check` pass — 07d6a70
-- [x] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing) — 07d6a70
-- [x] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture — 07d6a70
+- [x] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused) — 591c5c4
+- [x] 4.2 `npm run lint` and `npx astro check` pass — 591c5c4
+- [x] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing) — 591c5c4
+- [x] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture — 591c5c4
 
 #### Manual
 
-- [ ] 4.5 On a preview, after a save the toast shows, and DevTools' Cache Storage holds the new copy without a reload
+- [x] 4.5 On a preview, after a save the toast shows, and DevTools' Cache Storage holds the new copy without a reload
 
 ### Phase 5: Editor, reset dialog and dashboard
 
 #### Automated
 
-- [ ] 5.1 `npm test` (reducer, i18n parity, no-hardcoded-colors, contrast, no-console guard) passes
-- [ ] 5.2 `npm run lint` and `npx astro check` pass
-- [ ] 5.3 `npm run build` succeeds
-- [ ] 5.4 The whole e2e suite passes against a fresh local preview with the forecast fixture and keys inline (lessons): `npm run test:e2e`
-- [ ] 5.5 `npm run smoke` passes
+- [x] 5.1 `npm test` (reducer, i18n parity, no-hardcoded-colors, contrast, no-console guard) passes
+- [x] 5.2 `npm run lint` and `npx astro check` pass
+- [x] 5.3 `npm run build` succeeds
+- [x] 5.4 The whole e2e suite passes against a fresh local preview with the forecast fixture and keys inline (lessons): `npm run test:e2e`
+- [x] 5.5 `npm run smoke` passes
 
 #### Manual
 
-- [ ] 5.6 On a phone-width preview: edit, save, reload, reset in dark, light and red; red tells enabled and `aria-disabled` controls apart by shape, not only colour
+- [x] 5.6 On a phone-width preview: edit, save, reload, reset in dark, light and red; red tells enabled and `aria-disabled` controls apart by shape, not only colour
 - [ ] 5.7 Keyboard only: open, move, add, save, reset, with focus visible and kept
-- [ ] 5.8 Polish copy fits at 320 px
+- [x] 5.8 Polish copy fits at 320 px
 
 ### Phase 6: Docs and rules
 

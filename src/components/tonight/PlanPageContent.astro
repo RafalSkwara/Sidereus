@@ -12,8 +12,14 @@
 // not pass) or `unavailable` (the plan or the saved list could not be read, or there is no plan); the booleans
 // `data-session-plan-edited`, `-held` and `-locked` say the same for HTTP checks. In the failure states (a failed plan or
 // edits read) the island renders no `OfflineCopy`, so the worker commits nothing and the earlier stored copy survives (D14).
-import { Lock } from "lucide-react";
+//
+// Editing (Phase 5): in the `edited` and `suggested` states of a night that passes, `PlanEditRow` sits above the
+// timeline: the "Edited by you" line with Reset on an edited plan, and the editor island (`PlanEditor`). The plan area is
+// the `group` the editor marks `data-editing` while it is open, which hides the timeline, the "Edited" line and the
+// edited-empty line (the editor lists the same targets).
 import { ServerError } from "@/components/forms/ServerError";
+import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
+import PlanNote from "@/components/tonight/PlanNote.astro";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
@@ -24,6 +30,7 @@ import { accountPlanForCopy } from "@/lib/account-plan";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { readPlanEditsFor } from "@/lib/session-plans/read";
 import { loadTonightFor } from "@/lib/tonight/island";
+import { planEditorData } from "@/lib/tonight/plan-editor-view";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -75,10 +82,12 @@ const drawable = plan !== null && (plan.rows.length > 0 || plan.notTonight.lengt
 const empty = view !== null && !drawable;
 const state: "edited" | "suggested" | "locked" | "held" | "unavailable" =
   editsFailed || plan === null ? "unavailable" : locked ? "locked" : held ? "held" : edited ? "edited" : "suggested";
+// The editor, for a full-plan user's plan in the two states edits apply in; `planEditorData` is `null` unless the build
+// listed candidates (tonight, full plan, a night that passes).
+const editor = view && plan && (state === "edited" || state === "suggested") ? planEditorData(plan, locale) : null;
 // The message column renders only with something in it, so a normal night has one gap under the sky, not two.
 const hasMessages = failures.length > 0 || noGear || empty || error !== null || locked || held || editsFailed;
 const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
-const note = "flex items-start gap-2 text-label text-muted-foreground";
 ---
 
 {load && (
@@ -87,6 +96,7 @@ const note = "flex items-start gap-2 text-label text-muted-foreground";
     {view && !editsFailed && <OfflineCopy view={view} night={night} />}
 
     <div
+      class="group"
       data-session-plan-area
       data-session-plan-state={state}
       data-session-plan-edited={state === "edited" ? "" : undefined}
@@ -114,24 +124,11 @@ const note = "flex items-start gap-2 text-label text-muted-foreground";
             </p>
           )}
 
-          {locked && (
-            <p class:list={[note]} data-session-plan-note="locked">
-              <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              {t.pages.plan.locked}
-            </p>
-          )}
+          {locked && <PlanNote kind="locked" />}
 
-          {editsFailed && (
-            <p class:list={[note]} data-session-plan-note="unavailable">
-              {t.pages.plan.editsUnavailable}
-            </p>
-          )}
+          {editsFailed && <PlanNote kind="unavailable" />}
 
-          {held && !editsFailed && (
-            <p class:list={[note]} data-session-plan-note="held">
-              {t.pages.plan.held}
-            </p>
-          )}
+          {held && !editsFailed && <PlanNote kind="held" />}
 
           {empty && (
             /* Nothing to place on the night: why, from the view, and the way to a better night. */
@@ -155,7 +152,9 @@ const note = "flex items-start gap-2 text-label text-muted-foreground";
                   )}
                   {/* An edited list with nothing left says so; a held one has its own line above; only the suggested plan has "nothing to place". */}
                   {edited ? (
-                    <p class="text-body text-muted-foreground">{t.pages.plan.editedEmpty}</p>
+                    <p class="text-body text-muted-foreground group-data-[editing]:hidden">
+                      {t.pages.plan.editedEmpty}
+                    </p>
                   ) : (
                     !held && <p class="text-body text-muted-foreground">{t.pages.plan.empty}</p>
                   )}
@@ -174,15 +173,15 @@ const note = "flex items-start gap-2 text-label text-muted-foreground";
         </div>
       )}
 
+      {view && editor && (
+        <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+          <PlanEditRow siteId={view.siteId} night={view.date} editor={editor} edited={edited} />
+        </div>
+      )}
+
       {plan && !empty && (
-        <div class="mx-auto w-full max-w-3xl pt-8">
+        <div class="mx-auto w-full max-w-3xl pt-8 group-data-[editing]:hidden">
           <Band headingId="plan-heading" heading={t.summary.plan} headingHidden>
-            {edited && (
-              /* The editor's Reset joins this line later; for now it is text. */
-              <p class="px-4 pb-4 text-label font-semibold text-heading" data-session-plan-line-edited>
-                {t.pages.plan.edited}
-              </p>
-            )}
             <SessionTimeline plan={plan} />
           </Band>
         </div>

@@ -30,7 +30,7 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 /** Waits for Targets' island to paint its best objects (the first card), then for the fonts. */
 async function waitForTargets(page: Page) {
-  await expect(page.locator('li[id^="object-"]').first()).toBeVisible();
+  await expect(page.locator("li[data-object-card]").first()).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -62,7 +62,7 @@ test("a full-plan account sees a phrase from the catalogue in the first object's
   await page.goto("/tonight/targets");
   await waitForTargets(page);
 
-  const line = page.locator('li[id^="object-"]').first().locator("[data-expect]");
+  const line = page.locator("li[data-object-card]").first().locator("[data-expect]");
   await expect(line).toHaveCount(1);
   const text = ((await line.textContent()) ?? "").trim();
   expect(Object.values(en.tonight.expect.phrase)).toContain(text);
@@ -89,9 +89,9 @@ test("at 320 px with the full plan, the best five's and an opened row's lines fi
     await waitForTargets(page);
 
     // The best five's details are open at once: every card carries exactly one line, one of this language's phrases.
-    const cards = await page.locator('li[id^="object-"]').count();
+    const cards = await page.locator("li[data-object-card]").count();
     expect(cards, `${locale}: Targets shows its best objects`).toBeGreaterThan(0);
-    const lines = page.locator('li[id^="object-"] [data-expect]');
+    const lines = page.locator("li[data-object-card] [data-expect]");
     await expect(lines, `${locale}: every best object carries a line`).toHaveCount(cards);
     const phrases = Object.values(messages.tonight.expect.phrase);
     for (const line of await lines.all()) {
