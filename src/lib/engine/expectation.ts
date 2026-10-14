@@ -59,7 +59,10 @@ export const EXPECTATION_KEYS = [
 
 export type ExpectationKey = (typeof EXPECTATION_KEYS)[number];
 
-/** How far an object stands from the sky: `bright` is easy straight on, `limit` is at the edge of the sky's allowance. */
+/**
+ * How far an object stands from the sky: `bright` is easy straight on, `limit` is at the edge of the sky's
+ * allowance.
+ */
 export type ContrastBand = "bright" | "smudge" | "faint" | "limit";
 
 export type ExpectationObject = Pick<DeepSkyObject, "type" | "vMag" | "majorAxisArcmin" | "minorAxisArcmin">;

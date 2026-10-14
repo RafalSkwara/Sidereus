@@ -224,7 +224,7 @@ const SRC = {
   DEEP_SKY_WATCH_COMA: source(
     "Coma Cluster of Galaxies (Abell 1656)",
     "Deep Sky Watch (Michael Vlasov)",
-    "http://www.deepskywatch.com/Astrosketches/coma-cluster-sketch.html",
+    "https://www.deepskywatch.com/Astrosketches/coma-cluster-sketch.html",
   ),
 } as const;
 

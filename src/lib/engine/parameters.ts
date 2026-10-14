@@ -450,10 +450,11 @@ export const EXPECT_STARLIKE_ARCMIN = 0.5;
 export const EXPECT_RESOLVE_APERTURE_MM = 150;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a globular cluster is resolved only when its magnitude is at least
- * this many magnitudes brighter than the telescope's limiting magnitude at the site, so the bar rises with aperture
- * and falls with a brighter sky. 5.75 reproduces a fixed magnitude of 7 at 150 mm under Bortle 4 (limit 12.75), where
- * M13 and M3 resolve, and lets M56 (8.4, "8 inches or larger" in the guides) reach "grainy" at 200 mm.
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a globular cluster is resolved only when its
+ * magnitude is at least this many magnitudes brighter than the telescope's limiting magnitude at the site, so the bar
+ * rises with aperture and falls with a brighter sky. 5.75 reproduces a fixed magnitude of 7 at 150 mm under Bortle 4
+ * (limit 12.75), where M13 and M3 resolve, and lets M56 (8.4, "8 inches or larger" in the guides) reach "grainy" at 200
+ * mm.
  */
 export const EXPECT_RESOLVE_MARGIN_MAG = 5.75;
 
@@ -464,10 +465,10 @@ export const EXPECT_RESOLVE_MARGIN_MAG = 5.75;
 export const EXPECT_GRAINY_APERTURE_MM = 100;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a globular cluster can look grainy when it is at least this many
- * magnitudes brighter than the telescope's limiting magnitude. 4.75 is a fixed magnitude of 8 at 150 mm under
- * Bortle 4; M56 (8.4) falls just inside it at 200 mm, where the guides first report hints of stars and a ragged,
- * grainy view.
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a globular cluster can look grainy when it is
+ * at least this many magnitudes brighter than the telescope's limiting magnitude. 4.75 is a fixed magnitude of 8 at 150
+ * mm under Bortle 4; M56 (8.4) falls just inside it at 200 mm, where the guides first report hints of stars and a
+ * ragged, grainy view.
  */
 export const EXPECT_GRAINY_MARGIN_MAG = 4.75;
 
@@ -484,40 +485,42 @@ export const EXPECT_WIDE_ARCMIN = 60;
 export const EXPECT_COMPACT_ARCMIN = 10;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a planetary nebula at least this wide, arcminutes, can be too
- * large for its surface brightness to read as a crisp disc (the Helix, 16 arcminutes; the Owl, 3.6). The Dumbbell
- * (6.7) is wider than this too but bright enough to stay a disc: see `EXPECT_LARGE_PLANETARY_DISC_BELOW`.
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a planetary nebula at least this wide,
+ * arcminutes, can be too large for its surface brightness to read as a crisp disc (the Helix, 16 arcminutes; the Owl,
+ * 3.6). The Dumbbell (6.7) is wider than this too but bright enough to stay a disc: see
+ * `EXPECT_LARGE_PLANETARY_DISC_BELOW`.
  */
 export const EXPECT_LARGE_PLANETARY_ARCMIN = 3;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a large planetary nebula (`EXPECT_LARGE_PLANETARY_ARCMIN`) keeps
- * the "crisp disc" phrase only when its contrast deficit is below this, magnitudes (its core stands this far clear
- * of the sky); otherwise it is faint. -1.5 sits between the Dumbbell (-2.1 at 150 mm, Bortle 4) and the Owl (-1.0),
- * which Starlust and Skyhound call indistinct in a 6-inch because of its low surface brightness.
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a large planetary nebula
+ * (`EXPECT_LARGE_PLANETARY_ARCMIN`) keeps the "crisp disc" phrase only when its contrast deficit is below this,
+ * magnitudes (its core stands this far clear of the sky); otherwise it is faint. -1.5 sits between the Dumbbell (-2.1
+ * at 150 mm, Bortle 4) and the Owl (-1.0), which Starlust and Skyhound call indistinct in a 6-inch because of its low
+ * surface brightness.
  */
 export const EXPECT_LARGE_PLANETARY_DISC_BELOW = -1.5;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a cluster with nebulosity brighter than this, V mag, is a bright
- * nebula whatever the sky: it is visible to the naked eye even from city centres (Telescope Advisor), so a city
- * sky does not turn M42 into a faint haze. Only M42 is this bright of its type.
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a cluster with nebulosity this bright or
+ * brighter, V mag, is a bright nebula whatever the sky: it is visible to the naked eye even from city centres
+ * (Telescope Advisor), so a city sky does not turn M42 into a faint haze. Only M42 is this bright of its type.
  */
 export const EXPECT_BRIGHT_NEBULA_MAX_VMAG = 4.5;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a galaxy is "bright", easy straight on, only when it is at
- * least this many magnitudes brighter than the telescope's limiting magnitude; a galaxy closer to the limit with
- * a high surface brightness is still just a smudge. 5 separates M81 (5.8 below the limit at 150 mm, Bortle 4, "a
- * large bright oval, core sharply defined") from M51 (4.4, "a large, round, hazy spot with a slightly brighter
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): a galaxy is "bright", easy straight on, only
+ * when it is at least this many magnitudes brighter than the telescope's limiting magnitude; a galaxy closer to the
+ * limit with a high surface brightness is still just a smudge. 5 separates M81 (5.8 below the limit at 150 mm, Bortle
+ * 4, "a large bright oval, core sharply defined") from M51 (4.4, "a large, round, hazy spot with a slightly brighter
  * centre", Skyhound).
  */
 export const EXPECT_BRIGHT_GALAXY_MARGIN_MAG = 5;
 
 /**
- * Candidate (what-to-expect planning, 2026-10-14, reference calibration): an emission or other nebula at least this wide, arcminutes, is
- * never "bright", whatever its core: its light is spread over many fields of view (NGC 7000 is 120 arcminutes and
- * "cannot be seen with the unaided eye" for its low surface brightness).
+ * Candidate (what-to-expect planning, 2026-10-14, reference calibration): an emission or other nebula at least this
+ * wide, arcminutes, is never "bright", whatever its core: its light is spread over many fields of view (NGC 7000 is 120
+ * arcminutes and "cannot be seen with the unaided eye" for its low surface brightness).
  */
 export const EXPECT_HUGE_NEBULA_ARCMIN = 100;
 

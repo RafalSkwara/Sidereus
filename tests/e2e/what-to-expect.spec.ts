@@ -44,6 +44,13 @@ test("a free account sees the locked line once and no phrase", async ({ page }) 
   await expect(page.locator("[data-expect-locked]")).toHaveCount(1);
   await expect(page.locator("[data-expect-locked]")).toContainText(en.tonight.expect.locked);
   await expect(page.locator("[data-expect]")).toHaveCount(0);
+  // Not only no marker: no phrase anywhere in the page, open or folded, except the one the locked line quotes (O-1).
+  const body = await page.evaluate(() => document.body.textContent);
+  const { galaxySmudge, ...others } = en.tonight.expect.phrase;
+  for (const phrase of Object.values(others)) {
+    expect(body, "a free account's page must hold no phrase").not.toContain(phrase);
+  }
+  expect(en.tonight.expect.locked).toContain(galaxySmudge);
 });
 
 test("a full-plan account sees a phrase from the catalogue in the first object's details", async ({ page }) => {
@@ -64,7 +71,7 @@ test("a full-plan account sees a phrase from the catalogue in the first object's
   await expect(page.locator("[data-expect-locked]")).toHaveCount(0);
 });
 
-test("at 320 px with the full plan, the best five's lines fit without scrolling sideways, in English and Polish", async ({
+test("at 320 px with the full plan, the best five's and an opened row's lines fit without scrolling sideways, in English and Polish", async ({
   page,
   context,
   baseURL,
@@ -81,9 +88,11 @@ test("at 320 px with the full plan, the best five's lines fit without scrolling 
     await page.goto("/tonight/targets");
     await waitForTargets(page);
 
-    // The best five's details are open at once; each line is one of this language's phrases.
+    // The best five's details are open at once: every card carries exactly one line, one of this language's phrases.
+    const cards = await page.locator('li[id^="object-"]').count();
+    expect(cards, `${locale}: Targets shows its best objects`).toBeGreaterThan(0);
     const lines = page.locator('li[id^="object-"] [data-expect]');
-    expect(await lines.count(), `${locale}: the best objects each carry a line`).toBeGreaterThan(0);
+    await expect(lines, `${locale}: every best object carries a line`).toHaveCount(cards);
     const phrases = Object.values(messages.tonight.expect.phrase);
     for (const line of await lines.all()) {
       await expect(line).toBeVisible();
@@ -97,6 +106,18 @@ test("at 320 px with the full plan, the best five's lines fit without scrolling 
       clientWidth: document.documentElement.clientWidth,
     }));
     expect(scrollWidth, `${locale}: Targets must not scroll sideways at 320 px`).toBeLessThanOrEqual(clientWidth);
+
+    // The rest sit narrower (indented rows in a bordered, scrolling region whose overflow the page width would hide):
+    // open the list and one row, and check that row's line fits its own box.
+    if ((await page.locator("details#more").count()) > 0) {
+      await page.locator("details#more > summary").click();
+      const row = page.locator("details#more li[data-object]").first();
+      await row.locator("summary").click();
+      const restLine = row.locator("[data-expect]");
+      await expect(restLine, `${locale}: an opened row shows its line`).toBeVisible();
+      const fits = await restLine.evaluate((element) => element.scrollWidth <= element.clientWidth);
+      expect(fits, `${locale}: a row's line must not overflow at 320 px`).toBe(true);
+    }
   }
 });
 

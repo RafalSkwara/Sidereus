@@ -203,7 +203,7 @@ describe("expectationFor: the reference fixture (D-6)", () => {
       for (const s of entry.sources) {
         expect(s.title, label).not.toBe("");
         expect(s.publisher, label).not.toBe("");
-        expect(s.url, label).toMatch(/^https?:\/\//);
+        expect(s.url, label).toMatch(/^https:\/\//);
         expect(s.accessed, label).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       }
       expect(entry.note, label).not.toBe("");

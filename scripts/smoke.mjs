@@ -124,10 +124,10 @@ const TARGETS_PAGE = "/tonight/targets";
 let targetsIslandUrl = "";
 
 /**
- * An island's URL from the shell's `<link rel="preload" as="fetch" href="/_server-islands/<Name>?e=…">` (`path` is the
- * island's route, e.g. FINDER_ISLAND_PATH), or "" when there is none. The HTML escapes `&` as `&amp;` inside the attribute, so it is decoded here, as the service
- * worker's `islandUrlFromShell` (src/lib/offline/copies.ts) does; a POST island has no such link, so the capture is empty
- * and every step that needs it fails.
+ * An island's URL from the shell's `<link rel="preload" as="fetch" href="/_server-islands/<Name>?e=…">` (`path` is
+ * the island's route, e.g. FINDER_ISLAND_PATH), or "" when there is none. The HTML escapes `&` as `&amp;` inside the
+ * attribute, so it is decoded here, as the service worker's `islandUrlFromShell` (src/lib/offline/copies.ts) does; a
+ * POST island has no such link, so the capture is empty and every step that needs it fails.
  */
 function islandUrlFromShell(html, path) {
   for (const [, list] of html.matchAll(/<link\b([^>]*)>/gi)) {
@@ -354,13 +354,14 @@ const steps = [
   ],
   [
     // What to expect (what-to-expect Phase 4, D-11): the Targets island route is not gated either. Signed out, a leaked
-    // URL's island loads no Tonight (the user is null), so it renders neither the lines nor the locked line.
-    "expect 3: signed out, a leaked Targets island URL renders no line",
+    // URL's island loads no Tonight (the user is null), so it renders neither the lines nor the locked line, and no
+    // offline copy either: no Tonight load happened at all, not just a missing marker. The URL was captured in
+    // `expect 1`, before any grant, so this step needs none.
+    "expect 3: signed out, a leaked Targets island URL loads no Tonight and renders no line",
     () => replayTargetsIsland(),
     {
       status: 200,
-      needsPlanGrant: true,
-      bodyExcludes: ['data-expect="', "data-expect-locked"],
+      bodyExcludes: ['data-expect="', "data-expect-locked", "data-offline-copy"],
     },
   ],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],

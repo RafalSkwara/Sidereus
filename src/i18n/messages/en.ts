@@ -972,7 +972,7 @@ export const en = {
         openClusterHazy: "A few brighter stars over a faint haze of fainter ones.",
         planetaryStarLike: "Looks like a star at low power; at high power it shows as a tiny, slightly fuzzy disc.",
         planetaryDisc: "A bright grey-green disc, ring or bow-tie shape that takes magnification well.",
-        planetaryFaint: "A faint, large round glow; use your lowest power and averted vision.",
+        planetaryFaint: "A faint round glow; use averted vision.",
         galaxyBright: "An oval glow with a bright centre, easy to see straight on.",
         galaxySmudge: "A faint grey smudge with a slightly brighter middle.",
         galaxyFaint: "A very faint grey smudge; use averted vision.",
