@@ -143,6 +143,7 @@ The owner's answers of 2026-10-14 (relayed by the orchestrator) to the agent's d
   - `line` 8 px: between the lines of one group.
   - `group` 24 px: between the groups of one item, and the hairline's padding.
   - `item` 40 px: the padding on each side of the rule between two items holding groups (target, planet, Moon target, event).
+  - **Open until Phase 1's checkpoint** (owner, 2026-10-14): "item 40 px" may instead mean 40 px in total between two items' contents (20 px on each side of the rule). Phase 1 shows both readings, and the owner chooses from the screenshots. Until then the token is `2.5rem` (40 px each side). If the owner picks 40 px in total, `--spacing-item` becomes `1.25rem` and nothing else in the plan changes, because every view uses the role.
   - A one-group row (a night, a washed-out row) is `py-group`.
 - **D2. Overline** (default kept): 13 px / 20 px, weight 600, tracking 0.04em, sentence case, muted ink.
 - **D3. Stat card** (default kept, with F2 and F8):
@@ -355,6 +356,10 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
     - in that frame, fallbacks (a), (b) and (c) side by side, each labelled, EN and PL, with the longest real values ("20:51–07:10", "Widoczność", "Najlepiej", "03:21" / "NNE, 87°").
   - **`c-fact`**: `Fact` with a label and an inline value, with a sentence, muted, a two-line `<p>` block (the eyepiece pair), Polish (the "Do szczegółów: …" spacing case), the accent `see` icon and the `safety` tone.
   - **`c-fact-icons`**: the map as a grid of every concept, event kind and visibility mark, with its name.
+  - **`c-item-rhythm`** (owner's D1 question): two Targets rows (an `ObjectCard`-like heading, the stat pair, the hairline and three facts, then the rule and the next row's heading), shown twice side by side in a 288 px column:
+    - (i) 40 px in total between the two contents, 20 px on each side of the rule;
+    - (ii) 40 px on each side of the rule, 80 px in total.
+    - Each variant is labelled with its numbers. The specimen frames may use plain spacing steps (`/design` is not guarded), so variant (i) needs no second token.
 - States:
   - default is shown;
   - hover, focus-visible and disabled are N/A (not interactive: no link, no control; offline leaves facts untouched);
@@ -390,7 +395,7 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 **Intent**: The script has ui-quiet-actions' section ids. Point it at this change's sections, add a 320 px viewport, and print the computed heights of the three `data-role-sample` bars (8/24/40 px expected), which proves the roles compile to their values.
 
 **Contract**:
-- Sections `c-stat-pair`, `c-fact`, `c-fact-icons` and the spacing strip, at 320 px (2×) and 1280 px, in dark, light and red, EN and PL.
+- Sections `c-stat-pair`, `c-fact`, `c-fact-icons`, `c-item-rhythm` and the spacing strip, at 320 px (2×) and 1280 px, in dark, light and red, EN and PL.
 - Output in `evidence/design/<section>-<theme>-<locale>-<width>.png`; a curated, downscaled set is committed.
 
 ### Success Criteria:
@@ -413,6 +418,7 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
   - every concept in the map has one icon, and no icon serves two concepts;
   - in red the card's faint border does not read like the hairline "Mark observed" button, and the overline stays readable
 - **Owner checkpoint (F2)**: the 320 px screenshots of `c-stat-pair` (paths listed in the report) go to the owner, who picks fallback (a), (b) or (c) for the expanded rows before Phase 3 starts. The choice is recorded under "Decisions"
+- **Owner checkpoint (D1)**: the 320 px screenshots of `c-item-rhythm` go to the owner with the stat-pair shots. The owner picks (i) 40 px in total or (ii) 40 px on each side. `--spacing-item` is set to match (`1.25rem` or `2.5rem`), and the choice is recorded under "Decisions"
 
 ---
 
@@ -850,6 +856,7 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 - [ ] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked
 - [ ] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c)
+- [ ] 1.8 Owner checkpoint: the 320 px `c-item-rhythm` screenshots go to the owner, who picks 40 px in total or 40 px on each side
 
 ### Phase 2: Planet fact labels and value wording
 
