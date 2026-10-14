@@ -953,6 +953,21 @@ export const en = {
       shortNight: "Short night: the sky never gets fully dark",
       /** A bright Moon is up during the dark window. */
       brightMoon: "Bright Moon up: only the brighter meteors show",
+      /**
+       * When to go, for the dashboard tile: relative to the selected night, `span` as "12/13 Aug" (the evening and the
+       * morning it ends in).
+       */
+      when: {
+        tonight: "tonight",
+        tomorrow: "tomorrow night",
+        night: (p: { span: string }) => `night of ${p.span}`,
+      },
+      /** A visible solar eclipse on the tile and the verdict line is never "go out and look". */
+      glassesOnly: "eclipse glasses only",
+      withGlasses: (p: { name: string }) => `${p.name}, eclipse glasses only`,
+      /** The verdict's muted line on an event night; `count` is how many more events the night holds, pre-formatted. */
+      verdictLine: (p: { name: string }) => `Tonight: ${p.name}`,
+      verdictLineMore: (p: { name: string; count: string }) => `Tonight: ${p.name} +${p.count} more`,
       /** The fixed safety line on every solar eclipse, visible or not. */
       solarSafety:
         "Eye safety: look only through certified eclipse glasses. Never look at the Sun directly, or through a telescope or binoculars, without a certified solar filter.",
@@ -1090,6 +1105,8 @@ export const en = {
       planets: "Planets",
       /** The sky events page's title and the dashboard tile's heading. */
       events: "Sky events",
+      /** The events tile with nothing notable to go out for; `count` is `EVENT_WINDOW_NIGHTS`, pre-formatted. */
+      eventsNone: (p: { count: string }) => `Nothing to go out for in the next ${p.count} nights`,
       /** The Session plan: the page's title and the dashboard tile's heading. */
       plan: "Session plan",
       /** The tile's line under its timeline before sunset: the first target by best time. */

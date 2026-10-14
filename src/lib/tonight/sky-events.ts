@@ -10,6 +10,8 @@ import type { Locale } from "@/lib/preferences";
 
 import { createFormatter } from "./format";
 
+const DAY_MS = 86_400_000;
+
 /**
  * The sky events as the Tonight view carries them (M-3 S-07, sky-events Phase 4): the engine's events worded for the
  * page in the site's time zone and the user's locale, so the page, the dashboard tile and the verdict line render
@@ -31,6 +33,22 @@ export interface TonightSkyEvent {
   /** The observing night (`YYYY-MM-DD`) the event belongs to, and its label ("Saturday, 10 October 2026"). */
   night: string;
   nightLabel: string;
+  /**
+   * The night to go out for it (`YYYY-MM-DD`): `night`, except a meteor shower, whose peak can fall in daylight, so
+   * it counts on its best night (the one before or after). It, not `night`, decides `tonight` and `next`; the page
+   * still groups the row by `night`.
+   */
+  goNight: string;
+  /**
+   * The name for the dashboard's tile and the verdict line: `name`, and for a close pairing the separation too
+   * ("Moon and Jupiter, 1.8° apart"), since the pair alone says nothing about how close it is.
+   */
+  lineName: string;
+  /**
+   * When to go, relative to the selected night: "tonight", "tomorrow night" or "night of 12/13 Aug". A solar eclipse
+   * is a daytime event, so it reads the day and time of its own moment ("Mon 2 Aug, 12:03").
+   */
+  nightWhen: string;
   visible: boolean;
   /** Visible: the best time, altitude and compass point ("Best 22:40 · SW, 45°"); not visible: the reason ("Below your horizon"). */
   visibilityText: string;
@@ -55,6 +73,21 @@ export interface TonightSkyEvents {
 }
 
 /**
+ * The first notable visible event to go out for from `date` on: the earliest go night, the earlier moment on a tie.
+ * (The events are in moment order, and a shower's moment can be a night before its go night, so the first of them
+ * is not always the soonest.)
+ */
+function nextEvent(worded: readonly TonightSkyEvent[], date: string): TonightSkyEvent | null {
+  let next: TonightSkyEvent | null = null;
+  for (const event of worded) {
+    if (event.notable && event.goNight >= date && (next === null || event.goNight < next.goNight)) {
+      next = event;
+    }
+  }
+  return next;
+}
+
+/**
  * Words `events` (from `skyEvents(site, date, …)`) for `locale` in `timeZone`. `date` is the selected night
  * (`YYYY-MM-DD`): `tonight` holds that night's notable visible events.
  */
@@ -67,7 +100,8 @@ export function formatSkyEvents(
 ): TonightSkyEvents {
   const m = getMessages(locale);
   const t = m.tonight.events;
-  const { formatTime, formatDayTime, formatNightDate, formatDirection, formatDegrees } = createFormatter(locale);
+  const { formatTime, formatDayTime, formatNightDate, formatNightSpan, formatDirection, formatDegrees } =
+    createFormatter(locale);
 
   const showers: Record<string, string> = m.targets.meteorShower;
   const bodyName = (body: string): string =>
@@ -76,6 +110,9 @@ export function formatSkyEvents(
     start: formatTime(interval.start, timeZone),
     end: formatTime(interval.end, timeZone),
   });
+
+  const nightsFrom = (night: string): number =>
+    Math.round((Date.parse(`${night}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / DAY_MS);
 
   const worded = events.map((event): TonightSkyEvent => {
     const notes: string[] = [];
@@ -152,6 +189,19 @@ export function formatSkyEvents(
     if (visibility.shortNight) notes.push(t.shortNight);
     if (event.kind === "meteor-shower" && event.brightMoon) notes.push(t.brightMoon);
 
+    // A meteor shower counts on its best night: the night the user should go out, which is not the peak night when
+    // the peak falls in daylight.
+    const goNight = event.kind === "meteor-shower" ? event.bestNight : event.night;
+    const daysAhead = nightsFrom(goNight);
+    const nightWhen =
+      event.kind === "solar-eclipse"
+        ? when
+        : daysAhead === 0
+          ? t.when.tonight
+          : daysAhead === 1
+            ? t.when.tomorrow
+            : t.when.night({ span: formatNightSpan(goNight) });
+
     return {
       kind: event.kind,
       name,
@@ -160,6 +210,9 @@ export function formatSkyEvents(
       details,
       night: event.night,
       nightLabel: formatNightDate(event.night),
+      goNight,
+      lineName: event.kind === "pairing" ? `${name}, ${details[0]}` : name,
+      nightWhen,
       visible: visibility.visible,
       visibilityText,
       notes,
@@ -170,8 +223,45 @@ export function formatSkyEvents(
 
   return {
     events: worded,
-    tonight: worded.filter((event) => event.notable && event.night === date),
-    next: worded.find((event) => event.notable && event.night >= date) ?? null,
+    tonight: worded.filter((event) => event.notable && event.goNight === date),
+    next: nextEvent(worded, date),
     windowNights,
   };
+}
+
+/**
+ * The dashboard tile's line (owner decision 5): the next notable event and when to go, "Perseids peak · night of
+ * 12/13 Aug" or "Moon and Jupiter, 1.8° apart · tonight", and for a solar eclipse "eclipse glasses only" besides.
+ * Nothing to go out for in the window reads `eventsNone`; a view without the block reads the unavailable line.
+ */
+export function eventsTileLine(events: TonightSkyEvents | null, locale: Locale): string {
+  const m = getMessages(locale);
+  if (events === null) {
+    return m.tonight.pages.events.unavailable;
+  }
+  const { next } = events;
+  if (next === null) {
+    return m.tonight.summary.eventsNone({ count: String(events.windowNights) });
+  }
+  const parts = [next.lineName, next.nightWhen];
+  if (next.safety) {
+    parts.push(m.tonight.events.glassesOnly);
+  }
+  return parts.join(m.tonight.summary.separator);
+}
+
+/**
+ * The verdict's muted line (owner decision 5, F3): "Tonight: Perseids peak", plus "+1 more" when several notable
+ * events fall on the night, and for a solar eclipse "eclipse glasses only". `null` on a night with none, so the line
+ * (and the room it takes) exists only on event nights.
+ */
+export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Locale): string | null {
+  const first = events?.tonight[0];
+  if (events === null || first === undefined) {
+    return null;
+  }
+  const t = getMessages(locale).tonight.events;
+  const name = first.safety ? t.withGlasses({ name: first.lineName }) : first.lineName;
+  const more = events.tonight.length - 1;
+  return more > 0 ? t.verdictLineMore({ name, count: String(more) }) : t.verdictLine({ name });
 }

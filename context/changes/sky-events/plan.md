@@ -577,10 +577,10 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [x] 4.1 `npx vitest run src/lib/tonight/build.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes
-- [x] 4.2 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/sky-events.spec.ts tests/e2e/tonight-phone.spec.ts tests/e2e/offline.spec.ts` passes
+- [x] 4.1 `npx vitest run src/lib/tonight/build.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes — ed0c806
+- [x] 4.2 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/sky-events.spec.ts tests/e2e/tonight-phone.spec.ts tests/e2e/offline.spec.ts` passes — ed0c806
   - F6 timing (one run, 4333 preview, warm, 2026-10-14): island TTFB `/tonight/events` about 52-62 ms vs `/tonight/nights` about 25-34 ms, so `skyEvents` plus formatting adds about 25-30 ms.
-- [x] 4.3 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
+- [x] 4.3 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — ed0c806
 
 #### Manual
 
@@ -590,8 +590,8 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [ ] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it
-- [ ] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
+- [x] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it
+- [x] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
 
 #### Manual
 

@@ -16,7 +16,9 @@ import { onboardInMadrid } from "./helpers";
  *    a phone) end above the fixed TabBar, and the Telescope card's title shows above it too; the rest of the
  *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
  *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
- *    known limits (the plan's "What we're not doing"), so they are not asserted;
+ *    known limits (the plan's "What we're not doing"), so they are not asserted. On a night with a notable sky event
+ *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), so the
+ *    spec measures that line (0 when absent) and subtracts it, and holds on any date;
  *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL;
  *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
@@ -57,6 +59,18 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+/** The event line's height with its margins, 0 when the night has no notable event: how far it pushes the cards down. */
+async function eventLineShift(page: Page): Promise<number> {
+  const line = page.locator("[data-verdict-event]");
+  if ((await line.count()) === 0) {
+    return 0;
+  }
+  return line.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return element.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+  });
+}
+
 // The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
 // starts on it (its title shows above the TabBar). On phones each card gives the name its own line with Manage under it,
 // so the Telescope card's lower part needs a short scroll, as the first target does.
@@ -80,6 +94,9 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
   const telescope = await telescopeCard.boundingBox();
   const telescopeTitle = await telescopeCard.locator("label, p").first().boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
+  // The event line is in flow under the verdict's reason, so it pushes everything below it down by its height and its
+  // top margin; the checks below take that one shift out, so they read the same on event and no-event nights.
+  const eventShift = await eventLineShift(page);
 
   if (!tabBar || !headline || !site || !telescope || !telescopeTitle || !firstTile) {
     throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");
@@ -92,10 +109,13 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
   expect(site.y + site.height, "the Site card must sit above the Telescope card at 390×844").toBeLessThanOrEqual(
     telescope.y,
   );
-  expect(site.y + site.height, "the Site card must end above the TabBar at 390×844").toBeLessThanOrEqual(tabBar.y);
   expect(
-    telescopeTitle.y + telescopeTitle.height,
-    "the Telescope card's title must show above the TabBar at 390×844",
+    site.y + site.height - eventShift,
+    "the Site card must end above the TabBar at 390×844 (less the event line)",
+  ).toBeLessThanOrEqual(tabBar.y);
+  expect(
+    telescopeTitle.y + telescopeTitle.height - eventShift,
+    "the Telescope card's title must show above the TabBar at 390×844 (less the event line)",
   ).toBeLessThanOrEqual(tabBar.y);
   expect(telescope.y + telescope.height, "the cards must end above the first tile at 390×844").toBeLessThanOrEqual(
     firstTile.y,

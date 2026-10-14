@@ -1,23 +1,25 @@
 import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+import { EVENT_WINDOW_NIGHTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import { onboardInMadrid } from "./helpers";
 
 /*
- * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, five tiles each open a focused
- * page under /tonight/*, never an anchor on the dashboard, and each page leads back to Tonight. Same setup as the
- * other specs: a production preview on local Supabase with the all-clear forecast fixture, so the Moon card and the
- * planets tile are both shown, and place search stubbed with Madrid. The clock is real, so the spec never asserts
- * what the tiles say, only where they lead.
+ * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, six tiles (the second, "Sky
+ * events", since sky-events) each open a focused page under /tonight/*, never an anchor on the dashboard, and each page
+ * leads back to Tonight. Same setup as the other specs: a production preview on local Supabase with the all-clear
+ * forecast fixture, so the Moon card and the planets tile are both shown, and place search stubbed with Madrid. The
+ * clock is real, so the spec never asserts what the tiles say, only where they lead (the events tile's line is checked
+ * for its shape: the empty fact or an event and its night).
  */
 
 const t = en.tonight;
 /** Each tile: its heading, the page it opens and that page's title ("Open …" joins the name only where they differ). */
 const TILES = [
   { heading: t.summary.targets, href: "/tonight/targets", page: t.pages.targets },
+  { heading: t.summary.events, href: "/tonight/events", page: t.summary.events },
   { heading: t.summary.plan, href: "/tonight/plan", page: t.summary.plan },
   { heading: t.summary.moon, href: "/tonight/moon", page: t.summary.moon },
   { heading: t.summary.planets, href: "/tonight/planets", page: t.summary.planets },
@@ -63,6 +65,34 @@ test("Tonight's tiles open their pages, and each page leads back", async ({ page
   await expect(page).toHaveURL(/\/tonight$/);
   await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
   await expect(page.locator("[data-tonight-tiles]")).toBeVisible();
+});
+
+test("the Sky events tile states the next event or that there is none, and opens the events page", async ({ page }) => {
+  await onboardInMadrid(page, "e2e-dashboard-events");
+  await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
+
+  // The second tile, straight after "Point here first". The clock is real, so the line is whichever the sky holds: the
+  // empty fact, or an event with its night ("Perseids peak · night of 12/13 Aug").
+  const tiles = page.locator("[data-tonight-tiles]");
+  await expect(tiles.getByRole("link").nth(1)).toHaveAttribute("href", "/tonight/events");
+  const line = tiles.locator("[data-events-tile-line]");
+  await expect(line).toBeVisible();
+  const text = ((await line.textContent()) ?? "").trim();
+  const none = t.summary.eventsNone({ count: String(EVENT_WINDOW_NIGHTS) });
+  expect(text === none || text.includes(" · "), `the tile says "${text}"`).toBe(true);
+
+  // The verdict's own line exists only on a night with a notable event, as plain text: no link, no control.
+  const verdictLine = page.locator("[data-verdict-event]");
+  if ((await verdictLine.count()) > 0) {
+    await expect(verdictLine).toHaveText(/^Tonight: \S/);
+    await expect(verdictLine.locator("a, button")).toHaveCount(0);
+    // An event tonight is also the next one, so the tile cannot say there is none.
+    expect(text).not.toBe(none);
+  }
+
+  await tiles.getByRole("link", { name: t.summary.events, exact: true }).click();
+  await expect(page).toHaveURL(/\/tonight\/events$/);
+  await expect(page).toHaveTitle(en.common.pageTitle({ title: t.summary.events }));
 });
 
 test("The Session plan page lists rows that lead to their targets", async ({ page }) => {

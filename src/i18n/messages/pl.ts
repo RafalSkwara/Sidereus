@@ -834,6 +834,15 @@ export const pl = {
       lowHorizon: "Nisko, potrzebny otwarty horyzont",
       shortNight: "Krótka noc: niebo nie robi się w pełni ciemne",
       brightMoon: "Księżyc w górze: widać tylko jaśniejsze meteory",
+      when: {
+        tonight: "dziś w nocy",
+        tomorrow: "jutro w nocy",
+        night: (p) => `noc ${p.span}`,
+      },
+      glassesOnly: "tylko przez okulary do zaćmień",
+      withGlasses: (p) => `${p.name}, tylko przez okulary do zaćmień`,
+      verdictLine: (p) => `Dziś: ${p.name}`,
+      verdictLineMore: (p) => `Dziś: ${p.name} +${p.count} więcej`,
       solarSafety:
         "Bezpieczeństwo oczu: patrz wyłącznie przez certyfikowane okulary do obserwacji zaćmień. Nigdy nie patrz na Słońce gołym okiem ani przez teleskop czy lornetkę bez certyfikowanego filtra słonecznego.",
     },
@@ -946,6 +955,8 @@ export const pl = {
       moon: "Księżyc",
       planets: "Planety",
       events: "Zjawiska na niebie",
+      // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30; switch to plural() if it changes.
+      eventsNone: (p) => `Brak zjawisk wartych wyjścia w ciągu najbliższych ${p.count} nocy`,
       plan: "Plan sesji",
       planFirst: (p) => `Na początek: ${p.name} ${p.time}`,
       planNext: (p) => `Następny: ${p.name} ${p.time}`,

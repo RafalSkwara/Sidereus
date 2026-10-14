@@ -18,9 +18,11 @@ interface Props {
   events: TonightSkyEvent[];
   /** How many nights the window spans, for the empty state. */
   windowNights: number;
+  /** The prefix of each night heading's id (`<idBase>-<night>`); /design gives each specimen its own so ids stay unique. */
+  idBase?: string;
 }
 
-const { events, windowNights } = Astro.props;
+const { events, windowNights, idBase = "events-night" } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.events;
 
 // One icon per kind: decorative, the name and the kind line carry the meaning.
@@ -52,8 +54,8 @@ for (const event of events) {
 ) : (
   <div class="space-y-6" data-events-list>
     {groups.map((group) => (
-      <section aria-labelledby={`events-night-${group.night}`} data-events-night={group.night}>
-        <h3 id={`events-night-${group.night}`} class="text-label font-semibold text-primary">
+      <section aria-labelledby={`${idBase}-${group.night}`} data-events-night={group.night}>
+        <h3 id={`${idBase}-${group.night}`} class="text-label font-semibold text-primary">
           {t.nightOf({ date: group.label })}
         </h3>
         <ul class="divide-y divide-border">

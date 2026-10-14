@@ -27,6 +27,9 @@ import type { Interval, Site } from "./types";
  * or after (a peak that falls in daylight is "best the night before" or "best the night after"). Where a
  * night has no dark window the span with the Sun at or below `EVENT_SUN_MAX_ALTITUDE_DEG` stands in, flagged
  * `shortNight` (plan review F5).
+ *
+ * A peak from the two days before the window is kept only when its best night is the window's first, so a shower
+ * whose peak night has just passed is still tonight's event on its best night (sky-events Phase 5).
  */
 
 const J2000_TO_ECLIPTIC = Rotation_EQJ_ECL();
@@ -135,8 +138,13 @@ export function meteorEvents(
   showers: readonly MeteorShower[] = METEOR_SHOWERS,
 ): MeteorShowerEvent[] {
   const events: MeteorShowerEvent[] = [];
+  const firstNight = observingNightDateFor(window.start, site.timeZone);
+  // A peak just before the window can still be the shower's night to go out: it counts when its best night is the
+  // window's first (the peak fell in daylight and the radiant is better the night after). Two days cover the peak's
+  // night and a 23 or 25 hour day.
+  const searched: Interval = { start: new Date(window.start.getTime() - 2 * DAY_MS), end: window.end };
   for (const shower of showers) {
-    for (const moment of sunLongitudeCrossings(shower.peakSolarLongitudeJ2000Deg, window)) {
+    for (const moment of sunLongitudeCrossings(shower.peakSolarLongitudeJ2000Deg, searched)) {
       const night = observingNightDateFor(moment, site.timeZone);
       const peak = radiantOnNight(site, shower, night, darkThresholdDeg);
       let best = peak;
@@ -148,6 +156,9 @@ export function meteorEvents(
         if (passing.length > 0) {
           best = passing.reduce((a, b) => (altitudeOf(b) > altitudeOf(a) ? b : a));
         }
+      }
+      if (moment.getTime() < window.start.getTime() && best.night < firstNight) {
+        continue;
       }
       events.push({
         kind: "meteor-shower",

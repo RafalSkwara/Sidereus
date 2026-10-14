@@ -27,6 +27,7 @@ import { skyCheckStore } from "@/lib/sky-checks/store";
 import { islandDefer, loadTonightFor } from "@/lib/tonight/island";
 import type { TonightLoad } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
+import { eventsVerdictLine } from "@/lib/tonight/sky-events";
 
 interface Props {
   /** The site picked on the page (`?site=` or the remembered cookie); resolved against the user's own. */
@@ -78,6 +79,7 @@ const load = await loadTonightFor(Astro.locals, {
   night,
   withSkyView: true,
   withSessionPlan: true,
+  withSkyEvents: true,
 });
 const supabase = load ? Astro.locals.supabase : null;
 const {
@@ -119,6 +121,8 @@ const showPrompts = needsSetup || addSite || addTelescope;
 // The gear row: the Site and Telescope cards (once a site and a telescope resolve) and the gear-list load errors.
 const gearLoadFailed = Boolean(sitesError ?? telescopesError);
 const showGearRow = Boolean(site && telescope) || gearLoadFailed;
+// The verdict's muted line on a night with a notable visible sky event (sky-events); `null` on every other night.
+const eventLine = view ? eventsVerdictLine(view.skyEvents, locale) : null;
 ---
 
 {load && (
@@ -137,6 +141,7 @@ const showGearRow = Boolean(site && telescope) || gearLoadFailed;
           withSlider
           forecastStatus={view.forecastStatus}
           explanation={view.explanation}
+          event={eventLine}
         />
       </TonightSkyView>
     ) : (
@@ -154,6 +159,7 @@ const showGearRow = Boolean(site && telescope) || gearLoadFailed;
               withSlider={false}
               forecastStatus={view.forecastStatus}
               explanation={view.explanation}
+              event={eventLine}
             />
           </>
         ) : (

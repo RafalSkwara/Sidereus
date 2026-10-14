@@ -1860,6 +1860,51 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(perseids?.when).not.toMatch(/\d:\d\d/);
   });
 
+  it("counts a meteor shower on its best night, not its peak night, for `tonight` and `next` (2027-07-30 at Reykjavik)", () => {
+    // 64° N in late July: the Southern Delta Aquariids' radiant is too low in the peak night's short span (2027-07-30)
+    // and clears the minimum the night after (07-31), so the night to go out is 07-31 (found with the engine).
+    const REYKJAVIK: SiteRecord = {
+      ...WARSAW,
+      latitudeDeg: 64,
+      longitudeDeg: -22,
+      timeZone: "Atlantic/Reykjavik",
+    };
+    const at = (night: string) => {
+      const now = new Date(`${night}T18:00:00Z`);
+      return eventsOf(
+        build({ site: REYKJAVIK, now, forecast: result(uniformForecast(`${night}T00:00:00Z`, 5), false, now) }),
+      );
+    };
+    const showerName = en.tonight.events.showerName({ shower: en.targets.meteorShower.southernDeltaAquariids });
+    const isShower = (event: { name: string }) => event.name === showerName;
+
+    // The week before: the row is grouped under the peak night, and says go out the night after.
+    const early = at("2027-07-25");
+    const row = early.events.find(isShower);
+    expect(row?.name).toBe(showerName);
+    expect(row?.night).toBe("2027-07-30");
+    expect(row?.goNight).toBe("2027-07-31");
+    expect(row?.visibilityText).toMatch(/^Best the night after: /);
+
+    // The peak night: not tonight's event (the radiant is not up in the dark), but the next one, tomorrow night.
+    const peakNight = at("2027-07-30");
+    expect(peakNight.tonight.filter(isShower)).toEqual([]);
+    const tomorrow = peakNight.events.find(isShower);
+    expect(tomorrow?.nightWhen).toBe(en.tonight.events.when.tomorrow);
+    expect(peakNight.next === null || peakNight.next.goNight >= "2027-07-30").toBe(true);
+
+    // The best night: tonight's event, although its peak night is behind it.
+    const bestNight = at("2027-07-31");
+    const tonight = bestNight.tonight.find(isShower);
+    expect(tonight?.night).toBe("2027-07-30");
+    expect(tonight?.goNight).toBe("2027-07-31");
+    expect(tonight?.nightWhen).toBe(en.tonight.events.when.tonight);
+    expect(bestNight.next?.goNight).toBe("2027-07-31");
+
+    // A night later it is past.
+    expect(at("2027-08-01").events.some(isShower)).toBe(false);
+  });
+
   it("words the events in Polish in the site's zone", () => {
     const pl = eventsOf(build({}, { withSkyEvents: true }, "pl"));
     const eclipse = pl.events.find((event) => event.kind === "solar-eclipse");

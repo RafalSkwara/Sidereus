@@ -250,6 +250,19 @@ describe("the night before or after a peak", () => {
     }
   });
 
+  it("still lists a peak that fell the night before the window when its best night is the window's first (sky-events Phase 5)", () => {
+    // The peak night is 12/13 and the best night 12/14: a window that starts on 12/14 holds it, one that starts on 12/15 does not.
+    const [event, ...rest] = meteorEvents(WARSAW, windowOf(WARSAW, "2026-12-14", 5), undefined, [invented(245, 0)]);
+    expect(rest).toEqual([]);
+    expect(event.night).toBe("2026-12-13");
+    expect(event.bestNight).toBe("2026-12-14");
+    expect(meteorEvents(WARSAW, windowOf(WARSAW, "2026-12-15", 5), undefined, [invented(245, 0)])).toEqual([]);
+  });
+
+  it("drops a peak from before the window when the peak night itself was the best (it is already past)", () => {
+    expect(meteorEvents(WARSAW, windowOf(WARSAW, "2026-12-14", 5), undefined, [invented(242, 0)])).toEqual([]);
+  });
+
   it("keeps the peak night when it passes, even if a neighbouring night is a little higher", () => {
     const [event] = meteorEvents(WARSAW, window, undefined, [invented(242, 0)]);
     expect(event.visibility.visible).toBe(true);
