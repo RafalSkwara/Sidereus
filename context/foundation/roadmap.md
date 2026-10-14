@@ -50,7 +50,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
 | S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | done |
-| S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | proposed |
+| S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | planning |
 
 ## Streams
 
@@ -197,7 +197,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Paid features in a stored offline copy (PRD Open Question 23). — Owner: team. Block: no.
 - **Risk:** The only slice adding a per-user table (RLS and isolation test required), and edits must never schedule a target outside its window.
-- **Status:** proposed
+- **Status:** planning
 
 ## Backlog Handoff
 
