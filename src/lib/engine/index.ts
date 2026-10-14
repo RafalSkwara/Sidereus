@@ -20,6 +20,8 @@ export { moonDiscState, moonDiscStates } from "./moon-disc";
 export type { MoonDiscState } from "@/lib/moon-disc/state";
 export { effectiveSurfaceBrightness, moonBrighteningMag, magToNL, nlToMag, skyBrightnessNL } from "./moonlight";
 export type { SkyBrightness, SkyBrightnessInput } from "./moonlight";
+export { EXPECTATION_KEYS, contrastBand, expectationFor } from "./expectation";
+export type { ContrastBand, ExpectationKey, ExpectationObject } from "./expectation";
 export type { MoonState } from "./moon";
 export { moonPlacementOf, moonTarget } from "./moon-target";
 export type { MoonFacts, MoonPlacement, MoonTargetEntry, MoonTargetInput } from "./moon-target";

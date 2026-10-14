@@ -182,6 +182,18 @@ These are delegated (team-owned): decided here, and changed by editing the param
     The fixture is never edited to pass.
   - **More than 3 remaining divergences** stop Phase 1 and go to the owner with the list.
   - The outcome (changes applied, divergences left) is written here before Phase 1 closes.
+  - **Outcome (Phase 1, 2026-10-14).** The fixture has 22 entries, each with at least 2 sources. 14 matched the starting rule. Five sourced changes were applied:
+    - **(a)** `EXPECT_RESOLVE_MARGIN_MAG` 5.75 and `EXPECT_GRAINY_MARGIN_MAG` 4.75 below `telescopeLimitingMag` replace the fixed 7.0 / 8.0. They are equal to the old values at 150 mm / Bortle 4. M56 at 200 mm becomes `globularGrainy`.
+    - **(b)** `EXPECT_LARGE_PLANETARY_ARCMIN` 3 and `EXPECT_LARGE_PLANETARY_DISC_BELOW` −1.5: the Helix and the Owl become `planetaryFaint`, and the Dumbbell stays `planetaryDisc`.
+    - **(c)** `EXPECT_BRIGHT_NEBULA_MAX_VMAG` 4.5, applied as an override to `cluster-with-nebula` only. A one-step lift could not reach `clusterNebulaBright` from `faint`, and applying it to the nebula types would undo (e). Only M42 qualifies, and M42 at Bortle 7 becomes `clusterNebulaBright`.
+    - **(d)** `EXPECT_BRIGHT_GALAXY_MARGIN_MAG` 5: a galaxy in the `bright` band is `galaxyBright` only when at least 5 mag above the limit. M51 becomes `galaxySmudge` (sources: a hazy spot with a slightly brighter centre), and M81 stays `galaxyBright`.
+    - **(e)** `EXPECT_HUGE_NEBULA_ARCMIN` 100: a nebula of 100′ or more is at most `nebulaGlow`.
+
+    **Known divergences: 2 (≤ 3, no stop).**
+    - NGC 7000 at 150 mm / Bortle 4: expected `nebulaFaint`, computed `nebulaGlow`. Cap (e) stops at `nebulaGlow`.
+    - NGC 4889 at 150 mm / Bortle 4: expected `galaxyFaint`, computed `galaxySmudge`. Reaching it needs `EXPECT_NEAR_LIMIT_MAG` ≈ 1.5, a retune not in the permitted list.
+
+    Phase 2 rewords `planetaryFaint` toward low power (Helix, Owl) and widens `planetaryDisc` (the Dumbbell is not small). Several sources were read from search summaries only (403 errors); each entry's note says which.
 - **D-7 Server-side, plan-first, outside `TonightView`.**
   - `TargetsPageContent` turns its `void getAccountPlan(...)` into a promise awaited after the Tonight load. The read is the same single memoised query and still overlaps the load.
   - With a confirmed `full` plan, and both `load.site` and `load.telescope` defined (a type guard; the view exists only then), it computes `{ key, text }` per entry through the server helper. It passes `expectation: { key: ExpectationKey; text: string } | null` to `ObjectCard` / `ObjectRow` → `ObjectDetails`.
@@ -595,10 +607,10 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [ ] 1.1 `npx vitest run src/lib/engine/expectation.test.ts` passes, including the reference fixture
-- [ ] 1.2 `npm test` passes (purity test included)
-- [ ] 1.3 `npm run lint` and `npx astro check` pass
-- [ ] 1.4 Deliberate break (sign of the aperture term in `contrastBand`) turns the aperture monotonicity test red, then reverted
+- [x] 1.1 `npx vitest run src/lib/engine/expectation.test.ts` passes, including the reference fixture
+- [x] 1.2 `npm test` passes (purity test included)
+- [x] 1.3 `npm run lint` and `npx astro check` pass
+- [x] 1.4 Deliberate break (sign of the aperture term in `contrastBand`) turns the aperture monotonicity test red, then reverted
 
 #### Manual
 
