@@ -620,13 +620,13 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes (i18n parity and helper tests included)
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.3 `npm run build` succeeds
-- [x] 2.4 `npm run smoke` passes with 0 skipped (all-clear fixture, inline local key)
-- [x] 2.5 `npx playwright test tests/e2e/what-to-expect.spec.ts` passes with 0 skipped
-- [x] 2.6 `tonight-targets`, `tonight-phone` and `offline` specs pass
-- [x] 2.7 Deliberate break (lines rendered on `locked`) turns the smoke free step red, then reverted
+- [x] 2.1 `npm test` passes (i18n parity and helper tests included) — 7119669
+- [x] 2.2 `npm run lint` and `npx astro check` pass — 7119669
+- [x] 2.3 `npm run build` succeeds — 7119669
+- [x] 2.4 `npm run smoke` passes with 0 skipped (all-clear fixture, inline local key) — 7119669
+- [x] 2.5 `npx playwright test tests/e2e/what-to-expect.spec.ts` passes with 0 skipped — 7119669
+- [x] 2.6 `tonight-targets`, `tonight-phone` and `offline` specs pass — 7119669
+- [x] 2.7 Deliberate break (lines rendered on `locked`) turns the smoke free step red, then reverted — 7119669
 
 #### Manual
 
@@ -639,10 +639,10 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [ ] 3.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [ ] 3.2 `npm run build` succeeds
-- [ ] 3.3 `npm run smoke` passes with 0 skipped, including the `finder 3` expectation check
-- [ ] 3.4 `what-to-expect` and `finder-chart` specs pass with 0 skipped
+- [x] 3.1 `npm test`, `npm run lint` and `npx astro check` pass
+- [x] 3.2 `npm run build` succeeds
+- [x] 3.3 `npm run smoke` passes with 0 skipped, including the `finder 3` expectation check
+- [x] 3.4 `what-to-expect` and `finder-chart` specs pass with 0 skipped
 
 #### Manual
 

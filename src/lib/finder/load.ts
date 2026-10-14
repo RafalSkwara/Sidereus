@@ -6,6 +6,7 @@
 import { formatDesignation, loadFinderStars } from "@/lib/catalogue/finder-stars";
 import { findDeepSky } from "@/lib/catalogue";
 import { requireFullPlan } from "@/lib/account-plan";
+import { getMessages } from "@/i18n";
 import {
   finderChart,
   findingEyepiece,
@@ -19,6 +20,7 @@ import { toEngineSite } from "@/lib/gear/store";
 import type { Locale } from "@/lib/preferences";
 import { isPlanetKey, type TargetKey } from "@/lib/targets";
 import type { TonightView } from "@/lib/tonight/build";
+import { expectationKeyFor, expectationText } from "@/lib/tonight/expectation";
 import { loadTonightFor } from "@/lib/tonight/island";
 
 import type { FinderChartLabels } from "./steps";
@@ -35,7 +37,14 @@ export type FinderLoad =
   | { kind: "locked" }
   | { kind: "not-configured" }
   | { kind: "no-gear" | "not-ranked" | "failed"; view: TonightView | null }
-  | { kind: "chart"; view: TonightView; chart: FinderChartData; labels: FinderChartLabels };
+  | {
+      kind: "chart";
+      view: TonightView;
+      chart: FinderChartData;
+      labels: FinderChartLabels;
+      /** What the object will look like in this telescope (what-to-expect); `null` when the catalogue has no key for it. */
+      expectation: { key: string; text: string } | null;
+    };
 
 function equatorialVector(raHours: number, decDeg: number): UnitVector {
   const ra = (raHours * 15 * Math.PI) / 180;
@@ -54,6 +63,8 @@ interface Resolved {
   vector: (site: ReturnType<typeof toEngineSite>, time: Date) => UnitVector;
   magnitude: (time: Date) => number | null;
   isPlanet: boolean;
+  /** The planet's fixed "what you'll see" note, already in the request's language; `null` for a deep-sky object. */
+  planetNote: string | null;
 }
 
 /** The target's row in tonight's ranking (a deep-sky object) or planet list; `null` when it is not on either. */
@@ -72,6 +83,7 @@ function resolveTarget(view: TonightView, target: TargetKey): Resolved | null {
       vector: (site, time) => planetJ2000Vector(target, site, time),
       magnitude: (time) => planetFacts(target, time).magnitude,
       isPlanet: true,
+      planetNote: entry.note,
     };
   }
   // Messier and Caldwell keys; the Moon has no chart.
@@ -89,6 +101,7 @@ function resolveTarget(view: TonightView, target: TargetKey): Resolved | null {
     vector: () => equatorialVector(object.raHours, object.decDeg),
     magnitude: () => object.vMag,
     isPlanet: false,
+    planetNote: null,
   };
 }
 
@@ -178,5 +191,15 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
     direction: resolved.bestDirection,
     time: resolved.bestTime,
   };
-  return { kind: "chart", view, chart, labels };
+  // The line above the chart (what-to-expect): a planet's own note, or the deep-sky object's phrase for this site and
+  // aperture in the request's language. Pure catalogue and gear data, nothing that can fail or carry coordinates.
+  const deepSkyKey =
+    resolved.planetNote === null ? expectationKeyFor(options.target, site.bortle, telescope.apertureMm) : null;
+  const expectation =
+    resolved.planetNote !== null
+      ? { key: options.target, text: resolved.planetNote }
+      : deepSkyKey === null
+        ? null
+        : { key: deepSkyKey, text: expectationText(deepSkyKey, getMessages(locale)) };
+  return { kind: "chart", view, chart, labels, expectation };
 }

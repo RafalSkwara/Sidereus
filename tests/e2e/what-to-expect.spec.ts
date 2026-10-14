@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
 
 /*
  * What to expect on /tonight/targets (what-to-expect Phase 2, M-3 S-04, FR-038): a full-plan account sees an eye line
@@ -98,4 +98,23 @@ test("at 320 px with the full plan, the best five's lines fit without scrolling 
     }));
     expect(scrollWidth, `${locale}: Targets must not scroll sideways at 320 px`).toBeLessThanOrEqual(clientWidth);
   }
+});
+
+test("a full-plan account's finder chart for M13 says what it will look like, above the chart", async ({ page }) => {
+  requirePlanGrant("what-to-expect");
+  test.skip(inNoDarknessWindow(), NO_DARKNESS);
+  const email = await onboardInMadrid(page, "e2e-expect-finder");
+  await setPlan(email, "full");
+
+  await page.goto("/tonight/targets");
+  await (await finderLink(page, "M13")).click();
+  await expect(page.locator("[data-finder-chart]")).toBeVisible();
+
+  const line = page.locator("[data-expect]");
+  await expect(line).toHaveCount(1);
+  const text = ((await line.textContent()) ?? "").trim();
+  const { globularResolved, globularGrainy, globularGlow } = en.tonight.expect.phrase;
+  expect([globularResolved, globularGrainy, globularGlow]).toContain(text);
+  // The line sits above the chart, outside its root.
+  await expect(page.locator("[data-finder-chart] [data-expect]")).toHaveCount(0);
 });

@@ -297,7 +297,7 @@ const steps = [
       // In the no-darkness window nothing is ranked, so M13 is "not ranked" instead of a chart.
       ...(inNoDarknessWindow()
         ? { skippedNote: "no astronomical darkness", bodyIncludes: ['data-finder-state="not-ranked"'] }
-        : { bodyIncludes: ["data-finder-chart"] }),
+        : { bodyIncludes: ["data-finder-chart", 'data-expect="'] }),
     },
   ],
   [

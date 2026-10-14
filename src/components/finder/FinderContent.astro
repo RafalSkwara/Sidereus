@@ -8,6 +8,8 @@
 // Offline (Phase 5): only the chart state renders `OfflineCopy`, with the target, so only a chart is ever stored; the
 // locked root carries `data-plan` and `data-plan-at` (from `accountPlanForCopy`) so the worker can tell a lost plan from a failed read
 // and order it against the charts' plan reads.
+import { Eye } from "lucide-react";
+
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import FinderChart from "@/components/finder/FinderChart.astro";
@@ -86,7 +88,15 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
       night={night}
       target={target === null ? undefined : { key: target, name: loaded.labels.target }}
     />
-    <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+    <div class="mx-auto w-full max-w-3xl space-y-4 px-4 pt-8">
+      {loaded.expectation && (
+        /* What the object will look like in this telescope: outside the chart root, so `data-finder-chart` still
+           marks the chart alone. `data-expect` carries the key (a planet's own key for its note). */
+        <p data-expect={loaded.expectation.key} class="flex items-start gap-2 text-label text-foreground">
+          <Eye className="mt-0.5 size-4 shrink-0 text-primary-strong" aria-hidden="true" />
+          <span class="min-w-0">{loaded.expectation.text}</span>
+        </p>
+      )}
       <div data-finder-state="chart" data-finder-chart>
         <FinderChart chart={loaded.chart} labels={loaded.labels} locale={locale} />
       </div>

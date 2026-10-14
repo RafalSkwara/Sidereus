@@ -27,7 +27,9 @@ interface Props {
 }
 
 const { example, exampleLabels, locale, plan, planAt } = Astro.props;
-const t = getMessages(locale).tonight.finder.locked;
+const messages = getMessages(locale).tonight;
+const t = messages.finder.locked;
+const expect = messages.expect;
 ---
 
 <section
@@ -45,6 +47,7 @@ const t = getMessages(locale).tonight.finder.locked;
       <li>{t.lineStar}</li>
       <li>{t.lineHop}</li>
       <li>{t.lineScale}</li>
+      <li>{expect.lockedFinderLine}</li>
     </ul>
   </div>
 
