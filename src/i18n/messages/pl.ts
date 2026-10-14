@@ -1073,6 +1073,7 @@ export const pl = {
         legendDark: "Ciemna noc",
         empty: "Brak polecanych obiektów na dzisiejszą noc.",
         unavailable: "Plan sesji jest teraz niedostępny.",
+        candidateDetail: (p) => `Okno ${p.window}`,
       },
     },
   },

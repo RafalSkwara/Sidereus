@@ -46,10 +46,11 @@ export type {
   RankableObject,
   RankedEntry,
   Ranking,
+  ReachableEntry,
   ReasonComponents,
   WashedOutEntry,
 } from "./ranking";
-export { PLANET_KEYS, planetFacts, planetJ2000Vector, planetTracks } from "./planets";
+export { PLANET_KEYS, isIceGiant, planetFacts, planetJ2000Vector, planetTracks } from "./planets";
 export { finderChart, projectGnomonic } from "./finder";
 export type {
   FinderChartData,

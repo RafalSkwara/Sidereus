@@ -36,7 +36,7 @@ export interface SessionPlanLayout<R extends SessionPlanRowInput> {
   dark: { from: number; to: number } | null;
   /** Moonrises and moonsets strictly inside the axis, in time order. */
   moonEvents: SessionPlanMoonEvent[];
-  /** By peak, earliest first; ties keep the input order. Rows whose window misses the axis are dropped. */
+  /** By peak, earliest first; ties keep the input order (with `order: "given"`, the input order). Rows whose window misses the axis are dropped. */
   rows: SessionPlanRow<R>[];
   /** Epoch ms of every whole hour on the axis (local, per `isWholeHour`), ends included, for ticks. */
   hours: number[];
@@ -47,8 +47,13 @@ export interface SessionPlanInput<R extends SessionPlanRowInput> {
   dark: Interval | null;
   /** When the Moon is up over the axis; a span touching an axis end is up there, not rising or setting. */
   moonSpans: readonly Interval[];
-  /** In tie order: the Moon, the planets, then the deep-sky objects by rank. */
+  /** In tie order: the Moon, the planets, then the deep-sky objects by rank. With `order: "given"`, the order to draw. */
   rows: readonly R[];
+  /**
+   * `"peak"` (the default) draws the rows by best time. `"given"` keeps the input order (a user's edited plan,
+   * adjustable-session-plan) and still drops the rows whose window misses the axis.
+   */
+  order?: "peak" | "given";
   /**
    * Whether an instant (always a whole quarter hour) starts a whole hour on the site's clock, so ticks land on local
    * hours in zones offset by :30 or :45; the caller decides with its time zone. Defaults to whole UTC hours.
@@ -84,14 +89,14 @@ export function layoutSessionPlan<R extends SessionPlanRowInput>(input: SessionP
   }
   moonEvents.sort((a, b) => a.time - b.time);
 
-  const rows = input.rows
+  const placed = input.rows
     .filter((row) => overlaps(row.window))
     .map((row): SessionPlanRow<R> => {
       const { window, ...rest } = row;
       return { ...rest, from: at(window.start.getTime()), to: at(window.end.getTime()), best: at(row.bestAt) };
-    })
-    // Array.prototype.sort is stable, so ties keep the input order.
-    .sort((a, b) => a.bestAt - b.bestAt);
+    });
+  // Array.prototype.sort is stable, so ties keep the input order.
+  const rows = input.order === "given" ? placed : placed.sort((a, b) => a.bestAt - b.bestAt);
 
   // Every zone offset is a whole number of quarter hours, so a local whole hour is always one of these instants.
   const isWholeHour = input.isWholeHour ?? ((ms: number) => ms % HOUR_MS === 0);

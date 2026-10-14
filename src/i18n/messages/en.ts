@@ -1273,6 +1273,8 @@ export const en = {
         empty: "No target is recommended tonight, so there is no plan to draw.",
         /** The view has no plan (only when building it failed). */
         unavailable: "The session plan isn't available right now.",
+        /** The editor's "add" list under a target's name (adjustable-session-plan): its window tonight, "21:40–23:10". */
+        candidateDetail: (p: { window: string }) => `Window ${p.window}`,
       },
     },
   },

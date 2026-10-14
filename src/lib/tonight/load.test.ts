@@ -4,8 +4,9 @@ import { memoryCache } from "@/lib/forecast/test-helpers";
 import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
-import { loadTonight } from "./load";
+import { loadTonight, type PlanEditsReader } from "./load";
 import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
+import { tonightDateForSite } from "./tonight-date";
 
 /**
  * The loader never turns a forecast problem into an error page (PRD guardrail "forecast outage degrades, never
@@ -52,7 +53,7 @@ const failingFetch: typeof fetch = () => Promise.reject(new TypeError("fetch fai
 
 const noDefer = (_task: Promise<void>): void => undefined;
 
-function load() {
+function load(overrides: Partial<Parameters<typeof loadTonight>[0]> = {}) {
   return loadTonight({
     supabase: SUPABASE,
     locale: "en",
@@ -60,6 +61,7 @@ function load() {
     cache: memoryCache(),
     defer: noDefer,
     fetchFn: failingFetch,
+    ...overrides,
   });
 }
 
@@ -106,5 +108,102 @@ describe("loadTonight", () => {
     expect(result.tonightError).toBe("tonight.failed");
     expect(result.sites).toEqual([WARSAW]);
     expect(result.telescopes).toEqual([TELESCOPE]);
+  });
+});
+
+describe("loadTonight's saved Session plan (adjustable-session-plan)", () => {
+  it("reads nothing, and passes no list, without a reader", async () => {
+    const result = await load({ withSessionPlan: true });
+    expect(mocks.buildTonight.mock.calls[0][2]).toMatchObject({ planEdits: null });
+    expect(result.planEditsError).toBeNull();
+    expect(result.view?.sessionPlan?.edited).toBe(false);
+  });
+
+  it("reads the saved list for tonight's site and night, and hands it to the build", async () => {
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockResolvedValue(["M31", "M13"]);
+    const result = await load({ withSessionPlan: true, withPlanCandidates: true, readPlanEdits });
+    expect(readPlanEdits).toHaveBeenCalledTimes(1);
+    expect(readPlanEdits).toHaveBeenCalledWith(WARSAW.id, "2026-10-10");
+    expect(mocks.buildTonight.mock.calls[0][2]).toMatchObject({
+      planEdits: ["M31", "M13"],
+      withPlanCandidates: true,
+      nightDate: "2026-10-10",
+    });
+    expect(result.planEditsError).toBeNull();
+    expect(result.view?.sessionPlan?.rows.map((row) => row.key)).toEqual(["M31", "M13"]);
+    expect(result.view?.sessionPlan?.edited).toBe(true);
+  });
+
+  it("never calls the reader for the evening after tonight", async () => {
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockResolvedValue(["M31"]);
+    const result = await load({ withSessionPlan: true, night: "next", readPlanEdits });
+    expect(readPlanEdits).not.toHaveBeenCalled();
+    expect(mocks.buildTonight.mock.calls[0][2]).toMatchObject({
+      night: "next",
+      nightDate: "2026-10-11",
+      planEdits: null,
+    });
+    expect(result.view?.date).toBe("2026-10-11");
+    expect(result.view?.sessionPlan?.edited).toBe(false);
+  });
+
+  it("never calls the reader without a site and a telescope to build for", async () => {
+    mocks.listTelescopes.mockResolvedValue([]);
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockResolvedValue(null);
+    const result = await load({ withSessionPlan: true, readPlanEdits });
+    expect(readPlanEdits).not.toHaveBeenCalled();
+    expect(result.view).toBeNull();
+  });
+
+  it("names one night for the reader and the build, before and after civil dawn", async () => {
+    // 04:00 local: the night in progress (the 9th) is still tonight. 10:00 local: the evening ahead (the 10th).
+    for (const [now, night] of [
+      ["2026-10-10T02:00:00Z", "2026-10-09"],
+      ["2026-10-10T08:00:00Z", "2026-10-10"],
+    ] as const) {
+      mocks.buildTonight.mockClear();
+      const readPlanEdits = vi.fn<PlanEditsReader>().mockResolvedValue(null);
+      const result = await load({ now: new Date(now), withSessionPlan: true, readPlanEdits });
+      expect(readPlanEdits).toHaveBeenCalledWith(WARSAW.id, night);
+      expect(mocks.buildTonight.mock.calls[0][2]).toMatchObject({ nightDate: night });
+      expect(result.view?.date).toBe(night);
+      // The hook's night is the one the site's own rule gives, which the save route compares against.
+      expect(tonightDateForSite(WARSAW, new Date(now))).toBe(night);
+    }
+  });
+
+  it("starts the read before the forecast is asked for, so the two overlap", async () => {
+    const events: string[] = [];
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockImplementation(() => {
+      events.push("edits");
+      return Promise.resolve(null);
+    });
+    const fetchFn: typeof fetch = () => {
+      events.push("forecast");
+      return Promise.reject(new TypeError("fetch failed"));
+    };
+    await load({ readPlanEdits, fetchFn });
+    expect(events[0]).toBe("edits");
+    expect(events).toContain("forecast");
+  });
+
+  it("keeps the suggested plan, with a fixed notice key, when the read fails", async () => {
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockRejectedValue(new Error("errors.load.sessionPlan"));
+    const result = await load({ withSessionPlan: true, readPlanEdits });
+    expect(result.planEditsError).toBe("errors.load.sessionPlan");
+    expect(result.tonightError).toBeNull();
+    expect(mocks.buildTonight.mock.calls[0][2]).toMatchObject({ planEdits: null });
+    expect(result.view?.sessionPlan?.edited).toBe(false);
+    expect(result.view?.sessionPlan?.rows.length).toBeGreaterThan(0);
+  });
+
+  it("leaves no unhandled rejection when the build fails while the read is in flight", async () => {
+    mocks.buildTonight.mockImplementationOnce(() => {
+      throw new Error("build failed");
+    });
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockRejectedValue(new Error("read failed"));
+    const result = await load({ readPlanEdits });
+    expect(result.tonightError).toBe("tonight.failed");
+    expect(result.view).toBeNull();
   });
 });

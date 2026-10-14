@@ -786,28 +786,28 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Automated
 
-- [x] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up`
-- [x] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit
-- [x] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts`
-- [x] 1.4 `npx vitest run src/lib/session-plans` passes
-- [x] 1.5 `npm run lint` and `npx astro check` pass
-- [x] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set)
+- [x] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up` — d320730
+- [x] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit — d320730
+- [x] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts` — d320730
+- [x] 1.4 `npx vitest run src/lib/session-plans` passes — d320730
+- [x] 1.5 `npm run lint` and `npx astro check` pass — d320730
+- [x] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set) — d320730
 
 #### Manual
 
-- [x] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert
+- [x] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert — d320730
 
 ### Phase 2: Applying edits to the night
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases
-- [ ] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged
-- [ ] 2.3 `npm run lint` and `npx astro check` pass
+- [x] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases
+- [x] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged
+- [x] 2.3 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert
+- [x] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert
 
 ### Phase 3: Full-plan routes, gated plan island and HTTP checks
 

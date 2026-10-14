@@ -42,6 +42,23 @@ describe("layoutSessionPlan", () => {
     expect(layout.rows.map((r) => r.key)).toEqual(["moon", "jupiter", "M31"]);
   });
 
+  it("keeps the given order with order: given, and still drops a row whose window misses the axis", () => {
+    const rows = [
+      row("M1", "2026-10-11T01:00:00Z", "2026-10-11T03:00:00Z", "2026-10-11T02:00:00Z"),
+      row("early", "2026-10-10T15:00:00Z", "2026-10-10T17:00:00Z", "2026-10-10T16:00:00Z"),
+      row("M2", "2026-10-10T20:00:00Z", "2026-10-10T23:00:00Z", "2026-10-10T21:00:00Z"),
+    ];
+    const given = layoutSessionPlan({ axis, dark: null, moonSpans: [], rows, order: "given" });
+    expect(given.rows.map((r) => r.key)).toEqual(["M1", "M2"]);
+    expect(given.rows[0]).toMatchObject({ from: 7 / 12, to: 9 / 12, best: 8 / 12 });
+    // The default and an explicit "peak" are by best time.
+    expect(layoutSessionPlan({ axis, dark: null, moonSpans: [], rows }).rows.map((r) => r.key)).toEqual(["M2", "M1"]);
+    expect(layoutSessionPlan({ axis, dark: null, moonSpans: [], rows, order: "peak" }).rows.map((r) => r.key)).toEqual([
+      "M2",
+      "M1",
+    ]);
+  });
+
   it("clamps a window that crosses an axis end", () => {
     const layout = layoutSessionPlan({
       axis,

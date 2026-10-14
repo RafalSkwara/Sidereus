@@ -68,6 +68,7 @@ describe("rankObjects (synthetic catalogue, Warsaw 2026-10-10)", () => {
       entries: [],
       washedOut: [],
       washedOutCount: 0,
+      reachable: [],
       telescopeId: "t1",
     });
   });
@@ -181,6 +182,50 @@ describe("rankObjects with a limit (tonight-all-objects, Warsaw 2026-10-10)", ()
     for (let i = 1; i < all.entries.length; i++) {
       expect(all.entries[i - 1].rankScore).toBeGreaterThanOrEqual(all.entries[i].rankScore);
     }
+  });
+});
+
+describe("rankObjects' reachable objects (adjustable-session-plan, Warsaw)", () => {
+  const faint = (messier: number, vMag: number): RankableObject =>
+    synthetic(messier, 0, { vMag, type: "double-star", surfaceBrightness: 22 });
+
+  it("lists every scored object in catalogue order: the listed, the cleared beyond the limit and the below-bar ones", () => {
+    // M40 at vMag 10.3 scores but falls short of the bar (see the bonus test above); M9 never rises above 15°.
+    const catalogue = [synthetic(8, 89.9), faint(40, 10.3), synthetic(9, -60), synthetic(1, 89.9), synthetic(2, 89.9)];
+    const ranking = rank(catalogue, { limit: 1 });
+    expect(ranking.entries.map((e) => e.object.id)).toEqual(["M1"]);
+    expect(ranking.clearedCount).toBe(3);
+    expect(ranking.reachable.map((r) => r.object.id)).toEqual(["M8", "M40", "M1", "M2"]);
+    expect(ranking.reachable.map((r) => r.cleared)).toEqual([true, false, true, true]);
+    expect(ranking.reachable.every((r) => !r.washedOut)).toBe(true);
+  });
+
+  it("carries the same best window and peak the ranking lists", () => {
+    const ranking = rank(MESSIER, { limit: Number.POSITIVE_INFINITY });
+    const byId = new Map(ranking.reachable.map((r) => [r.object.id, r]));
+    expect(ranking.entries.length).toBeGreaterThan(MAX_RANKED_OBJECTS);
+    for (const entry of ranking.entries) {
+      const reachable = byId.get(entry.object.id);
+      expect(reachable?.window).toEqual(entry.score.window);
+      expect(reachable?.peak).toBe(entry.peak);
+      expect(reachable?.cleared).toBe(true);
+    }
+    for (const { object, window, peak } of ranking.washedOut) {
+      expect(byId.get(object.id)).toMatchObject({ window, peak, washedOut: true, cleared: false });
+    }
+  });
+
+  it("does not depend on the limit: the same list at the default and at Infinity", () => {
+    expect(rank(MESSIER).reachable).toEqual(rank(MESSIER, { limit: Number.POSITIVE_INFINITY }).reachable);
+  });
+
+  it("flags a Moon-washed object, never as cleared", () => {
+    const ranking = rank(MESSIER, { darkWindow: warsawDarkWindow("2026-10-26"), limit: Number.POSITIVE_INFINITY });
+    const washed = ranking.reachable.filter((r) => r.washedOut);
+    expect(washed.map((r) => r.object.id).sort()).toEqual(ranking.washedOut.map((w) => w.object.id).sort());
+    expect(washed.length).toBeGreaterThan(0);
+    expect(washed.every((r) => !r.cleared)).toBe(true);
+    expect(ranking.reachable.filter((r) => r.cleared)).toHaveLength(ranking.clearedCount);
   });
 });
 
