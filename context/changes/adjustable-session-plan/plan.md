@@ -826,10 +826,10 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Automated
 
-- [x] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused)
-- [x] 4.2 `npm run lint` and `npx astro check` pass
-- [x] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing)
-- [x] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture
+- [x] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused) — 07d6a70
+- [x] 4.2 `npm run lint` and `npx astro check` pass — 07d6a70
+- [x] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing) — 07d6a70
+- [x] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture — 07d6a70
 
 #### Manual
 
