@@ -1,6 +1,35 @@
-# Handoff — 2026-10-13 evening (S-06 and S-03 shipped; S-07 planned and plan-reviewed)
+# Handoff — 2026-10-14 (S-04 and S-07 shipped)
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
+
+## Update 2026-10-14 (supersedes every next step below)
+
+**Shipped** (check the post-merge `ci` on main before trusting a deploy):
+
+- **S-04 what-to-expect** (#125): merged as #158, archived in #160 (`context/archive/2026-10-14-what-to-expect/`). Follow-up **#159** (open): M31 at 60 mm reads "very faint" beside "bright for your 60 mm" (core brightness).
+- **S-07 sky-events** (#128): merged as #161 (main 1389bc1), archived in the `chore/archive-sky-events` PR, which closes #128 and carries this handoff (`context/archive/2026-10-13-sky-events/`). It covers the next 30 nights from the pure engine:
+  - eclipses, Mercury and Venus elongations, Mars, Jupiter and Saturn oppositions;
+  - close pairings (≤5°, topocentric);
+  - 8 meteor showers.
+
+  The events show on `/tonight/events` (stored offline), on the dashboard's second tile, and as a muted line under the verdict on event nights. A solar eclipse stays on Tonight until its partial phase ends ("Today/Tomorrow, 11:22").
+
+**Owner to-dos:**
+
+- **ESA licence** for the Hipparcos-derived stars (PRD OQ21): the owner **sent** the request on 2026-10-14 and awaits the reply. SAO stays the fallback before any payment.
+- **IAU MDC courtesy email**: still the owner's to send (draft `context/archive/2026-10-13-sky-events/iau-mdc-request.md`).
+
+**Next:**
+
+- **UI refinement**: the audit and its split live on `feat/ui-refine`, not yet on main. Next comes `ui-quiet-actions`, whose plan is under review.
+- **M-3 S-08 adjustable-session-plan** (#129) is not started.
+- Leftover local branch `feat/ui-auth`: `-D` only with the owner's OK.
+
+**Lesson from S-07** (in the roadmap's Done entry): a coarse sampling grid misses short visibility windows (twilight pairings, impl review F1). Pin a scan against a brute-force reference over fixed windows.
+
+---
+
+## Earlier: Handoff — 2026-10-13 evening (S-06 and S-03 shipped; S-07 planned and plan-reviewed)
 
 ## Update 2026-10-13 evening (supersedes every next step below)
 
