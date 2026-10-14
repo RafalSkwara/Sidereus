@@ -1051,7 +1051,7 @@ export const en = {
     finder: {
       /** The page's title; `target` is the object's name ("M31", "Jupiter"). */
       title: (p: { target: string }) => `Finder chart · ${p.target}`,
-      /** The action link beside "Mark observed", and its accessible name with the target. */
+      /** The quiet link beside "Mark observed", and its accessible name with the target. */
       link: "Finder chart",
       linkLabel: (p: { target: string }) => `Finder chart for ${p.target}`,
       /** The context line: `direction` is the ranking's refracted "SE, 41°", `time` the object's best time. */

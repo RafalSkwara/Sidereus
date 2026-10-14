@@ -1,0 +1,96 @@
+diff --git a/src/components/tonight/ObjectCard.astro b/src/components/tonight/ObjectCard.astro
+index 55ea359..c2e3305 100644
+--- a/src/components/tonight/ObjectCard.astro
++++ b/src/components/tonight/ObjectCard.astro
+@@ -35,7 +35,7 @@ const tipId = `not-seen-tip-${entry.id}`;
+   data-object={entry.id}
+   data-label={entry.label}
+   data-not-seen-scope
+-  class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0"
++  class="relative scroll-mt-4 rounded-lg border border-border bg-surface p-5"
+ >
+   {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
+   <h3 class="font-display text-title font-semibold break-words text-heading">
+diff --git a/src/components/tonight/ObjectDetails.astro b/src/components/tonight/ObjectDetails.astro
+index f556441..0277493 100644
+--- a/src/components/tonight/ObjectDetails.astro
++++ b/src/components/tonight/ObjectDetails.astro
+@@ -47,12 +47,12 @@ const t = tonight.object;
+   {entry.pair?.kind === "pair" && (
+     <div class="space-y-2">
+       <p class="text-label text-foreground">
+-        {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
++        {t.findWith} <span class="font-semibold text-heading">{entry.pair.finding.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.finding.magnification) })}
+       </p>
+       {/* The message reads on after "Find with …" in lower case: its own line starts with a capital. */}
+       <p class="text-label text-foreground first-letter:uppercase">
+-        {t.detailWith} <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
++        {t.detailWith} <span class="font-semibold text-heading">{entry.pair.detail.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
+       </p>
+     </div>
+diff --git a/src/components/tonight/TargetDetails.astro b/src/components/tonight/TargetDetails.astro
+index dacfe4c..4fea341 100644
+--- a/src/components/tonight/TargetDetails.astro
++++ b/src/components/tonight/TargetDetails.astro
+@@ -41,16 +41,16 @@ const markClass = buttonVariants({ variant: "action", size: "sm" });
+ const finderClass = buttonVariants({ variant: "action", size: "sm" });
+ ---
+ 
+-<dl class="mt-4 grid gap-y-2 text-label">
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.window}</dt>
+-    <dd class="font-mono text-heading">
++<dl class="mt-4 grid grid-cols-2 gap-3">
++  <div class="rounded-lg bg-background px-3 py-2">
++    <dt class="text-caption text-muted-foreground">{t.window}</dt>
++    <dd class="font-mono text-body font-semibold text-heading">
+       {windowStart}–{windowEnd}
+     </dd>
+   </div>
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.best}</dt>
+-    <dd class="font-mono text-heading">
++  <div class="rounded-lg bg-background px-3 py-2">
++    <dt class="text-caption text-muted-foreground">{t.best}</dt>
++    <dd class="font-mono text-body font-semibold text-heading">
+       {bestTime}, {bestDirection}
+     </dd>
+   </div>
+diff --git a/src/components/tonight/TargetsPageContent.astro b/src/components/tonight/TargetsPageContent.astro
+index 4e3d943..ba869d9 100644
+--- a/src/components/tonight/TargetsPageContent.astro
++++ b/src/components/tonight/TargetsPageContent.astro
+@@ -186,7 +186,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
+                   <span class="min-w-0">{t.expect.locked}</span>
+                 </p>
+               )}
+-              <ol class="divide-y divide-border">
++              <ol class="space-y-4">
+                 {best.map((entry) => (
+                   <ObjectCard
+                     entry={entry}
+diff --git a/src/components/ui/button.tsx b/src/components/ui/button.tsx
+index 2ef0321..5b968ae 100644
+--- a/src/components/ui/button.tsx
++++ b/src/components/ui/button.tsx
+@@ -37,7 +37,7 @@ const buttonVariants = cva(
+           "bg-secondary whitespace-nowrap text-secondary-foreground hover:bg-accent disabled:text-muted-foreground",
+         ghost: "whitespace-nowrap text-heading hover:bg-accent disabled:text-muted-foreground",
+         action:
+-          "border border-action-border bg-action-surface py-2 text-left whitespace-normal text-primary-strong underline-offset-4 hover:border-primary-strong hover:underline disabled:border-border disabled:bg-transparent disabled:text-muted-foreground",
++          "border border-border bg-transparent py-2 text-left whitespace-normal text-foreground [&_svg]:text-primary-strong hover:border-muted-foreground hover:bg-accent disabled:text-muted-foreground",
+         link: "whitespace-nowrap text-primary-strong underline decoration-1 underline-offset-4 hover:decoration-2 disabled:text-muted-foreground",
+       },
+       size: {
+diff --git a/src/components/ui/tile.ts b/src/components/ui/tile.ts
+index 177da37..22f00b2 100644
+--- a/src/components/ui/tile.ts
++++ b/src/components/ui/tile.ts
+@@ -23,4 +23,4 @@ export const TILE_HEADING_CLASS =
+  * every theme. 24 px with a -2 px margin top and bottom, so it never makes the heading row taller than one line.
+  */
+ export const TILE_CUE_CLASS =
+-  "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-lg border border-action-border bg-action-surface text-primary-strong";
++  "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground";

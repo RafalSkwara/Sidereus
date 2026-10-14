@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /*
- * The way back to a parent page, an `action` button-link (border, tinted surface and the chevron) with a 44 px target. `href` is a fixed app path chosen by the page (ids at most,
+ * The way back to a parent page, a `quiet` text action (link-coloured label and the chevron, no box) with a 44 px target. `href` is a fixed app path chosen by the page (ids at most,
  * encoded by the caller), never user text. `class` is merged last; `/design` uses it to pin the hover and focus
  * looks as specimens.
  */
@@ -17,7 +17,7 @@ interface Props {
 const { href, label, class: className } = Astro.props;
 ---
 
-<a href={href} class:list={cn(buttonVariants({ variant: "action", size: "sm" }), "mb-2 sm:mb-3", className)}>
+<a href={href} class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), "mb-2 sm:mb-3", className)}>
   <ChevronLeft aria-hidden="true" />
   {label}
 </a>

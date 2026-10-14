@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { LOCALE_COOKIE } from "@/lib/preferences";
+import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
 
 import { onboardInMadrid, signOut } from "./helpers";
 import { Proxy } from "./offline-proxy";
@@ -43,7 +43,11 @@ test("Tonight pages opened online are there offline, and signing out removes the
   // Its own context on the proxy's origin, so the service worker registers there.
   const context = await browser.newContext({ baseURL: proxy.origin });
   try {
-    await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: proxy.origin }]);
+    // Red night mode: offline, a quiet link must lose the resting underline red mode gives it (ui-quiet-actions).
+    await context.addCookies([
+      { name: LOCALE_COOKIE, value: "en", url: proxy.origin },
+      { name: THEME_COOKIE, value: "red", url: proxy.origin },
+    ]);
     const page = await context.newPage();
     const email = await onboardInMadrid(page, "e2e-offline");
 
@@ -94,6 +98,24 @@ test("Tonight pages opened online are there offline, and signing out removes the
       const log = page.getByRole("navigation", { name: en.nav.primary }).getByRole("link", { name: en.nav.log });
       await expect(log).toHaveAttribute("aria-disabled", "true");
       await expect(log).toHaveAccessibleDescription(en.offline.needsConnection);
+      if (path === "/tonight") {
+        // The gear card's Manage link (a `quiet` action that needs the network) mutes with its icon and drops red
+        // mode's resting underline: the offline rule in global.css outranks the variant (ui-quiet-actions).
+        const manage = page.getByRole("link", { name: en.tonight.gear.manageSites });
+        await expect(manage).toHaveAttribute("aria-disabled", "true");
+        await expect
+          .poll(() =>
+            manage.evaluate((el) => {
+              const style = getComputedStyle(el);
+              const icon = el.querySelector("svg");
+              return {
+                underline: style.textDecorationLine,
+                iconMatches: icon !== null && getComputedStyle(icon).color === style.color,
+              };
+            }),
+          )
+          .toEqual({ underline: "none", iconMatches: true });
+      }
       await log.click({ force: true });
       // A navigation would land on /log, or /offline with the network gone: give it time to happen, then check.
       await page.waitForTimeout(1000);

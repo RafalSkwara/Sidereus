@@ -18,7 +18,7 @@ interface Props {
   /** The log form for this target, prefilled with tonight's night, site and telescope (FR-016). */
   logHref: string;
   /**
-   * The finder chart for this target (finder-chart), a second action link beside "Mark observed"; the Moon card passes
+   * The finder chart for this target (finder-chart), a second link beside "Mark observed", a quiet one; the Moon card passes
    * none. It has no `data-needs-network`: offline, a stored chart opens from the device (D-15).
    */
   finderHref?: string;
@@ -36,9 +36,9 @@ const { windowStart, windowEnd, bestTime, bestDirection, logHref, finderHref, fi
   Astro.props;
 const tonight = getMessages(Astro.locals.locale).tonight;
 const t = tonight.object;
-// A standalone action: border, tinted surface and a check icon, 44 px tall.
-const markClass = buttonVariants({ variant: "action", size: "sm" });
-const finderClass = buttonVariants({ variant: "action", size: "sm" });
+// "Mark observed" is the per-item hairline (a border, no fill, a check icon); "Finder chart" is a quiet text action.
+const markClass = buttonVariants({ variant: "hairline", size: "sm" });
+const finderClass = buttonVariants({ variant: "quiet", size: "bare" });
 ---
 
 <dl class="mt-4 grid gap-y-2 text-label">
@@ -60,7 +60,7 @@ const finderClass = buttonVariants({ variant: "action", size: "sm" });
   <slot />
 </div>
 
-<div class="mt-5 flex flex-wrap gap-3">
+<div class="mt-5 flex flex-wrap gap-x-5 gap-y-2">
   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
     <Check aria-hidden="true" />

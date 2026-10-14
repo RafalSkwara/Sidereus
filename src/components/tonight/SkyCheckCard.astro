@@ -36,7 +36,7 @@ const headline = translateKey(m, SKY_HEADLINE_KEYS[check.headline], "errors.gene
 // The answer that matches what we said, outlined in the form; Skip and All are quiet links (no primary fill here,
 // so the page keeps at most one primary action).
 const matching = claimOf(check.headline);
-const quietAction = buttonVariants({ variant: "link", size: "sm" });
+const inlineAction = buttonVariants({ variant: "link", size: "sm" });
 ---
 
 <div data-sky-check>
@@ -50,10 +50,10 @@ const quietAction = buttonVariants({ variant: "link", size: "sm" });
     </p>
     <SkyAnswerForm id={check.id} from="tonight" current={null} matching={matching} label={t.answers}>
       <div class="mt-2 flex flex-wrap items-center gap-x-2">
-        <button type="submit" name="action" value="skip" class:list={[quietAction]}>
+        <button type="submit" name="action" value="skip" class:list={[inlineAction]}>
           {t.skip}
         </button>
-        <a href={SKY_CHECKS_PAGE} class:list={[quietAction]}>
+        <a href={SKY_CHECKS_PAGE} class:list={[inlineAction]}>
           {t.all}
         </a>
       </div>
