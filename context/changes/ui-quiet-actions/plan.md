@@ -488,7 +488,7 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Manual
 
-- [x] 1.5 `/design` in dark, light and red at 390 px and desktop: hairline quieter than `action`, quiet reads as a link, red underline and border visible, offline icons muted, Polish wraps
+- [x] 1.5 `/design` in dark, light and red at 390 px and desktop: hairline quieter than `action`, quiet reads as a link, red underline and border visible, offline icons muted, Polish wraps — adea9d0
 
 ### Phase 2: Move every call site, the credit links, and remove `action`
 
@@ -501,18 +501,18 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Manual
 
-- [x] 2.6 Targets, Planets and the Moon at 390 px in EN and PL, dark, light and red: one hairline Mark observed, text Finder chart, eyepiece names not link-coloured, Polish wraps
-- [x] 2.7 Offline: Mark observed muted (icon included) and dashed; Manage muted with no underline in red
-- [x] 2.8 The dashboard's six tiles end in a bare arrow; the gear cards' height is unchanged
+- [x] 2.6 Targets, Planets and the Moon at 390 px in EN and PL, dark, light and red: one hairline Mark observed, text Finder chart, eyepiece names not link-coloured, Polish wraps — adea9d0
+- [x] 2.7 Offline: Mark observed muted (icon included) and dashed; Manage muted with no underline in red — adea9d0
+- [x] 2.8 The dashboard's six tiles end in a bare arrow; the gear cards' height is unchanged — adea9d0
 
 ### Phase 3: Rules, comments, screenshot gate and the whole suite
 
 #### Automated
 
-- [x] 3.1 The whole unit suite, types and lint pass
-- [x] 3.2 The whole e2e suite passes against a fresh local preview: `npm run test:e2e`
-- [x] 3.3 Smoke passes against the same preview: `npm run smoke`
-- [x] 3.4 No doc or comment still prescribes the action look (grep reviewed by hand)
+- [x] 3.1 The whole unit suite, types and lint pass — adea9d0
+- [x] 3.2 The whole e2e suite passes against a fresh local preview: `npm run test:e2e` — adea9d0
+- [x] 3.3 Smoke passes against the same preview: `npm run smoke` — adea9d0
+- [x] 3.4 No doc or comment still prescribes the action look (grep reviewed by hand) — adea9d0
 
 #### Manual
 
