@@ -1,4 +1,6 @@
 import type { Messages } from "@/i18n";
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
+import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
 
 /**
  * The Polish catalogue. It must match `en` key for key (`satisfies Messages`) and overrides every
@@ -8,7 +10,7 @@ import type { Messages } from "@/i18n";
  * Informal second person ("ty"), capitalised "Twój" in direct address. Dates arrive in the
  * nominative ("sobota, 10 października 2026"), so they follow a colon rather than a preposition.
  *
- * Island-safe: no runtime imports.
+ * Island-safe: no runtime imports (the `import type`s are erased).
  */
 export const pl = {
   common: {
@@ -776,6 +778,126 @@ export const pl = {
       starData: "Dane gwiazd:",
       hipparcosCredit: "Credit: ESA",
       weather: "Pogoda:",
+      meteorData: "Roje meteorów:",
+      nasaFor: "noce maksimum",
+      mdcFor: "radianty",
+    },
+
+    events: {
+      // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30; switch to plural() if it changes.
+      empty: (p) => `Brak zjawisk na niebie w ciągu najbliższych ${p.count} nocy`,
+      nightOf: (p) => `Noc: ${p.date}`,
+      kind: {
+        "lunar-eclipse": "Zaćmienie Księżyca",
+        "solar-eclipse": "Zaćmienie Słońca",
+        elongation: "Największa elongacja",
+        opposition: "Opozycja",
+        pairing: "Bliskie złączenie",
+        "meteor-shower": "Rój meteorów",
+      },
+      eclipse: {
+        lunar: {
+          penumbral: "Półcieniowe zaćmienie Księżyca",
+          partial: "Częściowe zaćmienie Księżyca",
+          total: "Całkowite zaćmienie Księżyca",
+        },
+        solar: {
+          partial: "Częściowe zaćmienie Słońca",
+          annular: "Obrączkowe zaćmienie Słońca",
+          total: "Całkowite zaćmienie Słońca",
+        },
+        lunarInLine: {
+          penumbral: "półcieniowe zaćmienie Księżyca",
+          partial: "częściowe zaćmienie Księżyca",
+          total: "całkowite zaćmienie Księżyca",
+        },
+        solarInLine: {
+          partial: "częściowe zaćmienie Słońca",
+          annular: "obrączkowe zaćmienie Słońca",
+          total: "całkowite zaćmienie Słońca",
+        },
+        barelyNoticeable: "Ledwo zauważalne: Księżyc tylko lekko przygasa",
+        sunCovered: (p) => `Księżyc zakrywa ${p.percent}% tarczy Słońca`,
+        penumbralPhase: (p) => `Faza półcieniowa ${p.start}–${p.end}`,
+        partialPhase: (p) => `Faza częściowa ${p.start}–${p.end}`,
+        totalPhase: (p) => `Całkowitość ${p.start}–${p.end}`,
+        annularPhase: (p) => `Faza obrączkowa ${p.start}–${p.end}`,
+      },
+      elongationName: {
+        mercury: "Największa elongacja Merkurego",
+        venus: "Największa elongacja Wenus",
+      } satisfies Record<ElongationBody, string>,
+      elongationNameInLine: {
+        mercury: "największa elongacja Merkurego",
+        venus: "największa elongacja Wenus",
+      } satisfies Record<ElongationBody, string>,
+      elongationDetail: (p) => `${p.deg}° od Słońca, ${p.sky}`,
+      apparition: { morning: "niebo poranne", evening: "niebo wieczorne" },
+      oppositionName: {
+        mars: "Opozycja Marsa",
+        jupiter: "Opozycja Jowisza",
+        saturn: "Opozycja Saturna",
+      } satisfies Record<OppositionBody, string>,
+      oppositionNameInLine: {
+        mars: "opozycja Marsa",
+        jupiter: "opozycja Jowisza",
+        saturn: "opozycja Saturna",
+      } satisfies Record<OppositionBody, string>,
+      pairingName: (p) => `${p.first} i ${p.second}`,
+      pairingDetail: (p) => `${p.deg}° od siebie`,
+      showerName: {
+        quadrantids: "Maksimum Kwadrantydów",
+        lyrids: "Maksimum Lirydów",
+        etaAquariids: "Maksimum Eta Akwarydów",
+        southernDeltaAquariids: "Maksimum Południowych Delta Akwarydów",
+        perseids: "Maksimum Perseidów",
+        orionids: "Maksimum Orionidów",
+        leonids: "Maksimum Leonidów",
+        geminids: "Maksimum Geminidów",
+      } satisfies Record<ShowerKey, string>,
+      showerNameInLine: {
+        quadrantids: "maksimum Kwadrantydów",
+        lyrids: "maksimum Lirydów",
+        etaAquariids: "maksimum Eta Akwarydów",
+        southernDeltaAquariids: "maksimum Południowych Delta Akwarydów",
+        perseids: "maksimum Perseidów",
+        orionids: "maksimum Orionidów",
+        leonids: "maksimum Leonidów",
+        geminids: "maksimum Geminidów",
+      } satisfies Record<ShowerKey, string>,
+      showerWhen: "Noc maksimum",
+      visible: "Widoczne",
+      notVisible: "Niewidoczne",
+      reason: {
+        "below-horizon": "Pod horyzontem",
+        daylight: "W świetle dnia",
+        "too-low": "Zbyt nisko",
+      },
+      best: (p) => `Najlepiej ${p.time} · ${p.direction}`,
+      bestRadiant: (p) => `Radiant najwyżej ${p.time} · ${p.direction}`,
+      bestNightBefore: (p) => `Najlepiej poprzedniej nocy: radiant najwyżej ${p.time} · ${p.direction}`,
+      bestNightAfter: (p) => `Najlepiej następnej nocy: radiant najwyżej ${p.time} · ${p.direction}`,
+      partly: "Z tego miejsca widać tylko część zjawiska",
+      lowHorizon: "Nisko, potrzebny otwarty horyzont",
+      shortNight: "Krótka noc: niebo nie robi się w pełni ciemne",
+      brightMoon: "Jasny Księżyc nad horyzontem: widać tylko jaśniejsze meteory",
+      when: {
+        tonight: "dziś w nocy",
+        tomorrow: "jutro w nocy",
+        night: (p) => `noc ${p.span}`,
+        todayAt: (p) => `dziś, ${p.time}`,
+        tomorrowAt: (p) => `jutro, ${p.time}`,
+      },
+      glassesOnly: "tylko przez okulary do zaćmień",
+      withGlasses: (p) => `${p.name}, tylko przez okulary do zaćmień`,
+      verdictLine: (p) => `Dziś: ${p.name}`,
+      verdictLineMore: (p) => `Dziś: ${p.name} +${p.count} więcej`,
+      verdictLineToday: (p) => `Dziś, ${p.time}: ${p.name}`,
+      verdictLineTodayMore: (p) => `Dziś, ${p.time}: ${p.name} +${p.count} więcej`,
+      verdictLineTomorrow: (p) => `Jutro, ${p.time}: ${p.name}`,
+      verdictLineTomorrowMore: (p) => `Jutro, ${p.time}: ${p.name} +${p.count} więcej`,
+      solarSafety:
+        "Bezpieczeństwo oczu: patrz wyłącznie przez certyfikowane okulary do obserwacji zaćmień. Nigdy nie patrz na Słońce gołym okiem ani przez teleskop czy lornetkę bez certyfikowanego filtra słonecznego.",
     },
 
     finder: {
@@ -885,6 +1007,9 @@ export const pl = {
       },
       moon: "Księżyc",
       planets: "Planety",
+      events: "Zjawiska na niebie",
+      // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30; switch to plural() if it changes.
+      eventsNone: (p) => `Brak zjawisk wartych wyjścia w ciągu najbliższych ${p.count} nocy`,
       plan: "Plan sesji",
       planFirst: (p) => `Na początek: ${p.name} ${p.time}`,
       planNext: (p) => `Następny: ${p.name} ${p.time}`,
@@ -908,6 +1033,12 @@ export const pl = {
       noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       seeNights: (p) => `Zobacz najbliższe ${p.count} nocy`,
+      events: {
+        // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30.
+        heading: (p) => `Zjawiska na niebie: ${p.site}, najbliższe ${p.count} nocy`,
+        timesIn: (p) => `Czas w strefie ${p.zone}`,
+        unavailable: "Zjawiska na niebie są teraz niedostępne.",
+      },
       showRest: {
         one: (p) => `Pokaż jeszcze ${p.count} obiekt`,
         few: (p) => `Pokaż pozostałe ${p.count} obiekty`,

@@ -1,0 +1,5808 @@
+{
+  "provenance": {
+    "tool": "Skyfield",
+    "version": "1.55",
+    "ephemeris": "JPL DE421 (de421.bsp)",
+    "separation": "angle between apparent topocentric directions (observer.at(t).observe(body).apparent())",
+    "refraction": "Skyfield altaz, 10 C, 1010 mbar; the Sun's altitude is geometric",
+    "grid": "one minute, local noon to local noon",
+    "visibleRule": "both bodies at least 10 degrees up, the Sun at or below -6 degrees",
+    "script": "scripts/events-reference.py",
+    "generatedAt": "2026-10-14"
+  },
+  "site": {
+    "name": "Sydney centre",
+    "latitudeDeg": -33.87,
+    "longitudeDeg": 151.21,
+    "elevationM": 20,
+    "timeZone": "Australia/Sydney"
+  },
+  "fromNight": "2026-12-12",
+  "nights": 30,
+  "pairs": [
+    {
+      "first": "moon",
+      "second": "mercury",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 44.5722,
+            "firstAltitudeDeg": 46.757,
+            "secondAltitudeDeg": 77.655,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 54.8969,
+            "firstAltitudeDeg": 35.807,
+            "secondAltitudeDeg": 77.99,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 65.28,
+            "firstAltitudeDeg": 24.777,
+            "secondAltitudeDeg": 78.28,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 75.7706,
+            "firstAltitudeDeg": 13.645,
+            "secondAltitudeDeg": 78.522,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 86.4312,
+            "firstAltitudeDeg": 2.507,
+            "secondAltitudeDeg": 78.712,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 97.3315,
+            "firstAltitudeDeg": -9.34,
+            "secondAltitudeDeg": 78.847,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 108.5424,
+            "firstAltitudeDeg": -21.226,
+            "secondAltitudeDeg": 78.926,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 120.1265,
+            "firstAltitudeDeg": -33.472,
+            "secondAltitudeDeg": 78.947,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 132.127,
+            "firstAltitudeDeg": -46.106,
+            "secondAltitudeDeg": 78.91,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 144.5512,
+            "firstAltitudeDeg": -59.093,
+            "secondAltitudeDeg": 78.814,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 157.3439,
+            "firstAltitudeDeg": -72.195,
+            "secondAltitudeDeg": 78.662,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 170.2396,
+            "firstAltitudeDeg": -83.193,
+            "secondAltitudeDeg": 78.454,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 161.976,
+            "firstAltitudeDeg": -63.628,
+            "secondAltitudeDeg": 77.884,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 148.6998,
+            "firstAltitudeDeg": -49.767,
+            "secondAltitudeDeg": 77.528,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 135.5891,
+            "firstAltitudeDeg": -36.009,
+            "secondAltitudeDeg": 77.129,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 122.8012,
+            "firstAltitudeDeg": -22.546,
+            "secondAltitudeDeg": 76.69,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 110.406,
+            "firstAltitudeDeg": -9.461,
+            "secondAltitudeDeg": 76.214,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 98.4197,
+            "firstAltitudeDeg": 3.44,
+            "secondAltitudeDeg": 75.705,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 86.8198,
+            "firstAltitudeDeg": 15.577,
+            "secondAltitudeDeg": 75.164,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 75.5595,
+            "firstAltitudeDeg": 27.501,
+            "secondAltitudeDeg": 74.594,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 64.5795,
+            "firstAltitudeDeg": 39.143,
+            "secondAltitudeDeg": 73.998,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 53.8183,
+            "firstAltitudeDeg": 50.533,
+            "secondAltitudeDeg": 73.377,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 43.2182,
+            "firstAltitudeDeg": 61.672,
+            "secondAltitudeDeg": 72.733,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 32.7293,
+            "firstAltitudeDeg": 72.423,
+            "secondAltitudeDeg": 72.069,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 22.3112,
+            "firstAltitudeDeg": 81.658,
+            "secondAltitudeDeg": 71.384,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 11.9332,
+            "firstAltitudeDeg": 81.029,
+            "secondAltitudeDeg": 70.681,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 1.6046,
+            "firstAltitudeDeg": 71.552,
+            "secondAltitudeDeg": 69.96,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T06:37:00Z",
+            "separationDeg": 0.0102,
+            "firstAltitudeDeg": 33.705,
+            "secondAltitudeDeg": 33.715,
+            "sunAltitudeDeg": 29.244
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 8.8252,
+            "firstAltitudeDeg": 60.849,
+            "secondAltitudeDeg": 69.222,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 19.2287,
+            "firstAltitudeDeg": 49.858,
+            "secondAltitudeDeg": 68.47,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "moon",
+      "second": "venus",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 77.8415,
+            "firstAltitudeDeg": 46.757,
+            "secondAltitudeDeg": 52.182,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 88.8992,
+            "firstAltitudeDeg": 35.807,
+            "secondAltitudeDeg": 52.159,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 99.9746,
+            "firstAltitudeDeg": 24.777,
+            "secondAltitudeDeg": 52.151,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 111.1178,
+            "firstAltitudeDeg": 13.645,
+            "secondAltitudeDeg": 52.155,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 122.3839,
+            "firstAltitudeDeg": 2.507,
+            "secondAltitudeDeg": 52.171,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 133.8222,
+            "firstAltitudeDeg": -9.34,
+            "secondAltitudeDeg": 52.199,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 145.4492,
+            "firstAltitudeDeg": -21.226,
+            "secondAltitudeDeg": 52.238,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 157.1512,
+            "firstAltitudeDeg": -33.472,
+            "secondAltitudeDeg": 52.288,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 168.037,
+            "firstAltitudeDeg": -46.106,
+            "secondAltitudeDeg": 52.349,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 160.2622,
+            "firstAltitudeDeg": -72.195,
+            "secondAltitudeDeg": 52.5,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 147.2105,
+            "firstAltitudeDeg": -83.193,
+            "secondAltitudeDeg": 52.589,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 133.517,
+            "firstAltitudeDeg": -77.003,
+            "secondAltitudeDeg": 52.687,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-23T17:02:00Z",
+            "separationDeg": 138.5265,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 119.6277,
+            "firstAltitudeDeg": -63.628,
+            "secondAltitudeDeg": 52.794,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-24T18:13:00Z",
+            "separationDeg": 123.8887,
+            "lowerAltitudeDeg": 10.672
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 105.7861,
+            "firstAltitudeDeg": -49.767,
+            "secondAltitudeDeg": 52.909,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-25T18:14:00Z",
+            "separationDeg": 109.7324,
+            "lowerAltitudeDeg": 21.942
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 92.1687,
+            "firstAltitudeDeg": -36.009,
+            "secondAltitudeDeg": 53.031,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-26T18:14:00Z",
+            "separationDeg": 95.7528,
+            "lowerAltitudeDeg": 26.906
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 78.8983,
+            "firstAltitudeDeg": -22.546,
+            "secondAltitudeDeg": 53.161,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-27T18:15:00Z",
+            "separationDeg": 82.1005,
+            "lowerAltitudeDeg": 27.26
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 66.0463,
+            "firstAltitudeDeg": -9.461,
+            "secondAltitudeDeg": 53.298,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-28T18:15:00Z",
+            "separationDeg": 68.886,
+            "lowerAltitudeDeg": 27.605
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 53.6422,
+            "firstAltitudeDeg": 3.44,
+            "secondAltitudeDeg": 53.442,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-29T18:15:00Z",
+            "separationDeg": 56.1645,
+            "lowerAltitudeDeg": 27.734
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 41.694,
+            "firstAltitudeDeg": 15.577,
+            "secondAltitudeDeg": 53.593,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-30T18:16:00Z",
+            "separationDeg": 43.9401,
+            "lowerAltitudeDeg": 28.062
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 30.2302,
+            "firstAltitudeDeg": 27.501,
+            "secondAltitudeDeg": 53.749,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2026-12-31T18:17:00Z",
+            "separationDeg": 32.2348,
+            "lowerAltitudeDeg": 28.382
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 19.4352,
+            "firstAltitudeDeg": 39.143,
+            "secondAltitudeDeg": 53.911,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-01T18:18:00Z",
+            "separationDeg": 21.1677,
+            "lowerAltitudeDeg": 28.693
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 10.475,
+            "firstAltitudeDeg": 50.533,
+            "secondAltitudeDeg": 54.079,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-02T18:18:00Z",
+            "separationDeg": 11.5142,
+            "lowerAltitudeDeg": 28.788
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T12:44:00Z",
+            "separationDeg": 7.7474,
+            "firstAltitudeDeg": -24.837,
+            "secondAltitudeDeg": -32.274,
+            "sunAltitudeDeg": -30.538
+          },
+          "visible": {
+            "time": "2027-01-03T16:47:00Z",
+            "separationDeg": 8.2447,
+            "lowerAltitudeDeg": 10.197
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 9.7738,
+            "firstAltitudeDeg": 61.672,
+            "secondAltitudeDeg": 54.252,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T17:09:00Z",
+            "separationDeg": 15.553,
+            "lowerAltitudeDeg": 10.044
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 18.0523,
+            "firstAltitudeDeg": 72.423,
+            "secondAltitudeDeg": 54.43,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T17:59:00Z",
+            "separationDeg": 25.8638,
+            "lowerAltitudeDeg": 10.101
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 28.2059,
+            "firstAltitudeDeg": 81.658,
+            "secondAltitudeDeg": 54.613,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 38.7594,
+            "firstAltitudeDeg": 81.029,
+            "secondAltitudeDeg": 54.8,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 49.4561,
+            "firstAltitudeDeg": 71.552,
+            "secondAltitudeDeg": 54.991,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 60.233,
+            "firstAltitudeDeg": 60.849,
+            "secondAltitudeDeg": 55.186,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 71.0779,
+            "firstAltitudeDeg": 49.858,
+            "secondAltitudeDeg": 55.385,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "moon",
+      "second": "mars",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 137.5823,
+            "firstAltitudeDeg": 46.757,
+            "secondAltitudeDeg": -5.395,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 149.1525,
+            "firstAltitudeDeg": 35.807,
+            "secondAltitudeDeg": -5.919,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 160.6771,
+            "firstAltitudeDeg": 24.777,
+            "secondAltitudeDeg": -6.451,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 171.8102,
+            "firstAltitudeDeg": 13.645,
+            "secondAltitudeDeg": -6.991,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 162.4237,
+            "firstAltitudeDeg": -9.34,
+            "secondAltitudeDeg": -8.099,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 150.0993,
+            "firstAltitudeDeg": -21.226,
+            "secondAltitudeDeg": -8.666,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 137.2747,
+            "firstAltitudeDeg": -33.472,
+            "secondAltitudeDeg": -9.243,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 123.9823,
+            "firstAltitudeDeg": -46.106,
+            "secondAltitudeDeg": -9.828,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 110.2266,
+            "firstAltitudeDeg": -59.093,
+            "secondAltitudeDeg": -10.423,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-20T14:28:00Z",
+            "separationDeg": 117.2906,
+            "lowerAltitudeDeg": 10.159
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 96.042,
+            "firstAltitudeDeg": -72.195,
+            "secondAltitudeDeg": -11.027,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-21T15:07:00Z",
+            "separationDeg": 102.7522,
+            "lowerAltitudeDeg": 10.05
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 81.5084,
+            "firstAltitudeDeg": -83.193,
+            "secondAltitudeDeg": -11.64,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-22T15:58:00Z",
+            "separationDeg": 87.6902,
+            "lowerAltitudeDeg": 10.079
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 66.7521,
+            "firstAltitudeDeg": -77.003,
+            "secondAltitudeDeg": -12.264,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-23T17:02:00Z",
+            "separationDeg": 72.1946,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 51.9353,
+            "firstAltitudeDeg": -63.628,
+            "secondAltitudeDeg": -12.897,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-24T18:13:00Z",
+            "separationDeg": 56.497,
+            "lowerAltitudeDeg": 10.672
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 37.2394,
+            "firstAltitudeDeg": -49.767,
+            "secondAltitudeDeg": -13.54,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-25T18:14:00Z",
+            "separationDeg": 41.439,
+            "lowerAltitudeDeg": 21.942
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 22.8745,
+            "firstAltitudeDeg": -36.009,
+            "secondAltitudeDeg": -14.193,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-26T18:14:00Z",
+            "separationDeg": 26.639,
+            "lowerAltitudeDeg": 32.764
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 9.4049,
+            "firstAltitudeDeg": -22.546,
+            "secondAltitudeDeg": -14.857,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-27T18:15:00Z",
+            "separationDeg": 12.4347,
+            "lowerAltitudeDeg": 42.337
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T12:47:00Z",
+            "separationDeg": 3.8741,
+            "firstAltitudeDeg": 3.844,
+            "secondAltitudeDeg": 0.694,
+            "sunAltitudeDeg": -30.512
+          },
+          "visible": {
+            "time": "2026-12-28T13:35:00Z",
+            "separationDeg": 3.9053,
+            "lowerAltitudeDeg": 10.083
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 7.3052,
+            "firstAltitudeDeg": -9.461,
+            "secondAltitudeDeg": -15.531,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-29T13:46:00Z",
+            "separationDeg": 14.7626,
+            "lowerAltitudeDeg": 10.181
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 19.628,
+            "firstAltitudeDeg": 3.44,
+            "secondAltitudeDeg": -16.216,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-30T14:14:00Z",
+            "separationDeg": 27.9708,
+            "lowerAltitudeDeg": 10.124
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 32.4572,
+            "firstAltitudeDeg": 15.577,
+            "secondAltitudeDeg": -16.911,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-31T14:41:00Z",
+            "separationDeg": 40.9537,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 45.0879,
+            "firstAltitudeDeg": 27.501,
+            "secondAltitudeDeg": -17.618,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2027-01-01T15:13:00Z",
+            "separationDeg": 53.6749,
+            "lowerAltitudeDeg": 10.048
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 57.4931,
+            "firstAltitudeDeg": 39.143,
+            "secondAltitudeDeg": -18.336,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-02T15:48:00Z",
+            "separationDeg": 66.1884,
+            "lowerAltitudeDeg": 10.163
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 69.7115,
+            "firstAltitudeDeg": 50.533,
+            "secondAltitudeDeg": -19.065,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-03T16:25:00Z",
+            "separationDeg": 78.5436,
+            "lowerAltitudeDeg": 10.006
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 81.7919,
+            "firstAltitudeDeg": 61.672,
+            "secondAltitudeDeg": -19.805,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T17:09:00Z",
+            "separationDeg": 90.8215,
+            "lowerAltitudeDeg": 10.044
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 93.7794,
+            "firstAltitudeDeg": 72.423,
+            "secondAltitudeDeg": -20.557,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T17:59:00Z",
+            "separationDeg": 103.0577,
+            "lowerAltitudeDeg": 10.101
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 105.7106,
+            "firstAltitudeDeg": 81.658,
+            "secondAltitudeDeg": -21.32,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 117.6127,
+            "firstAltitudeDeg": 81.029,
+            "secondAltitudeDeg": -22.096,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 129.5029,
+            "firstAltitudeDeg": 71.552,
+            "secondAltitudeDeg": -22.883,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 141.3853,
+            "firstAltitudeDeg": 60.849,
+            "secondAltitudeDeg": -23.682,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 153.2331,
+            "firstAltitudeDeg": 49.858,
+            "secondAltitudeDeg": -24.493,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "moon",
+      "second": "jupiter",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 146.1391,
+            "firstAltitudeDeg": 46.757,
+            "secondAltitudeDeg": -13.457,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 158.065,
+            "firstAltitudeDeg": 35.807,
+            "secondAltitudeDeg": -14.269,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 169.9953,
+            "firstAltitudeDeg": 24.777,
+            "secondAltitudeDeg": -15.085,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 165.5076,
+            "firstAltitudeDeg": 2.507,
+            "secondAltitudeDeg": -16.729,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 153.0485,
+            "firstAltitudeDeg": -9.34,
+            "secondAltitudeDeg": -17.556,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 140.2567,
+            "firstAltitudeDeg": -21.226,
+            "secondAltitudeDeg": -18.388,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 127.0805,
+            "firstAltitudeDeg": -33.472,
+            "secondAltitudeDeg": -19.223,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 113.4759,
+            "firstAltitudeDeg": -46.106,
+            "secondAltitudeDeg": -20.062,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-19T13:56:00Z",
+            "separationDeg": 120.9465,
+            "lowerAltitudeDeg": 10.146
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 99.4271,
+            "firstAltitudeDeg": -59.093,
+            "secondAltitudeDeg": -20.904,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-20T14:28:00Z",
+            "separationDeg": 106.6654,
+            "lowerAltitudeDeg": 10.159
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 84.9599,
+            "firstAltitudeDeg": -72.195,
+            "secondAltitudeDeg": -21.75,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-21T15:07:00Z",
+            "separationDeg": 91.8268,
+            "lowerAltitudeDeg": 10.05
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 70.1492,
+            "firstAltitudeDeg": -83.193,
+            "secondAltitudeDeg": -22.599,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-22T15:58:00Z",
+            "separationDeg": 76.4727,
+            "lowerAltitudeDeg": 10.079
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 55.1168,
+            "firstAltitudeDeg": -77.003,
+            "secondAltitudeDeg": -23.452,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-23T17:02:00Z",
+            "separationDeg": 60.6859,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 40.0173,
+            "firstAltitudeDeg": -63.628,
+            "secondAltitudeDeg": -24.307,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-24T18:13:00Z",
+            "separationDeg": 44.692,
+            "lowerAltitudeDeg": 10.672
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 25.0168,
+            "firstAltitudeDeg": -49.767,
+            "secondAltitudeDeg": -25.166,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-25T18:14:00Z",
+            "separationDeg": 29.3429,
+            "lowerAltitudeDeg": 21.942
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 10.2867,
+            "firstAltitudeDeg": -36.009,
+            "secondAltitudeDeg": -26.028,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-26T18:14:00Z",
+            "separationDeg": 14.2056,
+            "lowerAltitudeDeg": 32.764
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T16:24:00Z",
+            "separationDeg": 0.6499,
+            "firstAltitudeDeg": 41.012,
+            "secondAltitudeDeg": 40.396,
+            "sunAltitudeDeg": -22.775
+          },
+          "visible": {
+            "time": "2026-12-27T16:24:00Z",
+            "separationDeg": 0.6499,
+            "lowerAltitudeDeg": 40.396
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 4.4183,
+            "firstAltitudeDeg": -22.546,
+            "secondAltitudeDeg": -26.893,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-28T13:19:00Z",
+            "separationDeg": 12.8713,
+            "lowerAltitudeDeg": 10.07
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 18.3149,
+            "firstAltitudeDeg": -9.461,
+            "secondAltitudeDeg": -27.761,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-29T13:46:00Z",
+            "separationDeg": 26.9885,
+            "lowerAltitudeDeg": 10.181
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 31.929,
+            "firstAltitudeDeg": 3.44,
+            "secondAltitudeDeg": -28.632,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-30T14:14:00Z",
+            "separationDeg": 40.6493,
+            "lowerAltitudeDeg": 10.124
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 45.1722,
+            "firstAltitudeDeg": 15.577,
+            "secondAltitudeDeg": -29.505,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-31T14:41:00Z",
+            "separationDeg": 53.9169,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 58.0848,
+            "firstAltitudeDeg": 27.501,
+            "secondAltitudeDeg": -30.381,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2027-01-01T15:13:00Z",
+            "separationDeg": 66.874,
+            "lowerAltitudeDeg": 10.048
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 70.7248,
+            "firstAltitudeDeg": 39.143,
+            "secondAltitudeDeg": -31.259,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-02T15:48:00Z",
+            "separationDeg": 79.6001,
+            "lowerAltitudeDeg": 10.163
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 83.1538,
+            "firstAltitudeDeg": 50.533,
+            "secondAltitudeDeg": -32.139,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-03T16:25:00Z",
+            "separationDeg": 92.1532,
+            "lowerAltitudeDeg": 10.006
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 95.4297,
+            "firstAltitudeDeg": 61.672,
+            "secondAltitudeDeg": -33.022,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T17:09:00Z",
+            "separationDeg": 104.6192,
+            "lowerAltitudeDeg": 10.044
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 107.6024,
+            "firstAltitudeDeg": 72.423,
+            "secondAltitudeDeg": -33.907,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T17:59:00Z",
+            "separationDeg": 117.0368,
+            "lowerAltitudeDeg": 10.101
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 119.7126,
+            "firstAltitudeDeg": 81.658,
+            "secondAltitudeDeg": -34.793,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 131.7916,
+            "firstAltitudeDeg": 81.029,
+            "secondAltitudeDeg": -35.681,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 143.8632,
+            "firstAltitudeDeg": 71.552,
+            "secondAltitudeDeg": -36.571,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 155.9447,
+            "firstAltitudeDeg": 60.849,
+            "secondAltitudeDeg": -37.462,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 168.0334,
+            "firstAltitudeDeg": 49.858,
+            "secondAltitudeDeg": -38.354,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "moon",
+      "second": "saturn",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 62.8117,
+            "firstAltitudeDeg": 35.807,
+            "secondAltitudeDeg": -25.297,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": {
+            "time": "2026-12-12T10:37:00Z",
+            "separationDeg": 71.2124,
+            "lowerAltitudeDeg": 10.093
+          }
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 50.9362,
+            "firstAltitudeDeg": 24.777,
+            "secondAltitudeDeg": -24.52,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": {
+            "time": "2026-12-13T11:12:00Z",
+            "separationDeg": 59.1333,
+            "lowerAltitudeDeg": 10.087
+          }
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 39.0103,
+            "firstAltitudeDeg": 13.645,
+            "secondAltitudeDeg": -23.742,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": {
+            "time": "2026-12-14T11:43:00Z",
+            "separationDeg": 47.0396,
+            "lowerAltitudeDeg": 10.063
+          }
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 27.0318,
+            "firstAltitudeDeg": 2.507,
+            "secondAltitudeDeg": -22.963,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": {
+            "time": "2026-12-15T12:12:00Z",
+            "separationDeg": 34.8966,
+            "lowerAltitudeDeg": 10.031
+          }
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 15.2048,
+            "firstAltitudeDeg": -9.34,
+            "secondAltitudeDeg": -22.184,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": {
+            "time": "2026-12-16T12:37:00Z",
+            "separationDeg": 22.7514,
+            "lowerAltitudeDeg": 10.015
+          }
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 6.3728,
+            "firstAltitudeDeg": -21.226,
+            "secondAltitudeDeg": -21.404,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": {
+            "time": "2026-12-17T13:02:00Z",
+            "separationDeg": 11.2528,
+            "lowerAltitudeDeg": 10.048
+          }
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T02:29:00Z",
+            "separationDeg": 6.2847,
+            "firstAltitudeDeg": -3.604,
+            "secondAltitudeDeg": -3.075,
+            "sunAltitudeDeg": 76.69
+          },
+          "visible": {
+            "time": "2026-12-18T09:33:00Z",
+            "separationDeg": 7.3748,
+            "lowerAltitudeDeg": 45.969
+          }
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 13.5696,
+            "firstAltitudeDeg": -33.472,
+            "secondAltitudeDeg": -20.624,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": {
+            "time": "2026-12-19T09:34:00Z",
+            "separationDeg": 17.7019,
+            "lowerAltitudeDeg": 41.988
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 26.3348,
+            "firstAltitudeDeg": -46.106,
+            "secondAltitudeDeg": -19.843,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-20T09:35:00Z",
+            "separationDeg": 31.0906,
+            "lowerAltitudeDeg": 35.817
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 40.0523,
+            "firstAltitudeDeg": -59.093,
+            "secondAltitudeDeg": -19.062,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-21T09:35:00Z",
+            "separationDeg": 45.3018,
+            "lowerAltitudeDeg": 27.906
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 54.3129,
+            "firstAltitudeDeg": -72.195,
+            "secondAltitudeDeg": -18.281,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-22T09:36:00Z",
+            "separationDeg": 60.0323,
+            "lowerAltitudeDeg": 18.907
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 68.9609,
+            "firstAltitudeDeg": -83.193,
+            "secondAltitudeDeg": -17.5,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-23T09:42:00Z",
+            "separationDeg": 75.1438,
+            "lowerAltitudeDeg": 10.138
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 83.8468,
+            "firstAltitudeDeg": -77.003,
+            "secondAltitudeDeg": -16.719,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-24T10:45:00Z",
+            "separationDeg": 90.8947,
+            "lowerAltitudeDeg": 10.114
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 98.8024,
+            "firstAltitudeDeg": -63.628,
+            "secondAltitudeDeg": -15.939,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-25T11:36:00Z",
+            "separationDeg": 106.5111,
+            "lowerAltitudeDeg": 10.025
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 113.6542,
+            "firstAltitudeDeg": -49.767,
+            "secondAltitudeDeg": -15.159,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-26T12:16:00Z",
+            "separationDeg": 121.8321,
+            "lowerAltitudeDeg": 10.158
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 128.2432,
+            "firstAltitudeDeg": -36.009,
+            "secondAltitudeDeg": -14.379,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-27T12:49:00Z",
+            "separationDeg": 136.7023,
+            "lowerAltitudeDeg": 10.118
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 142.4329,
+            "firstAltitudeDeg": -22.546,
+            "secondAltitudeDeg": -13.599,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 156.0687,
+            "firstAltitudeDeg": -9.461,
+            "secondAltitudeDeg": -12.821,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 168.6007,
+            "firstAltitudeDeg": 3.44,
+            "secondAltitudeDeg": -12.042,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 162.5739,
+            "firstAltitudeDeg": 27.501,
+            "secondAltitudeDeg": -10.488,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 150.5256,
+            "firstAltitudeDeg": 39.143,
+            "secondAltitudeDeg": -9.712,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 138.4159,
+            "firstAltitudeDeg": 50.533,
+            "secondAltitudeDeg": -8.938,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 126.3784,
+            "firstAltitudeDeg": 61.672,
+            "secondAltitudeDeg": -8.164,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 114.4127,
+            "firstAltitudeDeg": 72.423,
+            "secondAltitudeDeg": -7.391,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 102.497,
+            "firstAltitudeDeg": 81.658,
+            "secondAltitudeDeg": -6.62,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 90.6089,
+            "firstAltitudeDeg": 81.029,
+            "secondAltitudeDeg": -5.849,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 78.7298,
+            "firstAltitudeDeg": 71.552,
+            "secondAltitudeDeg": -5.08,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 66.8445,
+            "firstAltitudeDeg": 60.849,
+            "secondAltitudeDeg": -4.313,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 54.9405,
+            "firstAltitudeDeg": 49.858,
+            "secondAltitudeDeg": -3.547,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-11T01:00:00Z",
+            "separationDeg": 43.0101,
+            "firstAltitudeDeg": 38.716,
+            "secondAltitudeDeg": -2.782,
+            "sunAltitudeDeg": 71.691
+          },
+          "visible": {
+            "time": "2027-01-10T09:46:00Z",
+            "separationDeg": 51.7953,
+            "lowerAltitudeDeg": 10.151
+          }
+        }
+      ]
+    },
+    {
+      "first": "mercury",
+      "second": "venus",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 33.2715,
+            "firstAltitudeDeg": 77.655,
+            "secondAltitudeDeg": 52.182,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 34.0348,
+            "firstAltitudeDeg": 77.99,
+            "secondAltitudeDeg": 52.159,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 34.7857,
+            "firstAltitudeDeg": 78.28,
+            "secondAltitudeDeg": 52.151,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 35.5247,
+            "firstAltitudeDeg": 78.522,
+            "secondAltitudeDeg": 52.155,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 36.2519,
+            "firstAltitudeDeg": 78.712,
+            "secondAltitudeDeg": 52.171,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 36.968,
+            "firstAltitudeDeg": 78.847,
+            "secondAltitudeDeg": 52.199,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 37.6732,
+            "firstAltitudeDeg": 78.926,
+            "secondAltitudeDeg": 52.238,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 38.3681,
+            "firstAltitudeDeg": 78.947,
+            "secondAltitudeDeg": 52.288,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 39.0531,
+            "firstAltitudeDeg": 78.91,
+            "secondAltitudeDeg": 52.349,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 39.7288,
+            "firstAltitudeDeg": 78.814,
+            "secondAltitudeDeg": 52.419,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 40.3956,
+            "firstAltitudeDeg": 78.662,
+            "secondAltitudeDeg": 52.5,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 41.0541,
+            "firstAltitudeDeg": 78.454,
+            "secondAltitudeDeg": 52.589,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 41.7049,
+            "firstAltitudeDeg": 78.194,
+            "secondAltitudeDeg": 52.687,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 42.3484,
+            "firstAltitudeDeg": 77.884,
+            "secondAltitudeDeg": 52.794,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 42.9853,
+            "firstAltitudeDeg": 77.528,
+            "secondAltitudeDeg": 52.909,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 43.6161,
+            "firstAltitudeDeg": 77.129,
+            "secondAltitudeDeg": 53.031,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 44.2413,
+            "firstAltitudeDeg": 76.69,
+            "secondAltitudeDeg": 53.161,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 44.8617,
+            "firstAltitudeDeg": 76.214,
+            "secondAltitudeDeg": 53.298,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 45.4776,
+            "firstAltitudeDeg": 75.705,
+            "secondAltitudeDeg": 53.442,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 46.0897,
+            "firstAltitudeDeg": 75.164,
+            "secondAltitudeDeg": 53.593,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 46.6985,
+            "firstAltitudeDeg": 74.594,
+            "secondAltitudeDeg": 53.749,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 47.3045,
+            "firstAltitudeDeg": 73.998,
+            "secondAltitudeDeg": 53.911,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 47.9082,
+            "firstAltitudeDeg": 73.377,
+            "secondAltitudeDeg": 54.079,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 48.5101,
+            "firstAltitudeDeg": 72.733,
+            "secondAltitudeDeg": 54.252,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 49.1105,
+            "firstAltitudeDeg": 72.069,
+            "secondAltitudeDeg": 54.43,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 49.7099,
+            "firstAltitudeDeg": 71.384,
+            "secondAltitudeDeg": 54.613,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 50.3085,
+            "firstAltitudeDeg": 70.681,
+            "secondAltitudeDeg": 54.8,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 50.9067,
+            "firstAltitudeDeg": 69.96,
+            "secondAltitudeDeg": 54.991,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 51.5047,
+            "firstAltitudeDeg": 69.222,
+            "secondAltitudeDeg": 55.186,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 52.1026,
+            "firstAltitudeDeg": 68.47,
+            "secondAltitudeDeg": 55.385,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "mercury",
+      "second": "mars",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 93.0184,
+            "firstAltitudeDeg": 77.655,
+            "secondAltitudeDeg": -5.395,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 94.2666,
+            "firstAltitudeDeg": 77.99,
+            "secondAltitudeDeg": -5.919,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 95.525,
+            "firstAltitudeDeg": 78.28,
+            "secondAltitudeDeg": -6.451,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 96.7938,
+            "firstAltitudeDeg": 78.522,
+            "secondAltitudeDeg": -6.991,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 98.0728,
+            "firstAltitudeDeg": 78.712,
+            "secondAltitudeDeg": -7.541,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 99.3622,
+            "firstAltitudeDeg": 78.847,
+            "secondAltitudeDeg": -8.099,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 100.6622,
+            "firstAltitudeDeg": 78.926,
+            "secondAltitudeDeg": -8.666,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 101.9729,
+            "firstAltitudeDeg": 78.947,
+            "secondAltitudeDeg": -9.243,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 103.2946,
+            "firstAltitudeDeg": 78.91,
+            "secondAltitudeDeg": -9.828,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 104.6275,
+            "firstAltitudeDeg": 78.814,
+            "secondAltitudeDeg": -10.423,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 105.9719,
+            "firstAltitudeDeg": 78.662,
+            "secondAltitudeDeg": -11.027,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 107.3283,
+            "firstAltitudeDeg": 78.454,
+            "secondAltitudeDeg": -11.64,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 108.6969,
+            "firstAltitudeDeg": 78.194,
+            "secondAltitudeDeg": -12.264,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 110.0783,
+            "firstAltitudeDeg": 77.884,
+            "secondAltitudeDeg": -12.897,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 111.4727,
+            "firstAltitudeDeg": 77.528,
+            "secondAltitudeDeg": -13.54,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 112.8807,
+            "firstAltitudeDeg": 77.129,
+            "secondAltitudeDeg": -14.193,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 114.3028,
+            "firstAltitudeDeg": 76.69,
+            "secondAltitudeDeg": -14.857,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 115.7394,
+            "firstAltitudeDeg": 76.214,
+            "secondAltitudeDeg": -15.531,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 117.1909,
+            "firstAltitudeDeg": 75.705,
+            "secondAltitudeDeg": -16.216,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 118.6578,
+            "firstAltitudeDeg": 75.164,
+            "secondAltitudeDeg": -16.911,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 120.1405,
+            "firstAltitudeDeg": 74.594,
+            "secondAltitudeDeg": -17.618,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 121.6395,
+            "firstAltitudeDeg": 73.998,
+            "secondAltitudeDeg": -18.336,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 123.1551,
+            "firstAltitudeDeg": 73.377,
+            "secondAltitudeDeg": -19.065,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 124.6877,
+            "firstAltitudeDeg": 72.733,
+            "secondAltitudeDeg": -19.805,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 126.2377,
+            "firstAltitudeDeg": 72.069,
+            "secondAltitudeDeg": -20.557,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 127.8053,
+            "firstAltitudeDeg": 71.384,
+            "secondAltitudeDeg": -21.32,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 129.3908,
+            "firstAltitudeDeg": 70.681,
+            "secondAltitudeDeg": -22.096,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 130.9943,
+            "firstAltitudeDeg": 69.96,
+            "secondAltitudeDeg": -22.883,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 132.6161,
+            "firstAltitudeDeg": 69.222,
+            "secondAltitudeDeg": -23.682,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 134.256,
+            "firstAltitudeDeg": 68.47,
+            "secondAltitudeDeg": -24.493,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "mercury",
+      "second": "jupiter",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 101.6448,
+            "firstAltitudeDeg": 77.655,
+            "secondAltitudeDeg": -13.457,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 103.1825,
+            "firstAltitudeDeg": 77.99,
+            "secondAltitudeDeg": -14.269,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 104.7262,
+            "firstAltitudeDeg": 78.28,
+            "secondAltitudeDeg": -15.085,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 106.2756,
+            "firstAltitudeDeg": 78.522,
+            "secondAltitudeDeg": -15.905,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 107.8307,
+            "firstAltitudeDeg": 78.712,
+            "secondAltitudeDeg": -16.729,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 109.3912,
+            "firstAltitudeDeg": 78.847,
+            "secondAltitudeDeg": -17.556,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 110.9573,
+            "firstAltitudeDeg": 78.926,
+            "secondAltitudeDeg": -18.388,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 112.5289,
+            "firstAltitudeDeg": 78.947,
+            "secondAltitudeDeg": -19.223,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 114.1062,
+            "firstAltitudeDeg": 78.91,
+            "secondAltitudeDeg": -20.062,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 115.6892,
+            "firstAltitudeDeg": 78.814,
+            "secondAltitudeDeg": -20.904,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 117.2782,
+            "firstAltitudeDeg": 78.662,
+            "secondAltitudeDeg": -21.75,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 118.8731,
+            "firstAltitudeDeg": 78.454,
+            "secondAltitudeDeg": -22.599,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 120.4744,
+            "firstAltitudeDeg": 78.194,
+            "secondAltitudeDeg": -23.452,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 122.0821,
+            "firstAltitudeDeg": 77.884,
+            "secondAltitudeDeg": -24.307,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 123.6965,
+            "firstAltitudeDeg": 77.528,
+            "secondAltitudeDeg": -25.166,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 125.3178,
+            "firstAltitudeDeg": 77.129,
+            "secondAltitudeDeg": -26.028,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 126.9464,
+            "firstAltitudeDeg": 76.69,
+            "secondAltitudeDeg": -26.893,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 128.5823,
+            "firstAltitudeDeg": 76.214,
+            "secondAltitudeDeg": -27.761,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 130.2259,
+            "firstAltitudeDeg": 75.705,
+            "secondAltitudeDeg": -28.632,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 131.8773,
+            "firstAltitudeDeg": 75.164,
+            "secondAltitudeDeg": -29.505,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 133.5369,
+            "firstAltitudeDeg": 74.594,
+            "secondAltitudeDeg": -30.381,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 135.2047,
+            "firstAltitudeDeg": 73.998,
+            "secondAltitudeDeg": -31.259,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 136.881,
+            "firstAltitudeDeg": 73.377,
+            "secondAltitudeDeg": -32.139,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 138.566,
+            "firstAltitudeDeg": 72.733,
+            "secondAltitudeDeg": -33.022,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 140.2598,
+            "firstAltitudeDeg": 72.069,
+            "secondAltitudeDeg": -33.907,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 141.9624,
+            "firstAltitudeDeg": 71.384,
+            "secondAltitudeDeg": -34.793,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 143.674,
+            "firstAltitudeDeg": 70.681,
+            "secondAltitudeDeg": -35.681,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 145.3945,
+            "firstAltitudeDeg": 69.96,
+            "secondAltitudeDeg": -36.571,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 147.124,
+            "firstAltitudeDeg": 69.222,
+            "secondAltitudeDeg": -37.462,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 148.8624,
+            "firstAltitudeDeg": 68.47,
+            "secondAltitudeDeg": -38.354,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "mercury",
+      "second": "saturn",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 117.7012,
+            "firstAltitudeDeg": 77.99,
+            "secondAltitudeDeg": -25.297,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 116.1616,
+            "firstAltitudeDeg": 78.28,
+            "secondAltitudeDeg": -24.52,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 114.6215,
+            "firstAltitudeDeg": 78.522,
+            "secondAltitudeDeg": -23.742,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 113.0809,
+            "firstAltitudeDeg": 78.712,
+            "secondAltitudeDeg": -22.963,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 111.5398,
+            "firstAltitudeDeg": 78.847,
+            "secondAltitudeDeg": -22.184,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 109.9984,
+            "firstAltitudeDeg": 78.926,
+            "secondAltitudeDeg": -21.404,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 108.4565,
+            "firstAltitudeDeg": 78.947,
+            "secondAltitudeDeg": -20.624,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 106.9141,
+            "firstAltitudeDeg": 78.91,
+            "secondAltitudeDeg": -19.843,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 105.371,
+            "firstAltitudeDeg": 78.814,
+            "secondAltitudeDeg": -19.062,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 103.8271,
+            "firstAltitudeDeg": 78.662,
+            "secondAltitudeDeg": -18.281,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 102.2821,
+            "firstAltitudeDeg": 78.454,
+            "secondAltitudeDeg": -17.5,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 100.736,
+            "firstAltitudeDeg": 78.194,
+            "secondAltitudeDeg": -16.719,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 99.1883,
+            "firstAltitudeDeg": 77.884,
+            "secondAltitudeDeg": -15.939,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 97.639,
+            "firstAltitudeDeg": 77.528,
+            "secondAltitudeDeg": -15.159,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 96.0877,
+            "firstAltitudeDeg": 77.129,
+            "secondAltitudeDeg": -14.379,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 94.5342,
+            "firstAltitudeDeg": 76.69,
+            "secondAltitudeDeg": -13.599,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 92.9783,
+            "firstAltitudeDeg": 76.214,
+            "secondAltitudeDeg": -12.821,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 91.4196,
+            "firstAltitudeDeg": 75.705,
+            "secondAltitudeDeg": -12.042,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 89.858,
+            "firstAltitudeDeg": 75.164,
+            "secondAltitudeDeg": -11.265,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 88.2931,
+            "firstAltitudeDeg": 74.594,
+            "secondAltitudeDeg": -10.488,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 86.7248,
+            "firstAltitudeDeg": 73.998,
+            "secondAltitudeDeg": -9.712,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 85.1528,
+            "firstAltitudeDeg": 73.377,
+            "secondAltitudeDeg": -8.938,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 83.5769,
+            "firstAltitudeDeg": 72.733,
+            "secondAltitudeDeg": -8.164,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 81.997,
+            "firstAltitudeDeg": 72.069,
+            "secondAltitudeDeg": -7.391,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 80.4128,
+            "firstAltitudeDeg": 71.384,
+            "secondAltitudeDeg": -6.62,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 78.8244,
+            "firstAltitudeDeg": 70.681,
+            "secondAltitudeDeg": -5.849,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 77.2316,
+            "firstAltitudeDeg": 69.96,
+            "secondAltitudeDeg": -5.08,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 75.6344,
+            "firstAltitudeDeg": 69.222,
+            "secondAltitudeDeg": -4.313,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 74.0329,
+            "firstAltitudeDeg": 68.47,
+            "secondAltitudeDeg": -3.547,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-11T01:00:00Z",
+            "separationDeg": 72.4271,
+            "firstAltitudeDeg": 67.702,
+            "secondAltitudeDeg": -2.782,
+            "sunAltitudeDeg": 71.691
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "venus",
+      "second": "mars",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 59.7641,
+            "firstAltitudeDeg": 52.182,
+            "secondAltitudeDeg": -5.395,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": {
+            "time": "2026-12-12T17:07:00Z",
+            "separationDeg": 60.093,
+            "lowerAltitudeDeg": 10.135
+          }
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 60.2533,
+            "firstAltitudeDeg": 52.159,
+            "secondAltitudeDeg": -5.919,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": {
+            "time": "2026-12-13T17:06:00Z",
+            "separationDeg": 60.5972,
+            "lowerAltitudeDeg": 10.192
+          }
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 60.7654,
+            "firstAltitudeDeg": 52.151,
+            "secondAltitudeDeg": -6.451,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": {
+            "time": "2026-12-14T17:04:00Z",
+            "separationDeg": 61.1234,
+            "lowerAltitudeDeg": 10.037
+          }
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 61.2997,
+            "firstAltitudeDeg": 52.155,
+            "secondAltitudeDeg": -6.991,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": {
+            "time": "2026-12-15T17:03:00Z",
+            "separationDeg": 61.672,
+            "lowerAltitudeDeg": 10.079
+          }
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 61.856,
+            "firstAltitudeDeg": 52.171,
+            "secondAltitudeDeg": -7.541,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": {
+            "time": "2026-12-16T17:02:00Z",
+            "separationDeg": 62.2423,
+            "lowerAltitudeDeg": 10.112
+          }
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 62.4339,
+            "firstAltitudeDeg": 52.199,
+            "secondAltitudeDeg": -8.099,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": {
+            "time": "2026-12-17T17:00:00Z",
+            "separationDeg": 62.8339,
+            "lowerAltitudeDeg": 10.138
+          }
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 63.033,
+            "firstAltitudeDeg": 52.238,
+            "secondAltitudeDeg": -8.666,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": {
+            "time": "2026-12-18T16:59:00Z",
+            "separationDeg": 63.4464,
+            "lowerAltitudeDeg": 10.156
+          }
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 63.6529,
+            "firstAltitudeDeg": 52.288,
+            "secondAltitudeDeg": -9.243,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": {
+            "time": "2026-12-19T16:58:00Z",
+            "separationDeg": 64.0796,
+            "lowerAltitudeDeg": 10.166
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 64.2934,
+            "firstAltitudeDeg": 52.349,
+            "secondAltitudeDeg": -9.828,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-20T16:57:00Z",
+            "separationDeg": 64.7332,
+            "lowerAltitudeDeg": 10.169
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 64.9543,
+            "firstAltitudeDeg": 52.419,
+            "secondAltitudeDeg": -10.423,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-21T16:56:00Z",
+            "separationDeg": 65.4069,
+            "lowerAltitudeDeg": 10.164
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 65.6352,
+            "firstAltitudeDeg": 52.5,
+            "secondAltitudeDeg": -11.027,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-22T16:56:00Z",
+            "separationDeg": 66.1005,
+            "lowerAltitudeDeg": 10.151
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 66.3361,
+            "firstAltitudeDeg": 52.589,
+            "secondAltitudeDeg": -11.64,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-23T16:55:00Z",
+            "separationDeg": 66.8139,
+            "lowerAltitudeDeg": 10.13
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 67.0566,
+            "firstAltitudeDeg": 52.687,
+            "secondAltitudeDeg": -12.264,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-24T16:54:00Z",
+            "separationDeg": 67.5468,
+            "lowerAltitudeDeg": 10.102
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 67.7966,
+            "firstAltitudeDeg": 52.794,
+            "secondAltitudeDeg": -12.897,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-25T16:53:00Z",
+            "separationDeg": 68.2991,
+            "lowerAltitudeDeg": 10.066
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 68.556,
+            "firstAltitudeDeg": 52.909,
+            "secondAltitudeDeg": -13.54,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-26T16:52:00Z",
+            "separationDeg": 69.0706,
+            "lowerAltitudeDeg": 10.022
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 69.3346,
+            "firstAltitudeDeg": 53.031,
+            "secondAltitudeDeg": -14.193,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-27T16:52:00Z",
+            "separationDeg": 69.8618,
+            "lowerAltitudeDeg": 10.173
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 70.1323,
+            "firstAltitudeDeg": 53.161,
+            "secondAltitudeDeg": -14.857,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-28T16:51:00Z",
+            "separationDeg": 70.6715,
+            "lowerAltitudeDeg": 10.113
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 70.949,
+            "firstAltitudeDeg": 53.298,
+            "secondAltitudeDeg": -15.531,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-29T16:49:00Z",
+            "separationDeg": 71.5,
+            "lowerAltitudeDeg": 10.046
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 71.7846,
+            "firstAltitudeDeg": 53.442,
+            "secondAltitudeDeg": -16.216,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-30T16:49:00Z",
+            "separationDeg": 72.348,
+            "lowerAltitudeDeg": 10.173
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 72.6389,
+            "firstAltitudeDeg": 53.593,
+            "secondAltitudeDeg": -16.911,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-31T16:48:00Z",
+            "separationDeg": 73.214,
+            "lowerAltitudeDeg": 10.09
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 73.5119,
+            "firstAltitudeDeg": 53.749,
+            "secondAltitudeDeg": -17.618,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2027-01-01T16:48:00Z",
+            "separationDeg": 74.0992,
+            "lowerAltitudeDeg": 10.201
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 74.4035,
+            "firstAltitudeDeg": 53.911,
+            "secondAltitudeDeg": -18.336,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-02T16:47:00Z",
+            "separationDeg": 75.0023,
+            "lowerAltitudeDeg": 10.102
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 75.3135,
+            "firstAltitudeDeg": 54.079,
+            "secondAltitudeDeg": -19.065,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-03T16:47:00Z",
+            "separationDeg": 75.9244,
+            "lowerAltitudeDeg": 10.197
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 76.242,
+            "firstAltitudeDeg": 54.252,
+            "secondAltitudeDeg": -19.805,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T16:46:00Z",
+            "separationDeg": 76.8642,
+            "lowerAltitudeDeg": 10.083
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 77.1887,
+            "firstAltitudeDeg": 54.43,
+            "secondAltitudeDeg": -20.557,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T16:46:00Z",
+            "separationDeg": 77.823,
+            "lowerAltitudeDeg": 10.161
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 78.1538,
+            "firstAltitudeDeg": 54.613,
+            "secondAltitudeDeg": -21.32,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": {
+            "time": "2027-01-06T16:45:00Z",
+            "separationDeg": 78.7992,
+            "lowerAltitudeDeg": 10.031
+          }
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 79.137,
+            "firstAltitudeDeg": 54.8,
+            "secondAltitudeDeg": -22.096,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": {
+            "time": "2027-01-07T16:45:00Z",
+            "separationDeg": 79.7944,
+            "lowerAltitudeDeg": 10.094
+          }
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 80.1383,
+            "firstAltitudeDeg": 54.991,
+            "secondAltitudeDeg": -22.883,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": {
+            "time": "2027-01-08T16:45:00Z",
+            "separationDeg": 80.8075,
+            "lowerAltitudeDeg": 10.148
+          }
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 81.1577,
+            "firstAltitudeDeg": 55.186,
+            "secondAltitudeDeg": -23.682,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": {
+            "time": "2027-01-09T16:45:00Z",
+            "separationDeg": 81.8387,
+            "lowerAltitudeDeg": 10.194
+          }
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 82.195,
+            "firstAltitudeDeg": 55.385,
+            "secondAltitudeDeg": -24.493,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": {
+            "time": "2027-01-10T16:45:00Z",
+            "separationDeg": 82.8871,
+            "lowerAltitudeDeg": 10.033
+          }
+        }
+      ]
+    },
+    {
+      "first": "venus",
+      "second": "jupiter",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 68.4348,
+            "firstAltitudeDeg": 52.182,
+            "secondAltitudeDeg": -13.457,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": {
+            "time": "2026-12-12T17:07:00Z",
+            "separationDeg": 68.9641,
+            "lowerAltitudeDeg": 10.135
+          }
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 69.2186,
+            "firstAltitudeDeg": 52.159,
+            "secondAltitudeDeg": -14.269,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": {
+            "time": "2026-12-13T17:06:00Z",
+            "separationDeg": 69.7597,
+            "lowerAltitudeDeg": 10.192
+          }
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 70.0208,
+            "firstAltitudeDeg": 52.151,
+            "secondAltitudeDeg": -15.085,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": {
+            "time": "2026-12-14T17:04:00Z",
+            "separationDeg": 70.5726,
+            "lowerAltitudeDeg": 10.037
+          }
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 70.8407,
+            "firstAltitudeDeg": 52.155,
+            "secondAltitudeDeg": -15.905,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": {
+            "time": "2026-12-15T17:03:00Z",
+            "separationDeg": 71.4034,
+            "lowerAltitudeDeg": 10.079
+          }
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 71.6778,
+            "firstAltitudeDeg": 52.171,
+            "secondAltitudeDeg": -16.729,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": {
+            "time": "2026-12-16T17:02:00Z",
+            "separationDeg": 72.251,
+            "lowerAltitudeDeg": 10.112
+          }
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 72.5315,
+            "firstAltitudeDeg": 52.199,
+            "secondAltitudeDeg": -17.556,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": {
+            "time": "2026-12-17T17:00:00Z",
+            "separationDeg": 73.1149,
+            "lowerAltitudeDeg": 10.138
+          }
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 73.4013,
+            "firstAltitudeDeg": 52.238,
+            "secondAltitudeDeg": -18.388,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": {
+            "time": "2026-12-18T16:59:00Z",
+            "separationDeg": 73.9946,
+            "lowerAltitudeDeg": 10.156
+          }
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 74.2869,
+            "firstAltitudeDeg": 52.288,
+            "secondAltitudeDeg": -19.223,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": {
+            "time": "2026-12-19T16:58:00Z",
+            "separationDeg": 74.8896,
+            "lowerAltitudeDeg": 10.166
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 75.1876,
+            "firstAltitudeDeg": 52.349,
+            "secondAltitudeDeg": -20.062,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-20T16:57:00Z",
+            "separationDeg": 75.7996,
+            "lowerAltitudeDeg": 10.169
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 76.1031,
+            "firstAltitudeDeg": 52.419,
+            "secondAltitudeDeg": -20.904,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-21T16:56:00Z",
+            "separationDeg": 76.724,
+            "lowerAltitudeDeg": 10.164
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 77.033,
+            "firstAltitudeDeg": 52.5,
+            "secondAltitudeDeg": -21.75,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-22T16:56:00Z",
+            "separationDeg": 77.6625,
+            "lowerAltitudeDeg": 10.151
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 77.9768,
+            "firstAltitudeDeg": 52.589,
+            "secondAltitudeDeg": -22.599,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-23T16:55:00Z",
+            "separationDeg": 78.6147,
+            "lowerAltitudeDeg": 10.13
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 78.9343,
+            "firstAltitudeDeg": 52.687,
+            "secondAltitudeDeg": -23.452,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-24T16:54:00Z",
+            "separationDeg": 79.5803,
+            "lowerAltitudeDeg": 10.102
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 79.905,
+            "firstAltitudeDeg": 52.794,
+            "secondAltitudeDeg": -24.307,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-25T16:53:00Z",
+            "separationDeg": 80.5588,
+            "lowerAltitudeDeg": 10.066
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 80.8886,
+            "firstAltitudeDeg": 52.909,
+            "secondAltitudeDeg": -25.166,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-26T16:52:00Z",
+            "separationDeg": 81.55,
+            "lowerAltitudeDeg": 10.022
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 81.8847,
+            "firstAltitudeDeg": 53.031,
+            "secondAltitudeDeg": -26.028,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-27T16:52:00Z",
+            "separationDeg": 82.5542,
+            "lowerAltitudeDeg": 10.173
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 82.8931,
+            "firstAltitudeDeg": 53.161,
+            "secondAltitudeDeg": -26.893,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-28T16:51:00Z",
+            "separationDeg": 83.5696,
+            "lowerAltitudeDeg": 10.113
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 83.9132,
+            "firstAltitudeDeg": 53.298,
+            "secondAltitudeDeg": -27.761,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-29T16:49:00Z",
+            "separationDeg": 84.5966,
+            "lowerAltitudeDeg": 10.046
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 84.9448,
+            "firstAltitudeDeg": 53.442,
+            "secondAltitudeDeg": -28.632,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-30T16:49:00Z",
+            "separationDeg": 85.6356,
+            "lowerAltitudeDeg": 10.173
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 85.9876,
+            "firstAltitudeDeg": 53.593,
+            "secondAltitudeDeg": -29.505,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-31T16:48:00Z",
+            "separationDeg": 86.6847,
+            "lowerAltitudeDeg": 10.09
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 87.0412,
+            "firstAltitudeDeg": 53.749,
+            "secondAltitudeDeg": -30.381,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2027-01-01T16:48:00Z",
+            "separationDeg": 87.7452,
+            "lowerAltitudeDeg": 10.201
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 88.1052,
+            "firstAltitudeDeg": 53.911,
+            "secondAltitudeDeg": -31.259,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-02T16:47:00Z",
+            "separationDeg": 88.8152,
+            "lowerAltitudeDeg": 10.102
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 89.1795,
+            "firstAltitudeDeg": 54.079,
+            "secondAltitudeDeg": -32.139,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-03T16:47:00Z",
+            "separationDeg": 89.896,
+            "lowerAltitudeDeg": 10.197
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 90.2636,
+            "firstAltitudeDeg": 54.252,
+            "secondAltitudeDeg": -33.022,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T16:46:00Z",
+            "separationDeg": 90.9856,
+            "lowerAltitudeDeg": 10.083
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 91.3573,
+            "firstAltitudeDeg": 54.43,
+            "secondAltitudeDeg": -33.907,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T16:46:00Z",
+            "separationDeg": 92.0854,
+            "lowerAltitudeDeg": 10.161
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 92.4602,
+            "firstAltitudeDeg": 54.613,
+            "secondAltitudeDeg": -34.793,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": {
+            "time": "2027-01-06T16:45:00Z",
+            "separationDeg": 93.1935,
+            "lowerAltitudeDeg": 10.031
+          }
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 93.5722,
+            "firstAltitudeDeg": 54.8,
+            "secondAltitudeDeg": -35.681,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": {
+            "time": "2027-01-07T16:45:00Z",
+            "separationDeg": 94.3112,
+            "lowerAltitudeDeg": 10.094
+          }
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 94.6929,
+            "firstAltitudeDeg": 54.991,
+            "secondAltitudeDeg": -36.571,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": {
+            "time": "2027-01-08T16:45:00Z",
+            "separationDeg": 95.4375,
+            "lowerAltitudeDeg": 10.148
+          }
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 95.8221,
+            "firstAltitudeDeg": 55.186,
+            "secondAltitudeDeg": -37.462,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": {
+            "time": "2027-01-09T16:45:00Z",
+            "separationDeg": 96.572,
+            "lowerAltitudeDeg": 10.194
+          }
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 96.9594,
+            "firstAltitudeDeg": 55.385,
+            "secondAltitudeDeg": -38.354,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": {
+            "time": "2027-01-10T16:45:00Z",
+            "separationDeg": 97.7139,
+            "lowerAltitudeDeg": 10.033
+          }
+        }
+      ]
+    },
+    {
+      "first": "venus",
+      "second": "saturn",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 151.7055,
+            "firstAltitudeDeg": 52.159,
+            "secondAltitudeDeg": -25.297,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 150.91,
+            "firstAltitudeDeg": 52.151,
+            "secondAltitudeDeg": -24.52,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 150.1016,
+            "firstAltitudeDeg": 52.155,
+            "secondAltitudeDeg": -23.742,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 149.281,
+            "firstAltitudeDeg": 52.171,
+            "secondAltitudeDeg": -22.963,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 148.4487,
+            "firstAltitudeDeg": 52.199,
+            "secondAltitudeDeg": -22.184,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 147.6052,
+            "firstAltitudeDeg": 52.238,
+            "secondAltitudeDeg": -21.404,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 146.7511,
+            "firstAltitudeDeg": 52.288,
+            "secondAltitudeDeg": -20.624,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 145.8868,
+            "firstAltitudeDeg": 52.349,
+            "secondAltitudeDeg": -19.843,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 145.0127,
+            "firstAltitudeDeg": 52.419,
+            "secondAltitudeDeg": -19.062,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 144.1292,
+            "firstAltitudeDeg": 52.5,
+            "secondAltitudeDeg": -18.281,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 143.2367,
+            "firstAltitudeDeg": 52.589,
+            "secondAltitudeDeg": -17.5,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 142.3356,
+            "firstAltitudeDeg": 52.687,
+            "secondAltitudeDeg": -16.719,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 141.4262,
+            "firstAltitudeDeg": 52.794,
+            "secondAltitudeDeg": -15.939,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 140.5089,
+            "firstAltitudeDeg": 52.909,
+            "secondAltitudeDeg": -15.159,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 139.5839,
+            "firstAltitudeDeg": 53.031,
+            "secondAltitudeDeg": -14.379,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 138.6518,
+            "firstAltitudeDeg": 53.161,
+            "secondAltitudeDeg": -13.599,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 137.7127,
+            "firstAltitudeDeg": 53.298,
+            "secondAltitudeDeg": -12.821,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 136.7669,
+            "firstAltitudeDeg": 53.442,
+            "secondAltitudeDeg": -12.042,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 135.8149,
+            "firstAltitudeDeg": 53.593,
+            "secondAltitudeDeg": -11.265,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 134.8569,
+            "firstAltitudeDeg": 53.749,
+            "secondAltitudeDeg": -10.488,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 133.8932,
+            "firstAltitudeDeg": 53.911,
+            "secondAltitudeDeg": -9.712,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 132.924,
+            "firstAltitudeDeg": 54.079,
+            "secondAltitudeDeg": -8.938,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 131.9497,
+            "firstAltitudeDeg": 54.252,
+            "secondAltitudeDeg": -8.164,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 130.9704,
+            "firstAltitudeDeg": 54.43,
+            "secondAltitudeDeg": -7.391,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 129.9865,
+            "firstAltitudeDeg": 54.613,
+            "secondAltitudeDeg": -6.62,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 128.9981,
+            "firstAltitudeDeg": 54.8,
+            "secondAltitudeDeg": -5.849,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 128.0055,
+            "firstAltitudeDeg": 54.991,
+            "secondAltitudeDeg": -5.08,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 127.0088,
+            "firstAltitudeDeg": 55.186,
+            "secondAltitudeDeg": -4.313,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 126.0082,
+            "firstAltitudeDeg": 55.385,
+            "secondAltitudeDeg": -3.547,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-11T01:00:00Z",
+            "separationDeg": 125.004,
+            "firstAltitudeDeg": 55.587,
+            "secondAltitudeDeg": -2.782,
+            "sunAltitudeDeg": 71.691
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "mars",
+      "second": "jupiter",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 8.7951,
+            "firstAltitudeDeg": -5.395,
+            "secondAltitudeDeg": -13.457,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": {
+            "time": "2026-12-12T14:27:00Z",
+            "separationDeg": 8.9614,
+            "lowerAltitudeDeg": 10.024
+          }
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 9.0861,
+            "firstAltitudeDeg": -5.919,
+            "secondAltitudeDeg": -14.269,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": {
+            "time": "2026-12-13T14:23:00Z",
+            "separationDeg": 9.2495,
+            "lowerAltitudeDeg": 10.033
+          }
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 9.3729,
+            "firstAltitudeDeg": -6.451,
+            "secondAltitudeDeg": -15.085,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": {
+            "time": "2026-12-14T14:20:00Z",
+            "separationDeg": 9.5335,
+            "lowerAltitudeDeg": 10.046
+          }
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 9.6555,
+            "firstAltitudeDeg": -6.991,
+            "secondAltitudeDeg": -15.905,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": {
+            "time": "2026-12-15T14:18:00Z",
+            "separationDeg": 9.813,
+            "lowerAltitudeDeg": 10.062
+          }
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 9.9336,
+            "firstAltitudeDeg": -7.541,
+            "secondAltitudeDeg": -16.729,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": {
+            "time": "2026-12-16T14:15:00Z",
+            "separationDeg": 10.088,
+            "lowerAltitudeDeg": 10.083
+          }
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 10.207,
+            "firstAltitudeDeg": -8.099,
+            "secondAltitudeDeg": -17.556,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": {
+            "time": "2026-12-17T14:11:00Z",
+            "separationDeg": 10.3583,
+            "lowerAltitudeDeg": 10.107
+          }
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 10.4757,
+            "firstAltitudeDeg": -8.666,
+            "secondAltitudeDeg": -18.388,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": {
+            "time": "2026-12-18T14:08:00Z",
+            "separationDeg": 10.6237,
+            "lowerAltitudeDeg": 10.135
+          }
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 10.7394,
+            "firstAltitudeDeg": -9.243,
+            "secondAltitudeDeg": -19.223,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": {
+            "time": "2026-12-19T14:06:00Z",
+            "separationDeg": 10.8841,
+            "lowerAltitudeDeg": 10.168
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 10.9979,
+            "firstAltitudeDeg": -9.828,
+            "secondAltitudeDeg": -20.062,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-20T14:02:00Z",
+            "separationDeg": 11.1391,
+            "lowerAltitudeDeg": 10.012
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 11.2511,
+            "firstAltitudeDeg": -10.423,
+            "secondAltitudeDeg": -20.904,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-21T13:58:00Z",
+            "separationDeg": 11.3888,
+            "lowerAltitudeDeg": 10.054
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 11.4988,
+            "firstAltitudeDeg": -11.027,
+            "secondAltitudeDeg": -21.75,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-22T13:56:00Z",
+            "separationDeg": 11.6329,
+            "lowerAltitudeDeg": 10.099
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 11.7408,
+            "firstAltitudeDeg": -11.64,
+            "secondAltitudeDeg": -22.599,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-23T13:53:00Z",
+            "separationDeg": 11.8713,
+            "lowerAltitudeDeg": 10.149
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 11.9768,
+            "firstAltitudeDeg": -12.264,
+            "secondAltitudeDeg": -23.452,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-24T13:48:00Z",
+            "separationDeg": 12.1036,
+            "lowerAltitudeDeg": 10.011
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 12.2068,
+            "firstAltitudeDeg": -12.897,
+            "secondAltitudeDeg": -24.307,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-25T13:45:00Z",
+            "separationDeg": 12.3298,
+            "lowerAltitudeDeg": 10.07
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 12.4305,
+            "firstAltitudeDeg": -13.54,
+            "secondAltitudeDeg": -25.166,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-26T13:43:00Z",
+            "separationDeg": 12.5496,
+            "lowerAltitudeDeg": 10.134
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 12.6477,
+            "firstAltitudeDeg": -14.193,
+            "secondAltitudeDeg": -26.028,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-27T13:38:00Z",
+            "separationDeg": 12.7626,
+            "lowerAltitudeDeg": 10.009
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 12.8581,
+            "firstAltitudeDeg": -14.857,
+            "secondAltitudeDeg": -26.893,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-28T13:35:00Z",
+            "separationDeg": 12.9689,
+            "lowerAltitudeDeg": 10.083
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 13.0614,
+            "firstAltitudeDeg": -15.531,
+            "secondAltitudeDeg": -27.761,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-29T13:33:00Z",
+            "separationDeg": 13.1682,
+            "lowerAltitudeDeg": 10.162
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 13.2576,
+            "firstAltitudeDeg": -16.216,
+            "secondAltitudeDeg": -28.632,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-30T13:29:00Z",
+            "separationDeg": 13.36,
+            "lowerAltitudeDeg": 10.052
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 13.4463,
+            "firstAltitudeDeg": -16.911,
+            "secondAltitudeDeg": -29.505,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-31T13:25:00Z",
+            "separationDeg": 13.5443,
+            "lowerAltitudeDeg": 10.141
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 13.6273,
+            "firstAltitudeDeg": -17.618,
+            "secondAltitudeDeg": -30.381,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2027-01-01T13:22:00Z",
+            "separationDeg": 13.7208,
+            "lowerAltitudeDeg": 10.042
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 13.8003,
+            "firstAltitudeDeg": -18.336,
+            "secondAltitudeDeg": -31.259,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-02T13:19:00Z",
+            "separationDeg": 13.8894,
+            "lowerAltitudeDeg": 10.142
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 13.9652,
+            "firstAltitudeDeg": -19.065,
+            "secondAltitudeDeg": -32.139,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-03T13:14:00Z",
+            "separationDeg": 14.0496,
+            "lowerAltitudeDeg": 10.054
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 14.1217,
+            "firstAltitudeDeg": -19.805,
+            "secondAltitudeDeg": -33.022,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-04T13:11:00Z",
+            "separationDeg": 14.2014,
+            "lowerAltitudeDeg": 10.165
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 14.2696,
+            "firstAltitudeDeg": -20.557,
+            "secondAltitudeDeg": -33.907,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-05T13:08:00Z",
+            "separationDeg": 14.3445,
+            "lowerAltitudeDeg": 10.088
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 14.4086,
+            "firstAltitudeDeg": -21.32,
+            "secondAltitudeDeg": -34.793,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": {
+            "time": "2027-01-06T13:03:00Z",
+            "separationDeg": 14.4786,
+            "lowerAltitudeDeg": 10.018
+          }
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 14.5386,
+            "firstAltitudeDeg": -22.096,
+            "secondAltitudeDeg": -35.681,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": {
+            "time": "2027-01-07T13:00:00Z",
+            "separationDeg": 14.6037,
+            "lowerAltitudeDeg": 10.146
+          }
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 14.6594,
+            "firstAltitudeDeg": -22.883,
+            "secondAltitudeDeg": -36.571,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": {
+            "time": "2027-01-08T12:57:00Z",
+            "separationDeg": 14.7195,
+            "lowerAltitudeDeg": 10.087
+          }
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 14.7706,
+            "firstAltitudeDeg": -23.682,
+            "secondAltitudeDeg": -37.462,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": {
+            "time": "2027-01-09T12:52:00Z",
+            "separationDeg": 14.8257,
+            "lowerAltitudeDeg": 10.035
+          }
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 14.8722,
+            "firstAltitudeDeg": -24.493,
+            "secondAltitudeDeg": -38.354,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": {
+            "time": "2027-01-10T12:49:00Z",
+            "separationDeg": 14.9223,
+            "lowerAltitudeDeg": 10.181
+          }
+        }
+      ]
+    },
+    {
+      "first": "mars",
+      "second": "saturn",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-12T01:00:00Z",
+            "separationDeg": 147.7413,
+            "firstAltitudeDeg": -5.395,
+            "secondAltitudeDeg": -26.073,
+            "sunAltitudeDeg": 74.821
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 148.032,
+            "firstAltitudeDeg": -5.919,
+            "secondAltitudeDeg": -25.297,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 148.3131,
+            "firstAltitudeDeg": -6.451,
+            "secondAltitudeDeg": -24.52,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 148.5845,
+            "firstAltitudeDeg": -6.991,
+            "secondAltitudeDeg": -23.742,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 148.8462,
+            "firstAltitudeDeg": -7.541,
+            "secondAltitudeDeg": -22.963,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 149.0978,
+            "firstAltitudeDeg": -8.099,
+            "secondAltitudeDeg": -22.184,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 149.3393,
+            "firstAltitudeDeg": -8.666,
+            "secondAltitudeDeg": -21.404,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 149.5705,
+            "firstAltitudeDeg": -9.243,
+            "secondAltitudeDeg": -20.624,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 149.7913,
+            "firstAltitudeDeg": -9.828,
+            "secondAltitudeDeg": -19.843,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 150.0016,
+            "firstAltitudeDeg": -10.423,
+            "secondAltitudeDeg": -19.062,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 150.201,
+            "firstAltitudeDeg": -11.027,
+            "secondAltitudeDeg": -18.281,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 150.3896,
+            "firstAltitudeDeg": -11.64,
+            "secondAltitudeDeg": -17.5,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 150.5671,
+            "firstAltitudeDeg": -12.264,
+            "secondAltitudeDeg": -16.719,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 150.7333,
+            "firstAltitudeDeg": -12.897,
+            "secondAltitudeDeg": -15.939,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 150.888,
+            "firstAltitudeDeg": -13.54,
+            "secondAltitudeDeg": -15.159,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 151.0311,
+            "firstAltitudeDeg": -14.193,
+            "secondAltitudeDeg": -14.379,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 151.1623,
+            "firstAltitudeDeg": -14.857,
+            "secondAltitudeDeg": -13.599,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 151.2814,
+            "firstAltitudeDeg": -15.531,
+            "secondAltitudeDeg": -12.821,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 151.3882,
+            "firstAltitudeDeg": -16.216,
+            "secondAltitudeDeg": -12.042,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": null
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 151.4825,
+            "firstAltitudeDeg": -16.911,
+            "secondAltitudeDeg": -11.265,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 151.5641,
+            "firstAltitudeDeg": -17.618,
+            "secondAltitudeDeg": -10.488,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 151.6328,
+            "firstAltitudeDeg": -18.336,
+            "secondAltitudeDeg": -9.712,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 151.6885,
+            "firstAltitudeDeg": -19.065,
+            "secondAltitudeDeg": -8.938,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 151.7308,
+            "firstAltitudeDeg": -19.805,
+            "secondAltitudeDeg": -8.164,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 151.7597,
+            "firstAltitudeDeg": -20.557,
+            "secondAltitudeDeg": -7.391,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 151.775,
+            "firstAltitudeDeg": -21.32,
+            "secondAltitudeDeg": -6.62,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 151.7641,
+            "firstAltitudeDeg": -22.883,
+            "secondAltitudeDeg": -5.08,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 151.7377,
+            "firstAltitudeDeg": -23.682,
+            "secondAltitudeDeg": -4.313,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 151.6971,
+            "firstAltitudeDeg": -24.493,
+            "secondAltitudeDeg": -3.547,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": null
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-11T01:00:00Z",
+            "separationDeg": 151.6421,
+            "firstAltitudeDeg": -25.316,
+            "secondAltitudeDeg": -2.782,
+            "sunAltitudeDeg": 71.691
+          },
+          "visible": null
+        }
+      ]
+    },
+    {
+      "first": "jupiter",
+      "second": "saturn",
+      "nights": [
+        {
+          "night": "2026-12-12",
+          "geometric": {
+            "time": "2026-12-13T01:00:00Z",
+            "separationDeg": 139.0745,
+            "firstAltitudeDeg": -14.269,
+            "secondAltitudeDeg": -25.297,
+            "sunAltitudeDeg": 74.803
+          },
+          "visible": {
+            "time": "2026-12-12T14:12:00Z",
+            "separationDeg": 139.0766,
+            "lowerAltitudeDeg": 10.007
+          }
+        },
+        {
+          "night": "2026-12-13",
+          "geometric": {
+            "time": "2026-12-14T01:00:00Z",
+            "separationDeg": 139.0685,
+            "firstAltitudeDeg": -15.085,
+            "secondAltitudeDeg": -24.52,
+            "sunAltitudeDeg": 74.777
+          },
+          "visible": {
+            "time": "2026-12-13T14:08:00Z",
+            "separationDeg": 139.073,
+            "lowerAltitudeDeg": 10.019
+          }
+        },
+        {
+          "night": "2026-12-14",
+          "geometric": {
+            "time": "2026-12-15T01:00:00Z",
+            "separationDeg": 139.0574,
+            "firstAltitudeDeg": -15.905,
+            "secondAltitudeDeg": -23.742,
+            "sunAltitudeDeg": 74.744
+          },
+          "visible": {
+            "time": "2026-12-14T14:05:00Z",
+            "separationDeg": 139.0642,
+            "lowerAltitudeDeg": 10.032
+          }
+        },
+        {
+          "night": "2026-12-15",
+          "geometric": {
+            "time": "2026-12-16T01:00:00Z",
+            "separationDeg": 139.0412,
+            "firstAltitudeDeg": -16.729,
+            "secondAltitudeDeg": -22.963,
+            "sunAltitudeDeg": 74.704
+          },
+          "visible": {
+            "time": "2026-12-15T14:00:00Z",
+            "separationDeg": 139.0503,
+            "lowerAltitudeDeg": 10.047
+          }
+        },
+        {
+          "night": "2026-12-16",
+          "geometric": {
+            "time": "2026-12-17T01:00:00Z",
+            "separationDeg": 139.0198,
+            "firstAltitudeDeg": -17.556,
+            "secondAltitudeDeg": -22.184,
+            "sunAltitudeDeg": 74.657
+          },
+          "visible": {
+            "time": "2026-12-16T13:56:00Z",
+            "separationDeg": 139.0314,
+            "lowerAltitudeDeg": 10.062
+          }
+        },
+        {
+          "night": "2026-12-17",
+          "geometric": {
+            "time": "2026-12-18T01:00:00Z",
+            "separationDeg": 138.9934,
+            "firstAltitudeDeg": -18.388,
+            "secondAltitudeDeg": -21.404,
+            "sunAltitudeDeg": 74.603
+          },
+          "visible": {
+            "time": "2026-12-17T13:53:00Z",
+            "separationDeg": 139.0074,
+            "lowerAltitudeDeg": 10.078
+          }
+        },
+        {
+          "night": "2026-12-18",
+          "geometric": {
+            "time": "2026-12-19T01:00:00Z",
+            "separationDeg": 138.9619,
+            "firstAltitudeDeg": -19.223,
+            "secondAltitudeDeg": -20.624,
+            "sunAltitudeDeg": 74.543
+          },
+          "visible": {
+            "time": "2026-12-18T13:48:00Z",
+            "separationDeg": 138.9784,
+            "lowerAltitudeDeg": 10.095
+          }
+        },
+        {
+          "night": "2026-12-19",
+          "geometric": {
+            "time": "2026-12-20T01:00:00Z",
+            "separationDeg": 138.9254,
+            "firstAltitudeDeg": -20.062,
+            "secondAltitudeDeg": -19.843,
+            "sunAltitudeDeg": 74.476
+          },
+          "visible": {
+            "time": "2026-12-19T13:45:00Z",
+            "separationDeg": 138.9443,
+            "lowerAltitudeDeg": 10.114
+          }
+        },
+        {
+          "night": "2026-12-20",
+          "geometric": {
+            "time": "2026-12-21T01:00:00Z",
+            "separationDeg": 138.8837,
+            "firstAltitudeDeg": -20.904,
+            "secondAltitudeDeg": -19.062,
+            "sunAltitudeDeg": 74.404
+          },
+          "visible": {
+            "time": "2026-12-20T13:41:00Z",
+            "separationDeg": 138.9051,
+            "lowerAltitudeDeg": 10.133
+          }
+        },
+        {
+          "night": "2026-12-21",
+          "geometric": {
+            "time": "2026-12-22T01:00:00Z",
+            "separationDeg": 138.8371,
+            "firstAltitudeDeg": -21.75,
+            "secondAltitudeDeg": -18.281,
+            "sunAltitudeDeg": 74.325
+          },
+          "visible": {
+            "time": "2026-12-21T13:36:00Z",
+            "separationDeg": 138.861,
+            "lowerAltitudeDeg": 10.153
+          }
+        },
+        {
+          "night": "2026-12-22",
+          "geometric": {
+            "time": "2026-12-23T01:00:00Z",
+            "separationDeg": 138.7854,
+            "firstAltitudeDeg": -22.599,
+            "secondAltitudeDeg": -17.5,
+            "sunAltitudeDeg": 74.24
+          },
+          "visible": {
+            "time": "2026-12-22T13:33:00Z",
+            "separationDeg": 138.8119,
+            "lowerAltitudeDeg": 10.174
+          }
+        },
+        {
+          "night": "2026-12-23",
+          "geometric": {
+            "time": "2026-12-24T01:00:00Z",
+            "separationDeg": 138.7288,
+            "firstAltitudeDeg": -23.452,
+            "secondAltitudeDeg": -16.719,
+            "sunAltitudeDeg": 74.15
+          },
+          "visible": {
+            "time": "2026-12-23T13:29:00Z",
+            "separationDeg": 138.7577,
+            "lowerAltitudeDeg": 10.196
+          }
+        },
+        {
+          "night": "2026-12-24",
+          "geometric": {
+            "time": "2026-12-25T01:00:00Z",
+            "separationDeg": 138.6671,
+            "firstAltitudeDeg": -24.307,
+            "secondAltitudeDeg": -15.939,
+            "sunAltitudeDeg": 74.054
+          },
+          "visible": {
+            "time": "2026-12-24T13:25:00Z",
+            "separationDeg": 138.6986,
+            "lowerAltitudeDeg": 10.014
+          }
+        },
+        {
+          "night": "2026-12-25",
+          "geometric": {
+            "time": "2026-12-26T01:00:00Z",
+            "separationDeg": 138.6005,
+            "firstAltitudeDeg": -25.166,
+            "secondAltitudeDeg": -15.159,
+            "sunAltitudeDeg": 73.952
+          },
+          "visible": {
+            "time": "2026-12-25T13:22:00Z",
+            "separationDeg": 138.6346,
+            "lowerAltitudeDeg": 10.038
+          }
+        },
+        {
+          "night": "2026-12-26",
+          "geometric": {
+            "time": "2026-12-27T01:00:00Z",
+            "separationDeg": 138.529,
+            "firstAltitudeDeg": -26.028,
+            "secondAltitudeDeg": -14.379,
+            "sunAltitudeDeg": 73.846
+          },
+          "visible": {
+            "time": "2026-12-26T13:18:00Z",
+            "separationDeg": 138.5656,
+            "lowerAltitudeDeg": 10.063
+          }
+        },
+        {
+          "night": "2026-12-27",
+          "geometric": {
+            "time": "2026-12-28T01:00:00Z",
+            "separationDeg": 138.4525,
+            "firstAltitudeDeg": -26.893,
+            "secondAltitudeDeg": -13.599,
+            "sunAltitudeDeg": 73.734
+          },
+          "visible": {
+            "time": "2026-12-27T13:13:00Z",
+            "separationDeg": 138.4918,
+            "lowerAltitudeDeg": 10.088
+          }
+        },
+        {
+          "night": "2026-12-28",
+          "geometric": {
+            "time": "2026-12-29T01:00:00Z",
+            "separationDeg": 138.3711,
+            "firstAltitudeDeg": -27.761,
+            "secondAltitudeDeg": -12.821,
+            "sunAltitudeDeg": 73.617
+          },
+          "visible": {
+            "time": "2026-12-28T13:10:00Z",
+            "separationDeg": 138.413,
+            "lowerAltitudeDeg": 10.115
+          }
+        },
+        {
+          "night": "2026-12-29",
+          "geometric": {
+            "time": "2026-12-30T01:00:00Z",
+            "separationDeg": 138.2849,
+            "firstAltitudeDeg": -28.632,
+            "secondAltitudeDeg": -12.042,
+            "sunAltitudeDeg": 73.495
+          },
+          "visible": {
+            "time": "2026-12-29T13:06:00Z",
+            "separationDeg": 138.3294,
+            "lowerAltitudeDeg": 10.142
+          }
+        },
+        {
+          "night": "2026-12-30",
+          "geometric": {
+            "time": "2026-12-31T01:00:00Z",
+            "separationDeg": 138.1938,
+            "firstAltitudeDeg": -29.505,
+            "secondAltitudeDeg": -11.265,
+            "sunAltitudeDeg": 73.368
+          },
+          "visible": {
+            "time": "2026-12-30T13:01:00Z",
+            "separationDeg": 138.241,
+            "lowerAltitudeDeg": 10.171
+          }
+        },
+        {
+          "night": "2026-12-31",
+          "geometric": {
+            "time": "2027-01-01T01:00:00Z",
+            "separationDeg": 138.0979,
+            "firstAltitudeDeg": -30.381,
+            "secondAltitudeDeg": -10.488,
+            "sunAltitudeDeg": 73.237
+          },
+          "visible": {
+            "time": "2026-12-31T12:58:00Z",
+            "separationDeg": 138.1478,
+            "lowerAltitudeDeg": 10.2
+          }
+        },
+        {
+          "night": "2027-01-01",
+          "geometric": {
+            "time": "2027-01-02T01:00:00Z",
+            "separationDeg": 137.9973,
+            "firstAltitudeDeg": -31.259,
+            "secondAltitudeDeg": -9.712,
+            "sunAltitudeDeg": 73.101
+          },
+          "visible": {
+            "time": "2027-01-01T12:55:00Z",
+            "separationDeg": 138.0497,
+            "lowerAltitudeDeg": 10.026
+          }
+        },
+        {
+          "night": "2027-01-02",
+          "geometric": {
+            "time": "2027-01-03T01:00:00Z",
+            "separationDeg": 137.8919,
+            "firstAltitudeDeg": -32.139,
+            "secondAltitudeDeg": -8.938,
+            "sunAltitudeDeg": 72.96
+          },
+          "visible": {
+            "time": "2027-01-02T12:50:00Z",
+            "separationDeg": 137.947,
+            "lowerAltitudeDeg": 10.057
+          }
+        },
+        {
+          "night": "2027-01-03",
+          "geometric": {
+            "time": "2027-01-04T01:00:00Z",
+            "separationDeg": 137.7818,
+            "firstAltitudeDeg": -33.022,
+            "secondAltitudeDeg": -8.164,
+            "sunAltitudeDeg": 72.816
+          },
+          "visible": {
+            "time": "2027-01-03T12:47:00Z",
+            "separationDeg": 137.8395,
+            "lowerAltitudeDeg": 10.09
+          }
+        },
+        {
+          "night": "2027-01-04",
+          "geometric": {
+            "time": "2027-01-05T01:00:00Z",
+            "separationDeg": 137.667,
+            "firstAltitudeDeg": -33.907,
+            "secondAltitudeDeg": -7.391,
+            "sunAltitudeDeg": 72.667
+          },
+          "visible": {
+            "time": "2027-01-04T12:42:00Z",
+            "separationDeg": 137.7275,
+            "lowerAltitudeDeg": 10.123
+          }
+        },
+        {
+          "night": "2027-01-05",
+          "geometric": {
+            "time": "2027-01-06T01:00:00Z",
+            "separationDeg": 137.5477,
+            "firstAltitudeDeg": -34.793,
+            "secondAltitudeDeg": -6.62,
+            "sunAltitudeDeg": 72.514
+          },
+          "visible": {
+            "time": "2027-01-05T12:38:00Z",
+            "separationDeg": 137.6108,
+            "lowerAltitudeDeg": 10.157
+          }
+        },
+        {
+          "night": "2027-01-06",
+          "geometric": {
+            "time": "2027-01-07T01:00:00Z",
+            "separationDeg": 137.4238,
+            "firstAltitudeDeg": -35.681,
+            "secondAltitudeDeg": -5.849,
+            "sunAltitudeDeg": 72.357
+          },
+          "visible": {
+            "time": "2027-01-06T12:35:00Z",
+            "separationDeg": 137.4896,
+            "lowerAltitudeDeg": 10.192
+          }
+        },
+        {
+          "night": "2027-01-07",
+          "geometric": {
+            "time": "2027-01-08T01:00:00Z",
+            "separationDeg": 137.2955,
+            "firstAltitudeDeg": -36.571,
+            "secondAltitudeDeg": -5.08,
+            "sunAltitudeDeg": 72.196
+          },
+          "visible": {
+            "time": "2027-01-07T12:32:00Z",
+            "separationDeg": 137.3639,
+            "lowerAltitudeDeg": 10.023
+          }
+        },
+        {
+          "night": "2027-01-08",
+          "geometric": {
+            "time": "2027-01-09T01:00:00Z",
+            "separationDeg": 137.1628,
+            "firstAltitudeDeg": -37.462,
+            "secondAltitudeDeg": -4.313,
+            "sunAltitudeDeg": 72.031
+          },
+          "visible": {
+            "time": "2027-01-08T12:27:00Z",
+            "separationDeg": 137.2338,
+            "lowerAltitudeDeg": 10.06
+          }
+        },
+        {
+          "night": "2027-01-09",
+          "geometric": {
+            "time": "2027-01-10T01:00:00Z",
+            "separationDeg": 137.0257,
+            "firstAltitudeDeg": -38.354,
+            "secondAltitudeDeg": -3.547,
+            "sunAltitudeDeg": 71.863
+          },
+          "visible": {
+            "time": "2027-01-09T12:24:00Z",
+            "separationDeg": 137.0993,
+            "lowerAltitudeDeg": 10.097
+          }
+        },
+        {
+          "night": "2027-01-10",
+          "geometric": {
+            "time": "2027-01-11T01:00:00Z",
+            "separationDeg": 136.8843,
+            "firstAltitudeDeg": -39.247,
+            "secondAltitudeDeg": -2.782,
+            "sunAltitudeDeg": 71.691
+          },
+          "visible": {
+            "time": "2027-01-10T12:19:00Z",
+            "separationDeg": 136.9606,
+            "lowerAltitudeDeg": 10.136
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,10 @@ import { SKY_CHECKED_PARAM } from "@/lib/sky-checks/redirect";
 import { parseTargetParam } from "@/lib/targets";
 import { isGearId } from "@/lib/tonight/gear-choice";
 
-/** The six Tonight pages, matched exactly: `/tonight/all` (a 301) and any other `/tonight/*` path are not pages. */
+/**
+ * The seven Tonight pages, matched exactly: `/tonight/all` (a 301) and any other `/tonight/*` path are not pages.
+ * `listCopies` orders the `/offline` list by this array, so a page's position here is its place there: new pages go last.
+ */
 export const TONIGHT_PAGES = [
   "/tonight",
   "/tonight/targets",
@@ -15,6 +18,7 @@ export const TONIGHT_PAGES = [
   "/tonight/moon",
   "/tonight/planets",
   "/tonight/nights",
+  "/tonight/events",
 ] as const;
 
 export type TonightPage = (typeof TONIGHT_PAGES)[number];
@@ -157,7 +161,7 @@ function siteIdOf(url: URL): string | undefined {
 }
 
 /**
- * The stored page a URL is, with its site and target: the six Tonight pages (`target: null`) and the finder chart,
+ * The stored page a URL is, with its site and target: the seven Tonight pages (`target: null`) and the finder chart,
  * the latter only with an `?object=` that `parseTargetParam` accepts, as its canonical key (`?object=31` is `M31`, so
  * a link with a bare Messier number finds the copy stored under the island's `M31`; review F14b). Anything else is
  * `undefined`: neither served from the store nor stored.
@@ -496,7 +500,7 @@ export interface ListedCopy {
 
 const LISTED_PAGES: readonly StoredPage[] = [...TONIGHT_PAGES, FINDER_PAGE];
 
-/** The copies the `/offline` page lists: per site the six pages, then one entry per stored chart, ordered by name. */
+/** The copies the `/offline` page lists: per site the seven pages, then one entry per stored chart, ordered by name. */
 export function listCopies(index: CopyIndex, now: Date): ListedCopy[] {
   const { index: live } = expire(index, now);
   const sites = [...new Set(live.copies.map((copy) => copy.siteId))];

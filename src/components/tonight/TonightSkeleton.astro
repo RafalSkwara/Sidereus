@@ -1,7 +1,7 @@
 ---
 // Stand-in for TonightContent while its server island loads: the same sky (TonightSky, with the live sky's panorama
 // strip and slider row reserved, interactive-sky) with bars where the date, the display-size headline and its reason
-// go, the two gear cards, then five ruled rows standing for the dashboard's tiles (TonightTiles), so
+// go, the two gear cards, then six ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
 // non-breaking space, so they have its line height.
 import {
@@ -79,6 +79,12 @@ const tile = TILE_ROW_CLASS;
         <div class:list={[bar, "mt-2 w-1/2 text-label"]}>&nbsp;</div>
         <!-- The tile's caption ("Each at the time it stands highest. N targets tonight."). -->
         <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
+      </div>
+
+      <!-- The sky events tile (sky-events), straight after the targets: its heading and one line. -->
+      <div class:list={[tile]}>
+        <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-3 w-3/4 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>

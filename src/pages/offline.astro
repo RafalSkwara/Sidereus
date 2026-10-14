@@ -23,6 +23,7 @@ const titles = {
   "/tonight/moon": m.tonight.summary.moon,
   "/tonight/planets": m.tonight.summary.planets,
   "/tonight/nights": m.tonight.summary.nights({ count: String(OUTLOOK_NIGHTS) }),
+  "/tonight/events": m.tonight.summary.events,
   // A stored finder chart's title has its target in it ("Finder chart · M31"): the page's own title with a placeholder
   // the script fills with the copy's target name.
   "/tonight/finder": m.tonight.finder.title({ target: TARGET_PLACEHOLDER }),

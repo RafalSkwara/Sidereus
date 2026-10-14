@@ -29,6 +29,9 @@ import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import DeleteButton from "@/components/gear/DeleteButton";
 import GearCard from "@/components/tonight/GearCard.astro";
+import EventsTile from "@/components/tonight/EventsTile.astro";
+import SkyEventList from "@/components/tonight/SkyEventList.astro";
+import { eventSamples, SAMPLE_EVENTS_NIGHT } from "@/components/design/event-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
@@ -456,6 +459,10 @@ const sampleNights = (clear: (number | null)[]): TonightNight[] =>
       : { ...base, kind: "outlook", cloudText: null };
   });
 
+// The sky events' specimens (sky-events): hand-made lines for the tile and the verdict, and the engine's real list for
+// a fixed site and night.
+const eventSpecimens = eventSamples(locale);
+
 const summaryView: TonightView = {
   siteId: "sample-site",
   telescopeId: "sample-telescope",
@@ -515,6 +522,7 @@ const summaryView: TonightView = {
   },
   skyView: null,
   sessionPlan: null,
+  skyEvents: eventSpecimens.tiles[2].events,
 };
 // One band only (the Moon band is left out so its disc's clip id stays unique on the page).
 const targetsOnlyView: TonightView = {
@@ -1576,6 +1584,70 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
+          <!-- VerdictCard with the sky event line -->
+          <section class:list={block} aria-labelledby="c-verdict-event">
+            <h3 id="c-verdict-event" class:list={blockTitle}>
+              VerdictCard: the sky event line
+            </h3>
+            <p class:list={blockNote}>
+              On a night with a notable visible sky event one muted, plain-text line names it under the reason (
+              <code>data-verdict-event</code>): no link (the events tile carries it), no reserved room, so the verdict
+              grows by one line on those nights only. It names one event plus “+1 more”, and a solar eclipse reads
+              “eclipse glasses only”. The live sky specimen shows it over the panorama.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>without the line · the usual night (default)</p>
+                <div class="overflow-hidden rounded-lg">
+                  <TonightSky night verdict>
+                    <VerdictCard {...skies[0].props} headingId="verdict-heading-no-event" />
+                  </TonightSky>
+                </div>
+              </div>
+              {eventSpecimens.verdictLines.map((sample, i) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>with the line · {sample.label}</p>
+                  <div class="overflow-hidden rounded-lg">
+                    <TonightSky night verdict>
+                      <VerdictCard
+                        {...skies[0].props}
+                        event={sample.line}
+                        headingId={`verdict-heading-event-${String(i)}`}
+                      />
+                    </TonightSky>
+                  </div>
+                </div>
+              ))}
+              {panoramas.length > 1 && (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>with the line · over the live sky (deep night)</p>
+                  <div class="overflow-hidden rounded-lg">
+                    <TonightSkyView view={panoramas[panoramas.length - 1].view} locale={locale} client:load>
+                      <VerdictCard
+                        level={panoramaView.verdict.level}
+                        dateLabel={panoramaView.dateLabel}
+                        headline={panoramaView.headline}
+                        text={panoramaView.verdictText}
+                        darkWindow={panoramaView.darkWindow}
+                        zoneLabel={panoramaView.zoneLabel}
+                        withSlider
+                        forecastStatus={panoramaView.forecastStatus}
+                        explanation={panoramaView.explanation}
+                        event={eventSpecimens.verdictLines[1].line}
+                        headingId="verdict-heading-event-panorama"
+                      />
+                    </TonightSkyView>
+                  </div>
+                </div>
+              )}
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, disabled — N/A (plain text, not interactive) · error — N/A (a failed events block
+              leaves the line out) · empty — the first specimen, no line · loading — see TonightSkeleton (it keeps
+              today's height; the swap grows by one line on an event night, which the owner accepts)
+            </p>
+          </section>
+
           <!-- TonightSky quiet -->
           <section class:list={block} aria-labelledby="c-tonight-sky-quiet">
             <h3 id="c-tonight-sky-quiet" class:list={blockTitle}>
@@ -1948,7 +2020,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <div class:list={grid}>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · live (targets, Moon, planets, nights)</p>
+                <p class:list={stateLabel}>default · live (targets, sky events, Moon, planets, nights)</p>
                 <TonightTiles view={summaryView} />
               </div>
               <div class:list={cell}>
@@ -1975,6 +2047,89 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               active — N/A (no pressed style: a tile navigates to its page) · disabled — N/A (a link is never disabled)
               · error — N/A (no view, no tiles) · loading — see TonightSkeleton
+            </p>
+          </section>
+
+          <!-- EventsTile -->
+          <section class:list={block} aria-labelledby="c-events-tile">
+            <h3 id="c-events-tile" class:list={blockTitle}>
+              EventsTile (the dashboard's second tile)
+            </h3>
+            <p class:list={blockNote}>
+              Always shown, straight after “Point here first”: the next notable visible event and its night, relative to
+              the selected night, or the fact that there is none. The tile also sits second in TonightTiles above.
+            </p>
+            <div class:list={grid}>
+              {eventSpecimens.tiles.map((tile, i) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    {i === 0 ? "default · live · " : ""}
+                    {tile.label}
+                  </p>
+                  <EventsTile events={tile.events} headingId={`design-events-tile-${String(i)}`} />
+                </div>
+              ))}
+              <div class:list={cell}>
+                <p class:list={stateLabel}>hover · specimen</p>
+                <div class:list={tileHover} inert>
+                  <EventsTile events={eventSpecimens.tiles[2].events} headingId="design-events-tile-hover" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>focus-visible · specimen</p>
+                <div class:list={tileFocus} inert>
+                  <EventsTile events={eventSpecimens.tiles[2].events} headingId="design-events-tile-focus" />
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              active — N/A (a tile navigates) · disabled — N/A (a link is never disabled) · error — the last specimen
+              (the events could not be worked out) · empty — “none in the window” · loading — see TonightSkeleton
+            </p>
+          </section>
+
+          <!-- SkyEventList -->
+          <section class:list={block} aria-labelledby="c-sky-event-list">
+            <h3 id="c-sky-event-list" class:list={blockTitle}>
+              SkyEventList (/tonight/events)
+            </h3>
+            <p class:list={blockNote}>
+              Pinned to the 30 nights from {SAMPLE_EVENTS_NIGHT} in Warsaw (the engine's real answer, so no clock): the
+              partial solar eclipse of 2027-08-02 with its eye-safety line, the visible rows and the not-visible ones
+              (muted, with the reason). A visible row has the “Visible” mark and a semibold name; a not-visible row has
+              the “Not visible” mark and a regular, muted name, so red mode tells them apart by mark and weight.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · the window with the visible solar eclipse</p>
+                <div class="rounded-lg border border-border p-4">
+                  <SkyEventList
+                    events={eventSpecimens.list.events}
+                    windowNights={eventSpecimens.list.windowNights}
+                    idBase="design-events-night"
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>not visible · the same eclipse from 10° N, 47° W (the safety line stays)</p>
+                <div class="rounded-lg border border-border p-4">
+                  <SkyEventList
+                    events={eventSpecimens.listNotVisibleEclipse}
+                    windowNights={eventSpecimens.list.windowNights}
+                    idBase="design-events-night-hidden"
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>empty · no events in the window</p>
+                <div class="rounded-lg border border-border p-4">
+                  <SkyEventList events={[]} windowNights={30} idBase="design-events-night-empty" />
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, disabled — N/A (rows are plain text) · error — EventsPageContent says the events are
+              unavailable instead of drawing · loading — see TonightPageSkeleton
             </p>
           </section>
 

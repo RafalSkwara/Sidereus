@@ -4,6 +4,7 @@ import { findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import {
+  addDays,
   darknessThresholdDegForBortle,
   darkWindow,
   ICE_GIANT_MIN_APERTURE_MM,
@@ -33,6 +34,7 @@ import {
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
+import { eventsTileLine, eventsVerdictLine } from "./sky-events";
 import {
   EYEPIECES,
   hourlyForecast,
@@ -53,6 +55,7 @@ const planetRanking = vi.hoisted(() => ({ throws: false }));
 const moonTargeting = vi.hoisted(() => ({ throws: false }));
 const skyFraming = vi.hoisted(() => ({ throws: false }));
 const planetTracking = vi.hoisted(() => ({ throws: false }));
+const eventSearching = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -76,6 +79,13 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.skyFrames(...args);
     },
+    skyEvents: (...args: Parameters<typeof actual.skyEvents>) => {
+      if (eventSearching.throws) {
+        // A message that carries a coordinate, which must never reach the log.
+        throw new RangeError("sky events failed at 52.23");
+      }
+      return actual.skyEvents(...args);
+    },
     planetTracks: (...args: Parameters<typeof actual.planetTracks>) => {
       if (planetTracking.throws) {
         // A message that carries a coordinate, which must never reach the log.
@@ -91,6 +101,7 @@ afterEach(() => {
   moonTargeting.throws = false;
   skyFraming.throws = false;
   planetTracking.throws = false;
+  eventSearching.throws = false;
   vi.restoreAllMocks();
 });
 
@@ -1738,6 +1749,273 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     );
     expect(plan.sunsetText).toBeNull();
     expect(plan.sunriseText).toBeNull();
+  });
+});
+
+describe("buildTonight's sky events (M-3 S-07)", () => {
+  function build(
+    overrides: Partial<Parameters<typeof buildTonight>[0]> = {},
+    options: Parameters<typeof buildTonight>[2] = { withSkyEvents: true },
+    locale: "en" | "pl" = "en",
+  ) {
+    return buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2027-07-25T00:00:00Z", 5)),
+        now: new Date("2027-07-25T18:00:00Z"),
+        ...overrides,
+      },
+      locale,
+      options,
+    );
+  }
+
+  function eventsOf(view: TonightView): NonNullable<TonightView["skyEvents"]> {
+    if (view.skyEvents === null) {
+      throw new Error("expected sky events");
+    }
+    return view.skyEvents;
+  }
+
+  it("is null without the option, and builds the block only with it", () => {
+    expect(build({}, {}).skyEvents).toBeNull();
+    expect(eventsOf(build()).windowNights).toBe(30);
+  });
+
+  it("words every event of the window in time order, with the 2027-08-02 solar eclipse and its safety line", () => {
+    const { events } = eventsOf(build());
+    expect(events.length).toBeGreaterThan(0);
+    expect(events.map((event) => event.night)).toEqual([...events.map((event) => event.night)].sort());
+    const eclipse = events.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.name).toBe("Partial solar eclipse");
+    expect(eclipse?.safety).toBe(true);
+    expect(eclipse?.visible).toBe(true);
+    expect(eclipse?.notable).toBe(true);
+    expect(eclipse?.nightLabel).toMatch(/August 2027/);
+    // The time is the site's wall clock (09:22 UTC is 11:22 CEST), never the browser's or UTC's.
+    expect(eclipse?.when).toBe("Mon 2 Aug, 11:22");
+    expect(eclipse?.visibilityText).toMatch(/^Best \d\d:\d\d · [NESW]+, \d+°$/);
+    // Only a solar eclipse carries the safety line.
+    expect(events.filter((event) => event.safety).every((event) => event.kind === "solar-eclipse")).toBe(true);
+  });
+
+  it("keeps the safety line on a solar eclipse that is not visible from the site", () => {
+    // 10° N, 47° W: the 2027-08-02 eclipse ends with the Sun 1.9° up, under the eclipse bar (engine events.test.ts).
+    const site: SiteRecord = { ...WARSAW, latitudeDeg: 10, longitudeDeg: -47, timeZone: "America/Belem" };
+    const eclipse = eventsOf(build({ site })).events.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.visible).toBe(false);
+    expect(eclipse?.safety).toBe(true);
+  });
+
+  it("says why a not-visible event cannot be seen, never inviting anyone out for it", () => {
+    const { events } = eventsOf(build());
+    const hidden = events.filter((event) => !event.visible);
+    for (const event of hidden) {
+      expect(Object.values(en.tonight.events.reason)).toContain(event.visibilityText);
+      expect(event.notable).toBe(false);
+    }
+    for (const event of events.filter((e) => e.visible)) {
+      expect(event.visibilityText).not.toBe("");
+      expect(Object.values(en.tonight.events.reason)).not.toContain(event.visibilityText);
+    }
+  });
+
+  it("puts the notable visible events of the selected night under `tonight` and the first one from it on under `next`", () => {
+    const window = eventsOf(build());
+    const eclipse = window.events.find((event) => event.kind === "solar-eclipse");
+    if (eclipse === undefined) {
+      throw new Error("expected the 2027-08-02 solar eclipse in the window");
+    }
+    expect(window.tonight.every((event) => event.notable && event.night === window.events[0].night)).toBe(true);
+    expect(window.next).not.toBeNull();
+    expect(window.next?.notable).toBe(true);
+    expect(window.events.find((event) => event.notable)).toEqual(window.next);
+    // On the eclipse's own night it is tonight's event, and the first notable one.
+    const onNight = eventsOf(build({ now: new Date(`${eclipse.night}T18:00:00Z`) }));
+    expect(onNight.tonight.map((event) => event.name)).toContain(eclipse.name);
+    expect(onNight.tonight.every((event) => event.night === eclipse.night && event.notable)).toBe(true);
+    // The night after, it is past: nothing of it is tonight's.
+    const after = eventsOf(build({ now: new Date(`${addDays(eclipse.night, 1)}T18:00:00Z`) }));
+    expect(after.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
+  });
+
+  it("lists a penumbral lunar eclipse but never makes it notable (2027-02-20)", () => {
+    const now = new Date("2027-02-12T18:00:00Z");
+    const block = eventsOf(build({ now, forecast: result(uniformForecast("2027-02-12T00:00:00Z", 5), false, now) }));
+    const penumbral = block.events.find((event) => event.name === en.tonight.events.eclipse.lunar.penumbral);
+    expect(penumbral).toBeDefined();
+    expect(penumbral?.notable).toBe(false);
+    expect(penumbral?.notes).toContain(en.tonight.events.eclipse.barelyNoticeable);
+    expect(block.tonight).not.toContain(penumbral);
+    expect(block.next).not.toEqual(penumbral);
+  });
+
+  it("words a meteor peak as a night, never a minute", () => {
+    const now = new Date("2026-08-05T18:00:00Z");
+    const block = eventsOf(build({ now, forecast: result(uniformForecast("2026-08-05T00:00:00Z", 5), false, now) }));
+    const perseids = block.events.find((event) => event.kind === "meteor-shower");
+    expect(perseids?.name).toBe("Perseids peak");
+    expect(perseids?.when).toBe(en.tonight.events.showerWhen);
+    expect(perseids?.when).not.toMatch(/\d:\d\d/);
+  });
+
+  it("names a shower in Polish as 'Maksimum Perseidów', and 'maksimum Perseidów' inside the verdict line", () => {
+    const now = new Date("2026-08-05T18:00:00Z");
+    const forecast = result(uniformForecast("2026-08-05T00:00:00Z", 5), false, now);
+    const perseids = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl")).events.find(
+      (event) => event.kind === "meteor-shower",
+    );
+    expect(perseids?.name).toBe("Maksimum Perseidów");
+    expect(perseids?.lineName).toBe("Maksimum Perseidów");
+    expect(perseids?.verdictName).toBe("maksimum Perseidów");
+  });
+
+  it("reads 'Tomorrow, 11:22' on the night before the 2027-08-02 solar eclipse at Warsaw, never 'Tonight' (owner, 2026-10-14)", () => {
+    // The eclipse peaks at 09:22 UTC (11:22 CEST) on 2 August, after the midnight of the night of 1 August.
+    const now = new Date("2027-08-01T18:00:00Z");
+    const forecast = result(uniformForecast("2027-08-01T00:00:00Z", 5), false, now);
+    const en = eventsOf(build({ now, forecast }));
+    const eclipse = en.tonight.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.night).toBe("2027-08-01");
+    expect(eclipse?.dayWord).toBe("tomorrow");
+    expect(eclipse?.at).toBe("11:22");
+    expect(en.tonight[0]).toEqual(eclipse);
+    expect(eventsVerdictLine(en, "en")).toMatch(
+      /^Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
+    );
+    const pl = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl"));
+    expect(eventsVerdictLine(pl, "pl")).toMatch(
+      /^Jutro, 11:22: częściowe zaćmienie Słońca, tylko przez okulary do zaćmień( \+\d+ więcej)?$/,
+    );
+    // Every other event keeps no day word and no time.
+    expect(
+      en.events
+        .filter((event) => event.kind !== "solar-eclipse")
+        .every((event) => event.dayWord === null && event.at === null),
+    ).toBe(true);
+  });
+
+  it("keeps the 2027-08-02 eclipse in view on its own morning, after dawn, until its partial phase ends (owner decision A, 2026-10-14)", () => {
+    // 07:00 CEST on 2 August: civil dawn has passed, so the night shown is 08-02, whose window starts at noon.
+    const morning = new Date("2027-08-02T05:00:00Z");
+    const view = build({ now: morning, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, morning) });
+    expect(view.date).toBe("2027-08-02");
+    const block = eventsOf(view);
+    const eclipse = block.events.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.night).toBe("2027-08-01");
+    expect(eclipse?.dayWord).toBe("today");
+    expect(block.tonight[0]).toEqual(eclipse);
+    expect(block.next).toEqual(eclipse);
+    expect(eventsVerdictLine(block, "en")).toMatch(
+      /^Today, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
+    );
+    expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · today, 11:22 · eclipse glasses only");
+
+    // 13:00 CEST: the partial phase ended at 12:19, so the eclipse is gone from the page, the tile and the line.
+    const noon = new Date("2027-08-02T11:00:00Z");
+    const later = eventsOf(
+      build({ now: noon, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, noon) }),
+    );
+    expect(later.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
+    expect(later.tonight.some((event) => event.kind === "solar-eclipse")).toBe(false);
+    expect(later.next?.kind).not.toBe("solar-eclipse");
+  });
+
+  it("builds the next night's copy against that night's sunset, so a morning eclipse already over is not in it", () => {
+    // Evening of 2027-08-01: the next night is 08-02, judged at its sunset, when the 08-02 morning eclipse is long over.
+    const now = new Date("2027-08-01T18:00:00Z");
+    const next = eventsOf(
+      build(
+        { now, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, now) },
+        { withSkyEvents: true, night: "next" },
+      ),
+    );
+    expect(next.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
+  });
+
+  it("counts a meteor shower on its best night, not its peak night, for `tonight` and `next` (2027-07-30 at Reykjavik)", () => {
+    // 64° N in late July: the Southern Delta Aquariids' radiant is too low in the peak night's short span (2027-07-30)
+    // and clears the minimum the night after (07-31), so the night to go out is 07-31 (found with the engine).
+    const REYKJAVIK: SiteRecord = {
+      ...WARSAW,
+      latitudeDeg: 64,
+      longitudeDeg: -22,
+      timeZone: "Atlantic/Reykjavik",
+    };
+    const at = (night: string) => {
+      const now = new Date(`${night}T18:00:00Z`);
+      return eventsOf(
+        build({ site: REYKJAVIK, now, forecast: result(uniformForecast(`${night}T00:00:00Z`, 5), false, now) }),
+      );
+    };
+    const showerName = en.tonight.events.showerName.southernDeltaAquariids;
+    const isShower = (event: { name: string }) => event.name === showerName;
+
+    // The week before: the row is grouped under the peak night, and says go out the night after.
+    const early = at("2027-07-25");
+    const row = early.events.find(isShower);
+    expect(row?.name).toBe(showerName);
+    expect(row?.night).toBe("2027-07-30");
+    expect(row?.goNight).toBe("2027-07-31");
+    expect(row?.visibilityText).toMatch(/^Best the night after: /);
+
+    // The peak night: not tonight's event (the radiant is not up in the dark), but the next one, tomorrow night.
+    const peakNight = at("2027-07-30");
+    expect(peakNight.tonight.filter(isShower)).toEqual([]);
+    const tomorrow = peakNight.events.find(isShower);
+    expect(tomorrow?.nightWhen).toBe(en.tonight.events.when.tomorrow);
+    expect(peakNight.next === null || peakNight.next.goNight >= "2027-07-30").toBe(true);
+
+    // The best night: tonight's event, although its peak night is behind it.
+    const bestNight = at("2027-07-31");
+    const tonight = bestNight.tonight.find(isShower);
+    expect(tonight?.night).toBe("2027-07-30");
+    expect(tonight?.goNight).toBe("2027-07-31");
+    expect(tonight?.nightWhen).toBe(en.tonight.events.when.tonight);
+    expect(bestNight.next?.goNight).toBe("2027-07-31");
+
+    // A night later it is past.
+    expect(at("2027-08-01").events.some(isShower)).toBe(false);
+  });
+
+  it("words the events in Polish in the site's zone", () => {
+    const pl = eventsOf(build({}, { withSkyEvents: true }, "pl"));
+    const eclipse = pl.events.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.name).toBe("Częściowe zaćmienie Słońca");
+    expect(eclipse?.kindLabel).toBe("Zaćmienie Słońca");
+    expect(eclipse?.nightLabel).toMatch(/sierpnia 2027/);
+  });
+
+  it("judges events over the site's own dark window (the Bortle threshold), like the rest of Tonight", () => {
+    // Helsinki has no -18° night in midsummer: the events there are judged on the short-night span.
+    const now = new Date("2026-06-20T18:00:00Z");
+    const view = build({
+      site: HELSINKI_DARK,
+      now,
+      forecast: result(uniformForecast("2026-06-20T00:00:00Z", 5), false, now),
+    });
+    expect(view.darkWindow.kind).toBe("none");
+    expect(eventsOf(view).events.every((event) => event.visible || event.visibilityText !== "")).toBe(true);
+  });
+
+  it("is deterministic and leaves the rest of the view untouched", () => {
+    const plain = build({}, {});
+    const withEvents = build();
+    expect(withEvents).toEqual({ ...plain, skyEvents: withEvents.skyEvents });
+    expect(build()).toEqual(withEvents);
+  });
+
+  it("drops only the events when the search fails, logging a fixed line and the error's name, never its message", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    eventSearching.throws = true;
+    const view = build();
+    expect(view.skyEvents).toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledWith("buildTonight: the sky events failed", "RangeError");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 });
 

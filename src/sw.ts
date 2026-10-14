@@ -598,7 +598,7 @@ registerRoute(
   },
 );
 
-// Stored-page navigations: the six Tonight pages exactly, and the finder chart with a valid `?object=` (never
+// Stored-page navigations: the seven Tonight pages exactly, and the finder chart with a valid `?object=` (never
 // redirects, so a redirect here can only be the sign-in bounce). A finder URL with no valid object is none of these.
 registerRoute(
   ({ request, url, sameOrigin }: RouteMatchCallbackOptions) =>

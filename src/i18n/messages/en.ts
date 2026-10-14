@@ -7,8 +7,11 @@
  * Messages that `?error=` or a zod issue carries are string leaves, addressed by dotted key
  * ("errors.site.latitudeRange"), and must never contain a submitted value.
  *
- * Island-safe: no imports.
+ * Island-safe: no runtime imports (the `import type`s below are erased).
  */
+
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
+import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
 
 /** One form per `Intl.PluralRules` category; `few` and `many` are only needed where a locale uses them. */
 export interface PluralForms<T = string> {
@@ -870,6 +873,175 @@ export const en = {
       starData: "Star data:",
       hipparcosCredit: "Credit: ESA",
       weather: "Weather:",
+      /** Sky events (S-07): the meteor showers' peak nights come from NASA, the radiants from the IAU MDC. */
+      meteorData: "Meteor showers:",
+      nasaFor: "peak nights",
+      mdcFor: "radiants",
+    },
+
+    /**
+     * Sky events (M-3 S-07): the eclipses, greatest elongations, oppositions, close pairings and meteor-shower
+     * peaks of the next nights, each with whether it can be seen from the site. A not-visible event is never worded
+     * as something to go out for. Times arrive pre-formatted in the site's time zone; numbers are pre-formatted.
+     */
+    events: {
+      /** The empty state; `count` is the window's nights (`EVENT_WINDOW_NIGHTS`), pre-formatted. */
+      empty: (p: { count: string }) => `No sky events in the next ${p.count} nights`,
+      /** A night's heading: the evening the night began (an event after midnight belongs to it), `date` as "Saturday, 10 October 2026". */
+      nightOf: (p: { date: string }) => `Night of ${p.date}`,
+      /** Each kind of event, named under the row's name. */
+      kind: {
+        "lunar-eclipse": "Lunar eclipse",
+        "solar-eclipse": "Solar eclipse",
+        elongation: "Greatest elongation",
+        opposition: "Opposition",
+        pairing: "Close pairing",
+        "meteor-shower": "Meteor shower",
+      },
+      eclipse: {
+        lunar: {
+          penumbral: "Penumbral lunar eclipse",
+          partial: "Partial lunar eclipse",
+          total: "Total lunar eclipse",
+        },
+        solar: {
+          partial: "Partial solar eclipse",
+          annular: "Annular solar eclipse",
+          total: "Total solar eclipse",
+        },
+        /** The names inside the verdict's sentence ("Today, 11:22: …"), where Polish needs its own, lowercase form. */
+        lunarInLine: {
+          penumbral: "Penumbral lunar eclipse",
+          partial: "Partial lunar eclipse",
+          total: "Total lunar eclipse",
+        },
+        solarInLine: {
+          partial: "Partial solar eclipse",
+          annular: "Annular solar eclipse",
+          total: "Total solar eclipse",
+        },
+        /** A penumbral lunar eclipse is listed but never put on the dashboard. */
+        barelyNoticeable: "Barely noticeable: the Moon only dims a little",
+        /** `percent` is the share of the Sun's disc the Moon covers at the site's peak. */
+        sunCovered: (p: { percent: string }) => `Moon covers ${p.percent}% of the Sun`,
+        /** The phases' local times, `start` and `end` as "HH:mm". */
+        penumbralPhase: (p: { start: string; end: string }) => `Penumbral phase ${p.start}–${p.end}`,
+        partialPhase: (p: { start: string; end: string }) => `Partial phase ${p.start}–${p.end}`,
+        totalPhase: (p: { start: string; end: string }) => `Totality ${p.start}–${p.end}`,
+        annularPhase: (p: { start: string; end: string }) => `Ring phase ${p.start}–${p.end}`,
+      },
+      /**
+       * An elongation and an opposition, by body: the title (the row and the tile) and the form inside the verdict's
+       * sentence. Per-key records, not a template, so Polish can decline each planet ("Opozycja Marsa").
+       */
+      elongationName: {
+        mercury: "Mercury at greatest elongation",
+        venus: "Venus at greatest elongation",
+      } satisfies Record<ElongationBody, string>,
+      elongationNameInLine: {
+        mercury: "Mercury at greatest elongation",
+        venus: "Venus at greatest elongation",
+      } satisfies Record<ElongationBody, string>,
+      /** `deg` the elongation, `sky` the apparition. */
+      elongationDetail: (p: { deg: string; sky: string }) => `${p.deg}° from the Sun, ${p.sky}`,
+      apparition: { morning: "morning sky", evening: "evening sky" },
+      oppositionName: {
+        mars: "Mars at opposition",
+        jupiter: "Jupiter at opposition",
+        saturn: "Saturn at opposition",
+      } satisfies Record<OppositionBody, string>,
+      oppositionNameInLine: {
+        mars: "Mars at opposition",
+        jupiter: "Jupiter at opposition",
+        saturn: "Saturn at opposition",
+      } satisfies Record<OppositionBody, string>,
+      /** `first` and `second` are the two bodies' names; `deg` the separation. */
+      pairingName: (p: { first: string; second: string }) => `${p.first} and ${p.second}`,
+      pairingDetail: (p: { deg: string }) => `${p.deg}° apart`,
+      /**
+       * A meteor peak, by shower key: a night, never a minute (the maximum is known to about a day). `showerName` is
+       * the row's title and the tile's line; `showerNameInLine` sits inside the verdict's sentence ("Tonight: …"), where
+       * Polish needs its own form (owner, 2026-10-14: "Dziś: maksimum Orionidów").
+       */
+      showerName: {
+        quadrantids: "Quadrantids peak",
+        lyrids: "Lyrids peak",
+        etaAquariids: "Eta Aquariids peak",
+        southernDeltaAquariids: "Southern Delta Aquariids peak",
+        perseids: "Perseids peak",
+        orionids: "Orionids peak",
+        leonids: "Leonids peak",
+        geminids: "Geminids peak",
+      } satisfies Record<ShowerKey, string>,
+      showerNameInLine: {
+        quadrantids: "Quadrantids peak",
+        lyrids: "Lyrids peak",
+        etaAquariids: "Eta Aquariids peak",
+        southernDeltaAquariids: "Southern Delta Aquariids peak",
+        perseids: "Perseids peak",
+        orionids: "Orionids peak",
+        leonids: "Leonids peak",
+        geminids: "Geminids peak",
+      } satisfies Record<ShowerKey, string>,
+      showerWhen: "Peak night",
+      /** The visible mark and its opposite, beside the name. */
+      visible: "Visible",
+      notVisible: "Not visible",
+      /** Why an event cannot be seen from the site. */
+      reason: {
+        "below-horizon": "Below your horizon",
+        daylight: "During daylight",
+        "too-low": "Too low",
+      },
+      /** The best time to look, `time` as "HH:mm" or with its day, `direction` as "SW, 45°". */
+      best: (p: { time: string; direction: string }) => `Best ${p.time} · ${p.direction}`,
+      /** A meteor shower's radiant, highest at `time`. */
+      bestRadiant: (p: { time: string; direction: string }) => `Radiant highest ${p.time} · ${p.direction}`,
+      /** The peak is in daylight (or the radiant is better a night away): watch the night before or after. */
+      bestNightBefore: (p: { time: string; direction: string }) =>
+        `Best the night before: radiant highest ${p.time} · ${p.direction}`,
+      bestNightAfter: (p: { time: string; direction: string }) =>
+        `Best the night after: radiant highest ${p.time} · ${p.direction}`,
+      /** An eclipse that is up for only part of it. */
+      partly: "Only part of it is visible from here",
+      /** An eclipse between 2° and 10° up. */
+      lowHorizon: "Low, needs an open horizon",
+      /** A night with no full darkness: judged over the whole twilight span. */
+      shortNight: "Short night: the sky never gets fully dark",
+      /** A bright Moon is up during the dark window (shown on a visible shower only). */
+      brightMoon: "Bright Moon up: only the brighter meteors show",
+      /**
+       * When to go, for the dashboard tile: relative to the selected night, `span` as "12/13 Aug" (the evening and the
+       * morning it ends in).
+       */
+      when: {
+        tonight: "tonight",
+        tomorrow: "tomorrow night",
+        night: (p: { span: string }) => `night of ${p.span}`,
+        /** A solar eclipse is a daytime event: the tile names its day and time, `time` as "HH:mm" (lowercase, like its siblings). */
+        todayAt: (p: { time: string }) => `today, ${p.time}`,
+        tomorrowAt: (p: { time: string }) => `tomorrow, ${p.time}`,
+      },
+      /** A visible solar eclipse on the tile and the verdict line is never "go out and look". */
+      glassesOnly: "eclipse glasses only",
+      withGlasses: (p: { name: string }) => `${p.name}, eclipse glasses only`,
+      /** The verdict's muted line on an event night; `count` is how many more events the night holds, pre-formatted. */
+      verdictLine: (p: { name: string }) => `Tonight: ${p.name}`,
+      verdictLineMore: (p: { name: string; count: string }) => `Tonight: ${p.name} +${p.count} more`,
+      /**
+       * The verdict's line for a solar eclipse, which is a daytime event and stays until its partial phase ends (owner
+       * decision A, 2026-10-14): "Today, 11:22: …" on its own day, "Tomorrow, 11:22: …" the day before; `time` is "HH:mm"
+       * in the site's zone.
+       */
+      verdictLineToday: (p: { time: string; name: string }) => `Today, ${p.time}: ${p.name}`,
+      verdictLineTodayMore: (p: { time: string; name: string; count: string }) =>
+        `Today, ${p.time}: ${p.name} +${p.count} more`,
+      verdictLineTomorrow: (p: { time: string; name: string }) => `Tomorrow, ${p.time}: ${p.name}`,
+      verdictLineTomorrowMore: (p: { time: string; name: string; count: string }) =>
+        `Tomorrow, ${p.time}: ${p.name} +${p.count} more`,
+      /** The fixed safety line on every solar eclipse, visible or not. */
+      solarSafety:
+        "Eye safety: look only through certified eclipse glasses. Never look at the Sun directly, or through a telescope or binoculars, without a certified solar filter.",
     },
 
     /**
@@ -1002,6 +1174,10 @@ export const en = {
       } as PluralForms<Count>,
       moon: "The Moon",
       planets: "Planets",
+      /** The sky events page's title and the dashboard tile's heading. */
+      events: "Sky events",
+      /** The events tile with nothing notable to go out for; `count` is `EVENT_WINDOW_NIGHTS`, pre-formatted. */
+      eventsNone: (p: { count: string }) => `Nothing to go out for in the next ${p.count} nights`,
       /** The Session plan: the page's title and the dashboard tile's heading. */
       plan: "Session plan",
       /** The tile's line under its timeline before sunset: the first target by best time. */
@@ -1039,6 +1215,13 @@ export const en = {
       noTargets: "No object cleared the bar tonight, so there is nothing to point at.",
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       seeNights: (p: { count: string }) => `See the next ${p.count} nights`,
+      /** The sky events page (S-07): `count` is `EVENT_WINDOW_NIGHTS`, pre-formatted, `site` the site's name. */
+      events: {
+        heading: (p: { count: string; site: string }) => `Sky events at ${p.site} in the next ${p.count} nights`,
+        timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
+        /** The view has no events block (only when working it out failed). */
+        unavailable: "Sky events aren't available right now.",
+      },
       /** Targets: the button that opens the rest of the list, after the best few. */
       showRest: {
         one: (p) => `Show the other ${p.count} object`,

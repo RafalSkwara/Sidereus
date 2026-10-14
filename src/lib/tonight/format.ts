@@ -194,6 +194,8 @@ export function createFormatter(locale: Locale) {
     day: "numeric",
     month: "short",
   });
+  const spanDayFormat = new Intl.DateTimeFormat(tag, { timeZone: "UTC", day: "numeric" });
+  const spanMonthFormat = new Intl.DateTimeFormat(tag, { timeZone: "UTC", month: "short" });
   const shortDateFormat = new Intl.DateTimeFormat(tag, {
     timeZone: "UTC",
     day: "numeric",
@@ -213,6 +215,11 @@ export function createFormatter(locale: Locale) {
   /** A number in the locale's notation; `-0` reads as "0". */
   function num(n: number): string {
     return numberFormat.format(n === 0 ? 0 : n);
+  }
+
+  /** An angle in the locale's notation, at most one decimal ("1.8", "22"); the caller adds the degree sign. */
+  function formatDegrees(degrees: number): string {
+    return num(degrees);
   }
 
   /** `HH:mm`, 24-hour, as the wall clock reads in `timeZone`. */
@@ -255,6 +262,21 @@ export function createFormatter(locale: Locale) {
   function formatShortNightDate(date: string): string {
     const [year, month, day] = date.split("-").map(Number);
     return shortNightDateFormat.format(new Date(Date.UTC(year, month - 1, day)));
+  }
+
+  /**
+   * The evening date `YYYY-MM-DD` as the night it starts, "12/13 Aug" (across a month end "31 Aug/1 Sep"), for the
+   * sky events tile. A calendar date, like `formatNightDate`.
+   */
+  function formatNightSpan(date: string): string {
+    const [year, month, day] = date.split("-").map(Number);
+    const start = new Date(Date.UTC(year, month - 1, day));
+    const end = new Date(Date.UTC(year, month - 1, day + 1));
+    const [startMonth, endMonth] = [spanMonthFormat.format(start), spanMonthFormat.format(end)];
+    const [startDay, endDay] = [spanDayFormat.format(start), spanDayFormat.format(end)];
+    return startMonth === endMonth
+      ? `${startDay}/${endDay} ${startMonth}`
+      : `${startDay} ${startMonth}/${endDay} ${endMonth}`;
   }
 
   /** A duration as "5 h 10 min", "5 h" or "40 min", rounded to the minute. */
@@ -717,12 +739,14 @@ export function createFormatter(locale: Locale) {
     formatDayTime,
     formatNightDate,
     formatShortNightDate,
+    formatNightSpan,
     formatShortDate,
     darkSpanText,
     moonLine,
     cloudOutlookText,
     formatDuration,
     formatDirection,
+    formatDegrees,
     reasonLine,
     skyHeadline,
     verdictReasonText,

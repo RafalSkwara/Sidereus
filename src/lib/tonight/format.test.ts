@@ -256,3 +256,13 @@ describe("zoneLabel (ui-user-adjustments)", () => {
     expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Asia/Tokyo")).toBe("GMT+9");
   });
 });
+
+describe("formatNightSpan", () => {
+  it("writes the night an evening starts as 12/13 Aug, naming both months across a month end and a year end", () => {
+    expect(createFormatter("en").formatNightSpan("2027-08-12")).toBe("12/13 Aug");
+    expect(createFormatter("en").formatNightSpan("2026-10-31")).toBe("31 Oct/1 Nov");
+    expect(createFormatter("en").formatNightSpan("2026-12-31")).toBe("31 Dec/1 Jan");
+    expect(createFormatter("pl").formatNightSpan("2027-08-12")).toBe("12/13 sie");
+    expect(createFormatter("pl").formatNightSpan("2026-12-31")).toBe("31 gru/1 sty");
+  });
+});

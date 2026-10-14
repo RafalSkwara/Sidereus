@@ -5,6 +5,7 @@ import {
   INDEX_KEY,
   NEXT_REFRESH_MS,
   OFFLINE_PAGE,
+  TONIGHT_PAGES,
   addAssets,
   answerTime,
   assetUrlsIn,
@@ -77,12 +78,23 @@ function indexOf(...copies: CopyMeta[]): CopyIndex {
 }
 
 describe("tonightPageOf", () => {
-  it.each(["/tonight", "/tonight/targets", "/tonight/plan", "/tonight/moon", "/tonight/planets", "/tonight/nights"])(
-    "matches %s exactly",
-    (path) => {
-      expect(tonightPageOf(url(path))?.page).toBe(path);
-    },
-  );
+  it.each([
+    "/tonight",
+    "/tonight/targets",
+    "/tonight/plan",
+    "/tonight/moon",
+    "/tonight/planets",
+    "/tonight/nights",
+    "/tonight/events",
+  ])("matches %s exactly", (path) => {
+    expect(tonightPageOf(url(path))?.page).toBe(path);
+  });
+
+  it("lists the events page last, so it is the last Tonight page on /offline", () => {
+    expect(TONIGHT_PAGES).toHaveLength(7);
+    expect(TONIGHT_PAGES.at(-1)).toBe("/tonight/events");
+    expect(TONIGHT_PAGES.at(-2)).toBe("/tonight/nights");
+  });
 
   it.each(["/tonight/all", "/tonight/", "/tonight/plan/extra", "/tonightx", "/log", "/"])("is none for %s", (path) => {
     expect(tonightPageOf(url(path))).toBeUndefined();
@@ -135,7 +147,7 @@ describe("storedPageOf", () => {
     expect(storedPageOf(url(path))).toBeUndefined();
   });
 
-  it("leaves tonightPageOf at its six pages", () => {
+  it("leaves tonightPageOf at its seven pages", () => {
     expect(tonightPageOf(url("/tonight/finder?object=M31"))).toBeUndefined();
   });
 });
@@ -780,7 +792,13 @@ describe("listCopies", () => {
     ]);
   });
 
-  it("lists one entry per site and chart after the six pages, ordered by the chart's name", () => {
+  it("lists a site's seven pages in TONIGHT_PAGES order, the events page last (F7c)", () => {
+    const now = new Date("2026-10-05T21:00:00.000Z");
+    const index = indexOf(...[...TONIGHT_PAGES].reverse().map((page) => copy({ page })));
+    expect(listCopies(index, now).map(({ page }) => page)).toEqual([...TONIGHT_PAGES]);
+  });
+
+  it("lists one entry per site and chart after the seven pages, ordered by the chart's name", () => {
     const now = new Date("2026-10-05T21:00:00.000Z");
     const index = indexOf(
       chart("M31", { targetName: "M31" }),

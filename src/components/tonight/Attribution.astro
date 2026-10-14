@@ -1,7 +1,8 @@
 ---
 /**
  * Data credits required by the OpenNGC (CC BY-SA 4.0), HYG (CC BY-SA 4.0), Hipparcos (ESA, CC BY-NC 3.0 IGO) and
- * Open-Meteo (CC BY 4.0) licences. HYG compiles Hipparcos, so ESA is credited beside it.
+ * Open-Meteo (CC BY 4.0) licences. HYG compiles Hipparcos, so ESA is credited beside it. The meteor showers of the
+ * sky events page credit NASA (peak nights) and the IAU Meteor Data Center (radiants), as `LICENSE-DATA.md` promises.
  */
 import { getMessages } from "@/i18n";
 
@@ -28,5 +29,13 @@ const link =
   <a href="https://open-meteo.com/" class:list={[link]} rel="noopener noreferrer">
     Open-Meteo
   </a>{" "}
-  (CC BY 4.0)
+  (CC BY 4.0) · {t.meteorData}{" "}
+  <a href="https://science.nasa.gov/meteor-showers/" class:list={[link]} rel="noopener noreferrer">
+    NASA
+  </a>{" "}
+  ({t.nasaFor}),{" "}
+  <a href="https://ceresiaumdc.ta3.sk/" class:list={[link]} rel="noopener noreferrer">
+    IAU Meteor Data Center
+  </a>{" "}
+  ({t.mdcFor})
 </p>

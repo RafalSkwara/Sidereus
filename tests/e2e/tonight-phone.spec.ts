@@ -16,8 +16,11 @@ import { onboardInMadrid } from "./helpers";
  *    a phone) end above the fixed TabBar, and the Telescope card's title shows above it too; the rest of the
  *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
  *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
- *    known limits (the plan's "What we're not doing"), so they are not asserted;
- *  - no sideways scroll at 320×568 and 375×667 on eight pages, in EN and PL;
+ *    known limits (the plan's "What we're not doing"), so they are not asserted. On a night with a notable sky event
+ *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), which
+ *    the verdict's min-height can swallow without moving the cards, so the spec hides that line while it measures and
+ *    holds on any date (impl review F9);
+ *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL;
  *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
 
@@ -37,6 +40,7 @@ const TONIGHT_PAGES = [
   "/tonight/moon",
   "/tonight/planets",
   "/tonight/nights",
+  "/tonight/events",
 ];
 /** The other app pages checked for sideways scroll: plain server-rendered. */
 const APP_PAGES = ["/gear", "/log", "/log/progress"];
@@ -54,6 +58,11 @@ async function waitForPage(page: Page, path: string) {
   }
   await page.waitForLoadState("networkidle");
   await page.evaluate(() => document.fonts.ready);
+}
+
+/** Hides the verdict's event line (present only on an event night) and returns the style to remove again afterwards. */
+async function hideEventLine(page: Page) {
+  return page.addStyleTag({ content: "[data-verdict-event]{display:none}" });
 }
 
 // The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
@@ -74,11 +83,17 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
 
   // The fixed bottom navigation: below `md` it is the only visible navigation named "Main" (the top bar's is hidden).
   const tabBar = await page.getByRole("navigation", { name: en.nav.primary }).boundingBox();
+  // The event line sits in flow under the verdict's reason, and its room may or may not move the cards (the verdict has
+  // a min-height), so measure without it: the checks below read the same on event and no-event nights.
+  const eventLineStyle = await hideEventLine(page);
   const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
   const site = await siteCard.boundingBox();
   const telescope = await telescopeCard.boundingBox();
   const telescopeTitle = await telescopeCard.locator("label, p").first().boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
+  await eventLineStyle.evaluate((style) => {
+    style.parentNode?.removeChild(style);
+  });
 
   if (!tabBar || !headline || !site || !telescope || !telescopeTitle || !firstTile) {
     throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");

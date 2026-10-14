@@ -1,0 +1,96 @@
+---
+// The data-dependent part of /tonight/events (M-3 S-07, sky-events Phase 4), a server island like NightsPageContent: the
+// slim page sky, the page's notice, then the sky events of the next nights for the site picked on Tonight, grouped by
+// night. It loads through the same loadTonight as Tonight (with the events), so both agree on the night, and never
+// records the sky verdict (only Tonight shows it). When building the events failed the page says so, never an empty list.
+import { ServerError } from "@/components/forms/ServerError";
+import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
+import SkyEventList from "@/components/tonight/SkyEventList.astro";
+import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import Band from "@/components/ui/Band.astro";
+import Notice from "@/components/ui/Notice.astro";
+import { buttonVariants } from "@/components/ui/button";
+import { getMessages, translateKey, type MessageKey } from "@/i18n";
+import { getAccountPlan } from "@/lib/account-plan";
+import { loadTonightFor } from "@/lib/tonight/island";
+import type { TonightNotice } from "@/lib/tonight/notice";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The site picked on Tonight (`?site=` or the remembered cookie); resolved against the user's own. */
+  siteId?: string;
+  /** The telescope picked on Tonight (`?telescope=` or the remembered cookie); resolved against the user's own. */
+  telescopeId?: string;
+  /** The page's notice, resolved in the shell from `?logged` or `?error` to catalogue text; `null` when none. */
+  notice?: TonightNotice | null;
+  /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
+  night?: "tonight" | "next";
+}
+
+const { locale } = Astro.locals;
+const { siteId, telescopeId, night = "tonight", notice = null } = Astro.props;
+const m = getMessages(locale);
+const t = m.tonight;
+const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
+
+// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
+void getAccountPlan(Astro.locals);
+// Signed out, `load` is null and the island renders nothing.
+const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, withSkyEvents: true });
+const view = load?.view ?? null;
+const events = view?.skyEvents ?? null;
+const failures = load
+  ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
+  : [];
+// No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
+const noGear =
+  load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
+---
+
+{load && (
+  <>
+    <TonightPageSky title={t.summary.events} view={view} />
+    {view && <OfflineCopy view={view} night={night} />}
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+      {notice?.tone === "success" && (
+        <Notice tone="success" toast param={notice.param}>
+          {notice.text}
+        </Notice>
+      )}
+      {notice?.tone === "error" && (
+        <div role="alert">
+          <ServerError message={notice.text} />
+        </div>
+      )}
+
+      {failures.map((key) => (
+        <ServerError message={translate(key)} />
+      ))}
+
+      {noGear && (
+        <p class="text-body text-foreground">
+          {t.pages.noGear}{" "}
+          <a href="/tonight" class:list={[inlineLink]}>
+            {t.pages.toTonight}
+          </a>
+        </p>
+      )}
+
+      {view && events === null && <p class="text-body text-foreground">{t.pages.events.unavailable}</p>}
+
+      {view && events !== null && (
+        <Band
+          id="events"
+          headingId="events-heading"
+          heading={t.pages.events.heading({ count: String(events.windowNights), site: view.siteName })}
+          headingHidden
+        >
+          <p class="mb-4 text-label text-muted-foreground">{t.pages.events.timesIn({ zone: view.timeZone })}</p>
+          <SkyEventList events={events.events} windowNights={events.windowNights} />
+        </Band>
+      )}
+    </div>
+  </>
+)}

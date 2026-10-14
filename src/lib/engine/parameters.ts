@@ -605,3 +605,44 @@ export const FINDER_PANEL_FIELD_DEG = 10;
  * zenith falls inside a panel, "up" would swing wildly with a small move, so the chart goes north up instead.
  */
 export const FINDER_OVERHEAD_ALT_DEG = 80;
+
+// Sky events (M-3 S-07) --------------------------------------------------------------------------
+
+/** Candidate (S-07 planning, M-3, 2026-10-13): how many observing nights the events list covers, from the selected night. */
+export const EVENT_WINDOW_NIGHTS = 30;
+
+/**
+ * Candidate (S-07 planning, M-3, 2026-10-13, owner decision 3): an event is visible only while its body is at or
+ * above this altitude, degrees (about one fist at arm's length). Every kind but eclipses uses it.
+ */
+export const EVENT_MIN_ALTITUDE_DEG = 10;
+
+/**
+ * Candidate (S-07 planning, M-3, 2026-10-13, owner, plan review F2): an eclipse is visible from this altitude up,
+ * degrees. Eclipses are rare enough to be worth a low horizon: between this and `EVENT_MIN_ALTITUDE_DEG` the event
+ * is visible but carries `lowHorizon` ("low, needs an open horizon").
+ */
+export const ECLIPSE_MIN_ALTITUDE_DEG = 2;
+
+/**
+ * Candidate (S-07 planning, M-3, 2026-10-13): twilight bound for night events, degrees: a night event counts only
+ * while the sun is at or below this. It is the planet window's bound, civil dusk to civil dawn.
+ */
+export const EVENT_SUN_MAX_ALTITUDE_DEG = PLANET_WINDOW_SUN_ALTITUDE_DEG;
+
+/**
+ * Candidate (S-07 planning, M-3, 2026-10-13): the sun altitude, degrees, that defines "the night's dark window" for
+ * events when the caller does not pass the site's own darkness threshold: astronomical darkness, the Bortle 1-4 value
+ * of `darknessThresholdDegForBortle`. Where the sun never gets that low the event uses the
+ * `EVENT_SUN_MAX_ALTITUDE_DEG` span and is flagged `shortNight`.
+ */
+export const EVENT_DARK_SUN_ALTITUDE_DEG = -18;
+
+/** Candidate (S-07 planning, M-3, 2026-10-13, owner decision 2): a pairing is "close" up to this separation, degrees. */
+export const PAIRING_MAX_SEPARATION_DEG = 5;
+
+/**
+ * Candidate (S-07 planning, M-3, 2026-10-13): a shower's peak night is flagged "bright Moon" when the Moon's
+ * illuminated fraction is at least this and it is up during the dark window.
+ */
+export const METEOR_BRIGHT_MOON_FRACTION = 0.5;
