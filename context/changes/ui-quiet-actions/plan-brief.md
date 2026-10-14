@@ -36,11 +36,14 @@ The owner finds the buttons too loud. Every per-item or standalone link is a bor
 | Action tokens | Kept, for the sky-check answers and the medallion only | Retiring them would reopen the sky checks' red-mode "suggested answer" fix | Research |
 | /gear Add (band not empty) | Hairline | A per-section add is a per-item button, not a text link | Plan |
 | Back link | Quiet now; replaced by the Tonight sub-nav in change 4 | Keeps this change global and small | Owner split |
-| Implementation start | After S-07 sky-events merges; rebase first | S-07 adds the events tile and page the evidence must show | Orchestrator |
+| Offline dash (F1) | Keep `var(--border)`; an `svg` colour reset mutes the hairline's icon | The owner keeps today's dash; a link-coloured icon on a disabled control would look live | Owner (plan review) |
+| Credit links in red (F4) | Plain links in a sentence with `red:decoration-current` | Their `decoration-border` underline is 1.17:1 in red | Owner (plan review) |
+| D2 guard (F8) | One `red-night-mode.spec` assertion on confirm-email | A later cascade change cannot silently undo the owner's decision | Plan review |
+| Implementation start | Rebased onto main 1389bc1 with S-07 merged | S-07's events tile, `/tonight/events` back link and credit links are in scope of the checks | Orchestrator |
 
 ## Scope
 
-**In scope:** the `quiet` and `hairline` variants, the `bare` size, the `--control-border` token, the `red:` custom variant, contrast pins, `/design` specimens; every `action` call site moved; the tile cue bared; eyepiece names recoloured; the CLAUDE.md Clickables rule; the screenshot gate; the whole e2e suite and smoke.
+**In scope:** the credit links' red underline (Attribution, onboarding); the offline icon reset; one red-mode e2e assertion; the `quiet` and `hairline` variants, the `bare` size, the `--control-border` token, the `red:` custom variant, contrast pins, `/design` specimens; every `action` call site moved; the tile cue bared; eyepiece names recoloured; the CLAUDE.md Clickables rule; the screenshot gate; the whole e2e suite and smoke.
 
 **Out of scope:** the Tonight sub-nav and Progress as a destination (change 4); stat cards, fact icons and spacing (change 2); the `default`, `outline`, `ghost`, `link` and `destructive` variants; sky-check answers; the milestone medallion; row links.
 
@@ -56,7 +59,7 @@ Contract first. Phase 1 adds the token, the `red` variant and the two variants b
 | 2. Call sites | Every `action` user moved, cue bared, eyepiece names recoloured, `action` removed | Gear card height or Polish wrapping shifting (`tonight-phone.spec`) |
 | 3. Rules and gate | CLAUDE.md rule, screenshot matrix, whole e2e and smoke | The owner judging the weight differently from the defaults |
 
-**Prerequisites:** S-07 sky-events merged to main; local Supabase and the forecast fixture for e2e.
+**Prerequisites:** done: S-07 merged (main 1389bc1) and the branch rebased. Needed: local Supabase, the forecast fixture on 4401 and the preview on 4331 for e2e.
 **Estimated effort:** about one session, 3 phases, mostly class edits plus the evidence.
 
 ## Open Risks & Assumptions

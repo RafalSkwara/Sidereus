@@ -87,7 +87,7 @@
   - Tradeoff: the sky-check answer buttons and Topbar/TabBar entries also get the stronger dash colour, though the Topbar/TabBar links have no border width, so it never shows there. Check the sky-check card offline in red.
   - Confidence: MED. The cascade is confirmed (unlayered rule). The visual result of the stronger dash on the sky-check card has not been seen.
   - Blind spot: whether the owner wants offline controls to read as clearly bordered at all, or only as muted.
-- **Decision**: PENDING
+- **Decision**: APPLIED (owner): the dash stays `var(--border)`; the offline rule gains an `svg { color: inherit }` reset so the hairline's icon mutes (plan Phase 1 §2, Critical Implementation Details).
 
 ### F2 — Contrast pins: quiet text on the ground and the surface is not pinned at 4.5, and the red numbers are off
 
@@ -108,7 +108,7 @@
   - Correct the red figures.
   - Fix the red `--control-border` at ≥ `#c00000`.
   - State in the rule that a hairline never sits on a sky header (or pin it there).
-- **Decision**: PENDING
+- **Decision**: APPLIED: pins for `primary-strong` on background+surface and on zenith+horizon at 4.5 (dark, light, red), red figures corrected, red `--control-border` ≥ `#c00000`, "never on a sky header" in the rule.
 
 ### F3 — The e2e success criteria are not runnable as written, and the spec list misses users of the moved links
 
@@ -132,7 +132,7 @@
     - `red-night-mode`, the theme whose look changes most;
     - after the rebase, `sky-events`, which uses the quiet back link on `/tonight/events`.
 - **Fix**: Spell out the full command line with its environment in Phase 2 and in Progress 2.4/2.5, with the ports as parameters (other agents hold ports), and add `finder-offline`, `what-to-expect`, `moon-card`, `red-night-mode` and `sky-events` to the list.
-- **Decision**: PENDING
+- **Decision**: APPLIED: full commands with ports 4331/4401, `.dev.vars` rewrite after build and keys inline; `finder-offline`, `what-to-expect`, `moon-card`, `red-night-mode`, `sky-events` added.
 
 ### F4 — What must be re-checked after S-07 merges
 
@@ -163,7 +163,7 @@
   - Tradeoff: Phase 3's capture grows by about six views.
   - Confidence: HIGH. Every item was checked against `git diff a98e77a..005d3d3`.
   - Blind spot: S-07 may still change before it merges (its impl-review fixes landed at 005d3d3), so the anchors are a snapshot.
-- **Decision**: PENDING
+- **Decision**: APPLIED after the rebase onto main 1389bc1 (S-07 merged): anchors re-taken; S-07 re-check list in Phase 1 §1; credit links (Attribution, onboarding) get `red:decoration-current` as plain sentence links (owner); capture grows by events, finder, /log/sky, confirm-email and the /design specimens.
 
 ### F5 — Docs and comments that still prescribe `action` are not all in Phase 3, and its grep check misses them
 
@@ -191,7 +191,7 @@
   - Add these files to Phase 3 §1.
   - Replace 3.4 with `grep -nE '`action`|action link|tinted|bordered chip' CLAUDE.md src` reviewed by hand, the action tokens' own lines excepted.
   - Rename `SkyCheckCard`'s `quietAction` (e.g. `inlineAction`).
-- **Decision**: PENDING
+- **Decision**: APPLIED: every CLAUDE.md mention and comment listed in Phase 3 §1; the grep check widened and reviewed by hand; `SkyCheckCard` `quietAction` → `inlineAction`.
 
 ### F6 — `/design`: the generic loops need the `bare` size, and the Manage specimens must move, not be deleted
 
@@ -205,7 +205,7 @@
   - **Hover mirror.** The quiet hover specimen should mirror `red:decoration-2` too.
   - **Disabled specimen.** A disabled link is only ever the offline `aria-disabled` state; say so beside the `<button disabled>` specimen.
 - **Fix**: In Phase 1 §5, map `sizeOf` (quiet → bare, hairline → sm) and include both in the focus filter. In Phase 2 §5, migrate the Manage specimens to quiet instead of deleting them.
-- **Decision**: PENDING
+- **Decision**: APPLIED: `sizeOf` maps quiet → bare, hairline → sm, focus filter includes both; Manage specimens migrate, not deleted; quiet hover mirrors `red:decoration-2`; disabled-link note.
 
 ### F7 — Red mode: `outline` and the hairline nearly merge, and a quiet action equals an inline link
 
@@ -236,7 +236,7 @@
   - Tradeoff: if the owner finds outline and hairline too close, `outline` or the hairline needs a red-only tweak, which is more scope.
   - Confidence: MED. Contrast figures computed; the perceptual call is the owner's.
   - Blind spot: not seen on a real phone at night.
-- **Decision**: PENDING
+- **Decision**: APPLIED: manual 3.6 covers red and dark and the dashboard, and the F7 pairs are captured as crops for the owner; the rule says a quiet action always carries its icon.
 
 ### F8 — No automated guard for D2 or the offline mute
 
@@ -246,7 +246,7 @@
 - **Location**: plan.md "Testing Strategy › Integration Tests" ("No new e2e spec")
 - **Detail**: The owner's D2 decision (underline at rest in red only) and the offline mute (no underline) are checked only by eye. Both are cheap to pin, and `red-night-mode.spec.ts` already exists with `getComputedStyle` checks. Without a pin, a later variant edit or a cascade change (the unlayered offline rule) can silently undo an owner decision.
 - **Fix**: Add one assertion to `red-night-mode.spec.ts`: in red, a back link has `text-decoration-line: underline`, and in dark it has `none`.
-- **Decision**: PENDING
+- **Decision**: APPLIED: Phase 2 §5 adds a `red-night-mode.spec.ts` test on the signed-out confirm-email page (underline in red, none in dark).
 
 ### F9 — Two explanations in the plan and research are inaccurate, with harmless conclusions
 
@@ -259,7 +259,7 @@
   - **Research's `--border` range.** "1.17-1.78:1" cannot be reproduced; the real range is about 1.14-1.57. The conclusion that it is below 3:1 holds.
   - **What `tonight-phone.spec` guards.** It does not measure the gear cards against `GEAR_CARD_MIN_HEIGHT_CLASS`, and it checks Polish only for sideways scroll at 320/375, not wrap height. "The card's height must not change" stays a manual check (2.8).
 - **Fix**: Correct the Key Discovery wording and the research figure, and say in Testing Strategy that the card height is manual (2.8).
-- **Decision**: PENDING
+- **Decision**: APPLIED: the `bare` explanation corrected (`has-[>svg]:px-2.5`), the `--border` range corrected in research and plan, the card height named as manual check 2.8.
 
 ### F10 — The landing screenshot and the "link colour only on links" wording
 
@@ -275,4 +275,4 @@
     - `NotSeenMark` / `NotSeenLegend`;
     - the Notice and confirm-email icons.
 - **Fix**: Add the landing recapture (or an explicit "not needed" judged from the image) to Phase 3 §2. Word the rule as "link-colour text only on links; icons may keep it".
-- **Decision**: PENDING
+- **Decision**: APPLIED: the landing image is judged and recaptured if needed in Phase 3 §2; the rule says link-colour text only on links, icons may keep it.

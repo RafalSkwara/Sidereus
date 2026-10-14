@@ -48,7 +48,7 @@ This research answers four questions:
   - **Touch targets.** Targets stay at least 44 px (`button.tsx` base `min-h-11`).
   - **Polish labels.** Long Polish labels must wrap (`whitespace-normal`).
   - **Offline.** The muted, dashed look shows its dashed cue only where a border width exists (`global.css:543-562`).
-- **The neutral hairline needs a new token.** Experiment B's hairline used `--border`, which measures **1.17-1.78:1** against the ground in the four themes (computed below). It is not a 3:1 indicator, and in red it nearly vanishes.
+- **The neutral hairline needs a new token.** Experiment B's hairline used `--border`, which measures about **1.14-1.57:1** (corrected by the plan review, F9) against the ground in the four themes (computed below). It is not a 3:1 indicator, and in red it nearly vanishes.
 - **S-07** (`feat/sky-events`, c050bd2) adds **no** `action` call site.
   - Its events tile inherits the cue through `Tile`.
   - `EventsPageContent.astro:48` uses only the `link` variant.
@@ -108,6 +108,7 @@ These variants stay out of scope:
 - `red-theme.test.ts:45-65`: red literals must have zero green and blue, and every `:root` token needs a red value.
 - Computed for this research (WCAG relative luminance), the neutral `--border` against the page background is 1.40 in dark (`#232b3f` / `#070a12`), 1.34 in light (`#d6dce6` / `#fbfcfd`), 1.78 in night (`#2c3a62`), and 1.17 in red (`#3a0000` / `#080000`).
 - Against the same backgrounds, `--action-border` is 5.39 in dark, 6.26 in light, 5.90 in night, and 3.64 in red.
+- The per-theme figures above used an assumed night background; the plan review (F9) measured about 1.14-1.57:1. The conclusion (below 3:1) holds.
 - Experiment B's hairline (`evidence/exp-b/experiment-b.diff`, `border border-border`) is therefore below 3:1 in every theme. In red, a hairline "Mark observed" would read almost as text.
 - Candidate neutral values, as a starting point for a new hairline token: `#646e8a` (dark, 3.90 on background), `#808a9e` (light, 3.38 on background, 3.17 on surface) and `#7480a8` (night, 4.25 on its surface). For red, `#a00000` reaches only 2.47; a red value nearer `#c80000` is needed for ≥3. The plan must pick and pin the values.
 - **Red mode text actions.** In red, `--foreground` is `#f20000` and `--primary-strong` is `#ff0000`, so a text action in the link colour is told apart from body text only by its icon and semibold weight.
