@@ -224,34 +224,42 @@ Risk: four tabs at 320 px in Polish ("Dziś w nocy", "Dziennik", "Postępy", "M�
 
 **Recommended combination:** 4A plus 4B. 4A fixes the hub-and-spoke cost that S-07 makes worse; 4B lifts Progress out of the Log header, which also removes two of finding 1's boxes.
 
+## Owner decisions (2026-10-14)
+
+1. **Button weight: 3C, the hierarchy.** "Mark observed" is the one per-item button, as a hairline (3B). "Finder chart", "Manage sites/telescopes", the washed-out link and the back link become text actions (3A). The tile cue becomes a bare arrow. The filled primary stays at most one per screen.
+2. **Grouping: a merge of 1A and 1B.**
+   - Window and Best become two small stat cards (1B's chips: a caption label over a larger mono value), side by side in one row.
+   - Everything else follows 1A: ruled bands, no boxed card around the whole target, the hairline between "when" and "what and how", more breathing room.
+   - 1A's icons go on every fact that still lacks one.
+3. **Icons: 2B, on facts only.** No icons on the dashboard tile headings.
+4. **Navigation: 4A plus 4B.**
+   - The Tonight sub-nav replaces the back box on the focused pages.
+   - Progress becomes a fourth destination in the TabBar and the Topbar.
+5. **Desktop: only Window and Best sit side by side.** They are the two stat cards in one row, at every width. Every other fact stays one per line in a single column, so finding 11 is resolved by decision 2, not by a two-column layout.
+
 ## Proposed split into changes
 
-Each is one /10x-ui change (one view family plus global tokens), started after S-07 merges, so each builds on its tile, verdict line and events page. The order puts the global contract first, so later views inherit it.
+Each is one /10x-ui change (one view family plus global tokens). Implementation starts after S-07 merges, so each change builds on its tile, verdict line and events page; docs (research, plan) may run earlier. The order puts the global contract first, so later views inherit it.
 
-1. **`ui-quiet-actions`** (global; findings 1, 3, the tile cue).
-   - The new quiet tier in `buttonVariants`, Theme 3's choice applied to `TargetDetails`, `BackLink`, `GearCard`, `MoonCard`, `/gear`, `/log` and `Pager`, and the tile cue.
+1. **`ui-quiet-actions`** (global; findings 1, 3, the tile cue; decision 1).
+   - A quiet tier in `buttonVariants`: hairline for "Mark observed", text for every other per-item action.
+   - Applied to `TargetDetails`, `BackLink` (everywhere it is still used; on the Tonight focused pages change 4 replaces it), `GearCard`, `MoonCard`, `/gear` "Add …", the `/log` header links, `Pager` and the tile cue.
    - Eyepiece names off the link colour.
-   - The Clickables rule rewritten, the contrast-test pins, the `/design` matrix and the e2e locators checked.
-   - Small and global; it removes the owner's biggest complaint fast.
-2. **`ui-fact-rhythm`** (Targets, Planets, the Moon, S-07 Events; findings 2, 4, 5, 8, 9).
-   - Spacing rhythm roles (`line` / `group` / `item`), a `text-overline` section-label role, and the `Fact` / `FactList` component.
-   - The icon map (absorbing S-07's event-kind icons).
-   - Then Targets' rows (direction 1A or 1B), Planets with labelled facts, MoonCard, SkyEventList and the Nights page reasons.
-3. **`ui-dashboard-tiles`** (/tonight; findings 4, 5 and the S-07 verdict line).
-   - `Tile` gains an icon prop from the map, the tile content uses the rhythm roles, and the S-07 verdict line gets its leading icon.
+   - The Clickables rule rewritten, the action-token contrast pins, the `/design` matrix and the e2e locators checked.
+2. **`ui-fact-rhythm`** (Targets, Planets, the Moon, S-07 Events, Nights; findings 2, 4, 5, 8, 9; decisions 2, 3, 5).
+   - Spacing rhythm roles (`line` / `group` / `item`) and a `text-overline` section-label role.
+   - The `StatCard` pair for Window and Best (one row at every width) and the `Fact` / `FactList` component with an icon (the fact icon map, absorbing S-07's event-kind icons).
+   - Then Targets' rows (merged 1A/1B), Planets with labelled facts, MoonCard, SkyEventList and the Nights page reasons.
+3. **`ui-dashboard-tiles`** (/tonight; finding 4, plus the S-07 verdict line).
+   - The tile content uses the rhythm roles. No tile heading icons (decision 3).
+   - The S-07 verdict event line gets its leading fact icon (it is a fact, not a heading).
    - The phone-first spec, the `VERDICT_MIN_HEIGHT_CLASS` re-measure and the skeleton stay in step.
-4. **`ui-tonight-nav`** (navigation; findings 6, 7, 12).
-   - The Tonight sub-nav (4A), the four destinations (4B) if chosen, and the nav type sizes onto roles.
-   - `TonightPageSkeleton` in step, and `TONIGHT_PAGES` order shared with the sub-nav.
-5. **`ui-log-progress-gear`** (findings 8 for /gear, 10, the /log header).
-   - The progress page (a progress bar plus a quieter grid), /gear's labelled meta rows, and the Log header without the two action boxes.
+   - Small. It may fold into change 2 if the plan finds it too thin.
+4. **`ui-tonight-nav`** (navigation; findings 6, 7, 12; decision 4).
+   - The Tonight sub-nav replaces `BackLink` on `TonightPageSky` / `TonightPageSkeleton`; the finder keeps its way back to its origin.
+   - Progress joins `NAV_ITEMS` as the fourth destination, and the Log header drops its Progress link.
+   - The nav type sizes move onto roles, and the sub-nav order is shared with `TONIGHT_PAGES`.
+5. **`ui-log-progress-gear`** (findings 8 for /gear, 10, what is left of the /log header).
+   - The progress page (a progress bar plus a quieter grid), /gear's labelled meta rows with fact icons, and the Log header's remaining Sky checks link.
 
-The desktop two-column facts (finding 11) are **deferred** until the owner decides, since they reverse a ui-user-adjustments decision. They could fold into change 2.
-
-## Open decisions for the owner
-
-1. Button weight: 3A (text), 3B (hairline) or 3C (the hierarchy, recommended)?
-2. Target grouping: 1A (fact rows in ruled bands), 1B (boxed cards, a second boxed exception) or 1C (summary plus details)?
-3. Icons: 2A (tiles plus facts), 2B (facts only) or 2C (status only)?
-4. Navigation: 4A (Tonight sub-nav), 4B (four tabs with Progress), both, or 4C (quiet back plus "Next")?
-5. Desktop: two-column facts from `sm` (reversing "one data point per line at every width"), or keep one column?
+Finding 11 (desktop) is resolved by decision 5: no two-column fact layout.
