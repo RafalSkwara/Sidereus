@@ -43,3 +43,17 @@
 - **Problem**: `calculateConfigForFile` reported `no-console` at error for every `.astro` client script while no rule ran on them: eslint-plugin-astro's virtual `X.astro/N.ts` failed the type-aware parser and the plugin dropped the parse error (testing-access-and-entitlement-boundary impl review F3, fixed in testing-quality-gates-wiring Phase 1).
 - **Rule**: Pair every config-resolution guard with one end-to-end `lintText` of a known violation per file kind it covers (a TS file, an `.astro` frontmatter, an `.astro` client script), asserting the rule's message actually appears. When a new file kind joins the lint scope, add its sample in the same change.
 - **Applies to**: plan, implement, impl-review
+
+## Run the whole e2e suite before a PR, the way CI runs it
+
+- **Context**: Any Sidereus change about to be pushed for a PR, especially one that touches shared components, the service worker, account plans or anything a spec outside the change also exercises.
+- **Problem**: PR #153 (observing-milestones) failed CI smoke because only the change's own specs were run before pushing; other specs broke on a behaviour the change introduced (the milestone dialog after a rated log entry).
+- **Rule**: Before opening a PR, run the whole e2e suite (`npm run test:e2e`) and `npm run smoke` against a local production preview the way CI does: a fresh `npm run build`, the forecast fixture, the local stack's URL and keys inline on the commands (the secret key never exported), and the preview's `dist/server/.dev.vars` pointed at the local stack rather than the hosted project. Report the counts in the PR.
+- **Applies to**: implement, impl-review
+
+## A red `ci` on main blocks the deploy: fix a flake failing-first, in its own change
+
+- **Context**: A CI failure whose tests all pass but the run fails (an unhandled error, a race in a test harness), on a PR or on main.
+- **Problem**: `deploy` runs only after `ci`, `smoke` and `migrate` pass, so an intermittent harness error on main (agent-hooks `write EPIPE`, CI runs 37992820410 and 38405588360) blocks a release that is otherwise green; rerunning hides it until it strikes on main again.
+- **Rule**: Gather the evidence first (every test passed? which line? earlier runs with the same signature?), rerun the failed job once only to classify it, then fix the cause in its own small change with a test that reproduces it deterministically and goes red before the fix (finder-chart follow-up, PR #156). Never add retries or weaken an assertion to get green.
+- **Applies to**: implement, impl-review

@@ -1,10 +1,10 @@
 ---
 change_id: finder-chart
 title: Finder chart for a chosen target
-status: implementing
+status: archived
 created: 2026-10-11
 updated: 2026-10-13
-archived_at: null
+archived_at: 2026-10-13T14:33:08Z
 ---
 
 ## Notes

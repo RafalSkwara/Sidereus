@@ -1,6 +1,51 @@
-# Handoff — 2026-10-09 night (test rollout Phase 4 merged and archived)
+# Handoff — 2026-10-13 evening (S-06 and S-03 shipped; S-07 planned and plan-reviewed)
 
-What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context.
+What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
+
+## Update 2026-10-13 evening (supersedes every next step below)
+
+**Shipped and live** (production https://sidereus.sidereus.workers.dev, deployed by main CI run 38412547105):
+
+- **S-06 observing-milestones** (#127): merged as #153, archived in #154 (`context/archive/2026-10-11-observing-milestones/`). 11 milestones in the `observing_milestones` table (RLS; self-only inserts accepted and pinned), celebrated once at save in a modal dialog (variant C), listed on `/log/progress`. e2e saves rated 3+ must call `dismissCelebrationIfOpen` (`tests/e2e/helpers.ts`).
+- **S-03 finder-chart** (#124): merged as #155. `/tonight/finder?object=…` behind the full plan (page and island both gated), HYG v4.1 stars to mag 7.5 (server-only), offline charts, zenith edge arrow. The owner did every manual check on 2026-10-13.
+- **EPIPE flake fix**: #156. `src/lib/agent-hooks.test.ts` `run()` now ignores EPIPE on `child.stdin`; a deterministic test pins it.
+
+**Awaiting the owner's merge:** **#157** `chore/archive-finder-chart`, the S-03 archive. It closes #124 and carries this handoff. After it merges, `git checkout main && git pull` in the main checkout and delete that branch.
+
+**Next: S-07 sky-events (#128), ready to implement.**
+
+- Worktree `.claude/worktrees/sky-events`, branch `feat/sky-events` (local only, not pushed), on main 998b30f. The plan is `context/changes/sky-events/plan.md`, plan-reviewed (`reviews/plan-review.md`, F1–F7 applied), last commit 5d81fc0. `change.md` is `plan_reviewed`.
+- Rebase onto origin/main first (#157 is docs only), run `npm ci` there, then `/10x-implement sky-events` phase by phase. Ports: preview 4333, forecast fixture 4400.
+- The owner's decisions, all recorded in the plan:
+  - meteor data is a hand-written fact list of about 10 showers: peak night and rate from NASA (public domain), radiant and speed from IAU MDC, peak λ computed by our engine. The optional IAU MDC email draft (`iau-mdc-request.md`) is the owner's to send;
+  - a close pairing is ≤5°, topocentric, at the closest moment when both bodies are visible;
+  - events are visible from 10°, eclipses from 2° (labelled "low, needs an open horizon");
+  - notable = every visible event except penumbral eclipses, with no Uranus or Neptune oppositions;
+  - the events tile goes straight after the Targets tile, and a muted line sits under the verdict on event nights only. The owner accepts the one-line layout shift. `tonight-phone.spec` must not depend on the date.
+- The plan's eclipse tests use future eclipses only (2027-08-02 solar, 2028-12-31 and 2027-02-20 lunar).
+
+**Still open beyond M-3's slices:**
+
+- The owner's ESA licence request for Hipparcos-derived stars (PRD OQ21). The draft is `context/archive/2026-10-11-finder-chart/esa-licence-request.md`. Fallback before any payment: switch both star files to SAO.
+- M-3 S-04 what-to-expect (#125) and S-08 adjustable-session-plan (#129) are not started.
+- A local branch `feat/ui-auth` is left behind: its worktree is removed and its commits are in main, but `git branch -d` refused because of a stale upstream. Delete it with `-D` only with the owner's OK.
+
+**Lessons from this run** (also in `context/foundation/lessons.md`):
+
+- Before any PR, run the WHOLE e2e suite and smoke locally, the way CI does. #153 failed smoke because an older spec met the new modal dialog.
+- A red `ci` on main means **no deploy**: always check the post-merge run. #155 sat undeployed until #156's run.
+- Fix a flake with a failing-first test in its own change, never with retries.
+- Never put the owner's email or other personal data in requests to external services (User-Agent included); use the repo URL as the contact.
+
+**Working setup** (herdr orchestrator plus agents; details in the orchestrator's memory):
+
+- herdr agents: `finder-chart` (w2), `sky-events` (w3), `reviewer` (w4, Opus), all idle. A fresh session may restart them.
+- `~/projects/.claude/settings.json` allows `herdr agent *`, `herdr notification *` and localhost curl; `curl *` is no longer an ask rule. Running agent sessions pick that up only after a restart.
+- The owner wants decisions asked through interactive question batches (≤4 per call), in Polish for plan, research and review questions.
+
+---
+
+## Earlier: Handoff — 2026-10-09 night (test rollout Phase 4 merged and archived)
 
 ## Update 2026-10-09 night (supersedes every next step below)
 

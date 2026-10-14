@@ -615,8 +615,8 @@ What was built differs from the contracts above in these ways; the contracts abo
 
 #### Manual
 
-- [ ] 3.3 `/design` FinderChart specimens read at 360 px in dark, light and red; circles distinguishable in red
-- [ ] 3.4 The M31 specimen matches a published M31 chart's star pattern, facing orientation
+- [x] 3.3 `/design` FinderChart specimens read at 360 px in dark, light and red; circles distinguishable in red — verified by the owner, 2026-10-13
+- [x] 3.4 The M31 specimen matches a published M31 chart's star pattern, facing orientation — verified by the owner, 2026-10-13
 
 ### Phase 4: The finder page behind the full plan
 
@@ -629,9 +629,9 @@ What was built differs from the contracts above in these ways; the contracts abo
 
 #### Manual
 
-- [ ] 4.4 Full account opens charts from an object and a planet; back link returns to the right page
-- [ ] 4.5 Free account sees the explainer with the example, no error styling
-- [ ] 4.6 The two action links wrap at 320 px without sideways scroll
+- [x] 4.4 Full account opens charts from an object and a planet; back link returns to the right page — verified by the owner, 2026-10-13
+- [x] 4.5 Free account sees the explainer with the example, no error styling — verified by the owner, 2026-10-13
+- [x] 4.6 The two action links wrap at 320 px without sideways scroll — verified by the owner, 2026-10-13
 
 ### Phase 5: Offline finder charts
 
@@ -643,8 +643,8 @@ What was built differs from the contracts above in these ways; the contracts abo
 
 #### Manual
 
-- [ ] 5.4 On a phone, a chart opened online opens offline from the stored Targets page with the stored-copy notice
-- [ ] 5.5 After a demotion and one online Tonight load, the chart is gone offline and from `/offline`
+- [x] 5.4 On a phone, a chart opened online opens offline from the stored Targets page with the stored-copy notice — verified by the owner, 2026-10-13
+- [x] 5.5 After a demotion and one online Tonight load, the chart is gone offline and from `/offline` — verified by the owner, 2026-10-13
 
 ### Phase 6: HTTP refusal, e2e and docs
 
@@ -652,10 +652,10 @@ What was built differs from the contracts above in these ways; the contracts abo
 
 - [x] 6.1 `npm run smoke` passes against local Supabase and the preview, including the six finder steps — e351b80
 - [x] 6.2 `npx playwright test finder-chart` passes against the preview — e351b80
-- [ ] 6.3 CI's `smoke` job passes on the PR
+- [x] 6.3 CI's `smoke` job passes on the PR — CI run 38405588360 (PR #155, after the rerun of the EPIPE flake) and 38412547105 (main, #156 merge incl. #155)
 
 #### Manual
 
-- [ ] 6.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object
+- [x] 6.4 Chart legible at arm's length on a phone in red mode for a planet and a deep-sky object — verified by the owner, 2026-10-13
 - [x] 6.5 PRD OQ21 records the ESA request and the SAO fallback; LICENSE-DATA names the upstream NC licence; credits carry HYG and "Credit: ESA" — e351b80
 - [x] 6.6 PR description calls out the `SUPABASE_SECRET_KEY` rule change and the owner accepts it
