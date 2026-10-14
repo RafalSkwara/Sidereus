@@ -21,6 +21,7 @@ import {
   EVENT_WINDOW_NIGHTS,
 } from "./parameters";
 import type { PlanetKey } from "./planets";
+import { pairingEvents } from "./pairings";
 import { sampleInstants } from "./sampling";
 import { darkWindow, observerFor, sunAltitudeDeg } from "./sun";
 import type { HorizontalPosition, Interval, Site } from "./types";
@@ -37,7 +38,7 @@ import type { HorizontalPosition, Interval, Site } from "./types";
  * something to go out for (PRD invariant, US-07).
  */
 
-/** The kinds of event. Close pairings and meteor showers are plugged into `skyEvents` by later phases. */
+/** The kinds of event. Meteor showers are plugged into `skyEvents` by a later phase. */
 export type SkyEventKind =
   "lunar-eclipse" | "solar-eclipse" | "elongation" | "opposition" | "pairing" | "meteor-shower";
 
@@ -478,13 +479,15 @@ function oppositionEvents(site: Site, window: Interval, darkThresholdDeg: number
  * so a daytime eclipse falls in the night that follows it. `darkThresholdDeg` is the sun altitude that
  * defines the night's dark window (the site's Bortle threshold from `darknessThresholdDegForBortle`; the
  * default is astronomical darkness). Throws `RangeError` on a malformed `fromNight` or a negative or
- * fractional `nights`.
+ * fractional `nights`. `options.pairings: false` leaves out the close pairings, the one kind that scans the
+ * nights (about half a millisecond a night): for a caller that reads no pairing over years of nights.
  */
 export function skyEvents(
   site: Site,
   fromNight: string,
   nights = EVENT_WINDOW_NIGHTS,
   darkThresholdDeg = EVENT_DARK_SUN_ALTITUDE_DEG,
+  options: { pairings?: boolean } = {},
 ): SkyEvent[] {
   if (!Number.isInteger(nights) || nights < 0) {
     throw new RangeError(`Event window must be a whole number of nights, got ${nights}`);
@@ -501,6 +504,7 @@ export function skyEvents(
     ...solarEclipseEvents(site, window),
     ...elongationEvents(site, window, darkThresholdDeg),
     ...oppositionEvents(site, window, darkThresholdDeg),
+    ...(options.pairings === false ? [] : pairingEvents(site, window)),
   ];
   return events.sort((a, b) => a.moment.getTime() - b.moment.getTime());
 }

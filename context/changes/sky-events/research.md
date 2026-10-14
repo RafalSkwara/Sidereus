@@ -153,6 +153,20 @@ From the event-maths research. The minimum altitude is discussed in §3.
   - A fixed 10° (about one fist at arm's length) is a defensible beginner rule. Showing the altitude and compass direction helps the user judge.
   - It is new: the nearest existing constant is `MOON_LOW_ALTITUDE_DEG = 30` (`parameters.ts:306`), which is about moonlight, not visibility.
 
+#### Frequency re-measured with the exact rule (2026-10-14, Phase 2)
+
+- **Method.** The shipped `pairingEvents` (`src/lib/engine/pairings.ts`) over one 1,826-night window from the night of 2026-10-13 to the night of 2031-10-12 at the Warsaw reference point (52.23 N 21.01 E, 110 m). Both bodies at least 10° up (refracted) and the Sun at or below −6°, topocentric, the closest such moment per night, consecutive nights of a pair merged into one event. A record, not a gate.
+- **Events per 30 nights** (visible events; counts over the five years in brackets):
+
+  | Threshold      | Moon-planet | Planet-planet |
+  | -------------- | ----------- | ------------- |
+  | ≤ 2°           | 0.16 (10)   | 0.03 (2)      |
+  | ≤ 3°           | 0.39 (24)   | 0.03 (2)      |
+  | ≤ 5° (owner's) | 0.97 (59)   | 0.08 (5)      |
+
+- **Against the simulation above.** The owner's 5° gives 0.97 Moon-planet per 30 nights, inside the 0.67–1.05 bracket of the two simulated rules; planet-planet is 0.08, half of the 0.16 of the looser "5° up, Sun −6°" case, as the 10° bar predicts.
+- **Not visible.** Pairings within 5° whose every close moment fails the rule are listed as not visible: 2.25 Moon-planet and 0.76 planet-planet per 30 nights (137 and 46 over the five years), mostly the Moon passing a planet by day or below the horizon. Plenty more events than visible ones, which is why the page must say why nothing shows.
+
 ### 4. Meteor-shower data (Open Question 19): what the terms say
 
 Not legal advice. It reports what primary pages say; UNVERIFIED marks what could not be read on one. All requests used no personal data.

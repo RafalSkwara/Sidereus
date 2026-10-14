@@ -1,5 +1,6 @@
 import { findMessier } from "@/lib/catalogue";
 
+import type { PairingBody } from "../events";
 import { observingNight } from "../night";
 import { darknessThresholdDegForBortle } from "../parameters";
 import { PLANET_KEYS } from "../planets";
@@ -7,6 +8,8 @@ import type { PlanetKey } from "../planets";
 import { darkWindow } from "../sun";
 import type { DarkWindow, EquatorialJ2000, Site } from "../types";
 import skyfieldMoonWarsaw20261024 from "./skyfield/moon-warsaw-2026-10-24.json";
+import skyfieldPairingsSydney20261212 from "./skyfield/pairings-sydney-2026-12-12.json";
+import skyfieldPairingsWarsaw20261013 from "./skyfield/pairings-warsaw-2026-10-13.json";
 import skyfieldPlanetsWarsaw20261010 from "./skyfield/planets-warsaw-2026-10-10.json";
 import tromso20260621 from "./stellarium/tromso-2026-06-21.json";
 import warsaw20261010 from "./stellarium/warsaw-2026-10-10.json";
@@ -352,6 +355,118 @@ export function parseMoonReference(raw: unknown, name: string): MoonReference {
 
 export const MOON_REFERENCES: readonly MoonReference[] = [
   parseMoonReference(skyfieldMoonWarsaw20261024, "moon-warsaw-2026-10-24"),
+];
+
+export interface PairingReferenceNight {
+  /** The observing night's evening date, `YYYY-MM-DD`. */
+  night: string;
+  /** The night's smallest separation at any moment, with the bodies' and the Sun's altitudes then. */
+  geometric: {
+    /** ISO 8601 UTC, to the minute. */
+    time: string;
+    separationDeg: number;
+    firstAltitudeDeg: number;
+    secondAltitudeDeg: number;
+    sunAltitudeDeg: number;
+  };
+  /** The smallest separation while both bodies are at least 10° up and the Sun is at or below -6°, or null. */
+  visible: { time: string; separationDeg: number; lowerAltitudeDeg: number } | null;
+}
+
+export interface PairingReferencePair {
+  first: PairingBody;
+  second: PairingBody;
+  nights: PairingReferenceNight[];
+}
+
+export interface PairingReference {
+  name: string;
+  site: FixtureSite;
+  fromNight: string;
+  pairs: PairingReferencePair[];
+}
+
+const PAIRING_BODY_NAMES: readonly PairingBody[] = ["moon", "mercury", "venus", "mars", "jupiter", "saturn"];
+
+function pairingBody(o: Record<string, unknown>, key: string, name: string): PairingBody {
+  const body = PAIRING_BODY_NAMES.find((b) => b === o[key]);
+  if (body === undefined) {
+    fail(name, `${key} must be one of ${PAIRING_BODY_NAMES.join(", ")}`);
+  }
+  return body;
+}
+
+/** An ISO 8601 UTC instant written with a trailing Z, as the pairing generator writes them. */
+function isoUtc(o: Record<string, unknown>, key: string, name: string): string {
+  const v = o[key];
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(v) || Number.isNaN(Date.parse(v))) {
+    fail(name, `${key} must be an ISO 8601 UTC time ending in Z`);
+  }
+  return v;
+}
+
+/** Validates a Skyfield pairing reference (`scripts/events-reference.py`, see the README). */
+export function parsePairingReference(raw: unknown, name: string): PairingReference {
+  const o = asRecord(raw, name, "reference");
+  const provenance = asRecord(o.provenance, name, "provenance");
+  for (const key of ["tool", "version", "ephemeris", "script"]) {
+    str(provenance, key, name);
+  }
+  const site = asRecord(o.site, name, "site");
+  const pairs = o.pairs;
+  if (!Array.isArray(pairs) || pairs.length === 0) {
+    fail(name, "pairs must be a non-empty array");
+  }
+  return {
+    name,
+    site: {
+      name: str(site, "name", name),
+      latitudeDeg: num(site, "latitudeDeg", name),
+      longitudeDeg: num(site, "longitudeDeg", name),
+      elevationM: num(site, "elevationM", name),
+      timeZone: str(site, "timeZone", name),
+    },
+    fromNight: str(o, "fromNight", name),
+    pairs: pairs.map((p: unknown, i) => {
+      const pair = asRecord(p, name, `pairs[${i}]`);
+      const nights = pair.nights;
+      if (!Array.isArray(nights) || nights.length === 0) {
+        fail(name, `pairs[${i}].nights must be a non-empty array`);
+      }
+      return {
+        first: pairingBody(pair, "first", name),
+        second: pairingBody(pair, "second", name),
+        nights: nights.map((n: unknown, j) => {
+          const night = asRecord(n, name, `pairs[${i}].nights[${j}]`);
+          const geometric = asRecord(night.geometric, name, "geometric");
+          const visible = night.visible === null ? null : asRecord(night.visible, name, "visible");
+          return {
+            night: str(night, "night", name),
+            geometric: {
+              time: isoUtc(geometric, "time", name),
+              separationDeg: num(geometric, "separationDeg", name),
+              firstAltitudeDeg: num(geometric, "firstAltitudeDeg", name),
+              secondAltitudeDeg: num(geometric, "secondAltitudeDeg", name),
+              sunAltitudeDeg: num(geometric, "sunAltitudeDeg", name),
+            },
+            visible:
+              visible === null
+                ? null
+                : {
+                    time: isoUtc(visible, "time", name),
+                    separationDeg: num(visible, "separationDeg", name),
+                    lowerAltitudeDeg: num(visible, "lowerAltitudeDeg", name),
+                  },
+          };
+        }),
+      };
+    }),
+  };
+}
+
+export const PAIRING_REFERENCES: readonly PairingReference[] = [
+  parsePairingReference(skyfieldPairingsWarsaw20261013, "pairings-warsaw-2026-10-13"),
+  parsePairingReference(skyfieldPairingsSydney20261212, "pairings-sydney-2026-12-12"),
 ];
 
 /** Synthetic-test sites shared across the engine tests (public reference points, not anyone's home). */

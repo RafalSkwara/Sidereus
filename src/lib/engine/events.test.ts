@@ -366,7 +366,7 @@ describe("the window", () => {
       expect(e.moment.getTime()).toBeGreaterThanOrEqual(events[i].moment.getTime());
     });
     expect(new Set(events.map((e) => e.kind))).toEqual(
-      new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition"]),
+      new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition", "pairing"]),
     );
   });
 
@@ -468,7 +468,7 @@ describe("the invariant: nothing is visible that is not up", () => {
   beforeAll(() => {
     for (const site of SITES) {
       for (const window of WINDOWS) {
-        all.push({ site, events: skyEvents(site, window.from, window.nights) });
+        all.push({ site, events: skyEvents(site, window.from, window.nights, undefined, { pairings: false }) });
       }
     }
   });
@@ -541,7 +541,7 @@ describe("the invariant: nothing is visible that is not up", () => {
     // Fifteen years, so that high-latitude summer oppositions (midnight Sun, a low planet in the twilight) are in.
     let checked = 0;
     for (const site of [TROMSO, WARSAW, { latitudeDeg: 64.15, longitudeDeg: -21.94, timeZone: "Atlantic/Reykjavik" }]) {
-      for (const event of ofKind(skyEvents(site, "2026-10-13", 5500), "opposition")) {
+      for (const event of ofKind(skyEvents(site, "2026-10-13", 5500, undefined, { pairings: false }), "opposition")) {
         if (event.visibility.visible) {
           continue;
         }
@@ -600,7 +600,9 @@ describe("the invariant: nothing is visible that is not up", () => {
 });
 
 describe("determinism and budget", () => {
-  const LOCAL_BUDGET_MS = 100;
+  // Measured with the pairings in (Phase 2, 2026-10-14): 38-50 ms for the first call in a fresh process, 18-29 ms
+  // warm, 15-20 ms inside the whole suite. The budget is about four times the slowest first call.
+  const LOCAL_BUDGET_MS = 200;
   let runs: { first: { events: SkyEvent[]; ms: number }; second: { events: SkyEvent[]; ms: number } } | null = null;
   const getRuns = () => {
     if (runs === null) {
