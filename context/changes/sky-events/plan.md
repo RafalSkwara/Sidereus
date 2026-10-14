@@ -564,44 +564,47 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [x] 1.1 `npx vitest run src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — e57dadf
-- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass — e57dadf
+- [x] 1.1 `npx vitest run src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — 7e17b39
+- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass — 7e17b39
 
 ### Phase 2: Close pairings
 
 #### Automated
 
-- [x] 2.1 `npx vitest run src/lib/engine/pairings.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — ef77221
-- [x] 2.2 `npx astro check`, `npm run lint` and `npm test` pass (incl. the events budget test) — ef77221
+- [x] 2.1 `npx vitest run src/lib/engine/pairings.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — 62c3a1b
+- [x] 2.2 `npx astro check`, `npm run lint` and `npm test` pass (incl. the events budget test) — 62c3a1b
 
 ### Phase 3: Meteor showers
 
 #### Automated
 
-- [x] 3.1 `npx vitest run src/lib/engine/meteors.test.ts src/lib/catalogue/meteor-showers.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — 06d464f
-- [x] 3.2 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — 06d464f
+- [x] 3.1 `npx vitest run src/lib/engine/meteors.test.ts src/lib/catalogue/meteor-showers.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — 537122d
+- [x] 3.2 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — 537122d
 
 ### Phase 4: The events page
 
 #### Automated
 
-- [x] 4.1 `npx vitest run src/lib/tonight/build.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes — ed0c806
-- [x] 4.2 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/sky-events.spec.ts tests/e2e/tonight-phone.spec.ts tests/e2e/offline.spec.ts` passes — ed0c806
+- [x] 4.1 `npx vitest run src/lib/tonight/build.test.ts src/lib/offline/copies.test.ts src/lib/no-console-guard.test.ts` passes — 0c63559
+- [x] 4.2 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npx playwright test tests/e2e/sky-events.spec.ts tests/e2e/tonight-phone.spec.ts tests/e2e/offline.spec.ts` passes — 0c63559
   - F6 timing (one run, 4333 preview, warm, 2026-10-14): island TTFB `/tonight/events` about 52-62 ms vs `/tonight/nights` about 25-34 ms, so `skyEvents` plus formatting adds about 25-30 ms.
-- [x] 4.3 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — ed0c806
+- [x] 4.3 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass — 0c63559
 
 #### Manual
 
-- [ ] 4.4 `/tonight/events` in EN/PL × dark/light/red at 390 px and desktop: rows readable, visible vs not distinguishable in red mode, PL at 320 px, the empty state, and a solar-eclipse row with the safety line
+- [x] 4.4 `/tonight/events` in EN/PL × dark/light/red at 390 px and desktop: rows readable, visible vs not distinguishable in red mode, PL at 320 px, the empty state, and a solar-eclipse row with the safety line
+  - Evidence (2026-10-14, after the impl-review fixes and the rebase onto main a98e77a): Playwright screenshots in the agent's scratchpad, EN/PL × dark/light/red × 390 and 1280 px (+ PL 320 px): `/tonight/events` and `/tonight` from the 4333 preview (run4), the `/design` verdict-line, events-tile and event-list specimens (run3). No sideways scroll; visible vs not visible told apart in red by icon, mark and weight; the empty state and the 2027-08-02 solar-eclipse rows (visible and not visible) with the safety line; the events tile second; the verdict line on the specimens.
 
 ### Phase 5: The dashboard tile and the verdict line
 
 #### Automated
 
-- [x] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it — 95d1ccc
-- [x] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass — 95d1ccc
+- [x] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it — 781e421
+- [x] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass — 781e421
 
 #### Manual
 
-- [ ] 5.3 The dashboard in EN/PL × dark/light/red at 390 px and desktop: the second tile (events) reads well, and on an event night (a pinned `/design` specimen) the verdict line reads well; the one-line shift is accepted (F3)
-- [ ] 5.4 `/design` specimens for the verdict line and the events tile render in all themes
+- [x] 5.3 The dashboard in EN/PL × dark/light/red at 390 px and desktop: the second tile (events) reads well, and on an event night (a pinned `/design` specimen) the verdict line reads well; the one-line shift is accepted (F3)
+  - Evidence (2026-10-14, after the impl-review fixes and the rebase onto main a98e77a): Playwright screenshots in the agent's scratchpad, EN/PL × dark/light/red × 390 and 1280 px (+ PL 320 px): `/tonight/events` and `/tonight` from the 4333 preview (run4), the `/design` verdict-line, events-tile and event-list specimens (run3). No sideways scroll; visible vs not visible told apart in red by icon, mark and weight; the empty state and the 2027-08-02 solar-eclipse rows (visible and not visible) with the safety line; the events tile second; the verdict line on the specimens.
+- [x] 5.4 `/design` specimens for the verdict line and the events tile render in all themes
+  - Evidence (2026-10-14, after the impl-review fixes and the rebase onto main a98e77a): Playwright screenshots in the agent's scratchpad, EN/PL × dark/light/red × 390 and 1280 px (+ PL 320 px): `/tonight/events` and `/tonight` from the 4333 preview (run4), the `/design` verdict-line, events-tile and event-list specimens (run3). No sideways scroll; visible vs not visible told apart in red by icon, mark and weight; the empty state and the 2027-08-02 solar-eclipse rows (visible and not visible) with the safety line; the events tile second; the verdict line on the specimens.

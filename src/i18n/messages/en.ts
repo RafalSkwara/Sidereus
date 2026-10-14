@@ -1018,9 +1018,9 @@ export const en = {
         tonight: "tonight",
         tomorrow: "tomorrow night",
         night: (p: { span: string }) => `night of ${p.span}`,
-        /** A solar eclipse is a daytime event: the tile names its day and time, `time` as "HH:mm". */
-        todayAt: (p: { time: string }) => `Today, ${p.time}`,
-        tomorrowAt: (p: { time: string }) => `Tomorrow, ${p.time}`,
+        /** A solar eclipse is a daytime event: the tile names its day and time, `time` as "HH:mm" (lowercase, like its siblings). */
+        todayAt: (p: { time: string }) => `today, ${p.time}`,
+        tomorrowAt: (p: { time: string }) => `tomorrow, ${p.time}`,
       },
       /** A visible solar eclipse on the tile and the verdict line is never "go out and look". */
       glassesOnly: "eclipse glasses only",

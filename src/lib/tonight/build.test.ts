@@ -1911,7 +1911,7 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(eventsVerdictLine(block, "en")).toMatch(
       /^Today, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
     );
-    expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Today, 11:22 · eclipse glasses only");
+    expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · today, 11:22 · eclipse glasses only");
 
     // 13:00 CEST: the partial phase ended at 12:19, so the eclipse is gone from the page, the tile and the line.
     const noon = new Date("2027-08-02T11:00:00Z");

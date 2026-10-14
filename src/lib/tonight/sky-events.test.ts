@@ -192,7 +192,7 @@ describe("a solar eclipse is first on the line, so its glasses never hide behind
   it("breaks a tie for `next` in the eclipse's favour, whichever came first", () => {
     const worded = formatSkyEvents([evening, morning], "en", WARSAW.timeZone, "2027-08-01", now);
     expect(worded.next?.kind).toBe("solar-eclipse");
-    expect(eventsTileLine(worded, "en")).toBe("Partial solar eclipse · Tomorrow, 11:22 · eclipse glasses only");
+    expect(eventsTileLine(worded, "en")).toBe("Partial solar eclipse · tomorrow, 11:22 · eclipse glasses only");
   });
 });
 
@@ -217,7 +217,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
       expect(eventsVerdictLine(block, "en")).toMatch(
         /^Today, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
       );
-      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Today, 11:22 · eclipse glasses only");
+      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · today, 11:22 · eclipse glasses only");
     });
 
     it("the evening before, at 20:00, reads 'Tomorrow, 11:22'", () => {
@@ -227,7 +227,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
       expect(eventsVerdictLine(block, "en")).toMatch(
         /^Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
       );
-      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Tomorrow, 11:22 · eclipse glasses only");
+      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · tomorrow, 11:22 · eclipse glasses only");
     });
 
     it("at 07:00, after dawn when the night is 08-02, is still shown as 'Today, 11:22' on the tile, the line and in `events`", () => {
@@ -242,7 +242,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
       expect(eventsVerdictLine(block, "en")).toMatch(
         /^Today, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
       );
-      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Today, 11:22 · eclipse glasses only");
+      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · today, 11:22 · eclipse glasses only");
     });
 
     it("in Polish reads 'Dziś, 11:22: częściowe zaćmienie Słońca, tylko przez okulary do zaćmień', no double colon", () => {
@@ -250,7 +250,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
       const line = eventsVerdictLine(block, "pl") ?? "";
       expect(line).toMatch(/^Dziś, 11:22: częściowe zaćmienie Słońca, tylko przez okulary do zaćmień( \+\d+ więcej)?$/);
       expect(eventsTileLine(block, "pl")).toBe(
-        "Częściowe zaćmienie Słońca · Dziś, 11:22 · tylko przez okulary do zaćmień",
+        "Częściowe zaćmienie Słońca · dziś, 11:22 · tylko przez okulary do zaćmień",
       );
     });
 
@@ -278,7 +278,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
         expect(eventsVerdictLine(block, "en"), clock).toMatch(
           /^Today, 16:54: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
         );
-        expect(eventsTileLine(block, "en"), clock).toBe("Partial solar eclipse · Today, 16:54 · eclipse glasses only");
+        expect(eventsTileLine(block, "en"), clock).toBe("Partial solar eclipse · today, 16:54 · eclipse glasses only");
       }
     });
 
@@ -287,7 +287,7 @@ describe("a solar eclipse stays until its partial phase ends, worded from today'
       expect(date).toBe("2028-01-25");
       expect(solar(block)?.dayWord).toBe("tomorrow");
       expect(block.tonight.some((event) => event.kind === "solar-eclipse")).toBe(false);
-      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Tomorrow, 16:54 · eclipse glasses only");
+      expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · tomorrow, 16:54 · eclipse glasses only");
     });
 
     it("is gone from every list once its partial phase has ended (18:30)", () => {
