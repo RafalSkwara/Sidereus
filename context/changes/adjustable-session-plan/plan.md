@@ -786,16 +786,16 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Automated
 
-- [ ] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up`
-- [ ] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit
-- [ ] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts`
-- [ ] 1.4 `npx vitest run src/lib/session-plans` passes
-- [ ] 1.5 `npm run lint` and `npx astro check` pass
-- [ ] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set)
+- [x] 1.1 The migration applies to the local stack in an announced window, without a reset: `npx supabase migration up`
+- [x] 1.2 `npm run db:types` with the stack at main + this migration, then `git diff --exit-code src/lib/database.types.ts` after the commit
+- [x] 1.3 `npm run test:db` passes: structure (four policies on `session_plans`), isolation with `needsSite`, `tests/db/session-plans.test.ts`
+- [x] 1.4 `npx vitest run src/lib/session-plans` passes
+- [x] 1.5 `npm run lint` and `npx astro check` pass
+- [x] 1.6 The stack is put back with `local-down.sql` after the run (`npx supabase migration list` shows main's set)
 
 #### Manual
 
-- [ ] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert
+- [x] 1.7 Break check: drop the site guard from the INSERT policy; `session-plans.test.ts` turns red; revert
 
 ### Phase 2: Applying edits to the night
 

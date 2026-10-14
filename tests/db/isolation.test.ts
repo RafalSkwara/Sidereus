@@ -13,7 +13,8 @@
  * PostgREST answers its INSERT with HTTP 401 and code `42501`, so the code is what the suite pins. Its UPDATE and
  * DELETE may be a no-op or `42501` (if its grant is ever revoked); the row read back as A is what decides.
  *
- * To cover a new per-user table, add an entry to `TABLES` in `tests/db/tables.ts`.
+ * To cover a new per-user table, add an entry to `TABLES` in `tests/db/tables.ts`. A table whose rows need the owner's
+ * own site (`needsSite`, as `session_plans`) gets one site per user, added to each insert at run time.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -52,21 +53,49 @@ async function signUp(label: string): Promise<{ client: Client; userId: string }
   return { client, userId: data.user.id };
 }
 
+/** One site per user, for the tables whose rows need the owner's own site (`needsSite`). */
+async function addSite(client: Client, label: string): Promise<string> {
+  const { data, error } = await client
+    .from("sites")
+    .insert({
+      name: `Isolation ${label}`,
+      latitude_deg: 52.23,
+      longitude_deg: 21.01,
+      bortle: 6,
+      min_altitude_deg: 15,
+      time_zone: "Europe/Warsaw",
+      time_zone_source: "auto",
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(`could not create a site for user ${label}`);
+  return data.id;
+}
+
 let a: { client: Client; userId: string };
 let b: { client: Client; userId: string };
+let siteOfA: string;
+let siteOfB: string;
 let anon: Client;
 
 beforeAll(async () => {
   a = await signUp("a");
   b = await signUp("b");
+  siteOfA = await addSite(a.client, "a");
+  siteOfB = await addSite(b.client, "b");
   anon = newClient();
 });
 
-describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
+describe.each(TABLES)("$table isolation", (entry) => {
+  const { table, valid, change } = entry;
+  const needsSite = "needsSite" in entry;
   // The generic client cannot narrow a union of table names; each entry above is type-checked by `satisfies`.
   const from = (client: Client) => client.from(table as "eyepieces");
-  const row = valid as TablesInsert<"eyepieces">;
   const patch = change as Database["public"]["Tables"]["eyepieces"]["Update"];
+  // `describe.each` collects `valid` before `beforeAll` has created the sites, so a row that needs the owner's site
+  // gets it here, when a test builds the insert. The rows are built per test: A's rows go to A's site, B's own
+  // inserts to B's site, and B's attempt at A's row keeps A's site and `user_id`, so only the user fails.
+  const rowOn = (siteId: string) => (needsSite ? { ...valid, site_id: siteId } : valid) as TablesInsert<"eyepieces">;
 
   // The ids `insertAsA` returned during the running test. A deletes them afterwards, so a table with a per-user
   // unique key (observing_milestones) can run the same suite: every test starts from a clean slate for A.
@@ -81,7 +110,7 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
   });
 
   async function insertAsA(): Promise<string> {
-    const { data, error } = await from(a.client).insert(row).select("id, user_id").single();
+    const { data, error } = await from(a.client).insert(rowOn(siteOfA)).select("id, user_id").single();
     expect(error).toBeNull();
     expect(data?.user_id).toBe(a.userId);
     if (!data) throw new Error(`A could not insert into ${table}`);
@@ -148,7 +177,7 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
     expect(before.error).toBeNull();
 
     const { data, error } = await from(b.client)
-      .insert({ ...row, user_id: a.userId })
+      .insert({ ...rowOn(siteOfA), user_id: a.userId })
       .select("id");
     expect(error?.code).toBe("42501");
     expect(data).toBeNull();
@@ -161,7 +190,7 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
   it("another user cannot hand its own row over to the first user", async () => {
     // Guards the update policy's WITH CHECK: the SELECT policy alone already hides A's rows from B's
     // update, but without WITH CHECK B could reassign its own row and plant it in A's account.
-    const own = await from(b.client).insert(row).select("id").single();
+    const own = await from(b.client).insert(rowOn(siteOfB)).select("id").single();
     expect(own.error).toBeNull();
     if (!own.data) throw new Error(`B could not insert into ${table}`);
     const id = own.data.id;
@@ -184,8 +213,8 @@ describe.each(TABLES)("$table isolation", ({ table, valid, change }) => {
   });
 
   it.each([
-    ["as a row of the first user", () => ({ ...row, user_id: a.userId })],
-    ["as a row without a user", () => row],
+    ["as a row of the first user", () => ({ ...rowOn(siteOfA), user_id: a.userId })],
+    ["as a row without a user", () => rowOn(siteOfA)],
   ])("an anonymous client cannot insert a row %s", async (_label, anonRow) => {
     const before = await from(a.client).select("id");
     expect(before.error).toBeNull();

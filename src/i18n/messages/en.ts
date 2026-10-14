@@ -1531,6 +1531,7 @@ export const en = {
       setup: "Could not load your setup. Please try again.",
       observations: "Could not load your observation log. Please try again.",
       skyChecks: "Could not load your sky checks. Please try again.",
+      sessionPlan: "Could not load your edited plan. Please try again.",
     },
     save: {
       site: "Could not save the site. Please try again.",
@@ -1539,6 +1540,7 @@ export const en = {
       setup: "Could not save your setup. Please try again.",
       observation: "Could not save the observation. Please try again.",
       skyCheck: "Could not save your answer. Please try again.",
+      sessionPlan: "Could not save your plan. Please try again.",
     },
     delete: {
       site: "Could not delete the site. Please try again.",
@@ -1555,6 +1557,10 @@ export const en = {
     },
     accountPlan: {
       needsFull: "This needs the full plan.",
+    },
+    sessionPlan: {
+      nightOver: "That night is over. Open tonight's plan and edit it again.",
+      notVisible: "One of the objects you added has no window tonight.",
     },
     geocoding: {
       failed: "Place search is unavailable right now.",

@@ -1318,6 +1318,7 @@ export const pl = {
       setup: "Nie udało się wczytać Twojego sprzętu. Spróbuj ponownie.",
       observations: "Nie udało się wczytać Twojego dziennika obserwacji. Spróbuj ponownie.",
       skyChecks: "Nie udało się wczytać Twoich ocen nieba. Spróbuj ponownie.",
+      sessionPlan: "Nie udało się wczytać Twojego zmienionego planu. Spróbuj ponownie.",
     },
     save: {
       site: "Nie udało się zapisać stanowiska. Spróbuj ponownie.",
@@ -1326,6 +1327,7 @@ export const pl = {
       setup: "Nie udało się zapisać Twojego sprzętu. Spróbuj ponownie.",
       observation: "Nie udało się zapisać obserwacji. Spróbuj ponownie.",
       skyCheck: "Nie udało się zapisać odpowiedzi. Spróbuj ponownie.",
+      sessionPlan: "Nie udało się zapisać planu. Spróbuj ponownie.",
     },
     delete: {
       site: "Nie udało się usunąć stanowiska. Spróbuj ponownie.",
@@ -1342,6 +1344,10 @@ export const pl = {
     },
     accountPlan: {
       needsFull: "To wymaga pełnego planu.",
+    },
+    sessionPlan: {
+      nightOver: "Ta noc już minęła. Otwórz dzisiejszy plan i edytuj go jeszcze raz.",
+      notVisible: "Jeden z dodanych obiektów nie ma dziś okna widoczności.",
     },
     geocoding: {
       failed: "Wyszukiwanie miejsc jest teraz niedostępne.",
