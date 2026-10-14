@@ -590,8 +590,8 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [x] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it
-- [x] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass
+- [x] 5.1 `BASE_URL=http://localhost:4333 SUPABASE_URL=… SUPABASE_KEY=… npm run test:e2e` passes: the whole suite, as CI runs it — 95d1ccc
+- [x] 5.2 `npx astro check`, `npm run lint`, `npm test` and `npm run build` pass — 95d1ccc
 
 #### Manual
 
