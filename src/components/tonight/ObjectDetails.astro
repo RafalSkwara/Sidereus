@@ -1,8 +1,11 @@
 ---
 // The details of one ranked object: window and best time, eyepiece pair, reason and "Mark observed". Shown by the
 // Targets page's expandable rows (ObjectRow); Tonight's dashboard lists no details since tonight-dashboard.
+import { Eye } from "lucide-react";
+
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import { getMessages } from "@/i18n";
+import type { ExpectationKey } from "@/lib/engine";
 import type { TonightEntry } from "@/lib/tonight/build";
 
 interface Props {
@@ -11,9 +14,14 @@ interface Props {
   logHref: string;
   /** The finder chart for this object (finder-chart). */
   finderHref: string;
+  /**
+   * What the object will look like in the user's telescope (what-to-expect), computed on the server for a confirmed
+   * full plan only. Absent or null: no line.
+   */
+  expectation?: { key: ExpectationKey; text: string } | null;
 }
 
-const { entry, logHref, finderHref } = Astro.props;
+const { entry, logHref, finderHref, expectation = null } = Astro.props;
 const tonight = getMessages(Astro.locals.locale).tonight;
 const t = tonight.object;
 ---
@@ -28,6 +36,14 @@ const t = tonight.object;
   finderLabel={tonight.finder.linkLabel({ target: entry.label })}
   srSuffix={entry.label}
 >
+  {expectation && (
+    /* The first of the slot's lines, above the eyepiece pair. `data-expect` carries the key: the bare attribute would
+       also match `data-expect-locked`, so smoke and e2e look for `data-expect="`. */
+    <p data-expect={expectation.key} class="flex items-start gap-2 text-label text-foreground">
+      <Eye className="mt-0.5 size-4 shrink-0 text-primary-strong" aria-hidden="true" />
+      <span class="min-w-0">{expectation.text}</span>
+    </p>
+  )}
   {entry.pair?.kind === "pair" && (
     <div class="space-y-2">
       <p class="text-label text-foreground">

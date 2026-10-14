@@ -7,7 +7,7 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, MapPin, Plus, Save, Settings2, Telescope } from "lucide-react";
+import { Check, Lock, MapPin, Plus, Save, Settings2, Telescope } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import SeenList from "@/components/progress/SeenList.astro";
 import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
+import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
 import FinderChart from "@/components/finder/FinderChart.astro";
@@ -51,7 +52,7 @@ import TonightSkyView from "@/components/tonight/TonightSkyView";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages } from "@/i18n";
-import type { MoonDiscState, Verdict } from "@/lib/engine";
+import { EXPECTATION_KEYS, type MoonDiscState, type Verdict } from "@/lib/engine";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import type { ForecastResult } from "@/lib/forecast/service";
 import type { SiteRecord } from "@/lib/gear/store";
@@ -402,6 +403,15 @@ const sampleTargets = [
     Date.UTC(2026, 9, 11, 1, 30),
   ),
 ];
+// The Targets row specimen for "What to expect": M13 with an eyepiece pair, as a full-plan row shows it.
+const expectSample = sampleTarget(
+  1,
+  messierSample(13),
+  "Great Globular Cluster in Hercules",
+  "Her",
+  "19:55",
+  Date.UTC(2026, 9, 10, 17, 55),
+);
 // The dashboard tile holds SUMMARY_TARGETS (3): the Double Cluster takes the place of M13.
 const sampleSummaryTargets = sampleTargets.filter((entry) => entry.id !== "M13");
 
@@ -2341,6 +2351,56 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               hover, focus-visible, active, disabled — N/A (a chart is a picture with text: no control to hover, focus
               or disable) · error — N/A (a failed build renders the page's own notice, not the chart) · empty — the
               no-start and no-eyepieces cells · loading — the page skeleton
+            </p>
+          </section>
+
+          <!-- What to expect -->
+          <section class:list={block} aria-labelledby="c-expect">
+            <h3 id="c-expect" class:list={blockTitle}>
+              What to expect (Targets rows)
+            </h3>
+            <p class:list={blockNote}>
+              The line a full-plan account sees first in each ranked row's details, above the eyepiece pair: an Eye icon
+              and one sentence of the engine's 22 keys, in the page's language. A free account sees one muted line with
+              a lock under the Targets count instead, and no phrase anywhere.
+            </p>
+            <div class="flex flex-col gap-10">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · every phrase, in the current language</p>
+                <ul class="divide-y divide-border" id="c-expect-phrases">
+                  {EXPECTATION_KEYS.map((key) => (
+                    <li class="py-2 text-label text-foreground">
+                      <span class="block font-mono text-caption text-muted-foreground">{key}</span>
+                      {m.tonight.expect.phrase[key]}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · in a row's details (ObjectDetails)</p>
+                <div id="c-expect-details" class="max-w-md rounded-lg border border-border p-4">
+                  <ObjectDetails
+                    entry={expectSample}
+                    logHref="/design"
+                    finderHref="/design"
+                    expectation={{ key: "globularResolved", text: m.tonight.expect.phrase.globularResolved }}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>locked · a free account, under the Targets count</p>
+                <div id="c-expect-locked" class="max-w-md rounded-lg border border-border p-4">
+                  <p class="flex items-start gap-2 text-label text-muted-foreground">
+                    <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span class="min-w-0">{m.tonight.expect.locked}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (a line of text: no control) · error — N/A (a failed plan
+              read renders neither line) · empty — N/A (an unknown object has no line) · loading — N/A (the line arrives
+              with its island)
             </p>
           </section>
         </div>

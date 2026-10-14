@@ -117,25 +117,26 @@ function inNoDarknessWindow(now = new Date()) {
 const FINDER_ISLAND_PATH = "/_server-islands/FinderContent";
 const FINDER_PAGE = "/tonight/finder?object=M13&from=targets";
 let islandUrl = "";
+// The Targets page's island (what-to-expect Phase 2): the same capture, from the `/tonight/targets` shell, so the
+// expectation line's gate is proven on the island itself and not only on the page that streams it.
+const TARGETS_ISLAND_PATH = "/_server-islands/TargetsPageContent";
+const TARGETS_PAGE = "/tonight/targets";
+let targetsIslandUrl = "";
 
 /**
- * The finder island's URL from the shell's `<link rel="preload" as="fetch" href="/_server-islands/FinderContent?e=…">`,
- * or "" when there is none. The HTML escapes `&` as `&amp;` inside the attribute, so it is decoded here, as the service
+ * An island's URL from the shell's `<link rel="preload" as="fetch" href="/_server-islands/<Name>?e=…">` (`path` is the
+ * island's route, e.g. FINDER_ISLAND_PATH), or "" when there is none. The HTML escapes `&` as `&amp;` inside the attribute, so it is decoded here, as the service
  * worker's `islandUrlFromShell` (src/lib/offline/copies.ts) does; a POST island has no such link, so the capture is empty
  * and every step that needs it fails.
  */
-function islandUrlFromShell(html) {
+function islandUrlFromShell(html, path) {
   for (const [, list] of html.matchAll(/<link\b([^>]*)>/gi)) {
     const attributes = new Map();
     for (const [, key, value] of list.matchAll(/([^\s"'>/=]+)\s*=\s*"([^"]*)"/g)) {
       attributes.set(key.toLowerCase(), value.replaceAll("&amp;", "&"));
     }
     const href = attributes.get("href") ?? "";
-    if (
-      attributes.get("rel") === "preload" &&
-      attributes.get("as") === "fetch" &&
-      href.startsWith(FINDER_ISLAND_PATH)
-    ) {
+    if (attributes.get("rel") === "preload" && attributes.get("as") === "fetch" && href.startsWith(path)) {
       return href;
     }
   }
@@ -148,6 +149,14 @@ function replayIsland() {
     return Promise.reject(new Error("no island URL was captured from the full account's shell (finder step 2 failed)"));
   }
   return request(islandUrl, { body: true });
+}
+
+/** A step that replays the Targets island's captured URL; fails loudly (never skips) when the capture is empty. */
+function replayTargetsIsland() {
+  if (!targetsIslandUrl) {
+    return Promise.reject(new Error("no Targets island URL was captured from the shell (expect step 1 failed)"));
+  }
+  return request(targetsIslandUrl, { body: true });
 }
 
 const steps = [
@@ -246,11 +255,29 @@ const steps = [
     },
   ],
   [
+    // What to expect (what-to-expect Phase 2, D-11): a free account's Targets island holds the one locked line and no
+    // phrase. The marker is the valued `data-expect="`: the bare attribute is a substring of `data-expect-locked`.
+    "expect 1: a free account's Targets island holds the locked line and no phrase (URL captured)",
+    async () => {
+      const shell = await request(TARGETS_PAGE, { body: true });
+      targetsIslandUrl = islandUrlFromShell(shell.body, TARGETS_ISLAND_PATH);
+      if (!targetsIslandUrl) throw new Error("the Targets shell has no preload link to its island");
+      return replayTargetsIsland();
+    },
+    {
+      status: 200,
+      // In the no-darkness window nothing is ranked, so there is no count line for the locked line to sit under.
+      ...(inNoDarknessWindow()
+        ? { skippedNote: "no astronomical darkness", bodyExcludes: ['data-expect="'] }
+        : { bodyIncludes: ["data-expect-locked"], bodyExcludes: ['data-expect="'] }),
+    },
+  ],
+  [
     "finder 2: after the grant, the full account's shell streams the island (URL captured)",
     async () => {
       await setPlan("full");
       const result = await request(FINDER_PAGE, { body: true });
-      islandUrl = islandUrlFromShell(result.body);
+      islandUrl = islandUrlFromShell(result.body, FINDER_ISLAND_PATH);
       if (!islandUrl) throw new Error("the full account's shell has no preload link to the finder island");
       return result;
     },
@@ -271,6 +298,17 @@ const steps = [
       ...(inNoDarknessWindow()
         ? { skippedNote: "no astronomical darkness", bodyIncludes: ['data-finder-state="not-ranked"'] }
         : { bodyIncludes: ["data-finder-chart"] }),
+    },
+  ],
+  [
+    "expect 2: the full account's Targets island holds the expectation lines",
+    () => replayTargetsIsland(),
+    {
+      status: 200,
+      needsPlanGrant: true,
+      ...(inNoDarknessWindow()
+        ? { skippedNote: "no astronomical darkness", bodyExcludes: ["data-expect-locked"] }
+        : { bodyIncludes: ['data-expect="'], bodyExcludes: ["data-expect-locked"] }),
     },
   ],
   [

@@ -5,6 +5,7 @@
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import { localCommonName } from "@/lib/catalogue/common-names";
+import type { ExpectationKey } from "@/lib/engine";
 import type { TonightEntry } from "@/lib/tonight/build";
 import { createFormatter } from "@/lib/tonight/format";
 
@@ -14,9 +15,11 @@ interface Props {
   logHref: string;
   /** The finder chart for this object (finder-chart). */
   finderHref: string;
+  /** What the object will look like in the user's telescope, for a confirmed full plan only (what-to-expect). */
+  expectation?: { key: ExpectationKey; text: string } | null;
 }
 
-const { entry, logHref, finderHref } = Astro.props;
+const { entry, logHref, finderHref, expectation = null } = Astro.props;
 const { locale } = Astro.locals;
 const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
@@ -60,7 +63,7 @@ const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
     </summary>
     <div class="pb-5 pl-10">
       <p class="text-label text-muted-foreground">{detailLine}</p>
-      <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} />
+      <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} expectation={expectation} />
     </div>
   </details>
 </li>

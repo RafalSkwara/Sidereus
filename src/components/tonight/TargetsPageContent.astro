@@ -4,7 +4,7 @@
 // rest as a scrollable list of expandable rows, by rank or by best time, and the ones the Moon washes out. Each
 // "Mark observed" returns here (`from=targets`). It loads through the same loadTonight as Tonight, so both always
 // agree; it never records the sky verdict (only Tonight shows it).
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Lock } from "lucide-react";
 
 import { ServerError } from "@/components/forms/ServerError";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
@@ -17,10 +17,12 @@ import Band from "@/components/ui/Band.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural, translateKey, type MessageKey } from "@/i18n";
-import { getAccountPlan } from "@/lib/account-plan";
+import { accountPlanForCopy, getAccountPlan } from "@/lib/account-plan";
 import { localCommonName } from "@/lib/catalogue/common-names";
+import type { ExpectationKey } from "@/lib/engine";
 import { MAX_RANKED_OBJECTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { sortEntries, type AllObjectsSort } from "@/lib/tonight/all-objects";
+import { expectationKeyFor, expectationText, expectationView } from "@/lib/tonight/expectation";
 import { createFormatter } from "@/lib/tonight/format";
 import { loadTonightFor } from "@/lib/tonight/island";
 import { finderHref, logHref } from "@/lib/tonight/load";
@@ -52,11 +54,14 @@ const { objectDetailLine } = createFormatter(locale);
 const a = t.all;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
-// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
-void getAccountPlan(Astro.locals);
+// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised
+// read), and "what to expect" awaits the same promise below. Access is `getAccountPlan` (fails closed); the display
+// reads the same result three-valued (`accountPlanForCopy`), so a failed read shows neither line.
+const planAccess = getAccountPlan(Astro.locals);
 // Signed out, `load` is null and the island renders nothing. Every cleared object gets a full entry.
 const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, limit: Number.POSITIVE_INFINITY });
 const view = load?.view ?? null;
+const expectView = load ? expectationView(await planAccess, (await accountPlanForCopy(Astro.locals)).plan) : "none";
 const failures = load
   ? [load.sitesError, load.telescopesError, load.tonightError].filter((key): key is MessageKey => key !== null)
   : [];
@@ -76,6 +81,21 @@ const loggedInRest = logged !== null && rest.some((entry) => entry.id === logged
 // Washed out by the Moon (moonlight-and-the-verdict): shown whether or not anything cleared, so a shorter list on
 // Tonight is never unexplained.
 const washedOut = ranking?.washedOutEntries ?? [];
+
+// What to expect (what-to-expect, D-7): the line per ranked object, only for a confirmed full plan and only with the
+// site and the telescope in hand. It is computed here, never in `TonightView`, so a free account's HTML cannot hold it.
+const expectations = new Map<string, { key: ExpectationKey; text: string }>();
+if (expectView === "lines" && ranking && load?.site && load.telescope) {
+  const { bortle } = load.site;
+  const { apertureMm } = load.telescope;
+  for (const entry of ranking.entries) {
+    const key = expectationKeyFor(entry.id, bortle, apertureMm);
+    if (key !== null) {
+      expectations.set(entry.id, { key, text: expectationText(key, m) });
+    }
+  }
+}
+const expectLocked = expectView === "locked" && best.length > 0;
 
 const sortLinks: { value: AllObjectsSort; label: string }[] = [
   { value: "rank", label: a.byRank },
@@ -155,10 +175,17 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
         <div>
           {best.length > 0 ? (
             <Band headingId="targets-heading" heading={t.summary.targets}>
-              <p class="mb-4 text-label text-muted-foreground">
+              <p class:list={["text-label text-muted-foreground", expectLocked ? "mb-2" : "mb-4"]}>
                 {ranking.clearedText}
                 {load.multipleTelescopes && <> · {t.rankingFor({ telescope: view.telescopeName })}</>}
               </p>
+              {expectLocked && (
+                /* A free account: once per page, no phrase anywhere (O-1). The marker has no valued `data-expect`. */
+                <p data-expect-locked class="mb-4 flex items-start gap-2 text-label text-muted-foreground">
+                  <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span class="min-w-0">{t.expect.locked}</span>
+                </p>
+              )}
               <ol class="divide-y divide-border">
                 {best.map((entry) => (
                   <ObjectCard
@@ -166,6 +193,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                     rank={entry.rank}
                     logHref={href(entry.id)}
                     finderHref={finderLink(entry.id)}
+                    expectation={expectations.get(entry.id) ?? null}
                   />
                 ))}
               </ol>
@@ -219,7 +247,12 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                   >
                     <ul class="divide-y divide-border">
                       {rest.map((entry) => (
-                        <ObjectRow entry={entry} logHref={href(entry.id)} finderHref={finderLink(entry.id)} />
+                        <ObjectRow
+                          entry={entry}
+                          logHref={href(entry.id)}
+                          finderHref={finderLink(entry.id)}
+                          expectation={expectations.get(entry.id) ?? null}
+                        />
                       ))}
                     </ul>
                   </div>

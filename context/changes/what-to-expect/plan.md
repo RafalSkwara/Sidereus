@@ -607,10 +607,10 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [x] 1.1 `npx vitest run src/lib/engine/expectation.test.ts` passes, including the reference fixture
-- [x] 1.2 `npm test` passes (purity test included)
-- [x] 1.3 `npm run lint` and `npx astro check` pass
-- [x] 1.4 Deliberate break (sign of the aperture term in `contrastBand`) turns the aperture monotonicity test red, then reverted
+- [x] 1.1 `npx vitest run src/lib/engine/expectation.test.ts` passes, including the reference fixture — 4b83028
+- [x] 1.2 `npm test` passes (purity test included) — 4b83028
+- [x] 1.3 `npm run lint` and `npx astro check` pass — 4b83028
+- [x] 1.4 Deliberate break (sign of the aperture term in `contrastBand`) turns the aperture monotonicity test red, then reverted — 4b83028
 
 #### Manual
 
@@ -620,13 +620,13 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes (i18n parity and helper tests included)
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.3 `npm run build` succeeds
-- [ ] 2.4 `npm run smoke` passes with 0 skipped (all-clear fixture, inline local key)
-- [ ] 2.5 `npx playwright test tests/e2e/what-to-expect.spec.ts` passes with 0 skipped
-- [ ] 2.6 `tonight-targets`, `tonight-phone` and `offline` specs pass
-- [ ] 2.7 Deliberate break (lines rendered on `locked`) turns the smoke free step red, then reverted
+- [x] 2.1 `npm test` passes (i18n parity and helper tests included)
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.3 `npm run build` succeeds
+- [x] 2.4 `npm run smoke` passes with 0 skipped (all-clear fixture, inline local key)
+- [x] 2.5 `npx playwright test tests/e2e/what-to-expect.spec.ts` passes with 0 skipped
+- [x] 2.6 `tonight-targets`, `tonight-phone` and `offline` specs pass
+- [x] 2.7 Deliberate break (lines rendered on `locked`) turns the smoke free step red, then reverted
 
 #### Manual
 
