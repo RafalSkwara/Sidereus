@@ -3,7 +3,7 @@ project: "Sidereus"
 version: 3
 status: draft
 created: 2026-09-16
-updated: 2026-10-07
+updated: 2026-10-14
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -757,7 +757,7 @@ the plan of the slice that needs it.
     old file with no licence (Yale BSC5 forbids altered copies without its
     authors' permission). The owner chose to stay on HYG v4.1 for M-3 and to ask
     ESA (data.licences@esa.int) for a commercial licence; the request is drafted
-    in `context/archive/2026-10-11-finder-chart/esa-licence-request.md` and is pending. If ESA refuses, SAO only replaces HYG for both star files, in
+    in `context/archive/2026-10-11-finder-chart/esa-licence-request.md`; the owner sent it on 2026-10-14 and awaits ESA's reply. If ESA refuses, SAO only replaces HYG for both star files, in
     its own change before any payment. SAO caveat: NASA NTRS marks the 1966
     reports and the ADC documentation "public use permitted"; no formal
     licence for the I/131A file; confirm before switching. SAO has no Bayer or

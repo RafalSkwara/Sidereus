@@ -49,7 +49,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | done |
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
 | S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
-| S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | in-progress |
+| S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | done |
 | S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | proposed |
 
 ## Streams
@@ -184,7 +184,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Meteor shower data whose terms allow reuse (PRD Open Question 19). — Owner: team. Block: no.
   - What counts as a close pairing (Open Question 20). — Owner: team. Block: no.
 - **Risk:** Several kinds of event maths at once; may split by event kind in its plan. Computed by the engine, no feed, so it stays deterministic and works offline in stored copies.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-08: Adjustable session plan
 
@@ -258,3 +258,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-06: user can have a milestone celebrated when the log entry that reaches it is saved, and see every milestone reached on the progress page.** — Archived 2026-10-13 → `context/archive/2026-10-11-observing-milestones/`. Lesson: —.
 - **S-03: user can open a finder chart for any ranked deep-sky object or planet: the nearest star they can see with the naked eye from their site, the hop to the target, and their finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky; a free account sees what the chart does and that it needs the full plan.** — Archived 2026-10-13 → `context/archive/2026-10-11-finder-chart/`. Lesson: run the whole e2e suite locally the way CI does before opening a PR, not only the slice's specs; a red `ci` on main blocks `deploy`, so an intermittent harness flake (agent-hooks EPIPE, fixed in #156) is fixed failing-first in its own change, never retried away; measure size budgets on the real encoding before planning them (the finder file's estimate was off by 2x).
 - **S-04: user can read, with each ranked target, what it will look like in their own telescope from their site.** — Archived 2026-10-14 → `context/archive/2026-10-14-what-to-expect/`. Lesson: —.
+- **S-07: user can see the next 30 days of sky events for their site with times and visibility, the next notable one as a dashboard tile, and tonight's named beside the sky verdict.** — Archived 2026-10-14 → `context/archive/2026-10-13-sky-events/`. Lesson: a coarse sampling grid misses short visibility windows (twilight pairings, impl review F1): pin a scan against a brute-force reference over fixed windows.
