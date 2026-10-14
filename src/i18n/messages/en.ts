@@ -955,6 +955,44 @@ export const en = {
       },
     },
 
+    /**
+     * What to expect (what-to-expect, M-3 S-04): one plain sentence per `ExpectationKey` (the engine's 22 keys), a
+     * full-plan line on every ranked Targets row. Plain string literals: this file stays import-free.
+     */
+    expect: {
+      phrase: {
+        globularResolved:
+          "A ball of stars: at high power the edges break into pinpoints while the core stays a bright glow.",
+        globularGrainy:
+          "A round glow, brighter in the middle; at high power its edges look grainy, about to break into stars.",
+        globularGlow: "A small round glow, brighter in the middle, like an out-of-focus star.",
+        openClusterWide: "A wide spray of stars, bigger than most eyepiece fields: use your lowest power.",
+        openClusterCompact: "A small, tight knot of stars; more appear as your eye settles.",
+        openClusterScattered: "A loose group of stars of different brightness, clearly separate against the sky.",
+        openClusterHazy: "A few brighter stars over a faint haze of fainter ones.",
+        planetaryStarLike: "Looks like a star at low power; at high power it shows as a tiny, slightly fuzzy disc.",
+        planetaryDisc: "A bright grey-green disc, ring or bow-tie shape that takes magnification well.",
+        planetaryFaint: "A faint round glow; use averted vision.",
+        galaxyBright: "An oval glow with a bright centre, easy to see straight on.",
+        galaxySmudge: "A faint grey smudge with a slightly brighter middle.",
+        galaxyFaint: "A very faint grey smudge; use averted vision.",
+        galaxyLimit: "At the edge of what your sky allows: a ghostly patch you may glimpse only with averted vision.",
+        nebulaBright: "A bright cloud of glowing gas with a clear shape and structure.",
+        nebulaGlow: "A soft, misty glow with an irregular shape.",
+        nebulaFaint: "A very faint mist; use averted vision and your lowest power.",
+        clusterNebulaBright: "Bright stars wrapped in a glowing cloud with clear structure.",
+        clusterNebulaFaint: "A group of stars inside a faint haze; averted vision shows more of the glow.",
+        asterism: "A rich patch of the Milky Way crowded with faint stars; best at your lowest power.",
+        doubleStar: "Two faint stars close together, and nothing more.",
+        other: "A small group of a few faint stars.",
+      },
+      /** The one muted line a free account sees under the Targets count (O-1); the example is the `galaxySmudge` phrase. */
+      locked:
+        'Full plan: each target also says what it will look like in your telescope from your site, such as "A faint grey smudge with a slightly brighter middle."',
+      /** The locked finder explainer's fourth bullet (the finder chart's line, Phase 3). */
+      lockedFinderLine: "Says what the object will look like in your telescope from your site.",
+    },
+
     /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */
     summary: {
       targets: "Point here first",

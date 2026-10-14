@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { en } from "@/i18n/messages/en";
 import type { EyepieceRecord } from "@/lib/gear/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
+import { expectationKeyFor } from "@/lib/tonight/expectation";
 import type { TonightLoad } from "@/lib/tonight/load";
 import { EYEPIECES, NOW, TELESCOPE, WARSAW, result, uniformForecast } from "@/lib/tonight/test-fixtures";
 
@@ -147,6 +149,30 @@ describe("loadFinderFor for a full account", () => {
     // The context line is the ranking's own refracted direction and time.
     expect(load.labels.direction).toBe(ranked?.bestDirection);
     expect(load.labels.time).toBe(ranked?.bestTime);
+  });
+
+  it("gives a deep-sky chart its expectation key and phrase for the site's Bortle class and the aperture", async () => {
+    const key = expectationKeyFor("M31", WARSAW.bortle, TELESCOPE.apertureMm);
+    if (key === null) {
+      throw new Error("expected M31 in the catalogue");
+    }
+    const load = await loadFinderFor(locals(), { target: "M31" });
+    if (load.kind !== "chart") {
+      throw new Error(`expected a chart, got ${load.kind}`);
+    }
+    expect(load.expectation).toEqual({ key, text: en.tonight.expect.phrase[key] });
+  });
+
+  it("gives a planet's chart the planet's own note under its key", async () => {
+    const planet = viewFor(WIDE_KIT).solarSystem?.entries[0];
+    if (planet === undefined) {
+      throw new Error("expected a planet on this night");
+    }
+    const load = await loadFinderFor(locals(), { target: planet.key });
+    if (load.kind !== "chart") {
+      throw new Error(`expected a chart, got ${load.kind}`);
+    }
+    expect(load.expectation).toEqual({ key: planet.key, text: planet.note });
   });
 
   it("draws a planet's chart with the finding eyepiece of a kit that fits everything", async () => {

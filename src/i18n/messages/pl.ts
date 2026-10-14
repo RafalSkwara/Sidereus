@@ -840,6 +840,41 @@ export const pl = {
       },
     },
 
+    expect: {
+      phrase: {
+        globularResolved:
+          "Kula gwiazd: przy dużym powiększeniu brzegi rozpadają się na pojedyncze punkty, a jądro pozostaje jasną poświatą.",
+        globularGrainy:
+          "Okrągła poświata, jaśniejsza pośrodku; przy dużym powiększeniu brzegi wyglądają ziarnisto, jakby miały się zaraz rozpaść na gwiazdy.",
+        globularGlow: "Mała okrągła poświata, jaśniejsza pośrodku, jak nieostra gwiazda.",
+        openClusterWide:
+          "Rozległe rozsypisko gwiazd, większe niż pole widzenia większości okularów: użyj najmniejszego powiększenia.",
+        openClusterCompact: "Mała, ciasna gromadka gwiazd; gdy oko się przyzwyczai, widać ich coraz więcej.",
+        openClusterScattered: "Luźna grupa gwiazd o różnej jasności, wyraźnie odcinająca się od tła nieba.",
+        openClusterHazy: "Kilka jaśniejszych gwiazd na tle mgiełki z gwiazd zbyt słabych, by je rozróżnić.",
+        planetaryStarLike:
+          "Przy małym powiększeniu wygląda jak gwiazda; przy dużym widać maleńką, lekko rozmytą tarczę.",
+        planetaryDisc: "Jasna szarozielona tarcza, pierścień albo kształt muszki; dobrze znosi duże powiększenie.",
+        planetaryFaint: "Słaba okrągła poświata; patrz kątem oka.",
+        galaxyBright: "Owalna poświata z jasnym środkiem, dobrze widoczna, gdy patrzysz wprost.",
+        galaxySmudge: "Słaba szara plamka z nieco jaśniejszym środkiem.",
+        galaxyFaint: "Bardzo słaba szara plamka; patrz kątem oka.",
+        galaxyLimit:
+          "Na granicy tego, na co pozwala Twoje niebo: ledwo uchwytna plamka, którą możesz dostrzec tylko kątem oka.",
+        nebulaBright: "Jasny obłok świecącego gazu o wyraźnym kształcie i strukturze.",
+        nebulaGlow: "Miękka, mglista poświata o nieregularnym kształcie.",
+        nebulaFaint: "Bardzo słaba mgiełka; patrz kątem oka i użyj najmniejszego powiększenia.",
+        clusterNebulaBright: "Jasne gwiazdy otulone świecącym obłokiem o wyraźnej strukturze.",
+        clusterNebulaFaint: "Grupa gwiazd w słabej mgiełce; patrząc kątem oka, zobaczysz więcej poświaty.",
+        asterism: "Gęsty płat Drogi Mlecznej usiany słabymi gwiazdami; najlepiej przy najmniejszym powiększeniu.",
+        doubleStar: "Dwie słabe gwiazdy blisko siebie i nic więcej.",
+        other: "Mała grupka kilku słabych gwiazd.",
+      },
+      locked:
+        "Pełny plan: przy każdym celu zobaczysz też, jak będzie wyglądał w Twoim teleskopie z Twojego miejsca, na przykład „Słaba szara plamka z nieco jaśniejszym środkiem”.",
+      lockedFinderLine: "Mówi, jak obiekt będzie wyglądał w Twoim teleskopie z Twojego miejsca.",
+    },
+
     summary: {
       targets: "Zacznij od nich",
       targetsCaption: {

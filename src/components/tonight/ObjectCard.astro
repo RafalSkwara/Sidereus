@@ -7,6 +7,7 @@ import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import { localCommonName } from "@/lib/catalogue/common-names";
+import type { ExpectationKey } from "@/lib/engine";
 import type { TonightEntry } from "@/lib/tonight/build";
 import { createFormatter } from "@/lib/tonight/format";
 
@@ -17,9 +18,11 @@ interface Props {
   logHref: string;
   /** The finder chart for this object (finder-chart). */
   finderHref: string;
+  /** What the object will look like in the user's telescope, for a confirmed full plan only (what-to-expect). */
+  expectation?: { key: ExpectationKey; text: string } | null;
 }
 
-const { entry, rank, logHref, finderHref } = Astro.props;
+const { entry, rank, logHref, finderHref, expectation = null } = Astro.props;
 const { locale } = Astro.locals;
 const { objectDetailLine } = createFormatter(locale);
 const commonName = localCommonName(entry.id, entry.commonName, locale);
@@ -47,5 +50,5 @@ const tipId = `not-seen-tip-${entry.id}`;
   <p class="mt-1 text-label text-muted-foreground">{detailLine}</p>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 
-  <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} />
+  <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} expectation={expectation} />
 </li>
