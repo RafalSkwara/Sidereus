@@ -271,9 +271,10 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                   const commonName = localCommonName(entry.id, entry.commonName, locale);
                   return (
                     <li
+                      id={`object-${entry.id}`}
                       data-washed-out-object={entry.id}
                       data-label={entry.label}
-                      class="flex min-h-11 items-center gap-3 py-3"
+                      class="flex min-h-11 scroll-mt-4 items-center gap-3 py-3"
                     >
                       <span class="min-w-0 flex-1">
                         <span class="font-display text-title font-semibold break-words text-muted-foreground">

@@ -26,7 +26,13 @@ const commonName = localCommonName(entry.id, entry.commonName, locale);
 const detailLine = objectDetailLine(entry.caldwell, entry.constellation);
 ---
 
-<li data-object={entry.id} data-label={entry.label} data-best-at={entry.bestAt}>
+<li
+  id={`object-${entry.id}`}
+  class="scroll-mt-4"
+  data-object={entry.id}
+  data-label={entry.label}
+  data-best-at={entry.bestAt}
+>
   <details class="group">
     <!-- At least 44 px; the hover tint and the ring run a little past the text, inside the list's width. -->
     <summary

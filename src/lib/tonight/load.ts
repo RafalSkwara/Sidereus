@@ -78,6 +78,8 @@ export interface LoadTonightInput {
   readPlanEdits?: PlanEditsReader;
   /** Also list what the plan editor may add; see `buildTonight`. */
   withPlanCandidates?: boolean;
+  /** Also list every object the telescope can reach (the finder chart's `from=plan`); see `buildTonight`. */
+  withReachable?: boolean;
 }
 
 export interface TonightLoad {
@@ -100,11 +102,8 @@ export interface TonightLoad {
   tonightError: MessageKey | null;
   /** The user's recent open sky checks when `withSkyChecks` is set; empty otherwise or when the read fails. */
   openSkyChecks: SkyCheckRecord[];
-  /**
-   * The saved plan could not be read (`readPlanEdits` threw): the view is the suggested plan. `null` or absent
-   * otherwise (optional so the islands' own empty `TonightLoad` literals stay valid until they read edits).
-   */
-  planEditsError?: MessageKey | null;
+  /** The saved plan could not be read (`readPlanEdits` threw): the view is the suggested plan. `null` otherwise. */
+  planEditsError: MessageKey | null;
 }
 
 /** Loads one list; a failure only affects what depends on it, never the whole page. */
@@ -198,6 +197,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
           nightDate,
           planEdits: planEdits?.edits ?? null,
           withPlanCandidates: input.withPlanCandidates,
+          withReachable: input.withReachable,
         },
       );
     } catch {

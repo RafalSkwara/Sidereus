@@ -801,25 +801,25 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases
-- [x] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged
-- [x] 2.3 `npm run lint` and `npx astro check` pass
+- [x] 2.1 `npm test` passes, including `plan-edits.test.ts`, `plan-order.test.ts`, `plan-window.test.ts`, the order cases in `session-plan.test.ts`, the edited-plan, href and hint cases in `build.test.ts`, the `load.test.ts` night cases and the new invariant cases — ac686bd
+- [x] 2.2 `src/lib/engine/calibration.test.ts` and the ranking suites pass unchanged — ac686bd
+- [x] 2.3 `npm run lint` and `npx astro check` pass — ac686bd
 
 #### Manual
 
-- [x] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert
+- [x] 2.4 Break check: let `applyPlanEdits` draw a deep-sky key that is not reachable from a fabricated window; the invariant turns red; revert — ac686bd
 
 ### Phase 3: Full-plan routes, gated plan island and HTTP checks
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases
-- [ ] 3.2 `npm run lint` and `npx astro check` pass
-- [ ] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7
+- [x] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases
+- [x] 3.2 `npm run lint` and `npx astro check` pass
+- [x] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7
 
 #### Manual
 
-- [ ] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert
+- [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert
 - [ ] 3.5 On a preview, the free lock line, a forced `?error=` alert and the held line read correctly in EN and PL
 
 ### Phase 4: Fresh offline copy after a save

@@ -69,6 +69,7 @@ const NOTHING_LOADED: TonightLoad = {
   view: null,
   tonightError: null,
   openSkyChecks: [],
+  planEditsError: null,
 };
 // Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
 void getAccountPlan(Astro.locals);

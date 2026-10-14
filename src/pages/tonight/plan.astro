@@ -1,18 +1,28 @@
 ---
 // The Session plan focused page (session-plan-timeline): tonight's targets on one night axis, for the site and
-// telescope picked on Tonight. The shell reads the gear and paints at once; PlanPageContent streams the timeline in
-// under the slim page sky. The page has no "Mark observed", so it has no log notice.
+// telescope picked on Tonight. The shell reads the gear, the save toast and the refusal (`?saved=`, `?error=`, which
+// POST /api/tonight/plan and /reset redirect with, adjustable-session-plan) and paints at once; PlanPageContent streams
+// the timeline in under the slim page sky. The page has no "Mark observed", so it has no log notice. The page itself
+// stays free (FR-031): only editing, the editor and the edited rows are gated, inside the island.
 import GearShell from "@/components/gear/GearShell.astro";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import Attribution from "@/components/tonight/Attribution.astro";
 import PlanPageContent from "@/components/tonight/PlanPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
-import { getMessages } from "@/i18n";
+import Notice from "@/components/ui/Notice.astro";
+import { getMessages, isMessageKey, translateKey } from "@/i18n";
+import { parsePlanSaved } from "@/lib/session-plans/redirect";
 import { requestedGear, requestedNight } from "@/lib/tonight/requested-gear";
 
 const { supabase, locale } = Astro.locals;
-const title = getMessages(locale).tonight.summary.plan;
+const m = getMessages(locale);
+const title = m.tonight.summary.plan;
+// The refusal of a save or reset: a catalogue key only (never a sentence or a value), translated here and shown by the
+// island above the plan (the `planets.astro` pattern). `?saved=plan|plan-reset` is the toast, a fixed pair.
+const errorParam = Astro.url.searchParams.get("error");
+const error = errorParam && isMessageKey(errorParam) ? translateKey(m, errorParam, "errors.generic") : null;
+const saved = parsePlanSaved(Astro.url.searchParams.get("saved"));
 
 // The site and telescope picked on Tonight (or remembered on this device); see requested-gear.ts.
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
@@ -21,8 +31,14 @@ const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={title} skyFlow>
+  {saved && (
+    <Notice tone="success" toast param="saved">
+      {saved === "plan" ? m.tonight.pages.plan.saved : m.tonight.pages.plan.resetDone}
+    </Notice>
+  )}
+
   {supabase ? (
-    <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night}>
+    <PlanPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night} error={error}>
       <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/plan" rows={4} layout="plan" />
     </PlanPageContent>
   ) : (

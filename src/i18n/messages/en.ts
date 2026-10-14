@@ -1275,6 +1275,26 @@ export const en = {
         unavailable: "The session plan isn't available right now.",
         /** The editor's "add" list under a target's name (adjustable-session-plan): its window tonight, "21:40–23:10". */
         candidateDetail: (p: { window: string }) => `Window ${p.window}`,
+        /** The save toast and the reset toast (`?saved=plan`, `?saved=plan-reset`). */
+        saved: "Plan saved",
+        resetDone: "Plan reset to the suggested one",
+        /** The edited plan's accessible list name: the rows are in the user's order, not by best time. */
+        listLabelEdited: "Targets in your order",
+        /** The line above an edited plan's rows (the editor and its Reset button join it later). */
+        edited: "Edited by you",
+        /** An edited plan with no target left in it. */
+        editedEmpty: "You removed every target from this plan.",
+        /** A free account, above the suggested plan: what editing does and what it needs. */
+        locked: "With the full plan you can reorder, remove and add targets on this plan.",
+        /** The saved changes are not applied because tonight does not pass; they come back when a night clears. */
+        held: "Your saved changes come back on a night that clears.",
+        /** The saved changes could not be read (or the plan could not be confirmed): the suggested plan shows. */
+        editsUnavailable: "Your edits could not be loaded, so this is the suggested plan.",
+        /** A row whose best window ends before the previous row's best time (advisory). */
+        endsBeforePrevious: "Its window ends before the target above is at its best.",
+        /** Saved targets with no window tonight: never drawn, kept until removed. */
+        notTonightHeading: "Not on tonight's plan",
+        notTonightHint: "They have no window tonight and stay saved until you remove them.",
       },
     },
   },

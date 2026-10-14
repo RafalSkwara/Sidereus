@@ -17,6 +17,7 @@ import {
   type UnitVector,
 } from "@/lib/engine";
 import { toEngineSite } from "@/lib/gear/store";
+import type { FinderFrom } from "@/lib/finder/from";
 import type { Locale } from "@/lib/preferences";
 import { isPlanetKey, type TargetKey } from "@/lib/targets";
 import type { TonightView } from "@/lib/tonight/build";
@@ -31,6 +32,12 @@ export interface FinderLoadOptions {
   siteId?: string;
   telescopeId?: string;
   night?: "tonight" | "next";
+  /**
+   * The page the chart was opened from. `"plan"` (the Session plan, F9) also resolves an object that is below the
+   * ranking's bar but has a window tonight, so a row the user added opens its chart; any other value, or none, keeps
+   * a below-bar object `not-ranked`.
+   */
+  from?: FinderFrom | null;
 }
 
 export type FinderLoad =
@@ -67,8 +74,12 @@ interface Resolved {
   planetNote: string | null;
 }
 
-/** The target's row in tonight's ranking (a deep-sky object) or planet list; `null` when it is not on either. */
-function resolveTarget(view: TonightView, target: TargetKey): Resolved | null {
+/**
+ * The target's row in tonight's ranking (a deep-sky object) or planet list; `null` when it is not on either. With
+ * `fromPlan`, a deep-sky object the ranking does not list falls back to `view.reachable` (every object the telescope
+ * can reach with a window tonight), so a below-bar object the user added to the plan still has its chart.
+ */
+function resolveTarget(view: TonightView, target: TargetKey, fromPlan: boolean): Resolved | null {
   if (isPlanetKey(target)) {
     const entry = view.solarSystem?.entries.find((candidate) => candidate.key === target);
     if (entry === undefined) {
@@ -87,7 +98,8 @@ function resolveTarget(view: TonightView, target: TargetKey): Resolved | null {
     };
   }
   // Messier and Caldwell keys; the Moon has no chart.
-  const entry = view.ranking?.entries.find((candidate) => candidate.id === target);
+  const ranked = view.ranking?.entries.find((candidate) => candidate.id === target);
+  const entry = ranked ?? (fromPlan ? view.reachable?.find((candidate) => candidate.id === target) : undefined);
   const object = entry === undefined ? undefined : findDeepSky(target);
   if (entry === undefined || object === undefined) {
     return null;
@@ -125,6 +137,7 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
     telescopeId: options.telescopeId,
     night: options.night,
     limit: Number.POSITIVE_INFINITY,
+    ...(options.from === "plan" ? { withReachable: true } : {}),
   });
   if (load === null) {
     // Unreachable after the guard (it answers null only without a user or a database); never a chart.
@@ -140,7 +153,7 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
     return { kind: "failed", view };
   }
 
-  const resolved = resolveTarget(view, options.target);
+  const resolved = resolveTarget(view, options.target, options.from === "plan");
   if (resolved === null) {
     return { kind: "not-ranked", view };
   }

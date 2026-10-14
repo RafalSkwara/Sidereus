@@ -14,6 +14,8 @@ describe("isProtectedPath", () => {
       "/gear/sites/new",
       "/api/gear/sites",
       "/tonight",
+      "/api/tonight/plan",
+      "/api/tonight/plan/reset",
       "/onboarding",
       "/api/onboarding",
     ]) {
@@ -22,7 +24,16 @@ describe("isProtectedPath", () => {
   });
 
   it("matches whole path segments, leaving look-alike and public paths open", () => {
-    for (const path of ["/", "/login", "/logbook", "/auth/signin", "/api/auth/signin", "/gearbox", "/tonightly"]) {
+    for (const path of [
+      "/",
+      "/login",
+      "/logbook",
+      "/auth/signin",
+      "/api/auth/signin",
+      "/gearbox",
+      "/tonightly",
+      "/api/tonightly",
+    ]) {
       expect({ path, gated: isProtectedPath(path) }).toEqual({ path, gated: false });
     }
   });

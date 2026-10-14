@@ -5,6 +5,8 @@
 // (`node scripts/account-plan.mjs <email> full|free`, a child process) with the SUPABASE_URL and SUPABASE_SECRET_KEY of
 // the local stack, passed inline on the command: `SUPABASE_URL=<api url> SUPABASE_SECRET_KEY=<secret key> npm run smoke`.
 // Never export the key (the preview must not inherit it). Without it those steps fail under CI and are skipped locally.
+// The Session plan steps (adjustable-session-plan Phase 3, test-plan 6.4's first full-plan POST route) walk the same plan
+// grant over POST /api/tonight/plan and its island; they need the migration `session_plans` applied to the local stack.
 
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -157,6 +159,53 @@ function replayTargetsIsland() {
     return Promise.reject(new Error("no Targets island URL was captured from the shell (expect step 1 failed)"));
   }
   return request(targetsIslandUrl, { body: true });
+}
+
+// The Session plan's server island and shell (adjustable-session-plan Phase 3, test-plan 6.4). Its own capture variables:
+// never the finder's `islandUrl`. The site id and the night come from the island's own `OfflineCopy` data attributes
+// (`data-site-id`, `data-night-date`), read from the first replay, so the POST names the night the server computes.
+const PLAN_ISLAND_PATH = "/_server-islands/PlanPageContent";
+const PLAN_PAGE = "/tonight/plan";
+const SAVE_PLAN = "/api/tonight/plan";
+const RESET_PLAN = "/api/tonight/plan/reset";
+let planIslandUrl = "";
+let planSiteId = "";
+let planNight = "";
+const planLocation = (query) => `/tonight/plan?site=${planSiteId}&${query}`;
+const EDITED = "data-session-plan-edited";
+const HELD = "data-session-plan-held";
+const LOCKED = "data-session-plan-locked";
+
+/** The value of a `data-<name>="…"` attribute in `html`, or "" when there is none. */
+function dataAttribute(html, name) {
+  return new RegExp(`\\bdata-${name}="([^"]*)"`).exec(html)?.[1] ?? "";
+}
+
+/** A step that replays the Session plan island's captured URL; fails loudly (never skips) when the capture is empty. */
+function replayPlanIsland() {
+  if (!planIslandUrl) {
+    return Promise.reject(new Error("no Session plan island URL was captured from the shell (plan step 1 failed)"));
+  }
+  return request(planIslandUrl, { body: true });
+}
+
+/** A POST to a Session plan route, as the editor's form will send it: `targets` repeated, as an array of pairs. */
+function postPlan(path, targets = []) {
+  if (!planSiteId || !planNight) {
+    return Promise.reject(new Error("no site id or night was read from the Session plan island (plan step 1 failed)"));
+  }
+  return request(path, {
+    method: "POST",
+    form: [["site", planSiteId], ["night", planNight], ...targets.map((key) => ["targets", key])],
+  });
+}
+
+/**
+ * What the island says its night did with a saved list: `data-session-plan-state` is "edited" on a night that passes
+ * and "held" on one that does not (a no-go or no darkness), so the date never decides it.
+ */
+function savedListMarker(body) {
+  return dataAttribute(body, "session-plan-state") === "held" ? HELD : EDITED;
 }
 
 const steps = [
@@ -325,6 +374,90 @@ const steps = [
     },
   ],
   [
+    // Session plan (adjustable-session-plan Phase 3, test-plan 6.4). The account is free here (finder 4 demoted it). The
+    // first replay captures the island's URL and reads the site id and the night off its offline metadata.
+    "plan 1: a free account's save is refused with the plan key, and nothing is submitted back",
+    async () => {
+      const shell = await request(PLAN_PAGE, { body: true });
+      planIslandUrl = islandUrlFromShell(shell.body, PLAN_ISLAND_PATH);
+      if (!planIslandUrl) throw new Error("the Session plan shell has no preload link to its island");
+      const island = await replayPlanIsland();
+      planSiteId = dataAttribute(island.body, "site-id");
+      planNight = dataAttribute(island.body, "night-date");
+      if (!planSiteId || !planNight) throw new Error("the Session plan island has no data-site-id or data-night-date");
+      return postPlan(SAVE_PLAN, ["M31"]);
+    },
+    {
+      status: 302,
+      location: () => planLocation("error=errors.accountPlan.needsFull"),
+      exact: true,
+      absent: "M31",
+    },
+  ],
+  [
+    "plan 2: after the grant the island shows the suggested plan, which proves plan 1 wrote nothing",
+    async () => {
+      await setPlan("full");
+      return replayPlanIsland();
+    },
+    {
+      status: 200,
+      needsPlanGrant: true,
+      bodyIncludes: ['data-session-plan-state="suggested"'],
+      bodyExcludes: [EDITED, HELD, LOCKED],
+    },
+  ],
+  [
+    // An empty list is a saved plan with no targets: on a night that passes it is the edited plan, on one that does not
+    // (a no-go, no darkness) it is held. The island's own state decides which, not the date.
+    "plan 3: the full account saves a list and the island shows it (edited, or held on a night that does not pass)",
+    async () => {
+      const saved = await postPlan(SAVE_PLAN);
+      const island = await replayPlanIsland();
+      return { ...saved, body: island.body };
+    },
+    {
+      status: 302,
+      location: () => planLocation("saved=plan"),
+      exact: true,
+      needsPlanGrant: true,
+      bodyIncludesFrom: (actual) => [savedListMarker(actual.body)],
+    },
+  ],
+  [
+    "plan 4: after a demotion the island shows the lock and none of the edits",
+    async () => {
+      await setPlan("free");
+      return replayPlanIsland();
+    },
+    {
+      status: 200,
+      needsPlanGrant: true,
+      bodyIncludes: [LOCKED, 'data-session-plan-state="locked"'],
+      bodyExcludes: [EDITED, HELD],
+    },
+  ],
+  [
+    "plan 5: the edits return with the plan (D11), and a reset removes them",
+    async () => {
+      await setPlan("full");
+      const back = await replayPlanIsland();
+      if (!back.body.includes(savedListMarker(back.body))) {
+        throw new Error("the saved list did not come back after the plan did");
+      }
+      const reset = await postPlan(RESET_PLAN);
+      const island = await replayPlanIsland();
+      return { ...reset, body: island.body };
+    },
+    {
+      status: 302,
+      location: () => planLocation("saved=plan-reset"),
+      exact: true,
+      needsPlanGrant: true,
+      bodyExcludes: [EDITED, HELD],
+    },
+  ],
+  [
     // A well-formed id that matches no row: the route answers with the store's fixed "not found" key.
     "answering an unknown sky check returns with a fixed error",
     () =>
@@ -364,6 +497,28 @@ const steps = [
       bodyExcludes: ['data-expect="', "data-expect-locked", "data-offline-copy"],
     },
   ],
+  [
+    "plan 6: signed out, a save goes to sign-in",
+    () =>
+      request(SAVE_PLAN, {
+        method: "POST",
+        form: [
+          ["site", planSiteId],
+          ["night", planNight],
+          ["targets", "M31"],
+        ],
+      }),
+    { status: 302, location: "/auth/signin", exact: true },
+  ],
+  [
+    // The island route is not gated, so a leaked URL is the case: with no session it loads and reads nothing.
+    "plan 7: signed out, a leaked Session plan island URL renders no plan",
+    () => replayPlanIsland(),
+    {
+      status: 200,
+      bodyExcludes: ["data-session-plan-state", EDITED, HELD, LOCKED, "data-offline-copy"],
+    },
+  ],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],
   ["tonight redirects after signout", () => request("/tonight"), { status: 302, location: "/auth/signin" }],
@@ -394,12 +549,14 @@ for (const [name, run, expected] of steps) {
     continue;
   }
   const maxAges = expected.sessionMaxAge === undefined ? [] : authCookieMaxAges(actual.setCookies);
-  const missingIncludes = (expected.bodyIncludes ?? []).filter((text) => !actual.body.includes(text));
+  const expectedLocation = typeof expected.location === "function" ? expected.location() : expected.location;
+  const includes = [...(expected.bodyIncludes ?? []), ...(expected.bodyIncludesFrom?.(actual) ?? [])];
+  const missingIncludes = includes.filter((text) => !actual.body.includes(text));
   const presentExcludes = (expected.bodyExcludes ?? []).filter((text) => actual.body.includes(text));
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined ||
-      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expectedLocation === undefined ||
+      (expected.exact ? actual.location === expectedLocation : actual.location.startsWith(expectedLocation))) &&
     // A submitted value (here a coordinate) must never come back in the redirect.
     (expected.absent === undefined || !actual.location.includes(expected.absent)) &&
     (expected.sessionMaxAge === undefined ||
@@ -411,7 +568,7 @@ for (const [name, run, expected] of steps) {
   console.log(`${label}  ${name}  -> ${actual.status} ${actual.location}${cookieNote}`);
   if (!ok) {
     failed++;
-    console.log(`      expected ${expected.status} ${expected.location ?? ""}`);
+    console.log(`      expected ${expected.status} ${expectedLocation ?? ""}`);
     if (expected.absent !== undefined) console.log(`      and no "${expected.absent}" in the location`);
     for (const text of missingIncludes) console.log(`      and the body to include ${text}`);
     for (const text of presentExcludes) console.log(`      and the body not to include ${text}`);

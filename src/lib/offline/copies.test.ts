@@ -159,6 +159,8 @@ describe("mayStoreShell", () => {
     "/tonight/targets?sort=name&telescope=x",
     "/tonight?night=next",
     "/tonight/finder?object=M13&from=targets",
+    "/tonight/finder?object=M13&from=plan",
+    `/tonight/plan?site=${SITE_A}`,
   ])("stores %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(true);
   });
@@ -169,6 +171,8 @@ describe("mayStoreShell", () => {
     "/tonight?milestone=first-galaxy",
     "/tonight/planets?logged=jupiter&milestone=first-planet",
     "/tonight/plan?error=errors.generic",
+    "/tonight/plan?saved=plan",
+    `/tonight/plan?site=${SITE_A}&saved=plan-reset`,
     "/tonight/all",
     "/tonight/finder",
     "/tonight/finder?object=M13&error=errors.generic",

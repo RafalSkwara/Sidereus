@@ -46,6 +46,7 @@ import {
   type Verdict,
   type VerdictLevel,
 } from "@/lib/engine";
+import type { FinderFrom } from "@/lib/finder/from";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 import { localCommonName } from "@/lib/catalogue/common-names";
@@ -529,6 +530,21 @@ export interface TonightView {
    * `withSkyEvents` option; `null` without it, or when working it out fails, which never takes the rest of the view down.
    */
   skyEvents: TonightSkyEvents | null;
+  /**
+   * Every deep-sky object the telescope can reach tonight with a window, below-bar and washed-out ones included, in
+   * catalogue order (adjustable-session-plan F9). Built only with the `withReachable` option, on a night that passes;
+   * `null` otherwise. Only the finder chart opened with `from=plan` reads it.
+   */
+  reachable: TonightReachable[] | null;
+}
+
+/** What the finder chart needs of a reachable object: its names and where and when it peaks tonight. */
+export interface TonightReachable {
+  id: string;
+  label: string;
+  bestAt: number;
+  bestTime: string;
+  bestDirection: string;
 }
 
 type RankedObjects = RankedEntry<DeepSkyObject, EyepieceRecord>[];
@@ -692,6 +708,11 @@ export function buildTonight(
     planEdits?: readonly TargetKey[] | null;
     /** Also list what the plan editor may add (`TonightSessionPlan.candidates`). Needs `withSessionPlan`. */
     withPlanCandidates?: boolean;
+    /**
+     * Also list every object the telescope can reach tonight (`TonightView.reachable`), the below-bar ones included:
+     * what the finder chart opened from the Session plan (`from=plan`) resolves an added object against.
+     */
+    withReachable?: boolean;
   } = {},
 ): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], logKnown = true, catalogue = DEEP_SKY } = input;
@@ -1272,7 +1293,9 @@ export function buildTonight(
         });
       }
       // An object that cleared the bar, or the Moon washed out, is on the Targets page; one below the bar is on no list,
-      // so its row opens its finder chart (F9). Ids only, never coordinates.
+      // so its row opens its finder chart (F9). Ids only, never coordinates. (`finderHref` in `load.ts` builds the same
+      // URL from a view, but `load.ts` imports this module and there is no view yet.)
+      const fromPlan: FinderFrom = "plan";
       const addedHref = ({ object, cleared, washedOut }: ReachableEntry<DeepSkyObject>): string =>
         cleared || washedOut
           ? `/tonight/targets#object-${object.id}`
@@ -1280,7 +1303,7 @@ export function buildTonight(
               object: object.id,
               site: site.id,
               telescope: telescope.id,
-              from: "plan",
+              from: fromPlan,
             }).toString()}`;
       let planRows: TonightSessionPlanRowInput[] = suggestedRows;
       if (applied !== null && applyEdits) {
@@ -1460,5 +1483,15 @@ export function buildTonight(
     skyView,
     sessionPlan,
     skyEvents: skyEventsBlock,
+    reachable:
+      options.withReachable === true && cardPasses
+        ? planReachable.map(({ object, peak }) => ({
+            id: object.id,
+            label: object.label,
+            bestAt: peak.time.getTime(),
+            bestTime: formatTime(peak.time, timeZone),
+            bestDirection: formatDirection(peak),
+          }))
+        : null,
   };
 }
