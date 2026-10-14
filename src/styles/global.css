@@ -568,7 +568,8 @@
   text-decoration-line: none;
 }
 
-:root[data-offline] [data-needs-network] svg {
+:root[data-offline] :is(a, button)[data-needs-network]:not([aria-current="page"]) svg,
+:root[data-offline] [data-needs-network] :is(a, button) svg {
   color: inherit;
 }
 

@@ -75,7 +75,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
     - **2.8** nie ma pomiaru „przed”: wynik porównano z klasami `min-h`.
   - README to ujawnia, więc to nie ukrywanie, tylko rozjazd z procesem.
 - **Fix**: Oznaczyć 1.5 i 2.6–2.8 w Progress jako „agent-verified, owner to confirm” i dołączyć je do przeglądu właściciela razem z 3.5 i 3.6. 2.7 powtórzyć na zapisanej stronie przy zamkniętym proxy (jak w `offline.spec.ts`) albo dodać do `offline.spec.ts` jedną asercję wyliczonego koloru ikony Mark observed.
-- **Decision**: PENDING
+- **Decision**: APPLIED (owner): agents run manual checks with evidence, so the ticks stand; 2.7 redone for real (stored pages served with the preview stopped, `html[data-from-device]` asserted, `evidence/scripts/offline-real.mjs`), 1.5 redone at 390 px too.
 
 ### F2 — Luki w dowodach dla właściciela, m.in. brak wycinka F7 z /gear
 
@@ -97,7 +97,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - Tradeoff: potrzebny podgląd na 4331 (port agenta wdrażającego).
   - Confidence: HIGH: lista ujęć sprawdzona w katalogach `evidence/`.
   - Blind spot: czy właściciel ocenił już F7 na całej stronie.
-- **Decision**: PENDING
+- **Decision**: APPLIED: crops added for the /gear F7 pair, the /design milestone dialog and VerdictCard event line, Nights, /log/progress and dark desktop (`evidence/README.md`).
 
 ### F3 — Skrypty seed nie pilnują lokalnego stacku, a teraz nie są lintowane
 
@@ -111,7 +111,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - `--empty-eyepieces` pisze przez `process.env.SUPABASE_URL` bez sprawdzenia, czy to adres lokalny. Dla porównania `scripts/account-plan.mjs` odmawia adresu nielokalnego bez `--hosted`.
   - Kluczy, JWT ani prawdziwych adresów e-mail w skryptach nie ma. Nic w `src`, `tests` ani `scripts` ich nie importuje. Nie ma też zacommitowanych `state-*.json` ani `email-*.txt`.
 - **Fix**: Na początku obu skryptów odmówić, gdy `SUPABASE_URL` nie wskazuje `127.0.0.1` ani `localhost`, oraz dodać komentarz „local stack only”. W kopii ui-refine honorować `BASE_URL`.
-- **Decision**: PENDING
+- **Decision**: APPLIED: every evidence script refuses a non-local BASE_URL, seed.mjs also a non-local SUPABASE_URL; the port comes from BASE_URL or PREVIEW_PORT (both change folders).
 
 ### F4 — `context/**` poza ESLint: bezpieczne, ale spoza planu
 
@@ -126,7 +126,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - `tsconfig.json` obejmuje `**/*`, więc przyszły plik `.ts` w `context/` byłby sprawdzany typami, ale nie lintowany. To akceptowalne, bo `context/` to dokumenty i dowody.
   - Zmiana nie jest częścią planu ui-quiet-actions, tylko chore ui-refine (skrypty dowodów psuły lint całego repo).
 - **Fix**: Wspomnieć o tym w opisie PR. Ewentualnie dopisać zdanie do Tripwires w CLAUDE.md: „`context/` is docs and evidence; never product code”.
-- **Decision**: PENDING
+- **Decision**: ACCEPTED: mentioned in the PR body.
 
 ### F5 — Reguła „always with its lucide icon” ma drugi wyjątek, którego CLAUDE.md nie wymienia
 
@@ -136,7 +136,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
 - **Location**: `src/components/tonight/MoonCard.astro:49-52`; `CLAUDE.md:101`
 - **Detail**: Link „washed-out” w MoonCard (`quiet`/`bare`) ma tekstową strzałkę „→” zamiast ikony lucide. Nowa reguła Clickables zwalnia z ikony tylko Pager („labels carry their own arrows”).
 - **Fix**: Dać ikonę lucide `ArrowRight` (`aria-hidden`) albo dopisać MoonCard do wyjątku w regule.
-- **Decision**: PENDING
+- **Decision**: APPLIED: the washed-out link carries an `ArrowRight` icon (`MoonCard.astro`).
 
 ### F6 — Odstęp ikona–etykieta zależy od sposobu złożenia klas (6 px albo 8 px)
 
@@ -150,7 +150,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - Tam, gdzie jest goły `class:list` (GearCard, TargetDetails, MoonCard, nagłówek /log, MilestoneCelebration), `.gap-2` stoi dalej w CSS i wygrywa (8 px).
   - Ten wzorzec istniał już przy `sm`. Mała, ale widoczna niespójność.
 - **Fix**: W wywołaniach `quiet`/`bare` składać klasy przez `cn(buttonVariants(...))` albo przenieść `gap-2` z bazy do rozmiarów.
-- **Decision**: PENDING
+- **Decision**: APPLIED: `gap-2` moved from the cva base into the `default` and `lg` sizes, so `sm` and `bare` are 6 px however the classes are composed.
 
 ### F7 — Kilka zachowań z kontraktu nie ma automatycznego strażnika
 
@@ -163,7 +163,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - **Zdejmowanie czerwonego podkreślenia offline.** Sprawdził to tylko ręczny `checks.mjs`.
   - **„Hairline nigdy na nagłówku z niebem”.** To tylko komentarz: `--control-border` nie ma wartości dla `.night-sky`, a na jasnym zenicie daje 1,92:1.
 - **Fix**: Dodać w `red-night-mode.spec.ts` asercję `textDecorationColor` linku z `Attribution` (kolor = `color`). Asercję offline dołączyć do poprawki F1.
-- **Decision**: PENDING
+- **Decision**: APPLIED: `red-night-mode.spec` pins the credit links' red underline colour; `offline.spec` (in red) pins a stored quiet link offline: aria-disabled, no underline, icon in the link colour. Both deliberately broken once and went red. "Never on a sky header" stays a documented rule.
 
 ### F8 — Reset koloru `svg` offline ma szerszy zasięg niż kontrolki
 
@@ -178,7 +178,7 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
   - Podagent zgłosił, że chevron rozjaśnia się offline. Po sprawdzeniu `native-select.tsx` i `GearCard.astro:59-66` to się nie potwierdza.
   - Drobiazg obok: na wyłączonym `<button>` hairline ikona zostaje w `text-primary-strong` (utility `[&_svg]:` wygrywa z `disabled:`). Widać to tylko w `/design`, bo nie ma produktowego hairline jako `<button>`.
 - **Fix**: Zawęzić selektor do `:root[data-offline] :is(a,button)[data-needs-network]:not([aria-current="page"]) svg, :root[data-offline] [data-needs-network] :is(a,button) svg`, żeby zamiar był jawny.
-- **Decision**: PENDING
+- **Decision**: APPLIED: the svg reset narrowed to `:is(a, button)` controls (not the current page's entry); the hairline `<button>`'s icon mutes on `disabled:` too.
 
 ### F9 — Ryzyko rebase'u i nakładanie się z adjustable-session-plan
 
@@ -193,9 +193,15 @@ Ręczne: 1.5 i 2.6–2.8 są `[x]`, ale wykonał je agent (F1). 3.5 i 3.6 są `[
     - `quiet` stylizuje tylko `disabled:`, nie `aria-disabled`, więc przyciski Move z `aria-disabled` na krawędziach listy potrzebują własnego wyciszenia;
     - rozmiar `icon` istniał przed tą zmianą.
 - **Fix**: Merge ui-quiet-actions przed Fazą 4 adjustable-session-plan (jej D15). Obie uwagi przekazać do triage'u przeglądu planu adjustable-session-plan (F7 tamtego raportu).
-- **Decision**: PENDING
+- **Decision**: APPLIED: `hairline` and `quiet` style `aria-disabled` like `disabled` (for S-08's Move buttons); merged ahead of S-08 Phase 4 is the orchestrator's call.
 
 ## Pytania do właściciela
 
 1. **(F2, 3.6)** README dowodów zauważa, że w trybie red hairline (`#c80000`) i outline (`#ff0000`) na /gear wyglądają prawie tak samo. Czy przed oceną 3.6 chcesz wycinek pary z /gear (Add przy pustym i niepustym paśmie), czy ocenisz na pełnej stronie `after/gear-empty-phone-pl-red.jpg`?
 2. **(F1)** Ręczne punkty 1.5 i 2.6–2.8 wykonał agent, a nie Ty. Czy potwierdzasz je razem z 3.5 i 3.6 przy przeglądzie zrzutów (rekomendacja), czy akceptujesz weryfikację agenta tak, jak jest?
+
+## Owner decisions (2026-10-14)
+
+- 3.5 accepted (the new button weight, after the before/after crops).
+- 3.6 / F7 accepted as is (red-mode hairline vs outline).
+- F1: agent-run manual checks with evidence stand; 2.7 redone for real, 1.5 also at 390 px.

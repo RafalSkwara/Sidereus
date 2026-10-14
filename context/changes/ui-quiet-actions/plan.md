@@ -516,5 +516,5 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Manual
 
-- [ ] 3.5 The owner reviews the screenshot matrix against the audit's before shots and accepts the button weight
-- [ ] 3.6 Red and dark mode at arm's length on a phone, including the dashboard; the owner judges the F7 outline-vs-hairline pairs
+- [x] 3.5 The owner reviews the screenshot matrix against the audit's before shots and accepts the button weight — owner-accepted 2026-10-14
+- [x] 3.6 Red and dark mode at arm's length on a phone, including the dashboard; the owner judges the F7 outline-vs-hairline pairs — owner-accepted 2026-10-14

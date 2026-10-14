@@ -5,7 +5,15 @@ import { join } from "node:path";
 
 const [worktree, stateFile, outDir] = process.argv.slice(2);
 const { chromium } = await import(join(worktree, "node_modules/playwright/index.mjs"));
-const BASE = process.env.BASE_URL ?? "http://localhost:4331";
+const BASE = process.env.BASE_URL ?? `http://localhost:${process.env.PREVIEW_PORT ?? 4331}`;
+
+// Local stack only (ui-quiet-actions impl review F3): this script signs up real accounts through the server at BASE_URL,
+// so it refuses anything but localhost, and the preview must run on local Supabase (never the hosted project).
+function assertLocal(name, value) {
+  const host = new URL(value).hostname;
+  if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`${name} must point at the local stack, got ${host}`);
+}
+assertLocal("BASE_URL", BASE);
 const browser = await chromium.launch();
 
 for (const width of [390, 700]) {

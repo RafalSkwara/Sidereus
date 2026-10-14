@@ -4,6 +4,8 @@
 // what it does to faint objects beside the disc, then, when the Moon is a target tonight (it passes the planets'
 // gate), its observing details with the shared TargetDetails layout. Without a civil window (high-latitude summer)
 // there are no states: only the phase shows, from local noon.
+import { ArrowRight } from "lucide-react";
+
 import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
@@ -48,7 +50,7 @@ const washedOutLink = buttonVariants({ variant: "quiet", size: "bare" });
       {washedOut && (
         <a href={washedOut.href} class:list={[washedOutLink]}>
           {washedOut.label}
-          <span aria-hidden="true">→</span>
+          <ArrowRight aria-hidden="true" />
         </a>
       )}
     </MoonTimeSlider>

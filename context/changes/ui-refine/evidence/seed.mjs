@@ -1,12 +1,22 @@
 // Seeds one local test user for the ui-refine audit: onboarding in Madrid, a few log entries, storage state saved.
-// Usage: node seed.mjs <worktree> <outDir>
+// Usage: BASE_URL=http://localhost:4331 SUPABASE_URL=http://127.0.0.1:54321 node seed.mjs <worktree> <outDir>
 import { randomUUID } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const [worktree, outDir] = process.argv.slice(2);
 const { chromium } = await import(join(worktree, "node_modules/playwright/index.mjs"));
-const BASE = "http://localhost:4331";
+const BASE = process.env.BASE_URL ?? `http://localhost:${process.env.PREVIEW_PORT ?? 4331}`;
+
+// Local stack only (ui-quiet-actions impl review F3): this script signs up real accounts through the server at BASE_URL,
+// so it refuses anything but localhost, and the preview must run on local Supabase (never the hosted project).
+function assertLocal(name, value) {
+  const host = new URL(value).hostname;
+  if (host !== "localhost" && host !== "127.0.0.1") throw new Error(`${name} must point at the local stack, got ${host}`);
+}
+assertLocal("BASE_URL", BASE);
+if (!process.env.SUPABASE_URL) throw new Error("set SUPABASE_URL to the local stack (API_URL from `npx supabase status -o env`)");
+assertLocal("SUPABASE_URL", process.env.SUPABASE_URL);
 const PASSWORD = "E2e-Test-Passw0rd!";
 const email = `ui-refine-${randomUUID()}@example.com`;
 
