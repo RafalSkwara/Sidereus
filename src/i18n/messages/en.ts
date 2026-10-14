@@ -1105,6 +1105,17 @@ export const en = {
       uranus: "Uranus",
       neptune: "Neptune",
     },
+    /** The meteor showers of the sky events list, keyed by the shower table's `key` (`meteor-showers.ts`). */
+    meteorShower: {
+      quadrantids: "Quadrantids",
+      lyrids: "Lyrids",
+      etaAquariids: "Eta Aquariids",
+      southernDeltaAquariids: "Southern Delta Aquariids",
+      perseids: "Perseids",
+      orionids: "Orionids",
+      leonids: "Leonids",
+      geminids: "Geminids",
+    },
     /** The picker's secondary line for a planet. */
     planetDetail: "Planet",
     /** The Moon as a log target: headings, notices and the picker. */

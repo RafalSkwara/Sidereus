@@ -1,4 +1,14 @@
-import { Body, Equator, Horizon, Observer } from "astronomy-engine";
+import {
+  Body,
+  Equator,
+  Horizon,
+  HorizonFromVector,
+  Observer,
+  RotateVector,
+  Rotation_EQJ_HOR,
+  Spherical,
+  VectorFromSphere,
+} from "astronomy-engine";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import {
@@ -8,6 +18,8 @@ import {
   EVENT_WINDOW_NIGHTS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
 } from "./parameters";
+import { METEOR_SHOWERS } from "@/lib/catalogue/meteor-showers";
+
 import { isNotableEvent, skyEvents, visibleAt } from "./events";
 import type { LunarEclipseEvent, SkyEvent } from "./events";
 import { darkWindow, sunAltitudeDeg } from "./sun";
@@ -58,6 +70,13 @@ function altitudeOf(body: Body, site: Site, time: Date): number {
   const observer = new Observer(site.latitudeDeg, site.longitudeDeg, site.elevationM ?? 0);
   const eq = Equator(body, time, observer, true, true);
   return Horizon(time, observer, eq.ra, eq.dec, "normal").altitude;
+}
+
+/** Independent altitude of a J2000 radiant, from astronomy-engine's rotation directly (not through the module under test). */
+function radiantAltitude(shower: { radiantRaDeg: number; radiantDecDeg: number }, site: Site, time: Date): number {
+  const observer = new Observer(site.latitudeDeg, site.longitudeDeg, site.elevationM ?? 0);
+  const j2000 = VectorFromSphere(new Spherical(shower.radiantDecDeg, shower.radiantRaDeg, 1), time);
+  return HorizonFromVector(RotateVector(Rotation_EQJ_HOR(time, observer), j2000), "normal").lat;
 }
 
 /** A lunar eclipse's contacts: the umbral phases' ends, or the penumbral ends of an eclipse with none. */
@@ -366,7 +385,7 @@ describe("the window", () => {
       expect(e.moment.getTime()).toBeGreaterThanOrEqual(events[i].moment.getTime());
     });
     expect(new Set(events.map((e) => e.kind))).toEqual(
-      new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition", "pairing"]),
+      new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition", "pairing", "meteor-shower"]),
     );
   });
 
@@ -475,7 +494,7 @@ describe("the invariant: nothing is visible that is not up", () => {
 
   it("has something to check in every kind", () => {
     const kinds = new Set(all.flatMap(({ events }) => events.map((e) => e.kind)));
-    expect(kinds).toEqual(new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition"]));
+    expect(kinds).toEqual(new Set(["lunar-eclipse", "solar-eclipse", "elongation", "opposition", "meteor-shower"]));
     expect(all.flatMap(({ events }) => events).filter((e) => e.visibility.visible).length).toBeGreaterThan(100);
     expect(all.flatMap(({ events }) => events).filter((e) => !e.visibility.visible).length).toBeGreaterThan(100);
   });
@@ -597,11 +616,80 @@ describe("the invariant: nothing is visible that is not up", () => {
     }
     expect(checked).toBeGreaterThan(10);
   }, 60_000);
+
+  /** The span a night event is judged over: the dark window, else the twilight span (short night), else none. */
+  function judgedSpan(site: Site, night: string): { start: Date; end: Date } | null {
+    const window = observingNight(night, site.timeZone);
+    const dark = darkWindow(site, window, -18);
+    const twilight = darkWindow(site, window, EVENT_SUN_MAX_ALTITUDE_DEG);
+    return dark.kind === "window" ? dark : twilight.kind === "window" ? twilight : null;
+  }
+
+  it("holds every visible shower to the minimum altitude and the twilight bound at its best moment, on its best night", () => {
+    let checked = 0;
+    for (const { site, events } of all) {
+      for (const event of ofKind(events, "meteor-shower")) {
+        if (!event.visibility.visible) {
+          continue;
+        }
+        checked++;
+        const shower = METEOR_SHOWERS.find((s) => s.key === event.shower);
+        expect(shower).toBeDefined();
+        if (shower === undefined) {
+          continue;
+        }
+        const { best, altitudeDeg } = event.visibility;
+        const label = `${event.shower} ${event.night} at ${site.timeZone}`;
+        expect(radiantAltitude(shower, site, best), label).toBeGreaterThanOrEqual(EVENT_MIN_ALTITUDE_DEG);
+        expect(altitudeDeg, label).toBeCloseTo(radiantAltitude(shower, site, best), 2);
+        expect(sunAltitudeDeg(site, best), label).toBeLessThanOrEqual(EVENT_SUN_MAX_ALTITUDE_DEG + 0.05);
+        expect(event.visibility.lowHorizon, label).toBeUndefined();
+        const night = observingNight(event.bestNight, site.timeZone);
+        expect(best.getTime(), label).toBeGreaterThanOrEqual(night.start.getTime());
+        expect(best.getTime(), label).toBeLessThanOrEqual(night.end.getTime());
+        expect([event.night, addDays(event.night, -1), addDays(event.night, 1)], label).toContain(event.bestNight);
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  });
+
+  it("calls a shower not visible only when its radiant stays under 10° through the judged span of the peak night and both neighbours", () => {
+    let checked = 0;
+    for (const { site, events } of all) {
+      for (const event of ofKind(events, "meteor-shower")) {
+        if (event.visibility.visible) {
+          continue;
+        }
+        checked++;
+        const shower = METEOR_SHOWERS.find((s) => s.key === event.shower);
+        expect(shower).toBeDefined();
+        if (shower === undefined) {
+          continue;
+        }
+        for (const night of [addDays(event.night, -1), event.night, addDays(event.night, 1)]) {
+          const span = judgedSpan(site, night);
+          if (span === null) {
+            continue;
+          }
+          for (let t = span.start.getTime(); t <= span.end.getTime(); t += 2 * MINUTE_MS) {
+            expect(
+              radiantAltitude(shower, site, new Date(t)),
+              `${event.shower} ${night} at ${site.timeZone}`,
+            ).toBeLessThan(EVENT_MIN_ALTITUDE_DEG);
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  }, 60_000);
 });
 
 describe("determinism and budget", () => {
   // Measured with the pairings in (Phase 2, 2026-10-14): 38-50 ms for the first call in a fresh process, 18-29 ms
-  // warm, 15-20 ms inside the whole suite. The budget is about four times the slowest first call.
+  // warm, 15-20 ms inside the whole suite. With the meteor showers in (Phase 3, 2026-10-14) the same windows took
+  // 18-40 ms for the first call (Warsaw, windows from 2026-12-01 with the Geminids and 2027-08-05 with the Perseids
+  // included: 18 and 31 ms), 15-18 ms warm and inside the suite; the eight crossing searches add about 1-2 ms. The
+  // budget is about four times the slowest first call, so it stays.
   const LOCAL_BUDGET_MS = 200;
   let runs: { first: { events: SkyEvent[]; ms: number }; second: { events: SkyEvent[]; ms: number } } | null = null;
   const getRuns = () => {

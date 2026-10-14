@@ -21,6 +21,7 @@ import {
   EVENT_WINDOW_NIGHTS,
 } from "./parameters";
 import type { PlanetKey } from "./planets";
+import { meteorEvents } from "./meteors";
 import { pairingEvents } from "./pairings";
 import { sampleInstants } from "./sampling";
 import { darkWindow, observerFor, sunAltitudeDeg } from "./sun";
@@ -38,7 +39,7 @@ import type { HorizontalPosition, Interval, Site } from "./types";
  * something to go out for (PRD invariant, US-07).
  */
 
-/** The kinds of event. Meteor showers are plugged into `skyEvents` by a later phase. */
+/** The kinds of event. */
 export type SkyEventKind =
   "lunar-eclipse" | "solar-eclipse" | "elongation" | "opposition" | "pairing" | "meteor-shower";
 
@@ -194,7 +195,7 @@ export function visibleAt(site: Site, sample: (time: Date) => HorizontalPosition
 }
 
 /** `visibility` of a night event with the night's `shortNight` flag applied. */
-function withShortNight(visibility: EventVisibility, shortNight: boolean): EventVisibility {
+export function withShortNight(visibility: EventVisibility, shortNight: boolean): EventVisibility {
   return shortNight ? { ...visibility, shortNight: true } : visibility;
 }
 
@@ -257,12 +258,12 @@ function around(centre: Date, semiDurationMinutes: number): Interval {
 // Night spans --------------------------------------------------------------------------------------
 
 /** The night's twilight span (sun at or below `EVENT_SUN_MAX_ALTITUDE_DEG`) and dark window, each `null` when the sun never gets that low. */
-interface NightSpans {
+export interface NightSpans {
   twilight: Interval | null;
   dark: Interval | null;
 }
 
-function nightSpans(site: Site, date: string, darkThresholdDeg: number): NightSpans {
+export function nightSpans(site: Site, date: string, darkThresholdDeg: number): NightSpans {
   const night = observingNight(date, site.timeZone);
   const twilight = darkWindow(site, night, EVENT_SUN_MAX_ALTITUDE_DEG);
   const dark = darkWindow(site, night, darkThresholdDeg);
@@ -273,14 +274,14 @@ function nightSpans(site: Site, date: string, darkThresholdDeg: number): NightSp
 }
 
 /** A span an event is judged over, or `null` when no part of the night is dark enough (the sun never gets to the twilight bound). */
-interface EventSpan {
+export interface EventSpan {
   span: Interval;
   /** The night has no dark window, so the whole twilight span was used. */
   shortNight: boolean;
 }
 
 /** The night's dark window, or the whole twilight span flagged `shortNight` when there is none (plan review F5). */
-function darkSpan(spans: NightSpans): EventSpan | null {
+export function darkSpan(spans: NightSpans): EventSpan | null {
   if (spans.dark !== null) {
     return { span: spans.dark, shortNight: false };
   }
@@ -505,6 +506,7 @@ export function skyEvents(
     ...elongationEvents(site, window, darkThresholdDeg),
     ...oppositionEvents(site, window, darkThresholdDeg),
     ...(options.pairings === false ? [] : pairingEvents(site, window)),
+    ...meteorEvents(site, window, darkThresholdDeg),
   ];
   return events.sort((a, b) => a.moment.getTime() - b.moment.getTime());
 }

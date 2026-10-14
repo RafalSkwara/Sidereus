@@ -63,3 +63,39 @@ grant cannot lift an upstream condition it does not own, so the files are CC BY-
 that upstream licence allows. Commercial use needs ESA's authorisation; the owner's request to ESA
 (data.licences@esa.int) is pending, and until ESA answers the files must not be used to generate
 financial gain.
+
+## Meteor showers (hand-entered facts)
+
+`meteor-showers.ts` lists eight major annual meteor showers (the Quadrantids, Lyrids, Eta Aquariids,
+Southern Delta Aquariids, Perseids, Orionids, Leonids and Geminids). It is **not** a derived work of any
+database and carries no share-alike condition: the values are facts, entered by hand, rounded, in the
+file's own layout, and no table (or its layout) was copied from any source. This is the owner's
+reading of the position and not legal advice; the EU database right protects a maker's investment in a
+whole collection or a substantial part of it, and about eight hand-typed rows, rounded and checked
+against more than one published value, are not that.
+
+Where each field comes from (the file's header says the same):
+
+- **Peak night and approximate rate:** NASA's shower pages (<https://science.nasa.gov/meteor-showers/>,
+  "Fast Facts" boxes read on 2026-10-14). NASA content is generally not subject to copyright in the
+  United States and may be used without permission, provided it does not imply NASA's endorsement; this
+  app does not. NASA has no page for the Draconids or the Ursids, so they are not in the table and were
+  not filled in from another source. The rate is NASA's "observed under dark skies" line for that page's
+  year (the upper end of a range), approximate, and moves with the Moon and the year.
+- **Peak solar longitude:** derived, not taken from any source and **not taken from the International
+  Meteor Organization (IMO)**, whose working list and calendar need the publisher's prior written
+  permission. The engine computes the Sun's J2000 ecliptic longitude at the middle of NASA's peak night
+  (00:00 UT at the turn between its two dates), rounded to 0.1 degree. `meteor-showers.test.ts`
+  recomputes it from the peak night recorded in the file.
+- **Radiant and speed:** the IAU Meteor Data Center's list of established showers
+  (<https://ceresiaumdc.ta3.sk/established>), the annual solution of Jenniskens (2023) with the largest
+  sample on each shower's page, rounded to 1 degree and 1 km/s. The MDC states no licence and asks that
+  its data be cited (<https://ceresiaumdc.ta3.sk/references>): Jopek, T. J. et al. (2024), Astronomy &
+  Astrophysics 682, A159; Jenniskens, P. et al. (2020), Planetary and Space Science 182, 104821.
+  A courtesy request to the MDC to confirm this use is drafted for the owner in
+  `context/changes/sky-events/iau-mdc-request.md`; the agent never sends it, and no reply is on file.
+
+Each value was cross-checked by reading a second source (NASA's own speeds, and Wikipedia's "List of meteor
+showers" for radiants, speeds and peak dates); no value was taken from Wikipedia, the IMO or the American
+Meteor Society's list. The app credits NASA and the IAU MDC in its data notice (to be added with the events
+page, S-07 Phase 4).

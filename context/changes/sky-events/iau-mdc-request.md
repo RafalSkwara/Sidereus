@@ -9,14 +9,13 @@
 
 Dear IAU Meteor Data Center team,
 
-I develop Sidereus (https://github.com/RafalSkwara/Sidereus), a web app that helps beginner amateur astronomers plan an observing night. It is free today and may offer a paid plan in the future.
+I develop Sidereus (https://github.com/RafalSkwara/sidereus), a web app that helps beginner amateur astronomers plan an observing night. It is free today and may offer a paid plan in the future.
 
-The app will show the peaks of about ten major annual meteor showers: the Quadrantids, Lyrids, Eta Aquariids, Southern Delta Aquariids, Perseids, Draconids, Orionids, Leonids, Geminids and Ursids. For each shower we store a few rounded values, entered by hand:
+The app will show the peak nights of eight major annual meteor showers: the Quadrantids, Lyrids, Eta Aquariids, Southern Delta Aquariids, Perseids, Orionids, Leonids and Geminids. From the IAU MDC's list of established showers we take only two facts per shower, entered by hand and rounded to 1 degree and 1 km/s:
 - the radiant's right ascension and declination (J2000);
-- the geocentric velocity;
-- the solar longitude of the peak.
+- the geocentric velocity.
 
-We cross-check these values against more than one published source, and we do not copy any table or its layout. The app credits the IAU MDC in its data notice and cites:
+(In each case the annual solution of Jenniskens, 2023, with the largest sample on the shower's page.) We take nothing else from the MDC: the peak night comes from NASA's shower pages, and the solar longitude of the peak is computed by our own code from that date. We cross-check the values against other published sources by reading only, and we do not copy any table or its layout. The app credits the IAU MDC in its data notice and cites the references your references page (https://ceresiaumdc.ta3.sk/references) asks for:
 
 - Jopek, T. J. et al. (2024), A&A 682, A159
 - Jenniskens, P. et al. (2020), Planetary and Space Science 182, 104821

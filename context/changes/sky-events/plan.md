@@ -563,15 +563,15 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [x] 2.1 `npx vitest run src/lib/engine/pairings.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes
-- [x] 2.2 `npx astro check`, `npm run lint` and `npm test` pass (incl. the events budget test)
+- [x] 2.1 `npx vitest run src/lib/engine/pairings.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes — ef77221
+- [x] 2.2 `npx astro check`, `npm run lint` and `npm test` pass (incl. the events budget test) — ef77221
 
 ### Phase 3: Meteor showers
 
 #### Automated
 
-- [ ] 3.1 `npx vitest run src/lib/engine/meteors.test.ts src/lib/catalogue/meteor-showers.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes
-- [ ] 3.2 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
+- [x] 3.1 `npx vitest run src/lib/engine/meteors.test.ts src/lib/catalogue/meteor-showers.test.ts src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes
+- [x] 3.2 `npx astro check`, `npm run lint` and `npm test` (incl. i18n parity) pass
 
 ### Phase 4: The events page
 
