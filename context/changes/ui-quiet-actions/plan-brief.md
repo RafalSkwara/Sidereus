@@ -30,8 +30,8 @@ The owner finds the buttons too loud. Every per-item or standalone link is a bor
 | Decision | Choice | Why (1 sentence) | Source |
 |---|---|---|---|
 | Hierarchy | 3C: one hairline per item, text for the rest, bare tile arrow, one filled primary per screen | The owner's decision on the audit | Owner (audit) |
-| Hairline colour (D1) | New neutral `--control-border` at ≥3:1 on background and surface | Experiment B's `--border` is 1.17-1.78:1, so in red "Mark observed" would read as text | Plan default, **owner to confirm** |
-| Red-mode text actions (D2) | Underlined at rest in red only (new `red:` variant) | Red has one hue, so shape must mark a link; elsewhere the colour already does | Plan default, **owner to confirm** |
+| Hairline colour (D1) | New neutral `--control-border` at ≥3:1 on background and surface | Experiment B's `--border` is 1.17-1.78:1, so in red "Mark observed" would read as text | Owner (2026-10-14) |
+| Red-mode text actions (D2) | Underlined at rest in red only (new `red:` variant) | Red has one hue, so shape must mark a link; elsewhere the colour already does | Owner (2026-10-14) |
 | Variant names | Remove `action`; add `quiet` (with a `bare` size) and `hairline` | Removing it makes TypeScript find every call site; the size avoids a padding clash in cva | Plan |
 | Action tokens | Kept, for the sky-check answers and the medallion only | Retiring them would reopen the sky checks' red-mode "suggested answer" fix | Research |
 | /gear Add (band not empty) | Hairline | A per-section add is a per-item button, not a text link | Plan |
@@ -56,12 +56,12 @@ Contract first. Phase 1 adds the token, the `red` variant and the two variants b
 | 2. Call sites | Every `action` user moved, cue bared, eyepiece names recoloured, `action` removed | Gear card height or Polish wrapping shifting (`tonight-phone.spec`) |
 | 3. Rules and gate | CLAUDE.md rule, screenshot matrix, whole e2e and smoke | The owner judging the weight differently from the defaults |
 
-**Prerequisites:** S-07 sky-events merged to main; the owner's answer on D1 and D2 (or acceptance of the defaults); local Supabase and the forecast fixture for e2e.
+**Prerequisites:** S-07 sky-events merged to main; local Supabase and the forecast fixture for e2e.
 **Estimated effort:** about one session, 3 phases, mostly class edits plus the evidence.
 
 ## Open Risks & Assumptions
 
-- D1 and D2 are defaults pending the owner. Phase 1 adapts: reusing `--action-border` drops the token, and "underline everywhere" drops the variant.
+- D1 and D2 were decided by the owner on 2026-10-14 (the recommended options). The red `--control-border` must reach 3:1 while staying pure red, and must be measured.
 - A text action in the link colour sits directly on the sky (back links, /log header). It passes 4.5 in every theme (light zenith 4.90), and the new pin holds it there.
 - The gear cards' measured height assumes the Manage link stays 44 px tall.
 

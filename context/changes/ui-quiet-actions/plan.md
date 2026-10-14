@@ -107,9 +107,9 @@ Implementation starts only after S-07 sky-events has merged to main: this branch
 **Decisions taken without an interview.** This planning run is a herdr agent and may not use interactive questions; owner questions go through the orchestrator.
 
 - The UI choices from the audit are the owner's (3C).
-- Two UI details the owner did not decide take recommended defaults. They are relayed as an owner question with this plan, and Phase 1 adapts to the answer:
-  - **D1**, the hairline colour: a new neutral `--control-border` at ≥3:1.
-  - **D2**, red-mode text actions: a resting underline in red only.
+- Two UI details the audit left open were put to the owner through the orchestrator; the owner chose the recommended options on 2026-10-14:
+  - **D1 (decided)**, the hairline colour: a new neutral grey `--control-border` at ≥3:1.
+  - **D2 (decided)**, red-mode text actions: a resting underline in red only.
 - The technical choices are this plan's: the variant names and the `bare` size, keeping the action tokens, the hairline for the /gear Add links.
 
 ## Critical Implementation Details
@@ -153,10 +153,7 @@ Add everything the hierarchy needs beside the existing `action`, prove it in the
   - Published as `--color-control-border` in `@theme inline` beside the action tokens.
   - Values: ≥3:1 against `--background` and `--surface` of its theme. Starting points from research §4 are dark `#646e8a`, light `#808a9e`; red must be pure red (zero green and blue), around `#c80000`, and must be measured.
 - New `@custom-variant red (&:where([data-theme="red"] *));` next to `offline` and `night`, with a comment naming its one use (the quiet action's resting underline).
-- If the owner answers D1 or D2 differently, this item adapts:
-  - Reusing `--action-border` drops the new token.
-  - "Underline everywhere" makes the underline unconditional and drops the variant.
-  - Accepting the faint hairline uses `--border` with no pin.
+- Both follow the owner's decisions D1 and D2 (2026-10-14); the rejected options were reusing `--action-border`, the faint `--border` hairline, and an underline in every theme.
 
 #### 3. The `quiet` and `hairline` variants and the `bare` size
 
