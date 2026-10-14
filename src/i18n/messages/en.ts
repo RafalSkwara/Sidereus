@@ -7,8 +7,11 @@
  * Messages that `?error=` or a zod issue carries are string leaves, addressed by dotted key
  * ("errors.site.latitudeRange"), and must never contain a submitted value.
  *
- * Island-safe: no imports.
+ * Island-safe: no runtime imports (the `import type`s below are erased).
  */
+
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
+import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
 
 /** One form per `Intl.PluralRules` category; `few` and `many` are only needed where a locale uses them. */
 export interface PluralForms<T = string> {
@@ -906,6 +909,17 @@ export const en = {
           annular: "Annular solar eclipse",
           total: "Total solar eclipse",
         },
+        /** The names inside the verdict's sentence ("Today, 11:22: …"), where Polish needs its own, lowercase form. */
+        lunarInLine: {
+          penumbral: "Penumbral lunar eclipse",
+          partial: "Partial lunar eclipse",
+          total: "Total lunar eclipse",
+        },
+        solarInLine: {
+          partial: "Partial solar eclipse",
+          annular: "Annular solar eclipse",
+          total: "Total solar eclipse",
+        },
         /** A penumbral lunar eclipse is listed but never put on the dashboard. */
         barelyNoticeable: "Barely noticeable: the Moon only dims a little",
         /** `percent` is the share of the Sun's disc the Moon covers at the site's peak. */
@@ -916,11 +930,31 @@ export const en = {
         totalPhase: (p: { start: string; end: string }) => `Totality ${p.start}–${p.end}`,
         annularPhase: (p: { start: string; end: string }) => `Ring phase ${p.start}–${p.end}`,
       },
-      /** `body` is the planet's name, `deg` the elongation, `sky` the apparition. */
-      elongationName: (p: { body: string }) => `${p.body} at greatest elongation`,
+      /**
+       * An elongation and an opposition, by body: the title (the row and the tile) and the form inside the verdict's
+       * sentence. Per-key records, not a template, so Polish can decline each planet ("Opozycja Marsa").
+       */
+      elongationName: {
+        mercury: "Mercury at greatest elongation",
+        venus: "Venus at greatest elongation",
+      } satisfies Record<ElongationBody, string>,
+      elongationNameInLine: {
+        mercury: "Mercury at greatest elongation",
+        venus: "Venus at greatest elongation",
+      } satisfies Record<ElongationBody, string>,
+      /** `deg` the elongation, `sky` the apparition. */
       elongationDetail: (p: { deg: string; sky: string }) => `${p.deg}° from the Sun, ${p.sky}`,
       apparition: { morning: "morning sky", evening: "evening sky" },
-      oppositionName: (p: { body: string }) => `${p.body} at opposition`,
+      oppositionName: {
+        mars: "Mars at opposition",
+        jupiter: "Jupiter at opposition",
+        saturn: "Saturn at opposition",
+      } satisfies Record<OppositionBody, string>,
+      oppositionNameInLine: {
+        mars: "Mars at opposition",
+        jupiter: "Jupiter at opposition",
+        saturn: "Saturn at opposition",
+      } satisfies Record<OppositionBody, string>,
       /** `first` and `second` are the two bodies' names; `deg` the separation. */
       pairingName: (p: { first: string; second: string }) => `${p.first} and ${p.second}`,
       pairingDetail: (p: { deg: string }) => `${p.deg}° apart`,
@@ -938,7 +972,7 @@ export const en = {
         orionids: "Orionids peak",
         leonids: "Leonids peak",
         geminids: "Geminids peak",
-      },
+      } satisfies Record<ShowerKey, string>,
       showerNameInLine: {
         quadrantids: "Quadrantids peak",
         lyrids: "Lyrids peak",
@@ -948,7 +982,7 @@ export const en = {
         orionids: "Orionids peak",
         leonids: "Leonids peak",
         geminids: "Geminids peak",
-      },
+      } satisfies Record<ShowerKey, string>,
       showerWhen: "Peak night",
       /** The visible mark and its opposite, beside the name. */
       visible: "Visible",
@@ -974,7 +1008,7 @@ export const en = {
       lowHorizon: "Low, needs an open horizon",
       /** A night with no full darkness: judged over the whole twilight span. */
       shortNight: "Short night: the sky never gets fully dark",
-      /** A bright Moon is up during the dark window. */
+      /** A bright Moon is up during the dark window (shown on a visible shower only). */
       brightMoon: "Bright Moon up: only the brighter meteors show",
       /**
        * When to go, for the dashboard tile: relative to the selected night, `span` as "12/13 Aug" (the evening and the
@@ -984,6 +1018,9 @@ export const en = {
         tonight: "tonight",
         tomorrow: "tomorrow night",
         night: (p: { span: string }) => `night of ${p.span}`,
+        /** A solar eclipse is a daytime event: the tile names its day and time, `time` as "HH:mm". */
+        todayAt: (p: { time: string }) => `Today, ${p.time}`,
+        tomorrowAt: (p: { time: string }) => `Tomorrow, ${p.time}`,
       },
       /** A visible solar eclipse on the tile and the verdict line is never "go out and look". */
       glassesOnly: "eclipse glasses only",
@@ -992,9 +1029,13 @@ export const en = {
       verdictLine: (p: { name: string }) => `Tonight: ${p.name}`,
       verdictLineMore: (p: { name: string; count: string }) => `Tonight: ${p.name} +${p.count} more`,
       /**
-       * The verdict's line for a solar eclipse after the night's midnight, which is tomorrow's daytime, not tonight
-       * (owner, 2026-10-14); `time` is "HH:mm" in the site's zone.
+       * The verdict's line for a solar eclipse, which is a daytime event and stays until its partial phase ends (owner
+       * decision A, 2026-10-14): "Today, 11:22: …" on its own day, "Tomorrow, 11:22: …" the day before; `time` is "HH:mm"
+       * in the site's zone.
        */
+      verdictLineToday: (p: { time: string; name: string }) => `Today, ${p.time}: ${p.name}`,
+      verdictLineTodayMore: (p: { time: string; name: string; count: string }) =>
+        `Today, ${p.time}: ${p.name} +${p.count} more`,
       verdictLineTomorrow: (p: { time: string; name: string }) => `Tomorrow, ${p.time}: ${p.name}`,
       verdictLineTomorrowMore: (p: { time: string; name: string; count: string }) =>
         `Tomorrow, ${p.time}: ${p.name} +${p.count} more`,
@@ -1246,17 +1287,6 @@ export const en = {
       saturn: "Saturn",
       uranus: "Uranus",
       neptune: "Neptune",
-    },
-    /** The meteor showers of the sky events list, keyed by the shower table's `key` (`meteor-showers.ts`). */
-    meteorShower: {
-      quadrantids: "Quadrantids",
-      lyrids: "Lyrids",
-      etaAquariids: "Eta Aquariids",
-      southernDeltaAquariids: "Southern Delta Aquariids",
-      perseids: "Perseids",
-      orionids: "Orionids",
-      leonids: "Leonids",
-      geminids: "Geminids",
     },
     /** The picker's secondary line for a planet. */
     planetDetail: "Planet",

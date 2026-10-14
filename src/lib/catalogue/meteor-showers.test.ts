@@ -6,7 +6,7 @@ import { addDays } from "@/lib/engine/night";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 
-import { METEOR_SHOWERS } from "./meteor-showers";
+import { METEOR_SHOWERS, SHOWER_KEYS } from "./meteor-showers";
 
 /**
  * The shower table is hand-entered facts (see the file's header and `LICENSE-DATA.md`): this test pins its shape,
@@ -36,20 +36,27 @@ describe("meteor shower table", () => {
     ]);
   });
 
-  it("has an English and a Polish name for every shower, and no name without a shower", () => {
-    for (const shower of METEOR_SHOWERS) {
-      const names = [en.targets.meteorShower, pl.targets.meteorShower].map(
-        (table) => (table as Readonly<Record<string, string>>)[shower.key],
-      );
-      for (const name of names) {
-        expect(typeof name === "string" && name.trim().length > 0, `${shower.key} needs a name in both languages`).toBe(
-          true,
-        );
-      }
-    }
+  it("types its keys by SHOWER_KEYS, in the table's order", () => {
+    expect(METEOR_SHOWERS.map((s) => s.key)).toEqual([...SHOWER_KEYS]);
+  });
+
+  it("has an English and a Polish name, as a title and inside the verdict's sentence, for every shower, and no name without a shower", () => {
     const keys = METEOR_SHOWERS.map((s) => s.key).sort();
-    expect(Object.keys(en.targets.meteorShower).sort()).toEqual(keys);
-    expect(Object.keys(pl.targets.meteorShower).sort()).toEqual(keys);
+    // The names the page reads: `showerName` (the row and the tile) and `showerNameInLine` (the verdict's sentence).
+    const tables = {
+      "en showerName": en.tonight.events.showerName,
+      "en showerNameInLine": en.tonight.events.showerNameInLine,
+      "pl showerName": pl.tonight.events.showerName,
+      "pl showerNameInLine": pl.tonight.events.showerNameInLine,
+    };
+    for (const [label, table] of Object.entries(tables)) {
+      const names: Readonly<Record<string, string>> = table;
+      for (const shower of METEOR_SHOWERS) {
+        const name = names[shower.key];
+        expect(typeof name === "string" && name.trim().length > 0, `${shower.key} needs a name in ${label}`).toBe(true);
+      }
+      expect(Object.keys(names).sort(), label).toEqual(keys);
+    }
   });
 
   it("keeps every number in range, with a positive rate and speed", () => {

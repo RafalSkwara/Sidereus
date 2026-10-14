@@ -42,13 +42,23 @@ const BODY_OF: Readonly<Record<PairingBody, Body>> = {
   saturn: Body.Saturn,
 };
 
-/** Spacing of the night's samples for a pair that includes the Moon (about 0.55° of the Moon's own motion). */
+/**
+ * Spacing of the night's geometric-minimum samples for a pair that includes the Moon (about 0.55° of the
+ * Moon's own motion). The visible test uses its own, finer grid (`VISIBLE_STEP_MINUTES`).
+ */
 const MOON_STEP_MINUTES = 60;
 /** Planets move far slower against each other, so their pairs are sampled every third sample. */
 const PLANET_STEP_MINUTES = 180;
-/** Planet pairs use every third hourly sample. */
+/** Planet pairs use every third hourly sample for their geometric minimum. */
 const PLANET_STRIDE = PLANET_STEP_MINUTES / MOON_STEP_MINUTES;
 const MINUTE_MS = 60_000;
+/**
+ * Spacing of the visible test inside a night's Sun-low stretch, minutes. Both bodies at or above the
+ * minimum altitude while the Sun is low can hold for only a few minutes (a pairing in twilight), so the
+ * test cannot use the geometric grid: a stretch shorter than a grid step falls between its samples. At most
+ * `COARSE_REFINE_MINUTES`, so the refinement around the best sample scans every minute (`refine`).
+ */
+const VISIBLE_STEP_MINUTES = 10;
 /** Coarse grid of the refinement scan, minutes; the fine scan then covers one coarse step each side at 1 minute. */
 const COARSE_REFINE_MINUTES = 15;
 /**
@@ -108,7 +118,8 @@ function bothUp(a: Placed, b: Placed): boolean {
 
 /**
  * The closest approach of a pair within `centre ± halfSpanMinutes`, clipped to `night`: a scan on
- * `COARSE_REFINE_MINUTES`, then a scan of the best coarse step's neighbourhood to the minute. With
+ * `COARSE_REFINE_MINUTES`, then a scan of the best coarse step's neighbourhood to the minute (a span no wider
+ * than one coarse step is scanned to the minute at once). With
  * `visibleOnly` only the minutes where both bodies are up and the Sun is low enough count; `null` when
  * there are none.
  */
@@ -123,7 +134,8 @@ function refine(
 ): Approach | null {
   const at = (minutes: number): Approach | null => {
     const time = new Date(centre.getTime() + minutes * MINUTE_MS);
-    if (time < night.start || time > night.end) {
+    // Half-open: a night's end instant is the next night's start (and, at the window's end, outside it).
+    if (time < night.start || time >= night.end) {
       return null;
     }
     const t = MakeTime(time);
@@ -151,6 +163,9 @@ function refine(
     }
     return out;
   };
+  if (halfSpanMinutes <= COARSE_REFINE_MINUTES) {
+    return closest(range(-halfSpanMinutes, halfSpanMinutes, 1))?.approach ?? null;
+  }
   const coarse = closest(range(-halfSpanMinutes, halfSpanMinutes, COARSE_REFINE_MINUTES));
   if (coarse === null) {
     return null;
@@ -158,6 +173,46 @@ function refine(
   const lo = Math.max(coarse.offset - COARSE_REFINE_MINUTES, -halfSpanMinutes);
   const hi = Math.min(coarse.offset + COARSE_REFINE_MINUTES, halfSpanMinutes);
   return closest(range(lo, hi, 1))?.approach ?? coarse.approach;
+}
+
+/**
+ * The instants of `span` at which a pair's visibility is tested: every `VISIBLE_STEP_MINUTES` while the Sun is
+ * at or below `EVENT_SUN_MAX_ALTITUDE_DEG`, and the two ends of that stretch, found to the second (the
+ * Sun-low side of each crossing), so a stretch shorter than the step is still tested at its ends. The
+ * Sun's altitude has one maximum and one minimum a day, so the Sun-low part of a noon-to-noon night is one
+ * stretch; the code does not rely on that and handles each crossing it meets. In time order.
+ */
+function sunLowInstants(site: Site, span: Interval): Date[] {
+  const isLow = (ms: number): boolean => sunAltitudeDeg(site, new Date(ms)) <= EVENT_SUN_MAX_ALTITUDE_DEG;
+  const startMs = span.start.getTime();
+  const endMs = span.end.getTime();
+  const instants: Date[] = [];
+  let previous: { ms: number; low: boolean } | null = null;
+  for (let ms = startMs; ; ms += VISIBLE_STEP_MINUTES * MINUTE_MS) {
+    const now = Math.min(ms, endMs);
+    const low = isLow(now);
+    if (previous !== null && previous.low !== low) {
+      // The crossing lies between the two samples: bisect to the second and keep the Sun-low side.
+      let lowSide = low ? now : previous.ms;
+      let highSide = low ? previous.ms : now;
+      while (Math.abs(lowSide - highSide) > 1000) {
+        const middle = Math.round((lowSide + highSide) / 2);
+        if (isLow(middle)) {
+          lowSide = middle;
+        } else {
+          highSide = middle;
+        }
+      }
+      instants.push(new Date(lowSide));
+    }
+    if (low && (instants.length === 0 || instants[instants.length - 1].getTime() !== now)) {
+      instants.push(new Date(now));
+    }
+    previous = { ms: now, low };
+    if (now === endMs) {
+      return instants;
+    }
+  }
 }
 
 /** What one observing night holds for one pair that is within the threshold. */
@@ -185,9 +240,12 @@ function closer(a: Approach, b: Approach | null): Approach {
  * `too-low`.
  *
  * A visible event's `altitudeDeg` and `azimuthDeg` are the lower of the two bodies', the one that limits
- * the view. Sampling is hourly when the Moon is in the pair and every three hours between planets, so a
- * night whose Sun stays below the twilight bound for under an hour (high latitudes near midsummer) can be
- * missed as visible and falls back to the not-visible case.
+ * the view. A night is first screened for closeness on a coarse grid (hourly when the Moon is in the pair,
+ * the night's two ends for planets), which keeps the cost to the few nights a pair is near. A night that
+ * passes is tested for visibility every `VISIBLE_STEP_MINUTES` while the Sun is low and at the two ends of
+ * that stretch, and the best sample is refined to the minute. The stretch in which both bodies are up and
+ * the Sun is low is often short (a pairing in twilight, at any latitude, can hold for ten minutes), so a
+ * grid as coarse as the screening one would miss it and report the event as not visible.
  */
 export function pairingEvents(
   site: Site,
@@ -242,15 +300,16 @@ export function pairingEvents(
       placedCache[body][s] = placed;
       return placed;
     };
-    const sunCache = new Array<boolean | undefined>(times.length);
-    const sunLowAt = (s: number): boolean => {
-      const cached = sunCache[s];
-      if (cached !== undefined) {
-        return cached;
+    // The visible test's instants and the bodies' positions at them, computed when a pair first needs them.
+    let sunLow: Date[] | null = null;
+    const finePlaced = PAIRING_BODIES.map(() => new Map<number, Placed>());
+    const finePlacedAt = (body: number, time: Date): Placed => {
+      let placed = finePlaced[body].get(time.getTime());
+      if (placed === undefined) {
+        placed = place(BODY_OF[PAIRING_BODIES[body]], MakeTime(time), observer);
+        finePlaced[body].set(time.getTime(), placed);
       }
-      const low = sunAltitudeDeg(site, times[s]) <= EVENT_SUN_MAX_ALTITUDE_DEG;
-      sunCache[s] = low;
-      return low;
+      return placed;
     };
     const startVectors = planetVectors(nightSpan.start);
     const endVectors = planetVectors(nightSpan.end);
@@ -280,18 +339,29 @@ export function pairingEvents(
       }
 
       let geometric: Approach | null = null;
-      let visible: Approach | null = null;
       for (let s = 0; s < times.length; s += pair.stride) {
         const approach = approachOf(times[s], placedAt(ia, s), placedAt(ib, s));
         geometric = geometric === null ? approach : closer(geometric, approach);
-        if (sunLowAt(s) && bothUp(placedAt(ia, s), placedAt(ib, s))) {
-          visible = visible === null ? approach : closer(visible, approach);
+      }
+      // The visible test: the closest sample, in the night's Sun-low stretch, with both bodies up.
+      sunLow ??= sunLowInstants(site, nightSpan);
+      let visible: Approach | null = null;
+      for (const time of sunLow) {
+        const a = finePlacedAt(ia, time);
+        if (a.altitudeDeg < EVENT_MIN_ALTITUDE_DEG) {
+          continue;
         }
+        const b = finePlacedAt(ib, time);
+        if (b.altitudeDeg < EVENT_MIN_ALTITUDE_DEG) {
+          continue;
+        }
+        const approach = approachOf(time, a, b);
+        visible = visible === null ? approach : closer(visible, approach);
       }
       const halfSpan = pair.stride * MOON_STEP_MINUTES;
       const refinedVisible =
         visible !== null && visible.separationDeg <= maxSeparationDeg + REFINE_MARGIN_DEG
-          ? refine(site, observer, pair.astro, visible.time, halfSpan, nightSpan, true)
+          ? refine(site, observer, pair.astro, visible.time, VISIBLE_STEP_MINUTES, nightSpan, true)
           : null;
       const closeVisible =
         refinedVisible !== null && refinedVisible.separationDeg <= maxSeparationDeg ? refinedVisible : null;

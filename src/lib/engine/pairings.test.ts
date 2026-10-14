@@ -291,6 +291,175 @@ describe("the threshold", () => {
   });
 });
 
+describe("a pairing that is visible only in a short stretch of twilight", () => {
+  /** The best moment must be a real visible one, by the independent altitudes and the strict -6° bound. */
+  function expectVisibleMoment(event: PairingEvent, site: Site, label: string): void {
+    expect(event.visibility.visible, label).toBe(true);
+    const first = altitudeOf(event.bodies[0], site, event.moment);
+    const second = altitudeOf(event.bodies[1], site, event.moment);
+    expect(first, label).toBeGreaterThanOrEqual(EVENT_MIN_ALTITUDE_DEG);
+    expect(second, label).toBeGreaterThanOrEqual(EVENT_MIN_ALTITUDE_DEG);
+    expect(sunAltitudeDeg(site, event.moment), label).toBeLessThanOrEqual(EVENT_SUN_MAX_ALTITUDE_DEG);
+  }
+
+  it("lists the Jupiter-Saturn great conjunction of 2020-12-21 at Warsaw as visible, 0.10° apart, in the evening twilight", () => {
+    // Both planets are 10° up with the Sun at -6° from about 15:12 UTC for a short while only: the
+    // hourly and three-hourly samples of a night all fall outside that stretch.
+    const events = pairingEvents(WARSAW, windowOf(WARSAW, "2020-12-21", 1));
+    const event = only(events.filter((e) => pairName(e.bodies) === "jupiter-saturn"));
+    expect(event.night).toBe("2020-12-21");
+    expectVisibleMoment(event, WARSAW, "jupiter-saturn 2020-12-21");
+    expect(event.moment.getTime()).toBeGreaterThanOrEqual(Date.parse("2020-12-21T15:12:00Z") - 60_000);
+    expect(event.moment.getTime()).toBeLessThan(Date.parse("2020-12-21T17:00:00Z"));
+    expect(event.separationDeg).toBeGreaterThan(0.05);
+    expect(event.separationDeg).toBeLessThan(0.15);
+  });
+
+  it("lists Venus and Jupiter's 1.6° approach of 2026-06-09 at Warsaw as visible, not as daylight", () => {
+    const events = pairingEvents(WARSAW, windowOf(WARSAW, "2026-06-09", 1));
+    const event = only(events.filter((e) => pairName(e.bodies) === "venus-jupiter"));
+    expectVisibleMoment(event, WARSAW, "venus-jupiter 2026-06-09");
+    expect(event.moment.getTime()).toBeGreaterThanOrEqual(Date.parse("2026-06-09T19:54:00Z") - 60_000);
+    expect(event.separationDeg).toBeGreaterThan(1.5);
+    expect(event.separationDeg).toBeLessThan(1.7);
+  });
+
+  it("lists Mercury and Saturn's approach of 2026-04-20 at Sydney as visible", () => {
+    const events = pairingEvents(SYDNEY, windowOf(SYDNEY, "2026-04-20", 1));
+    const event = only(events.filter((e) => pairName(e.bodies) === "mercury-saturn"));
+    expectVisibleMoment(event, SYDNEY, "mercury-saturn 2026-04-20");
+  });
+});
+
+describe("a brute-force scan of every instant of a window", () => {
+  /**
+   * Independent of the engine's grids: a two-minute scan of every night of a fixed 30-night window, per
+   * pair, of whether any instant has both bodies at or above `EVENT_MIN_ALTITUDE_DEG`, the Sun at or below
+   * `EVENT_SUN_MAX_ALTITUDE_DEG` and the two within `PAIRING_MAX_SEPARATION_DEG` (visible), or the two
+   * within the threshold at all (close). Consecutive close nights of a pair are one cluster, which the
+   * engine must report as exactly one event, visible exactly when one of its nights has a visible instant.
+   *
+   * Edge tolerance, the only one: a stretch the scan sees in a single two-minute sample at most (the bodies
+   * or the Sun crossing their bounds within a couple of minutes of each other) may be missed by the engine,
+   * and a cluster whose only visible instants lie in such a stretch is not held to the scan.
+   */
+  const SCAN_MS = 2 * 60_000;
+
+  interface PairNight {
+    close: boolean;
+    /** Number of two-minute samples at which the pair is visible and within the threshold. */
+    visibleSamples: number;
+  }
+
+  function scan(site: Site, fromNight: string): Map<string, PairNight[]> {
+    const observer = new Observer(site.latitudeDeg, site.longitudeDeg, site.elevationM ?? 0);
+    const pairs: [number, number][] = [];
+    PAIRING_BODIES.forEach((_first, i) => {
+      for (let j = i + 1; j < PAIRING_BODIES.length; j++) {
+        pairs.push([i, j]);
+      }
+    });
+    const result = new Map<string, PairNight[]>(
+      pairs.map(([i, j]) => [`${PAIRING_BODIES[i]}-${PAIRING_BODIES[j]}`, []]),
+    );
+    for (let n = 0; n < NIGHTS; n++) {
+      const night = observingNight(addDays(fromNight, n), site.timeZone);
+      const nights = pairs.map<PairNight>(() => ({ close: false, visibleSamples: 0 }));
+      // Half-open, like the engine's nights: a night's end instant is the next night's first.
+      for (let t = night.start.getTime(); t < night.end.getTime(); t += SCAN_MS) {
+        const time = new Date(t);
+        const dark = sunAltitudeDeg(site, time) <= EVENT_SUN_MAX_ALTITUDE_DEG;
+        const vectors = PAIRING_BODIES.map((body) => Equator(BODY_OF[body], time, observer, true, true));
+        const up = PAIRING_BODIES.map(
+          (_body, b) =>
+            dark && Horizon(time, observer, vectors[b].ra, vectors[b].dec, "normal").altitude >= EVENT_MIN_ALTITUDE_DEG,
+        );
+        pairs.forEach(([i, j], p) => {
+          if (AngleBetween(vectors[i].vec, vectors[j].vec) <= PAIRING_MAX_SEPARATION_DEG) {
+            nights[p].close = true;
+            if (up[i] && up[j]) {
+              nights[p].visibleSamples++;
+            }
+          }
+        });
+      }
+      pairs.forEach(([i, j], p) => result.get(`${PAIRING_BODIES[i]}-${PAIRING_BODIES[j]}`)?.push(nights[p]));
+    }
+    return result;
+  }
+
+  it.each([
+    { name: "Warsaw", site: WARSAW, from: "2026-10-13" },
+    { name: "Sydney", site: SYDNEY, from: "2026-04-01" },
+    { name: "Warsaw in twilight-only season", site: WARSAW, from: "2026-05-25" },
+    { name: "Warsaw, the 2020 great conjunction", site: WARSAW, from: "2020-12-08" },
+  ])("agrees with the engine on which clusters of $name are visible", ({ site, from }) => {
+    const scanned = scan(site, from);
+    const events = pairingEvents(site, windowOf(site, from, NIGHTS));
+    let clusters = 0;
+    let visibleClusters = 0;
+    const problems: string[] = [];
+    for (const [name, nights] of scanned) {
+      const mine = events.filter((e) => pairName(e.bodies) === name);
+      let start = 0;
+      while (start < nights.length) {
+        if (!nights[start].close) {
+          start++;
+          continue;
+        }
+        let end = start;
+        while (end + 1 < nights.length && nights[end + 1].close) {
+          end++;
+        }
+        clusters++;
+        const dates = new Set(Array.from({ length: end - start + 1 }, (_, k) => addDays(from, start + k)));
+        const inCluster = mine.filter((e) => dates.has(e.night));
+        const samples = nights.slice(start, end + 1).reduce((sum, n) => sum + n.visibleSamples, 0);
+        const label = `${name} nights ${addDays(from, start)}..${addDays(from, end)} (${samples} visible samples)`;
+        if (inCluster.length !== 1) {
+          problems.push(`${label}: ${inCluster.length} engine events`);
+        } else {
+          const event = inCluster[0];
+          // A single sample is the edge tolerance: one two-minute sample of a span can be an instant the engine's span misses.
+          if (samples > 1 && !event.visibility.visible) {
+            problems.push(`${label}: engine says not visible (${JSON.stringify(event.visibility)})`);
+          }
+          // The engine reads the minute, the scan every second one: a visible event the scan has no sample of
+          // is allowed only when its moment really is visible and within the threshold (the other edge tolerance).
+          if (
+            samples === 0 &&
+            event.visibility.visible &&
+            !(
+              altitudeOf(event.bodies[0], site, event.moment) >= EVENT_MIN_ALTITUDE_DEG &&
+              altitudeOf(event.bodies[1], site, event.moment) >= EVENT_MIN_ALTITUDE_DEG &&
+              sunAltitudeDeg(site, event.moment) <= EVENT_SUN_MAX_ALTITUDE_DEG &&
+              event.separationDeg <= PAIRING_MAX_SEPARATION_DEG
+            )
+          ) {
+            problems.push(`${label}: engine says visible, but its moment is not`);
+          }
+        }
+        if (samples > 0) {
+          visibleClusters++;
+        }
+        start = end + 1;
+      }
+    }
+    expect(problems).toEqual([]);
+    // Every event of the window falls on a night of the window, its moment before the window's end.
+    const window = windowOf(site, from, NIGHTS);
+    for (const event of events) {
+      expect(event.night >= from && event.night <= addDays(from, NIGHTS - 1), pairName(event.bodies)).toBe(true);
+      expect(event.moment.getTime(), pairName(event.bodies)).toBeGreaterThanOrEqual(window.start.getTime());
+      expect(event.moment.getTime(), pairName(event.bodies)).toBeLessThan(window.end.getTime());
+    }
+    expect(clusters).toBeGreaterThan(0);
+    expect(visibleClusters).toBeGreaterThan(0);
+    // No event is outside a cluster the scan found.
+    expect(events.length).toBeLessThanOrEqual(clusters);
+  });
+});
+
 describe("the site's own sky", () => {
   it("separates the Moon from a planet by the site's parallax: Warsaw's 1.63° Moon-Jupiter approach is not the geocentric one", () => {
     const moment = new Date("2026-11-02T23:38:00Z");

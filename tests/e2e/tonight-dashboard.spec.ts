@@ -16,6 +16,23 @@ import { onboardInMadrid } from "./helpers";
  */
 
 const t = en.tonight;
+
+/**
+ * How the verdict's event line may begin, whichever date the clock has: "Tonight: ", or for a solar eclipse, a daytime
+ * event, "Today, 11:22: " or "Tomorrow, 11:22: " (owner decision A, 2026-10-14). Built from the English messages, so a
+ * rewording cannot leave the spec behind; a time is any `HH:mm`.
+ */
+const VERDICT_LINE_START = (() => {
+  const e = t.events;
+  const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const starts = [
+    e.verdictLine({ name: "" }),
+    e.verdictLineToday({ time: "00:00", name: "" }),
+    e.verdictLineTomorrow({ time: "00:00", name: "" }),
+  ];
+  return new RegExp(`^(?:${starts.map((start) => escape(start).replace("00:00", "\\d{2}:\\d{2}")).join("|")})\\S`);
+})();
+
 /** Each tile: its heading, the page it opens and that page's title ("Open …" joins the name only where they differ). */
 const TILES = [
   { heading: t.summary.targets, href: "/tonight/targets", page: t.pages.targets },
@@ -84,7 +101,7 @@ test("the Sky events tile states the next event or that there is none, and opens
   // The verdict's own line exists only on a night with a notable event, as plain text: no link, no control.
   const verdictLine = page.locator("[data-verdict-event]");
   if ((await verdictLine.count()) > 0) {
-    await expect(verdictLine).toHaveText(/^Tonight: \S/);
+    await expect(verdictLine).toHaveText(VERDICT_LINE_START);
     await expect(verdictLine.locator("a, button")).toHaveCount(0);
     // An event tonight is also the next one, so the tile cannot say there is none.
     expect(text).not.toBe(none);

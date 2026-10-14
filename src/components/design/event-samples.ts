@@ -41,6 +41,8 @@ function wordedEventsAt(site: SiteRecord, locale: Locale, night = SAMPLE_EVENTS_
     locale,
     site.timeZone,
     night,
+    // The evening the window starts: the 2027-08-02 eclipse is then still ahead, and not yet over.
+    new Date(`${night}T18:00:00Z`),
   );
 }
 
@@ -58,7 +60,7 @@ export interface EventSamples {
 export function eventSamples(locale: Locale): EventSamples {
   const m = getMessages(locale);
   const t = m.tonight.events;
-  const { formatNightSpan, formatDayTime, formatTime, formatDegrees } = createFormatter(locale);
+  const { formatNightSpan, formatTime, formatDegrees } = createFormatter(locale);
 
   const base: TonightSkyEvent = {
     kind: "meteor-shower",
@@ -71,7 +73,8 @@ export function eventSamples(locale: Locale): EventSamples {
     goNight: "2026-10-10",
     lineName: t.showerName.orionids,
     verdictName: t.showerNameInLine.orionids,
-    tomorrowAt: null,
+    dayWord: null,
+    at: null,
     nightWhen: t.when.tonight,
     visible: true,
     visibilityText: "",
@@ -90,17 +93,20 @@ export function eventSamples(locale: Locale): EventSamples {
     lineName: `${pairingName}, ${pairingDetail}`,
     verdictName: `${pairingName}, ${pairingDetail}`,
   };
-  // The 2027-08-02 eclipse in the morning after the night's midnight: the verdict line reads "Tomorrow, 12:03: …".
-  const eclipseMoment = new Date("2027-08-02T10:03:00Z");
+  // The 2027-08-02 eclipse at Warsaw, seen the evening before: its local peak is 09:22 UTC (11:22), so the verdict line
+  // reads "Tomorrow, 11:22: …" (owner decision A, 2026-10-14).
+  const eclipseMoment = new Date("2027-08-02T09:22:00Z");
+  const eclipseAt = formatTime(eclipseMoment, "Europe/Warsaw");
   const eclipse: TonightSkyEvent = {
     ...base,
     kind: "solar-eclipse",
     name: t.eclipse.solar.partial,
     kindLabel: t.kind["solar-eclipse"],
     lineName: t.eclipse.solar.partial,
-    verdictName: t.eclipse.solar.partial,
-    tomorrowAt: formatTime(eclipseMoment, "Europe/Warsaw"),
-    nightWhen: formatDayTime(eclipseMoment, "Europe/Warsaw"),
+    verdictName: t.eclipse.solarInLine.partial,
+    dayWord: "tomorrow",
+    at: eclipseAt,
+    nightWhen: t.when.tomorrowAt({ time: eclipseAt }),
     safety: true,
   };
   const geminids: TonightSkyEvent = {
@@ -132,7 +138,7 @@ export function eventSamples(locale: Locale): EventSamples {
       { label: "one event tonight", line: eventsVerdictLine(tonightOne, locale) ?? "" },
       { label: "several events tonight: the first and “+1 more”", line: eventsVerdictLine(tonightMany, locale) ?? "" },
       {
-        label: "a solar eclipse after midnight: “Tomorrow, 12:03”, eclipse glasses only",
+        label: "a solar eclipse the next day: “Tomorrow, 11:22”, eclipse glasses only",
         line: eventsVerdictLine(tonightEclipse, locale) ?? "",
       },
     ],

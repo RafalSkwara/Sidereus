@@ -31,12 +31,27 @@
  * Leonids' and Eta Aquariids' derived longitudes sit about 1 and 0.6 degrees below Wikipedia's, which is
  * the resolution of NASA's night-level dates, not a fault in the engine).
  *
- * Island-safe: no imports. The shower names live in the i18n catalogue (`targets.meteorShower.<key>`).
+ * Island-safe: no imports. The shower names live in the i18n catalogue (`tonight.events.showerName.<key>` and
+ * `showerNameInLine.<key>`), typed by `ShowerKey` in both languages.
  */
 
+/** The showers' keys, in the order of the table: the one list the i18n names and the engine's events are typed by. */
+export const SHOWER_KEYS = [
+  "quadrantids",
+  "lyrids",
+  "etaAquariids",
+  "southernDeltaAquariids",
+  "perseids",
+  "orionids",
+  "leonids",
+  "geminids",
+] as const;
+
+export type ShowerKey = (typeof SHOWER_KEYS)[number];
+
 export interface MeteorShower {
-  /** Stable id and the `targets.meteorShower` key: lower camel case. */
-  key: string;
+  /** Stable id and the key of `tonight.events.showerName` / `showerNameInLine`: lower camel case. */
+  key: ShowerKey;
   /**
    * The Sun's ecliptic longitude at the shower's peak, degrees [0, 360), for the equinox of J2000.0 (not
    * of date: the engine searches the J2000 longitude directly). Derived from `nasaPeakNight`, see above.

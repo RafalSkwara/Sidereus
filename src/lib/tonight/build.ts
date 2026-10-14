@@ -629,7 +629,7 @@ function nearestIndex(times: readonly number[], ms: number): number {
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
  * Targets page). `withSkyView`: also build the interactive sky (the dashboard only); without it `skyView` is
  * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan, and `withSkyEvents` for the
- * sky events (the events page asks for them). `night`: `"next"` builds the
+ * sky events (the dashboard and the events page ask for them). `night`: `"next"` builds the
  * evening after the one `tonightDateFor(now)` returns (offline-night-plan), from the same forecast; the forecast's age
  * keeps the real `now`, the time-driven initial selections read as at that night's sunset.
  */
@@ -1261,6 +1261,9 @@ export function buildTonight(
         locale,
         timeZone,
         date,
+        // The clock the events are worded against (a solar eclipse's day, and when it is over): the real one for
+        // tonight, the next night's sunset for `night: "next"`, like the other time-driven selections.
+        selectionNow,
         EVENT_WINDOW_NIGHTS,
       );
     } catch (error) {

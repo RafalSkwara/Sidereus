@@ -12,6 +12,8 @@ import {
 } from "astronomy-engine";
 import type { EclipseEvent } from "astronomy-engine";
 
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
+
 import { addDays, observingNight, observingNightDateFor } from "./night";
 import {
   ECLIPSE_MIN_ALTITUDE_DEG,
@@ -131,8 +133,8 @@ export interface PairingEvent extends EventBase {
 
 export interface MeteorShowerEvent extends EventBase {
   kind: "meteor-shower";
-  /** The shower's id in the shower table. */
-  shower: string;
+  /** The shower's key in the shower table. */
+  shower: ShowerKey;
   /** The Moon is bright (illuminated fraction at or above `METEOR_BRIGHT_MOON_FRACTION`) and up during the dark window. */
   brightMoon: boolean;
   /** The night (`YYYY-MM-DD`) to watch: the peak's night, or the one before or after when the peak is in daylight. */
@@ -199,27 +201,64 @@ export function withShortNight(visibility: EventVisibility, shortNight: boolean)
   return shortNight ? { ...visibility, shortNight: true } : visibility;
 }
 
+/** Bisection steps between a peak and a contact: a few hours down to a hundredth of a second. */
+const CLEAR_BISECTION_STEPS = 20;
+
 /**
- * The one rule for an eclipse. Visible if the body is at or above `ECLIPSE_MIN_ALTITUDE_DEG` at the peak;
- * otherwise visible `partly` if it is at or above it at a contact, the best moment being the highest
- * contact. `lowHorizon` when that altitude is under `EVENT_MIN_ALTITUDE_DEG`. When nothing qualifies the
- * reason is `below-horizon` (every sampled moment under 0°) or `too-low`. Daylight never applies: an
- * eclipse is not a night event.
+ * The moment between `from` (under `ECLIPSE_MIN_ALTITUDE_DEG`) and `contact` (at or above it) where the body clears
+ * the bar, found by bisection: the closest to `from` that is still up, so it is a moment of the phase in progress
+ * (an eclipse's phases nest around the peak, and the span between the peak and a contact lies inside the phase that
+ * contact bounds). Always returns a position at or above the bar.
  */
-function eclipseVisibility(peak: HorizontalPosition, contacts: readonly HorizontalPosition[]): EventVisibility {
+function firstUpBetween(
+  from: HorizontalPosition,
+  contact: HorizontalPosition,
+  positionAt: (time: Date) => HorizontalPosition,
+): HorizontalPosition {
+  let low = from.time.getTime();
+  let high: HorizontalPosition = contact;
+  for (let step = 0; step < CLEAR_BISECTION_STEPS; step++) {
+    const mid = positionAt(new Date((low + high.time.getTime()) / 2));
+    if (mid.altitudeDeg >= ECLIPSE_MIN_ALTITUDE_DEG) {
+      high = mid;
+    } else {
+      low = mid.time.getTime();
+    }
+  }
+  return high;
+}
+
+/**
+ * The one rule for an eclipse. Visible if the body is at or above `ECLIPSE_MIN_ALTITUDE_DEG` at the peak, `best` being
+ * the peak. Otherwise visible `partly` if it is at or above it at a contact (the highest one): then `best` is the
+ * moment the body clears the bar while the phase is still in progress, found between the peak and that contact
+ * (`firstUpBetween`), never the contact itself, which can be the moment the eclipse is over (sky-events impl review
+ * F5). `lowHorizon` when `best` is under `EVENT_MIN_ALTITUDE_DEG`. When nothing qualifies the reason is
+ * `below-horizon` (every sampled moment under 0°) or `too-low`. Daylight never applies: an eclipse is not a night
+ * event.
+ */
+function eclipseVisibility(
+  peak: HorizontalPosition,
+  contacts: readonly HorizontalPosition[],
+  positionAt: (time: Date) => HorizontalPosition,
+): EventVisibility {
   let chosen: HorizontalPosition | null = null;
   let partly = false;
   if (peak.altitudeDeg >= ECLIPSE_MIN_ALTITUDE_DEG) {
     chosen = peak;
   } else {
+    let highest: HorizontalPosition | null = null;
     for (const contact of contacts) {
       if (
         contact.altitudeDeg >= ECLIPSE_MIN_ALTITUDE_DEG &&
-        (chosen === null || contact.altitudeDeg > chosen.altitudeDeg)
+        (highest === null || contact.altitudeDeg > highest.altitudeDeg)
       ) {
-        chosen = contact;
-        partly = true;
+        highest = contact;
       }
+    }
+    if (highest !== null) {
+      chosen = firstUpBetween(peak, highest, positionAt);
+      partly = true;
     }
   }
   if (chosen === null) {
@@ -248,6 +287,7 @@ function horizontalPosition(body: Body, site: Site, time: Date): HorizontalPosit
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
+const HALF_DAY_MS = DAY_MS / 2;
 
 function around(centre: Date, semiDurationMinutes: number): Interval {
   return {
@@ -359,14 +399,13 @@ function lunarEclipseEvents(site: Site, window: Interval): LunarEclipseEvent[] {
     const total = eclipse.sd_total > 0 ? around(moment, eclipse.sd_total) : null;
     // A penumbral eclipse has no umbral contacts, so its penumbral ends stand in for them.
     const contactTimes = [partial, total].flatMap((phase) => (phase === null ? [] : [phase.start, phase.end]));
-    const contacts = (contactTimes.length > 0 ? contactTimes : [penumbral.start, penumbral.end]).map((time) =>
-      horizontalPosition(Body.Moon, site, time),
-    );
+    const positionAt = (time: Date): HorizontalPosition => horizontalPosition(Body.Moon, site, time);
+    const contacts = (contactTimes.length > 0 ? contactTimes : [penumbral.start, penumbral.end]).map(positionAt);
     events.push({
       kind: "lunar-eclipse",
       moment,
       night: observingNightDateFor(moment, site.timeZone),
-      visibility: eclipseVisibility(horizontalPosition(Body.Moon, site, moment), contacts),
+      visibility: eclipseVisibility(positionAt(moment), contacts, positionAt),
       eclipseKind: lunarKind(eclipse.kind),
       obscuration: eclipse.obscuration,
       penumbral,
@@ -385,15 +424,19 @@ function solarEclipseEvents(site: Site, window: Interval): SolarEclipseEvent[] {
     ...horizontalPosition(Body.Sun, site, contact.time.date),
     altitudeDeg: contact.altitude,
   });
+  const positionAt = (time: Date): HorizontalPosition => horizontalPosition(Body.Sun, site, time);
   // The search finds the next eclipse by its global peak, which can fall hours either side of the local one: start a
-  // day early so a local peak just inside the window is not missed, and skip a local peak before the window's start.
+  // day early so a local peak just inside the window is not missed. A solar eclipse stays in the answer until its
+  // partial phase ends (owner decision A, 2026-10-14), so one of the previous observing night is kept while its partial
+  // phase ends after the window's start minus 12 h (the previous night's midnight): the morning eclipse of day D is
+  // still the answer for the night of D after dawn. Its `night` is the earlier one.
   for (
     let eclipse = SearchLocalSolarEclipse(new Date(window.start.getTime() - DAY_MS), observer);
     eclipse.peak.time.date < window.end;
     eclipse = NextLocalSolarEclipse(eclipse.peak.time, observer)
   ) {
     const moment = eclipse.peak.time.date;
-    if (moment < window.start) {
+    if (eclipse.partial_end.time.date.getTime() <= window.start.getTime() - HALF_DAY_MS) {
       continue;
     }
     const central =
@@ -404,7 +447,11 @@ function solarEclipseEvents(site: Site, window: Interval): SolarEclipseEvent[] {
       kind: "solar-eclipse",
       moment,
       night: observingNightDateFor(moment, site.timeZone),
-      visibility: eclipseVisibility(sunAt(eclipse.peak), [sunAt(eclipse.partial_begin), sunAt(eclipse.partial_end)]),
+      visibility: eclipseVisibility(
+        sunAt(eclipse.peak),
+        [sunAt(eclipse.partial_begin), sunAt(eclipse.partial_end)],
+        positionAt,
+      ),
       eclipseKind: solarKind(eclipse.kind),
       obscuration: eclipse.obscuration,
       partial: { start: eclipse.partial_begin.time.date, end: eclipse.partial_end.time.date },
@@ -480,8 +527,10 @@ function oppositionEvents(site: Site, window: Interval, darkThresholdDeg: number
 
 /**
  * Every sky event of the `nights` observing nights from `fromNight` (`YYYY-MM-DD`, the site-local evening
- * date, local noon to local noon), in time order. An event belongs to the night that contains its moment,
- * so a daytime eclipse falls in the night that follows it. `darkThresholdDeg` is the sun altitude that
+ * date, local noon to local noon), in time order. An event belongs to the night that contains its moment, so a
+ * morning eclipse falls in the night that precedes it. A solar eclipse of the previous night whose partial phase ends
+ * after the window's start minus 12 h is returned too (its `night` is then before `fromNight`): it stays in view until
+ * it is over, and the caller, which owns the clock, drops it then. `darkThresholdDeg` is the sun altitude that
  * defines the night's dark window (the site's Bortle threshold from `darknessThresholdDegForBortle`; the
  * default is astronomical darkness). Throws `RangeError` on a malformed `fromNight` or a negative or
  * fractional `nights`. `options.pairings: false` leaves out the close pairings, the one kind that scans the

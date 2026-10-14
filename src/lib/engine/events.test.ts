@@ -157,9 +157,37 @@ describe("the total solar eclipse of 2027-08-02", () => {
     if (eclipse.visibility.visible) {
       expect(altitudeOf(Body.Sun, site, eclipse.moment)).toBeLessThan(ECLIPSE_MIN_ALTITUDE_DEG);
       expect(eclipse.visibility.partly).toBe(true);
-      expect(eclipse.visibility.best).toEqual(eclipse.partial.end);
       expect(eclipse.visibility.lowHorizon).toBe(true);
     }
+  });
+
+  it("gives a partly visible eclipse at sunrise a best moment with the Sun up and the eclipse still going, not the last contact (impl review F5)", () => {
+    const site: Site = { latitudeDeg: 10, longitudeDeg: -44, timeZone: "America/Fortaleza" };
+    const eclipse = only(ofKind(skyEvents(site, FROM), "solar-eclipse"));
+    expect(eclipse.visibility.visible).toBe(true);
+    if (eclipse.visibility.visible) {
+      const { best, altitudeDeg } = eclipse.visibility;
+      // The Sun clears the 2° bar after the peak and the eclipse is not over: the best moment is that one.
+      expect(best.getTime()).toBeGreaterThan(eclipse.moment.getTime());
+      expect(best.getTime()).toBeLessThan(eclipse.partial.end.getTime());
+      expect(altitudeOf(Body.Sun, site, best)).toBeGreaterThanOrEqual(ECLIPSE_MIN_ALTITUDE_DEG);
+      expect(altitudeOf(Body.Sun, site, best)).toBeLessThan(ECLIPSE_MIN_ALTITUDE_DEG + 0.01);
+      expect(altitudeDeg).toBeCloseTo(altitudeOf(Body.Sun, site, best), 3);
+      // A second earlier the Sun was under the bar: it is the first moment it is up.
+      expect(altitudeOf(Body.Sun, site, new Date(best.getTime() - 1000))).toBeLessThan(ECLIPSE_MIN_ALTITUDE_DEG);
+    }
+  });
+
+  it("keeps a solar eclipse in the answer until its partial phase ends, in the previous night's window too (owner decision A, 2026-10-14)", () => {
+    // Warsaw: the partial phase of 2027-08-02 runs to 12:19 CEST, so the night of 08-02 (from noon) still returns it, tagged with its own night 08-01.
+    const eclipse = only(ofKind(skyEvents(WARSAW, "2027-08-02"), "solar-eclipse"));
+    expect(eclipse.night).toBe("2027-08-01");
+    expect(eclipse.partial.end.getTime()).toBeGreaterThan(
+      observingNight("2027-08-02", WARSAW.timeZone).start.getTime(),
+    );
+    expect(only(ofKind(skyEvents(WARSAW, "2027-08-02", 1), "solar-eclipse")).partial.end).toEqual(eclipse.partial.end);
+    // From the next night on it is over for good.
+    expect(ofKind(skyEvents(WARSAW, "2027-08-03"), "solar-eclipse")).toEqual([]);
   });
 });
 
@@ -208,6 +236,21 @@ describe("the total lunar eclipse of 2028-12-31", () => {
       expect(madrid.visibility.partly).toBe(true);
       expect(madrid.visibility.altitudeDeg).toBeGreaterThanOrEqual(ECLIPSE_MIN_ALTITUDE_DEG);
       expect(madrid.visibility.best.getTime()).toBeGreaterThan(madrid.moment.getTime());
+    }
+  });
+
+  it("puts the best moment of a rising-Moon eclipse where the Moon clears 2° while the partial phase is still going, not at the contact (impl review F5)", () => {
+    const madrid = only(ofKind(skyEvents(MADRID, FROM), "lunar-eclipse"));
+    expect(madrid.partial).not.toBeNull();
+    expect(madrid.visibility.visible).toBe(true);
+    if (madrid.visibility.visible && madrid.partial !== null) {
+      const { best, altitudeDeg } = madrid.visibility;
+      expect(best.getTime()).toBeLessThan(madrid.partial.end.getTime());
+      expect(altitudeOf(Body.Moon, MADRID, best)).toBeGreaterThanOrEqual(ECLIPSE_MIN_ALTITUDE_DEG);
+      expect(altitudeOf(Body.Moon, MADRID, best)).toBeLessThan(ECLIPSE_MIN_ALTITUDE_DEG + 0.01);
+      expect(altitudeDeg).toBeCloseTo(altitudeOf(Body.Moon, MADRID, best), 3);
+      expect(altitudeOf(Body.Moon, MADRID, new Date(best.getTime() - 1000))).toBeLessThan(ECLIPSE_MIN_ALTITUDE_DEG);
+      expect(madrid.visibility.lowHorizon).toBe(true);
     }
   });
 
@@ -401,16 +444,23 @@ describe("the window", () => {
     }
   });
 
-  it("holds a local solar eclipse only when its local peak is in the window, whichever way the global peak falls", () => {
+  it("holds a local solar eclipse until its partial phase ends, whichever way the global peak falls", () => {
     // Warsaw's peak is at 09:22 UTC on 2027-08-02 (11:22 CEST, the night that began on 08-01), the global peak at
     // 10:07 UTC: a window starting at local noon of 08-02 (10:00 UTC) sits between them, and the search's own
-    // "after" is the global peak. The local peak is before the window, so the eclipse is not in it.
+    // "after" is the global peak. The local eclipse is not over until 10:19 UTC, so that window still has it (as
+    // the previous night's event, owner decision A, 2026-10-14); a window from 08-03 does not.
     const eclipse = only(ofKind(skyEvents(WARSAW, "2027-08-01", 1), "solar-eclipse"));
     expect(eclipse.night).toBe("2027-08-01");
-    expect(ofKind(skyEvents(WARSAW, "2027-08-02", 1), "solar-eclipse")).toEqual([]);
-    expect(ofKind(skyEvents(WARSAW, "2027-08-02"), "solar-eclipse")).toEqual([]);
+    // (The search starts from a different instant in each window, so the same eclipse agrees to the second, not bit for bit.)
+    for (const later of [skyEvents(WARSAW, "2027-08-02", 1), skyEvents(WARSAW, "2027-08-02")]) {
+      const same = only(ofKind(later, "solar-eclipse"));
+      expect(same.night).toBe("2027-08-01");
+      expect(Math.abs(same.moment.getTime() - eclipse.moment.getTime())).toBeLessThan(1000);
+      expect(Math.abs(same.partial.end.getTime() - eclipse.partial.end.getTime())).toBeLessThan(1000);
+    }
+    expect(ofKind(skyEvents(WARSAW, "2027-08-03"), "solar-eclipse")).toEqual([]);
     for (const e of skyEvents(WARSAW, "2027-08-02")) {
-      expect(e.night >= "2027-08-02").toBe(true);
+      expect(e.kind === "solar-eclipse" || e.night >= "2027-08-02").toBe(true);
     }
   });
 

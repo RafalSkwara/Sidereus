@@ -58,7 +58,7 @@ export interface LoadTonightInput {
   withSkyView?: boolean;
   /** Also build the Session plan (session-plan-timeline); see `buildTonight`. The dashboard and the plan page ask for it. */
   withSessionPlan?: boolean;
-  /** Also build the sky events (sky-events); see `buildTonight`. Only the events page asks for it. */
+  /** Also build the sky events (sky-events); see `buildTonight`. The dashboard and the events page ask for it. */
   withSkyEvents?: boolean;
   /** `"next"` builds the evening after tonight (offline-night-plan); see `buildTonight`. Default `"tonight"`. */
   night?: "tonight" | "next";

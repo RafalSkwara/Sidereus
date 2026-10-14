@@ -18,7 +18,7 @@ export interface TonightIslandLoad {
   withSkyView?: boolean;
   /** Also build the Session plan; the dashboard and the plan page set it. */
   withSessionPlan?: boolean;
-  /** Also build the sky events; only the events page sets it. */
+  /** Also build the sky events; the dashboard and the events page set it. */
   withSkyEvents?: boolean;
   /** `"next"` renders the evening after tonight, from the same forecast, and never reads sky checks. */
   night?: "tonight" | "next";

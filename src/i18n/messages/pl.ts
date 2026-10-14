@@ -1,4 +1,6 @@
 import type { Messages } from "@/i18n";
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
+import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
 
 /**
  * The Polish catalogue. It must match `en` key for key (`satisfies Messages`) and overrides every
@@ -8,7 +10,7 @@ import type { Messages } from "@/i18n";
  * Informal second person ("ty"), capitalised "Twój" in direct address. Dates arrive in the
  * nominative ("sobota, 10 października 2026"), so they follow a colon rather than a preposition.
  *
- * Island-safe: no runtime imports.
+ * Island-safe: no runtime imports (the `import type`s are erased).
  */
 export const pl = {
   common: {
@@ -804,6 +806,16 @@ export const pl = {
           annular: "Obrączkowe zaćmienie Słońca",
           total: "Całkowite zaćmienie Słońca",
         },
+        lunarInLine: {
+          penumbral: "półcieniowe zaćmienie Księżyca",
+          partial: "częściowe zaćmienie Księżyca",
+          total: "całkowite zaćmienie Księżyca",
+        },
+        solarInLine: {
+          partial: "częściowe zaćmienie Słońca",
+          annular: "obrączkowe zaćmienie Słońca",
+          total: "całkowite zaćmienie Słońca",
+        },
         barelyNoticeable: "Ledwo zauważalne: Księżyc tylko lekko przygasa",
         sunCovered: (p) => `Księżyc zakrywa ${p.percent}% tarczy Słońca`,
         penumbralPhase: (p) => `Faza półcieniowa ${p.start}–${p.end}`,
@@ -811,10 +823,26 @@ export const pl = {
         totalPhase: (p) => `Całkowitość ${p.start}–${p.end}`,
         annularPhase: (p) => `Faza obrączkowa ${p.start}–${p.end}`,
       },
-      elongationName: (p) => `${p.body}: największa elongacja`,
+      elongationName: {
+        mercury: "Największa elongacja Merkurego",
+        venus: "Największa elongacja Wenus",
+      } satisfies Record<ElongationBody, string>,
+      elongationNameInLine: {
+        mercury: "największa elongacja Merkurego",
+        venus: "największa elongacja Wenus",
+      } satisfies Record<ElongationBody, string>,
       elongationDetail: (p) => `${p.deg}° od Słońca, ${p.sky}`,
       apparition: { morning: "niebo poranne", evening: "niebo wieczorne" },
-      oppositionName: (p) => `${p.body}: opozycja`,
+      oppositionName: {
+        mars: "Opozycja Marsa",
+        jupiter: "Opozycja Jowisza",
+        saturn: "Opozycja Saturna",
+      } satisfies Record<OppositionBody, string>,
+      oppositionNameInLine: {
+        mars: "opozycja Marsa",
+        jupiter: "opozycja Jowisza",
+        saturn: "opozycja Saturna",
+      } satisfies Record<OppositionBody, string>,
       pairingName: (p) => `${p.first} i ${p.second}`,
       pairingDetail: (p) => `${p.deg}° od siebie`,
       showerName: {
@@ -826,7 +854,7 @@ export const pl = {
         orionids: "Maksimum Orionidów",
         leonids: "Maksimum Leonidów",
         geminids: "Maksimum Geminidów",
-      },
+      } satisfies Record<ShowerKey, string>,
       showerNameInLine: {
         quadrantids: "maksimum Kwadrantydów",
         lyrids: "maksimum Lirydów",
@@ -836,7 +864,7 @@ export const pl = {
         orionids: "maksimum Orionidów",
         leonids: "maksimum Leonidów",
         geminids: "maksimum Geminidów",
-      },
+      } satisfies Record<ShowerKey, string>,
       showerWhen: "Noc maksimum",
       visible: "Widoczne",
       notVisible: "Niewidoczne",
@@ -852,16 +880,20 @@ export const pl = {
       partly: "Z tego miejsca widać tylko część zjawiska",
       lowHorizon: "Nisko, potrzebny otwarty horyzont",
       shortNight: "Krótka noc: niebo nie robi się w pełni ciemne",
-      brightMoon: "Księżyc w górze: widać tylko jaśniejsze meteory",
+      brightMoon: "Jasny Księżyc nad horyzontem: widać tylko jaśniejsze meteory",
       when: {
         tonight: "dziś w nocy",
         tomorrow: "jutro w nocy",
         night: (p) => `noc ${p.span}`,
+        todayAt: (p) => `Dziś, ${p.time}`,
+        tomorrowAt: (p) => `Jutro, ${p.time}`,
       },
       glassesOnly: "tylko przez okulary do zaćmień",
       withGlasses: (p) => `${p.name}, tylko przez okulary do zaćmień`,
       verdictLine: (p) => `Dziś: ${p.name}`,
       verdictLineMore: (p) => `Dziś: ${p.name} +${p.count} więcej`,
+      verdictLineToday: (p) => `Dziś, ${p.time}: ${p.name}`,
+      verdictLineTodayMore: (p) => `Dziś, ${p.time}: ${p.name} +${p.count} więcej`,
       verdictLineTomorrow: (p) => `Jutro, ${p.time}: ${p.name}`,
       verdictLineTomorrowMore: (p) => `Jutro, ${p.time}: ${p.name} +${p.count} więcej`,
       solarSafety:
@@ -1054,16 +1086,6 @@ export const pl = {
       saturn: "Saturn",
       uranus: "Uran",
       neptune: "Neptun",
-    },
-    meteorShower: {
-      quadrantids: "Kwadrantydy",
-      lyrids: "Lirydy",
-      etaAquariids: "Eta Akwarydy",
-      southernDeltaAquariids: "Południowe Delta Akwarydy",
-      perseids: "Perseidy",
-      orionids: "Orionidy",
-      leonids: "Leonidy",
-      geminids: "Geminidy",
     },
     planetDetail: "Planeta",
     moon: "Księżyc",

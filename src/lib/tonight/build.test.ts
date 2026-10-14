@@ -34,7 +34,7 @@ import {
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
-import { eventsVerdictLine } from "./sky-events";
+import { eventsTileLine, eventsVerdictLine } from "./sky-events";
 import {
   EYEPIECES,
   hourlyForecast,
@@ -1794,8 +1794,8 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(eclipse?.visible).toBe(true);
     expect(eclipse?.notable).toBe(true);
     expect(eclipse?.nightLabel).toMatch(/August 2027/);
-    // The time is the site's wall clock ("Mon 2 Aug, 12:0x"), never the browser's or UTC's.
-    expect(eclipse?.when).toMatch(/^Mon 2 Aug, \d\d:\d\d$/);
+    // The time is the site's wall clock (09:22 UTC is 11:22 CEST), never the browser's or UTC's.
+    expect(eclipse?.when).toBe("Mon 2 Aug, 11:22");
     expect(eclipse?.visibilityText).toMatch(/^Best \d\d:\d\d · [NESW]+, \d+°$/);
     // Only a solar eclipse carries the safety line.
     expect(events.filter((event) => event.safety).every((event) => event.kind === "solar-eclipse")).toBe(true);
@@ -1879,19 +1879,60 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     const en = eventsOf(build({ now, forecast }));
     const eclipse = en.tonight.find((event) => event.kind === "solar-eclipse");
     expect(eclipse?.night).toBe("2027-08-01");
-    expect(eclipse?.tomorrowAt).toBe("11:22");
+    expect(eclipse?.dayWord).toBe("tomorrow");
+    expect(eclipse?.at).toBe("11:22");
     expect(en.tonight[0]).toEqual(eclipse);
     expect(eventsVerdictLine(en, "en")).toMatch(
       /^Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
     );
     const pl = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl"));
     expect(eventsVerdictLine(pl, "pl")).toMatch(
-      /^Jutro, 11:22: Częściowe zaćmienie Słońca, tylko przez okulary do zaćmień( \+\d+ więcej)?$/,
+      /^Jutro, 11:22: częściowe zaćmienie Słońca, tylko przez okulary do zaćmień( \+\d+ więcej)?$/,
     );
-    // Every other event keeps no "tomorrow" time.
+    // Every other event keeps no day word and no time.
     expect(
-      en.events.filter((event) => event.kind !== "solar-eclipse").every((event) => event.tomorrowAt === null),
+      en.events
+        .filter((event) => event.kind !== "solar-eclipse")
+        .every((event) => event.dayWord === null && event.at === null),
     ).toBe(true);
+  });
+
+  it("keeps the 2027-08-02 eclipse in view on its own morning, after dawn, until its partial phase ends (owner decision A, 2026-10-14)", () => {
+    // 07:00 CEST on 2 August: civil dawn has passed, so the night shown is 08-02, whose window starts at noon.
+    const morning = new Date("2027-08-02T05:00:00Z");
+    const view = build({ now: morning, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, morning) });
+    expect(view.date).toBe("2027-08-02");
+    const block = eventsOf(view);
+    const eclipse = block.events.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.night).toBe("2027-08-01");
+    expect(eclipse?.dayWord).toBe("today");
+    expect(block.tonight[0]).toEqual(eclipse);
+    expect(block.next).toEqual(eclipse);
+    expect(eventsVerdictLine(block, "en")).toMatch(
+      /^Today, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
+    );
+    expect(eventsTileLine(block, "en")).toBe("Partial solar eclipse · Today, 11:22 · eclipse glasses only");
+
+    // 13:00 CEST: the partial phase ended at 12:19, so the eclipse is gone from the page, the tile and the line.
+    const noon = new Date("2027-08-02T11:00:00Z");
+    const later = eventsOf(
+      build({ now: noon, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, noon) }),
+    );
+    expect(later.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
+    expect(later.tonight.some((event) => event.kind === "solar-eclipse")).toBe(false);
+    expect(later.next?.kind).not.toBe("solar-eclipse");
+  });
+
+  it("builds the next night's copy against that night's sunset, so a morning eclipse already over is not in it", () => {
+    // Evening of 2027-08-01: the next night is 08-02, judged at its sunset, when the 08-02 morning eclipse is long over.
+    const now = new Date("2027-08-01T18:00:00Z");
+    const next = eventsOf(
+      build(
+        { now, forecast: result(uniformForecast("2027-08-01T00:00:00Z", 5), false, now) },
+        { withSkyEvents: true, night: "next" },
+      ),
+    );
+    expect(next.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
   });
 
   it("counts a meteor shower on its best night, not its peak night, for `tonight` and `next` (2027-07-30 at Reykjavik)", () => {

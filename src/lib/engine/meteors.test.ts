@@ -216,10 +216,13 @@ describe("bright Moon", () => {
   });
 });
 
-/** A made-up shower at the Geminids' longitude and a chosen radiant (J2000), to put the radiant exactly where a rule is decided. */
+/**
+ * A made-up shower at the Geminids' longitude and a chosen radiant (J2000), to put the radiant exactly where a rule is
+ * decided. It borrows the Geminids' key, since the keys are typed.
+ */
 function invented(radiantRaDeg: number, radiantDecDeg: number): MeteorShower {
   return {
-    key: "invented",
+    key: "geminids",
     peakSolarLongitudeJ2000Deg: shower("geminids").peakSolarLongitudeJ2000Deg,
     nasaPeakNight: "2026-12-13",
     radiantRaDeg,

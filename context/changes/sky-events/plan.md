@@ -91,6 +91,8 @@ Answered by the owner on 2026-10-13, relayed by the orchestrator. **Not legal ad
    - **Polish shower names:** "Maksimum Orionidów" as a title and "Dziś: maksimum Orionidów" in the verdict line, with the genitive per shower (`showerName` / `showerNameInLine`). The rest of the Polish copy is accepted.
    - **`/design`:** the tile specimen's "1.8°" goes through the formatter (PL "1,8°").
 
+7. **Impl review (2026-10-14), owner decision on F2 = A, relayed by the orchestrator:** a solar eclipse stays visible on Tonight (the tile, the verdict line and `/tonight/events`) until the end of its partial phase, worded "Today, 11:22" / "Tomorrow, 11:22" (PL "Dziś, 11:22" / "Jutro, 11:22"), the day counted from today's date in the site's zone; this supersedes decision 6's evening-only "Tomorrow" rule. Pinned by unit tests: 2027-08-02 at Warsaw from dawn to 11:22 and after the partial phase ends, plus an afternoon eclipse after its end. Every other finding (F1, F3-F10) is applied as the review proposes (F1: the fine visible test on close nights; F3: solar eclipses first in the night's list; F4/F9: date-independent dashboard and phone specs; F5: a partly visible eclipse's best time is a moment with something to see; F6: Polish in-sentence forms, no double colon, "jasny" kept; F7: typed shower keys; F10 a-d).
+
 ## What We're NOT Doing
 
 - No external data feed, API or yearly download. Every event comes from the engine and one hand-entered shower table.

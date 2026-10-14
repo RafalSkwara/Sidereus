@@ -1,11 +1,13 @@
 import { getMessages } from "@/i18n";
 import {
+  addDays,
   EVENT_WINDOW_NIGHTS,
   isNotableEvent,
   observingNightDateFor,
   type SkyEvent,
   type SkyEventKind,
 } from "@/lib/engine";
+import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
 import type { Locale } from "@/lib/preferences";
 
 import { createFormatter } from "./format";
@@ -35,8 +37,10 @@ export interface TonightSkyEvent {
   nightLabel: string;
   /**
    * The night to go out for it (`YYYY-MM-DD`): `night`, except a meteor shower, whose peak can fall in daylight, so
-   * it counts on its best night (the one before or after). It, not `night`, decides `tonight` and `next`; the page
-   * still groups the row by `night`.
+   * it counts on its best night (the one before or after), and a solar eclipse that is still to come (or under way)
+   * today, which counts on the selected night however its own night falls (the morning eclipse after dawn, the
+   * afternoon one the night before). It, not `night`, decides `tonight` and `next`; the page still groups the row by
+   * `night`.
    */
   goNight: string;
   /**
@@ -45,18 +49,23 @@ export interface TonightSkyEvent {
    */
   lineName: string;
   /**
-   * The name inside the verdict's sentence ("Tonight: …"): `lineName`, except a meteor shower, which Polish words in
-   * its own form there ("Dziś: maksimum Orionidów", owner 2026-10-14).
+   * The name inside the verdict's sentence ("Tonight: …"): `lineName`, except where Polish words it in its own,
+   * lowercase form there (a meteor peak, an opposition, an elongation, an eclipse: "Dziś: maksimum Orionidów",
+   * "Dziś: opozycja Marsa", owner 2026-10-14).
    */
   verdictName: string;
   /**
-   * A solar eclipse after the night's midnight happens tomorrow in daytime, not tonight: its local time ("11:22"), so
-   * the verdict line reads "Tomorrow, 11:22: …" (owner, 2026-10-14). `null` for every other event.
+   * A solar eclipse is a daytime event, never "tonight": `at` is the local time to look ("11:22", the best moment,
+   * which is the peak when the peak is visible) and `dayWord` its day relative to today's date in the site's zone
+   * (`now`), so the verdict line reads "Today, 11:22: …" or "Tomorrow, 11:22: …" (owner decision A, 2026-10-14).
+   * `dayWord` is `null` for a later day (the tile then reads the day and time); both are `null` for every other event.
    */
-  tomorrowAt: string | null;
+  dayWord: "today" | "tomorrow" | null;
+  at: string | null;
   /**
    * When to go, relative to the selected night: "tonight", "tomorrow night" or "night of 12/13 Aug". A solar eclipse
-   * is a daytime event, so it reads the day and time of its own moment ("Mon 2 Aug, 12:03").
+   * is a daytime event, so it reads its day and best time: "Today, 11:22", "Tomorrow, 11:22" or, further out, "Mon 2
+   * Aug, 11:22".
    */
   nightWhen: string;
   visible: boolean;
@@ -83,14 +92,22 @@ export interface TonightSkyEvents {
 }
 
 /**
- * The first notable visible event to go out for from `date` on: the earliest go night, the earlier moment on a tie.
- * (The events are in moment order, and a shower's moment can be a night before its go night, so the first of them
- * is not always the soonest.)
+ * The first notable visible event to go out for from `date` on: the earliest go night, a solar eclipse before anything
+ * else on a tie (its safety words must not hide behind another event), then the earlier moment. (The events are in
+ * moment order, and a shower's moment can be a night before its go night, so the first of them is not always the
+ * soonest.)
  */
 function nextEvent(worded: readonly TonightSkyEvent[], date: string): TonightSkyEvent | null {
   let next: TonightSkyEvent | null = null;
   for (const event of worded) {
-    if (event.notable && event.goNight >= date && (next === null || event.goNight < next.goNight)) {
+    if (!event.notable || event.goNight < date) {
+      continue;
+    }
+    if (
+      next === null ||
+      event.goNight < next.goNight ||
+      (event.goNight === next.goNight && event.safety && !next.safety)
+    ) {
       next = event;
     }
   }
@@ -99,13 +116,19 @@ function nextEvent(worded: readonly TonightSkyEvent[], date: string): TonightSky
 
 /**
  * Words `events` (from `skyEvents(site, date, …)`) for `locale` in `timeZone`. `date` is the selected night
- * (`YYYY-MM-DD`): `tonight` holds that night's notable visible events.
+ * (`YYYY-MM-DD`): `tonight` holds that night's notable visible events, solar eclipses first (then by moment), so the
+ * eclipse glasses never hide behind "+N more". `now` is the request's clock (the engine takes none): a solar eclipse
+ * stays until the end of its partial phase and is dropped from `events`, `tonight` and `next` once that is before
+ * `now`; one that is not over counts in `tonight` (and as the soonest `next`) when it is today in the site's zone or
+ * belongs to the selected night, and in `next` alone when it is later. Its day is worded from today's date, not from
+ * the observing night ("Today, 11:22" / "Tomorrow, 11:22").
  */
 export function formatSkyEvents(
   events: readonly SkyEvent[],
   locale: Locale,
   timeZone: string,
   date: string,
+  now: Date,
   windowNights = EVENT_WINDOW_NIGHTS,
 ): TonightSkyEvents {
   const m = getMessages(locale);
@@ -113,10 +136,12 @@ export function formatSkyEvents(
   const { formatTime, formatDayTime, formatNightDate, formatNightSpan, formatDirection, formatDegrees } =
     createFormatter(locale);
 
-  const showerNames: Record<string, string> = t.showerName;
-  const showerNamesInLine: Record<string, string> = t.showerNameInLine;
+  const showerNames: Record<ShowerKey, string> = t.showerName;
+  const showerNamesInLine: Record<ShowerKey, string> = t.showerNameInLine;
   // The calendar date (`YYYY-MM-DD`) of an instant in the site's zone.
   const localDate = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+  const today = localDate.format(now);
+  const tomorrow = addDays(today, 1);
   const bodyName = (body: string): string =>
     body === "moon" ? m.targets.moon : (m.targets.planet as Record<string, string>)[body];
   const range = (interval: { start: Date; end: Date }) => ({
@@ -127,15 +152,20 @@ export function formatSkyEvents(
   const nightsFrom = (night: string): number =>
     Math.round((Date.parse(`${night}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / DAY_MS);
 
-  const worded = events.map((event): TonightSkyEvent => {
+  // A solar eclipse that is over (its partial phase ended before `now`) is gone from every list.
+  const live = events.filter((event) => event.kind !== "solar-eclipse" || event.partial.end.getTime() >= now.getTime());
+
+  const worded = live.map((event): TonightSkyEvent => {
     const notes: string[] = [];
     const details: string[] = [];
     let name: string;
+    let inLineName: string | null = null;
     let when = formatDayTime(event.moment, timeZone);
 
     switch (event.kind) {
       case "lunar-eclipse":
         name = t.eclipse.lunar[event.eclipseKind];
+        inLineName = t.eclipse.lunarInLine[event.eclipseKind];
         if (event.eclipseKind === "penumbral") {
           details.push(t.eclipse.penumbralPhase(range(event.penumbral)));
           notes.push(t.eclipse.barelyNoticeable);
@@ -146,6 +176,7 @@ export function formatSkyEvents(
         break;
       case "solar-eclipse":
         name = t.eclipse.solar[event.eclipseKind];
+        inLineName = t.eclipse.solarInLine[event.eclipseKind];
         details.push(t.eclipse.sunCovered({ percent: formatDegrees(Math.round(event.obscuration * 100)) }));
         details.push(t.eclipse.partialPhase(range(event.partial)));
         if (event.central !== null) {
@@ -157,20 +188,23 @@ export function formatSkyEvents(
         }
         break;
       case "elongation":
-        name = t.elongationName({ body: bodyName(event.body) });
+        name = t.elongationName[event.body];
+        inLineName = t.elongationNameInLine[event.body];
         details.push(
           t.elongationDetail({ deg: formatDegrees(event.elongationDeg), sky: t.apparition[event.apparition] }),
         );
         break;
       case "opposition":
-        name = t.oppositionName({ body: bodyName(event.body) });
+        name = t.oppositionName[event.body];
+        inLineName = t.oppositionNameInLine[event.body];
         break;
       case "pairing":
         name = t.pairingName({ first: bodyName(event.bodies[0]), second: bodyName(event.bodies[1]) });
         details.push(t.pairingDetail({ deg: formatDegrees(event.separationDeg) }));
         break;
       case "meteor-shower":
-        name = showerNames[event.shower] ?? event.shower;
+        name = showerNames[event.shower];
+        inLineName = showerNamesInLine[event.shower];
         when = t.showerWhen;
         break;
     }
@@ -200,20 +234,46 @@ export function formatSkyEvents(
       visibilityText = t.reason[visibility.reason];
     }
     if (visibility.shortNight) notes.push(t.shortNight);
-    if (event.kind === "meteor-shower" && event.brightMoon) notes.push(t.brightMoon);
+    // The bright-Moon caveat is viewing advice, so only a shower worth going out for carries it.
+    if (visibility.visible && event.kind === "meteor-shower" && event.brightMoon) notes.push(t.brightMoon);
+
+    // A solar eclipse is a daytime event: it reads the time to look (the best moment, the peak when that is visible) and
+    // its day against today's date in the site's zone, not against the observing night.
+    let at: string | null = null;
+    let dayWord: TonightSkyEvent["dayWord"] = null;
+    if (event.kind === "solar-eclipse") {
+      const shown = visibility.visible ? visibility.best : event.moment;
+      at = formatTime(shown, timeZone);
+      const shownDate = localDate.format(shown);
+      dayWord = shownDate === today ? "today" : shownDate === tomorrow ? "tomorrow" : null;
+    }
 
     // A meteor shower counts on its best night: the night the user should go out, which is not the peak night when
-    // the peak falls in daylight.
-    const goNight = event.kind === "meteor-shower" ? event.bestNight : event.night;
+    // the peak falls in daylight. A solar eclipse that is today's, or whose night is already behind the selected one
+    // (the morning eclipse after dawn), counts on the selected night: it is still to come.
+    const goNight =
+      event.kind === "meteor-shower"
+        ? event.bestNight
+        : event.kind === "solar-eclipse" && (dayWord === "today" || event.night < date)
+          ? date
+          : event.night;
     const daysAhead = nightsFrom(goNight);
-    const nightWhen =
-      event.kind === "solar-eclipse"
-        ? when
-        : daysAhead === 0
+    let nightWhen: string;
+    if (event.kind === "solar-eclipse" && at !== null) {
+      nightWhen =
+        dayWord === "today"
+          ? t.when.todayAt({ time: at })
+          : dayWord === "tomorrow"
+            ? t.when.tomorrowAt({ time: at })
+            : formatDayTime(visibility.visible ? visibility.best : event.moment, timeZone);
+    } else {
+      nightWhen =
+        daysAhead === 0
           ? t.when.tonight
           : daysAhead === 1
             ? t.when.tomorrow
             : t.when.night({ span: formatNightSpan(goNight) });
+    }
 
     const lineName = event.kind === "pairing" ? `${name}, ${details[0]}` : name;
 
@@ -227,11 +287,9 @@ export function formatSkyEvents(
       nightLabel: formatNightDate(event.night),
       goNight,
       lineName,
-      verdictName: event.kind === "meteor-shower" ? (showerNamesInLine[event.shower] ?? lineName) : lineName,
-      tomorrowAt:
-        event.kind === "solar-eclipse" && localDate.format(event.moment) > event.night
-          ? formatTime(event.moment, timeZone)
-          : null,
+      verdictName: inLineName ?? lineName,
+      dayWord,
+      at,
       nightWhen,
       visible: visibility.visible,
       visibilityText,
@@ -241,9 +299,12 @@ export function formatSkyEvents(
     };
   });
 
+  // A solar eclipse first, then by moment (`worded` is in moment order and the split keeps it): the safety words are
+  // the one thing the line must never hide behind "+N more".
+  const tonightEvents = worded.filter((event) => event.notable && event.goNight === date);
   return {
     events: worded,
-    tonight: worded.filter((event) => event.notable && event.goNight === date),
+    tonight: [...tonightEvents.filter((event) => event.safety), ...tonightEvents.filter((event) => !event.safety)],
     next: nextEvent(worded, date),
     windowNights,
   };
@@ -272,9 +333,9 @@ export function eventsTileLine(events: TonightSkyEvents | null, locale: Locale):
 
 /**
  * The verdict's muted line (owner decision 5, F3): "Tonight: Perseids peak", plus "+1 more" when several notable
- * events fall on the night, and for a solar eclipse "eclipse glasses only"; a solar eclipse after the night's
- * midnight reads "Tomorrow, 11:22: …" instead (owner, 2026-10-14). `null` on a night with none, so the line (and the
- * room it takes) exists only on event nights.
+ * events fall on the night, and for a solar eclipse "eclipse glasses only"; a solar eclipse reads its day and time
+ * instead, "Today, 11:22: …" or "Tomorrow, 11:22: …" (owner decision A, 2026-10-14). `null` on a night with none, so
+ * the line (and the room it takes) exists only on event nights.
  */
 export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Locale): string | null {
   const first = events?.tonight[0];
@@ -285,8 +346,12 @@ export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Local
   const name = first.safety ? t.withGlasses({ name: first.verdictName }) : first.verdictName;
   const count = String(events.tonight.length - 1);
   const more = events.tonight.length > 1;
-  if (first.tomorrowAt !== null) {
-    const time = first.tomorrowAt;
+  if (first.at !== null && first.dayWord === "today") {
+    const time = first.at;
+    return more ? t.verdictLineTodayMore({ time, name, count }) : t.verdictLineToday({ time, name });
+  }
+  if (first.at !== null && first.dayWord === "tomorrow") {
+    const time = first.at;
     return more ? t.verdictLineTomorrowMore({ time, name, count }) : t.verdictLineTomorrow({ time, name });
   }
   return more ? t.verdictLineMore({ name, count }) : t.verdictLine({ name });

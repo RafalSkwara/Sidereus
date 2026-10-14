@@ -15,7 +15,7 @@ The app will show the peak nights of eight major annual meteor showers: the Quad
 - the radiant's right ascension and declination (J2000);
 - the geocentric velocity.
 
-(In each case the annual solution of Jenniskens, 2023, with the largest sample on the shower's page.) We take nothing else from the MDC: the peak night comes from NASA's shower pages, and the solar longitude of the peak is computed by our own code from that date. We cross-check the values against other published sources by reading only, and we do not copy any table or its layout. The app credits the IAU MDC in its data notice and cites the references your references page (https://ceresiaumdc.ta3.sk/references) asks for:
+(In each case the annual solution of Jenniskens, 2023, with the largest sample on the shower's page.) We take nothing else from the MDC: the peak night comes from NASA's shower pages, and the solar longitude of the peak is computed by our own code from that date. We cross-check the values against other published sources by reading only, and we do not copy any table or its layout. The app credits the IAU MDC in its credits line, with a link to your site. The full references that your references page (https://ceresiaumdc.ta3.sk/references) asks for are cited in the repository's data notice (`LICENSE-DATA.md`) and in the header of the table that holds the values, not in the app's screens:
 
 - Jopek, T. J. et al. (2024), A&A 682, A159
 - Jenniskens, P. et al. (2020), Planetary and Space Science 182, 104821

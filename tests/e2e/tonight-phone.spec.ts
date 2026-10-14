@@ -17,8 +17,9 @@ import { onboardInMadrid } from "./helpers";
  *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
  *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
  *    known limits (the plan's "What we're not doing"), so they are not asserted. On a night with a notable sky event
- *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), so the
- *    spec measures that line (0 when absent) and subtracts it, and holds on any date;
+ *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), which
+ *    the verdict's min-height can swallow without moving the cards, so the spec hides that line while it measures and
+ *    holds on any date (impl review F9);
  *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL;
  *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
@@ -59,16 +60,9 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-/** The event line's height with its margins, 0 when the night has no notable event: how far it pushes the cards down. */
-async function eventLineShift(page: Page): Promise<number> {
-  const line = page.locator("[data-verdict-event]");
-  if ((await line.count()) === 0) {
-    return 0;
-  }
-  return line.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return element.getBoundingClientRect().height + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
-  });
+/** Hides the verdict's event line (present only on an event night) and returns the style to remove again afterwards. */
+async function hideEventLine(page: Page) {
+  return page.addStyleTag({ content: "[data-verdict-event]{display:none}" });
 }
 
 // The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
@@ -89,14 +83,17 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
 
   // The fixed bottom navigation: below `md` it is the only visible navigation named "Main" (the top bar's is hidden).
   const tabBar = await page.getByRole("navigation", { name: en.nav.primary }).boundingBox();
+  // The event line sits in flow under the verdict's reason, and its room may or may not move the cards (the verdict has
+  // a min-height), so measure without it: the checks below read the same on event and no-event nights.
+  const eventLineStyle = await hideEventLine(page);
   const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
   const site = await siteCard.boundingBox();
   const telescope = await telescopeCard.boundingBox();
   const telescopeTitle = await telescopeCard.locator("label, p").first().boundingBox();
   const firstTile = await tiles.locator("a").first().boundingBox();
-  // The event line is in flow under the verdict's reason, so it pushes everything below it down by its height and its
-  // top margin; the checks below take that one shift out, so they read the same on event and no-event nights.
-  const eventShift = await eventLineShift(page);
+  await eventLineStyle.evaluate((style) => {
+    style.parentNode?.removeChild(style);
+  });
 
   if (!tabBar || !headline || !site || !telescope || !telescopeTitle || !firstTile) {
     throw new Error("a box to measure is missing (TabBar, verdict headline, a gear card or the first tile)");
@@ -109,13 +106,10 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
   expect(site.y + site.height, "the Site card must sit above the Telescope card at 390×844").toBeLessThanOrEqual(
     telescope.y,
   );
+  expect(site.y + site.height, "the Site card must end above the TabBar at 390×844").toBeLessThanOrEqual(tabBar.y);
   expect(
-    site.y + site.height - eventShift,
-    "the Site card must end above the TabBar at 390×844 (less the event line)",
-  ).toBeLessThanOrEqual(tabBar.y);
-  expect(
-    telescopeTitle.y + telescopeTitle.height - eventShift,
-    "the Telescope card's title must show above the TabBar at 390×844 (less the event line)",
+    telescopeTitle.y + telescopeTitle.height,
+    "the Telescope card's title must show above the TabBar at 390×844",
   ).toBeLessThanOrEqual(tabBar.y);
   expect(telescope.y + telescope.height, "the cards must end above the first tile at 390×844").toBeLessThanOrEqual(
     firstTile.y,
