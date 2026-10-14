@@ -11,12 +11,10 @@ import { cn } from "@/lib/utils";
  * with `size: "sm"`, never on a sky header (the border is too faint there). `quiet` is every other standalone link or
  * action: link-coloured text, no box, always with its icon (in red mode it is underlined at rest, which with the icon
  * tells it apart from an inline link); use it with `size: "bare"`. `link` is an inline link inside a sentence,
- * underlined at rest. `action` (a border and a tinted fill in the link colour) stays only until the call sites move
- * to `hairline` and `quiet` (ui-quiet-actions, Phase 2). Hairline, quiet and action wrap, so a long Polish label stays
- * inside the column. Every size is at least 44 px tall. Focus is a `--ring` outline offset from the button, so it stays
- * visible on the filled ink (red mode paints ink and ring the same red). Disabled swaps to muted colours instead of
- * fading, so the label stays readable; a disabled link is only ever the offline `aria-disabled` state (`global.css`).
- * Astro links that act as buttons use `buttonVariants` directly: `<a class={buttonVariants({ variant })}>`.
+ * underlined at rest. Hairline and quiet wrap, so a long Polish label stays inside the column. Every size is at
+ * least 44 px tall. Focus is a `--ring` outline offset from the button, so it stays visible on the filled ink (red
+ * mode paints ink and ring the same red). Disabled swaps to muted colours instead of fading, so the label stays
+ * readable; a disabled link is only ever the offline `aria-disabled` state (`global.css`). Astro links that act as buttons use `buttonVariants` directly: `<a class={buttonVariants({ variant })}>`.
  */
 /** The resting border of a ghost control that must still read as a button (the sky-check answers). */
 const RESTING_BORDER_CLASS = "border border-action-border";
@@ -41,8 +39,6 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary whitespace-nowrap text-secondary-foreground hover:bg-accent disabled:text-muted-foreground",
         ghost: "whitespace-nowrap text-heading hover:bg-accent disabled:text-muted-foreground",
-        action:
-          "border border-action-border bg-action-surface py-2 text-left whitespace-normal text-primary-strong underline-offset-4 hover:border-primary-strong hover:underline disabled:border-border disabled:bg-transparent disabled:text-muted-foreground",
         hairline:
           "border border-control-border bg-transparent py-2 text-left whitespace-normal text-foreground [&_svg]:text-primary-strong hover:border-primary-strong hover:bg-accent disabled:border-border disabled:text-muted-foreground",
         quiet:

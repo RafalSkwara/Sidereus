@@ -70,7 +70,7 @@ const titleClass = "text-label font-semibold text-muted-foreground";
         <p class="max-w-full min-w-0 truncate text-body text-heading" title={active?.name} data-gear-name={kind}>
           {active?.name}
         </p>
-        <a href="/gear" class:list={[buttonVariants({ variant: "action", size: "sm" })]} data-needs-network="">
+        <a href="/gear" class:list={[buttonVariants({ variant: "quiet", size: "bare" })]} data-needs-network="">
           <Settings2 aria-hidden="true" />
           {manage}
         </a>

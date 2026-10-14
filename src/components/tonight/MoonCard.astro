@@ -29,8 +29,8 @@ const { card, logHref, washedOut = null } = Astro.props;
 const locale = Astro.locals.locale;
 const t = getMessages(locale).tonight;
 const target = card.target;
-// A standalone action that wraps, so the long Polish label stays inside the column.
-const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
+// A quiet text action that wraps, so the long Polish label stays inside the column.
+const washedOutLink = buttonVariants({ variant: "quiet", size: "bare" });
 ---
 
 {/* The heading names the band; the phase line under it follows the slider, so it is not the heading. */}
@@ -85,7 +85,7 @@ const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
             <p class="text-label text-foreground">
               {target.wholeDiscFits ? (
                 <>
-                  {t.moon.wholeDiscWith} <span class="font-semibold text-primary-strong">{target.wholeDisc.name}</span>{" "}
+                  {t.moon.wholeDiscWith} <span class="font-semibold text-heading">{target.wholeDisc.name}</span>{" "}
                   {t.object.magnification({ magnification: String(target.wholeDisc.magnification) })}
                 </>
               ) : (
@@ -95,7 +95,7 @@ const washedOutLink = buttonVariants({ variant: "action", size: "sm" });
             {target.detail && (
               /* The message reads on after the whole-disc part in lower case: its own line starts with a capital. */
               <p class="text-label text-foreground first-letter:uppercase">
-                {t.moon.detailWith} <span class="font-semibold text-primary-strong">{target.detail.name}</span>{" "}
+                {t.moon.detailWith} <span class="font-semibold text-heading">{target.detail.name}</span>{" "}
                 {t.object.magnification({ magnification: String(target.detail.magnification) })}
               </p>
             )}

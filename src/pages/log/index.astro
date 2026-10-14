@@ -68,11 +68,11 @@ const rowLink =
   <PageHeader slot="header" title={t.title} subtitle={t.intro}>
     {supabase && (
       <Fragment slot="actions">
-        <a href={PROGRESS_PAGE} class:list={buttonVariants({ variant: "action", size: "sm" })}>
+        <a href={PROGRESS_PAGE} class:list={buttonVariants({ variant: "quiet", size: "bare" })}>
           <Award aria-hidden="true" />
           {t.progress}
         </a>
-        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "action", size: "sm" })}>
+        <a href={SKY_CHECKS_PAGE} class:list={buttonVariants({ variant: "quiet", size: "bare" })}>
           <ListChecks aria-hidden="true" />
           {t.skyChecks}
         </a>

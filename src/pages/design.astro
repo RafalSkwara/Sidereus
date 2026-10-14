@@ -179,7 +179,7 @@ const stateContract = [
 ];
 
 /*
- * The nine Button variants and the class each one takes on `:hover` (button.tsx). The hover specimen applies that
+ * The eight Button variants and the class each one takes on `:hover` (button.tsx). The hover specimen applies that
  * class directly (quiet's also mirrors `red:hover:decoration-2` as `red:decoration-2`); the focus-visible specimen applies the `focus-visible:` outline classes directly.
  */
 const variants = [
@@ -188,24 +188,22 @@ const variants = [
   { variant: "secondary", label: "Secondary", hover: "bg-accent" },
   { variant: "ghost", label: "Ghost", hover: "bg-accent" },
   { variant: "destructive", label: "Destructive", hover: "bg-destructive/10" },
-  { variant: "action", label: "Action", hover: "border-primary-strong underline underline-offset-4" },
   { variant: "hairline", label: "Hairline", hover: "border-primary-strong bg-accent" },
   { variant: "quiet", label: "Quiet", hover: "underline underline-offset-4 red:decoration-2" },
   { variant: "link", label: "Link", hover: "decoration-2" },
 ] as const;
-// `action` and `hairline` wrap and are used at `sm`, `quiet` at `bare` (no horizontal padding), so their specimens render so too.
+// `hairline` wraps and is used at `sm`, `quiet` at `bare` (no horizontal padding), so their specimens render so too.
 const sizeOf = (variant: (typeof variants)[number]["variant"]) =>
-  variant === "quiet" ? "bare" : variant === "action" || variant === "hairline" ? "sm" : "default";
+  variant === "quiet" ? "bare" : variant === "hairline" ? "sm" : "default";
 const linkVariants = variants.filter(
   (v) =>
     v.variant === "default" ||
     v.variant === "outline" ||
     v.variant === "ghost" ||
-    v.variant === "action" ||
     v.variant === "hairline" ||
     v.variant === "quiet",
 );
-// A hairline, `action` or quiet link while offline (`html[data-offline] [data-needs-network]`, global.css): muted ink on the
+// A hairline or quiet link while offline (`html[data-offline] [data-needs-network]`, global.css): muted ink on the
 // control and its icon, no fill, no underline, a dashed `--border` (a quiet action has no border width, so none shows).
 const offlineAction =
   "border-dashed border-border bg-transparent text-muted-foreground cursor-not-allowed [&_svg]:text-muted-foreground no-underline!";
@@ -726,7 +724,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
             <p class="text-body text-foreground">
               text-body · Up for 7 h 50 min of the dark window, 92% clear of moonlight. Find with{" "}
-              <span class="font-semibold text-primary-strong">25 mm Plössl</span>.
+              <span class="font-semibold text-heading">25 mm Plössl</span>.
             </p>
             <p class="text-body text-foreground">
               font-mono (Archivo, tabular figures) · Dark from <span class="font-mono text-heading">19:42</span> to{" "}
@@ -884,29 +882,6 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         {v.label}
                       </a>
                     ))}
-                  </div>
-                </div>
-                <div class:list={cell}>
-                  <p class:list={stateLabel}>action · offline specimen (data-needs-network)</p>
-                  <div class:list={row}>
-                    <a
-                      href="#c-link-button"
-                      tabindex="-1"
-                      aria-disabled="true"
-                      class:list={cn(buttonVariants({ variant: "action", size: "sm" }), offlineAction)}
-                    >
-                      <Check aria-hidden="true" />
-                      Mark observed
-                    </a>
-                  </div>
-                </div>
-                <div class:list={cell}>
-                  <p class:list={stateLabel}>action · long label wraps (320 px column)</p>
-                  <div class="max-w-xs">
-                    <a href="#c-link-button" class:list={buttonVariants({ variant: "action", size: "sm" })}>
-                      Zobacz obiekty, które dziś wymywa Księżyc i które lepiej zostawić na inną noc
-                      <span aria-hidden="true">→</span>
-                    </a>
                   </div>
                 </div>
                 <div class:list={cell}>
@@ -1076,7 +1051,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>hover · specimen</p>
                   <div>
-                    <BackLink href="#c-back-link" label={m.gear.backToGear} class="bg-accent" />
+                    <BackLink href="#c-back-link" label={m.gear.backToGear} class="underline red:decoration-2" />
                   </div>
                 </div>
                 <div class:list={cell}>
@@ -1130,7 +1105,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     newerHref="#c-pager"
                     newerLabel={m.log.list.newer}
                     olderLabel={m.log.list.older}
-                    linkClass="bg-accent"
+                    linkClass="underline red:decoration-2"
                   />
                 </div>
                 <div class:list={cell}>
@@ -1783,7 +1758,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={blockNote}>
               TonightContent's `px-4` gear row: one `GearCard` each for the Site and the Telescope, side by side from
               `sm` and stacked below it (`GEAR_ROW_GRID_CLASS`). The title is on top and a large icon bottom-left. With
-              one item the bottom-right shows the name and a "Manage" action link; from two items it is a select (the
+              one item the bottom-right shows the name and a "Manage" quiet link; from two items it is a select (the
               pills are retired) whose label is the card's title. A deliberate exception to "Bands, not boxed cards".
             </p>
             <div class:list={grid}>
@@ -1846,7 +1821,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                       <a
                         href="/design"
                         tabindex="-1"
-                        class:list={[buttonVariants({ variant: "action", size: "sm" }), focusRing]}
+                        class:list={[buttonVariants({ variant: "quiet", size: "bare" }), focusRing]}
                       >
                         <Settings2 aria-hidden="true" />
                         {m.tonight.gear.manageSites}
@@ -1876,7 +1851,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         href="/design"
                         tabindex="-1"
                         aria-disabled="true"
-                        class:list={cn(buttonVariants({ variant: "action", size: "sm" }), offlineAction)}
+                        class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), offlineAction)}
                       >
                         <Settings2 aria-hidden="true" />
                         {m.tonight.gear.manageTelescopes}
@@ -1915,13 +1890,12 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover — the Manage link's border moves to the link colour and its label underlines (the action variant's
-              hover); the select takes the native hover · select focus — the NativeSelect's own focus cell (above) ·
-              disabled — N/A while online; offline Manage and the Telescope select take the dashed muted look (a pick
-              puts the select back), while the Site select stays live and opens that site's stored copy · error — the
-              gear-list load errors are a ServerError under the cards (see ServerError) · empty — no cards without a
-              site and a telescope (the setup and add prompts take their place) · loading — the skeleton's two bars at
-              the cards' minimum height (see TonightSkeleton)
+              hover — the Manage link's label underlines (the quiet variant's hover); the select takes the native hover
+              · select focus — the NativeSelect's own focus cell (above) · disabled — N/A while online; offline Manage
+              and the Telescope select take the dashed muted look (a pick puts the select back), while the Site select
+              stays live and opens that site's stored copy · error — the gear-list load errors are a ServerError under
+              the cards (see ServerError) · empty — no cards without a site and a telescope (the setup and add prompts
+              take their place) · loading — the skeleton's two bars at the cards' minimum height (see TonightSkeleton)
             </p>
           </section>
 

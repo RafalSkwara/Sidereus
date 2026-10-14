@@ -34,7 +34,7 @@ const names = createFormatter(locale).listOf(keys.map((key) => t.name[key]));
 const reached = plural(locale, keys.length, c.reached);
 const labelId = `${idBase}-label`;
 const namesId = `${idBase}-names`;
-const actionClass = buttonVariants({ variant: "action", size: "sm" });
+const actionClass = buttonVariants({ variant: "quiet", size: "bare" });
 const DialogTag = specimen ? "div" : "dialog";
 
 // The dialog card's fixed star field (percent of the card), a few of them twinkling.

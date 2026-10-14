@@ -51,3 +51,22 @@ test("the theme button cycles dark, light and red, and red keeps its guarantees"
   await themeButton(page, red, dark).click();
   expect(await theme(page)).toBe("dark");
 });
+
+test("a quiet action is underlined at rest in red night mode only", async ({ page, baseURL }) => {
+  // "Back to sign in" (a `quiet` action) on the signed-out confirm-email page. The dev server shows the "registered"
+  // wording and a production build the "check your email" one, so the name matches either.
+  const { checkEmail, registered } = en.auth.confirmEmail;
+  const link = page.getByRole("link", { name: new RegExp(`^(${checkEmail.link}|${registered.link})$`) });
+  const decoration = () => link.evaluate((el) => getComputedStyle(el).textDecorationLine);
+
+  for (const [value, expected] of [
+    ["red", "underline"],
+    ["dark", "none"],
+  ] as const) {
+    await page.context().addCookies([{ name: THEME_COOKIE, value, url: baseURL }]);
+    await page.goto("/auth/confirm-email");
+    expect(await theme(page)).toBe(value);
+    await expect(link).toBeVisible();
+    await expect.poll(decoration).toBe(expected);
+  }
+});

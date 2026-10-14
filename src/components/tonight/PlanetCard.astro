@@ -53,7 +53,7 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
   >
     {entry.eyepiece && (
       <p class="text-label text-foreground">
-        {t.planets.detailWith} <span class="font-semibold text-primary-strong">{entry.eyepiece.name}</span>{" "}
+        {t.planets.detailWith} <span class="font-semibold text-heading">{entry.eyepiece.name}</span>{" "}
         {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
       </p>
     )}

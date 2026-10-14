@@ -19,8 +19,7 @@ export const TILE_HEADING_CLASS =
   "flex items-center justify-between gap-3 text-label font-semibold text-muted-foreground";
 
 /**
- * The tile's cue: the arrow sits in a bordered, filled chip (ui-user-adjustments), so a tile reads as clickable in
- * every theme. 24 px with a -2 px margin top and bottom, so it never makes the heading row taller than one line.
+ * The tile's cue: a bare muted arrow (ui-quiet-actions), no border and no fill: the whole row is the link, so the arrow
+ * only points. 24 px with a -2 px margin top and bottom, so it never makes the heading row taller than one line.
  */
-export const TILE_CUE_CLASS =
-  "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-lg border border-action-border bg-action-surface text-primary-strong";
+export const TILE_CUE_CLASS = "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center text-muted-foreground";

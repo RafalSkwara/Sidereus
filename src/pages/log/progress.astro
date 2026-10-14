@@ -74,7 +74,7 @@ const nothingSeen =
         {nothingSeen && (
           <div class="mb-6" data-progress-empty>
             <p class="text-body text-foreground">{t.empty}</p>
-            <a href="/tonight" class:list={cn(buttonVariants({ variant: "action", size: "sm" }), "mt-3")}>
+            <a href="/tonight" class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), "mt-3")}>
               <Telescope aria-hidden="true" />
               {t.toTonight}
             </a>

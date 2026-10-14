@@ -481,10 +481,10 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Automated
 
-- [x] 1.1 Types and lint pass: `npx astro check` and `npm run lint`
-- [x] 1.2 Unit tests pass, including the new contrast rows and `red-theme.test.ts` with the new token: `npm test`
-- [x] 1.3 `src/styles/no-hardcoded-colors.test.ts` passes (the new hex lives only in `global.css`)
-- [x] 1.4 `npm run build` succeeds
+- [x] 1.1 Types and lint pass: `npx astro check` and `npm run lint` — 2e2b903
+- [x] 1.2 Unit tests pass, including the new contrast rows and `red-theme.test.ts` with the new token: `npm test` — 2e2b903
+- [x] 1.3 `src/styles/no-hardcoded-colors.test.ts` passes (the new hex lives only in `global.css`) — 2e2b903
+- [x] 1.4 `npm run build` succeeds — 2e2b903
 
 #### Manual
 
@@ -494,10 +494,10 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Automated
 
-- [ ] 2.1 Types and lint pass (TypeScript rejects any leftover `variant: "action"`): `npx astro check` and `npm run lint`
-- [ ] 2.2 No `action` variant left: `grep -rn 'variant: "action"' src` prints nothing
-- [ ] 2.3 Unit tests pass: `npm test`
-- [ ] 2.4 The affected specs pass against a fresh local preview (ports 4331/4401, keys inline): `npx playwright test tonight-phone tonight-targets planets-on-tonight moon-as-target moon-card observation-log observing-progress observing-milestones telescope-selector sky-checks tonight-dashboard finder-chart finder-offline what-to-expect red-night-mode sky-events`
+- [x] 2.1 Types and lint pass (TypeScript rejects any leftover `variant: "action"`): `npx astro check` and `npm run lint`
+- [x] 2.2 No `action` variant left: `grep -rn 'variant: "action"' src` prints nothing
+- [x] 2.3 Unit tests pass: `npm test`
+- [x] 2.4 The affected specs pass against a fresh local preview (ports 4331/4401, keys inline): `npx playwright test tonight-phone tonight-targets planets-on-tonight moon-as-target moon-card observation-log observing-progress observing-milestones telescope-selector sky-checks tonight-dashboard finder-chart finder-offline what-to-expect red-night-mode sky-events`
 
 #### Manual
 

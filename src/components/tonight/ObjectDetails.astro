@@ -47,12 +47,12 @@ const t = tonight.object;
   {entry.pair?.kind === "pair" && (
     <div class="space-y-2">
       <p class="text-label text-foreground">
-        {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
+        {t.findWith} <span class="font-semibold text-heading">{entry.pair.finding.name}</span>{" "}
         {t.magnification({ magnification: String(entry.pair.finding.magnification) })}
       </p>
       {/* The message reads on after "Find with …" in lower case: its own line starts with a capital. */}
       <p class="text-label text-foreground first-letter:uppercase">
-        {t.detailWith} <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
+        {t.detailWith} <span class="font-semibold text-heading">{entry.pair.detail.name}</span>{" "}
         {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
       </p>
     </div>
