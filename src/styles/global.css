@@ -44,7 +44,7 @@
   --primary-foreground: #070a12;
   --primary-strong: #c3d0ff;
 
-  /* Standalone clickables (ui-user-adjustments): a tinted fill and a link-coloured border, plain hex so the contrast test pins them. */
+  /* The sky-check answers' border and fill and the milestone medallion (ui-user-adjustments; quiet links and the hairline no longer use them): plain hex so the contrast test pins them. */
   --action-surface: #16224a;
   --action-border: #6b82cf;
   /* The hairline button's border (ui-quiet-actions): a neutral grey held to 3:1 on the ground and the surface; `--border` is too faint to be a control's edge. */
@@ -556,7 +556,7 @@
  * page script adds `aria-disabled` (also on the gear cards' selects) and swallows the click or submit; "Needs a connection" is their description, or a caption
  * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme) on the control and its icons (an icon painted by its
  * own utility, such as the hairline's Check, is reset to the control's colour), no fill or hover, no underline on quiet
- * actions, and a dashed outline in `--border` on buttons, hairlines and `action` links (the Topbar and TabBar links and quiet actions
+ * actions, and a dashed outline in `--border` on buttons and hairlines (the Topbar and TabBar links and quiet links
  * have no border width, so it never shows there); the focus outline is left alone, so focus stays visible. The current
  * page's entry keeps its pressed look.
  */

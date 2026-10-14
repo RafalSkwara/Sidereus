@@ -128,10 +128,9 @@ const CHECKS: Check[] = [
   // The hairline button's border (ui-quiet-actions) as a non-text indicator over the ground and the surface (a hairline
   // never sits on a sky header).
   { themes: [...DARK_LIGHT, "red"], fg: ["control-border"], bg: ["background", "surface"], floor: 3 },
-  // The action tokens (ui-user-adjustments) stay for the sky-check answers (`SkyAnswerForm`: the border as a non-text
-  // indicator, the link colour on the fill as text) and the milestone medallion, plus the `action` buttons until
-  // ui-quiet-actions Phase 2 removes that variant. The border is held over the ground, the surface and the sky stops,
-  // in every theme.
+  // The action tokens (ui-user-adjustments) now serve only the sky-check answers (`SkyAnswerForm`: the border as a
+  // non-text indicator, the link colour on the fill as text) and the milestone medallion. The border is held over the
+  // ground, the surface and the sky stops, in every theme.
   { themes: [...DARK_LIGHT, "red", "night"], fg: ["primary-strong"], bg: ["action-surface"], floor: 4.5 },
   {
     themes: [...DARK_LIGHT, "red", "night"],

@@ -488,31 +488,31 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Manual
 
-- [ ] 1.5 `/design` in dark, light and red at 390 px and desktop: hairline quieter than `action`, quiet reads as a link, red underline and border visible, offline icons muted, Polish wraps
+- [x] 1.5 `/design` in dark, light and red at 390 px and desktop: hairline quieter than `action`, quiet reads as a link, red underline and border visible, offline icons muted, Polish wraps
 
 ### Phase 2: Move every call site, the credit links, and remove `action`
 
 #### Automated
 
-- [x] 2.1 Types and lint pass (TypeScript rejects any leftover `variant: "action"`): `npx astro check` and `npm run lint`
-- [x] 2.2 No `action` variant left: `grep -rn 'variant: "action"' src` prints nothing
-- [x] 2.3 Unit tests pass: `npm test`
-- [x] 2.4 The affected specs pass against a fresh local preview (ports 4331/4401, keys inline): `npx playwright test tonight-phone tonight-targets planets-on-tonight moon-as-target moon-card observation-log observing-progress observing-milestones telescope-selector sky-checks tonight-dashboard finder-chart finder-offline what-to-expect red-night-mode sky-events`
+- [x] 2.1 Types and lint pass (TypeScript rejects any leftover `variant: "action"`): `npx astro check` and `npm run lint` — 73d233d
+- [x] 2.2 No `action` variant left: `grep -rn 'variant: "action"' src` prints nothing — 73d233d
+- [x] 2.3 Unit tests pass: `npm test` — 73d233d
+- [x] 2.4 The affected specs pass against a fresh local preview (ports 4331/4401, keys inline): `npx playwright test tonight-phone tonight-targets planets-on-tonight moon-as-target moon-card observation-log observing-progress observing-milestones telescope-selector sky-checks tonight-dashboard finder-chart finder-offline what-to-expect red-night-mode sky-events` — 73d233d
 
 #### Manual
 
-- [ ] 2.6 Targets, Planets and the Moon at 390 px in EN and PL, dark, light and red: one hairline Mark observed, text Finder chart, eyepiece names not link-coloured, Polish wraps
-- [ ] 2.7 Offline: Mark observed muted (icon included) and dashed; Manage muted with no underline in red
-- [ ] 2.8 The dashboard's six tiles end in a bare arrow; the gear cards' height is unchanged
+- [x] 2.6 Targets, Planets and the Moon at 390 px in EN and PL, dark, light and red: one hairline Mark observed, text Finder chart, eyepiece names not link-coloured, Polish wraps
+- [x] 2.7 Offline: Mark observed muted (icon included) and dashed; Manage muted with no underline in red
+- [x] 2.8 The dashboard's six tiles end in a bare arrow; the gear cards' height is unchanged
 
 ### Phase 3: Rules, comments, screenshot gate and the whole suite
 
 #### Automated
 
-- [ ] 3.1 The whole unit suite, types and lint pass
-- [ ] 3.2 The whole e2e suite passes against a fresh local preview: `npm run test:e2e`
-- [ ] 3.3 Smoke passes against the same preview: `npm run smoke`
-- [ ] 3.4 No doc or comment still prescribes the action look (grep reviewed by hand)
+- [x] 3.1 The whole unit suite, types and lint pass
+- [x] 3.2 The whole e2e suite passes against a fresh local preview: `npm run test:e2e`
+- [x] 3.3 Smoke passes against the same preview: `npm run smoke`
+- [x] 3.4 No doc or comment still prescribes the action look (grep reviewed by hand)
 
 #### Manual
 
