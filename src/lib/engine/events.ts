@@ -247,6 +247,7 @@ function horizontalPosition(body: Body, site: Site, time: Date): HorizontalPosit
 }
 
 const MINUTE_MS = 60_000;
+const DAY_MS = 86_400_000;
 
 function around(centre: Date, semiDurationMinutes: number): Interval {
   return {
@@ -384,12 +385,17 @@ function solarEclipseEvents(site: Site, window: Interval): SolarEclipseEvent[] {
     ...horizontalPosition(Body.Sun, site, contact.time.date),
     altitudeDeg: contact.altitude,
   });
+  // The search finds the next eclipse by its global peak, which can fall hours either side of the local one: start a
+  // day early so a local peak just inside the window is not missed, and skip a local peak before the window's start.
   for (
-    let eclipse = SearchLocalSolarEclipse(window.start, observer);
+    let eclipse = SearchLocalSolarEclipse(new Date(window.start.getTime() - DAY_MS), observer);
     eclipse.peak.time.date < window.end;
     eclipse = NextLocalSolarEclipse(eclipse.peak.time, observer)
   ) {
     const moment = eclipse.peak.time.date;
+    if (moment < window.start) {
+      continue;
+    }
     const central =
       eclipse.total_begin !== undefined && eclipse.total_end !== undefined
         ? { start: eclipse.total_begin.time.date, end: eclipse.total_end.time.date }
@@ -407,8 +413,6 @@ function solarEclipseEvents(site: Site, window: Interval): SolarEclipseEvent[] {
   }
   return events;
 }
-
-const DAY_MS = 86_400_000;
 
 const ELONGATION_BODIES: readonly { key: ElongationBody; body: Body }[] = [
   { key: "mercury", body: Body.Mercury },

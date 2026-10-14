@@ -17,7 +17,7 @@ import { onboardInMadrid } from "./helpers";
  *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
  *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
  *    known limits (the plan's "What we're not doing"), so they are not asserted;
- *  - no sideways scroll at 320×568 and 375×667 on eight pages, in EN and PL;
+ *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL;
  *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
 
@@ -37,6 +37,7 @@ const TONIGHT_PAGES = [
   "/tonight/moon",
   "/tonight/planets",
   "/tonight/nights",
+  "/tonight/events",
 ];
 /** The other app pages checked for sideways scroll: plain server-rendered. */
 const APP_PAGES = ["/gear", "/log", "/log/progress"];

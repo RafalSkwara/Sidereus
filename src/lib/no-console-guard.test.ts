@@ -36,8 +36,9 @@ const IGNORED = new Set(["src/lib/database.types.ts"]);
 /** Every file allowed to disable `no-console`, with the exact number of disables and why. */
 const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }>> = {
   "src/lib/tonight/build.ts": {
-    count: 1,
-    reason: "the Session plan's failure trace: a fixed line and the error's name only, never its message",
+    count: 2,
+    reason:
+      "the Session plan's and the sky events' failure traces: a fixed line and the error's name only, never its message",
   },
   "src/lib/observations/celebrate.ts": {
     count: 1,

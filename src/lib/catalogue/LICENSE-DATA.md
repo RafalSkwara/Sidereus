@@ -97,5 +97,5 @@ Where each field comes from (the file's header says the same):
 
 Each value was cross-checked by reading a second source (NASA's own speeds, and Wikipedia's "List of meteor
 showers" for radiants, speeds and peak dates); no value was taken from Wikipedia, the IMO or the American
-Meteor Society's list. The app credits NASA and the IAU MDC in its data notice (to be added with the events
-page, S-07 Phase 4).
+Meteor Society's list. The app credits NASA and the IAU MDC in its data notice (`Attribution.astro`, added
+with the events page, S-07 Phase 4).

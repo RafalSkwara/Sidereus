@@ -870,6 +870,92 @@ export const en = {
       starData: "Star data:",
       hipparcosCredit: "Credit: ESA",
       weather: "Weather:",
+      /** Sky events (S-07): the meteor showers' peak nights come from NASA, the radiants from the IAU MDC. */
+      meteorData: "Meteor showers:",
+      nasaFor: "peak nights",
+      mdcFor: "radiants",
+    },
+
+    /**
+     * Sky events (M-3 S-07): the eclipses, greatest elongations, oppositions, close pairings and meteor-shower
+     * peaks of the next nights, each with whether it can be seen from the site. A not-visible event is never worded
+     * as something to go out for. Times arrive pre-formatted in the site's time zone; numbers are pre-formatted.
+     */
+    events: {
+      /** The empty state; `count` is the window's nights (`EVENT_WINDOW_NIGHTS`), pre-formatted. */
+      empty: (p: { count: string }) => `No sky events in the next ${p.count} nights`,
+      /** A night's heading: the evening the night began (an event after midnight belongs to it), `date` as "Saturday, 10 October 2026". */
+      nightOf: (p: { date: string }) => `Night of ${p.date}`,
+      /** Each kind of event, named under the row's name. */
+      kind: {
+        "lunar-eclipse": "Lunar eclipse",
+        "solar-eclipse": "Solar eclipse",
+        elongation: "Greatest elongation",
+        opposition: "Opposition",
+        pairing: "Close pairing",
+        "meteor-shower": "Meteor shower",
+      },
+      eclipse: {
+        lunar: {
+          penumbral: "Penumbral lunar eclipse",
+          partial: "Partial lunar eclipse",
+          total: "Total lunar eclipse",
+        },
+        solar: {
+          partial: "Partial solar eclipse",
+          annular: "Annular solar eclipse",
+          total: "Total solar eclipse",
+        },
+        /** A penumbral lunar eclipse is listed but never put on the dashboard. */
+        barelyNoticeable: "Barely noticeable: the Moon only dims a little",
+        /** `percent` is the share of the Sun's disc the Moon covers at the site's peak. */
+        sunCovered: (p: { percent: string }) => `Moon covers ${p.percent}% of the Sun`,
+        /** The phases' local times, `start` and `end` as "HH:mm". */
+        penumbralPhase: (p: { start: string; end: string }) => `Penumbral phase ${p.start}–${p.end}`,
+        partialPhase: (p: { start: string; end: string }) => `Partial phase ${p.start}–${p.end}`,
+        totalPhase: (p: { start: string; end: string }) => `Totality ${p.start}–${p.end}`,
+        annularPhase: (p: { start: string; end: string }) => `Ring phase ${p.start}–${p.end}`,
+      },
+      /** `body` is the planet's name, `deg` the elongation, `sky` the apparition. */
+      elongationName: (p: { body: string }) => `${p.body} at greatest elongation`,
+      elongationDetail: (p: { deg: string; sky: string }) => `${p.deg}° from the Sun, ${p.sky}`,
+      apparition: { morning: "morning sky", evening: "evening sky" },
+      oppositionName: (p: { body: string }) => `${p.body} at opposition`,
+      /** `first` and `second` are the two bodies' names; `deg` the separation. */
+      pairingName: (p: { first: string; second: string }) => `${p.first} and ${p.second}`,
+      pairingDetail: (p: { deg: string }) => `${p.deg}° apart`,
+      /** A meteor peak is a night, never a minute: the maximum is known to about a day. */
+      showerName: (p: { shower: string }) => `${p.shower} peak`,
+      showerWhen: "Peak night",
+      /** The visible mark and its opposite, beside the name. */
+      visible: "Visible",
+      notVisible: "Not visible",
+      /** Why an event cannot be seen from the site. */
+      reason: {
+        "below-horizon": "Below your horizon",
+        daylight: "During daylight",
+        "too-low": "Too low",
+      },
+      /** The best time to look, `time` as "HH:mm" or with its day, `direction` as "SW, 45°". */
+      best: (p: { time: string; direction: string }) => `Best ${p.time} · ${p.direction}`,
+      /** A meteor shower's radiant, highest at `time`. */
+      bestRadiant: (p: { time: string; direction: string }) => `Radiant highest ${p.time} · ${p.direction}`,
+      /** The peak is in daylight (or the radiant is better a night away): watch the night before or after. */
+      bestNightBefore: (p: { time: string; direction: string }) =>
+        `Best the night before: radiant highest ${p.time} · ${p.direction}`,
+      bestNightAfter: (p: { time: string; direction: string }) =>
+        `Best the night after: radiant highest ${p.time} · ${p.direction}`,
+      /** An eclipse that is up for only part of it. */
+      partly: "Only part of it is visible from here",
+      /** An eclipse between 2° and 10° up. */
+      lowHorizon: "Low, needs an open horizon",
+      /** A night with no full darkness: judged over the whole twilight span. */
+      shortNight: "Short night: the sky never gets fully dark",
+      /** A bright Moon is up during the dark window. */
+      brightMoon: "Bright Moon up: only the brighter meteors show",
+      /** The fixed safety line on every solar eclipse, visible or not. */
+      solarSafety:
+        "Eye safety: look only through certified eclipse glasses. Never look at the Sun directly, or through a telescope or binoculars, without a certified solar filter.",
     },
 
     /**
@@ -1002,6 +1088,8 @@ export const en = {
       } as PluralForms<Count>,
       moon: "The Moon",
       planets: "Planets",
+      /** The sky events page's title and the dashboard tile's heading. */
+      events: "Sky events",
       /** The Session plan: the page's title and the dashboard tile's heading. */
       plan: "Session plan",
       /** The tile's line under its timeline before sunset: the first target by best time. */
@@ -1039,6 +1127,13 @@ export const en = {
       noTargets: "No object cleared the bar tonight, so there is nothing to point at.",
       /** `count` is `OUTLOOK_NIGHTS`, pre-formatted; the wording assumes more than one night. */
       seeNights: (p: { count: string }) => `See the next ${p.count} nights`,
+      /** The sky events page (S-07): `count` is `EVENT_WINDOW_NIGHTS`, pre-formatted, `site` the site's name. */
+      events: {
+        heading: (p: { count: string; site: string }) => `Sky events at ${p.site} in the next ${p.count} nights`,
+        timesIn: (p: { zone: string }) => `Times in ${p.zone}`,
+        /** The view has no events block (only when working it out failed). */
+        unavailable: "Sky events aren't available right now.",
+      },
       /** Targets: the button that opens the rest of the list, after the best few. */
       showRest: {
         one: (p) => `Show the other ${p.count} object`,

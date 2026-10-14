@@ -401,6 +401,19 @@ describe("the window", () => {
     }
   });
 
+  it("holds a local solar eclipse only when its local peak is in the window, whichever way the global peak falls", () => {
+    // Warsaw's peak is at 09:22 UTC on 2027-08-02 (11:22 CEST, the night that began on 08-01), the global peak at
+    // 10:07 UTC: a window starting at local noon of 08-02 (10:00 UTC) sits between them, and the search's own
+    // "after" is the global peak. The local peak is before the window, so the eclipse is not in it.
+    const eclipse = only(ofKind(skyEvents(WARSAW, "2027-08-01", 1), "solar-eclipse"));
+    expect(eclipse.night).toBe("2027-08-01");
+    expect(ofKind(skyEvents(WARSAW, "2027-08-02", 1), "solar-eclipse")).toEqual([]);
+    expect(ofKind(skyEvents(WARSAW, "2027-08-02"), "solar-eclipse")).toEqual([]);
+    for (const e of skyEvents(WARSAW, "2027-08-02")) {
+      expect(e.night >= "2027-08-02").toBe(true);
+    }
+  });
+
   it("defaults to the 30-night window", () => {
     expect(skyEvents(WARSAW, "2027-01-25")).toEqual(skyEvents(WARSAW, "2027-01-25", EVENT_WINDOW_NIGHTS));
   });

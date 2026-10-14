@@ -18,6 +18,8 @@ export interface TonightIslandLoad {
   withSkyView?: boolean;
   /** Also build the Session plan; the dashboard and the plan page set it. */
   withSessionPlan?: boolean;
+  /** Also build the sky events; only the events page sets it. */
+  withSkyEvents?: boolean;
   /** `"next"` renders the evening after tonight, from the same forecast, and never reads sky checks. */
   night?: "tonight" | "next";
 }
@@ -53,6 +55,7 @@ export async function loadTonightFor(locals: App.Locals, options: TonightIslandL
     withSkyChecks: options.night === "next" ? false : options.withSkyChecks,
     withSkyView: options.withSkyView,
     withSessionPlan: options.withSessionPlan,
+    withSkyEvents: options.withSkyEvents,
     night: options.night,
   });
 }

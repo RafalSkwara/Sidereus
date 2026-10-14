@@ -8,6 +8,7 @@ import {
   darkWindow,
   darkWindowReturn,
   DEFAULT_TRACK_STEP_MINUTES,
+  EVENT_WINDOW_NIGHTS,
   eyepieceOptics,
   MAX_RANKED_OBJECTS,
   MOON_DISC_STEP_MINUTES,
@@ -26,6 +27,7 @@ import {
   rankPlanets,
   seenSummaries,
   sevenNightOutlook,
+  skyEvents,
   skyFrames,
   sunEvents,
   TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG,
@@ -60,6 +62,7 @@ import {
   type MoonUp,
   type SkyHeadline,
 } from "./format";
+import { formatSkyEvents, type TonightSkyEvents } from "./sky-events";
 import {
   layoutSessionPlan,
   type SessionPlanMoonEvent,
@@ -409,6 +412,9 @@ export interface TonightSessionPlan {
 /** The interactive sky's data (interactive-sky); declared island-safe in `@/lib/sky-view/view`. */
 export type { TonightSkyBody, TonightSkyView };
 
+/** The sky events block (sky-events Phase 4); the wording is in `./sky-events`. */
+export type { TonightSkyEvent, TonightSkyEvents } from "./sky-events";
+
 export interface TonightView {
   /** The site and telescope the ranking is for; the log form is prefilled with them (FR-016). */
   siteId: string;
@@ -482,6 +488,11 @@ export interface TonightView {
    * when working it out fails, which never takes the rest of the view down.
    */
   sessionPlan: TonightSessionPlan | null;
+  /**
+   * The sky events of the next `EVENT_WINDOW_NIGHTS` nights from this night (M-3 S-07), built only with the
+   * `withSkyEvents` option; `null` without it, or when working it out fails, which never takes the rest of the view down.
+   */
+  skyEvents: TonightSkyEvents | null;
 }
 
 type RankedObjects = RankedEntry<DeepSkyObject, EyepieceRecord>[];
@@ -617,14 +628,21 @@ function nearestIndex(times: readonly number[], ms: number): number {
 /**
  * `limit`: how many cleared objects get full entries (default: Tonight's top five; `Infinity` for the
  * Targets page). `withSkyView`: also build the interactive sky (the dashboard only); without it `skyView` is
- * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan. `night`: `"next"` builds the
+ * `null` and nothing of it is computed. `withSessionPlan`: likewise for the Session plan, and `withSkyEvents` for the
+ * sky events (the events page asks for them). `night`: `"next"` builds the
  * evening after the one `tonightDateFor(now)` returns (offline-night-plan), from the same forecast; the forecast's age
  * keeps the real `now`, the time-driven initial selections read as at that night's sunset.
  */
 export function buildTonight(
   input: TonightInput,
   locale: Locale,
-  options: { limit?: number; withSkyView?: boolean; withSessionPlan?: boolean; night?: "tonight" | "next" } = {},
+  options: {
+    limit?: number;
+    withSkyView?: boolean;
+    withSessionPlan?: boolean;
+    withSkyEvents?: boolean;
+    night?: "tonight" | "next";
+  } = {},
 ): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], logKnown = true, catalogue = DEEP_SKY } = input;
   const {
@@ -1233,6 +1251,27 @@ export function buildTonight(
     }
   }
 
+  // The sky events (M-3 S-07): the next `EVENT_WINDOW_NIGHTS` nights from this one, judged over the same dark window
+  // as the rest of Tonight (the site's own threshold). A failure drops only the block.
+  let skyEventsBlock: TonightSkyEvents | null = null;
+  if (options.withSkyEvents) {
+    try {
+      skyEventsBlock = formatSkyEvents(
+        skyEvents(engineSite, date, EVENT_WINDOW_NIGHTS, thresholdDeg),
+        locale,
+        timeZone,
+        date,
+        EVENT_WINDOW_NIGHTS,
+      );
+    } catch (error) {
+      // The page says the events are unavailable; this leaves a trace for us. A fixed line and the error's name only:
+      // an engine message or stack could carry the site's coordinates, which never go into logs.
+      // eslint-disable-next-line no-console -- a fixed line and the error's name, never its message (see above).
+      console.error("buildTonight: the sky events failed", error instanceof Error ? error.name : typeof error);
+      skyEventsBlock = null;
+    }
+  }
+
   return {
     siteId: site.id,
     telescopeId: telescope.id,
@@ -1269,5 +1308,6 @@ export function buildTonight(
     moonCard,
     skyView,
     sessionPlan,
+    skyEvents: skyEventsBlock,
   };
 }

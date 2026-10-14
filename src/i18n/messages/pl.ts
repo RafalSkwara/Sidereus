@@ -776,6 +776,66 @@ export const pl = {
       starData: "Dane gwiazd:",
       hipparcosCredit: "Credit: ESA",
       weather: "Pogoda:",
+      meteorData: "Roje meteorów:",
+      nasaFor: "noce maksimum",
+      mdcFor: "radianty",
+    },
+
+    events: {
+      // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30; switch to plural() if it changes.
+      empty: (p) => `Brak zjawisk na niebie w ciągu najbliższych ${p.count} nocy`,
+      nightOf: (p) => `Noc: ${p.date}`,
+      kind: {
+        "lunar-eclipse": "Zaćmienie Księżyca",
+        "solar-eclipse": "Zaćmienie Słońca",
+        elongation: "Największa elongacja",
+        opposition: "Opozycja",
+        pairing: "Bliskie złączenie",
+        "meteor-shower": "Rój meteorów",
+      },
+      eclipse: {
+        lunar: {
+          penumbral: "Półcieniowe zaćmienie Księżyca",
+          partial: "Częściowe zaćmienie Księżyca",
+          total: "Całkowite zaćmienie Księżyca",
+        },
+        solar: {
+          partial: "Częściowe zaćmienie Słońca",
+          annular: "Obrączkowe zaćmienie Słońca",
+          total: "Całkowite zaćmienie Słońca",
+        },
+        barelyNoticeable: "Ledwo zauważalne: Księżyc tylko lekko przygasa",
+        sunCovered: (p) => `Księżyc zakrywa ${p.percent}% tarczy Słońca`,
+        penumbralPhase: (p) => `Faza półcieniowa ${p.start}–${p.end}`,
+        partialPhase: (p) => `Faza częściowa ${p.start}–${p.end}`,
+        totalPhase: (p) => `Całkowitość ${p.start}–${p.end}`,
+        annularPhase: (p) => `Faza obrączkowa ${p.start}–${p.end}`,
+      },
+      elongationName: (p) => `${p.body}: największa elongacja`,
+      elongationDetail: (p) => `${p.deg}° od Słońca, ${p.sky}`,
+      apparition: { morning: "niebo poranne", evening: "niebo wieczorne" },
+      oppositionName: (p) => `${p.body}: opozycja`,
+      pairingName: (p) => `${p.first} i ${p.second}`,
+      pairingDetail: (p) => `${p.deg}° od siebie`,
+      showerName: (p) => `${p.shower}: maksimum`,
+      showerWhen: "Noc maksimum",
+      visible: "Widoczne",
+      notVisible: "Niewidoczne",
+      reason: {
+        "below-horizon": "Pod horyzontem",
+        daylight: "W świetle dnia",
+        "too-low": "Zbyt nisko",
+      },
+      best: (p) => `Najlepiej ${p.time} · ${p.direction}`,
+      bestRadiant: (p) => `Radiant najwyżej ${p.time} · ${p.direction}`,
+      bestNightBefore: (p) => `Najlepiej poprzedniej nocy: radiant najwyżej ${p.time} · ${p.direction}`,
+      bestNightAfter: (p) => `Najlepiej następnej nocy: radiant najwyżej ${p.time} · ${p.direction}`,
+      partly: "Z tego miejsca widać tylko część zjawiska",
+      lowHorizon: "Nisko, potrzebny otwarty horyzont",
+      shortNight: "Krótka noc: niebo nie robi się w pełni ciemne",
+      brightMoon: "Księżyc w górze: widać tylko jaśniejsze meteory",
+      solarSafety:
+        "Bezpieczeństwo oczu: patrz wyłącznie przez certyfikowane okulary do obserwacji zaćmień. Nigdy nie patrz na Słońce gołym okiem ani przez teleskop czy lornetkę bez certyfikowanego filtra słonecznego.",
     },
 
     finder: {
@@ -885,6 +945,7 @@ export const pl = {
       },
       moon: "Księżyc",
       planets: "Planety",
+      events: "Zjawiska na niebie",
       plan: "Plan sesji",
       planFirst: (p) => `Na początek: ${p.name} ${p.time}`,
       planNext: (p) => `Następny: ${p.name} ${p.time}`,
@@ -908,6 +969,12 @@ export const pl = {
       noTargets: "Dziś żaden obiekt nie jest wart uwagi, więc nie ma na co celować.",
       // "nocy" (genitive plural) fits counts 5-21, which covers OUTLOOK_NIGHTS = 7; switch to plural() if it changes.
       seeNights: (p) => `Zobacz najbliższe ${p.count} nocy`,
+      events: {
+        // "nocy" (genitive plural) fits counts 5-21 and 25-31, which covers EVENT_WINDOW_NIGHTS = 30.
+        heading: (p) => `Zjawiska na niebie: ${p.site}, najbliższe ${p.count} nocy`,
+        timesIn: (p) => `Czas w strefie ${p.zone}`,
+        unavailable: "Zjawiska na niebie są teraz niedostępne.",
+      },
       showRest: {
         one: (p) => `Pokaż jeszcze ${p.count} obiekt`,
         few: (p) => `Pokaż pozostałe ${p.count} obiekty`,

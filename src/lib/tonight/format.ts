@@ -215,6 +215,11 @@ export function createFormatter(locale: Locale) {
     return numberFormat.format(n === 0 ? 0 : n);
   }
 
+  /** An angle in the locale's notation, at most one decimal ("1.8", "22"); the caller adds the degree sign. */
+  function formatDegrees(degrees: number): string {
+    return num(degrees);
+  }
+
   /** `HH:mm`, 24-hour, as the wall clock reads in `timeZone`. */
   function formatTime(date: Date, timeZone: string): string {
     let format = timeFormats.get(timeZone);
@@ -723,6 +728,7 @@ export function createFormatter(locale: Locale) {
     cloudOutlookText,
     formatDuration,
     formatDirection,
+    formatDegrees,
     reasonLine,
     skyHeadline,
     verdictReasonText,
