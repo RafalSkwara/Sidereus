@@ -1,0 +1,239 @@
+diff --git a/src/components/tonight/ObjectCard.astro b/src/components/tonight/ObjectCard.astro
+index 55ea359..8642a64 100644
+--- a/src/components/tonight/ObjectCard.astro
++++ b/src/components/tonight/ObjectCard.astro
+@@ -35,7 +35,7 @@ const tipId = `not-seen-tip-${entry.id}`;
+   data-object={entry.id}
+   data-label={entry.label}
+   data-not-seen-scope
+-  class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0"
++  class="relative scroll-mt-4 py-8 first:pt-2 last:pb-0"
+ >
+   {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
+   <h3 class="font-display text-title font-semibold break-words text-heading">
+diff --git a/src/components/tonight/ObjectDetails.astro b/src/components/tonight/ObjectDetails.astro
+index f556441..a4c3349 100644
+--- a/src/components/tonight/ObjectDetails.astro
++++ b/src/components/tonight/ObjectDetails.astro
+@@ -1,7 +1,7 @@
+ ---
+ // The details of one ranked object: window and best time, eyepiece pair, reason and "Mark observed". Shown by the
+ // Targets page's expandable rows (ObjectRow); Tonight's dashboard lists no details since tonight-dashboard.
+-import { Eye } from "lucide-react";
++import { Eye, Telescope, Timer } from "lucide-react";
+ 
+ import TargetDetails from "@/components/tonight/TargetDetails.astro";
+ import { getMessages } from "@/i18n";
+@@ -45,21 +45,21 @@ const t = tonight.object;
+     </p>
+   )}
+   {entry.pair?.kind === "pair" && (
+-    <div class="space-y-2">
++    <div class="flex items-start gap-2"><Telescope className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" /><div class="space-y-1">
+       <p class="text-label text-foreground">
+-        {t.findWith} <span class="font-semibold text-primary-strong">{entry.pair.finding.name}</span>{" "}
++        {t.findWith} <span class="font-semibold text-heading">{entry.pair.finding.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.finding.magnification) })}
+       </p>
+       {/* The message reads on after "Find with …" in lower case: its own line starts with a capital. */}
+       <p class="text-label text-foreground first-letter:uppercase">
+-        {t.detailWith} <span class="font-semibold text-primary-strong">{entry.pair.detail.name}</span>{" "}
++        {t.detailWith} <span class="font-semibold text-heading">{entry.pair.detail.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
+       </p>
+-    </div>
++    </div></div>
+   )}
+   {entry.pair?.kind === "none-fit" && (
+     <p class="text-label text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
+   )}
+ 
+-  <p class="text-label text-foreground">{entry.reason}</p>
++  <p class="flex items-start gap-2 text-label text-muted-foreground"><Timer className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span>{entry.reason}</span></p>
+ </TargetDetails>
+diff --git a/src/components/tonight/TargetDetails.astro b/src/components/tonight/TargetDetails.astro
+index dacfe4c..2fe426f 100644
+--- a/src/components/tonight/TargetDetails.astro
++++ b/src/components/tonight/TargetDetails.astro
+@@ -4,7 +4,7 @@
+ // cards and the all-objects rows), PlanetCard and the Moon card. Each data point sits on its own line at every width
+ // (ui-user-adjustments), and the spacing between the list, the slot's lines and the action lives here, so a caller's
+ // lines carry no margins of their own.
+-import { Check, Crosshair } from "lucide-react";
++import { Check, Clock, Crosshair, Compass } from "lucide-react";
+ import { buttonVariants } from "@/components/ui/button";
+ import { getMessages } from "@/i18n";
+ 
+@@ -41,26 +41,26 @@ const markClass = buttonVariants({ variant: "action", size: "sm" });
+ const finderClass = buttonVariants({ variant: "action", size: "sm" });
+ ---
+ 
+-<dl class="mt-4 grid gap-y-2 text-label">
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.window}</dt>
++<dl class="mt-5 grid gap-y-2.5 text-label">
++  <div class="flex gap-3">
++    <dt class="flex w-32 shrink-0 items-center gap-2 text-muted-foreground"><Clock className="size-4" aria-hidden="true" />{t.window}</dt>
+     <dd class="font-mono text-heading">
+       {windowStart}–{windowEnd}
+     </dd>
+   </div>
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.best}</dt>
++  <div class="flex gap-3">
++    <dt class="flex w-32 shrink-0 items-center gap-2 text-muted-foreground"><Compass className="size-4" aria-hidden="true" />{t.best}</dt>
+     <dd class="font-mono text-heading">
+       {bestTime}, {bestDirection}
+     </dd>
+   </div>
+ </dl>
+ 
+-<div class="mt-4 space-y-3">
++<div class="mt-5 space-y-3 border-t border-border/60 pt-5">
+   <slot />
+ </div>
+ 
+-<div class="mt-5 flex flex-wrap gap-3">
++<div class="mt-4 flex flex-wrap gap-x-4 gap-y-1">
+   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
+   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
+     <Check aria-hidden="true" />
+diff --git a/src/components/tonight/TonightPageSky.astro b/src/components/tonight/TonightPageSky.astro
+index ad68022..8712708 100644
+--- a/src/components/tonight/TonightPageSky.astro
++++ b/src/components/tonight/TonightPageSky.astro
+@@ -24,10 +24,23 @@ interface Props {
+ 
+ const { title, view, backHref = "/tonight", backLabel } = Astro.props;
+ const m = getMessages(Astro.locals.locale);
++const here = Astro.url.pathname;
++const subnav = [
++  ["/tonight", m.nav.tonight],
++  ["/tonight/targets", m.tonight.pages.targets],
++  ["/tonight/plan", m.tonight.summary.plan],
++  ["/tonight/moon", m.tonight.summary.moon],
++  ["/tonight/planets", m.tonight.summary.planets],
++  ["/tonight/nights", m.tonight.summary.nights({ count: "7" })],
++];
+ ---
+ 
+ <TonightSky night quiet>
+-  <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />
++  <nav aria-label="Tonight" class="scrollbar-hidden -mx-4 mb-3 flex gap-1 overflow-x-auto px-4">
++    {subnav.map(([href, label]) => (
++      <a href={href} class:list={["inline-flex min-h-9 shrink-0 items-center rounded-full px-3 text-label font-semibold", here === href ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:bg-accent hover:text-heading"]}>{label}</a>
++    ))}
++  </nav>
+   <div class="mt-1 sm:mt-2">
+     <PageHeader title={title} />
+   </div>
+diff --git a/src/components/tonight/TonightTiles.astro b/src/components/tonight/TonightTiles.astro
+index db5fce6..293049c 100644
+--- a/src/components/tonight/TonightTiles.astro
++++ b/src/components/tonight/TonightTiles.astro
+@@ -12,6 +12,7 @@
+  * its heading does not name the page it opens. The → says it opens a page.
+  */
+ import MoonDisc from "@/components/tonight/MoonDisc";
++import { CalendarDays, Crosshair, ListOrdered, Moon, Orbit } from "lucide-react";
+ import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
+ import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+ import Tile from "@/components/ui/Tile.astro";
+@@ -108,7 +109,7 @@ const nightsSummary = view.nights
+ ---
+ 
+ <div data-tonight-tiles>
+-  <Tile href="/tonight/targets" headingId="tile-targets-heading" heading={t.targets} labelledBy="tile-targets-open">
++  <Tile href="/tonight/targets" headingId="tile-targets-heading" heading={t.targets} icon={Crosshair} labelledBy="tile-targets-open">
+     {targets.length > 0 ? (
+       <>
+         <ul class="mt-4">
+@@ -139,13 +140,13 @@ const nightsSummary = view.nights
+   </Tile>
+ 
+   {plan && (
+-    <Tile href="/tonight/plan" headingId="tile-plan-heading" heading={t.plan}>
++    <Tile href="/tonight/plan" headingId="tile-plan-heading" heading={t.plan} icon={ListOrdered}>
+       <span class="mt-3 block text-body font-semibold">{planLine}</span>
+     </Tile>
+   )}
+ 
+   {moonCard && (
+-    <Tile href="/tonight/moon" headingId="tile-moon-heading" heading={t.moon}>
++    <Tile href="/tonight/moon" headingId="tile-moon-heading" heading={t.moon} icon={Moon}>
+       {moonState ? (
+         <span class="mt-3 flex items-center gap-4">
+           <MoonDisc state={moonState} clipId="moon-summary-lit" decorative className="size-6 shrink-0" />
+@@ -158,7 +159,7 @@ const nightsSummary = view.nights
+   )}
+ 
+   {solarSystem && (
+-    <Tile href="/tonight/planets" headingId="tile-planets-heading" heading={t.planets}>
++    <Tile href="/tonight/planets" headingId="tile-planets-heading" heading={t.planets} icon={Orbit}>
+       {solarSystem.entries.length > 0 ? (
+         <>
+           <span class="mt-3 block text-body font-semibold break-words">{planetNames}</span>
+@@ -171,7 +172,7 @@ const nightsSummary = view.nights
+   )}
+ 
+   {bars.length > 0 && (
+-    <Tile href="/tonight/nights" headingId="tile-nights-heading" heading={nightsTitle}>
++    <Tile href="/tonight/nights" headingId="tile-nights-heading" heading={nightsTitle} icon={CalendarDays}>
+       <span class="mt-5 grid grid-cols-7 items-end gap-2" aria-hidden="true">
+         {bars.map((bar) => (
+           <span class="flex flex-col items-center gap-2">
+diff --git a/src/components/ui/Tile.astro b/src/components/ui/Tile.astro
+index caf7d04..d6f770c 100644
+--- a/src/components/ui/Tile.astro
++++ b/src/components/ui/Tile.astro
+@@ -17,15 +17,16 @@ interface Props {
+   heading: string;
+   /** Extra element ids (space-separated) that join the heading in the link's name. */
+   labelledBy?: string;
++  icon?: any;
+ }
+ 
+-const { href, headingId, heading, labelledBy } = Astro.props;
++const { href, headingId, heading, labelledBy, icon: Icon } = Astro.props;
+ const names = labelledBy ? `${headingId} ${labelledBy}` : headingId;
+ ---
+ 
+ <a href={href} class:list={[TILE_CLASS]} aria-labelledby={names}>
+   <h2 id={headingId} class:list={[TILE_HEADING_CLASS]}>
+-    {heading}
++    <span class="flex items-center gap-2">{Icon && <Icon className="size-4 text-primary-strong" aria-hidden="true" />}{heading}</span>
+     <span class:list={[TILE_CUE_CLASS]} aria-hidden="true">
+       <ArrowRight className="size-4" />
+     </span>
+diff --git a/src/components/ui/button.tsx b/src/components/ui/button.tsx
+index 2ef0321..27d5e9f 100644
+--- a/src/components/ui/button.tsx
++++ b/src/components/ui/button.tsx
+@@ -37,7 +37,7 @@ const buttonVariants = cva(
+           "bg-secondary whitespace-nowrap text-secondary-foreground hover:bg-accent disabled:text-muted-foreground",
+         ghost: "whitespace-nowrap text-heading hover:bg-accent disabled:text-muted-foreground",
+         action:
+-          "border border-action-border bg-action-surface py-2 text-left whitespace-normal text-primary-strong underline-offset-4 hover:border-primary-strong hover:underline disabled:border-border disabled:bg-transparent disabled:text-muted-foreground",
++          "-mx-2.5 py-2 text-left whitespace-normal text-primary-strong underline-offset-4 hover:bg-accent hover:underline disabled:text-muted-foreground",
+         link: "whitespace-nowrap text-primary-strong underline decoration-1 underline-offset-4 hover:decoration-2 disabled:text-muted-foreground",
+       },
+       size: {
+diff --git a/src/components/ui/tile.ts b/src/components/ui/tile.ts
+index 177da37..56a9e43 100644
+--- a/src/components/ui/tile.ts
++++ b/src/components/ui/tile.ts
+@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
+  */
+ 
+ /** A tile's row: full width, at least 44 px, ruled below, the phone padding one step tighter than `sm`. */
+-export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-4 sm:py-5";
++export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-6 sm:py-7";
+ 
+ /** The tile link: the row plus the token hover and the ring focus. Rules run between the tiles. */
+ export const TILE_CLASS = cn(
+@@ -23,4 +23,4 @@ export const TILE_HEADING_CLASS =
+  * every theme. 24 px with a -2 px margin top and bottom, so it never makes the heading row taller than one line.
+  */
+ export const TILE_CUE_CLASS =
+-  "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-lg border border-action-border bg-action-surface text-primary-strong";
++  "-my-0.5 inline-flex size-6 shrink-0 items-center justify-center text-muted-foreground";
