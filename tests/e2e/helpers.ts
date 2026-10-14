@@ -199,6 +199,19 @@ export async function setPlan(email: string, plan: "full" | "free") {
 }
 
 /**
+ * Whether tonight's Session plan can be edited (adjustable-session-plan, F10): waits for the plan island's readiness marker
+ * (`data-session-plan-state`, not `[data-offline-copy]` alone, which the failure states omit) and says whether it reads
+ * `suggested` or `edited`, the two states the edits apply in. `held` (a night that does not pass), `locked`, `unavailable`
+ * and a missing marker are `false`: a spec skips on that, with `test.skip(!(await planEditable(page)), "…")`.
+ */
+export async function planEditable(page: Page): Promise<boolean> {
+  const area = page.locator("[data-session-plan-state]");
+  await expect(area).toBeAttached();
+  const state = await area.getAttribute("data-session-plan-state");
+  return state === "suggested" || state === "edited";
+}
+
+/**
  * Smoke's no-darkness window at its 52° N site (8 June to 2 July), where the ranking can be empty. Madrid keeps its
  * darkness all year, so this only errs on the safe side.
  */

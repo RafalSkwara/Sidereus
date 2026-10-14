@@ -181,6 +181,35 @@ export function mayStoreShell(url: URL): boolean {
   return storedPageOf(url) !== undefined && NOTICE_PARAMS.every((param) => !url.searchParams.has(param));
 }
 
+/** The message a page posts to the worker to have a Tonight page stored now (`{ type: "store-page", url }`). */
+export const STORE_PAGE_MESSAGE = "store-page";
+
+/**
+ * The page a `store-page` message asks the worker to store now (adjustable-session-plan Phase 4, D7 b), or `null` when
+ * the message is anything else: another type or shape, a URL of another origin, a path that is not a Tonight page
+ * (the finder chart included), a notice param, or any param other than a well-formed `site`. Pages post only the clean
+ * URL, so nothing a visitor controls reaches the worker's fetch beyond a site id. The URL comes back without its hash.
+ */
+export function storeRequestFrom(data: unknown, origin: string): URL | null {
+  if (typeof data !== "object" || data === null) return null;
+  const { type, url } = data as { type?: unknown; url?: unknown };
+  if (type !== STORE_PAGE_MESSAGE || typeof url !== "string") return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url, origin);
+  } catch {
+    return null;
+  }
+  if (parsed.origin !== origin) return null;
+  if (!TONIGHT_PAGES.some((page) => page === parsed.pathname)) return null;
+  if (!mayStoreShell(parsed)) return null;
+  const sites = parsed.searchParams.getAll("site");
+  if ([...parsed.searchParams.keys()].some((name) => name !== "site") || sites.length > 1) return null;
+  if (sites.length === 1 && !isGearId(sites[0])) return null;
+  parsed.hash = "";
+  return parsed;
+}
+
 function decodeEntities(value: string): string {
   return value.replace(/&(#x[0-9a-f]+|#[0-9]+|amp|quot|apos|lt|gt);/gi, (entity, code: string) => {
     const lower = code.toLowerCase();

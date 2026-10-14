@@ -29,6 +29,7 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
+  storeRequestFrom,
   storedPageOf,
   tonightPageOf,
   type CopyIndex,
@@ -179,6 +180,86 @@ describe("mayStoreShell", () => {
     "/log",
   ])("refuses %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(false);
+  });
+});
+
+describe("storeRequestFrom", () => {
+  const ORIGIN = "https://sidereus.example";
+  const ask = (path: string) => ({ type: "store-page", url: path });
+
+  it("accepts a Tonight page with the site param, as a URL on the origin", () => {
+    const request = storeRequestFrom(ask(`/tonight/plan?site=${SITE_A}`), ORIGIN);
+    expect(request?.href).toBe(`${ORIGIN}/tonight/plan?site=${SITE_A}`);
+  });
+
+  it("accepts the page's absolute URL, and drops its hash", () => {
+    const request = storeRequestFrom(ask(`${ORIGIN}/tonight/plan?site=${SITE_A}#plan-heading`), ORIGIN);
+    expect(request?.href).toBe(`${ORIGIN}/tonight/plan?site=${SITE_A}`);
+  });
+
+  it.each(TONIGHT_PAGES)("accepts %s with no param", (path) => {
+    expect(storeRequestFrom(ask(path), ORIGIN)?.pathname).toBe(path);
+  });
+
+  it("refuses a URL of another origin", () => {
+    expect(storeRequestFrom(ask(`https://evil.example/tonight/plan?site=${SITE_A}`), ORIGIN)).toBeNull();
+    expect(storeRequestFrom(ask(`//evil.example/tonight/plan`), ORIGIN)).toBeNull();
+  });
+
+  it.each(["/tonight/finder?object=M13", "/tonight/all", "/log", "/api/tonight/plan", "/offline", "/"])(
+    "refuses %s, which is not a Tonight page",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+    },
+  );
+
+  it.each([
+    `/tonight/plan?site=${SITE_A}&telescope=${SITE_B}`,
+    `/tonight/plan?site=${SITE_A}&night=next`,
+    "/tonight/plan?sort=name",
+  ])("refuses %s, whose params are not just the site", (path) => {
+    expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+  });
+
+  it.each([
+    `/tonight/plan?site=${SITE_A}&saved=plan`,
+    "/tonight/plan?saved=plan-reset",
+    `/tonight/plan?site=${SITE_A}&error=errors.generic`,
+    "/tonight?logged=M31",
+    "/tonight?milestone=first-galaxy",
+  ])("refuses %s, a notice param", (path) => {
+    expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+  });
+
+  it.each(["/tonight/plan?site=", "/tonight/plan?site=nope", "/tonight/plan?site=40.4168,-3.7038"])(
+    "refuses %s, a site that is not an id",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+    },
+  );
+
+  it("refuses two sites", () => {
+    expect(storeRequestFrom(ask(`/tonight/plan?site=${SITE_A}&site=${SITE_B}`), ORIGIN)).toBeNull();
+  });
+
+  it.each<unknown>([
+    null,
+    undefined,
+    "store-page",
+    42,
+    {},
+    { type: "purge", url: "/tonight/plan" },
+    { type: "list-copies" },
+    { type: "store-page" },
+    { type: "store-page", url: 42 },
+    { type: "store-page", url: null },
+    { type: ["store-page"], url: "/tonight/plan" },
+  ])("refuses a message of the wrong type or shape (%j)", (data) => {
+    expect(storeRequestFrom(data, ORIGIN)).toBeNull();
+  });
+
+  it("refuses an unparseable URL", () => {
+    expect(storeRequestFrom(ask("http://"), ORIGIN)).toBeNull();
   });
 });
 

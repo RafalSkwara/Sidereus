@@ -813,23 +813,23 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Automated
 
-- [x] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases
-- [x] 3.2 `npm run lint` and `npx astro check` pass
-- [x] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7
+- [x] 3.1 `npm test` passes, including the route, redirect, `plan-window` boundary (minimum altitude, dark window, polar day), `from.test.ts`, finder `load.test.ts`, `copies.test.ts` (`saved` refused for storage) and protected-routes cases — 9bf8043
+- [x] 3.2 `npm run lint` and `npx astro check` pass — 9bf8043
+- [x] 3.3 `npm run smoke` against a local preview (stack in an announced window, keys inline) passes, including plan 1–7 — 9bf8043
 
 #### Manual
 
-- [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert
+- [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert — 9bf8043
 - [ ] 3.5 On a preview, the free lock line, a forced `?error=` alert and the held line read correctly in EN and PL
 
 ### Phase 4: Fresh offline copy after a save
 
 #### Automated
 
-- [ ] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused)
-- [ ] 4.2 `npm run lint` and `npx astro check` pass
-- [ ] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing)
-- [ ] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture
+- [x] 4.1 `npm test` passes, including the `storeRequestFrom` cases (foreign origin, unknown path, extra param, notice param refused)
+- [x] 4.2 `npm run lint` and `npx astro check` pass
+- [x] 4.3 `npm run build` succeeds (`build-sw.mjs` raises nothing)
+- [x] 4.4 `tests/e2e/session-plan-store.spec.ts` passes against a fresh local preview with the forecast fixture
 
 #### Manual
 

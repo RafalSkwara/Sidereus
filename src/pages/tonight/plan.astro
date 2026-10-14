@@ -32,9 +32,13 @@ const night = requestedNight(Astro.url);
 
 <GearShell title={title} skyFlow>
   {saved && (
-    <Notice tone="success" toast param="saved">
-      {saved === "plan" ? m.tonight.pages.plan.saved : m.tonight.pages.plan.resetDone}
-    </Notice>
+    <>
+      <Notice tone="success" toast param="saved">
+        {saved === "plan" ? m.tonight.pages.plan.saved : m.tonight.pages.plan.resetDone}
+      </Notice>
+      {/* The page script asks the service worker to store this page's clean URL once (D7 b); nothing is shown. */}
+      <span hidden data-store-after-save></span>
+    </>
   )}
 
   {supabase ? (
@@ -56,3 +60,9 @@ const night = requestedNight(Astro.url);
     </div>
   </div>
 </GearShell>
+
+<script>
+  import { storeAfterSave } from "@/lib/offline/page-state";
+
+  storeAfterSave();
+</script>
