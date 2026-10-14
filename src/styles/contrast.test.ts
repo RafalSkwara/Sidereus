@@ -78,7 +78,14 @@ const CHECKS: Check[] = [
   // The interactive sky's dusk colours (interactive-sky): the verdict and the labels stay readable at sunset.
   { themes: DARK_LIGHT, fg: ["heading", "muted-foreground"], bg: DUSK, floor: 4.5 },
   { themes: DARK_LIGHT, fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
-  { themes: DARK_LIGHT, fg: ["primary-strong"], bg: ["background"], floor: 4.5 },
+  // The link colour as text on the ground and the surface (ui-quiet-actions: quiet actions have no fill) and on the sky
+  // stops (back links and the /log header links sit on the sky headers; the night scope is pinned below), every theme.
+  {
+    themes: [...DARK_LIGHT, "red"],
+    fg: ["primary-strong"],
+    bg: ["background", "surface", "zenith", "horizon"],
+    floor: 4.5,
+  },
   { themes: DARK_LIGHT, fg: ["go", "marginal", "no-go"], bg: ["background"], floor: 4.5 },
   // The Session plan's curves (`plan-line`), window stretches (`primary-strong`) and best-time dots (`heading`) over its
   // axis, as non-text indicators.
@@ -118,9 +125,13 @@ const CHECKS: Check[] = [
   { themes: ["night"], fg: ["primary-strong", "go", "marginal", "no-go"], bg: ["zenith", "horizon"], floor: 4.5 },
   { themes: ["night"], fg: ["primary-foreground"], bg: ["primary"], floor: 4.5 },
   { themes: ["night"], fg: ["primary", "primary-strong"], bg: ["zenith", "horizon", ...DUSK], floor: 3 },
-  // Standalone clickables (ui-user-adjustments): the link colour on the `action` fill as text, and the action border
-  // as a non-text indicator over the ground, the surface and the sky stops (BackLink sits on the sky headers and in
-  // the night scope), in every theme.
+  // The hairline button's border (ui-quiet-actions) as a non-text indicator over the ground and the surface (a hairline
+  // never sits on a sky header).
+  { themes: [...DARK_LIGHT, "red"], fg: ["control-border"], bg: ["background", "surface"], floor: 3 },
+  // The action tokens (ui-user-adjustments) stay for the sky-check answers (`SkyAnswerForm`: the border as a non-text
+  // indicator, the link colour on the fill as text) and the milestone medallion, plus the `action` buttons until
+  // ui-quiet-actions Phase 2 removes that variant. The border is held over the ground, the surface and the sky stops,
+  // in every theme.
   { themes: [...DARK_LIGHT, "red", "night"], fg: ["primary-strong"], bg: ["action-surface"], floor: 4.5 },
   {
     themes: [...DARK_LIGHT, "red", "night"],

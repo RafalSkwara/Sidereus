@@ -113,6 +113,7 @@ const tokenGroups = [
       { name: "primary-strong", swatch: "bg-primary-strong" },
       { name: "action-surface", swatch: "bg-action-surface" },
       { name: "action-border", swatch: "bg-action-border" },
+      { name: "control-border", swatch: "bg-control-border" },
       { name: "ring", swatch: "bg-ring" },
       { name: "selected", swatch: "bg-selected" },
       { name: "selected-foreground", swatch: "bg-selected-foreground" },
@@ -178,8 +179,8 @@ const stateContract = [
 ];
 
 /*
- * The seven Button variants and the class each one takes on `:hover` (button.tsx). The hover specimen applies that
- * class directly; the focus-visible specimen applies the `focus-visible:` outline classes directly.
+ * The nine Button variants and the class each one takes on `:hover` (button.tsx). The hover specimen applies that
+ * class directly (quiet's also mirrors `red:hover:decoration-2` as `red:decoration-2`); the focus-visible specimen applies the `focus-visible:` outline classes directly.
  */
 const variants = [
   { variant: "default", label: "Primary", hover: "bg-primary/85" },
@@ -188,15 +189,26 @@ const variants = [
   { variant: "ghost", label: "Ghost", hover: "bg-accent" },
   { variant: "destructive", label: "Destructive", hover: "bg-destructive/10" },
   { variant: "action", label: "Action", hover: "border-primary-strong underline underline-offset-4" },
+  { variant: "hairline", label: "Hairline", hover: "border-primary-strong bg-accent" },
+  { variant: "quiet", label: "Quiet", hover: "underline underline-offset-4 red:decoration-2" },
   { variant: "link", label: "Link", hover: "decoration-2" },
 ] as const;
-// `action` wraps and is used at `sm` everywhere, so its specimens render at `sm` too.
-const sizeOf = (variant: (typeof variants)[number]["variant"]) => (variant === "action" ? "sm" : "default");
+// `action` and `hairline` wrap and are used at `sm`, `quiet` at `bare` (no horizontal padding), so their specimens render so too.
+const sizeOf = (variant: (typeof variants)[number]["variant"]) =>
+  variant === "quiet" ? "bare" : variant === "action" || variant === "hairline" ? "sm" : "default";
 const linkVariants = variants.filter(
-  (v) => v.variant === "default" || v.variant === "outline" || v.variant === "ghost" || v.variant === "action",
+  (v) =>
+    v.variant === "default" ||
+    v.variant === "outline" ||
+    v.variant === "ghost" ||
+    v.variant === "action" ||
+    v.variant === "hairline" ||
+    v.variant === "quiet",
 );
-// An `action` link while offline (`html[data-offline] [data-needs-network]`, global.css): muted, no fill, dashed border.
-const offlineAction = "border-dashed border-border bg-transparent text-muted-foreground cursor-not-allowed";
+// A hairline, `action` or quiet link while offline (`html[data-offline] [data-needs-network]`, global.css): muted ink on the
+// control and its icon, no fill, no underline, a dashed `--border` (a quiet action has no border width, so none shows).
+const offlineAction =
+  "border-dashed border-border bg-transparent text-muted-foreground cursor-not-allowed [&_svg]:text-muted-foreground no-underline!";
 
 const focusRing = "outline-2 outline-offset-2 outline-ring";
 // The field look on `:focus-visible` (input.tsx `fieldClass`).
@@ -817,6 +829,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   </div>
                 </div>
               </div>
+              <p class:list={blockNote}>
+                A disabled link is only ever the offline <code>aria-disabled</code> state (see the Link-button offline
+                specimens): <code>disabled</code> exists on <code>&lt;button&gt;</code> only.
+              </p>
               <p class:list={notApplicable}>error, empty — N/A · loading — see SubmitButton</p>
             </section>
 
@@ -890,6 +906,52 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     <a href="#c-link-button" class:list={buttonVariants({ variant: "action", size: "sm" })}>
                       Zobacz obiekty, które dziś wymywa Księżyc i które lepiej zostawić na inną noc
                       <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hairline · offline specimen (data-needs-network)</p>
+                  <div class:list={row}>
+                    <a
+                      href="#c-link-button"
+                      tabindex="-1"
+                      aria-disabled="true"
+                      class:list={cn(buttonVariants({ variant: "hairline", size: "sm" }), offlineAction)}
+                    >
+                      <Check aria-hidden="true" />
+                      Mark observed
+                    </a>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>hairline · long label wraps (320 px column)</p>
+                  <div class="max-w-xs">
+                    <a href="#c-link-button" class:list={buttonVariants({ variant: "hairline", size: "sm" })}>
+                      <Check aria-hidden="true" />
+                      Zobacz obiekty, które dziś wymywa Księżyc i które lepiej zostawić na inną noc
+                    </a>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>quiet · offline specimen (data-needs-network)</p>
+                  <div class:list={row}>
+                    <a
+                      href="#c-link-button"
+                      tabindex="-1"
+                      aria-disabled="true"
+                      class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), offlineAction)}
+                    >
+                      <Settings2 aria-hidden="true" />
+                      Manage sites
+                    </a>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>quiet · long label wraps (320 px column)</p>
+                  <div class="max-w-xs">
+                    <a href="#c-link-button" class:list={buttonVariants({ variant: "quiet", size: "bare" })}>
+                      <Plus aria-hidden="true" />
+                      Zobacz obiekty, które dziś wymywa Księżyc i które lepiej zostawić na inną noc
                     </a>
                   </div>
                 </div>

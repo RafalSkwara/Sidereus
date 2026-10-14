@@ -10,6 +10,13 @@
 /* `offline:` applies while the device is offline (`<html data-offline>`, src/lib/offline/page-state.ts; S-06). */
 @custom-variant offline (&:where([data-offline] *));
 
+/*
+ * `red:` is "in red night mode" (`<html data-theme="red">`, or a popover that carries its own `data-theme="red"`): red has
+ * no hue to tell things apart, so it styles by shape. Used by quiet actions (a resting underline, `red:hover:decoration-2`)
+ * and by the data credit links (their underline takes the text colour).
+ */
+@custom-variant red (&:where([data-theme="red"] *));
+
 /* `night:` is "under a night sky": a dark or red page, or inside a `.night-sky` scope in the light theme (ui-sky-light). */
 @custom-variant night (&:where(:root:not([data-theme="light"]) *, .night-sky, .night-sky *));
 
@@ -40,6 +47,8 @@
   /* Standalone clickables (ui-user-adjustments): a tinted fill and a link-coloured border, plain hex so the contrast test pins them. */
   --action-surface: #16224a;
   --action-border: #6b82cf;
+  /* The hairline button's border (ui-quiet-actions): a neutral grey held to 3:1 on the ground and the surface; `--border` is too faint to be a control's edge. */
+  --control-border: #646e8a;
 
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #2a3450;
@@ -95,6 +104,7 @@
 
   --action-surface: #e4ebfa;
   --action-border: #3a58b8;
+  --control-border: #808a9e;
 
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #e3e8f0;
@@ -193,6 +203,7 @@
 
   --action-surface: #2a0000;
   --action-border: #d00000;
+  --control-border: #c80000;
 
   /* The Session plan's axis (session-plan-timeline): twilight on the track, the dark window darker still. */
   --plan-twilight: #3a0000;
@@ -543,9 +554,11 @@
  * Network-only controls while offline (S-06, offline-night-plan): anything marked `data-needs-network` (Mark observed,
  * the sky-check form's buttons and links, Log and Gear in the Topbar and TabBar, sign-out) reads as unavailable. The
  * page script adds `aria-disabled` (also on the gear cards' selects) and swallows the click or submit; "Needs a connection" is their description, or a caption
- * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme), no fill or hover, a dashed outline on buttons and
- * `action` links (the Topbar and TabBar links have no border width, so it never shows there); the focus outline is
- * left alone, so focus stays visible. The current page's entry keeps its pressed look.
+ * shown with `offline:`. Muted ink (it keeps 4.5:1 in every theme) on the control and its icons (an icon painted by its
+ * own utility, such as the hairline's Check, is reset to the control's colour), no fill or hover, no underline on quiet
+ * actions, and a dashed outline in `--border` on buttons, hairlines and `action` links (the Topbar and TabBar links and quiet actions
+ * have no border width, so it never shows there); the focus outline is left alone, so focus stays visible. The current
+ * page's entry keeps its pressed look.
  */
 :root[data-offline] [data-needs-network]:not([aria-current="page"]),
 :root[data-offline] [data-needs-network] :is(a, button, select) {
@@ -553,6 +566,10 @@
   color: var(--muted-foreground);
   background-color: transparent;
   text-decoration-line: none;
+}
+
+:root[data-offline] [data-needs-network] svg {
+  color: inherit;
 }
 
 :root[data-offline] [data-needs-network] :is(a, button, select),
@@ -661,6 +678,7 @@
   --color-primary-strong: var(--primary-strong);
   --color-action-surface: var(--action-surface);
   --color-action-border: var(--action-border);
+  --color-control-border: var(--control-border);
   --color-plan-twilight: var(--plan-twilight);
   --color-plan-night: var(--plan-night);
   --color-plan-line: var(--plan-line);

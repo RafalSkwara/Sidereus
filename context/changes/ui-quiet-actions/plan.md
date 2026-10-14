@@ -481,10 +481,10 @@ There is no data or migration. Rollback is a revert of this change's commits. Th
 
 #### Automated
 
-- [ ] 1.1 Types and lint pass: `npx astro check` and `npm run lint`
-- [ ] 1.2 Unit tests pass, including the new contrast rows and `red-theme.test.ts` with the new token: `npm test`
-- [ ] 1.3 `src/styles/no-hardcoded-colors.test.ts` passes (the new hex lives only in `global.css`)
-- [ ] 1.4 `npm run build` succeeds
+- [x] 1.1 Types and lint pass: `npx astro check` and `npm run lint`
+- [x] 1.2 Unit tests pass, including the new contrast rows and `red-theme.test.ts` with the new token: `npm test`
+- [x] 1.3 `src/styles/no-hardcoded-colors.test.ts` passes (the new hex lives only in `global.css`)
+- [x] 1.4 `npm run build` succeeds
 
 #### Manual
 
