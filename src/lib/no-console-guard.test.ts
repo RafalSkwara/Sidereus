@@ -58,6 +58,7 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     reason: "the opt-in calibration snapshot (CALIBRATION_SNAPSHOT=1) over fixed test nights",
   },
   "src/lib/engine/determinism.test.ts": { count: 2, reason: "engine and ranking timings printed for CI" },
+  "src/lib/engine/events.test.ts": { count: 1, reason: "the skyEvents timing printed for CI" },
   "src/lib/engine/finder.test.ts": {
     count: 2,
     reason:

@@ -1,9 +1,9 @@
 ---
 change_id: sky-events
 title: Sky events - meteor showers, close pairings and other events for a night, from the pure engine
-status: plan_reviewed
+status: implementing
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-14
 archived_at: null
 ---
 

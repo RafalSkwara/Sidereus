@@ -556,8 +556,8 @@ None: no schema or stored-data change. The offline worker picks up the new page 
 
 #### Automated
 
-- [ ] 1.1 `npx vitest run src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes
-- [ ] 1.2 `npx astro check`, `npm run lint` and `npm test` pass
+- [x] 1.1 `npx vitest run src/lib/engine/events.test.ts src/lib/engine/purity.test.ts` passes
+- [x] 1.2 `npx astro check`, `npm run lint` and `npm test` pass
 
 ### Phase 2: Close pairings
 

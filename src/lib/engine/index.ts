@@ -77,3 +77,19 @@ export { clearIntervals, cloudOutlook, verdict } from "./verdict";
 export type { CloudOutlook } from "./verdict";
 export { darkWindowReturn, nextNightInOutlook, nextNightNotNoGo, sevenNightOutlook } from "./outlook";
 export type { NextNight, NextNightInput, OutlookNight } from "./outlook";
+export { isNotableEvent, skyEvents, visibleAt } from "./events";
+export type {
+  ElongationBody,
+  ElongationEvent,
+  EventVisibility,
+  LunarEclipseEvent,
+  MeteorShowerEvent,
+  NotVisibleReason,
+  OppositionBody,
+  OppositionEvent,
+  PairingBody,
+  PairingEvent,
+  SkyEvent,
+  SkyEventKind,
+  SolarEclipseEvent,
+} from "./events";
