@@ -653,11 +653,11 @@ None. There is no schema, data or worker change.
 
 #### Automated
 
-- [x] 4.1 `npm test`, `npm run lint` and `npx astro check` pass
-- [x] 4.2 `npm run build` succeeds
-- [x] 4.3 `npm run smoke` passes with 0 skipped, including the leaked-URL step
-- [x] 4.4 Deliberate break (no plan check in `TargetsPageContent`) turns the smoke free step red, then reverted
-- [x] 4.5 The whole e2e suite passes locally the way CI runs it
+- [x] 4.1 `npm test`, `npm run lint` and `npx astro check` pass — 193811f
+- [x] 4.2 `npm run build` succeeds — 193811f
+- [x] 4.3 `npm run smoke` passes with 0 skipped, including the leaked-URL step — 193811f
+- [x] 4.4 Deliberate break (no plan check in `TargetsPageContent`) turns the smoke free step red, then reverted — 193811f
+- [x] 4.5 The whole e2e suite passes locally the way CI runs it — 193811f
 
 #### Manual
 
