@@ -2,6 +2,7 @@
 
 > Full plan: `context/changes/what-to-expect/plan.md`
 > Research: `context/changes/what-to-expect/research.md`
+> Plan review: `context/changes/what-to-expect/reviews/plan-review.md` (F1-F10 applied)
 
 ## What & Why
 
@@ -33,9 +34,12 @@ Nothing classifies how an object looks. Planets and the Moon already ship fixed,
 | Moon | Not an input | The line is a property of object, site and scope; the reason line already covers the Moon | Plan D-4 |
 | Calibration | Source-cited reference fixture (about 12 objects, at least 2 sources each, 150 mm at Bortle 4) with known divergences, never edited to pass | No observer; follows finder-chart D-11 | Plan D-6 |
 | Gate | Computed server-side in the Targets island and the finder loader after the plan read, passed as a prop; never in `TonightView` | Islands replay without the shell, and the plan-blind view would leak the text | Plan D-7 |
-| Overlap with S-07 | No edit to `build.ts`, `load.ts`, `island.ts`, `TONIGHT_PAGES`, `copies.ts` or the dashboard; appended blocks only in i18n, `parameters.ts`, `/design` and docs | S-07 is implementing those files in parallel | Research §6 / D-10 |
-| Free view (O-1, owner) | Default: one muted lock line under the Targets count | Quieter than a locked line in 30 rows | Pending owner |
-| Plan loss offline (O-2, owner) | Default: accept; a stored Targets copy keeps its lines until replaced online or expired (36 h) | Text holds only public catalogue data and the user's own gear; avoids S-07's `copies.ts` | Pending owner |
+| Overlap with S-07 | No edit to S-07's files (`build.ts`, `load.ts`, `island.ts`, `TONIGHT_PAGES`, `copies.ts`, dashboard, `tonight-phone.spec.ts`, `fixtures/index.ts`); new blocks at named places, away from S-07's: `EXPECT_*` after `WASHED_OUT_TYPES`, the barrel export after `./moonlight`, `tonight.expect` after `tonight.finder` | S-07's `e57dadf` already appends at the ends of `parameters.ts` and `engine/index.ts` | Review F3 / D-10 |
+| Failed plan read (D-13) | `unknown` shows neither the lines nor the free line; access stays fail-closed | A paying user is never told they lack the plan because of a transient error | Review F5 / Plan |
+| Free view (O-1) | One muted lock line under the Targets count | Owner chose A on 2026-10-14 | Owner |
+| Plan loss offline (O-2) | A stored Targets copy keeps its lines until replaced online or expired (36 h); no `copies.ts` change | Owner chose A on 2026-10-14 | Owner |
+| Hard cases (D-6) | The fixture also samples M42 at Bortle 7, M56 at 200 mm, Helix and M97, NGC 7000, a ~11 mag galaxy and M33 at Bortle 9; Phase 1 may apply 5 listed, source-backed rule changes | The showcase-only fixture could not fail | Review F2, F8 |
+| Proof timing | The Targets gate's smoke and e2e land with the gate in Phase 2; markers are valued (`data-expect="<key>"`) | Bare `data-expect` could not fail the smoke checks | Review F1, F7 |
 
 ## Scope
 
@@ -55,7 +59,7 @@ Nothing classifies how an object looks. Planets and the Moon already ship fixed,
 - any Moon input;
 - the dashboard, Session plan and washed-out rows;
 - `TonightView` and loader changes;
-- the offline drop rule (unless O-2 says B);
+- the offline drop rule (O-2 = A);
 - new data, migrations or logs;
 - observer calibration.
 
@@ -63,17 +67,17 @@ Nothing classifies how an object looks. Planets and the Moon already ship fixed,
 
 - `src/lib/engine/expectation.ts` holds the pure `expectationFor(object, bortle, apertureMm) → ExpectationKey`.
 - `src/lib/tonight/expectation.ts`, server-only, does the catalogue lookup and the translation.
-- `TargetsPageContent` awaits the memoised plan read after the Tonight load. On `full` it passes `expectation` text through `ObjectCard` / `ObjectRow` to `ObjectDetails`; otherwise it renders the lock line.
+- `TargetsPageContent` awaits the memoised plan read after the Tonight load and decides through `expectationView`: on `full` it passes `{ key, text }` through `ObjectCard` / `ObjectRow` to `ObjectDetails`; on `free` it renders the lock line; on `unknown` it renders neither.
 - `loadFinderFor`'s chart result gains `expectation`, and `FinderContent` renders it.
 
 ## Phases at a Glance
 
 | Phase | What it delivers | Key risk |
 |---|---|---|
-| 1. The rule | `expectationFor`, `EXPECT_*`, property tests, reference fixture | Armchair thresholds; more than 3 divergences stop the phase for the owner |
-| 2. Copy and Targets rows | 22 phrases in EN and PL, helper, gated row line, free line, `/design` | Wording judged without an observer; owner reads it on `/design` |
-| 3. Finder chart line | Deep-sky phrase and planet note on the chart; locked bullet | Small; `load.ts` chart variant shape |
-| 4. Proof and docs | Smoke (free, full, leaked), e2e spec, CLAUDE.md, whole suite | Shared-file merges with S-07 (i18n, `/design`, CLAUDE.md) |
+| 1. The rule | `expectationFor`, `EXPECT_*`, property tests, reference fixture with hard cases | The hard cases may leave more than 3 divergences, which stops the phase for the owner |
+| 2. Copy, Targets rows and proof | 22 phrases in EN and PL, helper, gated row line, free line, `/design`, Targets smoke and e2e (EN and PL at 320 px) | Wording judged without an observer; owner reads it on `/design` |
+| 3. Finder chart line | Deep-sky phrase and planet note on the chart; locked bullet; `finder 3` check and an e2e test | Small; `load.ts` chart variant shape |
+| 4. Leaked island, docs, whole suite | Signed-out island step, CLAUDE.md, whole e2e suite and smoke | Shared-file merges with S-07 |
 
 **Prerequisites:** F-01 (account plans) and S-03 (finder chart), both done. Rebase onto main if S-07 merges first.
 
@@ -82,7 +86,7 @@ Nothing classifies how an object looks. Planets and the Moon already ship fixed,
 ## Open Risks & Assumptions
 
 - The thresholds and phrases are candidates judged without an observer. The reference fixture catches gross errors, not nuance.
-- Contrast for very large emission nebulae (NGC 7000) may read too bright under the core-offset formula. The reference fixture decides between a sourced rule change and a known divergence.
+- The plan review's recomputation shows the starting rule misclassifies known hard cases: faint globulars, Helix and M97, M42 under a city sky, NGC 7000 and small galaxies near 11 mag. They are now in the fixture, and Phase 1 resolves each by a sourced rule change (D-2 (a)-(e)) or a known divergence. More than 3 left over goes to the owner.
 - Polish copy quality depends on the owner's read in Phase 2.
 
 ## Success Criteria (Summary)
