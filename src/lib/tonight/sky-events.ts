@@ -45,6 +45,16 @@ export interface TonightSkyEvent {
    */
   lineName: string;
   /**
+   * The name inside the verdict's sentence ("Tonight: …"): `lineName`, except a meteor shower, which Polish words in
+   * its own form there ("Dziś: maksimum Orionidów", owner 2026-10-14).
+   */
+  verdictName: string;
+  /**
+   * A solar eclipse after the night's midnight happens tomorrow in daytime, not tonight: its local time ("11:22"), so
+   * the verdict line reads "Tomorrow, 11:22: …" (owner, 2026-10-14). `null` for every other event.
+   */
+  tomorrowAt: string | null;
+  /**
    * When to go, relative to the selected night: "tonight", "tomorrow night" or "night of 12/13 Aug". A solar eclipse
    * is a daytime event, so it reads the day and time of its own moment ("Mon 2 Aug, 12:03").
    */
@@ -103,7 +113,10 @@ export function formatSkyEvents(
   const { formatTime, formatDayTime, formatNightDate, formatNightSpan, formatDirection, formatDegrees } =
     createFormatter(locale);
 
-  const showers: Record<string, string> = m.targets.meteorShower;
+  const showerNames: Record<string, string> = t.showerName;
+  const showerNamesInLine: Record<string, string> = t.showerNameInLine;
+  // The calendar date (`YYYY-MM-DD`) of an instant in the site's zone.
+  const localDate = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
   const bodyName = (body: string): string =>
     body === "moon" ? m.targets.moon : (m.targets.planet as Record<string, string>)[body];
   const range = (interval: { start: Date; end: Date }) => ({
@@ -157,7 +170,7 @@ export function formatSkyEvents(
         details.push(t.pairingDetail({ deg: formatDegrees(event.separationDeg) }));
         break;
       case "meteor-shower":
-        name = t.showerName({ shower: showers[event.shower] ?? event.shower });
+        name = showerNames[event.shower] ?? event.shower;
         when = t.showerWhen;
         break;
     }
@@ -202,6 +215,8 @@ export function formatSkyEvents(
             ? t.when.tomorrow
             : t.when.night({ span: formatNightSpan(goNight) });
 
+    const lineName = event.kind === "pairing" ? `${name}, ${details[0]}` : name;
+
     return {
       kind: event.kind,
       name,
@@ -211,7 +226,12 @@ export function formatSkyEvents(
       night: event.night,
       nightLabel: formatNightDate(event.night),
       goNight,
-      lineName: event.kind === "pairing" ? `${name}, ${details[0]}` : name,
+      lineName,
+      verdictName: event.kind === "meteor-shower" ? (showerNamesInLine[event.shower] ?? lineName) : lineName,
+      tomorrowAt:
+        event.kind === "solar-eclipse" && localDate.format(event.moment) > event.night
+          ? formatTime(event.moment, timeZone)
+          : null,
       nightWhen,
       visible: visibility.visible,
       visibilityText,
@@ -252,8 +272,9 @@ export function eventsTileLine(events: TonightSkyEvents | null, locale: Locale):
 
 /**
  * The verdict's muted line (owner decision 5, F3): "Tonight: Perseids peak", plus "+1 more" when several notable
- * events fall on the night, and for a solar eclipse "eclipse glasses only". `null` on a night with none, so the line
- * (and the room it takes) exists only on event nights.
+ * events fall on the night, and for a solar eclipse "eclipse glasses only"; a solar eclipse after the night's
+ * midnight reads "Tomorrow, 11:22: …" instead (owner, 2026-10-14). `null` on a night with none, so the line (and the
+ * room it takes) exists only on event nights.
  */
 export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Locale): string | null {
   const first = events?.tonight[0];
@@ -261,7 +282,12 @@ export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Local
     return null;
   }
   const t = getMessages(locale).tonight.events;
-  const name = first.safety ? t.withGlasses({ name: first.lineName }) : first.lineName;
-  const more = events.tonight.length - 1;
-  return more > 0 ? t.verdictLineMore({ name, count: String(more) }) : t.verdictLine({ name });
+  const name = first.safety ? t.withGlasses({ name: first.verdictName }) : first.verdictName;
+  const count = String(events.tonight.length - 1);
+  const more = events.tonight.length > 1;
+  if (first.tomorrowAt !== null) {
+    const time = first.tomorrowAt;
+    return more ? t.verdictLineTomorrowMore({ time, name, count }) : t.verdictLineTomorrow({ time, name });
+  }
+  return more ? t.verdictLineMore({ name, count }) : t.verdictLine({ name });
 }

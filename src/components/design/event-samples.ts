@@ -58,18 +58,20 @@ export interface EventSamples {
 export function eventSamples(locale: Locale): EventSamples {
   const m = getMessages(locale);
   const t = m.tonight.events;
-  const { formatNightSpan, formatDayTime } = createFormatter(locale);
+  const { formatNightSpan, formatDayTime, formatTime, formatDegrees } = createFormatter(locale);
 
   const base: TonightSkyEvent = {
     kind: "meteor-shower",
-    name: t.showerName({ shower: m.targets.meteorShower.orionids }),
+    name: t.showerName.orionids,
     kindLabel: t.kind["meteor-shower"],
     when: t.showerWhen,
     details: [],
     night: "2026-10-10",
     nightLabel: "",
     goNight: "2026-10-10",
-    lineName: t.showerName({ shower: m.targets.meteorShower.orionids }),
+    lineName: t.showerName.orionids,
+    verdictName: t.showerNameInLine.orionids,
+    tomorrowAt: null,
     nightWhen: t.when.tonight,
     visible: true,
     visibilityText: "",
@@ -78,7 +80,7 @@ export function eventSamples(locale: Locale): EventSamples {
     safety: false,
   };
   const pairingName = t.pairingName({ first: m.targets.moon, second: m.targets.planet.jupiter });
-  const pairingDetail = t.pairingDetail({ deg: "1.8" });
+  const pairingDetail = t.pairingDetail({ deg: formatDegrees(1.8) });
   const pairing: TonightSkyEvent = {
     ...base,
     kind: "pairing",
@@ -86,20 +88,26 @@ export function eventSamples(locale: Locale): EventSamples {
     kindLabel: t.kind.pairing,
     details: [pairingDetail],
     lineName: `${pairingName}, ${pairingDetail}`,
+    verdictName: `${pairingName}, ${pairingDetail}`,
   };
+  // The 2027-08-02 eclipse in the morning after the night's midnight: the verdict line reads "Tomorrow, 12:03: …".
+  const eclipseMoment = new Date("2027-08-02T10:03:00Z");
   const eclipse: TonightSkyEvent = {
     ...base,
     kind: "solar-eclipse",
     name: t.eclipse.solar.partial,
     kindLabel: t.kind["solar-eclipse"],
     lineName: t.eclipse.solar.partial,
-    nightWhen: formatDayTime(new Date("2027-08-02T10:03:00Z"), "Europe/Warsaw"),
+    verdictName: t.eclipse.solar.partial,
+    tomorrowAt: formatTime(eclipseMoment, "Europe/Warsaw"),
+    nightWhen: formatDayTime(eclipseMoment, "Europe/Warsaw"),
     safety: true,
   };
   const geminids: TonightSkyEvent = {
     ...base,
-    name: t.showerName({ shower: m.targets.meteorShower.geminids }),
-    lineName: t.showerName({ shower: m.targets.meteorShower.geminids }),
+    name: t.showerName.geminids,
+    lineName: t.showerName.geminids,
+    verdictName: t.showerNameInLine.geminids,
     night: "2026-12-13",
     goNight: "2026-12-13",
     nightWhen: t.when.night({ span: formatNightSpan("2026-12-13") }),
@@ -123,7 +131,10 @@ export function eventSamples(locale: Locale): EventSamples {
     verdictLines: [
       { label: "one event tonight", line: eventsVerdictLine(tonightOne, locale) ?? "" },
       { label: "several events tonight: the first and “+1 more”", line: eventsVerdictLine(tonightMany, locale) ?? "" },
-      { label: "a solar eclipse: eclipse glasses only", line: eventsVerdictLine(tonightEclipse, locale) ?? "" },
+      {
+        label: "a solar eclipse after midnight: “Tomorrow, 12:03”, eclipse glasses only",
+        line: eventsVerdictLine(tonightEclipse, locale) ?? "",
+      },
     ],
     tiles: [
       { label: "an event tonight (a close pairing)", events: block({ next: pairing }) },

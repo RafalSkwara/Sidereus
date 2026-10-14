@@ -34,6 +34,7 @@ import {
   type TonightView,
 } from "./build";
 import { logHref } from "./load";
+import { eventsVerdictLine } from "./sky-events";
 import {
   EYEPIECES,
   hourlyForecast,
@@ -1860,6 +1861,39 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(perseids?.when).not.toMatch(/\d:\d\d/);
   });
 
+  it("names a shower in Polish as 'Maksimum Perseidów', and 'maksimum Perseidów' inside the verdict line", () => {
+    const now = new Date("2026-08-05T18:00:00Z");
+    const forecast = result(uniformForecast("2026-08-05T00:00:00Z", 5), false, now);
+    const perseids = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl")).events.find(
+      (event) => event.kind === "meteor-shower",
+    );
+    expect(perseids?.name).toBe("Maksimum Perseidów");
+    expect(perseids?.lineName).toBe("Maksimum Perseidów");
+    expect(perseids?.verdictName).toBe("maksimum Perseidów");
+  });
+
+  it("reads 'Tomorrow, 11:22' on the night before the 2027-08-02 solar eclipse at Warsaw, never 'Tonight' (owner, 2026-10-14)", () => {
+    // The eclipse peaks at 09:22 UTC (11:22 CEST) on 2 August, after the midnight of the night of 1 August.
+    const now = new Date("2027-08-01T18:00:00Z");
+    const forecast = result(uniformForecast("2027-08-01T00:00:00Z", 5), false, now);
+    const en = eventsOf(build({ now, forecast }));
+    const eclipse = en.tonight.find((event) => event.kind === "solar-eclipse");
+    expect(eclipse?.night).toBe("2027-08-01");
+    expect(eclipse?.tomorrowAt).toBe("11:22");
+    expect(en.tonight[0]).toEqual(eclipse);
+    expect(eventsVerdictLine(en, "en")).toMatch(
+      /^Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only( \+\d+ more)?$/,
+    );
+    const pl = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl"));
+    expect(eventsVerdictLine(pl, "pl")).toMatch(
+      /^Jutro, 11:22: Częściowe zaćmienie Słońca, tylko przez okulary do zaćmień( \+\d+ więcej)?$/,
+    );
+    // Every other event keeps no "tomorrow" time.
+    expect(
+      en.events.filter((event) => event.kind !== "solar-eclipse").every((event) => event.tomorrowAt === null),
+    ).toBe(true);
+  });
+
   it("counts a meteor shower on its best night, not its peak night, for `tonight` and `next` (2027-07-30 at Reykjavik)", () => {
     // 64° N in late July: the Southern Delta Aquariids' radiant is too low in the peak night's short span (2027-07-30)
     // and clears the minimum the night after (07-31), so the night to go out is 07-31 (found with the engine).
@@ -1875,7 +1909,7 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
         build({ site: REYKJAVIK, now, forecast: result(uniformForecast(`${night}T00:00:00Z`, 5), false, now) }),
       );
     };
-    const showerName = en.tonight.events.showerName({ shower: en.targets.meteorShower.southernDeltaAquariids });
+    const showerName = en.tonight.events.showerName.southernDeltaAquariids;
     const isShower = (event: { name: string }) => event.name === showerName;
 
     // The week before: the row is grouped under the peak night, and says go out the night after.

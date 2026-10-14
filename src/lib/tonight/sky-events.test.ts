@@ -20,6 +20,8 @@ const event = (overrides: Partial<TonightSkyEvent>): TonightSkyEvent => ({
   nightLabel: "Thursday, 12 August 2027",
   goNight: "2027-08-12",
   lineName: "Perseids peak",
+  verdictName: "Perseids peak",
+  tomorrowAt: null,
   nightWhen: "night of 12/13 Aug",
   visible: true,
   visibilityText: "Radiant highest 03:10 · NE, 62°",
@@ -33,6 +35,7 @@ const eclipse = event({
   kind: "solar-eclipse",
   name: "Partial solar eclipse",
   lineName: "Partial solar eclipse",
+  verdictName: "Partial solar eclipse",
   nightWhen: "Mon 2 Aug, 12:03",
   safety: true,
 });
@@ -40,6 +43,7 @@ const pairing = event({
   kind: "pairing",
   name: "Moon and Jupiter",
   lineName: "Moon and Jupiter, 1.8° apart",
+  verdictName: "Moon and Jupiter, 1.8° apart",
   details: ["1.8° apart"],
   nightWhen: "tonight",
 });
@@ -97,5 +101,27 @@ describe("the verdict's event line", () => {
     expect(eventsVerdictLine(block({ tonight: [eclipse] }), "pl")).toBe(
       "Dziś: Partial solar eclipse, tylko przez okulary do zaćmień",
     );
+  });
+
+  it("reads 'Tomorrow, <time>' for a solar eclipse after the night's midnight (owner, 2026-10-14)", () => {
+    const morning = { ...eclipse, tomorrowAt: "11:22" };
+    expect(eventsVerdictLine(block({ tonight: [morning] }), "en")).toBe(
+      "Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only",
+    );
+    expect(eventsVerdictLine(block({ tonight: [morning] }), "pl")).toBe(
+      "Jutro, 11:22: Partial solar eclipse, tylko przez okulary do zaćmień",
+    );
+    expect(eventsVerdictLine(block({ tonight: [morning, pairing] }), "en")).toBe(
+      "Tomorrow, 11:22: Partial solar eclipse, eclipse glasses only +1 more",
+    );
+  });
+
+  it("uses the in-sentence name, which Polish words as 'maksimum Orionidów' (owner, 2026-10-14)", () => {
+    const orionids = event({
+      name: "Maksimum Orionidów",
+      lineName: "Maksimum Orionidów",
+      verdictName: "maksimum Orionidów",
+    });
+    expect(eventsVerdictLine(block({ tonight: [orionids] }), "pl")).toBe("Dziś: maksimum Orionidów");
   });
 });

@@ -924,8 +924,31 @@ export const en = {
       /** `first` and `second` are the two bodies' names; `deg` the separation. */
       pairingName: (p: { first: string; second: string }) => `${p.first} and ${p.second}`,
       pairingDetail: (p: { deg: string }) => `${p.deg}° apart`,
-      /** A meteor peak is a night, never a minute: the maximum is known to about a day. */
-      showerName: (p: { shower: string }) => `${p.shower} peak`,
+      /**
+       * A meteor peak, by shower key: a night, never a minute (the maximum is known to about a day). `showerName` is
+       * the row's title and the tile's line; `showerNameInLine` sits inside the verdict's sentence ("Tonight: …"), where
+       * Polish needs its own form (owner, 2026-10-14: "Dziś: maksimum Orionidów").
+       */
+      showerName: {
+        quadrantids: "Quadrantids peak",
+        lyrids: "Lyrids peak",
+        etaAquariids: "Eta Aquariids peak",
+        southernDeltaAquariids: "Southern Delta Aquariids peak",
+        perseids: "Perseids peak",
+        orionids: "Orionids peak",
+        leonids: "Leonids peak",
+        geminids: "Geminids peak",
+      },
+      showerNameInLine: {
+        quadrantids: "Quadrantids peak",
+        lyrids: "Lyrids peak",
+        etaAquariids: "Eta Aquariids peak",
+        southernDeltaAquariids: "Southern Delta Aquariids peak",
+        perseids: "Perseids peak",
+        orionids: "Orionids peak",
+        leonids: "Leonids peak",
+        geminids: "Geminids peak",
+      },
       showerWhen: "Peak night",
       /** The visible mark and its opposite, beside the name. */
       visible: "Visible",
@@ -968,6 +991,13 @@ export const en = {
       /** The verdict's muted line on an event night; `count` is how many more events the night holds, pre-formatted. */
       verdictLine: (p: { name: string }) => `Tonight: ${p.name}`,
       verdictLineMore: (p: { name: string; count: string }) => `Tonight: ${p.name} +${p.count} more`,
+      /**
+       * The verdict's line for a solar eclipse after the night's midnight, which is tomorrow's daytime, not tonight
+       * (owner, 2026-10-14); `time` is "HH:mm" in the site's zone.
+       */
+      verdictLineTomorrow: (p: { time: string; name: string }) => `Tomorrow, ${p.time}: ${p.name}`,
+      verdictLineTomorrowMore: (p: { time: string; name: string; count: string }) =>
+        `Tomorrow, ${p.time}: ${p.name} +${p.count} more`,
       /** The fixed safety line on every solar eclipse, visible or not. */
       solarSafety:
         "Eye safety: look only through certified eclipse glasses. Never look at the Sun directly, or through a telescope or binoculars, without a certified solar filter.",

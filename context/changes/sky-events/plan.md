@@ -85,6 +85,12 @@ Answered by the owner on 2026-10-13, relayed by the orchestrator. **Not legal ad
    - The phone first screen is re-checked. `tonight-phone.spec.ts` pins the verdict and the gear cards above the TabBar, and the tiles sit below them anyway, so the tile's position does not move that first screen.
    - **Plan review F3 (owner):** the line appears only on event nights, and the one-line layout shift on those nights is accepted. No space is reserved; the skeleton keeps today's height, and its jump on event nights is accepted. `tonight-phone.spec.ts` must not depend on the run date, so it subtracts the measured line.
 
+6. **After implementation (owner, 2026-10-14), relayed by the orchestrator:**
+   - **Meteor rate:** not shown; keep the page as it is (NASA's rate is a year-specific observed number).
+   - **Morning solar eclipse:** a solar eclipse after the night's midnight reads "Tomorrow, 11:22: …" (PL "Jutro, 11:22: …") on the verdict line instead of "Tonight:" (`tomorrowAt`), pinned by a unit test on the 2027-08-02 eclipse at Warsaw.
+   - **Polish shower names:** "Maksimum Orionidów" as a title and "Dziś: maksimum Orionidów" in the verdict line, with the genitive per shower (`showerName` / `showerNameInLine`). The rest of the Polish copy is accepted.
+   - **`/design`:** the tile specimen's "1.8°" goes through the formatter (PL "1,8°").
+
 ## What We're NOT Doing
 
 - No external data feed, API or yearly download. Every event comes from the engine and one hand-entered shower table.
