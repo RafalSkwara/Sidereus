@@ -46,7 +46,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done     |
 | S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | done        |
 | S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | done |
-| S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | in-progress |
+| S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | done |
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
 | S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | proposed |
@@ -145,7 +145,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - The phrase set and its rules (PRD Open Question 17), judged without an observer. — Owner: team. Block: no.
 - **Risk:** Advice nobody can check yet; kept to a fixed phrase set derived from data the engine already has, so it stays deterministic and reviewable.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-05: Observing progress
 
@@ -257,3 +257,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-05: user can see the Messier and Caldwell checklists with counts, the planets and the Moon as firsts, and a "not seen yet" mark on tonight's targets.** — Archived 2026-10-09 → `context/archive/2026-10-09-observing-progress/`. Lesson: —.
 - **S-06: user can have a milestone celebrated when the log entry that reaches it is saved, and see every milestone reached on the progress page.** — Archived 2026-10-13 → `context/archive/2026-10-11-observing-milestones/`. Lesson: —.
 - **S-03: user can open a finder chart for any ranked deep-sky object or planet: the nearest star they can see with the naked eye from their site, the hop to the target, and their finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky; a free account sees what the chart does and that it needs the full plan.** — Archived 2026-10-13 → `context/archive/2026-10-11-finder-chart/`. Lesson: run the whole e2e suite locally the way CI does before opening a PR, not only the slice's specs; a red `ci` on main blocks `deploy`, so an intermittent harness flake (agent-hooks EPIPE, fixed in #156) is fixed failing-first in its own change, never retried away; measure size budgets on the real encoding before planning them (the finder file's estimate was off by 2x).
+- **S-04: user can read, with each ranked target, what it will look like in their own telescope from their site.** — Archived 2026-10-14 → `context/archive/2026-10-14-what-to-expect/`. Lesson: —.

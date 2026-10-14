@@ -1,10 +1,10 @@
 ---
 change_id: what-to-expect
 title: What to expect in your own telescope for each ranked target
-status: impl_reviewed
+status: archived
 created: 2026-10-14
 updated: 2026-10-14
-archived_at: null
+archived_at: 2026-10-14T10:29:55Z
 ---
 
 ## Notes
