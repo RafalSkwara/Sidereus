@@ -3,17 +3,19 @@ import NavIcon from "@/components/NavIcon.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
 import { getAccountPlan } from "@/lib/account-plan";
-import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
+import { NAV_ITEMS, currentDestination, isCurrentPage } from "@/lib/navigation";
 
 const { user, theme, locale } = Astro.locals;
 // The account plan line in the settings panel (F-01 addendum): one lazy query per page, signed in only.
 const accountPlan = user ? await getAccountPlan(Astro.locals) : null;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
+// One current segment (the most specific destination), so `/log/progress` marks Progress and not also Log.
+const current = currentDestination(pathname);
 const links = NAV_ITEMS.map((item) => ({
   ...item,
   text: m.nav[item.label],
-  current: isCurrentPage(pathname, item.href),
+  current: item.href === current,
 }));
 const onSignin = isCurrentPage(pathname, "/auth/signin");
 // `/` is the signed-out landing and redirects a user to `/tonight` (ui-landing), so the logo skips that hop.
@@ -46,7 +48,7 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
             aria-current={link.current ? "page" : undefined}
             data-needs-network={link.needsNetwork ? "" : undefined}
             class:list={[
-              "group inline-flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold",
+              "group inline-flex h-11 items-center gap-1.5 rounded-full px-3.5 text-label font-semibold",
               "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
               focusRing,
               link.current
@@ -61,7 +63,8 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
             <NavIcon
               name={link.icon}
               class:list={[
-                "size-4 transition-transform duration-150 ease-out motion-reduce:transition-none",
+                // Text only between `md` and `lg`, so four Polish segments fit the row at 768 px (owner, 2026-10-15).
+                "hidden size-4 transition-transform duration-150 ease-out motion-reduce:transition-none lg:block",
                 !link.current && "group-hover:-translate-y-px",
               ]}
             />

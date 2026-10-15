@@ -447,14 +447,14 @@ until their next online refresh, which is harmless.
 
 #### Automated
 
-- [ ] 1.1 The navigation model tests pass
-- [ ] 1.2 Types, lint and the unit suite pass
-- [ ] 1.3 The build passes
-- [ ] 1.4 The phase's e2e pass on the preview
+- [x] 1.1 The navigation model tests pass
+- [x] 1.2 Types, lint and the unit suite pass
+- [x] 1.3 The build passes
+- [x] 1.4 The phase's e2e pass on the preview
 
 #### Manual
 
-- [ ] 1.5 The four-item bars read as one bar at every width, language and theme
+- [x] 1.5 The four-item bars read as one bar at every width, language and theme
 
 ### Phase 2: The Tonight sub-nav replaces the back link
 

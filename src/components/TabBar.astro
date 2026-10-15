@@ -1,9 +1,9 @@
 ---
 import NavIcon from "@/components/NavIcon.astro";
 import { getMessages } from "@/i18n";
-import { NAV_ITEMS, isCurrentPage } from "@/lib/navigation";
+import { NAV_ITEMS, currentDestination, isCurrentPage } from "@/lib/navigation";
 
-// Phone and small-tablet navigation (top-nav-redesign, board direction A): below `md` the three destinations sit in
+// Phone and small-tablet navigation (top-nav-redesign, board direction A): below `md` the four destinations sit in
 // a bottom tab bar, in thumb reach at the telescope; from `md` the top bar's segmented pill takes over. Signed in
 // only, and not during onboarding, where there is one way forward. The in-flow spacer keeps page content clear of
 // the fixed bar.
@@ -11,10 +11,12 @@ const { user, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
 const show = user !== null && !isCurrentPage(pathname, "/onboarding");
+// One current tab (the most specific destination), so `/log/progress` marks Progress and not also Log.
+const current = currentDestination(pathname);
 const tabs = NAV_ITEMS.map((item) => ({
   ...item,
   text: m.nav[item.label],
-  current: isCurrentPage(pathname, item.href),
+  current: item.href === current,
 }));
 ---
 
@@ -26,7 +28,7 @@ const tabs = NAV_ITEMS.map((item) => ({
       data-tabbar
       class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-safe-area md:hidden"
     >
-      <ul class="mx-auto grid h-16 max-w-md grid-cols-3">
+      <ul class="mx-auto grid h-16 max-w-md grid-cols-4">
         {tabs.map((tab) => (
           <li>
             <a
@@ -34,7 +36,7 @@ const tabs = NAV_ITEMS.map((item) => ({
               aria-current={tab.current ? "page" : undefined}
               data-needs-network={tab.needsNetwork ? "" : undefined}
               class:list={[
-                "relative flex h-full flex-col items-center justify-center gap-1 text-xs",
+                "relative flex h-full flex-col items-center justify-center gap-1 text-caption",
                 "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
                 // Inset, so the outline stays inside the fixed bar at the screen's edge.
                 "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",

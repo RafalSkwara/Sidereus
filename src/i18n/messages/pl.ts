@@ -26,6 +26,7 @@ export const pl = {
   nav: {
     tonight: "Dziś w nocy",
     log: "Dziennik",
+    progress: "Postępy",
     myGear: "Mój sprzęt",
     signIn: "Zaloguj się",
     signOut: "Wyloguj się",
@@ -1177,7 +1178,6 @@ export const pl = {
       deletedGear: (p) => `${p.name} (usunięte)`,
       pages: "Strony dziennika",
       skyChecks: "Oceny nieba",
-      progress: "Postępy",
       newer: "← Nowsze",
       older: "Starsze →",
       saved: (p) => `Zapisano obserwację: ${p.object}.`,

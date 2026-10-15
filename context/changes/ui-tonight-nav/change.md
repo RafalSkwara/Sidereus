@@ -1,7 +1,7 @@
 ---
 change_id: ui-tonight-nav
 title: Tonight sub-nav and Progress as a destination
-status: planned
+status: implementing
 created: 2026-10-15
 updated: 2026-10-15
 archived_at: null

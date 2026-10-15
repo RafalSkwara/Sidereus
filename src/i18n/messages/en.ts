@@ -38,6 +38,7 @@ export const en = {
   nav: {
     tonight: "Tonight",
     log: "Log",
+    progress: "Progress",
     myGear: "My gear",
     signIn: "Sign in",
     signOut: "Sign out",
@@ -1414,7 +1415,6 @@ export const en = {
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
       pages: "Log pages",
       skyChecks: "Sky checks",
-      progress: "Progress",
       newer: "← Newer",
       older: "Older →",
       saved: (p: { object: string }) => `${p.object} logged.`,
