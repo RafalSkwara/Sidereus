@@ -18,6 +18,17 @@ describe("Caldwell catalogue", () => {
     }
   });
 
+  it("carries OpenNGC's Hubble type on every galaxy and on nothing else", () => {
+    for (const o of CALDWELL) {
+      if (o.type === "galaxy") {
+        expect(o.hubble, o.id).toEqual(expect.any(String));
+        expect(o.hubble, o.id).not.toBe("");
+      } else {
+        expect(o.hubble, o.id).toBeNull();
+      }
+    }
+  });
+
   it("keeps only objects a 52 N observer can lift above 15 degrees (dec >= -23)", () => {
     for (const o of CALDWELL) {
       expect(o.decDeg).toBeGreaterThanOrEqual(-23);
@@ -32,6 +43,7 @@ describe("Caldwell catalogue", () => {
     expect(c14?.commonName).toBe("Double Cluster");
     expect(c14?.vMag).toBe(3.7);
     expect(c14?.surfaceBrightness).toBeNull();
+    expect(c14?.hubble).toBeNull();
     expect(CALDWELL.some((o) => o.id === "NGC884")).toBe(false);
   });
 

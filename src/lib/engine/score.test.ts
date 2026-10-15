@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { DEEP_SKY } from "@/lib/catalogue";
+
+import { contrastBand, telescopeLimitingMag } from "./contrast";
 import {
   BRIGHTNESS_RAMP_MAG,
+  GALAXY_FAINT_BRIGHTNESS_CAP,
+  GALAXY_LIMIT_BRIGHTNESS_CAP,
   LOW_INTEREST_PENALTY,
   MIN_OBJECT_SCORE,
   SCORE_WEIGHTS,
@@ -45,6 +50,7 @@ const CLUSTER: ScoredObject = {
   type: "open-cluster",
   majorAxisArcmin: 10,
   minorAxisArcmin: 10,
+  hubble: null,
 };
 
 function input(overrides: Partial<ScoreInput> = {}): ScoreInput {
@@ -181,6 +187,7 @@ describe("scoreObject", () => {
       type: "galaxy",
       majorAxisArcmin: 10,
       minorAxisArcmin: 10,
+      hubble: null,
     });
     // A Bortle 2 sky (about 21.4 mag/arcsec² at 40°) and a full Moon 30° away, both well up.
     const fullMoonNight = {
@@ -257,6 +264,96 @@ describe("scoreObject", () => {
       // 70 mm gains exactly 5 magnitudes.
       const vMag = limit + 5 - BRIGHTNESS_RAMP_MAG / 4;
       expect(score({ object: { ...CLUSTER, vMag }, apertureMm: 70 }).components.brightness).toBeCloseTo(0.25, 12);
+    });
+
+    // small-scope-galaxies: a galaxy's credit follows its contrast band (the line), never more than it allows.
+    describe("for a galaxy", () => {
+      // A 10' round galaxy under a Bortle 2 sky in a 200 mm telescope; its core surface brightness is vMag + 12.13.
+      const night = { bortle: 2, apertureMm: 200 };
+      const galaxyAt = (coreMag: number): ScoredObject => ({
+        ...CLUSTER,
+        id: "M33",
+        type: "galaxy",
+        vMag: coreMag - 12.13,
+      });
+      const ramp = (object: ScoredObject) =>
+        Math.min(1, (telescopeLimitingMag(night.bortle, night.apertureMm) - object.vMag) / BRIGHTNESS_RAMP_MAG);
+      const brightnessOf = (object: ScoredObject) => score({ object, ...night }).components.brightness;
+
+      it("keeps the whole headroom ramp in the bright and smudge bands", () => {
+        for (const [coreMag, band] of [
+          [21, "bright"],
+          [23, "smudge"],
+        ] as const) {
+          const object = galaxyAt(coreMag);
+          expect(contrastBand(object, night.bortle, night.apertureMm)).toBe(band);
+          expect(ramp(object)).toBeGreaterThan(GALAXY_FAINT_BRIGHTNESS_CAP);
+          expect(brightnessOf(object)).toBeCloseTo(ramp(object), 12);
+        }
+      });
+
+      it("takes at most GALAXY_FAINT_BRIGHTNESS_CAP in the faint band when the ramp is higher", () => {
+        const object = galaxyAt(24);
+        expect(contrastBand(object, night.bortle, night.apertureMm)).toBe("faint");
+        expect(ramp(object)).toBeGreaterThan(GALAXY_FAINT_BRIGHTNESS_CAP);
+        expect(brightnessOf(object)).toBe(GALAXY_FAINT_BRIGHTNESS_CAP);
+      });
+
+      it("takes GALAXY_LIMIT_BRIGHTNESS_CAP in the limit band, though it is inside the telescope's limit", () => {
+        const object = galaxyAt(25);
+        expect(contrastBand(object, night.bortle, night.apertureMm)).toBe("limit");
+        expect(ramp(object)).toBeGreaterThan(0);
+        expect(brightnessOf(object)).toBe(GALAXY_LIMIT_BRIGHTNESS_CAP);
+      });
+
+      it("leaves every other type on the headroom ramp, whatever its band", () => {
+        const nebula: ScoredObject = { ...galaxyAt(24), id: "M1", type: "nebula" };
+        expect(contrastBand(nebula, night.bortle, night.apertureMm)).toBe("faint");
+        expect(brightnessOf(nebula)).toBeCloseTo(ramp(nebula), 12);
+      });
+
+      it("never lowers with a larger aperture, for every catalogue galaxy under every Bortle class", () => {
+        const apertures = [60, 70, 80, 100, 130, 150, 200, 300];
+        const drops: string[] = [];
+        for (const object of DEEP_SKY.filter((o) => o.type === "galaxy")) {
+          for (let bortle = 1; bortle <= 9; bortle++) {
+            let previous = -1;
+            for (const apertureMm of apertures) {
+              // A galaxy fainter than the telescope's limit has no score yet; a larger aperture reaches it.
+              const result = scoreObject(input({ object, bortle, apertureMm }));
+              if (result === null) {
+                continue;
+              }
+              if (result.components.brightness < previous) {
+                drops.push(`${object.id} Bortle ${bortle} ${apertureMm} mm`);
+              }
+              previous = result.components.brightness;
+            }
+          }
+        }
+        expect(drops).toEqual([]);
+      });
+
+      it("never rises under a worse sky, for every catalogue galaxy at every aperture (impl review F5)", () => {
+        const rises: string[] = [];
+        for (const object of DEEP_SKY.filter((o) => o.type === "galaxy")) {
+          for (const apertureMm of [60, 80, 100, 150, 200, 300]) {
+            let previous = Number.POSITIVE_INFINITY;
+            for (let bortle = 1; bortle <= 9; bortle++) {
+              // Under a worse sky the telescope's limit falls; a galaxy past it has no score, and stays past it.
+              const result = scoreObject(input({ object, bortle, apertureMm }));
+              if (result === null) {
+                break;
+              }
+              if (result.components.brightness > previous) {
+                rises.push(`${object.id} ${apertureMm} mm Bortle ${bortle}`);
+              }
+              previous = result.components.brightness;
+            }
+          }
+        }
+        expect(rises).toEqual([]);
+      });
     });
   });
 

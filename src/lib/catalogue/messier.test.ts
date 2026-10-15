@@ -31,6 +31,24 @@ describe("Messier catalogue", () => {
     expect(m102?.constellation).toBe("Dra");
   });
 
+  it("carries OpenNGC's Hubble type on every galaxy and on nothing else", () => {
+    for (const o of MESSIER) {
+      if (o.type === "galaxy") {
+        expect(o.hubble, o.id).toEqual(expect.any(String));
+        expect(o.hubble, o.id).not.toBe("");
+      } else {
+        expect(o.hubble, o.id).toBeNull();
+      }
+    }
+  });
+
+  it("pins the Hubble type of the spirals the galaxy rules read", () => {
+    expect(findMessier(31)?.hubble).toBe("Sb");
+    expect(findMessier(33)?.hubble).toBe("Sc");
+    expect(findMessier(101)?.hubble).toBe("SABc");
+    expect(findMessier(102)?.hubble).toBe("S0-a");
+  });
+
   it("records the pinned OpenNGC commit and licence", () => {
     expect(CATALOGUE_META.commit).toBe(PINNED_SHA);
     expect(CATALOGUE_META.licence).toBe("CC BY-SA 4.0");

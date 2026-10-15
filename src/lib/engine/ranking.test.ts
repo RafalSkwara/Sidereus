@@ -34,6 +34,7 @@ function synthetic(messier: number, decDeg: number, overrides: Partial<RankableO
     type: "open-cluster",
     majorAxisArcmin: 5,
     minorAxisArcmin: null,
+    hubble: null,
     ...overrides,
   };
 }

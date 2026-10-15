@@ -13,7 +13,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.1,
     "bMag": 8.91,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC40",
@@ -29,7 +30,8 @@
     "minorAxisArcmin": null,
     "vMag": 11.89,
     "bMag": 11.27,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4236",
@@ -45,7 +47,8 @@
     "minorAxisArcmin": 6.85,
     "vMag": 9.77,
     "bMag": 10.06,
-    "surfaceBrightness": 24.58
+    "surfaceBrightness": 24.58,
+    "hubble": "SBd"
   },
   {
     "id": "NGC7023",
@@ -61,7 +64,8 @@
     "minorAxisArcmin": 8,
     "vMag": 7.2,
     "bMag": 7.2,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "IC342",
@@ -77,7 +81,8 @@
     "minorAxisArcmin": 18.79,
     "vMag": 9.68,
     "bMag": 9.68,
-    "surfaceBrightness": 24.85
+    "surfaceBrightness": 24.85,
+    "hubble": "SABc"
   },
   {
     "id": "NGC6543",
@@ -93,7 +98,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.01,
     "bMag": 9.79,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC2403",
@@ -109,7 +115,8 @@
     "minorAxisArcmin": 10.07,
     "vMag": 8.43,
     "bMag": 8.83,
-    "surfaceBrightness": 23.48
+    "surfaceBrightness": 23.48,
+    "hubble": "SABc"
   },
   {
     "id": "NGC559",
@@ -125,7 +132,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.5,
     "bMag": 9.85,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC663",
@@ -141,7 +149,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.1,
     "bMag": 7.78,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC7635",
@@ -157,7 +166,8 @@
     "minorAxisArcmin": 8,
     "vMag": 11,
     "bMag": 11,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC6946",
@@ -173,7 +183,8 @@
     "minorAxisArcmin": 10.84,
     "vMag": 9.05,
     "bMag": 9.76,
-    "surfaceBrightness": 23.73
+    "surfaceBrightness": 23.73,
+    "hubble": "SABc"
   },
   {
     "id": "NGC457",
@@ -189,7 +200,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.4,
     "bMag": 6.97,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC869",
@@ -205,7 +217,8 @@
     "minorAxisArcmin": null,
     "vMag": 3.7,
     "bMag": 4.3,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC6826",
@@ -221,7 +234,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.44,
     "bMag": 10.02,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC7243",
@@ -237,7 +251,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.4,
     "bMag": 6.54,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC147",
@@ -253,7 +268,8 @@
     "minorAxisArcmin": 5.41,
     "vMag": 9.72,
     "bMag": 10.6,
-    "surfaceBrightness": 24.29
+    "surfaceBrightness": 24.29,
+    "hubble": "E"
   },
   {
     "id": "NGC185",
@@ -269,7 +285,8 @@
     "minorAxisArcmin": 10.76,
     "vMag": 9.2,
     "bMag": 10.15,
-    "surfaceBrightness": 24.58
+    "surfaceBrightness": 24.58,
+    "hubble": "E"
   },
   {
     "id": "IC5146",
@@ -285,7 +302,8 @@
     "minorAxisArcmin": 10,
     "vMag": 7.2,
     "bMag": 7.82,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC7000",
@@ -301,7 +319,8 @@
     "minorAxisArcmin": 30,
     "vMag": 4,
     "bMag": 4,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4449",
@@ -317,7 +336,8 @@
     "minorAxisArcmin": 2.71,
     "vMag": 9.64,
     "bMag": 9.5,
-    "surfaceBrightness": 21.1
+    "surfaceBrightness": 21.1,
+    "hubble": "IB"
   },
   {
     "id": "NGC7662",
@@ -333,7 +353,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.3,
     "bMag": 9.2,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC891",
@@ -349,7 +370,8 @@
     "minorAxisArcmin": 3.03,
     "vMag": 10.01,
     "bMag": 10.84,
-    "surfaceBrightness": 24.17
+    "surfaceBrightness": 24.17,
+    "hubble": "Sb"
   },
   {
     "id": "NGC1275",
@@ -365,7 +387,8 @@
     "minorAxisArcmin": 1.45,
     "vMag": 12.24,
     "bMag": 12.61,
-    "surfaceBrightness": 23
+    "surfaceBrightness": 23,
+    "hubble": "S0"
   },
   {
     "id": "NGC2419",
@@ -381,7 +404,8 @@
     "minorAxisArcmin": null,
     "vMag": 10.05,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4244",
@@ -397,7 +421,8 @@
     "minorAxisArcmin": 7.24,
     "vMag": 10.18,
     "bMag": 10.44,
-    "surfaceBrightness": 24.57
+    "surfaceBrightness": 24.57,
+    "hubble": "Sc"
   },
   {
     "id": "NGC6888",
@@ -413,7 +438,8 @@
     "minorAxisArcmin": 10,
     "vMag": 7.44,
     "bMag": 7.44,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC752",
@@ -429,7 +455,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.7,
     "bMag": 6.47,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC5005",
@@ -445,7 +472,8 @@
     "minorAxisArcmin": 1.52,
     "vMag": 10.71,
     "bMag": 10.54,
-    "surfaceBrightness": 21.82
+    "surfaceBrightness": 21.82,
+    "hubble": "SABb"
   },
   {
     "id": "NGC7331",
@@ -461,7 +489,8 @@
     "minorAxisArcmin": 3.76,
     "vMag": 9.41,
     "bMag": 10.2,
-    "surfaceBrightness": 23.08
+    "surfaceBrightness": 23.08,
+    "hubble": "Sbc"
   },
   {
     "id": "IC405",
@@ -477,7 +506,8 @@
     "minorAxisArcmin": 30,
     "vMag": 10,
     "bMag": 10,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4631",
@@ -493,7 +523,8 @@
     "minorAxisArcmin": 2.2,
     "vMag": 9.24,
     "bMag": 9.47,
-    "surfaceBrightness": 22.44
+    "surfaceBrightness": 22.44,
+    "hubble": "SBcd"
   },
   {
     "id": "NGC6992",
@@ -509,7 +540,8 @@
     "minorAxisArcmin": 8,
     "vMag": 7,
     "bMag": 7,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC6960",
@@ -525,7 +557,8 @@
     "minorAxisArcmin": 160,
     "vMag": 7,
     "bMag": 7,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4889",
@@ -541,7 +574,8 @@
     "minorAxisArcmin": 1.68,
     "vMag": 11.45,
     "bMag": 12.49,
-    "surfaceBrightness": 23.39
+    "surfaceBrightness": 23.39,
+    "hubble": "E"
   },
   {
     "id": "NGC4559",
@@ -557,7 +591,8 @@
     "minorAxisArcmin": 4.82,
     "vMag": 9.92,
     "bMag": 10.28,
-    "surfaceBrightness": 23.48
+    "surfaceBrightness": 23.48,
+    "hubble": "Sc"
   },
   {
     "id": "NGC6882",
@@ -573,7 +608,8 @@
     "minorAxisArcmin": null,
     "vMag": 14.1,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4565",
@@ -589,7 +625,8 @@
     "minorAxisArcmin": 2.89,
     "vMag": 10.86,
     "bMag": 10.05,
-    "surfaceBrightness": 23.75
+    "surfaceBrightness": 23.75,
+    "hubble": "Sb"
   },
   {
     "id": "NGC2392",
@@ -605,7 +642,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.61,
     "bMag": 10.12,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC3626",
@@ -621,7 +659,8 @@
     "minorAxisArcmin": 1.94,
     "vMag": 10.98,
     "bMag": 11.8,
-    "surfaceBrightness": 22.86
+    "surfaceBrightness": 22.86,
+    "hubble": "S0-a"
   },
   {
     "id": "NGC7006",
@@ -637,7 +676,8 @@
     "minorAxisArcmin": null,
     "vMag": 10.46,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC7814",
@@ -653,7 +693,8 @@
     "minorAxisArcmin": 1.88,
     "vMag": 10.6,
     "bMag": 11.59,
-    "surfaceBrightness": 23.03
+    "surfaceBrightness": 23.03,
+    "hubble": "Sab"
   },
   {
     "id": "NGC7479",
@@ -669,7 +710,8 @@
     "minorAxisArcmin": 2.72,
     "vMag": 11.09,
     "bMag": 11.73,
-    "surfaceBrightness": 23.04
+    "surfaceBrightness": 23.04,
+    "hubble": "SBbc"
   },
   {
     "id": "NGC5248",
@@ -685,7 +727,8 @@
     "minorAxisArcmin": 2.38,
     "vMag": 9.97,
     "bMag": 10.88,
-    "surfaceBrightness": 22.25
+    "surfaceBrightness": 22.25,
+    "hubble": "SABb"
   },
   {
     "id": "NGC2261",
@@ -701,7 +744,8 @@
     "minorAxisArcmin": 1,
     "vMag": 11.85,
     "bMag": 12.46,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC6934",
@@ -717,7 +761,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.75,
     "bMag": 10.48,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC2775",
@@ -733,7 +778,8 @@
     "minorAxisArcmin": 3.36,
     "vMag": 10.24,
     "bMag": 11.14,
-    "surfaceBrightness": 22.88
+    "surfaceBrightness": 22.88,
+    "hubble": "Sab"
   },
   {
     "id": "NGC2237",
@@ -749,7 +795,8 @@
     "minorAxisArcmin": 60,
     "vMag": 6,
     "bMag": 6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC2244",
@@ -765,7 +812,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.8,
     "bMag": 5.26,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "IC1613",
@@ -781,7 +829,8 @@
     "minorAxisArcmin": 17.14,
     "vMag": 9.54,
     "bMag": 10.01,
-    "surfaceBrightness": 25
+    "surfaceBrightness": 25,
+    "hubble": "I"
   },
   {
     "id": "NGC4697",
@@ -797,7 +846,8 @@
     "minorAxisArcmin": 4.16,
     "vMag": 9.37,
     "bMag": 10.25,
-    "surfaceBrightness": 23.36
+    "surfaceBrightness": 23.36,
+    "hubble": "E"
   },
   {
     "id": "NGC3115",
@@ -813,7 +863,8 @@
     "minorAxisArcmin": 3.01,
     "vMag": 9.09,
     "bMag": 10.08,
-    "surfaceBrightness": 23.02
+    "surfaceBrightness": 23.02,
+    "hubble": "E-S0"
   },
   {
     "id": "NGC2506",
@@ -829,7 +880,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.6,
     "bMag": 8.28,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC7009",
@@ -845,7 +897,8 @@
     "minorAxisArcmin": 0.52,
     "vMag": 8,
     "bMag": 8.3,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC246",
@@ -861,7 +914,8 @@
     "minorAxisArcmin": null,
     "vMag": 10.9,
     "bMag": 8,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC6822",
@@ -877,7 +931,8 @@
     "minorAxisArcmin": 16.75,
     "vMag": 10.05,
     "bMag": 9.36,
-    "surfaceBrightness": 24.25
+    "surfaceBrightness": 24.25,
+    "hubble": "IB"
   },
   {
     "id": "NGC2360",
@@ -893,7 +948,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.2,
     "bMag": 7.62,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC3242",
@@ -909,7 +965,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.7,
     "bMag": 8.6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "NGC4038",
@@ -925,7 +982,8 @@
     "minorAxisArcmin": 3.78,
     "vMag": 10.2,
     "bMag": 10.85,
-    "surfaceBrightness": 22.94
+    "surfaceBrightness": 22.94,
+    "hubble": "SBm"
   },
   {
     "id": "NGC4039",
@@ -941,7 +999,8 @@
     "minorAxisArcmin": 2.73,
     "vMag": 11.04,
     "bMag": 11.04,
-    "surfaceBrightness": 22.82
+    "surfaceBrightness": 22.82,
+    "hubble": "SBm"
   },
   {
     "id": "NGC247",
@@ -957,7 +1016,8 @@
     "minorAxisArcmin": 5.55,
     "vMag": 9.21,
     "bMag": 9.67,
-    "surfaceBrightness": 23.79
+    "surfaceBrightness": 23.79,
+    "hubble": "SABc"
   },
   {
     "id": "NGC7293",
@@ -973,6 +1033,7 @@
     "minorAxisArcmin": null,
     "vMag": 7.3,
     "bMag": 7.5,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   }
 ]

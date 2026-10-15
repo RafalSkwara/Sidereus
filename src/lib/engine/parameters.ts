@@ -525,6 +525,69 @@ export const EXPECT_BRIGHT_GALAXY_MARGIN_MAG = 5;
 export const EXPECT_HUGE_NEBULA_ARCMIN = 100;
 
 /**
+ * OpenNGC `Hubble` types of the bulge-type spirals, a concentrated bulge on a flatter disc (small-scope-galaxies
+ * planning, 2026-10-15, owner decision OD-3 a: every bulge-type spiral, not an M31-only exception): S0 to Sb, plain
+ * (`S`), intermediate (`SAB`) and barred (`SB`), exact strings as OpenNGC writes them. Eight of
+ * these occur among the catalogue's galaxies at the pinned commit (S0, S0-a, E-S0, Sa, SABa, Sab, Sb, SABb); SBa,
+ * SABab, SBab and SBb complete the class for a future pin bump. Ellipticals, the Sbc and later spirals and the irregulars are not in it:
+ * the flat `BRIGHT_CORE_OFFSET_MAG` fits a disc-dominated galaxy (M33, M101, NGC 2403), and a blanket elliptical
+ * term would brighten the low-surface-brightness dwarfs (NGC 4889 is already a known divergence in that direction).
+ * `contrast.test.ts` fails when a catalogue galaxy's `hubble` is neither in this list nor in the test's explicit
+ * disc-or-other list, so a new OpenNGC value after a pin bump is classed on purpose.
+ */
+export const BULGE_HUBBLE_TYPES: readonly string[] = [
+  "S0",
+  "S0-a",
+  "E-S0",
+  "Sa",
+  "SABa",
+  "SBa",
+  "Sab",
+  "SABab",
+  "SBab",
+  "Sb",
+  "SABb",
+  "SBb",
+];
+
+/**
+ * Candidate (small-scope-galaxies planning, 2026-10-15, source-cited reference calibration, owner decision OD-2 a):
+ * how many magnitudes brighter than the flat core (`BRIGHT_CORE_OFFSET_MAG`) a bulge-type spiral's core is, for the
+ * contrast deficit of the expectation line and the ranking's brightness credit. 0.8 sits in the scanned window
+ * (0.762, 0.862] set by two references at 60 mm: M31 reads `galaxySmudge` at Bortle 5 and 6 and `galaxyFaint` at
+ * Bortle 8 (Telescope Advisor, Astronomy, Skyhound). The lower edge is the Bortle 8 entry (M31 60 mm / B8: at
+ * 0.762 its deficit is exactly the `limit` threshold 2.5), the upper edge the Bortle 5 entry (M31 60 mm / B5: at
+ * 0.862 its deficit falls below `EXPECT_BRIGHT_BELOW`). Margins at 0.8: 0.062 to the Bortle 5 edge (M31 60 mm / B5,
+ * deficit 0.562) and 0.038 to the Bortle 8 edge (M31 60 mm / B8, deficit 2.462). Any change to the Bortle table or
+ * to M31's catalogue data will flip one of those two references, loudly. The disc-type galaxies (M33, M101) stay on
+ * the flat offset, which the 150 mm references calibrate; 0.8 leaves M31 at 150 mm / Bortle 4 `galaxyBright`.
+ */
+export const EXPECT_BULGE_CORE_EXTRA_MAG = 0.8;
+
+/**
+ * Candidate (small-scope-galaxies planning, 2026-10-15; owner, plan review F1): the most brightness credit (the 0-1
+ * `brightness` score component) a galaxy keeps while its what-to-expect line is `galaxyFaint` ("a very faint grey
+ * smudge; use averted vision"), so the ranking cannot call a galaxy "bright for your N mm" beside a faint line. A galaxy
+ * whose band is `bright` or `smudge` keeps the whole ramp. Working window about 0.065 to 0.2:
+ * - the upper edge is where M101 at Warsaw 2026-04-15, Bortle 5, 60 mm re-enters the top 10 (the guard G1 in
+ *   `small-scope.test.ts`; 0.25 leaves it at #7);
+ * - the lower edge, about 0.065 (a deliberate-break run: red at 0.05 and 0.06, green at 0.07), is the washed-out test
+ *   "only counts an object a moonless night would list" (`score.test.ts`): `coreGalaxy(24)` at 200 mm / Bortle 2 is a
+ *   `faint` galaxy, and below it the moonless total no longer clears `MIN_OBJECT_SCORE`, so `washedOut` stops being
+ *   true.
+ * 0.1 sits inside the window: G1's margin there is 0.028 in rank score (M101 is #17 at 60 mm / Bortle 5). Any change to
+ * the Bortle table, the score weights or M101's catalogue data can close that margin, loudly, in G1.
+ */
+export const GALAXY_FAINT_BRIGHTNESS_CAP = 0.1;
+
+/**
+ * Candidate (small-scope-galaxies planning, 2026-10-15; owner decision OD-4 a): the brightness credit of a galaxy whose
+ * line is `galaxyLimit`, "at the edge of what your sky allows". It stays listed when its other components clear the
+ * bar, but takes no brightness credit, so it sinks. 0 is the natural floor, not a tuned value.
+ */
+export const GALAXY_LIMIT_BRIGHTNESS_CAP = 0;
+
+/**
  * Candidate (moonlight-and-the-verdict planning, 2026-10-02): minutes between the Moon-disc states the Moon card's
  * time slider steps through. The elongation changes by about 0.1° in ten minutes, so the terminator moves by well
  * under a pixel on the card's disc between steps.

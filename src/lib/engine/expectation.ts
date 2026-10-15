@@ -1,28 +1,21 @@
 import type { DeepSkyObject } from "@/lib/catalogue";
 
-import { effectiveSurfaceBrightness } from "./moonlight";
+import { contrastBand, contrastDeficit, telescopeLimitingMag } from "./contrast";
+import type { ContrastBand } from "./contrast";
 import {
-  EXPECT_APERTURE_GAIN_MAG,
-  EXPECT_BRIGHT_BELOW,
   EXPECT_BRIGHT_GALAXY_MARGIN_MAG,
   EXPECT_BRIGHT_NEBULA_MAX_VMAG,
   EXPECT_COMPACT_ARCMIN,
-  EXPECT_FAINT_BELOW,
   EXPECT_GRAINY_APERTURE_MM,
   EXPECT_GRAINY_MARGIN_MAG,
   EXPECT_HUGE_NEBULA_ARCMIN,
   EXPECT_LARGE_PLANETARY_ARCMIN,
   EXPECT_LARGE_PLANETARY_DISC_BELOW,
-  EXPECT_NEAR_LIMIT_MAG,
-  EXPECT_REFERENCE_APERTURE_MM,
   EXPECT_RESOLVE_APERTURE_MM,
   EXPECT_RESOLVE_MARGIN_MAG,
-  EXPECT_SMUDGE_BELOW,
   EXPECT_STARLIKE_ARCMIN,
   EXPECT_WIDE_ARCMIN,
-  darkSkyZenithMagForBortle,
 } from "./parameters";
-import { telescopeLimitingMag } from "./score";
 
 /**
  * What a deep-sky object will look like in the user's telescope from the user's site (M-3 S-04, what-to-expect):
@@ -59,55 +52,7 @@ export const EXPECTATION_KEYS = [
 
 export type ExpectationKey = (typeof EXPECTATION_KEYS)[number];
 
-/**
- * How far an object stands from the sky: `bright` is easy straight on, `limit` is at the edge of the sky's
- * allowance.
- */
-export type ContrastBand = "bright" | "smudge" | "faint" | "limit";
-
-export type ExpectationObject = Pick<DeepSkyObject, "type" | "vMag" | "majorAxisArcmin" | "minorAxisArcmin">;
-
-const BAND_ORDER: readonly ContrastBand[] = ["bright", "smudge", "faint", "limit"];
-
-function atLeast(band: ContrastBand, floor: ContrastBand): ContrastBand {
-  return BAND_ORDER.indexOf(band) >= BAND_ORDER.indexOf(floor) ? band : floor;
-}
-
-/**
- * The contrast deficit, magnitudes: the object's core surface brightness minus the moonless zenith sky, less the
- * aperture's correction. Positive means the core is fainter than the sky; `null` when the object has no size.
- */
-function contrastDeficit(object: ExpectationObject, bortle: number, apertureMm: number): number | null {
-  const surface = effectiveSurfaceBrightness(object);
-  if (surface === null) {
-    return null;
-  }
-  const apertureGain = EXPECT_APERTURE_GAIN_MAG * Math.log2(apertureMm / EXPECT_REFERENCE_APERTURE_MM);
-  return surface - darkSkyZenithMagForBortle(bortle) - apertureGain;
-}
-
-function rawBand(deficit: number | null): ContrastBand {
-  if (deficit === null) {
-    return "smudge";
-  }
-  if (deficit < EXPECT_BRIGHT_BELOW) {
-    return "bright";
-  }
-  if (deficit < EXPECT_SMUDGE_BELOW) {
-    return "smudge";
-  }
-  return deficit < EXPECT_FAINT_BELOW ? "faint" : "limit";
-}
-
-/**
- * The band after the near-limit floor: an object within `EXPECT_NEAR_LIMIT_MAG` of the telescope's limiting
- * magnitude is at least `faint`. Never brightens at a worse sky, never fades at a larger aperture.
- */
-export function contrastBand(object: ExpectationObject, bortle: number, apertureMm: number): ContrastBand {
-  const band = rawBand(contrastDeficit(object, bortle, apertureMm));
-  const nearLimit = object.vMag > telescopeLimitingMag(bortle, apertureMm) - EXPECT_NEAR_LIMIT_MAG;
-  return nearLimit ? atLeast(band, "faint") : band;
-}
+export type ExpectationObject = Pick<DeepSkyObject, "type" | "vMag" | "majorAxisArcmin" | "minorAxisArcmin" | "hubble">;
 
 function galaxyKey(object: ExpectationObject, band: ContrastBand, bortle: number, apertureMm: number): ExpectationKey {
   switch (band) {

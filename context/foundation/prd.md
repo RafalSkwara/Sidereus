@@ -703,7 +703,9 @@ milestone, approximately 2026-09-30.
    than about 21 mag/arcsec2 surface brightness, scaling from 0 at Bortle 1-2 to
    0.40 at Bortle 8-9. The catalogue source does not carry surface brightness for every
    Messier object, clusters especially, so where it is missing the penalty falls
-   back to object type (galaxies and diffuse nebulae penalized).
+   back to object type (galaxies and diffuse nebulae penalized). The penalty is
+   unchanged, but a galaxy's brightness credit in the ranking is now capped by
+   its contrast band in the user's aperture (small-scope-galaxies, 2026-10-15).
 6. **Log penalty size** - candidate (uncalibrated): 0.15 subtracted for entries
    rated 3 or above; zero for entries rated 1-2.
 7. **Darkness threshold by Bortle class** - candidate (uncalibrated): sun at
@@ -760,7 +762,8 @@ the plan of the slice that needs it.
 17. **What-to-expect wording** - candidate: a fixed set of phrases chosen by
     object type, surface brightness against the site's sky quality, and
     aperture; judged without an observer, like M-2's advice (roadmap Open
-    Question 2).
+    Question 2). The galaxy core term is calibrated on source-cited small-scope
+    references (small-scope-galaxies, 2026-10-15), still without an observer.
 18. **The milestone set** - candidate: first planet, first galaxy, first
     globular cluster, first nebula, the Moon's terminator, 10 / 25 / 50 / 110
     Messier objects, all Caldwell objects in the list, all planets. Owner: user.

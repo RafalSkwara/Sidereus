@@ -1,5 +1,7 @@
 import type { DeepSkyObject } from "@/lib/catalogue";
 
+import { contrastBand, telescopeLimitingMag } from "./contrast";
+import type { ContrastBand } from "./contrast";
 import type { MoonState } from "./moon";
 import { effectiveSurfaceBrightness, moonBrighteningMag, nlToMag, skyBrightnessNL } from "./moonlight";
 import { bestWindow } from "./objects";
@@ -7,7 +9,8 @@ import type { BestWindow } from "./objects";
 import {
   BRIGHTNESS_RAMP_MAG,
   EXTINCTION_V,
-  EYE_PUPIL_REFERENCE_MM,
+  GALAXY_FAINT_BRIGHTNESS_CAP,
+  GALAXY_LIMIT_BRIGHTNESS_CAP,
   LOW_INTEREST_PENALTY,
   LOW_INTEREST_TYPES,
   MIN_OBJECT_SCORE,
@@ -22,9 +25,11 @@ import {
   bortlePenaltyForBortle,
   darkSkyZenithMagForBortle,
   moonlightSensitivity,
-  nakedEyeLimitingMagForBortle,
 } from "./parameters";
 import type { HorizontalPosition } from "./types";
+
+// The one definition lives in `contrast.ts` (it needs it for its near-limit floor); kept here for existing imports.
+export { telescopeLimitingMag };
 
 /**
  * The object score (PRD Open Question 1): four components on a 0-1 scale and their weighted total.
@@ -45,7 +50,7 @@ export type ScoreComponents = Record<ScoreComponent, number>;
  */
 export type ScoredObject = Pick<
   DeepSkyObject,
-  "id" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin" | "minorAxisArcmin"
+  "id" | "vMag" | "surfaceBrightness" | "type" | "majorAxisArcmin" | "minorAxisArcmin" | "hubble"
 >;
 
 export interface ScoreInput {
@@ -88,11 +93,6 @@ function indexOfTime(track: readonly HorizontalPosition[], time: Date, from: num
   throw new Error("scoreObject: window instant is not a sample of the track");
 }
 
-/** Limiting magnitude through the telescope: naked-eye limit for the sky plus the aperture's gain. */
-export function telescopeLimitingMag(bortle: number, apertureMm: number): number {
-  return nakedEyeLimitingMagForBortle(bortle) + 5 * Math.log10(apertureMm / EYE_PUPIL_REFERENCE_MM);
-}
-
 function skyPenalty(object: ScoredObject, bortle: number): number {
   const penalized =
     object.surfaceBrightness === null
@@ -113,7 +113,8 @@ function skyPenalty(object: ScoredObject, bortle: number): number {
  *   [0, 1], where `m_b` is how much the Moon brightens the sky at the object (`moonBrighteningMag`): one scale for
  *   every object, so a cluster beside a bright Moon and a galaxy far from a thin one compare fairly.
  * - `brightness`: how far the object's magnitude is inside the telescope's limiting magnitude,
- *   ramped over `BRIGHTNESS_RAMP_MAG` and clamped to [0, 1].
+ *   ramped over `BRIGHTNESS_RAMP_MAG` and clamped to [0, 1]; for a galaxy, no more than its contrast band allows
+ *   (`GALAXY_FAINT_BRIGHTNESS_CAP`, `GALAXY_LIMIT_BRIGHTNESS_CAP`).
  * - `sky`: 1 − the Bortle penalty for a low-surface-brightness object (or, with no surface
  *   brightness, a penalized type).
  *
@@ -173,7 +174,7 @@ export function scoreObject(input: ScoreInput): ObjectScore | null {
   const components: ScoreComponents = {
     duration: placed / track.length,
     moon: moonSum / windowSamples,
-    brightness: clamp01((limitingMag - object.vMag) / BRIGHTNESS_RAMP_MAG),
+    brightness: brightnessOf(object, limitingMag, bortle, apertureMm),
     sky: 1 - skyPenalty(object, bortle),
   };
   const total = totalOf(object, components);
@@ -181,6 +182,31 @@ export function scoreObject(input: ScoreInput): ObjectScore | null {
   const washedOut =
     lostThroughout && visibleWithoutMoon && totalOf(object, { ...components, moon: 1 }) >= MIN_OBJECT_SCORE;
   return { window, components, total, washedOut };
+}
+
+/** The most brightness credit each contrast band allows a galaxy (`contrastBand`): the line and the credit agree. */
+function galaxyBrightnessCap(band: ContrastBand): number {
+  switch (band) {
+    case "bright":
+    case "smudge":
+      return 1;
+    case "faint":
+      return GALAXY_FAINT_BRIGHTNESS_CAP;
+    case "limit":
+      return GALAXY_LIMIT_BRIGHTNESS_CAP;
+  }
+}
+
+/**
+ * The headroom ramp: how far the object's magnitude is inside the telescope's limiting magnitude. A galaxy gets no
+ * more than its contrast band allows (small-scope-galaxies): the band is read after the near-limit floor, so the cap
+ * never rises at a worse sky and never falls at a larger aperture.
+ */
+function brightnessOf(object: ScoredObject, limitingMag: number, bortle: number, apertureMm: number): number {
+  const ramp = clamp01((limitingMag - object.vMag) / BRIGHTNESS_RAMP_MAG);
+  return object.type === "galaxy"
+    ? Math.min(ramp, galaxyBrightnessCap(contrastBand(object, bortle, apertureMm)))
+    : ramp;
 }
 
 /** The weighted components less the low-interest penalty, floored at 0. */

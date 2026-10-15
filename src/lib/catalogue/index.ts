@@ -55,6 +55,8 @@ export interface DeepSkyObject {
   bMag: number | null;
   /** mag/arcsec²; null where OpenNGC has no value (70 objects) */
   surfaceBrightness: number | null;
+  /** OpenNGC's morphological (Hubble) type, e.g. "Sb", "SABc", "S0-a"; null outside galaxies or where OpenNGC has none */
+  hubble: string | null;
 }
 
 /** A Messier object: `messier` is set, `caldwell` never is. */
@@ -149,6 +151,7 @@ function validateMeasurements(file: string, o: Record<string, unknown>, index: n
     vMag: requireNumber(file, o, "vMag", index, -30, 30),
     bMag: nullableNumber(file, o, "bMag", index),
     surfaceBrightness: nullableNumber(file, o, "surfaceBrightness", index),
+    hubble: nullableString(file, o, "hubble", index),
   };
 }
 
