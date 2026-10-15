@@ -1,7 +1,7 @@
 ---
 change_id: ui-dashboard-tiles
 title: Dashboard tiles on the rhythm roles and shared facts (ui-refine split, change 3)
-status: planned
+status: plan_reviewed
 created: 2026-10-15
 updated: 2026-10-15
 archived_at: null
@@ -26,3 +26,5 @@ Out of scope: the Tonight sub-nav and the fourth destination (change 4, `ui-toni
 Research done 2026-10-15 (`research.md`, charges C1-C5). A reverted experiment (tiles on the roles, the verdict's event line as a `Fact` with its kind's icon, the skeleton in step) was built, measured and captured on the preview (4331/4401) and on `/design`. It is `evidence/exp/experiment.diff`, with before shots in `evidence/before/` and the measurements in `evidence/README.md`. The phone first screen is unchanged (149 / 701 / 746 against the TabBar at 779 px), and the skeleton's tile rows match the real ones.
 
 Plan done 2026-10-15 (`plan.md`, `plan-brief.md`): 3 phases (the tiles; the verdict; rules, gate, landing image, whole suite). Agent defaults D1-D7 wait for the owner at plan review. The owner questions are D2 (the targets list at `line`), D4 (the solar eclipse's amber safety icon on the verdict line instead of `Eclipse`, which reads as a clock) and D5 (no icon on the events tile's line). Next: /10x-plan-review (reviewer), then the owner's answers.
+
+Plan reviewed 2026-10-15 (`reviews/plan-review.md`: 0 critical, F1-F7 warnings, F8-F10 observations; all applied, F4 moot). Owner answers: D2 8 px (`space-y-line`); D4 the `Eclipse` kind icon for a solar eclipse too (no amber icon, no contrast row); D5 the Events tile's line leads with the event kind icon (a deliberate exception; headings stay icon-free); D6 the forecast line stays in the answer group (`mt-line`), and only the "Next clear night" advice moves to `mt-group`; D1, D3, D7 as planned. The plan's Phase 1 now carries the contract (`eventsVerdict` / `eventsTile`, `factIcon`, `Fact` kind and size). Next: /10x-implement phase by phase.

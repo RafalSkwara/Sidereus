@@ -6,15 +6,17 @@ This change gives the `/tonight` dashboard the rhythm and the facts that ui-fact
 
 - **The tiles** become Tonight list rows on the `item` role (40 px between two tiles' contents). Each heading sits on the `line` role over its content, and an explanatory caption is its own group.
 - **The Planets tile's reason** becomes the same "why" `Fact` it is on `/tonight/planets`.
-- **The verdict's sky-event line** becomes a `Fact` with its event kind's icon, so it reads as its own fact instead of the end of the reason.
-- **The verdict's lower lines** (what to do next, the forecast's freshness) move a group away from the reason.
-- **The skeleton** stays in step tile by tile. The rhythm guard covers the dashboard files.
+- **The Events tile's line leads with the event kind's icon.** This is the owner's deliberate exception to text-led tiles; tile headings still carry no icon.
+- **The verdict's sky-event line** becomes a muted `Fact` with its event kind's icon, so it reads as its own fact instead of the end of the reason.
+- **The "Next clear night" advice** moves a group away from the answer. The forecast line stays in the answer group.
+- **The skeleton** stays in step tile by tile, and the rhythm guard covers the dashboard files.
 
-No icon goes on any tile heading (decision 2B). There is no new token and no new copy.
+There is no new token and no new copy.
 
 **Sources**
 - The research and its five charges: `research.md` (C1-C5).
-- The reverted experiment: `evidence/exp/experiment.diff`, its shots in `evidence/exp/`, and the before shots from main 42ce808 in `evidence/before/`. They were measured on a production preview (4331, fixture 4401, local Supabase) and on `/design` (dev server, 4331).
+- The reverted experiment: `evidence/exp/experiment.diff`, its shots in `evidence/exp/`, and the before shots from main 42ce808 in `evidence/before/`.
+- The plan review `reviews/plan-review.md` (F1-F10). All its findings are applied, with the owner's answers of 2026-10-15 (see "Decisions").
 
 ## Current State Analysis
 
@@ -23,430 +25,511 @@ From `research.md`, on main 42ce808 (ui-fact-rhythm #167 merged).
 **Tiles**
 - `TILE_ROW_CLASS` is `py-4 sm:py-5` (`src/components/ui/tile.ts:9`), and `TILES_GAP_CLASS` is `pt-3 sm:pt-6` (`src/components/tonight/sky-band.ts:11`).
 - The content under a tile heading is offset `mt-3`, `mt-4` or `mt-5` depending on the tile (`TonightTiles.astro:118,138,149,156,161,170,174,181`, `EventsTile.astro:25`).
-- The targets list rows are `py-1.5` (`:120`); the legend is `mt-2` and the caption `mt-3` (`:40,130`).
+- The targets rows are `py-1.5` (`:120`); the legend is `mt-2` and the caption `mt-3` (`:40,130`).
 - The Planets reason is a plain `mt-2` muted line (`:171`).
 - The nights grid is a bare `gap-2` (`:181,183`).
 - On a phone, tiles sit 32 px apart against 40 px between the focused pages' rows.
 
+**Events**
+- The Events tile's line is `eventsTileLine(events, locale)` (`src/lib/tonight/sky-events.ts:318-332`), from `events.next`, whose `kind` is on the view (`TonightSkyEvent.kind`, `:26`).
+- The verdict's line is `eventsVerdictLine` (`:340-358`), from `events.tonight[0]`; solar eclipses sort first (`:307`).
+- Neither kind reaches a component.
+
 **The verdict**
-- The event line is `<p class="mt-1 text-label font-medium text-muted-foreground" data-verdict-event>` (`VerdictCard.astro:92-96`), with no icon.
-- The kind of the event it words is on the view (`TonightSkyEvent.kind`, `src/lib/tonight/sky-events.ts:26`; `eventsVerdictLine` words `events.tonight[0]`, `:340-358`) but never reaches `VerdictCard`.
-- What to do next and the forecast line are `mt-3` under the reason (`:97,100,104`).
+- The event line is `<p class="mt-1 text-label font-medium text-muted-foreground" data-verdict-event>` (`VerdictCard.astro:92-96`).
+- What to do next and the forecast line are `mt-3` under the reason (`:97,100,104`). The forecast line hides below `sm` only when the forecast is fresh (`:64-68`).
 - `VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-59"` (`sky-band.ts:45`) is the measured EN go verdict at 360 / 640 px.
 
 **`Fact`**
-- `Fact` takes only a `FactKind`, and its icon is `FACT_ICONS[kind]` (`src/components/ui/Fact.astro:19,31`).
-- The event-kind icons are a second map in the same module (`EVENT_KIND_ICONS`, `fact-icons.ts:89-96`). The two key sets don't overlap: the fact kinds are `when` … `safety`, and the event kinds are `lunar-eclipse` … `meteor-shower`.
+- `Fact` takes only a `FactKind`, its icon is `FACT_ICONS[kind]`, and it is fixed at `text-label` (`src/components/ui/Fact.astro:19,31,37`).
+- `EVENT_KIND_ICONS` is a second map in the same module (`fact-icons.ts:89-96`), with keys disjoint from the fact kinds.
 
-**The skeleton**
+**The skeleton and the guards**
 - `TonightSkeleton.astro:39-124` hand-copies the verdict's and each tile's offsets.
-
-**Guards**
-- None of `TonightTiles`, `EventsTile`, `VerdictCard`, `TonightSkeleton` or `tile.ts` is in the rhythm guard (`src/styles/rhythm-roles.test.ts:55-100`).
-- `fact-islands.test.ts` scans only the islands' own files. `VerdictCard` reaches `TonightSkyView` as server-rendered children, so it may use `Fact`.
+- None of `TonightTiles`, `EventsTile`, `VerdictCard`, `TonightSkeleton` or `tile.ts` is in `GUARDED` (`src/styles/rhythm-roles.test.ts:51-93`).
+- The guard lets an allowance go unused, so a count that should have shrunk is not caught (review F6).
 
 **Contracts other code relies on**
-- `Tile`'s root is the `<a>`. The `/design` depth selectors `*:*:bg-accent` / `*:bg-accent` depend on it (`design.astro:641-646`).
-- The `tile-*-heading` ids and `aria-labelledby` names (`tests/e2e/tonight-dashboard.spec.ts:60-68`).
-- The targets tile keeps `<ul><li>` (`landing-screenshot.spec.ts:76-80`).
-- The markers stay: `data-tonight-tiles`, `data-events-tile-line` and `data-verdict-event`. The verdict line's text must match `VERDICT_LINE_START`, with no link or button in it (`tonight-dashboard.spec.ts:25-35,104-105`).
-- The phone first screen at 390×844 hides `[data-verdict-event]` while it measures (`tests/e2e/tonight-phone.spec.ts:66-68,73-119`).
+- `Tile`'s root is the `<a>`, which `/design`'s depth selectors (`*:*:bg-accent`, `design.astro:641-646`) depend on.
+- `tests/e2e/tonight-dashboard.spec.ts:60-68` reads the `tile-*-heading` ids and the `aria-labelledby` names.
+- `landing-screenshot.spec.ts:76-80` reads the targets tile's `<ul><li>`.
+- The markers `data-tonight-tiles`, `data-events-tile-line` (text: the none string or containing " · ", `:95-100`) and `data-verdict-event` stay. The verdict line's text must match `VERDICT_LINE_START`, with no link or button in it (`:25-35,104-105`).
+- `tests/e2e/tonight-phone.spec.ts:66-68,73-119` measures the phone first screen at 390×844, in EN only, hiding `[data-verdict-event]` while it measures.
+- The landing image `public/landing/tonight.png` is 1280×1125, set in `landing-screenshot.spec.ts:22` (`VIEWPORT`) and `src/components/Welcome.astro:34` (`SCREENSHOT`), and ends on the first tile's rule.
 
 ## Desired End State
 
 - **Tiles**
-  - Every tile row is `py-item`. Below `sm` that is 8 px taller per tile; from `sm` it is unchanged.
-  - Every tile's content sits `mt-line` under its heading, from one shared class in `tile.ts`.
-  - The targets list rows are `space-y-line`.
-  - The targets legend and caption, and the nights caption, are a second group at `mt-group`. Within it the caption follows the legend at `mt-line`.
+  - Every tile row is `py-item`: 8 px taller per tile below `sm`, unchanged from `sm`.
+  - Every tile's content sits under its heading by one shared class, `TILE_CONTENT_CLASS` (`mt-line`).
+  - The targets rows are `space-y-line`.
+  - The targets' legend and caption, and the nights caption, are a second group at `mt-group`; within it, the caption follows the legend at `mt-line`.
   - The Planets reason is `Fact kind="why" tone="muted"`.
-  - The nights grid uses `gap-x-2`, and its columns use `gap-line`.
-  - `TILES_GAP_CLASS` is `pt-line`. On a phone the first tile's heading stays where it is (8 + 20 = 12 + 16 px).
+  - When an event is next, the Events line is a `Fact` at the body size whose icon is that event's kind, with `data-events-tile-line` on its root. The "none" and "unavailable" lines stay plain text.
+  - `TILES_GAP_CLASS` is `pt-line`.
 - **The verdict**
-  - On an event night the line is a muted `Fact` at `mt-line`. Its icon is the event kind's, except a solar eclipse, which gets the amber safety icon (D4). `data-verdict-event` sits on the `Fact` root.
-  - The date → headline gap is `mt-line` (8 px, as today).
-  - What to do next and the forecast line are `mt-group`, and the second next-step line is `mt-line`.
-  - `VERDICT_MIN_HEIGHT_CLASS` is re-measured. The expectation is `min-h-42` unchanged and `sm:min-h-62` instead of `sm:min-h-59`; the measured values win.
-- **The skeleton** mirrors every tile and the verdict. At 390 and 1280 px (EN, dark, the fixture night) each skeleton tile row is within 2 px of the real row. The page's skeleton/real difference is no worse than before (−35 / −36 px).
-- **The phone first screen is unchanged.** At 390×844 the headline ends at 149 px, the Site card at 701 px and the Telescope title at 746 px, against the TabBar at 779 px (`tonight-phone.spec.ts` green, EN and PL).
-- **The rhythm guard** covers `TonightTiles`, `EventsTile`, `VerdictCard`, `TonightSkeleton` and `tile.ts`, with exact allowlists.
-- **The contrast test** pins the amber safety icon on the sky stops it can sit on.
-- **CLAUDE.md** says how a tile is spaced and that the verdict's event line is a `Fact`.
-- **`/design`** shows the verdict line with its icons, and tile specimens on the roles.
+  - On an event night, the event line is a muted `Fact` at `mt-line` with its kind's icon, solar eclipse included (`Eclipse`). `data-verdict-event` sits on the root.
+  - The date → headline gap stays 8 px, now `mt-line`.
+  - The forecast line is `mt-line`, 4 px closer than today.
+  - The weather no-go "Next clear night" advice is `mt-group`.
+  - The no-darkness lines are `mt-line`: they explain the headline.
+  - `VERDICT_MIN_HEIGHT_CLASS` is re-measured. The expectation is `min-h-42` unchanged and `sm:min-h-58`, from 236 − 4 px; the measurement decides.
+- **The skeleton** mirrors every tile and the verdict. At 390 and 1280 px (EN, dark), each skeleton tile row and the verdict container are within 2 px of the real ones. The page's skeleton/real difference is no worse than before (−35 / −36 px).
+- **The phone first screen is no worse.**
+  - On the fresh go night at 390×844, the headline ends at 149 px, the Site card at 701 px and the Telescope title at 746 px, against the TabBar at 779 px. `tonight-phone.spec.ts` checks this in EN; `dashboard.mjs --measure` checks PL by hand.
+  - On a no-forecast night (the `none` state), the verdict is measured before and after at 390 px and recorded. It is no taller, since the forecast line moves 4 px up.
+  - A weather no-go night grows by 12 px from the advice (owner, D6). That night already sits past the fold today, which is a known limit.
+- **The guards**
+  - The rhythm guard covers `tile.ts`, `TonightTiles`, `EventsTile`, `VerdictCard`, `TonightSkeleton` and `Fact`'s new nudge.
+  - Every allowance in `GUARDED` must be used exactly; an unused one fails.
+  - `factIcon` and the two event helpers have unit tests.
+- **The rules**: CLAUDE.md says how a tile is spaced, that the Events line and the verdict's event line are event `Fact`s, and the new min-height.
+- **`/design`** shows the icons and the tiles on the roles.
+- **The landing image** is recaptured at the height that ends on the first tile's rule, set in both places.
 
-Verify with the gates of each phase, `evidence/after/` (the same names as `evidence/before/`), and the whole e2e suite plus smoke on a fresh local preview.
+Verify with each phase's gates, `evidence/after/`, and the whole e2e suite plus smoke on a fresh local preview.
 
 ### Key Discoveries:
 
-- **The phone first screen does not move**: the experiment kept 149 / 701 / 746 against 779 px, EN and PL (`research.md` C2). The 33 px slack is untouched, so the spec needs no new room.
-- **`class:list` does not merge Tailwind conflicts**: `[caption, "mt-group"]` rendered `mt-line` in the experiment. Overrides go through `cn()`.
-- **`Fact` is a `div`**: inside a tile's `<a>` it goes in a `div` wrapper, never a `span`.
-- **The solar-eclipse kind icon** (lucide `Eclipse`, 16 px) reads as the Clock (`when`) beside "Tomorrow, 11:22: …" (`evidence/exp/c-verdict-event-390-en-light.jpg`, third specimen). This is the reason for D4.
-- **The amber icon is not pinned on the dark or red sky yet**: the contrast test pins `marginal` on `zenith` / `horizon` only in the `night` scope (`contrast.test.ts:125`), and on `background` in dark and light (`:89`).
-- **The landing image `public/landing/tonight.png`** (1280×1125: the verdict, the sky, the slider and the first tile) changes with the desktop verdict's +12 px. CLAUDE.md asks for a recapture after a Tonight redesign.
+- **The first screen did not move in the experiment**: 149 / 701 / 746 against 779 px, EN and PL (`research.md` C2).
+- **`class:list` does not merge Tailwind conflicts**: overrides go through `cn()` (`cn("mt-line","mt-group")` gives `mt-group`, `utils.ts:14`).
+- **`Fact` is a `div`**: inside a tile's `<a>` it goes in a `div`, never a `span`.
+- **`Fact`'s spread attributes land on its root** (`Fact.astro:27,30,35`). `data-verdict-event` and `data-events-tile-line` therefore hide and read together with the icon. The svg has no text, so `VERDICT_LINE_START` (`^…`) still matches.
+- **The text sizes differ.** A body-size line (the Events tile, `text-body` with a 24 px line) needs its 16 px icon nudged 4 px; a label line (20 px) needs 2 px. Hence `Fact`'s `size`.
 
 ## What We're NOT Doing
 
 - **No icons on tile headings** (decision 2B). The audit's "Tile gains an icon prop" is dropped.
-- **No icon on the events tile's line, the Plan line or the Moon line** (D5). The Moon keeps its disc.
-- **No new tokens and no new copy.** No i18n key changes, and `eventsVerdictLine` / `eventsTileLine` keep their strings.
-- **The area below the tiles** (`TonightContent.astro:222`: the sky-check card, the setup prompts, the eyepieces prompt) stays as is (research, Deferred).
-- **The gear row** (`GEAR_ROW_GAP_CLASS`, `GearCard`'s padding and `GEAR_CARD_MIN_HEIGHT_CLASS`) stays as is. It is first-screen geometry, already 8 px on a phone.
-- **`sky-band.ts` is not guarded.** Its band geometry (`pt-12`, `pb-10`, `-mt-16`, the slider row) is not rhythm. Only `TILES_GAP_CLASS` changes there.
-- **The headline → reason `mt-1` and the dot's nudge stay**: they are the display line's own leading and alignment. They go on the guard's allowlist.
-- **No "Edited by you" marker on the Plan tile.** D13 asked only that the tile follow the edited plan, and it already does (`TonightTiles.astro:52-64`).
-- **The page's skeleton/real difference outside the tiles** (−35 px at 390 EN) is not addressed. It is pre-existing.
+- **No icon on the Plan line or the Moon line.** The Moon keeps its disc. The Events line is the one exception (D5).
+- **No amber icon and no contrast row** (owner D4: the solar eclipse keeps `Eclipse`; "eclipse glasses only" stays in the words).
+- **No new tokens and no new copy.** `eventsVerdictLine` and `eventsTileLine` keep their strings and tests.
+- **The area below the tiles** (`TonightContent.astro:222`: the sky check, the prompts) stays as is (research, Deferred).
+- **The gear row and `GEAR_CARD_MIN_HEIGHT_CLASS`** stay as they are.
+- **`sky-band.ts` is not guarded**: its band geometry is not rhythm. Only `TILES_GAP_CLASS` and `VERDICT_MIN_HEIGHT_CLASS` change there.
+- **The headline → reason `mt-1` and the dot's nudge stay**: they are the display line's own leading. They are allowlisted.
+- **No "Edited by you" marker on the Plan tile**: D13 is already met (`TonightTiles.astro:52-64`).
+- **The skeleton/real difference outside the tiles** (−35 px at 390 EN) is pre-existing.
+- **No new first-screen e2e for PL or the fallback/no-go nights**: they are measured by hand and recorded.
 - **No change to the focused pages, the navigation (change 4) or /log, /log/progress and /gear (change 5).**
-- **No change to the not-seen Sparkles** (`NotSeenMark`). It is distinguishable from the meteor-shower `Sparkle` (research C3, observation).
 
 ## Decisions
 
-Agent defaults, waiting for the owner at plan review (the reviewer relays them in Polish). The ones marked **(owner question)** are the open UI choices; the others follow from the owner's earlier rules.
+The owner's answers of 2026-10-15 (relayed by the orchestrator) to the agent's defaults D1-D7 and to the review question (F1):
 
-- **D1. A tile's rhythm** (follows ui-fact-rhythm's roles).
-  - The row is `py-item`, like every Tonight list row.
-  - Heading → content is `line` (8 px): the heading belongs to its content.
-  - A caption that explains the whole tile is its own group (`group`, 24 px): the targets' not-seen legend with the cleared-count caption under it at `line`, and the nights caption.
-  - The Planets reason is a fact about the names, so it stays in their group at `line`.
-- **D2. The targets list** **(owner question)**: the three rows are `space-y-line`, 8 px between rows instead of today's 12 px, since they are one group. The alternative is `group` between rows (24 px), which makes the tile taller by about 32 px.
-- **D3. The tiles' first gap**: `TILES_GAP_CLASS` is `pt-line`. On a phone the first heading stays put; from `sm` it moves up 16 px, so the gear cards and the first tile are 28 px apart on every width.
-- **D4. The verdict's event icon** **(owner question)**: the event kind's icon from `EVENT_KIND_ICONS`, muted. For a solar eclipse it is instead the safety concept's amber `TriangleAlert` (`kind="safety"`, `iconClass="text-marginal"`), because the kind's `Eclipse` reads as a clock at 16 px and the line already says "eclipse glasses only". The alternative keeps `Eclipse` for every solar eclipse.
-- **D5. The events tile's line** **(owner question)**: no icon, so the dashboard stays text-led (2B) and the summary lines of Events, Plan and Moon look alike. The alternative leads it with the same kind icon as the verdict line.
-- **D6. The verdict's lower lines**: what to do next and the forecast line are a group away from the reason (`mt-group`). On a phone a fresh forecast line stays hidden, so a go night keeps its height there. From `sm` the verdict grows about 12 px, and `sm:min-h-*` is re-measured.
-- **D7. The Fact API for an event**: `Fact`'s `kind` widens to `FactKind | SkyEventKind`. The icon comes from one resolver in `fact-icons.ts` (`FACT_ICONS` for a fact kind, `EVENT_KIND_ICONS` for an event kind), and `data-fact` carries the kind. One concept, one icon still holds: an event fact's concept is its kind.
+- **D1. A tile's rhythm** (as planned).
+  - The row is `py-item`.
+  - Heading → content is `line`.
+  - An explanatory caption is its own group: the not-seen legend with the cleared-count caption at `line` under it, and the nights caption.
+  - The Planets reason stays in the names' group at `line`.
+- **D2. The targets list** (owner: 8 px): `space-y-line`.
+- **D3. The tiles' first gap** (as planned): `TILES_GAP_CLASS` = `pt-line`. On a phone the first heading stays put; from `sm` it moves up 16 px.
+- **D4. The verdict's event icon** (owner): the event kind's icon from `EVENT_KIND_ICONS`, muted, **solar eclipse included** (`Eclipse`). There is no amber `TriangleAlert`, and therefore no contrast row (review F4 drops out). "Eclipse glasses only" stays in the line's words.
+- **D5. The Events tile's line** (owner): it **leads with the event kind icon** whenever an event is next. This is a deliberate exception to text-led tiles; the tile headings still have no icon.
+  - The "none in the window" and "unavailable" lines have no event and no icon.
+  - The icon is muted, like every fact icon. The line keeps the tile's `text-body font-semibold` heading ink.
+- **D6. The verdict's lower lines** (owner, answering review F1):
+  - The forecast line stays in the answer group (`mt-line`).
+  - Only the weather no-go "Next clear night" advice moves a group down (`mt-group`), so the phone first screen does not get worse.
+  - The no-darkness lines (`returnText`, `causeText`) explain the "no darkness" headline. They are part of the answer and go to `mt-line`; the agent's reading of "only the advice".
+- **D7. Event facts** (as planned, with review F9).
+  - `Fact`'s `kind` widens to `FactKind | SkyEventKind`. One pure resolver, `factIcon`, picks from `FACT_ICONS` or `EVENT_KIND_ICONS`, and `data-fact` carries the kind.
+  - The components take an event as one value, `{ line, kind }`, from one helper, so a line without its kind cannot be expressed. There is no `why` fallback.
+  - `Fact` gains `size: "label" | "body"` (default `label`) for the Events tile's body-size line.
+
+Review findings, all applied: F1 (D6 above), F2, F3, F5-F10, plus F4 (moot under D4). The changes they caused are named where they land: the test helpers and resolver in Phase 1, the measuring script in Phase 2, the landing height in Phase 3, the runnable lines throughout, ports and stopping below, the extra e2e specs, the single event prop, and the comments and scripts.
 
 ## Implementation Approach
 
 The /10x-ui order:
 
 1. Environment/library: nothing to add.
-2. Token values: none new. The roles exist; the contract change is `Fact`'s icon resolver and the shared tile content class.
+2. Token values: none new. The contract is the pure helpers, `factIcon`, `Fact`'s kind and size, and the shared tile content class (Phase 1, first).
 3. The view: the tiles (Phase 1), then the verdict (Phase 2).
 4. The states, the rules and the gate: Phase 3.
 
-Each charge maps to a phase:
-
 | Charge | Phase(s) |
 |---|---|
-| C1 tile content offsets, Planets reason as a Fact | 1 |
+| C1 tile content offsets, Planets reason, Events icon | 1 |
 | C2 tile row on `py-item`, the tiles' gap | 1 |
-| C3 the verdict's event line as a Fact with its icon | 2 |
+| C3 the verdict's event line as a Fact | 1 (contract), 2 (verdict) |
 | C4 the verdict's lower lines, `VERDICT_MIN_HEIGHT_CLASS` | 2 |
-| C5 skeleton parity and the guard | 1 (tiles), 2 (verdict), 3 (break check) |
-
-**The guard grows with the work.** Phase 1 adds `tile.ts`, `TonightTiles`, `EventsTile` and `TonightSkeleton`, with the verdict bars' numeric steps still allowlisted. Phase 2 adds `VerdictCard` and shrinks the skeleton's allowlist to its final counts. Phase 3 runs the break check.
+| C5 skeleton parity and the guard | 1 (tiles, exact counts), 2 (verdict), 3 (break check) |
 
 **Delegation** (owner rule):
-- UI code goes to a subagent with `model: "opus"` at high effort: components, layout, `/design`, the skeleton, the guard's lists and UI e2e.
-- Non-UI code goes to `model: "sonnet"` at high effort: the `eventsVerdictKind` helper and its unit test.
-- Docs, the evidence README and screenshot capture go to `model: "sonnet"` at medium effort.
-- Screenshot judgement and the gates are the main session's.
+- UI code goes to a subagent with `model: "opus"` at high effort: `Fact`, the tiles, the verdict, the skeleton, `/design`, the guard, UI e2e and the measuring script.
+- Non-UI code goes to `model: "sonnet"` at high effort: `eventsVerdict`, `eventsTile` and their tests, `factIcon` and its test.
+- Docs, the evidence README and screenshot capture go to `model: "sonnet"` at medium effort. The main session reviews the CLAUDE.md wording.
+- The gates, the commits and the screenshot judgement are the main session's.
 
 **Every implementation brief**:
-- gives the `nvm use` prefix up front;
-- forbids web sourcing (everything needed is in `research.md`, the experiment diff and this plan);
-- names the preview port 4331 and the fixture port 4401;
+- gives the `nvm use` prefix up front (`export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use >/dev/null &&`);
+- forbids web sourcing;
+- names this agent's ports, the preview on **4331** and the fixture on **4401**;
 - says keys go inline only and `test:db` is never run;
 - says to batch while iterating: `npx astro check && npm run lint && npx vitest related <changed .ts files> --run`, with `npm test` as the gate for `.astro`/`.css` changes.
 
-**Running the e2e lists** (every phase, and the whole suite in Phase 3):
-1. Run `npm run build`, then write `dist/server/.dev.vars` with the local Supabase URL and publishable key and `FORECAST_BASE_URL=http://127.0.0.1:4401` (the build drops the file).
-2. Start `FIXTURE_PORT=4401 node tests/e2e/forecast-fixture.mjs` and `npx astro preview --port 4331`.
-3. Run `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test <specs>`, with the values from `npx supabase status -o env`, inline only.
+**Ports and servers** (review F7). This agent's ports are 4331 (preview, or `astro dev` for `/design`, never both at once) and 4401 (fixture).
+- Stop a server only through the pid listening on one of these two ports (`kill $(lsof -t -nP -iTCP:4331 -sTCP:LISTEN)`), never with a global `astro preview stop` or `astro dev stop`.
+- After a rebuild, restart the preview: a running one serves stale asset hashes, and the page renders unstyled.
 
-Stop the preview by the pid listening on 4331 (`lsof -t -iTCP:4331 -sTCP:LISTEN`), never with a global `astro preview stop`, which can reach other agents' servers. After a rebuild, restart the preview: a running one serves stale asset hashes and the page renders unstyled. `astro dev` for `/design` also uses 4331, so the dev server and the preview never run at the same time.
+**Running a preview and the e2e** (every phase, and the whole suite in Phase 3):
+1. `npm run build`, then copy the local env into `dist/server/.dev.vars` (the build drops it):
+   - `SUPABASE_URL=http://127.0.0.1:54321`;
+   - `SUPABASE_KEY=<ANON_KEY>`;
+   - `FORECAST_BASE_URL=http://127.0.0.1:4401`.
+2. `FIXTURE_PORT=4401 node tests/e2e/forecast-fixture.mjs &` and `npx astro preview --port 4331 &`.
+3. E2E, with the values from `npx supabase status -o env`, inline only:
+   ```
+   BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test <specs>
+   ```
 
-**Evidence scripts** (`evidence/scripts/`, local only, refuse a non-local `BASE_URL`):
-- `seed.mjs`: one onboarded Madrid user with six log entries. Grant it the full plan with `npm run account:plan -- <email> full`, the keys inline.
-- `dashboard.mjs <wt> <out> [themes] [locales] [viewports] [--measure]`: the full page, the fold and the tiles; with `--measure`, the first-screen boxes, the verdict, the tile rows and the skeleton.
-- `design-section.mjs <wt> <out> <section-id> …`: one `/design` section on the dev server.
+**Evidence scripts** (`evidence/scripts/`, local only, refuse a non-local `BASE_URL`; their outputs go to the session scratchpad, never into `evidence/`; review F10):
+- `seed.mjs <wt> <scratch> ui-dash`: writes `state-ui-dash.json` and `email-ui-dash.txt` to the scratchpad. Grant the full plan with `SUPABASE_URL=… SUPABASE_SECRET_KEY=… npm run account:plan -- <email> full`.
+- `dashboard.mjs <wt> <scratch>/<set> [themes] [locales] [viewports] [--measure]`: reads `state-ui-dash.json` from `<scratch>`.
+- `design-section.mjs <wt> <scratch>/<set> <section-id> …`.
+- Curated shots go into `evidence/<set>/` as JPEGs via `sips -s format jpeg -s formatOptions 45 -Z <px>` (620 px for phone tiles, 900 for desktop tiles, 1400 for full pages).
 
 ## Critical Implementation Details
 
-- **Phone spec and the event line.** `data-verdict-event` must sit on the `Fact` root, so the spec's `[data-verdict-event]{display:none}` hides the icon and the text together. The root's only text is the line, since the icon is an `aria-hidden` svg. `VERDICT_LINE_START` and "no link or button" keep holding.
-- **The min-height is measured, never computed** (`sky-band.ts:35-36`): EN go verdict on the fixture night, at 360 and 640 px, after Phase 2's verdict edits and before the skeleton edit is judged. Update the comment's arithmetic with the new numbers.
-- **`cn()` for every override** of a shared class string (the tile caption's `mt-line` against `mt-group`). `class:list` keeps both classes, and the stylesheet's order decides.
+- **Markers on the `Fact` root.** `data-verdict-event` and `data-events-tile-line` sit on the `Fact` root, whose only text is the line; the icon is an `aria-hidden` svg. This keeps the phone spec's `display:none`, `VERDICT_LINE_START`, "no link or button" and the tile line's none / " · " check holding.
+- **The min-height is measured, never computed** (`sky-band.ts:35-36`):
+  - EN go verdict, at 360 and 640 px;
+  - only when `[data-verdict-event]` is absent or hidden;
+  - with the container's `min-height` set to 0 for the measure, so a shorter verdict is not hidden by the old value;
+  - for both the real page and the skeleton.
 
-## Phase 1: The tiles on the rhythm roles
+  Redo the comment's arithmetic with the new numbers.
+- **`cn()` for every override** of a shared class string.
 
-**Delegation**: Opus subagent, high effort (tiles, skeleton rows, `/design` tile specimens, the guard's entries, e2e). Capture: Sonnet subagent, medium effort. Judgement and gates: the main session.
+## Phase 1: The shared contract and the tiles on the rhythm roles
+
+**Delegation**: §1-§2 go to a Sonnet subagent, high effort (pure helpers and their tests). §3-§9 go to an Opus subagent, high effort. Capture goes to a Sonnet subagent, medium effort. The gates, the commit and judgement are the main session's.
 
 ### Overview
 
-Every tile becomes a Tonight list row on the roles, the Planets reason becomes a `Fact`, and the skeleton's tile rows follow (C1, C2, C5 for the tiles).
+The pure contract lands first: the event helpers, `factIcon`, and `Fact`'s kind and size. Then every tile becomes a Tonight list row on the roles, the Planets reason becomes a `Fact`, the Events line leads with its kind's icon, the skeleton follows, and the guard checks exact counts (C1, C2, C5 for the tiles, the contract for C3).
 
 ### Changes Required:
 
-#### 1. The tile's shared classes
+#### 1. The event helpers
+
+**File**: `src/lib/tonight/sky-events.ts` (+ `sky-events.test.ts`)
+
+**Intent**: Each component gets an event's line and kind from one call, so the text and the icon always name the same event (D7, review F9).
+
+**Contract**:
+- `export interface WordedEvent { line: string; kind: SkyEventKind }`.
+- `eventsVerdict(events, locale): WordedEvent | null`: `eventsVerdictLine`'s text with `events.tonight[0].kind`, and `null` exactly when `eventsVerdictLine` is `null`.
+- `eventsTile(events, locale): { line: string; kind: SkyEventKind | null }`: `eventsTileLine`'s text with `events.next?.kind`, and `kind: null` for the none and unavailable lines.
+- The doc comments tie each one to its line function. The existing functions and their tests are unchanged.
+- Unit tests:
+  - `eventsVerdict`: no event (`null`); one meteor shower (its line and `"meteor-shower"`); a solar eclipse first among several (`"solar-eclipse"`, with the line still saying "+N more"); an unavailable block (`null`).
+  - `eventsTile`: next is a pairing (`"pairing"`); none in the window (`null` kind, the none line); unavailable (`null` kind, the unavailable line).
+
+#### 2. One icon resolver
+
+**File**: `src/components/ui/fact-icons.ts` (+ new `fact-icons.test.ts`)
+
+**Intent**: One pure mapping decides every fact's icon, events included, and a test pins it (review F2).
+
+**Contract**:
+- `export type FactSubject = FactKind | SkyEventKind`.
+- `export function factIcon(subject: FactSubject): LucideIcon`: `FACT_ICONS` for a fact kind, else `EVENT_KIND_ICONS`.
+- The header comment says event facts use the kind's icon, the verdict line and the Events tile included (D4, D5).
+- Tests:
+  - every `FACT_KINDS` entry resolves to `FACT_ICONS[k]`;
+  - every key of `EVENT_KIND_ICONS` (six) resolves to its icon;
+  - `"solar-eclipse"` resolves to lucide `Eclipse` (D4);
+  - the two key sets are disjoint.
+
+#### 3. `Fact`'s kind and size
+
+**File**: `src/components/ui/Fact.astro`
+
+**Intent**: A `Fact` can state an event (D7) at the label or the body size (D5).
+
+**Contract**:
+- `kind: FactSubject`, with the icon from `factIcon(kind)` and `data-fact={kind}`.
+- `size?: "label" | "body"` (default `label`). It sets the root's `text-label` or `text-body`, and the icon nudge `mt-0.5` (label) or `mt-1` (body).
+- The `iconClass` rule is unchanged (only `see` and `safety`).
+- The guard entry becomes `{ "mt-0.5": 1, "mt-1": 1 }`.
+- `fact-islands.test.ts` stays green.
+
+#### 4. The tile's shared classes
 
 **File**: `src/components/ui/tile.ts`
 
-**Intent**: The row takes the `item` role, and one exported class names the heading → content gap, so tiles, the skeleton and `/design` share it.
+**Intent**: The row takes the `item` role, and one class names the heading → content gap for tiles, skeleton and `/design` (D1).
 
 **Contract**:
 - `TILE_ROW_CLASS` = `min-h-11 border-b border-border px-4 py-item`.
-- A new `TILE_CONTENT_CLASS` = `mt-line`, applied to the first content element under the heading.
-- `TILE_CUE_CLASS` keeps `-my-0.5` (allowlisted). The header comment says what each role does in a tile (D1).
+- A new `TILE_CONTENT_CLASS` = `mt-line`.
+- `TILE_CUE_CLASS` keeps `-my-0.5`. The header comment states the tile rhythm.
 
-#### 2. The tiles' gap
+#### 5. The tiles' gap
 
 **File**: `src/components/tonight/sky-band.ts`
 
-**Intent**: The gap above the first tile takes the `line` role, now that the tile's own padding is `py-item` (D3).
+**Intent**: The gap above the first tile takes the `line` role (D3).
 
-**Contract**: `TILES_GAP_CLASS` = `pt-line`, plus its comment. Nothing else in the file changes.
+**Contract**: `TILES_GAP_CLASS` = `pt-line`, plus its comment.
 
-#### 3. The tiles
+#### 6. The tiles
 
 **Files**: `src/components/tonight/TonightTiles.astro`, `src/components/tonight/EventsTile.astro`
 
-**Intent**: Every tile's content follows D1.
+**Intent**: Every tile's content follows D1 and D2, and the Events line follows D5.
 
 **Contract**:
-- **Heading → content**: the first content element of each tile takes `TILE_CONTENT_CLASS` in place of `mt-3` / `mt-4` / `mt-5`. That covers the targets `<ul>`, the no-targets line, Events, Plan, both Moon branches, the Planets names and none line, and the nights grid.
-- **The targets tile**:
-  - The `<ul>` is `space-y-line`, and the `<li>` loses `py-1.5` (D2).
-  - `NotSeenLegend` gets `class="mt-group"`.
-  - The cleared-count caption is `mt-line` after the legend, or `mt-group` when no legend shows, merged with `cn()`.
-- **The nights tile**:
-  - The grid is `grid grid-cols-7 items-end gap-x-2`.
-  - Each column is `flex flex-col items-center gap-line`.
-  - The caption is `mt-group`, merged with `cn()`.
-- **The Planets tile**: the reason is `<div class="mt-line"><Fact kind="why" tone="muted"><p>…</p></Fact></div>`, a `div` because `Fact` is a block.
-- **What stays**: the targets `<ul><li>`, every id, `aria-labelledby` and `data-*` marker, and the sr-only spans.
-- The header comment notes the roles.
+- **Heading → content**: each tile's first content element takes `TILE_CONTENT_CLASS` in place of `mt-3` / `mt-4` / `mt-5`. That covers the targets `<ul>`, the no-targets line, Plan, both Moon branches, the Planets names and none line, the nights grid, and the Events line.
+- **Targets**:
+  - the `<ul>` is `space-y-line`, and the `<li>` loses `py-1.5`;
+  - `NotSeenLegend class="mt-group"`;
+  - the caption is `mt-line` after the legend, else `mt-group`, through `cn()`.
+- **Nights**: the grid is `grid grid-cols-7 items-end gap-x-2`, each column `flex flex-col items-center gap-line`, and the caption `mt-group` through `cn()`.
+- **Planets**: the reason is `<div class="mt-line"><Fact kind="why" tone="muted"><p>…</p></Fact></div>`.
+- **Events** (`EventsTile`): `const { line, kind } = eventsTile(events, locale)`.
+  - With a `kind`: `<div class={TILE_CONTENT_CLASS}><Fact kind={kind} size="body" data-events-tile-line><p class="font-semibold break-words text-heading">{line}</p></Fact></div>`.
+  - Without one: today's span with `TILE_CONTENT_CLASS` and `data-events-tile-line`.
+  - The header comment notes the exception to text-led tiles.
+- **What stays**: the targets `<ul><li>`, every id, `aria-labelledby`, the `data-*` markers and the sr-only spans. The `TonightTiles` header comment notes the roles and the Events exception.
 
-#### 4. The skeleton's tile rows
+#### 7. The skeleton's tile rows
 
 **File**: `src/components/tonight/TonightSkeleton.astro`
 
-**Intent**: The six tile rows mirror the real ones offset by offset, from the same classes.
+**Intent**: The six tile rows mirror the real ones offset by offset.
 
 **Contract**:
 - Each row's first bar after the heading bar uses `TILE_CONTENT_CLASS`.
-- The targets rows are `space-y-line` with no `py-1.5`, the legend bar is `mt-group` and the caption bar `mt-line`.
+- Targets: `space-y-line` without `py-1.5`, the legend bar `mt-group`, the caption bar `mt-line`.
+- Events: the line bar stays a `text-body` bar. The icon sits inside the line's height, so no extra room is needed (checked in 1.7).
 - The Planets reason bar is `mt-line`.
-- The nights grid is `gap-x-2`, its columns `gap-line`, and its caption bars `mt-group` then `mt-0`.
-- The verdict bars stay as they are until Phase 2.
+- Nights: `gap-x-2`, columns `gap-line`, caption bars `mt-group` then `mt-0`.
+- The verdict bars wait for Phase 2.
 
-#### 5. `/design`'s tile specimens
+#### 8. `/design`
 
-**File**: `src/pages/design.astro` (the Tile specimens, about `:2495-2530`)
+**File**: `src/pages/design.astro` (the Tile specimens near `:2495-2530`, the EventsTile specimens near `:2796-2830`)
 
-**Intent**: The hand-built Tile specimens and the skeleton row show the same rhythm as the real tiles.
+**Intent**: The specimens show the tile rhythm and the Events icon.
 
-**Contract**: their inner `mt-2` / `mt-3` spans use `TILE_CONTENT_CLASS` (and `mt-line` for a second line). Each tile's root stays the `<a>`, so the depth selectors keep working.
+**Contract**:
+- The hand-built Tile specimens' content spans and the skeleton row's bar use `TILE_CONTENT_CLASS`. Each tile's root stays the `<a>`.
+- The EventsTile specimens render through `EventsTile` unchanged, so they pick the icon up. Their prose names the exception.
 
-#### 6. The guard
+#### 9. The guard, exact counts
 
 **File**: `src/styles/rhythm-roles.test.ts`
 
-**Intent**: The converted files can't slip back to numeric steps (C5).
+**Intent**: The converted files cannot slip back, and an allowance that is no longer used fails (review F6).
 
-**Contract**: `GUARDED` gains:
-- `components/ui/tile.ts`: `{ "-my-0.5": 1 }`.
-- `components/tonight/TonightTiles.astro`: `{}`.
-- `components/tonight/EventsTile.astro`: `{}`.
-- `components/tonight/TonightSkeleton.astro`: its remaining verdict-bar and slow-hint steps, counted exactly (expected: `mt-2` 1, `mt-1` 1, `mt-3` 1 for the verdict bars until Phase 2, and `mt-6` 1 for the slow hint).
+**Contract**:
+- A new test asserts that, for every file in `GUARDED`, each allowance's count equals its uses, with the message naming the file, the token and both numbers. Existing entries whose counts are loose are corrected in this phase.
+- `GUARDED` gains:
+  - `components/ui/tile.ts`: `{ "-my-0.5": 1 }`;
+  - `components/tonight/TonightTiles.astro`: `{}`;
+  - `components/tonight/EventsTile.astro`: `{}`;
+  - `components/tonight/TonightSkeleton.astro`: the verdict bars' `mt-2`, `mt-1`, `mt-3` (1 each, until Phase 2) and the slow hint's `mt-6` (1), with exact counts.
 
-Each entry has a one-line comment, as the existing ones do.
+  Each entry has a one-line comment.
+
+#### 10. E2E for the Events icon
+
+**File**: `tests/e2e/tonight-dashboard.spec.ts`
+
+**Intent**: Pin the Events icon on every run that has an event in the window (on the fixture's real date, the Orionids are next today).
+
+**Contract**: where the test reads `[data-events-tile-line]`:
+- when its text is not the none string, assert it has a `data-fact` attribute equal to one of the six event kinds and exactly one `svg`;
+- when it is the none string, assert it has no `svg`.
+
+The header comment is updated.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
+- The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts`
 - Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- The rhythm guard covers `tile.ts`, `TonightTiles`, `EventsTile` and `TonightSkeleton` and passes
+- The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts`
+- No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing
 - The build passes: `npm run build`
-- The phase's e2e pass on a fresh preview: `tonight-dashboard`, `tonight-phone`, `seven-night-planner`, `sky-events`, `planets-on-tonight`, `telescope-selector`, `offline`
-- The hardcoded-value scan over the dashboard files still finds 0
+- The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`
 
 #### Manual Verification:
 
-- `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): the first-screen boxes match the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
-- The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg` (main session's judgement; shots in `evidence/after/`)
+- `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
+- The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`)
 
-**Implementation Note**: After the automated checks pass, the main session judges the shots and continues to Phase 2. The owner's checks are deferred to the plan's end (autonomous flow).
+**Implementation Note**: After the gates pass, the main session judges the shots, commits the phase and continues to Phase 2 (autonomous flow; the owner's checks come at the end).
 
 ---
 
 ## Phase 2: The verdict's event line as a Fact, and the verdict's rhythm
 
-**Delegation**: the `eventsVerdictKind` helper and its test go to a Sonnet subagent, high effort, first. The Fact API, `VerdictCard`, the skeleton's verdict bars, the min-height re-measure, the contrast pin, `/design` and e2e go to an Opus subagent, high effort. Capture: Sonnet subagent, medium effort. Judgement and gates: the main session.
+**Delegation**: an Opus subagent, high effort, for the verdict, the call sites, the skeleton's verdict bars, the measuring script's 360/640 viewports, `/design`, the guard and e2e. Its brief says that mid-phase it must build, start the preview on 4331 with the fixture on 4401, and use the seeded `ui-dash` user to re-measure. Capture goes to a Sonnet subagent, medium effort. The gates, the commit and judgement are the main session's.
 
 ### Overview
 
-The event line becomes a muted `Fact` with its kind's icon (D4, D7), the verdict's lower lines move a group away (D6), and the min-height and skeleton follow (C3, C4, C5 for the verdict).
+The event line becomes a muted `Fact` with its kind's icon (D4, D7). The advice moves a group away, while the forecast line stays in the answer group (D6). The min-height and the skeleton follow (C3, C4, C5 for the verdict).
 
 ### Changes Required:
 
-#### 1. The event's kind for the verdict line
-
-**File**: `src/lib/tonight/sky-events.ts` (+ `sky-events.test.ts`)
-
-**Intent**: The verdict gets the kind of the same event its line words, from one place, so the text and the icon can't name two different events.
-
-**Contract**:
-- `eventsVerdictKind(events: TonightSkyEvents | null): SkyEventKind | null` returns `events.tonight[0]?.kind`, and `null` when `eventsVerdictLine` returns `null`.
-- Its doc comment ties it to `eventsVerdictLine`.
-- Unit tests cover:
-  - a night with no event: `null`;
-  - one meteor shower: `"meteor-shower"`;
-  - a solar eclipse sorted first among several: `"solar-eclipse"`;
-  - an unavailable block (`null`): `null`.
-- `eventsVerdictLine` is untouched.
-
-#### 2. One icon resolver for facts and events
-
-**Files**: `src/components/ui/fact-icons.ts`, `src/components/ui/Fact.astro`
-
-**Intent**: `Fact` can state an event as a fact, with the icon still coming from the one map (D7).
-
-**Contract**:
-- `fact-icons.ts` exports `factIcon(kind: FactKind | SkyEventKind): LucideIcon` (`FACT_ICONS` first, then `EVENT_KIND_ICONS`) and the union type.
-- `Fact`'s `kind` prop takes the union and uses `factIcon`. `data-fact` is the kind, as today.
-- The comments are updated, including the `iconClass` rule (still only `see` and `safety`).
-- `fact-islands.test.ts` stays green.
-
-#### 3. The verdict
+#### 1. The verdict
 
 **File**: `src/components/tonight/VerdictCard.astro`
 
-**Intent**: The event line is its own fact, and the verdict's lines follow the roles (D4, D6).
+**Intent**: The event line is its own fact, and the verdict's lines follow the roles (D4, D6, review F9).
 
 **Contract**:
-- A new optional prop `eventKind?: SkyEventKind | null`.
-- The event line renders only when `event` is set, as `<div class="mt-line"><Fact …data-verdict-event><p class="font-medium">{event}</p></Fact></div>`, `tone="muted"`. It takes `kind={eventKind}` when one is known; for `"solar-eclipse"` it takes `kind="safety"` with `iconClass="text-marginal"` (D4). With no kind it falls back to `kind="why"`.
+- The `event` prop becomes `event?: WordedEvent | null`, replacing the string.
+- With an event: `<div class="mt-line"><Fact kind={event.kind} tone="muted" data-verdict-event><p class="font-medium">{event.line}</p></Fact></div>`.
 - The h2 is `mt-line`.
-- The weather no-go `nextText` and the no-darkness `returnText` are `mt-group`, `causeText` is `mt-line`, and the forecast line is `mt-group`.
+- Weather no-go: `nextText` is `mt-group`.
+- No darkness: `returnText` and `causeText` are `mt-line`.
+- The forecast line is `mt-line`.
 - The reason's `mt-1` and the dot's `mt-2.5 sm:mt-3.5` stay.
-- The header comment is updated (the line is a `Fact`, no reserved room, F3 still holds).
+- The header comment is updated: the event line is a `Fact` with its kind's icon, so besides the dot it carries one muted icon; no reserved room, F3 still holds; the D6 groups.
 
-#### 4. The two call sites
+#### 2. The two call sites
 
 **File**: `src/components/tonight/TonightContent.astro`
 
-**Intent**: Both `VerdictCard`s get the kind.
+**Intent**: Both `VerdictCard`s get the worded event.
 
-**Contract**: `const eventKind = view ? eventsVerdictKind(view.skyEvents) : null;` beside `eventLine`, passed as `eventKind={eventKind}` at both call sites (`:139`, `:157`).
+**Contract**: `const verdictEvent = view ? eventsVerdict(view.skyEvents, locale) : null;` replaces `eventLine`, and both call sites (`:139`, `:157`) pass `event={verdictEvent}`.
 
-#### 5. The min-height and the skeleton's verdict bars
+#### 3. The measuring script and the re-measure
 
-**Files**: `src/components/tonight/sky-band.ts`, `src/components/tonight/TonightSkeleton.astro`
+**Files**: `context/changes/ui-dashboard-tiles/evidence/scripts/dashboard.mjs`, `src/components/tonight/sky-band.ts`
 
-**Intent**: The skeleton paints the verdict's new height, so the swap doesn't jump (C4, C5).
+**Intent**: Measure the min-height the way its rule says, for the page and the skeleton (review F3).
 
 **Contract**:
-- Re-measure the EN go verdict at 360 and 640 px and set `VERDICT_MIN_HEIGHT_CLASS` to the measured steps (expected `min-h-42 sm:min-h-62`), with the comment's arithmetic redone.
-- The skeleton's headline bar is `mt-line` and its forecast bar `mt-group`. The reason bar keeps `mt-1`.
-- The skeleton's guard entry shrinks to `mt-1` 1 and `mt-6` 1 (exact counts).
+- `dashboard.mjs` gains the viewports `w360` (360×780) and `w640` (640×900), 2x.
+- With `--measure` it also prints the verdict container's natural height (with `min-height: 0` injected) on the real page and on the skeleton, and `eventLine` (the number must be read with `eventLine=0`, or with the line hidden).
+- `VERDICT_MIN_HEIGHT_CLASS` takes the measured EN go values (expected `min-h-42 sm:min-h-58`), and the comment's arithmetic is redone with the measurement date.
 
-#### 6. The contrast pin for the amber icon
+#### 4. The skeleton's verdict bars
 
-**File**: `src/styles/contrast.test.ts`
+**File**: `src/components/tonight/TonightSkeleton.astro`
 
-**Intent**: The solar eclipse's amber icon on the sky is held to the non-text floor in every theme it can show in (D4).
+**Intent**: The skeleton paints the verdict's new geometry, so the swap does not jump.
 
-**Contract**: one row `{ themes: [...DARK_LIGHT, "red", "night"], fg: ["marginal"], bg: ["zenith", "horizon", ...DUSK], floor: 3 }`, with a comment. If a theme fails, D4 falls back to the kind icon for that case: the implementer stops and reports to the main session, never adjusts a token.
+**Contract**:
+- The headline bar is `mt-line`, and the forecast bar (`max-sm:hidden`) is `mt-line`. The reason bar keeps `mt-1`.
+- The guard entry shrinks to `{ "mt-1": 1, "mt-6": 1 }`. The exact-count test fails if it doesn't.
 
-#### 7. `/design`
+#### 5. `/design`
 
-**Files**: `src/components/design/event-samples.ts`, `src/pages/design.astro` (the "VerdictCard: the sky event line" section, `:2146-2210`)
+**Files**: `src/components/design/event-samples.ts`, `src/pages/design.astro` (the "VerdictCard: the sky event line" section near `:2146-2210`)
 
 **Intent**: The specimens show the icons the dashboard shows.
 
 **Contract**:
-- `verdictLines` entries carry `kind` (from `eventsVerdictKind` on each sample).
-- Every event specimen passes `eventKind`, including the panorama one.
-- The section's prose names the icon rule (the kind's icon; the amber safety icon for a solar eclipse).
+- `verdictLines` become `{ label: string; event: WordedEvent | null }`, from `eventsVerdict` on each sample.
+- Every event specimen passes `event`, the panorama one included.
+- The section's prose names the icon rule: the kind's icon, solar eclipse included.
 
-#### 8. The guard and e2e
+#### 6. The guard and e2e
 
 **Files**: `src/styles/rhythm-roles.test.ts`, `tests/e2e/tonight-dashboard.spec.ts`, `tests/e2e/tonight-phone.spec.ts`
 
-**Intent**: The verdict stays on the roles, and the line's icon is pinned where a test can see it.
+**Intent**: The verdict stays on the roles, and its icon is pinned where a run can see it.
 
 **Contract**:
 - `GUARDED` gains `components/tonight/VerdictCard.astro`: `{ "mt-1": 1, "mt-2.5": 1, "sm:mt-3.5": 1 }`.
-- `tonight-dashboard.spec.ts`: on an event night (the existing conditional branch), assert that `[data-verdict-event]` has a `data-fact` attribute and exactly one `svg`. Its text and the no-link check are unchanged.
-- `tonight-phone.spec.ts`: the header comment notes that the hidden line is now a `Fact` (icon included). Its assertions are unchanged.
+- `tonight-dashboard.spec.ts`, in the existing event-night branch: `[data-verdict-event]` has a `data-fact` equal to one of the six event kinds and exactly one `svg`.
+- `tonight-phone.spec.ts`: the header comment notes that the hidden line is a `Fact`, icon included. Its assertions are unchanged.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- `eventsVerdictKind` unit tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts`
 - Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- The contrast test passes with the amber row
-- The rhythm guard covers `VerdictCard` and the skeleton's final counts, and passes
+- The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts`
 - The build passes: `npm run build`
-- The phase's e2e pass on a fresh preview: `tonight-dashboard`, `tonight-phone`, `sky-events`, `tonight-sky`, `red-night-mode`, `offline`
+- The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`
 
 #### Manual Verification:
 
-- `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go) and the values are recorded in `evidence/README.md`; the skeleton and the real verdict match within 2 px at 390 and 1280 px
-- The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact, with the amber icon on the solar eclipse
+- `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px
+- The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1)
+- The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included
 
 Shots: `evidence/after/c-verdict-event-*` against `evidence/before/`.
 
-**Implementation Note**: After the automated checks pass, the main session judges the shots and continues to Phase 3.
+**Implementation Note**: After the gates pass, the main session judges the shots, commits the phase and continues to Phase 3.
 
 ---
 
 ## Phase 3: Rules, the gate, the landing image and the whole suite
 
-**Delegation**: the guard's break check, the whole e2e suite, smoke and judgement go to the main session. CLAUDE.md, the comments, the after-matrix capture, the landing recapture and the evidence README go to a Sonnet subagent, medium effort.
+**Delegation**: the break check, the whole e2e suite, smoke and judgement go to the main session. CLAUDE.md, the comments, the after-matrix capture, the landing recapture and the evidence README go to a Sonnet subagent, medium effort; the main session reviews the CLAUDE.md wording.
 
 ### Overview
 
-Prove the guard bites, write the rule down, record the after state, refresh the landing image, and run everything the way CI does (the lesson "Run the whole e2e suite before a PR").
+Prove the guard bites, write the rule down, record the after state, refresh the landing image at the right height, and run everything the way CI does (the lesson "Run the whole e2e suite before a PR").
 
 ### Changes Required:
 
 #### 1. The guard's break check
 
-**Files**: worktree only, restored afterwards
+**Files**: worktree only, on a clean, committed tree; restored afterwards
 
 **Intent**: Show the guard fails on the dashboard files.
 
-**Contract**: add `mt-4` in `TonightTiles.astro`, `space-y-3` in `TonightSkeleton.astro` and a second `mt-1` in `VerdictCard.astro`. `npm test` must fail in `rhythm-roles.test.ts` with each file:line. Restore with `git checkout --` and get green again. Record the output in `evidence/README.md`.
+**Contract**:
+- Add `mt-4` in `TonightTiles.astro`, `space-y-3` in `TonightSkeleton.astro` and a second `mt-1` in `VerdictCard.astro`, then run `npx vitest run src/styles/rhythm-roles.test.ts`. It must fail with each file:line.
+- Restore with `git checkout -- src/components/tonight/TonightTiles.astro src/components/tonight/TonightSkeleton.astro src/components/tonight/VerdictCard.astro`, never a pathless checkout. The guard is green again.
+- Then drop one allowance's use (remove the slow hint's `mt-6` from the skeleton): the exact-count test must fail. Restore the same way.
+- Record both outputs in `evidence/README.md`.
 
 #### 2. The rules
 
-**File**: `CLAUDE.md` (UI (Nightfall): Tokens, Components, Tonight's sky, Phone first)
+**File**: `CLAUDE.md` (UI (Nightfall): Tokens, Components, Tonight's sky, Phone first; the S-07 paragraph)
 
-**Intent**: The next agent spaces a tile and words the verdict's event line the same way.
+**Intent**: The next agent spaces a tile and states an event the same way.
 
 **Contract**:
-- **Tokens**: the guarded list names the dashboard files.
-- **Components**: `Fact`'s kind may be an event kind (`factIcon`), and the verdict's event line is a muted `Fact` with the kind's icon (the amber safety icon for a solar eclipse).
-- **Tonight's sky / dashboard**: a tile is a `py-item` row, its content `TILE_CONTENT_CLASS` (`mt-line`) under the heading, and an explanatory caption is a group; there are no icons on tile headings.
-- **Phone first**: the new `VERDICT_MIN_HEIGHT_CLASS` values and the date they were measured.
-- The S-07 paragraph's sentence on the verdict line ("one muted plain-text line") is updated to the `Fact`.
+- **Tokens**: the guarded list names the dashboard files, and allowances are exact.
+- **Components**:
+  - `Fact`'s kind may be an event kind (`factIcon`), and its `size` may be `body`.
+  - "The event kind icon beside an event's name keeps heading ink" is narrowed to the Sky events row's title. The verdict line and the Events tile use muted event icons.
+- **Tonight's sky / dashboard**:
+  - a tile is a `py-item` row, with its content under the heading through `TILE_CONTENT_CLASS` (`mt-line`), and an explanatory caption is a group;
+  - no icons on tile headings; the Events line leads with its kind's icon (the one exception).
+- **Phone first**: the new `VERDICT_MIN_HEIGHT_CLASS` values and their date. The first-screen invariant holds for the fresh go night; weather no-go nights are a known limit.
+- **S-07 paragraph**: "one muted plain-text line" becomes the muted `Fact` with its kind's icon, and "`VERDICT_MIN_HEIGHT_CLASS` and the skeleton keep today's height" becomes the re-measured values.
 
 #### 3. The after matrix, the landing image and the evidence README
 
-**Files**: `context/changes/ui-dashboard-tiles/evidence/after/`, `evidence/README.md`, `public/landing/tonight.png`
+**Files**: `evidence/after/`, `evidence/README.md`, `public/landing/tonight.png`, `tests/e2e/landing-screenshot.spec.ts`, `src/components/Welcome.astro`
 
-**Intent**: Record the change against the before shots, and keep the landing's picture of Tonight current.
+**Intent**: Record the change against the before shots, and keep the landing's picture ending on the first tile's rule (review F5).
 
 **Contract**:
-- `dashboard.mjs` over dark / light / red × EN / PL × phone / desktop (plus 320 px for EN dark and PL dark), and `design-section.mjs c-verdict-event`, downscaled JPEGs with the before names.
-- `CAPTURE_LANDING=1 … npx playwright test landing-screenshot`, keeping its size.
-- The README lists the folders, the scripts, the measurements (first screen, tile rows, skeleton, min-height) and the break check.
+- `dashboard.mjs` over dark / light / red × EN / PL × phone / desktop (plus 320 px for EN dark and PL dark), the phone fold included, and `design-section.mjs c-verdict-event`. Downscaled JPEGs, with the before names.
+- **The landing image**:
+  - Measure the y of the first tile's bottom rule at 1280 px on a night without `[data-verdict-event]` (check it first).
+  - Set the height in `landing-screenshot.spec.ts:22` (`VIEWPORT`) and `Welcome.astro:34` (`SCREENSHOT`); the expectation is about 1105.
+  - Recapture with `CAPTURE_LANDING=1 BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test landing-screenshot`.
+- **The README**: the folders, the scripts, the measurements (first screen EN and PL, tile rows, skeleton, the min-height at 360/640, the `none` night) and the break check.
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- The guard's break check fails as expected on the three files and is green after the restore
-- The whole e2e suite passes on a fresh local preview, the way CI runs it: `npm run test:e2e` (counts recorded)
-- Smoke passes: `npm run smoke` with the local keys inline
+- The guard's break check fails on the three files and on the unused allowance, and is green after restoring exactly those files: `npx vitest run src/styles/rhythm-roles.test.ts`
+- The whole e2e suite passes on a fresh build and preview (4331/4401), the way CI runs it: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` (counts recorded)
+- Smoke passes: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run smoke`
 - Types, lint, unit suite and build pass on the final tree: `npx astro check && npm run lint && npm test && npm run build`
 
 #### Manual Verification:
 
-- The owner accepts the dashboard in dark, light and red, EN and PL, at 390 and 1280 px from `evidence/after/` against `evidence/before/`, including the verdict line specimens and the new landing image
+- The agent's own check of the after shots (EN/PL, dark/light/red, 390 px including the phone first screen, and desktop) against `evidence/before/`, recorded in `evidence/README.md`
+- The owner accepts the dashboard, the verdict line specimens and the new landing image from `evidence/after/`
 
 ---
 
@@ -454,26 +537,30 @@ Prove the guard bites, write the rule down, record the after state, refresh the 
 
 ### Unit Tests:
 
-- `eventsVerdictKind`: no event, one shower, a solar eclipse first among several, an unavailable block.
-- The rhythm guard over the five new files, and the break check.
-- The contrast row for `marginal` on the sky stops.
-- `fact-islands.test.ts` and the `i18n` parity stay green (no new keys).
+- `eventsVerdict` and `eventsTile`: their kinds and lines, null and unavailable cases, a solar eclipse first.
+- `factIcon`: every fact kind, every event kind, the solar eclipse's `Eclipse`, disjoint keys.
+- The rhythm guard over the six new or changed entries, the exact-count test, and the break check.
+- `fact-islands.test.ts` and the i18n parity stay green (no new keys).
 
 ### Integration Tests:
 
-- `tonight-phone.spec.ts`: the first screen at 390×844 (unchanged values), and no sideways scroll at 320 and 375 px in EN and PL.
-- `tonight-dashboard.spec.ts`: the tile names and hrefs, the events tile line, and on an event night the verdict line's text, the absence of any link or button, `data-fact` and one svg.
+- `tonight-phone.spec.ts`: the first screen at 390×844 in EN (unchanged values), and no sideways scroll at 320 and 375 px in EN and PL.
+- `tonight-dashboard.spec.ts`:
+  - the tile names and hrefs;
+  - the Events line's icon and kind (any day with an event in the window), or no icon on the none line;
+  - on an event night, the verdict line's text, no link or button, its `data-fact` and its one svg.
+- `planets-on-tonight` and `what-to-expect` cover `Fact`'s focused-page uses after the API change.
 - The whole suite and smoke in Phase 3.
 
 ### Manual Testing Steps:
 
-1. Open `/tonight` at 390 px in dark, light and red (EN, PL): the tiles are 40 px apart, each heading sits close over its content, and the Planets reason has its Info icon.
-2. Open `/design` → "VerdictCard: the sky event line": each line has its icon on its own line under the reason; the solar eclipse shows the amber triangle.
-3. Throttle the network and reload `/tonight`: the skeleton's tile rows and the verdict don't jump when the island arrives.
+1. Open `/tonight` at 390 px in dark, light and red (EN, PL). The tiles are 40 px apart, each heading sits close over its content, the Events line leads with the event's icon, and the Planets reason has its Info icon.
+2. Open `/design` → "VerdictCard: the sky event line". Each line has its kind's icon, solar eclipse included.
+3. Throttle the network and reload `/tonight`. The tiles and the verdict don't jump when the island arrives.
 
 ## Performance Considerations
 
-None: no new requests or islands. The verdict gains one svg on event nights.
+None: no new requests or islands. One svg more on the Events line, and one on the verdict on event nights.
 
 ## Migration Notes
 
@@ -482,6 +569,7 @@ None.
 ## References
 
 - Research: `context/changes/ui-dashboard-tiles/research.md`
+- Plan review: `context/changes/ui-dashboard-tiles/reviews/plan-review.md`
 - Experiment: `context/changes/ui-dashboard-tiles/evidence/exp/experiment.diff`
 - Umbrella audit: `context/changes/ui-refine/audit.md`
 - The focused pages' contract: `context/changes/ui-fact-rhythm/plan.md` (D1, D4, F7)
@@ -491,46 +579,47 @@ None.
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
-### Phase 1: The tiles on the rhythm roles
+### Phase 1: The shared contract and the tiles on the rhythm roles
 
 #### Automated
 
-- [ ] 1.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [ ] 1.2 The rhythm guard covers `tile.ts`, `TonightTiles`, `EventsTile` and `TonightSkeleton` and passes
-- [ ] 1.3 The build passes: `npm run build`
-- [ ] 1.4 The phase's e2e pass on a fresh preview: `tonight-dashboard`, `tonight-phone`, `seven-night-planner`, `sky-events`, `planets-on-tonight`, `telescope-selector`, `offline`
-- [ ] 1.5 The hardcoded-value scan over the dashboard files still finds 0
+- [ ] 1.1 The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts`
+- [ ] 1.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
+- [ ] 1.3 The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [ ] 1.4 No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing
+- [ ] 1.5 The build passes: `npm run build`
+- [ ] 1.6 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`
 
 #### Manual
 
-- [ ] 1.6 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): the first-screen boxes match the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
-- [ ] 1.7 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg` (main session's judgement; shots in `evidence/after/`)
+- [ ] 1.7 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
+- [ ] 1.8 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`)
 
 ### Phase 2: The verdict's event line as a Fact, and the verdict's rhythm
 
 #### Automated
 
-- [ ] 2.1 `eventsVerdictKind` unit tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts`
-- [ ] 2.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [ ] 2.3 The contrast test passes with the amber row
-- [ ] 2.4 The rhythm guard covers `VerdictCard` and the skeleton's final counts, and passes
-- [ ] 2.5 The build passes: `npm run build`
-- [ ] 2.6 The phase's e2e pass on a fresh preview: `tonight-dashboard`, `tonight-phone`, `sky-events`, `tonight-sky`, `red-night-mode`, `offline`
+- [ ] 2.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
+- [ ] 2.2 The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [ ] 2.3 The build passes: `npm run build`
+- [ ] 2.4 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`
 
 #### Manual
 
-- [ ] 2.7 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go) and the values are recorded in `evidence/README.md`; the skeleton and the real verdict match within 2 px at 390 and 1280 px
-- [ ] 2.8 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact, with the amber icon on the solar eclipse
+- [ ] 2.5 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px
+- [ ] 2.6 The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1)
+- [ ] 2.7 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included
 
 ### Phase 3: Rules, the gate, the landing image and the whole suite
 
 #### Automated
 
-- [ ] 3.1 The guard's break check fails as expected on the three files and is green after the restore
-- [ ] 3.2 The whole e2e suite passes on a fresh local preview, the way CI runs it: `npm run test:e2e` (counts recorded)
-- [ ] 3.3 Smoke passes: `npm run smoke` with the local keys inline
+- [ ] 3.1 The guard's break check fails on the three files and on the unused allowance, and is green after restoring exactly those files: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [ ] 3.2 The whole e2e suite passes on a fresh build and preview (4331/4401), the way CI runs it: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` (counts recorded)
+- [ ] 3.3 Smoke passes: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run smoke`
 - [ ] 3.4 Types, lint, unit suite and build pass on the final tree: `npx astro check && npm run lint && npm test && npm run build`
 
 #### Manual
 
-- [ ] 3.5 The owner accepts the dashboard in dark, light and red, EN and PL, at 390 and 1280 px from `evidence/after/` against `evidence/before/`, including the verdict line specimens and the new landing image
+- [ ] 3.5 The agent's own check of the after shots (EN/PL, dark/light/red, 390 px including the phone first screen, and desktop) against `evidence/before/`, recorded in `evidence/README.md`
+- [ ] 3.6 The owner accepts the dashboard, the verdict line specimens and the new landing image from `evidence/after/`
