@@ -3,7 +3,7 @@ project: Sidereus
 version: 3
 status: draft
 created: 2026-09-30
-updated: 2026-10-14
+updated: 2026-10-15
 prd_version: 3
 main_goal: quality
 top_blocker: skills # and decisions: the user named both (2026-10-07)
@@ -50,7 +50,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
 | S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
 | S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | done |
-| S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | in-progress |
+| S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | done        |
 
 ## Streams
 
@@ -197,7 +197,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Paid features in a stored offline copy (PRD Open Question 23). — Owner: team. Block: no.
 - **Risk:** The only slice adding a per-user table (RLS and isolation test required), and edits must never schedule a target outside its window.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -259,3 +259,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-03: user can open a finder chart for any ranked deep-sky object or planet: the nearest star they can see with the naked eye from their site, the hop to the target, and their finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky; a free account sees what the chart does and that it needs the full plan.** — Archived 2026-10-13 → `context/archive/2026-10-11-finder-chart/`. Lesson: run the whole e2e suite locally the way CI does before opening a PR, not only the slice's specs; a red `ci` on main blocks `deploy`, so an intermittent harness flake (agent-hooks EPIPE, fixed in #156) is fixed failing-first in its own change, never retried away; measure size budgets on the real encoding before planning them (the finder file's estimate was off by 2x).
 - **S-04: user can read, with each ranked target, what it will look like in their own telescope from their site.** — Archived 2026-10-14 → `context/archive/2026-10-14-what-to-expect/`. Lesson: —.
 - **S-07: user can see the next 30 days of sky events for their site with times and visibility, the next notable one as a dashboard tile, and tonight's named beside the sky verdict.** — Archived 2026-10-14 → `context/archive/2026-10-13-sky-events/`. Lesson: a coarse sampling grid misses short visibility windows (twilight pairings, impl review F1): pin a scan against a brute-force reference over fixed windows.
+- **S-08: user can reorder, drop and add targets on the session plan for a site and night, reset it to the suggested plan, and find their edits on every device and in the offline copy; a free account sees what it does and that it needs the full plan.** — Archived 2026-10-15 → `context/archive/2026-10-14-adjustable-session-plan/`. Lesson: wait for the service worker with `ready` (`waitForServiceWorker`), never on `controller` alone: a document whose navigation was in flight when the worker activated stays uncontrolled (CI flake on #165).

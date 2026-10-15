@@ -1,10 +1,10 @@
 ---
 change_id: adjustable-session-plan
 title: Adjustable session plan, saved to the account (M-3 S-08)
-status: impl_reviewed
+status: archived
 created: 2026-10-14
 updated: 2026-10-15
-archived_at: null
+archived_at: 2026-10-15T09:13:17Z
 ---
 
 ## Notes
