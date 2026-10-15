@@ -12,17 +12,28 @@
  * its heading does not name the page it opens. The → says it opens a page. "Sky events" always shows, straight after
  * the targets: the next notable visible event and when to go ("Perseids peak · night of 12/13 Aug"), or the fact that
  * there is none in the window.
+ *
+ * Rhythm (ui-dashboard-tiles D1, D2): each tile is a `py-item` row (`tile.ts`); its content sits under the heading at
+ * `TILE_CONTENT_CLASS` (`line`), the lines of one group on `line` (the targets' rows `space-y-line`, the Planets reason,
+ * the nights' columns), and an explanatory caption is a second group at `mt-group` (the not-seen legend with the
+ * cleared-count caption `mt-line` under it, the nights caption). Overrides of the shared caption go through `cn()`. The
+ * Planets reason is the same muted "why" `Fact` as on `/tonight/planets`. Tile headings carry no icon (2B); the Events
+ * line leads with the next event's kind icon (D5, `EventsTile`); with the Planets reason's Info icon these are the two
+ * icon-led lines in otherwise text-led tiles.
  */
 import EventsTile from "@/components/tonight/EventsTile.astro";
 import MoonDisc from "@/components/tonight/MoonDisc";
 import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+import Fact from "@/components/ui/Fact.astro";
 import Tile from "@/components/ui/Tile.astro";
+import { TILE_CONTENT_CLASS } from "@/components/ui/tile";
 import { getMessages, plural } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import { OUTLOOK_NIGHTS, VERDICT_NIGHTS } from "@/lib/engine/parameters";
 import type { TonightView } from "@/lib/tonight/build";
 import { createFormatter, formatLocaleTag } from "@/lib/tonight/format";
+import { cn } from "@/lib/utils";
 
 interface Props {
   view: TonightView;
@@ -37,7 +48,8 @@ const nightsTitle = t.nights({ count: String(OUTLOOK_NIGHTS) });
 const { listOf } = createFormatter(locale);
 const tag = formatLocaleTag(locale);
 
-const caption = "mt-3 block text-label text-muted-foreground";
+// A caption line; it follows another caption line at `line`, and opens its own group with `cn(caption, "mt-group")`.
+const caption = "mt-line block text-label text-muted-foreground";
 
 // Point here first. Without a ranking (weather no-go or no darkness) the tile says there are no targets; it still
 // opens Targets, which gives the reason and the way to the week.
@@ -115,9 +127,9 @@ const nightsSummary = view.nights
   <Tile href="/tonight/targets" headingId="tile-targets-heading" heading={t.targets} labelledBy="tile-targets-open">
     {targets.length > 0 ? (
       <>
-        <ul class="mt-4">
+        <ul class:list={[TILE_CONTENT_CLASS, "space-y-line"]}>
           {targets.map((target) => (
-            <li class="flex items-baseline justify-between gap-3 py-1.5 text-title">
+            <li class="flex items-baseline justify-between gap-3 text-title">
               <span class="min-w-0 font-semibold break-words">
                 {target.name}
                 {/* The tile is a link: no button in it, so a static icon and one legend line under the rows. */}
@@ -127,15 +139,15 @@ const nightsSummary = view.nights
             </li>
           ))}
         </ul>
-        {anyNotSeen && <NotSeenLegend class="mt-2" />}
+        {anyNotSeen && <NotSeenLegend class="mt-group" />}
         {view.ranking && (
-          <span class:list={[caption]}>
+          <span class:list={cn(caption, !anyNotSeen && "mt-group")}>
             {plural(locale, view.ranking.clearedCount, t.targetsCaption)({ count: String(view.ranking.clearedCount) })}
           </span>
         )}
       </>
     ) : (
-      <span class="mt-4 block text-body font-semibold">{t.noTargets}</span>
+      <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>{t.noTargets}</span>
     )}
     <span id="tile-targets-open" class="sr-only">
       {open(m.tonight.pages.targets)}
@@ -146,19 +158,19 @@ const nightsSummary = view.nights
 
   {plan && (
     <Tile href="/tonight/plan" headingId="tile-plan-heading" heading={t.plan}>
-      <span class="mt-3 block text-body font-semibold">{planLine}</span>
+      <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>{planLine}</span>
     </Tile>
   )}
 
   {moonCard && (
     <Tile href="/tonight/moon" headingId="tile-moon-heading" heading={t.moon}>
       {moonState ? (
-        <span class="mt-3 flex items-center gap-4">
+        <span class:list={[TILE_CONTENT_CLASS, "flex items-center gap-4"]}>
           <MoonDisc state={moonState} clipId="moon-summary-lit" decorative className="size-6 shrink-0" />
           <span class="min-w-0 text-body">{moonLine}</span>
         </span>
       ) : (
-        <span class="mt-3 block text-body">{moonCard.phaseText}</span>
+        <span class:list={[TILE_CONTENT_CLASS, "block text-body"]}>{moonCard.phaseText}</span>
       )}
     </Tile>
   )}
@@ -167,20 +179,25 @@ const nightsSummary = view.nights
     <Tile href="/tonight/planets" headingId="tile-planets-heading" heading={t.planets}>
       {solarSystem.entries.length > 0 ? (
         <>
-          <span class="mt-3 block text-body font-semibold break-words">{planetNames}</span>
-          <span class="mt-2 block text-label text-muted-foreground">{solarSystem.entries[0].reason}</span>
+          <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold break-words"]}>{planetNames}</span>
+          {/* A `div`, never a `span`: `Fact` is a block. */}
+          <div class="mt-line">
+            <Fact kind="why" tone="muted">
+              <p>{solarSystem.entries[0].reason}</p>
+            </Fact>
+          </div>
         </>
       ) : (
-        solarSystem.noneText && <span class="mt-3 block text-body">{solarSystem.noneText}</span>
+        solarSystem.noneText && <span class:list={[TILE_CONTENT_CLASS, "block text-body"]}>{solarSystem.noneText}</span>
       )}
     </Tile>
   )}
 
   {bars.length > 0 && (
     <Tile href="/tonight/nights" headingId="tile-nights-heading" heading={nightsTitle}>
-      <span class="mt-5 grid grid-cols-7 items-end gap-2" aria-hidden="true">
+      <span class:list={[TILE_CONTENT_CLASS, "grid grid-cols-7 items-end gap-x-2"]} aria-hidden="true">
         {bars.map((bar) => (
-          <span class="flex flex-col items-center gap-2">
+          <span class="flex flex-col items-center gap-line">
             <svg
               viewBox="0 0 10 100"
               preserveAspectRatio="none"
@@ -218,7 +235,7 @@ const nightsSummary = view.nights
         ))}
       </span>
       {nightsSummary && <span class="sr-only">{nightsSummary}</span>}
-      <span class:list={[caption]}>{t.nightsCaption({ count: String(VERDICT_NIGHTS) })}</span>
+      <span class:list={cn(caption, "mt-group")}>{t.nightsCaption({ count: String(VERDICT_NIGHTS) })}</span>
     </Tile>
   )}
 </div>

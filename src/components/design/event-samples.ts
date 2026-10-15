@@ -4,10 +4,11 @@ import { toEngineSite, type SiteRecord } from "@/lib/gear/store";
 import type { Locale } from "@/lib/preferences";
 import { createFormatter } from "@/lib/tonight/format";
 import {
-  eventsVerdictLine,
+  eventsVerdict,
   formatSkyEvents,
   type TonightSkyEvent,
   type TonightSkyEvents,
+  type WordedEvent,
 } from "@/lib/tonight/sky-events";
 
 /**
@@ -47,8 +48,11 @@ function wordedEventsAt(site: SiteRecord, locale: Locale, night = SAMPLE_EVENTS_
 }
 
 export interface EventSamples {
-  /** One notable event tonight, several (the line says "+1 more"), and a solar eclipse (eclipse glasses only). */
-  verdictLines: { label: string; line: string }[];
+  /**
+   * One notable event tonight, several (the line says "+1 more"), and a solar eclipse (eclipse glasses only), each
+   * worded with its kind (`eventsVerdict`) for the line's icon.
+   */
+  verdictLines: { label: string; event: WordedEvent | null }[];
   /** The tile's lines: an event tonight, one on a later night, a solar eclipse, none in the window, unavailable. */
   tiles: { label: string; events: TonightSkyEvents | null }[];
   /** Warsaw, 2027-07-25 + 30 nights: the visible solar eclipse with its safety line, other visible rows and not-visible ones. */
@@ -135,11 +139,14 @@ export function eventSamples(locale: Locale): EventSamples {
 
   return {
     verdictLines: [
-      { label: "one event tonight", line: eventsVerdictLine(tonightOne, locale) ?? "" },
-      { label: "several events tonight: the first and “+1 more”", line: eventsVerdictLine(tonightMany, locale) ?? "" },
+      { label: "one event tonight (a meteor shower)", event: eventsVerdict(tonightOne, locale) },
       {
-        label: "a solar eclipse the next day: “Tomorrow, 11:22”, eclipse glasses only",
-        line: eventsVerdictLine(tonightEclipse, locale) ?? "",
+        label: "several events tonight: the first and “+1 more”",
+        event: eventsVerdict(tonightMany, locale),
+      },
+      {
+        label: "a solar eclipse the next day: “Tomorrow, 11:22”, eclipse glasses only, its own Eclipse icon",
+        event: eventsVerdict(tonightEclipse, locale),
       },
     ],
     tiles: [

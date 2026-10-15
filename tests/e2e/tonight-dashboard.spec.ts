@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import type { SkyEventKind } from "@/lib/engine";
 import { EVENT_WINDOW_NIGHTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
@@ -12,10 +13,18 @@ import { onboardInMadrid } from "./helpers";
  * leads back to Tonight. Same setup as the other specs: a production preview on local Supabase with the all-clear
  * forecast fixture, so the Moon card and the planets tile are both shown, and place search stubbed with Madrid. The
  * clock is real, so the spec never asserts what the tiles say, only where they lead (the events tile's line is checked
- * for its shape: the empty fact or an event and its night).
+ * for its shape: the empty fact or an event and its night; an event's line leads with its kind's icon, a `Fact` whose
+ * `data-fact` is the event kind with one svg, and the empty line has no icon, ui-dashboard-tiles D5). On an event
+ * night the verdict's line is such a fact too: its kind in `data-fact`, one svg, no link or control (D4).
  */
 
 const t = en.tonight;
+
+/**
+ * The sky-event kinds, the values an event fact's `data-fact` may carry, read from the catalogue's per-kind names rather
+ * than copied by hand: the `satisfies` fails the type check if a kind lacks its name, so the list follows `SkyEventKind`.
+ */
+const EVENT_KINDS = Object.keys(t.events.kind satisfies Record<SkyEventKind, string>) as SkyEventKind[];
 
 /**
  * How the verdict's event line may begin, whichever date the clock has: "Tonight: ", or for a solar eclipse, a daytime
@@ -97,12 +106,22 @@ test("the Sky events tile states the next event or that there is none, and opens
   const text = ((await line.textContent()) ?? "").trim();
   const none = t.summary.eventsNone({ count: String(EVENT_WINDOW_NIGHTS) });
   expect(text === none || text.includes(" · "), `the tile says "${text}"`).toBe(true);
+  // An event's line leads with its kind's icon (a Fact, the marker on its root); the none line is plain text.
+  if (text === none) {
+    await expect(line.locator("svg")).toHaveCount(0);
+  } else {
+    expect(EVENT_KINDS as readonly (string | null)[]).toContain(await line.getAttribute("data-fact"));
+    await expect(line.locator("svg")).toHaveCount(1);
+  }
 
-  // The verdict's own line exists only on a night with a notable event, as plain text: no link, no control.
+  // The verdict's own line exists only on a night with a notable event, as a muted fact led by its kind's icon (the
+  // marker on the Fact root, ui-dashboard-tiles D4): no link, no control.
   const verdictLine = page.locator("[data-verdict-event]");
   if ((await verdictLine.count()) > 0) {
     await expect(verdictLine).toHaveText(VERDICT_LINE_START);
     await expect(verdictLine.locator("a, button")).toHaveCount(0);
+    expect(EVENT_KINDS as readonly (string | null)[]).toContain(await verdictLine.getAttribute("data-fact"));
+    await expect(verdictLine.locator("svg")).toHaveCount(1);
     // An event tonight is also the next one, so the tile cannot say there is none.
     expect(text).not.toBe(none);
   }

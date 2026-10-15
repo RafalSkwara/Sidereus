@@ -6,16 +6,23 @@
  * ui-mobile-pass). With the live sky (`withSlider`) its slider shows the dark window and the zone, but its edge labels
  * are `aria-hidden`, so the same dark line stays as a screen-reader-only line; without the slider (the static fallback
  * when the sky view fails) that line is visible and muted, so the information is never lost.
- * On a night with a notable visible sky event (sky-events, M-3 S-07) one more muted, plain-text line names it under the
- * reason ("Tonight: Perseids peak", `data-verdict-event`): no link (the dashboard's events tile carries it) and no
- * reserved room, so the verdict grows by one line on those nights only (plan review F3).
+ * On a night with a notable visible sky event (sky-events, M-3 S-07) one more line names it under the reason ("Tonight:
+ * Perseids peak", `data-verdict-event` on its root): a muted `Fact` led by its event kind's icon, a solar eclipse's
+ * `Eclipse` included (ui-dashboard-tiles D4, D7), so it reads as its own fact rather than the end of the reason. No
+ * link (the dashboard's events tile carries it) and no reserved room, so the verdict grows by one line on those nights
+ * only (plan review F3 still holds).
+ * The rhythm (ui-dashboard-tiles D6): the answer is one group on the `line` role, date → headline, the event line, the
+ * no-darkness lines that explain the headline and the forecast line; the weather no-go "Next clear night" advice is a
+ * group of its own (`mt-group`). The headline → reason `mt-1` and the dot's nudge are the display line's own leading.
  * All text is heading or muted ink, the pair the contrast test pins on zenith and horizon; the verdict's colour is
- * only the dot before the headline.
+ * only the dot before the headline, and besides it the verdict carries one muted icon, the event line's.
  */
 import type { VerdictLevel } from "@/lib/engine";
 import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } from "@/lib/tonight/build";
 import type { SkyHeadline } from "@/lib/tonight/format";
+import type { WordedEvent } from "@/lib/tonight/sky-events";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+import Fact from "@/components/ui/Fact.astro";
 import { getMessages } from "@/i18n";
 
 interface Props {
@@ -38,8 +45,11 @@ interface Props {
   forecastStatus: TonightForecastStatus;
   /** What to do next on a weather no-go or a no-darkness night; `null` otherwise. */
   explanation: TonightExplanation | null;
-  /** The night's notable sky event, already worded ("Tonight: Perseids peak"); `null` or left out on every other night. */
-  event?: string | null;
+  /**
+   * The night's notable sky event, worded with its kind (`eventsVerdict`: "Tonight: Perseids peak", `meteor-shower`);
+   * `null` or left out on every other night.
+   */
+  event?: WordedEvent | null;
   /** The heading's id, `verdict-heading` by default; /design gives each specimen its own so ids stay unique. */
   headingId?: string;
 }
@@ -79,7 +89,7 @@ const darkLine =
 <section aria-labelledby={headingId}>
   <p class="text-label font-medium text-muted-foreground">{dateLabel}</p>
   {darkLine && <p class:list={["text-label font-medium text-muted-foreground", withSlider && "sr-only"]}>{darkLine}</p>}
-  <h2 id={headingId} class="mt-2 text-heading">
+  <h2 id={headingId} class="mt-line text-heading">
     <span class="flex items-start gap-3 font-display text-display font-semibold" data-sky-headline={headline.key}>
       <span
         class:list={["mt-2.5 size-4 shrink-0 rounded-full sm:mt-3.5", VERDICT_TONES[level].dot]}
@@ -90,16 +100,18 @@ const darkLine =
     <span class="mt-1 block text-body font-normal text-muted-foreground first-letter:uppercase">{text}</span>
   </h2>
   {event && (
-    <p class="mt-1 text-label font-medium text-muted-foreground" data-verdict-event>
-      {event}
-    </p>
+    <div class="mt-line">
+      <Fact kind={event.kind} tone="muted" data-verdict-event>
+        <p class="font-medium">{event.line}</p>
+      </Fact>
+    </div>
   )}
-  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-body text-heading">{explanation.nextText}</p>}
+  {explanation?.kind === "weather-no-go" && <p class="mt-group text-body text-heading">{explanation.nextText}</p>}
   {explanation?.kind === "no-darkness" && (
     <>
-      <p class="mt-3 text-body text-heading">{explanation.returnText}</p>
-      <p class="mt-2 text-body text-heading">{explanation.causeText}</p>
+      <p class="mt-line text-body text-heading">{explanation.returnText}</p>
+      <p class="mt-line text-body text-heading">{explanation.causeText}</p>
     </>
   )}
-  <p class:list={["mt-3 text-label", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
+  <p class:list={["mt-line text-label", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
 </section>

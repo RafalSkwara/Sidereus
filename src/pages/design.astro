@@ -20,7 +20,7 @@ import BackLink from "@/components/ui/BackLink.astro";
 import Notice from "@/components/ui/Notice.astro";
 import Pager from "@/components/ui/Pager.astro";
 import Tile from "@/components/ui/Tile.astro";
-import { TILE_ROW_CLASS } from "@/components/ui/tile";
+import { TILE_CONTENT_CLASS, TILE_ROW_CLASS } from "@/components/ui/tile";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
@@ -2149,10 +2149,12 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               VerdictCard: the sky event line
             </h3>
             <p class:list={blockNote}>
-              On a night with a notable visible sky event one muted, plain-text line names it under the reason (
-              <code>data-verdict-event</code>): no link (the events tile carries it), no reserved room, so the verdict
-              grows by one line on those nights only. It names one event plus “+1 more”, and a solar eclipse reads
-              “eclipse glasses only”. The live sky specimen shows it over the panorama.
+              On a night with a notable visible sky event one muted line names it under the reason, a <code>Fact</code>{" "}
+              led by its event kind's icon (<code>data-verdict-event</code> and
+              <code>data-fact</code> on its root): the icon is always the kind's, a solar eclipse's own Eclipse
+              included, never an alert icon. No link (the events tile carries it), no reserved room, so the verdict
+              grows by one line on those nights only. It names one event plus “+1 more” (the icon is the first event's),
+              and a solar eclipse reads “eclipse glasses only”. The live sky specimen shows it over the panorama.
             </p>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>
@@ -2170,7 +2172,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     <TonightSky night verdict>
                       <VerdictCard
                         {...skies[0].props}
-                        event={sample.line}
+                        event={sample.event}
                         headingId={`verdict-heading-event-${String(i)}`}
                       />
                     </TonightSky>
@@ -2192,7 +2194,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                         withSlider
                         forecastStatus={panoramaView.forecastStatus}
                         explanation={panoramaView.explanation}
-                        event={eventSpecimens.verdictLines[1].line}
+                        event={eventSpecimens.verdictLines[1].event}
                         headingId="verdict-heading-event-panorama"
                       />
                     </TonightSkyView>
@@ -2201,9 +2203,9 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               )}
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, disabled — N/A (plain text, not interactive) · error — N/A (a failed events block
-              leaves the line out) · empty — the first specimen, no line · loading — see TonightSkeleton (it keeps
-              today's height; the swap grows by one line on an event night, which the owner accepts)
+              hover, focus-visible, disabled — N/A (a fact, not interactive) · error — N/A (a failed events block leaves
+              the line out) · empty — the first specimen, no line · loading — see TonightSkeleton (it keeps the go
+              verdict's height; the swap grows by one line on an event night, which the owner accepts)
             </p>
           </section>
 
@@ -2497,14 +2499,18 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <div class:list={cell}>
                 <p class:list={stateLabel}>default</p>
                 <Tile href="/design" headingId="design-tile-default" heading={m.tonight.summary.plan}>
-                  <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                  <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                    {m.tonight.summary.planEmpty}
+                  </span>
                 </Tile>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>hover · specimen</p>
                 <div class:list={tileHover} inert>
                   <Tile href="/design" headingId="design-tile-hover" heading={m.tonight.summary.plan}>
-                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                    <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                      {m.tonight.summary.planEmpty}
+                    </span>
                   </Tile>
                 </div>
               </div>
@@ -2512,21 +2518,27 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <p class:list={stateLabel}>focus-visible · specimen</p>
                 <div class:list={tileFocus} inert>
                   <Tile href="/design" headingId="design-tile-focus" heading={m.tonight.summary.plan}>
-                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                    <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                      {m.tonight.summary.planEmpty}
+                    </span>
                   </Tile>
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>empty · no targets</p>
                 <Tile href="/design" headingId="design-tile-empty" heading={m.tonight.summary.targets}>
-                  <span class="mt-3 block text-body font-semibold">{m.tonight.summary.noTargets}</span>
+                  <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                    {m.tonight.summary.noTargets}
+                  </span>
                 </Tile>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>loading · skeleton row</p>
                 <div class:list={[TILE_ROW_CLASS]} aria-hidden="true">
                   <div class="rounded bg-border text-label motion-safe:animate-pulse w-28">&nbsp;</div>
-                  <div class="mt-2 rounded bg-border text-body motion-safe:animate-pulse w-2/3">&nbsp;</div>
+                  <div class:list={[TILE_CONTENT_CLASS, "rounded bg-border text-body motion-safe:animate-pulse w-2/3"]}>
+                    &nbsp;
+                  </div>
                 </div>
               </div>
             </div>
@@ -2800,7 +2812,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <p class:list={blockNote}>
               Always shown, straight after “Point here first”: the next notable visible event and its night, relative to
-              the selected night, or the fact that there is none. The tile also sits second in TonightTiles above.
+              the selected night, or the fact that there is none. The tile also sits second in TonightTiles above. The
+              one exception to text-led tiles: an event's line leads with its kind's muted icon (a body-size Fact, solar
+              eclipse included); the “none in the window” and “unavailable” lines stay plain text, and the heading has
+              no icon.
             </p>
             <div class:list={grid}>
               {eventSpecimens.tiles.map((tile, i) => (

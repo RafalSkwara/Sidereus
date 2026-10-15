@@ -11,32 +11,47 @@
  * the content (the icon is an `aria-hidden` svg). No list element, so a fact never adds a `listitem`.
  *
  * `iconClass` is for the two accented icons only: `see` in `text-primary-strong`, `safety` in `text-marginal`.
+ *
+ * `kind` is a fact concept or, for an event's fact, a sky-event kind (ui-dashboard-tiles D7): `factIcon` picks the icon
+ * from the one map either way, and `data-fact` carries the kind. `size` is the root's type role, `label` by default;
+ * `body` is for a body-size line (the dashboard's Events tile, D5), whose 24 px line nudges the 16 px icon 4 px down
+ * (`mt-1`) where a label line's 20 px nudges it 2 px (`mt-0.5`).
  */
-import { FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
+import { factIcon, type FactSubject } from "@/components/ui/fact-icons";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  kind: FactKind;
+  /** A fact concept (`FACT_ICONS`) or a sky-event kind (`EVENT_KIND_ICONS`); the icon comes from `factIcon`. */
+  kind: FactSubject;
   /** A muted label before an inline value ("Window 20:51–07:10"); never before a block `<p>`. */
   label?: string;
   /** `muted` for the quieter facts (why, notes, a not-visible event, Nights' lines). */
   tone?: "default" | "muted";
   /** Replaces the icon's muted ink: `text-primary-strong` on `see`, `text-marginal` on `safety`, nowhere else. */
   iconClass?: string;
+  /** The root's type role: `label` (default) or `body`, with the icon's first-line nudge to match. */
+  size?: "label" | "body";
   /** Markers for e2e and smoke (`data-expect`, `data-event-visibility`, …), forwarded to the root. */
   [data: `data-${string}`]: string | number | boolean | null | undefined;
 }
 
-const { kind, label, tone = "default", iconClass, ...data } = Astro.props;
-const Icon = FACT_ICONS[kind];
+const { kind, label, tone = "default", iconClass, size = "label", ...data } = Astro.props;
+const Icon = factIcon(kind);
 ---
 
 <div
   {...data}
   data-fact={kind}
-  class:list={cn("flex items-start gap-2 text-label", tone === "muted" ? "text-muted-foreground" : "text-foreground")}
+  class:list={cn(
+    "flex items-start gap-2",
+    size === "body" ? "text-body" : "text-label",
+    tone === "muted" ? "text-muted-foreground" : "text-foreground",
+  )}
 >
-  <Icon className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground", iconClass)} aria-hidden="true" />
+  <Icon
+    className={cn("size-4 shrink-0 text-muted-foreground", size === "body" ? "mt-1" : "mt-0.5", iconClass)}
+    aria-hidden="true"
+  />
   <div class="min-w-0 space-y-line">
     {label && (
       <Fragment>

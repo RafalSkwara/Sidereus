@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import { TILES_GAP_CLASS } from "@/components/tonight/sky-band";
+
 /**
  * Rhythm guard (ui-fact-rhythm): the guarded files space their content vertically with the rhythm roles from
  * `src/styles/global.css` (`line` 8 px, `group` 24 px, `item` 20 px: `mt-group`, `py-item`, `space-y-line`, …), never
@@ -13,7 +15,8 @@ import { describe, expect, it } from "vitest";
  * included, unless it is a zero (`pt-0`, `last:pb-0`) or the file's allowlist still has one left for that token.
  * The allowlist is a count per token (`{ "mt-0.5": 1 }`): the first N uses are allowed, every use beyond N fails with
  * its file:line. It covers the few steps that are not rhythm: an icon's first-line nudge, a card's own padding, a 44 px
- * summary.
+ * summary. The count is exact (ui-dashboard-tiles, review F6): an allowance a file no longer uses as many times fails
+ * too, naming the file, the token and both numbers, so a count that should have shrunk cannot stay loose.
  *
  * A bare `gap-<n>` / `gap-px` / `gap-[…]` is vertical spacing when its class string also holds `flex-col` or `grid`
  * (variants included): a column's gap is its row spacing, and so is a grid's even with `grid-cols-2`, since the rows
@@ -49,8 +52,8 @@ type Allowance = Readonly<Record<string, number>>;
 
 /** File (relative to `src/`) → the tokens it may keep, with how many times. */
 const GUARDED: Record<string, Allowance> = {
-  // The icon's first-line nudge.
-  "components/ui/Fact.astro": { "mt-0.5": 1 },
+  // The icon's first-line nudge: a label line's (`mt-0.5`) and a body line's (`mt-1`, the Events tile).
+  "components/ui/Fact.astro": { "mt-0.5": 1, "mt-1": 1 },
   "components/ui/FactList.astro": {},
   // The card's own padding and the value's nudge under its caption label.
   "components/ui/StatCard.astro": { "py-2": 1, "mt-0.5": 1 },
@@ -90,6 +93,17 @@ const GUARDED: Record<string, Allowance> = {
     "mt-3": 1,
     "mt-8": 1,
   },
+  // ui-dashboard-tiles Phase 1: the dashboard's tiles. The tile cue's -2 px margin, which keeps the arrow inside one line.
+  "components/ui/tile.ts": { "-my-0.5": 1 },
+  // Every tile on the roles: heading → content `line`, a caption group `mt-group`.
+  "components/tonight/TonightTiles.astro": {},
+  // The Events line under its heading at `TILE_CONTENT_CLASS`; the icon's nudge is `Fact`'s.
+  "components/tonight/EventsTile.astro": {},
+  // The verdict bars' headline → reason `mt-1` (the display line's own leading) and the slow hint's `mt-6`; the tile
+  // rows and the other verdict bars are on the roles.
+  "components/tonight/TonightSkeleton.astro": { "mt-1": 1, "mt-6": 1 },
+  // ui-dashboard-tiles Phase 2: the verdict on the roles; the headline → reason `mt-1` and the dot's first-line nudge.
+  "components/tonight/VerdictCard.astro": { "mt-1": 1, "mt-2.5": 1, "sm:mt-3.5": 1 },
 };
 
 /** Replaces comment text with spaces, keeping newlines so line numbers still match the file. */
@@ -128,6 +142,24 @@ function classStrings(source: string): { start: number; text: string }[] {
  * the first N uses (in file order) pass and each one after reports.
  */
 export function findNumericSpacing(source: string, allowed: Allowance = {}): { line: number; token: string }[] {
+  const left = new Map(Object.entries(allowed));
+  const hits: { line: number; token: string }[] = [];
+  for (const { line, token } of spacingSteps(source)) {
+    const remaining = left.get(token) ?? 0;
+    if (remaining > 0) {
+      left.set(token, remaining - 1);
+      continue;
+    }
+    hits.push({ line, token });
+  }
+  return hits;
+}
+
+/**
+ * Every non-zero vertical spacing step in `source`, in file order, with its line: what `findNumericSpacing` checks
+ * against the allowlist, and what `unusedAllowances` counts.
+ */
+function spacingSteps(source: string): { line: number; token: string }[] {
   const text = blankComments(source);
   const found = new Map<number, string>();
   for (const match of text.matchAll(VERTICAL_SPACING)) found.set(match.index, match[0]);
@@ -135,19 +167,25 @@ export function findNumericSpacing(source: string, allowed: Allowance = {}): { l
     if (!COLUMN_OR_GRID.test(classes)) continue;
     for (const match of classes.matchAll(BARE_GAP)) found.set(start + match.index, match[0]);
   }
+  return [...found]
+    .sort(([a], [b]) => a - b)
+    .filter(([, token]) => !isZero(token))
+    .map(([index, token]) => ({ line: text.slice(0, index).split("\n").length, token }));
+}
 
-  const left = new Map(Object.entries(allowed));
-  const hits: { line: number; token: string }[] = [];
-  for (const [index, token] of [...found].sort(([a], [b]) => a - b)) {
-    if (isZero(token)) continue;
-    const remaining = left.get(token) ?? 0;
-    if (remaining > 0) {
-      left.set(token, remaining - 1);
-      continue;
-    }
-    hits.push({ line: text.slice(0, index).split("\n").length, token });
-  }
-  return hits;
+/**
+ * Each allowance whose count is not exactly the number of uses of its token in `source`, with both numbers. More uses
+ * than allowed also show in `findNumericSpacing` with their lines; fewer means the allowance is loose.
+ */
+export function inexactAllowances(
+  source: string,
+  allowed: Allowance,
+): { token: string; allowed: number; used: number }[] {
+  const steps = spacingSteps(source);
+  return Object.entries(allowed).flatMap(([token, count]) => {
+    const used = steps.filter((step) => step.token === token).length;
+    return used === count ? [] : [{ token, allowed: count, used }];
+  });
 }
 
 /** The token a lone utility reports when it sits in a `div` with `classes` in front of it. */
@@ -265,6 +303,16 @@ describe("the rhythm guard's pattern", () => {
     expect(findNumericSpacing(source, { "gap-3": 1 })).toEqual([{ line: 2, token: "gap-3" }]);
   });
 
+  it("names an allowance whose count is not exactly its uses", () => {
+    const source = `<i class="mt-0.5" />\n<i class="mt-0.5" />\n<i class="pt-0" />`;
+    expect(inexactAllowances(source, { "mt-0.5": 2 })).toEqual([]);
+    expect(inexactAllowances(source, { "mt-0.5": 3, "mt-1": 1 })).toEqual([
+      { token: "mt-0.5", allowed: 3, used: 2 },
+      { token: "mt-1", allowed: 1, used: 0 },
+    ]);
+    expect(inexactAllowances(source, { "mt-0.5": 1 })).toEqual([{ token: "mt-0.5", allowed: 1, used: 2 }]);
+  });
+
   it("ignores comments", () => {
     expect(
       findNumericSpacing(
@@ -280,5 +328,20 @@ describe("rhythm roles in the guarded files", () => {
       ({ line, token }) => `${file}:${String(line)} ${token}`,
     );
     expect(offenders).toEqual([]);
+  });
+
+  it.each(Object.entries(GUARDED))("%s uses each allowance exactly as many times as it is allowed", (file, allowed) => {
+    const loose = inexactAllowances(readFileSync(join(SRC_DIR, file), "utf8"), allowed).map(
+      ({ token, allowed: count, used }) => `${file}: ${token} allowed ${String(count)}, used ${String(used)}`,
+    );
+    expect(loose).toEqual([]);
+  });
+});
+
+// `sky-band.ts` stays out of `GUARDED` (its band geometry is not rhythm), but the gap above the dashboard's first tile is
+// the `line` role (ui-dashboard-tiles D3, impl review F2), so this one constant is held to the roles on its own.
+describe("the dashboard tiles' gap", () => {
+  it("uses the rhythm roles, not a numeric vertical step", () => {
+    expect(findNumericSpacing(`"${TILES_GAP_CLASS}"`)).toEqual([]);
   });
 });

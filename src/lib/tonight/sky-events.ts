@@ -356,3 +356,33 @@ export function eventsVerdictLine(events: TonightSkyEvents | null, locale: Local
   }
   return more ? t.verdictLineMore({ name, count }) : t.verdictLine({ name });
 }
+
+/** An event's line with the kind it names, so the text and the icon beside it always come from the same event. */
+export interface WordedEvent {
+  line: string;
+  kind: SkyEventKind;
+}
+
+/**
+ * `eventsVerdictLine`'s text with the kind of the event it leads with (`events.tonight[0]`, the first the line names).
+ * `null` exactly when `eventsVerdictLine` is `null`, so the line and its icon exist only on event nights.
+ */
+export function eventsVerdict(events: TonightSkyEvents | null, locale: Locale): WordedEvent | null {
+  const line = eventsVerdictLine(events, locale);
+  const first = events?.tonight[0];
+  if (line === null || first === undefined) {
+    return null;
+  }
+  return { line, kind: first.kind };
+}
+
+/**
+ * `eventsTileLine`'s text with the kind of the next event it names (`events.next`). The kind is `null` for the none
+ * line and the unavailable line, which name no event and so get no kind icon.
+ */
+export function eventsTile(
+  events: TonightSkyEvents | null,
+  locale: Locale,
+): { line: string; kind: SkyEventKind | null } {
+  return { line: eventsTileLine(events, locale), kind: events?.next?.kind ?? null };
+}

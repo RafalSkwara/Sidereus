@@ -4,10 +4,18 @@
  * ("Perseids peak · night of 12/13 Aug", "Moon and Jupiter, 1.8° apart · tonight"), or the fact that there is none in
  * the window. Always shown, straight after "Point here first", and it opens `/tonight/events`. Its own component so
  * `TonightTiles` and the /design specimens share it, the specimens with their own heading ids.
+ *
+ * An icon-led line in text-led tiles (ui-dashboard-tiles D5; the Planets reason's Info icon is the other): when an
+ * event is next, the line is a body-size `Fact` that leads with that event's kind icon (muted, from `factIcon`; the
+ * line keeps the tile's semibold heading ink), and `data-events-tile-line` sits on the Fact root, whose only text is the
+ * line. The "none in the window" and
+ * "unavailable" lines name no event, so they stay plain text without an icon. The tile's heading has no icon (2B).
  */
+import Fact from "@/components/ui/Fact.astro";
 import Tile from "@/components/ui/Tile.astro";
+import { TILE_CONTENT_CLASS } from "@/components/ui/tile";
 import { getMessages } from "@/i18n";
-import { eventsTileLine, type TonightSkyEvents } from "@/lib/tonight/sky-events";
+import { eventsTile, type TonightSkyEvents } from "@/lib/tonight/sky-events";
 
 interface Props {
   /** The view's events block; `null` when working it out failed (the tile then says so). */
@@ -19,10 +27,20 @@ interface Props {
 const { events, headingId = "tile-events-heading" } = Astro.props;
 const { locale } = Astro.locals;
 const m = getMessages(locale);
+const { line, kind } = eventsTile(events, locale);
 ---
 
 <Tile href="/tonight/events" headingId={headingId} heading={m.tonight.summary.events}>
-  <span class="mt-3 block text-body font-semibold break-words" data-events-tile-line>
-    {eventsTileLine(events, locale)}
-  </span>
+  {kind ? (
+    /* A `div`, never a `span`: `Fact` is a block. */
+    <div class:list={[TILE_CONTENT_CLASS]}>
+      <Fact kind={kind} size="body" data-events-tile-line>
+        <p class="font-semibold break-words text-heading">{line}</p>
+      </Fact>
+    </div>
+  ) : (
+    <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold break-words"]} data-events-tile-line>
+      {line}
+    </span>
+  )}
 </Tile>

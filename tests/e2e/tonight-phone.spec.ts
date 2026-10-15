@@ -17,9 +17,12 @@ import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForHydrat
  *    Telescope card, the first tile and the first target need a short scroll (the user's decision of 2026-10-08,
  *    ui-user-adjustments: a gear card gives the name its own line with Manage under it). 360×780 and 375×667 are
  *    known limits (the plan's "What we're not doing"), so they are not asserted. On a night with a notable sky event
- *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), which
- *    the verdict's min-height can swallow without moving the cards, so the spec hides that line while it measures and
- *    holds on any date (impl review F9);
+ *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room). At
+ *    390 px the verdict fills its min-height exactly, so nothing swallows the line: it moves the cards down by 28 px
+ *    (`mt-line` 8 + the 20 px line), which leaves the Telescope title about 5 px above the TabBar for a one-line event
+ *    (ui-dashboard-tiles impl review F1). The spec hides that line while it measures, so it holds on any date (sky-events
+ *    impl review F9). The line is a `Fact` (ui-dashboard-tiles D4) in an `mt-line` wrapper, with the
+ *    marker on its root: the spec hides the wrapper, so the icon and the wrapper's margin go too;
  *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL, and none with the Session plan's editor open
  *    (adjustable-session-plan Phase 5: a full-plan user, granted through the operator command; skipped on a night that
  *    does not pass);
@@ -62,9 +65,12 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-/** Hides the verdict's event line (present only on an event night) and returns the style to remove again afterwards. */
+/**
+ * Hides the verdict's event line (present only on an event night) with its `mt-line` wrapper, so neither its height nor
+ * the wrapper's margin counts, and returns the style to remove again afterwards.
+ */
 async function hideEventLine(page: Page) {
-  return page.addStyleTag({ content: "[data-verdict-event]{display:none}" });
+  return page.addStyleTag({ content: ":has(> [data-verdict-event]), [data-verdict-event]{display:none}" });
 }
 
 // The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card
@@ -85,8 +91,9 @@ test("the verdict, the Site card and the Telescope card's title fit one 390×844
 
   // The fixed bottom navigation: below `md` it is the only visible navigation named "Main" (the top bar's is hidden).
   const tabBar = await page.getByRole("navigation", { name: en.nav.primary }).boundingBox();
-  // The event line sits in flow under the verdict's reason, and its room may or may not move the cards (the verdict has
-  // a min-height), so measure without it: the checks below read the same on event and no-event nights.
+  // The event line sits in flow under the verdict's reason and moves the cards down by its 28 px (at 390 px the verdict's
+  // min-height has no slack to swallow it), so measure without it: the checks below read the same on event and no-event
+  // nights.
   const eventLineStyle = await hideEventLine(page);
   const headline = await page.locator("#verdict-heading [data-sky-headline]").boundingBox();
   const site = await siteCard.boundingBox();
