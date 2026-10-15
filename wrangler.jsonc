@@ -18,7 +18,8 @@
     "redact_query_string": true,
     // Per-fetch spans (Supabase, KV, Open-Meteo) so a slow request can be pinned to one call.
     "traces": { "enabled": true },
-    // Every logged console.error becomes an Issue (the line shape is src/lib/observability/log-failure.ts).
+    // Every logged console.error becomes an Issue (the line shape is src/lib/observability/log-failure.ts). Keep it:
+    // a dashboard-only switch is turned off by the next deploy, and src/lib/wrangler-config.test.ts fails if it goes.
     "issues": { "enabled": true },
   },
   // Version URLs (the probe procedure in context/changes/error-visibility/plan.md): pinned so a CI deploy cannot turn them off.

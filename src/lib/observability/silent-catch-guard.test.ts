@@ -5,19 +5,23 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
- * Silent-catch guard (error-visibility D8): a failure in runtime code must leave a trace, so every `catch` clause
- * and every `.catch(...)` handler under src either reports or is on the allowlist below with a reason. A new
- * silent catch therefore fails CI, whatever its shape (an empty block, a fallback expression, a rethrow without a
- * cause, an error turned into a redirect or a key, a constant).
+ * Silent-catch guard (error-visibility D8): a failure in runtime code must leave a trace, so every `catch` clause,
+ * every `.catch(...)` handler and every rejection handler given to `.then(ok, fail)` under src either reports or is
+ * on the allowlist below with a reason. A new silent catch therefore fails CI, whatever its shape (an empty block, a
+ * fallback expression, a rethrow without a cause or on one branch only, an error turned into a redirect or a key, a
+ * constant).
  *
  * A site passes when its handler:
  *
  * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`), or
  * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters of Phases 7-9, recognised by
  *   name and only when the file imports them from `@/lib/observability/client` or `@/lib/offline/report` (for a
- *   `.catch(...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`), or
- * - rethrows: a bare `throw error` of the caught binding, or `throw new X(message, { cause })` whose cause is built
- *   from the caught binding.
+ *   `.catch(...)` or `.then(ok, ...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`),
+ *   or
+ * - rethrows on every path: a bare `throw error` of the caught binding, or `throw new X(message, { cause })` whose
+ *   cause is built from the caught binding, in a handler with no `return` of its own (outside nested functions). A
+ *   handler that returns on some branch (`if (stored) return stored; throw error;`, or `if (error instanceof
+ *   Redirect) throw error; return null;`) swallows the failures that take that branch, so it is judged as silent.
  *
  * Every other site is counted per file and compared with `ALLOWED_SILENT_CATCHES`, exactly like the no-console
  * guard's `ALLOWED_DISABLES`: more sites than the allowance fail (with their line numbers), and so does an
@@ -26,9 +30,9 @@ import { describe, expect, it } from "vitest";
  *
  * Scope: `.ts` and `.tsx` under src (not tests, not `src/lib/test-support`, not generated files) and the frontmatter
  * and `<script>` blocks of `.astro` files, each parsed once with the TypeScript compiler API. Blind spots: a
- * rejection handler given to `.then(ok, fail)`, a `.catch(handler)` whose handler is a named function declared
- * elsewhere (it counts as a site and needs a report or an allowance), `try`/`finally` without a catch, and
- * `.astro` template expressions (none exist today).
+ * `.catch(handler)` or `.then(ok, handler)` whose handler is a named function or reference (it counts as a site and
+ * needs a report or an allowance, even when the function reports), a two-argument `.then` on a non-promise thenable
+ * (it would count as a site), `try`/`finally` without a catch, and `.astro` template expressions (none exist today).
  */
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
@@ -53,12 +57,13 @@ const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
 const GEOLOCATION = "a denied or unavailable geolocation is the user's choice and would be noise";
 const STORE_FAULT =
-  "audit finding F8: Phase 2 keeps the fault in the returned result and Phase 4's saveFailureKey logs it, so the catch itself may stay allowlisted with that reason";
+  "audit finding F8: the catch returns { ok: false, message, fault } and keeps the fault in the result (Phase 2), and Phase 4's saveFailureKey logs it, so the catch itself stays allowlisted";
 
 /**
- * Every file with silent sites, the exact number of them and why they are tolerated. Later phases delete the
- * entries they fix first; Phase 6 leaves only entries with a permanent reason (the ones that name no phase, plus
- * the browser-side ones if Phases 7-9 are cut).
+ * Every file with silent sites, the exact number of them and why they are tolerated. A catch, a `.catch(...)` or the
+ * second argument of a `.then(ok, fail)` counts as one site. Later phases delete the entries of the phase groups
+ * first; the "Permanent" entries never go (Phase 6 leaves those, plus the browser-side ones if Phases 7-9 are cut).
+ * Reasons carry no line numbers: the guard's failure message names the lines.
  */
 const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: string }>> = {
   // Permanent: justified and staying.
@@ -111,11 +116,35 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 1,
     reason: `${GEOLOCATION} (a failing permission query only means no recentre)`,
   },
+  "src/lib/forecast/cache.ts": {
+    count: 1,
+    reason:
+      "withReadTimeout's `.then(resolve, reject)` forwards the rejection to the promise its caller awaits, so nothing is lost; the caller's catch in forecast/service.ts logs it as forecast.cache-read (Phase 3)",
+  },
+  "src/lib/forecast/open-meteo.ts": {
+    count: 2,
+    reason:
+      "throws fixed-message errors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); Phase 2 gives them a step and status and Phase 3 logs those, so the catches themselves stay allowlisted",
+  },
+  "src/lib/location/geocode.ts": {
+    count: 1,
+    reason:
+      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the island reports the failure as island.geocode (Phase 9)",
+  },
+  "src/lib/gear/store.ts": { count: 1, reason: `${STORE_FAULT} (toSiteColumns)` },
+  "src/lib/observations/store.ts": { count: 3, reason: `${STORE_FAULT} (the gear lookups and the latest-night bound)` },
+  "src/lib/onboarding/store.ts": { count: 1, reason: `${STORE_FAULT} (the time zone resolution)` },
 
-  // Phase 3: Tonight and the forecast.
+  "src/lib/offline/install.ts": {
+    count: 1,
+    reason:
+      "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
+  },
+
+  // Phase 3: Tonight and the forecast. Phase 3 deletes these entries.
   "src/lib/forecast/service.ts": {
     count: 2,
-    reason: `${AUDIT_P3}: the stored-copy parse (line 163) and the cache write (line 171) log forecast.cache-read and forecast.cache-write`,
+    reason: `${AUDIT_P3}: the stored-copy parse and the cache write log forecast.cache-read and forecast.cache-write`,
   },
   "src/lib/tonight/build.ts": {
     count: 5,
@@ -123,17 +152,14 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   },
   "src/lib/tonight/load.ts": {
     count: 2,
-    reason: `${AUDIT_P3}: the list read (line 117) and the build (line 207) log the failed step`,
+    reason: `${AUDIT_P3}: the list read and the build log the failed step`,
   },
-  "src/lib/forecast/open-meteo.ts": {
-    count: 2,
-    reason: `${AUDIT_P3}: Phase 2 turns these into a ForecastError with a step and status, Phase 3 logs it; the cause stays dropped on purpose (it can quote the request URL, which carries the coordinates), so the entry may stay with that reason`,
+  "src/components/tonight/TonightContent.astro": {
+    count: 1,
+    reason: `${AUDIT_P3}: the fire-and-forget sky-check record swallows both its outcomes; Phase 3 §4 logs tonight.sky-check-record`,
   },
 
-  // Phase 4: save routes, plan routes, page reads.
-  "src/lib/gear/store.ts": { count: 1, reason: `${STORE_FAULT} (toSiteColumns)` },
-  "src/lib/observations/store.ts": { count: 3, reason: `${STORE_FAULT} (the gear lookups and the latest-night bound)` },
-  "src/lib/onboarding/store.ts": { count: 1, reason: `${STORE_FAULT} (the time zone resolution)` },
+  // Phase 4: save routes, plan routes, page reads. Phase 4 deletes these entries.
   "src/pages/api/tonight/plan.ts": { count: 1, reason: `${AUDIT_P4}: the catch maps the error to a key with no line` },
   "src/pages/api/tonight/plan/reset.ts": {
     count: 1,
@@ -163,39 +189,42 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   // Phase 5: sign-in, session and the finder.
   "src/middleware.ts": { count: 1, reason: `${AUDIT_P5}: the thrown case of sessionUser reads as a sign-out` },
 
-  // Phases 8-9: the browser side.
+  // Phases 7-9: the browser side. Phases 8 and 9 delete these entries (all but the ones the reason says stay).
   "src/sw.ts": {
-    count: 20,
-    reason: `${CLIENT}: 18 .catch handlers and the two bare catch blocks (lines 507, 585) report through Phase 8's reportAnd and report`,
+    count: 26,
+    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks report through Phase 8's reportAnd and report. Four more catches pass today only through a conditional rethrow (they fall back to the stored copy, else rethrow): network-first fallback to the stored copy is the feature (D14); reported by Phases 8-9 only where the fault is not a routine network fault`,
   },
   "src/lib/offline/register.ts": {
     count: 1,
     reason: `${CLIENT}: service worker registration, island.sw-register (Phase 9)`,
   },
-  "src/lib/offline/install.ts": {
-    count: 1,
-    reason:
-      "a browser-side site that Phases 8-9 do not name: a refused or already-used install prompt is an expected outcome, left unreported unless the owner decides otherwise",
-  },
   "src/components/location/LocationPicker.tsx": {
-    count: 2,
-    reason: `line 64: ${CLIENT} (a failed map import resets its memo, island.import, Phase 9); line 74: ${GEOLOCATION}`,
+    count: 5,
+    reason: `${CLIENT}: the map import's memo reset, the map-open rejection (island.import) and the place search's rejection (island.geocode), all Phase 9; and two geolocation sites that stay silent, the "Use my location" rejection and the recentre lookup (${GEOLOCATION})`,
   },
   "src/components/location/map-panel.tsx": {
     count: 2,
-    reason: `line 52: ${CLIENT} (a failed stylesheet load resets its memo, island.import, Phase 9); line 162: forwards to the browser's reportError, which Phase 9's global handler reports`,
+    reason: `${CLIENT}: a failed stylesheet load resets its memo (island.import, Phase 9); the other catch forwards to the browser's reportError, which Phase 9's global handler reports`,
   },
   "src/lib/gear/catalogue/load.ts": {
     count: 2,
     reason: `${CLIENT}: a failed catalogue import resets its memo (island.import, Phase 9)`,
   },
-  "src/lib/location/geocode.ts": {
+  "src/components/gear/EyepieceForm.tsx": {
     count: 1,
-    reason: `${CLIENT}: reported on the island side as island.geocode (Phase 9); the cause is dropped on purpose (it can quote the request URL, which carries the search text)`,
+    reason: `${CLIENT}: a failed catalogue import sets "unavailable" (island.import, Phase 9)`,
+  },
+  "src/components/gear/TelescopeForm.tsx": {
+    count: 1,
+    reason: `${CLIENT}: a failed catalogue import sets "unavailable" (island.import, Phase 9)`,
+  },
+  "src/components/onboarding/OnboardingWizard.tsx": {
+    count: 2,
+    reason: `${CLIENT}: the failed telescope and eyepiece catalogue imports set "unavailable" (island.import, Phase 9)`,
   },
 };
 
-type SiteKind = "catch" | ".catch";
+type SiteKind = "catch" | ".catch" | ".then";
 
 interface Site {
   kind: SiteKind;
@@ -203,7 +232,7 @@ interface Site {
 }
 
 interface FileAnalysis {
-  /** Every catch clause and `.catch(...)` call, passing or not. */
+  /** Every catch clause, `.catch(...)` call and `.then(ok, fail)` call, passing or not. */
   total: number;
   /** The sites that neither report nor rethrow with a cause. */
   silent: Site[];
@@ -295,17 +324,20 @@ function isRethrowWithCause(node: ts.Node, binding: string | undefined): boolean
   );
 }
 
-/** Does a handler body (a catch block, or the body of a `.catch` callback) report or rethrow with a cause? */
+/**
+ * Does a handler body (a catch block, or the body of a `.catch` / `.then` rejection callback) report or rethrow with
+ * a cause? A rethrow counts only when the handler has no `return` of its own: `if (stored) return stored; throw
+ * error;` and `if (error instanceof Redirect) throw error; return null;` both swallow some failures.
+ */
 function handlerPasses(body: ts.Node, binding: string | undefined, imports: Imports): boolean {
   const skipFunctionsAndCatch = (node: ts.Node): boolean => skipNestedCatch(node) || isFunction(node);
-  return (
-    someNode(body, (node) => isReportingCall(node, imports), skipNestedCatch) ||
-    someNode(body, (node) => isRethrowWithCause(node, binding), skipFunctionsAndCatch)
-  );
+  if (someNode(body, (node) => isReportingCall(node, imports), skipNestedCatch)) return true;
+  if (someNode(body, (node) => ts.isReturnStatement(node), isFunction)) return false;
+  return someNode(body, (node) => isRethrowWithCause(node, binding), skipFunctionsAndCatch);
 }
 
-function catchCallHandlerPasses(call: ts.CallExpression, imports: Imports): boolean {
-  const [handler] = call.arguments;
+/** The rejection handler of a `.catch(handler)` call or the second argument of a `.then(ok, handler)` call. */
+function rejectionHandlerPasses(handler: ts.Expression, imports: Imports): boolean {
   if (ts.isArrowFunction(handler) || ts.isFunctionExpression(handler)) {
     const parameter = handler.parameters.at(0);
     const binding = parameter !== undefined && ts.isIdentifier(parameter.name) ? parameter.name.text : undefined;
@@ -336,15 +368,18 @@ function analyzeChunk(code: string, scriptKind: ts.ScriptKind, lineOffset: numbe
       if (!handlerPasses(node.block, binding, imports)) {
         analysis.silent.push({ kind: "catch", line: lineOf(node.getStart(sourceFile)) });
       }
-    } else if (
-      ts.isCallExpression(node) &&
-      ts.isPropertyAccessExpression(node.expression) &&
-      node.expression.name.text === "catch" &&
-      node.arguments.length > 0
-    ) {
-      analysis.total++;
-      if (!catchCallHandlerPasses(node, imports)) {
-        analysis.silent.push({ kind: ".catch", line: lineOf(node.expression.name.getStart(sourceFile)) });
+    } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+      const method = node.expression.name.text;
+      // `.catch(handler)`, and the second argument of `.then(ok, handler)` (a one-argument `.then` has none).
+      const handler = method === "catch" ? node.arguments.at(0) : method === "then" ? node.arguments.at(1) : undefined;
+      if (handler !== undefined) {
+        analysis.total++;
+        if (!rejectionHandlerPasses(handler, imports)) {
+          analysis.silent.push({
+            kind: method === "catch" ? ".catch" : ".then",
+            line: lineOf(node.expression.name.getStart(sourceFile)),
+          });
+        }
       }
     }
     ts.forEachChild(node, visit);
@@ -410,7 +445,7 @@ const inventory = new Map<string, FileAnalysis>();
 for (const file of files) inventory.set(file, analyzeSource(readFileSync(join(REPO_ROOT, file), "utf8"), file));
 
 const describeSites = (sites: Site[]): string =>
-  sites.map((site) => `${String(site.line)}${site.kind === "catch" ? "" : " (.catch)"}`).join(", ");
+  sites.map((site) => `${String(site.line)}${site.kind === "catch" ? "" : ` (${site.kind})`}`).join(", ");
 
 /** Compares the inventory with an allowlist; every line of the result is one violation, naming the sites. */
 function violationsOf(
@@ -471,6 +506,16 @@ const SAMPLES: { name: string; silent: string; reported: string }[] = [
     reported: `const stored = await index.read().catch((error: unknown) => {\n  logNotice("progress.seen", error);\n  return undefined;\n});\n`,
   },
   {
+    name: "a conditional rethrow that returns on another branch",
+    silent: `async function read() {\n  try {\n    return await fetchIt();\n  } catch (error) {\n    const stored = await readStored();\n    if (stored) return stored;\n    throw error;\n  }\n}\n`,
+    reported: `async function read() {\n  try {\n    return await fetchIt();\n  } catch (error) {\n    logNotice("forecast.fetch", error);\n    const stored = await readStored();\n    if (stored) return stored;\n    throw error;\n  }\n}\n`,
+  },
+  {
+    name: "a rejection handler given to .then(ok, fail)",
+    silent: `load().then(use, () => undefined);\n`,
+    reported: `load().then(use, (error: unknown) => {\n  logFailure("tonight.build", error);\n});\n`,
+  },
+  {
     name: "a .catch(reportAnd(...)) handler without its import",
     silent: `const stored = await index.read().catch(reportAnd("sw.index", undefined));\n`,
     reported: `import { reportAnd } from "@/lib/offline/report";\nconst stored = await index.read().catch(reportAnd("sw.index", undefined));\n`,
@@ -519,6 +564,13 @@ describe("analyzeSource: the guard's rule on in-memory samples", () => {
     expect(rethrows("throw other;")).toBe(1);
     // A throw inside a callback does not leave the handler.
     expect(rethrows("queue(() => { throw error; });")).toBe(1);
+    // A rethrow on one branch only: the other branch swallows the failure, wherever the return sits.
+    expect(rethrows("if (stored) return stored; throw error;")).toBe(1);
+    expect(rethrows("if (error instanceof Redirect) throw error; return null;")).toBe(1);
+    expect(rethrows("return; throw error;")).toBe(1);
+    // A return inside a nested function is not the handler's own.
+    expect(rethrows("const pick = () => { return 1; }; throw error;")).toBe(0);
+    expect(rethrows('if (isRoutine(error)) { logNotice("forecast.fetch", error); return null; } throw error;')).toBe(0);
     // A catch without a binding has no cause to keep.
     expect(
       analyzeSource('try { a(); } catch { throw new Error("fixed", { cause: undefined }); }\n', "src/a.ts").silent,
@@ -526,6 +578,21 @@ describe("analyzeSource: the guard's rule on in-memory samples", () => {
     expect(
       analyzeSource('try { a(); } catch (cause) { throw new Error("fixed", { cause }); }\n', "src/a.ts").silent,
     ).toEqual([]);
+  });
+
+  it("counts the second argument of a two-argument .then as a site, judged like a .catch handler", () => {
+    const silentCount = (source: string): number => analyzeSource(source, "src/a.ts").silent.length;
+    expect(silentCount("p.then(ok, () => undefined);")).toBe(1);
+    expect(silentCount("p.then(ok, fail);")).toBe(1);
+    expect(silentCount("p.then(ok, (error) => { throw error; });")).toBe(0);
+    expect(silentCount("p.then(ok, (error) => { if (a) return 1; throw error; });")).toBe(1);
+    expect(silentCount('p.then(ok, (error) => { logFailure("tonight.build", error); });')).toBe(0);
+    expect(
+      silentCount(`import { reportAnd } from "@/lib/offline/report";\np.then(ok, reportAnd("sw.index", undefined));`),
+    ).toBe(0);
+    // A one-argument `.then` has no rejection handler, and its callback is not judged.
+    expect(silentCount("p.then(() => undefined);")).toBe(0);
+    expect(analyzeSource("p.then(ok, () => undefined);\n", "src/a.ts").silent).toEqual([{ kind: ".then", line: 1 }]);
   });
 
   it("judges a nested catch on its own: a log inside it does not excuse the outer one", () => {

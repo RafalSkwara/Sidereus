@@ -90,6 +90,7 @@
     ]
   },
   "overrides": {
+    "@cloudflare/vite-plugin": "1.62.3",
     "eslint-plugin-react": {
       "eslint": "$eslint"
     },

@@ -152,7 +152,7 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 
 **Intent**: Make every logged error an alertable Issue from the first deploy (D1).
 
-**Contract**: add `"issues": { "enabled": true }` under `observability`; raise the `wrangler` devDependency to at least 4.134.0, taking a version at least about two weeks old (supply-chain rule, orchestrator 2026-10-15): pinned at `^4.145.0` (released 2026-09-30, lockfile 4.145.0; every other package version the bump changed was published on or before 2026-09-30). 4.151.0 (2026-10-14) was tried first and dropped. `worker-configuration.d.ts` is left as is: `wrangler types --check` reports it stale, but regenerating needs the repo's `.dev.vars` and is not CI-neutral. Also add a top-level `"preview_urls": true` (owner, 2026-10-15 evening: Version URLs are enabled for the Worker in the dashboard, and a CI deploy must not flip the setting back, as it would a dashboard-only Issues switch); confirm the build carries it into the generated config and that `wrangler deploy --dry-run` accepts it. Confirm `npm run build` still emits the setting into the generated server config and that `npx wrangler deploy --dry-run` accepts it.
+**Contract**: add `"issues": { "enabled": true }` under `observability`; raise the `wrangler` devDependency to at least 4.134.0, taking a version at least about two weeks old (supply-chain rule, orchestrator 2026-10-15): pinned at `^4.145.0` (released 2026-09-30, lockfile 4.145.0; every other package version the bump changed was published on or before 2026-09-30). 4.151.0 (2026-10-14) was tried first and dropped. `worker-configuration.d.ts` is left as is: `wrangler types --check` reports it stale, but regenerating needs the repo's `.dev.vars` and is not CI-neutral. `@astrojs/cloudflare` 14.x depends on `@cloudflare/vite-plugin ^1.53.0`, which at 1.54.8 pinned wrangler 4.131.1 exactly (a second wrangler and workerd, and the warning "Unexpected fields found in observability field: issues" on every dev and build run); an `overrides` entry `"@cloudflare/vite-plugin": "1.62.3"` (published 2026-09-30, pins wrangler 4.145.0) leaves a single wrangler, miniflare and workerd without an adapter bump (impl review F3). `src/lib/wrangler-config.test.ts` pins `observability.issues.enabled`, `redact_query_string` and `preview_urls` so deleting one fails CI. Also add a top-level `"preview_urls": true` (owner, 2026-10-15 evening: Version URLs are enabled for the Worker in the dashboard, and a CI deploy must not flip the setting back, as it would a dashboard-only Issues switch); confirm the build carries it into the generated config and that `wrangler deploy --dry-run` accepts it. Confirm `npm run build` still emits the setting into the generated server config and that `npx wrangler deploy --dry-run` accepts it.
 
 #### 6. The probe line
 
@@ -188,7 +188,7 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 - Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL, a form value or a header.
 - After the owner merges and deploys this phase, Workers Issues is on for the Worker and Workers Logs shows the script version per invocation (D6).
 - At the same first deploy the owner reads the **invocation event** of one real request in Workers Logs for its geo fields (`request.cf`: latitude, longitude, city, postal code; any client IP) (second review F6): D4's correlation rests on that metadata, and "no coordinates in any report" is broken by configuration if the event holds them. If a coordinate-like field is present, the orchestrator is told before Phase 3 and the fallback applies: turn the invocation log off with `observability.logs.invocation_logs: false` in `wrangler.jsonc` (the flag name is to be confirmed in the Wrangler configuration docs before use), then check whether the `console` lines of one request still share an invocation or request identifier in their metadata (also to be confirmed); if they do not, per-request correlation is lost and the owner decides. Phase 6 §1 documents the result.
-- A deliberate forecast failure on a preview version of the production Worker (the probe procedure in §7: a Version URL from `wrangler versions upload` with `FORECAST_BASE_URL` overridden to a dead address, falling back to a Worker Preview, then to a separate `sidereus-probe` Worker) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message, with production traffic untouched. If Issues groups by call site or stack instead, D2 is revisited before Phase 3 starts.
+- A deliberate forecast failure on a preview version of the production Worker (the probe procedure in §7: a Version URL from `wrangler versions upload` with `FORECAST_BASE_URL` overridden to a dead address, falling back to a Worker Preview, then to a separate `sidereus-probe` Worker) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message, with production traffic untouched. If Issues groups by call site or stack instead, D2 is revisited before Phase 3 starts. In Workers Logs the same line is also filtered on `step = forecast.fetch` as an indexed field (D2 passes the fields as a second `console.error` argument; if they are not filterable fields, D2 is revisited together with the grouping check, for example a single object `{ message, step, ... }`), because the runbook's per-step queries depend on it (impl review F4).
 
 **Implementation Note**: This phase ships as its own pull request, merged and deployed by the owner (review F5, taken: the whole line shape assumes how Issues groups). Phase 2 can proceed in parallel; Phase 3 starts only after the grouping check above. Pause for confirmation before Phase 2.
 
@@ -224,7 +224,7 @@ Stop dropping the cause at the source (RC2), without logging yet: results and th
 
 **Intent**: A thrown read keeps the key as its message and a `StoreFault` as its `cause`, so a later `logFailure` can read the code (F2, F16).
 
-**Contract**: `throw new Error(KEY, { cause: faultFrom(error) })`; the cause never holds the PostgREST message. `session-plans/store.ts` is aligned to the same carrier.
+**Contract**: `throw new Error(KEY, { cause: faultFrom(error) })`; the cause never holds the PostgREST message. `session-plans/store.ts` is aligned to the same carrier. The account-plan store (`src/lib/account-plan/store.ts`) stops returning `error.code || error.name` as one `code` value: it returns `{ code?, name? }` separately (or the `StoreFault`) and `account-plan/index.ts` passes that as the cause, so the helper files each value correctly; today a long name such as `AuthRetryableFetchError` fails `CODE_SHAPE` and the `account.plan` line holds only its step (Phase 1 impl review F5).
 
 #### 4. The forecast client keeps step and status
 
@@ -438,7 +438,7 @@ Close the loop with the owner: the runbook, the final guard allowlist, one delib
 
 **Intent**: Leave only justified silent catches, and tell the next agent the new rule. The service-worker and island entries stay allowlisted with the reason "reported by Phases 7-9, or out of scope if that block is cut" until those phases land.
 
-**Contract**: the allowlist holds only entries with a reason (the browser-side ones are removed by Phases 8 and 9); the CLAUDE.md tripwire says "log a failure through `logFailure(step, error)`; add a step to `FAILURE_STEPS`; never pass an `Error`, a message, a URL or a value", and drops the old "needs its own allowlisted disable" for logs. A lesson (via `/10x-lesson`) records: swallowed catches need a line, the step vocabulary, and the sanitized `cause` for store errors.
+**Contract**: after the probe 1.10 `wrangler.jsonc` pins `"preview_urls": false` (owner, 2026-10-15: Version URLs are on only for the probe; impl review F7) and `src/lib/wrangler-config.test.ts` expects `false` in the same commit; the allowlist holds only entries with a reason (the browser-side ones are removed by Phases 8 and 9); the CLAUDE.md tripwire says "log a failure through `logFailure(step, error)`; add a step to `FAILURE_STEPS`; never pass an `Error`, a message, a URL or a value", and drops the old "needs its own allowlisted disable" for logs. A lesson (via `/10x-lesson`) records: swallowed catches need a line, the step vocabulary, and the sanitized `cause` for store errors.
 
 #### 3. Roadmap and issue
 
@@ -542,7 +542,7 @@ The worker stops swallowing its failures: each of its ~20 silent sites reports a
 
 **Intent**: Wire `createReporter` into the worker with a `send` that posts the payload to `/api/client-error` and swallows its own failure (the one justified silent catch, allowlisted with that reason).
 
-**Contract**: `send` is `fetch("/api/client-error", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true })` with no credentials beyond the default same-origin; cap 10 per worker wake-up (D14). A helper `reportAnd(step, fallback)` returns a catch handler that reports and returns the old fallback value, so each site changes from `.catch(() => undefined)` to `.catch(reportAnd("sw.<step>", undefined))` and behaviour is identical; a routine network fault at a `NETWORK_STEPS` site is not reported (D14) but the same fallback value is still returned. `report` and `reportAnd` are exported from `src/lib/offline/report.ts`, the two names the silent-catch guard accepts (Phase 1 §3), and the two bare `catch {}` blocks call `report(...)` in their body.
+**Contract**: `send` is `fetch("/api/client-error", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true })` with no credentials beyond the default same-origin; cap 10 per worker wake-up (D14). A helper `reportAnd(step, fallback)` returns a catch handler that reports and returns the old fallback value, so each site changes from `.catch(() => undefined)` to `.catch(reportAnd("sw.<step>", undefined))` and behaviour is identical; a routine network fault at a `NETWORK_STEPS` site is not reported (D14) but the same fallback value is still returned. `report` and `reportAnd` are exported from `src/lib/offline/report.ts`, the two names the silent-catch guard accepts (Phase 1 §3), and the two bare `catch {}` blocks call `report(...)` in their body. The guard also counts four conditional-rethrow catches in `sw.ts` (the network-first `if (stored) return stored; throw error;` shape) and two `.then(ok, fail)` rejection handlers (`indexQueue.then(task, task)` is a named function reference the guard cannot see into, so it is restructured to an inline handler that reports); the four rethrow catches stay allowlisted under D14 (the fallback to the stored copy is the feature) unless the implementer reports the non-network faults there too.
 
 #### 2. The sites
 
@@ -593,7 +593,7 @@ React islands and the page's lazy loads report their failures: one global handle
 
 **Intent**: A failed dynamic import or service-worker registration reports its step and keeps the recovery it has (reset the memo, show the existing failed state) (F26, F33).
 
-**Contract**: steps `island.import`, `island.sw-register`, `island.geocode`. Not reported, with a reason in the guard's allowlist: a denied or unavailable geolocation (`LocationPicker.tsx:74`, `locate.ts:60`), which is the user's choice and would be noise.
+**Contract**: steps `island.import`, `island.sw-register`, `island.geocode`. Not reported, with a reason in the guard's allowlist: a denied or unavailable geolocation (`locate.ts`, and in `LocationPicker.tsx` the "Use my location" rejection and the recentre lookup), which is the user's choice and would be noise, and a refused install prompt (`offline/install.ts`, owner 2026-10-15: stays silent for good, no `island.install` step). The `.then(ok, fail)` rejection handlers in `EyepieceForm.tsx`, `TelescopeForm.tsx`, `OnboardingWizard.tsx` (two) and `LocationPicker.tsx` (map open, place search) are sites too: each reports `island.import` or `island.geocode` and its allowlist count drops (impl review F2).
 
 #### 3. Docs and the final allowlist
 
@@ -601,7 +601,7 @@ React islands and the page's lazy loads report their failures: one global handle
 
 **Intent**: Document the client steps and the endpoint, and leave only reasoned silent catches.
 
-**Contract**: the runbook gains the client step table and the endpoint's limits; the CLAUDE.md rule says client code reports through `@/lib/observability/client` and never calls `console`; the lesson is extended; the guard's allowlist holds only the reporter's own `send` catches and the two geolocation sites.
+**Contract**: the runbook gains the client step table and the endpoint's limits; the CLAUDE.md rule says client code reports through `@/lib/observability/client` and never calls `console`; the lesson is extended; the guard's allowlist holds only the reporter's own `send` catches, the geolocation sites (`locate.ts` and two in `LocationPicker.tsx`) and the install prompt.
 
 ### Success Criteria:
 
@@ -683,7 +683,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 - [ ] 1.8 Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL, a form value or a header
 - [ ] 1.9 After the owner merges and deploys this phase, Workers Issues is on, the script version shows per invocation, and the invocation event holds no geo field (`request.cf` latitude, longitude, city, postal code) or client IP; otherwise the written fallback (invocation logs off) is applied before Phase 3
-- [ ] 1.10 A deliberate forecast failure on a preview version of the production Worker (Version URL, else Worker Preview, else `sidereus-probe`; see §7) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message (else D2 is revisited before Phase 3)
+- [ ] 1.10 A deliberate forecast failure on a preview version of the production Worker (Version URL, else Worker Preview, else `sidereus-probe`; see §7) produces a `sidereus: forecast.fetch failed` line, an Issue grouped by that message, and a line that Workers Logs filters on `step = forecast.fetch` as a field (else D2 is revisited before Phase 3)
 
 ### Phase 2: Stores and the forecast client keep the diagnosis
 
@@ -762,6 +762,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 - [ ] 6.6 One Workers Logs line per flow and the invocation event around it (URL path, headers, script version; the `cf` geo fields were checked at 1.9) hold no coordinate, email, key or form value, and the runbook records what the invocation event holds
 - [ ] 6.7 If a line does not become an Issue, the fallback query is used and the gap is recorded as a follow-up
 - [ ] 6.8 Follow-up issues exist for release identity (D6), the island/404/500/plan-unknown UI (D7) and, only if the block was cut, client reporting (D5)
+- [ ] 6.9 After the probe, `wrangler.jsonc` pins `preview_urls: false` and the config pin test expects it, so no later version is public (owner, 2026-10-15)
 
 ### Phase 7: The client-error endpoint and the reporter core
 
