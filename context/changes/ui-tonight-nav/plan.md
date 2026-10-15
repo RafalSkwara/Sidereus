@@ -480,12 +480,12 @@ until their next online refresh, which is harmless.
 
 #### Automated
 
-- [x] 3.1 The nav type-roles guard passes and fails on a planted size — SHA_P3
-- [x] 3.2 Types, lint and the unit suite pass — SHA_P3
-- [x] 3.3 The build passes — SHA_P3
-- [ ] 3.4 The full e2e suite passes on the preview
+- [x] 3.1 The nav type-roles guard passes and fails on a planted size — f3b3249
+- [x] 3.2 Types, lint and the unit suite pass — f3b3249
+- [x] 3.3 The build passes — f3b3249
+- [x] 3.4 The full e2e suite passes on the preview — f3b3249
 
 #### Manual
 
-- [x] 3.5 `/design`'s sub-nav block shows every listed state — SHA_P3
+- [x] 3.5 `/design`'s sub-nav block shows every listed state — f3b3249
 - [ ] 3.6 The owner's walk on the preview
