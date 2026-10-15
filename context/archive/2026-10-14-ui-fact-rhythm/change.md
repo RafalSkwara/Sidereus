@@ -1,10 +1,10 @@
 ---
 change_id: ui-fact-rhythm
 title: Grouped, icon-led facts with a spacing rhythm (ui-refine split, change 2)
-status: impl_reviewed
+status: archived
 created: 2026-10-14
 updated: 2026-10-15
-archived_at: null
+archived_at: 2026-10-15T10:24:14Z
 ---
 
 ## Notes
