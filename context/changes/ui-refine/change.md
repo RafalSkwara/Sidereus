@@ -26,3 +26,23 @@ The owner, 2026-10-14 (relayed by the orchestrator; full wording in `audit.md`, 
 5. Desktop: only Window and Best side by side; every other fact one per line.
 
 The split's first change is `ui-quiet-actions` (its own change folder). Implementation of the split waits for S-07 sky-events to merge.
+
+## Split status
+
+This folder is the umbrella for the split in `audit.md` ("Proposed split into changes") and stays in `changes/` until the last change ships.
+
+| # | Change | Status |
+|---|---|---|
+| 1 | `ui-quiet-actions` | Done: merged in #163 (main c650a8a) and archived to `context/archive/2026-10-14-ui-quiet-actions/` |
+| 2 | `ui-fact-rhythm` | **Next** |
+| 3 | `ui-dashboard-tiles` | Not started (may fold into change 2) |
+| 4 | `ui-tonight-nav` | Not started |
+| 5 | `ui-log-progress-gear` | Not started |
+
+Contract carried over from change 1:
+- **Buttons:** `buttonVariants` has `hairline` (sm) and `quiet` (bare, with its icon, underlined at rest in red through `red:`). `action` is gone.
+- **Tokens:** `--control-border` exists.
+- **Offline:** a control's icons mute with it.
+- **Lint:** `context/**` is outside ESLint.
+
+Evidence scripts to reuse: `context/archive/2026-10-14-ui-quiet-actions/evidence/scripts/`. They take the port from the environment and refuse non-local URLs.

@@ -1,10 +1,10 @@
 ---
 change_id: ui-quiet-actions
 title: Quieter per-item actions through a button hierarchy (ui-refine split, change 1)
-status: impl_reviewed
+status: archived
 created: 2026-10-14
 updated: 2026-10-14
-archived_at: null
+archived_at: 2026-10-14T19:42:38Z
 ---
 
 ## Notes
