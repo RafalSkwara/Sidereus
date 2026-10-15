@@ -863,17 +863,17 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [x] 2.1 Types, lint and the related tests pass in one run
-- [x] 2.2 The whole unit suite passes: `npm test`
+- [x] 2.1 Types, lint and the related tests pass in one run — a6187fe
+- [x] 2.2 The whole unit suite passes: `npm test` — a6187fe
 
 ### Phase 3: Targets, Planets, the Moon and the finder's expect line
 
 #### Automated
 
-- [x] 3.1 Types and lint pass
-- [x] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass
-- [x] 3.3 The affected specs pass against a fresh local preview
-- [x] 3.4 The hardcoded-value scan over the changed view files prints nothing
+- [x] 3.1 Types and lint pass — a6187fe
+- [x] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass — a6187fe
+- [x] 3.3 The affected specs pass against a fresh local preview — a6187fe
+- [x] 3.4 The hardcoded-value scan over the changed view files prints nothing — a6187fe
 
 #### Manual
 
@@ -883,9 +883,9 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [ ] 4.1 Types and lint pass
-- [ ] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass
-- [ ] 4.3 The affected specs pass against a fresh local preview
+- [x] 4.1 Types and lint pass
+- [x] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass
+- [x] 4.3 The affected specs pass against a fresh local preview
 
 #### Manual
 

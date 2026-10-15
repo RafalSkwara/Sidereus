@@ -42,6 +42,10 @@ const GUARDED: Record<string, readonly string[]> = {
   "components/tonight/SolarSystemSection.astro": [],
   // The pill's own padding (the plan listed none; the chip's py-0.5 is not rhythm).
   "components/tonight/SeenTag.astro": ["py-0.5"],
+  // Phase 4: Sky events and Nights. The kind icon's first-line nudge, and the wrap gap between the name and the mark
+  // when they wrap (the marks' own `gap-1` is a bare, horizontal gap).
+  "components/tonight/SkyEventList.astro": ["mt-0.5", "gap-y-1"],
+  "components/tonight/NightStrip.astro": [],
 };
 
 /** Replaces comment text with spaces, keeping newlines so line numbers still match the file. */

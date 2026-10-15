@@ -8,13 +8,18 @@
  * height. `layout="plan"` stands in for the Session plan
  * instead (ui-user-adjustments): one 44 px bar for the edit row above the plan (adjustable-session-plan: "Edit plan", or
  * the free account's lock line), then its night lines, the legend and rows as tall as SessionTimeline's (name, line,
- * curve, hours).
+ * curve, hours). `layout="nights"` and `layout="events"` stand in for the two lighter list pages (ui-fact-rhythm), each
+ * sized to its real rows, since one shared row would be too tall for a night or too short for an event: the Nights
+ * strip's "Times in" line, the verdict nights (date and dark window beside the headline and two fact lines), then under
+ * the dashed rule the outlook nights (two fact lines); the events' "Times in" line, then one night per row (its overline
+ * heading over an event: the kind icon beside the name and "kind · when" lines, two facts at the group step).
  */
 import BackLink from "@/components/ui/BackLink.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
+import { VERDICT_NIGHTS } from "@/lib/engine/parameters";
 
 interface Props {
   title: string;
@@ -22,8 +27,12 @@ interface Props {
   reloadHref: string;
   /** How many placeholder rows stand for the page's content. */
   rows?: number;
-  /** `plan`: the Session plan's shape (SessionTimeline) instead of the generic rows. */
-  layout?: "rows" | "plan";
+  /**
+   * The rows' shape: `rows` (default) a ranked target (Targets, Planets, the Moon); `plan` the Session plan's
+   * (SessionTimeline); `nights` NightStrip's rows (the first `VERDICT_NIGHTS` with a verdict, the rest an outlook under
+   * the dashed rule); `events` one night heading and one event row per row (SkyEventList).
+   */
+  layout?: "rows" | "plan" | "nights" | "events";
   /** The back link, as `TonightPageSky` draws it (Tonight by default). */
   backHref?: string;
   backLabel?: string;
@@ -34,6 +43,12 @@ const m = getMessages(Astro.locals.locale);
 const t = m.tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
 const bar = "rounded bg-border motion-safe:animate-pulse";
+// The Nights layout: the strip's verdict nights first, the outlook nights under the dashed rule.
+const verdictRows = Math.min(rows, VERDICT_NIGHTS);
+const outlookRows = rows - verdictRows;
+// NightStrip's left column and main column (the same classes, so the bars line up as the rows will).
+const nightLeftCell = "flex w-26 shrink-0 flex-col gap-y-line sm:w-28";
+const nightMainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
 ---
 
 <!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
@@ -79,6 +94,72 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
               <div class:list={[bar, "mt-1.5 w-2/3 text-label"]}>&nbsp;</div>
               <div class:list={[bar, "mt-3 h-12"]} />
               <div class="mt-1 h-4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ) : layout === "nights" ? (
+      <div aria-hidden="true">
+        <div class:list={[bar, "mb-group w-40 max-w-full text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "w-16 text-overline"]}>&nbsp;</div>
+        <div class="divide-y divide-border">
+          {Array.from({ length: verdictRows }, () => (
+            <div class="flex gap-x-4 py-item">
+              <div class:list={[nightLeftCell]}>
+                <div class:list={[bar, "w-20 text-label"]}>&nbsp;</div>
+                <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
+              </div>
+              <div class:list={[nightMainCell]}>
+                <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
+                <div class:list={[bar, "w-5/6 text-label"]}>&nbsp;</div>
+                <div class:list={[bar, "w-2/3 text-label"]}>&nbsp;</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {outlookRows > 0 && (
+          <>
+            <div class="mt-line border-t-2 border-dashed border-border pt-group">
+              <div class:list={[bar, "w-40 max-w-full text-overline"]}>&nbsp;</div>
+            </div>
+            <div class="divide-y divide-border">
+              {Array.from({ length: outlookRows }, () => (
+                <div class="flex gap-x-4 py-item">
+                  <div class:list={[nightLeftCell]}>
+                    <div class:list={[bar, "w-20 text-label"]}>&nbsp;</div>
+                    <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
+                  </div>
+                  <div class:list={[nightMainCell]}>
+                    <div class:list={[bar, "w-32 max-w-full text-label"]}>&nbsp;</div>
+                    <div class:list={[bar, "w-2/3 text-label"]}>&nbsp;</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    ) : layout === "events" ? (
+      <div aria-hidden="true">
+        <div class:list={[bar, "mb-group w-40 max-w-full text-label"]}>&nbsp;</div>
+        <div class="space-y-item">
+          {Array.from({ length: rows }, () => (
+            <div>
+              <div class:list={[bar, "w-56 max-w-full text-overline"]}>&nbsp;</div>
+              {/* SkyEventList's first row after its heading: the group step above, the item step below. */}
+              <div class="flex items-start gap-3 pt-group pb-item">
+                <div class:list={[bar, "size-5 shrink-0"]} />
+                <div class="min-w-0 flex-1">
+                  <div class="space-y-line">
+                    <div class:list={[bar, "w-1/2 text-body"]}>&nbsp;</div>
+                    <div class:list={[bar, "w-2/3 text-label"]}>&nbsp;</div>
+                  </div>
+                  <div class="mt-group space-y-line">
+                    <div class:list={[bar, "w-5/6 text-label"]}>&nbsp;</div>
+                    <div class:list={[bar, "w-3/4 text-label"]}>&nbsp;</div>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

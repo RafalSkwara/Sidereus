@@ -32,6 +32,8 @@ import GearCard from "@/components/tonight/GearCard.astro";
 import EventsTile from "@/components/tonight/EventsTile.astro";
 import SkyEventList from "@/components/tonight/SkyEventList.astro";
 import { eventSamples, SAMPLE_EVENTS_NIGHT } from "@/components/design/event-samples";
+import NightStrip from "@/components/tonight/NightStrip.astro";
+import { nightSamples, SAMPLE_NIGHTS_ZONE } from "@/components/design/night-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
@@ -2851,6 +2853,28 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
+          <!-- NightStrip (ui-fact-rhythm) -->
+          <section class:list={block} aria-labelledby="c-night-strip">
+            <h3 id="c-night-strip" class:list={blockTitle}>
+              NightStrip (/tonight/nights)
+            </h3>
+            <p class:list={blockNote}>
+              Fixed sample nights (no clock, no forecast): a go night with its reason and a no-darkness night without
+              one (the headline and the dark column say it), then two outlook nights, one with a cloud range and one
+              with a single figure. The group labels are the muted overline; the reason, cloud and moon lines are muted
+              icon-led facts; every row is at the item role. The strip's band heading is screen-reader only, as on the
+              page.
+            </p>
+            <div class="max-w-3xl" data-night-strip-specimen>
+              <NightStrip siteName="Back garden" timeZone={SAMPLE_NIGHTS_ZONE} nights={nightSamples(locale)} />
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, disabled — N/A (rows are plain text, nothing is interactive) · error — N/A
+              (NightsPageContent shows its own notice instead of the strip) · empty — N/A (the page renders its own “no
+              nights” notice, not the strip) · loading — see TonightPageSkeleton
+            </p>
+          </section>
+
           <!-- NotSeenMark -->
           <section class:list={block} aria-labelledby="c-not-seen">
             <h3 id="c-not-seen" class:list={blockTitle}>
@@ -3089,6 +3113,28 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </p>
               <div class="overflow-hidden rounded-lg">
                 <TonightPageSkeleton title={m.tonight.summary.plan} reloadHref="/design" rows={2} layout="plan" />
+              </div>
+            </div>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>
+                loading · layout="nights" (/tonight/nights): "Times in", 3 verdict nights, the dashed rule, 1 outlook
+                night
+              </p>
+              <div class="overflow-hidden rounded-lg">
+                <TonightPageSkeleton
+                  title={m.tonight.summary.nights({ count: String(OUTLOOK_NIGHTS) })}
+                  reloadHref="/design"
+                  rows={4}
+                  layout="nights"
+                />
+              </div>
+            </div>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>
+                loading · layout="events" (/tonight/events): "Times in", 2 nights of one event each
+              </p>
+              <div class="overflow-hidden rounded-lg">
+                <TonightPageSkeleton title={m.tonight.summary.events} reloadHref="/design" rows={2} layout="events" />
               </div>
             </div>
           </section>

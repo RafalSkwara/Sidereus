@@ -3,9 +3,11 @@
 // carry the verdict, worded by its sky headline; nights 4-7 only the dark window, the moon and a cloud outlook, in
 // neutral tokens and never a headline or tone (invariant 5). A ruled Band: one row per night, the date and dark
 // window stacked in a fixed-width column at every width, and the headline, its reason and the Moon each on their own
-// line beside it (ui-user-adjustments).
+// line beside it (ui-user-adjustments). The group labels use the muted overline role, and the lines beside the
+// headline are muted icon-led facts (ui-fact-rhythm); a row holds no list element (the spec counts `ol > li`).
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
 import Band from "@/components/ui/Band.astro";
+import Fact from "@/components/ui/Fact.astro";
 import { getMessages } from "@/i18n";
 import type { TonightNight } from "@/lib/tonight/build";
 
@@ -26,14 +28,15 @@ const t = m.tonight.nights;
 const verdictNights = nights.filter((night): night is VerdictNight => night.kind === "verdict");
 const outlookNights = nights.filter((night): night is OutlookNight => night.kind === "outlook");
 
-// Date over dark window on the left, headline / reason / moon (or cloud outlook / moon) on the right, a gap between
-// the lines. The left column is a fixed width from the spacing scale (w-26, w-28 from sm), so the rows line up.
-const row = "flex gap-x-4 py-5 text-label";
-const leftCell = "flex w-26 shrink-0 flex-col gap-2 sm:w-28";
+// Date over dark window on the left, headline / reason / moon (or cloud outlook / moon) on the right, the line role
+// between the lines and the item role around each row. The left column is a fixed width from the spacing scale (w-26,
+// w-28 from sm), so the rows line up.
+const row = "flex gap-x-4 py-item text-label";
+const leftCell = "flex w-26 shrink-0 flex-col gap-y-line sm:w-28";
 const dateCell = "block font-semibold text-heading";
 const darkCell = "block text-foreground tabular-nums";
-const mainCell = "flex min-w-0 flex-1 flex-col gap-2";
-const groupLabel = "text-label font-semibold";
+const mainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
+const groupLabel = "text-overline text-muted-foreground";
 ---
 
 <Band
@@ -42,12 +45,12 @@ const groupLabel = "text-label font-semibold";
   heading={t.heading({ count: String(nights.length), site: siteName })}
   headingHidden
 >
-  <p class="mb-4 text-label text-muted-foreground">{t.timesIn({ zone: timeZone })}</p>
+  <p class="mb-group text-label text-muted-foreground">{t.timesIn({ zone: timeZone })}</p>
 
   <div>
     {verdictNights.length > 0 && (
       <>
-        <h3 class:list={[groupLabel, "text-primary"]}>{t.verdictLabel}</h3>
+        <h3 class:list={[groupLabel]}>{t.verdictLabel}</h3>
         <ol class="divide-y divide-border">
           {verdictNights.map((night) => (
             <li class:list={[row]}>
@@ -68,8 +71,14 @@ const groupLabel = "text-label font-semibold";
                     {night.headline.text}
                   </span>
                 </p>
-                {night.reasonText && <p class="text-muted-foreground first-letter:uppercase">{night.reasonText}</p>}
-                <p class="text-muted-foreground">{night.moonText}</p>
+                {night.reasonText && (
+                  <Fact kind="why" tone="muted">
+                    <p class="first-letter:uppercase">{night.reasonText}</p>
+                  </Fact>
+                )}
+                <Fact kind="moon" tone="muted">
+                  <span>{night.moonText}</span>
+                </Fact>
               </div>
             </li>
           ))}
@@ -82,8 +91,7 @@ const groupLabel = "text-label font-semibold";
         <h3
           class:list={[
             groupLabel,
-            "text-muted-foreground",
-            verdictNights.length > 0 && "mt-1 border-t-2 border-dashed border-border pt-4",
+            verdictNights.length > 0 && "mt-line border-t-2 border-dashed border-border pt-group",
           ]}
         >
           {t.outlookLabel}
@@ -95,9 +103,15 @@ const groupLabel = "text-label font-semibold";
                 <span class:list={[dateCell]}>{night.label}</span>
                 <span class:list={[darkCell]}>{night.darkText}</span>
               </div>
-              <div class:list={[mainCell, "text-muted-foreground"]}>
-                {night.cloudText !== null && <p>{night.cloudText}</p>}
-                <p>{night.moonText}</p>
+              <div class:list={[mainCell]}>
+                {night.cloudText !== null && (
+                  <Fact kind="cloud" tone="muted">
+                    <span>{night.cloudText}</span>
+                  </Fact>
+                )}
+                <Fact kind="moon" tone="muted">
+                  <span>{night.moonText}</span>
+                </Fact>
               </div>
             </li>
           ))}
