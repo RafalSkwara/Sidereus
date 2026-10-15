@@ -1,5 +1,7 @@
 # Production Error Visibility (M-4 S-07) Implementation Plan
 
+> **Status (2026-10-15): planned, awaiting the reviewer's second plan review (after F1-F7, the D4/D5 changes and the probe procedure). No phase has started; every Progress row below is unchecked.**
+
 ## Overview
 
 Give the operator one first-party signal for every failure in the critical flows (Tonight and its forecast, the save routes, sign-in and session, the finder chart and Session-plan edits, and the browser side: the service worker and the React islands), with its cause, and an alert path, without a coordinate, email, key, user or site ID or form value ever reaching a log.
@@ -645,6 +647,8 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 ## Progress
 
+> Status: awaiting the second plan review; no phase has started.
+>
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
 ### Phase 1: The failure helper, the guard, Issues config and the first probe line
