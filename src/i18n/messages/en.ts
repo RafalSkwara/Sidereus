@@ -597,12 +597,20 @@ export const en = {
         clearHoursMissing: (p: { hours: string }) =>
           `clear ${p.hours}, but an hour between dusk and dawn is missing from the forecast`,
       },
+      /** Each fact's label; the card shows it, a space, then the value below ("Brightness mag −1.9"). */
+      factLabel: {
+        magnitude: "Brightness",
+        size: "Apparent size",
+        phase: "Phase",
+        rings: "Rings",
+      },
+      /** The fact values carry no label of their own: the card puts `factLabel` before them. */
       magnitude: (p: { mag: string }) => `mag ${p.mag}`,
       size: (p: { arcsec: string }) => `${p.arcsec}″`,
       /** Mercury and Venus only. */
       phase: (p: { percent: string }) => `${p.percent}% lit`,
       /** Saturn only. */
-      rings: (p: { degrees: string }) => `rings tilted ${p.degrees}°`,
+      rings: (p: { degrees: string }) => `tilted ${p.degrees}°`,
       detailWith: "Detail with",
       /** By placement (peak altitude) × timing (which third of the planet window holds the peak). */
       reason: {

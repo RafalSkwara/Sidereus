@@ -1,0 +1,257 @@
+diff --git a/src/components/tonight/ObjectCard.astro b/src/components/tonight/ObjectCard.astro
+index 55ea359..45d092c 100644
+--- a/src/components/tonight/ObjectCard.astro
++++ b/src/components/tonight/ObjectCard.astro
+@@ -35,7 +35,7 @@ const tipId = `not-seen-tip-${entry.id}`;
+   data-object={entry.id}
+   data-label={entry.label}
+   data-not-seen-scope
+-  class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0"
++  class="relative scroll-mt-4 py-item first:pt-0 last:pb-0"
+ >
+   {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
+   <h3 class="font-display text-title font-semibold break-words text-heading">
+diff --git a/src/components/tonight/ObjectDetails.astro b/src/components/tonight/ObjectDetails.astro
+index 0277493..fe92570 100644
+--- a/src/components/tonight/ObjectDetails.astro
++++ b/src/components/tonight/ObjectDetails.astro
+@@ -1,9 +1,10 @@
+ ---
+ // The details of one ranked object: window and best time, eyepiece pair, reason and "Mark observed". Shown by the
+ // Targets page's expandable rows (ObjectRow); Tonight's dashboard lists no details since tonight-dashboard.
+-import { Eye } from "lucide-react";
+ 
+ import TargetDetails from "@/components/tonight/TargetDetails.astro";
++import Fact from "@/components/ui/Fact.astro";
++import { FACT_ICONS } from "@/lib/ui/fact-icons";
+ import { getMessages } from "@/i18n";
+ import type { ExpectationKey } from "@/lib/engine";
+ import type { TonightEntry } from "@/lib/tonight/build";
+@@ -37,29 +38,23 @@ const t = tonight.object;
+   srSuffix={entry.label}
+ >
+   {expectation && (
+-    /* The first of the slot's lines, above the eyepiece pair. `data-expect` carries the key: the bare attribute would
+-       also match `data-expect-locked`, so smoke and e2e look for `data-expect="`. */
+-    <p data-expect={expectation.key} class="flex items-start gap-2 text-label text-foreground">
+-      <Eye className="mt-0.5 size-4 shrink-0 text-primary-strong" aria-hidden="true" />
+-      <span class="min-w-0">{expectation.text}</span>
+-    </p>
++    /* `data-expect` carries the key: smoke and e2e look for `data-expect="`. */
++    <Fact icon={FACT_ICONS.expect} data-expect={expectation.key}>{expectation.text}</Fact>
+   )}
+   {entry.pair?.kind === "pair" && (
+-    <div class="space-y-2">
+-      <p class="text-label text-foreground">
++    <Fact icon={FACT_ICONS.eyepiece}>
++      <p>
+         {t.findWith} <span class="font-semibold text-heading">{entry.pair.finding.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.finding.magnification) })}
+       </p>
+-      {/* The message reads on after "Find with …" in lower case: its own line starts with a capital. */}
+-      <p class="text-label text-foreground first-letter:uppercase">
++      <p class="first-letter:uppercase">
+         {t.detailWith} <span class="font-semibold text-heading">{entry.pair.detail.name}</span>{" "}
+         {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
+       </p>
+-    </div>
++    </Fact>
+   )}
+   {entry.pair?.kind === "none-fit" && (
+-    <p class="text-label text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
++    <Fact icon={FACT_ICONS.eyepiece}>{t.noneFit({ name: entry.pair.widestName })}</Fact>
+   )}
+-
+-  <p class="text-label text-foreground">{entry.reason}</p>
++  <Fact icon={FACT_ICONS.reason} muted>{entry.reason}</Fact>
+ </TargetDetails>
+diff --git a/src/components/tonight/PlanetCard.astro b/src/components/tonight/PlanetCard.astro
+index 5df5b34..d2d1a32 100644
+--- a/src/components/tonight/PlanetCard.astro
++++ b/src/components/tonight/PlanetCard.astro
+@@ -7,6 +7,8 @@ import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
+ import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
+ import SeenTag from "@/components/tonight/SeenTag.astro";
+ import TargetDetails from "@/components/tonight/TargetDetails.astro";
++import Fact from "@/components/ui/Fact.astro";
++import { FACT_ICONS, type FactIcon } from "@/lib/ui/fact-icons";
+ import { getMessages } from "@/i18n";
+ import type { TonightPlanetEntry } from "@/lib/tonight/build";
+ 
+@@ -21,12 +23,17 @@ interface Props {
+ const { entry, logHref, finderHref } = Astro.props;
+ const t = getMessages(Astro.locals.locale).tonight;
+ const tipId = `not-seen-tip-planet-${entry.key}`;
+-const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringText].filter(
+-  (text): text is string => text !== null,
+-);
++const facts = (
++  [
++    [FACT_ICONS.magnitude, entry.magnitudeText],
++    [FACT_ICONS.size, entry.sizeText],
++    [FACT_ICONS.phase, entry.phaseText],
++    [FACT_ICONS.rings, entry.ringText],
++  ] as const
++).filter((pair): pair is readonly [FactIcon, string] => pair[1] !== null);
+ ---
+ 
+-<li id={`planet-${entry.key}`} data-not-seen-scope class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0">
++<li id={`planet-${entry.key}`} data-not-seen-scope class="relative scroll-mt-4 py-item first:pt-0 last:pb-0">
+   {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
+   <h3 class="font-display text-title font-semibold break-words text-heading">
+     <span data-target-name>{entry.name}</span>
+@@ -34,9 +41,9 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
+   </h3>
+   {entry.notSeenYet && <NotSeenTip id={tipId} />}
+   {/* One fact per line under the name: magnitude, size, phase, rings. */}
+-  <div class="mt-1 space-y-1 font-mono text-label text-muted-foreground">
+-    {facts.map((fact) => (
+-      <p>{fact}</p>
++  <div class="mt-line space-y-line">
++    {facts.map(([icon, fact]) => (
++      <Fact icon={icon}><span class="font-mono">{fact}</span></Fact>
+     ))}
+   </div>
+   {entry.seenText && <SeenTag text={entry.seenText} />}
+@@ -51,14 +58,13 @@ const facts = [entry.magnitudeText, entry.sizeText, entry.phaseText, entry.ringT
+     finderLabel={t.finder.linkLabel({ target: entry.name })}
+     ariaLabel={t.planets.markObserved({ planet: entry.name })}
+   >
++    <Fact icon={FACT_ICONS.see}>{entry.note}</Fact>
+     {entry.eyepiece && (
+-      <p class="text-label text-foreground">
++      <Fact icon={FACT_ICONS.eyepiece}>
+         {t.planets.detailWith} <span class="font-semibold text-heading">{entry.eyepiece.name}</span>{" "}
+         {t.object.magnification({ magnification: String(entry.eyepiece.magnification) })}
+-      </p>
++      </Fact>
+     )}
+-
+-    <p class="text-label text-foreground">{entry.reason}</p>
+-    <p class="text-label text-muted-foreground">{entry.note}</p>
++    <Fact icon={FACT_ICONS.reason} muted>{entry.reason}</Fact>
+   </TargetDetails>
+ </li>
+diff --git a/src/components/tonight/TargetDetails.astro b/src/components/tonight/TargetDetails.astro
+index f45b60a..90f7b0b 100644
+--- a/src/components/tonight/TargetDetails.astro
++++ b/src/components/tonight/TargetDetails.astro
+@@ -6,7 +6,9 @@
+ // lines carry no margins of their own.
+ import { Check, Crosshair } from "lucide-react";
+ import { buttonVariants } from "@/components/ui/button";
++import StatCard from "@/components/ui/StatCard.astro";
+ import { getMessages } from "@/i18n";
++import { FACT_ICONS } from "@/lib/ui/fact-icons";
+ 
+ interface Props {
+   /** Best window, `HH:mm` in the site's time zone. */
+@@ -41,26 +43,19 @@ const markClass = buttonVariants({ variant: "hairline", size: "sm" });
+ const finderClass = buttonVariants({ variant: "quiet", size: "bare" });
+ ---
+ 
+-<dl class="mt-4 grid gap-y-2 text-label">
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.window}</dt>
+-    <dd class="font-mono text-heading">
+-      {windowStart}–{windowEnd}
+-    </dd>
+-  </div>
+-  <div class="flex gap-2">
+-    <dt class="text-muted-foreground">{t.best}</dt>
+-    <dd class="font-mono text-heading">
+-      {bestTime}, {bestDirection}
+-    </dd>
+-  </div>
++<dl class="mt-group grid grid-cols-2 gap-3">
++  <StatCard label={t.window} icon={FACT_ICONS.window}>{windowStart}–{windowEnd}</StatCard>
++  <StatCard label={t.best} icon={FACT_ICONS.best}>
++    {bestTime}
++    <span class="block text-label font-normal text-muted-foreground">{bestDirection}</span>
++  </StatCard>
+ </dl>
+ 
+-<div class="mt-4 space-y-3">
++<div class="mt-group space-y-line border-t border-border pt-group">
+   <slot />
+ </div>
+ 
+-<div class="mt-5 flex flex-wrap gap-x-5 gap-y-2">
++<div class="mt-group flex flex-wrap gap-x-5 gap-y-2">
+   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
+   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
+     <Check aria-hidden="true" />
+diff --git a/src/styles/global.css b/src/styles/global.css
+index 2d2fe9d..aec6a1a 100644
+--- a/src/styles/global.css
++++ b/src/styles/global.css
+@@ -659,6 +659,14 @@
+   /* The interactive sky's star and body labels (interactive-sky): small enough for 15 stars and 13 bodies at 390 px. */
+   --text-caption: 0.75rem;
+   --text-caption--line-height: 1rem;
++  /* EXPERIMENT (ui-fact-rhythm): the section-label role and the three rhythm roles. */
++  --text-overline: 0.75rem;
++  --text-overline--line-height: 1rem;
++  --text-overline--letter-spacing: 0.06em;
++  --text-overline--font-weight: 600;
++  --spacing-line: 0.5rem;
++  --spacing-group: 1.25rem;
++  --spacing-item: 2rem;
+ 
+   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
+   --font-sans: "Archivo Variable", system-ui, sans-serif;
+=== new file src/components/ui/Fact.astro
+---
+// EXPERIMENT (ui-fact-rhythm): one fact, an icon then an optional muted label and the value or sentence.
+import type { HTMLAttributes } from "astro/types";
+import type { FactIcon } from "@/lib/ui/fact-icons";
+
+interface Props extends HTMLAttributes<"div"> {
+  icon: FactIcon;
+  label?: string;
+  muted?: boolean;
+}
+const { icon: Icon, label, muted = false, ...rest } = Astro.props;
+---
+
+<div class:list={["flex items-start gap-2 text-label", muted ? "text-muted-foreground" : "text-foreground"]} {...rest}>
+  <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+  <div class="min-w-0 space-y-1">
+    {label && <span class="text-muted-foreground">{label} </span>}<slot />
+  </div>
+</div>
+=== new file src/components/ui/StatCard.astro
+---
+// EXPERIMENT (ui-fact-rhythm): a small stat card, a caption label with its icon over a larger mono value.
+import type { FactIcon } from "@/lib/ui/fact-icons";
+
+interface Props {
+  label: string;
+  icon: FactIcon;
+}
+const { label, icon: Icon } = Astro.props;
+---
+
+<div class="rounded-lg border border-border bg-surface px-3 py-2">
+  <dt class="flex items-center gap-1.5 text-caption text-muted-foreground">
+    <Icon className="size-3.5 shrink-0" aria-hidden="true" />{label}
+  </dt>
+  <dd class="mt-0.5 font-mono text-body font-semibold text-heading"><slot /></dd>
+</div>
+=== new file src/lib/ui/fact-icons.ts
+// EXPERIMENT (ui-fact-rhythm): one icon per fact.
+import { Clock, Compass, Diameter, Ellipse, Eye, Info, Contrast, SunDim, Telescope } from "lucide-react";
+
+export const FACT_ICONS = {
+  window: Clock,
+  best: Compass,
+  expect: Eye,
+  eyepiece: Telescope,
+  reason: Info,
+  see: Eye,
+  magnitude: SunDim,
+  size: Diameter,
+  phase: Contrast,
+  rings: Ellipse,
+} as const;
+export type FactIcon = (typeof FACT_ICONS)[keyof typeof FACT_ICONS];

@@ -203,7 +203,7 @@ export interface TonightPlanetEntry {
   sizeText: string;
   /** "62% lit", Mercury and Venus only. */
   phaseText: string | null;
-  /** "rings tilted 4°", Saturn only. */
+  /** "tilted 4°", Saturn only. */
   ringText: string | null;
   /** The detail eyepiece; `null` when the kit has no eyepieces. */
   eyepiece: EyepieceLine | null;

@@ -1,16 +1,17 @@
 ---
 // The sky events list (M-3 S-07, sky-events Phase 4): the events of the next nights grouped by night, a heading per
-// night and one row per event. Each row has the kind's icon (decorative), the name, the visible or not-visible mark,
-// when it happens, a few facts, then either the best time and direction or the reason it cannot be seen from the site.
-// A visible row uses heading ink and a semibold name with the "Visible" mark; a not-visible row is muted, regular
-// weight, and says why. Red mode has no hue to tell them apart, so the mark (an icon and its word) and the weight
-// carry it, never colour alone. A not-visible row is never worded as something to go out for. Every solar-eclipse row,
-// visible or not, carries the fixed eye-safety line. Rows carry `data-event-kind` and `data-visible` for e2e. With no
-// events at all the list says so honestly.
-import { Eclipse, Eye, EyeOff, Link, Moon, Orbit, CircleDot, Sparkle, TriangleAlert } from "lucide-react";
-
+// night (the muted overline role) and one row per event. Each row has a header, the kind's icon (decorative), the
+// name, the visible or not-visible mark and the muted "kind · when" line, then its facts one per line (ui-fact-rhythm):
+// each detail, then either the best time and direction or the reason it cannot be seen from the site, the notes, and
+// the safety line. A visible row uses heading ink and a semibold name with the "Visible" mark; a not-visible row is
+// muted, regular weight, and says why. Red mode has no hue to tell them apart, so the mark (an icon and its word) and
+// the weight carry it, never colour alone. A not-visible row is never worded as something to go out for. Every
+// solar-eclipse row, visible or not, carries the fixed eye-safety line. Rows carry `data-event-kind` and
+// `data-visible` for e2e. With no events at all the list says so honestly.
+import Fact from "@/components/ui/Fact.astro";
+import FactList from "@/components/ui/FactList.astro";
+import { EVENT_KIND_ICONS, VISIBILITY_MARK_ICONS } from "@/components/ui/fact-icons";
 import { getMessages } from "@/i18n";
-import type { SkyEventKind } from "@/lib/engine";
 import type { TonightSkyEvent } from "@/lib/tonight/sky-events";
 import { cn } from "@/lib/utils";
 
@@ -25,15 +26,10 @@ interface Props {
 const { events, windowNights, idBase = "events-night" } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.events;
 
-// One icon per kind: decorative, the name and the kind line carry the meaning.
-const ICONS = {
-  "lunar-eclipse": Moon,
-  "solar-eclipse": Eclipse,
-  elongation: Orbit,
-  opposition: CircleDot,
-  pairing: Link,
-  "meteor-shower": Sparkle,
-} satisfies Record<SkyEventKind, typeof Moon>;
+// One icon per kind and one per visibility mark, from the shared map (ui-fact-rhythm): decorative, the name, the kind
+// line and the mark's word carry the meaning.
+const VisibleIcon = VISIBILITY_MARK_ICONS.visible;
+const NotVisibleIcon = VISIBILITY_MARK_ICONS.notVisible;
 
 // The events arrive in time order, so a night's events are adjacent: group them in one pass.
 const groups: { night: string; label: string; events: TonightSkyEvent[] }[] = [];
@@ -52,75 +48,84 @@ for (const event of events) {
     {t.empty({ count: String(windowNights) })}
   </p>
 ) : (
-  <div class="space-y-6" data-events-list>
+  <div class="space-y-item" data-events-list>
     {groups.map((group) => (
       <section aria-labelledby={`${idBase}-${group.night}`} data-events-night={group.night}>
-        <h3 id={`${idBase}-${group.night}`} class="text-label font-semibold text-primary">
+        <h3 id={`${idBase}-${group.night}`} class="text-overline text-muted-foreground">
           {t.nightOf({ date: group.label })}
         </h3>
         <ul class="divide-y divide-border">
           {group.events.map((event) => {
-            const Icon = ICONS[event.kind];
+            const Icon = EVENT_KIND_ICONS[event.kind];
+            // A not-visible row keeps its muted tone on every fact; the notes are always muted.
+            const tone = event.visible ? "default" : "muted";
             return (
-              <li class="py-5" data-event-kind={event.kind} data-visible={event.visible ? "true" : "false"}>
+              <li
+                class="py-item first:pt-group"
+                data-event-kind={event.kind}
+                data-visible={event.visible ? "true" : "false"}
+              >
                 <div class="flex items-start gap-3">
                   <Icon
                     className={cn("mt-0.5 size-5 shrink-0", event.visible ? "text-heading" : "text-muted-foreground")}
                     aria-hidden="true"
                   />
-                  <div class="min-w-0 flex-1 space-y-1.5">
-                    <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                      <h4
-                        class:list={[
-                          "min-w-0 text-body break-words",
-                          event.visible ? "font-semibold text-heading" : "font-normal text-muted-foreground",
-                        ]}
-                      >
-                        {event.name}
-                      </h4>
-                      {event.visible ? (
-                        <span
-                          class="inline-flex shrink-0 items-center gap-1 text-label font-semibold text-heading"
-                          data-event-visible-mark
+                  <div class="min-w-0 flex-1">
+                    <div class="space-y-line">
+                      <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                        <h4
+                          class:list={[
+                            "min-w-0 text-body break-words",
+                            event.visible ? "font-semibold text-heading" : "font-normal text-muted-foreground",
+                          ]}
                         >
-                          <Eye className="size-4" aria-hidden="true" />
-                          {t.visible}
-                        </span>
-                      ) : (
-                        <span
-                          class="inline-flex shrink-0 items-center gap-1 text-label font-normal text-muted-foreground"
-                          data-event-not-visible-mark
-                        >
-                          <EyeOff className="size-4" aria-hidden="true" />
-                          {t.notVisible}
-                        </span>
-                      )}
+                          {event.name}
+                        </h4>
+                        {event.visible ? (
+                          <span
+                            class="inline-flex shrink-0 items-center gap-1 text-label font-semibold text-heading"
+                            data-event-visible-mark
+                          >
+                            <VisibleIcon className="size-4" aria-hidden="true" />
+                            {t.visible}
+                          </span>
+                        ) : (
+                          <span
+                            class="inline-flex shrink-0 items-center gap-1 text-label font-normal text-muted-foreground"
+                            data-event-not-visible-mark
+                          >
+                            <NotVisibleIcon className="size-4" aria-hidden="true" />
+                            {t.notVisible}
+                          </span>
+                        )}
+                      </div>
+                      <p class="text-label text-muted-foreground">
+                        {event.kindLabel} · <span data-event-when>{event.when}</span>
+                      </p>
                     </div>
-                    <p class="text-label text-muted-foreground">
-                      {event.kindLabel} · <span data-event-when>{event.when}</span>
-                    </p>
-                    {event.details.length > 0 && (
-                      <p class:list={["text-label", event.visible ? "text-foreground" : "text-muted-foreground"]}>
-                        {event.details.join(" · ")}
-                      </p>
-                    )}
-                    <p
-                      class:list={["text-label", event.visible ? "text-foreground" : "text-muted-foreground"]}
-                      data-event-visibility
-                    >
-                      {event.visibilityText}
-                    </p>
-                    {event.notes.map((note) => (
-                      <p class="text-label text-muted-foreground" data-event-note>
-                        {note}
-                      </p>
-                    ))}
-                    {event.safety && (
-                      <p class="flex items-start gap-2 text-label text-foreground" data-event-safety>
-                        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-marginal" aria-hidden="true" />
-                        <span>{t.solarSafety}</span>
-                      </p>
-                    )}
+                    {/* One fact per line: each detail on its own (no longer joined with " · "), then the best time or
+                        the reason, the notes and the safety line. The markers sit on the fact's root, whose only text
+                        is the sentence (the icon is an aria-hidden svg). */}
+                    <FactList class="mt-group">
+                      {event.details.map((detail) => (
+                        <Fact kind="measure" tone={tone}>
+                          <span>{detail}</span>
+                        </Fact>
+                      ))}
+                      <Fact kind={event.visible ? "best" : "why"} tone={tone} data-event-visibility>
+                        <p>{event.visibilityText}</p>
+                      </Fact>
+                      {event.notes.map((note) => (
+                        <Fact kind="tip" tone="muted" data-event-note>
+                          <p>{note}</p>
+                        </Fact>
+                      ))}
+                      {event.safety && (
+                        <Fact kind="safety" iconClass="text-marginal" data-event-safety>
+                          <p>{t.solarSafety}</p>
+                        </Fact>
+                      )}
+                    </FactList>
                   </div>
                 </div>
               </li>

@@ -175,13 +175,13 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
         <div>
           {best.length > 0 ? (
             <Band headingId="targets-heading" heading={t.summary.targets}>
-              <p class:list={["text-label text-muted-foreground", expectLocked ? "mb-2" : "mb-4"]}>
+              <p class:list={["text-label text-muted-foreground", expectLocked ? "mb-line" : "mb-group"]}>
                 {ranking.clearedText}
                 {load.multipleTelescopes && <> · {t.rankingFor({ telescope: view.telescopeName })}</>}
               </p>
               {expectLocked && (
                 /* A free account: once per page, no phrase anywhere (O-1). The marker has no valued `data-expect`. */
-                <p data-expect-locked class="mb-4 flex items-start gap-2 text-label text-muted-foreground">
+                <p data-expect-locked class="mb-group flex items-start gap-2 text-label text-muted-foreground">
                   <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <span class="min-w-0">{t.expect.locked}</span>
                 </p>
@@ -265,7 +265,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
 
           {washedOut.length > 0 && (
             <Band id="washed-out" class="scroll-mt-4" headingId="washed-out-heading" heading={t.washedOut.heading}>
-              <p class="mb-4 text-label text-muted-foreground">{t.washedOut.intro}</p>
+              <p class="mb-group text-label text-muted-foreground">{t.washedOut.intro}</p>
               <ul class="divide-y divide-border">
                 {washedOut.map((entry) => {
                   const commonName = localCommonName(entry.id, entry.commonName, locale);
@@ -274,7 +274,7 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
                       id={`object-${entry.id}`}
                       data-washed-out-object={entry.id}
                       data-label={entry.label}
-                      class="flex min-h-11 scroll-mt-4 items-center gap-3 py-3"
+                      class="flex min-h-11 scroll-mt-4 items-center gap-3 py-item"
                     >
                       <span class="min-w-0 flex-1">
                         <span class="font-display text-title font-semibold break-words text-muted-foreground">

@@ -754,7 +754,7 @@ describe("buildTonight's planets (M-2 S-01)", () => {
       expect(entry.notSeenYet).toBe(true);
     }
     const saturn = planets.entries.find((entry) => entry.key === "saturn");
-    expect(saturn?.ringText).toMatch(/^rings tilted \d+°$/);
+    expect(saturn?.ringText).toMatch(/^tilted \d+°$/);
   });
 
   it("words the planets in Polish with the locale's decimal comma", () => {
@@ -762,8 +762,8 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     const saturn = planets.entries.find((entry) => entry.key === "saturn");
     expect(planets.windowText).toMatch(/^Od zmierzchu cywilnego do świtu, \d{2}:\d{2}–\d{2}:\d{2}$/);
     expect(saturn).toMatchObject({ name: "Saturn", note: pl.tonight.planets.note.saturn });
-    expect(saturn?.magnitudeText).toMatch(/^jasność −?\d+,\d mag$/);
-    expect(saturn?.ringText).toMatch(/^pierścienie nachylone o \d+°$/);
+    expect(saturn?.magnitudeText).toMatch(/^−?\d+,\d mag$/);
+    expect(saturn?.ringText).toMatch(/^nachylone o \d+°$/);
   });
 
   it("lists only the planets up in the clear twilight hours of a cloudy no-go night, and names those hours", () => {

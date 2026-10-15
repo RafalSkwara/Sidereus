@@ -553,8 +553,9 @@ export function createFormatter(locale: Locale) {
   }
 
   /**
-   * A planet's magnitude, apparent size, phase (Mercury and Venus) and ring tilt (Saturn), each worded on its
-   * own: "mag −2.4", "44″", "62% lit", "rings tilted 4°". The magnitude takes a true minus sign; a size under
+   * A planet's magnitude, apparent size, phase (Mercury and Venus) and ring tilt (Saturn), each worded as a value
+   * without its label (the card adds `factLabel`): "mag −2.4" (Polish "−2,4 mag"), "44″", "62% lit" ("62%"),
+   * "tilted 4°" ("nachylone o 4°"). The magnitude takes a true minus sign; a size under
    * 10″ keeps one decimal (Uranus, Neptune), a larger one is whole.
    */
   function planetFactsText(key: PlanetKey, facts: PlanetFacts): PlanetFactsText {

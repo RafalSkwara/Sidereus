@@ -117,6 +117,80 @@ test("at 320 px with the full plan, the best five's and an opened row's lines fi
       await expect(restLine, `${locale}: an opened row shows its line`).toBeVisible();
       const fits = await restLine.evaluate((element) => element.scrollWidth <= element.clientWidth);
       expect(fits, `${locale}: a row's line must not overflow at 320 px`).toBe(true);
+
+      // The narrowest stat pair (ui-fact-rhythm): Window and Best stacked in the indented row, about 222 px wide.
+      // Every label and value fits its own box, and each value keeps to one line (the owner stacked the cards for it).
+      const pair = row.locator("dl");
+      await expect(pair, `${locale}: an opened row shows its stat pair`).toBeVisible();
+      const cells = await pair.locator("dt, dd").evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.textContent.trim(),
+          tag: element.tagName,
+          fits: element.scrollWidth <= element.clientWidth,
+          oneLine:
+            element.getBoundingClientRect().height < 1.5 * Number.parseFloat(getComputedStyle(element).lineHeight),
+        })),
+      );
+      expect(cells.length, `${locale}: the pair holds Window and Best`).toBeGreaterThanOrEqual(4);
+      for (const cell of cells) {
+        expect(cell.fits, `${locale}: "${cell.text}" must not overflow its card at 320 px`).toBe(true);
+        if (cell.tag === "DD") {
+          expect(cell.oneLine, `${locale}: "${cell.text}" must stay on one line at 320 px`).toBe(true);
+        }
+      }
+
+      // The cells' own boxes cannot overflow (a grid's `auto` column grows the card instead), so also check the card:
+      // the `dl` has no sideways overflow, and every card ends within the row's scroll region, whose right edge is
+      // the region's box minus its border and padding.
+      const geometry = await pair.evaluate((dl) => {
+        let region: HTMLElement | null = dl.parentElement;
+        while (region && !/auto|scroll/.test(getComputedStyle(region).overflowY)) region = region.parentElement;
+        if (!region) return null;
+        const style = getComputedStyle(region);
+        return {
+          dlScrollWidth: dl.scrollWidth,
+          dlClientWidth: dl.clientWidth,
+          regionInnerRight:
+            region.getBoundingClientRect().right -
+            Number.parseFloat(style.borderRightWidth) -
+            Number.parseFloat(style.paddingRight),
+          cardRights: [...dl.children].map((card) => card.getBoundingClientRect().right),
+        };
+      });
+      expect(geometry, `${locale}: the opened row sits in a scrolling region`).not.toBeNull();
+      if (geometry) {
+        expect(
+          geometry.dlScrollWidth,
+          `${locale}: the stat pair must not scroll sideways at 320 px`,
+        ).toBeLessThanOrEqual(geometry.dlClientWidth);
+        expect(
+          geometry.cardRights.length,
+          `${locale}: the pair holds a card each for Window and Best`,
+        ).toBeGreaterThanOrEqual(2);
+        for (const right of geometry.cardRights) {
+          expect(right, `${locale}: a stat card must end within the row at 320 px`).toBeLessThanOrEqual(
+            geometry.regionInnerRight + 0.5,
+          );
+        }
+      }
+    }
+
+    // No lost space after a label's colon ("Do szczegółów:10 mm"): in Polish, no fact on Targets runs a letter, a
+    // colon and a non-space together. Times such as "22:10" pass (a digit before the colon). The all-clear fixture
+    // always ranks targets, so this holds on any date outside the no-darkness window.
+    if (locale === "pl") {
+      const facts = await page
+        .locator("[data-fact]")
+        .evaluateAll((elements) => elements.map((element) => element.textContent));
+      expect(facts.length, "pl: Targets shows facts").toBeGreaterThan(0);
+      // The eyepiece fact is among them, so the check below really runs over a label that ends in a colon.
+      expect(
+        facts.some((text) => text.includes(pl.tonight.object.findWith)),
+        "pl: Targets shows an eyepiece fact (the 'Do szukania:' label)",
+      ).toBe(true);
+      for (const text of facts) {
+        expect(text, "pl: a fact must keep the space after a label's colon").not.toMatch(/\p{L}:\S/u);
+      }
     }
   }
 });

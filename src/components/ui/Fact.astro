@@ -1,0 +1,48 @@
+---
+/*
+ * One fact on a Tonight item (ui-fact-rhythm): its concept's icon from `fact-icons.ts` (decorative, muted, `size-4`,
+ * nudged down to the first line), an optional muted label, then the caller's content. The rhythm between the lines of
+ * one fact lives here (`space-y-line`); a run of facts sits in a `FactList`.
+ *
+ * Content contract: a sentence goes in a `<p>` (always when it needs `first-letter:uppercase`, which works neither on
+ * this flex root nor on an inline `<span>`); a short value goes in a `<span>`; `label` only with inline content (before
+ * a block `<p>` it would land on its own line). Never bare text plus expressions straight in the slot: slotted text
+ * can lose a space ("Do szczegółów:10 mm"). Markers such as `data-expect` are forwarded to the root, whose only text is
+ * the content (the icon is an `aria-hidden` svg). No list element, so a fact never adds a `listitem`.
+ *
+ * `iconClass` is for the two accented icons only: `see` in `text-primary-strong`, `safety` in `text-marginal`.
+ */
+import { FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  kind: FactKind;
+  /** A muted label before an inline value ("Window 20:51–07:10"); never before a block `<p>`. */
+  label?: string;
+  /** `muted` for the quieter facts (why, notes, a not-visible event, Nights' lines). */
+  tone?: "default" | "muted";
+  /** Replaces the icon's muted ink: `text-primary-strong` on `see`, `text-marginal` on `safety`, nowhere else. */
+  iconClass?: string;
+  /** Markers for e2e and smoke (`data-expect`, `data-event-visibility`, …), forwarded to the root. */
+  [data: `data-${string}`]: string | number | boolean | null | undefined;
+}
+
+const { kind, label, tone = "default", iconClass, ...data } = Astro.props;
+const Icon = FACT_ICONS[kind];
+---
+
+<div
+  {...data}
+  data-fact={kind}
+  class:list={cn("flex items-start gap-2 text-label", tone === "muted" ? "text-muted-foreground" : "text-foreground")}
+>
+  <Icon className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground", iconClass)} aria-hidden="true" />
+  <div class="min-w-0 space-y-line">
+    {label && (
+      <Fragment>
+        <span class="text-muted-foreground">{label}</span>{" "}
+      </Fragment>
+    )}
+    <slot />
+  </div>
+</div>

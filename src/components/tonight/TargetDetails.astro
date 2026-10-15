@@ -1,10 +1,14 @@
 ---
-// The details every Tonight target shares (S-01 review F10): the window and best-time list, then the caller's own
-// lines (eyepieces, reason, note) in the default slot, then the "Mark observed" link. Used by ObjectDetails (ranked
-// cards and the all-objects rows), PlanetCard and the Moon card. Each data point sits on its own line at every width
-// (ui-user-adjustments), and the spacing between the list, the slot's lines and the action lives here, so a caller's
-// lines carry no margins of their own.
+// The details every Tonight target shares (S-01 review F10; ui-fact-rhythm): Window and Best as a stat pair, then,
+// under a hairline, the caller's own facts (what you'll see, the eyepieces, why) in the default slot, then the "Mark
+// observed" link. Used by ObjectDetails (ranked cards and the all-objects rows), PlanetCard and the Moon card. Window
+// and Best are two cards stacked in one column, Best under Window, each the full width of its column at every width
+// (owner change of 2026-10-15); every other fact sits on its own line. The spacing between the pair, the facts and
+// the actions lives here (the rhythm roles), so a caller's facts carry no margins of their own.
 import { Check, Crosshair } from "lucide-react";
+import FactList from "@/components/ui/FactList.astro";
+import StatCard from "@/components/ui/StatCard.astro";
+import StatPair from "@/components/ui/StatPair.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 
@@ -41,26 +45,21 @@ const markClass = buttonVariants({ variant: "hairline", size: "sm" });
 const finderClass = buttonVariants({ variant: "quiet", size: "bare" });
 ---
 
-<dl class="mt-4 grid gap-y-2 text-label">
-  <div class="flex gap-2">
-    <dt class="text-muted-foreground">{t.window}</dt>
-    <dd class="font-mono text-heading">
-      {windowStart}–{windowEnd}
-    </dd>
-  </div>
-  <div class="flex gap-2">
-    <dt class="text-muted-foreground">{t.best}</dt>
-    <dd class="font-mono text-heading">
-      {bestTime}, {bestDirection}
-    </dd>
-  </div>
-</dl>
+<StatPair class="mt-group">
+  <StatCard label={t.window} kind="when">
+    {windowStart}–{windowEnd}
+  </StatCard>
+  <StatCard label={t.best} kind="best">
+    {bestTime}
+    <Fragment slot="sub">{bestDirection}</Fragment>
+  </StatCard>
+</StatPair>
 
-<div class="mt-4 space-y-3">
+<FactList class="mt-group border-t border-border pt-group">
   <slot />
-</div>
+</FactList>
 
-<div class="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+<div class="mt-group flex flex-wrap gap-x-5 gap-y-line">
   {/* Saving an observation needs the network: disabled offline (S-06, src/lib/offline/page-state.ts). */}
   <a href={logHref} aria-label={ariaLabel} class:list={[markClass]} data-needs-network="">
     <Check aria-hidden="true" />

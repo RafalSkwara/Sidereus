@@ -1,0 +1,33 @@
+---
+/*
+ * One small stat card inside a `StatPair` (ui-fact-rhythm): the gear cards' bordered `bg-surface` box (in red the faint
+ * border carries the shape, as on the gear cards), a caption label with its concept's icon over the value in mono
+ * semibold heading ink. The slot is the value; the optional `sub` slot is a second, muted line (Best's direction).
+ * Window and Best only; the card fills its column's width (the pair stacks them, owner, 2026-10-15).
+ */
+import { FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
+
+interface Props {
+  label: string;
+  kind: FactKind;
+}
+
+const { label, kind } = Astro.props;
+const Icon = FACT_ICONS[kind];
+const hasSub = Astro.slots.has("sub");
+---
+
+<div class="rounded-lg border border-border bg-surface px-3 py-2">
+  <dt class="flex items-center gap-1.5 text-caption text-muted-foreground">
+    <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+    <span>{label}</span>
+  </dt>
+  <dd class="mt-0.5 font-mono text-body font-semibold text-heading">
+    <slot />
+  </dd>
+  {hasSub && (
+    <dd class="font-mono text-label text-muted-foreground">
+      <slot name="sub" />
+    </dd>
+  )}
+</div>

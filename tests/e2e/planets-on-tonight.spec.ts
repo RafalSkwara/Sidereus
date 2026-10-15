@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
@@ -70,4 +71,41 @@ test("marking a planet observed on the Planets page saves it and the log lists i
   await page.getByRole("link", { name: en.nav.log }).click();
   await expect(page).toHaveURL(/\/log$/);
   await expect(page.locator('main a[href^="/log/"]').filter({ hasText: name })).toBeVisible();
+});
+
+test("each planet's facts carry their labels, and the Polish eyepiece line keeps the space after its colon", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await onboardInMadrid(page, "e2e-planet-facts");
+  const url = baseURL ?? "http://localhost:4321";
+
+  for (const { locale, messages } of [
+    { locale: "en", messages: en },
+    { locale: "pl", messages: pl },
+  ] as const) {
+    await context.addCookies([{ name: LOCALE_COOKIE, value: locale, url }]);
+    await page.goto("/tonight/planets");
+    const section = page.locator('section[aria-labelledby="planets-heading"]');
+    await expect(section.getByRole("heading", { level: 2 })).toHaveText(messages.tonight.planets.heading);
+    const cards = section.getByRole("list", { name: messages.tonight.planets.listLabel }).getByRole("listitem");
+    if ((await cards.count()) === 0) {
+      test.skip(true, "no planet is up in Madrid tonight");
+    }
+
+    // A bare "34″" means nothing to a beginner: every card names its brightness and apparent size (ui-fact-rhythm).
+    const { factLabel } = messages.tonight.planets;
+    for (const card of await cards.all()) {
+      await expect(card.locator('[data-fact="magnitude"]')).toContainText(factLabel.magnitude);
+      await expect(card.locator('[data-fact="size"]')).toContainText(factLabel.size);
+    }
+
+    // Slotted text can lose a space ("Do szczegółów:10 mm"): the onboarding kit gives every planet a detail eyepiece,
+    // and its line keeps the space after the label's colon.
+    if (locale === "pl") {
+      const label = pl.tonight.planets.detailWith.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      await expect(cards.first().locator('[data-fact="eyepiece"]')).toContainText(new RegExp(`${label} \\S`));
+    }
+  }
 });
