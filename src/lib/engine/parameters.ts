@@ -564,6 +564,29 @@ export const BULGE_HUBBLE_TYPES: readonly string[] = [
 export const EXPECT_BULGE_CORE_EXTRA_MAG = 0.8;
 
 /**
+ * Candidate (small-scope-galaxies planning, 2026-10-15; owner, plan review F1): the most brightness credit (the 0-1
+ * `brightness` score component) a galaxy keeps while its what-to-expect line is `galaxyFaint` ("a very faint grey
+ * smudge; use averted vision"), so the ranking cannot call a galaxy "bright for your N mm" beside a faint line. A galaxy
+ * whose band is `bright` or `smudge` keeps the whole ramp. Working window about 0.065 to 0.2:
+ * - the upper edge is where M101 at Warsaw 2026-04-15, Bortle 5, 60 mm re-enters the top 10 (the guard G1 in
+ *   `small-scope.test.ts`; 0.25 leaves it at #7);
+ * - the lower edge, about 0.065 (a deliberate-break run: red at 0.05 and 0.06, green at 0.07), is the washed-out test
+ *   "only counts an object a moonless night would list" (`score.test.ts`): `coreGalaxy(24)` at 200 mm / Bortle 2 is a
+ *   `faint` galaxy, and below it the moonless total no longer clears `MIN_OBJECT_SCORE`, so `washedOut` stops being
+ *   true.
+ * 0.1 sits inside the window: G1's margin there is 0.028 in rank score (M101 is #17 at 60 mm / Bortle 5). Any change to
+ * the Bortle table, the score weights or M101's catalogue data can close that margin, loudly, in G1.
+ */
+export const GALAXY_FAINT_BRIGHTNESS_CAP = 0.1;
+
+/**
+ * Candidate (small-scope-galaxies planning, 2026-10-15; owner decision OD-4 a): the brightness credit of a galaxy whose
+ * line is `galaxyLimit`, "at the edge of what your sky allows". It stays listed when its other components clear the
+ * bar, but takes no brightness credit, so it sinks. 0 is the natural floor, not a tuned value.
+ */
+export const GALAXY_LIMIT_BRIGHTNESS_CAP = 0;
+
+/**
  * Candidate (moonlight-and-the-verdict planning, 2026-10-02): minutes between the Moon-disc states the Moon card's
  * time slider steps through. The elongation changes by about 0.1° in ten minutes, so the terminator moves by well
  * under a pixel on the card's disc between steps.

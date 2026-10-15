@@ -465,20 +465,20 @@ None. No database, no stored data, no offline-copy format change. Stored Targets
 
 #### Automated
 
-- [x] 2.1 Before the rule change, M31 60/B6 and 60/B8 fail and the other five new references pass (entry by entry, recorded, not committed red)
-- [x] 2.2 `npx vitest run src/lib/engine/expectation.test.ts src/lib/engine/contrast.test.ts` passes: 27 references, 3 divergences (30 entries), D-3 invariants
-- [x] 2.3 The re-run research §5 table at the chosen `EXPECT_BULGE_CORE_EXTRA_MAG` is recorded in the phase notes
-- [x] 2.4 `npm test` passes with `calibration.test.ts` untouched
-- [x] 2.5 `npx astro check` and `npm run lint` pass; `purity.test.ts` passes
+- [x] 2.1 Before the rule change, M31 60/B6 and 60/B8 fail and the other five new references pass (entry by entry, recorded, not committed red) — e75db73
+- [x] 2.2 `npx vitest run src/lib/engine/expectation.test.ts src/lib/engine/contrast.test.ts` passes: 27 references, 3 divergences (30 entries), D-3 invariants — e75db73
+- [x] 2.3 The re-run research §5 table at the chosen `EXPECT_BULGE_CORE_EXTRA_MAG` is recorded in the phase notes — e75db73
+- [x] 2.4 `npm test` passes with `calibration.test.ts` untouched — e75db73
+- [x] 2.5 `npx astro check` and `npm run lint` pass; `purity.test.ts` passes — e75db73
 
 ### Phase 3: Ranking follows the line
 
 #### Automated
 
-- [ ] 3.1 `npx vitest run src/lib/engine/small-scope.test.ts` passes G1-G6; G1, G3, G5 and G6 fail against Phase 2's code, G2 and G4 are pins
-- [ ] 3.2 `npx vitest run src/lib/engine/calibration.test.ts` passes with its file and `beginner-reference.ts` unchanged; top ten before and after recorded
-- [ ] 3.3 `npx vitest run src/lib/engine/ranking-invariants.test.ts` passes, including (g)
-- [ ] 3.4 `npm test`, `npx astro check` and `npm run lint` pass
+- [x] 3.1 `npx vitest run src/lib/engine/small-scope.test.ts` passes G1-G6; G1, G3, G5 and G6 fail against Phase 2's code, G2 and G4 are pins
+- [x] 3.2 `npx vitest run src/lib/engine/calibration.test.ts` passes with its file and `beginner-reference.ts` unchanged; top ten before and after recorded
+- [x] 3.3 `npx vitest run src/lib/engine/ranking-invariants.test.ts` passes, including (g)
+- [x] 3.4 `npm test`, `npx astro check` and `npm run lint` pass
 
 ### Phase 4: Docs and owner checklist
 

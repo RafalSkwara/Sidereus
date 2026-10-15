@@ -42,6 +42,7 @@ export type RankableObject = Pick<
   | "type"
   | "majorAxisArcmin"
   | "minorAxisArcmin"
+  | "hubble"
 >;
 
 /** A telescope as the ranking needs it. The gear store's `TelescopeRecord` is assignable to it. */
