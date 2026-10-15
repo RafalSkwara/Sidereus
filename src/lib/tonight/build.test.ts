@@ -1737,7 +1737,10 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     expect(view.sessionPlan).toBeNull();
     expect(view.ranking).not.toBeNull();
     expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged).toHaveBeenCalledWith("buildTonight: the Session plan failed", "RangeError");
+    expect(logged).toHaveBeenCalledWith("sidereus: tonight.session-plan failed", {
+      step: "tonight.session-plan",
+      name: "RangeError",
+    });
     expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 
@@ -2265,7 +2268,10 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(view.skyEvents).toBeNull();
     expect(view.ranking).not.toBeNull();
     expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged).toHaveBeenCalledWith("buildTonight: the sky events failed", "RangeError");
+    expect(logged).toHaveBeenCalledWith("sidereus: tonight.sky-events failed", {
+      step: "tonight.sky-events",
+      name: "RangeError",
+    });
     expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 });

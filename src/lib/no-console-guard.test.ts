@@ -35,29 +35,10 @@ const IGNORED = new Set(["src/lib/database.types.ts"]);
 
 /** Every file allowed to disable `no-console`, with the exact number of disables and why. */
 const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }>> = {
-  "src/lib/tonight/build.ts": {
+  "src/lib/observability/log-failure.ts": {
     count: 2,
     reason:
-      "the Session plan's and the sky events' failure traces: a fixed line and the error's name only, never its message",
-  },
-  "src/lib/tonight/load.ts": {
-    count: 1,
-    reason:
-      "the saved Session plan's failed read trace: a fixed line, the step word and the cause's code or name, never a message or anything from the request",
-  },
-  "src/lib/observations/celebrate.ts": {
-    count: 1,
-    reason: "the milestone failure trace: a fixed line and the error's and its cause's names, never a message",
-  },
-  "src/lib/account-plan/index.ts": {
-    count: 1,
-    reason:
-      "the failed plan read's trace: a fixed line and the store's fixed error code or name, never a message or anything from the request",
-  },
-  "src/lib/finder/load.ts": {
-    count: 2,
-    reason:
-      "the finder chart's two failure traces (the star load, the chart build): a fixed line and the error's name only, never its message",
+      "the one failure line (console.error) and the one notice line (console.warn): a fixed message per step and the shaped fields, never a message, stack or Error",
   },
   "src/lib/engine/calibration.test.ts": {
     count: 1,

@@ -6,6 +6,7 @@ import {
   type MilestoneKey,
   type MilestoneState,
 } from "@/lib/progress/milestones";
+import { logFailure, type FailureStep } from "@/lib/observability/log-failure";
 import { observingProgress } from "@/lib/progress/progress";
 
 import type { MilestoneRecordInput } from "./milestone-store";
@@ -32,17 +33,21 @@ import type { MilestoneRecordInput } from "./milestone-store";
 export type MilestoneStep = "read" | "record" | "list" | "seen";
 
 /**
- * Traces a failed milestone step: a fixed line plus the error's name and its cause's name, never a message (an error
- * message could carry a coordinate or a value, which never go into logs). Follows the precedent in
- * `src/lib/tonight/build.ts`.
+ * The page's seen read is S-05's (observing progress), so its step names that feature, not milestones.
+ */
+const FAILURE_STEP_OF: Record<MilestoneStep, FailureStep> = {
+  read: "milestones.read",
+  record: "milestones.record",
+  list: "milestones.list",
+  seen: "progress.seen",
+};
+
+/**
+ * Traces a failed milestone step through the shared helper: its fixed line, the error's (or its cause's) name and a
+ * shaped cause code, never a message (an error message could carry a coordinate or a value, which never go into logs).
  */
 export function logMilestoneFailure(step: MilestoneStep, error: unknown): void {
-  const nameOf = (value: unknown) => (value instanceof Error ? value.name : typeof value);
-  const cause = error instanceof Error ? error.cause : undefined;
-  // The page's seen read is S-05's (observing progress), so its line names that feature, not milestones.
-  const line = step === "seen" ? "progress: seen read failed" : `milestones: ${step} failed`;
-  // eslint-disable-next-line no-console -- a fixed line plus the error's and its cause's names, never a message (see above).
-  console.error(line, nameOf(error), ...(cause === undefined ? [] : [nameOf(cause)]));
+  logFailure(FAILURE_STEP_OF[step], error);
 }
 
 export interface ReachedBySaveOptions<Result extends { ok: boolean }> {

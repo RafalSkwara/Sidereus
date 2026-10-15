@@ -211,7 +211,7 @@ describe("reachedBySave, a counting save", () => {
     expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
     expect(celebrate).toEqual([]);
     expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("milestones: read failed", "Error");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
   });
 
   it("records the before-state after a failed after-read, and celebrates nothing", async () => {
@@ -227,7 +227,7 @@ describe("reachedBySave, a counting save", () => {
     expect(result).toEqual({ ok: true });
     expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("milestones: read failed", "Error");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
   });
 
   it("returns the write's failure unchanged and records and celebrates nothing", async () => {
@@ -258,7 +258,10 @@ describe("reachedBySave, a counting save", () => {
     expect(result).toEqual({ ok: true });
     expect(celebrate).toEqual([]);
     expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("milestones: record failed", "Error", "TypeError");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record failed", {
+      step: "milestones.record",
+      name: "TypeError",
+    });
   });
 });
 
@@ -313,7 +316,7 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
     expect(result).toEqual({ ok: true });
     expect(fixture.calls).toEqual(["read", "write"]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("milestones: read failed", "Error");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
   });
 
   it("still writes after a failed record, and traces it", async () => {
@@ -329,7 +332,10 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
     expect(result).toEqual({ ok: true });
     expect(fixture.calls).toEqual(["read", "record", "write"]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("milestones: record failed", "Error");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record failed", {
+      step: "milestones.record",
+      name: "Error",
+    });
   });
 
   it("returns the write's failure unchanged", async () => {
@@ -353,27 +359,31 @@ describe("logMilestoneFailure", () => {
     }
 
     expect(errors.mock.calls).toEqual([
-      ["milestones: read failed", "RangeError"],
-      ["milestones: record failed", "RangeError"],
-      ["milestones: list failed", "RangeError"],
-      ["progress: seen read failed", "RangeError"],
+      ["sidereus: milestones.read failed", { step: "milestones.read", name: "RangeError" }],
+      ["sidereus: milestones.record failed", { step: "milestones.record", name: "RangeError" }],
+      ["sidereus: milestones.list failed", { step: "milestones.list", name: "RangeError" }],
+      ["sidereus: progress.seen failed", { step: "progress.seen", name: "RangeError" }],
     ]);
     expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });
 
-  it("adds the cause's name when there is one", () => {
+  it("names the cause when the error is a plain wrapper around it", () => {
     logMilestoneFailure("list", new Error("load", { cause: new TypeError("boom") }));
 
-    expect(errors).toHaveBeenCalledWith("milestones: list failed", "Error", "TypeError");
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.list failed", {
+      step: "milestones.list",
+      name: "TypeError",
+    });
   });
 
-  it("names the type of a non-Error, never its value", () => {
+  it("logs no value of a non-Error, and only a shaped code from the cause", () => {
     logMilestoneFailure("seen", "52.37,4.89");
     logMilestoneFailure("seen", new Error("load", { cause: { code: "42501", details: "52.37" } }));
 
     expect(errors.mock.calls).toEqual([
-      ["progress: seen read failed", "string"],
-      ["progress: seen read failed", "Error", "object"],
+      ["sidereus: progress.seen failed", { step: "progress.seen" }],
+      ["sidereus: progress.seen failed", { step: "progress.seen", name: "Error", code: "42501" }],
     ]);
+    expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });
 });

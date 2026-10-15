@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { HourlyForecast } from "@/lib/engine";
+import { logFailure } from "@/lib/observability/log-failure";
 
 import type { ForecastCache } from "./cache";
 import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-meteo";
@@ -20,7 +21,8 @@ import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-
  *   in KV. Without such a copy the incomplete series is returned and stored, as any other 200.
  * - Cache read and write errors behave like a miss and never throw.
  *
- * Privacy: keys use the site id, never coordinates; nothing here logs.
+ * Privacy: keys use the site id, never coordinates. The one line logged is a failed fetch (`forecast.fetch`, through
+ * `logFailure`: the step and the error's name only); the cache catches stay silent for now.
  */
 
 /** A cached forecast younger than this is served without a fetch (about 1 h per site). */
@@ -213,7 +215,9 @@ export async function getForecast({
       await write;
     }
     return result;
-  } catch (_error) {
+  } catch (error) {
+    // The fallback below hides the outage from the page, so this line is its only trace (name only, never the message).
+    logFailure("forecast.fetch", error);
     return usable ? fromStored(stored, true) : null;
   }
 }

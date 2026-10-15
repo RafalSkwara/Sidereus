@@ -206,8 +206,10 @@ describe("loadTonight's saved Session plan (adjustable-session-plan)", () => {
       const readPlanEdits = vi.fn<PlanEditsReader>().mockRejectedValue(new Error("errors.load.sessionPlan", { cause }));
       const result = await load({ withSessionPlan: true, readPlanEdits });
       expect(result.planEditsError).toBe("errors.load.sessionPlan");
-      const lines = log.mock.calls.filter(([line]) => String(line).startsWith("tonight: plan edits"));
-      expect(lines).toEqual([["tonight: plan edits read failed", "42501"]]);
+      const lines = log.mock.calls.filter(([line]) => String(line).startsWith("sidereus: tonight.plan-edits"));
+      expect(lines).toEqual([
+        ["sidereus: tonight.plan-edits failed", { step: "tonight.plan-edits", name: "Error", code: "42501" }],
+      ]);
       expect(JSON.stringify(log.mock.calls)).not.toMatch(/permission denied|session_plans|52\.2297|errors\.load/);
     } finally {
       log.mockRestore();
@@ -221,13 +223,17 @@ describe("loadTonight's saved Session plan (adjustable-session-plan)", () => {
         .fn<PlanEditsReader>()
         .mockRejectedValue(new Error("errors.load.sessionPlan", { cause: new TypeError("secret value M31") }));
       await load({ withSessionPlan: true, readPlanEdits });
-      expect(log).toHaveBeenCalledTimes(1);
-      expect(log).toHaveBeenCalledWith("tonight: plan edits read failed", "TypeError");
+      // The unreachable forecast (failingFetch) also leaves its own `forecast.fetch` line; only the plan-edits ones count here.
+      const planLines = () =>
+        log.mock.calls.filter(([line]) => String(line).startsWith("sidereus: tonight.plan-edits"));
+      expect(planLines()).toEqual([
+        ["sidereus: tonight.plan-edits failed", { step: "tonight.plan-edits", name: "TypeError" }],
+      ]);
       expect(JSON.stringify(log.mock.calls)).not.toMatch(/secret|M31/);
 
       log.mockClear();
       await load({ withSessionPlan: true, readPlanEdits: vi.fn<PlanEditsReader>().mockResolvedValue(["M31"]) });
-      expect(log).not.toHaveBeenCalled();
+      expect(planLines()).toEqual([]);
     } finally {
       log.mockRestore();
     }

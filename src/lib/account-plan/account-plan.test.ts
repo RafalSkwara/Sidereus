@@ -117,7 +117,7 @@ describe("accountPlanForCopy", () => {
     });
     expect(mocks.read).toHaveBeenCalledOnce();
     expect(logged).toHaveBeenCalledOnce();
-    expect(logged).toHaveBeenCalledWith("getAccountPlan: the plan read failed", "42501");
+    expect(logged).toHaveBeenCalledWith("sidereus: account.plan failed", { step: "account.plan", code: "42501" });
   });
 
   it("logs a failed read once however it is asked first", async () => {

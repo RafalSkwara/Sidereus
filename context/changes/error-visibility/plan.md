@@ -152,7 +152,7 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 
 **Intent**: Make every logged error an alertable Issue from the first deploy (D1).
 
-**Contract**: add `"issues": { "enabled": true }` under `observability`; raise the `wrangler` devDependency to at least 4.134.0. Confirm `npm run build` still emits the setting into the generated server config and that `npx wrangler deploy --dry-run` accepts it.
+**Contract**: add `"issues": { "enabled": true }` under `observability`; raise the `wrangler` devDependency to at least 4.134.0. Also add a top-level `"preview_urls": true` (owner, 2026-10-15 evening: Version URLs are enabled for the Worker in the dashboard, and a CI deploy must not flip the setting back, as it would a dashboard-only Issues switch); confirm the build carries it into the generated config and that `wrangler deploy --dry-run` accepts it. Confirm `npm run build` still emits the setting into the generated server config and that `npx wrangler deploy --dry-run` accepts it.
 
 #### 6. The probe line
 
@@ -167,7 +167,7 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 **Intent**: Trigger the probe line on the real Worker without touching production traffic (owner, 2026-10-15: a preview version of the production Worker, same bindings), with a checked order of fallbacks. The runbook (Phase 6) records the procedure that worked.
 
 **Contract**: the production Worker's active deployment, its variables and its secrets are never changed for the probe: the dead address exists only inside the uploaded version (or the separate Worker), never as a production setting, even briefly (second review F7d). Cloudflare's docs (read 2026-10-15) state that `wrangler versions upload` creates a Version URL that "uses that Worker version's existing configuration and resources", that its `--var key:value` flag overrides config variables, and that invocations are attributable to a version (`ScriptVersion` in Workers Logs/Logpush). They do **not** say in so many words that Version URL invocations appear in the Worker's Workers Logs or create Issues, so the owner's step is verified, not assumed, in this order:
-1. **Version URL (the owner's choice).** After `npm run build`, upload a version with the forecast base URL overridden to a dead address, for example `npx wrangler versions upload --tag probe --message "issues probe" --var FORECAST_BASE_URL:http://127.0.0.1:9`, open the printed Version URL's `/tonight` signed in, and look in the production Worker's Workers Logs (filter on the `sidereus:` prefix and the `ScriptVersion`) and in Issues. Production's active deployment and traffic are untouched. `FORECAST_BASE_URL` is an `astro:env` secret; if the override is not picked up as a variable, upload it with `--secrets-file` instead. Version URLs must be enabled for the Worker (`preview_urls`; they follow the `workers.dev` setting).
+1. **Version URL (the owner's choice).** After `npm run build`, upload a version with the forecast base URL overridden to a dead address, for example `npx wrangler versions upload --tag probe --message "issues probe" --var FORECAST_BASE_URL:http://127.0.0.1:9`, open the printed Version URL's `/tonight` signed in, and look in the production Worker's Workers Logs (filter on the `sidereus:` prefix and the `ScriptVersion`) and in Issues. Production's active deployment and traffic are untouched. `FORECAST_BASE_URL` is an `astro:env` secret; if the override is not picked up as a variable, upload it with `--secrets-file` instead. Version URLs must be enabled for the Worker (`preview_urls`; they follow the `workers.dev` setting): **confirmed enabled by the owner on 2026-10-15 evening**, and `preview_urls: true` is in `wrangler.jsonc` (§5). The upload prints a Version Preview URL; the implementer verifies that it does before opening it, and never deploys.
 2. **Worker Preview (documented to have its own logs).** If step 1 shows no log line or no Issue, use `npx wrangler@4.135.0 preview --name probe` (Previews need Wrangler 4.135.0 or later; no repository dependency change) with a `previews` block that sets `FORECAST_BASE_URL` and enables `previews.observability` with `logs.persist` true. Previews are documented to keep their own logs, traces and metrics under the same Worker with the same bindings by default; the docs do not say whether Issues covers a Preview.
 3. **A separate `sidereus-probe` Worker.** Only if both fail to produce a line and an Issue: deploy the same build under another name with the dead variable and the secrets and bindings it needs. The orchestrator is told which step was used.
 
@@ -663,7 +663,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 ## Progress
 
-> Status: second plan review applied (2026-10-15 evening); implementation starts at Phase 1; no phase has started.
+> Status: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
 >
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
@@ -671,13 +671,13 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 1.1 Helper tests pass (no message or stack, `CODE_SHAPE`, status range, never throws, no `Error` argument, `logNotice` at warn level and `logFailure` at error level)
-- [ ] 1.2 The virtual-module seams load `middleware.ts`, `supabase.ts` and `kv-cache.ts` under the mocks
-- [ ] 1.3 Silent-catch guard passes with the day-one allowlist, and its six sample shapes (the sixth a `.catch(reportAnd(...))` handler) are red without a report and green with one
-- [ ] 1.4 No-console guard passes with the two disables in `log-failure.ts` and no other runtime entry
-- [ ] 1.5 The touched suites pass, including the forecast probe line
-- [ ] 1.6 Full unit suite, lint and types pass
-- [ ] 1.7 Production build keeps the Issues setting
+- [x] 1.1 Helper tests pass (no message or stack, `CODE_SHAPE`, status range, never throws, no `Error` argument, `logNotice` at warn level and `logFailure` at error level)
+- [x] 1.2 The virtual-module seams load `middleware.ts`, `supabase.ts` and `kv-cache.ts` under the mocks
+- [x] 1.3 Silent-catch guard passes with the day-one allowlist, and its six sample shapes (the sixth a `.catch(reportAnd(...))` handler) are red without a report and green with one
+- [x] 1.4 No-console guard passes with the two disables in `log-failure.ts` and no other runtime entry
+- [x] 1.5 The touched suites pass, including the forecast probe line
+- [x] 1.6 Full unit suite, lint and types pass
+- [x] 1.7 Production build keeps the Issues setting
 
 #### Manual
 
