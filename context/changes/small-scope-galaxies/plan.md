@@ -489,4 +489,4 @@ None. No database, no stored data, no offline-copy format change. Stored Targets
 
 #### Manual
 
-- [x] 4.3 The owner runs the three checks in `manual-checks.md`
+- [x] 4.3 The owner runs the three checks in `manual-checks.md` — 08e5eec
