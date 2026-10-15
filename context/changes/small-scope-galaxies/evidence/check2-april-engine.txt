@@ -1,0 +1,5 @@
+Warsaw 2026-04-15 Bortle 5 60 mm: top5=M3,M13,M92,M81,M53; M101 #17 rankScore 0.7850 key galaxyFaint reasons duration/moon
+Warsaw 2026-04-15 Bortle 5 80 mm: top5=M3,M13,M92,M81,M53; M101 #21 rankScore 0.7850 key galaxyFaint reasons duration/moon
+Warsaw 2026-04-15 Bortle 6 60 mm: top5=M3,M13,M92,M81,M53; M101 #17 rankScore 0.7533 key galaxyLimit reasons duration/moon
+Warsaw 2026-04-15 Bortle 6 80 mm: top5=M3,M13,M92,M81,M53; M101 #26 rankScore 0.7533 key galaxyLimit reasons duration/moon
+ ✓ src/lib/engine/zz-april-s04.test.ts > april 38ms

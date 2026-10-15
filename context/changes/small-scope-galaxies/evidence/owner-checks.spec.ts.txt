@@ -1,0 +1,113 @@
+import { expect, test, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/lib/database.types";
+import { LOCALE_COOKIE } from "@/lib/preferences";
+
+import { PASSWORD, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+
+/*
+ * Owner manual checks for small-scope-galaxies (manual-checks.md), run by the agent with evidence. Temporary: not part
+ * of the suite. The night is the server's own "tonight" (the page reads the real clock, `island.ts:55`); the run date
+ * is recorded in manual-checks.md. Site: Warsaw (52.23 N, 21.01 E, Europe/Warsaw), the calibration and guard site.
+ */
+
+const OUT = "context/changes/small-scope-galaxies/evidence";
+
+async function setGear(email: string, bortle: number, apertureMm: number) {
+  const client = createClient<Database>(process.env.SUPABASE_URL ?? "", process.env.SUPABASE_KEY ?? "", {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const signIn = await client.auth.signInWithPassword({ email, password: PASSWORD });
+  if (signIn.error) throw new Error(`sign-in failed: ${signIn.error.message}`);
+  const site = await client
+    .from("sites")
+    .update({ latitude_deg: 52.23, longitude_deg: 21.01, time_zone: "Europe/Warsaw", bortle, name: "Warsaw" })
+    .not("id", "is", null)
+    .select("id");
+  if (site.error || site.data.length !== 1) throw new Error(`site update failed: ${site.error?.message}`);
+  const scope = await client
+    .from("telescopes")
+    .update({ aperture_mm: apertureMm, focal_length_mm: apertureMm * 5, name: `${apertureMm} mm` })
+    .not("id", "is", null)
+    .select("id");
+  if (scope.error || scope.data.length !== 1) throw new Error(`telescope update failed: ${scope.error?.message}`);
+}
+
+async function targets(page: Page, locale: "en" | "pl") {
+  await page.context().addCookies([{ name: LOCALE_COOKIE, value: locale, url: "http://localhost:4333/" }]);
+  // `?sort=rank` is the default order and opens the rest of the list, so a row outside the best five can be read.
+  await page.goto("/tonight/targets?sort=rank");
+  await expect(page.locator("li[data-object-card]").first()).toBeVisible({ timeout: 30_000 });
+  await page.evaluate(() => document.fonts.ready);
+}
+
+async function topFive(page: Page): Promise<string[]> {
+  return page.locator("li[data-object-card]").evaluateAll((els) => els.map((e) => e.getAttribute("data-object") ?? ""));
+}
+
+/** The object's card or row, opened when it is a row, with its expect key and reason text. */
+async function objectFacts(page: Page, id: string) {
+  const item = page.locator(`[data-object="${id}"]`).first();
+  await expect(item).toHaveCount(1);
+  const summary = item.locator("summary");
+  if ((await summary.count()) > 0 && (await item.getAttribute("open")) === null) {
+    await summary.first().click();
+  }
+  const details = item.locator("details").first();
+  if ((await details.count()) > 0 && (await details.getAttribute("open")) === null) {
+    await details.locator("summary").first().click();
+  }
+  await item.scrollIntoViewIfNeeded();
+  const key = await item.locator("[data-expect]").first().getAttribute("data-expect");
+  const line = ((await item.locator("[data-expect]").first().textContent()) ?? "").trim();
+  const paragraphs = await item.locator("p").allTextContents();
+  const reason = paragraphs.map((t) => t.replace(/\s+/g, " ").trim()).filter((t) => t.includes("·")).join(" | ");
+  return { item, key, line, reason };
+}
+
+test.describe.configure({ mode: "serial" });
+test.setTimeout(180_000);
+
+test("owner checks 1-4 for small-scope-galaxies", async ({ page }) => {
+  requirePlanGrant("owner-checks");
+  await page.setViewportSize({ width: 430, height: 1100 });
+  const email = await onboardInMadrid(page, "e2e-s04-owner");
+  await setPlan(email, "full");
+  const log: string[] = [`run ${new Date().toISOString()}`];
+
+  // Check 1: 60 mm, Bortle 6.
+  await setGear(email, 6, 60);
+  for (const locale of ["en", "pl"] as const) {
+    await targets(page, locale);
+    const five = await topFive(page);
+    const m31 = await objectFacts(page, "M31");
+    await m31.item.screenshot({ path: `${OUT}/check1-m31-60mm-b6-${locale}.png` });
+    log.push(`check1 ${locale}: top5=${five.join(",")} M31 key=${m31.key} line="${m31.line}" reason="${m31.reason}" lang=${await page.locator("html").getAttribute("lang")}`);
+  }
+
+  // Check 2: 60 mm, Bortle 6, M101 (tonight's night; the April night is checked at engine level).
+  await targets(page, "en");
+  const five2 = await topFive(page);
+  await page.locator("li[data-object-card]").first().locator("xpath=..").screenshot({ path: `${OUT}/check2-top5-60mm-b6-en.png` });
+  log.push(`check2 en: top5=${five2.join(",")} M101 in top5=${five2.includes("M101")}`);
+
+  // Check 3: 150 mm, Bortle 4.
+  await setGear(email, 4, 150);
+  await targets(page, "en");
+  const five3 = await topFive(page);
+  const m31b = await objectFacts(page, "M31");
+  await m31b.item.screenshot({ path: `${OUT}/check3-m31-150mm-b4-en.png` });
+  log.push(`check3 en: top5=${five3.join(",")} M31 key=${m31b.key} line="${m31b.line}" reason="${m31b.reason}"`);
+
+  // Check 4: 60 mm, Bortle 8.
+  await setGear(email, 8, 60);
+  await targets(page, "en");
+  const five4 = await topFive(page);
+  await page.locator("li[data-object-card]").first().locator("xpath=..").screenshot({ path: `${OUT}/check4-top5-60mm-b8-en.png` });
+  const m31c = await objectFacts(page, "M31");
+  await m31c.item.screenshot({ path: `${OUT}/check4-m31-60mm-b8-en.png` });
+  log.push(`check4 en: top5=${five4.join(",")} M31 key=${m31c.key} line="${m31c.line}" reason="${m31c.reason}" in top5=${five4.includes("M31")}`);
+
+  console.log(log.join("\n"));
+});
