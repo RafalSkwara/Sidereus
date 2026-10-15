@@ -3,7 +3,7 @@ import { expect, test, type Browser, type BrowserContext, type Page, type TestIn
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, planEditable, requirePlanGrant, setPlan } from "./helpers";
+import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForServiceWorker } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -94,7 +94,7 @@ async function openSuggestedPlan(browser: Browser, testInfo: TestInfo, prefix: s
     const page = await context.newPage();
     const email = await onboardInMadrid(page, prefix);
     await setPlan(email, "full");
-    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await waitForServiceWorker(page);
 
     // Online: the suggested plan is drawn and its pair stored.
     await page.goto(PLAN_PAGE);

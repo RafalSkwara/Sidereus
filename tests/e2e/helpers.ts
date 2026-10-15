@@ -238,3 +238,18 @@ export async function finderLink(page: Page, target: string): Promise<Locator> {
   }
   return row.getByRole("link", { name: en.tonight.finder.linkLabel({ target }) });
 }
+
+/**
+ * Waits until the service worker controls `page`: first until it is active (`navigator.serviceWorker.ready`), then,
+ * if the page is still not controlled, reloads it once. Waiting on `controller` alone can hang for ever: when the worker
+ * activates while a navigation is in flight, Chromium leaves the document it creates uncontrolled although the worker
+ * calls `clients.claim()` (the session-plan-store flake, CI run 38704238918; `service-worker-control.spec.ts`), and a
+ * navigation that starts once the worker is active is always controlled.
+ */
+export async function waitForServiceWorker(page: Page) {
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  if (await page.evaluate(() => navigator.serviceWorker.controller === null)) await page.reload();
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+}
