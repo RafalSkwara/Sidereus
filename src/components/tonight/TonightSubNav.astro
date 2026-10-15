@@ -13,12 +13,29 @@
  * paths (the site and telescope live in cookies), so offline they reach the stored copies as the tiles do.
  */
 import { getMessages } from "@/i18n";
-import { TONIGHT_NAV, currentTonightPage } from "@/lib/navigation";
+import { TONIGHT_NAV, currentTonightPage, type TonightNavItem } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
+interface Props {
+  /**
+   * `/design` only: the chip to mark current instead of the page's own path, so a specimen can show any chip. A
+   * specimen's current chip carries no view-transition name (several on one page would abort the transition).
+   */
+  current?: TonightNavItem["href"];
+  /** `/design` only: classes merged last on one chip, to pin its hover or focus look as a specimen. */
+  pinned?: { href: TonightNavItem["href"]; class: string };
+}
+
+const { current: currentOverride, pinned } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight.subnav;
-const current = currentTonightPage(Astro.url.pathname);
-const chips = TONIGHT_NAV.map((item) => ({ href: item.href, text: t[item.label], current: item.href === current }));
+const current = currentOverride ?? currentTonightPage(Astro.url.pathname);
+const chips = TONIGHT_NAV.map((item) => ({
+  href: item.href,
+  text: t[item.label],
+  current: item.href === current,
+  pinned: pinned?.href === item.href ? pinned.class : undefined,
+}));
 // The Topbar's focus ring: a `--ring` outline offset from the chip, so it shows on the filled chip too.
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 ---
@@ -34,15 +51,16 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
           <a
             href={chip.href}
             aria-current={chip.current ? "page" : undefined}
-            class:list={[
+            class:list={cn(
               "inline-flex min-h-11 items-center rounded-full px-3 text-label font-semibold whitespace-nowrap",
               "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
               focusRing,
               chip.current
                 ? "bg-selected text-selected-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-heading",
-            ]}
-            style={chip.current ? "view-transition-name: subnav-current" : undefined}
+              chip.pinned,
+            )}
+            style={chip.current && !currentOverride ? "view-transition-name: subnav-current" : undefined}
           >
             {chip.text}
           </a>

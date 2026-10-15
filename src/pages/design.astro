@@ -65,6 +65,7 @@ import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
+import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
 import { getMessages, plural } from "@/i18n";
@@ -3097,6 +3098,52 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <TonightSkeleton />
               </div>
             </div>
+          </section>
+
+          <!-- TonightSubNav (ui-tonight-nav) -->
+          <section class:list={block} aria-labelledby="c-tonight-subnav">
+            <h3 id="c-tonight-subnav" class:list={blockTitle}>
+              TonightSubNav
+            </h3>
+            <p class:list={blockNote}>
+              The six focused pages' way between siblings, in GearShell's sky-flow strip. Each specimen sits on the
+              strip's night sky; <code>current</code> marks a chip here, the pages mark their own path.
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>default · live · Targets current</p>
+                <div class="night-sky overflow-hidden rounded-lg bg-zenith">
+                  <TonightSubNav current="/tonight/targets" />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>hover · specimen (Events)</p>
+                <div class="night-sky overflow-hidden rounded-lg bg-zenith">
+                  <TonightSubNav
+                    current="/tonight/targets"
+                    pinned={{ href: "/tonight/events", class: "bg-accent text-heading" }}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>focus-visible · specimen (Plan)</p>
+                <div class="night-sky overflow-hidden rounded-lg bg-zenith">
+                  <TonightSubNav current="/tonight/targets" pinned={{ href: "/tonight/plan", class: focusRing }} />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>
+                  default · the last chip current, at phone width (scrolled to the end, fade at the start)
+                </p>
+                <div class="night-sky max-w-xs overflow-hidden rounded-lg bg-zenith">
+                  <TonightSubNav current="/tonight/nights" />
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              disabled — N/A (the links work offline: the same plain paths as the tiles) · error — N/A (no input) ·
+              empty — N/A (the list is fixed) · loading — N/A (server-rendered in the shell, there before the island)
+            </p>
           </section>
 
           <!-- TonightPageSky -->

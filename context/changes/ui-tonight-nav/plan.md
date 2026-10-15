@@ -467,25 +467,25 @@ until their next online refresh, which is harmless.
 
 #### Manual
 
-- [ ] 2.5 Skeleton and real page within 2 px on the six pages and the finder
-  > Half-done (2026-10-15, tonight-nav): the header this phase changed matches exactly: h1 top and sky-band bottom
-  > are equal in skeleton and real page on all six pages and the finder at 390 and 1280 px
-  > (`evidence/scripts/header-heights.mjs`: 136/297 and 188/368; finder 140/301 and 200/380). The whole-page
-  > `skeleton-heights.mjs` run gives content-driven deltas (targets 44/0, plan 1051/1003, planets −64/−24,
-  > moon −601/−468, nights −5/−65, events −56/−76, finder 129/−295 at 390/1280) that this change does not touch.
-  > To tick 2.5, run the same script on main (2c4b348) with the same seed and confirm the deltas are unchanged.
+- [x] 2.5 Skeleton and real page within 2 px on the six pages and the finder
+  > Done 2026-10-15 (tonight-nav): the header this change touched matches exactly (`evidence/scripts/header-heights.mjs`).
+  > The whole-page `skeleton-heights.mjs` deltas are content-driven and equal to main's (2c4b348, same seed, same
+  > evening): targets 44/0, plan 1051/1003, planets −64/−24, nights −5/−65, events −56/−76, finder 129/−295 at
+  > 390/1280 on both. Every page is 4/12 px shorter on the branch, skeleton and real alike (the sub-nav strip in place
+  > of the back link). Moon reads −605/−480 on main and −601/−468 here only because its real page is shorter than the
+  > viewport (scrollHeight clamped at 844/900), so only the skeleton shows that 4/12 px.
 - [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme — b1e7c8b
 
 ### Phase 3: States, specimens and the rule
 
 #### Automated
 
-- [ ] 3.1 The nav type-roles guard passes and fails on a planted size
-- [ ] 3.2 Types, lint and the unit suite pass
-- [ ] 3.3 The build passes
+- [x] 3.1 The nav type-roles guard passes and fails on a planted size — SHA_P3
+- [x] 3.2 Types, lint and the unit suite pass — SHA_P3
+- [x] 3.3 The build passes — SHA_P3
 - [ ] 3.4 The full e2e suite passes on the preview
 
 #### Manual
 
-- [ ] 3.5 `/design`'s sub-nav block shows every listed state
+- [x] 3.5 `/design`'s sub-nav block shows every listed state — SHA_P3
 - [ ] 3.6 The owner's walk on the preview
