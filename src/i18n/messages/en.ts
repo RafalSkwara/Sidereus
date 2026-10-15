@@ -38,6 +38,7 @@ export const en = {
   nav: {
     tonight: "Tonight",
     log: "Log",
+    progress: "Progress",
     myGear: "My gear",
     signIn: "Sign in",
     signOut: "Sign out",
@@ -1173,6 +1174,21 @@ export const en = {
       lockedFinderLine: "Says what the object will look like in your telescope from your site.",
     },
 
+    /**
+     * The sub-nav on the focused pages (ui-tonight-nav): `label` is the nav's accessible name, the rest are the chips'
+     * short labels in `TONIGHT_NAV`'s order (not the pages' titles). `tonight` is `nav.tonight`'s wording.
+     */
+    subnav: {
+      label: "Tonight's pages",
+      tonight: "Tonight",
+      targets: "Targets",
+      events: "Events",
+      plan: "Plan",
+      moon: "Moon",
+      planets: "Planets",
+      nights: "Nights",
+    },
+
     /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */
     summary: {
       targets: "Point here first",
@@ -1414,7 +1430,6 @@ export const en = {
       deletedGear: (p: { name: string }) => `${p.name} (deleted)`,
       pages: "Log pages",
       skyChecks: "Sky checks",
-      progress: "Progress",
       newer: "← Newer",
       older: "Older →",
       saved: (p: { object: string }) => `${p.object} logged.`,

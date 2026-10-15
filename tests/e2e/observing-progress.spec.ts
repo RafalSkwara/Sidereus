@@ -212,9 +212,9 @@ test.describe("the progress page", () => {
     test.setTimeout(150_000);
     await onboardInMadrid(page, "e2e-progress-page");
 
-    // 1. The log's Progress link opens the page; nothing is seen yet, but every band shows.
+    // 1. Progress in the primary nav opens the page; nothing is seen yet, but every band shows.
     await page.goto("/log");
-    await page.getByRole("link", { name: en.log.list.progress }).click();
+    await page.getByRole("navigation", { name: en.nav.primary }).getByRole("link", { name: en.nav.progress }).click();
     await expect(page).toHaveURL(/\/log\/progress$/);
     await expect(messierHeading(page)).toContainText(count(0, 110));
     await expect(page.locator("#progress-caldwell-heading")).toContainText(count(0, 61));

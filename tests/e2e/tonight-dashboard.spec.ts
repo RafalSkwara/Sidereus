@@ -10,7 +10,7 @@ import { onboardInMadrid } from "./helpers";
 /*
  * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, six tiles (the second, "Sky
  * events", since sky-events) each open a focused page under /tonight/*, never an anchor on the dashboard, and each page
- * leads back to Tonight. Same setup as the other specs: a production preview on local Supabase with the all-clear
+ * leads back to Tonight through its sub-nav (ui-tonight-nav). Same setup as the other specs: a production preview on local Supabase with the all-clear
  * forecast fixture, so the Moon card and the planets tile are both shown, and place search stubbed with Madrid. The
  * clock is real, so the spec never asserts what the tiles say, only where they lead (the events tile's line is checked
  * for its shape: the empty fact or an event and its night; an event's line leads with its kind's icon, a `Fact` whose
@@ -84,10 +84,14 @@ test("Tonight's tiles open their pages, and each page leads back", async ({ page
   await expect(page).toHaveURL(/\/tonight\/targets$/);
   await expect(page).toHaveTitle(en.common.pageTitle({ title: t.pages.targets }));
   await expect(page.getByRole("heading", { level: 1, name: t.pages.targets })).toBeVisible();
-  // The page's skeleton carries the title and the back link too: wait for the island's list before going back.
+  // The page's skeleton carries the title too, and the sub-nav is the shell's: wait for the island's list before going
+  // back through the sub-nav's Tonight chip (exact: "Tonight" is also the primary nav's label, outside the sub-nav).
   await expect(page.locator('section[aria-labelledby="targets-heading"] li[data-object]').first()).toBeVisible();
 
-  await page.locator("main").getByRole("link", { name: en.nav.tonight, exact: true }).click();
+  await page
+    .getByRole("navigation", { name: t.subnav.label })
+    .getByRole("link", { name: t.subnav.tonight, exact: true })
+    .click();
   await expect(page).toHaveURL(/\/tonight$/);
   await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
   await expect(page.locator("[data-tonight-tiles]")).toBeVisible();

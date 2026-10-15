@@ -26,6 +26,7 @@ export const pl = {
   nav: {
     tonight: "Dziś w nocy",
     log: "Dziennik",
+    progress: "Postępy",
     myGear: "Mój sprzęt",
     signIn: "Zaloguj się",
     signOut: "Wyloguj się",
@@ -1003,6 +1004,17 @@ export const pl = {
       lockedFinderLine: "Mówi, jak obiekt będzie wyglądał w Twoim teleskopie z Twojego miejsca.",
     },
 
+    subnav: {
+      label: "Strony nocy",
+      tonight: "Dziś w nocy",
+      targets: "Cele",
+      events: "Zjawiska",
+      plan: "Plan",
+      moon: "Księżyc",
+      planets: "Planety",
+      nights: "Noce",
+    },
+
     summary: {
       targets: "Zacznij od nich",
       targetsCaption: {
@@ -1177,7 +1189,6 @@ export const pl = {
       deletedGear: (p) => `${p.name} (usunięte)`,
       pages: "Strony dziennika",
       skyChecks: "Oceny nieba",
-      progress: "Postępy",
       newer: "← Nowsze",
       older: "Starsze →",
       saved: (p) => `Zapisano obserwację: ${p.object}.`,

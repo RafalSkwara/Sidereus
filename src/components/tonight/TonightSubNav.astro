@@ -1,0 +1,104 @@
+---
+/*
+ * The Tonight sub-nav (ui-tonight-nav, 4A): the dashboard and its six focused pages as a row of chips, in the
+ * dashboard's tile order, so a page's siblings are one tap apart. The six focused pages pass it to GearShell's
+ * `subnav` slot, so the shell renders it once in the sky-flow strip under the Topbar, outside the island: it is never
+ * drawn twice (skeleton, then island) and keeps its scroll position. The dashboard and the finder chart have none.
+ *
+ * The current page's chip is filled, as the Topbar's pressed segment is (a fill, so red mode tells it by shape, not
+ * hue), and glides to the next page's chip (`subnav-current`, global.css). Seven chips never fit a phone, so the row
+ * scrolls sideways: the script centres the current chip by setting `scrollLeft` (never `scrollIntoView`, which could
+ * scroll the page vertically) and marks the edges with chips beyond them (`data-more-start` / `data-more-end`), which
+ * global.css fades with an alpha mask. With no script the row is a plain scroll row. The links are the tiles' plain
+ * paths (the site and telescope live in cookies), so offline they reach the stored copies as the tiles do.
+ */
+import { getMessages } from "@/i18n";
+import { TONIGHT_NAV, currentTonightPage, type TonightNavItem } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /**
+   * `/design` only: the chip to mark current instead of the page's own path, so a specimen can show any chip. A
+   * specimen's current chip is filled by its classes only: no `aria-current` (it is not the page, impl-review F6) and
+   * no view-transition name (several on one page would abort the transition).
+   */
+  current?: TonightNavItem["href"];
+  /** `/design` only: classes merged last on one chip, to pin its hover or focus look as a specimen. */
+  pinned?: { href: TonightNavItem["href"]; class: string };
+}
+
+const { current: currentOverride, pinned } = Astro.props;
+const m = getMessages(Astro.locals.locale);
+const t = m.tonight.subnav;
+const current = currentOverride ?? currentTonightPage(Astro.url.pathname);
+const chips = TONIGHT_NAV.map((item) => ({
+  href: item.href,
+  text: t[item.label],
+  current: item.href === current,
+  pinned: pinned?.href === item.href ? pinned.class : undefined,
+}));
+// The Topbar's focus ring: a `--ring` outline offset from the chip, so it shows on the filled chip too.
+const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+---
+
+<nav aria-label={t.label} data-tonight-subnav>
+  {/* The scroll area spans the title's column; the list's own padding aligns the first chip with the title, and a
+      phone scrolls the chips to the screen's edge instead of cutting them at the padding. The vertical padding keeps
+      the focus ring inside the scroll area, which clips it. */}
+  <div class="scrollbar-hidden overflow-x-auto" data-subnav-row>
+    <ul class="flex w-max list-none items-center gap-1 px-4 py-1">
+      {chips.map((chip) => (
+        <li>
+          <a
+            href={chip.href}
+            aria-current={chip.current && !currentOverride ? "page" : undefined}
+            data-subnav-current={chip.current ? "" : undefined}
+            class:list={cn(
+              "inline-flex min-h-11 items-center rounded-full px-3 text-label font-semibold whitespace-nowrap",
+              "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
+              focusRing,
+              chip.current
+                ? "bg-selected text-selected-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-heading",
+              chip.pinned,
+            )}
+            style={chip.current && !currentOverride ? "view-transition-name: subnav-current" : undefined}
+          >
+            {chip.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
+<script>
+  import { edges, scrollLeftFor } from "@/components/tonight/subnav";
+
+  for (const row of document.querySelectorAll<HTMLElement>("[data-subnav-row]")) {
+    const markEdges = () => {
+      const { start, end } = edges(row.scrollLeft, row.clientWidth, row.scrollWidth);
+      row.toggleAttribute("data-more-start", start);
+      row.toggleAttribute("data-more-end", end);
+    };
+    // The current chip into view (`data-subnav-current`, which `/design`'s specimens carry without `aria-current`),
+    // measured in the row's scrolled content (not `offsetLeft`, which counts from a further ancestor). Once on load,
+    // and again once the web font is in: the swap can change the chips' widths.
+    const centre = () => {
+      const chip = row.querySelector<HTMLElement>("[data-subnav-current]");
+      if (chip) {
+        const rowRect = row.getBoundingClientRect();
+        const chipRect = chip.getBoundingClientRect();
+        row.scrollLeft = scrollLeftFor(
+          { left: chipRect.left - rowRect.left + row.scrollLeft, width: chipRect.width },
+          { width: row.clientWidth, scrollWidth: row.scrollWidth },
+        );
+      }
+      markEdges();
+    };
+    centre();
+    void document.fonts.ready.then(centre);
+    row.addEventListener("scroll", markEdges, { passive: true });
+    window.addEventListener("resize", markEdges, { passive: true });
+  }
+</script>

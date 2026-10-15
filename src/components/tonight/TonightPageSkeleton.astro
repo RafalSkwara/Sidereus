@@ -1,7 +1,8 @@
 ---
 /*
  * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
- * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
+ * TonightPageSky, with the real title (known in the shell), the finder's back link when `backHref` is given (the
+ * focused pages have none: their sub-nav is the shell's, ui-tonight-nav) and a bar for the context line, then
  * ruled placeholder rows with a ranked target's geometry (ui-fact-rhythm: the item role around each row, the heading
  * and detail lines, the stacked Window and Best cards as StatCard boxes, the facts under a hairline, the actions), so
  * nothing jumps when the island swaps in. Bars that stand for text take that text's type role and hold a non-breaking
@@ -39,12 +40,12 @@ interface Props {
    * with the Moon as a target (MoonCard), which ignores `rows`.
    */
   layout?: "rows" | "plan" | "nights" | "events" | "moon";
-  /** The back link, as `TonightPageSky` draws it (Tonight by default). */
+  /** The back link, as `TonightPageSky` draws it: the finder chart's only; without it, no back link. */
   backHref?: string;
   backLabel?: string;
 }
 
-const { title, reloadHref, rows = 5, layout = "rows", backHref = "/tonight", backLabel } = Astro.props;
+const { title, reloadHref, rows = 5, layout = "rows", backHref, backLabel } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 const t = m.tonight;
 // bg-border, not bg-muted: --muted is the surface colour, so muted bars vanish on the ground.
@@ -65,15 +66,15 @@ const targetRows = moon ? 1 : rows;
 const blob = "rounded-full bg-border motion-safe:animate-pulse";
 ---
 
-<!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
-     reaches them if the island never arrives (tonight-dashboard review F8). -->
+<!-- Only the loading line is the status: the finder's back link and the reload link stay outside it, so a screen
+     reader still reaches them if the island never arrives (tonight-dashboard review F8). -->
 <div>
   <span role="status" class="sr-only">
     {t.loading}
   </span>
   <TonightSky night quiet>
-    <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />
-    <div class="mt-1 sm:mt-2">
+    {backHref && <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />}
+    <div class:list={[backHref && "mt-1 sm:mt-2"]}>
       <PageHeader title={title} />
     </div>
     <!-- The context line: date, then "site · telescope" on the next line on a phone (TonightPageSky). -->

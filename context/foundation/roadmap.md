@@ -56,7 +56,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | ID   | Change ID            | Outcome (user can …)                                                                                                                                | Prerequisites | PRD refs                                                      | Status      |
 | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------- | ----------- |
 | S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | done        |
-| S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | ready       |
+| S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | in-progress |
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                            | S-02          | MS-01, FR-039, FR-007                                         | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015                                         | proposed    |
@@ -121,7 +121,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Unknowns:**
   - Whether four tabs fit at 320 px in Polish. — Owner: team. Block: no.
 - **Risk:** Touches every focused page and the shared navigation. The skeleton must not jump, and the dashboard's first screen (`tonight-phone.spec.ts`) must stay untouched.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-03: Log, progress and gear rows
 

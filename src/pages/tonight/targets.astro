@@ -9,6 +9,7 @@ import Attribution from "@/components/tonight/Attribution.astro";
 import TargetsPageContent from "@/components/tonight/TargetsPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
 import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { MAX_RANKED_OBJECTS } from "@/lib/engine";
 import { parseTargetParam } from "@/lib/targets";
@@ -45,6 +46,8 @@ const restOpen = Astro.url.searchParams.has("sort");
 ---
 
 <GearShell title={title} skyFlow>
+  <TonightSubNav slot="subnav" />
+
   {supabase ? (
     <TargetsPageContent
       server:defer

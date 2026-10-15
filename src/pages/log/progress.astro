@@ -6,14 +6,12 @@ import { ServerError } from "@/components/forms/ServerError";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
 import SeenList from "@/components/progress/SeenList.astro";
-import BackLink from "@/components/ui/BackLink.astro";
 import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { logMilestoneFailure } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
-import { LOG_LIST } from "@/lib/observations/redirect";
 import { observationStore } from "@/lib/observations/store";
 import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
 import { observingProgress, type ObservingProgress } from "@/lib/progress/progress";
@@ -57,12 +55,8 @@ const nothingSeen =
 ---
 
 <GearShell title={t.title}>
-  <Fragment slot="header">
-    <BackLink href={LOG_LIST} label={m.nav.log} />
-    <div class="mt-2">
-      <PageHeader title={t.title} subtitle={t.intro} />
-    </div>
-  </Fragment>
+  {/* A destination of its own in the bars (ui-tonight-nav), so no back link: the title sits as on /log and /gear. */}
+  <PageHeader slot="header" title={t.title} subtitle={t.intro} />
 
   {!supabase ? (
     <DatabaseMissing />

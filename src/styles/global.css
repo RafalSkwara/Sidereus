@@ -437,8 +437,9 @@
 /*
  * Navigation motion (nav-motion-theme-cycle). Every page change is a full load, so the active indicator travels
  * with cross-document view transitions (Chrome 126+, Safari 18.2+; other browsers switch instantly). The page
- * itself swaps without a cross-fade; only the named indicators move: the pressed pill segment (Topbar.astro) and the
- * phone tab bar's top bar plus the new tab's icon bounce (TabBar.astro). Off with reduced motion.
+ * itself swaps without a cross-fade; only the named indicators move: the pressed pill segment (Topbar.astro), the
+ * phone tab bar's top bar plus the new tab's icon bounce (TabBar.astro), and the Tonight sub-nav's current chip
+ * (TonightSubNav.astro, ui-tonight-nav). Off with reduced motion.
  */
 @view-transition {
   navigation: auto;
@@ -456,14 +457,17 @@
 }
 
 ::view-transition-group(nav-current),
-::view-transition-group(tab-current) {
+::view-transition-group(tab-current),
+::view-transition-group(subnav-current) {
   animation-duration: 250ms;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Keep the segment's label at its own size while the pill resizes between segments. */
+/* Keep the segment's (and the chip's) label at its own size while the fill resizes between them. */
 ::view-transition-old(nav-current),
-::view-transition-new(nav-current) {
+::view-transition-new(nav-current),
+::view-transition-old(subnav-current),
+::view-transition-new(subnav-current) {
   height: 100%;
 }
 
@@ -558,9 +562,9 @@
  * own utility, such as the hairline's Check, is reset to the control's colour), no fill or hover, no underline on quiet
  * actions, and a dashed outline in `--border` on buttons and hairlines (the Topbar and TabBar links and quiet links
  * have no border width, so it never shows there); the focus outline is left alone, so focus stays visible. The current
- * page's entry keeps its pressed look.
+ * page's entry keeps its pressed look (`aria-current` `page`, or `true` for a bar's section on a page below it).
  */
-:root[data-offline] [data-needs-network]:not([aria-current="page"]),
+:root[data-offline] [data-needs-network]:not([aria-current="page"], [aria-current="true"]),
 :root[data-offline] [data-needs-network] :is(a, button, select) {
   cursor: not-allowed;
   color: var(--muted-foreground);
@@ -568,7 +572,7 @@
   text-decoration-line: none;
 }
 
-:root[data-offline] :is(a, button)[data-needs-network]:not([aria-current="page"]) svg,
+:root[data-offline] :is(a, button)[data-needs-network]:not([aria-current="page"], [aria-current="true"]) svg,
 :root[data-offline] [data-needs-network] :is(a, button) svg {
   color: inherit;
 }
@@ -589,6 +593,36 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/*
+ * The Tonight sub-nav's edge fade (ui-tonight-nav): the row scrolls sideways on a phone, and an edge with chips beyond
+ * it fades out, so the row reads as one that continues. TonightSubNav's script sets `data-more-start` /
+ * `data-more-end` from the scroll position (`subnav.ts`); without it there is no mask and the row is a plain scroll
+ * row. An alpha mask only (its colour is ignored), so it fades whatever the theme paints, red included. The scroll
+ * padding keeps a chip that keyboard focus scrolls to clear of the fade, so its focus ring stays visible.
+ */
+[data-subnav-row] {
+  --subnav-fade: 2rem;
+  scroll-padding-inline: var(--subnav-fade);
+}
+
+[data-subnav-row][data-more-start] {
+  mask-image: linear-gradient(to right, transparent, black var(--subnav-fade));
+}
+
+[data-subnav-row][data-more-end] {
+  mask-image: linear-gradient(to left, transparent, black var(--subnav-fade));
+}
+
+[data-subnav-row][data-more-start][data-more-end] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--subnav-fade),
+    black calc(100% - var(--subnav-fade)),
+    transparent
+  );
 }
 
 /*

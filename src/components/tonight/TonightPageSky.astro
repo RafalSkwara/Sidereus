@@ -1,10 +1,12 @@
 ---
 /*
  * The slim sky at the top of a focused Tonight page (tonight-dashboard): TonightSky in its title-only mode with the
- * way back to Tonight (or to `backHref`), the page title and a context line (verdict dot · date · site · telescope; on a phone the date
- * is one line and "site · telescope" the next, ui-user-adjustments). The dot's meaning is in screen-reader text
- * beside it (the sky headline), so it never rests on colour alone. Without a view (setup missing or a failure) the
- * context line is left out. The island renders it, since the line needs the view; TonightPageSkeleton draws the same
+ * page title and a context line (verdict dot · date · site · telescope; on a phone the date is one line and
+ * "site · telescope" the next, ui-user-adjustments). The six focused pages have no back link: the sub-nav in the
+ * shell's strip is their way between pages (ui-tonight-nav). Only the finder chart passes `backHref`, its way back to
+ * the page it was opened from; the title then sits under that link at its offset. The dot's meaning is in
+ * screen-reader text beside it (the sky headline), so it never rests on colour alone. Without a view (setup missing or
+ * a failure) the context line is left out. The island renders it, since the line needs the view; TonightPageSkeleton draws the same
  * sky while it loads.
  */
 import BackLink from "@/components/ui/BackLink.astro";
@@ -17,18 +19,18 @@ import type { TonightView } from "@/lib/tonight/build";
 interface Props {
   title: string;
   view: TonightView | null;
-  /** Where the back link goes and what it says; Tonight and its label by default (the finder chart returns to the page it came from). */
+  /** The back link and what it says (Tonight's label by default): the finder chart's only; without it, no back link. */
   backHref?: string;
   backLabel?: string;
 }
 
-const { title, view, backHref = "/tonight", backLabel } = Astro.props;
+const { title, view, backHref, backLabel } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 ---
 
 <TonightSky night quiet>
-  <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />
-  <div class="mt-1 sm:mt-2">
+  {backHref && <BackLink href={backHref} label={backLabel ?? m.nav.tonight} />}
+  <div class:list={[backHref && "mt-1 sm:mt-2"]}>
     <PageHeader title={title} />
   </div>
   {view && (
