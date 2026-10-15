@@ -35,7 +35,7 @@ This folder is the umbrella for the split in `audit.md` ("Proposed split into ch
 |---|---|---|
 | 1 | `ui-quiet-actions` | Done: merged in #163 (main c650a8a) and archived to `context/archive/2026-10-14-ui-quiet-actions/` |
 | 2 | `ui-fact-rhythm` | Done: merged in #167 (main 42ce808) and archived to `context/archive/2026-10-14-ui-fact-rhythm/` |
-| 3 | `ui-dashboard-tiles` | **In review**: implemented and impl-reviewed (APPROVED) on `feat/ui-dashboard-tiles`; owner accepted 2026-10-15; PR open (closes #169) |
+| 3 | `ui-dashboard-tiles` | Done: merged in #177 (main c5cfdb1) and archived to `context/archive/2026-10-15-ui-dashboard-tiles/` |
 | 4 | `ui-tonight-nav` | Not started |
 | 5 | `ui-log-progress-gear` | Not started |
 
@@ -50,5 +50,10 @@ Contract carried over from change 2 (`ui-fact-rhythm`):
 - **Components:** `Fact` / `FactList`, `StatCard` / `StatPair` (Window and Best stacked, full width, at every width) and the icon map `src/components/ui/fact-icons.ts` (one concept, one icon).
 - **Guards:** `src/styles/rhythm-roles.test.ts` (converted files: no numeric, px or arbitrary vertical steps, allowlists with counts) and `src/components/ui/fact-islands.test.ts`.
 - **Skeletons:** `TonightPageSkeleton` mirrors the real rows (`rows`, `moon`, `nights`, `events`; `plan` is S-08's); fit a changed view's skeleton and measure it (`scripts/skeleton-heights.mjs`).
+
+Contract carried over from change 3 (`ui-dashboard-tiles`):
+- **Dashboard on the roles:** `tile.ts`, `TonightTiles`, `EventsTile`, `VerdictCard` and `TonightSkeleton` are converted files under the rhythm guard (`TILE_CONTENT_CLASS` = `mt-line`, captions `mt-group`, `TILES_GAP_CLASS` guarded); the guard's allowlist counts are exact.
+- **Event lines:** `eventsVerdict` / `eventsTile` give `{ line, kind }`; the verdict's event line is a muted `Fact` (`mt-line`) led by its kind's icon, and the Events tile's line leads with it too (the one deliberate icon on a tile; headings stay icon-free). `factIcon` resolves fact and sky-event kinds; `Fact` takes `kind` and `size` (`label` | `body`).
+- **Verdict height:** `VERDICT_MIN_HEIGHT_CLASS` = `min-h-42 sm:min-h-58` (re-measured 2026-10-15); the phone first screen is unchanged (149 / 701 / 746 against the TabBar at 779 px), and `tonight-phone.spec.ts` hides the event line while it measures.
 
 Evidence scripts to reuse: `context/archive/2026-10-14-ui-quiet-actions/evidence/scripts/` and `context/archive/2026-10-14-ui-fact-rhythm/evidence/scripts/` (capture, targets-rows, skeleton-heights, design-sections). They take the port from the environment and refuse non-local URLs.
