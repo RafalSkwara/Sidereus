@@ -671,13 +671,13 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 1.1 Helper tests pass (no message or stack, `CODE_SHAPE`, status range, never throws, no `Error` argument, `logNotice` at warn level and `logFailure` at error level)
-- [x] 1.2 The virtual-module seams load `middleware.ts`, `supabase.ts` and `kv-cache.ts` under the mocks
-- [x] 1.3 Silent-catch guard passes with the day-one allowlist, and its six sample shapes (the sixth a `.catch(reportAnd(...))` handler) are red without a report and green with one
-- [x] 1.4 No-console guard passes with the two disables in `log-failure.ts` and no other runtime entry
-- [x] 1.5 The touched suites pass, including the forecast probe line
-- [x] 1.6 Full unit suite, lint and types pass
-- [x] 1.7 Production build keeps the Issues setting
+- [x] 1.1 Helper tests pass (no message or stack, `CODE_SHAPE`, status range, never throws, no `Error` argument, `logNotice` at warn level and `logFailure` at error level) — e133a30
+- [x] 1.2 The virtual-module seams load `middleware.ts`, `supabase.ts` and `kv-cache.ts` under the mocks — e133a30
+- [x] 1.3 Silent-catch guard passes with the day-one allowlist, and its six sample shapes (the sixth a `.catch(reportAnd(...))` handler) are red without a report and green with one — e133a30
+- [x] 1.4 No-console guard passes with the two disables in `log-failure.ts` and no other runtime entry — e133a30
+- [x] 1.5 The touched suites pass, including the forecast probe line — e133a30
+- [x] 1.6 Full unit suite, lint and types pass — e133a30
+- [x] 1.7 Production build keeps the Issues setting — e133a30
 
 #### Manual
 
