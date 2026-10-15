@@ -30,11 +30,11 @@ their Progress / back links.
 | --- | --- | --- | --- |
 | Navigation shape | 4A sub-nav plus 4B four destinations | The owner's decision 4 | Audit |
 | Where the sub-nav lives | GearShell's sky-flow strip (named slot), not the island's sky | Rendered once, never swapped, so no skeleton duplication and no scroll reset on the swap | Research (C1) |
-| Sub-nav order | The dashboard's tile order (Events second), held to `TONIGHT_PAGES` as a set | Follows what the user sees; `TONIGHT_PAGES`' order serves the offline list | Plan (agent default, owner to confirm) |
-| Sub-nav labels | Short labels (Plan, Moon, Nights, Events / Plan, Księżyc, Noce, Zjawiska) | Fits from `sm`, less scrolling on a phone | Research (C2), agent default |
-| Phone overflow cue | Edge fade (alpha mask) plus the current chip scrolled into view | No colour in the mask (red-safe), no extra controls | Research (C2), agent default |
+| Sub-nav order | The dashboard's tile order (Events second), held to `TONIGHT_PAGES` as a set | Follows what the user sees; `TONIGHT_PAGES`' order serves the offline list | Plan (owner confirmed 2026-10-15) |
+| Sub-nav labels | Short labels (Plan, Moon, Nights, Events / Plan, Księżyc, Noce, Zjawiska) | Fits from `sm`, less scrolling on a phone | Research (C2), owner confirmed |
+| Phone overflow cue | Edge fade (alpha mask) plus the current chip scrolled into view | No colour in the mask (red-safe), no extra controls | Research (C2), owner confirmed |
 | Progress URL | Stays `/log/progress`; `currentDestination` picks the longest match | No URL moves for the celebration, smoke and specs | Research (C3, C4) |
-| Pill at `md` | `text-label`, icons only from `lg` | Polish leaves about 5 px at 768 px with icons (measured) | Research (C5), agent default |
+| Pill at `md` | `text-label`, icons only from `lg` | Polish leaves about 5 px at 768 px with icons (measured) | Research (C5), owner confirmed |
 | Finder | No sub-nav; keeps its back link to its origin | Roadmap S-02 outcome; it is a leaf, not a sibling | Roadmap |
 | Back link on `/log/progress` | Removed | Progress is a destination now | Plan |
 
@@ -51,7 +51,8 @@ checks link and the progress page redesign (S-03); `TopbarControls`' popover siz
 ## Architecture / Approach
 
 The /10x-ui order: model and copy → shared bars (Phase 1) → the one new component on the focused pages (Phase 2) →
-states, specimens, guard and rules (Phase 3). Phases 1 and 2 touch disjoint files, so either can land first.
+states, specimens, guard and rules (Phase 3). Phases 1 and 2 are independent in logic; their shared files are
+`navigation.ts` (+ its test) and the i18n catalogues, so they run one after the other in one checkout.
 
 ## Phases at a Glance
 
@@ -66,8 +67,9 @@ states, specimens, guard and rules (Phase 3). Phases 1 and 2 touch disjoint file
 
 ## Open Risks & Assumptions
 
-- The four agent defaults marked above (order, labels, fade, icons from `lg`) are UI choices put to the owner with
-  this plan. Changing any one changes only Phase 1 or 2 copy or classes, not the structure.
+- The owner confirmed the four UI defaults (order, labels, fade, icons from `lg`) on 2026-10-15. The plan review
+  (SOUND, F1-F5) is applied: rhythm-guard counts unchanged under a conditional title offset, the heights script copied
+  with the plan page and a seed recipe, the scroll offset's origin, exact e2e locators, and the shared files.
 - Stored offline copies taken before the deploy keep the back link until their next online refresh (harmless).
 
 ## Success Criteria (Summary)

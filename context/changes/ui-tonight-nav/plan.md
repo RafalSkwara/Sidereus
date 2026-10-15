@@ -49,6 +49,15 @@ From `research.md` (charges C1-C5; hardcoded-value scan over the nine nav files:
   `observing-progress.spec.ts:217` clicks the Log header's Progress link. `offline.spec.ts:98` finds Log in the
   primary nav.
 
+### Owner decisions (2026-10-15, relayed by the orchestrator)
+
+The owner confirmed all four UI defaults this plan proposed:
+
+1. The sub-nav's order is the dashboard's tile order: Tonight, Targets, Events, Plan, Moon, Planets, Nights.
+2. Short labels (Plan, Moon, Nights, Events / Plan, Księżyc, Noce, Zjawiska), not the page titles.
+3. On a phone, an edge fade on the side with more chips, plus the current chip scrolled into view. No chevrons.
+4. The Topbar pill shows its icons only from 1024 px (`lg`); between 768 and 1024 px it is text only.
+
 ## What We're NOT Doing
 
 - No URL move: Progress stays at `/log/progress` (the celebration, `redirect.ts`, smoke and three specs use it).
@@ -65,7 +74,9 @@ From `research.md` (charges C1-C5; hardcoded-value scan over the nine nav files:
 
 The work runs in the /10x-ui order: model and copy → the shared bars → the one new component on the focused pages →
 states, specimens and the rule. Phase 1 carries 4B and C3-C5 and touches no Tonight page. Phase 2 carries 4A (C1-C2)
-and touches no shared bar. They are independent, so either can ship first if one stalls.
+and touches no shared bar. They are independent in logic, so either can ship first if one stalls, but they share
+`src/lib/navigation.ts` (+ its test) and the i18n catalogues (`en.ts`, `pl.ts`): run them one after the other in one
+checkout, never in parallel worktrees (plan review F5).
 
 ## Critical Implementation Details
 
@@ -227,7 +238,10 @@ that has more.
   with a `mask-image` linear gradient (alpha only). With no script, there is no mask and the row is a plain scroll
   row.
 - `subnav.ts` (pure, tested): `scrollLeftFor(chip: {left, width}, row: {width, scrollWidth}) → number` (centres the
-  chip, clamped to `[0, scrollWidth - width]`), and `edges(scrollLeft, width, scrollWidth) → {start, end}` with a 1 px
+  chip, clamped to `[0, scrollWidth - width]`). `chip.left` is the chip's position in the row's scrolled content:
+  `chipRect.left - rowRect.left + row.scrollLeft` from `getBoundingClientRect`, never a bare `offsetLeft` (the row is
+  not positioned, so `offsetLeft` would count from a further ancestor and shift the centring by the container's
+  padding and the phone bleed; plan review F3), and `edges(scrollLeft, width, scrollWidth) → {start, end}` with a 1 px
   tolerance. The component's `<script>` applies them on load and on `scroll` (passive) and `resize`. It sets
   `scrollLeft`, never `scrollIntoView`.
 - The current-chip glide: add `subnav-current` to the `::view-transition-group` rules beside `nav-current` in
@@ -247,15 +261,25 @@ byte-for-byte what it is today (the dashboard and the finder pass nothing). Each
 #### 4. The back link only for the finder
 
 **File**: `src/components/tonight/TonightPageSky.astro`, `TonightPageSkeleton.astro`, the six `*PageContent.astro`
-islands only if they pass `backHref`, `src/pages/design.astro`
+islands only if they pass `backHref`, `src/pages/design.astro`, `src/styles/rhythm-roles.test.ts`
 
 **Intent**: no back link on the six focused pages. The finder keeps its own.
 
 **Contract**: `backHref` becomes optional with no default, and the `BackLink` and its wrapper render only when
 `backHref` is given. The skeleton follows the same rule, so the two stay identical. `finder.astro` and
-`FinderContent` keep passing `backHref` / `backLabel` (unchanged). Check the title's top spacing with no back link
-against the skeleton (`scripts/skeleton-heights.mjs` from the ui-fact-rhythm evidence: delta within 2 px at 390 and
-1280 on the six pages).
+`FinderContent` keep passing `backHref` / `backLabel` (unchanged).
+- **The title's offset** (plan review F1): today the title's wrapper is `mt-1 sm:mt-2` under the back link. With no
+  back link that offset has nothing to separate, so the wrapper takes `mt-1 sm:mt-2` only when `backHref` is given
+  (`class:list={[backHref && "mt-1 sm:mt-2"]}`), identically in `TonightPageSky` and `TonightPageSkeleton`. The title
+  then starts at the sky band's own top padding, as a sky-header title without a back link does on `/gear` and
+  `/log`. The literal stays once in the skeleton, so `rhythm-roles.test.ts`'s `TonightPageSkeleton` counts
+  (`"mt-1": 3`, `"sm:mt-2": 1`) do not change. Update that entry's comment to say the title's offset applies under the
+  finder's back link only. If the implementer restructures the header instead, the counts change only by the
+  removed uses, with the comment saying why, and never to fit an unplanned class.
+- **Heights** (plan review F2): measure with this change's copy of the script,
+  `context/changes/ui-tonight-nav/evidence/scripts/skeleton-heights.mjs` (the ui-fact-rhythm script plus the `plan`
+  page). It needs a seeded full-plan user: `evidence/README.md` gives the three commands (`seed.mjs`, `account:plan …
+  full`, the script). Delta within 2 px at 390 and 1280 px on the six pages and the finder.
 
 #### 5. E2E
 
@@ -274,6 +298,9 @@ against the skeleton (`scripts/skeleton-heights.mjs` from the ui-fact-rhythm evi
   - At 390×844 on `/tonight/nights` and `/tonight/events`: the current chip's box lies inside the row's box and the
     viewport, and `window.scrollY` is 0 after load.
   - Clicking Plan from Targets lands on `/tonight/plan` with the Plan chip current (one tap).
+  - Every sub-nav link is found with `exact: true` (`getByRole("link", { name, exact: true })`): "Plan" is a substring of
+    "Planets" and "Planety", so a substring match hits two links (plan review F4). The same goes for the
+    `tonight-dashboard.spec.ts` and `sky-events.spec.ts` locators above.
 
 ### Success Criteria:
 
@@ -286,7 +313,7 @@ against the skeleton (`scripts/skeleton-heights.mjs` from the ui-fact-rhythm evi
 
 #### Manual Verification:
 
-- `skeleton-heights.mjs` on the six pages at 390 and 1280 px: skeleton and real page within 2 px
+- `evidence/scripts/skeleton-heights.mjs` (seeded per `evidence/README.md`) on the six pages and the finder at 390 and 1280 px: skeleton and real page within 2 px
 - The sub-nav on Targets, Plan and Events at 390 and 1280 px, EN and PL, dark, light and red: the current chip reads
   as selected in red (fill, not hue), the fade shows on the side with more chips, and the strip continues the sky with
   no seam (main session's judgement; shots in `evidence/after/subnav-*.jpg`, compared with
@@ -410,6 +437,7 @@ until their next online refresh, which is harmless.
 - Experiment A: `context/changes/ui-refine/evidence/exp-a/experiment-a.diff`
 - Pattern: Topbar pill `src/components/Topbar.astro:46-75`; panorama strip `scrollbar-hidden` in `TonightSkyView`
 - Measurement: `context/changes/ui-tonight-nav/evidence/measure-nav-labels.mjs`
+- Plan review: `context/changes/ui-tonight-nav/reviews/plan-review.md` (SOUND; F1-F5 applied 2026-10-15)
 
 ## Progress
 
@@ -439,7 +467,7 @@ until their next online refresh, which is harmless.
 
 #### Manual
 
-- [ ] 2.5 Skeleton and real page within 2 px on the six pages
+- [ ] 2.5 Skeleton and real page within 2 px on the six pages and the finder
 - [ ] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme
 
 ### Phase 3: States, specimens and the rule
