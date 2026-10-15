@@ -484,8 +484,8 @@ None. No database, no stored data, no offline-copy format change. Stored Targets
 
 #### Automated
 
-- [x] 4.1 `npm test` and `npm run lint` pass (docs only)
-- [x] 4.2 Before the PR, the whole e2e suite and `npm run smoke` run against a fresh local production build; counts reported in the PR
+- [x] 4.1 `npm test` and `npm run lint` pass (docs only) — 24cdde0
+- [x] 4.2 Before the PR, the whole e2e suite and `npm run smoke` run against a fresh local production build; counts reported in the PR — 24cdde0
 
 #### Manual
 
