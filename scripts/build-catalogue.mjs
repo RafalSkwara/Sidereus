@@ -185,6 +185,12 @@ function nullableNumber(value) {
   return n;
 }
 
+/** A trimmed text column, or null when it is empty ("Sb", "SABc"; OpenNGC's Hubble type). */
+function nullableText(value) {
+  const text = (value ?? "").trim();
+  return text === "" ? null : text;
+}
+
 function designationFor(name) {
   const match = /^(NGC|IC|Mel)0*(\d+)$/.exec(name);
   if (match) {
@@ -231,6 +237,7 @@ function toMessierObject(row, messier, options = {}) {
     vMag,
     bMag: nullableNumber(row["B-Mag"]),
     surfaceBrightness: nullableNumber(row.SurfBr),
+    hubble: nullableText(row.Hubble),
   };
 }
 
@@ -345,6 +352,7 @@ function buildDoubleCluster(rows) {
     vMag: Math.min(oa.vMag, ob.vMag),
     bMag: Math.min(oa.bMag, ob.bMag),
     surfaceBrightness: null,
+    hubble: null,
   };
 }
 

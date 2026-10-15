@@ -12,7 +12,8 @@
     "minorAxisArcmin": 4,
     "vMag": 8.4,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M2",
@@ -27,7 +28,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.25,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M3",
@@ -42,7 +44,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.39,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M4",
@@ -57,7 +60,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.4,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M5",
@@ -72,7 +76,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.95,
     "bMag": 7.34,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M6",
@@ -87,7 +92,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.2,
     "bMag": 4.48,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M7",
@@ -102,7 +108,8 @@
     "minorAxisArcmin": null,
     "vMag": 3.3,
     "bMag": 3.45,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M8",
@@ -117,7 +124,8 @@
     "minorAxisArcmin": 30,
     "vMag": 5.8,
     "bMag": 5,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M9",
@@ -132,7 +140,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.42,
     "bMag": 9.36,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M10",
@@ -147,7 +156,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.98,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M11",
@@ -162,7 +172,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.8,
     "bMag": 6.32,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M12",
@@ -177,7 +188,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.07,
     "bMag": 8.52,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M13",
@@ -192,7 +204,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.8,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M14",
@@ -207,7 +220,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.73,
     "bMag": 9.55,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M15",
@@ -222,7 +236,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.3,
     "bMag": 3,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M16",
@@ -237,7 +252,8 @@
     "minorAxisArcmin": 25,
     "vMag": 6,
     "bMag": 6.58,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M17",
@@ -252,7 +268,8 @@
     "minorAxisArcmin": null,
     "vMag": 7,
     "bMag": 6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M18",
@@ -267,7 +284,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.9,
     "bMag": 7.24,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M19",
@@ -282,7 +300,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.57,
     "bMag": 8.45,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M20",
@@ -297,7 +316,8 @@
     "minorAxisArcmin": 28,
     "vMag": 8.5,
     "bMag": 6.3,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M21",
@@ -312,7 +332,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.9,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M22",
@@ -327,7 +348,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.17,
     "bMag": 7.16,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M23",
@@ -342,7 +364,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.5,
     "bMag": 6.03,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M24",
@@ -357,7 +380,8 @@
     "minorAxisArcmin": 60,
     "vMag": 4.5,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M25",
@@ -372,7 +396,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.6,
     "bMag": 5.29,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M26",
@@ -387,7 +412,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.87,
     "bMag": 8,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M27",
@@ -402,7 +428,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.4,
     "bMag": 7.6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M28",
@@ -417,7 +444,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.9,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M29",
@@ -432,7 +460,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.6,
     "bMag": 7.3,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M30",
@@ -447,7 +476,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.1,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M31",
@@ -462,7 +492,8 @@
     "minorAxisArcmin": 69.66,
     "vMag": 3.44,
     "bMag": 4.29,
-    "surfaceBrightness": 23.63
+    "surfaceBrightness": 23.63,
+    "hubble": "Sb"
   },
   {
     "id": "M32",
@@ -477,7 +508,8 @@
     "minorAxisArcmin": 4.86,
     "vMag": 8.13,
     "bMag": 8.89,
-    "surfaceBrightness": 22.17
+    "surfaceBrightness": 22.17,
+    "hubble": "E"
   },
   {
     "id": "M33",
@@ -492,7 +524,8 @@
     "minorAxisArcmin": 36.73,
     "vMag": 5.79,
     "bMag": 6.35,
-    "surfaceBrightness": 23.61
+    "surfaceBrightness": 23.61,
+    "hubble": "Sc"
   },
   {
     "id": "M34",
@@ -507,7 +540,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.2,
     "bMag": 5.37,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M35",
@@ -522,7 +556,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.1,
     "bMag": 5.31,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M36",
@@ -537,7 +572,8 @@
     "minorAxisArcmin": null,
     "vMag": 6,
     "bMag": 6.09,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M37",
@@ -552,7 +588,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.6,
     "bMag": 6.19,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M38",
@@ -567,7 +604,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.4,
     "bMag": 6.69,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M39",
@@ -582,7 +620,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.6,
     "bMag": 4.66,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M40",
@@ -597,7 +636,8 @@
     "minorAxisArcmin": null,
     "vMag": 8,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M41",
@@ -612,7 +652,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.5,
     "bMag": 4.89,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M42",
@@ -627,7 +668,8 @@
     "minorAxisArcmin": 60,
     "vMag": 4,
     "bMag": 4,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M43",
@@ -642,7 +684,8 @@
     "minorAxisArcmin": 15,
     "vMag": 9,
     "bMag": 9,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M44",
@@ -657,7 +700,8 @@
     "minorAxisArcmin": null,
     "vMag": 3.1,
     "bMag": 3.46,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M45",
@@ -672,7 +716,8 @@
     "minorAxisArcmin": 150,
     "vMag": 1.2,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M46",
@@ -687,7 +732,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.1,
     "bMag": 6.33,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M47",
@@ -702,7 +748,8 @@
     "minorAxisArcmin": null,
     "vMag": 4.4,
     "bMag": 4.42,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M48",
@@ -717,7 +764,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.8,
     "bMag": 6.11,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M49",
@@ -732,7 +780,8 @@
     "minorAxisArcmin": 8.38,
     "vMag": 8.28,
     "bMag": 9.35,
-    "surfaceBrightness": 23.25
+    "surfaceBrightness": 23.25,
+    "hubble": "E"
   },
   {
     "id": "M50",
@@ -747,7 +796,8 @@
     "minorAxisArcmin": null,
     "vMag": 5.9,
     "bMag": 6.27,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M51",
@@ -762,7 +812,8 @@
     "minorAxisArcmin": 11.67,
     "vMag": 8.36,
     "bMag": 8.61,
-    "surfaceBrightness": 22.9
+    "surfaceBrightness": 22.9,
+    "hubble": "SABb"
   },
   {
     "id": "M52",
@@ -777,7 +828,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.9,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M53",
@@ -792,7 +844,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.79,
     "bMag": 8.95,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M54",
@@ -807,7 +860,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.7,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M55",
@@ -822,7 +876,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.49,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M56",
@@ -837,7 +892,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.4,
     "bMag": 8.9,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M57",
@@ -852,7 +908,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.8,
     "bMag": 9.7,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M58",
@@ -867,7 +924,8 @@
     "minorAxisArcmin": 3.84,
     "vMag": 10.3,
     "bMag": 10.44,
-    "surfaceBrightness": 22.49
+    "surfaceBrightness": 22.49,
+    "hubble": "Sb"
   },
   {
     "id": "M59",
@@ -882,7 +940,8 @@
     "minorAxisArcmin": 3.21,
     "vMag": 9.56,
     "bMag": 10.57,
-    "surfaceBrightness": 22.71
+    "surfaceBrightness": 22.71,
+    "hubble": "E"
   },
   {
     "id": "M60",
@@ -897,7 +956,8 @@
     "minorAxisArcmin": 5.45,
     "vMag": 8.79,
     "bMag": 9.79,
-    "surfaceBrightness": 22.81
+    "surfaceBrightness": 22.81,
+    "hubble": "E"
   },
   {
     "id": "M61",
@@ -912,7 +972,8 @@
     "minorAxisArcmin": 6.56,
     "vMag": 10.25,
     "bMag": 10.16,
-    "surfaceBrightness": 23.05
+    "surfaceBrightness": 23.05,
+    "hubble": "Sbc"
   },
   {
     "id": "M62",
@@ -927,7 +988,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.39,
     "bMag": 8.55,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M63",
@@ -942,7 +1004,8 @@
     "minorAxisArcmin": 7.16,
     "vMag": 8.61,
     "bMag": 9.32,
-    "surfaceBrightness": 23.04
+    "surfaceBrightness": 23.04,
+    "hubble": "Sbc"
   },
   {
     "id": "M64",
@@ -957,7 +1020,8 @@
     "minorAxisArcmin": 5.33,
     "vMag": 8.52,
     "bMag": 9.27,
-    "surfaceBrightness": 22.68
+    "surfaceBrightness": 22.68,
+    "hubble": "SABa"
   },
   {
     "id": "M65",
@@ -972,7 +1036,8 @@
     "minorAxisArcmin": 1.97,
     "vMag": 9.32,
     "bMag": 10.14,
-    "surfaceBrightness": 22.73
+    "surfaceBrightness": 22.73,
+    "hubble": "Sa"
   },
   {
     "id": "M66",
@@ -987,7 +1052,8 @@
     "minorAxisArcmin": 4.61,
     "vMag": 8.92,
     "bMag": 9.73,
-    "surfaceBrightness": 22.96
+    "surfaceBrightness": 22.96,
+    "hubble": "Sb"
   },
   {
     "id": "M67",
@@ -1002,7 +1068,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.9,
     "bMag": 7.6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M68",
@@ -1017,7 +1084,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.96,
     "bMag": 10.26,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M69",
@@ -1032,7 +1100,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.31,
     "bMag": 9.32,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M70",
@@ -1047,7 +1116,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.06,
     "bMag": 9.76,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M71",
@@ -1062,7 +1132,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.1,
     "bMag": 7.91,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M72",
@@ -1077,7 +1148,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.96,
     "bMag": 9.95,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M73",
@@ -1092,7 +1164,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.9,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M74",
@@ -1107,7 +1180,8 @@
     "minorAxisArcmin": 9.33,
     "vMag": 9.31,
     "bMag": 9.71,
-    "surfaceBrightness": 23.37
+    "surfaceBrightness": 23.37,
+    "hubble": "Sc"
   },
   {
     "id": "M75",
@@ -1122,7 +1196,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.26,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M76",
@@ -1137,7 +1212,8 @@
     "minorAxisArcmin": null,
     "vMag": 10.1,
     "bMag": 12.2,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M77",
@@ -1152,7 +1228,8 @@
     "minorAxisArcmin": 5.61,
     "vMag": 9.29,
     "bMag": 9.74,
-    "surfaceBrightness": 22.35
+    "surfaceBrightness": 22.35,
+    "hubble": "Sb"
   },
   {
     "id": "M78",
@@ -1167,7 +1244,8 @@
     "minorAxisArcmin": null,
     "vMag": 8,
     "bMag": 8,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M79",
@@ -1182,7 +1260,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.16,
     "bMag": 9.21,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M80",
@@ -1197,7 +1276,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.3,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M81",
@@ -1212,7 +1292,8 @@
     "minorAxisArcmin": 11.25,
     "vMag": 6.92,
     "bMag": 7.79,
-    "surfaceBrightness": 22.78
+    "surfaceBrightness": 22.78,
+    "hubble": "Sab"
   },
   {
     "id": "M82",
@@ -1227,7 +1308,8 @@
     "minorAxisArcmin": 5.11,
     "vMag": 8.3,
     "bMag": 8.94,
-    "surfaceBrightness": 22.22
+    "surfaceBrightness": 22.22,
+    "hubble": "S?"
   },
   {
     "id": "M83",
@@ -1242,7 +1324,8 @@
     "minorAxisArcmin": 13.21,
     "vMag": 7.21,
     "bMag": 7.82,
-    "surfaceBrightness": 22.2
+    "surfaceBrightness": 22.2,
+    "hubble": "Sc"
   },
   {
     "id": "M84",
@@ -1257,7 +1340,8 @@
     "minorAxisArcmin": 6.44,
     "vMag": 9.79,
     "bMag": 10.01,
-    "surfaceBrightness": 23.23
+    "surfaceBrightness": 23.23,
+    "hubble": "E"
   },
   {
     "id": "M85",
@@ -1272,7 +1356,8 @@
     "minorAxisArcmin": 5.35,
     "vMag": 9.05,
     "bMag": 9.94,
-    "surfaceBrightness": 22.87
+    "surfaceBrightness": 22.87,
+    "hubble": "S0-a"
   },
   {
     "id": "M86",
@@ -1287,7 +1372,8 @@
     "minorAxisArcmin": 8.43,
     "vMag": 8.86,
     "bMag": 9.74,
-    "surfaceBrightness": 23.9
+    "surfaceBrightness": 23.9,
+    "hubble": "E"
   },
   {
     "id": "M87",
@@ -1302,7 +1388,8 @@
     "minorAxisArcmin": 6.67,
     "vMag": 9,
     "bMag": 9.65,
-    "surfaceBrightness": 22.79
+    "surfaceBrightness": 22.79,
+    "hubble": "E"
   },
   {
     "id": "M88",
@@ -1317,7 +1404,8 @@
     "minorAxisArcmin": 4.38,
     "vMag": 10.33,
     "bMag": 10.24,
-    "surfaceBrightness": 23.17
+    "surfaceBrightness": 23.17,
+    "hubble": "Sb"
   },
   {
     "id": "M89",
@@ -1332,7 +1420,8 @@
     "minorAxisArcmin": 8,
     "vMag": 10.08,
     "bMag": 10.68,
-    "surfaceBrightness": 24.11
+    "surfaceBrightness": 24.11,
+    "hubble": "E"
   },
   {
     "id": "M90",
@@ -1347,7 +1436,8 @@
     "minorAxisArcmin": 3.82,
     "vMag": 9.54,
     "bMag": 10.18,
-    "surfaceBrightness": 23.16
+    "surfaceBrightness": 23.16,
+    "hubble": "Sab"
   },
   {
     "id": "M91",
@@ -1362,7 +1452,8 @@
     "minorAxisArcmin": 4.52,
     "vMag": 10.96,
     "bMag": 10.94,
-    "surfaceBrightness": 23.24
+    "surfaceBrightness": 23.24,
+    "hubble": "Sb"
   },
   {
     "id": "M92",
@@ -1377,7 +1468,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.52,
     "bMag": null,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M93",
@@ -1392,7 +1484,8 @@
     "minorAxisArcmin": null,
     "vMag": 6.2,
     "bMag": 6.57,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M94",
@@ -1407,7 +1500,8 @@
     "minorAxisArcmin": 6.68,
     "vMag": 8.24,
     "bMag": 8.71,
-    "surfaceBrightness": 21.79
+    "surfaceBrightness": 21.79,
+    "hubble": "SABa"
   },
   {
     "id": "M95",
@@ -1422,7 +1516,8 @@
     "minorAxisArcmin": 4.45,
     "vMag": 9.77,
     "bMag": 10.58,
-    "surfaceBrightness": 23.26
+    "surfaceBrightness": 23.26,
+    "hubble": "Sb"
   },
   {
     "id": "M96",
@@ -1437,7 +1532,8 @@
     "minorAxisArcmin": 5.51,
     "vMag": 9.21,
     "bMag": 10.08,
-    "surfaceBrightness": 23.14
+    "surfaceBrightness": 23.14,
+    "hubble": "Sab"
   },
   {
     "id": "M97",
@@ -1452,7 +1548,8 @@
     "minorAxisArcmin": null,
     "vMag": 9.9,
     "bMag": 11.6,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M98",
@@ -1467,7 +1564,8 @@
     "minorAxisArcmin": 2.66,
     "vMag": 10.84,
     "bMag": 10.82,
-    "surfaceBrightness": 23.89
+    "surfaceBrightness": 23.89,
+    "hubble": "SABb"
   },
   {
     "id": "M99",
@@ -1482,7 +1580,8 @@
     "minorAxisArcmin": 4.74,
     "vMag": 9.84,
     "bMag": 10.4,
-    "surfaceBrightness": 22.6
+    "surfaceBrightness": 22.6,
+    "hubble": "Sc"
   },
   {
     "id": "M100",
@@ -1497,7 +1596,8 @@
     "minorAxisArcmin": 5.62,
     "vMag": 9.47,
     "bMag": 10.01,
-    "surfaceBrightness": 22.61
+    "surfaceBrightness": 22.61,
+    "hubble": "SABb"
   },
   {
     "id": "M101",
@@ -1512,7 +1612,8 @@
     "minorAxisArcmin": 23.07,
     "vMag": 7.9,
     "bMag": 8.36,
-    "surfaceBrightness": 23.97
+    "surfaceBrightness": 23.97,
+    "hubble": "SABc"
   },
   {
     "id": "M102",
@@ -1527,7 +1628,8 @@
     "minorAxisArcmin": 2.72,
     "vMag": 9.89,
     "bMag": 10.74,
-    "surfaceBrightness": 23.4
+    "surfaceBrightness": 23.4,
+    "hubble": "S0-a"
   },
   {
     "id": "M103",
@@ -1542,7 +1644,8 @@
     "minorAxisArcmin": null,
     "vMag": 7.4,
     "bMag": 7.72,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M104",
@@ -1557,7 +1660,8 @@
     "minorAxisArcmin": 4.91,
     "vMag": 8.59,
     "bMag": 9.15,
-    "surfaceBrightness": 22.26
+    "surfaceBrightness": 22.26,
+    "hubble": "Sa"
   },
   {
     "id": "M105",
@@ -1572,7 +1676,8 @@
     "minorAxisArcmin": 4.25,
     "vMag": 9.27,
     "bMag": 10.23,
-    "surfaceBrightness": 22.54
+    "surfaceBrightness": 22.54,
+    "hubble": "E"
   },
   {
     "id": "M106",
@@ -1587,7 +1692,8 @@
     "minorAxisArcmin": 7.24,
     "vMag": 9.29,
     "bMag": 9.12,
-    "surfaceBrightness": 23.36
+    "surfaceBrightness": 23.36,
+    "hubble": "Sbc"
   },
   {
     "id": "M107",
@@ -1602,7 +1708,8 @@
     "minorAxisArcmin": null,
     "vMag": 8.85,
     "bMag": 9.96,
-    "surfaceBrightness": null
+    "surfaceBrightness": null,
+    "hubble": null
   },
   {
     "id": "M108",
@@ -1617,7 +1724,8 @@
     "minorAxisArcmin": 1.66,
     "vMag": 10.05,
     "bMag": 10.7,
-    "surfaceBrightness": 21.7
+    "surfaceBrightness": 21.7,
+    "hubble": "Sc"
   },
   {
     "id": "M109",
@@ -1632,7 +1740,8 @@
     "minorAxisArcmin": 5.64,
     "vMag": 9.88,
     "bMag": 10.48,
-    "surfaceBrightness": 23.45
+    "surfaceBrightness": 23.45,
+    "hubble": "Sbc"
   },
   {
     "id": "M110",
@@ -1647,6 +1756,7 @@
     "minorAxisArcmin": 9.59,
     "vMag": 8.15,
     "bMag": 8.9,
-    "surfaceBrightness": 23.78
+    "surfaceBrightness": 23.78,
+    "hubble": "E"
   }
 ]
