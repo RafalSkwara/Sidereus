@@ -1,0 +1,19 @@
+---
+/*
+ * Window and Best side by side (ui-fact-rhythm, decisions 2 and 5): a `<dl>` of two `StatCard`s in two columns at every
+ * width, capped from `sm` so a desktop card does not float its value in a wide box. The grid stretches the shorter card
+ * to its neighbour's height (accepted: the room sits under Window's value). `class` is merged last: the caller's
+ * spacing and, in a narrow row, the owner's fallback.
+ */
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<dl class:list={cn("grid grid-cols-2 gap-3 sm:max-w-md", className)}>
+  <slot />
+</dl>

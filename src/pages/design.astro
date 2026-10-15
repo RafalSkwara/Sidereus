@@ -40,6 +40,13 @@ import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
+import { Crosshair } from "lucide-react";
+import Fact from "@/components/ui/Fact.astro";
+import FactList from "@/components/ui/FactList.astro";
+import StatCard from "@/components/ui/StatCard.astro";
+import StatPair from "@/components/ui/StatPair.astro";
+import { EVENT_KIND_ICONS, FACT_ICONS, FACT_KINDS, VISIBILITY_MARK_ICONS } from "@/components/ui/fact-icons";
+import { localCommonName } from "@/lib/catalogue/common-names";
 import { GEAR_CARD_MIN_HEIGHT_CLASS, GEAR_ROW_GRID_CLASS } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
 import FinderChart from "@/components/finder/FinderChart.astro";
@@ -657,6 +664,68 @@ const celebrateThree: MilestoneKey[] = ["first-planet", "all-planets", "messier-
 // The finder chart's specimens (finder-chart): real engine charts from the real star file at a fixed public point.
 const finder = await finderSamples(locale);
 
+/*
+ * The fact rhythm's specimens (ui-fact-rhythm): the rhythm roles, the stat pair at the real widths of a Targets row at
+ * 320 px (English and Polish, the longest real values), the facts, the icon map, and the item spacing both ways (the
+ * owner's D1 question). Fixed-width frames (`w-72` = 288 px, the 320 px column), so they render the same at any width.
+ */
+const rhythmRoles = [
+  { name: "line", px: "8 px", bar: "h-line", use: "between the lines of one group" },
+  { name: "group", px: "24 px", bar: "h-group", use: "between the groups of one item; the hairline's padding" },
+  { name: "item", px: "40 px", bar: "h-item", use: "each side of the rule between two items holding groups" },
+];
+const STAT_WINDOW = "20:51–07:10";
+const STAT_BEST = "03:21";
+const STAT_BEST_DIRECTION = "NNE, 87°";
+const statLocales = (["en", "pl"] as const).map((tag) => {
+  const messages = getMessages(tag);
+  return {
+    tag,
+    label: tag.toUpperCase(),
+    object: messages.tonight.object,
+    planets: messages.tonight.planets,
+    detailLine: createFormatter(tag).objectDetailLine(null, "Her"),
+  };
+});
+const statFallbacks = [
+  { key: "a", label: "(a) as planned", valueClass: undefined, indent: true },
+  { key: "b", label: "(b) the value at text-label, in the row only", valueClass: "text-label", indent: true },
+  { key: "c", label: "(c) the pair without the row's pl-10 indent", valueClass: undefined, indent: false },
+];
+// TargetsPageContent's scroll region of the other objects, in the 288 px column: its border and px-3 (ObjectRow's body
+// then indents by pl-10, which leaves the pair about 222 px).
+const rowRegionClass = "w-72 rounded-lg border border-border px-3 py-1";
+const sampleEyepieces = { finding: "25 mm Plössl", findingX: "30", detail: "10 mm Plössl", detailX: "75" };
+const sampleReason = m.tonight.reason.line({
+  lead: m.tonight.reason.moon.lead,
+  second: m.tonight.reason.brightness.follow({ aperture: "150" }),
+});
+const noFacts: string[] = [];
+const factIconGroups = [
+  { title: "Facts · FACT_ICONS", icons: FACT_KINDS.map((kind) => ({ name: kind, Icon: FACT_ICONS[kind] })) },
+  {
+    title: "Event kinds · EVENT_KIND_ICONS",
+    icons: Object.entries(EVENT_KIND_ICONS).map(([name, Icon]) => ({ name, Icon })),
+  },
+  {
+    title: "Visibility marks · VISIBILITY_MARK_ICONS",
+    icons: Object.entries(VISIBILITY_MARK_ICONS).map(([name, Icon]) => ({ name, Icon })),
+  },
+];
+// D1: (i) 20 px on each side of the rule, 40 px in total; (ii) the `item` role, 40 px on each side, 80 px in total.
+const rhythmVariants = [
+  { key: "i", label: "(i) 40 px in total · 20 px on each side of the rule", rowClass: "py-5" },
+  { key: "ii", label: "(ii) 80 px in total · 40 px on each side of the rule (py-item)", rowClass: "py-item" },
+];
+const rhythmRows = [
+  { rank: 1, id: "M13", commonName: "Great Globular Cluster in Hercules", constellation: "Her" },
+  { rank: 2, id: "M31", commonName: "Andromeda Galaxy", constellation: "And" },
+].map((row) => ({
+  ...row,
+  commonName: localCommonName(row.id, row.commonName, locale),
+  detailLine: fmt.objectDetailLine(null, row.constellation),
+}));
+
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
 const blockNote = "text-sm text-muted-foreground";
@@ -757,6 +826,33 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </li>
             ))}
           </ul>
+          <!-- The overline and the rhythm roles (ui-fact-rhythm) -->
+          <div class="flex flex-col gap-3">
+            <h3 id="t-rhythm-roles" class:list={groupTitle}>
+              Overline and rhythm roles
+            </h3>
+            <p class="text-overline text-muted-foreground">
+              text-overline · Night of Wednesday, 21 October 2026 (a group label: muted, sentence case)
+            </p>
+            <p class="text-overline text-muted-foreground">text-overline · Noc: środa, 21 października 2026</p>
+            <ul class="flex flex-col gap-3">
+              {rhythmRoles.map((role) => (
+                <li class="flex min-w-0 items-center gap-3">
+                  <span
+                    class:list={["w-16 shrink-0 rounded-sm bg-primary", role.bar]}
+                    data-role-sample={role.name}
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 text-sm text-muted-foreground">
+                    <span class="font-mono text-heading">
+                      {role.name} · {role.px}
+                    </span>{" "}
+                    · {role.use}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </Band>
 
@@ -1592,6 +1688,344 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 hover, focus-visible, disabled — the Destructive and Outline Buttons (above; Cancel takes the initial
                 focus, shown in the specimen) · error — the page's ServerError after a failed delete · empty, loading —
                 N/A
+              </p>
+            </section>
+
+            <!-- StatCard and StatPair (ui-fact-rhythm) -->
+            <section class:list={block} aria-labelledby="c-stat-pair">
+              <h3 id="c-stat-pair" class:list={blockTitle}>
+                StatCard and StatPair (Window and Best)
+              </h3>
+              <p class:list={blockNote}>
+                Two small cards side by side at every width: the gear cards' bordered surface, a caption label with its
+                icon, the value in mono semibold heading ink, Best's direction on a second muted line. The pair is
+                capped at max-w-md from sm. The frames below are fixed widths with the longest real values, so the 320
+                px measurement reads the same at any viewport: a 288 px column (a top-five card), and a Targets expanded
+                row (the scroll region's border and px-3, then the row body's pl-10: about 222 px for the pair) with the
+                three fallbacks.
+              </p>
+              <div class="flex flex-col gap-8">
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · full width (capped from sm) · EN, then PL</p>
+                  {statLocales.map((loc) => (
+                    <div data-stat-frame={`full-${loc.tag}`}>
+                      <StatPair>
+                        <StatCard label={loc.object.window} kind="when">
+                          {STAT_WINDOW}
+                        </StatCard>
+                        <StatCard label={loc.object.best} kind="best">
+                          {STAT_BEST}
+                          <Fragment slot="sub">{STAT_BEST_DIRECTION}</Fragment>
+                        </StatCard>
+                      </StatPair>
+                    </div>
+                  ))}
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · a 288 px column (a top-five card at 320 px)</p>
+                  <div class="flex flex-wrap gap-x-6 gap-y-4">
+                    {statLocales.map((loc) => (
+                      <div class="flex w-72 flex-col gap-2" data-stat-frame={`column-${loc.tag}`}>
+                        <p class:list={stateLabel}>{loc.label}</p>
+                        <StatPair>
+                          <StatCard label={loc.object.window} kind="when">
+                            {STAT_WINDOW}
+                          </StatCard>
+                          <StatCard label={loc.object.best} kind="best">
+                            {STAT_BEST}
+                            <Fragment slot="sub">{STAT_BEST_DIRECTION}</Fragment>
+                          </StatCard>
+                        </StatPair>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>a Targets expanded row at 320 px · the fallbacks, EN and PL</p>
+                  <div class="flex flex-wrap gap-x-6 gap-y-6">
+                    {statFallbacks.flatMap((fallback) =>
+                      statLocales.map((loc) => (
+                        <div class="flex w-72 flex-col gap-2" data-stat-frame={`row-${fallback.key}-${loc.tag}`}>
+                          <p class:list={stateLabel}>
+                            {fallback.label} · {loc.label}
+                          </p>
+                          <div class:list={rowRegionClass}>
+                            <div class:list={["pb-5", fallback.indent && "pl-10"]}>
+                              <p class:list={["text-label text-muted-foreground", !fallback.indent && "pl-10"]}>
+                                {loc.detailLine}
+                              </p>
+                              <StatPair class="mt-group">
+                                <StatCard label={loc.object.window} kind="when" valueClass={fallback.valueClass}>
+                                  {STAT_WINDOW}
+                                </StatCard>
+                                <StatCard label={loc.object.best} kind="best" valueClass={fallback.valueClass}>
+                                  {STAT_BEST}
+                                  <Fragment slot="sub">{STAT_BEST_DIRECTION}</Fragment>
+                                </StatCard>
+                              </StatPair>
+                            </div>
+                          </div>
+                        </div>
+                      )),
+                    )}
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive: no link, no control; offline leaves the cards
+                untouched) · error — N/A (the cards show data, never an error) · empty — N/A (a target always has a
+                window and a best time) · loading — N/A (the focused page's TonightPageSkeleton stands in)
+              </p>
+            </section>
+
+            <!-- Fact and FactList (ui-fact-rhythm) -->
+            <section class:list={block} aria-labelledby="c-fact">
+              <h3 id="c-fact" class:list={blockTitle}>
+                Fact and FactList
+              </h3>
+              <p class:list={blockNote}>
+                One fact per line: the concept's icon (muted; the Eye on "what you'll see" and the safety triangle are
+                the two accented ones), an optional muted label before an inline value, then a sentence in a p or a
+                value in a span. A FactList spaces a run of facts by the line role and renders nothing when it is empty.
+                No list elements.
+              </p>
+              <div class="grid gap-x-6 gap-y-6 sm:grid-cols-2">
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · a label and an inline value (EN, then PL)</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <FactList>
+                      {statLocales.map((loc) => (
+                        <Fact kind="when" label={loc.object.window}>
+                          <span class="font-mono text-heading">{STAT_WINDOW}</span>
+                        </Fact>
+                      ))}
+                    </FactList>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · a sentence · the accent see icon (data-* forwarded)</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <Fact kind="see" iconClass="text-primary-strong" data-specimen="fact-see">
+                      <p>{m.tonight.expect.phrase.globularResolved}</p>
+                    </Fact>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>muted · why</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <Fact kind="why" tone="muted">
+                      <p>{sampleReason}</p>
+                    </Fact>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>a two-line block · the eyepiece pair</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <Fact kind="eyepiece">
+                      <p>
+                        {m.tonight.object.findWith}{" "}
+                        <span class="font-semibold text-heading">{sampleEyepieces.finding}</span>{" "}
+                        {m.tonight.object.magnification({ magnification: sampleEyepieces.findingX })}
+                      </p>
+                      <p class="first-letter:uppercase">
+                        {m.tonight.object.detailWith}{" "}
+                        <span class="font-semibold text-heading">{sampleEyepieces.detail}</span>{" "}
+                        {m.tonight.object.magnification({ magnification: sampleEyepieces.detailX })}
+                      </p>
+                    </Fact>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>Polish · the space after the colon ("Do szczegółów: …")</p>
+                  <div class="rounded-lg border border-border p-4" lang="pl">
+                    <FactList>
+                      <Fact kind="eyepiece">
+                        <p>
+                          {statLocales[1].object.findWith}{" "}
+                          <span class="font-semibold text-heading">{sampleEyepieces.finding}</span>{" "}
+                          {statLocales[1].object.magnification({ magnification: sampleEyepieces.findingX })}
+                        </p>
+                        <p class="first-letter:uppercase">
+                          {statLocales[1].object.detailWith}{" "}
+                          <span class="font-semibold text-heading">{sampleEyepieces.detail}</span>{" "}
+                          {statLocales[1].object.magnification({ magnification: sampleEyepieces.detailX })}
+                        </p>
+                      </Fact>
+                      <Fact kind="eyepiece">
+                        <p>
+                          {statLocales[1].planets.detailWith}{" "}
+                          <span class="font-semibold text-heading">{sampleEyepieces.detail}</span>{" "}
+                          {statLocales[1].object.magnification({ magnification: sampleEyepieces.detailX })}
+                        </p>
+                      </Fact>
+                    </FactList>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>safety · the amber icon</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <Fact kind="safety" iconClass="text-marginal">
+                      <p>{m.tonight.events.solarSafety}</p>
+                    </Fact>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>default · a FactList of a row's three facts</p>
+                  <div class="rounded-lg border border-border p-4">
+                    <FactList>
+                      <Fact kind="see" iconClass="text-primary-strong">
+                        <p>{m.tonight.expect.phrase.globularResolved}</p>
+                      </Fact>
+                      <Fact kind="eyepiece">
+                        <p>
+                          {m.tonight.object.findWith}{" "}
+                          <span class="font-semibold text-heading">{sampleEyepieces.finding}</span>{" "}
+                          {m.tonight.object.magnification({ magnification: sampleEyepieces.findingX })}
+                        </p>
+                        <p class="first-letter:uppercase">
+                          {m.tonight.object.detailWith}{" "}
+                          <span class="font-semibold text-heading">{sampleEyepieces.detail}</span>{" "}
+                          {m.tonight.object.magnification({ magnification: sampleEyepieces.detailX })}
+                        </p>
+                      </Fact>
+                      <Fact kind="why" tone="muted">
+                        <p>{sampleReason}</p>
+                      </Fact>
+                    </FactList>
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>empty · a FactList with no facts renders nothing (the dashed frame)</p>
+                  <div class="min-h-11 rounded-lg border border-dashed border-border p-4" data-fact-empty>
+                    <FactList>
+                      {noFacts.map((note) => (
+                        <Fact kind="tip" tone="muted">
+                          <p>{note}</p>
+                        </Fact>
+                      ))}
+                    </FactList>
+                  </div>
+                </div>
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible, disabled — N/A (not interactive: no link, no control; offline leaves facts
+                untouched) · error — N/A (facts show data, never an error; errors stay the page's own notices) · empty —
+                the dashed frame · loading — N/A (the focused page's TonightPageSkeleton stands in)
+              </p>
+            </section>
+
+            <!-- The fact icon map (ui-fact-rhythm) -->
+            <section class:list={block} aria-labelledby="c-fact-icons">
+              <h3 id="c-fact-icons" class:list={blockTitle}>
+                Fact icons (src/components/ui/fact-icons.ts)
+              </h3>
+              <p class:list={blockNote}>
+                One concept, one icon, and one icon per concept. The Moon is one icon everywhere (a fact and the lunar
+                eclipse's kind); the Eye means only "what you'll see"; Visible and Not visible have their own marks.
+              </p>
+              <div class="flex flex-col gap-6">
+                {factIconGroups.map((group) => (
+                  <div class="flex flex-col gap-3">
+                    <p class:list={groupTitle}>{group.title}</p>
+                    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                      {group.icons.map(({ name, Icon }) => (
+                        <li class="flex min-w-0 items-center gap-2 rounded-lg border border-border px-3 py-2">
+                          <Icon className="size-5 shrink-0 text-heading" aria-hidden="true" />
+                          <span class="min-w-0 font-mono text-xs break-all text-foreground">{name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <p class:list={notApplicable}>
+                Decorative only (aria-hidden): the label or the value carries the meaning · every state — N/A
+              </p>
+            </section>
+
+            <!-- Item rhythm, both readings of D1 (ui-fact-rhythm) -->
+            <section class:list={block} aria-labelledby="c-item-rhythm">
+              <h3 id="c-item-rhythm" class:list={blockTitle}>
+                Item rhythm: two Targets rows, both readings of "item 40 px"
+              </h3>
+              <p class:list={blockNote}>
+                Two rows as Phase 3 will build them, each in a 288 px column (a 320 px phone): the heading, the stat
+                pair at mt-group, the hairline and three facts, the actions at mt-group, then the rule and the next
+                row's heading. (i) puts 20 px on each side of the rule, (ii) the item role's 40 px on each side.
+              </p>
+              <div class="flex flex-wrap gap-x-10 gap-y-8">
+                {rhythmVariants.map((variant) => (
+                  <div class="flex w-72 flex-col gap-3" data-rhythm-variant={variant.key}>
+                    <p class:list={stateLabel}>{variant.label}</p>
+                    <ol class="divide-y divide-border">
+                      {rhythmRows.map((row, index) => (
+                        <li class:list={[variant.rowClass, "first:pt-0 last:pb-0"]}>
+                          <h4 class="font-display text-title font-semibold break-words text-heading">
+                            <span class="mr-2 font-mono text-label font-normal text-muted-foreground">{row.rank}.</span>
+                            <span>
+                              {row.id}
+                              {row.commonName && <span class="text-body text-foreground"> · {row.commonName}</span>}
+                            </span>
+                          </h4>
+                          <p class="mt-line text-label text-muted-foreground">{row.detailLine}</p>
+                          {index === 0 && (
+                            <Fragment>
+                              <StatPair class="mt-group">
+                                <StatCard label={m.tonight.object.window} kind="when">
+                                  {STAT_WINDOW}
+                                </StatCard>
+                                <StatCard label={m.tonight.object.best} kind="best">
+                                  {STAT_BEST}
+                                  <Fragment slot="sub">{STAT_BEST_DIRECTION}</Fragment>
+                                </StatCard>
+                              </StatPair>
+                              <FactList class="mt-group border-t border-border pt-group">
+                                <Fact kind="see" iconClass="text-primary-strong">
+                                  <p>{m.tonight.expect.phrase.globularResolved}</p>
+                                </Fact>
+                                <Fact kind="eyepiece">
+                                  <p>
+                                    {m.tonight.object.findWith}{" "}
+                                    <span class="font-semibold text-heading">{sampleEyepieces.finding}</span>{" "}
+                                    {m.tonight.object.magnification({ magnification: sampleEyepieces.findingX })}
+                                  </p>
+                                  <p class="first-letter:uppercase">
+                                    {m.tonight.object.detailWith}{" "}
+                                    <span class="font-semibold text-heading">{sampleEyepieces.detail}</span>{" "}
+                                    {m.tonight.object.magnification({ magnification: sampleEyepieces.detailX })}
+                                  </p>
+                                </Fact>
+                                <Fact kind="why" tone="muted">
+                                  <p>{sampleReason}</p>
+                                </Fact>
+                              </FactList>
+                              <div class="mt-group flex flex-wrap gap-x-5 gap-y-line">
+                                <a
+                                  href="#c-item-rhythm"
+                                  class:list={[buttonVariants({ variant: "hairline", size: "sm" })]}
+                                >
+                                  <Check aria-hidden="true" />
+                                  {m.tonight.object.markObserved}
+                                </a>
+                                <a
+                                  href="#c-item-rhythm"
+                                  class:list={[buttonVariants({ variant: "quiet", size: "bare" })]}
+                                >
+                                  <Crosshair aria-hidden="true" />
+                                  {m.tonight.finder.link}
+                                </a>
+                              </div>
+                            </Fragment>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+              <p class:list={notApplicable}>
+                A specimen for the owner's choice of --spacing-item (1.25rem or 2.5rem); the states are StatPair's and
+                FactList's above
               </p>
             </section>
           </div>

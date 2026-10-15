@@ -1,0 +1,23 @@
+---
+/*
+ * A run of `Fact`s (ui-fact-rhythm): one `div` with the line role between them, never a list element (a Tonight card is
+ * a `listitem` and a Nights row an `ol > li`; a nested list would change their counts). It renders nothing when its
+ * content is empty (every fact conditional and none shown): `Astro.slots.has` is true for any passed slot, so the
+ * rendered slot is checked instead. `class` is merged last (the caller's group spacing, the hairline).
+ */
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+// Rendered once to see whether anything shows, then through `<slot />` (facts are pure markup, so twice is harmless).
+const hasFacts = Astro.slots.has("default") && (await Astro.slots.render("default")).trim() !== "";
+---
+
+{hasFacts && (
+  <div class:list={cn("space-y-line", className)}>
+    <slot />
+  </div>
+)}

@@ -659,6 +659,28 @@
   /* The interactive sky's star and body labels (interactive-sky): small enough for 15 stars and 13 bodies at 390 px. */
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
+  /*
+   * The section-label role (ui-fact-rhythm): a group label inside a page (a night's heading on Events, the Verdict and
+   * Outlook labels on Nights), in muted ink and sentence case (Polish dates would shout in capitals). 13 / 20 px, 600.
+   */
+  --text-overline: 0.8125rem;
+  --text-overline--line-height: 1.25rem;
+  --text-overline--letter-spacing: 0.04em;
+  --text-overline--font-weight: 600;
+
+  /*
+   * The rhythm roles (ui-fact-rhythm), fixed at every width (an `@theme inline` value cannot be overridden by a media
+   * query): `gap-line`, `mt-group`, `py-item`, `space-y-line` and so on. A Tonight item's vertical spacing uses these,
+   * never numeric steps (`src/styles/rhythm-roles.test.ts` guards the converted files).
+   * - line (8 px): between the lines of one group (the facts of an item).
+   * - group (24 px): between the groups of one item (identity, the stat pair, the facts, the actions), and the
+   *   hairline's padding; also the padding of a one-group row (a night, a washed-out row).
+   * - item (40 px): the padding on each side of the rule between two items that hold groups (a target, a planet, the
+   *   Moon target, an event).
+   */
+  --spacing-line: 0.5rem;
+  --spacing-group: 1.5rem;
+  --spacing-item: 2.5rem;
 
   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
   --font-sans: "Archivo Variable", system-ui, sans-serif;

@@ -7,10 +7,10 @@
 // carry it, never colour alone. A not-visible row is never worded as something to go out for. Every solar-eclipse row,
 // visible or not, carries the fixed eye-safety line. Rows carry `data-event-kind` and `data-visible` for e2e. With no
 // events at all the list says so honestly.
-import { Eclipse, Eye, EyeOff, Link, Moon, Orbit, CircleDot, Sparkle, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 
+import { EVENT_KIND_ICONS, VISIBILITY_MARK_ICONS } from "@/components/ui/fact-icons";
 import { getMessages } from "@/i18n";
-import type { SkyEventKind } from "@/lib/engine";
 import type { TonightSkyEvent } from "@/lib/tonight/sky-events";
 import { cn } from "@/lib/utils";
 
@@ -25,15 +25,10 @@ interface Props {
 const { events, windowNights, idBase = "events-night" } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight.events;
 
-// One icon per kind: decorative, the name and the kind line carry the meaning.
-const ICONS = {
-  "lunar-eclipse": Moon,
-  "solar-eclipse": Eclipse,
-  elongation: Orbit,
-  opposition: CircleDot,
-  pairing: Link,
-  "meteor-shower": Sparkle,
-} satisfies Record<SkyEventKind, typeof Moon>;
+// One icon per kind and one per visibility mark, from the shared map (ui-fact-rhythm): decorative, the name, the kind
+// line and the mark's word carry the meaning.
+const VisibleIcon = VISIBILITY_MARK_ICONS.visible;
+const NotVisibleIcon = VISIBILITY_MARK_ICONS.notVisible;
 
 // The events arrive in time order, so a night's events are adjacent: group them in one pass.
 const groups: { night: string; label: string; events: TonightSkyEvent[] }[] = [];
@@ -60,7 +55,7 @@ for (const event of events) {
         </h3>
         <ul class="divide-y divide-border">
           {group.events.map((event) => {
-            const Icon = ICONS[event.kind];
+            const Icon = EVENT_KIND_ICONS[event.kind];
             return (
               <li class="py-5" data-event-kind={event.kind} data-visible={event.visible ? "true" : "false"}>
                 <div class="flex items-start gap-3">
@@ -83,7 +78,7 @@ for (const event of events) {
                           class="inline-flex shrink-0 items-center gap-1 text-label font-semibold text-heading"
                           data-event-visible-mark
                         >
-                          <Eye className="size-4" aria-hidden="true" />
+                          <VisibleIcon className="size-4" aria-hidden="true" />
                           {t.visible}
                         </span>
                       ) : (
@@ -91,7 +86,7 @@ for (const event of events) {
                           class="inline-flex shrink-0 items-center gap-1 text-label font-normal text-muted-foreground"
                           data-event-not-visible-mark
                         >
-                          <EyeOff className="size-4" aria-hidden="true" />
+                          <NotVisibleIcon className="size-4" aria-hidden="true" />
                           {t.notVisible}
                         </span>
                       )}
