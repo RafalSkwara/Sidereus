@@ -460,10 +460,10 @@ until their next online refresh, which is harmless.
 
 #### Automated
 
-- [x] 2.1 The model, copy and sub-nav helper tests pass
-- [x] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value
-- [x] 2.3 The build passes
-- [x] 2.4 The phase's e2e pass on the preview
+- [x] 2.1 The model, copy and sub-nav helper tests pass — b1e7c8b
+- [x] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value — b1e7c8b
+- [x] 2.3 The build passes — b1e7c8b
+- [x] 2.4 The phase's e2e pass on the preview — b1e7c8b
 
 #### Manual
 
@@ -474,7 +474,7 @@ until their next online refresh, which is harmless.
   > `skeleton-heights.mjs` run gives content-driven deltas (targets 44/0, plan 1051/1003, planets −64/−24,
   > moon −601/−468, nights −5/−65, events −56/−76, finder 129/−295 at 390/1280) that this change does not touch.
   > To tick 2.5, run the same script on main (2c4b348) with the same seed and confirm the deltas are unchanged.
-- [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme
+- [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme — b1e7c8b
 
 ### Phase 3: States, specimens and the rule
 
