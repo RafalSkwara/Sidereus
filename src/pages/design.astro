@@ -735,8 +735,10 @@ const expectPairSample: TonightEntry = {
   },
   reason: sampleReason,
 };
-// The Moon card with the Moon as a target (ui-fact-rhythm): the night at capture may not have one. One state, so the
-// slider shows the phase, the disc and its facts without a range; one MoonCard on the page keeps its clip id unique.
+// The Moon card with the Moon as a target (ui-fact-rhythm): the night at capture may not have one. The specimens spread
+// two states into it, so the slider renders its range as on the real page, and show it with and without the target to
+// measure the skeleton's `moon` layout against both nights. Each island gets its own clip-id prefix; MoonCard's own
+// `#moon` / `#moon-heading` ids repeat on this dev-only page.
 const moonCardUp = {
   kind: "part" as const,
   spans: [{ start: new Date("2026-10-10T19:10:00Z"), end: new Date("2026-10-11T03:18:00Z") }],
@@ -2067,21 +2069,42 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <!-- The Moon card with the Moon as a target (ui-fact-rhythm) -->
             <section class:list={block} aria-labelledby="c-moon-card">
               <h3 id="c-moon-card" class:list={blockTitle}>
-                MoonCard with the Moon as a target
+                MoonCard with and without the Moon as a target
               </h3>
               <p class:list={blockNote}>
                 The Moon page's band: the phase and the disc with its facts beside it in one FactList (when it is up,
-                what it does to faint objects), the washed-out link after them, then the target block at the item role
-                under its rule: the stat pair, the hairline, and what you'll see, the whole-disc and detail eyepieces
-                and why. One state, so no range; the real page adds the time slider under the disc.
+                what it does to faint objects), the washed-out link after them, the time slider under the disc (two
+                states here, so the range shows as on the real page), then, when the Moon is a target, the target block
+                at the item role under its rule: the stat pair, the hairline, and what you'll see, the whole-disc and
+                detail eyepieces and why. The two wrappers (data-moon-measure) are what the Moon page's skeleton
+                (c-tonight-page-skeleton, layout="moon") is measured against; their px-4 matches the skeleton's content
+                container, so both wrap at the same width.
               </p>
-              <div class="max-w-xl" data-moon-card-specimen>
-                <MoonCard card={moonTargetCard} logHref="/design" washedOut={moonCardWashedOutLink} />
+              <p class:list={stateLabel}>default · the Moon as a target</p>
+              <div class="max-w-xl px-4" data-moon-card-specimen data-moon-measure="card-target">
+                <MoonCard
+                  card={{ ...moonTargetCard, states: [sampleMoon, sampleMoon], timeLabels: ["23:40", "23:50"] }}
+                  logHref="/design"
+                  washedOut={moonCardWashedOutLink}
+                />
+              </div>
+              <p class:list={stateLabel}>empty · no target: the band ends after the slider</p>
+              <div class="max-w-xl px-4" data-moon-measure="card-no-target">
+                <MoonCard
+                  card={{
+                    ...moonTargetCard,
+                    states: [sampleMoon, sampleMoon],
+                    timeLabels: ["23:40", "23:50"],
+                    target: null,
+                  }}
+                  logHref="/design"
+                  washedOut={moonCardWashedOutLink}
+                />
               </div>
               <p class:list={notApplicable}>
                 hover, focus-visible — the hairline and quiet links' own (c-button) · disabled — offline mutes Mark
-                observed (data-needs-network) · error — N/A (a failed Moon target drops only the target) · empty — no
-                target: the band ends after the disc's facts · loading — the focused page's TonightPageSkeleton
+                observed (data-needs-network) · error — N/A (a failed Moon target drops only the target) · empty — the
+                no-target specimen above · loading — TonightPageSkeleton layout="moon"
               </p>
             </section>
           </div>
@@ -3135,6 +3158,15 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </p>
               <div class="overflow-hidden rounded-lg">
                 <TonightPageSkeleton title={m.tonight.summary.events} reloadHref="/design" rows={2} layout="events" />
+              </div>
+            </div>
+            <div class:list={cell}>
+              <p class:list={stateLabel}>
+                loading · layout="moon" (/tonight/moon): the phase, the disc and its facts, the slider, then the target
+                block (sized to a night with the Moon as a target; measure [data-skeleton-content] against c-moon-card)
+              </p>
+              <div class="max-w-xl overflow-hidden rounded-lg" data-moon-measure="skeleton">
+                <TonightPageSkeleton title={m.tonight.summary.moon} reloadHref="/design" layout="moon" />
               </div>
             </div>
           </section>

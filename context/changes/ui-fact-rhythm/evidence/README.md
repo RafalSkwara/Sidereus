@@ -97,3 +97,21 @@ Gates after the fixes: `astro check` 0/0, lint clean, `npm test` 111 files, 2043
 ## After the rebase onto S-08 (main 33a5586)
 
 The whole e2e suite: **76 passed, 4 skipped, 0 failed** (80 tests; S-08 added its own); smoke: **45/45 PASS**; `npm test` 121 files, 2289 passed. S-08's `session_plans` migration was applied to the local stack with `npx supabase migration up --local` (no reset). S-08 changed nothing visible in the captured views (row ids, `scroll-mt-4`, `data-object-card`, the finder's `from` prop), so no screenshot was retaken.
+
+## Moon skeleton for both nights (owner, PR #167, 2026-10-15)
+
+`/tonight/moon` now passes `layout="moon"`: the skeleton mirrors MoonCard with the Moon as a target (the phase line, the disc beside its facts and the washed-out link, the slider's time row and track, then the target block: the not-seen mark, the stacked pair, the hairline facts, Mark observed). Before, `rows={0}` drew only the opening bars, so a target night grew by the whole target block after the swap.
+
+Measured (`scripts/moon-skeleton.mjs` on the preview, a night when the Moon is not a target; `scripts/moon-skeleton-design.mjs` on `/design`, MoonCard with and without a target; the Moon band's height, px):
+
+```
+                          390 px                       1280 px
+band top, skeleton/real   333 / 333                    412 / 412
+target night (/design)    skeleton 831 / real 847 (-16)   763 / 787 (-24)
+no-target night (/design) skeleton 831 / real 300         763 / 280
+no-target night (page)    skeleton 831 / real 264         763 / 280
+page height, no target    skeleton 1449 / real 844        1380 / 900
+before (rows={0})         target night grew by ~450-550 (the whole target block); no-target night matched at the shell's min height
+```
+
+On a target night the swap is within 16-24 px. On a night without a target the band's top and its first ~264-300 px (phase, disc, facts, slider) stay where the skeleton drew them; the skeleton's target block (from y≈621 at 390, ≈692 at 1280) gives way to the footer, about 140-190 px of it inside the first screen. The owner chose to fit the target night. Shots: `crops/moon-skeleton-light-390.jpg` / `crops/moon-target-light-390.jpg`, `crops/moon-skeleton-dark-1280.jpg` / `crops/moon-target-dark-1280.jpg`, `crops/moon-none-dark-390.jpg`, and the page pair `crops/page-moon-skeleton-390.jpg` / `crops/page-moon-real-390.jpg`. Gates: astro check 0/0, lint clean, `npm test` 121 files / 2289 passed, build OK; e2e moon-card, moon-as-target, tonight-phone, tonight-dashboard, tonight-sky, red-night-mode, offline, what-to-expect: 24 passed, 1 skipped (the Moon is not a target tonight).

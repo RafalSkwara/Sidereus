@@ -13,7 +13,11 @@
  * a night or too short for an event: the Nights strip's "Times in" line, the verdict nights (date and dark window
  * beside the headline and two fact lines), then under the dashed rule the outlook nights (two fact lines); the events'
  * "Times in" line, then one night per row (its overline heading over an event: the kind icon beside the name and
- * "kind · when" lines, two facts at the group step).
+ * "kind · when" lines, two facts at the group step). `layout="moon"` stands in for the Moon page (MoonCard): the phase
+ * line, the disc beside its facts and the time slider (MoonTimeSlider's own geometry, see the branch), then one target
+ * block under its rule, the default rows' Window, Best, facts and actions with the Moon's longer note. It is sized to a
+ * night when the Moon is a target: nothing above the target block moves on a night when it is not, the block only
+ * goes.
  */
 import BackLink from "@/components/ui/BackLink.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
@@ -31,9 +35,10 @@ interface Props {
   /**
    * The rows' shape: `rows` (default) a ranked target (Targets, Planets, the Moon); `plan` the Session plan's
    * (SessionTimeline); `nights` NightStrip's rows (the first `VERDICT_NIGHTS` with a verdict, the rest an outlook under
-   * the dashed rule); `events` one night heading and one event row per row (SkyEventList).
+   * the dashed rule); `events` one night heading and one event row per row (SkyEventList); `moon` the Moon page's band
+   * with the Moon as a target (MoonCard), which ignores `rows`.
    */
-  layout?: "rows" | "plan" | "nights" | "events";
+  layout?: "rows" | "plan" | "nights" | "events" | "moon";
   /** The back link, as `TonightPageSky` draws it (Tonight by default). */
   backHref?: string;
   backLabel?: string;
@@ -53,6 +58,11 @@ const nightMainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
 // StatCard's box (its border and 8 px padding, here the line role) holding bars at its caption, value and sub lines:
 // about 58 px for Window and 78 px for Best, as measured (StatCard's 2 px value nudge is left out).
 const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
+// The rows and the Moon share a ranked target's details: the Moon draws one target block under its band.
+const moon = layout === "moon";
+const targetRows = moon ? 1 : rows;
+// A round placeholder (the Moon's disc, the not-seen mark).
+const blob = "rounded-full bg-border motion-safe:animate-pulse";
 ---
 
 <!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
@@ -75,7 +85,7 @@ const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
     </div>
   </TonightSky>
 
-  <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+  <div class="mx-auto w-full max-w-3xl px-4 pt-8" data-skeleton-content>
     {layout === "plan" ? (
       <div aria-hidden="true">
         {/* The edit row (PlanEditRow's collapsed "Edit plan"), 44 px, with the band's 32 px gap under it. */}
@@ -178,16 +188,70 @@ const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
         </div>
       </div>
     ) : (
-      <div aria-hidden="true">
-        {/* The band's opening lines: Targets' heading and count, a stand-in for Planets' window line. */}
-        <div class:list={[bar, "w-56 max-w-full text-title"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-line w-64 max-w-full text-label"]}>&nbsp;</div>
-        <div class="mt-group divide-y divide-border">
-          {Array.from({ length: rows }, () => (
+      <div aria-hidden="true" data-skeleton-layout={layout}>
+        {moon ? (
+          <>
+            {/* MoonTimeSlider's own geometry (an island, not on the rhythm roles), drawn with sizes: the phase line
+                (text-body) and the slider's 16 px step under it as one 40 px box. */}
+            <div class="h-10">
+              <div class:list={[bar, "w-52 max-w-full text-body"]}>&nbsp;</div>
+            </div>
+            {/* The disc (MoonDisc's size) beside its facts, centred as the slider's row: when the Moon is up, what it
+                does to faint objects (two lines in the narrow column on a phone), then the 44 px washed-out link,
+                which a night with the Moon as a target usually has. */}
+            <div class="flex items-center gap-4 sm:gap-5">
+              <div class:list={[blob, "size-24 shrink-0 sm:size-28"]} />
+              <div class="min-w-0 flex-1 space-y-line">
+                <div class:list={[bar, "w-32 text-label"]}>&nbsp;</div>
+                <div class:list={[bar, "w-full text-label"]}>
+                  &nbsp;
+                  <br class="sm:hidden" />
+                  &nbsp;
+                </div>
+                <div class="flex h-11 items-center">
+                  <div class:list={[bar, "w-52 max-w-full text-label"]}>&nbsp;</div>
+                </div>
+              </div>
+            </div>
+            {/* The slider: its 16 px step and the 44 px row of the time (text-title) and "Now" as one 60 px box, the
+                range's 4 px step and 44 px input as a 48 px box with the thin track in it, then the edge times. */}
+            <div class="flex h-15 flex-col justify-end">
+              <div class="flex h-11 items-center justify-between">
+                <div class:list={[bar, "w-16 text-title"]}>&nbsp;</div>
+                <div class:list={[bar, "h-11 w-16"]} />
+              </div>
+            </div>
+            <div class="flex h-12 items-center">
+              <div class:list={[bar, "h-1.5 w-full"]} />
+            </div>
+            <div class="flex justify-between">
+              <div class:list={[bar, "w-12 text-label"]}>&nbsp;</div>
+              <div class:list={[bar, "w-12 text-label"]}>&nbsp;</div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* The band's opening lines: Targets' heading and count, a stand-in for Planets' window line. */}
+            <div class:list={[bar, "w-56 max-w-full text-title"]}>&nbsp;</div>
+            <div class:list={[bar, "mt-line w-64 max-w-full text-label"]}>&nbsp;</div>
+          </>
+        )}
+        {/* The Moon's target block sits under a rule at the item role; ranked targets are ruled rows. */}
+        <div class:list={[moon ? "mt-item border-t border-border pt-item" : "mt-group divide-y divide-border"]}>
+          {Array.from({ length: targetRows }, () => (
             /* A ranked target as ObjectCard and TargetDetails draw it. */
             <div class="py-item first:pt-0 last:pb-0">
-              <div class:list={[bar, "w-1/2 text-title"]}>&nbsp;</div>
-              <div class:list={[bar, "mt-line w-2/3 text-label"]}>&nbsp;</div>
+              {moon ? (
+                /* The Moon has no visible name: the not-seen mark's 24 px button (or the seen tag) takes its line. */
+                <p class="mt-line">
+                  <span class:list={[blob, "inline-block size-6 align-middle"]} />
+                </p>
+              ) : (
+                <>
+                  <div class:list={[bar, "w-1/2 text-title"]}>&nbsp;</div>
+                  <div class:list={[bar, "mt-line w-2/3 text-label"]}>&nbsp;</div>
+                </>
+              )}
               {/* Window over Best, each a StatCard box: a caption over a value, Best with its direction under it. */}
               <div class="mt-group grid gap-line">
                 <div class:list={[statCard]}>
@@ -201,10 +265,19 @@ const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
                 </div>
               </div>
               {/* The facts under the hairline: what you'll see, the eyepiece pair (two lines), why. A sentence wraps
-                  to a second line on a phone, so its bar does too. */}
+                  to a second line on a phone, so its bar does too; the Moon's phase note is longer, two lines on a
+                  wide screen and four on a phone. */}
               <div class="mt-group space-y-line border-t border-border pt-group">
                 <div class:list={[bar, "w-full text-label"]}>
                   &nbsp;
+                  {moon && (
+                    <>
+                      <br />
+                      &nbsp;
+                      <br class="sm:hidden" />
+                      &nbsp;
+                    </>
+                  )}
                   <br class="sm:hidden" />
                   &nbsp;
                 </div>
@@ -218,10 +291,10 @@ const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
                   &nbsp;
                 </div>
               </div>
-              {/* The actions: the 44 px hairline "Mark observed" and the quiet "Finder chart" link. */}
+              {/* The actions: the 44 px hairline "Mark observed" and, on a ranked target, the quiet "Finder chart". */}
               <div class="mt-group flex flex-wrap gap-x-5 gap-y-line">
                 <div class:list={[bar, "h-11 w-36"]} />
-                <div class:list={[bar, "w-28 self-center text-label"]}>&nbsp;</div>
+                {!moon && <div class:list={[bar, "w-28 self-center text-label"]}>&nbsp;</div>}
               </div>
             </div>
           ))}

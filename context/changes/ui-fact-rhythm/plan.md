@@ -909,4 +909,4 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Manual
 
-- [ ] 5.4 The owner accepts the before/after crops and the `/design` sections
+- [x] 5.4 The owner accepts the before/after crops and the `/design` sections — owner accepted 2026-10-15 (PR #167)
