@@ -562,9 +562,9 @@
  * own utility, such as the hairline's Check, is reset to the control's colour), no fill or hover, no underline on quiet
  * actions, and a dashed outline in `--border` on buttons and hairlines (the Topbar and TabBar links and quiet links
  * have no border width, so it never shows there); the focus outline is left alone, so focus stays visible. The current
- * page's entry keeps its pressed look.
+ * page's entry keeps its pressed look (`aria-current` `page`, or `true` for a bar's section on a page below it).
  */
-:root[data-offline] [data-needs-network]:not([aria-current="page"]),
+:root[data-offline] [data-needs-network]:not([aria-current="page"], [aria-current="true"]),
 :root[data-offline] [data-needs-network] :is(a, button, select) {
   cursor: not-allowed;
   color: var(--muted-foreground);
@@ -572,7 +572,7 @@
   text-decoration-line: none;
 }
 
-:root[data-offline] :is(a, button)[data-needs-network]:not([aria-current="page"]) svg,
+:root[data-offline] :is(a, button)[data-needs-network]:not([aria-current="page"], [aria-current="true"]) svg,
 :root[data-offline] [data-needs-network] :is(a, button) svg {
   color: inherit;
 }

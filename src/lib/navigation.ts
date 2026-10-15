@@ -33,6 +33,18 @@ export function currentDestination(pathname: string): NavItem["href"] | null {
 }
 
 /**
+ * The bars' `aria-current` for one destination (impl-review F6, owner 2026-10-15): `"page"` on the current
+ * destination, except Tonight below `/tonight` (the six focused pages and the finder), where it is `"true"`: the
+ * section, not the page, since the sub-nav's chip already names the page. One `aria-current="page"` per page.
+ * Other destinations keep `"page"` on their sub-pages (`/log/sky` marks Log). `undefined` on every other item.
+ */
+export function ariaCurrentFor(href: NavItem["href"], pathname: string): "page" | "true" | undefined {
+  if (href !== currentDestination(pathname)) return undefined;
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return href === "/tonight" && path !== href ? "true" : "page";
+}
+
+/**
  * The Tonight pages' sub-nav (ui-tonight-nav): the dashboard and its six focused pages in the dashboard's tile order,
  * each with its short label in `tonight.subnav`. The same set as the offline list (`TONIGHT_PAGES`, whose order is the
  * `/offline` list's), so a new Tonight page joins both (`navigation.test.ts`). The finder chart is not on it: it is a

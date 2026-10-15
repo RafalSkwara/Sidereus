@@ -1,7 +1,7 @@
 ---
 import NavIcon from "@/components/NavIcon.astro";
 import { getMessages } from "@/i18n";
-import { NAV_ITEMS, currentDestination, isCurrentPage } from "@/lib/navigation";
+import { NAV_ITEMS, ariaCurrentFor, currentDestination, isCurrentPage } from "@/lib/navigation";
 
 // Phone and small-tablet navigation (top-nav-redesign, board direction A): below `md` the four destinations sit in
 // a bottom tab bar, in thumb reach at the telescope; from `md` the top bar's segmented pill takes over. Signed in
@@ -11,12 +11,14 @@ const { user, locale } = Astro.locals;
 const m = getMessages(locale);
 const { pathname } = Astro.url;
 const show = user !== null && !isCurrentPage(pathname, "/onboarding");
-// One current tab (the most specific destination), so `/log/progress` marks Progress and not also Log.
+// One current tab (the most specific destination), so `/log/progress` marks Progress and not also Log. Below
+// `/tonight` it is marked `aria-current="true"`, the section, since the sub-nav names the page (`ariaCurrentFor`).
 const current = currentDestination(pathname);
 const tabs = NAV_ITEMS.map((item) => ({
   ...item,
   text: m.nav[item.label],
   current: item.href === current,
+  ariaCurrent: ariaCurrentFor(item.href, pathname),
 }));
 ---
 
@@ -33,7 +35,7 @@ const tabs = NAV_ITEMS.map((item) => ({
           <li>
             <a
               href={tab.href}
-              aria-current={tab.current ? "page" : undefined}
+              aria-current={tab.ariaCurrent}
               data-needs-network={tab.needsNetwork ? "" : undefined}
               class:list={[
                 "relative flex h-full flex-col items-center justify-center gap-1 text-caption",

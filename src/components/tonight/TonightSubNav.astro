@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   /**
    * `/design` only: the chip to mark current instead of the page's own path, so a specimen can show any chip. A
-   * specimen's current chip carries no view-transition name (several on one page would abort the transition).
+   * specimen's current chip is filled by its classes only: no `aria-current` (it is not the page, impl-review F6) and
+   * no view-transition name (several on one page would abort the transition).
    */
   current?: TonightNavItem["href"];
   /** `/design` only: classes merged last on one chip, to pin its hover or focus look as a specimen. */
@@ -50,7 +51,8 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
         <li>
           <a
             href={chip.href}
-            aria-current={chip.current ? "page" : undefined}
+            aria-current={chip.current && !currentOverride ? "page" : undefined}
+            data-subnav-current={chip.current ? "" : undefined}
             class:list={cn(
               "inline-flex min-h-11 items-center rounded-full px-3 text-label font-semibold whitespace-nowrap",
               "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
@@ -79,10 +81,11 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
       row.toggleAttribute("data-more-start", start);
       row.toggleAttribute("data-more-end", end);
     };
-    // The current chip into view, measured in the row's scrolled content (not `offsetLeft`, which counts from a further
-    // ancestor). Once on load, and again once the web font is in: the swap can change the chips' widths.
+    // The current chip into view (`data-subnav-current`, which `/design`'s specimens carry without `aria-current`),
+    // measured in the row's scrolled content (not `offsetLeft`, which counts from a further ancestor). Once on load,
+    // and again once the web font is in: the swap can change the chips' widths.
     const centre = () => {
-      const chip = row.querySelector<HTMLElement>('[aria-current="page"]');
+      const chip = row.querySelector<HTMLElement>("[data-subnav-current]");
       if (chip) {
         const rowRect = row.getBoundingClientRect();
         const chipRect = chip.getBoundingClientRect();

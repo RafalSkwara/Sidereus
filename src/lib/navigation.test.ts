@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { TONIGHT_PAGES } from "@/lib/offline/copies";
 
-import { currentDestination, currentTonightPage, isCurrentPage, NAV_ITEMS, TONIGHT_NAV } from "./navigation";
+import {
+  ariaCurrentFor,
+  currentDestination,
+  currentTonightPage,
+  isCurrentPage,
+  NAV_ITEMS,
+  TONIGHT_NAV,
+} from "./navigation";
 
 describe("NAV_ITEMS", () => {
   it("lists Tonight, Log, Progress and My gear, in that order", () => {
@@ -34,6 +41,40 @@ describe("currentDestination", () => {
 
   it.each(["/login", "/", "/auth/signin"])("names no destination on %s", (pathname) => {
     expect(currentDestination(pathname)).toBeNull();
+  });
+});
+
+describe("ariaCurrentFor", () => {
+  /** Every destination's mark on a path, the unmarked ones left out. */
+  const marks = (pathname: string): Record<string, string> => {
+    const marked: Record<string, string> = {};
+    for (const item of NAV_ITEMS) {
+      const value = ariaCurrentFor(item.href, pathname);
+      if (value !== undefined) marked[item.href] = value;
+    }
+    return marked;
+  };
+
+  it("marks Tonight as the page on the dashboard itself", () => {
+    expect(marks("/tonight")).toEqual({ "/tonight": "page" });
+    expect(marks("/tonight/")).toEqual({ "/tonight": "page" });
+  });
+
+  it.each(["/tonight/targets", "/tonight/events", "/tonight/nights", "/tonight/finder"])(
+    "marks Tonight as the section, not the page, on %s",
+    (pathname) => {
+      expect(marks(pathname)).toEqual({ "/tonight": "true" });
+    },
+  );
+
+  it("keeps the page mark on other destinations' sub-pages", () => {
+    expect(marks("/log/sky")).toEqual({ "/log": "page" });
+    expect(marks("/log/progress")).toEqual({ "/log/progress": "page" });
+    expect(marks("/gear/sites/new")).toEqual({ "/gear": "page" });
+  });
+
+  it.each(["/login", "/", "/auth/signin"])("marks nothing on %s", (pathname) => {
+    expect(marks(pathname)).toEqual({});
   });
 });
 

@@ -138,7 +138,7 @@
   - Tradeoff: Touches both bars and `navigation.spec.ts`, which asserts `aria-current="page"` on Log at `/log/sky`. The CSS keyed on `aria-current` has to accept both values.
   - Confidence: MED — standard ARIA guidance; the repo has no precedent either way.
   - Blind spot: How VoiceOver and TalkBack actually announce `"true"` inside a nav was not tested.
-- **Decision**: FIX NOW (owner, 2026-10-15) — on Tonight sub-pages the Topbar and TabBar mark Tonight `aria-current="true"`; the sub-nav chip keeps `"page"`; pinned in a test.
+- **Decision**: FIX NOW (owner, 2026-10-15), APPLIED 2026-10-15 — `ariaCurrentFor` (`navigation.ts`): on Tonight sub-pages the Topbar and TabBar mark Tonight `aria-current="true"`, the sub-nav chip keeps `"page"`, and `/design` specimens carry none. Pinned in `navigation.test.ts` (break check: 4 of 52 red when it always returns `"page"`) and `tonight-subnav.spec.ts` (six pages, the dashboard, the finder). Left: the Targets sort control's own `aria-current="page"` (out of scope, noted in the PR).
 
 ### F7 — Criterion 2.5 was re-scoped from the whole page to the header
 

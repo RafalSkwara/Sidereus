@@ -10,7 +10,9 @@ import { onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
  * The Tonight sub-nav, end to end (ui-tonight-nav Phase 2, 4A): the six focused pages carry one row of seven chips in
  * the shell's sky strip, in the dashboard's tile order, the current page's chip marked, and no back link; the dashboard
  * and the finder chart have no sub-nav, and the finder keeps its back link. On a phone the current chip is scrolled
- * into view without scrolling the page. Same setup as the other Tonight specs: a production preview on local Supabase
+ * into view without scrolling the page. The main bars (Topbar pill and TabBar) mark Tonight `aria-current="true"` (the
+ * section) below `/tonight` and `"page"` on the dashboard only, so a focused page has one `"page"`: its chip
+ * (impl-review F6, owner 2026-10-15). Same setup as the other Tonight specs: a production preview on local Supabase
  * with the all-clear forecast fixture and place search stubbed with Madrid. Every chip is found with `exact: true`:
  * "Plan" is a substring of "Planets", so a substring match hits two links. Each test signs up a fresh user.
  */
@@ -18,6 +20,8 @@ import { onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
 const t = en.tonight;
 /** The six focused pages: the sub-nav's items without the dashboard. */
 const FOCUSED = TONIGHT_NAV.filter((item) => item.href !== "/tonight");
+/** The main bars, as in `navigation.spec.ts`. Both are in the DOM at every width (one is hidden by CSS). */
+const BARS = ["[data-tabbar]", "header nav"] as const;
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -28,6 +32,14 @@ const subnav = (page: Page) => page.getByRole("navigation", { name: t.subnav.lab
 /** Waits until the island has replaced the page's skeleton, so an assertion sees the real page and not the stand-in. */
 async function waitForIsland(page: Page) {
   await expect(page.locator("[data-skeleton-content]")).toHaveCount(0);
+}
+
+/** Each main bar marks Tonight with `aria-current` `value`, and no item of the bar as the page unless that is it. */
+async function expectBarsMarkTonight(page: Page, value: "page" | "true") {
+  for (const bar of BARS) {
+    await expect(page.locator(`${bar} a[href="/tonight"]`), `${bar}: Tonight`).toHaveAttribute("aria-current", value);
+    await expect(page.locator(`${bar} [aria-current]`), `${bar}: one current item`).toHaveCount(1);
+  }
 }
 
 test("each focused page has one sub-nav of seven chips with its own chip current, and no back link", async ({
@@ -52,6 +64,14 @@ test("each focused page has one sub-nav of seven chips with its own chip current
     // The island is in: neither it nor the skeleton draws a back link to Tonight any more.
     await waitForIsland(page);
     await expect(page.locator("main").getByRole("link", { name: en.nav.tonight, exact: true })).toHaveCount(0);
+
+    // The bars mark Tonight as the section, so the chip is the page's one `aria-current="page"`. Targets' own Order
+    // control marks its current order the same way (its links carry `?sort=`): that is not the page's mark.
+    await expectBarsMarkTonight(page, "true");
+    const pageMarks = await page
+      .locator('[aria-current="page"]')
+      .evaluateAll((marks) => marks.map((mark) => mark.getAttribute("href")));
+    expect(pageMarks.filter((href) => !href?.startsWith("/tonight/targets?sort="))).toEqual([item.href]);
   }
 });
 
@@ -61,6 +81,8 @@ test("the dashboard has no sub-nav", async ({ page }) => {
   await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
   await expect(page.locator("[data-tonight-subnav]")).toHaveCount(0);
   await expect(subnav(page)).toHaveCount(0);
+  // The dashboard is Tonight itself: the bars mark it as the page.
+  await expectBarsMarkTonight(page, "page");
 });
 
 test("the finder chart has no sub-nav and keeps its back link to Targets", async ({ page }) => {
@@ -76,6 +98,9 @@ test("the finder chart has no sub-nav and keeps its back link to Targets", async
     "href",
     "/tonight/targets",
   );
+  // Below `/tonight`, so the bars mark Tonight as the section; with no sub-nav, nothing on the page is the page.
+  await expectBarsMarkTonight(page, "true");
+  await expect(page.locator('[aria-current="page"]')).toHaveCount(0);
 });
 
 test("on a phone the current chip is scrolled into view without scrolling the page", async ({ page }) => {
