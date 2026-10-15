@@ -778,6 +778,10 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 - Offline decisions: `context/archive/2026-10-11-finder-chart/plan.md` (O-4, D-13 to D-15), `context/archive/2026-10-14-what-to-expect/plan.md` (O-2)
 - Action tiers: `feat/ui-refine`, `context/changes/ui-quiet-actions/plan.md`
 
+## Implementation notes
+
+- `solarSystemWindow` is held to the build's planet and Moon rule by the parity test `src/lib/tonight/plan-window.test.ts`, not by shared code (impl review F9).
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
