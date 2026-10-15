@@ -1,7 +1,7 @@
 ---
 change_id: error-visibility
 title: Production error visibility with first-party tools
-status: new
+status: planned
 created: 2026-10-15
 updated: 2026-10-15
 archived_at: null
