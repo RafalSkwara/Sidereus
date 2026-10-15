@@ -17,7 +17,17 @@ function assertLocal(name, value) {
     throw new Error(`${name} must point at the local stack, got ${host}`);
 }
 assertLocal("BASE_URL", BASE);
-const IDS = ["t-rhythm-roles", "c-stat-pair", "c-fact", "c-fact-icons", "c-item-rhythm"];
+const IDS = [
+  "t-rhythm-roles",
+  "c-stat-pair",
+  "c-fact",
+  "c-fact-icons",
+  "c-item-rhythm",
+  "c-moon-card",
+  "c-night-strip",
+  "c-tonight-page-skeleton",
+  "c-sky-event-list",
+];
 const THEMES = ["dark", "light", "red"];
 const LOCALES = ["en", "pl"];
 mkdirSync(outDir, { recursive: true });

@@ -883,9 +883,9 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [x] 4.1 Types and lint pass
-- [x] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass
-- [x] 4.3 The affected specs pass against a fresh local preview
+- [x] 4.1 Types and lint pass — 4f34ad2
+- [x] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass — 4f34ad2
+- [x] 4.3 The affected specs pass against a fresh local preview — 4f34ad2
 
 #### Manual
 
@@ -895,9 +895,9 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [ ] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks
-- [ ] 5.2 `npm run build` succeeds
-- [ ] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded
+- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks
+- [x] 5.2 `npm run build` succeeds
+- [x] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded
 
 #### Manual
 

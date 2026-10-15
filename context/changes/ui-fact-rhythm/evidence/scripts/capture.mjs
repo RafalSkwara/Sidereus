@@ -1,4 +1,4 @@
-// Captures the ui-fact-rhythm evidence matrix: routes × locale (en, pl) × theme (dark, light, red) × viewport (390 px
+// Captures the ui-fact-rhythm evidence matrix: routes × locale (en, pl) × theme (dark, light, red) × viewport (320 px narrow and 390 px
 // phone at 2x, 1280 px desktop). Usage:
 //   BASE_URL=http://localhost:4331 node capture.mjs <worktree> <outDir> [route-filter-regex] [themes] [locales] [viewports]
 // Needs `state-ui-fact.json` (a seeded user with the full plan) and `state-ui-fact-empty.json` (a user without
@@ -23,6 +23,7 @@ const stateDir = dirname(outDir);
 
 const VIEWPORTS = {
   phone: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  narrow: { viewport: { width: 320, height: 700 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   desktop: { viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 },
 };
 const THEMES = (themesArg || "dark,light,red").split(",");
@@ -79,6 +80,8 @@ for (const view of VIEWS) {
         }
         await page.goto(BASE + path, { waitUntil: "networkidle" });
         await page.waitForTimeout(600);
+        // The fixed TabBar would cover content mid-page in a full-page shot.
+        await page.addStyleTag({ content: "[data-tabbar] { display: none !important; }" });
         await page.screenshot({ path: join(outDir, `${name}-${view}-${locale}-${theme}.png`), fullPage: true });
         if (name === "tonight" || name === "targets") {
           await page.screenshot({ path: join(outDir, `${name}-${view}-${locale}-${theme}-fold.png`) });

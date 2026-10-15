@@ -25,7 +25,7 @@ interface Props {
 const { entry, logHref, finderHref } = Astro.props;
 const t = getMessages(Astro.locals.locale).tonight;
 const tipId = `not-seen-tip-planet-${entry.key}`;
-// Label, then the value (label-free since ui-fact-rhythm): "Brightness mag −1.9", "Jasność −1,9 mag". Null facts
+// A label, a space, then the value (the `Fact` label): "Brightness mag −1.9", "Jasność −1,9 mag". Null facts
 // (phase off Mercury and Venus, rings off Saturn) are skipped.
 type PlanetFact = "magnitude" | "size" | "phase" | "rings";
 const allFacts: [PlanetFact, string | null][] = [
