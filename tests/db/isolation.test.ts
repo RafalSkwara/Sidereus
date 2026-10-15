@@ -93,8 +93,11 @@ describe.each(TABLES)("$table isolation", (entry) => {
   const from = (client: Client) => client.from(table as "eyepieces");
   const patch = change as Database["public"]["Tables"]["eyepieces"]["Update"];
   // `describe.each` collects `valid` before `beforeAll` has created the sites, so a row that needs the owner's site
-  // gets it here, when a test builds the insert. The rows are built per test: A's rows go to A's site, B's own
-  // inserts to B's site, and B's attempt at A's row keeps A's site and `user_id`, so only the user fails.
+  // gets it here, when a test builds the insert. The rows are built per test: A's rows go to A's site and B's own
+  // inserts to B's site. B's attempt at A's row keeps A's `user_id` and, for a `needsSite` table, A's site too, so
+  // there the site check refuses it as well: the generic case cannot tell the two conditions apart, and the case that
+  // only the user condition refuses (B's site under A's `user_id`) is pinned in the table's own file
+  // (`session-plans.test.ts`, "the user guard"). A table without a site gets the user condition from this case.
   const rowOn = (siteId: string) => (needsSite ? { ...valid, site_id: siteId } : valid) as TablesInsert<"eyepieces">;
 
   // The ids `insertAsA` returned during the running test. A deletes them afterwards, so a table with a per-user

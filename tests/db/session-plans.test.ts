@@ -4,7 +4,8 @@
  * write the owner makes succeeds), because under RLS and a check constraint "nothing was written" alone would
  * also pass for a table that refuses everyone:
  *
- * - a user cannot put a plan on another user's site, by insert or by repointing an own row (`42501`);
+ * - a user cannot put a plan on another user's site, by insert or by repointing an own row (`42501`), nor insert one
+ *   on their own site under another user's id (`42501`, the user condition alone);
  * - the unique key (user, site, night) holds, and `sessionPlanStore.save` replaces the row;
  * - deleting a site deletes its plans (`on delete cascade`);
  * - the `targets` checks accept the closed target grammar and an empty list, and refuse an unknown key, an empty or
@@ -136,6 +137,31 @@ describe("the site guard", () => {
     expect(error?.code).toBe(RLS_REFUSAL);
     expect(await plans(b.client, siteB, "2026-10-03")).toMatchObject([{ targets: ["M13"] }]);
     expect(await plans(a.client, siteA, "2026-10-03")).toEqual([]);
+  });
+});
+
+describe("the user guard", () => {
+  it("does not let another user insert a plan on its own site under the first user's id", async () => {
+    // The one row that only the INSERT policy's user condition refuses: the site is B's own (so the site guard passes),
+    // the `user_id` is A's. The generic isolation case cannot isolate it, since it sends A's site as well.
+    // Positive control: the same insert under B's own user_id succeeds.
+    expect(
+      (
+        await b.client
+          .from("session_plans")
+          .insert({ site_id: siteB, user_id: b.userId, night: "2026-10-09", targets: ["M31"] })
+      ).error,
+    ).toBeNull();
+
+    // No .select(): RETURNING would apply the SELECT policy and could mask a missing WITH CHECK.
+    const { error } = await b.client
+      .from("session_plans")
+      .insert({ site_id: siteB, user_id: a.userId, night: "2026-10-10", targets: ["M31"] });
+    expect(error?.code).toBe(RLS_REFUSAL);
+
+    // Nothing was planted: neither user has a row for that night.
+    expect(await plans(b.client, siteB, "2026-10-10")).toEqual([]);
+    expect(await plans(a.client, siteB, "2026-10-10")).toEqual([]);
   });
 });
 

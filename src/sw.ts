@@ -11,6 +11,7 @@ import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from "workbox-
 import { registerRoute } from "workbox-routing";
 import type { RouteHandlerCallbackOptions, RouteMatchCallbackOptions } from "workbox-core/types.js";
 
+import { createCoalescer } from "@/lib/offline/coalesce";
 import {
   FINDER_PAGE,
   INDEX_KEY,
@@ -18,6 +19,7 @@ import {
   addAssets,
   answerTime,
   assetUrlsIn,
+  awaitsNetwork,
   chooseCopy,
   commitPair,
   copyMetaFor,
@@ -509,7 +511,18 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
   }
 }
 
-const pagesStoring = new Set<string>();
+/**
+ * `store-page` requests, one run per page at a time: a request that arrives while one is in flight is not dropped, it
+ * marks the page dirty and the store runs once more, for the latest request, after the current one (F2 b), so the
+ * device never keeps list A when the server has B. The unit is `createCoalescer`.
+ */
+const storePageOnce = createCoalescer<{ url: URL; clientId: string }>(({ url, clientId }) =>
+  storePageRun(url, clientId),
+);
+
+function storePageNow(url: URL, clientId: string): Promise<void> {
+  return storePageOnce(pathKey(url), { url, clientId });
+}
 
 /**
  * A page asked for its own fresh copy (`store-page`, adjustable-session-plan D7 b): after a save the stored plan page
@@ -518,12 +531,10 @@ const pagesStoring = new Set<string>();
  * scope taken first, `commit`), tonight's kind only, with no next-night copy. The replaced pair's files stay with the
  * new one, so what its page loaded late is still there offline. Best effort: any failure keeps the previous copy.
  */
-async function storePageNow(url: URL, clientId: string): Promise<void> {
+async function storePageRun(url: URL, clientId: string): Promise<void> {
   const target = storedPageOf(url);
   if (!target || target.page === FINDER_PAGE) return;
   const shellPath = pathKey(url);
-  if (pagesStoring.has(shellPath)) return;
-  pagesStoring.add(shellPath);
   try {
     // Taken before the fetches, like a navigation's: a purge meanwhile makes this commit find another scope.
     const scope = await currentScope();
@@ -573,8 +584,6 @@ async function storePageNow(url: URL, clientId: string): Promise<void> {
     await afterCommit(meta.assets);
   } catch {
     // Offline or timed out: the stored copy stays, and the next visit replaces it.
-  } finally {
-    pagesStoring.delete(shellPath);
   }
 }
 
@@ -582,14 +591,25 @@ async function storePageNow(url: URL, clientId: string): Promise<void> {
 
 /**
  * The network's answer, or the stored one when the network fails or takes longer than the timeout. With nothing
- * stored, a slow network is still waited for: a slow page beats no page.
+ * stored, a slow network is still waited for: a slow page beats no page. With `waitForNetwork` (the landing after a
+ * plan save, `awaitsNetwork`) there is no timeout at all: the stored copy answers only when the fetch itself fails.
  */
 async function networkFirst(
   request: Request,
   stored: () => Promise<Response | undefined>,
+  waitForNetwork = false,
 ): Promise<{ response: Response; fromNetwork: boolean; network: Promise<Response> }> {
   // Also returned: when the stored copy wins, the network's late answer is still worth reading.
   const network = fetch(request);
+  if (waitForNetwork) {
+    try {
+      return { response: await network, fromNetwork: true, network };
+    } catch (error) {
+      const response = await stored();
+      if (response) return { response, fromNetwork: false, network };
+      throw error;
+    }
+  }
   const fromNetwork = network.then((response) => ({ response, fromNetwork: true, network }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timedOut = new Promise<Response | undefined>((resolve) => {
@@ -682,8 +702,10 @@ registerRoute(
     const scope = currentScope();
     void scope.catch(() => undefined);
     try {
-      const { response, fromNetwork, network } = await networkFirst(request, () =>
-        storedPage(target.page, target.siteId, target.target),
+      const { response, fromNetwork, network } = await networkFirst(
+        request,
+        () => storedPage(target.page, target.siteId, target.target),
+        awaitsNetwork(url),
       );
       const settle = (answer: Response, late: boolean) =>
         afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(() => undefined);

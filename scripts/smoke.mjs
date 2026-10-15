@@ -190,15 +190,22 @@ function replayPlanIsland() {
 }
 
 /** A POST to a Session plan route, as the editor's form will send it: `targets` repeated, as an array of pairs. */
-function postPlan(path, targets = []) {
+function postPlan(path, targets = [], site = planSiteId) {
   if (!planSiteId || !planNight) {
     return Promise.reject(new Error("no site id or night was read from the Session plan island (plan step 1 failed)"));
   }
   return request(path, {
     method: "POST",
-    form: [["site", planSiteId], ["night", planNight], ...targets.map((key) => ["targets", key])],
+    form: [["site", site], ["night", planNight], ...targets.map((key) => ["targets", key])],
   });
 }
+
+// The route's refusals (plan 8 to plan 10), each a fixed `?error=` key that the route's order of checks decides:
+// shape (`savePlanSchema`: every issue is `errors.save.sessionPlan`), then the catalogue (`isKnownTarget`, the same key),
+// then the user's own site (`errors.notFound.site`), tonight's date, and last the window of each newly added key
+// (`errors.sessionPlan.notVisible`). Only the fixed key and a well-formed site id reach the location, never a submitted key.
+const NEVER_RISES = "M7";
+const FOREIGN_SITE = "00000000-0000-4000-8000-000000000000";
 
 /**
  * What the island says its night did with a saved list: `data-session-plan-state` is "edited" on a night that passes
@@ -455,6 +462,63 @@ const steps = [
       exact: true,
       needsPlanGrant: true,
       bodyExcludes: [EDITED, HELD],
+    },
+  ],
+  [
+    // The account is full here and plan 5's reset left no saved list, so every key below is a newly added one. M7 is the
+    // southernmost object in the catalogue (dec -34.8 deg; NGC104 is not in it, and Caldwell stops at -23 deg): at
+    // smoke's 52.23 N it culminates at 90 - 52.23 - 34.8 = 3.0 deg, under the site's minimum altitude (15 deg from
+    // onboarding, 20 deg for the created site) on every night of the year, so `deepSkyWindow` is null whatever the
+    // date, the moon or the darkness (a night with no dark window has none either, which is the same refusal).
+    "plan 8: a newly added key that never rises at the site is refused as not visible, and nothing is saved",
+    () => postPlan(SAVE_PLAN, [NEVER_RISES]),
+    {
+      status: 302,
+      location: () => planLocation("error=errors.sessionPlan.notVisible"),
+      exact: true,
+      needsPlanGrant: true,
+      absent: NEVER_RISES,
+    },
+  ],
+  [
+    // A well-formed id that is not the user's: the route's own-site read finds no row, so the key is `notFound.site`,
+    // and the foreign id itself is the one value allowed in the location (it passes `isGearId`).
+    "plan 9: a well-formed site that is not the user's is refused as not found",
+    () => postPlan(SAVE_PLAN, ["M31"], FOREIGN_SITE),
+    {
+      status: 302,
+      location: `/tonight/plan?site=${FOREIGN_SITE}&error=errors.notFound.site`,
+      exact: true,
+      needsPlanGrant: true,
+    },
+  ],
+  [
+    // NGC1 passes the key grammar but the catalogue lacks it; a repeated key fails the schema's refinement. Both are
+    // `errors.save.sessionPlan`, and neither key comes back in the location.
+    "plan 10: an unknown catalogue key and a repeated key are refused with the save key",
+    async () => {
+      const unknown = await postPlan(SAVE_PLAN, ["NGC1"]);
+      if (unknown.location !== planLocation("error=errors.save.sessionPlan")) {
+        throw new Error(`an unknown key answered ${unknown.status} ${unknown.location}`);
+      }
+      return postPlan(SAVE_PLAN, ["M31", "M31"]);
+    },
+    {
+      status: 302,
+      location: () => planLocation("error=errors.save.sessionPlan"),
+      exact: true,
+      needsPlanGrant: true,
+      absent: "M31",
+    },
+  ],
+  [
+    "plan 11: none of the refusals wrote a list, so the island still shows the suggested plan",
+    () => replayPlanIsland(),
+    {
+      status: 200,
+      needsPlanGrant: true,
+      bodyIncludes: ['data-session-plan-state="suggested"'],
+      bodyExcludes: [EDITED, HELD, LOCKED],
     },
   ],
   [

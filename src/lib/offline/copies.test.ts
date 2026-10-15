@@ -29,6 +29,7 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
+  awaitsNetwork,
   storeRequestFrom,
   storedPageOf,
   tonightPageOf,
@@ -183,6 +184,37 @@ describe("mayStoreShell", () => {
   });
 });
 
+describe("awaitsNetwork", () => {
+  it.each([
+    "/tonight/plan?saved=plan",
+    "/tonight/plan?saved=plan-reset",
+    `/tonight/plan?site=${SITE_A}&saved=plan`,
+    `/tonight/plan?saved=plan-reset&site=${SITE_A}`,
+  ])("is true for %s, the landing after a save or reset", (path) => {
+    expect(awaitsNetwork(url(path))).toBe(true);
+  });
+
+  it.each([
+    "/tonight/plan",
+    `/tonight/plan?site=${SITE_A}`,
+    "/tonight/plan?saved=",
+    "/tonight/plan?saved=site",
+    "/tonight/plan?saved=Plan",
+    "/tonight/plan?saved=plan-resets",
+    "/tonight/plan?saved=other",
+    "/tonight/plan?error=errors.sessionPlan.notVisible",
+    "/tonight/plan?logged=plan",
+    "/tonight?saved=plan",
+    "/tonight/targets?saved=plan",
+    "/tonight/planets?saved=plan",
+    "/tonight/plan/extra?saved=plan",
+    "/gear?saved=plan",
+    "/log?saved=plan",
+  ])("is false for %s", (path) => {
+    expect(awaitsNetwork(url(path))).toBe(false);
+  });
+});
+
 describe("storeRequestFrom", () => {
   const ORIGIN = "https://sidereus.example";
   const ask = (path: string) => ({ type: "store-page", url: path });
@@ -197,9 +229,17 @@ describe("storeRequestFrom", () => {
     expect(request?.href).toBe(`${ORIGIN}/tonight/plan?site=${SITE_A}`);
   });
 
-  it.each(TONIGHT_PAGES)("accepts %s with no param", (path) => {
-    expect(storeRequestFrom(ask(path), ORIGIN)?.pathname).toBe(path);
+  it("accepts the plan page with no param", () => {
+    expect(storeRequestFrom(ask("/tonight/plan"), ORIGIN)?.pathname).toBe("/tonight/plan");
   });
+
+  it.each(TONIGHT_PAGES.filter((page) => page !== "/tonight/plan"))(
+    "refuses %s: only the plan page asks to be stored (F10 f)",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+      expect(storeRequestFrom(ask(`${path}?site=${SITE_A}`), ORIGIN)).toBeNull();
+    },
+  );
 
   it("refuses a URL of another origin", () => {
     expect(storeRequestFrom(ask(`https://evil.example/tonight/plan?site=${SITE_A}`), ORIGIN)).toBeNull();
@@ -207,7 +247,7 @@ describe("storeRequestFrom", () => {
   });
 
   it.each(["/tonight/finder?object=M13", "/tonight/all", "/log", "/api/tonight/plan", "/offline", "/"])(
-    "refuses %s, which is not a Tonight page",
+    "refuses %s, which is not the plan page",
     (path) => {
       expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
     },

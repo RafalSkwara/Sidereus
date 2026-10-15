@@ -1276,8 +1276,8 @@ export const en = {
         /** The editor's "add" list under a target's name (adjustable-session-plan): its window tonight, "21:40–23:10". */
         candidateDetail: (p: { window: string }) => `Window ${p.window}`,
         /** The save toast and the reset toast (`?saved=plan`, `?saved=plan-reset`). */
-        saved: "Plan saved",
-        resetDone: "Plan reset to the suggested one",
+        saved: "Plan saved.",
+        resetDone: "Plan reset to the suggested one.",
         /** The edited plan's accessible list name: the rows are in the user's order, not by best time. */
         listLabelEdited: "Targets in your order",
         /** The line above an edited plan's rows, beside its Reset button and the editor's "Edit plan". */
@@ -1286,18 +1286,24 @@ export const en = {
         editedEmpty: "You removed every target from this plan.",
         /** A free account, above the suggested plan: what editing does and what it needs. */
         locked: "With the full plan you can reorder, remove and add targets on this plan.",
-        /** The saved changes are not applied because tonight does not pass; they come back when a night clears. */
-        held: "Your saved changes come back on a night that clears.",
-        /** The saved changes could not be read (or the plan could not be confirmed): the suggested plan shows. */
-        editsUnavailable: "Your edits could not be loaded, so this is the suggested plan.",
+        /**
+         * The saved changes are not applied because tonight does not pass. The list is saved for this night only, so it
+         * returns only if tonight turns good enough (F7); Reset beside "Edited by you" drops it.
+         */
+        held: "Your saved changes for tonight return if the night turns good enough to observe.",
+        /**
+         * The plan could not be confirmed or the saved list could not be read: the suggested plan shows. Neutral, since
+         * the user may have no edits at all (F10 b).
+         */
+        editsUnavailable: "Plan editing is unavailable right now, so you see the suggested plan.",
         /** A row whose best window ends before the previous row's best time (advisory). */
-        endsBeforePrevious: "Its window ends before the target above is at its best.",
+        endsBeforePrevious: "Its window ends before the previous target is at its best.",
         /** Saved targets with no window tonight: never drawn, kept until removed. */
         notTonightHeading: "Not on tonight's plan",
         notTonightHint: "They have no window tonight and stay saved until you remove them.",
         /**
          * The editor (full plan, Phase 5): the buttons, the add picker (outside the save form) and the list. `addFull` is
-         * the line in the picker's place once the list holds `SESSION_PLAN_MAX_TARGETS` (30).
+         * the line in the picker's place once the list holds `max` (`SESSION_PLAN_MAX_TARGETS`) targets.
          */
         edit: "Edit plan",
         save: "Save plan",
@@ -1306,13 +1312,27 @@ export const en = {
         addLabel: "Add a target",
         addPlaceholder: "Number or name, e.g. 31 or Orion",
         addNoMatch: "No target with a window tonight matches that.",
-        addFull: "A plan holds up to 30 targets. Remove one to add another.",
+        addFull: (p: { max: string }) => `A plan holds up to ${p.max} targets. Remove one to add another.`,
         editorListLabel: "Targets in your plan",
         editorEmpty: "No targets in your plan yet. Add one below.",
         /** The icon buttons' accessible names; `name` is the row's name. */
         moveUp: (p: { name: string }) => `Move ${p.name} up`,
         moveDown: (p: { name: string }) => `Move ${p.name} down`,
         remove: (p: { name: string }) => `Remove ${p.name} from the plan`,
+        /**
+         * Save stays disabled while the list is the one the editor opened with (F10 c); this line beside it says why, and
+         * is the button's description.
+         */
+        saveUnchanged: "Change the plan to save it.",
+        /**
+         * The editor's status region (F6, visually hidden, polite): what a Move, Remove or Add did. `position` and
+         * `count` are pre-formatted whole numbers; a Move whose row now ends before the previous target is at its best
+         * appends `endsBeforePrevious`.
+         */
+        movedTo: (p: { name: string; position: string; count: string }) =>
+          `${p.name} moved to position ${p.position} of ${p.count}.`,
+        removed: (p: { name: string }) => `${p.name} removed from the plan.`,
+        added: (p: { name: string }) => `${p.name} added to the end of the plan.`,
         /** Reset (beside "Edited by you"): the trigger and the dialog's name, then the dialog's question and buttons. */
         reset: "Reset to suggested",
         resetConfirm: "Reset this plan to the suggested one? Your changes for tonight will be removed.",
@@ -1605,7 +1625,7 @@ export const en = {
     },
     sessionPlan: {
       nightOver: "That night is over. Open tonight's plan and edit it again.",
-      notVisible: "One of the objects you added has no window tonight.",
+      notVisible: "One of the targets you added has no window tonight.",
     },
     geocoding: {
       failed: "Place search is unavailable right now.",

@@ -1,8 +1,16 @@
+import { getMessages } from "@/i18n";
 import type { ForecastResult } from "@/lib/forecast/service";
 import type { SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 import type { Locale } from "@/lib/preferences";
 import { isTargetKey, type TargetKey } from "@/lib/targets";
 import { buildTonight, type TonightSessionPlan } from "@/lib/tonight/build";
+import {
+  editPlan,
+  editorAnnouncement,
+  savedKeys,
+  type PlanEditorAction,
+  type PlanEditorState,
+} from "@/lib/tonight/plan-editor";
 import { planEditorData, type PlanEditorData } from "@/lib/tonight/plan-editor-view";
 
 /**
@@ -86,4 +94,32 @@ export function planSamples(locale: Locale): PlanSamples {
     suggested: sampleOf(suggested.sessionPlan, locale),
     edited: sampleOf(edited.sessionPlan, locale),
   };
+}
+
+/**
+ * What the editor's visually hidden status region (F6) says after a Move, a Remove and an Add on the saved sample list,
+ * worded by the island's own `editorAnnouncement`, so `/design` can show the text that a screen reader hears.
+ */
+export function planStatusSamples(editor: PlanEditorData, locale: Locale): { action: string; text: string }[] {
+  const t = getMessages(locale).tonight.pages.plan;
+  const state: PlanEditorState = { rows: editor.rows, notTonight: editor.notTonight };
+  const present = new Set(savedKeys(state));
+  const option = editor.candidates.find((candidate) => !present.has(candidate.key));
+  const actions: { action: string; run: PlanEditorAction | null }[] = [
+    { action: "Move down", run: editor.rows[0] ? { type: "move-down", key: editor.rows[0].key } : null },
+    { action: "Remove", run: editor.rows[1] ? { type: "remove", key: editor.rows[1].key } : null },
+    {
+      action: "Add",
+      run: option
+        ? {
+            type: "add",
+            row: { key: option.key, label: option.label, line: option.detail, bestAt: null, windowEnd: null },
+          }
+        : null,
+    },
+  ];
+  return actions.flatMap(({ action, run }) => {
+    const text = run ? editorAnnouncement(t, state, run, editPlan(state, run)) : null;
+    return text === null ? [] : [{ action, text }];
+  });
 }

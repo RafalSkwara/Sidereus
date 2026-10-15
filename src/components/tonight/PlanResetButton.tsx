@@ -18,12 +18,14 @@ interface Props {
  * submitting. The trigger is a plain button, so before hydration it does nothing (it never resets without asking). The
  * trigger and the confirm button need the network (`data-needs-network`): offline the click is swallowed and the dialog
  * never opens. The confirm button is `destructive`, as the delete dialog's (it removes the saved list). Once the reset
- * is submitted both dialog buttons disable, so it cannot be sent twice.
+ * is submitted both dialog buttons disable, so it cannot be sent twice. Closing (Escape or Cancel) puts focus back on the
+ * trigger explicitly (F10 e): Safari otherwise leaves it on `<body>` after a mouse click.
  */
 export default function PlanResetButton({ locale, siteId, night }: Props) {
   const t = getMessages(locale).tonight.pages.plan;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const messageId = useId();
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,7 +59,7 @@ export default function PlanResetButton({ locale, siteId, night }: Props) {
     <form method="POST" action="/api/tonight/plan/reset" onSubmit={markSubmitting}>
       <input type="hidden" name="site" value={siteId} />
       <input type="hidden" name="night" value={night} />
-      <Button type="button" variant="quiet" size="bare" data-needs-network="" onClick={openDialog}>
+      <Button ref={triggerRef} type="button" variant="quiet" size="bare" data-needs-network="" onClick={openDialog}>
         <RotateCcw aria-hidden="true" />
         {t.reset}
       </Button>
@@ -66,6 +68,9 @@ export default function PlanResetButton({ locale, siteId, night }: Props) {
         role="alertdialog"
         aria-label={t.reset}
         aria-describedby={messageId}
+        onClose={() => {
+          triggerRef.current?.focus();
+        }}
         className="border-border bg-surface text-foreground backdrop:bg-background/80 m-auto w-11/12 max-w-sm rounded-xl border p-5 shadow-2xl"
       >
         <p id={messageId} className="text-body text-heading">

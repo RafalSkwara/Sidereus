@@ -3,6 +3,7 @@
 // only wires them to Workbox and the Cache API. A copy is one *pair*: a Tonight shell and the server-island response
 // it references by exact URL (the island URL changes on every render, so a shell replays only with its own island).
 // The index holds site ids and names, never coordinates; nothing here logs.
+import { PLAN_PAGE, parsePlanSaved } from "@/lib/session-plans/redirect";
 import { SKY_CHECKED_PARAM } from "@/lib/sky-checks/redirect";
 import { parseTargetParam } from "@/lib/targets";
 import { isGearId } from "@/lib/tonight/gear-choice";
@@ -181,14 +182,25 @@ export function mayStoreShell(url: URL): boolean {
   return storedPageOf(url) !== undefined && NOTICE_PARAMS.every((param) => !url.searchParams.has(param));
 }
 
+/**
+ * Whether a navigation must wait for the network instead of racing the timeout (adjustable-session-plan F2): the
+ * landing after a Session plan save or reset (`/tonight/plan` with `?saved=plan` or `?saved=plan-reset`). The stored
+ * copy is from before the save and the toast URL is never stored, so serving it after the timeout would show the old
+ * list with no confirmation; the worker answers from storage only when the fetch itself fails.
+ */
+export function awaitsNetwork(url: URL): boolean {
+  return url.pathname === PLAN_PAGE && parsePlanSaved(url.searchParams.get("saved")) !== null;
+}
+
 /** The message a page posts to the worker to have a Tonight page stored now (`{ type: "store-page", url }`). */
 export const STORE_PAGE_MESSAGE = "store-page";
 
 /**
  * The page a `store-page` message asks the worker to store now (adjustable-session-plan Phase 4, D7 b), or `null` when
- * the message is anything else: another type or shape, a URL of another origin, a path that is not a Tonight page
- * (the finder chart included), a notice param, or any param other than a well-formed `site`. Pages post only the clean
- * URL, so nothing a visitor controls reaches the worker's fetch beyond a site id. The URL comes back without its hash.
+ * the message is anything else: another type or shape, a URL of another origin, a path other than `/tonight/plan`
+ * (the other Tonight pages and the finder chart included: only the plan page posts, F10 f), a notice param, or any
+ * param other than a well-formed `site`. Pages post only the clean URL, so nothing a visitor controls reaches the
+ * worker's fetch beyond a site id. The URL comes back without its hash.
  */
 export function storeRequestFrom(data: unknown, origin: string): URL | null {
   if (typeof data !== "object" || data === null) return null;
@@ -201,7 +213,7 @@ export function storeRequestFrom(data: unknown, origin: string): URL | null {
     return null;
   }
   if (parsed.origin !== origin) return null;
-  if (!TONIGHT_PAGES.some((page) => page === parsed.pathname)) return null;
+  if (parsed.pathname !== PLAN_PAGE) return null;
   if (!mayStoreShell(parsed)) return null;
   const sites = parsed.searchParams.getAll("site");
   if ([...parsed.searchParams.keys()].some((name) => name !== "site") || sites.length > 1) return null;

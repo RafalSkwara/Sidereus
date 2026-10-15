@@ -14,7 +14,9 @@
 // edits read) the island renders no `OfflineCopy`, so the worker commits nothing and the earlier stored copy survives (D14).
 //
 // Editing (Phase 5): in the `edited` and `suggested` states of a night that passes, `PlanEditRow` sits above the
-// timeline: the "Edited by you" line with Reset on an edited plan, and the editor island (`PlanEditor`). The plan area is
+// timeline: the "Edited by you" line with Reset on an edited plan, and the editor island (`PlanEditor`). In the `held`
+// state (tonight only) the row holds just the "Edited" line and Reset, so the saved list can be dropped; the editor
+// still does not show (D5; owner, Fable #2). The plan area is
 // the `group` the editor marks `data-editing` while it is open, which hides the timeline, the "Edited" line and the
 // edited-empty line (the editor lists the same targets).
 import { ServerError } from "@/components/forms/ServerError";
@@ -85,6 +87,8 @@ const state: "edited" | "suggested" | "locked" | "held" | "unavailable" =
 // The editor, for a full-plan user's plan in the two states edits apply in; `planEditorData` is `null` unless the build
 // listed candidates (tonight, full plan, a night that passes).
 const editor = view && plan && (state === "edited" || state === "suggested") ? planEditorData(plan, locale) : null;
+// A held list (held is only ever reached by a confirmed full plan) can be reset tonight, without the editor.
+const resetHeld = view !== null && state === "held" && night === "tonight";
 // The message column renders only with something in it, so a normal night has one gap under the sky, not two.
 const hasMessages = failures.length > 0 || noGear || empty || error !== null || locked || held || editsFailed;
 const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
@@ -173,9 +177,9 @@ const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whi
         </div>
       )}
 
-      {view && editor && (
+      {view && (editor !== null || resetHeld) && (
         <div class="mx-auto w-full max-w-3xl px-4 pt-8">
-          <PlanEditRow siteId={view.siteId} night={view.date} editor={editor} edited={edited} />
+          <PlanEditRow siteId={view.siteId} night={view.date} editor={editor} edited={edited || resetHeld} />
         </div>
       )}
 

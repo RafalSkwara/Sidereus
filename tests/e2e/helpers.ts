@@ -199,16 +199,23 @@ export async function setPlan(email: string, plan: "full" | "free") {
 }
 
 /**
- * Whether tonight's Session plan can be edited (adjustable-session-plan, F10): waits for the plan island's readiness marker
- * (`data-session-plan-state`, not `[data-offline-copy]` alone, which the failure states omit) and says whether it reads
- * `suggested` or `edited`, the two states the edits apply in. `held` (a night that does not pass), `locked`, `unavailable`
- * and a missing marker are `false`: a spec skips on that, with `test.skip(!(await planEditable(page)), "…")`.
+ * Whether tonight's Session plan can be edited (adjustable-session-plan, F10, F8): waits for the plan island's readiness
+ * marker (`data-session-plan-state`, not `[data-offline-copy]` alone, which the failure states omit) and says whether it
+ * reads `suggested` or `edited`, the two states the edits apply in. Only `held` (a list saved for a night that does not
+ * pass, the one legitimate reason) is `false`, and a spec skips on it with
+ * `test.skip(!(await planEditable(page)), "…")`. `locked`, `unavailable` or a missing marker fail the test: for a
+ * full-plan user on the fixture's clear night they mean a regression (a broken plan or `session_plans` read), never a
+ * reason to skip.
  */
 export async function planEditable(page: Page): Promise<boolean> {
   const area = page.locator("[data-session-plan-state]");
-  await expect(area).toBeAttached();
+  await expect(area, "the plan island must render its readiness marker").toBeAttached();
   const state = await area.getAttribute("data-session-plan-state");
-  return state === "suggested" || state === "edited";
+  expect(
+    state,
+    "tonight's plan must be editable (suggested or edited) or held; locked or unavailable means the plan or the saved list could not be read",
+  ).toMatch(/^(suggested|edited|held)$/);
+  return state !== "held";
 }
 
 /**

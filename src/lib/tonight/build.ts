@@ -435,7 +435,8 @@ export interface TonightSessionPlan {
   heldEdits: boolean;
   /**
    * Saved targets with no window tonight (the minimum altitude was raised, or another telescope cannot reach them): never
-   * a row, listed apart and kept until the user removes them (D4, F4), in saved order.
+   * a row, listed apart and kept until the user removes them (D4, F4), in saved order. `label` is named as a row's
+   * `name` is ("M7 · Ptolemy Cluster"), from the same rule (F10 h).
    */
   notTonight: { key: TargetKey; label: string }[];
   /**
@@ -1223,24 +1224,18 @@ export function buildTonight(
         track,
         peakAltitudeDeg: roundTo(peak.altitudeDeg, 1),
       });
+      // A row's name ("M31 · Andromeda Galaxy"): the plan's rows and its "Not on tonight's plan" entries alike (F10 h).
+      const objectNameOf = (object: DeepSkyObject): string => {
+        const commonName = localCommonName(object.id, object.commonName, locale);
+        return commonName ? `${object.label} · ${commonName}` : object.label;
+      };
       const objectRowOf = (
         object: DeepSkyObject,
         window: Interval,
         peak: HorizontalPosition,
         href: string,
-      ): TonightSessionPlanRowInput => {
-        const commonName = localCommonName(object.id, object.commonName, locale);
-        return rowOf(
-          "object",
-          object.id,
-          object.label,
-          commonName ? `${object.label} · ${commonName}` : object.label,
-          href,
-          window,
-          peak,
-          altitudesOf(object.id),
-        );
-      };
+      ): TonightSessionPlanRowInput =>
+        rowOf("object", object.id, object.label, objectNameOf(object), href, window, peak, altitudesOf(object.id));
       // The suggested plan: the Moon, the planets, then the ranking's objects (the layout orders them by best time).
       const suggestedRows: TonightSessionPlanRowInput[] = [
         ...(planMoon === null
@@ -1345,12 +1340,12 @@ export function buildTonight(
               : { kind: "done" };
       // Saved keys with no window tonight (and, defensively, one whose row the layout dropped): never drawn, kept.
       const drawn = new Set(layout.rows.map((row) => row.key));
-      const labelOfKey = (key: string): string =>
-        key === MOON_TARGET_KEY
-          ? messages.targets.moon
-          : isPlanetKey(key)
-            ? messages.targets.planet[key]
-            : (findDeepSky(key)?.label ?? key);
+      const labelOfKey = (key: string): string => {
+        if (key === MOON_TARGET_KEY) return messages.targets.moon;
+        if (isPlanetKey(key)) return messages.targets.planet[key];
+        const object = findDeepSky(key);
+        return object ? objectNameOf(object) : key;
+      };
       const notTonight = edited
         ? [...new Set(savedPlan ?? [])].filter((key) => !drawn.has(key)).map((key) => ({ key, label: labelOfKey(key) }))
         : [];

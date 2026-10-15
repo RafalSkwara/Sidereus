@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
+import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
 import { SESSION_PLAN_MAX_TARGETS } from "@/lib/session-plans/schemas";
 
 import {
   canAdd,
   editPlan,
+  editorAnnouncement,
   editorHints,
+  isUnchanged,
   keyCount,
   savedKeys,
   type EditorRow,
@@ -111,5 +115,58 @@ describe("editorHints", () => {
   it("never flags a row without times, and never guesses from it", () => {
     expect(editorHints([row("a", 25, 26), added("b")])).toEqual([false, false]);
     expect(editorHints([added("a"), row("b", 21, 24)])).toEqual([false, false]);
+  });
+});
+
+describe("isUnchanged", () => {
+  it("is true for the list the editor opened with, and after changes that bring it back", () => {
+    expect(isUnchanged(state, state)).toBe(true);
+    const there = editPlan(state, { type: "move-up", key: "jupiter" });
+    expect(isUnchanged(state, there)).toBe(false);
+    expect(isUnchanged(state, editPlan(there, { type: "move-down", key: "jupiter" }))).toBe(true);
+  });
+
+  it("counts a removed or added target, the notTonight entries included", () => {
+    expect(isUnchanged(state, editPlan(state, { type: "remove", key: "NGC7000" }))).toBe(false);
+    expect(isUnchanged(state, editPlan(state, { type: "add", row: added("M42") }))).toBe(false);
+  });
+});
+
+describe("editorAnnouncement", () => {
+  const t = en.tonight.pages.plan;
+  const say = (action: Parameters<typeof editPlan>[1], from: PlanEditorState = state) =>
+    editorAnnouncement(t, from, action, editPlan(from, action));
+
+  it("gives a moved row's new position of the count", () => {
+    expect(say({ type: "move-up", key: "jupiter" })).toBe(t.movedTo({ name: "jupiter", position: "1", count: "3" }));
+    expect(say({ type: "move-down", key: "jupiter" })).toBe(t.movedTo({ name: "jupiter", position: "3", count: "3" }));
+  });
+
+  it("adds the order hint when the moved row now ends before the previous target is at its best", () => {
+    const late: PlanEditorState = { rows: [row("b", 21, 24), row("a", 25, 26)], notTonight: [] };
+    expect(say({ type: "move-down", key: "b" }, late)).toBe(
+      `${t.movedTo({ name: "b", position: "2", count: "2" })} ${t.endsBeforePrevious}`,
+    );
+    // The hint belongs to the moved row only: moving "a" up leaves "a" on top, with no hint of its own.
+    expect(say({ type: "move-up", key: "a" }, late)).toBe(t.movedTo({ name: "a", position: "1", count: "2" }));
+  });
+
+  it("names a removed row or notTonight entry by its label, and an added target", () => {
+    expect(say({ type: "remove", key: "M13" })).toBe(t.removed({ name: "M13" }));
+    expect(say({ type: "remove", key: "NGC7000" })).toBe(t.removed({ name: "NGC 7000" }));
+    expect(say({ type: "add", row: added("M42") })).toBe(t.added({ name: "M42" }));
+  });
+
+  it("says nothing for a no-op: an edge move, an unknown key, a duplicate add", () => {
+    expect(say({ type: "move-up", key: "M31" })).toBeNull();
+    expect(say({ type: "remove", key: "saturn" })).toBeNull();
+    expect(say({ type: "add", row: added("M31") })).toBeNull();
+  });
+
+  it("words the same events in Polish from the Polish catalogue", () => {
+    const action = { type: "move-up", key: "jupiter" } as const;
+    expect(editorAnnouncement(pl.tonight.pages.plan, state, action, editPlan(state, action))).toBe(
+      "Przesunięto na pozycję 1 z 3: jupiter.",
+    );
   });
 });

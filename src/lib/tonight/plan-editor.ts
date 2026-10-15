@@ -1,3 +1,4 @@
+import type { Messages } from "@/i18n";
 import { SESSION_PLAN_MAX_TARGETS } from "@/lib/session-plans/schemas";
 import { orderHints } from "@/lib/tonight/plan-order";
 
@@ -10,6 +11,9 @@ import { orderHints } from "@/lib/tonight/plan-order";
  * tonight (`notTonight`, D4), which stay on the list until the user removes them. A save posts the rows in order, then
  * the `notTonight` keys (`savedKeys`). Every no-op (an edge move, a key that is not there, a duplicate add, a full list)
  * returns the same state object, so a caller can tell a change by identity.
+ *
+ * Island-safe also for its wording: `editorAnnouncement` takes the page's own `tonight.pages.plan` messages as an
+ * argument (the island already holds them), so it stays pure and needs no locale here.
  */
 
 /** One row of the editor: a plan row as the page words it, or a target the user just added. */
@@ -111,5 +115,54 @@ export function editPlan(state: PlanEditorState, action: PlanEditorAction): Plan
       }
       return { ...state, rows: [...state.rows, action.row] };
     }
+  }
+}
+
+/**
+ * Whether the list is the one the editor opened with (F10 c): the same keys in the same order. Save stays disabled
+ * then, so saving an untouched suggestion never pins it as the user's list (D1).
+ */
+export function isUnchanged(initial: PlanEditorState, state: PlanEditorState): boolean {
+  const before = savedKeys(initial);
+  const after = savedKeys(state);
+  return before.length === after.length && before.every((key, i) => key === after[i]);
+}
+
+type PlanText = Messages["tonight"]["pages"]["plan"];
+
+/**
+ * What the editor's status region says after an action (F6): a Move gives the row's new position of the count, plus the
+ * order hint (D2 b) when the moved row now ends before the previous target is at its best; Remove and Add name the
+ * target. A no-op (`after` is `before`, as `editPlan` returns for an edge move or a duplicate) says nothing (`null`).
+ */
+export function editorAnnouncement(
+  t: PlanText,
+  before: PlanEditorState,
+  action: PlanEditorAction,
+  after: PlanEditorState,
+): string | null {
+  if (after === before) {
+    return null;
+  }
+  switch (action.type) {
+    case "move-up":
+    case "move-down": {
+      const index = after.rows.findIndex((row) => row.key === action.key);
+      if (index < 0) {
+        return null;
+      }
+      const moved = t.movedTo({
+        name: after.rows[index].label,
+        position: String(index + 1),
+        count: String(after.rows.length),
+      });
+      return editorHints(after.rows)[index] ? `${moved} ${t.endsBeforePrevious}` : moved;
+    }
+    case "remove": {
+      const entry = [...before.rows, ...before.notTonight].find((candidate) => candidate.key === action.key);
+      return entry ? t.removed({ name: entry.label }) : null;
+    }
+    case "add":
+      return t.added({ name: action.row.label });
   }
 }

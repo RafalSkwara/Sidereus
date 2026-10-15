@@ -48,7 +48,7 @@ import { finderSamples } from "@/components/design/finder-samples";
 import Attribution from "@/components/tonight/Attribution.astro";
 import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
 import PlanNote from "@/components/tonight/PlanNote.astro";
-import { planSamples } from "@/components/design/plan-samples";
+import { planSamples, planStatusSamples } from "@/components/design/plan-samples";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
@@ -602,6 +602,8 @@ const panoramaPlan = panoramaView.sessionPlan;
 // The plan editor's specimens (adjustable-session-plan): the same night, suggested and with a saved list applied.
 const planSpecimens = planSamples(locale);
 const planText = m.tonight.pages.plan;
+// The editor's status region (F6) after a Move, a Remove and an Add on the saved sample list.
+const planStatus = planSpecimens.edited ? planStatusSamples(planSpecimens.edited.editor, locale) : [];
 const frameNearestSun = (altitudeDeg: number) =>
   panoramaSky
     ? panoramaSky.sunAltDeg.reduce(
@@ -2101,8 +2103,9 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 </div>
                 <div class:list={wideCell}>
                   <p class:list={stateLabel}>
-                    open · live: the hint, the edge Move buttons aria-disabled (muted, still focusable), Remove on "Not
-                    on tonight's plan", the add picker (Enter never saves) and Save / Cancel
+                    open · live: the hint, the edge Move buttons aria-disabled (muted and a dashed box in every theme,
+                    still focusable), Remove on "Not on tonight's plan", the add picker (Enter never saves) and Save /
+                    Cancel; Save is disabled with its "change the plan" line until the list differs from the opened one
                   </p>
                   <div class="group rounded-lg border border-border p-4" data-session-plan-area>
                     <PlanEditRow
@@ -2116,7 +2119,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 </div>
                 <div class:list={wideCell}>
                   <p class:list={stateLabel}>
-                    open · red mode: an aria-disabled Move button takes a dashed box (shape, not colour)
+                    open · red mode: an aria-disabled Move button keeps its dashed box, as in every theme (shape, not
+                    colour)
                   </p>
                   <div
                     data-theme="red"
@@ -2194,6 +2198,30 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 </div>
                 <div class:list={cell}>
                   <p class:list={stateLabel}>
+                    held · live: a saved list on a night that does not pass: the note, then "Edited by you" with Reset
+                    and no editor
+                  </p>
+                  <div class="group space-y-6 rounded-lg border border-border p-4" data-session-plan-area>
+                    <PlanNote kind="held" />
+                    <PlanEditRow siteId={planSpecimens.siteId} night={planSpecimens.night} editor={null} edited />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    status region · specimen (visually hidden role="status" in the editor; its text after each action,
+                    empty on opening)
+                  </p>
+                  <dl class="space-y-2 text-label">
+                    {planStatus.map(({ action, text }) => (
+                      <div>
+                        <dt class="font-mono text-muted-foreground">{action}</dt>
+                        <dd class="text-foreground">{text}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
                     PlanNote · locked (free), held (a night that does not pass), unavailable
                   </p>
                   <div class="space-y-3">
@@ -2208,10 +2236,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             )}
             <p class:list={notApplicable}>
               hover, focus-visible — the Hairline, Quiet, Primary and Destructive Buttons (above), the list takes the
-              ring when it receives focus on opening · disabled — the edge Move buttons (aria-disabled) and the offline
-              specimen · error — the page's ServerError alert above the plan (?error=) · empty — an emptied list says so
-              in the editor · loading — Save and the dialog's Reset disable once submitted; the page's
-              TonightPageSkeleton has a 44 px bar for the edit row
+              ring when it receives focus on opening · disabled — the edge Move buttons (aria-disabled), Save until the
+              list changes (the open specimens) and the offline specimen · error — the page's ServerError alert above
+              the plan (?error=) · empty — an emptied list says so in the editor · loading — Save and the dialog's Reset
+              disable once submitted; the page's TonightPageSkeleton has a 44 px bar for the edit row
             </p>
           </section>
 

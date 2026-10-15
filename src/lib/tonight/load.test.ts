@@ -197,6 +197,42 @@ describe("loadTonight's saved Session plan (adjustable-session-plan)", () => {
     expect(result.view?.sessionPlan?.rows.length).toBeGreaterThan(0);
   });
 
+  it("logs one fixed line with the cause's code when the read fails, never its message", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const cause = Object.assign(new Error("permission denied for table session_plans at 52.2297,21.0122"), {
+        code: "42501",
+      });
+      const readPlanEdits = vi.fn<PlanEditsReader>().mockRejectedValue(new Error("errors.load.sessionPlan", { cause }));
+      const result = await load({ withSessionPlan: true, readPlanEdits });
+      expect(result.planEditsError).toBe("errors.load.sessionPlan");
+      const lines = log.mock.calls.filter(([line]) => String(line).startsWith("tonight: plan edits"));
+      expect(lines).toEqual([["tonight: plan edits read failed", "42501"]]);
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(/permission denied|session_plans|52\.2297|errors\.load/);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("names the error when the cause has no code, and logs nothing when the read succeeds", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const readPlanEdits = vi
+        .fn<PlanEditsReader>()
+        .mockRejectedValue(new Error("errors.load.sessionPlan", { cause: new TypeError("secret value M31") }));
+      await load({ withSessionPlan: true, readPlanEdits });
+      expect(log).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith("tonight: plan edits read failed", "TypeError");
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(/secret|M31/);
+
+      log.mockClear();
+      await load({ withSessionPlan: true, readPlanEdits: vi.fn<PlanEditsReader>().mockResolvedValue(["M31"]) });
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("leaves no unhandled rejection when the build fails while the read is in flight", async () => {
     mocks.buildTonight.mockImplementationOnce(() => {
       throw new Error("build failed");

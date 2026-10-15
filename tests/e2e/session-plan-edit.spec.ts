@@ -8,11 +8,13 @@ import { PASSWORD, onboardInMadrid, planEditable, requirePlanGrant, setPlan, wai
 /*
  * Editing the Session plan (adjustable-session-plan Phase 5): a full-plan user opens the editor on /tonight/plan, moves,
  * removes and adds targets and saves them in one POST; the saved order reaches another device, the keyboard keeps its
- * place, Reset asks once, a free account gets the lock line instead of an editor, offline only the network controls
- * mute, and a refused save comes back as an inline alert. Each test signs up its own fresh Madrid user and, where it
- * edits, grants the full plan through the operator command (`requirePlanGrant`, the local stack's key inline on the
- * command); a night that does not pass (`planEditable`) skips the editing tests. Same setup as the other specs: a
- * production preview on local Supabase with the all-clear forecast fixture.
+ * place (and the status region says what each Move, Remove and Add did, F6), Save waits for a change, Reset asks once
+ * and gives focus back to its trigger, a free account gets the lock line instead of an editor, offline only the network
+ * controls mute, and a refused save comes back as an inline alert. The held state's Reset needs a night that does not
+ * pass, which the all-clear fixture never gives: it is checked by hand. Each test signs up its own fresh Madrid user
+ * and, where it edits, grants the full plan through the operator command (`requirePlanGrant`, the local stack's key
+ * inline on the command); a held plan (`planEditable`) skips the editing tests, and a locked or unavailable one fails
+ * them. Same setup as the other specs: a production preview on local Supabase with the all-clear forecast fixture.
  */
 
 const PLAN_PAGE = "/tonight/plan";
@@ -36,6 +38,21 @@ function editorKeys(page: Page): Promise<string[]> {
   return page
     .locator("[data-plan-editor-row]")
     .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-plan-editor-row") ?? ""));
+}
+
+/** The editor's visually hidden status region (F6). */
+function status(page: Page) {
+  return page.locator("[data-plan-editor-status]");
+}
+
+/**
+ * What the status region says after `key` moved to `position` of `count`: the order hint is appended when the moved row
+ * now carries it, which depends on tonight's times, so it is read from the row itself.
+ */
+async function movedText(page: Page, key: string, position: number, count: number): Promise<string> {
+  const moved = t.movedTo({ name: await rowName(page, key), position: String(position), count: String(count) });
+  const hinted = (await page.locator(`[data-plan-editor-row="${key}"] [data-plan-editor-hint]`).count()) > 0;
+  return hinted ? `${moved} ${t.endsBeforePrevious}` : moved;
 }
 
 /** One of a row's editor controls (`move-up`, `move-down`, `remove`) by the row's key. */
@@ -112,10 +129,14 @@ async function addFirstCandidate(page: Page): Promise<string> {
   await picker.press("Enter");
   await expect(picker).toHaveValue(label);
   const before = await editorKeys(page);
-  await page.getByRole("button", { name: t.add, exact: true }).click();
+  const add = page.getByRole("button", { name: t.add, exact: true });
+  await add.click();
   await expect(page.locator("[data-plan-editor-row]")).toHaveCount(before.length + 1);
   const added = (await editorKeys(page)).at(-1) ?? "";
   expect(before, "the added target was not on the list").not.toContain(added);
+  // Focus stays on Add (the list is far from full), and the status region names the added target.
+  await expect(add).toBeFocused();
+  await expect(status(page)).toHaveText(t.added({ name: await rowName(page, added) }));
   return added;
 }
 
@@ -127,12 +148,22 @@ test("a full user removes, moves and adds a target, saves, and sees the plan in 
   await openEditor(page);
   // The timeline is hidden while the editor lists the same targets.
   await expect(page.locator("[data-session-plan-row]").first()).toBeHidden();
-  expect(await editorKeys(page)).toEqual(suggested);
+  await expect.poll(() => editorKeys(page)).toEqual(suggested);
+  // Nothing is announced on opening, and Save waits for a change, saying why.
+  await expect(status(page)).toHaveText("");
+  const saveButton = page.getByRole("button", { name: t.save });
+  await expect(saveButton).toBeDisabled();
+  await expect(page.locator("[data-plan-editor-unchanged]")).toHaveText(t.saveUnchanged);
 
   // The icon buttons are found by their accessible names, which carry the row's name.
-  await page.getByRole("button", { name: t.remove({ name: await rowName(page, first) }), exact: true }).click();
+  const firstName = await rowName(page, first);
+  await page.getByRole("button", { name: t.remove({ name: firstName }), exact: true }).click();
+  await expect(status(page)).toHaveText(t.removed({ name: firstName }));
   await page.getByRole("button", { name: t.moveUp({ name: await rowName(page, third) }), exact: true }).click();
-  expect(await editorKeys(page)).toEqual([third, second, ...rest]);
+  await expect.poll(() => editorKeys(page)).toEqual([third, second, ...rest]);
+  await expect(status(page)).toHaveText(await movedText(page, third, 1, suggested.length - 1));
+  await expect(saveButton).toBeEnabled();
+  await expect(page.locator("[data-plan-editor-unchanged]")).toHaveCount(0);
   const added = await addFirstCandidate(page);
 
   await save(page);
@@ -171,25 +202,35 @@ test("with the keyboard, focus stays on the moved row's control and moves on aft
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-plan-editor-list]")).toBeFocused();
 
-  // Move down, then back up to the top: focus stays on the same control of the same row.
+  // Move down, then back up to the top: focus stays on the same control of the same row, and the status region says
+  // where the row went.
   await control(page, "move-down", first).focus();
   await page.keyboard.press("Enter");
-  expect(await editorKeys(page)).toEqual([second, first, ...rest]);
+  await expect.poll(() => editorKeys(page)).toEqual([second, first, ...rest]);
   await expect(control(page, "move-down", first)).toBeFocused();
+  await expect(status(page)).toHaveText(await movedText(page, first, 2, suggested.length));
   await control(page, "move-up", first).focus();
   await page.keyboard.press("Enter");
-  expect(await editorKeys(page)).toEqual(suggested);
+  await expect.poll(() => editorKeys(page)).toEqual(suggested);
+  await expect(status(page)).toHaveText(await movedText(page, first, 1, suggested.length));
   // At the top, Move up is aria-disabled but keeps focus, and pressing it again changes nothing.
   await expect(control(page, "move-up", first)).toBeFocused();
   await expect(control(page, "move-up", first)).toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("Enter");
-  expect(await editorKeys(page)).toEqual(suggested);
+  await expect.poll(() => editorKeys(page)).toEqual(suggested);
+
+  // At the bottom, Move down is aria-disabled the same way: focus stays and nothing moves.
+  const last = suggested.at(-1) ?? "";
+  await control(page, "move-down", last).focus();
+  await expect(control(page, "move-down", last)).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("Enter");
+  await expect(control(page, "move-down", last)).toBeFocused();
+  await expect.poll(() => editorKeys(page)).toEqual(suggested);
 
   // Remove: focus goes to the next row's Remove; after the last entry, to the list.
   await control(page, "remove", first).focus();
   await page.keyboard.press("Enter");
   await expect(control(page, "remove", second)).toBeFocused();
-  const last = suggested.at(-1) ?? "";
   await control(page, "remove", last).focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-plan-editor-list]")).toBeFocused();
@@ -220,7 +261,13 @@ test("Reset asks once, then restores the suggested order", async ({ page }) => {
   await expect(dialog.getByRole("button", { name: t.resetCancel })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+  // Closing gives focus back to the trigger, after Escape and after Cancel alike.
+  await expect(reset).toBeFocused();
   await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "edited");
+  await reset.click();
+  await dialog.getByRole("button", { name: t.resetCancel }).click();
+  await expect(dialog).toBeHidden();
+  await expect(reset).toBeFocused();
 
   await reset.click();
   await dialog.getByRole("button", { name: t.resetConfirmYes }).click();
@@ -259,18 +306,20 @@ test("offline, Edit, Save and Reset are disabled while Move, Remove and Cancel s
   await context.setOffline(true);
   try {
     await expect(page.locator("html")).toHaveAttribute("data-offline");
+
+    // Move and Remove need no network. A move first, so Save is held back by the network alone, not by an unchanged list.
+    await expect.poll(() => editorKeys(page)).toEqual([second, first, ...rest]);
+    await control(page, "move-up", first).click();
+    await expect.poll(() => editorKeys(page)).toEqual(suggested);
     const saveButton = page.getByRole("button", { name: t.save });
+    // `toBeEnabled` counts `aria-disabled` too, so the native attribute is checked on its own.
+    await expect(saveButton).not.toHaveAttribute("disabled");
     await expect(saveButton).toHaveAttribute("aria-disabled", "true");
     await saveButton.click({ force: true });
     await expect(page.locator('[data-plan-editor="open"]')).toBeVisible();
     await expect(page).toHaveURL((url) => url.pathname === PLAN_PAGE && !url.search.includes("saved"));
-
-    // Move and Remove need no network.
-    expect(await editorKeys(page)).toEqual([second, first, ...rest]);
-    await control(page, "move-up", first).click();
-    expect(await editorKeys(page)).toEqual(suggested);
     await control(page, "remove", first).click();
-    expect(await editorKeys(page)).toEqual([second, ...rest]);
+    await expect.poll(() => editorKeys(page)).toEqual([second, ...rest]);
 
     // Cancel closes the editor; Edit and Reset are then disabled and do nothing.
     await page.getByRole("button", { name: t.cancel, exact: true }).click();
@@ -289,9 +338,11 @@ test("offline, Edit, Save and Reset are disabled while Move, Remove and Cancel s
 
 test("a save for a night that is over comes back as an inline alert", async ({ page }) => {
   test.setTimeout(120_000);
-  await fullUserOnPlan(page, "e2e-plan-stale");
+  const { suggested } = await fullUserOnPlan(page, "e2e-plan-stale");
 
   await openEditor(page);
+  // A change first: Save waits for one.
+  await control(page, "move-down", suggested[0]).click();
   // The form as a page left open past its night would post it: a night that is no longer tonight.
   await page.locator('[data-plan-editor-save] input[name="night"]').evaluate((input: HTMLInputElement) => {
     input.value = "2000-01-01";

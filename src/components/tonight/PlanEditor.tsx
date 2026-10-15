@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
 import type { TargetOption } from "@/lib/observations/target-search";
+import { SESSION_PLAN_MAX_TARGETS } from "@/lib/session-plans/schemas";
 import type { TargetKey } from "@/lib/targets";
 import {
   canAdd,
   editPlan,
+  editorAnnouncement,
   editorHints,
+  isUnchanged,
   savedKeys,
   type EditorEntry,
   type EditorRow,
@@ -41,10 +44,12 @@ type FocusRequest = { kind: "control"; control: Control; key: string } | { kind:
 
 /**
  * An edge Move button is `aria-disabled` and stays focusable, so focus is never lost to the page when a row reaches the
- * top or bottom; `quiet` mutes it. Red mode has one hue, so there the muted icon also gets a dashed box in
- * `--control-border`: shape, not colour, tells it from an enabled one.
+ * top or bottom; `quiet` mutes it. Muted is only a colour (in light barely one: about 1.1:1 against the enabled icon),
+ * so in every theme the muted icon also gets a dashed box in `--control-border` (3:1 on the ground and the surface):
+ * shape, not colour, tells it from an enabled one (F5, WCAG 1.4.1). Here rather than in `quiet`, whose offline
+ * `aria-disabled` links stay boxless (`global.css`).
  */
-const MOVE_CLASS = "red:aria-disabled:border red:aria-disabled:border-dashed red:aria-disabled:border-control-border";
+const MOVE_CLASS = "aria-disabled:border aria-disabled:border-dashed aria-disabled:border-control-border";
 
 /** The plan area (`PlanPageContent`'s wrapper) hides the timeline and the "Edited" line while this marker is on it. */
 const PLAN_AREA = "[data-session-plan-area]";
@@ -61,7 +66,10 @@ const PLAN_AREA = "[data-session-plan-area]";
  * the Add button puts it on the list. Focus: opening goes to the list and Cancel back to Edit; after a move it stays on
  * the moved row's same control (an edge Move is `aria-disabled`, never `disabled`, so it keeps focus); after Remove it
  * goes to the next entry's Remove, else to the list; after Add it stays on Add (the list when it is now full), so the
- * picker's list does not open over the page.
+ * picker's list does not open over the page. Since focus stays put, a visually hidden `role="status"` region says what
+ * each Move, Remove and Add did (`editorAnnouncement`, F6); it starts empty, so opening announces nothing. Save stays
+ * disabled while the list is the one the editor opened with (`isUnchanged`, F10 c), with a visible line saying why that
+ * is also its description (a disabled button leaves the tab order, the line does not).
  */
 export default function PlanEditor({
   locale,
@@ -74,12 +82,14 @@ export default function PlanEditor({
 }: Props) {
   const t = getMessages(locale).tonight.pages.plan;
   const pickerId = useId();
+  const unchangedId = useId();
   const [initial] = useState<PlanEditorState>(() => ({ rows: [...rows], notTonight: [...notTonight] }));
   const [state, setState] = useState(initial);
   const [open, setOpen] = useState(defaultOpen);
   const [picked, setPicked] = useState<TargetKey | null>(null);
   const [pickerKey, setPickerKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const editRef = useRef<HTMLButtonElement>(null);
@@ -92,6 +102,7 @@ export default function PlanEditor({
     return candidates.filter((option) => !present.has(option.key));
   }, [candidates, state]);
   const hints = useMemo(() => editorHints(state.rows), [state.rows]);
+  const unchanged = isUnchanged(initial, state);
 
   // A focus request runs once the DOM has the new list.
   useLayoutEffect(() => {
@@ -139,8 +150,12 @@ export default function PlanEditor({
     };
   }, []);
 
+  // Every event re-renders before the next one, so `state` is current here.
   function apply(action: PlanEditorAction) {
-    setState((current) => editPlan(current, action));
+    const next = editPlan(state, action);
+    setState(next);
+    const said = editorAnnouncement(t, state, action, next);
+    if (said !== null) setAnnouncement(said);
   }
 
   function move(key: string, direction: "move-up" | "move-down", edge: boolean) {
@@ -176,6 +191,7 @@ export default function PlanEditor({
 
   function cancel() {
     setState(initial);
+    setAnnouncement("");
     setPicked(null);
     setPickerKey((n) => n + 1);
     setOpen(false);
@@ -207,6 +223,9 @@ export default function PlanEditor({
 
   return (
     <div ref={rootRef} className={open ? "w-full" : undefined} data-plan-editor={open ? "open" : "closed"}>
+      <p role="status" className="sr-only" data-plan-editor-status>
+        {announcement}
+      </p>
       {!open ? (
         <Button
           ref={editRef}
@@ -341,7 +360,7 @@ export default function PlanEditor({
                 </Button>
               </div>
             ) : (
-              <p className="text-label text-muted-foreground">{t.addFull}</p>
+              <p className="text-label text-muted-foreground">{t.addFull({ max: String(SESSION_PLAN_MAX_TARGETS) })}</p>
             )}
           </div>
 
@@ -357,7 +376,14 @@ export default function PlanEditor({
             {savedKeys(state).map((key) => (
               <input key={key} type="hidden" name="targets" value={key} />
             ))}
-            <Button type="submit" data-needs-network="" disabled={submitting} aria-busy={submitting}>
+            {/* `aria-describedby` never changes (a missing id is ignored), so a render never drops the offline description. */}
+            <Button
+              type="submit"
+              data-needs-network=""
+              disabled={submitting || unchanged}
+              aria-busy={submitting}
+              aria-describedby={unchangedId}
+            >
               <Save aria-hidden="true" />
               {t.save}
             </Button>
@@ -365,6 +391,11 @@ export default function PlanEditor({
               <X aria-hidden="true" />
               {t.cancel}
             </Button>
+            {unchanged && (
+              <p id={unchangedId} className="text-label text-muted-foreground basis-full" data-plan-editor-unchanged>
+                {t.saveUnchanged}
+              </p>
+            )}
           </form>
         </>
       )}
