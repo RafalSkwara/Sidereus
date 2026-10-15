@@ -1,275 +1,243 @@
 ---
 project: Sidereus
-version: 3
+version: 4
 status: draft
 created: 2026-09-30
 updated: 2026-10-15
 prd_version: 3
 main_goal: quality
-top_blocker: skills # and decisions: the user named both (2026-10-07)
-milestone_id: find-it-and-keep-going
-milestone_seq: 3
-milestone_status: done
+top_blocker: skills # advice judged without an observer; the owner kept it for M-4 (2026-10-15)
+milestone_id: finished-and-trustworthy
+milestone_seq: 4
+milestone_status: open
 ---
 
 # Roadmap: Sidereus
 
-> Derived from `context/foundation/prd.md` (v3, FR-037 to FR-046, US-05 to US-08) and the user's description of two UI passes (MS-01, MS-02), plus a codebase baseline confirmed on 2026-10-07.
-> Edit-in-place; archive when superseded.
-> **M-3 closed 2026-10-15.** The next milestone (M-4) is a draft awaiting the owner's decisions: `context/foundation/roadmap-m4-draft.md`. Once the owner answers, it replaces this file in place, carrying `## Milestone History` forward.
+> Derived from the owner's description of M-4 (MS-01 to MS-04, 2026-10-15) with PRD v3 references (`context/foundation/prd.md`), plus a codebase baseline re-checked on 2026-10-15. There is no PRD change: every PRD v3 functional requirement is delivered except FR-003, which stays parked.
+> Edit-in-place; archive when superseded. M-3's closure check is in git history (commit 9a2cdc6) and in Milestone History below.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
 ## Milestone
 
-**M-3: Find it and keep going** — Status: done (closed 2026-10-15)
+**M-4: Finished and trustworthy** — Status: open
 
-- **Intent:** Make Sidereus comfortable on a phone first, then take a beginner past "what to look at": find the target from a star they can see, know what it will look like, see how far they are through the classic lists, plan around the sky's events and shape the night's plan. Finder charts and plan edits are the first features of a paid ("full") plan; the plan is granted by hand for now.
-- **Source materials:** `context/foundation/prd.md` (v3), plus the user's description, 2026-10-07 (verbatim below).
-- **User description, 2026-10-07 (verbatim):** "throw in 4 as well and add a task for UI improvements, I'll list things that bother me in how the app looks later on. Actually, make it two UI/UX improvements task. First you'll go over the views (especially mobile as they feel crowded) and try and improve them (especially dashboard/tonight). So: 1. your UI improvements 2. My UI adjustments afterwards 3. And then the suggestions accepted from your research." On paid features: "We have provided some functionality for free so let's keep in mind if some of the next ones should be behind paywall. I also need an easy way to create accounts with all functionalities unlocked so I can access them."
-- **Done when:** every F-NN and S-NN below is `done`, or explicitly moved to Parked by the user.
-- **Scope anchors:** PRD v3 FR-037 to FR-046, US-05 to US-08 and the phone-first NFR; plus:
-  - MS-01: Claude goes over the views, mobile first, and improves them, especially the dashboard and Tonight, which feel crowded.
-  - MS-02: The user's own UI adjustments, from a list the user gives after MS-01.
-
-### Closure check (2026-10-15)
-
-Every item is `done`, GitHub issues #121 to #129 are closed, and main's run at 42ce808 passed `ci`, `smoke`, `migrate` and `deploy`.
-
-- **The intent, clause by clause:**
-  - Comfortable on a phone first: S-01 (#131, #132) and S-02 (#139, #140). The first screen is pinned by `tonight-phone.spec.ts` at 390×844, and sideways scroll is checked at 320 and 375 px.
-  - Find the target from a visible star: S-03 (#155, #156).
-  - Know what it will look like: S-04 (#158).
-  - See progress through the classic lists: S-05 (#149) and S-06 (#153).
-  - Plan around the sky's events: S-07 (#161).
-  - Shape the night's plan: S-08 (#165).
-  - Finder charts and plan edits are the first full-plan features, granted by command: F-01 (#144). What-to-expect also went behind the full plan (FR-038).
-- **PRD v3 (FR-037 to FR-046, US-05 to US-08):** all delivered. Coverage of the success criteria and invariants:
-  - Secondary criterion "Sidereus alone gets a beginner to the target": met as built. The owner confirmed on 2026-10-13 that the chart is legible at arm's length in red mode (finder-chart Progress 6.4). The hop and naked-eye-limit candidates (Open Questions 15 and 16) have still not been tried by an observer.
-  - Secondary criterion "a reason to come back": met (checklists, "not seen yet" marks, milestones).
-  - Phone-first NFR: met and pinned by e2e.
-  - Guardrail "an edited plan never schedules a target outside its window": enforced by `applyPlanEdits` and the save route's window check.
-  - The three invariants v3 added: pinned in the engine and progress rules (a finder chart's start star, a 1-2 rating never counting, an event below the horizon never shown as worth going out for).
-- **Not settled when M-3 closed (carried over):**
-  - Follow-up **#159**: M31 at 60 mm reads "very faint" beside "bright for your 60 mm". The core-brightness term underrates very large galaxies at small apertures (Open Question 17 judged without an observer).
-  - **ESA's licence reply** for the Hipparcos-derived stars (PRD Open Question 21): the request was sent on 2026-10-14. SAO remains the fallback, before any payment.
-  - **The ui-refine split** (umbrella `context/changes/ui-refine/`, the owner's request of 2026-10-14), outside M-3's slices:
-    - `ui-quiet-actions`: done (#163).
-    - `ui-fact-rhythm`: merged (#167), archive pending.
-    - Not started: `ui-dashboard-tiles`, `ui-tonight-nav` (the Tonight sub-nav and Progress as a fourth tab) and `ui-log-progress-gear`.
-  - Older follow-ups still open: #21 (ranking calibration, items 1, 3 and 4) and #19 (Stellarium fixtures). Also still open:
-    - ui-auth D1 and D2;
-    - S-12's manual rows;
-    - the moonlight post-merge checks, due after 2026-10-22;
-    - the IAU MDC courtesy email.
+- **Intent:** Finish the look the owner asked for on 2026-10-14, make the advice agree with itself and with published references, and let the operator see production failures, before any new feature or payment.
+- **Source materials:**
+  - the owner's decisions of 2026-10-15, relayed by the orchestrator: outcome A of the M-4 draft, all seven slices, and S-07 on first-party tools only;
+  - PRD v3 references;
+  - `context/changes/ui-refine/audit.md`, including the owner's decisions 1-5 recorded there.
+- **Done when:** every S-NN below is `done`, or cut by the cut order below, or moved to Parked by the owner.
+- **Cut order (owner, 2026-10-15):** the PRD's hard deadline of 2026-11-04 still holds. If time runs short, drop **S-06** first, then **S-03**, then **S-01**. The cut order lists what to drop first, not a priority label.
+- **Scope anchors:**
+  - MS-01: Finish the UI refinement the owner asked for on 2026-10-14: separate the data more visibly, make the buttons quieter, update the navigation. These are changes 3-5 of the `ui-refine` split (`context/changes/ui-refine/`).
+  - MS-02: The advice agrees with itself and with published references:
+    - the what-to-expect line and the ranking for galaxies in small telescopes (#159, #21 item 3);
+    - evening showpieces and window edges (#21 items 1, 4 and 5);
+    - PRD Primary criterion 2 re-run.
+  - MS-03: The operator sees production failures in the critical flows, with their cause, and is alerted. Only first-party tools (Workers Logs, Cloudflare alerts) and `/10x-observability-audit`, no new third party. No coordinates, emails or keys go into any report.
+  - MS-04: Loose ends a user can hit in the auth flow:
+    - a signed-in visitor who opens sign-in or sign-up goes on to Tonight;
+    - sign-up continues to the page that was asked for (PRD Access Control, ui-auth D1 and D2).
 
 ## Vision recap
 
-A beginner with a first telescope can't tell whether tonight is worth setting up for or what to point at; Sidereus answers both as a verdict and a ranked, explained shortlist from their own site and kit, and since M-2 covers the Moon, the planets, a night plan and offline use. PRD v3 widens the promise: help the user find each target from a star they can already see, say what it will look like, track what they have seen, flag the sky's events and let them shape the night's plan.
+A beginner with a first telescope can't tell whether tonight is worth setting up for, or what to point at. Sidereus answers both from their own site and kit, and since M-3 it also helps them find each target, says what it will look like, tracks their progress, flags sky events and lets them shape the night's plan. M-4 adds no new promise. It makes the existing one hold:
+- the advice must not contradict itself;
+- the look must be finished;
+- failures must be visible before anyone else relies on the app.
 
 ## North star
 
-**S-03: Finder chart** — the north star is the smallest slice whose delivery proves the milestone's main claim, so it goes as early as its prerequisites allow: here, that Sidereus alone gets a beginner from a naked-eye star to the target (PRD v3 Secondary criterion), and that the first paid feature is worth having.
+**S-04: Galaxies in a small telescope.** The north star is the smallest slice whose delivery proves the milestone's main claim, so it goes as early as its prerequisites allow. Here the claim is that the advice can be trusted. Today a beginner with a 60 mm telescope is told M31 is "very faint" in the same place it is called "bright for your 60 mm" (#159), and the persona's typical telescope is a small one.
 
 ## At a glance
 
-| ID   | Change ID               | Outcome (user can …)                                                                                     | Prerequisites | PRD refs               | Status   |
-| ---- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- | ---------------------- | -------- |
-| F-01 | account-plans           | (foundation) every account is on the free or full plan, enforced on the server; the operator grants full | —             | FR-045, FR-046         | done |
-| S-01 | ui-mobile-pass          | use every view comfortably on a phone, with the dashboard and Tonight leading with their answer          | —             | MS-01, NFR phone first | done     |
-| S-02 | ui-user-adjustments     | see the user's own list of look-and-feel fixes applied                                                   | S-01          | MS-02                  | done        |
-| S-03 | finder-chart            | open a finder chart that hops from a naked-eye star to a ranked target, with finder and eyepiece circles | F-01, S-02    | FR-037, FR-045, US-05  | done |
-| S-04 | what-to-expect          | read what each ranked target will look like in their telescope from their site                           | F-01, S-02    | FR-038, US-05          | done |
-| S-05 | observing-progress      | see Messier and Caldwell checklists, firsts and "not seen yet" marks on tonight's targets                | S-02          | FR-039, FR-040, US-06  | done |
-| S-06 | observing-milestones    | have milestones celebrated when a log entry reaches them, and listed on the progress page                | S-05          | FR-041, US-06          | done |
-| S-07 | sky-events              | see the next 30 days of sky events, the next one on the dashboard and tonight's beside the verdict       | S-02          | FR-042, FR-043, US-07  | done |
-| S-08 | adjustable-session-plan | reorder, drop and add targets on the session plan, saved to their account                                | F-01, S-02    | FR-044, US-08          | done        |
+| ID   | Change ID            | Outcome (user can …)                                                                                                                                | Prerequisites | PRD refs                                                      | Status      |
+| ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------- | ----------- |
+| S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | in-progress |
+| S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | ready       |
+| S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                            | S-02          | MS-01, FR-039, FR-007                                         | proposed    |
+| S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | ready       |
+| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015                                         | proposed    |
+| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link               | —             | MS-04                                                         | ready       |
+| S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                               | —             | MS-03                                                         | ready       |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme            | Chain                             | Note                                                                                        |
-| ------ | ---------------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| A      | Phone-first look | `S-01` → `S-02`                   | First, by the user's order: every later slice builds on the reworked layout (quality goal). |
-| B      | Full plan        | `F-01` → `S-03` → `S-04` → `S-08` | `F-01` runs alongside Stream A; the paid slices join Stream A after `S-02`.                 |
-| C      | Progress         | `S-05` → `S-06`                   | Free; joins Stream A after `S-02`.                                                          |
-| D      | Sky events       | `S-07`                            | Free; joins Stream A after `S-02`.                                                          |
+| Stream | Theme                | Chain                     | Note                                                                                                                    |
+| ------ | -------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| A      | UI refinement        | `S-01`, `S-02` → `S-03`   | The `ui-refine` umbrella. `S-01` stands alone (already running); `S-03` follows `S-02`. The board has four Stream options. |
+| B      | Advice you can trust | `S-04` → `S-05`           | The north star first. The PRD's re-check closes the stream.                                                             |
+| C      | Seeing production    | `S-07`                    | Standalone; it makes the other streams' post-merge checks observable.                                                   |
+| D      | Auth loose ends      | `S-06`                    | Standalone and small; first in the cut order.                                                                           |
 
 ## Baseline
 
-What's already in place in the codebase as of `2026-10-07` (probed and user-confirmed).
-Foundations below assume these are present and do NOT re-scaffold them.
+What's already in place in the codebase as of `2026-10-15`. This is the 2026-10-07 baseline plus M-3's deltas, re-checked against the code and CI. Slices below assume these are present and do NOT re-scaffold them.
 
-- **Frontend:** present — Astro 7 SSR with React islands, Nightfall tokens and shared components, the Tonight dashboard with focused pages, and the live sky's projection code (`src/lib/sky-view/`).
-- **Backend / API:** present — Astro routes on Cloudflare Workers; the Open-Meteo forecast behind a Workers KV cache.
-- **Data:** present, with gaps — Supabase Postgres with per-user RLS tables (sites, telescopes, eyepieces, observations, sky checks). Absent: any per-account plan, stored session-plan edits. Partial: bundled stars stop at magnitude 4.5 (927 stars).
-- **Auth:** present — Supabase email and password, gated routes in the middleware, 30-day sessions. Absent: plans and operator tooling.
-- **Deploy / infra:** present — Workers deploy and migrations from CI.
-- **Observability:** partial — Workers observability enabled; no error tracker.
+- **Frontend:** present.
+  - Astro 7 SSR with React islands.
+  - The Nightfall tokens and shared components, including the `ui-refine` contract so far: the `hairline` / `quiet` button tiers, the rhythm roles, `text-overline`, `Fact` / `FactList` and `StatCard` / `StatPair`.
+  - The Tonight dashboard with seven focused pages, the finder chart and the plan editor.
+- **Backend / API:** present. Astro routes on Cloudflare Workers (Workers Paid); the Open-Meteo forecast behind a Workers KV cache; full-plan gates in each page shell and again in the island loaders.
+- **Data:** present. Supabase Postgres with per-user RLS tables, including `observing_milestones`, `session_plans` and the server-owned `account_plans`. Star files: the bundled stars to magnitude 4.5, and the server-only finder stars to 7.5.
+- **Auth:** present. Supabase email and password, 30-day sessions, `next` after sign-in, free and full plans with the operator command. Partial:
+  - a signed-in visitor still sees the auth forms (ui-auth D1);
+  - sign-up drops `next` (D2).
+- **Deploy / infra:** present. CI runs `ci`, `smoke`, `migrate` and `deploy` on main (main's run at 42ce808 passed all four).
+- **Observability:** partial.
+  - Present: Workers observability is on, and the deliberate logs are fixed, allowlisted lines.
+  - Missing: an audit, alerting and a view of failures by flow.
 
 ## Foundations
 
-### F-01: Account plans and complimentary full accounts
-
-- **Outcome:** (foundation) every account carries a free or full plan that pages and routes can read and the server enforces, and the operator can create a full account, or switch one to full and back, with one command.
-- **Change ID:** account-plans
-- **PRD refs:** FR-045, FR-046, Access Control (Plans, v3)
-- **Unlocks:** S-03, S-04, S-08 (the paid slices); the user's own full account for testing them
-- **Prerequisites:** —
-- **Parallel with:** S-01, S-02
-- **Blockers:** —
-- **Unknowns:** —
-- **Risk:** Minimal by design: the plan, its server-side check and the command only. The "needs the full plan" state each paid feature shows lands with S-03, the first slice that has a paid feature to show; no checkout (PRD Non-Goals).
-- **Status:** done
+None. Every layer M-4 touches is present. Observability is partial, and S-07 completes it as an operator-facing slice rather than as a foundation.
 
 ## Slices
 
-### S-01: Phone-first UI pass
+### S-01: Dashboard tiles in the new rhythm
 
-- **Outcome:** user can use every view comfortably on a phone, the dashboard and Tonight above all: each leads with its answer, nothing scrolls sideways, and the dashboard shows the sky verdict and its first tiles on the first screen.
-- **Change ID:** ui-mobile-pass
-- **PRD refs:** MS-01, NFR phone first
+- **Outcome:** user can read the dashboard's tiles and the verdict's event line in the same spacing rhythm and icon language as the focused pages, with no icons on the tile headings.
+- **Change ID:** ui-dashboard-tiles
+- **PRD refs:** MS-01, FR-030, FR-043
 - **Prerequisites:** —
-- **Parallel with:** F-01
-- **Blockers:** —
-- **Unknowns:**
-  - Which views beyond the dashboard and Tonight get the pass. Candidate: every view, audited first, the crowded ones fixed. — Owner: team. Block: no.
-- **Risk:** First by the user's order; the risk is reworking views that M-3's own slices then change again, so the pass concentrates on layout density and shared components rather than per-feature details.
-- **Status:** done
-
-### S-02: The user's UI adjustments
-
-- **Outcome:** user can see their own list of look-and-feel fixes applied across the app.
-- **Change ID:** ui-user-adjustments
-- **PRD refs:** MS-02
-- **Prerequisites:** S-01
-- **Parallel with:** F-01
-- **Blockers:** —
-- **Unknowns:**
-  - The list of things that bother the user. — Owner: user. Block: yes. Resolved 2026-10-08 (list in `context/changes/ui-user-adjustments/change.md`).
-- **Risk:** Blocked until the user writes the list after seeing S-01; may split into several changes if the list is long.
-- **Status:** done
-
-### S-03: Finder chart
-
-- **Outcome:** user can open a finder chart for any ranked deep-sky object or planet: the nearest star they can see with the naked eye from their site, the hop to the target, and their finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky; a free account sees what the chart does and that it needs the full plan.
-- **Change ID:** finder-chart
-- **PRD refs:** FR-037, FR-045, US-05
-- **Prerequisites:** F-01, S-02
-- **Parallel with:** S-05, S-07
-- **Blockers:** —
-- **Unknowns:**
-  - The finder's field: the gear has no finder (PRD Open Question 13). Candidate: a standard 6×30 finder plus reflex-finder rings. — Owner: user. Block: no. **Resolved 2026-10-13** as that candidate (6×30, 7° field, reflex rings 0.5° / 2° / 4°, no choice of finder): `context/archive/2026-10-11-finder-chart/plan.md` O-1.
-  - Star depth: bundled stars stop at magnitude 4.5, a finder shows about 8 (Open Question 14); licence and page weight checked in the plan. — Owner: team. Block: no. **Resolved 2026-10-13**: a second server-only star file to magnitude 7.5 from the same HYG pin (122 KB gzip), D-2 and D-5; the licence finding (ESA CC BY-NC upstream, request pending, SAO fallback) is recorded in PRD Open Question 21 and plan O-6.
-  - Naked-eye limit by sky class and hop length (Open Questions 15, 16). — Owner: team. Block: no. **Resolved 2026-10-13** as the PRD candidates, still uncalibrated against an observer: `context/archive/2026-10-11-finder-chart/plan.md` D-3, D-4, D-11.
-- **Risk:** The milestone's riskiest slice: new star data, chart geometry and orientation, judged without an observer; placed first among the features so its lessons reach S-04 and S-08.
-- **Note from F-01 (impl review F8, 2026-10-09):** `requireFullPlan(locals)` (`src/lib/account-plan/`) answers `signed-out` with the `needsFull` key; full-plan routes should send a signed-out visitor to sign-in (the middleware gate) and show the "needs the full plan" state only to a signed-in free account.
-- **Status:** done
-
-### S-04: What to expect
-
-- **Outcome:** user can read, with each ranked target, what it will look like in their own telescope from their site.
-- **Change ID:** what-to-expect
-- **PRD refs:** FR-038, US-05
-- **Prerequisites:** F-01, S-02
-- **Parallel with:** S-03, S-05, S-07
-- **Blockers:** —
-- **Unknowns:**
-  - The phrase set and its rules (PRD Open Question 17), judged without an observer. — Owner: team. Block: no.
-- **Risk:** Advice nobody can check yet; kept to a fixed phrase set derived from data the engine already has, so it stays deterministic and reviewable.
-- **Status:** done
-
-### S-05: Observing progress
-
-- **Outcome:** user can see the Messier and Caldwell checklists with counts, the planets and the Moon as firsts, and a "not seen yet" mark on tonight's targets.
-- **Change ID:** observing-progress
-- **PRD refs:** FR-039, FR-040, US-06
-- **Prerequisites:** S-02
-- **Parallel with:** S-03, S-04, S-07, S-08
+- **Parallel with:** S-02, S-04, S-06, S-07
 - **Blockers:** —
 - **Unknowns:** —
-- **Risk:** Reads the existing log only; the one rule that matters (rated 3 or above counts) mirrors the ranking's penalty rule, so both must stay in step.
-- **Status:** done
+- **Risk:** The first-screen spec, `VERDICT_MIN_HEIGHT_CLASS` and the skeleton must move together. The change is already running (`ui-refine` agent, branch `feat/ui-dashboard-tiles`). It is third in the cut order.
+- **Status:** in-progress
 
-### S-06: Observing milestones
+### S-02: Tonight navigation and Progress as a destination
 
-- **Outcome:** user can have a milestone celebrated when the log entry that reaches it is saved, and see every milestone reached on the progress page.
-- **Change ID:** observing-milestones
-- **PRD refs:** FR-041, US-06
-- **Prerequisites:** S-05
-- **Parallel with:** S-03, S-04, S-07, S-08
+- **Outcome:** user can move between Tonight's focused pages in one tap through a sub-nav that replaces the back box, and reach Progress as the fourth destination in the tab bar and the top bar. The finder keeps its way back to where it was opened from.
+- **Change ID:** ui-tonight-nav
+- **PRD refs:** MS-01, FR-030, FR-039
+- **Prerequisites:** —
+- **Parallel with:** S-01, S-04, S-06, S-07
 - **Blockers:** —
 - **Unknowns:**
-  - The milestone set (PRD Open Question 18). — Owner: user. Block: no.
-- **Risk:** Builds on S-05's counts; the celebration must appear once, at save, and never for an entry rated 1-2.
-- **Status:** done
+  - Whether four tabs fit at 320 px in Polish. — Owner: team. Block: no.
+- **Risk:** Touches every focused page and the shared navigation. The skeleton must not jump, and the dashboard's first screen (`tonight-phone.spec.ts`) must stay untouched.
+- **Status:** ready
 
-### S-07: Sky events
+### S-03: Log, progress and gear rows
 
-- **Outcome:** user can see the next 30 days of sky events for their site with times and visibility, the next notable one as a dashboard tile, and tonight's named beside the sky verdict.
-- **Change ID:** sky-events
-- **PRD refs:** FR-042, FR-043, US-07
+- **Outcome:** user can see their progress as a bar over a quieter checklist, /gear's rows labelled with fact icons, and the Log header reduced to its own actions.
+- **Change ID:** ui-log-progress-gear
+- **PRD refs:** MS-01, FR-039, FR-007
 - **Prerequisites:** S-02
-- **Parallel with:** S-03, S-04, S-05, S-08
+- **Parallel with:** S-04, S-05, S-06, S-07
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Waits for S-02, where the Progress link leaves the Log header. It is second in the cut order.
+- **Status:** proposed
+
+### S-04: Galaxies in a small telescope
+
+- **Outcome:** user with a small telescope gets galaxy advice that agrees with itself:
+  - a big bright galaxy such as M31 is not called "very faint" beside "bright for your 60 mm";
+  - a faint, low-surface-brightness galaxy such as M101 is not ranked high in an 80 mm.
+- **Change ID:** small-scope-galaxies
+- **PRD refs:** MS-02, FR-038, FR-013 (also PRD Open Questions 5 and 17; GitHub #159 and #21 item 3)
+- **Prerequisites:** —
+- **Parallel with:** S-01, S-02, S-03, S-06, S-07
 - **Blockers:** —
 - **Unknowns:**
-  - Meteor shower data whose terms allow reuse (PRD Open Question 19). — Owner: team. Block: no.
-  - What counts as a close pairing (Open Question 20). — Owner: team. Block: no.
-- **Risk:** Several kinds of event maths at once; may split by event kind in its plan. Computed by the engine, no feed, so it stays deterministic and works offline in stored copies.
-- **Status:** done
+  - Published small-scope sources for M31, M33, M81 and M101 under suburban skies, at least two per entry. They go into the reference fixtures before either rule changes. — Owner: team. Block: no.
+- **Risk:** These are two rules over the same physics: the expectation's core term, and the ranking's surface-brightness penalty, which ignores aperture. They must move in one direction, which is why they share a slice. Judged against references, not an observer (lessons.md).
+- **Status:** ready
 
-### S-08: Adjustable session plan
+### S-05: Evening showpieces and window edges
 
-- **Outcome:** user can reorder, drop and add targets on the session plan for a site and night, reset it to the suggested plan, and find their edits on every device and in the offline copy; a free account sees what it does and that it needs the full plan.
-- **Change ID:** adjustable-session-plan
-- **PRD refs:** FR-044, US-08
-- **Prerequisites:** F-01, S-02
-- **Parallel with:** S-05, S-06, S-07
+- **Outcome:** user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.
+- **Change ID:** evening-showpieces
+- **PRD refs:** MS-02, FR-013, FR-015 (also PRD Primary criterion 2 and Open Questions 1 and 9; GitHub #21 items 1, 4 and 5)
+- **Prerequisites:** S-04
+- **Parallel with:** S-01, S-02, S-03, S-06, S-07
 - **Blockers:** —
 - **Unknowns:**
-  - Paid features in a stored offline copy (PRD Open Question 23). — Owner: team. Block: no.
-- **Risk:** The only slice adding a per-user table (RLS and isolation test required), and edits must never schedule a target outside its window.
-- **Status:** done
+  - Which planner to use as the reference for ranking sanity (M-1 used Telescopius). — Owner: team. Block: no.
+- **Risk:**
+  - Retuning the duration term reorders every night, so `calibration.test.ts` and the beginner reference must stay green without being regenerated.
+  - Waits for S-04, so the PRD re-check runs once, after both retunes. It also closes S-03's open calibration sign-off (Progress 2.5 of the deep-sky-beyond-messier archive).
+- **Status:** proposed
+
+### S-06: Auth loose ends
+
+- **Outcome:** user who opens sign-in or sign-up while signed in lands on Tonight, and a visitor who signs up from a gated link continues to that page afterwards.
+- **Change ID:** auth-loose-ends
+- **PRD refs:** MS-04 (also PRD Access Control: "continues to the requested page afterwards"; ui-auth D1 and D2)
+- **Prerequisites:** —
+- **Parallel with:** S-01, S-02, S-03, S-04, S-05, S-07
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Small. `safeNextPath` stays the one rule for a safe `next`, and the offline purge on sign-in or sign-up must keep working. It is first in the cut order.
+- **Status:** ready
+
+### S-07: Production error visibility
+
+- **Outcome:** user (the operator) can see every failure in the critical flows with its cause: Tonight's islands, the save routes, the finder chart, plan edits and sign-in. They are alerted on it, and no coordinates, emails or keys appear in any report.
+- **Change ID:** error-visibility
+- **PRD refs:** MS-03 (also the coordinate-privacy NFR)
+- **Prerequisites:** —
+- **Parallel with:** S-01, S-02, S-03, S-04, S-05, S-06
+- **Blockers:** —
+- **Unknowns:**
+  - What the audit finds hidden: empty catches, failures turned into redirects or 200s, dropped causes. `/10x-observability-audit` writes the report, and the fixes go through the change chain. — Owner: team. Block: no.
+- **Risk:**
+  - The owner's limit is first-party tools only (Workers Logs, Cloudflare alerts), with no new third party.
+  - A report must never carry private data (the NFR, and lessons.md on `no-console`).
+  - The fixed log lines must keep their allowlist counts.
+- **Status:** ready
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID               | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                                       |
-| ---------- | ----------------------- | ----------------------------------------------------------- | --------------------- | ----------------------------------------------------------- |
-| F-01       | account-plans           | M-3 F-01 · Free and full plans, complimentary full accounts | yes                   | Run `/10x-plan account-plans` · GitHub #121                 |
-| S-01       | ui-mobile-pass          | M-3 S-01 · Phone-first UI pass (dashboard and Tonight)      | yes                   | Run `/10x-plan ui-mobile-pass` (or `/10x-ui`) · GitHub #122 |
-| S-02       | ui-user-adjustments     | M-3 S-02 · The user's UI adjustments                        | no                    | Waits for the user's list after S-01 · GitHub #123          |
-| S-03       | finder-chart            | M-3 S-03 · Finder chart from a naked-eye star               | no                    | After F-01 and S-02 · GitHub #124                           |
-| S-04       | what-to-expect          | M-3 S-04 · What each target will look like                  | no                    | After F-01 and S-02 · GitHub #125                           |
-| S-05       | observing-progress      | M-3 S-05 · Messier and Caldwell progress, not seen yet      | no                    | After S-02 · GitHub #126                                    |
-| S-06       | observing-milestones    | M-3 S-06 · Observing milestones                             | no                    | After S-05 · GitHub #127                                    |
-| S-07       | sky-events              | M-3 S-07 · Sky events for the next 30 days                  | no                    | After S-02 · GitHub #128                                    |
-| S-08       | adjustable-session-plan | M-3 S-08 · Adjustable session plan, saved to the account    | no                    | After F-01 and S-02 · GitHub #129                           |
+| Roadmap ID | Change ID            | Suggested issue title                                         | Ready for `/10x-plan` | Notes                                                                 |
+| ---------- | -------------------- | ------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
+| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                  | in progress           | `ui-refine` agent, `feat/ui-dashboard-tiles` · GitHub #169            |
+| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination      | yes                   | Run `/10x-ui` → `/10x-plan ui-tonight-nav` · GitHub #170              |
+| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                        | no                    | After S-02 · GitHub #171                                              |
+| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)   | yes                   | North star · Run `/10x-plan small-scope-galaxies` · GitHub #172       |
+| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check     | no                    | After S-04 · GitHub #173                                              |
+| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next) | yes                 | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174 |
+| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)          | yes                   | Run `/10x-observability-audit` first · GitHub #175                    |
 
 ## Open Roadmap Questions
 
-1. **Judging advice without an observer.** The finder charts' hops and the what-to-expect wording (S-03, S-04) can't be checked against a real night yet (`top_blocker: skills`). Candidate, as in M-2: published finder charts and observing guides as references, and the decision noted in each plan. — Owner: user. Block: none.
-2. **PRD v3 Open Questions 13 to 20 and 23** are routed to the slices that need them (see each slice's Unknowns); 21 (commercial licences) and 22 (pricing) belong to a later payments milestone. — Owner: as in the PRD. Block: none for M-3.
-3. **Carry-over follow-ups:** #19 (Stellarium moon/object fixture values) and #21 (ranking calibration refinements). Neither is a slice. — Owner: team. Block: none.
+1. **Judging advice without an observer** (carried from M-3). S-04 and S-05 are judged against source-cited references. The owner's own first nights, once they happen, are the first real check: sky-check tallies and log entries. — Owner: user. Block: none.
+2. **ESA licence reply** for the Hipparcos-derived stars (PRD Open Question 21, request sent 2026-10-14). It is external and does not block M-4. A refusal opens its own change to switch to SAO before any payment. — Owner: user. Block: none for M-4.
+3. **Carry-overs that are not slices:**
+   - #19, the Stellarium fixtures, which need values the owner reads by hand;
+   - S-12's manual rows (Delta Optical has no entries);
+   - the moonlight post-merge checks, due after 2026-10-22;
+   - a VoiceOver pass over the live sky;
+   - the IAU MDC courtesy email.
+
+   — Owner: user, or team. Block: none.
+4. **PRD v4** opens with the next milestone that adds scope (payments or new observing features), not in M-4. — Owner: user. Block: none.
 
 ## Parked
 
-- **Payments** (checkout, pricing, subscriptions) — Why parked: PRD v3 Non-Goals; needs commercial forecast, geocoding and tile terms first (PRD Open Question 21).
-- **An admin interface for plans** — Why parked: PRD v3 Non-Goals; the operator uses one command (F-01).
-- **Choosing your own finder** (finder type and field per telescope) — Why parked: S-03 assumes a standard finder (PRD Open Question 13); a later change.
-- **Double stars (was M-2 S-04, `double-stars`, GitHub #68)** — Why parked: by the user, 2026-10-06; doubles need a redistributable data source and splitting rules with no calibration reference.
-- **Comets and other transient objects** — Why parked: PRD v3 Non-Goals; need a refreshed external feed.
-- **A sky atlas or planetarium view** — Why parked: PRD v3 Non-Goals; the finder chart shows only the stretch between a starting star and its target.
-- **Offline logging and offline plan edits with later sync** — Why parked: logging and plan edits stay online-only (FR-044).
+- **Ready to charge** (payments, pricing, a custom domain, an email sender for password reset (FR-003) and email verification, terms of use, usage analytics) — Why parked: option B of the M-4 draft. It needs PRD v4 and PRD Open Questions 21 and 22 answered.
+- **An external error tracker** — Why parked: the owner's limit for S-07 (first-party tools only). If S-07's audit shows a gap they cannot close, the choice goes through `/10x-infra-research`.
+- **An admin interface for plans** — Why parked: PRD v3 Non-Goals; the operator uses one command.
+- **Choosing your own finder** (finder type and field per telescope) — Why parked: the finder chart assumes a standard finder (PRD Open Question 13); option C.
+- **Double stars (was M-2 S-04, `double-stars`, GitHub #68)** — Why parked: by the user, 2026-10-06; they need a redistributable data source and splitting rules with no calibration reference.
+- **Comets and other transient objects** — Why parked: PRD v3 Non-Goals; they need a refreshed external feed.
+- **A sky atlas or planetarium view** — Why parked: PRD v3 Non-Goals.
+- **Offline logging and offline plan edits with later sync** — Why parked: logging and plan edits stay online-only (FR-044); option C.
 - **Astrophotography** — Why parked: PRD §Non-Goals.
 - **Hardware control** (GoTo mounts, telescope integration) — Why parked: PRD §Non-Goals.
-- **Notifications** (push, email, "clear tonight" alerts) — Why parked: PRD §Non-Goals; would need a custom email sender, which also gates password reset.
-- **Social and sharing features, badges and leaderboards** — Why parked: PRD §Non-Goals; v3 progress is private.
+- **Notifications** (push, email, "clear tonight" alerts) — Why parked: PRD §Non-Goals; they would need a custom email sender.
+- **Social and sharing features, badges and leaderboards** — Why parked: PRD §Non-Goals; progress is private.
 - **AI features** (planner chat, object descriptions, summaries) — Why parked: PRD §Non-Goals.
 - **Modelling seeing, transparency or light pollution** — Why parked: PRD §Non-Goals.
 - **Native mobile app** — Why parked: PRD §Non-Goals; the web app is installable (FR-032).
-- **Email verification, OAuth sign-in, read-only demo account** — Why parked: PRD §Access Control, post-MVP.
-- **Password reset (FR-003)** — Why parked: cut-order #3 applied 2026-09-28; needs a custom SMTP sender.
-- **Going public** (custom domain, preview environments with a separate database, usage analytics) — Why parked: deferred until payments are on the table.
+- **OAuth sign-in, a read-only demo account** — Why parked: PRD §Access Control, post-MVP.
+- **Preview environments with a separate database** — Why parked: deferred until payments are on the table.
 - **Forecast caching by grid cell shared between nearby users** — Why parked: only needed beyond the target scale.
 
 ## Milestone History
@@ -290,14 +258,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ## Done
 
-(`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's and M-2's entries live in git history and in `context/archive/`.)
-
-- **S-01: user can use every view comfortably on a phone, the dashboard and Tonight above all: each leads with its answer, nothing scrolls sideways, and the dashboard shows the sky verdict and its first tiles on the first screen.** — Archived 2026-10-07 → `context/archive/2026-10-07-ui-mobile-pass/`. Lesson: —.
-- **S-02: user can see their own list of look-and-feel fixes applied across the app.** — Archived 2026-10-09 → `context/archive/2026-10-08-ui-user-adjustments/`. Lesson: —.
-- **F-01: (foundation) every account carries a free or full plan that pages and routes can read and the server enforces, and the operator can create a full account, or switch one to full and back, with one command.** — Archived 2026-10-09 → `context/archive/2026-10-09-account-plans/`. Lesson: —.
-- **S-05: user can see the Messier and Caldwell checklists with counts, the planets and the Moon as firsts, and a "not seen yet" mark on tonight's targets.** — Archived 2026-10-09 → `context/archive/2026-10-09-observing-progress/`. Lesson: —.
-- **S-06: user can have a milestone celebrated when the log entry that reaches it is saved, and see every milestone reached on the progress page.** — Archived 2026-10-13 → `context/archive/2026-10-11-observing-milestones/`. Lesson: —.
-- **S-03: user can open a finder chart for any ranked deep-sky object or planet: the nearest star they can see with the naked eye from their site, the hop to the target, and their finder's and finding eyepiece's fields drawn to scale, oriented as they face that part of the sky; a free account sees what the chart does and that it needs the full plan.** — Archived 2026-10-13 → `context/archive/2026-10-11-finder-chart/`. Lesson: run the whole e2e suite locally the way CI does before opening a PR, not only the slice's specs; a red `ci` on main blocks `deploy`, so an intermittent harness flake (agent-hooks EPIPE, fixed in #156) is fixed failing-first in its own change, never retried away; measure size budgets on the real encoding before planning them (the finder file's estimate was off by 2x).
-- **S-04: user can read, with each ranked target, what it will look like in their own telescope from their site.** — Archived 2026-10-14 → `context/archive/2026-10-14-what-to-expect/`. Lesson: —.
-- **S-07: user can see the next 30 days of sky events for their site with times and visibility, the next notable one as a dashboard tile, and tonight's named beside the sky verdict.** — Archived 2026-10-14 → `context/archive/2026-10-13-sky-events/`. Lesson: a coarse sampling grid misses short visibility windows (twilight pairings, impl review F1): pin a scan against a brute-force reference over fixed windows.
-- **S-08: user can reorder, drop and add targets on the session plan for a site and night, reset it to the suggested plan, and find their edits on every device and in the offline copy; a free account sees what it does and that it needs the full plan.** — Archived 2026-10-15 → `context/archive/2026-10-14-adjustable-session-plan/`. Lesson: wait for the service worker with `ready` (`waitForServiceWorker`), never on `controller` alone: a document whose navigation was in flight when the worker activated stays uncontrolled (CI flake on #165).
+(`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's, M-2's and M-3's entries live in git history and in `context/archive/`.)
