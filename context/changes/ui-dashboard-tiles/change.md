@@ -1,7 +1,7 @@
 ---
 change_id: ui-dashboard-tiles
 title: Dashboard tiles on the rhythm roles and shared facts (ui-refine split, change 3)
-status: plan_reviewed
+status: implementing
 created: 2026-10-15
 updated: 2026-10-15
 archived_at: null

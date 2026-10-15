@@ -583,17 +583,17 @@ None.
 
 #### Automated
 
-- [ ] 1.1 The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts`
-- [ ] 1.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [ ] 1.3 The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts`
-- [ ] 1.4 No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing
-- [ ] 1.5 The build passes: `npm run build`
-- [ ] 1.6 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`
+- [x] 1.1 The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts`
+- [x] 1.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
+- [x] 1.3 The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [x] 1.4 No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing
+- [x] 1.5 The build passes: `npm run build`
+- [x] 1.6 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`
 
 #### Manual
 
-- [ ] 1.7 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
-- [ ] 1.8 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`)
+- [x] 1.7 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
+- [x] 1.8 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`)
 
 ### Phase 2: The verdict's event line as a Fact, and the verdict's rhythm
 

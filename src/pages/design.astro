@@ -20,7 +20,7 @@ import BackLink from "@/components/ui/BackLink.astro";
 import Notice from "@/components/ui/Notice.astro";
 import Pager from "@/components/ui/Pager.astro";
 import Tile from "@/components/ui/Tile.astro";
-import { TILE_ROW_CLASS } from "@/components/ui/tile";
+import { TILE_CONTENT_CLASS, TILE_ROW_CLASS } from "@/components/ui/tile";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
@@ -2497,14 +2497,18 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <div class:list={cell}>
                 <p class:list={stateLabel}>default</p>
                 <Tile href="/design" headingId="design-tile-default" heading={m.tonight.summary.plan}>
-                  <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                  <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                    {m.tonight.summary.planEmpty}
+                  </span>
                 </Tile>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>hover · specimen</p>
                 <div class:list={tileHover} inert>
                   <Tile href="/design" headingId="design-tile-hover" heading={m.tonight.summary.plan}>
-                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                    <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                      {m.tonight.summary.planEmpty}
+                    </span>
                   </Tile>
                 </div>
               </div>
@@ -2512,21 +2516,27 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <p class:list={stateLabel}>focus-visible · specimen</p>
                 <div class:list={tileFocus} inert>
                   <Tile href="/design" headingId="design-tile-focus" heading={m.tonight.summary.plan}>
-                    <span class="mt-2 block text-body font-semibold">{m.tonight.summary.planEmpty}</span>
+                    <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                      {m.tonight.summary.planEmpty}
+                    </span>
                   </Tile>
                 </div>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>empty · no targets</p>
                 <Tile href="/design" headingId="design-tile-empty" heading={m.tonight.summary.targets}>
-                  <span class="mt-3 block text-body font-semibold">{m.tonight.summary.noTargets}</span>
+                  <span class:list={[TILE_CONTENT_CLASS, "block text-body font-semibold"]}>
+                    {m.tonight.summary.noTargets}
+                  </span>
                 </Tile>
               </div>
               <div class:list={cell}>
                 <p class:list={stateLabel}>loading · skeleton row</p>
                 <div class:list={[TILE_ROW_CLASS]} aria-hidden="true">
                   <div class="rounded bg-border text-label motion-safe:animate-pulse w-28">&nbsp;</div>
-                  <div class="mt-2 rounded bg-border text-body motion-safe:animate-pulse w-2/3">&nbsp;</div>
+                  <div class:list={[TILE_CONTENT_CLASS, "rounded bg-border text-body motion-safe:animate-pulse w-2/3"]}>
+                    &nbsp;
+                  </div>
                 </div>
               </div>
             </div>
@@ -2800,7 +2810,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <p class:list={blockNote}>
               Always shown, straight after “Point here first”: the next notable visible event and its night, relative to
-              the selected night, or the fact that there is none. The tile also sits second in TonightTiles above.
+              the selected night, or the fact that there is none. The tile also sits second in TonightTiles above. The
+              one exception to text-led tiles: an event's line leads with its kind's muted icon (a body-size Fact, solar
+              eclipse included); the “none in the window” and “unavailable” lines stay plain text, and the heading has
+              no icon.
             </p>
             <div class:list={grid}>
               {eventSpecimens.tiles.map((tile, i) => (

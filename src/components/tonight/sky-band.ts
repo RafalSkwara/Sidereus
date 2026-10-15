@@ -6,9 +6,13 @@
  * Island-safe: plain strings and numbers.
  */
 
-/** The gear row under the sky (the two gear cards) and the gap before the tiles, shared with the skeleton. */
+/**
+ * The gear row under the sky (the two gear cards) and the gap before the tiles, shared with the skeleton. The tiles'
+ * gap is the `line` role (ui-dashboard-tiles D3): with the first tile's `py-item` it puts 28 px between the gear cards
+ * and the first heading at every width.
+ */
 export const GEAR_ROW_GAP_CLASS = "pt-2 sm:pt-4";
-export const TILES_GAP_CLASS = "pt-3 sm:pt-6";
+export const TILES_GAP_CLASS = "pt-line";
 
 /** The gear row's grid: the Site and Telescope cards side by side from `sm`, stacked below it. Shared with the skeleton. */
 export const GEAR_ROW_GRID_CLASS = "grid gap-3 sm:grid-cols-2";

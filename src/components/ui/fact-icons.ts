@@ -1,8 +1,11 @@
 /*
  * The one vocabulary of decorative fact icons (ui-fact-rhythm), keyed by concept, never by place: a concept has one
  * icon everywhere and an icon means one concept. The icons are `aria-hidden`; the label and the value carry the meaning.
- * `Fact` and `StatCard` read `FACT_ICONS`; `SkyEventList` reads the event-kind and visibility-mark icons. Server-rendered
- * (Astro) only: no island imports this module.
+ * `Fact` and `StatCard` read `FACT_ICONS`; `SkyEventList` reads the event-kind and visibility-mark icons. `factIcon`
+ * is the one resolver: a fact kind reads `FACT_ICONS`, a sky-event kind reads `EVENT_KIND_ICONS`. An event's fact uses
+ * its kind's icon, the verdict line and the dashboard's Events tile included (owner decisions D4: the solar eclipse
+ * keeps its own `Eclipse` icon, no amber icon; D5: the Events tile's line leads with the next event's kind icon).
+ * Server-rendered (Astro) only: no island imports this module.
  */
 import {
   CircleCheck,
@@ -100,3 +103,15 @@ export const VISIBILITY_MARK_ICONS = {
   visible: CircleCheck,
   notVisible: CircleSlash,
 } satisfies Record<"visible" | "notVisible", LucideIcon>;
+
+/** What a fact's icon can name: a fact concept or a sky-event kind. The two key sets are disjoint. */
+export type FactSubject = FactKind | SkyEventKind;
+
+function isFactKind(subject: FactSubject): subject is FactKind {
+  return Object.hasOwn(FACT_ICONS, subject);
+}
+
+/** The one icon for a fact: `FACT_ICONS` for a fact kind, else `EVENT_KIND_ICONS` for an event kind. */
+export function factIcon(subject: FactSubject): LucideIcon {
+  return isFactKind(subject) ? FACT_ICONS[subject] : EVENT_KIND_ICONS[subject];
+}

@@ -43,3 +43,21 @@ The page's skeleton/real difference (EN) is −35 px at 390 and −36 px at 1280
 - The tiles read as one family: each heading is 8 px over its content, and tiles are 40 px apart (`exp/tonight-phone-en-dark-tiles.jpg` against `before/`).
 - The event line reads as its own fact with its icon (`exp/c-verdict-event-390-en-light.jpg`).
 - The solar eclipse's lucide `Eclipse` icon reads as a clock beside "Tomorrow, 11:22", the third specimen. This is the reason for the plan's D4.
+
+## Phase 1 (the contract and the tiles), 2026-10-15
+
+Built from the Phase 1 tree, previewed on 4331 with the fixture on 4401, the `ui-dash` user (full plan). Shots in `after/` (the same names as `before/`; the verdict specimens follow in Phase 2).
+
+```
+                first screen at 390 (headline / Site / Telescope title / TabBar)   tiles real            tiles skeleton
+EN 390 dark     149 / 701 / 746 / 779                                             241 93 93 93 121 221  241 93 93 93 121 221
+PL 390 dark     149 / 701 / 746 / 779                                             269 93 93 93 121 221  (same)
+EN 1280 dark    -                                                                  241 93 93 93 121 233  241 93 93 93 121 233
+PL 320 dark     148 / 700 / 745 (TabBar 635, not asserted)                         289 117 93 117 141 241 241 93 93 93 121 221
+```
+
+The page's skeleton/real difference: −35 px at 390 EN and −36 px at 1280 EN, the same as before. At 320 px in Polish the Events line ("Maksimum Orionidów · noc 21/22 paź" behind its icon) wraps to two lines (117 px against the skeleton's 93), like the Polish target names there: the known 320 px wrap, as accepted in ui-user-adjustments.
+
+Break check (main session): `eventsVerdict` returning `"pairing"`, `factIcon` returning `FACT_ICONS.why` for events, and the skeleton's slow-hint `mt-6` removed made 5 tests fail (2 in `sky-events.test.ts`, 2 in `fact-icons.test.ts`, the exact-count test for `TonightSkeleton.astro`). All three files were restored with `git checkout -- <file>` and 147/147 passed again.
+
+E2E (1.6): `tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`: 19 passed. The new Events assertion (one svg, `data-fact` an event kind) ran: the Orionids are next today.

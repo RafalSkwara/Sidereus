@@ -3,7 +3,10 @@
 // strip and slider row reserved, interactive-sky) with bars where the date, the display-size headline and its reason
 // go, the two gear cards, then six ruled rows standing for the dashboard's tiles (TonightTiles), so
 // nothing jumps when the real content swaps in. Bars that stand for text take that text's type role and hold a
-// non-breaking space, so they have its line height.
+// non-breaking space, so they have its line height. The tile rows mirror TonightTiles offset by offset on the rhythm
+// roles (ui-dashboard-tiles): the row from `TILE_ROW_CLASS`, the first bar under each heading at `TILE_CONTENT_CLASS`,
+// a group's lines on `line` and an explanatory caption at `mt-group`. The Events line's kind icon sits inside its
+// `text-body` line, so its bar needs no extra room.
 import {
   SLIDER_LAYOUT_CLASS,
   SLIDER_LEGEND_CLASS,
@@ -19,7 +22,7 @@ import {
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import { getMessages } from "@/i18n";
 import { buttonVariants } from "@/components/ui/button";
-import { TILE_ROW_CLASS } from "@/components/ui/tile";
+import { TILE_CONTENT_CLASS, TILE_ROW_CLASS } from "@/components/ui/tile";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 
 const t = getMessages(Astro.locals.locale).tonight;
@@ -70,31 +73,31 @@ const tile = TILE_ROW_CLASS;
     <div aria-hidden="true">
       <div class:list={[tile]}>
         <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
-        <div class="mt-4 space-y-3 py-1.5">
+        <div class:list={[TILE_CONTENT_CLASS, "space-y-line"]}>
           {[1, 2, 3].map(() => (
             <div class:list={[bar, "w-2/3 text-title"]}>&nbsp;</div>
           ))}
         </div>
         <!-- The legend line for the "not seen yet" icons (observing-progress), then the tile's caption. -->
-        <div class:list={[bar, "mt-2 w-1/2 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-group w-1/2 text-label"]}>&nbsp;</div>
         <!-- The tile's caption ("Each at the time it stands highest. N targets tonight."). -->
-        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-line w-3/4 text-label"]}>&nbsp;</div>
       </div>
 
       <!-- The sky events tile (sky-events), straight after the targets: its heading and one line. -->
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-3 w-3/4 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, TILE_CONTENT_CLASS, "w-3/4 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-3 w-2/3 text-body"]}>&nbsp;</div>
+        <div class:list={[bar, TILE_CONTENT_CLASS, "w-2/3 text-body"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
-        <div class="mt-3 flex items-center gap-4">
+        <div class:list={[TILE_CONTENT_CLASS, "flex items-center gap-4"]}>
           <div class="size-6 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
           <div class:list={[bar, "w-3/4 text-body"]}>&nbsp;</div>
         </div>
@@ -102,24 +105,25 @@ const tile = TILE_ROW_CLASS;
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-3 w-1/2 text-body"]}>&nbsp;</div>
-        <div class:list={[bar, "mt-2 w-2/3 text-label"]}>&nbsp;</div>
+        <div class:list={[bar, TILE_CONTENT_CLASS, "w-1/2 text-body"]}>&nbsp;</div>
+        <!-- The best planet's reason, a "why" Fact on the names' group. -->
+        <div class:list={[bar, "mt-line w-2/3 text-label"]}>&nbsp;</div>
       </div>
 
       <div class:list={[tile]}>
         <div class:list={[bar, "w-36 text-label"]}>&nbsp;</div>
-        <div class="mt-5 grid grid-cols-7 items-end gap-2">
+        <div class:list={[TILE_CONTENT_CLASS, "grid grid-cols-7 items-end gap-x-2"]}>
           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
             /* A bar, its verdict mark's room and the day under it, as in TonightTiles. */
-            <div class="flex flex-col items-center gap-2">
+            <div class="flex flex-col items-center gap-line">
               <div class="h-10 w-full rounded bg-border motion-safe:animate-pulse sm:h-18" />
               <div class="size-3" />
               <div class:list={[bar, "w-6 text-label"]}>&nbsp;</div>
             </div>
           ))}
         </div>
-        <!-- The caption, two lines on a phone. -->
-        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
+        <!-- The caption, its own group, two lines on a phone. -->
+        <div class:list={[bar, "mt-group w-3/4 text-label"]}>&nbsp;</div>
         <div class:list={[bar, "mt-0 w-1/3 text-label sm:hidden"]}>&nbsp;</div>
       </div>
     </div>

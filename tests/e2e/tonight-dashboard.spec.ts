@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import type { SkyEventKind } from "@/lib/engine";
 import { EVENT_WINDOW_NIGHTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
@@ -12,10 +13,21 @@ import { onboardInMadrid } from "./helpers";
  * leads back to Tonight. Same setup as the other specs: a production preview on local Supabase with the all-clear
  * forecast fixture, so the Moon card and the planets tile are both shown, and place search stubbed with Madrid. The
  * clock is real, so the spec never asserts what the tiles say, only where they lead (the events tile's line is checked
- * for its shape: the empty fact or an event and its night).
+ * for its shape: the empty fact or an event and its night; an event's line leads with its kind's icon, a `Fact` whose
+ * `data-fact` is the event kind with one svg, and the empty line has no icon, ui-dashboard-tiles D5).
  */
 
 const t = en.tonight;
+
+/** The six sky-event kinds, the values an event fact's `data-fact` may carry. */
+const EVENT_KINDS = [
+  "lunar-eclipse",
+  "solar-eclipse",
+  "elongation",
+  "opposition",
+  "pairing",
+  "meteor-shower",
+] as const satisfies readonly SkyEventKind[];
 
 /**
  * How the verdict's event line may begin, whichever date the clock has: "Tonight: ", or for a solar eclipse, a daytime
@@ -97,6 +109,13 @@ test("the Sky events tile states the next event or that there is none, and opens
   const text = ((await line.textContent()) ?? "").trim();
   const none = t.summary.eventsNone({ count: String(EVENT_WINDOW_NIGHTS) });
   expect(text === none || text.includes(" · "), `the tile says "${text}"`).toBe(true);
+  // An event's line leads with its kind's icon (a Fact, the marker on its root); the none line is plain text.
+  if (text === none) {
+    await expect(line.locator("svg")).toHaveCount(0);
+  } else {
+    expect(EVENT_KINDS as readonly (string | null)[]).toContain(await line.getAttribute("data-fact"));
+    await expect(line.locator("svg")).toHaveCount(1);
+  }
 
   // The verdict's own line exists only on a night with a notable event, as plain text: no link, no control.
   const verdictLine = page.locator("[data-verdict-event]");

@@ -7,7 +7,9 @@ import type { Site, SkyEvent } from "@/lib/engine";
 import { TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG } from "@/lib/engine/parameters";
 
 import {
+  eventsTile,
   eventsTileLine,
+  eventsVerdict,
   eventsVerdictLine,
   formatSkyEvents,
   type TonightSkyEvent,
@@ -144,6 +146,48 @@ describe("the verdict's event line", () => {
       verdictName: "maksimum Orionidów",
     });
     expect(eventsVerdictLine(block({ tonight: [orionids] }), "pl")).toBe("Dziś: maksimum Orionidów");
+  });
+});
+
+describe("the verdict's line with its event kind", () => {
+  it("is absent exactly when the line is", () => {
+    expect(eventsVerdict(block({}), "en")).toBeNull();
+    expect(eventsVerdict(block({ next: event({}) }), "en")).toBeNull();
+    // An unavailable block (the view carries none) has no line and no kind.
+    expect(eventsVerdict(null, "en")).toBeNull();
+  });
+
+  it("pairs one event's line with its kind", () => {
+    expect(eventsVerdict(block({ tonight: [event({})] }), "en")).toEqual({
+      line: "Tonight: Perseids peak",
+      kind: "meteor-shower",
+    });
+  });
+
+  it("takes the kind of the event the line leads with, a solar eclipse first, and keeps '+N more'", () => {
+    const worded = eventsVerdict(block({ tonight: [eclipse, event({}), pairing] }), "en");
+    expect(worded).toEqual({
+      line: "Tonight: Partial solar eclipse, eclipse glasses only +2 more",
+      kind: "solar-eclipse",
+    });
+    expect(worded?.line).toBe(eventsVerdictLine(block({ tonight: [eclipse, event({}), pairing] }), "en"));
+  });
+});
+
+describe("the events tile's line with its event kind", () => {
+  it("pairs the next event's line with its kind", () => {
+    expect(eventsTile(block({ next: pairing }), "en")).toEqual({
+      line: "Moon and Jupiter, 1.8° apart · tonight",
+      kind: "pairing",
+    });
+  });
+
+  it("has no kind when nothing is in the window", () => {
+    expect(eventsTile(block({}), "en")).toEqual({ line: eventsTileLine(block({}), "en"), kind: null });
+  });
+
+  it("has no kind when the events are unavailable", () => {
+    expect(eventsTile(null, "en")).toEqual({ line: en.tonight.pages.events.unavailable, kind: null });
   });
 });
 
