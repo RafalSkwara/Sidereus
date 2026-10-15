@@ -583,32 +583,32 @@ None.
 
 #### Automated
 
-- [x] 1.1 The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts`
-- [x] 1.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [x] 1.3 The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts`
-- [x] 1.4 No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing
-- [x] 1.5 The build passes: `npm run build`
-- [x] 1.6 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`
+- [x] 1.1 The helper and resolver tests pass: `npx vitest run src/lib/tonight/sky-events.test.ts src/components/ui/fact-icons.test.ts` — df4aa76
+- [x] 1.2 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test` — df4aa76
+- [x] 1.3 The rhythm guard passes with the five new entries and the exact-count test: `npx vitest run src/styles/rhythm-roles.test.ts` — df4aa76
+- [x] 1.4 No literal colour or arbitrary value in the dashboard files: `npx vitest run src/styles/no-hardcoded-colors.test.ts` passes and `grep -nE -- '-\[[0-9.]+(px|rem)\]' src/components/tonight/{TonightTiles,EventsTile,VerdictCard,TonightSkeleton,TonightContent,GearCard,SkyCheckCard,EyepiecesPrompt}.astro src/components/ui/{Tile.astro,tile.ts,Fact.astro} src/components/tonight/sky-band.ts` prints nothing — df4aa76
+- [x] 1.5 The build passes: `npm run build` — df4aa76
+- [x] 1.6 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline` — df4aa76
 
 #### Manual
 
-- [x] 1.7 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN
-- [x] 1.8 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`)
+- [x] 1.7 `dashboard.mjs --measure` (EN and PL, 320 / 390 / 1280 px, dark): on the fresh go night the first-screen boxes equal the before values (149 / 701 / 746 against 779 at 390), and each skeleton tile row is within 2 px of the real row at 390 and 1280 EN — df4aa76
+- [x] 1.8 The tiles in dark, light and red, EN and PL, at 390 and 1280 px read as one family against `evidence/before/*-tiles.jpg`, with the Events icon aligned to its line (main session's judgement; shots in `evidence/after/`) — df4aa76
 
 ### Phase 2: The verdict's event line as a Fact, and the verdict's rhythm
 
 #### Automated
 
-- [ ] 2.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [ ] 2.2 The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts`
-- [ ] 2.3 The build passes: `npm run build`
-- [ ] 2.4 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`
+- [x] 2.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
+- [x] 2.2 The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [x] 2.3 The build passes: `npm run build`
+- [x] 2.4 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`
 
 #### Manual
 
-- [ ] 2.5 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px
-- [ ] 2.6 The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1)
-- [ ] 2.7 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included
+- [x] 2.5 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px
+- [x] 2.6 The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1)
+- [x] 2.7 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included
 
 ### Phase 3: Rules, the gate, the landing image and the whole suite
 

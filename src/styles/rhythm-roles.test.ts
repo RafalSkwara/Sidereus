@@ -97,9 +97,11 @@ const GUARDED: Record<string, Allowance> = {
   "components/tonight/TonightTiles.astro": {},
   // The Events line under its heading at `TILE_CONTENT_CLASS`; the icon's nudge is `Fact`'s.
   "components/tonight/EventsTile.astro": {},
-  // The verdict bars' date → headline `mt-2`, headline → reason `mt-1` and forecast `mt-3` (Phase 2 converts them), and
-  // the slow hint's `mt-6`; the tile rows are on the roles.
-  "components/tonight/TonightSkeleton.astro": { "mt-2": 1, "mt-1": 1, "mt-3": 1, "mt-6": 1 },
+  // The verdict bars' headline → reason `mt-1` (the display line's own leading) and the slow hint's `mt-6`; the tile
+  // rows and the other verdict bars are on the roles.
+  "components/tonight/TonightSkeleton.astro": { "mt-1": 1, "mt-6": 1 },
+  // ui-dashboard-tiles Phase 2: the verdict on the roles; the headline → reason `mt-1` and the dot's first-line nudge.
+  "components/tonight/VerdictCard.astro": { "mt-1": 1, "mt-2.5": 1, "sm:mt-3.5": 1 },
 };
 
 /** Replaces comment text with spaces, keeping newlines so line numbers still match the file. */

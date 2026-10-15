@@ -19,7 +19,8 @@ import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForHydrat
  *    known limits (the plan's "What we're not doing"), so they are not asserted. On a night with a notable sky event
  *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), which
  *    the verdict's min-height can swallow without moving the cards, so the spec hides that line while it measures and
- *    holds on any date (impl review F9);
+ *    holds on any date (impl review F9). The line is a `Fact` (ui-dashboard-tiles D4) in an `mt-line` wrapper, with the
+ *    marker on its root: the spec hides the wrapper, so the icon and the wrapper's margin go too;
  *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL, and none with the Session plan's editor open
  *    (adjustable-session-plan Phase 5: a full-plan user, granted through the operator command; skipped on a night that
  *    does not pass);
@@ -62,9 +63,12 @@ async function waitForPage(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-/** Hides the verdict's event line (present only on an event night) and returns the style to remove again afterwards. */
+/**
+ * Hides the verdict's event line (present only on an event night) with its `mt-line` wrapper, so neither its height nor
+ * the wrapper's margin counts, and returns the style to remove again afterwards.
+ */
 async function hideEventLine(page: Page) {
-  return page.addStyleTag({ content: "[data-verdict-event]{display:none}" });
+  return page.addStyleTag({ content: ":has(> [data-verdict-event]), [data-verdict-event]{display:none}" });
 }
 
 // The user's fold (2026-10-08): the verdict and the Site card fit the first 390×844 screen, and the Telescope card

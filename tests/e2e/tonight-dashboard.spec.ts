@@ -14,7 +14,8 @@ import { onboardInMadrid } from "./helpers";
  * forecast fixture, so the Moon card and the planets tile are both shown, and place search stubbed with Madrid. The
  * clock is real, so the spec never asserts what the tiles say, only where they lead (the events tile's line is checked
  * for its shape: the empty fact or an event and its night; an event's line leads with its kind's icon, a `Fact` whose
- * `data-fact` is the event kind with one svg, and the empty line has no icon, ui-dashboard-tiles D5).
+ * `data-fact` is the event kind with one svg, and the empty line has no icon, ui-dashboard-tiles D5). On an event
+ * night the verdict's line is such a fact too: its kind in `data-fact`, one svg, no link or control (D4).
  */
 
 const t = en.tonight;
@@ -117,11 +118,14 @@ test("the Sky events tile states the next event or that there is none, and opens
     await expect(line.locator("svg")).toHaveCount(1);
   }
 
-  // The verdict's own line exists only on a night with a notable event, as plain text: no link, no control.
+  // The verdict's own line exists only on a night with a notable event, as a muted fact led by its kind's icon (the
+  // marker on the Fact root, ui-dashboard-tiles D4): no link, no control.
   const verdictLine = page.locator("[data-verdict-event]");
   if ((await verdictLine.count()) > 0) {
     await expect(verdictLine).toHaveText(VERDICT_LINE_START);
     await expect(verdictLine.locator("a, button")).toHaveCount(0);
+    expect(EVENT_KINDS as readonly (string | null)[]).toContain(await verdictLine.getAttribute("data-fact"));
+    await expect(verdictLine.locator("svg")).toHaveCount(1);
     // An event tonight is also the next one, so the tile cannot say there is none.
     expect(text).not.toBe(none);
   }

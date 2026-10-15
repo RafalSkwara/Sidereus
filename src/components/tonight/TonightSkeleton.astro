@@ -6,7 +6,8 @@
 // non-breaking space, so they have its line height. The tile rows mirror TonightTiles offset by offset on the rhythm
 // roles (ui-dashboard-tiles): the row from `TILE_ROW_CLASS`, the first bar under each heading at `TILE_CONTENT_CLASS`,
 // a group's lines on `line` and an explanatory caption at `mt-group`. The Events line's kind icon sits inside its
-// `text-body` line, so its bar needs no extra room.
+// `text-body` line, so its bar needs no extra room. The verdict's bars follow VerdictCard's answer group (D6): the
+// headline and the forecast line at `line`, the reason at the display line's own `mt-1`.
 import {
   SLIDER_LAYOUT_CLASS,
   SLIDER_LEGEND_CLASS,
@@ -42,9 +43,9 @@ const tile = TILE_ROW_CLASS;
   <TonightSky night verdict strip>
     <div aria-hidden="true">
       <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
-      <div class:list={[bar, "mt-2 w-2/3 font-display text-display"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-line w-2/3 font-display text-display"]}>&nbsp;</div>
       <div class:list={[bar, "mt-1 w-3/4 text-body"]}>&nbsp;</div>
-      <div class:list={[bar, "mt-3 w-40 text-label max-sm:hidden"]}>&nbsp;</div>
+      <div class:list={[bar, "mt-line w-40 text-label max-sm:hidden"]}>&nbsp;</div>
     </div>
   </TonightSky>
   <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->

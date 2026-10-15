@@ -61,3 +61,37 @@ The page's skeleton/real difference: −35 px at 390 EN and −36 px at 1280 EN,
 Break check (main session): `eventsVerdict` returning `"pairing"`, `factIcon` returning `FACT_ICONS.why` for events, and the skeleton's slow-hint `mt-6` removed made 5 tests fail (2 in `sky-events.test.ts`, 2 in `fact-icons.test.ts`, the exact-count test for `TonightSkeleton.astro`). All three files were restored with `git checkout -- <file>` and 147/147 passed again.
 
 E2E (1.6): `tonight-dashboard tonight-phone seven-night-planner sky-events planets-on-tonight what-to-expect telescope-selector offline`: 19 passed. The new Events assertion (one svg, `data-fact` an event kind) ran: the Orionids are next today.
+
+## Phase 2 (the verdict), 2026-10-15
+
+`dashboard.mjs --measure` now also takes the viewports `w360` and `w640` and prints the verdict container's natural height (`min-height: 0` injected) and its rendered height for the page and the skeleton, with the event line and its wrapper hidden (`eventLine` was 0 in every run).
+
+`VERDICT_MIN_HEIGHT_CLASS` (EN go, the fixture night, dark): the real verdict's natural height is 168 px at 360 and 232 px at 640, so the class is `min-h-42 sm:min-h-58` (was `sm:min-h-59`; the forecast line moved from `mt-3` to `mt-line`). The container, natural/rendered:
+
+```
+           real          skeleton
+360        168 / 168     144 / 168   (the skeleton's reason bar is one line; the min-height holds it)
+390        168.9 / 168.9 144.9 / 168
+640        232 / 232     232 / 232
+1280       232 / 232     232 / 232
+```
+
+The page's skeleton/real difference: 360 −16, 390 −35, 640 −36, 1280 −36 px (390 and 1280 as before). The phone first screen at 390: 149 / 701 / 746 against 779, unchanged.
+
+A night with no forecast (review F1; the preview's `FORECAST_BASE_URL` on a closed port and the local KV cache moved aside, then restored), 390 px, dark, verdict section / Telescope title bottom, against the TabBar at 779:
+
+```
+        before        after
+EN      145 / 774     141 / 770
+PL      165 / 794     161 / 790
+```
+
+So that night is 4 px better (the forecast line on `mt-line`). In Polish the Telescope title already sat under the TabBar on that night and still does; the first-screen invariant is the fresh go night's. Shots: `before|after/tonight-phone-{en,pl}-dark-noforecast-fold.jpg`.
+
+`/design` "VerdictCard: the sky event line" (dev server on 4331): `after/c-verdict-event-{390,1280}-{en,pl}-{dark,light,red}.jpg`. Each line is one `data-fact` with one svg: the meteor shower's `Sparkle`, the solar eclipse's own `Eclipse` (owner D4).
+
+The phone spec now hides the line's `mt-line` wrapper too (`:has(> [data-verdict-event])`), so the wrapper's 8 px margin never counts on an event night.
+
+Break check: a second `mt-1` (the h2 back to a numeric step) in `VerdictCard.astro` failed the guard twice: the numeric step, and `mt-1` used more often than allowed. Restored with `git checkout --`, 104/104.
+
+E2E (2.4): `tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`: 27 passed. Gates: `astro check` 0/0, lint clean, `npm test` 122 files / 2338 passed, build OK.

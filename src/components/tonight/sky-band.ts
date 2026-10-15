@@ -38,15 +38,18 @@ export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 p
 
 /**
  * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps.
- * Measured 2026-10-08 (ui-user-adjustments, EN and PL go on the all-clear fixture); re-measure at 360 px and 640 px after any
- * change to the verdict's lines, sizes or copy, never compute it. The arithmetic, from the type roles and spacing:
- *  - 360 px: pt-3 12 + date (`text-label`) 20 + h2 `mt-2` 8 + headline (`text-display` line, 36 px at 360 px) 36 + reason
- *    `mt-1` 4 + the reason on two `text-body` lines (24 px each: 53 characters do not fit the 328 px column) 48 + pb-10 40
- *    = 168 px, `min-h-42`. The fresh forecast line is `max-sm:hidden`.
- *  - 640 px: pt-12 48 + 20 + 8 + headline (44 px) 44 + 4 + the reason on one line 24 + forecast line `mt-3` 12 + 20 + pb-14 56
- *    = 236 px, `min-h-59`.
+ * Measured 2026-10-15 (ui-dashboard-tiles Phase 2, EN go on the all-clear fixture, no event line, the container's
+ * `min-height` set to 0, `evidence/scripts/dashboard.mjs --measure`); re-measure at 360 px and 640 px after any change to
+ * the verdict's lines, sizes or copy, never compute it. The arithmetic, from the type roles and the rhythm roles:
+ *  - 360 px: pt-3 12 + date (`text-label`) 20 + h2 `mt-line` 8 + headline (`text-display` line, 36 px at 360 px) 36 +
+ *    reason `mt-1` 4 + the reason on two `text-body` lines (24 px each: it does not fit the 328 px column) 48 + pb-10 40
+ *    = 168 px, `min-h-42`. The fresh forecast line is `max-sm:hidden`. The skeleton's bars measure 144 px (its reason
+ *    bar is one line), so the min-height holds it at 168.
+ *  - 640 px: pt-12 48 + 20 + 8 + headline (44 px) 44 + 4 + the reason on one line 24 + forecast line `mt-line` 8 + 20 +
+ *    pb-14 56 = 232 px, `min-h-58` (4 px less than before, the forecast line's `mt-3` → `mt-line`). The skeleton
+ *    measures 232 px too.
  */
-export const VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-59";
+export const VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-58";
 
 /** The horizon silhouette in the ground colour, stretched to the band's width. */
 export const SILHOUETTE_VIEWBOX = "0 0 390 40";
