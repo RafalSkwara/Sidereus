@@ -599,16 +599,16 @@ None.
 
 #### Automated
 
-- [x] 2.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test`
-- [x] 2.2 The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts`
-- [x] 2.3 The build passes: `npm run build`
-- [x] 2.4 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`
+- [x] 2.1 Types, lint and the unit suite pass: `npx astro check && npm run lint && npm test` — c369bf0
+- [x] 2.2 The rhythm guard passes with `VerdictCard` and the skeleton's final counts: `npx vitest run src/styles/rhythm-roles.test.ts` — c369bf0
+- [x] 2.3 The build passes: `npm run build` — c369bf0
+- [x] 2.4 The phase's e2e pass on the preview (4331/4401): `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline` — c369bf0
 
 #### Manual
 
-- [x] 2.5 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px
-- [x] 2.6 The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1)
-- [x] 2.7 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included
+- [x] 2.5 `VERDICT_MIN_HEIGHT_CLASS` is re-measured at 360 and 640 px (EN go, no event line, `min-height: 0`) on the page and the skeleton; the values are recorded in `evidence/README.md`, and the skeleton and real verdict containers match within 2 px — c369bf0
+- [x] 2.6 The verdict on a no-forecast night (`none`: the preview's `FORECAST_BASE_URL` pointed at a closed port, rebuilt) at 390 px is no taller than before, measured before and after and recorded (review F1) — c369bf0
+- [x] 2.7 The `/design` "sky event line" section in dark, light and red, EN and PL, at 390 and 1280 px shows each line as its own fact with its kind's icon, solar eclipse included — c369bf0
 
 ### Phase 3: Rules, the gate, the landing image and the whole suite
 
