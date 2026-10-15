@@ -1,10 +1,10 @@
 ---
 change_id: small-scope-galaxies
 title: Galaxies in a small telescope (M-4 S-04, #172, #159, #21 item 3)
-status: impl_reviewed
+status: archived
 created: 2026-10-15
 updated: 2026-10-15
-archived_at: null
+archived_at: 2026-10-15T16:58:39Z
 ---
 
 ## Notes
