@@ -2,9 +2,9 @@
 
 ## Overview
 
-Give the operator one first-party signal for every failure in the critical flows (Tonight and its forecast, the save routes, sign-in and session, the finder chart and Session-plan edits), with its cause, and an alert path, without a coordinate, email, key or form value ever reaching a log.
+Give the operator one first-party signal for every failure in the critical flows (Tonight and its forecast, the save routes, sign-in and session, the finder chart and Session-plan edits, and the browser side: the service worker and the React islands), with its cause and a request ID, and an alert path, without a coordinate, email, key, user or site ID or form value ever reaching a log.
 
-Today a Supabase, Open-Meteo or engine failure ends as a 200 notice, a stale-forecast fallback or a 302 `?error=<key>`, and only 7 `console.error` sites exist in the whole app (`context/audits/observability/2026-10-15_tonight-save-routes-auth-finder-plan.md`, 33 findings, 4 critical). The plan adds one logging helper with a closed vocabulary, makes the data layer keep the diagnosis it drops today, logs at every swallow point, ratchets the silent catches with a guard test, and switches on Workers Issues (Cloudflare's own grouping and alert path) with an operator runbook. No new third-party vendor (owner, 2026-10-15).
+Today a Supabase, Open-Meteo or engine failure ends as a 200 notice, a stale-forecast fallback or a 302 `?error=<key>`, and only 7 `console.error` sites exist in the whole app (`context/audits/observability/2026-10-15_tonight-save-routes-auth-finder-plan.md`, 33 findings, 4 critical). The plan adds one logging helper with a closed vocabulary, makes the data layer keep the diagnosis it drops today, logs at every swallow point, ratchets the silent catches with a guard test, and switches on Workers Issues (Cloudflare's own grouping and alert path) with an operator runbook. Phases 7-9 add a first-party, rate-limited, sanitized collection endpoint and the reporting from `src/sw.ts` and the islands; they can be cut late as a block (deadline 2026-11-04). No new third-party vendor (owner, 2026-10-15).
 
 ## Current State Analysis
 
@@ -15,16 +15,22 @@ Today a Supabase, Open-Meteo or engine failure ends as a 200 notice, a stale-for
 - **Supabase result errors go unread (RC4).** `src/middleware.ts:15` takes only `data` from `getClaims()`; auth-js returns auth failures as `{ data: null, error }` (`GoTrueClient.ts:6715,6791-6794`, verified), so the `catch` at `:18` is nearly dead and an Auth outage reads as a mass sign-out.
 - **Cloudflare's own tools** (checked 2026-10-15 in the Cloudflare docs): Workers Issues "detects production failures and groups related failures into issues without an SDK"; it records uncaught exceptions, failed invocations, `5xx` responses and **logged errors**, and "to record an error that your application catches, pass the caught value to `console.error()`"; automations route an issue to a webhook, chat service or incident tool. Enabling needs `observability.issues.enabled: true` in the Wrangler config and Wrangler 4.134.0 or later (the repo has `^4.131.1`); a dashboard-only enable is turned off by the next deploy. Workers Logs recommends structured (JSON-object) logs, which it indexes by field. Since 2026-08-24 `console.*` also preserves an `Error` argument's message and stack, so an `Error` object must never be passed.
 
+- **The browser side is silent (RC5).** `src/sw.ts` has 17 `.catch(() => undefined)`, one `.catch(() => null)` and two bare `catch {}` (lines 79, 85, 254, 340, 402, 507, 585, 685-798) and no way to reach the server; React islands have no global handler, and several dynamic-import failures reset a memo and nothing else (`map-panel.tsx:52`, `LocationPicker.tsx:64,74`, `gear/catalogue/load.ts:15,23`, `offline/register.ts:8`). The only `reportError` goes to the browser console (`map-panel.tsx:167`).
+
 ### Key Discoveries:
 
 - Only `src/lib/tonight/load.ts`'s `CODE_SHAPE` (`/^[0-9A-Za-z_]{1,12}$/`) is a ready, reviewed filter for a Postgres or PostgREST code; the new helper reuses it.
 - `src/lib/no-console-guard.test.ts` counts `eslint-disable` lines per file exactly and fails on an allowance not fully used, so moving the seven lines into one helper file shrinks the allowlist to one entry.
+- The Workers Rate Limiting binding is GA (`ratelimits` in the Wrangler config with an integer `namespace_id` and a `limit` per 10 or 60 s; `env.<NAME>.limit({ key })`); its counters are per Cloudflare location and permissive, which suits log-flood protection. Cloudflare advises against IP keys, and we may not use personal keys anyway, so the key is one constant.
+- React 19 (`^19.2.6`) reports an uncaught render or event error through `window.reportError`, which fires a window `error` event, so one global handler sees island errors without per-island error boundaries.
+- `src/sw.ts` routes only `GET` (`registerRoute(isNavigation, networkOrOffline, "GET")`, line 766), so a `POST` to a report endpoint passes through the worker untouched.
+- `src/middleware.ts` runs for every request, including a report beacon, and would call Supabase Auth for it; the report route must be short-circuited before the session is resolved.
 - No route under `src/pages/api/**` has a unit test, but each is a plain exported `POST` over `context`; a fake context is enough to test one.
 - The Stop hook runs the whole unit suite at the end of every turn (CLAUDE.md "Agent hooks"), so a standing red test cannot be committed between phases; a ratchet must start green and each phase tightens it.
 
 ## Desired End State
 
-When the operator opens Workers Logs or Workers Issues, every failure in the four flows shows up as a line with a fixed per-step message (`sidereus: forecast.fetch failed`) and indexed fields (`step`, `name`, `code`, `status`), grouped by step in Issues and routable by an automation. A save route that failed because of the server redirects with its own key ("could not reach the database, nothing was saved") instead of the entity's "could not save", so a user mistake and a server fault differ in the redirect and in the log. The stores keep the PostgREST code and HTTP status in a sanitized `cause`. A `silent-catch` guard test lists every catch in runtime code that neither logs nor is justified, so a new silent catch fails CI. The operator has a runbook (`context/deployment/error-visibility.md`) with the Issues switch, the queries per step and the automations to create. Verify with: the unit suites in each phase, `npm run lint`, `npx astro check`, and one local run with a dead forecast URL and a stopped Supabase showing the lines (Phase 6).
+When the operator opens Workers Logs or Workers Issues, every failure in the four flows shows up as a line with a fixed per-step message (`sidereus: forecast.fetch failed`) and indexed fields (`step`, `name`, `code`, `status`), grouped by step in Issues and routable by an automation. Every line also carries a `requestId` (Cloudflare's `cf-ray` prefix, or a random one), so the lines of one failing request can be put together. Failures in the service worker and in the islands reach the same logs through one rate-limited, sanitized endpoint (`POST /api/client-error`: closed step list, no message, no stack, no URL). A save route that failed because of the server redirects with its own key ("could not reach the database, nothing was saved") instead of the entity's "could not save", so a user mistake and a server fault differ in the redirect and in the log. The stores keep the PostgREST code and HTTP status in a sanitized `cause`. A `silent-catch` guard test lists every catch in runtime code that neither logs nor is justified, so a new silent catch fails CI. The operator has a runbook (`context/deployment/error-visibility.md`) with the Issues switch, the queries per step and the automations to create. Verify with: the unit suites in each phase, `npm run lint`, `npx astro check`, and one local run with a dead forecast URL and a stopped Supabase showing the lines (Phase 6).
 
 ## Decisions
 
@@ -35,17 +41,20 @@ Owner on 2026-10-15: first-party tools only; no private data in any report or lo
 | D1 | Alert path | Workers Issues, enabled in `wrangler.jsonc`; the owner creates the automation in the dashboard | First-party, no SDK; `console.error` is a recorded signal |
 | D2 | Log shape | `console.error("sidereus: <step> failed", { step, name, code?, status? })`; message fixed per step, fields structured | One message per step groups in Issues; fields filter in Workers Logs |
 | D3 | Save-route faults | Keep the 302 convention; a server fault redirects with `errors.save.unavailable`, user mistakes keep the entity key | Smallest change that separates the two; no change to the project's no-JSON-errors rule |
-| D4 | Identifiers in lines | None: no user, site or request id | Keeps the coordinate and privacy NFR trivially true; revisit only on an owner request |
-| D5 | Service worker and client errors | Out: no beacon route in this change | Adds an endpoint and a privacy surface; follow-up if wanted |
+| D4 | Identifiers in lines | A request ID only (owner, 2026-10-15): the 16-hex prefix of `cf-ray` when valid, else a random UUID; no user, site or other personal ID | Puts one request's lines together without a way back to a person |
+| D5 | Service worker and client errors | In (owner, 2026-10-15): a first-party endpoint plus reporting from `sw.ts` and the islands, as Phases 7-9, cuttable as a block | Closes RC5 for the browser side |
 | D6 | Release identity | Out: rely on the version Workers Logs attaches to each invocation; the runbook confirms it | A `version_metadata` binding would make the helper need `cloudflare:workers` |
 | D7 | Island failure state (F13), 404/500 pages (F15), neutral plan state (F12), finder eyepiece notice (F28) | Out: user-visible UI and copy | UI changes need their own design pass; the server side of each is logged |
+| D9 | Endpoint limits | `POST /api/client-error`: same-origin only, body at most 512 bytes, strict schema with a closed step list, one constant-key Workers Rate Limiting binding (30 per minute per location), client-side caps (5 per page, 10 per worker lifetime, one per step and name) | Bounds log volume and forgery without a personal key |
+| D10 | Offline reports | A report made while the device is offline is dropped, not queued | A queue stores data on the device and adds a privacy surface; the next online failure is reported |
 | D8 | Regression guard | A `silent-catch` ratchet test, green on day one, tightened per phase | The only thing that stops the next silent catch |
 
 ## What We're NOT Doing
 
 - No third-party tracker or exporter (Sentry, Datadog, OpenTelemetry destinations, Logpush to a vendor).
-- No user, site or request identifier, message, stack, URL, coordinate, email, key or form value in any log line (D4); no `Error` object is ever passed to `console.*`.
-- No service-worker or React-island error reporting, no beacon route (D5; F25, F26, F33).
+- No user ID, site ID, IP address or other personal identifier, message, stack, URL, file name, coordinate, email, key or form value in any log line or client report (D4); the request ID is the only identifier; no `Error` object is ever passed to `console.*`.
+- No queue or storage of client reports on the device (D10), no per-user rate limit, no IP-keyed limit, no React error boundaries around islands (the global handler covers them, Phase 9).
+- No UI for client failures: nothing tells the user a report was sent.
 - No `version_metadata` binding or release field (D6; F27).
 - No new UI: no island fallback state, no 404/500 pages, no neutral "plan unknown" state, no finder notice (D7; F12, F13, F15, F28). The only copy added is the one `errors.save.unavailable` key in EN and PL.
 - No change to the verdict, ranking, forecast fallback behaviour or any engine rule; the fallbacks stay, they gain a trace.
@@ -54,13 +63,13 @@ Owner on 2026-10-15: first-party tools only; no private data in any report or lo
 
 ## Implementation Approach
 
-Build the vocabulary first, then make the data layer carry causes, then add the lines flow by flow, widest first. Each phase starts with failing tests: a behaviour test that makes the failure happen and asserts the helper's line (never the message), and a tightened silent-catch allowlist. The helper is the only `console.error` site, so the privacy rule is enforced in one file and one test. Workers Issues is switched on in Phase 1 so every later line is alertable from its first deploy, and Phase 6 proves it end to end with the owner.
+Build the vocabulary first, then make the data layer carry causes, then add the lines flow by flow, widest first. Each phase starts with failing tests: a behaviour test that makes the failure happen and asserts the helper's line (never the message), and a tightened silent-catch allowlist. The helper is the only `console.error` site, so the privacy rule is enforced in one file and one test. Workers Issues is switched on in Phase 1 so every later line is alertable from its first deploy, and Phase 6 proves it end to end with the owner. Phases 7-9 then add the browser side on top of the same helper: 7 builds the endpoint and the shared reporter core, 8 wires the service worker, 9 wires the islands. Phases 1-6 are shippable on their own; 8 and 9 are independent after 7, so late in the schedule the block can be cut whole, or either half kept.
 
-## Phase 1: The failure helper, the guard and Issues config
+## Phase 1: The failure helper, the request ID, the guard and Issues config
 
 ### Overview
 
-One `logFailure` helper with a closed step vocabulary, the seven existing lines moved onto it, the `no-console` allowlist reduced to one entry, a silent-catch ratchet, and `observability.issues.enabled`.
+One `logFailure` helper with a closed step vocabulary and a request ID on every line, the seven existing lines moved onto it, the `no-console` allowlist reduced to one entry, a silent-catch ratchet, and `observability.issues.enabled`.
 
 ### Changes Required:
 
@@ -70,9 +79,17 @@ One `logFailure` helper with a closed step vocabulary, the seven existing lines 
 
 **Intent**: The only place the app writes a failure to the console. It turns an error into the allowed fields and drops everything else (RC1, RC6; F18, F19).
 
-**Contract**: `logFailure(step: FailureStep, error?: unknown, extra?: { status?: number }): void`. `FailureStep` is a closed string union (`FAILURE_STEPS`), dotted names grouped by flow: `forecast.*`, `tonight.*`, `save.*`, `read.*`, `account.plan`, `milestones.*`, `progress.seen`, `finder.*`, `auth.*`, `config.supabase`, `request.form`; one entry per trace site, added as the phases need them. It calls `console.error(\`sidereus: ${step} failed\`, fields)` where `fields` is `{ step, name?, code?, status? }`: `name` from the error (or its `cause`) only when it matches a short identifier shape, `code` only when it passes `CODE_SHAPE` (moved here and exported; `tonight/load.ts` imports it), `status` only an integer 100-599. It never reads `message` or `stack`, never passes an `Error` to the console, and never throws. The single `eslint-disable-next-line no-console` lives here.
+**Contract**: `logFailure(step: FailureStep, error?: unknown, extra?: { status?: number }): void`. `FailureStep` is a closed string union (`FAILURE_STEPS`), dotted names grouped by flow: `forecast.*`, `tonight.*`, `save.*`, `read.*`, `account.plan`, `milestones.*`, `progress.seen`, `finder.*`, `auth.*`, `config.supabase`, `request.form`; one entry per trace site, added as the phases need them. It calls `console.error(\`sidereus: ${step} failed\`, fields)` where `fields` is `{ step, requestId?, name?, code?, status? }`: `name` from the error (or its `cause`) only when it matches a short identifier shape, `code` only when it passes `CODE_SHAPE` (moved here and exported; `tonight/load.ts` imports it), `status` only an integer 100-599, and `requestId` from the current request (below) when there is one. It never reads `message` or `stack`, never passes an `Error` to the console, and never throws. The single `eslint-disable-next-line no-console` lives here.
 
-#### 2. Move the seven existing lines
+#### 2. The request ID
+
+**Files**: `src/lib/observability/request-id.ts` (new, with tests), `src/middleware.ts`, `src/env.d.ts`
+
+**Intent**: Let every line of one failing request be put together without a user, site or other personal ID (D4).
+
+**Contract**: `requestIdFrom(headers: Headers): string` returns the first 16 hex characters of the `cf-ray` header when it matches `/^[0-9a-f]{16}(-[A-Za-z]{3})?$/` (the data-centre suffix is dropped), else `crypto.randomUUID()`. `runWithRequestId(id, fn)` and `currentRequestId()` use `AsyncLocalStorage` from `node:async_hooks` (the Worker has `nodejs_compat`), so a `waitUntil` task started inside the request keeps the ID. The middleware computes the ID first thing, sets `context.locals.requestId` (typed in `src/env.d.ts`) and runs `next()` inside `runWithRequestId`. `logFailure` adds `requestId` when `currentRequestId()` returns one and omits it outside a request (tests, build). Nothing else reads the headers.
+
+#### 3. Move the seven existing lines
 
 **Files**: `src/lib/tonight/build.ts:1415,1439`, `src/lib/finder/load.ts:171,194`, `src/lib/tonight/load.ts:47-54`, `src/lib/account-plan/index.ts:45`, `src/lib/observations/celebrate.ts:39-46`, and the tests that spy on them (`build.test.ts`, `load.test.ts`, `finder/load.test.ts`, `account-plan.test.ts`, `celebrate.test.ts`)
 
@@ -80,7 +97,7 @@ One `logFailure` helper with a closed step vocabulary, the seven existing lines 
 
 **Contract**: step words `tonight.session-plan`, `tonight.sky-events`, `finder.stars`, `finder.chart`, `tonight.plan-edits`, `account.plan`, `milestones.read|record|list|seen`, `progress.seen`. `src/lib/no-console-guard.test.ts` `ALLOWED_DISABLES` keeps `src/lib/observability/log-failure.ts: { count: 1 }` and drops the six entries that no longer disable.
 
-#### 3. The silent-catch ratchet
+#### 4. The silent-catch ratchet
 
 **File**: `src/lib/observability/silent-catch-guard.test.ts` (new)
 
@@ -88,7 +105,7 @@ One `logFailure` helper with a closed step vocabulary, the seven existing lines 
 
 **Contract**: scans non-test source under `src` (`.ts`, `.tsx`, and the frontmatter and `<script>` blocks of `.astro`, parsed with the TypeScript compiler API) for `catch` clauses and `.catch(...)` handlers that return a constant (`undefined`, `null`, `[]`, `{}`, a literal). Each must call `logFailure` in its body or sit in a per-file allowlist with an exact count and a reason, like `ALLOWED_DISABLES` (an allowance not fully used fails). The first run's inventory becomes the allowlist, so the test is green on day one; later phases delete their entries first. Final allowlist (justified, Phase 6): the service worker, the client-side islands and `src/lib/offline/register.ts`.
 
-#### 4. Switch on Workers Issues
+#### 5. Switch on Workers Issues
 
 **Files**: `wrangler.jsonc`, `package.json`, `package-lock.json`
 
@@ -101,6 +118,7 @@ One `logFailure` helper with a closed step vocabulary, the seven existing lines 
 #### Automated Verification:
 
 - Helper tests pass: `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use >/dev/null && npx vitest run src/lib/observability/log-failure.test.ts` (never prints a message or stack, rejects a code that fails `CODE_SHAPE`, ignores a status outside 100-599, never throws on `undefined` or a non-Error, never passes an `Error` argument)
+- Request-ID tests pass: `npx vitest run src/lib/observability/request-id.test.ts src/middleware.test.ts` (a valid `cf-ray` gives its 16-hex prefix without the data-centre suffix, an invalid or missing one gives a UUID, the ID reaches a line logged inside a `waitUntil`-style detached promise, no ID outside a request)
 - Silent-catch guard passes with the day-one allowlist: `npx vitest run src/lib/observability/silent-catch-guard.test.ts`
 - No-console guard passes with one allowed disable: `npx vitest run src/lib/no-console-guard.test.ts`
 - The five touched suites pass: `npx vitest run src/lib/tonight src/lib/finder src/lib/account-plan src/lib/observations`
@@ -109,7 +127,7 @@ One `logFailure` helper with a closed step vocabulary, the seven existing lines 
 
 #### Manual Verification:
 
-- Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL or a form value.
+- Reading `log-failure.ts` and `request-id.ts` confirms no path reads `message`, `stack`, a URL, a form value, an IP or any header but `cf-ray`.
 
 **Implementation Note**: Pause for confirmation before Phase 2.
 
@@ -356,9 +374,9 @@ Close the loop with the owner: the runbook, the final guard allowlist, one delib
 
 **Files**: `src/lib/observability/silent-catch-guard.test.ts`, `CLAUDE.md` (Tripwires, `no-console` bullet and a new Observability bullet), `context/foundation/lessons.md`
 
-**Intent**: Leave only justified silent catches (service worker, client islands, `register.ts`), and tell the next agent the new rule.
+**Intent**: Leave only justified silent catches, and tell the next agent the new rule. The service-worker and island entries stay allowlisted with the reason "reported by Phases 7-9, or out of scope if that block is cut" until those phases land.
 
-**Contract**: the allowlist holds only entries with a reason; the CLAUDE.md tripwire says "log a failure through `logFailure(step, error)`; add a step to `FAILURE_STEPS`; never pass an `Error`, a message, a URL or a value", and drops the old "needs its own allowlisted disable" for logs. A lesson (via `/10x-lesson`) records: swallowed catches need a line, the step vocabulary, and the sanitized `cause` for store errors.
+**Contract**: the allowlist holds only entries with a reason (the browser-side ones are removed by Phases 8 and 9); the CLAUDE.md tripwire says "log a failure through `logFailure(step, error)`; add a step to `FAILURE_STEPS`; never pass an `Error`, a message, a URL or a value", and drops the old "needs its own allowlisted disable" for logs. A lesson (via `/10x-lesson`) records: swallowed catches need a line, the step vocabulary, and the sanitized `cause` for store errors.
 
 #### 3. Roadmap and issue
 
@@ -388,6 +406,160 @@ Close the loop with the owner: the runbook, the final guard allowlist, one delib
 
 ---
 
+## Phase 7: The client-error endpoint and the reporter core (start of the cuttable block)
+
+### Overview
+
+A first-party collection point for failures that happen in the browser: one rate-limited, sanitized `POST` route, the shared reporter core the service worker and the islands will use, and the closed client step list. Nothing reports yet; Phases 8 and 9 do. This block (7-9) can be cut whole late in the schedule.
+
+### Changes Required:
+
+#### 1. The shared reporter core and the step list
+
+**Files**: `src/lib/observability/client/steps.ts`, `src/lib/observability/client/reporter.ts` (new, with tests; browser-safe, no server import)
+
+**Intent**: One pure place that builds a sanitized report and applies the client-side caps, usable from the worker (no DOM) and from the page (D9, D10).
+
+**Contract**: `CLIENT_STEPS` is a closed list in two families, `sw.*` (index, precache, shell, offline-page, next-night, store-page, asset-note, navigation, island-commit, sweep, purge) and `island.*` (uncaught, unhandled-rejection, import, sw-register, geocode); `ClientStep` is its union. `createReporter({ send, maxTotal, now? })` returns `report(step, error)`: it builds `{ source, step, name?, code? }` (`name` only from `error.name` when it matches a short identifier shape, `code` only when it passes `CODE_SHAPE`; never `message`, `stack`, file name, line or URL), drops a repeat of the same step and name, stops after `maxTotal` reports (5 per page, 10 per worker lifetime), calls `send` without awaiting it, and never throws. A report whose device is offline is dropped, not queued (D10).
+
+#### 2. The route
+
+**Files**: `src/pages/api/client-error.ts` (new), `src/middleware.ts`, `src/lib/observability/client-report.ts` (new, server side), `src/lib/observability/log-failure.ts` (step union gains `client.<ClientStep>`)
+
+**Intent**: Accept a report, log it through `logFailure` and answer with no body; refuse everything else cheaply (D9).
+
+**Contract**: only `POST`. In order: same-origin check (`Sec-Fetch-Site: same-origin`, or `Origin` equal to the request's origin; otherwise 403), body of at most 512 bytes (413), `content-type` `application/json` or `text/plain` (a beacon sends the latter; 415 otherwise), the limiter (429), a strict schema (unknown keys, a long `name` or a non-shaped `code` give 400), then `logFailure("client.<step>", { name, code })` and `204` with `Cache-Control: no-store` and no body. The route reads no cookie and calls no Supabase. The middleware returns before creating the Supabase client or resolving the session for this one path (the request ID still applies). The route is not in `PROTECTED_ROUTES`, so signed-out pages and the worker can report. This is the one deliberate exception to "API routes redirect with `?error=`": a beacon has no page to go back to, so it answers with status codes and empty bodies.
+
+#### 3. The rate limiter
+
+**Files**: `src/lib/observability/client-error-limit.ts` (interface and an in-memory token bucket for tests and local dev), `src/lib/observability/rate-limit.ts` (new; the only importer of `cloudflare:workers` here), `wrangler.jsonc`, `worker-configuration.d.ts`
+
+**Intent**: Bound the log volume an unauthenticated route can create, with no personal key (D9).
+
+**Contract**: a `ratelimits` entry `CLIENT_ERROR_LIMITER` with an integer `namespace_id` unique in the account (the owner confirms the number is unused), `simple: { limit: 30, period: 60 }` (per Cloudflare location, permissive by design); the limiter calls `limit({ key: "client-error" })` with that one constant key. A missing binding (local dev, tests) falls back to the in-memory bucket, never to "allow all". `npm run cf:types` regenerates `worker-configuration.d.ts`, committed.
+
+#### 4. The HTTP proof
+
+**File**: `scripts/smoke.mjs`
+
+**Intent**: Prove the route over HTTP as the other gates are proved.
+
+**Contract**: a valid report gives 204; a body with a `message` field gives 400; a 600-byte body gives 413; a request with a foreign `Origin` gives 403; a `GET` does not give 2xx.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Reporter tests fail first, then pass: sanitizing (a message, stack, file name and URL in the error never reach the payload), same step and name sent once, the cap, never throws when `send` throws or rejects: `npx vitest run src/lib/observability/client`
+- Route tests with a fake `context` and the in-memory limiter fail first, then pass: valid report gives 204 and exactly one `sidereus: client.<step> failed` line with only allowed fields plus `requestId`; extra keys, a long name, a bad code and a bad step give 400; 513 bytes gives 413; foreign origin gives 403; over the limit gives 429 and logs nothing; the route never touches `locals.supabase`: `npx vitest run src/pages/api/client-error.test.ts`
+- Middleware test: a request to `/api/client-error` creates no Supabase client and calls no `getClaims`: `npx vitest run src/middleware.test.ts`
+- Wrangler config is valid and types are regenerated: `npx wrangler deploy --dry-run` and `npm run cf:types` leave no diff
+- Silent-catch guard and no-console guard pass
+- Full unit suite, lint, types and build pass: `npm test && npm run lint && npx astro check && npm run build`
+- Smoke walk passes against the local stack: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=… npm run smoke`
+
+#### Manual Verification:
+
+- After the first deploy the owner confirms the rate-limit binding exists on the Worker and that a hand-posted valid report appears as a `sidereus: client.* failed` line.
+
+**Implementation Note**: Pause for confirmation before Phase 8. If the schedule forces a cut, stop here and record Phases 7-9 as cut.
+
+---
+
+## Phase 8: Service-worker reporting
+
+### Overview
+
+The worker stops swallowing its failures: each of its ~20 silent sites reports a step through the reporter core and then returns exactly the value it returned before (F25).
+
+### Changes Required:
+
+#### 1. The worker's reporter
+
+**Files**: `src/sw.ts`, `src/lib/offline/report.ts` (new, with tests)
+
+**Intent**: Wire `createReporter` into the worker with a `send` that posts the payload to `/api/client-error` and swallows its own failure (the one justified silent catch, allowlisted with that reason).
+
+**Contract**: `send` is `fetch("/api/client-error", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true })` with no credentials beyond the default same-origin; cap 10 per worker lifetime. A helper `reportAnd(step, fallback)` returns a catch handler that reports and returns the old fallback value, so each site changes from `.catch(() => undefined)` to `.catch(reportAnd("sw.<step>", undefined))` and behaviour is identical.
+
+#### 2. The sites
+
+**File**: `src/sw.ts:79,85,254,340,402,507,585,685-798` (about 17 `.catch(() => undefined)`, the `.catch(() => null)` at 85 and the two bare `catch {}` at 507 and 585)
+
+**Intent**: Give every site its step: index write and read, precache fetch, shell read, offline page, next-night copy, page copy (`store-page`), asset note, navigation settle, island commit, sweep and purge. `networkOrOffline` keeps rethrowing as it does.
+
+**Contract**: the steps are the `sw.*` family from Phase 7; no step is added without a `CLIENT_STEPS` entry. `scripts/build-sw.mjs` keeps passing (no new precache entry, no server import in the bundle).
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Report tests fail first, then pass: a failing commit reports its step once and the stored-copy decision is unchanged; a thrown `send` does not change any outcome; the cap and the dedupe hold: `npx vitest run src/lib/offline`
+- Silent-catch allowlist entries for `src/sw.ts` removed, guard green (only the reporter's own `send` catch remains, with its reason)
+- Build and the worker bundle check pass: `npm run build`
+- Offline e2e specs stay green with no retries added: `SUPABASE_URL=<local API_URL> SUPABASE_SECRET_KEY=<local SECRET_KEY> npx playwright test offline finder-offline session-plan-store service-worker-control`
+- A `POST` to `/api/client-error` passes through the worker untouched (asserted in the offline proxy spec or a unit test of the route table)
+- Full unit suite, lint and types pass: `npm test && npm run lint && npx astro check`
+
+#### Manual Verification:
+
+- With the preview running and the cache full, making a store step fail (for example by breaking the island URL in a proxy) produces a `sidereus: client.sw.* failed` line with a `requestId`, while the page and the stored copies behave as before.
+
+**Implementation Note**: Pause for confirmation before Phase 9; Phase 9 can be cut independently.
+
+---
+
+## Phase 9: Island and browser reporting
+
+### Overview
+
+React islands and the page's lazy loads report their failures: one global handler for uncaught errors and rejections, and the dynamic-import catches that today only reset a memo (F26, F33).
+
+### Changes Required:
+
+#### 1. The page-side reporter and the global handlers
+
+**Files**: `src/lib/observability/client/browser.ts` (new, with tests), `src/layouts/Layout.astro` (one `<script>` block)
+
+**Intent**: Report an uncaught error or an unhandled rejection from any island without a boundary around each (React 19 surfaces render errors as window `error` events).
+
+**Contract**: `installErrorReporting(reporter)` registers `error` and `unhandledrejection` handlers once; an event without an `error` object (a cross-origin "Script error." or a resource load) is ignored; the report carries only the error's name. `send` uses `navigator.sendBeacon("/api/client-error", new Blob([body], { type: "text/plain" }))` and falls back to a keepalive `fetch`; cap 5 per page. The script lives in `Layout.astro`, is linted without type information and obeys `no-console`; the module never imports server code, `@/lib/engine`, `@/lib/catalogue` or `cloudflare:workers` (an import-guard test, like `fact-islands.test.ts`).
+
+#### 2. Lazy-load and registration failures
+
+**Files**: `src/components/location/map-panel.tsx:52`, `src/components/location/LocationPicker.tsx:64`, `src/lib/gear/catalogue/load.ts:15,23`, `src/lib/offline/register.ts:8`, `src/lib/location/geocode.ts:98` (report only on the island side of the call)
+
+**Intent**: A failed dynamic import or service-worker registration reports its step and keeps the recovery it has (reset the memo, show the existing failed state) (F26, F33).
+
+**Contract**: steps `island.import`, `island.sw-register`, `island.geocode`. Not reported, with a reason in the guard's allowlist: a denied or unavailable geolocation (`LocationPicker.tsx:74`, `locate.ts:60`), which is the user's choice and would be noise.
+
+#### 3. Docs and the final allowlist
+
+**Files**: `context/deployment/error-visibility.md`, `CLAUDE.md`, `context/foundation/lessons.md`, `src/lib/observability/silent-catch-guard.test.ts`
+
+**Intent**: Document the client steps and the endpoint, and leave only reasoned silent catches.
+
+**Contract**: the runbook gains the client step table and the endpoint's limits; the CLAUDE.md rule says client code reports through `@/lib/observability/client` and never calls `console`; the lesson is extended; the guard's allowlist holds only the reporter's own `send` catches and the two geolocation sites.
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Browser reporter tests fail first, then pass: an event with a message, stack and file name sends only the name; no error object sends nothing; the page cap holds; install is idempotent: `npx vitest run src/lib/observability/client`
+- Import guard passes: the client module imports no server code: `npx vitest run src/lib/observability`
+- E2E `tests/e2e/client-errors.spec.ts` fails first, then passes: a thrown `TypeError` in a timeout and a rejected `RangeError` on a page each produce one `POST /api/client-error` (captured with `page.route`) whose body holds only `source`, `step` and `name`, never the thrown message: `SUPABASE_URL=<local API_URL> SUPABASE_SECRET_KEY=<local SECRET_KEY> npx playwright test client-errors`
+- Silent-catch guard passes with only reasoned entries
+- Existing island e2e stay green: `npx playwright test site-location site-map gear-catalogue`
+- Full unit suite, lint, types and build pass: `npm test && npm run lint && npx astro check && npm run build`
+
+#### Manual Verification:
+
+- After the deploy, running `setTimeout(() => { throw new TypeError("x") })` in the browser console on the live site produces a `sidereus: client.island.uncaught failed` line, and an Issue grouped by that step; neither line holds the text "x".
+
+**Implementation Note**: Pause for confirmation before closing the change.
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:
@@ -396,25 +568,26 @@ Close the loop with the owner: the runbook, the final guard allowlist, one delib
 - A coordinate canary in every flow test: the fake site's latitude and longitude, a fake email and a fake form value are put into error messages, and the test fails if any logged argument contains them.
 - The classification table (`isServerFault`), the fault carrier, the store results and thrown causes, the forecast steps, the loaders, the save-failure step, the middleware and the auth routes.
 - The silent-catch ratchet and the no-console guard.
+- The request ID (valid and invalid `cf-ray`, propagation into a detached promise), the client reporter cores (sanitizing, dedupe, caps), the endpoint (every refusal path and the one success path) and the middleware short-circuit.
 
 ### Integration Tests:
 
-- Route tests with a fake `context` per family; the existing Playwright specs and `npm run smoke` stay green; no new e2e is needed because no UI is added except one error message.
+- Route tests with a fake `context` per family; the existing Playwright specs and `npm run smoke` stay green; one new e2e (`client-errors.spec.ts`) proves the browser reports only a name; smoke proves the endpoint's refusals over HTTP. No UI is added except one error message.
 
 ### Manual Testing Steps:
 
 1. Build and preview with a dead `FORECAST_BASE_URL`; load `/tonight`; read the preview output for `sidereus: forecast.fetch failed`.
 2. Stop local Supabase; save a log entry; see the new message and `sidereus: save.log failed`.
 3. Stop local Auth; reload a gated page; see `sidereus: auth.claims failed`.
-4. After deploy, the Issues check and the automation (Phase 6).
+4. After deploy, the Issues check and the automation (Phase 6), then a deliberate console error on the live site (Phase 9).
 
 ## Performance Considerations
 
-A line costs one `console.error` with a small object, only on a failure path. A forecast outage logs once per failed step per request (a few lines per page view); Workers Logs' 256 KB per invocation cap is far above that. No hot path gains work.
+A line costs one `console.error` with a small object, only on a failure path. The client endpoint answers with no body and does no database work (the middleware skips the session for it); the worst case is 30 accepted reports per minute per location, and each browser sends at most 5 per page and the worker at most 10 per lifetime. A forecast outage logs once per failed step per request (a few lines per page view); Workers Logs' 256 KB per invocation cap is far above that. No hot path gains work.
 
 ## Migration Notes
 
-No database migration. The new `errors.save.unavailable` key ships with both locales. The `wrangler` bump and `observability.issues.enabled` take effect on the first deploy after merge (CI's `deploy` job); a dashboard-only enable would be turned off by it, which is why the flag is in the config.
+No database migration. The new `errors.save.unavailable` key ships with both locales. Phase 7 adds a `ratelimits` binding (Wrangler 4.36+, already satisfied by the Phase 1 bump) and regenerates `worker-configuration.d.ts`; the namespace ID must be an integer unused in the Cloudflare account. The `wrangler` bump and `observability.issues.enabled` take effect on the first deploy after merge (CI's `deploy` job); a dashboard-only enable would be turned off by it, which is why the flag is in the config.
 
 ## References
 
@@ -429,21 +602,21 @@ No database migration. The new `errors.save.unavailable` key ships with both loc
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
-### Phase 1: The failure helper, the guard and Issues config
+### Phase 1: The failure helper, the request ID, the guard and Issues config
 
 #### Automated
 
 - [ ] 1.1 Helper tests pass (never prints a message or stack, rejects a code that fails `CODE_SHAPE`, ignores a status outside 100-599, never throws on `undefined` or a non-Error, never passes an `Error` argument)
-- [ ] 1.2 Silent-catch guard passes with the day-one allowlist
-- [ ] 1.3 No-console guard passes with one allowed disable
-- [ ] 1.4 The five touched suites pass
-- [ ] 1.5 Full unit suite, lint and types pass
-- [ ] 1.6 Production build keeps the Issues setting
+- [ ] 1.2 Request-ID tests pass (`cf-ray` prefix without the data-centre suffix, UUID otherwise, ID reaches a detached promise, none outside a request)
+- [ ] 1.3 Silent-catch guard passes with the day-one allowlist
+- [ ] 1.4 No-console guard passes with one allowed disable
+- [ ] 1.5 The five touched suites pass
+- [ ] 1.6 Full unit suite, lint and types pass
+- [ ] 1.7 Production build keeps the Issues setting
 
 #### Manual
 
-- [ ] 1.7 Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL or a form value
-
+- [ ] 1.8 Reading `log-failure.ts` and `request-id.ts` confirms no path reads `message`, `stack`, a URL, a form value, an IP or any header but `cf-ray`
 ### Phase 2: Stores and the forecast client keep the diagnosis
 
 #### Automated
@@ -520,3 +693,49 @@ No database migration. The new `errors.save.unavailable` key ships with both loc
 - [ ] 6.6 The owner creates the Issues automation and a deliberate failure arrives grouped as `sidereus: forecast.fetch failed` at the chosen target
 - [ ] 6.7 One Workers Logs line per flow holds no coordinate, email, key or form value
 - [ ] 6.8 If a line does not become an Issue, the fallback query is used and the gap is recorded as a follow-up
+
+### Phase 7: The client-error endpoint and the reporter core
+
+#### Automated
+
+- [ ] 7.1 Reporter tests fail first, then pass (sanitizing, dedupe, caps, never throws)
+- [ ] 7.2 Route tests fail first, then pass (one success path, 400, 413, 403, 429, no Supabase use)
+- [ ] 7.3 Middleware test: `/api/client-error` creates no Supabase client and calls no `getClaims`
+- [ ] 7.4 Wrangler config is valid and `worker-configuration.d.ts` is regenerated
+- [ ] 7.5 Silent-catch guard and no-console guard pass
+- [ ] 7.6 Full unit suite, lint, types and build pass
+- [ ] 7.7 Smoke walk passes against the local stack, including the endpoint's refusals
+
+#### Manual
+
+- [ ] 7.8 After the first deploy the owner confirms the rate-limit binding exists and a hand-posted valid report appears as a `sidereus: client.* failed` line
+
+### Phase 8: Service-worker reporting
+
+#### Automated
+
+- [ ] 8.1 Report tests fail first, then pass (a failing commit reports once, outcomes unchanged, the cap and dedupe hold)
+- [ ] 8.2 Silent-catch allowlist entries for `src/sw.ts` removed, guard green
+- [ ] 8.3 Build and the worker bundle check pass
+- [ ] 8.4 Offline e2e specs stay green with no retries added
+- [ ] 8.5 A `POST` to `/api/client-error` passes through the worker untouched
+- [ ] 8.6 Full unit suite, lint and types pass
+
+#### Manual
+
+- [ ] 8.7 A forced store failure in the preview produces a `sidereus: client.sw.* failed` line with a `requestId`, and the page and stored copies behave as before
+
+### Phase 9: Island and browser reporting
+
+#### Automated
+
+- [ ] 9.1 Browser reporter tests fail first, then pass (only the name is sent, no error object sends nothing, page cap, idempotent install)
+- [ ] 9.2 Import guard passes: the client module imports no server code
+- [ ] 9.3 `client-errors.spec.ts` fails first, then passes (thrown error and rejection each produce one report with only `source`, `step` and `name`)
+- [ ] 9.4 Silent-catch guard passes with only reasoned entries
+- [ ] 9.5 Existing island e2e stay green
+- [ ] 9.6 Full unit suite, lint, types and build pass
+
+#### Manual
+
+- [ ] 9.7 After the deploy, a deliberate console error on the live site produces a `sidereus: client.island.uncaught failed` line and an Issue, with no message text in either
