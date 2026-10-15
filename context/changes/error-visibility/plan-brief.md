@@ -49,9 +49,9 @@ One server-only helper is the only `console.error` site. Stores and `open-meteo.
 | 4. Save routes and page reads | `saveFailureKey`, new EN/PL key, route and page lines, `formData` guard | Many routes; keeping validation paths unchanged |
 | 5. Sign-in, session, finder | `sessionUser` extracted and tested; routine `getClaims` errors silent, failures logged; auth route lines; sign-out result; finder `failed` reasons | Getting the routine-versus-failure list right |
 | 6. Operator path and rule | Runbook, allowlist, CLAUDE.md rule, lesson, live alert proof with the owner | Needs the owner in the dashboard; Issues may not group a handled log |
-| 7. Client-error endpoint (cuttable block starts; cut-off dates below) | Route, rate limiter binding, reporter core, middleware short-circuit, smoke checks | A public route: abuse and log volume |
+| 7. Client-error endpoint (cuttable block starts; cut-off dates below) | Route, rate limiter binding, reporter core, middleware short-circuit, smoke checks | A public route: abuse and log volume; reports are untrusted warn-level notices, never Issues (D13) |
 | 8. Service-worker reporting | ~20 swallowed worker sites report a step; behaviour unchanged | A worker that reports must not change what it stores |
-| 9. Island reporting | Global handlers, lazy-load catches, import guard, e2e, docs | Browser noise (cross-origin errors, denied geolocation) |
+| 9. Island reporting | Global handlers, lazy-load catches, import guard, e2e, docs | Browser noise (extensions, hydration mismatches, denied geolocation, routine network faults in the worker; D14, D15) |
 
 **Prerequisites:** none; Wrangler 4.134.0 or later; local Supabase for the DB, smoke and e2e steps.
 **Estimated effort:** about 9 sessions across 9 phases, mostly Sonnet; no UI phase. Phases 7-9 (about 3 sessions) can be cut for the 2026-11-04 deadline: 1-6 ship alone; cut 7-9 whole if Phase 6 is not merged by 2026-10-28; cut 8 and 9 if Phase 7 is not deployed by 2026-10-30; after 7, keep whichever of 8 and 9 is deployed by 2026-11-02.

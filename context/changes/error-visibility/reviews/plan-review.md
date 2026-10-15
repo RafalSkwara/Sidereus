@@ -1,11 +1,11 @@
 <!-- PLAN-REVIEW-REPORT -->
-# Plan Review: Production Error Visibility (M-4 S-07)
+# Plan Review: Production Error Visibility (M-4 S-07) — runda 2
 
-- **Plan**: context/changes/error-visibility/plan.md
+- **Plan**: context/changes/error-visibility/plan.md (commit 4d9962e)
 - **Mode**: Deep (weryfikacja w kodzie wykonana bezpośrednio, bez sub-agenta)
 - **Date**: 2026-10-15
-- **Verdict**: REVISE
-- **Findings**: 0 critical, 4 warnings, 3 observations
+- **Verdict**: REVISE (tylko fazy 7-9; fazy 1-6 są gotowe do wdrożenia)
+- **Findings**: 0 critical, 5 warnings, 2 observations
 
 ## Verdicts
 
@@ -13,153 +13,164 @@
 |-----------|---------|
 | End-State Alignment | PASS |
 | Lean Execution | PASS |
-| Architectural Fitness | WARNING |
+| Architectural Fitness | PASS |
 | Blind Spots | WARNING |
 | Plan Completeness | WARNING |
 
 ## Grounding
 
-Ścieżki 12/12 ✓ (`middleware.ts`, `supabase.ts`, `wrangler.jsonc`, `no-console-guard.test.ts`, `forecast/service.ts`,
-`open-meteo.ts`, `gear/store.ts`, `session-plans/store.ts`, `tonight/load.ts`, `api/tonight/plan.ts`, `scripts/smoke.mjs`,
-audyt), symbole 6/6 ✓ (`CODE_SHAPE`, `ALLOWED_DISABLES`, `writeFailure`, `thrownKey`, `getClaims`, siedem linii
-`console.error` w podanych miejscach), brief↔plan ✓. Progress↔fazy: 6/6 faz, 40/40 kryteriów zgodnych ✓.
+Ścieżki 10/10 ✓ (`src/sw.ts`, `offline/register.ts`, `gear/catalogue/load.ts`, `location/map-panel.tsx`,
+`LocationPicker.tsx`, `geocode.ts`, `middleware.ts`, `wrangler.jsonc`, `Layout.astro`, `scripts/smoke.mjs`),
+symbole 5/6 (`registerRoute` w `sw.ts` rejestruje też `POST`, nie tylko `GET` — zob. F7), brief↔plan ✓.
+Progress↔fazy: 9/9 faz, 66/66 kryteriów zgodnych, brak checkboxów poza Progress ✓.
 
-Potwierdzone: `wrangler@4.134.0` istnieje (najnowszy 4.151.0); adapter przenosi blok `observability` do
-`dist/server/wrangler.json`, więc kryterium 1.6 jest sprawdzalne; `getClaims()` przy braku sesji zwraca
-`{ data: null, error: null }` (`GoTrueClient.js`, ścieżka `getSession`), a `catch` w `middleware.ts:18` łapie
-głównie rzucone wyjątki — RC4 z audytu się zgadza.
+Potwierdzone: `@astrojs/react` 6.0.5 woła `hydrateRoot(element, componentEl, { identifierPrefix, formState })`
+bez `onUncaughtError` / `onRecoverableError` (`dist/client.js:77-80,105`), więc w React 19.3 domyślne handlery
+kierują błędy (także odzyskiwalne błędy hydratacji) do `reportError` → zdarzenie `error` na `window` (podstawa F3).
+Komentarze w `sw.ts:507-508` i `:585-586` („Offline or timed out”) opisują te `catch` jako zwykłe zdarzenia (podstawa F2).
 
-## Decyzje właściciela D3-D5 — opinia recenzenta
+## Weryfikacja poprawek z rundy 1
 
-- **D3 (302 + `errors.save.unavailable`)**: kształt dobry (zgodny z konwencją „no JSON errors”), ale tabela
-  `isServerFault` i treść komunikatu wymagają poprawki — zob. F1.
-- **D4 (żadnych identyfikatorów w liniach)** *(właściciel wrócił do tej decyzji po recenzji: brak własnego request ID, plan zaktualizowany)*: słuszne. Workers Logs i tak grupuje linie jednego wywołania (request id
-  zdarzenia), więc własny identyfikator nic nie wnosi. Uwaga tylko na metadane wywołania spoza helpera — F6.
-- **D5 (bez service workera i błędów klienta)** *(właściciel zmienił decyzję: błędy klienta są w S-07 jako fazy 7-9, ucinane od 2026-10-28)*: słuszne dla MS-03 (przepływy serwerowe), pod warunkiem że follow-up
-  dostanie numer issue — F7.
+| Uwaga | Status | Gdzie w planie |
+| --- | --- | --- |
+| F1 klasyfikacja i treść | ✅ Zastosowana: `classifyFault` z domyślnym `server`, wyłączone `42501`, `PGRST301-303`, `PGRST116`; neutralny `errors.serverFault`; `logNotice` (warn) dla wyłączeń | D3, D12, Faza 2 §1, Faza 4 §1 |
+| F2 strażnik catch | ✅ Każdy `catch` i `.catch`, pięć próbek kształtów | D8, Faza 1 §3 (zob. F4 dla raportera z faz 8-9) |
+| F3 `getClaims` | ✅ Lista rutynowa i lista awarii, test tabelaryczny, `sessionUser` wydzielony | Faza 5 §1 |
+| F4 moduły wirtualne | ✅ Fabryki mocków, testy tras w `src/lib/routes` | Faza 1 §4 |
+| F5 grupowanie w Issues | ✅ Faza 1 osobnym PR z linią próbną, Faza 3 czeka na sprawdzenie | D11, Faza 1 §6, 1.9-1.10 |
+| F6 metadane wywołania | ✅ Runbook i 6.6 obejmują zdarzenie wywołania (zob. F6 niżej: kolejność) | Faza 6 §1 |
+| F7 nieścisłości | ✅ Pięć plików / siedem linii, `store.ts:36` nazwany problemem, follow-upy w 6.8 | Current State, Faza 1 §2, Faza 6 |
+| D4 (odwrócona przez właściciela) | ✅ Spójnie w D4, „What We're NOT Doing” i Desired End State | D4 |
 
 ## Findings
 
-### F1 — `isServerFault` zalicza do „awarii serwera” odmowy RLS i wygasły JWT; komunikat obiecuje „brak połączenia”
+### F1 — Publiczny endpoint może wywoływać Issues i alerty z podrobionych zgłoszeń
 
 - **Severity**: ⚠️ WARNING
 - **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
 - **Dimension**: Blind Spots
-- **Location**: Faza 2 §1 (`fault.ts`), Faza 4 §1 (`saveFailureKey`, `errors.save.unavailable`), decyzja D3
-- **Detail**: Tabela oznacza jako serwerowe `42501` i wszystkie `PGRST*`. `42501` to odmowa polityki RLS (`WITH CHECK`)
-  — wynik sfałszowanego lub nieaktualnego id cudzej encji, czyli żądania użytkownika, nie awarii. `PGRST301`/`PGRST303`
-  to wygasły lub zły JWT w trakcie zapisu (sesja, nie baza), `PGRST116` to „0 lub >1 wiersz” przy `.single()`.
-  Każdy z nich dostanie komunikat „We could not reach the database…” (nieprawdziwy) i linię błędu, która w Workers
-  Issues stanie się alertem — próba podmiany id przez jednego użytkownika obudzi operatora. Ten sam tekst trafi też
-  do tras usuwania („nothing was saved” przy nieudanym usunięciu) i do błędów 5xx/`XX*`, gdzie baza była osiągalna.
-- **Fix A ⭐ Recommended**: Zawęzić tabelę i zneutralizować tekst
-  - Strength: `42501` → bez `fault` „server” (klucz encji, linia bez alertu albo `kind: "refused"`), `PGRST301/303` →
-    osobny `kind: "session"` z istniejącym przekierowaniem do logowania lub kluczem encji; `PGRST116` → `no-rows`.
-    Tekst: „Something went wrong on our side, so nothing was changed. Try again in a moment.” pasuje do zapisu i usuwania.
-  - Tradeoff: Jeden dodatkowy `kind` i kilka wierszy w tabeli testowej.
-  - Confidence: HIGH — kody PostgREST/Postgres są udokumentowane, a RLS w tym repo jest per-user z `WITH CHECK`.
-  - Blind spot: Nie sprawdzono, czy któraś trasa dziś realnie dostaje `42501` zamiast 0 wierszy (update/delete RLS filtruje po cichu).
-- **Fix B**: Zostawić tabelę, zmienić tylko treść komunikatu na neutralną
-  - Strength: Minimalna zmiana planu.
-  - Tradeoff: Odmowy RLS i wygasłe sesje dalej generują alerty w Issues.
-  - Confidence: MEDIUM — szum alertów zależy od ruchu, którego nie zmierzono.
-  - Blind spot: Zmęczenie alertami przy pierwszym realnym incydencie.
-- **Decision**: Fix A applied: `classifyFault` defaults to server and excludes `42501`, `PGRST301/302/303` and `PGRST116`; neutral copy `errors.serverFault`; warn-level `logNotice` for the excluded kinds (plan: D3, D12, Phase 2 §1-2, Phase 4 §1)
-
-### F2 — Reguła strażnika `silent-catch` nie łapie wzorców, które wskazał audyt
-
-- **Severity**: ⚠️ WARNING
-- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
-- **Dimension**: Architectural Fitness
-- **Location**: Faza 1 §3 (`silent-catch-guard.test.ts`), decyzja D8
-- **Detail**: Kontrakt flaguje tylko `catch` / `.catch` „zwracające stałą”. W kodzie przemilczenia mają inne kształty:
-  pusty `catch` z komentarzem (`forecast/service.ts:169`, `Layout.astro:41`), zwrot wyrażenia awaryjnego
-  (`forecast/service.ts:216` `return usable ? fromStored(…) : null`), ponowne rzucenie bez `cause`
-  (`open-meteo.ts:92-94`, `geocode.ts:98-100`), zamiana na przekierowanie (`api/tonight/plan.ts:59-61`
-  `return fail(thrownKey(…))`). Strażnik byłby zielony dla następnego takiego `catch`, więc D8 („jedyna rzecz, która
-  zatrzyma następny cichy catch”) nie jest spełnione.
-- **Fix**: Flagować każdą klauzulę `catch` i każdy handler `.catch`, chyba że ciało wywołuje `logFailure`, rzuca dalej
-  z `cause` albo plik ma wpis w allowliście z dokładną liczbą i powodem (inwentarz dnia pierwszego ~80 miejsc, w tym
-  `sw.ts`). Test strażnika ma też próbki dla czterech kształtów powyżej.
-  - Strength: Ratchet obejmuje klasę błędów z audytu (RC1/RC2), a nie tylko jej najprostszą postać.
-  - Tradeoff: Większa allowlista na start; więcej wpisów do usunięcia w fazach 3-5.
-  - Confidence: HIGH — kształty potwierdzone grepem w `src`.
-  - Blind spot: Liczba uzasadnionych wyjątków w wyspach klienta niepoliczona.
-- **Decision**: Applied: the guard flags every `catch` and `.catch` and carries samples of the five shapes (plan: D8, Phase 1 §3)
-
-### F3 — Które błędy `getClaims` są rutynowe, a które są awarią: nierozstrzygnięte
-
-- **Severity**: ⚠️ WARNING
-- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
-- **Dimension**: Blind Spots
-- **Location**: Faza 5 §1 (`sessionUser`, krok `auth.claims`), kryterium 5.1
-- **Detail**: Plan wycisza tylko błąd „no session”, ale brak sesji zwraca `error: null`, więc ten warunek nic nie
-  rozstrzyga. Prawdziwy podział to: rutynowe (`refresh_token_not_found`, `refresh_token_already_used`,
-  `session_expired`, `AuthInvalidJwtError` dla starego lub zmienionego cookie — użytkownik wylogowany gdzie indziej)
-  kontra awaria (`AuthRetryableFetchError`, status ≥ 500, timeout z `withTimeout`). Bez tej listy każda nieważna sesja
-  da linię `console.error`, a więc Issue i alert.
-- **Fix**: Zapisać w kontrakcie listę cichych kodów/nazw (z testem tabelarycznym) i logować tylko resztę; kryterium 5.1
-  rozszerzyć o „stary refresh token → null user, brak linii”.
-- **Decision**: Applied: routine list (stale cookie, expired session, invalid JWT) versus failure list (retryable fetch, 5xx, timeout, unknown), pinned by a table test; `sessionUser` extracted (plan: Phase 5 §1)
-
-### F4 — Testy middleware, tras auth i KV importują moduły wirtualne, których Vitest nie zna
-
-- **Severity**: ⚠️ WARNING
-- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
-- **Dimension**: Plan Completeness
-- **Location**: Faza 4 §2 (testy tras), Faza 5 kryteria 5.1-5.2, Faza 3 §1 (`kv-cache.ts`)
-- **Detail**: `middleware.ts` importuje `astro:middleware`, `lib/supabase.ts` (a przez niego `api/auth/*`)
-  `astro:env/server`, `forecast/kv-cache.ts` `cloudflare:workers`. `vitest.config.ts` celowo nie ładuje pipeline’u
-  Astro, a żaden istniejący test nie mockuje tych modułów. Twierdzenie „a fake context is enough” jest niepełne —
-  implementer odkryje to dopiero przy pierwszym czerwonym imporcie.
-- **Fix**: Wydzielić `sessionUser(client)` do `src/lib/auth/session-user.ts` (testowalne bez mocków), a dla tras auth
-  i `kv-cache` zapisać `vi.mock("astro:env/server" | "cloudflare:workers", factory)` jako przyjęty wzorzec.
-- **Decision**: Applied: shared mock factories for `astro:middleware`, `astro:env/server` and `cloudflare:workers`, `sessionUser` extracted, route tests under `src/lib/routes` (plan: Phase 1 §4)
-
-### F5 — Dowód grupowania w Workers Issues dopiero w Fazie 6
-
-- **Severity**: 💡 OBSERVATION
-- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
-- **Dimension**: Blind Spots
-- **Location**: Decyzja D2, Faza 6 kryteria 6.5-6.6, brief „Open Risks”
-- **Detail**: Cały kształt linii (stały komunikat na krok) zakłada, że Issues grupuje `console.error` po komunikacie.
-  Jeśli grupuje po miejscu wywołania lub stosie, wszystkie kroki z jedynego `logFailure` zleją się w jedno Issue.
-  Plan ma fallback (zapisane zapytanie), ale dowiaduje się o tym po pięciu fazach.
-- **Fix A ⭐ Recommended**: Wydać Fazę 1 osobnym PR (merge przez właściciela, deploy) i przed Fazą 3 zrobić test 6.5/6.6
-  na jednej celowej linii (np. martwy `FORECAST_BASE_URL` na podglądzie albo pojedynczy krok testowy).
-  - Strength: Ryzyko projektowe sprawdzone, zanim powstanie ~30 kroków.
-  - Tradeoff: Dodatkowy merge i deploy w środku zmiany.
-  - Confidence: MEDIUM — zależy od dostępności okna na deploy.
-  - Blind spot: Grupowanie może zależeć od wolumenu.
-- **Fix B**: Zostawić kolejność i przyjąć ryzyko z fallbackiem.
-  - Strength: Bez zmian w przepływie.
-  - Tradeoff: Ewentualna przeróbka D2 na końcu.
-  - Confidence: MEDIUM.
+- **Location**: Faza 7 §2-3, decyzja D9
+- **Detail**: D9 mówi, że limity „bound log volume and forgery”. Ograniczają one jednak tylko wolumen. `Sec-Fetch-Site`
+  i `Origin` to nagłówki, które `curl` ustawi dowolnie; sprawdzenie zatrzymuje tylko cudzą stronę w przeglądarce.
+  Każde przyjęte zgłoszenie idzie przez `logFailure` → `console.error` → Workers Issues → automatyzacja, więc ktokolwiek
+  może wysyłać do operatora fałszywe alerty o wybranym kroku i nazwie (`name` to dowolny krótki identyfikator).
+  Do tego jeden stały klucz limitera oznacza, że 30 podrobionych zgłoszeń na minutę z jednej lokalizacji zagłusza
+  prawdziwe zgłoszenia wszystkich użytkowników tej lokalizacji — atak wyłącza sygnał, nie aplikację.
+- **Fix A ⭐ Recommended**: Zgłoszenia klienta jako niezaufane: `logNotice` (warn) dla `client.*`, alert z progu
+  - Strength: Podrobione zgłoszenie nie budzi operatora; prawdziwy wysyp błędów nadal jest widoczny przez zapisane
+  zapytanie Workers Logs na `step` z progiem (np. > N/godz.), opisane w runbooku. Zgodne z D12 („warn dla tego, co
+  nie powinno budzić”).
+  - Tradeoff: Błąd wyspy nie daje natychmiastowego Issue; kryterium 9.7 („…and an Issue”) trzeba zmienić.
+  - Confidence: MEDIUM — zależy od tego, czy Workers Logs pozwala ustawić alert na zapytanie (runbook ma już fallback z zapisanym zapytaniem).
+  - Blind spot: Możliwości alertów progowych w Workers Logs nie sprawdzono.
+- **Fix B**: Zostawić poziom error, ale wyłączyć `client.*` z automatyzacji Issues i dać osobne klucze limitera per rodzina (`sw`, `island`)
+  - Strength: Issues dalej grupuje błędy klienta do przeglądania; zalew jednej rodziny nie zagłusza drugiej.
+  - Tradeoff: Lista Issues nadal może zostać zaśmiecona podróbkami; filtr automatyzacji to ręczny krok w panelu.
+  - Confidence: MEDIUM — filtrowanie automatyzacji po treści komunikatu nie zostało potwierdzone w dokumentacji.
   - Blind spot: Jak wyżej.
-- **Decision**: Fix A taken: Phase 1 ships as its own PR with a real `forecast.fetch` probe line; Phase 3 waits for the Issues grouping check (plan: D11, Phase 1 §6, criteria 1.9-1.10)
+- **Decision**: Fix A taken (plan D13): client reports are `logNotice` (warn, `noted`), never error level; a real burst is found by a saved Workers Logs query with a count threshold, and the runbook verifies whether such a query can alert. Fix B's per-family limiter keys not taken: a forger can flood either family, and the key would be chosen before the body is validated; the residual (a flood uses one location's 30 per minute) is accepted and written down. Criteria 7.2, 7.8, 8.7, 9.7 reworded. D9 limits (30/min, 512 B) confirmed by the owner 2026-10-15 evening.
 
-### F6 — Prywatność poza helperem: metadane wywołania w Workers Logs
+### F2 — Service worker zgłosi oczekiwane błędy sieci, a limity „na czas życia workera” zerują się co chwilę
 
-- **Severity**: 💡 OBSERVATION
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: Faza 8 §1-2, Faza 7 §1 (limity), decyzja D10
+- **Detail**: Tryb offline jest dla teleskopu w terenie, więc błędy sieci w SW są normalne: `sw.ts:507` i `:585` same
+  piszą „Offline or timed out”, a pobieranie z precache (`:254`), kopia na następną noc i odświeżanie kopii zawodzą przy
+  każdej słabej sieci. D10 odrzuca zgłoszenie tylko wtedy, gdy urządzenie jest offline; przy `onLine === true` i
+  zerwanym zasięgu (`TimeoutError`, `TypeError: Failed to fetch`) zgłoszenia pójdą przy każdej wizycie. Limit „10 per
+  worker lifetime” i deduplikacja żyją w globalnym zakresie SW, który przeglądarka kończy po krótkiej bezczynności
+  i uruchamia na nowo przy następnym zdarzeniu — to limit na wybudzenie, nie na urządzenie. Szum z SW zużyje wspólny
+  koszyk 30/min i zasłoni rzadkie, prawdziwe awarie (pełny storage, uszkodzony indeks).
+- **Fix**: Klasyfikacja w `reportAnd` / reporterze SW: błędy sieci (`TypeError` z `fetch`, `AbortError`,
+  `TimeoutError`) w miejscach zależnych od sieci są rutynowe i nie są zgłaszane; zgłaszane są błędy cache i storage
+  (`QuotaExceededError`, `InvalidStateError`, `UnknownError`), parsowania (`SyntaxError`) i nieznane. W kontrakcie
+  zapisać wprost, że limit dotyczy jednego wybudzenia SW, i dodać do testów 8.1 przypadek „timeout przy `onLine`”.
+  - Strength: Sygnał z SW pokazuje to, czego operator nie zobaczy inaczej (storage, indeks), bez szumu z terenu.
+  - Tradeoff: Lista nazw do utrzymania; przeglądarki różnie nazywają błędy storage.
+  - Confidence: HIGH — komentarze w `sw.ts` same rozróżniają te przypadki.
+  - Blind spot: Nazwy błędów Cache API w Safari nie zostały sprawdzone.
+- **Decision**: Taken as recommended (D14): pure `isRoutineNetworkFault` in `client/classify.ts`, `NETWORK_STEPS` assigned site by site in Phase 8 §2; cap is per wake-up in D9/D10 and Phases 7-8; test 7.1 and 8.1 gain the timeout-while-online case. Unknown names are reported (Safari variance errs toward a notice).
+
+### F3 — Globalny handler wysp zgłosi błędy rozszerzeń i niedopasowania hydratacji jako `island.uncaught`
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: Faza 9 §1, kryterium 9.7
+- **Detail**: Handler `error` na `window` dostaje także wyjątki ze skryptów rozszerzeń (które często mają obiekt
+  `error`), a React 19 (Astro nie ustawia handlerów w `hydrateRoot`) kieruje przez `reportError` także odzyskiwalne
+  błędy hydratacji — typowy skutek rozszerzeń zmieniających DOM (tłumacz, tryb ciemny). Zgłoszenie niesie tylko
+  `name` (np. `TypeError`, `Error`), więc operator nie odróżni błędu Sidereus od cudzego.
+- **Fix**: Filtr lokalny, którego wynik nie jest wysyłany: zgłaszać `error` tylko gdy `event.filename` zaczyna się od
+  `location.origin + "/_astro/"` (sprawdzane w przeglądarce, nic z tego nie trafia do ciała zgłoszenia); błędy
+  hydratacji dostają osobny krok `island.hydration` albo nie są zgłaszane. Kryterium 9.7 (wyjątek wpisany w konsoli
+  DevTools, którego plik to „VM”) zastąpić wyjątkiem z kodu strony, np. ze strony `/design` w podglądzie.
+  - Strength: `island.uncaught` znaczy wtedy „nasz kod”.
+  - Tradeoff: Odrzucenia `unhandledrejection` nie mają `filename` — dla nich filtr nie działa i trzeba to zaakceptować.
+  - Confidence: MEDIUM — zachowanie `filename` dla skryptów rozszerzeń różni się między przeglądarkami.
+  - Blind spot: Nie sprawdzono, czy Astro serwuje wszystkie skrypty wysp spod `/_astro/`.
+- **Decision**: Taken with one deviation (D15): own-script filter on `filename` under `location.origin + "/_astro/"`, `island.hydration` step, rejections unfiltered. Deviation: the reviewer's replacement for 9.7 (an exception on `/design` in a preview) cannot work, because `src/pages/design.astro:91` returns 404 unless `import.meta.env.DEV`. The e2e (9.3) serves a script from `/_astro/` via `page.route` for the positive case and throws from `page.evaluate` for the negative; the live check (9.7) uses a rejected promise typed in the console (positive) and a thrown error typed in the console (no line, negative).
+
+### F4 — Strażnik z Fazy 1 nie uzna `reportAnd` ani `report` za zgłoszenie
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Faza 1 §3 (kontrakt strażnika), Faza 8 kryterium 8.2, Faza 9 §2-3
+- **Detail**: Strażnik przepuszcza miejsce tylko wtedy, gdy ciało `catch` wywołuje `logFailure` / `logNotice` albo
+  rzuca dalej. W Fazie 8 miejsca wyglądają jak `.catch(reportAnd("sw.index", undefined))`: argument nie jest literałem
+  funkcji, więc reguła „body calls…” nie ma czego sprawdzić. W Fazie 9 wyspy wołają `reporter.report(...)`. Bez
+  zmiany kontraktu kryterium 8.2 („allowlist entries for `src/sw.ts` removed”) się nie spełni albo implementer
+  dopisze wyjątek w locie.
+- **Fix**: W Fazie 1 §3 (albo jako zmiana strażnika w Fazie 7) dopisać: wywołania `report` / `reportAnd` z
+  `@/lib/observability/client` są zgłoszeniem, a `.catch(<wywołanie reportAnd(...)>)` przechodzi; dodać szóstą próbkę.
+- **Decision**: Taken as recommended in Phase 1 §3: `report` / `reportAnd` / `<reporter>.report` count as a report when imported from `@/lib/observability/client` or `@/lib/offline/report`; `.catch(reportAnd(...))` passes; sixth sample shape (with and without the import); 1.3 and Progress updated. Phase 7 adds the `client/index.ts` barrel and Phase 8 exports both names from `offline/report.ts`.
+
+### F5 — Limit 512 bajtów bez sposobu odczytu ciała
+
+- **Severity**: ⚠️ WARNING
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Blind Spots
-- **Location**: Decyzja D4, Faza 6 §1 (runbook) i kryterium 6.7
-- **Detail**: D4 zabezpiecza treść linii, ale zdarzenie wywołania w Workers Logs ma własne pola (ścieżka URL z id encji,
-  np. `/gear/sites/<uuid>`; query jest redagowane przez `redact_query_string`; ewentualnie dane `cf` żądania).
-  Kryterium 6.7 sprawdza tylko „jedną linię na przepływ”.
-- **Fix**: W 6.7 i w runbooku sprawdzić też pola zdarzenia wywołania (nie tylko argumenty `console.error`) i zapisać,
-  co tam jest i dlaczego jest akceptowalne.
-- **Decision**: Applied: the runbook and criterion 6.6 cover the invocation event's fields (plan: Phase 6 §1)
+- **Location**: Faza 7 §2, kryterium 7.2
+- **Detail**: Kontrakt mówi „body of at most 512 bytes (413)”, ale nie mówi, jak to sprawdzić. Naturalne
+  `await request.text()` najpierw wczyta całe ciało (Workers przyjmują duże ciała), więc każde podrobione żądanie
+  z wielomegabajtowym ciałem zużyje pamięć i CPU, zanim padnie 413. Sprawdzenia przed limiterem (403, 413, 415)
+  nie są limitowane, więc to one są tanią powierzchnią ataku.
+- **Fix**: Najpierw odrzucać po `Content-Length` > 512, potem czytać strumień licznikiem przerywanym na 513. bajcie
+  (ciało bez `Content-Length`, chunked, też ograniczone); w 7.2 dodać przypadek bez `Content-Length`.
+- **Decision**: Taken as recommended: `Content-Length` over 512 refused first, then a streamed read stopping at the 513th byte; 7.2 adds a chunked body without `Content-Length` proved with a counting stream.
 
-### F7 — Drobne nieścisłości w planie
+### F6 — Sprawdzenie pól zdarzenia wywołania (pola `cf`) dopiero w Fazie 6, choć Faza 1 wdraża się wcześniej
+
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: D4 (odwrócona), Faza 6 §1 i 6.6, Faza 1 kryterium 1.9
+- **Detail**: Właściwości `request.cf` w Cloudflare zawierają przybliżone `latitude`, `longitude`, `city` i
+  `postalCode` odwiedzającego. Jeśli Workers Logs zapisuje je w zdarzeniu wywołania, zasada „no coordinates in any
+  report” jest łamana przez konfigurację, która działa już dziś, niezależnie od naszych linii. Po odwróceniu D4 cała
+  korelacja opiera się właśnie na tych metadanych. Plan sprawdza to w 6.6, a Faza 1 trafia na produkcję jako pierwsza
+  i już wtedy pozwala to zobaczyć.
+- **Fix**: Przenieść sprawdzenie pól zdarzenia wywołania do 1.9 (pierwszy deploy) i zapisać z góry, co zrobić, jeśli
+  pola geo tam są (np. wyłączenie logów wywołań w `observability.logs` i oparcie korelacji na identyfikatorze żądania
+  w metadanych linii `console`, jeśli Workers Logs go dołącza — do sprawdzenia).
+- **Decision**: Taken as recommended: the invocation-event geo check moves to 1.9 (first deploy) with the fallback written down (`observability.logs.invocation_logs: false`, flag name and the surviving correlation identifier both marked "to be confirmed in the docs" because neither is verified); Phase 6 §1 and 6.6 keep the runbook record, URL path and headers.
+
+### F7 — Drobne nieścisłości w nowych fragmentach
 
 - **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Plan Completeness
-- **Location**: Current State, Faza 1 §2, decyzja D5
-- **Detail**: (a) `ALLOWED_DISABLES` ma 5 wpisów plikowych (7 linii), a nie „six entries”. (b) `session-plans/store.ts:36`
-  jest opisany jako bezpieczny wzorzec, a przekazuje surowy `PostgrestError` (z `message`) jako `cause`; Faza 2 go
-  „wyrównuje”, ale Current State powinien to nazwać problemem, nie wzorcem. (c) D5/D6/D7 mówią o follow-upach bez
-  numerów issue.
-- **Fix**: Poprawić liczbę, opis `store.ts:36` i założyć issue dla follow-upów D5 (SW/klient), D6 (release) i D7 (UI).
-- **Decision**: Applied: five allowlist files (seven lines), `store.ts:36` named a problem (raw `PostgrestError` as `cause`), follow-up issues in criterion 6.8; D5 is now in scope as Phases 7-9
+- **Location**: Key Discoveries, Faza 7 §4, Faza 1 kryterium 1.10
+- **Detail**: (a) Key Discoveries: „`src/sw.ts` routes only `GET` (line 766)” — `sw.ts:767` rejestruje też `POST` dla
+  nawigacji. Wniosek („beacon passes through”) dalej jest prawdziwy, bo `sendBeacon` i `fetch` nie mają `mode:
+  "navigate"`, ale powód trzeba poprawić, bo 8.5 na nim stoi. (b) Astro domyślnie ma `security.checkOrigin`, który
+  odrzuca cross-site `POST` z `text/plain` własnym 403 jeszcze przed trasą; krok smoke „foreign Origin → 403” zobaczy
+  odpowiedź Astro, nie trasy (dla JSON — trasy). Trzeba zapisać, co test sprawdza. (c) Key Discoveries nadal mówi
+  „a fake context is enough”, choć F4 z rundy 1 dodał mocki modułów wirtualnych. (d) 1.10 dopuszcza „briefly pointing
+  the production variable at a dead host” — to psuje prognozę prawdziwym użytkownikom; tymczasowy Worker jest
+  bezpieczniejszy i powinien być jedyną opcją.
+- **Fix**: Poprawić cztery zdania jak wyżej.
+- **Decision**: Taken: (a) Key Discoveries now cites `sw.ts:766-767` (`GET` and `POST`) and the `mode: "navigate"` reason; (b) the smoke foreign-`Origin` step uses JSON so it proves the route, and the text says Astro's `checkOrigin` answers the `text/plain` variant (covered by the route test); (c) "a fake context" now names the virtual-module mocks; (d) §7 states the probe never changes the production variable, even briefly (the current 1.10 text only offers Version URL, Preview and a separate Worker, so no production-variable option remained to delete).
