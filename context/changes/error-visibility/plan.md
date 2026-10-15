@@ -689,11 +689,11 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 2.1 Fault tests pass (classification table, `faultFrom` drops the message)
-- [x] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status`
-- [x] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL
-- [x] 2.4 Full unit suite, lint and types pass
-- [x] 2.5 DB suites unaffected
+- [x] 2.1 Fault tests pass (classification table, `faultFrom` drops the message) — c2c65df
+- [x] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status` — c2c65df
+- [x] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL — c2c65df
+- [x] 2.4 Full unit suite, lint and types pass — c2c65df
+- [x] 2.5 DB suites unaffected — c2c65df
 
 #### Manual
 
