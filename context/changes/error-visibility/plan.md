@@ -145,6 +145,15 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 
 **Contract**: the `getForecast` catch logs `forecast.fetch` with the error's name and nothing else; behaviour (stored copy or null) is unchanged. Phase 3 extends this line with the `ForecastError` step and status and adds the other forecast steps.
 
+#### 7. The probe procedure
+
+**Intent**: Trigger the probe line on the real Worker without touching production traffic (owner, 2026-10-15: a preview version of the production Worker, same bindings), with a checked order of fallbacks. The runbook (Phase 6) records the procedure that worked.
+
+**Contract**: Cloudflare's docs (read 2026-10-15) state that `wrangler versions upload` creates a Version URL that "uses that Worker version's existing configuration and resources", that its `--var key:value` flag overrides config variables, and that invocations are attributable to a version (`ScriptVersion` in Workers Logs/Logpush). They do **not** say in so many words that Version URL invocations appear in the Worker's Workers Logs or create Issues, so the owner's step is verified, not assumed, in this order:
+1. **Version URL (the owner's choice).** After `npm run build`, upload a version with the forecast base URL overridden to a dead address, for example `npx wrangler versions upload --tag probe --message "issues probe" --var FORECAST_BASE_URL:http://127.0.0.1:9`, open the printed Version URL's `/tonight` signed in, and look in the production Worker's Workers Logs (filter on the `sidereus:` prefix and the `ScriptVersion`) and in Issues. Production's active deployment and traffic are untouched. `FORECAST_BASE_URL` is an `astro:env` secret; if the override is not picked up as a variable, upload it with `--secrets-file` instead. Version URLs must be enabled for the Worker (`preview_urls`; they follow the `workers.dev` setting).
+2. **Worker Preview (documented to have its own logs).** If step 1 shows no log line or no Issue, use `npx wrangler@4.135.0 preview --name probe` (Previews need Wrangler 4.135.0 or later; no repository dependency change) with a `previews` block that sets `FORECAST_BASE_URL` and enables `previews.observability` with `logs.persist` true. Previews are documented to keep their own logs, traces and metrics under the same Worker with the same bindings by default; the docs do not say whether Issues covers a Preview.
+3. **A separate `sidereus-probe` Worker.** Only if both fail to produce a line and an Issue: deploy the same build under another name with the dead variable and the secrets and bindings it needs. The orchestrator is told which step was used.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -161,7 +170,7 @@ One `logFailure` / `logNotice` helper pair with a closed step vocabulary, the se
 
 - Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL, a form value or a header.
 - After the owner merges and deploys this phase, Workers Issues is on for the Worker and Workers Logs shows the script version per invocation (D6).
-- A deliberate forecast failure on the deployed Worker (a throwaway Worker deployed from this build with a dead `FORECAST_BASE_URL`, or briefly pointing the production variable at a dead host, the owner's choice) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message. If Issues groups by call site or stack instead, D2 is revisited before Phase 3 starts.
+- A deliberate forecast failure on a preview version of the production Worker (the probe procedure in §7: a Version URL from `wrangler versions upload` with `FORECAST_BASE_URL` overridden to a dead address, falling back to a Worker Preview, then to a separate `sidereus-probe` Worker) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message, with production traffic untouched. If Issues groups by call site or stack instead, D2 is revisited before Phase 3 starts.
 
 **Implementation Note**: This phase ships as its own pull request, merged and deployed by the owner (review F5, taken: the whole line shape assumes how Issues groups). Phase 2 can proceed in parallel; Phase 3 starts only after the grouping check above. Pause for confirmation before Phase 2.
 
@@ -654,7 +663,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 - [ ] 1.8 Reading `log-failure.ts` confirms no path reads `message`, `stack`, a URL, a form value or a header
 - [ ] 1.9 After the owner merges and deploys this phase, Workers Issues is on and the script version shows per invocation
-- [ ] 1.10 A deliberate forecast failure on the deployed Worker produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message (else D2 is revisited before Phase 3)
+- [ ] 1.10 A deliberate forecast failure on a preview version of the production Worker (Version URL, else Worker Preview, else `sidereus-probe`; see §7) produces a `sidereus: forecast.fetch failed` line and an Issue grouped by that message (else D2 is revisited before Phase 3)
 
 ### Phase 2: Stores and the forecast client keep the diagnosis
 
