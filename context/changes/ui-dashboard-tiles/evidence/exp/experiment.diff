@@ -1,0 +1,405 @@
+diff --git a/src/components/design/event-samples.ts b/src/components/design/event-samples.ts
+index 74fe883..7358c5d 100644
+--- a/src/components/design/event-samples.ts
++++ b/src/components/design/event-samples.ts
+@@ -48,7 +48,7 @@ function wordedEventsAt(site: SiteRecord, locale: Locale, night = SAMPLE_EVENTS_
+ 
+ export interface EventSamples {
+   /** One notable event tonight, several (the line says "+1 more"), and a solar eclipse (eclipse glasses only). */
+-  verdictLines: { label: string; line: string }[];
++  verdictLines: { label: string; line: string; kind: TonightSkyEvent["kind"] | null }[];
+   /** The tile's lines: an event tonight, one on a later night, a solar eclipse, none in the window, unavailable. */
+   tiles: { label: string; events: TonightSkyEvents | null }[];
+   /** Warsaw, 2027-07-25 + 30 nights: the visible solar eclipse with its safety line, other visible rows and not-visible ones. */
+@@ -135,11 +135,12 @@ export function eventSamples(locale: Locale): EventSamples {
+ 
+   return {
+     verdictLines: [
+-      { label: "one event tonight", line: eventsVerdictLine(tonightOne, locale) ?? "" },
+-      { label: "several events tonight: the first and “+1 more”", line: eventsVerdictLine(tonightMany, locale) ?? "" },
++      { label: "one event tonight", line: eventsVerdictLine(tonightOne, locale) ?? "", kind: tonightOne.tonight[0]?.kind ?? null },
++      { label: "several events tonight: the first and “+1 more”", line: eventsVerdictLine(tonightMany, locale) ?? "", kind: tonightMany.tonight[0]?.kind ?? null },
+       {
+         label: "a solar eclipse the next day: “Tomorrow, 11:22”, eclipse glasses only",
+         line: eventsVerdictLine(tonightEclipse, locale) ?? "",
++        kind: tonightEclipse.tonight[0]?.kind ?? null,
+       },
+     ],
+     tiles: [
+diff --git a/src/components/tonight/EventsTile.astro b/src/components/tonight/EventsTile.astro
+index 4bc689a..4185d05 100644
+--- a/src/components/tonight/EventsTile.astro
++++ b/src/components/tonight/EventsTile.astro
+@@ -22,7 +22,7 @@ const m = getMessages(locale);
+ ---
+ 
+ <Tile href="/tonight/events" headingId={headingId} heading={m.tonight.summary.events}>
+-  <span class="mt-3 block text-body font-semibold break-words" data-events-tile-line>
++  <span class="mt-line block text-body font-semibold break-words" data-events-tile-line>
+     {eventsTileLine(events, locale)}
+   </span>
+ </Tile>
+diff --git a/src/components/tonight/TonightContent.astro b/src/components/tonight/TonightContent.astro
+index c09c4a1..385d15d 100644
+--- a/src/components/tonight/TonightContent.astro
++++ b/src/components/tonight/TonightContent.astro
+@@ -147,6 +147,7 @@ const eventLine = view ? eventsVerdictLine(view.skyEvents, locale) : null;
+           forecastStatus={view.forecastStatus}
+           explanation={view.explanation}
+           event={eventLine}
++          eventKind={view.skyEvents?.tonight[0]?.kind ?? null}
+         />
+       </TonightSkyView>
+     ) : (
+@@ -165,6 +166,7 @@ const eventLine = view ? eventsVerdictLine(view.skyEvents, locale) : null;
+               forecastStatus={view.forecastStatus}
+               explanation={view.explanation}
+               event={eventLine}
++              eventKind={view.skyEvents?.tonight[0]?.kind ?? null}
+             />
+           </>
+         ) : (
+diff --git a/src/components/tonight/TonightSkeleton.astro b/src/components/tonight/TonightSkeleton.astro
+index 5e23e72..1c2bab6 100644
+--- a/src/components/tonight/TonightSkeleton.astro
++++ b/src/components/tonight/TonightSkeleton.astro
+@@ -39,9 +39,9 @@ const tile = TILE_ROW_CLASS;
+   <TonightSky night verdict strip>
+     <div aria-hidden="true">
+       <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
+-      <div class:list={[bar, "mt-2 w-2/3 font-display text-display"]}>&nbsp;</div>
++      <div class:list={[bar, "mt-line w-2/3 font-display text-display"]}>&nbsp;</div>
+       <div class:list={[bar, "mt-1 w-3/4 text-body"]}>&nbsp;</div>
+-      <div class:list={[bar, "mt-3 w-40 text-label max-sm:hidden"]}>&nbsp;</div>
++      <div class:list={[bar, "mt-group w-40 text-label max-sm:hidden"]}>&nbsp;</div>
+     </div>
+   </TonightSky>
+   <!-- The live sky's slider row (interactive-sky) at its fixed height, so the tiles don't jump when it swaps in. -->
+@@ -70,31 +70,31 @@ const tile = TILE_ROW_CLASS;
+     <div aria-hidden="true">
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-40 text-label"]}>&nbsp;</div>
+-        <div class="mt-4 space-y-3 py-1.5">
++        <div class="mt-line space-y-line">
+           {[1, 2, 3].map(() => (
+             <div class:list={[bar, "w-2/3 text-title"]}>&nbsp;</div>
+           ))}
+         </div>
+         <!-- The legend line for the "not seen yet" icons (observing-progress), then the tile's caption. -->
+-        <div class:list={[bar, "mt-2 w-1/2 text-label"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-group w-1/2 text-label"]}>&nbsp;</div>
+         <!-- The tile's caption ("Each at the time it stands highest. N targets tonight."). -->
+-        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-line w-3/4 text-label"]}>&nbsp;</div>
+       </div>
+ 
+       <!-- The sky events tile (sky-events), straight after the targets: its heading and one line. -->
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+-        <div class:list={[bar, "mt-3 w-3/4 text-body"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-line w-3/4 text-body"]}>&nbsp;</div>
+       </div>
+ 
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+-        <div class:list={[bar, "mt-3 w-2/3 text-body"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-line w-2/3 text-body"]}>&nbsp;</div>
+       </div>
+ 
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-28 text-label"]}>&nbsp;</div>
+-        <div class="mt-3 flex items-center gap-4">
++        <div class="mt-line flex items-center gap-4">
+           <div class="size-6 shrink-0 rounded-full bg-border motion-safe:animate-pulse"></div>
+           <div class:list={[bar, "w-3/4 text-body"]}>&nbsp;</div>
+         </div>
+@@ -102,16 +102,16 @@ const tile = TILE_ROW_CLASS;
+ 
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
+-        <div class:list={[bar, "mt-3 w-1/2 text-body"]}>&nbsp;</div>
+-        <div class:list={[bar, "mt-2 w-2/3 text-label"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-line w-1/2 text-body"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-line w-2/3 text-label"]}>&nbsp;</div>
+       </div>
+ 
+       <div class:list={[tile]}>
+         <div class:list={[bar, "w-36 text-label"]}>&nbsp;</div>
+-        <div class="mt-5 grid grid-cols-7 items-end gap-2">
++        <div class="mt-line grid grid-cols-7 items-end gap-x-2">
+           {Array.from({ length: OUTLOOK_NIGHTS }, () => (
+             /* A bar, its verdict mark's room and the day under it, as in TonightTiles. */
+-            <div class="flex flex-col items-center gap-2">
++            <div class="flex flex-col items-center gap-line">
+               <div class="h-10 w-full rounded bg-border motion-safe:animate-pulse sm:h-18" />
+               <div class="size-3" />
+               <div class:list={[bar, "w-6 text-label"]}>&nbsp;</div>
+@@ -119,7 +119,7 @@ const tile = TILE_ROW_CLASS;
+           ))}
+         </div>
+         <!-- The caption, two lines on a phone. -->
+-        <div class:list={[bar, "mt-3 w-3/4 text-label"]}>&nbsp;</div>
++        <div class:list={[bar, "mt-group w-3/4 text-label"]}>&nbsp;</div>
+         <div class:list={[bar, "mt-0 w-1/3 text-label sm:hidden"]}>&nbsp;</div>
+       </div>
+     </div>
+diff --git a/src/components/tonight/TonightTiles.astro b/src/components/tonight/TonightTiles.astro
+index 1841932..8ecbdac 100644
+--- a/src/components/tonight/TonightTiles.astro
++++ b/src/components/tonight/TonightTiles.astro
+@@ -17,12 +17,14 @@ import EventsTile from "@/components/tonight/EventsTile.astro";
+ import MoonDisc from "@/components/tonight/MoonDisc";
+ import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
+ import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
++import Fact from "@/components/ui/Fact.astro";
+ import Tile from "@/components/ui/Tile.astro";
+ import { getMessages, plural } from "@/i18n";
+ import { localCommonName } from "@/lib/catalogue/common-names";
+ import { OUTLOOK_NIGHTS, VERDICT_NIGHTS } from "@/lib/engine/parameters";
+ import type { TonightView } from "@/lib/tonight/build";
+ import { createFormatter, formatLocaleTag } from "@/lib/tonight/format";
++import { cn } from "@/lib/utils";
+ 
+ interface Props {
+   view: TonightView;
+@@ -37,7 +39,7 @@ const nightsTitle = t.nights({ count: String(OUTLOOK_NIGHTS) });
+ const { listOf } = createFormatter(locale);
+ const tag = formatLocaleTag(locale);
+ 
+-const caption = "mt-3 block text-label text-muted-foreground";
++const caption = "mt-line block text-label text-muted-foreground";
+ 
+ // Point here first. Without a ranking (weather no-go or no darkness) the tile says there are no targets; it still
+ // opens Targets, which gives the reason and the way to the week.
+@@ -115,9 +117,9 @@ const nightsSummary = view.nights
+   <Tile href="/tonight/targets" headingId="tile-targets-heading" heading={t.targets} labelledBy="tile-targets-open">
+     {targets.length > 0 ? (
+       <>
+-        <ul class="mt-4">
++        <ul class="mt-line space-y-line">
+           {targets.map((target) => (
+-            <li class="flex items-baseline justify-between gap-3 py-1.5 text-title">
++            <li class="flex items-baseline justify-between gap-3 text-title">
+               <span class="min-w-0 font-semibold break-words">
+                 {target.name}
+                 {/* The tile is a link: no button in it, so a static icon and one legend line under the rows. */}
+@@ -127,15 +129,15 @@ const nightsSummary = view.nights
+             </li>
+           ))}
+         </ul>
+-        {anyNotSeen && <NotSeenLegend class="mt-2" />}
++        {anyNotSeen && <NotSeenLegend class="mt-group" />}
+         {view.ranking && (
+-          <span class:list={[caption]}>
++          <span class={cn(caption, !anyNotSeen && "mt-group")}>
+             {plural(locale, view.ranking.clearedCount, t.targetsCaption)({ count: String(view.ranking.clearedCount) })}
+           </span>
+         )}
+       </>
+     ) : (
+-      <span class="mt-4 block text-body font-semibold">{t.noTargets}</span>
++      <span class="mt-line block text-body font-semibold">{t.noTargets}</span>
+     )}
+     <span id="tile-targets-open" class="sr-only">
+       {open(m.tonight.pages.targets)}
+@@ -146,19 +148,19 @@ const nightsSummary = view.nights
+ 
+   {plan && (
+     <Tile href="/tonight/plan" headingId="tile-plan-heading" heading={t.plan}>
+-      <span class="mt-3 block text-body font-semibold">{planLine}</span>
++      <span class="mt-line block text-body font-semibold">{planLine}</span>
+     </Tile>
+   )}
+ 
+   {moonCard && (
+     <Tile href="/tonight/moon" headingId="tile-moon-heading" heading={t.moon}>
+       {moonState ? (
+-        <span class="mt-3 flex items-center gap-4">
++        <span class="mt-line flex items-center gap-4">
+           <MoonDisc state={moonState} clipId="moon-summary-lit" decorative className="size-6 shrink-0" />
+           <span class="min-w-0 text-body">{moonLine}</span>
+         </span>
+       ) : (
+-        <span class="mt-3 block text-body">{moonCard.phaseText}</span>
++        <span class="mt-line block text-body">{moonCard.phaseText}</span>
+       )}
+     </Tile>
+   )}
+@@ -167,20 +169,20 @@ const nightsSummary = view.nights
+     <Tile href="/tonight/planets" headingId="tile-planets-heading" heading={t.planets}>
+       {solarSystem.entries.length > 0 ? (
+         <>
+-          <span class="mt-3 block text-body font-semibold break-words">{planetNames}</span>
+-          <span class="mt-2 block text-label text-muted-foreground">{solarSystem.entries[0].reason}</span>
++          <span class="mt-line block text-body font-semibold break-words">{planetNames}</span>
++          <div class="mt-line"><Fact kind="why" tone="muted"><p>{solarSystem.entries[0].reason}</p></Fact></div>
+         </>
+       ) : (
+-        solarSystem.noneText && <span class="mt-3 block text-body">{solarSystem.noneText}</span>
++        solarSystem.noneText && <span class="mt-line block text-body">{solarSystem.noneText}</span>
+       )}
+     </Tile>
+   )}
+ 
+   {bars.length > 0 && (
+     <Tile href="/tonight/nights" headingId="tile-nights-heading" heading={nightsTitle}>
+-      <span class="mt-5 grid grid-cols-7 items-end gap-2" aria-hidden="true">
++      <span class="mt-line grid grid-cols-7 items-end gap-x-2" aria-hidden="true">
+         {bars.map((bar) => (
+-          <span class="flex flex-col items-center gap-2">
++          <span class="flex flex-col items-center gap-line">
+             <svg
+               viewBox="0 0 10 100"
+               preserveAspectRatio="none"
+@@ -218,7 +220,7 @@ const nightsSummary = view.nights
+         ))}
+       </span>
+       {nightsSummary && <span class="sr-only">{nightsSummary}</span>}
+-      <span class:list={[caption]}>{t.nightsCaption({ count: String(VERDICT_NIGHTS) })}</span>
++      <span class={cn(caption, "mt-group")}>{t.nightsCaption({ count: String(VERDICT_NIGHTS) })}</span>
+     </Tile>
+   )}
+ </div>
+diff --git a/src/components/tonight/VerdictCard.astro b/src/components/tonight/VerdictCard.astro
+index 55de84d..93a170b 100644
+--- a/src/components/tonight/VerdictCard.astro
++++ b/src/components/tonight/VerdictCard.astro
+@@ -17,6 +17,8 @@ import type { TonightDarkWindow, TonightExplanation, TonightForecastStatus } fro
+ import type { SkyHeadline } from "@/lib/tonight/format";
+ import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
+ import { getMessages } from "@/i18n";
++import Fact from "@/components/ui/Fact.astro";
++import type { SkyEventKind } from "@/lib/engine";
+ 
+ interface Props {
+   /** Picks the dot's tone; the headline's words come from `headline`. */
+@@ -40,6 +42,7 @@ interface Props {
+   explanation: TonightExplanation | null;
+   /** The night's notable sky event, already worded ("Tonight: Perseids peak"); `null` or left out on every other night. */
+   event?: string | null;
++  eventKind?: SkyEventKind | null;
+   /** The heading's id, `verdict-heading` by default; /design gives each specimen its own so ids stay unique. */
+   headingId?: string;
+ }
+@@ -55,6 +58,7 @@ const {
+   forecastStatus,
+   explanation,
+   event = null,
++  eventKind = null,
+   headingId = "verdict-heading",
+ } = Astro.props;
+ 
+@@ -79,7 +83,7 @@ const darkLine =
+ <section aria-labelledby={headingId}>
+   <p class="text-label font-medium text-muted-foreground">{dateLabel}</p>
+   {darkLine && <p class:list={["text-label font-medium text-muted-foreground", withSlider && "sr-only"]}>{darkLine}</p>}
+-  <h2 id={headingId} class="mt-2 text-heading">
++  <h2 id={headingId} class="mt-line text-heading">
+     <span class="flex items-start gap-3 font-display text-display font-semibold" data-sky-headline={headline.key}>
+       <span
+         class:list={["mt-2.5 size-4 shrink-0 rounded-full sm:mt-3.5", VERDICT_TONES[level].dot]}
+@@ -89,17 +93,19 @@ const darkLine =
+     </span>
+     <span class="mt-1 block text-body font-normal text-muted-foreground first-letter:uppercase">{text}</span>
+   </h2>
+-  {event && (
+-    <p class="mt-1 text-label font-medium text-muted-foreground" data-verdict-event>
+-      {event}
+-    </p>
++  {event && eventKind && (
++    <div class="mt-line">
++      <Fact kind="why" eventKind={eventKind} tone="muted" data-verdict-event>
++        <p class="font-medium">{event}</p>
++      </Fact>
++    </div>
+   )}
+-  {explanation?.kind === "weather-no-go" && <p class="mt-3 text-body text-heading">{explanation.nextText}</p>}
++  {explanation?.kind === "weather-no-go" && <p class="mt-group text-body text-heading">{explanation.nextText}</p>}
+   {explanation?.kind === "no-darkness" && (
+     <>
+-      <p class="mt-3 text-body text-heading">{explanation.returnText}</p>
+-      <p class="mt-2 text-body text-heading">{explanation.causeText}</p>
++      <p class="mt-group text-body text-heading">{explanation.returnText}</p>
++      <p class="mt-line text-body text-heading">{explanation.causeText}</p>
+     </>
+   )}
+-  <p class:list={["mt-3 text-label", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
++  <p class:list={["mt-group text-label", FORECAST_TONES[forecastStatus.kind]]}>{forecastStatus.text}</p>
+ </section>
+diff --git a/src/components/tonight/sky-band.ts b/src/components/tonight/sky-band.ts
+index 10db6a8..d076122 100644
+--- a/src/components/tonight/sky-band.ts
++++ b/src/components/tonight/sky-band.ts
+@@ -8,7 +8,7 @@
+ 
+ /** The gear row under the sky (the two gear cards) and the gap before the tiles, shared with the skeleton. */
+ export const GEAR_ROW_GAP_CLASS = "pt-2 sm:pt-4";
+-export const TILES_GAP_CLASS = "pt-3 sm:pt-6";
++export const TILES_GAP_CLASS = "pt-line";
+ 
+ /** The gear row's grid: the Site and Telescope cards side by side from `sm`, stacked below it. Shared with the skeleton. */
+ export const GEAR_ROW_GRID_CLASS = "grid gap-3 sm:grid-cols-2";
+diff --git a/src/components/ui/Fact.astro b/src/components/ui/Fact.astro
+index 1c1a6e8..82138cb 100644
+--- a/src/components/ui/Fact.astro
++++ b/src/components/ui/Fact.astro
+@@ -12,7 +12,8 @@
+  *
+  * `iconClass` is for the two accented icons only: `see` in `text-primary-strong`, `safety` in `text-marginal`.
+  */
+-import { FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
++import { EVENT_KIND_ICONS, FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
++import type { SkyEventKind } from "@/lib/engine";
+ import { cn } from "@/lib/utils";
+ 
+ interface Props {
+@@ -23,12 +24,14 @@ interface Props {
+   tone?: "default" | "muted";
+   /** Replaces the icon's muted ink: `text-primary-strong` on `see`, `text-marginal` on `safety`, nowhere else. */
+   iconClass?: string;
++  /** An event fact: the icon is the event kind's (EXPERIMENT). */
++  eventKind?: SkyEventKind;
+   /** Markers for e2e and smoke (`data-expect`, `data-event-visibility`, …), forwarded to the root. */
+   [data: `data-${string}`]: string | number | boolean | null | undefined;
+ }
+ 
+-const { kind, label, tone = "default", iconClass, ...data } = Astro.props;
+-const Icon = FACT_ICONS[kind];
++const { kind, label, tone = "default", iconClass, eventKind, ...data } = Astro.props;
++const Icon = eventKind ? EVENT_KIND_ICONS[eventKind] : FACT_ICONS[kind];
+ ---
+ 
+ <div
+diff --git a/src/components/ui/tile.ts b/src/components/ui/tile.ts
+index f7885d4..4b22eda 100644
+--- a/src/components/ui/tile.ts
++++ b/src/components/ui/tile.ts
+@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
+  */
+ 
+ /** A tile's row: full width, at least 44 px, ruled below, the phone padding one step tighter than `sm`. */
+-export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-4 sm:py-5";
++export const TILE_ROW_CLASS = "min-h-11 border-b border-border px-4 py-item";
+ 
+ /** The tile link: the row plus the token hover and the ring focus. Rules run between the tiles. */
+ export const TILE_CLASS = cn(
+diff --git a/src/pages/design.astro b/src/pages/design.astro
+index 8a52516..62845df 100644
+--- a/src/pages/design.astro
++++ b/src/pages/design.astro
+@@ -2171,6 +2171,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
+                       <VerdictCard
+                         {...skies[0].props}
+                         event={sample.line}
++                        eventKind={sample.kind}
+                         headingId={`verdict-heading-event-${String(i)}`}
+                       />
+                     </TonightSky>
+@@ -2193,6 +2194,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
+                         forecastStatus={panoramaView.forecastStatus}
+                         explanation={panoramaView.explanation}
+                         event={eventSpecimens.verdictLines[1].line}
++                        eventKind={eventSpecimens.verdictLines[1].kind}
+                         headingId="verdict-heading-event-panorama"
+                       />
+                     </TonightSkyView>

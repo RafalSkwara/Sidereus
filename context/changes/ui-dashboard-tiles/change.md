@@ -1,0 +1,28 @@
+---
+change_id: ui-dashboard-tiles
+title: Dashboard tiles on the rhythm roles and shared facts (ui-refine split, change 3)
+status: planned
+created: 2026-10-15
+updated: 2026-10-15
+archived_at: null
+---
+
+## Notes
+
+Third change of the `ui-refine` split (`context/changes/ui-refine/audit.md`, finding 4 for the dashboard, the S-07 notes on the verdict event line and the events tile; owner decisions 1, 3 and 5 as amended on 2026-10-15). Branch `feat/ui-dashboard-tiles`, off main 42ce808 (ui-fact-rhythm #167 merged).
+
+One view: the `/tonight` dashboard (`TonightContent`: the verdict over the sky, the gear row, `TonightTiles` with `EventsTile`, and `TonightSkeleton`), against the existing design system (**existing** variant, Nightfall: tokens in `src/styles/global.css`, components in `src/components/ui/`; the rhythm roles, `Fact` / `FactList`, `StatCard` / `StatPair` and `fact-icons.ts` from ui-fact-rhythm).
+
+Owner decisions that apply:
+- **Icons 2B**: icons on facts only, none on the dashboard tile headings. The audit's "Tile gains an icon prop" is dropped. The S-07 verdict event line may get a fact icon, because it is a fact, not a tile heading.
+- **Rhythm**: `line` 8, `group` 24, `item` 20 px each side of the rule (ui-fact-rhythm).
+- **Stat cards**: stacked, full width (owner, 2026-10-15), if a tile uses them at all.
+- **Buttons 3C**: quiet / hairline hierarchy; a bare tile arrow (already shipped in ui-quiet-actions).
+
+In scope (audit, change 3): the tile content on the rhythm roles and the shared Fact components; the S-07 verdict line; the events tile; the S-08 plan tile (the next target from the edited plan); the phone-first spec (`tests/e2e/tonight-phone.spec.ts` first screen: the verdict headline, the Site card and the Telescope card title above the TabBar at 390×844); the `VERDICT_MIN_HEIGHT_CLASS` re-measure; the skeleton.
+
+Out of scope: the Tonight sub-nav and the fourth destination (change 4, `ui-tonight-nav`), /log, /log/progress and /gear (change 5), the focused pages (change 2, shipped).
+
+Research done 2026-10-15 (`research.md`, charges C1-C5). A reverted experiment (tiles on the roles, the verdict's event line as a `Fact` with its kind's icon, the skeleton in step) was built, measured and captured on the preview (4331/4401) and on `/design`. It is `evidence/exp/experiment.diff`, with before shots in `evidence/before/` and the measurements in `evidence/README.md`. The phone first screen is unchanged (149 / 701 / 746 against the TabBar at 779 px), and the skeleton's tile rows match the real ones.
+
+Plan done 2026-10-15 (`plan.md`, `plan-brief.md`): 3 phases (the tiles; the verdict; rules, gate, landing image, whole suite). Agent defaults D1-D7 wait for the owner at plan review. The owner questions are D2 (the targets list at `line`), D4 (the solar eclipse's amber safety icon on the verdict line instead of `Eclipse`, which reads as a clock) and D5 (no icon on the events tile's line). Next: /10x-plan-review (reviewer), then the owner's answers.
