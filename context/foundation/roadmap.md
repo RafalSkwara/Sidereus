@@ -9,18 +9,19 @@ main_goal: quality
 top_blocker: skills # and decisions: the user named both (2026-10-07)
 milestone_id: find-it-and-keep-going
 milestone_seq: 3
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: Sidereus
 
 > Derived from `context/foundation/prd.md` (v3, FR-037 to FR-046, US-05 to US-08) and the user's description of two UI passes (MS-01, MS-02), plus a codebase baseline confirmed on 2026-10-07.
 > Edit-in-place; archive when superseded.
+> **M-3 closed 2026-10-15.** The next milestone (M-4) is a draft awaiting the owner's decisions: `context/foundation/roadmap-m4-draft.md`. Once the owner answers, it replaces this file in place, carrying `## Milestone History` forward.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
 ## Milestone
 
-**M-3: Find it and keep going** — Status: open
+**M-3: Find it and keep going** — Status: done (closed 2026-10-15)
 
 - **Intent:** Make Sidereus comfortable on a phone first, then take a beginner past "what to look at": find the target from a star they can see, know what it will look like, see how far they are through the classic lists, plan around the sky's events and shape the night's plan. Finder charts and plan edits are the first features of a paid ("full") plan; the plan is granted by hand for now.
 - **Source materials:** `context/foundation/prd.md` (v3), plus the user's description, 2026-10-07 (verbatim below).
@@ -29,6 +30,37 @@ milestone_status: open
 - **Scope anchors:** PRD v3 FR-037 to FR-046, US-05 to US-08 and the phone-first NFR; plus:
   - MS-01: Claude goes over the views, mobile first, and improves them, especially the dashboard and Tonight, which feel crowded.
   - MS-02: The user's own UI adjustments, from a list the user gives after MS-01.
+
+### Closure check (2026-10-15)
+
+Every item is `done`, GitHub issues #121 to #129 are closed, and main's run at 42ce808 passed `ci`, `smoke`, `migrate` and `deploy`.
+
+- **The intent, clause by clause:**
+  - Comfortable on a phone first: S-01 (#131, #132) and S-02 (#139, #140). The first screen is pinned by `tonight-phone.spec.ts` at 390×844, and sideways scroll is checked at 320 and 375 px.
+  - Find the target from a visible star: S-03 (#155, #156).
+  - Know what it will look like: S-04 (#158).
+  - See progress through the classic lists: S-05 (#149) and S-06 (#153).
+  - Plan around the sky's events: S-07 (#161).
+  - Shape the night's plan: S-08 (#165).
+  - Finder charts and plan edits are the first full-plan features, granted by command: F-01 (#144). What-to-expect also went behind the full plan (FR-038).
+- **PRD v3 (FR-037 to FR-046, US-05 to US-08):** all delivered. Coverage of the success criteria and invariants:
+  - Secondary criterion "Sidereus alone gets a beginner to the target": met as built. The owner confirmed on 2026-10-13 that the chart is legible at arm's length in red mode (finder-chart Progress 6.4). The hop and naked-eye-limit candidates (Open Questions 15 and 16) have still not been tried by an observer.
+  - Secondary criterion "a reason to come back": met (checklists, "not seen yet" marks, milestones).
+  - Phone-first NFR: met and pinned by e2e.
+  - Guardrail "an edited plan never schedules a target outside its window": enforced by `applyPlanEdits` and the save route's window check.
+  - The three invariants v3 added: pinned in the engine and progress rules (a finder chart's start star, a 1-2 rating never counting, an event below the horizon never shown as worth going out for).
+- **Not settled when M-3 closed (carried over):**
+  - Follow-up **#159**: M31 at 60 mm reads "very faint" beside "bright for your 60 mm". The core-brightness term underrates very large galaxies at small apertures (Open Question 17 judged without an observer).
+  - **ESA's licence reply** for the Hipparcos-derived stars (PRD Open Question 21): the request was sent on 2026-10-14. SAO remains the fallback, before any payment.
+  - **The ui-refine split** (umbrella `context/changes/ui-refine/`, the owner's request of 2026-10-14), outside M-3's slices:
+    - `ui-quiet-actions`: done (#163).
+    - `ui-fact-rhythm`: merged (#167), archive pending.
+    - Not started: `ui-dashboard-tiles`, `ui-tonight-nav` (the Tonight sub-nav and Progress as a fourth tab) and `ui-log-progress-gear`.
+  - Older follow-ups still open: #21 (ranking calibration, items 1, 3 and 4) and #19 (Stellarium fixtures). Also still open:
+    - ui-auth D1 and D2;
+    - S-12's manual rows;
+    - the moonlight post-merge checks, due after 2026-10-22;
+    - the IAU MDC courtesy email.
 
 ## Vision recap
 
@@ -246,6 +278,15 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **M-1: MVP night decision** (`mvp-night-decision`) — closed 2026-09-28. All 3 foundations and 10 slices shipped and deployed: a signed-in beginner gets tonight's go / marginal / no-go verdict and a ranked, explained Messier shortlist from their own site and kit, with onboarding, a seven-night planner, an observation log, light/dark/red themes, EN/PL, a 30-day session and continue-after-sign-in; password reset (FR-003) parked by cut-order #3.
 - **M-2: First real nights** (`first-real-nights`) — closed 2026-10-07. All 11 slices shipped (S-01–S-03, S-05–S-12; S-04 double stars parked by the user): the Moon, the planets and bright non-Messier objects on Tonight, a redesigned look (Nightfall) and a Tonight dashboard of focused pages with a live sky, a session-plan timeline, an installable app that opens stored Tonight pages offline, the sky check with its verdict tally, "Use my location" and "Pick from map" for sites, and a gear catalogue of real telescope and eyepiece models.
+- **M-3: Find it and keep going** (`find-it-and-keep-going`) — closed 2026-10-15. F-01 and all 8 slices shipped and deployed. Delivered:
+  - a phone-first pass, then the owner's own UI list;
+  - free and full plans, with the full plan granted by command;
+  - full plan: finder charts that hop from a naked-eye star, and a what-to-expect line per target;
+  - Messier and Caldwell progress with "not seen yet" marks and milestones;
+  - 30 days of computed sky events;
+  - full plan: an editable session plan, saved to the account and carried into the offline copy.
+
+  Carried over: #159 (M31's core brightness at small apertures), ESA's licence reply (PRD Open Question 21), and the rest of the ui-refine split (`ui-dashboard-tiles`, `ui-tonight-nav`, `ui-log-progress-gear`).
 
 ## Done
 
