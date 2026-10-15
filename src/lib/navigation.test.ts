@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { currentDestination, isCurrentPage, NAV_ITEMS } from "./navigation";
+import { TONIGHT_PAGES } from "@/lib/offline/copies";
+
+import { currentDestination, currentTonightPage, isCurrentPage, NAV_ITEMS, TONIGHT_NAV } from "./navigation";
 
 describe("NAV_ITEMS", () => {
   it("lists Tonight, Log, Progress and My gear, in that order", () => {
@@ -64,4 +66,37 @@ describe("exactly one current destination", () => {
     // The chosen item really covers the path.
     expect(marked.every((item) => isCurrentPage(pathname, item.href))).toBe(true);
   });
+});
+
+describe("TONIGHT_NAV", () => {
+  it("lists the dashboard and its pages in the dashboard's tile order", () => {
+    expect(TONIGHT_NAV.map((item) => item.href)).toEqual([
+      "/tonight",
+      "/tonight/targets",
+      "/tonight/events",
+      "/tonight/plan",
+      "/tonight/moon",
+      "/tonight/planets",
+      "/tonight/nights",
+    ]);
+  });
+
+  it("holds the same pages as the offline list, so a new Tonight page joins both", () => {
+    expect(new Set(TONIGHT_NAV.map((item) => item.href))).toEqual(new Set(TONIGHT_PAGES));
+    expect(TONIGHT_NAV).toHaveLength(TONIGHT_PAGES.length);
+  });
+});
+
+describe("currentTonightPage", () => {
+  it.each(TONIGHT_NAV.map((item) => item.href))("names %s itself", (href) => {
+    expect(currentTonightPage(href)).toBe(href);
+    expect(currentTonightPage(`${href}/`)).toBe(href);
+  });
+
+  it.each(["/tonight/finder", "/tonight/all", "/tonight/targets/more", "/log", "/"])(
+    "names no sub-nav page on %s",
+    (pathname) => {
+      expect(currentTonightPage(pathname)).toBeNull();
+    },
+  );
 });

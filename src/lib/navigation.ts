@@ -31,3 +31,27 @@ export function currentDestination(pathname: string): NavItem["href"] | null {
   }
   return current;
 }
+
+/**
+ * The Tonight pages' sub-nav (ui-tonight-nav): the dashboard and its six focused pages in the dashboard's tile order,
+ * each with its short label in `tonight.subnav`. The same set as the offline list (`TONIGHT_PAGES`, whose order is the
+ * `/offline` list's), so a new Tonight page joins both (`navigation.test.ts`). The finder chart is not on it: it is a
+ * leaf opened from a row, with its own back link.
+ */
+export const TONIGHT_NAV = [
+  { href: "/tonight", label: "tonight" },
+  { href: "/tonight/targets", label: "targets" },
+  { href: "/tonight/events", label: "events" },
+  { href: "/tonight/plan", label: "plan" },
+  { href: "/tonight/moon", label: "moon" },
+  { href: "/tonight/planets", label: "planets" },
+  { href: "/tonight/nights", label: "nights" },
+] as const;
+
+export type TonightNavItem = (typeof TONIGHT_NAV)[number];
+
+/** The sub-nav's current page: an exact path match (a trailing slash aside), `null` off the seven pages. */
+export function currentTonightPage(pathname: string): TonightNavItem["href"] | null {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return TONIGHT_NAV.find((item) => item.href === path)?.href ?? null;
+}

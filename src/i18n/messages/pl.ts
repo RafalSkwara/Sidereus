@@ -1004,6 +1004,17 @@ export const pl = {
       lockedFinderLine: "Mówi, jak obiekt będzie wyglądał w Twoim teleskopie z Twojego miejsca.",
     },
 
+    subnav: {
+      label: "Strony nocy",
+      tonight: "Dziś w nocy",
+      targets: "Cele",
+      events: "Zjawiska",
+      plan: "Plan",
+      moon: "Księżyc",
+      planets: "Planety",
+      nights: "Noce",
+    },
+
     summary: {
       targets: "Zacznij od nich",
       targetsCaption: {

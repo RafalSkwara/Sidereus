@@ -3106,15 +3106,24 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · with view (go)</p>
+                <p class:list={stateLabel}>
+                  default · with view (go): no back link, the shell's sub-nav is the way between the focused pages
+                </p>
                 <div class="overflow-hidden rounded-lg">
                   <TonightPageSky title={m.tonight.pages.targets} view={summaryView} />
                 </div>
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · with view (no-go)</p>
+                <p class:list={stateLabel}>
+                  default · with view (no-go) and backHref: the finder chart's back link to the page it was opened from
+                </p>
                 <div class="overflow-hidden rounded-lg">
-                  <TonightPageSky title={m.tonight.summary.planets} view={noTargetsView} />
+                  <TonightPageSky
+                    title={m.tonight.finder.title({ target: "M13" })}
+                    view={noTargetsView}
+                    backHref="/tonight/planets"
+                    backLabel={m.tonight.summary.planets}
+                  />
                 </div>
               </div>
               <div class:list={cell}>
@@ -3125,8 +3134,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible — see BackLink · disabled — N/A (a link is never disabled) · error — the without-view
-              sky, with the page's ServerError below it · loading — see TonightPageSkeleton
+              hover, focus-visible — see BackLink (the finder's) · disabled — N/A (a link is never disabled) · error —
+              the without-view sky, with the page's ServerError below it · loading — see TonightPageSkeleton
             </p>
           </section>
 
@@ -3282,6 +3291,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     title={m.tonight.finder.title({ target: "M13" })}
                     reloadHref="/design"
                     rows={2}
+                    backHref="/tonight/targets"
+                    backLabel={m.tonight.pages.targets}
                   />
                 </div>
               </div>

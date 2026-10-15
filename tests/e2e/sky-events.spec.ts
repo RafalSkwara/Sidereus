@@ -10,8 +10,8 @@ import { onboardInMadrid } from "./helpers";
 /*
  * The sky events page, end to end (M-3 S-07, sky-events Phase 4): a fresh user in Madrid on the all-clear forecast
  * fixture opens /tonight/events. The clock is real, so the spec never asserts which events occur (the next 30 nights
- * hold anywhere from none to a handful); it asserts the page's shape for whatever the real sky holds: the title and the
- * way back, then either rows that each state a time and either the "Visible" mark or a reason, or the honest empty
+ * hold anywhere from none to a handful); it asserts the page's shape for whatever the real sky holds: the title and its
+ * sub-nav chip, then either rows that each state a time and either the "Visible" mark or a reason, or the honest empty
  * state, with no not-visible row carrying the visible mark and every solar eclipse carrying its safety line. Engine
  * correctness is pinned by the unit tests against published dates, not here.
  */
@@ -54,8 +54,11 @@ test("the events page lists the next nights' events with their visibility, or sa
 
   await expect(page).toHaveTitle(en.common.pageTitle({ title: t.summary.events }));
   await expect(page.getByRole("heading", { level: 1, name: t.summary.events })).toBeVisible();
-  // The way back to Tonight, in the page's own sky band (the navigation has a "Tonight" link too).
-  await expect(page.locator('main a[href="/tonight"]').filter({ hasText: en.nav.tonight }).first()).toBeVisible();
+  // The sub-nav in the shell's strip names this page as the current one (ui-tonight-nav); exact, as a label can be a
+  // substring of another ("Plan" of "Planets").
+  await expect(
+    page.getByRole("navigation", { name: t.subnav.label }).getByRole("link", { name: t.subnav.events, exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   // Times are the site's: Madrid's zone is named.
   await expect(page.getByText(t.pages.events.timesIn({ zone: "Europe/Madrid" }), { exact: true })).toBeVisible();
 

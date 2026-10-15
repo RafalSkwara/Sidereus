@@ -10,6 +10,7 @@ import Attribution from "@/components/tonight/Attribution.astro";
 import PlanPageContent from "@/components/tonight/PlanPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
 import Notice from "@/components/ui/Notice.astro";
 import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { parsePlanSaved } from "@/lib/session-plans/redirect";
@@ -31,6 +32,8 @@ const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={title} skyFlow>
+  <TonightSubNav slot="subnav" />
+
   {saved && (
     <>
       <Notice tone="success" toast param="saved">

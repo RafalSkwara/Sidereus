@@ -447,28 +447,34 @@ until their next online refresh, which is harmless.
 
 #### Automated
 
-- [x] 1.1 The navigation model tests pass
-- [x] 1.2 Types, lint and the unit suite pass
-- [x] 1.3 The build passes
-- [x] 1.4 The phase's e2e pass on the preview
+- [x] 1.1 The navigation model tests pass — 380a33f
+- [x] 1.2 Types, lint and the unit suite pass — 380a33f
+- [x] 1.3 The build passes — 380a33f
+- [x] 1.4 The phase's e2e pass on the preview — 380a33f
 
 #### Manual
 
-- [x] 1.5 The four-item bars read as one bar at every width, language and theme
+- [x] 1.5 The four-item bars read as one bar at every width, language and theme — 380a33f
 
 ### Phase 2: The Tonight sub-nav replaces the back link
 
 #### Automated
 
-- [ ] 2.1 The model, copy and sub-nav helper tests pass
-- [ ] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value
-- [ ] 2.3 The build passes
-- [ ] 2.4 The phase's e2e pass on the preview
+- [x] 2.1 The model, copy and sub-nav helper tests pass
+- [x] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value
+- [x] 2.3 The build passes
+- [x] 2.4 The phase's e2e pass on the preview
 
 #### Manual
 
 - [ ] 2.5 Skeleton and real page within 2 px on the six pages and the finder
-- [ ] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme
+  > Half-done (2026-10-15, tonight-nav): the header this phase changed matches exactly: h1 top and sky-band bottom
+  > are equal in skeleton and real page on all six pages and the finder at 390 and 1280 px
+  > (`evidence/scripts/header-heights.mjs`: 136/297 and 188/368; finder 140/301 and 200/380). The whole-page
+  > `skeleton-heights.mjs` run gives content-driven deltas (targets 44/0, plan 1051/1003, planets −64/−24,
+  > moon −601/−468, nights −5/−65, events −56/−76, finder 129/−295 at 390/1280) that this change does not touch.
+  > To tick 2.5, run the same script on main (2c4b348) with the same seed and confirm the deltas are unchanged.
+- [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme
 
 ### Phase 3: States, specimens and the rule
 

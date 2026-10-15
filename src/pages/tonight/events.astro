@@ -9,6 +9,7 @@ import Attribution from "@/components/tonight/Attribution.astro";
 import EventsPageContent from "@/components/tonight/EventsPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
+import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
 import { getMessages, isMessageKey, translateKey } from "@/i18n";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
@@ -38,6 +39,8 @@ const night = requestedNight(Astro.url);
 ---
 
 <GearShell title={title} skyFlow>
+  <TonightSubNav slot="subnav" />
+
   {supabase ? (
     <EventsPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night} notice={notice}>
       <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/events" rows={5} layout="events" />
