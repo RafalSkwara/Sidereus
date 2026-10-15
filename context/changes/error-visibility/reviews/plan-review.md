@@ -33,9 +33,9 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
 
 - **D3 (302 + `errors.save.unavailable`)**: kształt dobry (zgodny z konwencją „no JSON errors”), ale tabela
   `isServerFault` i treść komunikatu wymagają poprawki — zob. F1.
-- **D4 (żadnych identyfikatorów w liniach)**: słuszne. Workers Logs i tak grupuje linie jednego wywołania (request id
+- **D4 (żadnych identyfikatorów w liniach)** *(właściciel wrócił do tej decyzji po recenzji: brak własnego request ID, plan zaktualizowany)*: słuszne. Workers Logs i tak grupuje linie jednego wywołania (request id
   zdarzenia), więc własny identyfikator nic nie wnosi. Uwaga tylko na metadane wywołania spoza helpera — F6.
-- **D5 (bez service workera i błędów klienta)**: słuszne dla MS-03 (przepływy serwerowe), pod warunkiem że follow-up
+- **D5 (bez service workera i błędów klienta)** *(właściciel zmienił decyzję: błędy klienta są w S-07 jako fazy 7-9, ucinane od 2026-10-28)*: słuszne dla MS-03 (przepływy serwerowe), pod warunkiem że follow-up
   dostanie numer issue — F7.
 
 ## Findings
@@ -64,7 +64,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   - Tradeoff: Odmowy RLS i wygasłe sesje dalej generują alerty w Issues.
   - Confidence: MEDIUM — szum alertów zależy od ruchu, którego nie zmierzono.
   - Blind spot: Zmęczenie alertami przy pierwszym realnym incydencie.
-- **Decision**: PENDING
+- **Decision**: Fix A applied: `classifyFault` defaults to server and excludes `42501`, `PGRST301/302/303` and `PGRST116`; neutral copy `errors.serverFault`; warn-level `logNotice` for the excluded kinds (plan: D3, D12, Phase 2 §1-2, Phase 4 §1)
 
 ### F2 — Reguła strażnika `silent-catch` nie łapie wzorców, które wskazał audyt
 
@@ -85,7 +85,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   - Tradeoff: Większa allowlista na start; więcej wpisów do usunięcia w fazach 3-5.
   - Confidence: HIGH — kształty potwierdzone grepem w `src`.
   - Blind spot: Liczba uzasadnionych wyjątków w wyspach klienta niepoliczona.
-- **Decision**: PENDING
+- **Decision**: Applied: the guard flags every `catch` and `.catch` and carries samples of the five shapes (plan: D8, Phase 1 §3)
 
 ### F3 — Które błędy `getClaims` są rutynowe, a które są awarią: nierozstrzygnięte
 
@@ -100,7 +100,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   da linię `console.error`, a więc Issue i alert.
 - **Fix**: Zapisać w kontrakcie listę cichych kodów/nazw (z testem tabelarycznym) i logować tylko resztę; kryterium 5.1
   rozszerzyć o „stary refresh token → null user, brak linii”.
-- **Decision**: PENDING
+- **Decision**: Applied: routine list (stale cookie, expired session, invalid JWT) versus failure list (retryable fetch, 5xx, timeout, unknown), pinned by a table test; `sessionUser` extracted (plan: Phase 5 §1)
 
 ### F4 — Testy middleware, tras auth i KV importują moduły wirtualne, których Vitest nie zna
 
@@ -114,7 +114,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   implementer odkryje to dopiero przy pierwszym czerwonym imporcie.
 - **Fix**: Wydzielić `sessionUser(client)` do `src/lib/auth/session-user.ts` (testowalne bez mocków), a dla tras auth
   i `kv-cache` zapisać `vi.mock("astro:env/server" | "cloudflare:workers", factory)` jako przyjęty wzorzec.
-- **Decision**: PENDING
+- **Decision**: Applied: shared mock factories for `astro:middleware`, `astro:env/server` and `cloudflare:workers`, `sessionUser` extracted, route tests under `src/lib/routes` (plan: Phase 1 §4)
 
 ### F5 — Dowód grupowania w Workers Issues dopiero w Fazie 6
 
@@ -136,7 +136,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   - Tradeoff: Ewentualna przeróbka D2 na końcu.
   - Confidence: MEDIUM.
   - Blind spot: Jak wyżej.
-- **Decision**: PENDING
+- **Decision**: Fix A taken: Phase 1 ships as its own PR with a real `forecast.fetch` probe line; Phase 3 waits for the Issues grouping check (plan: D11, Phase 1 §6, criteria 1.9-1.10)
 
 ### F6 — Prywatność poza helperem: metadane wywołania w Workers Logs
 
@@ -149,7 +149,7 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   Kryterium 6.7 sprawdza tylko „jedną linię na przepływ”.
 - **Fix**: W 6.7 i w runbooku sprawdzić też pola zdarzenia wywołania (nie tylko argumenty `console.error`) i zapisać,
   co tam jest i dlaczego jest akceptowalne.
-- **Decision**: PENDING
+- **Decision**: Applied: the runbook and criterion 6.6 cover the invocation event's fields (plan: Phase 6 §1)
 
 ### F7 — Drobne nieścisłości w planie
 
@@ -162,4 +162,4 @@ głównie rzucone wyjątki — RC4 z audytu się zgadza.
   „wyrównuje”, ale Current State powinien to nazwać problemem, nie wzorcem. (c) D5/D6/D7 mówią o follow-upach bez
   numerów issue.
 - **Fix**: Poprawić liczbę, opis `store.ts:36` i założyć issue dla follow-upów D5 (SW/klient), D6 (release) i D7 (UI).
-- **Decision**: PENDING
+- **Decision**: Applied: five allowlist files (seven lines), `store.ts:36` named a problem (raw `PostgrestError` as `cause`), follow-up issues in criterion 6.8; D5 is now in scope as Phases 7-9
