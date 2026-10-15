@@ -74,3 +74,21 @@ Evidence the plan asks to record ("recorded in the phase notes"). Each phase was
   - The guard's telescopes are f/5 (focal length = 5 × aperture), the calibration scope's ratio. Eyepieces do not affect the rank score.
   - `score.ts` gains the helpers `brightnessOf` and `galaxyBrightnessCap`.
 - **Deliberate break (lead agent):** disabling the cap in `brightnessOf` turned 48 tests red in `small-scope.test.ts` and `score.test.ts`. The file was restored.
+
+## Phase 4: Docs and owner checklist
+
+- **Docs** (Sonnet medium subagent):
+  - CLAUDE.md: the What to expect, Catalogue and Engine paragraphs, including the owner's F6 note.
+  - PRD: Open Questions 5 and 17.
+  - New `manual-checks.md`.
+- **4.2**, run by the lead agent (F9), CI's way:
+  - fresh `npm run build`;
+  - `dist/server/.dev.vars` pointed at the local stack (URL, anon key, forecast fixture);
+  - preview on 4333, forecast fixture on 4400;
+  - the local keys inline on the commands only, never exported or written to a file other than the anon key in the preview's vars.
+- **Results:**
+  - `npm run smoke`: 45/45 PASS.
+  - `npm run test:e2e`: 76 passed and 4 skipped, in 1.2 min. The skips are conditional and depend on the date, the Moon or an opt-in flag: landing screenshot capture, the finder's no-darkness window, Moon as a target, and an old washed-out bookmark.
+  - `npm test` on an idle machine: 2372 passed.
+  - Three time-sensitive unit tests failed once while the e2e suite was running at the same time, and passed on their own and on an idle re-run: agent-hooks, the runner-zone guard and the no-hardcoded-colours scan.
+- **4.3:** the owner's manual checks in `manual-checks.md` are pending.

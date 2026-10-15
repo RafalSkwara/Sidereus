@@ -475,17 +475,17 @@ None. No database, no stored data, no offline-copy format change. Stored Targets
 
 #### Automated
 
-- [x] 3.1 `npx vitest run src/lib/engine/small-scope.test.ts` passes G1-G6; G1, G3, G5 and G6 fail against Phase 2's code, G2 and G4 are pins
-- [x] 3.2 `npx vitest run src/lib/engine/calibration.test.ts` passes with its file and `beginner-reference.ts` unchanged; top ten before and after recorded
-- [x] 3.3 `npx vitest run src/lib/engine/ranking-invariants.test.ts` passes, including (g)
-- [x] 3.4 `npm test`, `npx astro check` and `npm run lint` pass
+- [x] 3.1 `npx vitest run src/lib/engine/small-scope.test.ts` passes G1-G6; G1, G3, G5 and G6 fail against Phase 2's code, G2 and G4 are pins — 16ce732
+- [x] 3.2 `npx vitest run src/lib/engine/calibration.test.ts` passes with its file and `beginner-reference.ts` unchanged; top ten before and after recorded — 16ce732
+- [x] 3.3 `npx vitest run src/lib/engine/ranking-invariants.test.ts` passes, including (g) — 16ce732
+- [x] 3.4 `npm test`, `npx astro check` and `npm run lint` pass — 16ce732
 
 ### Phase 4: Docs and owner checklist
 
 #### Automated
 
-- [ ] 4.1 `npm test` and `npm run lint` pass (docs only)
-- [ ] 4.2 Before the PR, the whole e2e suite and `npm run smoke` run against a fresh local production build; counts reported in the PR
+- [x] 4.1 `npm test` and `npm run lint` pass (docs only)
+- [x] 4.2 Before the PR, the whole e2e suite and `npm run smoke` run against a fresh local production build; counts reported in the PR
 
 #### Manual
 
