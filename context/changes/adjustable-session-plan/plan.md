@@ -782,18 +782,18 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
-> **Resume here (paused 2026-10-14, branch rebased onto main c650a8a):** Phases 1-4 are committed. Phase 5 is complete in the WIP commit `wip(adjustable-session-plan): Phase 5 in progress (paused)`, with every gate green there: unit 2162, lint, astro check, build, the whole e2e suite (72 passed, 4 date skips), smoke and the reducer break check. The WIP commit also holds the `what-to-expect.spec` selector fix (`data-object-card`) and the post-rebase SHA re-pointing. **Next session:**
-> - squash or amend the WIP into `feat(adjustable-session-plan): editor, reset dialog and dashboard (p5)` and write its SHA onto rows 4.5 and 5.x;
-> - do the open manual rows 3.5 (the held line is not visible on the fixture's clear night; it is covered only by unit tests and smoke) and 5.7 (keyboard order is proven by e2e, the focus ring not yet inspected);
-> - then Phase 6 (docs), then the Opus `/10x-impl-review`.
+> **State (2026-10-15):** Phases 1-6 are committed; Phase 5 is `20d08da` (the WIP squashed, plus a prettier fix in `what-to-expect.spec.ts`), Phase 6 `e73b4e1`, after `b78e3e3` (prettier-only reformat of `prd.md` and `test-plan.md`, which were not clean on main). Final gates on `e73b4e1`: unit 2162 passed, lint, astro check, build, the whole e2e suite against a fresh preview with the fixture (72 passed, 4 date/environment skips: landing screenshot, finder no-darkness window, Moon target, old washed-out bookmark) and smoke (all steps, plan 1-7). Manual 3.5 and 5.7 were done with Playwright screenshots (EN/PL, dark/light/red, 390 px and desktop); held was reached by moving the site to −78° and saving an empty list. Next: the Opus `/10x-impl-review` and the Fable second opinion; 6.2 is the owner's.
 >
 > **Known issues for the review:**
+>
 > - An `aria-disabled` Move button is muted by colour only in dark and light (#163's quiet style), which is subtle in dark; red mode adds a dashed box.
 > - A target added in the editor shows its D2 hint only after Save (no client times).
 > - `addFull` writes "30" literally.
 > - `?saved=plan` shows the toast from the URL alone, even on a free account (cosmetic).
 > - The skeleton's 44 px bar approximates the lock line (about 20 px).
-> - Two unit tests (`agent-hooks`, `runner-zone-guard`) failed once while a subagent had just finished; reruns pass (not reproduced).
+> - After Save the landing page sets no focus (focus on `body`), as every POST-redirect page does.
+> - At a site where the Sun never reaches −6° (−78°, mid October) the plan's night is the previous date (existing `tonightDateForSite` rollover, not changed here); the route uses the same rule, so a save still works.
+> - Two unit tests (`agent-hooks`, `runner-zone-guard`) failed once on 2026-10-14 while a subagent had just finished; reruns pass (not reproduced since).
 
 ### Phase 1: Table, store and isolation
 
@@ -833,7 +833,7 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 #### Manual
 
 - [x] 3.4 Break check: move `requireFullPlan` after the store call; plan 1 turns red; revert — 1f43897
-- [ ] 3.5 On a preview, the free lock line, a forced `?error=` alert and the held line read correctly in EN and PL
+- [x] 3.5 On a preview, the free lock line, a forced `?error=` alert and the held line read correctly in EN and PL — 20d08da
 
 ### Phase 4: Fresh offline copy after a save
 
@@ -846,29 +846,29 @@ The table is additive, and CI's `migrate` applies it before deploy. No backfill.
 
 #### Manual
 
-- [x] 4.5 On a preview, after a save the toast shows, and DevTools' Cache Storage holds the new copy without a reload
+- [x] 4.5 On a preview, after a save the toast shows, and DevTools' Cache Storage holds the new copy without a reload — 591c5c4
 
 ### Phase 5: Editor, reset dialog and dashboard
 
 #### Automated
 
-- [x] 5.1 `npm test` (reducer, i18n parity, no-hardcoded-colors, contrast, no-console guard) passes
-- [x] 5.2 `npm run lint` and `npx astro check` pass
-- [x] 5.3 `npm run build` succeeds
-- [x] 5.4 The whole e2e suite passes against a fresh local preview with the forecast fixture and keys inline (lessons): `npm run test:e2e`
-- [x] 5.5 `npm run smoke` passes
+- [x] 5.1 `npm test` (reducer, i18n parity, no-hardcoded-colors, contrast, no-console guard) passes — 20d08da
+- [x] 5.2 `npm run lint` and `npx astro check` pass — 20d08da
+- [x] 5.3 `npm run build` succeeds — 20d08da
+- [x] 5.4 The whole e2e suite passes against a fresh local preview with the forecast fixture and keys inline (lessons): `npm run test:e2e` — 20d08da
+- [x] 5.5 `npm run smoke` passes — 20d08da
 
 #### Manual
 
-- [x] 5.6 On a phone-width preview: edit, save, reload, reset in dark, light and red; red tells enabled and `aria-disabled` controls apart by shape, not only colour
-- [ ] 5.7 Keyboard only: open, move, add, save, reset, with focus visible and kept
-- [x] 5.8 Polish copy fits at 320 px
+- [x] 5.6 On a phone-width preview: edit, save, reload, reset in dark, light and red; red tells enabled and `aria-disabled` controls apart by shape, not only colour — 20d08da
+- [x] 5.7 Keyboard only: open, move, add, save, reset, with focus visible and kept — 20d08da
+- [x] 5.8 Polish copy fits at 320 px — 20d08da
 
 ### Phase 6: Docs and rules
 
 #### Automated
 
-- [ ] 6.1 `npx prettier --check CLAUDE.md context/foundation/test-plan.md context/foundation/prd.md` passes
+- [x] 6.1 `npx prettier --check CLAUDE.md context/foundation/test-plan.md context/foundation/prd.md` passes — e73b4e1
 
 #### Manual
 
