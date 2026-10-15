@@ -39,7 +39,7 @@ export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 p
 /**
  * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps.
  * Measured 2026-10-15 (ui-dashboard-tiles Phase 2, EN go on the all-clear fixture, no event line, the container's
- * `min-height` set to 0, `evidence/scripts/dashboard.mjs --measure`); re-measure at 360 px and 640 px after any change to
+ * `min-height` set to 0, on the page and on the skeleton); re-measure at 360 px and 640 px after any change to
  * the verdict's lines, sizes or copy, never compute it. The arithmetic, from the type roles and the rhythm roles:
  *  - 360 px: pt-3 12 + date (`text-label`) 20 + h2 `mt-line` 8 + headline (`text-display` line, 36 px at 360 px) 36 +
  *    reason `mt-1` 4 + the reason on two `text-body` lines (24 px each: it does not fit the 328 px column) 48 + pb-10 40

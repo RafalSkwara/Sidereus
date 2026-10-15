@@ -125,3 +125,9 @@ Whole suite (3.2-3.4), on a fresh `npm run build` of the final tree, previewed o
 - `npx astro check` 0 errors / 0 warnings, `npm run lint` clean, `npm test` 122 files / 2338 passed, 1 skipped, 6 todo, `npm run build` OK.
 
 The agent's own check (3.5) of `after/` against `before/`, by the main session: at 390 px in dark, light and red, EN and PL, the tiles read as one family (the heading 8 px over its content, 40 px between tiles), the Events line leads with the Orionids' `Sparkle` on its first line, the Planets reason carries its Info icon, and the first screen keeps the headline, the Site card and the Telescope title above the TabBar; on desktop the verdict and the tiles hold the one-column layout with the same rhythm; the `/design` verdict specimens show each event line as its own fact with its kind's icon, the solar eclipse's `Eclipse` included. Nothing looked off.
+
+## After the implementation review (2026-10-15)
+
+F1 (b), a known cost from arithmetic, not measured (no event night before the Orionids, 21/22 Oct): the verdict's event line now takes 28 px (`mt-line` 8 + the 20 px line; before `mt-1` 4 + 20 = 24). At 390 px the verdict fills its `min-h-42` exactly (natural 168.9 px), so nothing swallows the line and it moves the cards down: for a one-line event the Telescope title ends about 774 px against the TabBar at 779 (about 5 px to spare, was 9). A two-line Polish solar-eclipse line was already past the TabBar (about 790) and would be about 794. The phone spec measures without the line and its wrapper. Owner, 2026-10-15: the Polish no-forecast night under the TabBar is a permanent known limitation (CLAUDE.md, Phone first).
+
+F2: the `TILES_GAP_CLASS` test went red with `pt-3` and green again after the restore (105/105). Gates after F1-F3: `astro check` 0/0, lint clean, `npm test` 122 files / 2339 passed, build OK, e2e `tonight-dashboard tonight-phone` 7 passed.

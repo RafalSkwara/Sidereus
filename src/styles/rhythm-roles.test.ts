@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import { TILES_GAP_CLASS } from "@/components/tonight/sky-band";
+
 /**
  * Rhythm guard (ui-fact-rhythm): the guarded files space their content vertically with the rhythm roles from
  * `src/styles/global.css` (`line` 8 px, `group` 24 px, `item` 20 px: `mt-group`, `py-item`, `space-y-line`, …), never
@@ -333,5 +335,13 @@ describe("rhythm roles in the guarded files", () => {
       ({ token, allowed: count, used }) => `${file}: ${token} allowed ${String(count)}, used ${String(used)}`,
     );
     expect(loose).toEqual([]);
+  });
+});
+
+// `sky-band.ts` stays out of `GUARDED` (its band geometry is not rhythm), but the gap above the dashboard's first tile is
+// the `line` role (ui-dashboard-tiles D3, impl review F2), so this one constant is held to the roles on its own.
+describe("the dashboard tiles' gap", () => {
+  it("uses the rhythm roles, not a numeric vertical step", () => {
+    expect(findNumericSpacing(`"${TILES_GAP_CLASS}"`)).toEqual([]);
   });
 });

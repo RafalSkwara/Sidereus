@@ -20,15 +20,11 @@ import { onboardInMadrid } from "./helpers";
 
 const t = en.tonight;
 
-/** The six sky-event kinds, the values an event fact's `data-fact` may carry. */
-const EVENT_KINDS = [
-  "lunar-eclipse",
-  "solar-eclipse",
-  "elongation",
-  "opposition",
-  "pairing",
-  "meteor-shower",
-] as const satisfies readonly SkyEventKind[];
+/**
+ * The sky-event kinds, the values an event fact's `data-fact` may carry, read from the catalogue's per-kind names rather
+ * than copied by hand: the `satisfies` fails the type check if a kind lacks its name, so the list follows `SkyEventKind`.
+ */
+const EVENT_KINDS = Object.keys(t.events.kind satisfies Record<SkyEventKind, string>) as SkyEventKind[];
 
 /**
  * How the verdict's event line may begin, whichever date the clock has: "Tonight: ", or for a solar eclipse, a daytime

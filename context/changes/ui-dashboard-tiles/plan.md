@@ -622,4 +622,4 @@ None.
 #### Manual
 
 - [x] 3.5 The agent's own check of the after shots (EN/PL, dark/light/red, 390 px including the phone first screen, and desktop) against `evidence/before/`, recorded in `evidence/README.md` — b0ad3f9
-- [ ] 3.6 The owner accepts the dashboard, the verdict line specimens and the new landing image from `evidence/after/`
+- [x] 3.6 The owner accepts the dashboard, the verdict line specimens and the new landing image from `evidence/after/` — owner 2026-10-15

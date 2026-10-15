@@ -5,9 +5,10 @@
  * the window. Always shown, straight after "Point here first", and it opens `/tonight/events`. Its own component so
  * `TonightTiles` and the /design specimens share it, the specimens with their own heading ids.
  *
- * The one exception to text-led tiles (ui-dashboard-tiles D5): when an event is next, the line is a body-size `Fact`
- * that leads with that event's kind icon (muted, from `factIcon`; the line keeps the tile's semibold heading ink), and
- * `data-events-tile-line` sits on the Fact root, whose only text is the line. The "none in the window" and
+ * An icon-led line in text-led tiles (ui-dashboard-tiles D5; the Planets reason's Info icon is the other): when an
+ * event is next, the line is a body-size `Fact` that leads with that event's kind icon (muted, from `factIcon`; the
+ * line keeps the tile's semibold heading ink), and `data-events-tile-line` sits on the Fact root, whose only text is the
+ * line. The "none in the window" and
  * "unavailable" lines name no event, so they stay plain text without an icon. The tile's heading has no icon (2B).
  */
 import Fact from "@/components/ui/Fact.astro";
