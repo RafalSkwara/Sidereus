@@ -57,7 +57,7 @@ const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
 const GEOLOCATION = "a denied or unavailable geolocation is the user's choice and would be noise";
 const STORE_FAULT =
-  "audit finding F8: the catch returns { ok: false, message, fault } and keeps the fault in the result (Phase 2), and Phase 4's saveFailureKey logs it, so the catch itself stays allowlisted";
+  "audit finding F8: the catch returns { ok: false, message, fault } with the sanitized fault built by faultFrom (Phase 2), and Phase 4's saveFailureKey logs it, so the catch itself stays allowlisted";
 
 /**
  * Every file with silent sites, the exact number of them and why they are tolerated. A catch, a `.catch(...)` or the
@@ -71,6 +71,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 5,
     reason:
       "the logger must never throw: a getter, proxy or console that fails cannot be reported anywhere else (it would recurse), so each of the five reads and writes falls back to no field or no line",
+  },
+  "src/lib/observability/fault.ts": {
+    count: 1,
+    reason:
+      "faultFrom runs in a failure path and must never throw: a getter or proxy that fails while its code, status or cause is read cannot be reported anywhere else, so the read falls back to no field",
   },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
@@ -95,7 +100,8 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   },
   "src/lib/account-plan/store.ts": {
     count: 1,
-    reason: "returns the error's name as the result's code; the caller, account-plan/index.ts, logs account.plan",
+    reason:
+      "returns the shaped code and name of the error as the result's fault; the caller, account-plan/index.ts, logs account.plan",
   },
   "src/lib/catalogue/finder-stars.ts": {
     count: 1,
@@ -131,9 +137,18 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     reason:
       "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the island reports the failure as island.geocode (Phase 9)",
   },
-  "src/lib/gear/store.ts": { count: 1, reason: `${STORE_FAULT} (toSiteColumns)` },
-  "src/lib/observations/store.ts": { count: 3, reason: `${STORE_FAULT} (the gear lookups and the latest-night bound)` },
-  "src/lib/onboarding/store.ts": { count: 1, reason: `${STORE_FAULT} (the time zone resolution)` },
+  "src/lib/gear/store.ts": {
+    count: 1,
+    reason: `${STORE_FAULT} (toSiteColumns, whose fault the create and update results carry)`,
+  },
+  "src/lib/observations/store.ts": {
+    count: 3,
+    reason: `${STORE_FAULT} (the gear lookups of create and update and the latest-night bound)`,
+  },
+  "src/lib/onboarding/store.ts": {
+    count: 1,
+    reason: `${STORE_FAULT} (the time zone resolution of completeOnboarding)`,
+  },
 
   "src/lib/offline/install.ts": {
     count: 1,

@@ -1,7 +1,8 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { MessageKey } from "@/i18n";
-import type { Tables } from "@/lib/database.types";
+import type { Tables, TablesInsert } from "@/lib/database.types";
 import type { Site } from "@/lib/engine/types";
+import { faultFrom, noRowsFault, withFault, type StoreFault, type WriteFault } from "@/lib/observability/fault";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { EyepieceInput, SiteInput, TelescopeInput } from "./schemas";
 import { resolveTimeZone, type TimeZoneMode, type TimeZoneResolution } from "./timezone";
@@ -11,14 +12,17 @@ import { resolveTimeZone, type TimeZoneMode, type TimeZoneResolution } from "./t
  * here, so pages and routes stay thin. It maps camelCase domain types to snake_case columns.
  *
  * Privacy rules (PRD NFR): database error text can echo submitted values, coordinates included, so
- * it never leaves this module. Writes return a fixed, value-free message key (`@/i18n`); reads throw
- * an `Error` whose message is such a key. This module never logs.
+ * it never leaves this module. Writes return a fixed, value-free message key (`@/i18n`) and, for anything
+ * but a user-input failure, a `fault` holding only the PostgREST `code` and `status` and the kind
+ * `classifyFault` gave them (`@/lib/observability/fault`); reads throw an `Error` whose message is such a
+ * key and whose `cause` is the same sanitized `StoreFault`. This module never logs: the caller decides how
+ * a failure is traced.
  *
  * Ownership is enforced by RLS: `user_id` defaults to `auth.uid()`, so writes never send it, and a
  * row owned by someone else behaves exactly like a missing one.
  */
 
-export type WriteResult = { ok: true } | { ok: false; message: MessageKey };
+export type WriteResult = { ok: true } | { ok: false; message: MessageKey; fault?: WriteFault };
 
 export interface SiteRecord {
   id: string;
@@ -64,12 +68,12 @@ interface EntityMessages {
 
 function writeFailure(error: PostgrestError, fallback: MessageKey, messages: EntityMessages): WriteResult {
   if (error.code === INVALID_TEXT) {
-    return { ok: false, message: messages.notFound };
+    return { ok: false, message: messages.notFound, ...withFault(error) };
   }
   if (error.code === CHECK_VIOLATION) {
-    return { ok: false, message: OUT_OF_RANGE };
+    return { ok: false, message: OUT_OF_RANGE, ...withFault(error) };
   }
-  return { ok: false, message: fallback };
+  return { ok: false, message: fallback, ...withFault(error) };
 }
 
 function affected(
@@ -82,7 +86,7 @@ function affected(
     return writeFailure(error, fallback, messages);
   }
   if (!data || data.length === 0) {
-    return { ok: false, message: messages.notFound };
+    return { ok: false, message: messages.notFound, fault: noRowsFault() };
   }
   return { ok: true };
 }
@@ -112,8 +116,10 @@ function toSiteRecord(row: SiteRow): SiteRecord {
   };
 }
 
-/** Returns `null` when the zone cannot be resolved (tz-lookup throws on out-of-range coordinates). */
-function toSiteColumns(input: SiteInput) {
+/** Returns the sanitized fault when the zone cannot be resolved (tz-lookup throws on out-of-range coordinates). */
+function toSiteColumns(
+  input: SiteInput,
+): { ok: true; columns: TablesInsert<"sites"> } | { ok: false; fault: StoreFault } {
   let zone: TimeZoneResolution;
   try {
     zone = resolveTimeZone({
@@ -122,18 +128,26 @@ function toSiteColumns(input: SiteInput) {
       latitudeDeg: input.latitudeDeg,
       longitudeDeg: input.longitudeDeg,
     });
-  } catch {
-    return null;
+  } catch (error) {
+    return { ok: false, fault: faultFrom(error) };
   }
   return {
-    name: input.name,
-    latitude_deg: input.latitudeDeg,
-    longitude_deg: input.longitudeDeg,
-    bortle: input.bortle,
-    min_altitude_deg: input.minAltitudeDeg,
-    time_zone: zone.timeZone,
-    time_zone_source: zone.source,
+    ok: true,
+    columns: {
+      name: input.name,
+      latitude_deg: input.latitudeDeg,
+      longitude_deg: input.longitudeDeg,
+      bortle: input.bortle,
+      min_altitude_deg: input.minAltitudeDeg,
+      time_zone: zone.timeZone,
+      time_zone_source: zone.source,
+    },
   };
+}
+
+/** A site's save failed before any request: the unresolvable zone, carried as a fault, never as text. */
+function columnsFailure(fault: StoreFault, message: MessageKey): WriteResult {
+  return { ok: false, message, ...withFault(fault) };
 }
 
 /** Hands a stored site to the sky engine (S-02). */
@@ -145,7 +159,7 @@ export const siteStore = {
   async list(client: TypedSupabaseClient): Promise<SiteRecord[]> {
     const { data, error } = await client.from("sites").select("*").order("created_at", { ascending: true });
     if (error) {
-      throw new Error(SITE_MESSAGES.loadFailed);
+      throw new Error(SITE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data.map(toSiteRecord);
   },
@@ -156,26 +170,26 @@ export const siteStore = {
       if (error.code === INVALID_TEXT) {
         return null;
       }
-      throw new Error(SITE_MESSAGES.loadFailed);
+      throw new Error(SITE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data ? toSiteRecord(data) : null;
   },
 
   async create(client: TypedSupabaseClient, input: SiteInput): Promise<WriteResult> {
-    const columns = toSiteColumns(input);
-    if (!columns) {
-      return { ok: false, message: SITE_MESSAGES.saveFailed };
+    const resolved = toSiteColumns(input);
+    if (!resolved.ok) {
+      return columnsFailure(resolved.fault, SITE_MESSAGES.saveFailed);
     }
-    const { error } = await client.from("sites").insert(columns);
+    const { error } = await client.from("sites").insert(resolved.columns);
     return error ? writeFailure(error, SITE_MESSAGES.saveFailed, SITE_MESSAGES) : { ok: true };
   },
 
   async update(client: TypedSupabaseClient, id: string, input: SiteInput): Promise<WriteResult> {
-    const columns = toSiteColumns(input);
-    if (!columns) {
-      return { ok: false, message: SITE_MESSAGES.saveFailed };
+    const resolved = toSiteColumns(input);
+    if (!resolved.ok) {
+      return columnsFailure(resolved.fault, SITE_MESSAGES.saveFailed);
     }
-    const { data, error } = await client.from("sites").update(columns).eq("id", id).select("id");
+    const { data, error } = await client.from("sites").update(resolved.columns).eq("id", id).select("id");
     return affected(data, error, SITE_MESSAGES.saveFailed, SITE_MESSAGES);
   },
 
@@ -214,7 +228,7 @@ export const telescopeStore = {
   async list(client: TypedSupabaseClient): Promise<TelescopeRecord[]> {
     const { data, error } = await client.from("telescopes").select("*").order("created_at", { ascending: true });
     if (error) {
-      throw new Error(TELESCOPE_MESSAGES.loadFailed);
+      throw new Error(TELESCOPE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data.map(toTelescopeRecord);
   },
@@ -225,7 +239,7 @@ export const telescopeStore = {
       if (error.code === INVALID_TEXT) {
         return null;
       }
-      throw new Error(TELESCOPE_MESSAGES.loadFailed);
+      throw new Error(TELESCOPE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data ? toTelescopeRecord(data) : null;
   },
@@ -275,7 +289,7 @@ export const eyepieceStore = {
   async list(client: TypedSupabaseClient): Promise<EyepieceRecord[]> {
     const { data, error } = await client.from("eyepieces").select("*").order("created_at", { ascending: true });
     if (error) {
-      throw new Error(EYEPIECE_MESSAGES.loadFailed);
+      throw new Error(EYEPIECE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data.map(toEyepieceRecord);
   },
@@ -286,7 +300,7 @@ export const eyepieceStore = {
       if (error.code === INVALID_TEXT) {
         return null;
       }
-      throw new Error(EYEPIECE_MESSAGES.loadFailed);
+      throw new Error(EYEPIECE_MESSAGES.loadFailed, { cause: faultFrom(error) });
     }
     return data ? toEyepieceRecord(data) : null;
   },

@@ -1,13 +1,15 @@
 import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
 import type { WriteResult } from "@/lib/gear/store";
+import { faultFrom, noRowsFault, withFault } from "@/lib/observability/fault";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import { CHECKABLE_HEADLINES, type RecordedHeadline, type SkyAnswer, type TallyRow } from "./claim";
 
 /**
  * The sky checks' data layer (roadmap M-2 S-07, verdict-check). Follows `@/lib/gear/store.ts`'s privacy rules:
- * database error text never leaves this module, writes return a fixed, value-free message key (`@/i18n`), reads
- * throw an `Error` whose message is such a key, and this module never logs.
+ * database error text never leaves this module, writes return a fixed, value-free message key (`@/i18n`) plus a
+ * sanitized `fault` (only the code and status, never for a user-input failure), reads throw an `Error` whose
+ * message is such a key and whose `cause` is a sanitized `StoreFault`, and this module never logs.
  *
  * Which headline a night keeps is decided in the database (`record_sky_verdict`), by the database clock, so every
  * render of Tonight agrees. A night can be answered only once its dark window has started: before that the row is
@@ -64,7 +66,7 @@ export const skyCheckStore = {
       headline: input.headline,
       dark_start: input.darkStart.toISOString(),
     });
-    return error ? { ok: false, message: SAVE_FAILED } : { ok: true };
+    return error ? { ok: false, message: SAVE_FAILED, ...withFault(error) } : { ok: true };
   },
 
   /**
@@ -82,7 +84,7 @@ export const skyCheckStore = {
       .order("night", { ascending: false })
       .order("id", { ascending: true });
     if (error) {
-      throw new Error(LOAD_FAILED);
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return data.map(toSkyCheckRecord);
   },
@@ -101,9 +103,9 @@ export const skyCheckStore = {
       .lt("dark_start", at)
       .select("id");
     if (error) {
-      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : SAVE_FAILED };
+      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : SAVE_FAILED, ...withFault(error) };
     }
-    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND };
+    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND, fault: noRowsFault() };
   },
 
   /**
@@ -121,9 +123,9 @@ export const skyCheckStore = {
       .lt("dark_start", at)
       .select("id");
     if (error) {
-      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : SAVE_FAILED };
+      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : SAVE_FAILED, ...withFault(error) };
     }
-    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND };
+    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND, fault: noRowsFault() };
   },
 
   /**
@@ -146,7 +148,7 @@ export const skyCheckStore = {
       .order("id", { ascending: true })
       .range(offset, offset + SKY_CHECKS_PAGE_SIZE);
     if (error) {
-      throw new Error(LOAD_FAILED);
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return {
       entries: data.slice(0, SKY_CHECKS_PAGE_SIZE).map(toSkyCheckRecord),
@@ -158,7 +160,7 @@ export const skyCheckStore = {
   async tally(client: TypedSupabaseClient): Promise<TallyRow[]> {
     const { data, error } = await client.rpc("sky_check_tally");
     if (error) {
-      throw new Error(LOAD_FAILED);
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return data;
   },

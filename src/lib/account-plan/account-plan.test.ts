@@ -11,7 +11,9 @@ import { accountPlanForCopy, getAccountPlan, planFrom, requireFullPlan } from ".
  */
 
 const mocks = vi.hoisted(() => ({
-  read: vi.fn<(client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true; code: string }>>(),
+  read: vi.fn<
+    (client: unknown, userId: string) => Promise<{ plan: unknown } | { error: true; code?: string; name?: string }>
+  >(),
 }));
 
 vi.mock("./store", () => ({ accountPlanStore: { read: mocks.read } }));
@@ -121,11 +123,62 @@ describe("accountPlanForCopy", () => {
   });
 
   it("logs a failed read once however it is asked first", async () => {
-    mocks.read.mockResolvedValue({ error: true, code: "TypeError" });
+    mocks.read.mockResolvedValue({ error: true, name: "TypeError" });
     const request = locals();
     expect(await requireFullPlan(request)).toMatchObject({ ok: false, reason: "needs-full" });
     expect(await planOf(request)).toBe("unknown");
     expect(logged).toHaveBeenCalledOnce();
+  });
+
+  describe("what the failed read's line holds (review F5)", () => {
+    async function lineFor(result: { error: true; code?: string; name?: string }) {
+      mocks.read.mockResolvedValue(result);
+      expect(await planOf(locals())).toBe("unknown");
+      expect(logged).toHaveBeenCalledOnce();
+      return logged.mock.calls[0];
+    }
+
+    it("files a short class name under name, never under code", async () => {
+      expect(await lineFor({ error: true, name: "TypeError" })).toEqual([
+        "sidereus: account.plan failed",
+        { step: "account.plan", name: "TypeError" },
+      ]);
+    });
+
+    it("files a long class name under name (an identifier may be 32 characters; a code only 12)", async () => {
+      expect(await lineFor({ error: true, name: "AuthRetryableFetchError" })).toEqual([
+        "sidereus: account.plan failed",
+        { step: "account.plan", name: "AuthRetryableFetchError" },
+      ]);
+    });
+
+    it("files a database code under code, beside the name when there is one", async () => {
+      expect(await lineFor({ error: true, code: "PGRST301", name: "PostgrestError" })).toEqual([
+        "sidereus: account.plan failed",
+        { step: "account.plan", name: "PostgrestError", code: "PGRST301" },
+      ]);
+    });
+
+    it("holds the step alone when the store found neither, and never an Error or its message", async () => {
+      const line = await lineFor({ error: true });
+      expect(line).toEqual(["sidereus: account.plan failed", { step: "account.plan" }]);
+    });
+
+    it("never passes message text, an email or an Error to the console", async () => {
+      // A store that misbehaved and put a message and an email where only shaped values belong.
+      mocks.read.mockResolvedValue({
+        error: true,
+        code: "a@example.test",
+        name: "permission denied for a@example.test",
+        message: "permission denied for a@example.test",
+      } as { error: true; code: string; name: string });
+      expect(await planOf(locals())).toBe("unknown");
+      expect(logged).toHaveBeenCalledOnce();
+      const args = logged.mock.calls[0];
+      expect(args).toEqual(["sidereus: account.plan failed", { step: "account.plan" }]);
+      expect(args.some((arg) => arg instanceof Error)).toBe(false);
+      expect(JSON.stringify(args)).not.toMatch(/example\.test|permission denied|read failed/);
+    });
   });
 
   describe("the time the plan was read (review F1)", () => {

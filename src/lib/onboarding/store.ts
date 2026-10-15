@@ -1,5 +1,6 @@
 import type { MessageKey } from "@/i18n";
 import { resolveTimeZone, type TimeZoneResolution } from "@/lib/gear/timezone";
+import { faultFrom, withFault, type WriteFault } from "@/lib/observability/fault";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { OnboardingInput } from "./schemas";
 
@@ -10,12 +11,15 @@ import type { OnboardingInput } from "./schemas";
  *
  * Server-only (imports `timezone.ts`). Follows `@/lib/gear/store.ts`'s privacy rules: database
  * error text can echo submitted values, coordinates included, so it never leaves this module.
- * Failures return a fixed, value-free message key (`@/i18n`), reads throw an `Error` whose message is
- * such a key, and this module never logs.
+ * Failures return a fixed, value-free message key (`@/i18n`) plus a sanitized `fault` (only the code and
+ * status, never for a user-input failure), reads throw an `Error` whose message is such a key and whose
+ * `cause` is a sanitized `StoreFault`, and this module never logs.
  */
 
 export type OnboardingResult =
-  { ok: true } | { ok: false; reason: "alreadyOnboarded" } | { ok: false; reason: "failed"; message: MessageKey };
+  | { ok: true }
+  | { ok: false; reason: "alreadyOnboarded" }
+  | { ok: false; reason: "failed"; message: MessageKey; fault?: WriteFault };
 
 export interface OnboardingOptions {
   /** The site's name in the user's language (`onboarding.homeSiteName`, FR-004). */
@@ -32,8 +36,9 @@ const ALREADY_ONBOARDED = "already_onboarded";
 /** Postgres `check_violation`. */
 const CHECK_VIOLATION = "23514";
 
-function failed(message: MessageKey): OnboardingResult {
-  return { ok: false, reason: "failed", message };
+/** `cause` is the caught value or the database error: only its code and status are kept, as the result's `fault`. */
+function failed(message: MessageKey, cause: unknown): OnboardingResult {
+  return { ok: false, reason: "failed", message, ...withFault(cause) };
 }
 
 export async function completeOnboarding(
@@ -45,8 +50,8 @@ export async function completeOnboarding(
   let zone: TimeZoneResolution;
   try {
     zone = resolveTimeZone({ mode: "auto", latitudeDeg: site.latitudeDeg, longitudeDeg: site.longitudeDeg });
-  } catch {
-    return failed(SAVE_FAILED);
+  } catch (error) {
+    return failed(SAVE_FAILED, error);
   }
 
   const { error } = await client.rpc("complete_onboarding", {
@@ -74,9 +79,9 @@ export async function completeOnboarding(
     return { ok: false, reason: "alreadyOnboarded" };
   }
   if (error.code === CHECK_VIOLATION) {
-    return failed(OUT_OF_RANGE);
+    return failed(OUT_OF_RANGE, error);
   }
-  return failed(SAVE_FAILED);
+  return failed(SAVE_FAILED, error);
 }
 
 /** Whether the user has any site or telescope, i.e. has been through onboarding or `/gear`. */
@@ -86,7 +91,7 @@ export async function hasAnyGear(client: TypedSupabaseClient): Promise<boolean> 
     client.from("telescopes").select("id").limit(1),
   ]);
   if (sites.error || telescopes.error) {
-    throw new Error(LOAD_FAILED);
+    throw new Error(LOAD_FAILED, { cause: faultFrom(sites.error ?? telescopes.error) });
   }
   return sites.data.length > 0 || telescopes.data.length > 0;
 }

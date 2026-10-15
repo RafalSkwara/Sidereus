@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { StoreFault } from "@/lib/observability/fault";
 import type { TypedSupabaseClient } from "@/lib/supabase";
+import { fakeClient, leakyPostgrestError, LEAK, type FakeResult } from "@/lib/test-support/supabase-fake";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
+import type { ObservationInput, ObservationUpdateInput } from "./schemas";
 import { latestNightBound, observationStore, SEEN_PAGE_SIZE } from "./store";
 
 // The pure rules; what talks to Supabase is covered by tests/db/observations.test.ts. The one exception is the
@@ -99,8 +102,8 @@ describe("listSeenEntries", () => {
     expect(await observationStore.listSeenEntries(noCount)).toEqual(rows);
   });
 
-  it("throws a keyed error that keeps the database error as its cause", async () => {
-    const failure = { message: "boom", code: "XX000" };
+  it("throws a keyed error whose cause is a sanitized fault, never the database error", async () => {
+    const failure = leakyPostgrestError("XX000", 503);
     const failing = {
       from: () => {
         const query = {
@@ -112,9 +115,241 @@ describe("listSeenEntries", () => {
         return query;
       },
     } as unknown as TypedSupabaseClient;
-    await expect(observationStore.listSeenEntries(failing)).rejects.toMatchObject({
-      message: "errors.load.observations",
-      cause: failure,
+    const thrown = await observationStore.listSeenEntries(failing).catch((error: unknown) => error);
+    expect(thrown).toMatchObject({ message: "errors.load.observations" });
+    const cause = (thrown as Error).cause;
+    expect(cause).toBeInstanceOf(StoreFault);
+    expect(cause).not.toBe(failure);
+    expect(cause).toMatchObject({ code: "XX000", status: 503 });
+    expect(JSON.stringify(cause)).not.toMatch(LEAK);
+  });
+});
+
+// The writes and reads that go through the store's other paths. A fake answers per table: the gear lookups the
+// entry needs, then the observations request under test.
+
+const SITE_ROW = {
+  id: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  name: "Back garden",
+  latitude_deg: 52.2297,
+  longitude_deg: 21.0122,
+  bortle: 6,
+  min_altitude_deg: 20,
+  time_zone: "Europe/Warsaw",
+  time_zone_source: "auto",
+  created_at: "2026-10-01T00:00:00Z",
+};
+const TELESCOPE_ROW = {
+  id: "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+  name: "Dobsonian",
+  aperture_mm: 150,
+  focal_length_mm: 750,
+  created_at: "2026-10-01T00:00:00Z",
+};
+const OBSERVATION_ID = "5b4c3d2e-1f0a-4b9c-8d7e-6f5a4b3c2d1e";
+const NOW = new Date("2026-10-10T20:00:00Z");
+
+const EXISTING_ROW = {
+  id: OBSERVATION_ID,
+  target: "M31",
+  night: "2026-10-09",
+  rating: 4,
+  site_id: SITE_ROW.id,
+  telescope_id: TELESCOPE_ROW.id,
+  site_name: "Back garden",
+  telescope_name: "Dobsonian",
+  created_at: "2026-10-09T20:00:00Z",
+};
+
+const CREATE: ObservationInput = {
+  target: "M31",
+  night: "2026-10-09",
+  rating: 4,
+  siteId: SITE_ROW.id,
+  telescopeId: TELESCOPE_ROW.id,
+};
+const UPDATE: ObservationUpdateInput = { ...CREATE };
+
+/** A client whose gear lookups succeed and whose `observations` table answers `observations`. */
+function withGear(observations: FakeResult) {
+  return fakeClient((table) => {
+    if (table === "sites") return { data: SITE_ROW };
+    if (table === "telescopes") return { data: TELESCOPE_ROW };
+    return observations;
+  });
+}
+
+describe("a failed write carries a sanitized fault", () => {
+  it("create: a server fault keeps only its code and status next to the fixed key", async () => {
+    const result = await observationStore.create(withGear({ error: leakyPostgrestError("XX000", 503) }), CREATE, NOW);
+    expect(result).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "server", code: "XX000", status: 503 },
     });
+    expect(JSON.stringify(result)).not.toMatch(LEAK);
+  });
+
+  it("create: an RLS refusal is `refused`, and a user-input failure has no fault", async () => {
+    expect(await observationStore.create(withGear({ error: leakyPostgrestError("42501") }), CREATE, NOW)).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "refused", code: "42501" },
+    });
+    for (const code of ["22P02", "23514", "23503"]) {
+      const result = await observationStore.create(withGear({ error: leakyPostgrestError(code) }), CREATE, NOW);
+      expect(result, code).toEqual({ ok: false, message: "errors.save.observation" });
+    }
+  });
+
+  it("create: a failed gear lookup keeps the lookup's code instead of dropping the error", async () => {
+    const lookupFails = fakeClient((table) =>
+      table === "sites" ? { error: leakyPostgrestError("42501") } : { data: TELESCOPE_ROW },
+    );
+    const result = await observationStore.create(lookupFails, CREATE, NOW);
+    expect(result).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "refused", code: "42501" },
+    });
+    expect(JSON.stringify(result)).not.toMatch(LEAK);
+
+    const unreachable = fakeClient((table) =>
+      table === "sites" ? { error: { message: `fetch failed ${LEAK.source}` } } : { data: TELESCOPE_ROW },
+    );
+    expect(await observationStore.create(unreachable, CREATE, NOW)).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "server" },
+    });
+  });
+
+  it("update: a server fault keeps its code and status, a refusal is `refused`, a zero-row update is `no-rows`", async () => {
+    const updateAnswers = (answer: FakeResult) =>
+      fakeClient((table, calls) => {
+        if (table === "sites") return { data: SITE_ROW };
+        if (table === "telescopes") return { data: TELESCOPE_ROW };
+        // The entry is read first (`get`), then written (`update`): only the write gets the answer under test.
+        return calls.includes("update") ? answer : { data: EXISTING_ROW };
+      });
+
+    const server = await observationStore.update(
+      updateAnswers({ error: leakyPostgrestError("XX000", 503) }),
+      OBSERVATION_ID,
+      UPDATE,
+      NOW,
+    );
+    expect(server).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "server", code: "XX000", status: 503 },
+    });
+    expect(JSON.stringify(server)).not.toMatch(LEAK);
+
+    expect(
+      await observationStore.update(
+        updateAnswers({ error: leakyPostgrestError("42501") }),
+        OBSERVATION_ID,
+        UPDATE,
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.save.observation", fault: { kind: "refused", code: "42501" } });
+    expect(await observationStore.update(updateAnswers({ data: [] }), OBSERVATION_ID, UPDATE, NOW)).toEqual({
+      ok: false,
+      message: "errors.notFound.observation",
+      fault: { kind: "no-rows" },
+    });
+    expect(
+      await observationStore.update(
+        updateAnswers({ error: leakyPostgrestError("23514") }),
+        OBSERVATION_ID,
+        UPDATE,
+        NOW,
+      ),
+    ).toEqual({ ok: false, message: "errors.save.observation" });
+    expect(
+      await observationStore.update(updateAnswers({ data: [{ id: OBSERVATION_ID }] }), OBSERVATION_ID, UPDATE, NOW),
+    ).toEqual({ ok: true });
+  });
+
+  it("update: a failed lookup of the entry or of the user's sites keeps its code", async () => {
+    const getFails = fakeClient((table) =>
+      table === "observations" ? { error: leakyPostgrestError("PGRST301", 401) } : { data: SITE_ROW },
+    );
+    expect(await observationStore.update(getFails, OBSERVATION_ID, UPDATE, NOW)).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "session", code: "PGRST301", status: 401 },
+    });
+
+    // No chosen site: the night bound reads every site of the user, and that read fails.
+    const sitesFail = fakeClient((table) => {
+      if (table === "sites") return { error: leakyPostgrestError("XX000") };
+      return {
+        data: {
+          id: OBSERVATION_ID,
+          target: "M31",
+          night: "2026-10-09",
+          rating: 4,
+          site_id: null,
+          telescope_id: null,
+          site_name: "Gone",
+          telescope_name: "Gone",
+          created_at: "2026-10-09T20:00:00Z",
+        },
+      };
+    });
+    const result = await observationStore.update(
+      sitesFail,
+      OBSERVATION_ID,
+      { ...UPDATE, siteId: null, telescopeId: null },
+      NOW,
+    );
+    expect(result).toEqual({
+      ok: false,
+      message: "errors.save.observation",
+      fault: { kind: "server", code: "XX000" },
+    });
+  });
+
+  it("remove: a server fault keeps its code, a malformed id has none, and a zero-row delete is `no-rows`", async () => {
+    expect(
+      await observationStore.remove(fakeClient({ error: leakyPostgrestError("XX000", 502) }), OBSERVATION_ID),
+    ).toEqual({
+      ok: false,
+      message: "errors.delete.observation",
+      fault: { kind: "server", code: "XX000", status: 502 },
+    });
+    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("22P02") }), "nope")).toEqual({
+      ok: false,
+      message: "errors.notFound.observation",
+    });
+    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("42501") }), OBSERVATION_ID)).toEqual({
+      ok: false,
+      message: "errors.delete.observation",
+      fault: { kind: "refused", code: "42501" },
+    });
+    expect(await observationStore.remove(fakeClient({ data: [] }), OBSERVATION_ID)).toEqual({
+      ok: false,
+      message: "errors.notFound.observation",
+      fault: { kind: "no-rows" },
+    });
+  });
+});
+
+describe("a failed read throws its key with a sanitized cause", () => {
+  it.each([
+    ["list", (c: TypedSupabaseClient) => observationStore.list(c, { page: 1 })],
+    ["get", (c: TypedSupabaseClient) => observationStore.get(c, OBSERVATION_ID)],
+  ])("%s: the cause is a StoreFault holding only the code and status", async (_name, run) => {
+    const thrown = (await run(fakeClient({ error: leakyPostgrestError("XX000", 503) })).catch(
+      (error: unknown) => error,
+    )) as Error;
+    expect(thrown.message).toBe("errors.load.observations");
+    expect(thrown.cause).toBeInstanceOf(StoreFault);
+    expect(thrown.cause).toMatchObject({ code: "XX000", status: 503 });
+    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name", "status"]);
+    expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
+    expect((thrown.cause as Error).message).not.toMatch(LEAK);
   });
 });

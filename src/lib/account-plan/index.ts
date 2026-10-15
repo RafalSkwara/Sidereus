@@ -1,7 +1,7 @@
 import type { MessageKey } from "@/i18n";
 import { ACCOUNT_PLAN_NEEDS_FULL, NOT_CONFIGURED } from "@/lib/api-errors";
 import { logFailure } from "@/lib/observability/log-failure";
-import { accountPlanStore } from "./store";
+import { accountPlanStore, type PlanReadFault } from "./store";
 
 /**
  * The account plan on the server (roadmap F-01, PRD FR-045): the one rule "anything unknown is free", a lazy
@@ -32,6 +32,20 @@ export interface PlanReading {
 /** One read per request, keyed by the request's locals; the promise is stored so concurrent callers share it. */
 const plans = new WeakMap<App.Locals, Promise<PlanReading>>();
 
+/**
+ * What the failed read goes to the log as. `logFailure` takes a `name` only from an `Error` and a `code` from any
+ * object, so a named fault is a small `Error` with a fixed message (never the database's text) and that name, and an
+ * unnamed one is just its code: an `Error` without a name would log the useless "Error".
+ */
+function faultOf({ code, name }: PlanReadFault): unknown {
+  if (name === undefined) {
+    return { code };
+  }
+  const fault = new Error("account plan read failed");
+  fault.name = name;
+  return Object.assign(fault, code === undefined ? {} : { code });
+}
+
 async function readPlan(locals: App.Locals): Promise<PlanReading> {
   const { supabase, user } = locals;
   if (!supabase || !user) {
@@ -40,10 +54,9 @@ async function readPlan(locals: App.Locals): Promise<PlanReading> {
   const startedAt = new Date();
   const result = await accountPlanStore.read(supabase, user.id);
   if ("error" in result) {
-    // The store reports a fixed code or the error's name, never the database's text. Without this line the failure is
+    // The store reports the error's code and name apart, never the database's text. Without this line the failure is
     // invisible: access fails closed and the page shows the free state.
-    // The helper keeps the code only when it has a database code's shape.
-    logFailure("account.plan", { code: result.code });
+    logFailure("account.plan", faultOf(result));
     return { plan: "unknown", at: new Date() };
   }
   const plan = planFrom(result.plan);

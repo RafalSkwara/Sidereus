@@ -266,7 +266,7 @@ Trace every swallow point in the Tonight islands and the forecast path (flow A: 
 
 **Intent**: An Open-Meteo outage, a bad body, an incomplete series, a dead KV or a missing binding each leave one line (F1, F29).
 
-**Contract**: extends Phase 1's `forecast.fetch` probe line with the `ForecastError` step and status (as `name`/`status`) and adds the steps `forecast.incomplete`, `forecast.cache-read`, `forecast.cache-write`, `forecast.cache-missing`. Behaviour (fallback, null) is unchanged. The `waitUntil` write logs from inside `writeCache` since the task is deferred. The module header's "nothing here logs" is replaced by the new rule.
+**Contract**: extends Phase 1's `forecast.fetch` probe line with the `ForecastError` step and status (`ForecastError.name` stays "Error", so the call passes `{ status: error.status }` as `extra` and picks the step word from `error.step`; the phase may also name the class) and adds the steps `forecast.incomplete`, `forecast.cache-read`, `forecast.cache-write`, `forecast.cache-missing`. Behaviour (fallback, null) is unchanged. The `waitUntil` write logs from inside `writeCache` since the task is deferred. The module header's "nothing here logs" is replaced by the new rule.
 
 #### 2. The Tonight loaders
 
@@ -689,11 +689,11 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 2.1 Fault tests pass (classification table, `faultFrom` drops the message)
-- [ ] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status`
-- [ ] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL
-- [ ] 2.4 Full unit suite, lint and types pass
-- [ ] 2.5 DB suites unaffected
+- [x] 2.1 Fault tests pass (classification table, `faultFrom` drops the message)
+- [x] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status`
+- [x] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL
+- [x] 2.4 Full unit suite, lint and types pass
+- [x] 2.5 DB suites unaffected
 
 #### Manual
 

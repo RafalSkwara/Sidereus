@@ -7,8 +7,9 @@ import type { ForecastHour, HourlyForecast } from "@/lib/engine";
  * engine's `HourlyForecast`. The fetch function is passed in so tests need no network.
  *
  * Privacy (PRD NFR): the coordinates go only into this request's query string. Every failure
- * throws an `Error` with a fixed, value-free message (no URL, no response text, no cause), and
- * this module never logs.
+ * throws a `ForecastError` with a fixed, value-free message and the step that failed (plus the HTTP
+ * status for `http`): no URL, no response text, no cause (the cause of a network failure can quote the
+ * URL). This module never logs; the caller reads `name`, `step` and `status` (error-visibility).
  */
 
 export const OPEN_METEO_BASE_URL = "https://api.open-meteo.com";
@@ -18,6 +19,26 @@ export const FORECAST_TIMEOUT_MS = 3000;
 
 export const FORECAST_REQUEST_FAILED = "The forecast service could not be reached.";
 export const FORECAST_RESPONSE_INVALID = "The forecast service returned an unexpected response.";
+
+/** Which step of the fetch failed: the request itself, the HTTP status, the body's JSON, or the body's shape. */
+export type ForecastStep = "request" | "http" | "parse" | "schema";
+
+/**
+ * A failed forecast fetch. `message` is one of the two fixed texts above, `step` says where it failed and `status`
+ * (an integer HTTP status) is set for `http` only. It holds no URL and no cause, so every property is safe to log.
+ */
+export class ForecastError extends Error {
+  readonly step: ForecastStep;
+  readonly status?: number;
+
+  constructor(step: ForecastStep, status?: number) {
+    super(step === "parse" || step === "schema" ? FORECAST_RESPONSE_INVALID : FORECAST_REQUEST_FAILED);
+    this.step = step;
+    if (status !== undefined) {
+      this.status = status;
+    }
+  }
+}
 
 export interface ForecastCoords {
   latitudeDeg: number;
@@ -59,14 +80,14 @@ export function forecastUrl(site: ForecastCoords, baseUrl: string = OPEN_METEO_B
 
 /**
  * Maps an Open-Meteo response body into `HourlyForecast`. Hours where either value is null are
- * left out (the verdict counts them as not clear). Throws the fixed invalid-response error on a
+ * left out (the verdict counts them as not clear). Throws a `ForecastError` (step `schema`) on a
  * schema mismatch, including a cloud cover or humidity outside 0-100 (a negative cloud would
  * otherwise read clear).
  */
 export function mapForecastResponse(body: unknown): HourlyForecast {
   const parsed = responseSchema.safeParse(body);
   if (!parsed.success) {
-    throw new Error(FORECAST_RESPONSE_INVALID);
+    throw new ForecastError("schema");
   }
   const { time, cloud_cover: cloud, relative_humidity_2m: humidity } = parsed.data.hourly;
   const hours: ForecastHour[] = [];
@@ -80,7 +101,7 @@ export function mapForecastResponse(body: unknown): HourlyForecast {
   return { hours };
 }
 
-/** Fetches and maps the forecast. Throws a fixed-message `Error` on non-2xx, timeout, network or schema failure. */
+/** Fetches and maps the forecast. Throws a `ForecastError` on non-2xx, timeout, network, JSON or schema failure. */
 export async function fetchForecast(
   fetchFn: typeof fetch,
   site: ForecastCoords,
@@ -90,19 +111,18 @@ export async function fetchForecast(
   try {
     response = await fetchFn(forecastUrl(site, baseUrl), { signal: AbortSignal.timeout(FORECAST_TIMEOUT_MS) });
   } catch (_error) {
-    // eslint-disable-next-line preserve-caught-error -- the cause can quote the request URL, which carries the coordinates.
-    throw new Error(FORECAST_REQUEST_FAILED);
+    // No cause on purpose: it can quote the request URL, which carries the coordinates.
+    throw new ForecastError("request");
   }
   if (!response.ok) {
-    throw new Error(FORECAST_REQUEST_FAILED);
+    throw new ForecastError("http", response.status);
   }
   let body: unknown;
   try {
     body = await response.json();
   } catch (error) {
     // A body that is not JSON is a bad response; anything else (the timeout firing mid-body) is a failed request.
-    // eslint-disable-next-line preserve-caught-error -- fixed, value-free messages only (see the module comment).
-    throw new Error(error instanceof SyntaxError ? FORECAST_RESPONSE_INVALID : FORECAST_REQUEST_FAILED);
+    throw new ForecastError(error instanceof SyntaxError ? "parse" : "request");
   }
   return mapForecastResponse(body);
 }
