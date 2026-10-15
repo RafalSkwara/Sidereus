@@ -57,17 +57,16 @@ for (const width of widths) {
         const block = heading.locator("xpath=..");
         await block.screenshot({ path: join(outDir, `${id}-${theme}-${locale}-${width}.png`) });
         if (id === "c-item-rhythm") {
-          for (const v of ["i", "ii"]) {
-            const el = page.locator(`[data-rhythm-variant="${v}"]`).first();
-            if ((await el.count()) > 0)
-              await el.screenshot({ path: join(outDir, `rhythm-${v}-${theme}-${locale}-${width}.png`) });
-            else console.log(`MISSING rhythm variant ${v}`);
-          }
+          // The owner's rhythm (2026-10-15): one column, item 20 px on each side of the rule.
+          const el = page.locator("[data-rhythm-specimen]").first();
+          if ((await el.count()) > 0)
+            await el.screenshot({ path: join(outDir, `rhythm-${theme}-${locale}-${width}.png`) });
+          else console.log("MISSING rhythm specimen");
         }
       }
       // Stat frames: locale-independent (each frame names its own language), so once per theme, at 320 only.
       if (width === 320 && locale === "en") {
-        const frames = page.locator('[data-stat-frame^="row-"]');
+        const frames = page.locator("[data-stat-frame]");
         const n = await frames.count();
         for (let i = 0; i < n; i++) {
           const f = frames.nth(i);
@@ -80,13 +79,17 @@ for (const width of widths) {
               dl: dl ? Math.round(dl.getBoundingClientRect().width) : null,
               dd: [...el.querySelectorAll("dd")].map(over),
               dt: [...el.querySelectorAll("dt")].map(over),
+              // A wrapped value is taller than one line: count the lines of each dd.
+              lines: [...el.querySelectorAll("dd")].map((e) =>
+                Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight)),
+              ),
             };
           });
           const parts = [
             ...m.dd.map((o, k) => `dd[${k}] ${o ? "YES" : "no"}`),
             ...m.dt.map((o, k) => `dt[${k}] ${o ? "YES" : "no"}`),
           ];
-          console.log(`${name} ${theme} dl=${m.dl}px overflow: ${parts.join(", ")}`);
+          console.log(`${name} ${theme} dl=${m.dl}px overflow: ${parts.join(", ")} · dd lines: ${m.lines.join("/")}`);
         }
       }
       await context.close();

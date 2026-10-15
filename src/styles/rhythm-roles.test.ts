@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * Rhythm guard (ui-fact-rhythm): the guarded files space their content vertically with the rhythm roles from
- * `src/styles/global.css` (`line` 8 px, `group` 24 px, `item` 40 px: `mt-group`, `py-item`, `space-y-line`, …), never
+ * `src/styles/global.css` (`line` 8 px, `group` 24 px, `item` 20 px: `mt-group`, `py-item`, `space-y-line`, …), never
  * with numeric steps, so the gap between lines, groups and items stays one rule instead of a per-file choice.
  *
  * It fails on every vertical spacing utility with a number (`mt-4`, `sm:py-3`, `-mt-2`, `space-y-1.5`, `gap-y-2`),

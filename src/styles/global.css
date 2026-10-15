@@ -674,13 +674,14 @@
    * never numeric steps (`src/styles/rhythm-roles.test.ts` guards the converted files).
    * - line (8 px): between the lines of one group (the facts of an item).
    * - group (24 px): between the groups of one item (identity, the stat pair, the facts, the actions), and the
-   *   hairline's padding; also the padding of a one-group row (a night, a washed-out row).
-   * - item (40 px): the padding on each side of the rule between two items that hold groups (a target, a planet, the
-   *   Moon target, an event).
+   *   hairline's padding.
+   * - item (20 px): the padding on each side of the rule between two rows (a target, a planet, the Moon target, an
+   *   event, and the one-group rows: a night, a washed-out row), so 40 px separate two rows' contents (owner,
+   *   2026-10-15).
    */
   --spacing-line: 0.5rem;
   --spacing-group: 1.5rem;
-  --spacing-item: 2.5rem;
+  --spacing-item: 1.25rem;
 
   /* Nightfall: one family, Archivo, in widths. Display is expanded; mono is Archivo with tabular figures. */
   --font-sans: "Archivo Variable", system-ui, sans-serif;

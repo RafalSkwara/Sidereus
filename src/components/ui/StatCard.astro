@@ -3,19 +3,16 @@
  * One small stat card inside a `StatPair` (ui-fact-rhythm): the gear cards' bordered `bg-surface` box (in red the faint
  * border carries the shape, as on the gear cards), a caption label with its concept's icon over the value in mono
  * semibold heading ink. The slot is the value; the optional `sub` slot is a second, muted line (Best's direction).
- * Window and Best only. `valueClass` overrides the value's size where a row is too narrow (`text-label`).
+ * Window and Best only; the card fills its column's width (the pair stacks them, owner, 2026-10-15).
  */
 import { FACT_ICONS, type FactKind } from "@/components/ui/fact-icons";
-import { cn } from "@/lib/utils";
 
 interface Props {
   label: string;
   kind: FactKind;
-  /** Merged last onto the value (`text-label` for the narrow-row fallback). */
-  valueClass?: string;
 }
 
-const { label, kind, valueClass } = Astro.props;
+const { label, kind } = Astro.props;
 const Icon = FACT_ICONS[kind];
 const hasSub = Astro.slots.has("sub");
 ---
@@ -25,7 +22,7 @@ const hasSub = Astro.slots.has("sub");
     <Icon className="size-3.5 shrink-0" aria-hidden="true" />
     <span>{label}</span>
   </dt>
-  <dd class:list={cn("mt-0.5 font-mono text-body font-semibold text-heading", valueClass)}>
+  <dd class="mt-0.5 font-mono text-body font-semibold text-heading">
     <slot />
   </dd>
   {hasSub && (

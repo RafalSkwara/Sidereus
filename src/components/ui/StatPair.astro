@@ -1,9 +1,8 @@
 ---
 /*
- * Window and Best side by side (ui-fact-rhythm, decisions 2 and 5): a `<dl>` of two `StatCard`s in two columns at every
- * width, capped from `sm` so a desktop card does not float its value in a wide box. The grid stretches the shorter card
- * to its neighbour's height (accepted: the room sits under Window's value). `class` is merged last: the caller's
- * spacing and, in a narrow row, the owner's fallback.
+ * Window and Best (ui-fact-rhythm): a `<dl>` of two `StatCard`s in one column at every width, Best under Window, each
+ * card as wide as its column, with the line role between them (owner change of 2026-10-15, replacing side by side and
+ * the `sm` cap). `class` is merged last: the caller's spacing (`mt-group` in a row).
  */
 import { cn } from "@/lib/utils";
 
@@ -14,6 +13,6 @@ interface Props {
 const { class: className } = Astro.props;
 ---
 
-<dl class:list={cn("grid grid-cols-2 gap-3 sm:max-w-md", className)}>
+<dl class:list={cn("grid gap-line", className)}>
   <slot />
 </dl>
