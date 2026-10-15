@@ -3,7 +3,7 @@ change_id: ui-refine
 title: UI refinement audit of the data-dense views, button weight and navigation
 status: new
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-15
 archived_at: null
 ---
 
@@ -34,8 +34,8 @@ This folder is the umbrella for the split in `audit.md` ("Proposed split into ch
 | # | Change | Status |
 |---|---|---|
 | 1 | `ui-quiet-actions` | Done: merged in #163 (main c650a8a) and archived to `context/archive/2026-10-14-ui-quiet-actions/` |
-| 2 | `ui-fact-rhythm` | **Next** |
-| 3 | `ui-dashboard-tiles` | Not started (may fold into change 2) |
+| 2 | `ui-fact-rhythm` | Done: merged in #167 (main 42ce808) and archived to `context/archive/2026-10-14-ui-fact-rhythm/` |
+| 3 | `ui-dashboard-tiles` | **Next** (not started; it did not fold into change 2) |
 | 4 | `ui-tonight-nav` | Not started |
 | 5 | `ui-log-progress-gear` | Not started |
 
@@ -45,4 +45,10 @@ Contract carried over from change 1:
 - **Offline:** a control's icons mute with it.
 - **Lint:** `context/**` is outside ESLint.
 
-Evidence scripts to reuse: `context/archive/2026-10-14-ui-quiet-actions/evidence/scripts/`. They take the port from the environment and refuse non-local URLs.
+Contract carried over from change 2 (`ui-fact-rhythm`):
+- **Rhythm roles:** `line` 8, `group` 24, `item` 20 px in `global.css`; every Tonight list row is `py-item` (40 px between rows); `text-overline` for section labels. `cn()` knows the roles.
+- **Components:** `Fact` / `FactList`, `StatCard` / `StatPair` (Window and Best stacked, full width, at every width) and the icon map `src/components/ui/fact-icons.ts` (one concept, one icon).
+- **Guards:** `src/styles/rhythm-roles.test.ts` (converted files: no numeric, px or arbitrary vertical steps, allowlists with counts) and `src/components/ui/fact-islands.test.ts`.
+- **Skeletons:** `TonightPageSkeleton` mirrors the real rows (`rows`, `moon`, `nights`, `events`; `plan` is S-08's); fit a changed view's skeleton and measure it (`scripts/skeleton-heights.mjs`).
+
+Evidence scripts to reuse: `context/archive/2026-10-14-ui-quiet-actions/evidence/scripts/` and `context/archive/2026-10-14-ui-fact-rhythm/evidence/scripts/` (capture, targets-rows, skeleton-heights, design-sections). They take the port from the environment and refuse non-local URLs.
