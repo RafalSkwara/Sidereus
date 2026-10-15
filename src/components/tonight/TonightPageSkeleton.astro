@@ -2,17 +2,18 @@
 /*
  * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
  * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
- * ruled placeholder rows at the focused pages' rhythm (ui-fact-rhythm: the item role around each row, the stacked
- * Window and Best cards, the facts under a hairline), so nothing jumps when the island
- * swaps in. Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line
- * height. `layout="plan"` stands in for the Session plan
- * instead (ui-user-adjustments): one 44 px bar for the edit row above the plan (adjustable-session-plan: "Edit plan", or
- * the free account's lock line), then its night lines, the legend and rows as tall as SessionTimeline's (name, line,
- * curve, hours). `layout="nights"` and `layout="events"` stand in for the two lighter list pages (ui-fact-rhythm), each
- * sized to its real rows, since one shared row would be too tall for a night or too short for an event: the Nights
- * strip's "Times in" line, the verdict nights (date and dark window beside the headline and two fact lines), then under
- * the dashed rule the outlook nights (two fact lines); the events' "Times in" line, then one night per row (its overline
- * heading over an event: the kind icon beside the name and "kind · when" lines, two facts at the group step).
+ * ruled placeholder rows with a ranked target's geometry (ui-fact-rhythm: the item role around each row, the heading
+ * and detail lines, the stacked Window and Best cards as StatCard boxes, the facts under a hairline, the actions), so
+ * nothing jumps when the island swaps in. Bars that stand for text take that text's type role and hold a non-breaking
+ * space, so they have its line height; a sentence that wraps on a phone gets a second line there (`sm:hidden` break).
+ * `layout="plan"` stands in for the Session plan instead (ui-user-adjustments): one 44 px bar for the edit row above the
+ * plan (adjustable-session-plan: "Edit plan", or the free account's lock line), then its night lines, the legend and
+ * rows as tall as SessionTimeline's (name, line, curve, hours). `layout="nights"` and `layout="events"` stand in for
+ * the two lighter list pages (ui-fact-rhythm), each sized to its real rows, since one shared row would be too tall for
+ * a night or too short for an event: the Nights strip's "Times in" line, the verdict nights (date and dark window
+ * beside the headline and two fact lines), then under the dashed rule the outlook nights (two fact lines); the events'
+ * "Times in" line, then one night per row (its overline heading over an event: the kind icon beside the name and
+ * "kind · when" lines, two facts at the group step).
  */
 import BackLink from "@/components/ui/BackLink.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
@@ -49,6 +50,9 @@ const outlookRows = rows - verdictRows;
 // NightStrip's left column and main column (the same classes, so the bars line up as the rows will).
 const nightLeftCell = "flex w-26 shrink-0 flex-col gap-y-line sm:w-28";
 const nightMainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
+// StatCard's box (its border and 8 px padding, here the line role) holding bars at its caption, value and sub lines:
+// about 58 px for Window and 78 px for Best, as measured (StatCard's 2 px value nudge is left out).
+const statCard = "rounded-lg border border-border bg-surface px-3 py-line";
 ---
 
 <!-- Only the loading line is the status: the back and reload links stay outside it, so a screen reader still
@@ -111,8 +115,17 @@ const nightMainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
               </div>
               <div class:list={[nightMainCell]}>
                 <div class:list={[bar, "w-24 text-label"]}>&nbsp;</div>
-                <div class:list={[bar, "w-5/6 text-label"]}>&nbsp;</div>
-                <div class:list={[bar, "w-2/3 text-label"]}>&nbsp;</div>
+                {/* The reason and the Moon line, each two lines in the narrow column on a phone. */}
+                <div class:list={[bar, "w-5/6 text-label"]}>
+                  &nbsp;
+                  <br class="sm:hidden" />
+                  &nbsp;
+                </div>
+                <div class:list={[bar, "w-2/3 text-label"]}>
+                  &nbsp;
+                  <br class="sm:hidden" />
+                  &nbsp;
+                </div>
               </div>
             </div>
           ))}
@@ -166,21 +179,49 @@ const nightMainCell = "flex min-w-0 flex-1 flex-col gap-y-line";
       </div>
     ) : (
       <div aria-hidden="true">
-        <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
-        <div class="divide-y divide-border">
+        {/* The band's opening lines: Targets' heading and count, a stand-in for Planets' window line. */}
+        <div class:list={[bar, "w-56 max-w-full text-title"]}>&nbsp;</div>
+        <div class:list={[bar, "mt-line w-64 max-w-full text-label"]}>&nbsp;</div>
+        <div class="mt-group divide-y divide-border">
           {Array.from({ length: rows }, () => (
-            <div class="py-item">
-              <div class:list={[bar, "h-6 w-1/2"]} />
-              <div class:list={[bar, "mt-line h-4 w-2/3"]} />
-              {/* Window and Best: two cards stacked, each the full width of the column. */}
+            /* A ranked target as ObjectCard and TargetDetails draw it. */
+            <div class="py-item first:pt-0 last:pb-0">
+              <div class:list={[bar, "w-1/2 text-title"]}>&nbsp;</div>
+              <div class:list={[bar, "mt-line w-2/3 text-label"]}>&nbsp;</div>
+              {/* Window over Best, each a StatCard box: a caption over a value, Best with its direction under it. */}
               <div class="mt-group grid gap-line">
-                <div class:list={[bar, "h-14"]} />
-                <div class:list={[bar, "h-14"]} />
+                <div class:list={[statCard]}>
+                  <div class:list={[bar, "w-16 text-caption"]}>&nbsp;</div>
+                  <div class:list={[bar, "w-28 text-body"]}>&nbsp;</div>
+                </div>
+                <div class:list={[statCard]}>
+                  <div class:list={[bar, "w-12 text-caption"]}>&nbsp;</div>
+                  <div class:list={[bar, "w-14 text-body"]}>&nbsp;</div>
+                  <div class:list={[bar, "w-20 text-label"]}>&nbsp;</div>
+                </div>
               </div>
+              {/* The facts under the hairline: what you'll see, the eyepiece pair (two lines), why. A sentence wraps
+                  to a second line on a phone, so its bar does too. */}
               <div class="mt-group space-y-line border-t border-border pt-group">
-                <div class:list={[bar, "h-4 w-5/6"]} />
-                <div class:list={[bar, "h-4 w-3/4"]} />
-                <div class:list={[bar, "h-4 w-2/3"]} />
+                <div class:list={[bar, "w-full text-label"]}>
+                  &nbsp;
+                  <br class="sm:hidden" />
+                  &nbsp;
+                </div>
+                <div class="space-y-line">
+                  <div class:list={[bar, "w-3/4 text-label"]}>&nbsp;</div>
+                  <div class:list={[bar, "w-2/3 text-label"]}>&nbsp;</div>
+                </div>
+                <div class:list={[bar, "w-5/6 text-label"]}>
+                  &nbsp;
+                  <br class="sm:hidden" />
+                  &nbsp;
+                </div>
+              </div>
+              {/* The actions: the 44 px hairline "Mark observed" and the quiet "Finder chart" link. */}
+              <div class="mt-group flex flex-wrap gap-x-5 gap-y-line">
+                <div class:list={[bar, "h-11 w-36"]} />
+                <div class:list={[bar, "w-28 self-center text-label"]}>&nbsp;</div>
               </div>
             </div>
           ))}

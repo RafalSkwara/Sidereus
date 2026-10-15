@@ -34,12 +34,13 @@ const notice = pickTonightNotice({
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
 // `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
 const night = requestedNight(Astro.url);
+// The skeleton's rows: a typical night's planets up (a planet's row is about a target row's height).
 ---
 
 <GearShell title={title} skyFlow>
   {supabase ? (
     <PlanetsPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night} notice={notice}>
-      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/planets" rows={7} />
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/planets" rows={5} />
     </PlanetsPageContent>
   ) : (
     <>

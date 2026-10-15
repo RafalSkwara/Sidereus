@@ -1,4 +1,4 @@
-import type { DarkWindow, Verdict } from "@/lib/engine";
+import { darknessThresholdDegForBortle, type DarkWindow, type Verdict } from "@/lib/engine";
 import type { Locale } from "@/lib/preferences";
 import type { TonightNight } from "@/lib/tonight/build";
 import { createFormatter } from "@/lib/tonight/format";
@@ -13,7 +13,8 @@ import { createFormatter } from "@/lib/tonight/format";
 /** The specimen's zone, as the strip's "Times in" line names it. */
 export const SAMPLE_NIGHTS_ZONE = "Europe/Warsaw";
 
-const THRESHOLD_DEG = -18;
+/** Astronomical darkness, the engine's threshold for a Bortle 1-4 site (the samples' site is a Bortle 4). */
+const THRESHOLD_DEG = darknessThresholdDegForBortle(4);
 
 /** A dark window in UTC; Warsaw is on CEST (UTC+2) on these October nights, so 17:42Z reads 19:42. */
 function darkWindow(start: string, end: string): DarkWindow {

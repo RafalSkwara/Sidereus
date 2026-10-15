@@ -120,6 +120,7 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
   - This plan does not edit `tonight-phone.spec.ts` (research said it did; it does not).
   - S-08's new row ids make `what-to-expect.spec.ts:92-101` count closed and washed-out rows through `li[id^="object-"]`. That spec belongs to S-08 to narrow (to `ol > li[data-object]` of the top five, or `[data-object-card]`); the orchestrator relays it.
   - If this change rebases onto S-08 before S-08 fixes the spec, Phase 3's run of `what-to-expect` goes red for that reason, not this change's.
+  - **Update (impl review F4, 2026-10-15):** S-08 (39f3f1c) has already narrowed the spec to `li[data-object-card]`; the two notes above are history.
 
 ## What We're NOT Doing
 
@@ -151,7 +152,7 @@ The owner's answers of 2026-10-14 (relayed by the orchestrator) to the agent's d
   - A caption label with its icon over a `font-mono text-body` semibold value.
   - Best's direction on a second muted line.
   - ~~The pair is `grid-cols-2` at every width, capped at `max-w-md` from `sm`.~~ **Owner change of 2026-10-15**: the pair is one column at every width, Window above Best, each card the full width of its column (`StatPair` = `grid gap-line`, no cap). This replaces decision 5's "side by side" and the grid stretch below no longer applies.
-  - The grid stretches the shorter Window card to Best's height. That is accepted; the empty room sits under Window's value.
+  - ~~The grid stretches the shorter Window card to Best's height. That is accepted; the empty room sits under Window's value.~~ (Moot since the stacked pair of 2026-10-15: each card has its own height.)
   - **In red the card keeps the faint border like the gear cards** (owner, F8). The border carries the shape there, not the fill.
 - **F2, decided 2026-10-15** (owner): the look of fallback (a), the pair keeping the row's `pl-10` indent with the same card styling, but stacked in one column (see D3). (b) and (c) are dropped.
 - **F2. Measure first** (owner). Phase 1 builds the pair on its `/design` specimen and captures it at 320 px inside a Targets expanded-row frame (EN and PL; dark, light and red), with the fallbacks beside it. **Phase 1 then stops**, and the owner chooses from the screenshot before Phase 3 starts. Fallbacks shown:
@@ -179,6 +180,13 @@ The owner's answers of 2026-10-14 (relayed by the orchestrator) to the agent's d
   - The Eye means only "what you'll see".
   - "Visible" / "Not visible" get their own pair (CircleCheck / CircleSlash).
   - The map lives in `src/components/ui/fact-icons.ts`, beside the other presentational helpers (`ui/tile.ts`).
+
+- **Addendum after implementation (impl review F4, 2026-10-15)**, deviations recorded:
+  - `SeenTag` keeps its chip padding `py-0.5` (allowlisted in the guard; it is the pill's own padding, not rhythm).
+  - `MoonCard` wraps the slider's text children (the `FactList` and the washed-out link) in one `<div class="space-y-line">`, because the island's `space-y-2` lands on the box-less `<astro-slot>`.
+  - `TonightPageSkeleton` gained `nights` and `events` layouts mirroring those pages' rows, and Moon/Planets pass their own `rows`; after the review (F9, owner) the default rows mirror a target row's real geometry. The `plan` branch stays S-08's.
+  - Progress 1.5's title still says "8, 24 and 40 px" (titles are never renamed); since the checkpoint the `item` bar measures 20 px.
+  - Review F2 (owner): the `size` fact icon is `MoveHorizontal` instead of `Diameter`, which read like the CircleSlash "not visible" mark.
 
 ## Implementation Approach
 
@@ -268,7 +276,7 @@ Add the spacing and overline roles, the icon map and the four shared components.
 - `--text-overline: 0.8125rem`, with `--line-height: 1.25rem`, `--letter-spacing: 0.04em`, `--font-weight: 600`;
 - `--spacing-line: 0.5rem`;
 - `--spacing-group: 1.5rem`;
-- `--spacing-item: 2.5rem`.
+- `--spacing-item: 2.5rem`. **Superseded at the checkpoint** (owner, 2026-10-15): `1.25rem`, 20 px on each side of the rule.
 
 They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 
@@ -319,10 +327,10 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 
 **Files**: `src/components/ui/StatCard.astro`, `src/components/ui/StatPair.astro` (new)
 
-**Intent**: Window and Best as two small cards side by side at every width (decisions 2 and 5; D3).
+**Intent**: Window and Best as two small cards side by side at every width (decisions 2 and 5; D3). **Superseded** (owner, 2026-10-15): stacked, Window above Best, one column, each card the full width of its column, at every width.
 
 **Contract**:
-- `StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`, with an optional `class` merged last so the owner's F2 fallback can be applied by the caller.
+- ~~`StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`, with an optional `class` merged last so the owner's F2 fallback can be applied by the caller.~~ As built (591db72): a `<dl>`, `grid gap-line`, one column, no cap, `class` merged last for the caller's spacing.
 - `StatCard` props:
   - `label`, `kind: FactKind`;
   - the slot is the value;
@@ -352,7 +360,7 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 - In "Type and radius": a `text-overline` sample, and a spacing strip showing `line`, `group` and `item` at their sizes (each bar carries `data-role-sample="<role>"`).
 - In "Components × states", new sections:
   - **`c-stat-pair`**:
-    - the pair in EN and PL, at full width (the desktop cap) and in a 288 px column (a top-five `ObjectCard` at 320 px);
+    - the pair in EN and PL, at full width (~~the desktop cap~~ no cap since 2026-10-15) and in a 288 px column (a top-five `ObjectCard` at 320 px);
     - a frame that copies a Targets expanded row at 320 px: the scroll region's `rounded-lg border px-3`, then the `pl-10` body, so the pair gets about 222 px;
     - in that frame, fallbacks (a), (b) and (c) side by side, each labelled, EN and PL, with the longest real values ("20:51–07:10", "Widoczność", "Najlepiej", "03:21" / "NNE, 87°").
   - **`c-fact`**: `Fact` with a label and an inline value, with a sentence, muted, a two-line `<p>` block (the eyepiece pair), Polish (the "Do szczegółów: …" spacing case), the accent `see` icon and the `safety` tone.
@@ -407,14 +415,14 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 - The whole unit suite passes, including `rhythm-roles.test.ts` and the colour, red, contrast, zone and console guards: `npm test`
 - `npm run build` succeeds
 - `sky-events.spec.ts` passes against a fresh local preview (see "Running the e2e lists"): `… npx playwright test sky-events`
-- After the preview is stopped, `/design` on `astro dev` (port 4331) renders the three role bars at 8, 24 and 40 px computed height (the capture script prints them)
+- After the preview is stopped, `/design` on `astro dev` (port 4331) renders the three role bars at 8, 24 and 40 px computed height (the capture script prints them) (20 px for `item` since the checkpoint: measured 8/24/20 in 591db72)
 
 #### Manual Verification:
 
 - `/design` at 320 px and 1280 px in dark, light and red, EN and PL:
   - the roles read as three clearly different steps;
   - the pair fits the 288 px column, and the expanded-row frame shows fallbacks (a), (b) and (c) honestly;
-  - the pair is capped on desktop;
+  - the pair is capped on desktop; (superseded 2026-10-15: no cap, stacked full-width cards)
   - the Polish fact keeps the space after the colon;
   - every concept in the map has one icon, and no icon serves two concepts;
   - in red the card's faint border does not read like the hairline "Mark observed" button, and the overline stays readable
@@ -674,7 +682,7 @@ Bring the two list pages that are not targets onto the rhythm, the overline and 
 
 **File**: `src/components/tonight/NightStrip.astro`
 
-**Intent**: The group labels use the overline. The right-hand lines become muted facts. The rows use the group role. The structure stays two `h3` + `ol` groups.
+**Intent**: The group labels use the overline. The right-hand lines become muted facts. The rows use the item role (`py-item`, since the owner's item 20 of 2026-10-15). The structure stays two `h3` + `ol` groups.
 
 **Contract**:
 - "Times in" `mb-4` → `mb-group`.
@@ -811,7 +819,7 @@ Make the contract stick (/10x-ui "Make it stick"), record the evidence and run e
   - `planets-on-tonight`: planet labels, and the Polish eyepiece spacing;
   - `what-to-expect`: stat pair overflow at 320 px in an opened row, and the date-independent Polish "no lost space after a colon" check.
 - **`tonight-phone.spec.ts`**: no sideways scroll at 320/375 px on every Tonight page in EN and PL (unchanged spec).
-- **S-08's id change** narrows `what-to-expect.spec.ts:92-101` on its side (relayed by the orchestrator).
+- **S-08's id change** narrows `what-to-expect.spec.ts:92-101` on its side (relayed by the orchestrator). Done in S-08 39f3f1c (`li[data-object-card]`).
 
 ### Manual Testing Steps:
 
@@ -877,7 +885,7 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Manual
 
-- [ ] 3.5 Targets (closed and opened rows), Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/`
+- [x] 3.5 Targets (closed and opened rows), Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/` — d4340e0
 
 ### Phase 4: Sky events and the Nights page
 
@@ -889,7 +897,7 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Manual
 
-- [ ] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet readable labels, one fact per line, new visible mark, safety icon kept, no sideways scroll
+- [x] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet readable labels, one fact per line, new visible mark, safety icon kept, no sideways scroll — d4340e0
 
 ### Phase 5: The guard's break check, the rules, the screenshot gate and the whole suite
 

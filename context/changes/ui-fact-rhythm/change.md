@@ -1,7 +1,7 @@
 ---
 change_id: ui-fact-rhythm
 title: Grouped, icon-led facts with a spacing rhythm (ui-refine split, change 2)
-status: implementing
+status: impl_reviewed
 created: 2026-10-14
 updated: 2026-10-15
 archived_at: null
@@ -32,3 +32,5 @@ Phase 1 implemented 2026-10-15 (9385b8a): roles, overline, icon map, Fact/FactLi
 Owner checkpoint answered 2026-10-15 (Progress 1.6-1.8): the stat pair takes variant (a)'s look (indented row, same cards) but stacked, Window above Best, one column, each card the full width of its column, at every width (replacing decision 5's "side by side" and D3's grid-cols-2 / max-w-md); item spacing (i), 40 px in total between two items (`--spacing-item: 1.25rem`). Agent follow-up: one-group rows (nights, washed-out rows) also use `py-item`, so every row sits 40 px from the next (with `py-group` they would be 48 px apart, further than full items). Phase 1 updated; the stacked pair measures 222 px in the 320 px expanded row with every value on one line.
 
 Phases 2-5 implemented 2026-10-15 (a6187fe p2+p3, 4f34ad2 p4, then p5): gates green per phase with break checks; the whole e2e suite 64 passed / 4 skipped / 0 failed and smoke all passed on a fresh local preview (4331/4401). Main-session fixes beyond the plan: TonightPageSkeleton `nights`/`events` layouts (Phase 3's target-shaped rows were about 2.5x too tall there) and the Moon/Planets skeleton row counts (1 and 7), so every focused page lands within about 350 px of its skeleton. Manual checks 3.5, 4.4 done by the agent with screenshots (`evidence/after`, `crops`, `design/curated`); the owner's acceptance (5.4) is open. Not pushed: waiting for the reviewer's /10x-impl-review. S-08 not on main yet (no rebase needed so far).
+
+Implementation review 2026-10-15 (`reviews/impl-review.md`, NEEDS ATTENTION, 0 critical, F1-F6 warnings, F7-F9 observations): all applied with the owner's answers (F2 MoveHorizontal; F9 skeletons fitted before the PR, measured in the evidence README). Status impl_reviewed. Next: rebase onto main after S-08 (#165), the whole e2e suite and smoke, then the PR.

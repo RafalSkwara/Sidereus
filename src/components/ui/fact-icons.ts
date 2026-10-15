@@ -12,7 +12,6 @@ import {
   Cloud,
   Compass,
   Contrast,
-  Diameter,
   Eclipse,
   Ellipse,
   Eye,
@@ -20,6 +19,7 @@ import {
   Lightbulb,
   Link,
   Moon,
+  MoveHorizontal,
   Orbit,
   Ruler,
   Sparkle,
@@ -64,8 +64,11 @@ export const FACT_ICONS: Readonly<Record<FactKind, LucideIcon>> = {
   why: Info,
   /** A planet's brightness. */
   magnitude: SunDim,
-  /** A planet's apparent size. */
-  size: Diameter,
+  /**
+   * A planet's apparent size: a horizontal span, never a struck circle, which would read as the not-visible
+   * `CircleSlash`.
+   */
+  size: MoveHorizontal,
   /** A planet's phase. */
   phase: Contrast,
   /** Saturn's rings. */

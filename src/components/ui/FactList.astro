@@ -13,6 +13,7 @@ interface Props {
 
 const { class: className } = Astro.props;
 // Rendered once to see whether anything shows, then through `<slot />` (facts are pure markup, so twice is harmless).
+// Children are only `Fact`s or conditionals around them: a stray HTML comment or `&nbsp;` would count as content.
 const hasFacts = Astro.slots.has("default") && (await Astro.slots.render("default")).trim() !== "";
 ---
 

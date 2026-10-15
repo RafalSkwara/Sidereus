@@ -20,7 +20,7 @@ function assertLocal(name, value) {
 assertLocal("BASE_URL", BASE);
 
 const storageState = join(dirname(outDir), "state-ui-fact.json");
-const PAGES = ["targets", "planets", "moon", "nights", "events"];
+const PAGES = ["targets", "planets", "moon", "nights", "events", "finder?object=M13&from=targets"];
 const VIEWS = {
   390: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   1280: { viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 },
@@ -49,7 +49,7 @@ for (const name of PAGES) {
     await pa.addStyleTag({ content: "[data-tabbar] { display: none !important; }" });
     if ((await pa.locator(".slow-hint").count()) === 0) throw new Error(`${name} ${width}: no skeleton shown`);
     const skeleton = await height(pa);
-    await pa.screenshot({ path: join(outDir, `skeleton-${name}-${width}.png`), fullPage: true });
+    await pa.screenshot({ path: join(outDir, `skeleton-${name.split("?")[0]}-${width}.png`), fullPage: true });
     await a.close();
 
     const b = await open(width, false);

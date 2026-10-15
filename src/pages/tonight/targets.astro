@@ -10,6 +10,7 @@ import TargetsPageContent from "@/components/tonight/TargetsPageContent.astro";
 import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import { getMessages, isMessageKey, translateKey } from "@/i18n";
+import { MAX_RANKED_OBJECTS } from "@/lib/engine";
 import { parseTargetParam } from "@/lib/targets";
 import { targetLabel } from "@/lib/targets/labels";
 import { parseSort } from "@/lib/tonight/all-objects";
@@ -40,6 +41,7 @@ const night = requestedNight(Astro.url);
 const sort = parseSort(Astro.url.searchParams.get("sort"));
 // A sort link sits inside the rest of the list, so a page that came with one opens it again.
 const restOpen = Astro.url.searchParams.has("sort");
+// The skeleton's rows: one per card the page opens with (the rest wait behind a button).
 ---
 
 <GearShell title={title} skyFlow>
@@ -54,7 +56,7 @@ const restOpen = Astro.url.searchParams.has("sort");
       restOpen={restOpen}
       logged={loggedTarget}
     >
-      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/targets" rows={8} />
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/targets" rows={MAX_RANKED_OBJECTS} />
     </TargetsPageContent>
   ) : (
     <>

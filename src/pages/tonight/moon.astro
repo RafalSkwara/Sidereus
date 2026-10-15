@@ -34,12 +34,13 @@ const notice = pickTonightNotice({
 const { siteId, telescopeId } = requestedGear(Astro.url, Astro.cookies);
 // `?night=next` is the evening after tonight, the copy the service worker stores for offline use.
 const night = requestedNight(Astro.url);
+// The skeleton draws no target row: the phase, disc and slider usually fit in one screen (the page's minimum height).
 ---
 
 <GearShell title={title} skyFlow>
   {supabase ? (
     <MoonPageContent server:defer siteId={siteId} telescopeId={telescopeId} night={night} notice={notice}>
-      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/moon" rows={1} />
+      <TonightPageSkeleton slot="fallback" title={title} reloadHref="/tonight/moon" rows={0} />
     </MoonPageContent>
   ) : (
     <>

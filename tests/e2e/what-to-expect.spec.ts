@@ -138,6 +138,41 @@ test("at 320 px with the full plan, the best five's and an opened row's lines fi
           expect(cell.oneLine, `${locale}: "${cell.text}" must stay on one line at 320 px`).toBe(true);
         }
       }
+
+      // The cells' own boxes cannot overflow (a grid's `auto` column grows the card instead), so also check the card:
+      // the `dl` has no sideways overflow, and every card ends within the row's scroll region, whose right edge is
+      // the region's box minus its border and padding.
+      const geometry = await pair.evaluate((dl) => {
+        let region: HTMLElement | null = dl.parentElement;
+        while (region && !/auto|scroll/.test(getComputedStyle(region).overflowY)) region = region.parentElement;
+        if (!region) return null;
+        const style = getComputedStyle(region);
+        return {
+          dlScrollWidth: dl.scrollWidth,
+          dlClientWidth: dl.clientWidth,
+          regionInnerRight:
+            region.getBoundingClientRect().right -
+            Number.parseFloat(style.borderRightWidth) -
+            Number.parseFloat(style.paddingRight),
+          cardRights: [...dl.children].map((card) => card.getBoundingClientRect().right),
+        };
+      });
+      expect(geometry, `${locale}: the opened row sits in a scrolling region`).not.toBeNull();
+      if (geometry) {
+        expect(
+          geometry.dlScrollWidth,
+          `${locale}: the stat pair must not scroll sideways at 320 px`,
+        ).toBeLessThanOrEqual(geometry.dlClientWidth);
+        expect(
+          geometry.cardRights.length,
+          `${locale}: the pair holds a card each for Window and Best`,
+        ).toBeGreaterThanOrEqual(2);
+        for (const right of geometry.cardRights) {
+          expect(right, `${locale}: a stat card must end within the row at 320 px`).toBeLessThanOrEqual(
+            geometry.regionInnerRight + 0.5,
+          );
+        }
+      }
     }
 
     // No lost space after a label's colon ("Do szczegółów:10 mm"): in Polish, no fact on Targets runs a letter, a
@@ -148,6 +183,11 @@ test("at 320 px with the full plan, the best five's and an opened row's lines fi
         .locator("[data-fact]")
         .evaluateAll((elements) => elements.map((element) => element.textContent));
       expect(facts.length, "pl: Targets shows facts").toBeGreaterThan(0);
+      // The eyepiece fact is among them, so the check below really runs over a label that ends in a colon.
+      expect(
+        facts.some((text) => text.includes(pl.tonight.object.findWith)),
+        "pl: Targets shows an eyepiece fact (the 'Do szukania:' label)",
+      ).toBe(true);
       for (const text of facts) {
         expect(text, "pl: a fact must keep the space after a label's colon").not.toMatch(/\p{L}:\S/u);
       }

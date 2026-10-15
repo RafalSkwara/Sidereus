@@ -1,6 +1,6 @@
 # ui-fact-rhythm evidence
 
-Captured on 2026-10-15 against a production build of `feat/ui-refine` (head 4f34ad2), previewed on port 4331 with the forecast fixture on 4401 and local Supabase. The full matrices stay out of the repo; a curated, downscaled set is committed here.
+Captured on 2026-10-15 against a production build of `feat/ui-fact-rhythm` (head 4f34ad2; after it only a PlanetCard comment and the skeleton row counts changed, so the view shots stay current), previewed on port 4331 with the forecast fixture on 4401 and local Supabase. The full matrices stay out of the repo; a curated, downscaled set is committed here.
 
 Every script under `scripts/` refuses a non-local `BASE_URL`. No key is written anywhere: `seed.mjs` and the e2e take the local stack's keys inline on the command, never exported.
 
@@ -63,3 +63,33 @@ On 2026-10-15, against a fresh `npm run build` + `astro preview` on 4331 with th
 - `npm test` alone: 110 files, 1993 passed, 1 skipped, 6 todo.
 
 The solar eclipse is not on the fixture night, so its row (the amber safety icon) is checked on `/design`'s `c-sky-event-list` specimen: `crops/event-solar-after-{light,red}.jpg`.
+
+## After the implementation review (2026-10-15)
+
+**Skeleton fitted to the rows (F9, owner).** The default skeleton row now mirrors a target row (title, detail line, the two stat cards at their real 58 / 78 px, the hairline group of three facts, the action row); Targets passes `rows={MAX_RANKED_OBJECTS}`, Planets `rows={5}`, Moon `rows={0}`, Finder `rows={2}`. Measured with `skeleton-heights.mjs` (EN, dark, scrollHeight, px; finder = `/tonight/finder?object=M13&from=targets`):
+
+```
+page     width  before review (skeleton/real/delta)   after review (skeleton/real/delta)
+targets  390    3429 / 3331 / -98                     3287 / 3331 / +44
+targets  1280   3428 / 3086 / -342                    3086 / 3086 / 0
+planets  390    3083 / 3223 / +140                    3287 / 3223 / -64
+planets  1280   3082 / 3062 / -20                     3086 / 3062 / -24
+moon     390    1007 /  844 / -163                     844 /  844 / 0
+moon     1280   1006 /  900 / -106                     900 /  900 / 0
+nights   390    1441 / 1556 / +115                    1561 / 1556 / -5
+nights   1280   1440 / 1375 / -65                     1440 / 1375 / -65
+events   390    1682 / 1626 / -56                     1682 / 1626 / -56
+events   1280   1681 / 1605 / -76                     1681 / 1605 / -76
+finder   390    2640 / 1717 / -923 (rows 4)           1588 / 1717 / +129 (rows 2)
+finder   1280   2511 / 1244 / -1267 (rows 4)          1539 / 1244 / -295 (rows 2)
+```
+
+(The deltas are real minus skeleton; "before review" for Targets/Planets/Moon/Nights/Events is the table above, for the finder the first run after the skeleton rebuild with its old `rows={4}`; before this change the finder's skeleton was about 2045 px against the same real page.) The Moon skeleton is fitted to a night when the Moon is not a target (the page then sits at the shell's minimum height); on a night when it is a target the real page is about 1300 px and grows after the swap.
+
+**Guard break check (F1).** With a second `mt-0.5` in `Fact.astro`, `mt-[13px]` in `PlanetCard.astro` and `flex flex-col gap-2` in `NightStrip.astro` (worktree only), `rhythm-roles.test.ts` failed 3 of 78: `components/ui/Fact.astro:40 mt-0.5`, `components/tonight/PlanetCard.astro:40 mt-[13px]`, `components/tonight/NightStrip.astro:34 gap-2`; restored, 78/78.
+
+**E2E break check (F3).** `min-w-96` on `ObjectRow`'s body (rebuilt): the 320 px test failed on "a stat card must end within the row at 320 px" (413 > 291.5). `{entry.pair?.kind === "pair" && false && …}` in `ObjectDetails` (rebuilt): it failed on "pl: Targets shows an eyepiece fact (the 'Do szukania:' label)". Both restored and rebuilt. (A `min-w-96` on `StatCard` itself fails earlier, on the page's own no-sideways-scroll check, so it does not reach the new assertion.)
+
+**F2.** The size fact's icon is `MoveHorizontal`; `crops/planet-after-{light,red}.jpg` are recaptured with it.
+
+Gates after the fixes: `astro check` 0/0, lint clean, `npm test` 111 files, 2043 passed; build OK; e2e what-to-expect, planets-on-tonight, tonight-targets, tonight-phone, sky-events, seven-night-planner, moon-card, moon-as-target, finder-chart, finder-offline, red-night-mode, tonight-sky: 29 passed, 3 skipped.
