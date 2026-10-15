@@ -804,3 +804,16 @@ the plan of the slice that needs it.
     expires 36 h after its site's last refresh like the other copies, and is
     purged on sign-out and by another user's commit (`finder-chart/plan.md` O-4,
     D-13 to D-15). Other paid features will need their own answer.
+    _Settled for plan edits in the S-08 plan (2026-10-14, owner's answer):_ a
+    user's edits of the Session plan stay in the database when the account loses
+    the full plan and come back if it returns; meanwhile the plan page shows the
+    suggested plan, and a stored edited copy is replaced at that page's next
+    online answer, with no plan-loss drop in the service worker (unlike finder
+    charts). Rationale: the paid feature is the editing, not reading a list; a
+    copy stored while the plan was full is read-only, offline editing does not
+    exist, and every write passes the server's full-plan gate, so keeping what
+    the plan allowed when the copy was stored is this item's own candidate.
+    Copies of `?night=next` never carry edits. A failed read of the plan or of
+    the saved list shows the suggested plan with one muted line and stores no
+    offline copy of the plan page, so the earlier copy survives; the dashboard
+    is not affected (`adjustable-session-plan/plan.md` D11, D14).
