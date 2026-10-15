@@ -1,6 +1,6 @@
 # ui-fact-rhythm evidence
 
-Captured on 2026-10-15 against a production build of `feat/ui-fact-rhythm` (head 4f34ad2; after it only a PlanetCard comment and the skeleton row counts changed, so the view shots stay current), previewed on port 4331 with the forecast fixture on 4401 and local Supabase. The full matrices stay out of the repo; a curated, downscaled set is committed here.
+Captured on 2026-10-15 against a production build of `feat/ui-fact-rhythm` (head f3ff251; after it only a PlanetCard comment and the skeleton row counts changed, so the view shots stay current), previewed on port 4331 with the forecast fixture on 4401 and local Supabase. The full matrices stay out of the repo; a curated, downscaled set is committed here.
 
 Every script under `scripts/` refuses a non-local `BASE_URL`. No key is written anywhere: `seed.mjs` and the e2e take the local stack's keys inline on the command, never exported.
 
@@ -52,7 +52,7 @@ The default skeleton rows stand for a target (heading, detail line, the stacked 
 
 ## Guard break check
 
-Run by the main session on 2026-10-15 (Phase 5, after 4f34ad2): `mt-4` added to `PlanetCard.astro:40` and `space-y-3` to `SkyEventList.astro:74`, worktree only. `npm test`: 2 failed in `src/styles/rhythm-roles.test.ts` (`components/tonight/PlanetCard.astro:40 mt-4`, `components/tonight/SkyEventList.astro:74 space-y-3`), 1991 passed. Both files restored with `git checkout --`; the guard back to 43/43. Earlier, per phase: `mb-3` in `StatCard` (Phase 1), `mt-4` in `PlanetCard` (Phase 3), `mt-4` in `NightStrip` (Phase 4), each red then restored. The e2e break (Phase 3): `StatPair` back to `grid-cols-2`, rebuilt, and `what-to-expect.spec.ts`'s 320 px test went red on the one-line value check; restored and rebuilt.
+Run by the main session on 2026-10-15 (Phase 5, after f3ff251): `mt-4` added to `PlanetCard.astro:40` and `space-y-3` to `SkyEventList.astro:74`, worktree only. `npm test`: 2 failed in `src/styles/rhythm-roles.test.ts` (`components/tonight/PlanetCard.astro:40 mt-4`, `components/tonight/SkyEventList.astro:74 space-y-3`), 1991 passed. Both files restored with `git checkout --`; the guard back to 43/43. Earlier, per phase: `mb-3` in `StatCard` (Phase 1), `mt-4` in `PlanetCard` (Phase 3), `mt-4` in `NightStrip` (Phase 4), each red then restored. The e2e break (Phase 3): `StatPair` back to `grid-cols-2`, rebuilt, and `what-to-expect.spec.ts`'s 320 px test went red on the one-line value check; restored and rebuilt.
 
 ## E2E and smoke
 
@@ -93,3 +93,7 @@ finder   1280   2511 / 1244 / -1267 (rows 4)          1539 / 1244 / -295 (rows 2
 **F2.** The size fact's icon is `MoveHorizontal`; `crops/planet-after-{light,red}.jpg` are recaptured with it.
 
 Gates after the fixes: `astro check` 0/0, lint clean, `npm test` 111 files, 2043 passed; build OK; e2e what-to-expect, planets-on-tonight, tonight-targets, tonight-phone, sky-events, seven-night-planner, moon-card, moon-as-target, finder-chart, finder-offline, red-night-mode, tonight-sky: 29 passed, 3 skipped.
+
+## After the rebase onto S-08 (main 33a5586)
+
+The whole e2e suite: **76 passed, 4 skipped, 0 failed** (80 tests; S-08 added its own); smoke: **45/45 PASS**; `npm test` 121 files, 2289 passed. S-08's `session_plans` migration was applied to the local stack with `npx supabase migration up --local` (no reset). S-08 changed nothing visible in the captured views (row ids, `scroll-mt-4`, `data-object-card`, the finder's `from` prop), so no screenshot was retaken.

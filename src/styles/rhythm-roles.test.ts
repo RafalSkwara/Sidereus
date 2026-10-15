@@ -72,8 +72,8 @@ const GUARDED: Record<string, Allowance> = {
   "components/tonight/NightStrip.astro": {},
   // The skeleton's rows, nights and events layouts are on the roles. What stays: the header (the title's and the
   // context lines' offsets, the page wrapper's `pt-8`, the slow hint's `mt-6`) and the whole `layout="plan"` branch
-  // (its night lines, legend and rows, as tall as SessionTimeline's). The plan branch belongs to S-08: re-measure
-  // these counts after the S-08 rebase, whichever of them its conversion removes.
+  // (its edit-row offset `mt-8`, night lines, legend and rows, as tall as SessionTimeline's). The plan branch belongs to
+  // S-08; counts re-measured after the rebase onto S-08 (main 33a5586).
   "components/tonight/TonightPageSkeleton.astro": {
     "mt-1": 3,
     "sm:mt-2": 1,
@@ -88,6 +88,7 @@ const GUARDED: Record<string, Allowance> = {
     "sm:py-5": 1,
     "mt-1.5": 1,
     "mt-3": 1,
+    "mt-8": 1,
   },
 };
 

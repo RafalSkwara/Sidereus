@@ -101,7 +101,7 @@ From `research.md`, on main c650a8a (ui-quiet-actions merged).
 - **Slotted text can lose a space.** "Do szczegółów:10 mm Plössl" rendered when a sentence was slotted straight into the experiment's `Fact` (`evidence/exp-stat-cards/planets-pl-dark.jpg`). Fact content must sit in its own element.
 - **`MoonTimeSlider.tsx:70` puts `space-y-2` on its children**, but Astro wraps island children in `<astro-slot>` (`display: contents`), so the margins land on a box-less element. The lines stand tight today (`evidence/before/moon-phone-en-dark.jpg`; review F3). The facts must sit in one `FactList` inside the slot.
 - **Desktop.** A half-width stat card at 1280 px floats its value in a 360 px box (`evidence/exp-stat-cards/targets-desktop-pl-light.jpg`). Cap the pair's width from `sm`. **Superseded** (owner, 2026-10-15): the pair is stacked, each card the full width of its column, with no cap.
-- **The expanded rows are narrow at 320 px** (review F2): 288 px column − 26 px (the scroll region's border and `px-3`, `TargetsPageContent.astro:246`) − 40 px (`pl-10`) leaves about 222 px for the pair. That is about 105 px per card and about 79 px of text, against about 88-95 px for "20:51–07:10" at `text-body` and about 85 px for "Widoczność" with its icon. In the top five (`ObjectCard`) there is about 112 px of text per card. **Measured in Phase 1** (9385b8a, `evidence/design/curated/stat-frame-*`): side by side, "20:51–07:10" wraps in the 222 px row and "Widoczność" overflows by about 1 px; the owner then chose the stacked pair (see Decisions). None of the current checks sees this:
+- **The expanded rows are narrow at 320 px** (review F2): 288 px column − 26 px (the scroll region's border and `px-3`, `TargetsPageContent.astro:246`) − 40 px (`pl-10`) leaves about 222 px for the pair. That is about 105 px per card and about 79 px of text, against about 88-95 px for "20:51–07:10" at `text-body` and about 85 px for "Widoczność" with its icon. In the top five (`ObjectCard`) there is about 112 px of text per card. **Measured in Phase 1** (6bd6998, `evidence/design/curated/stat-frame-*`): side by side, "20:51–07:10" wraps in the 222 px row and "Widoczność" overflows by about 1 px; the owner then chose the stacked pair (see Decisions). None of the current checks sees this:
   - `tonight-phone.spec` measures the document with rows closed;
   - `capture.mjs` shoots at 390/1280 with rows closed.
 - `TonightTiles.astro:160,170` reads `moonCard.phaseText` and `solarSystem.entries[0].reason`. Their types and wording stay, and the dashboard is not touched.
@@ -330,7 +330,7 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 **Intent**: Window and Best as two small cards side by side at every width (decisions 2 and 5; D3). **Superseded** (owner, 2026-10-15): stacked, Window above Best, one column, each card the full width of its column, at every width.
 
 **Contract**:
-- ~~`StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`, with an optional `class` merged last so the owner's F2 fallback can be applied by the caller.~~ As built (591db72): a `<dl>`, `grid gap-line`, one column, no cap, `class` merged last for the caller's spacing.
+- ~~`StatPair` is a `<dl>`, `grid grid-cols-2 gap-3 sm:max-w-md`, with an optional `class` merged last so the owner's F2 fallback can be applied by the caller.~~ As built (99ca91c): a `<dl>`, `grid gap-line`, one column, no cap, `class` merged last for the caller's spacing.
 - `StatCard` props:
   - `label`, `kind: FactKind`;
   - the slot is the value;
@@ -415,7 +415,7 @@ They live only in `@theme inline` (no `:root` entry, so no red value is needed).
 - The whole unit suite passes, including `rhythm-roles.test.ts` and the colour, red, contrast, zone and console guards: `npm test`
 - `npm run build` succeeds
 - `sky-events.spec.ts` passes against a fresh local preview (see "Running the e2e lists"): `… npx playwright test sky-events`
-- After the preview is stopped, `/design` on `astro dev` (port 4331) renders the three role bars at 8, 24 and 40 px computed height (the capture script prints them) (20 px for `item` since the checkpoint: measured 8/24/20 in 591db72)
+- After the preview is stopped, `/design` on `astro dev` (port 4331) renders the three role bars at 8, 24 and 40 px computed height (the capture script prints them) (20 px for `item` since the checkpoint: measured 8/24/20 in 99ca91c)
 
 #### Manual Verification:
 
@@ -855,57 +855,57 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [x] 1.1 Types and lint pass — 9385b8a
-- [x] 1.2 The whole unit suite passes, including the new guard: `npm test` — 9385b8a
-- [x] 1.3 `npm run build` succeeds — 9385b8a
-- [x] 1.4 `sky-events.spec.ts` passes against a fresh local preview — 9385b8a
-- [x] 1.5 `/design` on `astro dev` renders the role bars at 8, 24 and 40 px (after the preview is stopped) — 9385b8a
+- [x] 1.1 Types and lint pass — 6bd6998
+- [x] 1.2 The whole unit suite passes, including the new guard: `npm test` — 6bd6998
+- [x] 1.3 `npm run build` succeeds — 6bd6998
+- [x] 1.4 `sky-events.spec.ts` passes against a fresh local preview — 6bd6998
+- [x] 1.5 `/design` on `astro dev` renders the role bars at 8, 24 and 40 px (after the preview is stopped) — 6bd6998
 
 #### Manual
 
-- [x] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked — 591db72
-- [x] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c) — 591db72
-- [x] 1.8 Owner checkpoint: the 320 px `c-item-rhythm` screenshots go to the owner, who picks 40 px in total or 40 px on each side — 591db72
+- [x] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked — 99ca91c
+- [x] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c) — 99ca91c
+- [x] 1.8 Owner checkpoint: the 320 px `c-item-rhythm` screenshots go to the owner, who picks 40 px in total or 40 px on each side — 99ca91c
 
 ### Phase 2: Planet fact labels and value wording
 
 #### Automated
 
-- [x] 2.1 Types, lint and the related tests pass in one run — a6187fe
-- [x] 2.2 The whole unit suite passes: `npm test` — a6187fe
+- [x] 2.1 Types, lint and the related tests pass in one run — bf0c8b8
+- [x] 2.2 The whole unit suite passes: `npm test` — bf0c8b8
 
 ### Phase 3: Targets, Planets, the Moon and the finder's expect line
 
 #### Automated
 
-- [x] 3.1 Types and lint pass — a6187fe
-- [x] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass — a6187fe
-- [x] 3.3 The affected specs pass against a fresh local preview — a6187fe
-- [x] 3.4 The hardcoded-value scan over the changed view files prints nothing — a6187fe
+- [x] 3.1 Types and lint pass — bf0c8b8
+- [x] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass — bf0c8b8
+- [x] 3.3 The affected specs pass against a fresh local preview — bf0c8b8
+- [x] 3.4 The hardcoded-value scan over the changed view files prints nothing — bf0c8b8
 
 #### Manual
 
-- [x] 3.5 Targets (closed and opened rows), Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/` — d4340e0
+- [x] 3.5 Targets (closed and opened rows), Planets and the Moon in the 390/1280 × EN/PL × three-theme matrix judged against `evidence/before/` — d38988a
 
 ### Phase 4: Sky events and the Nights page
 
 #### Automated
 
-- [x] 4.1 Types and lint pass — 4f34ad2
-- [x] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass — 4f34ad2
-- [x] 4.3 The affected specs pass against a fresh local preview — 4f34ad2
+- [x] 4.1 Types and lint pass — f3ff251
+- [x] 4.2 `npm test` (with the guard's new rows) and `npm run build` pass — f3ff251
+- [x] 4.3 The affected specs pass against a fresh local preview — f3ff251
 
 #### Manual
 
-- [x] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet readable labels, one fact per line, new visible mark, safety icon kept, no sideways scroll — d4340e0
+- [x] 4.4 `/tonight/events` and `/tonight/nights` in the matrix: quiet readable labels, one fact per line, new visible mark, safety icon kept, no sideways scroll — d38988a
 
 ### Phase 5: The guard's break check, the rules, the screenshot gate and the whole suite
 
 #### Automated
 
-- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks — d4340e0
-- [x] 5.2 `npm run build` succeeds — d4340e0
-- [x] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded — d4340e0
+- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks — d38988a
+- [x] 5.2 `npm run build` succeeds — d38988a
+- [x] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded — d38988a
 
 #### Manual
 
