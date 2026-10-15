@@ -197,7 +197,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 
 | Roadmap ID | Change ID            | Suggested issue title                                         | Ready for `/10x-plan` | Notes                                                                 |
 | ---------- | -------------------- | ------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
-| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                  | in progress           | `ui-refine` agent, `feat/ui-dashboard-tiles` · GitHub #169            |
+| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                  | done                  | Merged in #177, archived · GitHub #169                                |
 | S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination      | yes                   | Run `/10x-ui` → `/10x-plan ui-tonight-nav` · GitHub #170              |
 | S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                        | no                    | After S-02 · GitHub #171                                              |
 | S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)   | yes                   | North star · Run `/10x-plan small-scope-galaxies` · GitHub #172       |
