@@ -58,7 +58,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | in-progress |
 | S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | ready       |
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                            | S-02          | MS-01, FR-039, FR-007                                         | proposed    |
-| S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | in-progress |
+| S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015                                         | proposed    |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link               | —             | MS-04                                                         | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                               | —             | MS-03                                                         | ready       |
@@ -148,7 +148,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Unknowns:**
   - Published small-scope sources for M31, M33, M81 and M101 under suburban skies, at least two per entry. They go into the reference fixtures before either rule changes. — Owner: team. Block: no.
 - **Risk:** These are two rules over the same physics: the expectation's core term, and the ranking's surface-brightness penalty, which ignores aperture. They must move in one direction, which is why they share a slice. Judged against references, not an observer (lessons.md).
-- **Status:** in-progress
+- **Status:** done
 
 ### S-05: Evening showpieces and window edges
 
@@ -259,3 +259,5 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 ## Done
 
 (`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's, M-2's and M-3's entries live in git history and in `context/archive/`.)
+
+- **S-04: user with a small telescope gets galaxy advice that agrees with itself: a big bright galaxy such as M31 is not called "very faint" beside "bright for your 60 mm"; a faint, low-surface-brightness galaxy such as M101 is not ranked high in an 80 mm.** — Archived 2026-10-15 → `context/archive/2026-10-15-small-scope-galaxies/`. Lesson: —.
