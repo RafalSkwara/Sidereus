@@ -79,7 +79,7 @@
     "workbox-precaching": "^7.4.1",
     "workbox-routing": "^7.4.1",
     "workbox-strategies": "^7.4.1",
-    "wrangler": "^4.151.0"
+    "wrangler": "^4.145.0"
   },
   "lint-staged": {
     "*.{ts,tsx,astro}": [
