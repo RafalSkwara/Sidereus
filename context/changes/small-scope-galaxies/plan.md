@@ -456,10 +456,10 @@ None. No database, no stored data, no offline-copy format change. Stored Targets
 
 #### Automated
 
-- [ ] 1.1 After the commit, `npm run catalogue:build && git diff --exit-code src/lib/catalogue/` shows no change
-- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including the new `hubble` assertions
-- [x] 1.3 `npx astro check` and `npm run lint` pass
-- [x] 1.4 `npm test` passes (no ranking or expectation change yet)
+- [x] 1.1 After the commit, `npm run catalogue:build && git diff --exit-code src/lib/catalogue/` shows no change — 754393d
+- [x] 1.2 `npx vitest run src/lib/catalogue` passes, including the new `hubble` assertions — 754393d
+- [x] 1.3 `npx astro check` and `npm run lint` pass — 754393d
+- [x] 1.4 `npm test` passes (no ranking or expectation change yet) — 754393d
 
 ### Phase 2: Small-scope references and the bulge core term
 
