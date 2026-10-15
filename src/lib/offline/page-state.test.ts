@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { noticeFor, noticeHidden, withDescription } from "./page-state";
+import { noticeFor, noticeHidden, storePageMessage, withDescription } from "./page-state";
 
 const UNTIL = "2026-10-06T05:30:00.000Z";
 const BEFORE = Date.parse(UNTIL) - 1;
@@ -54,5 +54,26 @@ describe("withDescription", () => {
     expect(withDescription("own hint", "hint", false)).toBe("own");
     expect(withDescription("hint", "hint", false)).toBeNull();
     expect(withDescription(null, "hint", false)).toBeNull();
+  });
+});
+
+describe("storePageMessage", () => {
+  const SITE = "11111111-1111-4111-8111-111111111111";
+
+  it("asks for the page's own URL without the toast param", () => {
+    expect(storePageMessage(`https://sidereus.example/tonight/plan?site=${SITE}&saved=plan`)).toEqual({
+      type: "store-page",
+      url: `/tonight/plan?site=${SITE}`,
+    });
+  });
+
+  it("keeps a URL the toast already cleared as it is", () => {
+    expect(storePageMessage(`https://sidereus.example/tonight/plan?site=${SITE}`).url).toBe(
+      `/tonight/plan?site=${SITE}`,
+    );
+  });
+
+  it("clears the reset toast's value too", () => {
+    expect(storePageMessage("https://sidereus.example/tonight/plan?saved=plan-reset").url).toBe("/tonight/plan");
   });
 });

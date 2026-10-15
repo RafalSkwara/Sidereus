@@ -151,6 +151,44 @@ export type Database = {
         };
         Relationships: [];
       };
+      session_plans: {
+        Row: {
+          created_at: string;
+          id: string;
+          night: string;
+          site_id: string;
+          targets: string[];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          night: string;
+          site_id: string;
+          targets: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          night?: string;
+          site_id?: string;
+          targets?: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_plans_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sites: {
         Row: {
           bortle: number;

@@ -5,7 +5,7 @@
 // by `loadTonightFor` in `island.ts`.
 
 import type { MessageKey } from "@/i18n";
-import type { LogEntry } from "@/lib/engine";
+import { addDays, type LogEntry } from "@/lib/engine";
 import type { ForecastCache } from "@/lib/forecast/cache";
 import { getForecast } from "@/lib/forecast/service";
 import {
@@ -25,6 +25,8 @@ import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { Locale } from "@/lib/preferences";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
 import { chooseOwned, selectorKind } from "@/lib/tonight/gear-choice";
+import { tonightDateForSite } from "@/lib/tonight/tonight-date";
+import type { TargetKey } from "@/lib/targets";
 
 // Fixed, value-free message keys: nothing about the site (coordinates included) ever reaches the page or a log.
 const SITES_FAILED: MessageKey = "errors.load.sites";
@@ -32,6 +34,30 @@ const TELESCOPES_FAILED: MessageKey = "errors.load.telescopes";
 const EYEPIECES_FAILED: MessageKey = "tonight.eyepiecesFailed";
 const LOG_FAILED: MessageKey = "tonight.logFailed";
 const TONIGHT_FAILED: MessageKey = "tonight.failed";
+const PLAN_EDITS_FAILED: MessageKey = "errors.load.sessionPlan";
+
+/** A database error code shaped like PostgREST's or Postgres's (`42501`, `PGRST301`); anything else is not logged. */
+const CODE_SHAPE = /^[0-9A-Za-z_]{1,12}$/;
+
+/**
+ * Traces a failed read of the saved Session plan (D14 keeps the page on the suggested plan, so without this line the
+ * failure is invisible): a fixed line, the step word and the cause's code or, failing that, the error's or cause's
+ * `name`; never a message, an id, a site or a coordinate. The thrown error keeps its `cause` (the store sets it).
+ */
+function logPlanEditsFailure(error: unknown): void {
+  const cause = error instanceof Error ? error.cause : undefined;
+  const code = (cause as { code?: unknown } | null | undefined)?.code;
+  const nameOf = (value: unknown) => (value instanceof Error ? value.name : typeof value);
+  const detail = typeof code === "string" && CODE_SHAPE.test(code) ? code : nameOf(cause ?? error);
+  // eslint-disable-next-line no-console -- a fixed line, the step word and the cause's code or name, never a message.
+  console.error("tonight: plan edits read failed", detail);
+}
+
+/**
+ * Reads the user's saved Session plan for one site and night: the target keys in their order, or `null` for none (and
+ * for an account that may not edit, which the reader itself checks before it queries). It throws only on a failed read.
+ */
+export type PlanEditsReader = (siteId: string, nightDate: string) => Promise<TargetKey[] | null>;
 
 export interface LoadTonightInput {
   /** `null` signed out or unconfigured: nothing is loaded. */
@@ -62,6 +88,15 @@ export interface LoadTonightInput {
   withSkyEvents?: boolean;
   /** `"next"` builds the evening after tonight (offline-night-plan); see `buildTonight`. Default `"tonight"`. */
   night?: "tonight" | "next";
+  /**
+   * Reads the saved Session plan (adjustable-session-plan), called only for `night: "tonight"`, with the one night date
+   * the build uses, in parallel with the forecast. A throw leaves the view without edits and sets `planEditsError`.
+   */
+  readPlanEdits?: PlanEditsReader;
+  /** Also list what the plan editor may add; see `buildTonight`. */
+  withPlanCandidates?: boolean;
+  /** Also list every object the telescope can reach (the finder chart's `from=plan`); see `buildTonight`. */
+  withReachable?: boolean;
 }
 
 export interface TonightLoad {
@@ -84,6 +119,8 @@ export interface TonightLoad {
   tonightError: MessageKey | null;
   /** The user's recent open sky checks when `withSkyChecks` is set; empty otherwise or when the read fails. */
   openSkyChecks: SkyCheckRecord[];
+  /** The saved plan could not be read (`readPlanEdits` threw): the view is the suggested plan. `null` otherwise. */
+  planEditsError: MessageKey | null;
 }
 
 /** Loads one list; a failure only affects what depends on it, never the whole page. */
@@ -137,7 +174,22 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
 
   let view: TonightView | null = null;
   let tonightError: MessageKey | null = null;
+  let planEditsError: MessageKey | null = null;
   if (site && telescope) {
+    // The one night date: the saved plan's read, the build and so the editor's form all name the same night.
+    const tonightDate = tonightDateForSite(site, now);
+    const nightDate = input.night === "next" ? addDays(tonightDate, 1) : tonightDate;
+    // Only tonight has edits (D9). Started before the forecast so the two reads overlap; it never rejects.
+    const editsRead =
+      input.readPlanEdits && input.night !== "next"
+        ? input.readPlanEdits(site.id, nightDate).then(
+            (edits) => ({ edits, error: null }),
+            (error: unknown) => {
+              logPlanEditsFailure(error);
+              return { edits: null, error: PLAN_EDITS_FAILED };
+            },
+          )
+        : null;
     try {
       // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
       // a saved copy served in an outage, or in place of an incomplete 200, comes back flagged `fallback`, and
@@ -151,6 +203,8 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
         ...(input.forecastBaseUrl ? { baseUrl: input.forecastBaseUrl } : {}),
         defer: input.defer,
       });
+      const planEdits = editsRead === null ? null : await editsRead;
+      planEditsError = planEdits?.error ?? null;
       view = buildTonight(
         { site, telescope, eyepieces, forecast: result, now, log, logKnown: logError === null },
         locale,
@@ -160,6 +214,10 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
           withSessionPlan: input.withSessionPlan,
           withSkyEvents: input.withSkyEvents,
           night: input.night,
+          nightDate,
+          planEdits: planEdits?.edits ?? null,
+          withPlanCandidates: input.withPlanCandidates,
+          withReachable: input.withReachable,
         },
       );
     } catch {
@@ -183,6 +241,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
     view,
     tonightError,
     openSkyChecks,
+    planEditsError,
   };
 }
 

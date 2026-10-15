@@ -9,10 +9,12 @@
 //   while `data-offline` is set: `aria-disabled`, "Needs a connection" as their description, clicks and submits
 //   swallowed. Their look is CSS keyed on the same attributes (global.css);
 // - a page the server rendered for no user (`<html data-signed-out>`, not one served from the device) asks the service
-//   worker to purge whatever an earlier user left, also after a sign-out or an expiry the worker never saw.
+//   worker to purge whatever an earlier user left, also after a sign-out or an expiry the worker never saw;
+// - a page that showed a save toast (`storeAfterSave`, the plan page) asks the worker to store its clean URL.
 // Server islands arrive after load, so every DOM insertion re-applies the state (like `hash-scroll.ts`). It reads the
 // copy's kind and validity only: never coordinates.
-import type { CopyNotice } from "@/lib/offline/copies";
+import { STORE_PAGE_MESSAGE, type CopyNotice } from "@/lib/offline/copies";
+import { TOAST_PARAMS, withoutParams } from "@/lib/toasts";
 
 /** The layout's hidden "Needs a connection" text, the description of a control without its own caption. */
 export const NEEDS_CONNECTION_ID = "offline-needs-connection";
@@ -123,18 +125,39 @@ function swallow(event: Event) {
   event.stopPropagation();
 }
 
-function purgeIfSignedOut() {
-  const root = document.documentElement;
-  if (!root.hasAttribute("data-signed-out") || root.hasAttribute("data-from-device")) return;
-  if (!("serviceWorker" in navigator)) return;
-  const message = { type: "purge" };
+/** Posts a message to the page's service worker: its controller, or after a hard reload (no controller) the active one. */
+function postToWorker(message: { type: string; url?: string }) {
   const controller = navigator.serviceWorker.controller;
   if (controller) {
     controller.postMessage(message);
   } else {
-    // A hard reload: the page has no controller, but an active worker may hold copies.
     void navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage(message));
   }
+}
+
+function purgeIfSignedOut() {
+  const root = document.documentElement;
+  if (!root.hasAttribute("data-signed-out") || root.hasAttribute("data-from-device")) return;
+  if (!("serviceWorker" in navigator)) return;
+  postToWorker({ type: "purge" });
+}
+
+/** What a page that just showed a save toast asks the worker to store: its own clean URL (no toast param, no notice). */
+export function storePageMessage(href: string): { type: typeof STORE_PAGE_MESSAGE; url: string } {
+  return { type: STORE_PAGE_MESSAGE, url: withoutParams(href, TOAST_PARAMS) };
+}
+
+/**
+ * Called by a page whose shell rendered a save toast (`[data-store-after-save]`, adjustable-session-plan D7 b): asks the
+ * worker to store the clean page now, so the stored copy shows the change at once although the toast's own URL is never
+ * stored. Once per load, never offline (the worker could not fetch it) and never without the marker.
+ */
+export function storeAfterSave(): void {
+  const marker = document.querySelector("[data-store-after-save]");
+  if (!marker) return;
+  marker.remove();
+  if (!navigator.onLine || !("serviceWorker" in navigator)) return;
+  postToWorker(storePageMessage(location.href));
 }
 
 export function startOfflinePageState(): void {

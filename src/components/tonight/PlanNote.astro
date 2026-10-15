@@ -1,0 +1,23 @@
+---
+/*
+ * One muted line above the Session plan (adjustable-session-plan): `locked` for a free account (what editing does and
+ * that it needs the full plan, with a lock icon), `held` when a saved list waits for a night that passes (D5), and
+ * `unavailable` when the plan or the saved list could not be read (D14). `PlanPageContent` and the `/design` specimens
+ * render it, so they cannot drift. `data-session-plan-note` names the kind for e2e.
+ */
+import { Lock } from "lucide-react";
+import { getMessages } from "@/i18n";
+
+interface Props {
+  kind: "locked" | "held" | "unavailable";
+}
+
+const { kind } = Astro.props;
+const t = getMessages(Astro.locals.locale).tonight.pages.plan;
+const text = kind === "locked" ? t.locked : kind === "held" ? t.held : t.editsUnavailable;
+---
+
+<p class="flex items-start gap-2 text-label text-muted-foreground" data-session-plan-note={kind}>
+  {kind === "locked" && <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
+  {text}
+</p>

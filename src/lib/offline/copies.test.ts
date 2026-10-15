@@ -29,6 +29,8 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
+  awaitsNetwork,
+  storeRequestFrom,
   storedPageOf,
   tonightPageOf,
   type CopyIndex,
@@ -159,6 +161,8 @@ describe("mayStoreShell", () => {
     "/tonight/targets?sort=name&telescope=x",
     "/tonight?night=next",
     "/tonight/finder?object=M13&from=targets",
+    "/tonight/finder?object=M13&from=plan",
+    `/tonight/plan?site=${SITE_A}`,
   ])("stores %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(true);
   });
@@ -169,12 +173,133 @@ describe("mayStoreShell", () => {
     "/tonight?milestone=first-galaxy",
     "/tonight/planets?logged=jupiter&milestone=first-planet",
     "/tonight/plan?error=errors.generic",
+    "/tonight/plan?saved=plan",
+    `/tonight/plan?site=${SITE_A}&saved=plan-reset`,
     "/tonight/all",
     "/tonight/finder",
     "/tonight/finder?object=M13&error=errors.generic",
     "/log",
   ])("refuses %s", (path) => {
     expect(mayStoreShell(url(path))).toBe(false);
+  });
+});
+
+describe("awaitsNetwork", () => {
+  it.each([
+    "/tonight/plan?saved=plan",
+    "/tonight/plan?saved=plan-reset",
+    `/tonight/plan?site=${SITE_A}&saved=plan`,
+    `/tonight/plan?saved=plan-reset&site=${SITE_A}`,
+  ])("is true for %s, the landing after a save or reset", (path) => {
+    expect(awaitsNetwork(url(path))).toBe(true);
+  });
+
+  it.each([
+    "/tonight/plan",
+    `/tonight/plan?site=${SITE_A}`,
+    "/tonight/plan?saved=",
+    "/tonight/plan?saved=site",
+    "/tonight/plan?saved=Plan",
+    "/tonight/plan?saved=plan-resets",
+    "/tonight/plan?saved=other",
+    "/tonight/plan?error=errors.sessionPlan.notVisible",
+    "/tonight/plan?logged=plan",
+    "/tonight?saved=plan",
+    "/tonight/targets?saved=plan",
+    "/tonight/planets?saved=plan",
+    "/tonight/plan/extra?saved=plan",
+    "/gear?saved=plan",
+    "/log?saved=plan",
+  ])("is false for %s", (path) => {
+    expect(awaitsNetwork(url(path))).toBe(false);
+  });
+});
+
+describe("storeRequestFrom", () => {
+  const ORIGIN = "https://sidereus.example";
+  const ask = (path: string) => ({ type: "store-page", url: path });
+
+  it("accepts a Tonight page with the site param, as a URL on the origin", () => {
+    const request = storeRequestFrom(ask(`/tonight/plan?site=${SITE_A}`), ORIGIN);
+    expect(request?.href).toBe(`${ORIGIN}/tonight/plan?site=${SITE_A}`);
+  });
+
+  it("accepts the page's absolute URL, and drops its hash", () => {
+    const request = storeRequestFrom(ask(`${ORIGIN}/tonight/plan?site=${SITE_A}#plan-heading`), ORIGIN);
+    expect(request?.href).toBe(`${ORIGIN}/tonight/plan?site=${SITE_A}`);
+  });
+
+  it("accepts the plan page with no param", () => {
+    expect(storeRequestFrom(ask("/tonight/plan"), ORIGIN)?.pathname).toBe("/tonight/plan");
+  });
+
+  it.each(TONIGHT_PAGES.filter((page) => page !== "/tonight/plan"))(
+    "refuses %s: only the plan page asks to be stored (F10 f)",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+      expect(storeRequestFrom(ask(`${path}?site=${SITE_A}`), ORIGIN)).toBeNull();
+    },
+  );
+
+  it("refuses a URL of another origin", () => {
+    expect(storeRequestFrom(ask(`https://evil.example/tonight/plan?site=${SITE_A}`), ORIGIN)).toBeNull();
+    expect(storeRequestFrom(ask(`//evil.example/tonight/plan`), ORIGIN)).toBeNull();
+  });
+
+  it.each(["/tonight/finder?object=M13", "/tonight/all", "/log", "/api/tonight/plan", "/offline", "/"])(
+    "refuses %s, which is not the plan page",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+    },
+  );
+
+  it.each([
+    `/tonight/plan?site=${SITE_A}&telescope=${SITE_B}`,
+    `/tonight/plan?site=${SITE_A}&night=next`,
+    "/tonight/plan?sort=name",
+  ])("refuses %s, whose params are not just the site", (path) => {
+    expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+  });
+
+  it.each([
+    `/tonight/plan?site=${SITE_A}&saved=plan`,
+    "/tonight/plan?saved=plan-reset",
+    `/tonight/plan?site=${SITE_A}&error=errors.generic`,
+    "/tonight?logged=M31",
+    "/tonight?milestone=first-galaxy",
+  ])("refuses %s, a notice param", (path) => {
+    expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+  });
+
+  it.each(["/tonight/plan?site=", "/tonight/plan?site=nope", "/tonight/plan?site=40.4168,-3.7038"])(
+    "refuses %s, a site that is not an id",
+    (path) => {
+      expect(storeRequestFrom(ask(path), ORIGIN)).toBeNull();
+    },
+  );
+
+  it("refuses two sites", () => {
+    expect(storeRequestFrom(ask(`/tonight/plan?site=${SITE_A}&site=${SITE_B}`), ORIGIN)).toBeNull();
+  });
+
+  it.each<unknown>([
+    null,
+    undefined,
+    "store-page",
+    42,
+    {},
+    { type: "purge", url: "/tonight/plan" },
+    { type: "list-copies" },
+    { type: "store-page" },
+    { type: "store-page", url: 42 },
+    { type: "store-page", url: null },
+    { type: ["store-page"], url: "/tonight/plan" },
+  ])("refuses a message of the wrong type or shape (%j)", (data) => {
+    expect(storeRequestFrom(data, ORIGIN)).toBeNull();
+  });
+
+  it("refuses an unparseable URL", () => {
+    expect(storeRequestFrom(ask("http://"), ORIGIN)).toBeNull();
   });
 });
 

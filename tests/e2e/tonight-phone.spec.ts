@@ -4,7 +4,7 @@ import { STRIP_HEIGHT_PX, STRIP_OVERLAP_PX } from "@/components/tonight/sky-band
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid } from "./helpers";
+import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForHydration } from "./helpers";
 
 /*
  * The phone-first Tonight, pinned with bounding boxes (ui-mobile-pass, roadmap M-3 S-01); no pixel baselines. Same
@@ -20,7 +20,9 @@ import { onboardInMadrid } from "./helpers";
  *    the verdict grows by one muted line (`[data-verdict-event]`, sky-events, plan review F3: no reserved room), which
  *    the verdict's min-height can swallow without moving the cards, so the spec hides that line while it measures and
  *    holds on any date (impl review F9);
- *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL;
+ *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL, and none with the Session plan's editor open
+ *    (adjustable-session-plan Phase 5: a full-plan user, granted through the operator command; skipped on a night that
+ *    does not pass);
  *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
  */
 
@@ -142,6 +144,43 @@ test("no page scrolls sideways at 320 and 375 px, in English and Polish", async 
     }
   }
   expect(overflowing, "pages that scroll sideways").toEqual([]);
+});
+
+test("the open plan editor does not scroll sideways at 320 and 375 px, in English and Polish", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  requirePlanGrant("tonight-phone");
+  test.setTimeout(180_000);
+  const email = await onboardInMadrid(page, "e2e-phone-editor");
+  await setPlan(email, "full");
+  const url = baseURL ?? "http://localhost:4321";
+
+  const overflowing: string[] = [];
+  for (const locale of LOCALES) {
+    await context.addCookies([{ name: LOCALE_COOKIE, value: locale, url }]);
+    for (const viewport of NARROW_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.goto("/tonight/plan");
+      test.skip(!(await planEditable(page)), "tonight's plan is not editable (the night does not pass)");
+      const edit = '[data-plan-editor="closed"] button';
+      await waitForHydration(page, edit);
+      await page.locator(edit).click();
+      await expect(page.locator('[data-plan-editor="open"]')).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      if (scrollWidth > clientWidth) {
+        overflowing.push(
+          `the open editor (${locale}, ${String(viewport.width)}×${String(viewport.height)}): scrollWidth ${String(scrollWidth)} > clientWidth ${String(clientWidth)}`,
+        );
+      }
+    }
+  }
+  expect(overflowing, "the open editor scrolls sideways").toEqual([]);
 });
 
 test("the panorama keeps its height on a phone and on a desktop", async ({ page }) => {

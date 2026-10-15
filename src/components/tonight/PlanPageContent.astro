@@ -3,16 +3,36 @@
 // page sky, then the Session plan's timeline. Without a plan to draw (a weather no-go or no darkness with no planet,
 // or building it failed) one line says why and the nights page is a link away, never an empty page. It loads through
 // the same loadTonight as Tonight (with the plan) and never records the sky verdict (only Tonight shows it).
+//
+// Editing (adjustable-session-plan) is the full plan's, and the island checks it itself: the plan is read first
+// (`accountPlanForCopy`, the request's one memoised read), `readPlanEditsFor` reads the saved list only for a confirmed
+// full plan, and `/_server-islands/*` is not behind the middleware, so a replayed island URL gets the suggested plan.
+// `data-session-plan-state` on the plan area is the island's readiness marker (e2e and smoke wait on it), one of
+// `edited` (the saved list is drawn), `suggested`, `locked` (a free account), `held` (a list is saved but tonight does
+// not pass) or `unavailable` (the plan or the saved list could not be read, or there is no plan); the booleans
+// `data-session-plan-edited`, `-held` and `-locked` say the same for HTTP checks. In the failure states (a failed plan or
+// edits read) the island renders no `OfflineCopy`, so the worker commits nothing and the earlier stored copy survives (D14).
+//
+// Editing (Phase 5): in the `edited` and `suggested` states of a night that passes, `PlanEditRow` sits above the
+// timeline: the "Edited by you" line with Reset on an edited plan, and the editor island (`PlanEditor`). In the `held`
+// state (tonight only) the row holds just the "Edited" line and Reset, so the saved list can be dropped; the editor
+// still does not show (D5; owner, Fable #2). The plan area is
+// the `group` the editor marks `data-editing` while it is open, which hides the timeline, the "Edited" line and the
+// edited-empty line (the editor lists the same targets).
 import { ServerError } from "@/components/forms/ServerError";
+import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
+import PlanNote from "@/components/tonight/PlanNote.astro";
 import SessionTimeline from "@/components/tonight/SessionTimeline.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import Band from "@/components/ui/Band.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { getAccountPlan } from "@/lib/account-plan";
+import { accountPlanForCopy } from "@/lib/account-plan";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
+import { readPlanEditsFor } from "@/lib/session-plans/read";
 import { loadTonightFor } from "@/lib/tonight/island";
+import { planEditorData } from "@/lib/tonight/plan-editor-view";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -22,18 +42,29 @@ interface Props {
   telescopeId?: string;
   /** `"next"` renders the evening after tonight (`?night=next`, the service worker's background copy); no sky check. */
   night?: "tonight" | "next";
+  /** The refusal of a save or reset (`?error=`), already translated by the shell; shown above the plan. */
+  error?: string | null;
 }
 
 const { locale } = Astro.locals;
-const { siteId, telescopeId, night = "tonight" } = Astro.props;
+const { siteId, telescopeId, night = "tonight", error = null } = Astro.props;
 const m = getMessages(locale);
 const t = m.tonight;
 const translate = (key: MessageKey) => translateKey(m, key, "errors.generic");
 
-// Starts the plan read now, so it overlaps the Tonight load: `OfflineCopy` records it as `data-plan` (the one memoised read).
-void getAccountPlan(Astro.locals);
+// The plan first: only a confirmed full plan reads the saved list or asks for the editor's candidates, and the one
+// memoised read is then free for the loader's own check and for `OfflineCopy`'s `data-plan`.
+const planRead = await accountPlanForCopy(Astro.locals);
+const isFull = planRead.plan === "full";
 // Signed out, `load` is null and the island renders nothing.
-const load = await loadTonightFor(Astro.locals, { siteId, telescopeId, night, withSessionPlan: true });
+const load = await loadTonightFor(Astro.locals, {
+  siteId,
+  telescopeId,
+  night,
+  withSessionPlan: true,
+  readPlanEdits: readPlanEditsFor(Astro.locals),
+  withPlanCandidates: isFull && night === "tonight",
+});
 const view = load?.view ?? null;
 const plan = view?.sessionPlan ?? null;
 const failures = load
@@ -42,73 +73,123 @@ const failures = load
 // No site or telescope (and not because reading them failed): one line and the way back; Tonight holds the prompts.
 const noGear =
   load !== null && (load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope));
+// A failed plan read, or a failed read of the saved list: the suggested plan with one muted line, and no offline copy.
+const editsFailed = planRead.plan === "unknown" || (load?.planEditsError ?? null) !== null;
+const locked = planRead.plan === "free" && view !== null;
+const edited = plan?.edited === true;
+const held = plan?.heldEdits === true;
+// Something to draw: rows, or saved targets that have no window tonight (listed apart, kept until removed, D4).
+const drawable = plan !== null && (plan.rows.length > 0 || plan.notTonight.length > 0);
 // Nothing to place on the night: the page says why instead of drawing an empty axis.
-const empty = view !== null && (plan === null || plan.rows.length === 0);
+const empty = view !== null && !drawable;
+const state: "edited" | "suggested" | "locked" | "held" | "unavailable" =
+  editsFailed || plan === null ? "unavailable" : locked ? "locked" : held ? "held" : edited ? "edited" : "suggested";
+// The editor, for a full-plan user's plan in the two states edits apply in; `planEditorData` is `null` unless the build
+// listed candidates (tonight, full plan, a night that passes).
+const editor = view && plan && (state === "edited" || state === "suggested") ? planEditorData(plan, locale) : null;
+// A held list (held is only ever reached by a confirmed full plan) can be reset tonight, without the editor.
+const resetHeld = view !== null && state === "held" && night === "tonight";
 // The message column renders only with something in it, so a normal night has one gap under the sky, not two.
-const hasMessages = failures.length > 0 || noGear || empty;
+const hasMessages = failures.length > 0 || noGear || empty || error !== null || locked || held || editsFailed;
 const inlineLink = cn(buttonVariants({ variant: "link", size: "sm" }), "px-0 whitespace-normal");
 ---
 
 {load && (
   <>
     <TonightPageSky title={t.summary.plan} view={view} />
-    {view && <OfflineCopy view={view} night={night} />}
+    {view && !editsFailed && <OfflineCopy view={view} night={night} />}
 
-    {hasMessages && (
-      <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
-        {failures.map((key) => (
-          <ServerError message={translate(key)} />
-        ))}
+    <div
+      class="group"
+      data-session-plan-area
+      data-session-plan-state={state}
+      data-session-plan-edited={state === "edited" ? "" : undefined}
+      data-session-plan-held={state === "held" ? "" : undefined}
+      data-session-plan-locked={state === "locked" ? "" : undefined}
+    >
+      {hasMessages && (
+        <div class="mx-auto w-full max-w-3xl space-y-6 px-4 pt-8">
+          {error !== null && (
+            <div role="alert">
+              <ServerError message={error} />
+            </div>
+          )}
 
-        {noGear && (
-          <p class="text-body text-foreground">
-            {t.pages.noGear}{" "}
-            <a href="/tonight" class:list={[inlineLink]}>
-              {t.pages.toTonight}
-            </a>
-          </p>
-        )}
+          {failures.map((key) => (
+            <ServerError message={translate(key)} />
+          ))}
 
-        {empty && (
-          /* Nothing to place on the night: why, from the view, and the way to a better night. */
-          <div class="space-y-3">
-            {plan ? (
-              <>
-                {view.explanation?.kind === "weather-no-go" && (
-                  <>
-                    <p class="font-display text-title font-semibold text-heading">
-                      <span data-sky-headline={view.headline.key}>{view.headline.text}</span>
-                      <span class="font-normal text-muted-foreground"> — {view.verdictText}</span>
+          {noGear && (
+            <p class="text-body text-foreground">
+              {t.pages.noGear}{" "}
+              <a href="/tonight" class:list={[inlineLink]}>
+                {t.pages.toTonight}
+              </a>
+            </p>
+          )}
+
+          {locked && <PlanNote kind="locked" />}
+
+          {editsFailed && <PlanNote kind="unavailable" />}
+
+          {held && !editsFailed && <PlanNote kind="held" />}
+
+          {empty && (
+            /* Nothing to place on the night: why, from the view, and the way to a better night. */
+            <div class="space-y-3">
+              {plan ? (
+                <>
+                  {view.explanation?.kind === "weather-no-go" && (
+                    <>
+                      <p class="font-display text-title font-semibold text-heading">
+                        <span data-sky-headline={view.headline.key}>{view.headline.text}</span>
+                        <span class="font-normal text-muted-foreground"> — {view.verdictText}</span>
+                      </p>
+                      <p class="text-body text-foreground">{view.explanation.nextText}</p>
+                    </>
+                  )}
+                  {view.explanation?.kind === "no-darkness" && (
+                    <>
+                      <p class="text-body text-foreground">{view.explanation.causeText}</p>
+                      <p class="text-body text-foreground">{view.explanation.returnText}</p>
+                    </>
+                  )}
+                  {/* An edited list with nothing left says so; a held one has its own line above; only the suggested plan has "nothing to place". */}
+                  {edited ? (
+                    <p class="text-body text-muted-foreground group-data-[editing]:hidden">
+                      {t.pages.plan.editedEmpty}
                     </p>
-                    <p class="text-body text-foreground">{view.explanation.nextText}</p>
-                  </>
-                )}
-                {view.explanation?.kind === "no-darkness" && (
-                  <>
-                    <p class="text-body text-foreground">{view.explanation.causeText}</p>
-                    <p class="text-body text-foreground">{view.explanation.returnText}</p>
-                  </>
-                )}
-                <p class="text-body text-muted-foreground">{t.pages.plan.empty}</p>
-              </>
-            ) : (
-              <p class="text-body text-foreground">{t.pages.plan.unavailable}</p>
-            )}
-            <a href="/tonight/nights" class:list={[buttonVariants({ variant: "outline" })]}>
-              {t.pages.seeNights({ count: String(OUTLOOK_NIGHTS) })}
-              <span aria-hidden="true">→</span>
-            </a>
-          </div>
-        )}
-      </div>
-    )}
+                  ) : (
+                    !held && <p class="text-body text-muted-foreground">{t.pages.plan.empty}</p>
+                  )}
+                </>
+              ) : (
+                <p class="text-body text-foreground">{t.pages.plan.unavailable}</p>
+              )}
+              {!edited && (
+                <a href="/tonight/nights" class:list={[buttonVariants({ variant: "outline" })]}>
+                  {t.pages.seeNights({ count: String(OUTLOOK_NIGHTS) })}
+                  <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
-    {plan && !empty && (
-      <div class="mx-auto w-full max-w-3xl pt-8">
-        <Band headingId="plan-heading" heading={t.summary.plan} headingHidden>
-          <SessionTimeline plan={plan} />
-        </Band>
-      </div>
-    )}
+      {view && (editor !== null || resetHeld) && (
+        <div class="mx-auto w-full max-w-3xl px-4 pt-8">
+          <PlanEditRow siteId={view.siteId} night={view.date} editor={editor} edited={edited || resetHeld} />
+        </div>
+      )}
+
+      {plan && !empty && (
+        <div class="mx-auto w-full max-w-3xl pt-8 group-data-[editing]:hidden">
+          <Band headingId="plan-heading" heading={t.summary.plan} headingHidden>
+            <SessionTimeline plan={plan} />
+          </Band>
+        </div>
+      )}
+    </div>
   </>
 )}

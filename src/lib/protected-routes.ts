@@ -7,6 +7,7 @@ const PROTECTED_ROUTES = [
   "/gear",
   "/api/gear",
   "/tonight",
+  "/api/tonight",
   "/onboarding",
   "/api/onboarding",
   "/log",

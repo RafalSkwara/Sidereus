@@ -11,13 +11,27 @@
  */
 import type { Database, TablesInsert } from "@/lib/database.types";
 
-export interface TableCase<T extends keyof Database["public"]["Tables"]> {
+interface TableCaseBase<T extends keyof Database["public"]["Tables"]> {
   table: T;
-  /** A valid row, without user_id (the column defaults to auth.uid()). */
-  valid: TablesInsert<T>;
   /** A valid change applied by the owner (positive control) and attempted by the other user. */
   change: Database["public"]["Tables"][T]["Update"];
 }
+
+export type TableCase<T extends keyof Database["public"]["Tables"]> =
+  | (TableCaseBase<T> & {
+      needsSite?: undefined;
+      /** A valid row, without user_id (the column defaults to auth.uid()). */
+      valid: TablesInsert<T>;
+    })
+  | (TableCaseBase<T> & {
+      /**
+       * The row needs the owner's site (a required `site_id` the insert policy checks against `sites`): the
+       * isolation suite creates one site for each user and adds the right one to every insert it makes.
+       */
+      needsSite: true;
+      /** A valid row, without user_id and without site_id. */
+      valid: Omit<TablesInsert<T>, "site_id">;
+    });
 
 export const TABLES = [
   {
@@ -80,6 +94,15 @@ export const TABLES = [
     valid: { key: "first-moon", reached_night: "2026-09-26" },
     change: { reached_night: "2026-09-27" },
   } satisfies TableCase<"observing_milestones">,
+  {
+    // The site is required and the insert and update policies check it is the owner's, so the shared suite adds
+    // each user's own site (`needsSite`); the site guard, the unique key, the cascade and the key checks have their
+    // own suite in session-plans.test.ts.
+    table: "session_plans",
+    needsSite: true,
+    valid: { night: "2026-10-14", targets: ["M31", "jupiter"] },
+    change: { targets: ["M42"] },
+  } satisfies TableCase<"session_plans">,
 ] as const;
 
 /** Server-owned tables: users may read their own row and nothing else. */

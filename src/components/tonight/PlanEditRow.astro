@@ -1,0 +1,53 @@
+---
+/*
+ * The Session plan's edit row (adjustable-session-plan Phase 5), above the timeline for a full-plan user on a night
+ * that passes: on an edited plan the "Edited by you" line with its Reset (`PlanResetButton`, asks once, D8), then the
+ * editor island (`PlanEditor`), which is the "Edit plan" button until it opens and then the whole list, full width.
+ * While the editor is open the plan area (the `group` wrapper with `data-session-plan-area`) carries `data-editing`, which
+ * hides the "Edited" line here and the timeline below. One 44 px row when collapsed, as the plan skeleton's bar.
+ * On a held night (a saved list, but tonight does not pass, D5) there is no editor (`editor` is `null`), only the
+ * "Edited" line with Reset, so the user can drop the saved list (owner, Fable #2).
+ * `PlanPageContent` and the `/design` specimens render it.
+ */
+import PlanEditor from "@/components/tonight/PlanEditor";
+import PlanResetButton from "@/components/tonight/PlanResetButton";
+import { getMessages } from "@/i18n";
+import type { PlanEditorData } from "@/lib/tonight/plan-editor-view";
+
+interface Props {
+  /** The user's own site and tonight's night date (`view.date`): the forms' hidden fields. */
+  siteId: string;
+  night: string;
+  /** The editor's rows, add options and saved targets with no window tonight (`planEditorData`); `null` on a held night. */
+  editor: PlanEditorData | null;
+  /** A list is saved (applied, or held on a night that does not pass): the "Edited" line and Reset join the row. */
+  edited: boolean;
+  /** For the `/design` specimens: start with the editor open. */
+  defaultOpen?: boolean;
+}
+
+const { siteId, night, editor, edited, defaultOpen = false } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).tonight.pages.plan;
+---
+
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2" data-session-plan-edit-row>
+  {edited && (
+    <div class="flex flex-wrap items-center gap-x-4 group-data-[editing]:hidden" data-session-plan-line-edited>
+      <span class="text-label font-semibold text-heading">{t.edited}</span>
+      <PlanResetButton locale={locale} siteId={siteId} night={night} client:load />
+    </div>
+  )}
+  {editor && (
+    <PlanEditor
+      locale={locale}
+      siteId={siteId}
+      night={night}
+      rows={editor.rows}
+      candidates={editor.candidates}
+      notTonight={editor.notTonight}
+      defaultOpen={defaultOpen}
+      client:load
+    />
+  )}
+</div>

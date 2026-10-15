@@ -1,8 +1,8 @@
 import { Body, Observer } from "astronomy-engine";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { findDeepSky } from "@/lib/catalogue";
-import { darkWindow, observingNight, sunEvents } from "@/lib/engine";
+import { DEEP_SKY, findDeepSky } from "@/lib/catalogue";
+import { addDays, darkWindow, observingNight, PLANET_KEYS, sunEvents } from "@/lib/engine";
 import type { PlanetKey } from "@/lib/engine";
 import { generateCase, GENERATED_SITES, seeded } from "@/lib/engine/fixtures/generated";
 import type { GeneratedCase } from "@/lib/engine/fixtures/generated";
@@ -16,11 +16,13 @@ import {
   sunAltitudeGeometricDeg,
 } from "@/lib/engine/fixtures/independent-altitude";
 import { toEngineSite } from "@/lib/gear/store";
+import { isPlanetKey, MOON_TARGET_KEY, type TargetKey } from "@/lib/targets";
 import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 
 import { buildTonight } from "./build";
 import type { TonightView } from "./build";
-import { EYEPIECES, NOW, result, TELESCOPE, uniformForecast, WARSAW } from "./test-fixtures";
+import { deepSkyWindow, solarSystemWindow } from "./plan-window";
+import { EYEPIECES, hourlyForecast, NOW, result, TELESCOPE, uniformForecast, WARSAW } from "./test-fixtures";
 
 /**
  * Risk #3 (test-plan §2), through what the user sees: every Session plan row of a generated Tonight build is up at or
@@ -41,6 +43,11 @@ import { EYEPIECES, NOW, result, TELESCOPE, uniformForecast, WARSAW } from "./te
  * name the case index and inputs, so a case replays from the seed. The case array is built from the seed alone at
  * module scope; every build runs in `beforeAll`. Nothing here logs (`no-console` is an error in all of
  * `src`).
+ *
+ * An edited plan (adjustable-session-plan) is held to the same rule: random saved lists over the same cases (subsets
+ * and permutations of tonight's suggested and addable targets, with keys that have no window, planets that are no
+ * target and the Moon on nights it is none) must still draw every row inside its independently recomputed window, in
+ * the saved order, with every other saved key set aside, and a night that does not pass draws no edited row.
  */
 
 const SEED = 20261010;
@@ -147,83 +154,24 @@ interface CaseResult {
   gateViolations: string[];
 }
 
-function failureMessage(error: unknown): string {
-  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+interface RowCheck {
+  /** Rows accepted at a night edge (`from === 0` or `to === 1`) on a night-wide axis. */
+  clampedEdgeRows: number;
+  rowsChecked: number;
+  /** Every violation of the row checks, one line each. */
+  violations: string[];
 }
 
-function analyse(c: IndexedCase): CaseResult {
-  const record = siteRecordOf(c);
-  const engineSite = toEngineSite(record);
+/**
+ * Checks every row of `plan` against the independent oracle: the row's window start, end and best time are at or above
+ * the site's minimum altitude, with the Sun at or below the row's own threshold. Shared by the suggested and the edited
+ * plans, so an edit is held to exactly the rule a suggestion is.
+ */
+function checkRows(c: IndexedCase, plan: NonNullable<TonightView["sessionPlan"]>): RowCheck {
+  const engineSite = toEngineSite(siteRecordOf(c));
   const observer = new Observer(c.site.latitudeDeg, c.site.longitudeDeg, 0);
   const night = observingNight(c.date, c.site.timeZone);
-  const noDarkness = oracleHasNoDarkness(c, observer, night.start.getTime(), night.end.getTime());
-  const engineKind = darkWindow(engineSite, night, DARK_THRESHOLD_BY_BORTLE[c.bortle]).kind;
-  const outcome: CaseResult = {
-    noDarkness,
-    darknessMismatch:
-      noDarkness === (engineKind === "none")
-        ? null
-        : `the oracle's sun ${noDarkness ? "never reaches" : "reaches"} ${DARK_THRESHOLD_BY_BORTLE[c.bortle]} deg, ` +
-          `but darkWindow is "${engineKind}"`,
-    hasRows: false,
-    listedKeys: [],
-    rowKeys: [],
-    clampedEdgeRows: 0,
-    rowsChecked: 0,
-    violations: [],
-    gateViolations: [],
-  };
-
-  // Gate (i) is guarded twice in production, so a break of both guards may throw instead of returning a ranking:
-  // either way the case fails as an assertion, never as a crash.
-  let view: TonightView;
-  try {
-    view = buildTonight(
-      {
-        site: record,
-        telescope: telescopeRecordOf(c),
-        eyepieces: eyepieceRecordsOf(c),
-        forecast: null,
-        now: new Date(night.start.getTime() + 6 * HOUR_MS),
-      },
-      "en",
-      { withSessionPlan: true, limit: Infinity },
-    );
-  } catch (error) {
-    outcome.violations.push(`build threw: ${failureMessage(error)}`);
-    if (outcome.noDarkness) {
-      outcome.gateViolations.push(
-        `ranking built, or build threw, on a night without darkness: ${failureMessage(error)}`,
-      );
-    }
-    return outcome;
-  }
-
-  if (outcome.noDarkness && view.ranking !== null) {
-    outcome.gateViolations.push("ranking built, or build threw, on a night without darkness: a ranking was built");
-  }
-  if (outcome.noDarkness && view.verdict.level !== "no-go") {
-    outcome.gateViolations.push(`night without darkness has verdict ${view.verdict.level}, not no-go`);
-  }
-  if (view.date !== c.date) {
-    outcome.violations.push(`the view is for night ${view.date}, not ${c.date}`);
-    return outcome;
-  }
-  const plan = view.sessionPlan;
-  if (plan === null) {
-    outcome.violations.push("no Session plan was built");
-    return outcome;
-  }
-  outcome.hasRows = plan.rows.length > 0;
-  // `layoutSessionPlan` silently drops a row whose window misses the axis, and `build.ts` turns a planet failure into
-  // an empty list, so the plan must show exactly the targets the view lists.
-  outcome.listedKeys = [
-    ...(view.ranking?.entries.map((entry) => entry.id) ?? []),
-    ...(view.solarSystem?.entries.map((entry) => entry.key) ?? []),
-    ...(view.moonCard?.target ? [view.moonCard.target.key] : []),
-  ].sort();
-  outcome.rowKeys = plan.rows.map((row) => row.key).sort();
-
+  const outcome: RowCheck = { clampedEdgeRows: 0, rowsChecked: 0, violations: [] };
   // The plan's axis, rebuilt the way `skyAxis` does: sunset to sunrise, else the whole observing night.
   const { sunset, sunrise } = sunEvents(engineSite, night);
   const nightWide = !(sunset !== null && sunrise !== null);
@@ -302,6 +250,90 @@ function analyse(c: IndexedCase): CaseResult {
   return outcome;
 }
 
+function failureMessage(error: unknown): string {
+  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+}
+
+function analyse(c: IndexedCase): CaseResult {
+  const record = siteRecordOf(c);
+  const engineSite = toEngineSite(record);
+  const observer = new Observer(c.site.latitudeDeg, c.site.longitudeDeg, 0);
+  const night = observingNight(c.date, c.site.timeZone);
+  const noDarkness = oracleHasNoDarkness(c, observer, night.start.getTime(), night.end.getTime());
+  const engineKind = darkWindow(engineSite, night, DARK_THRESHOLD_BY_BORTLE[c.bortle]).kind;
+  const outcome: CaseResult = {
+    noDarkness,
+    darknessMismatch:
+      noDarkness === (engineKind === "none")
+        ? null
+        : `the oracle's sun ${noDarkness ? "never reaches" : "reaches"} ${DARK_THRESHOLD_BY_BORTLE[c.bortle]} deg, ` +
+          `but darkWindow is "${engineKind}"`,
+    hasRows: false,
+    listedKeys: [],
+    rowKeys: [],
+    clampedEdgeRows: 0,
+    rowsChecked: 0,
+    violations: [],
+    gateViolations: [],
+  };
+
+  // Gate (i) is guarded twice in production, so a break of both guards may throw instead of returning a ranking:
+  // either way the case fails as an assertion, never as a crash.
+  let view: TonightView;
+  try {
+    view = buildTonight(
+      {
+        site: record,
+        telescope: telescopeRecordOf(c),
+        eyepieces: eyepieceRecordsOf(c),
+        forecast: null,
+        now: new Date(night.start.getTime() + 6 * HOUR_MS),
+      },
+      "en",
+      { withSessionPlan: true, limit: Infinity },
+    );
+  } catch (error) {
+    outcome.violations.push(`build threw: ${failureMessage(error)}`);
+    if (outcome.noDarkness) {
+      outcome.gateViolations.push(
+        `ranking built, or build threw, on a night without darkness: ${failureMessage(error)}`,
+      );
+    }
+    return outcome;
+  }
+
+  if (outcome.noDarkness && view.ranking !== null) {
+    outcome.gateViolations.push("ranking built, or build threw, on a night without darkness: a ranking was built");
+  }
+  if (outcome.noDarkness && view.verdict.level !== "no-go") {
+    outcome.gateViolations.push(`night without darkness has verdict ${view.verdict.level}, not no-go`);
+  }
+  if (view.date !== c.date) {
+    outcome.violations.push(`the view is for night ${view.date}, not ${c.date}`);
+    return outcome;
+  }
+  const plan = view.sessionPlan;
+  if (plan === null) {
+    outcome.violations.push("no Session plan was built");
+    return outcome;
+  }
+  outcome.hasRows = plan.rows.length > 0;
+  // `layoutSessionPlan` silently drops a row whose window misses the axis, and `build.ts` turns a planet failure into
+  // an empty list, so the plan must show exactly the targets the view lists.
+  outcome.listedKeys = [
+    ...(view.ranking?.entries.map((entry) => entry.id) ?? []),
+    ...(view.solarSystem?.entries.map((entry) => entry.key) ?? []),
+    ...(view.moonCard?.target ? [view.moonCard.target.key] : []),
+  ].sort();
+  outcome.rowKeys = plan.rows.map((row) => row.key).sort();
+
+  const checked = checkRows(c, plan);
+  outcome.clampedEdgeRows = checked.clampedEdgeRows;
+  outcome.rowsChecked = checked.rowsChecked;
+  outcome.violations.push(...checked.violations);
+  return outcome;
+}
+
 describe("Session plan rows are visible over generated Tonight builds (Risk #3)", () => {
   let results: CaseResult[] = [];
   beforeAll(() => {
@@ -361,5 +393,233 @@ describe("Session plan rows are visible over generated Tonight builds (Risk #3)"
     });
     expect(cloudy.verdict.level).toBe("no-go");
     expect(cloudy.ranking).toBeNull();
+  });
+});
+
+// ---- Edited plans (adjustable-session-plan) ----------------------------------------------------------------------
+
+const EDIT_SEED = 20261014;
+const JUNK_DEEP_SKY_PER_CASE = 3;
+
+interface EditedResult {
+  passes: boolean;
+  /** Every violation of the edited-plan checks, one line each. */
+  violations: string[];
+  /** Rows of the edited plans the oracle checked, and how many of them were added beyond the suggestion. */
+  rowsChecked: number;
+  addedRows: number;
+  /** Saved keys set aside as having no window tonight. */
+  setAside: number;
+  /** Candidates whose window the pure helpers confirmed. */
+  candidatesChecked: number;
+  /** Builds on a night that does not pass whose held list was drawn as the suggested plan. */
+  heldChecked: number;
+}
+
+type Plan = NonNullable<TonightView["sessionPlan"]>;
+
+/** A saved list for this case: a shuffled subset of the targets that can be rows plus keys that cannot, sometimes with a repeat. */
+function savedListFor(c: IndexedCase, valid: readonly string[]): TargetKey[] {
+  const random = seeded(EDIT_SEED + c.index);
+  const inValid = new Set(valid);
+  const junk: string[] = [...PLANET_KEYS, MOON_TARGET_KEY].filter((key) => !inValid.has(key));
+  for (let i = 0; i < JUNK_DEEP_SKY_PER_CASE; i++) {
+    const object = DEEP_SKY[Math.floor(random() * DEEP_SKY.length)];
+    if (!inValid.has(object.id)) {
+      junk.push(object.id);
+    }
+  }
+  // Fisher-Yates, so the saved order is a permutation, not the catalogue's.
+  const shuffle = (list: string[]): string[] => {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  };
+  const picked = shuffle([...valid]).slice(0, Math.floor(random() * 10));
+  // Up to three keys with no window, each at a random place in the list.
+  for (const key of shuffle(junk).slice(0, Math.floor(random() * 4))) {
+    picked.splice(Math.floor(random() * (picked.length + 1)), 0, key);
+  }
+  if (picked.length > 1 && random() < 0.3) {
+    picked.push(picked[0]);
+  }
+  return picked as TargetKey[];
+}
+
+const dedupe = (keys: readonly string[]): string[] => [...new Set(keys)];
+
+function analyseEdited(c: IndexedCase): EditedResult {
+  const record = siteRecordOf(c);
+  const night = observingNight(c.date, c.site.timeZone);
+  const now = new Date(night.start.getTime() + 6 * HOUR_MS);
+  const out: EditedResult = {
+    passes: false,
+    violations: [],
+    rowsChecked: 0,
+    addedRows: 0,
+    setAside: 0,
+    candidatesChecked: 0,
+    heldChecked: 0,
+  };
+  const inputOf = (forecast: ReturnType<typeof result> | null) => ({
+    site: record,
+    telescope: telescopeRecordOf(c),
+    eyepieces: eyepieceRecordsOf(c),
+    forecast,
+    now,
+  });
+  const planOf = (view: TonightView): Plan | null => view.sessionPlan;
+  try {
+    // Without a forecast the verdict is marginal, so the night passes whenever it has a dark window.
+    const base = buildTonight(inputOf(null), "en", { withSessionPlan: true, withPlanCandidates: true });
+    const basePlan = planOf(base);
+    if (basePlan === null) {
+      out.violations.push("no Session plan was built");
+      return out;
+    }
+    out.passes = base.ranking !== null;
+    const baseKeys = basePlan.rows.map((row) => row.key);
+    const candidateKeys = basePlan.candidates?.map((option) => option.key) ?? [];
+
+    if (out.passes) {
+      // The property: every key the editor offers has a window by the pure helpers' own rule (F4).
+      for (const key of candidateKeys) {
+        const object = findDeepSky(key);
+        const window =
+          object !== undefined
+            ? deepSkyWindow(record, c.date, object)
+            : isPlanetKey(key) || key === MOON_TARGET_KEY
+              ? solarSystemWindow(record, c.date, key, { apertureMm: c.telescope.apertureMm })
+              : null;
+        out.candidatesChecked += 1;
+        if (window === null) {
+          out.violations.push(`candidate ${key} has no window by plan-window.ts`);
+        }
+      }
+      if (basePlan.candidates === null) {
+        out.violations.push("a passing night offered no candidates");
+      }
+    } else if (basePlan.candidates !== null) {
+      out.violations.push("a night that does not pass offered candidates");
+    }
+
+    const valid = new Set([...baseKeys, ...candidateKeys]);
+    const saved = savedListFor(c, [...valid]);
+    const edited = buildTonight(inputOf(null), "en", {
+      withSessionPlan: true,
+      withPlanCandidates: true,
+      planEdits: saved,
+    });
+    const plan = planOf(edited);
+    if (plan === null) {
+      out.violations.push("no edited Session plan was built");
+      return out;
+    }
+    const rowKeys = plan.rows.map((row) => row.key);
+    if (out.passes) {
+      const wantRows = dedupe(saved).filter((key) => valid.has(key));
+      const wantAside = dedupe(saved).filter((key) => !valid.has(key));
+      if (!plan.edited || plan.heldEdits) {
+        out.violations.push(
+          `a saved list was not applied on a passing night (edited ${plan.edited}, held ${plan.heldEdits})`,
+        );
+      }
+      if (rowKeys.join() !== wantRows.join()) {
+        out.violations.push(`rows [${rowKeys.join(", ")}] are not the saved order [${wantRows.join(", ")}]`);
+      }
+      const aside = plan.notTonight.map((entry) => entry.key as string);
+      if (aside.join() !== wantAside.join()) {
+        out.violations.push(`set-aside keys [${aside.join(", ")}] are not [${wantAside.join(", ")}]`);
+      }
+      if (rowKeys.some((key) => aside.includes(key)) || new Set(rowKeys).size !== rowKeys.length) {
+        out.violations.push("a saved key is a row and set aside, or a row twice");
+      }
+      if (!dedupe(saved).every((key) => rowKeys.includes(key) || aside.includes(key))) {
+        out.violations.push("a saved key is neither a row nor set aside");
+      }
+      const checked = checkRows(c, plan);
+      out.rowsChecked += checked.rowsChecked;
+      out.addedRows += rowKeys.filter((key) => !baseKeys.includes(key)).length;
+      out.setAside += aside.length;
+      out.violations.push(...checked.violations.map((line) => `edited plan: ${line}`));
+    } else {
+      out.heldChecked += 1;
+      if (plan.edited || !plan.heldEdits || plan.notTonight.length > 0 || plan.candidates !== null) {
+        out.violations.push(`a night that does not pass applied or listed edits: ${JSON.stringify(plan.heldEdits)}`);
+      }
+      if (rowKeys.join() !== baseKeys.join()) {
+        out.violations.push(
+          `a night that does not pass drew [${rowKeys.join(", ")}], not the suggested [${baseKeys.join(", ")}]`,
+        );
+      }
+    }
+
+    // The same list on a night that has darkness but is clouded out: held, and the suggested plan drawn.
+    if (out.passes) {
+      const cloudy = result(
+        hourlyForecast(`${addDays(c.date, -1)}T00:00:00Z`, 96, () => 100),
+        false,
+        new Date(now.getTime() - 20 * 60_000),
+      );
+      const heldView = buildTonight(inputOf(cloudy), "en", { withSessionPlan: true, planEdits: saved });
+      const heldPlan = planOf(heldView);
+      const suggested = planOf(buildTonight(inputOf(cloudy), "en", { withSessionPlan: true }));
+      if (heldView.ranking !== null) {
+        out.violations.push(`expected a no-go night under 100% cloud, got ${heldView.verdict.level}`);
+      } else if (heldPlan === null || suggested === null) {
+        out.violations.push("no Session plan was built on the clouded-out night");
+      } else {
+        out.heldChecked += 1;
+        if (heldPlan.edited || !heldPlan.heldEdits) {
+          out.violations.push("a clouded-out night applied a saved list");
+        }
+        if (heldPlan.rows.map((row) => row.key).join() !== suggested.rows.map((row) => row.key).join()) {
+          out.violations.push("a clouded-out night drew something other than the suggested plan");
+        }
+      }
+    }
+  } catch (error) {
+    out.violations.push(`build threw: ${failureMessage(error)}`);
+  }
+  return out;
+}
+
+describe("An edited Session plan never draws a target outside its window (adjustable-session-plan)", () => {
+  let results: EditedResult[] = [];
+  beforeAll(() => {
+    results = CASES.map(analyseEdited);
+  });
+
+  // First: a property that checks nothing passes for the wrong reason.
+  it("applies enough random lists, adds enough objects and sets enough keys aside to prove something", () => {
+    const sum = (pick: (r: EditedResult) => number) => results.reduce((total, r) => total + pick(r), 0);
+    expect(results.filter((r) => r.passes).length, "passing nights").toBeGreaterThanOrEqual(30);
+    expect(
+      sum((r) => r.rowsChecked),
+      "edited rows checked",
+    ).toBeGreaterThanOrEqual(60);
+    expect(
+      sum((r) => r.addedRows),
+      "rows added beyond the suggestion",
+    ).toBeGreaterThanOrEqual(30);
+    expect(
+      sum((r) => r.setAside),
+      "keys set aside",
+    ).toBeGreaterThanOrEqual(30);
+    expect(
+      sum((r) => r.candidatesChecked),
+      "candidates checked",
+    ).toBeGreaterThanOrEqual(500);
+    expect(
+      sum((r) => r.heldChecked),
+      "held lists checked",
+    ).toBeGreaterThanOrEqual(30);
+  });
+
+  it.each(CASES)("case $index: $site.label, night $date, Bortle $bortle", (c) => {
+    const { violations } = results[c.index];
+    expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
   });
 });

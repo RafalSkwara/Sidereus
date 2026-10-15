@@ -1,11 +1,10 @@
 import { getMessages } from "@/i18n";
-import { DEEP_SKY, type DeepSkyObject } from "@/lib/catalogue";
+import { DEEP_SKY, findDeepSky, type DeepSkyObject } from "@/lib/catalogue";
 import {
   addDays,
   clearIntervals,
   cloudOutlook,
   darknessThresholdDegForBortle,
-  darkWindow,
   darkWindowReturn,
   DEFAULT_TRACK_STEP_MINUTES,
   EVENT_WINDOW_NIGHTS,
@@ -21,7 +20,6 @@ import {
   objectTracks,
   observingNight,
   PLANET_KEYS,
-  PLANET_WINDOW_SUN_ALTITUDE_DEG,
   planetTracks,
   rankObjects,
   rankPlanets,
@@ -43,17 +41,21 @@ import {
   type MoonState,
   type PlanetKey,
   type RankedEntry,
+  type ReachableEntry,
   type Site,
   type Verdict,
   type VerdictLevel,
 } from "@/lib/engine";
+import type { FinderFrom } from "@/lib/finder/from";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightSkyBody, TonightSkyView } from "@/lib/sky-view/view";
 import { nearestStateIndex } from "@/lib/moon-disc/state";
 import type { Locale } from "@/lib/preferences";
-import { MOON_TARGET_KEY, type MoonKey } from "@/lib/targets";
+import type { TargetOption } from "@/lib/observations/target-search";
+import { targetOptions } from "@/lib/observations/target-options";
+import { isPlanetKey, MOON_TARGET_KEY, type MoonKey, type TargetKey } from "@/lib/targets";
 
 import {
   createFormatter,
@@ -62,6 +64,9 @@ import {
   type MoonUp,
   type SkyHeadline,
 } from "./format";
+import { applyPlanEdits, type AppliedPlan } from "./plan-edits";
+import { orderHints } from "./plan-order";
+import { planetWindowFor } from "./plan-window";
 import { formatSkyEvents, type TonightSkyEvents } from "./sky-events";
 import {
   layoutSessionPlan,
@@ -354,12 +359,17 @@ export interface TonightSessionPlanRowInput extends SessionPlanRowInput {
   label: string;
   /** "M31 · Andromeda Galaxy": the full name, as the live sky's markers name it. */
   name: string;
-  /** The target's row on its focused page, as the live sky's markers link: Targets, Planets or the Moon page. */
+  /**
+   * The target's row on its focused page, as the live sky's markers link: Targets, Planets or the Moon page. An object
+   * the user added that is below the ranking's bar is on no list, so its row opens its finder chart instead.
+   */
   href: string;
   /** Peak time, `HH:mm` in the site's time zone. */
   bestTime: string;
   /** Best window, "21:40–23:10" in the site's time zone. */
   windowText: string;
+  /** The end of the best window, epoch ms, unclamped: what the order hint and the tile's "next" line read. */
+  windowEnd: number;
   /** Direction at the peak, "SW, 45°". */
   bestDirection: string;
   /**
@@ -371,7 +381,13 @@ export interface TonightSessionPlanRowInput extends SessionPlanRowInput {
   peakAltitudeDeg: number;
 }
 
-export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput>;
+export type TonightSessionPlanRow = SessionPlanRow<TonightSessionPlanRowInput> & {
+  /**
+   * Edited plan (D2 b): the row's best window ends before the previous row's best time, so by the time you reach it
+   * the target has set or left the window. Advisory; never set on a plan by best time.
+   */
+  endsBeforePrevious: boolean;
+};
 
 /**
  * The Session plan (session-plan-timeline): the night from sunset to sunrise (the live sky's range) on one axis, with
@@ -395,7 +411,7 @@ export interface TonightSessionPlan {
   moonText: string;
   /** The hours as ticks: fraction of the axis and `HH:mm` in the site's time zone. */
   ticks: { at: number; label: string }[];
-  /** By best time, earliest first; empty when nothing is recommended tonight. */
+  /** By best time, earliest first, or in the user's own order when `edited`; empty when nothing is recommended tonight. */
   rows: TonightSessionPlanRow[];
   /** The site's minimum altitude, degrees: the curves' dashed line, and what a row's window stays above. */
   minAltitudeDeg: number;
@@ -407,6 +423,28 @@ export interface TonightSessionPlan {
    * once every window has; `index` is into `rows`. `null` when there are no rows.
    */
   nextUp: { kind: "first" | "next"; index: number } | { kind: "done" } | null;
+  /**
+   * The rows are the user's saved list (adjustable-session-plan), in their order, rather than the suggested plan by best
+   * time. Only on a night that passes, for tonight (D5, D9).
+   */
+  edited: boolean;
+  /**
+   * A list is saved, but tonight does not pass (a no-go, or no dark window), so it is not applied: the rows are the
+   * suggested ones and the page says the changes return when a night clears (D5).
+   */
+  heldEdits: boolean;
+  /**
+   * Saved targets with no window tonight (the minimum altitude was raised, or another telescope cannot reach them): never
+   * a row, listed apart and kept until the user removes them (D4, F4), in saved order. `label` is named as a row's
+   * `name` is ("M7 · Ptolemy Cluster"), from the same rule (F10 h).
+   */
+  notTonight: { key: TargetKey; label: string }[];
+  /**
+   * What the editor's "add" offers (D3): the picker's option for every target that has a window tonight and is not a row,
+   * its `detail` the window ("Window 21:40–23:10"). `null` unless the option `withPlanCandidates` is set, on a night
+   * that passes.
+   */
+  candidates: TargetOption[] | null;
 }
 
 /** The interactive sky's data (interactive-sky); declared island-safe in `@/lib/sky-view/view`. */
@@ -493,6 +531,21 @@ export interface TonightView {
    * `withSkyEvents` option; `null` without it, or when working it out fails, which never takes the rest of the view down.
    */
   skyEvents: TonightSkyEvents | null;
+  /**
+   * Every deep-sky object the telescope can reach tonight with a window, below-bar and washed-out ones included, in
+   * catalogue order (adjustable-session-plan F9). Built only with the `withReachable` option, on a night that passes;
+   * `null` otherwise. Only the finder chart opened with `from=plan` reads it.
+   */
+  reachable: TonightReachable[] | null;
+}
+
+/** What the finder chart needs of a reachable object: its names and where and when it peaks tonight. */
+export interface TonightReachable {
+  id: string;
+  label: string;
+  bestAt: number;
+  bestTime: string;
+  bestDirection: string;
 }
 
 type RankedObjects = RankedEntry<DeepSkyObject, EyepieceRecord>[];
@@ -642,6 +695,25 @@ export function buildTonight(
     withSessionPlan?: boolean;
     withSkyEvents?: boolean;
     night?: "tonight" | "next";
+    /**
+     * The evening date of the night to build, `YYYY-MM-DD`, already including the day `night: "next"` adds: `loadTonight`
+     * works it out once (`tonightDateForSite`) so the saved plan's read, this build and the editor's form all name the
+     * same night. Absent, the build works it out from `now`, as before.
+     */
+    nightDate?: string;
+    /**
+     * The user's saved Session plan for this night and site (adjustable-session-plan), the target keys in their order,
+     * or `null` for none. Applied to the Session plan only on a night that passes the verdict card, for tonight; held
+     * (`heldEdits`) otherwise, and never for `night: "next"`.
+     */
+    planEdits?: readonly TargetKey[] | null;
+    /** Also list what the plan editor may add (`TonightSessionPlan.candidates`). Needs `withSessionPlan`. */
+    withPlanCandidates?: boolean;
+    /**
+     * Also list every object the telescope can reach tonight (`TonightView.reachable`), the below-bar ones included:
+     * what the finder chart opened from the Session plan (`from=plan`) resolves an added object against.
+     */
+    withReachable?: boolean;
   } = {},
 ): TonightView {
   const { site, telescope, eyepieces, forecast, now, log = [], logKnown = true, catalogue = DEEP_SKY } = input;
@@ -681,8 +753,12 @@ export function buildTonight(
   const thresholdDeg = darknessThresholdDegForBortle(site.bortle);
   // Once civil dawn has passed, "tonight" is the evening ahead (see `tonightDateFor`). Until then the night in
   // progress stays on screen, dark window and ranking included, so morning planets and their log date belong to it.
-  const tonightDate = tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG);
-  const date = options.night === "next" ? addDays(tonightDate, 1) : tonightDate;
+  // `loadTonight` hands the date in (`options.nightDate`) so the saved plan's read names the same night.
+  const date =
+    options.nightDate ??
+    (options.night === "next"
+      ? addDays(tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG), 1)
+      : tonightDateFor(engineSite, now, TONIGHT_ROLLOVER_SUN_ALTITUDE_DEG));
   // The instant the time-driven initial selections (Moon slider, live sky frame, plan tile) read: the real clock for
   // tonight, the start of the night (sunset, else the observing night's start) for the next night.
   const selectionNow =
@@ -752,6 +828,8 @@ export function buildTonight(
   let planObjects: RankedObjects = [];
   let planPlanets: RankedPlanets = [];
   let planMoon: MoonTargetEntry | null = null;
+  // Every object the telescope can reach tonight, with its window: what an edited plan may draw beyond the suggested rows.
+  let planReachable: ReachableEntry<DeepSkyObject>[] = [];
 
   let ranking: TonightRanking | null = null;
   // The interactive sky's deep-sky targets: the ranking's first `MAX_RANKED_OBJECTS`, the Targets page's top band.
@@ -772,6 +850,7 @@ export function buildTonight(
     skyObjects = ranked.entries.slice(0, MAX_RANKED_OBJECTS).map((entry) => entry.object);
     const context = { apertureMm: telescope.apertureMm, bortle: site.bortle };
     planObjects = ranked.entries;
+    planReachable = ranked.reachable;
     ranking = {
       clearedCount: ranked.clearedCount,
       clearedText: clearedLine(ranked.clearedCount),
@@ -822,7 +901,7 @@ export function buildTonight(
   let gate: { window: Extract<DarkWindow, { kind: "window" }>; verdict: Verdict; clear: Interval[] | null } | null =
     null;
   try {
-    planetWindow = darkWindow(engineSite, observingNight(date, timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
+    planetWindow = planetWindowFor(engineSite, date);
     const windowVerdict = verdict(planetWindow, hourly, { fallback });
     planetVerdict = windowVerdict;
     if (planetWindow.kind === "window" && (windowVerdict.level === "go" || windowVerdict.level === "marginal")) {
@@ -1119,6 +1198,8 @@ export function buildTonight(
         }
         return packAltitudes(track);
       };
+      const windowTextOf = (window: Interval): string =>
+        `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`;
       const rowOf = (
         kind: TonightSessionPlanRowInput["kind"],
         key: string,
@@ -1137,12 +1218,26 @@ export function buildTonight(
         name,
         href,
         bestTime: formatTime(peak.time, timeZone),
-        windowText: `${formatTime(window.start, timeZone)}–${formatTime(window.end, timeZone)}`,
+        windowText: windowTextOf(window),
+        windowEnd: window.end.getTime(),
         bestDirection: formatDirection(peak),
         track,
         peakAltitudeDeg: roundTo(peak.altitudeDeg, 1),
       });
-      const planRows: TonightSessionPlanRowInput[] = [
+      // A row's name ("M31 · Andromeda Galaxy"): the plan's rows and its "Not on tonight's plan" entries alike (F10 h).
+      const objectNameOf = (object: DeepSkyObject): string => {
+        const commonName = localCommonName(object.id, object.commonName, locale);
+        return commonName ? `${object.label} · ${commonName}` : object.label;
+      };
+      const objectRowOf = (
+        object: DeepSkyObject,
+        window: Interval,
+        peak: HorizontalPosition,
+        href: string,
+      ): TonightSessionPlanRowInput =>
+        rowOf("object", object.id, object.label, objectNameOf(object), href, window, peak, altitudesOf(object.id));
+      // The suggested plan: the Moon, the planets, then the ranking's objects (the layout orders them by best time).
+      const suggestedRows: TonightSessionPlanRowInput[] = [
         ...(planMoon === null
           ? []
           : [
@@ -1170,31 +1265,71 @@ export function buildTonight(
             altitudesOf(entry.key),
           );
         }),
-        ...planObjects.map(({ object, score, peak }) => {
-          const commonName = localCommonName(object.id, object.commonName, locale);
-          return rowOf(
-            "object",
-            object.id,
-            object.label,
-            commonName ? `${object.label} · ${commonName}` : object.label,
-            `/tonight/targets#object-${object.id}`,
-            score.window,
-            peak,
-            altitudesOf(object.id),
-          );
-        }),
+        ...planObjects.map(({ object, score, peak }) =>
+          objectRowOf(object, score.window, peak, `/tonight/targets#object-${object.id}`),
+        ),
       ];
+
+      // The user's saved list (adjustable-session-plan), for tonight only (D9) and only where the verdict card passes
+      // (D5): a row is then still one the suggested plan has, or an object the ranking scored with a window (F4), so no
+      // edit can put a target outside its window. On a night that does not pass the list is held, not applied.
+      const savedPlan = options.night === "next" ? null : (options.planEdits ?? null);
+      const applyEdits = savedPlan !== null && cardPasses;
+      const wantsCandidates = options.withPlanCandidates === true && cardPasses && options.night !== "next";
+      let applied: AppliedPlan<
+        TonightSessionPlanRowInput,
+        { key: string; entry: ReachableEntry<DeepSkyObject> }
+      > | null = null;
+      if (applyEdits || wantsCandidates) {
+        applied = applyPlanEdits({
+          suggested: suggestedRows,
+          saved: applyEdits ? savedPlan : null,
+          reachable: planReachable.map((entry) => ({ key: entry.object.id, entry })),
+        });
+      }
+      // An object that cleared the bar, or the Moon washed out, is on the Targets page; one below the bar is on no list,
+      // so its row opens its finder chart (F9). Ids only, never coordinates. (`finderHref` in `load.ts` builds the same
+      // URL from a view, but `load.ts` imports this module and there is no view yet.)
+      const fromPlan: FinderFrom = "plan";
+      const addedHref = ({ object, cleared, washedOut }: ReachableEntry<DeepSkyObject>): string =>
+        cleared || washedOut
+          ? `/tonight/targets#object-${object.id}`
+          : `/tonight/finder?${new URLSearchParams({
+              object: object.id,
+              site: site.id,
+              telescope: telescope.id,
+              from: fromPlan,
+            }).toString()}`;
+      let planRows: TonightSessionPlanRowInput[] = suggestedRows;
+      if (applied !== null && applyEdits) {
+        const added = applied.rows.flatMap((row) => (row.from === "reachable" ? [row.item.entry.object] : []));
+        const untrackedAdded = added.filter((object) => !axisTracks.has(object.id));
+        objectTracks(engineSite, range, untrackedAdded).forEach((track, i) => {
+          axisTracks.set(untrackedAdded[i].id, track);
+        });
+        planRows = applied.rows.map((row) =>
+          row.from === "suggested"
+            ? row.item
+            : objectRowOf(row.item.entry.object, row.item.entry.window, row.item.entry.peak, addedHref(row.item.entry)),
+        );
+      }
+      const edited = applied?.edited === true;
       const layout = layoutSessionPlan({
         axis: range,
         dark: window.kind === "window" ? window : null,
         moonSpans,
         rows: planRows,
+        order: edited ? "given" : "peak",
         isWholeHour: (ms) => formatTime(new Date(ms), timeZone).endsWith(":00"),
       });
-      // The tile's line, by the raw window ends (the layout's rows are clamped to the axis and carry no window).
-      const windowEnds = new Map(planRows.map((row) => [row.key, row.window.end.getTime()]));
+      const hints = orderHints(layout.rows);
+      const planLayoutRows: TonightSessionPlanRow[] = layout.rows.map((row, i) => ({
+        ...row,
+        endsBeforePrevious: hints[i],
+      }));
+      // The tile's line, by the raw window ends (the layout's rows are clamped to the axis; each carries its own end).
       const nowMs = selectionNow.getTime();
-      const nextIndex = layout.rows.findIndex((row) => (windowEnds.get(row.key) ?? 0) > nowMs);
+      const nextIndex = layout.rows.findIndex((row) => row.windowEnd > nowMs);
       const nextUp: TonightSessionPlan["nextUp"] =
         layout.rows.length === 0
           ? null
@@ -1203,6 +1338,33 @@ export function buildTonight(
             : nextIndex >= 0
               ? { kind: "next", index: nextIndex }
               : { kind: "done" };
+      // Saved keys with no window tonight (and, defensively, one whose row the layout dropped): never drawn, kept.
+      const drawn = new Set(layout.rows.map((row) => row.key));
+      const labelOfKey = (key: string): string => {
+        if (key === MOON_TARGET_KEY) return messages.targets.moon;
+        if (isPlanetKey(key)) return messages.targets.planet[key];
+        const object = findDeepSky(key);
+        return object ? objectNameOf(object) : key;
+      };
+      const notTonight = edited
+        ? [...new Set(savedPlan ?? [])].filter((key) => !drawn.has(key)).map((key) => ({ key, label: labelOfKey(key) }))
+        : [];
+      // The editor's "add" list: every target with a window tonight that is not a row, as the picker's own options.
+      let candidates: TargetOption[] | null = null;
+      if (wantsCandidates && applied !== null) {
+        const windowOf = new Map<string, string>(
+          applied.candidates.map((candidate) => [
+            candidate.item.key,
+            candidate.from === "suggested" ? candidate.item.windowText : windowTextOf(candidate.item.entry.window),
+          ]),
+        );
+        candidates = targetOptions(locale)
+          .filter((option) => windowOf.has(option.key))
+          .map((option) => ({
+            ...option,
+            detail: messages.tonight.pages.plan.candidateDetail({ window: windowOf.get(option.key) ?? "" }),
+          }));
+      }
       const text = messages.tonight.pages.plan;
       const axisMs = layout.axis.end - layout.axis.start;
       const hourAt = (hour: number): number => (axisMs > 0 ? (hour - layout.axis.start) / axisMs : 0);
@@ -1237,10 +1399,14 @@ export function buildTonight(
           at: hourAt(hour),
           label: formatTime(new Date(hour), timeZone),
         })),
-        rows: layout.rows,
+        rows: planLayoutRows,
         minAltitudeDeg: site.minAltitudeDeg,
         trackStep: axisMs > 0 ? (DEFAULT_TRACK_STEP_MINUTES * 60_000) / axisMs : 1,
         nextUp,
+        edited,
+        heldEdits: savedPlan !== null && !cardPasses,
+        notTonight,
+        candidates,
       };
     } catch (error) {
       // The page says the plan is unavailable; this leaves a trace for us. A fixed line and the error's name only:
@@ -1312,5 +1478,15 @@ export function buildTonight(
     skyView,
     sessionPlan,
     skyEvents: skyEventsBlock,
+    reachable:
+      options.withReachable === true && cardPasses
+        ? planReachable.map(({ object, peak }) => ({
+            id: object.id,
+            label: object.label,
+            bestAt: peak.time.getTime(),
+            bestTime: formatTime(peak.time, timeZone),
+            bestDirection: formatDirection(peak),
+          }))
+        : null,
   };
 }

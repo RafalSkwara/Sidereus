@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { en } from "@/i18n/messages/en";
 import type { EyepieceRecord } from "@/lib/gear/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
+import { isTargetKey, type TargetKey } from "@/lib/targets";
 import { buildTonight, type TonightView } from "@/lib/tonight/build";
 import { expectationKeyFor } from "@/lib/tonight/expectation";
 import type { TonightLoad } from "@/lib/tonight/load";
@@ -45,7 +46,7 @@ const WIDE_KIT: EyepieceRecord[] = [
   ...EYEPIECES,
 ];
 
-function viewFor(eyepieces: EyepieceRecord[]): TonightView {
+function viewFor(eyepieces: EyepieceRecord[], withReachable = false): TonightView {
   return buildTonight(
     {
       site: WARSAW,
@@ -55,7 +56,7 @@ function viewFor(eyepieces: EyepieceRecord[]): TonightView {
       now: NOW,
     },
     "en",
-    { limit: Number.POSITIVE_INFINITY },
+    { limit: Number.POSITIVE_INFINITY, withReachable },
   );
 }
 
@@ -76,6 +77,7 @@ function tonightLoad(eyepieces: EyepieceRecord[], overrides: Partial<TonightLoad
     view: viewFor(eyepieces),
     tonightError: null,
     openSkyChecks: [],
+    planEditsError: null,
     ...overrides,
   };
 }
@@ -122,6 +124,55 @@ describe("loadFinderFor's plan guard", () => {
   it("checks the plan before looking at an object that does not parse", async () => {
     mocks.planRead.mockResolvedValue({ plan: "free" });
     expect(await loadFinderFor(locals(), { target: null })).toEqual({ kind: "locked" });
+  });
+});
+
+describe("loadFinderFor from the Session plan (adjustable-session-plan F9)", () => {
+  /** A deep-sky key the telescope reaches tonight that is neither ranked nor washed out: below the bar. */
+  function belowBarKey(view: TonightView): TargetKey {
+    const listed = new Set([
+      ...(view.ranking?.entries.map((entry) => entry.id) ?? []),
+      ...(view.ranking?.washedOutEntries.map((entry) => entry.id) ?? []),
+    ]);
+    const key = view.reachable?.find((entry) => !listed.has(entry.id))?.id;
+    if (key === undefined || !isTargetKey(key)) {
+      throw new Error("expected a below-bar object on this night");
+    }
+    return key;
+  }
+
+  it("resolves an object below the ranking's bar only with from=plan", async () => {
+    const view = viewFor(WIDE_KIT, true);
+    const key = belowBarKey(view);
+    mocks.loadTonightFor.mockResolvedValue(tonightLoad(WIDE_KIT, { view }));
+
+    expect((await loadFinderFor(locals(), { target: key })).kind).toBe("not-ranked");
+    expect((await loadFinderFor(locals(), { target: key, from: "targets" })).kind).toBe("not-ranked");
+
+    const load = await loadFinderFor(locals(), { target: key, from: "plan" });
+    if (load.kind !== "chart") {
+      throw new Error(`expected a chart, got ${load.kind}`);
+    }
+    const reached = view.reachable?.find((entry) => entry.id === key);
+    expect(load.labels.target).toBe(reached?.label);
+    expect(load.labels.time).toBe(reached?.bestTime);
+    expect(load.labels.direction).toBe(reached?.bestDirection);
+  });
+
+  it("asks Tonight for the reachable list only with from=plan", async () => {
+    await loadFinderFor(locals(), { target: "M31", from: "plan" });
+    expect(mocks.loadTonightFor).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ withReachable: true }),
+    );
+    await loadFinderFor(locals(), { target: "M31", from: "targets" });
+    expect(mocks.loadTonightFor.mock.lastCall?.[1]).not.toHaveProperty("withReachable");
+  });
+
+  it("stays locked for a free account, before Tonight is read", async () => {
+    mocks.planRead.mockResolvedValue({ plan: "free" });
+    expect(await loadFinderFor(locals(), { target: "NGC7000", from: "plan" })).toEqual({ kind: "locked" });
+    expect(mocks.loadTonightFor).not.toHaveBeenCalled();
   });
 });
 

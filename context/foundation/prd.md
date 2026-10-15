@@ -60,6 +60,7 @@ not yet observing, building toward their own first sessions.
 ## Success Criteria
 
 ### Primary
+
 - A new user goes from the landing page to a ranked top-5 for tonight in under a
   minute of interaction, without having to look up a single number they do not
   already have.
@@ -69,6 +70,7 @@ not yet observing, building toward their own first sessions.
   sanity) on 2-3 nights.
 
 ### Secondary
+
 - Multi-site comparison pays off: the user can see "Thursday at home is
   marginal, Saturday at the dark site is go" and make the drive decision on it.
 - Sidereus alone gets a beginner to the target: from a ranked object, the finder
@@ -78,6 +80,7 @@ not yet observing, building toward their own first sessions.
   and Caldwell lists and which tonight's targets they have never seen (added v3).
 
 ### Guardrails
+
 - Home coordinates stay private. A site's lat/long is where the user lives; it
   never appears in a shared URL, a log line, or any third-party request beyond
   the forecast lookup that needs it. One consented exception (amended
@@ -113,6 +116,7 @@ not yet observing, building toward their own first sessions.
   reason
 
 #### Acceptance Criteria
+
 - The path from sign-up to the ranked list takes under a minute of interaction
   and requires no value the user has to look up.
 - Up to five objects above the minimum score are shown, with a stated count.
@@ -133,6 +137,7 @@ not yet observing, building toward their own first sessions.
   not a no-go, in place of a ranking
 
 #### Acceptance Criteria
+
 - No object ranking is shown on a no-go night (FR-020, Business Logic
   invariant).
 - Where the site has no dark window for the night, the explanation names the
@@ -150,6 +155,7 @@ not yet observing, building toward their own first sessions.
   Thursday, go at the dark site Saturday" decision can be read off
 
 #### Acceptance Criteria
+
 - Nights 4-7 show no verdict (FR-011, Business Logic invariant).
 - All times are rendered in the selected site's timezone, including across the
   2026-10-25 daylight-saving transition.
@@ -164,6 +170,7 @@ not yet observing, building toward their own first sessions.
   still ranks, tagged "seen N times - last [date]"
 
 #### Acceptance Criteria
+
 - The entry stores object, observing night, rating, site and telescope; the
   night is prefilled and editable before saving (FR-016).
 - An entry rated 1-2 applies no penalty, so the object stays on the list
@@ -182,6 +189,7 @@ not yet observing, building toward their own first sessions.
   object will look like in their telescope
 
 #### Acceptance Criteria
+
 - The starting star is above the site's minimum altitude at the object's best
   time (FR-037, Business Logic invariant).
 - The eyepiece circle uses the user's own finding eyepiece from FR-014.
@@ -197,6 +205,7 @@ not yet observing, building toward their own first sessions.
   tonight's targets they have never logged
 
 #### Acceptance Criteria
+
 - An object counts as seen only through an entry rated 3 or above (FR-039).
 - Deleting or re-rating an entry updates the counts and the marks.
 - A milestone is shown once, when the log entry that reaches it is saved, and
@@ -212,6 +221,7 @@ not yet observing, building toward their own first sessions.
   site, and tonight's event named next to the sky verdict
 
 #### Acceptance Criteria
+
 - Events are computed by the product, with no external feed (FR-042).
 - An event below the site's horizon is shown as not visible from the site, never
   as something to go out for.
@@ -224,6 +234,7 @@ not yet observing, building toward their own first sessions.
   offline copy, and can be reset to the suggested plan
 
 #### Acceptance Criteria
+
 - An added target is placed only within its own visibility window (Guardrails).
 - Edits are saved per user, site and night (FR-044); another user never sees
   them.
@@ -231,6 +242,7 @@ not yet observing, building toward their own first sessions.
 ## Functional Requirements
 
 ### Accounts
+
 - FR-001: Visitor can create an account with email and password. Priority: must-have
   > Socrates: Counter-argument considered: "an account is a barrier to a
   > 30-second answer; a local-first profile would do." Resolution: stands.
@@ -252,6 +264,7 @@ not yet observing, building toward their own first sessions.
   > redirect-URL allowlist in the hosted dashboard. Cut-order #3 applied.
 
 ### Onboarding
+
 - FR-004: New user can set a home observing site using browser geolocation or place-name search; stored coordinates are rounded to approximately 1 km. The site is created with the default name "Home" and a default minimum altitude, both editable via FR-007. Priority: must-have
   > Socrates: Two counter-arguments accepted: "geolocation returns the user's
   > home address to metre precision, colliding with the privacy guardrail", and
@@ -277,6 +290,7 @@ not yet observing, building toward their own first sessions.
   > fixed presets, which stay as the "Not sure" fallback.
 
 ### Sites & equipment
+
 - FR-007: User can create, view, update and delete observing sites (name, coordinates, Bortle class, minimum altitude). Priority: must-have
   > Socrates: Counter-argument considered: "most users will have exactly one
   > site forever." Resolution: stands. Sites are the unit the engine runs
@@ -306,6 +320,7 @@ not yet observing, building toward their own first sessions.
   > weight. This supersedes the earlier decision to guard the last eyepiece.
 
 ### Night conditions
+
 - FR-010: User can see a go / marginal / no-go verdict and the dark window for a selected site and night, with all times shown in the site's timezone. The dark window runs between the site's Bortle-dependent sun-altitude thresholds (tunable parameter #7). Priority: must-have
   > Socrates: Counter-arguments considered: "astronomical darkness is the wrong
   > threshold at a light-polluted site", "a three-level verdict overstates
@@ -349,6 +364,7 @@ not yet observing, building toward their own first sessions.
   > screen with no explanation is the worst outcome for a beginner.
 
 ### Object ranking
+
 - FR-013: User can see up to five ranked Messier objects for a selected site, night and telescope, each with its best observing window, its constellation, and its altitude and compass direction at that time (for example "SW, 45 deg"). Only objects clearing a minimum object score are shown, and the view states how many cleared it. Priority: must-have
   > Socrates: Counter-argument accepted: "five is arbitrary and forces filler -
   > on a marginal night under a bright moon there may be two objects genuinely
@@ -372,11 +388,13 @@ not yet observing, building toward their own first sessions.
   > Socrates: Counter-argument accepted: "the objects that rank highly rank
   > highly for the same reasons, so five 'why' lines will read near-identically,
   > and repetition is how a reader learns to skip text." Resolution: FR amended
+  >
   > - each line leads with the differentiating component, so the five differ by
-  > construction rather than by luck, and the user learns which factor mattered
-  > tonight.
+  >   construction rather than by luck, and the user learns which factor mattered
+  >   tonight.
 
 ### Observation log
+
 - FR-016: User can mark a ranked object as observed. The entry stores the object, the observing night (the evening date), a 1-5 rating of how well it went, and the site and telescope used. The night is prefilled from the ranking's selected night, and the site and telescope from the ranking's selection; the user can confirm or edit all of them in the form. Priority: must-have
   > Socrates: Counter-argument accepted: "prefilling tonight will often be
   > wrong - logging happens next morning from memory, and confidently wrong
@@ -398,12 +416,14 @@ not yet observing, building toward their own first sessions.
   > on log entries, which FR-016, FR-017 and FR-022 all touch.
 - FR-022: User can add a log entry manually for any Messier object, not only from the ranking. Priority: must-have
   > Socrates: Counter-arguments considered: "it solves the wrong half of the gap
+  >
   > - the things a beginner most wants to log are Jupiter, the Moon, a meteor",
-  > "two entry points, one record, two validation paths." Resolution: stands. It
-  > is already in the cut order, and a log you can only write from tonight's
-  > ranking is a strange log.
+  >   "two entry points, one record, two validation paths." Resolution: stands. It
+  >   is already in the cut order, and a log you can only write from tonight's
+  >   ranking is a strange log.
 
 ### Night usability
+
 - FR-024: User can switch the interface to a red night mode that preserves dark adaptation. Priority: must-have
   > Socrates: Raised during Phase 5 rather than the FR round. It answers the
   > dark-adaptation counter-argument offered against FR-016 - which was not the
@@ -412,6 +432,7 @@ not yet observing, building toward their own first sessions.
   > priority value the schema does not have.
 
 ### Interface
+
 - FR-025: User can switch the interface between a dark theme (the default) and a light theme; the choice is remembered on the device. Priority: must-have
   > Added 2026-09-26 (v2) by the user after S-02 and S-04 had shipped UI, not
   > from the shaping round: theming was never designed, and retrofitting it
@@ -442,22 +463,27 @@ slice; details live in the archived change folders.
 - FR-036: The interface has a distinct visual identity of its own in the light and dark themes, with red night mode unchanged in function (roadmap S-10). Priority: must-have
 
 ### Finding the object (v3)
+
 - FR-037: User can open a finder chart for any ranked deep-sky object and any planet on Tonight: the nearest star bright enough to see with the naked eye from the site at the object's best time, the hop from it to the object through intermediate stars where needed, and two circles drawn to scale - the finder's field and the true field of the user's finding eyepiece (FR-014) - oriented as the user faces that part of the sky. Plan: full (FR-045). Priority: must-have
 - FR-038: User sees, with each ranked object, a plain-language line on what to expect in their own telescope from their site - for example "a faint grey smudge; use averted vision" or "a bright, tight ball of stars that resolves at the edge" - derived from the object's type, size and brightness, the aperture and the site's sky quality. Plan: full (FR-045). Priority: must-have
 
 ### Progress and goals (v3)
+
 - FR-039: User can see their progress: the Messier and Caldwell checklists with a count each ("47 / 110"), and the planets and the Moon as "firsts", filled from observation log entries rated 3 or above. Priority: must-have
 - FR-040: User sees a "not seen yet" mark on tonight's targets they have never logged with a rating of 3 or above. Priority: must-have
 - FR-041: User sees a milestone celebrated when the log entry that reaches it is saved - from a fixed, named set such as first planet, first galaxy, first globular cluster, 10 / 25 / 50 / 110 Messier objects and all planets seen - and every milestone reached is listed on the progress page. Priority: must-have
 
 ### Sky events (v3)
+
 - FR-042: User can see the sky events of the next 30 days for the selected site - meteor shower peaks, planet oppositions, Mercury and Venus greatest elongations, close Moon-planet and planet-planet pairings, and solar and lunar eclipses - each with its time in the site's timezone and whether it is visible from the site. Events are computed by the product, with no external data feed. Priority: must-have
 - FR-043: User sees the next notable event as a dashboard tile linking to the events page, and an event happening tonight named next to the sky verdict. Priority: must-have
 
 ### Session plan (v3)
+
 - FR-044: User can adjust the session plan for a site and night - reorder targets, drop one, add another object visible that night - and reset it to the suggested plan. Edits are saved to the user's account per site and night, so they reach every device and the stored offline copy; editing needs the network. Plan: full (FR-045). Priority: must-have
 
 ### Plans and entitlements (v3)
+
 - FR-045: Every account is on the free plan or the full plan. Everything shipped before v3, and the progress and sky-event features (FR-039 to FR-043), stay free. The features marked "Plan: full" (FR-037, FR-038, FR-044) are shown to a free account as what they do and that they need the full plan - never as an error or an empty state - and the server enforces the plan, not only the interface. Priority: must-have
 - FR-046: The operator can create a new account on the full plan, or move an existing account to it and back, with one command and no payment ("complimentary" accounts, for the author and testers). Priority: must-have
 
@@ -708,26 +734,26 @@ the plan of the slice that needs it.
     standard 6×30 finder (about 7° across) for every telescope, plus the
     concentric rings of a 1× reflex finder; a later change may let the user
     pick their finder. Owner: user.
-    *Settled as a candidate in the S-03 plan (2026-10-13, owner confirmed):* a
+    _Settled as a candidate in the S-03 plan (2026-10-13, owner confirmed):_ a
     6×30 finder, 7° field, for every telescope, with the 0.5°, 2° and 4° rings
     of a 1× reflex finder; no choice of finder (`finder-chart/plan.md` O-1).
 14. **Star depth for the chart** - the bundled stars stop at magnitude 4.5,
     while a 6×30 finder shows stars to about magnitude 8. Candidate: a deeper,
     redistributable subset of the same source, loaded only with the chart;
     licence and page weight are checked in the plan.
-    *Settled as a candidate in the S-03 plan (2026-10-13):* a second server-only
+    _Settled as a candidate in the S-03 plan (2026-10-13):_ a second server-only
     file of 25,791 stars to magnitude 7.5 from the same pinned HYG v4.1 source
     (122 KB gzip), drawn to a finder depth of 7.2-7.5 by Bortle class; the
     licence question is open, see item 21 (`finder-chart/plan.md` D-2, D-5).
 15. **Naked-eye limit for the starting star** - candidate (uncalibrated): by
     Bortle class, magnitude 4.5 at Bortle 1-4, 3.5 at 5-6, 2.5 at 7-9.
-    *Settled as a candidate in the S-03 plan (2026-10-13):* kept as written
+    _Settled as a candidate in the S-03 plan (2026-10-13):_ kept as written
     (`startStarMaxMagForBortle`), still uncalibrated against an observer, and
     pinned never to exceed the naked-eye limit for any class (`finder-chart/plan.md`
     D-3).
 16. **Hop length** - candidate (uncalibrated): each step at most one finder
     field, through stars the finder shows.
-    *Settled as a candidate in the S-03 plan (2026-10-13):* a step is at most
+    _Settled as a candidate in the S-03 plan (2026-10-13):_ a step is at most
     0.8 of the finder field (5.6°), through stars to magnitude 6.5, at most 8
     steps, fewest steps first; checked against published hops, still not against
     an observer (`finder-chart/plan.md` D-4, D-11).
@@ -750,7 +776,7 @@ the plan of the slice that needs it.
     guarantee and discourages heavy use. Before any payment is taken, move to a
     commercial forecast and geocoding plan (or provider) and confirm the map
     tiles' terms. Owner: user. Blocks: the payments milestone, not M-3.
-    *Added by the S-03 plan (2026-10-13), star data:* every star catalogue
+    _Added by the S-03 plan (2026-10-13), star data:_ every star catalogue
     complete to magnitude 7.5 is either ESA's Hipparcos, Tycho-2 or Gaia (CC BY-NC
     3.0 IGO, "Credit: ESA"; commercial use needs ESA's authorisation) or a
     compilation of them (HYG, which the app uses, AT-HYG, SKY2000, UCAC4), or an
@@ -772,9 +798,22 @@ the plan of the slice that needs it.
 23. **Paid features in a stored offline copy** - candidate: a copy keeps what
     the account's plan allowed when it was stored, and is purged on sign-out as
     today.
-    *Settled for finder charts in the S-03 plan (2026-10-13, owner's answer):* a
+    _Settled for finder charts in the S-03 plan (2026-10-13, owner's answer):_ a
     chart opened online is stored on the device with the Tonight copies; it
     disappears at the first online refresh after the account loses the full plan,
     expires 36 h after its site's last refresh like the other copies, and is
     purged on sign-out and by another user's commit (`finder-chart/plan.md` O-4,
     D-13 to D-15). Other paid features will need their own answer.
+    _Settled for plan edits in the S-08 plan (2026-10-14, owner's answer):_ a
+    user's edits of the Session plan stay in the database when the account loses
+    the full plan and come back if it returns; meanwhile the plan page shows the
+    suggested plan, and a stored edited copy is replaced at that page's next
+    online answer, with no plan-loss drop in the service worker (unlike finder
+    charts). Rationale: the paid feature is the editing, not reading a list; a
+    copy stored while the plan was full is read-only, offline editing does not
+    exist, and every write passes the server's full-plan gate, so keeping what
+    the plan allowed when the copy was stored is this item's own candidate.
+    Copies of `?night=next` never carry edits. A failed read of the plan or of
+    the saved list shows the suggested plan with one muted line and stores no
+    offline copy of the plan page, so the earlier copy survives; the dashboard
+    is not affected (`adjustable-session-plan/plan.md` D11, D14).

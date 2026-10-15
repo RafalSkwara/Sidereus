@@ -4,7 +4,7 @@
 import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
-import { loadTonight, type TonightLoad } from "@/lib/tonight/load";
+import { loadTonight, type PlanEditsReader, type TonightLoad } from "@/lib/tonight/load";
 
 export interface TonightIslandLoad {
   /** The site and telescope picked on the page shell (`?site=` / `?telescope=` or the remembered cookies). */
@@ -22,6 +22,12 @@ export interface TonightIslandLoad {
   withSkyEvents?: boolean;
   /** `"next"` renders the evening after tonight, from the same forecast, and never reads sky checks. */
   night?: "tonight" | "next";
+  /** Reads the saved Session plan (adjustable-session-plan); only for tonight. See `readPlanEditsFor`. */
+  readPlanEdits?: PlanEditsReader;
+  /** Also list what the plan editor may add; see `buildTonight`. */
+  withPlanCandidates?: boolean;
+  /** Also list every object the telescope can reach (the finder chart's `from=plan`); see `buildTonight`. */
+  withReachable?: boolean;
 }
 
 /** Runs work after the response is sent (the Worker's `waitUntil`): the forecast's KV write, the sky check's record. */
@@ -57,5 +63,8 @@ export async function loadTonightFor(locals: App.Locals, options: TonightIslandL
     withSessionPlan: options.withSessionPlan,
     withSkyEvents: options.withSkyEvents,
     night: options.night,
+    readPlanEdits: options.readPlanEdits,
+    withPlanCandidates: options.withPlanCandidates,
+    withReachable: options.withReachable,
   });
 }

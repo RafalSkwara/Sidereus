@@ -1752,6 +1752,257 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
   });
 });
 
+describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
+  const FULL_MOON_NIGHT = new Date("2026-10-26T18:00:00Z");
+
+  function build(
+    overrides: Partial<Parameters<typeof buildTonight>[0]> = {},
+    options: Parameters<typeof buildTonight>[2] = {},
+  ) {
+    return buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+        ...overrides,
+      },
+      "en",
+      { withSessionPlan: true, ...options },
+    );
+  }
+
+  function planOf(view: TonightView): NonNullable<TonightView["sessionPlan"]> {
+    if (view.sessionPlan === null) {
+      throw new Error("expected a session plan");
+    }
+    return view.sessionPlan;
+  }
+
+  const keysOf = (view: TonightView): string[] => planOf(view).rows.map((row) => row.key);
+
+  // Warsaw, 2026-10-10, Bortle 6, 150 mm: the suggested rows are M39, Neptune, Saturn, M31, NGC 869, M34, M45, Uranus,
+  // Jupiter and Mars. M3 is up 19:25-19:45 only, so by the end of the night its window is long over; NGC 4244 is
+  // reachable but below the bar (it is on no list); Mercury and the Moon are no targets that night.
+  it("changes nothing without a saved list: not edited, nothing held, no candidates unless asked", () => {
+    const plain = build();
+    const plan = planOf(plain);
+    expect(plan.edited).toBe(false);
+    expect(plan.heldEdits).toBe(false);
+    expect(plan.notTonight).toEqual([]);
+    expect(plan.candidates).toBeNull();
+    expect(plan.rows.every((row) => !row.endsBeforePrevious)).toBe(true);
+    // Absent, `null` and a list on a night that is not tonight all give the suggested plan.
+    expect(build({}, { planEdits: null })).toEqual(plain);
+    expect(planOf(build({}, { planEdits: ["M3"], night: "next" })).edited).toBe(false);
+    expect(keysOf(build({}, { planEdits: ["M3"], night: "next" }))).toEqual(keysOf(build({}, { night: "next" })));
+    const bestTimes = plan.rows.map((row) => row.bestAt);
+    expect(bestTimes).toEqual([...bestTimes].sort((a, b) => a - b));
+  });
+
+  it("uses the date it is given instead of working one out from now", () => {
+    expect(build().date).toBe("2026-10-10");
+    expect(build({}, { nightDate: "2026-10-12" }).date).toBe("2026-10-12");
+    // The same date the build works out itself gives the same view.
+    expect(build({}, { nightDate: "2026-10-10" })).toEqual(build());
+    expect(build({}, { night: "next" }).date).toBe("2026-10-11");
+    expect(build({}, { night: "next", nightDate: "2026-10-11" })).toEqual(build({}, { night: "next" }));
+  });
+
+  it("applies a saved list in the user's order, each row keeping its own window and best time", () => {
+    const suggested = planOf(build());
+    const view = build({}, { planEdits: ["M31", "jupiter", "M45"] });
+    const plan = planOf(view);
+    expect(plan.edited).toBe(true);
+    expect(plan.heldEdits).toBe(false);
+    expect(plan.notTonight).toEqual([]);
+    expect(plan.rows.map((row) => row.key)).toEqual(["M31", "jupiter", "M45"]);
+    for (const row of plan.rows) {
+      const before = suggested.rows.find((r) => r.key === row.key);
+      expect(before).toBeDefined();
+      expect({ ...row, endsBeforePrevious: false }).toEqual({ ...before, endsBeforePrevious: false });
+    }
+    // M45 (best 03:05, window to 05:20) comes after Jupiter (best 06:19): it ends before the row above peaks.
+    expect(plan.rows.map((row) => row.endsBeforePrevious)).toEqual([false, false, true]);
+    expect(plan.rows[2].windowEnd).toBeLessThan(plan.rows[1].bestAt);
+    // The ranking's view is untouched: edits only change the plan.
+    expect(view.ranking).toEqual(build().ranking);
+  });
+
+  it("draws an empty saved list as no rows, and keeps the tile quiet", () => {
+    const plan = planOf(build({}, { planEdits: [] }));
+    expect(plan.edited).toBe(true);
+    expect(plan.rows).toEqual([]);
+    expect(plan.nextUp).toBeNull();
+    expect(plan.notTonight).toEqual([]);
+  });
+
+  it("adds an object beyond the top five from the ranking's own window, with its curve, and keeps the rest", () => {
+    const plan = planOf(build({}, { planEdits: ["M13", "M31"] }));
+    expect(plan.rows.map((row) => row.key)).toEqual(["M13", "M31"]);
+    const [m13, m31] = plan.rows;
+    expect(m13).toMatchObject({ kind: "object", label: "M13", href: "/tonight/targets#object-M13" });
+    expect(m13.name).toContain("M13 · ");
+    expect(m13.windowText).toBe("19:25–23:35");
+    expect(m13.track).toHaveLength(m31.track.length);
+    expect(m13.peakAltitudeDeg).toBeGreaterThanOrEqual(WARSAW.minAltitudeDeg);
+    expect(m13.windowEnd).toBeGreaterThan(m13.bestAt);
+    // M31 is later than M13's best time, so it does not end before it.
+    expect(plan.rows.map((row) => row.endsBeforePrevious)).toEqual([false, false]);
+  });
+
+  it("links an object below the ranking's bar to its finder chart, and the others to the Targets list", () => {
+    const below = planOf(build({}, { planEdits: ["NGC4244", "M13"] }));
+    const [ngc4244, m13] = below.rows;
+    expect(ngc4244.key).toBe("NGC4244");
+    expect(ngc4244.href).toBe("/tonight/finder?object=NGC4244&site=site-1&telescope=scope-1&from=plan");
+    expect(m13.href).toBe("/tonight/targets#object-M13");
+    // Coordinates never reach a link.
+    expect(ngc4244.href).not.toContain("52.23");
+    expect(ngc4244.href).not.toContain("21.01");
+    // An object the Moon washes out is on the Targets page (its washed-out list), so it links there.
+    const fullMoon = planOf(
+      build(
+        {
+          now: FULL_MOON_NIGHT,
+          forecast: result(
+            uniformForecast("2026-10-26T00:00:00Z", 5),
+            false,
+            new Date(FULL_MOON_NIGHT.getTime() - 60_000),
+          ),
+        },
+        { planEdits: ["M33", "M1"] },
+      ),
+    );
+    expect(fullMoon.rows.map((row) => row.key)).toEqual(["M33", "M1"]);
+    // M33 is washed out, M1 is below the bar that night.
+    expect(fullMoon.rows[0].href).toBe("/tonight/targets#object-M33");
+    expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M1&");
+  });
+
+  it("sets aside, in saved order and never as a row, every saved key with no window tonight", () => {
+    // Mercury and the Moon are no targets that night; a 60 mm telescope cannot reach NGC 891.
+    const plan = planOf(
+      build({ telescope: { ...TELESCOPE, apertureMm: 60 } }, { planEdits: ["mercury", "NGC891", "M31", "moon", "M3"] }),
+    );
+    expect(plan.rows.map((row) => row.key)).toEqual(["M31", "M3"]);
+    expect(plan.notTonight).toEqual([
+      { key: "mercury", label: "Mercury" },
+      { key: "NGC891", label: "NGC 891" },
+      { key: "moon", label: "Moon" },
+    ]);
+    expect(plan.edited).toBe(true);
+    // Each saved key is a row or set aside, never both, and an unknown catalogue key keeps its key as the label.
+    const unknown = planOf(build({}, { planEdits: ["NGC1", "M31"] }));
+    expect(unknown.notTonight).toEqual([{ key: "NGC1", label: "NGC1" }]);
+  });
+
+  it("lets a planet or the Moon that was dropped come back: it is in tonight's suggestion", () => {
+    const withoutMars = planOf(build({}, { planEdits: ["M31"], withPlanCandidates: true }));
+    const candidates = withoutMars.candidates ?? [];
+    expect(candidates.map((option) => option.key)).toContain("mars");
+    const back = planOf(build({}, { planEdits: ["M31", "mars"] }));
+    expect(back.rows.map((row) => row.key)).toEqual(["M31", "mars"]);
+    expect(back.rows[1].href).toBe("/tonight/planets#planet-mars");
+  });
+
+  it("holds a saved list on a night that does not pass, drawing the suggested plan and no candidates", () => {
+    const cloudy = { forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) };
+    const suggested = build(cloudy);
+    expect(suggested.ranking).toBeNull();
+    const held = build(cloudy, { planEdits: ["M31", "mars"], withPlanCandidates: true });
+    const plan = planOf(held);
+    expect(plan.heldEdits).toBe(true);
+    expect(plan.edited).toBe(false);
+    expect(plan.notTonight).toEqual([]);
+    expect(plan.candidates).toBeNull();
+    expect(plan.rows).toEqual(planOf(suggested).rows);
+    // An empty saved list is a saved list too.
+    expect(planOf(build(cloudy, { planEdits: [] })).heldEdits).toBe(true);
+    expect(planOf(build(cloudy, { planEdits: null })).heldEdits).toBe(false);
+    // A night without a dark window passes no better.
+    const pole: SiteRecord = { ...WARSAW, latitudeDeg: 69.65, longitudeDeg: 18.96, timeZone: "Europe/Oslo", bortle: 3 };
+    const now = new Date("2026-06-21T12:00:00Z");
+    const noDark = planOf(
+      build(
+        { site: pole, now, forecast: result(uniformForecast("2026-06-21T00:00:00Z", 5), false, now) },
+        { planEdits: ["M31"] },
+      ),
+    );
+    expect(noDark).toMatchObject({ heldEdits: true, edited: false });
+  });
+
+  it("lists what may be added on a passing night only when asked: every window-bearing target that is not a row", () => {
+    expect(planOf(build()).candidates).toBeNull();
+    const plan = planOf(build({}, { withPlanCandidates: true }));
+    const candidates = plan.candidates ?? [];
+    const rowKeys = new Set(plan.rows.map((row) => row.key));
+    expect(candidates.length).toBeGreaterThan(50);
+    expect(candidates.some((option) => rowKeys.has(option.key))).toBe(false);
+    // Objects beyond the top five, below the bar, in their picker form, with the window as the detail.
+    const m3 = candidates.find((option) => option.key === "M3");
+    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:45" });
+    expect(m3?.names).toContain("NGC 5272");
+    expect(candidates.map((option) => option.key)).toContain("NGC4244");
+    // Mercury and the Moon have no window tonight, so they are not offered; a planet that has one and is not a row would be.
+    expect(candidates.map((option) => option.key)).not.toContain("mercury");
+    expect(candidates.map((option) => option.key)).not.toContain("moon");
+    // Nothing offered twice, and the picker's order is kept (Messier, then the planets, then Caldwell).
+    const keys = candidates.map((option) => option.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys.indexOf("M3")).toBeLessThan(keys.indexOf("NGC4244"));
+    // Dropping a row offers it back.
+    const dropped = planOf(build({}, { planEdits: ["M31"], withPlanCandidates: true }));
+    expect(dropped.candidates?.map((option) => option.key)).toEqual(expect.arrayContaining(["M39", "jupiter", "M45"]));
+    expect(dropped.candidates?.map((option) => option.key)).not.toContain("M31");
+    // Not for the evening after.
+    expect(planOf(build({}, { night: "next", withPlanCandidates: true })).candidates).toBeNull();
+  });
+
+  it("words the candidates' windows in Polish too", () => {
+    const view = buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
+        now: NOW,
+      },
+      "pl",
+      { withSessionPlan: true, withPlanCandidates: true },
+    );
+    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:45");
+  });
+
+  it("reads the tile's next target in the user's order: the first row whose window has not ended", () => {
+    // 03:30 local: M3's window ended at 19:45, M31's runs to 05:20.
+    const late = new Date("2026-10-11T01:30:00Z");
+    const forecast = result(uniformForecast("2026-10-10T00:00:00Z", 5), false, new Date(late.getTime() - 20 * 60_000));
+    const plan = planOf(build({ now: late, forecast }, { planEdits: ["M3", "M31", "M13"] }));
+    expect(plan.rows.map((row) => row.key)).toEqual(["M3", "M31", "M13"]);
+    expect(plan.nextUp).toEqual({ kind: "next", index: 1 });
+    // Every window over: done.
+    expect(planOf(build({ now: late, forecast }, { planEdits: ["M3", "M13"] })).nextUp).toEqual({ kind: "done" });
+    // Before sunset: the first row in the user's order.
+    const noon = new Date("2026-10-10T10:00:00Z");
+    expect(
+      planOf(
+        build(
+          { now: noon, forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5), false, noon) },
+          { planEdits: ["M13", "M31"] },
+        ),
+      ).nextUp,
+    ).toEqual({ kind: "first", index: 0 });
+  });
+
+  it("builds an added row's curve over the same axis grid, and reuses the sky view's tracks on the dashboard", () => {
+    const alone = planOf(build({}, { planEdits: ["M13", "M3"] }));
+    const withSky = planOf(build({}, { planEdits: ["M13", "M3"], withSkyView: true }));
+    expect(withSky.rows.map((row) => [row.key, row.track])).toEqual(alone.rows.map((row) => [row.key, row.track]));
+  });
+});
+
 describe("buildTonight's sky events (M-3 S-07)", () => {
   function build(
     overrides: Partial<Parameters<typeof buildTonight>[0]> = {},

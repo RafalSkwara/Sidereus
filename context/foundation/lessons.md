@@ -57,3 +57,10 @@
 - **Problem**: `deploy` runs only after `ci`, `smoke` and `migrate` pass, so an intermittent harness error on main (agent-hooks `write EPIPE`, CI runs 37992820410 and 38405588360) blocks a release that is otherwise green; rerunning hides it until it strikes on main again.
 - **Rule**: Gather the evidence first (every test passed? which line? earlier runs with the same signature?), rerun the failed job once only to classify it, then fix the cause in its own small change with a test that reproduces it deterministically and goes red before the fix (finder-chart follow-up, PR #156). Never add retries or weaken an assertion to get green.
 - **Applies to**: implement, impl-review
+
+## Wait for the service worker with `ready`, never on `controller` alone
+
+- **Context**: E2E specs that need the Sidereus service worker to control the page before they open Tonight pages and check stored copies (`offline.spec.ts`, `finder-offline.spec.ts`, `session-plan-store.spec.ts`, any new offline spec).
+- **Problem**: The worker registers on the first page and calls `clients.claim()`, but when it activates while a navigation is in flight, Chromium leaves the document that navigation creates uncontrolled, so `waitForFunction(() => navigator.serviceWorker.controller !== null)` never ends. Under CI load the install landed during the onboarding → `/tonight` redirect and the spec hit its 180 s timeout, then passed on retry, which `failOnFlakyTests` turns red (PR #165, CI run 38704238918).
+- **Rule**: Wait through `waitForServiceWorker(page)` in `tests/e2e/helpers.ts` (it awaits `navigator.serviceWorker.ready`, then reloads once if the page is still uncontrolled); `tests/e2e/service-worker-control.spec.ts` reproduces the race deterministically by holding the worker's `/offline` install fetch and a navigation in the proxy.
+- **Applies to**: implement, impl-review

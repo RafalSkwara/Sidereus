@@ -45,7 +45,7 @@ const { target, siteId, telescopeId, night = "tonight", from = null } = Astro.pr
 const m = getMessages(locale);
 const t = m.tonight;
 
-const loaded = await loadFinderFor(Astro.locals, { target, siteId, telescopeId, night });
+const loaded = await loadFinderFor(Astro.locals, { target, siteId, telescopeId, night, from });
 // The same memoised read the loader's guard made: no second query.
 const planRead = loaded.kind === "locked" ? await accountPlanForCopy(Astro.locals) : undefined;
 const name = target === null ? null : targetLabel(target, locale).id;

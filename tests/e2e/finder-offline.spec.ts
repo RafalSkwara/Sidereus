@@ -3,7 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+import {
+  finderLink,
+  inNoDarknessWindow,
+  onboardInMadrid,
+  requirePlanGrant,
+  setPlan,
+  waitForServiceWorker,
+} from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -66,7 +73,7 @@ test("a chart opened online opens from the device offline, and is gone once the 
     const page = await context.newPage();
     const email = await onboardInMadrid(page, "e2e-finder-offline");
     await setPlan(email, "full");
-    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await waitForServiceWorker(page);
 
     // Online: Targets, then M13's chart from its link; both pairs are committed.
     await page.goto("/tonight/targets");

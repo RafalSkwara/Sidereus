@@ -49,7 +49,8 @@ const targets = view.summaryTargets.map((entry) => ({
 }));
 const anyNotSeen = targets.some((target) => target.notSeenYet);
 
-// Session plan: the row the server's `nextUp` points at (by best time, named as the live sky's markers name it).
+// Session plan: the row the server's `nextUp` points at (by best time, or in the user's order on an edited plan,
+// adjustable-session-plan D13; named as the live sky's markers name it).
 const plan = view.sessionPlan;
 const nextUp = plan?.nextUp ?? null;
 const nextRow = plan && nextUp && nextUp.kind !== "done" ? (plan.rows[nextUp.index] ?? null) : null;

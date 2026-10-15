@@ -104,6 +104,21 @@ export interface WashedOutEntry<O extends RankableObject = RankableObject> {
   peak: HorizontalPosition;
 }
 
+/**
+ * An object the telescope can reach tonight: it has a score, so its best window over the dark window exists. Cleared,
+ * washed-out and below-bar objects alike (adjustable-session-plan: what the Session plan's "add" offers).
+ */
+export interface ReachableEntry<O extends RankableObject = RankableObject> {
+  object: O;
+  window: BestWindow;
+  /** Where the object is at the highest sample of its best window. */
+  peak: HorizontalPosition;
+  /** Tonight's Moon washes it out (`ObjectScore.washedOut`). */
+  washedOut: boolean;
+  /** It cleared `MIN_OBJECT_SCORE` and is not washed out: it is, or could be, ranked (below the listed ones, a rank). */
+  cleared: boolean;
+}
+
 export interface Ranking<
   O extends RankableObject = RankableObject,
   E extends EyepieceOpticsInput = EyepieceOpticsInput,
@@ -115,6 +130,11 @@ export interface Ranking<
   /** Every washed-out object, by best time (ties: Messier number, then id); not capped by `limit`. */
   washedOut: WashedOutEntry<O>[];
   washedOutCount: number;
+  /**
+   * Every object with a score (a best window over the dark window, within the telescope's reach), in catalogue order and
+   * not capped by `limit`: the cleared, the washed-out and the ones below the bar.
+   */
+  reachable: ReachableEntry<O>[];
   telescopeId: string;
 }
 
@@ -207,6 +227,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
 
   const scored: { object: O; score: ObjectScore; seen: SeenSummary | null; rankScore: number }[] = [];
   const washedOut: WashedOutEntry<O>[] = [];
+  const reachable: ReachableEntry<O>[] = [];
   catalogue.forEach((object, i) => {
     const score = scoreObject({
       object,
@@ -217,6 +238,15 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
       bortle,
       apertureMm: telescope.apertureMm,
     });
+    if (score !== null) {
+      reachable.push({
+        object,
+        window: score.window,
+        peak: score.window.peak,
+        washedOut: score.washedOut,
+        cleared: !score.washedOut && score.total >= MIN_OBJECT_SCORE,
+      });
+    }
     if (score?.washedOut) {
       washedOut.push({ object, window: score.window, peak: score.window.peak });
     } else if (score !== null) {
@@ -252,6 +282,7 @@ export function rankObjects<O extends RankableObject, E extends EyepieceOpticsIn
     entries,
     washedOut,
     washedOutCount: washedOut.length,
+    reachable,
     telescopeId: telescope.id,
   };
 }

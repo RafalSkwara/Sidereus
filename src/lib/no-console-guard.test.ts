@@ -40,6 +40,11 @@ const ALLOWED_DISABLES: Partial<Record<string, { count: number; reason: string }
     reason:
       "the Session plan's and the sky events' failure traces: a fixed line and the error's name only, never its message",
   },
+  "src/lib/tonight/load.ts": {
+    count: 1,
+    reason:
+      "the saved Session plan's failed read trace: a fixed line, the step word and the cause's code or name, never a message or anything from the request",
+  },
   "src/lib/observations/celebrate.ts": {
     count: 1,
     reason: "the milestone failure trace: a fixed line and the error's and its cause's names, never a message",

@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, signOut } from "./helpers";
+import { onboardInMadrid, signOut, waitForServiceWorker } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -52,7 +52,7 @@ test("Tonight pages opened online are there offline, and signing out removes the
     const email = await onboardInMadrid(page, "e2e-offline");
 
     // Online: the worker controls the page, then both pages are opened and their pairs committed.
-    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await waitForServiceWorker(page);
     await page.goto("/tonight");
     await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
     await page.goto("/tonight/plan");

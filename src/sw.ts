@@ -11,6 +11,7 @@ import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from "workbox-
 import { registerRoute } from "workbox-routing";
 import type { RouteHandlerCallbackOptions, RouteMatchCallbackOptions } from "workbox-core/types.js";
 
+import { createCoalescer } from "@/lib/offline/coalesce";
 import {
   FINDER_PAGE,
   INDEX_KEY,
@@ -18,6 +19,7 @@ import {
   addAssets,
   answerTime,
   assetUrlsIn,
+  awaitsNetwork,
   chooseCopy,
   commitPair,
   copyMetaFor,
@@ -37,6 +39,7 @@ import {
   referencedAssetKeys,
   referencedKeys,
   shellKeyFor,
+  storeRequestFrom,
   storedPageOf,
   type CopyIndex,
   type CopyMeta,
@@ -508,18 +511,105 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
   }
 }
 
+/**
+ * `store-page` requests, one run per page at a time: a request that arrives while one is in flight is not dropped, it
+ * marks the page dirty and the store runs once more, for the latest request, after the current one (F2 b), so the
+ * device never keeps list A when the server has B. The unit is `createCoalescer`.
+ */
+const storePageOnce = createCoalescer<{ url: URL; clientId: string }>(({ url, clientId }) =>
+  storePageRun(url, clientId),
+);
+
+function storePageNow(url: URL, clientId: string): Promise<void> {
+  return storePageOnce(pathKey(url), { url, clientId });
+}
+
+/**
+ * A page asked for its own fresh copy (`store-page`, adjustable-session-plan D7 b): after a save the stored plan page
+ * would otherwise show the old list until the next visit, because the toast URL itself is never stored. Fetches the
+ * clean shell and its island as the next-night copy does and commits them through the same rules (`copyMetaFor`, the
+ * scope taken first, `commit`), tonight's kind only, with no next-night copy. The replaced pair's files stay with the
+ * new one, so what its page loaded late is still there offline. Best effort: any failure keeps the previous copy.
+ */
+async function storePageRun(url: URL, clientId: string): Promise<void> {
+  const target = storedPageOf(url);
+  if (!target || target.page === FINDER_PAGE) return;
+  const shellPath = pathKey(url);
+  try {
+    // Taken before the fetches, like a navigation's: a purge meanwhile makes this commit find another scope.
+    const scope = await currentScope();
+    const signal = AbortSignal.timeout(BACKGROUND_TIMEOUT_MS);
+    const shellResponse = await fetch(shellPath, { credentials: "same-origin", redirect: "manual", signal });
+    if (!isHtml200(shellResponse)) return;
+    const shell = await shellResponse.text();
+    const islandUrl = islandUrlFromShell(shell);
+    if (!islandUrl) return;
+    const islandResponse = await fetch(islandUrl, { credentials: "same-origin", signal });
+    if (!isHtml200(islandResponse)) return;
+    const body = await islandResponse.text();
+    const island = copyMetaFor(target.page, new URL(shellPath, "http://localhost"), body);
+    // Tonight's copy of the page asked for: a different kind or site is not what the page asked to be stored.
+    if (island?.kind !== "tonight" || (target.siteId !== undefined && island.siteId !== target.siteId)) return;
+    const client = await tonightClient(clientId);
+    const earlier = await serial(async () => {
+      const index = await readIndex(await caches.open(TONIGHT_CACHE));
+      return (index?.copies ?? []).filter(
+        (copy) =>
+          copy.siteId === island.siteId && copy.page === target.page && copy.target === null && copy.kind === "tonight",
+      );
+    });
+    const meta: CopyMeta = {
+      ...island,
+      page: target.page,
+      shellKey: shellKeyFor(islandUrl),
+      islandUrl,
+      storedAt: new Date().toISOString(),
+      assets: [
+        ...new Set([
+          ...earlier.flatMap((copy) => copy.assets),
+          ...assetUrlsIn(shell),
+          ...assetUrlsIn(body),
+          ...(client?.assets ?? []),
+        ]),
+      ].sort(),
+    };
+    const index = await commit(
+      meta,
+      { body: shell, contentType: shellResponse.headers.get("content-type") ?? "text/html" },
+      { body, contentType: islandResponse.headers.get("content-type") ?? "text/html" },
+      scope,
+    );
+    if (!index) return;
+    client?.islands.add(islandUrl);
+    await afterCommit(meta.assets);
+  } catch {
+    // Offline or timed out: the stored copy stays, and the next visit replaces it.
+  }
+}
+
 // --- Serving -------------------------------------------------------------------------------------------------------
 
 /**
  * The network's answer, or the stored one when the network fails or takes longer than the timeout. With nothing
- * stored, a slow network is still waited for: a slow page beats no page.
+ * stored, a slow network is still waited for: a slow page beats no page. With `waitForNetwork` (the landing after a
+ * plan save, `awaitsNetwork`) there is no timeout at all: the stored copy answers only when the fetch itself fails.
  */
 async function networkFirst(
   request: Request,
   stored: () => Promise<Response | undefined>,
+  waitForNetwork = false,
 ): Promise<{ response: Response; fromNetwork: boolean; network: Promise<Response> }> {
   // Also returned: when the stored copy wins, the network's late answer is still worth reading.
   const network = fetch(request);
+  if (waitForNetwork) {
+    try {
+      return { response: await network, fromNetwork: true, network };
+    } catch (error) {
+      const response = await stored();
+      if (response) return { response, fromNetwork: false, network };
+      throw error;
+    }
+  }
   const fromNetwork = network.then((response) => ({ response, fromNetwork: true, network }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timedOut = new Promise<Response | undefined>((resolve) => {
@@ -612,8 +702,10 @@ registerRoute(
     const scope = currentScope();
     void scope.catch(() => undefined);
     try {
-      const { response, fromNetwork, network } = await networkFirst(request, () =>
-        storedPage(target.page, target.siteId, target.target),
+      const { response, fromNetwork, network } = await networkFirst(
+        request,
+        () => storedPage(target.page, target.siteId, target.target),
+        awaitsNetwork(url),
       );
       const settle = (answer: Response, late: boolean) =>
         afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(() => undefined);
@@ -689,7 +781,8 @@ self.addEventListener("activate", (event) => {
 // A worker started after a while (the browser stops idle ones) expires what is due, even with no page opened online.
 void sweepSoon().catch(() => undefined);
 
-// Two messages: a page rendered signed out asks for a purge; the /offline page lists the stored pages (the copy each
+// Three messages: a page rendered signed out asks for a purge; the plan page asks for its own fresh copy after a save
+// (`store-page`, validated by `storeRequestFrom`, no reply); the /offline page lists the stored pages (the copy each
 // would serve now, one per site and page).
 self.addEventListener("message", (event) => {
   const data: unknown = event.data;
@@ -697,6 +790,12 @@ self.addEventListener("message", (event) => {
   const type = typeof data === "object" && data !== null ? (data as { type?: unknown }).type : undefined;
   if (type === "purge") {
     event.waitUntil(purgeSignedOut().catch(() => undefined));
+    return;
+  }
+  const request = storeRequestFrom(data, self.location.origin);
+  if (request) {
+    const clientId = event.source && "id" in event.source ? event.source.id : "";
+    event.waitUntil(storePageNow(request, clientId).catch(() => undefined));
     return;
   }
   const port = event.ports.at(0);

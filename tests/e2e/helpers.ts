@@ -199,6 +199,26 @@ export async function setPlan(email: string, plan: "full" | "free") {
 }
 
 /**
+ * Whether tonight's Session plan can be edited (adjustable-session-plan, F10, F8): waits for the plan island's readiness
+ * marker (`data-session-plan-state`, not `[data-offline-copy]` alone, which the failure states omit) and says whether it
+ * reads `suggested` or `edited`, the two states the edits apply in. Only `held` (a list saved for a night that does not
+ * pass, the one legitimate reason) is `false`, and a spec skips on it with
+ * `test.skip(!(await planEditable(page)), "…")`. `locked`, `unavailable` or a missing marker fail the test: for a
+ * full-plan user on the fixture's clear night they mean a regression (a broken plan or `session_plans` read), never a
+ * reason to skip.
+ */
+export async function planEditable(page: Page): Promise<boolean> {
+  const area = page.locator("[data-session-plan-state]");
+  await expect(area, "the plan island must render its readiness marker").toBeAttached();
+  const state = await area.getAttribute("data-session-plan-state");
+  expect(
+    state,
+    "tonight's plan must be editable (suggested or edited) or held; locked or unavailable means the plan or the saved list could not be read",
+  ).toMatch(/^(suggested|edited|held)$/);
+  return state !== "held";
+}
+
+/**
  * Smoke's no-darkness window at its 52° N site (8 June to 2 July), where the ranking can be empty. Madrid keeps its
  * darkness all year, so this only errs on the safe side.
  */
@@ -217,4 +237,19 @@ export async function finderLink(page: Page, target: string): Promise<Locator> {
     await row.locator("summary").click();
   }
   return row.getByRole("link", { name: en.tonight.finder.linkLabel({ target }) });
+}
+
+/**
+ * Waits until the service worker controls `page`: first until it is active (`navigator.serviceWorker.ready`), then,
+ * if the page is still not controlled, reloads it once. Waiting on `controller` alone can hang for ever: when the worker
+ * activates while a navigation is in flight, Chromium leaves the document it creates uncontrolled although the worker
+ * calls `clients.claim()` (the session-plan-store flake, CI run 38704238918; `service-worker-control.spec.ts`), and a
+ * navigation that starts once the worker is active is always controlled.
+ */
+export async function waitForServiceWorker(page: Page) {
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  if (await page.evaluate(() => navigator.serviceWorker.controller === null)) await page.reload();
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
 }
