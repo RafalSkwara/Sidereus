@@ -56,8 +56,11 @@ export interface ExpectDivergence extends ExpectReference {
 
 const ACCESSED = "2026-10-14";
 
-function source(title: string, publisher: string, url: string): ExpectSource {
-  return { title, publisher, url, accessed: ACCESSED };
+/** Pages added by the small-scope-galaxies change were verified by its plan review on this day. */
+const ACCESSED_SMALL_SCOPE = "2026-10-15";
+
+function source(title: string, publisher: string, url: string, accessed: string = ACCESSED): ExpectSource {
+  return { title, publisher, url, accessed };
 }
 
 const SRC = {
@@ -225,6 +228,60 @@ const SRC = {
     "Coma Cluster of Galaxies (Abell 1656)",
     "Deep Sky Watch (Michael Vlasov)",
     "https://www.deepskywatch.com/Astrosketches/coma-cluster-sketch.html",
+  ),
+  ASTRONOMY_DEEP_SKY_DELIGHTS: source(
+    "Explore deep-sky delights",
+    "Astronomy magazine",
+    "https://www.astronomy.com/observing/explore-deep-sky-delights/",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  TELESCOPE_ADVISOR_FIND_ANDROMEDA: source(
+    "How to find the Andromeda Galaxy",
+    "Telescope Advisor",
+    "https://www.telescopeadvisor.com/how-to-find-andromeda-galaxy-telescope/",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  TELESCOPE_ADVISOR_ANDROMEDA_CITY: source(
+    "Can you see the Andromeda Galaxy from a city",
+    "Telescope Advisor",
+    "https://www.telescopeadvisor.com/can-you-see-andromeda-galaxy-from-city/",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  SKYHOUND_M31: source(
+    "M31 (Skyhound, with the Astronomy magazine text)",
+    "Skyhound",
+    "https://observing.skyhound.com/archives/oct/M_31.html",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  FREE_STAR_CHARTS_M33: source(
+    "Messier 33",
+    "freestarcharts.com",
+    "https://freestarcharts.com/messier-33",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  STARLUST_M81: source(
+    "M81 and M82 galaxies",
+    "Starlust",
+    "https://starlust.org/m81-and-m82-galaxies",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  NATIONAL_GEOGRAPHIC_M81: source(
+    "Week's night sky: Jupiter, galaxies",
+    "National Geographic",
+    "https://www.nationalgeographic.com/science/article/160425-weeks-night-sky-jupiter-galaxies-space-astronomy",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  FREE_STAR_CHARTS_M101: source(
+    "Messier 101",
+    "freestarcharts.com",
+    "https://freestarcharts.com/messier-101",
+    ACCESSED_SMALL_SCOPE,
+  ),
+  TELESCOPE_ADVISOR_M101: source(
+    "Pinwheel Galaxy (M101) telescope guide",
+    "Telescope Advisor",
+    "https://www.telescopeadvisor.com/pinwheel-galaxy-m101-telescope-guide/",
+    ACCESSED_SMALL_SCOPE,
   ),
 } as const;
 
@@ -409,6 +466,82 @@ export const EXPECT_REFERENCES: readonly ExpectReference[] = [
     sources: [SRC.ASTRONOMY_NOW_M33, SRC.SKY_TELESCOPE_BORTLE],
     note: "Pins the `limit` band for a ranked object whose deficit is above the washed-out threshold (3.5 mag). Astronomy Now: under an urban sky it melts into the background. Sky & Telescope (WebSearch summary only): class 4 or better is needed by eye, and it is difficult even there.",
   },
+  {
+    id: "M31",
+    apertureMm: 60,
+    bortle: 5,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [
+      SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION,
+      SRC.ASTRONOMY_DEEP_SKY_DELIGHTS,
+      SRC.TELESCOPE_ADVISOR_FIND_ANDROMEDA,
+    ],
+    note: "Small-scope entry (small-scope-galaxies, issue 159). Telescope Advisor's table: bright galaxies (M31, M81, M82) are 'Detectable but faint' at Bortle 5-6. Astronomy: 'M31's bright central core will pierce all but the worst sky glow'. Telescope Advisor, how to find it: the core 'is visible from suburban skies (Bortle 5-6) through binoculars or a small telescope', and a 50-70 mm shows 'A large, elongated grey patch. The core region appears brighter and slightly oval'. A faint grey smudge with a slightly brighter middle: 'galaxySmudge'. Counter-evidence (owner decision OD-2 a): Astronomy's 'pierces all but the worst sky glow' and Astronomy Now's 'the bright nucleus ... easy targets for small telescopes' could be read as 'galaxyBright' at Bortle 5.",
+  },
+  {
+    id: "M31",
+    apertureMm: 60,
+    bortle: 6,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [
+      SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION,
+      SRC.ASTRONOMY_DEEP_SKY_DELIGHTS,
+      SRC.TELESCOPE_ADVISOR_FIND_ANDROMEDA,
+    ],
+    note: "Small-scope entry (small-scope-galaxies, issue 159): the same three pages as the Bortle 5 entry. 'Detectable but faint' at Bortle 5-6; the core 'will pierce all but the worst sky glow'; core visible from Bortle 5-6 in a small telescope, a 50-70 mm shows 'A large, elongated grey patch' with a brighter core. This is the case of issue 159: the line must not read 'very faint' beside 'Bright for your 60 mm'.",
+  },
+  {
+    id: "M31",
+    apertureMm: 60,
+    bortle: 8,
+    kind: "hard",
+    expected: "galaxyFaint",
+    sources: [
+      SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION,
+      SRC.TELESCOPE_ADVISOR_FIND_ANDROMEDA,
+      SRC.SKYHOUND_M31,
+      SRC.TELESCOPE_ADVISOR_ANDROMEDA_CITY,
+    ],
+    note: "Small-scope entry (small-scope-galaxies). Telescope Advisor's table: 'Very difficult' at Bortle 7-8 for bright galaxies. Telescope Advisor, how to find it: 'From heavily light-polluted city centres (Bortle 7+), it becomes very difficult'. Skyhound (Astronomy magazine's text): 'From a relatively light-polluted location all you will see is the feeble glow of the nucleus.' Telescope Advisor, from a city: Bortle 8 'Compact oval core, limited halo'. No source gives an aperture of 70 mm or less at Bortle 7-8: the 'Compact oval core' row is for binoculars or a 4-8 inch scope at low power, so 60 mm is an extrapolation from it. The entry stays as the hard case that sets the lower edge of the window of `EXPECT_BULGE_CORE_EXTRA_MAG` (plan review F5). Dissenting: Astronomy's 'pierces all but the worst sky glow'.",
+  },
+  {
+    id: "M33",
+    apertureMm: 80,
+    bortle: 4,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [SRC.ASTRONOMY_NOW_M33, SRC.FREE_STAR_CHARTS_M33],
+    note: "Small-scope entry (small-scope-galaxies). Astronomy Now: from a dark site M33 is 'a fine sight through binoculars or a small, wide-field refractor'. freestarcharts: 'An 80mm (3.1-inch) scope shows the galaxy as a very large diffuse patch of light'. A faint grey smudge: 'galaxySmudge'.",
+  },
+  {
+    id: "M81",
+    apertureMm: 80,
+    bortle: 5,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [SRC.STARLUST_M81, SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION, SRC.NATIONAL_GEOGRAPHIC_M81],
+    note: "Small-scope entry (small-scope-galaxies). Starlust: M81 is 'bright enough to be visible in 7x50 binoculars in suburban skies'. Telescope Advisor's table: 'Detectable but faint' at Bortle 5-6. National Geographic: it can be located easily with binoculars and backyard telescopes 'even from light-polluted suburbia' (partial quote). Counter-evidence: Telescope Advisor's own M81 page (`TELESCOPE_ADVISOR_M81` in the Bortle 4 showcase entry) says it is visible 'in any telescope with at least 80mm ... under dark skies'.",
+  },
+  {
+    id: "M101",
+    apertureMm: 80,
+    bortle: 3,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [SRC.FREE_STAR_CHARTS_M101, SRC.TELESCOPE_ADVISOR_M101, SRC.ASTRONOMY_M101],
+    note: "Small-scope entry (small-scope-galaxies, owner decision OD-1 a: the line decides, not an extra rank rule). freestarcharts: 'Small 80mm (3.1-inch) refractors display a large nebulous haze with a brighter centre', and 'dark moonless skies are a must'. Telescope Advisor: '80mm sees the core' under dark skies. Astronomy: 'The core is relatively easy to observe in small scopes'. Counter-evidence: Telescope Advisor's 100 mm line is 'Large diffuse oval glow with a brighter centre. Very low contrast. Averted vision essential.', which reads as 'galaxyFaint'.",
+  },
+  {
+    id: "M101",
+    apertureMm: 80,
+    bortle: 6,
+    kind: "hard",
+    expected: "galaxyLimit",
+    sources: [SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION, SRC.TELESCOPE_ADVISOR_M101, SRC.FREE_STAR_CHARTS_M101],
+    note: "Small-scope entry (small-scope-galaxies, issue 21 item 3). Telescope Advisor's table: faint galaxies (M101, Leo Triplet) 'need Bortle 4 or better' and are 'Difficult' at Bortle 5-6. Telescope Advisor, M101: 'M101 is strongly affected by light pollution'. freestarcharts: in light-polluted areas it is sometimes difficult to spot even with 200 mm scopes. At the edge of what the sky allows: 'galaxyLimit'.",
+  },
 ];
 
 /**
@@ -439,5 +572,17 @@ export const KNOWN_DIVERGENCES: readonly ExpectDivergence[] = [
     computed: "galaxySmudge",
     reason:
       "Permitted change D-2 (d) stops a galaxy this far from the limit being 'galaxyBright' and it takes 'galaxySmudge'. Taking it to 'galaxyFaint' needs a wider near-limit floor (`EXPECT_NEAR_LIMIT_MAG` 1.0 to about 1.5), which is a retune of a starting value that D-2 does not list among the permitted changes.",
+  },
+  {
+    id: "M33",
+    apertureMm: 80,
+    bortle: 6,
+    kind: "hard",
+    expected: "galaxyLimit",
+    sources: [SRC.ASTRONOMY_DEEP_SKY_DELIGHTS, SRC.ASTRONOMY_NOW_M33, SRC.FREE_STAR_CHARTS_M33],
+    note: "Small-scope entry (small-scope-galaxies). Astronomy: 'spotting it using binoculars through light-polluted suburban skies is challenging enough'. Astronomy Now: 'Under an urban or even a suburban sky on an inferior night, M33 can appear lacking in contrast'. freestarcharts: 'even a small amount of light pollution can render it invisible'. At the edge of what the sky allows: 'galaxyLimit'.",
+    computed: "galaxyFaint",
+    reason:
+      "The deficit is 2.47 against the `limit` threshold `EXPECT_FAINT_BELOW` of 2.5. The disc-type core is calibrated on the 150 mm entries (M33 and M101 at Bortle 4 and 7), and moving it 0.03 mag to fit one entry would be fitting noise.",
   },
 ];

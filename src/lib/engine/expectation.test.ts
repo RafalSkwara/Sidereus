@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { DEEP_SKY, findDeepSky } from "@/lib/catalogue";
 
-import { EXPECTATION_KEYS, contrastBand, expectationFor } from "./expectation";
-import type { ContrastBand, ExpectationKey, ExpectationObject } from "./expectation";
+import { contrastBand, telescopeLimitingMag } from "./contrast";
+import type { ContrastBand } from "./contrast";
+import { EXPECTATION_KEYS, expectationFor } from "./expectation";
+import type { ExpectationKey, ExpectationObject } from "./expectation";
 import { EXPECT_REFERENCES, KNOWN_DIVERGENCES } from "./fixtures/expect-reference";
 import { EXPECT_STARLIKE_ARCMIN, EXPECT_WIDE_ARCMIN } from "./parameters";
-import { telescopeLimitingMag } from "./score";
 
 /**
  * The "what to expect" rule (M-3 S-04, what-to-expect D-2, D-3, D-6): which of 22 phrase keys an object takes from
@@ -24,7 +25,7 @@ const GLOBULAR_RANK: Partial<Record<ExpectationKey, number>> = {
 };
 
 function object(over: Partial<ExpectationObject> & Pick<ExpectationObject, "type">): ExpectationObject {
-  return { vMag: 8, majorAxisArcmin: 5, minorAxisArcmin: null, ...over };
+  return { vMag: 8, majorAxisArcmin: 5, minorAxisArcmin: null, hubble: null, ...over };
 }
 
 function catalogued(id: string): NonNullable<ReturnType<typeof findDeepSky>> {
@@ -176,6 +177,14 @@ describe("expectationFor: the reference fixture (D-6)", () => {
     ["NGC7000", 4, 150],
     ["NGC4889", 4, 150],
     ["M33", 9, 150],
+    ["M31", 5, 60],
+    ["M31", 6, 60],
+    ["M31", 8, 60],
+    ["M33", 4, 80],
+    ["M81", 5, 80],
+    ["M101", 3, 80],
+    ["M101", 6, 80],
+    ["M33", 6, 80],
   ];
   const ALL = [...EXPECT_REFERENCES, ...KNOWN_DIVERGENCES];
 

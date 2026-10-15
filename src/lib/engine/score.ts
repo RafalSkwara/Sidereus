@@ -1,5 +1,6 @@
 import type { DeepSkyObject } from "@/lib/catalogue";
 
+import { telescopeLimitingMag } from "./contrast";
 import type { MoonState } from "./moon";
 import { effectiveSurfaceBrightness, moonBrighteningMag, nlToMag, skyBrightnessNL } from "./moonlight";
 import { bestWindow } from "./objects";
@@ -7,7 +8,6 @@ import type { BestWindow } from "./objects";
 import {
   BRIGHTNESS_RAMP_MAG,
   EXTINCTION_V,
-  EYE_PUPIL_REFERENCE_MM,
   LOW_INTEREST_PENALTY,
   LOW_INTEREST_TYPES,
   MIN_OBJECT_SCORE,
@@ -22,9 +22,11 @@ import {
   bortlePenaltyForBortle,
   darkSkyZenithMagForBortle,
   moonlightSensitivity,
-  nakedEyeLimitingMagForBortle,
 } from "./parameters";
 import type { HorizontalPosition } from "./types";
+
+// The one definition lives in `contrast.ts` (it needs it for its near-limit floor); kept here for existing imports.
+export { telescopeLimitingMag };
 
 /**
  * The object score (PRD Open Question 1): four components on a 0-1 scale and their weighted total.
@@ -86,11 +88,6 @@ function indexOfTime(track: readonly HorizontalPosition[], time: Date, from: num
     }
   }
   throw new Error("scoreObject: window instant is not a sample of the track");
-}
-
-/** Limiting magnitude through the telescope: naked-eye limit for the sky plus the aperture's gain. */
-export function telescopeLimitingMag(bortle: number, apertureMm: number): number {
-  return nakedEyeLimitingMagForBortle(bortle) + 5 * Math.log10(apertureMm / EYE_PUPIL_REFERENCE_MM);
 }
 
 function skyPenalty(object: ScoredObject, bortle: number): number {
