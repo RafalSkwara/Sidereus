@@ -95,3 +95,33 @@ The phone spec now hides the line's `mt-line` wrapper too (`:has(> [data-verdict
 Break check: a second `mt-1` (the h2 back to a numeric step) in `VerdictCard.astro` failed the guard twice: the numeric step, and `mt-1` used more often than allowed. Restored with `git checkout --`, 104/104.
 
 E2E (2.4): `tonight-dashboard tonight-phone sky-events tonight-sky red-night-mode planets-on-tonight what-to-expect offline`: 27 passed. Gates: `astro check` 0/0, lint clean, `npm test` 122 files / 2338 passed, build OK.
+
+## Phase 3 (rules, gate, landing), 2026-10-15
+
+`after/` now holds the final build: `dashboard.mjs` over dark / light / red × EN / PL × phone / desktop, plus dark EN / PL at 320 px (`narrow`), written under the `before/` names (the Phase 1 files of the same name are overwritten) as JPEGs at quality 45 (620 px for phone and narrow tiles and folds, 900 px desktop tiles, 1400 px phone full pages, 1000 px desktop full pages). The `c-verdict-event-*` and `*-noforecast-*` files are the Phase 2 ones, kept.
+
+`dashboard.mjs --measure` on the final build (dark; the preview's fixture night; px). The Events row wraps at 320 PL and the Planets row is taller at 320 EN today (the planets line is longer on this date), so the 320 column differs from Phase 1.
+
+```
+                 first screen (headline / Site / Telescope title / TabBar)   tiles real                    tiles skeleton
+EN 390           149 / 701 / 746 / 779                                       241 93 93 93 121 221          241 93 93 93 121 221
+PL 390           149 / 701 / 746 / 779                                       269 93 93 93 121 221          (same)
+EN 1280          (desktop: 208 / 868 / 757 / -)                              241 93 93 93 121 233          241 93 93 93 121 233
+EN 320           148 / 700 / 745 / 635 (not asserted)                        261 93 93 117 145 221         (same)
+PL 320           148 / 700 / 745 / 635 (not asserted)                        289 117 93 117 141 241        (same)
+```
+
+The page's skeleton/real difference (the script's `delta`, real minus skeleton; negative when the skeleton is taller): EN 390 -35, EN 1280 -36, PL 390 -7 (PL targets wrap on one more line), PL 1280 -36, 320 EN +32 and PL +100 (known 320 px wraps). The verdict container: 390 real 168.86 / skeleton 144.86 natural, both rendered 168.86 / 168; 1280 232 / 232.
+
+The landing image (review F5): no `[data-verdict-event]` on /tonight today. At 1280×1125 dark EN with the seeded user the first tile `[data-tonight-tiles] > a` spans y 876 to 1117 (241 px), so its bottom rule is at 1117. `VIEWPORT.height` in `tests/e2e/landing-screenshot.spec.ts` and `SCREENSHOT.height` in `src/components/Welcome.astro` went 1125 -> 1117 (the plan expected about 1105). `public/landing/tonight.png` was recaptured: 1280×1117, the picture ends on the first tile's rule.
+
+`after/` is 1.5 MB; `evidence/` is about 4.4 MB in total.
+
+Break check (3.1), on the clean, rebased tree (main 5d52a37): `mt-4` in `TonightTiles.astro`, `space-y-3` in `TonightSkeleton.astro` and the h2 back to `mt-1` in `VerdictCard.astro` failed the guard with `components/tonight/TonightTiles.astro:129 mt-4`, `components/tonight/TonightSkeleton.astro:83 space-y-3`, `components/tonight/VerdictCard.astro:100 mt-1` and `VerdictCard.astro: mt-1 allowed 1, used 2` (4 failed); then the skeleton's slow-hint `mt-6` removed failed the exact-count test (`TonightSkeleton.astro … exactly as many times`). Each time the files were restored by path (`git checkout -- <file>`), 104/104.
+
+Whole suite (3.2-3.4), on a fresh `npm run build` of the final tree, previewed on 4331 with the fixture on 4401 and `dist/server/.dev.vars` on the local stack, the keys inline:
+- `npm run test:e2e`: **76 passed, 4 skipped, 0 failed** (1.1 min). The skips are the specs' own conditions: the landing capture (only with `CAPTURE_LANDING=1`), the finder's no-darkness window, the Moon as a target, the `/tonight/all#washed-out` bookmark.
+- `npm run smoke`: **45/45 passed**.
+- `npx astro check` 0 errors / 0 warnings, `npm run lint` clean, `npm test` 122 files / 2338 passed, 1 skipped, 6 todo, `npm run build` OK.
+
+The agent's own check (3.5) of `after/` against `before/`, by the main session: at 390 px in dark, light and red, EN and PL, the tiles read as one family (the heading 8 px over its content, 40 px between tiles), the Events line leads with the Orionids' `Sparkle` on its first line, the Planets reason carries its Info icon, and the first screen keeps the headline, the Site card and the Telescope title above the TabBar; on desktop the verdict and the tiles hold the one-column layout with the same rhythm; the `/design` verdict specimens show each event line as its own fact with its kind's icon, the solar eclipse's `Eclipse` included. Nothing looked off.

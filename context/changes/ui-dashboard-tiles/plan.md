@@ -614,12 +614,12 @@ None.
 
 #### Automated
 
-- [ ] 3.1 The guard's break check fails on the three files and on the unused allowance, and is green after restoring exactly those files: `npx vitest run src/styles/rhythm-roles.test.ts`
-- [ ] 3.2 The whole e2e suite passes on a fresh build and preview (4331/4401), the way CI runs it: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` (counts recorded)
-- [ ] 3.3 Smoke passes: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run smoke`
-- [ ] 3.4 Types, lint, unit suite and build pass on the final tree: `npx astro check && npm run lint && npm test && npm run build`
+- [x] 3.1 The guard's break check fails on the three files and on the unused allowance, and is green after restoring exactly those files: `npx vitest run src/styles/rhythm-roles.test.ts`
+- [x] 3.2 The whole e2e suite passes on a fresh build and preview (4331/4401), the way CI runs it: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` (counts recorded)
+- [x] 3.3 Smoke passes: `BASE_URL=http://localhost:4331 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run smoke`
+- [x] 3.4 Types, lint, unit suite and build pass on the final tree: `npx astro check && npm run lint && npm test && npm run build`
 
 #### Manual
 
-- [ ] 3.5 The agent's own check of the after shots (EN/PL, dark/light/red, 390 px including the phone first screen, and desktop) against `evidence/before/`, recorded in `evidence/README.md`
+- [x] 3.5 The agent's own check of the after shots (EN/PL, dark/light/red, 390 px including the phone first screen, and desktop) against `evidence/before/`, recorded in `evidence/README.md`
 - [ ] 3.6 The owner accepts the dashboard, the verdict line specimens and the new landing image from `evidence/after/`
