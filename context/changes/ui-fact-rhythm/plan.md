@@ -895,9 +895,9 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks
-- [x] 5.2 `npm run build` succeeds
-- [x] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded
+- [x] 5.1 `npx astro check`, `npm run lint` and `npm test` pass; the guard goes red on both deliberate breaks — d4340e0
+- [x] 5.2 `npm run build` succeeds — d4340e0
+- [x] 5.3 The whole e2e suite and smoke pass against a fresh local preview, counts recorded — d4340e0
 
 #### Manual
 
