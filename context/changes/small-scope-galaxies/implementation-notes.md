@@ -91,4 +91,4 @@ Evidence the plan asks to record ("recorded in the phase notes"). Each phase was
   - `npm run test:e2e`: 76 passed and 4 skipped, in 1.2 min. The skips are conditional and depend on the date, the Moon or an opt-in flag: landing screenshot capture, the finder's no-darkness window, Moon as a target, and an old washed-out bookmark.
   - `npm test` on an idle machine: 2372 passed.
   - Three time-sensitive unit tests failed once while the e2e suite was running at the same time, and passed on their own and on an idle re-run: agent-hooks, the runner-zone guard and the no-hardcoded-colours scan.
-- **4.3:** the owner's manual checks in `manual-checks.md` are pending.
+- **4.3:** the four checks in `manual-checks.md` (the plan's Progress row says "three"; the fourth is the owner's F6 city-sky check) were run by the agent on 2026-10-15 under the owner's standing rule, all PASS, with screenshots in `evidence/` (08e5eec). None is pending (impl review F3).

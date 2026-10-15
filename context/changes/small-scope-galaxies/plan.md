@@ -97,6 +97,7 @@ The review is `reviews/plan-review.md`; every other finding is applied as the re
 - No change to `SCORE_WEIGHTS`, `MIN_OBJECT_SCORE`, the flat `bortlePenaltyForBortle`, `BRIGHTNESS_RAMP_MAG`, the duration term or the Moon term. Those are #21 items 1, 2, 4 and 5 (S-05 / later).
 - No new data source: HyperLEDA's half-light surface brightness was considered and rejected for this slice (research §5).
 - No regeneration of `calibration.test.ts` expectations or `beginner-reference.ts`. Elliptical galaxies are not in the bulge class.
+- No change to the divergence cap: `KNOWN_DIVERGENCES` is now full (3/3, `expectation.test.ts` allows at most 3), so the next diverging reference needs a rule fix or an owner decision about the cap (impl review F4). The OpenNGC V-magnitude errors behind M106 and 11 other galaxies are follow-up #178 (impl review F1).
 - No web lookups during implementation: every URL and quote below comes from research §4.
 
 ## Implementation Approach
@@ -404,7 +405,7 @@ Both stay candidates, judged without an observer.
 
 #### Manual Verification:
 
-- The owner runs the three checks in `manual-checks.md`
+- The owner runs the four checks in `manual-checks.md` (the fourth, the city-sky case, came with the owner's F6 decision; the Progress row 4.3 keeps its original title). Under the owner's standing rule the agent ran all four on 2026-10-15, with evidence in `evidence/` (impl review F3).
 
 ---
 

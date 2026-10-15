@@ -6,9 +6,10 @@ import { expectationFor } from "./expectation";
 import type { ExpectationKey } from "./expectation";
 import { EYEPIECES, WARSAW } from "./fixtures";
 import { observingNight } from "./night";
-import { darknessThresholdDegForBortle } from "./parameters";
+import { BRIGHTNESS_RAMP_MAG, GALAXY_FAINT_BRIGHTNESS_CAP, darknessThresholdDegForBortle } from "./parameters";
 import { rankObjects } from "./ranking";
 import type { Ranking } from "./ranking";
+import { telescopeLimitingMag } from "./score";
 import { darkWindow } from "./sun";
 import type { DarkWindow, Site } from "./types";
 
@@ -107,11 +108,17 @@ describe("a small telescope's ranking follows the what-to-expect line", () => {
     expect(place === null || place > 10, `M33 is #${place}`).toBe(true);
   });
 
-  // G4 (OD-1 a): a pin. The sources call M101 "a large nebulous haze with a brighter centre" in an 80 mm under dark
-  // skies, so it keeps the smudge line there; there is no rank assertion.
-  it("G4: M101 reads galaxySmudge at Bieszczady 2027-04-06, Bortle 3, 80 mm", () => {
-    expect(expectationFor(object("M101"), 3, 80)).toBe("galaxySmudge");
-    expect(rankOf(rank(BIESZCZADY_NIGHT, 3, 80), "M101"), "M101 is not listed").not.toBeNull();
+  // G4 (OD-1 a): the line decides. The sources call M101 "a large nebulous haze with a brighter centre" in an 80 mm
+  // under dark skies, so it keeps the smudge line there and with it its whole brightness credit (the headroom ramp,
+  // uncapped); there is no rank assertion. The credit check catches a cap that reaches the smudge band (impl review F5).
+  it("G4: M101 reads galaxySmudge at Bieszczady 2027-04-06, Bortle 3, 80 mm, with its brightness credit uncapped", () => {
+    const m101 = object("M101");
+    expect(expectationFor(m101, 3, 80)).toBe("galaxySmudge");
+    const entry = rank(BIESZCZADY_NIGHT, 3, 80).entries.find((e) => e.object.id === "M101");
+    expect(entry, "M101 is not listed").toBeDefined();
+    const ramp = Math.min(1, Math.max(0, (telescopeLimitingMag(3, 80) - m101.vMag) / BRIGHTNESS_RAMP_MAG));
+    expect(ramp).toBeGreaterThan(GALAXY_FAINT_BRIGHTNESS_CAP);
+    expect(entry?.score.components.brightness).toBeCloseTo(ramp, 12);
   });
 
   // G5 (plan review F2): the reason line never says "bright for your N mm" beside a faint line. Every galaxy on the

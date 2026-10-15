@@ -527,8 +527,9 @@ export const EXPECT_HUGE_NEBULA_ARCMIN = 100;
 /**
  * OpenNGC `Hubble` types of the bulge-type spirals, a concentrated bulge on a flatter disc (small-scope-galaxies
  * planning, 2026-10-15, owner decision OD-3 a: every bulge-type spiral, not an M31-only exception): S0 to Sb, plain
- * (`S`), intermediate (`SAB`) and barred (`SB`), exact strings as OpenNGC writes them (the pinned commit has these
- * twelve among the catalogue's galaxies). Ellipticals, the Sbc and later spirals and the irregulars are not in it:
+ * (`S`), intermediate (`SAB`) and barred (`SB`), exact strings as OpenNGC writes them. Eight of
+ * these occur among the catalogue's galaxies at the pinned commit (S0, S0-a, E-S0, Sa, SABa, Sab, Sb, SABb); SBa,
+ * SABab, SBab and SBb complete the class for a future pin bump. Ellipticals, the Sbc and later spirals and the irregulars are not in it:
  * the flat `BRIGHT_CORE_OFFSET_MAG` fits a disc-dominated galaxy (M33, M101, NGC 2403), and a blanket elliptical
  * term would brighten the low-surface-brightness dwarfs (NGC 4889 is already a known divergence in that direction).
  * `contrast.test.ts` fails when a catalogue galaxy's `hubble` is neither in this list nor in the test's explicit

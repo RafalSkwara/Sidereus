@@ -333,6 +333,27 @@ describe("scoreObject", () => {
         }
         expect(drops).toEqual([]);
       });
+
+      it("never rises under a worse sky, for every catalogue galaxy at every aperture (impl review F5)", () => {
+        const rises: string[] = [];
+        for (const object of DEEP_SKY.filter((o) => o.type === "galaxy")) {
+          for (const apertureMm of [60, 80, 100, 150, 200, 300]) {
+            let previous = Number.POSITIVE_INFINITY;
+            for (let bortle = 1; bortle <= 9; bortle++) {
+              // Under a worse sky the telescope's limit falls; a galaxy past it has no score, and stays past it.
+              const result = scoreObject(input({ object, bortle, apertureMm }));
+              if (result === null) {
+                break;
+              }
+              if (result.components.brightness > previous) {
+                rises.push(`${object.id} ${apertureMm} mm Bortle ${bortle}`);
+              }
+              previous = result.components.brightness;
+            }
+          }
+        }
+        expect(rises).toEqual([]);
+      });
     });
   });
 
