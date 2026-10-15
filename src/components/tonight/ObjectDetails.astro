@@ -1,9 +1,9 @@
 ---
-// The details of one ranked object: window and best time, eyepiece pair, reason and "Mark observed". Shown by the
-// Targets page's expandable rows (ObjectRow); Tonight's dashboard lists no details since tonight-dashboard.
-import { Eye } from "lucide-react";
-
+// The details of one ranked object: window and best time, then its facts in D5's order (ui-fact-rhythm): what you'll
+// see (the accent Eye), the eyepiece pair, why (muted), then "Mark observed". Shown by the Targets page's best five
+// (ObjectCard) and its expandable rows (ObjectRow); Tonight's dashboard lists no details since tonight-dashboard.
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
+import Fact from "@/components/ui/Fact.astro";
 import { getMessages } from "@/i18n";
 import type { ExpectationKey } from "@/lib/engine";
 import type { TonightEntry } from "@/lib/tonight/build";
@@ -37,29 +37,33 @@ const t = tonight.object;
   srSuffix={entry.label}
 >
   {expectation && (
-    /* The first of the slot's lines, above the eyepiece pair. `data-expect` carries the key: the bare attribute would
-       also match `data-expect-locked`, so smoke and e2e look for `data-expect="`. */
-    <p data-expect={expectation.key} class="flex items-start gap-2 text-label text-foreground">
-      <Eye className="mt-0.5 size-4 shrink-0 text-primary-strong" aria-hidden="true" />
-      <span class="min-w-0">{expectation.text}</span>
-    </p>
+    /* The first fact, above the eyepiece pair. `data-expect` carries the key on the fact's root, whose only text is the
+       phrase (the icon is an aria-hidden svg): the bare attribute would also match `data-expect-locked`, so smoke and
+       e2e look for `data-expect="`. */
+    <Fact kind="see" iconClass="text-primary-strong" data-expect={expectation.key}>
+      <span>{expectation.text}</span>
+    </Fact>
   )}
+  {/* No eyepieces, no eyepiece fact: "Find with" and the none-fit sentence stay out of the page. */}
   {entry.pair?.kind === "pair" && (
-    <div class="space-y-2">
-      <p class="text-label text-foreground">
+    <Fact kind="eyepiece">
+      <p>
         {t.findWith} <span class="font-semibold text-heading">{entry.pair.finding.name}</span>{" "}
         {t.magnification({ magnification: String(entry.pair.finding.magnification) })}
       </p>
       {/* The message reads on after "Find with …" in lower case: its own line starts with a capital. */}
-      <p class="text-label text-foreground first-letter:uppercase">
+      <p class="first-letter:uppercase">
         {t.detailWith} <span class="font-semibold text-heading">{entry.pair.detail.name}</span>{" "}
         {t.magnification({ magnification: String(entry.pair.detail.magnification) })}
       </p>
-    </div>
+    </Fact>
   )}
   {entry.pair?.kind === "none-fit" && (
-    <p class="text-label text-foreground">{t.noneFit({ name: entry.pair.widestName })}</p>
+    <Fact kind="eyepiece">
+      <p>{t.noneFit({ name: entry.pair.widestName })}</p>
+    </Fact>
   )}
-
-  <p class="text-label text-foreground">{entry.reason}</p>
+  <Fact kind="why" tone="muted">
+    <p>{entry.reason}</p>
+  </Fact>
 </TargetDetails>

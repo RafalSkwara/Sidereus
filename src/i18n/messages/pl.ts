@@ -547,10 +547,16 @@ export const pl = {
         clearHoursMissing: (p) =>
           `pogodnie w godz. ${p.hours}, ale w prognozie brakuje godziny między zmierzchem a świtem`,
       },
-      magnitude: (p) => `jasność ${p.mag} mag`,
+      factLabel: {
+        magnitude: "Jasność",
+        size: "Średnica kątowa",
+        phase: "Faza",
+        rings: "Pierścienie",
+      },
+      magnitude: (p) => `${p.mag} mag`,
       size: (p) => `${p.arcsec}″`,
-      phase: (p) => `faza ${p.percent}%`,
-      rings: (p) => `pierścienie nachylone o ${p.degrees}°`,
+      phase: (p) => `${p.percent}%`,
+      rings: (p) => `nachylone o ${p.degrees}°`,
       detailWith: "Do szczegółów:",
       reason: {
         high: {

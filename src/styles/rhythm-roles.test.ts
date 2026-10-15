@@ -31,6 +31,17 @@ const GUARDED: Record<string, readonly string[]> = {
   // The card's own padding and the value's nudge under its caption label.
   "components/ui/StatCard.astro": ["py-2", "mt-0.5"],
   "components/ui/StatPair.astro": [],
+  // Phase 3: Targets, Planets and the Moon (`scroll-mt-4` and the zeros are outside the pattern).
+  "components/tonight/TargetDetails.astro": [],
+  "components/tonight/ObjectDetails.astro": [],
+  "components/tonight/ObjectCard.astro": [],
+  // The 44 px summary of an expandable row.
+  "components/tonight/ObjectRow.astro": ["py-4"],
+  "components/tonight/PlanetCard.astro": [],
+  "components/tonight/MoonCard.astro": [],
+  "components/tonight/SolarSystemSection.astro": [],
+  // The pill's own padding (the plan listed none; the chip's py-0.5 is not rhythm).
+  "components/tonight/SeenTag.astro": ["py-0.5"],
 };
 
 /** Replaces comment text with spaces, keeping newlines so line numbers still match the file. */

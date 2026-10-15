@@ -855,25 +855,25 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Manual
 
-- [x] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked
-- [x] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c)
-- [x] 1.8 Owner checkpoint: the 320 px `c-item-rhythm` screenshots go to the owner, who picks 40 px in total or 40 px on each side
+- [x] 1.6 `/design` at 320 px and 1280 px in three themes, EN and PL: distinct roles, pair and fallbacks honest, desktop cap, Polish spacing, one icon per concept, red card and overline checked — 591db72
+- [x] 1.7 Owner checkpoint: the 320 px `c-stat-pair` screenshots go to the owner, who picks fallback (a), (b) or (c) — 591db72
+- [x] 1.8 Owner checkpoint: the 320 px `c-item-rhythm` screenshots go to the owner, who picks 40 px in total or 40 px on each side — 591db72
 
 ### Phase 2: Planet fact labels and value wording
 
 #### Automated
 
-- [ ] 2.1 Types, lint and the related tests pass in one run
-- [ ] 2.2 The whole unit suite passes: `npm test`
+- [x] 2.1 Types, lint and the related tests pass in one run
+- [x] 2.2 The whole unit suite passes: `npm test`
 
 ### Phase 3: Targets, Planets, the Moon and the finder's expect line
 
 #### Automated
 
-- [ ] 3.1 Types and lint pass
-- [ ] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass
-- [ ] 3.3 The affected specs pass against a fresh local preview
-- [ ] 3.4 The hardcoded-value scan over the changed view files prints nothing
+- [x] 3.1 Types and lint pass
+- [x] 3.2 `npm test` (with the guard's new rows) and `npm run build` pass
+- [x] 3.3 The affected specs pass against a fresh local preview
+- [x] 3.4 The hardcoded-value scan over the changed view files prints nothing
 
 #### Manual
 

@@ -40,6 +40,7 @@ import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
 import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import ObjectDetails from "@/components/tonight/ObjectDetails.astro";
+import MoonCard from "@/components/tonight/MoonCard.astro";
 import { Crosshair } from "lucide-react";
 import Fact from "@/components/ui/Fact.astro";
 import FactList from "@/components/ui/FactList.astro";
@@ -64,7 +65,7 @@ import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
-import { getMessages } from "@/i18n";
+import { getMessages, plural } from "@/i18n";
 import { EXPECTATION_KEYS, type MoonDiscState, type Verdict } from "@/lib/engine";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import type { ForecastResult } from "@/lib/forecast/service";
@@ -721,6 +722,56 @@ const rhythmRows = [
   commonName: localCommonName(row.id, row.commonName, locale),
   detailLine: fmt.objectDetailLine(null, row.constellation),
 }));
+// "What to expect"'s second row (ui-fact-rhythm): M13 again, now with a find/detail pair and a reason, so every fact
+// of a Targets row shows. The shared `sampleTarget` (also the tiles') stays as it is.
+const expectPairSample: TonightEntry = {
+  ...expectSample,
+  pair: {
+    kind: "pair",
+    finding: { name: sampleEyepieces.finding, magnification: Number(sampleEyepieces.findingX) },
+    detail: { name: sampleEyepieces.detail, magnification: Number(sampleEyepieces.detailX) },
+  },
+  reason: sampleReason,
+};
+// The Moon card with the Moon as a target (ui-fact-rhythm): the night at capture may not have one. One state, so the
+// slider shows the phase, the disc and its facts without a range; one MoonCard on the page keeps its clip id unique.
+const moonCardUp = {
+  kind: "part" as const,
+  spans: [{ start: new Date("2026-10-10T19:10:00Z"), end: new Date("2026-10-11T03:18:00Z") }],
+  upAtStart: false,
+};
+const moonCardWashedOut = 4;
+const moonTargetCard: NonNullable<TonightView["moonCard"]> = {
+  window: { start: "19:42", end: "05:18" },
+  windowKind: "dark",
+  states: [sampleMoon],
+  timeLabels: ["23:40"],
+  initialIndex: 0,
+  phaseText: fmt.moonPhaseText(sampleMoon.band, sampleMoon.illuminatedFraction),
+  upText: fmt.moonUpText(moonCardUp, SAMPLE_ZONE),
+  faintText: fmt.moonFaintText(moonCardUp, moonCardWashedOut, SAMPLE_ZONE),
+  target: {
+    key: "moon",
+    name: m.targets.moon,
+    windowStart: "19:42",
+    windowEnd: "03:18",
+    bestTime: "23:10",
+    bestAt: Date.UTC(2026, 9, 10, 21, 10),
+    bestDirection: "SE, 42°",
+    band: sampleMoon.band,
+    wholeDisc: { name: sampleEyepieces.finding, magnification: Number(sampleEyepieces.findingX) },
+    wholeDiscFits: true,
+    detail: { name: sampleEyepieces.detail, magnification: Number(sampleEyepieces.detailX) },
+    reason: m.tonight.moon.reason.line({ altitude: "42", time: "23:10", timing: m.tonight.moon.reason.timing.night }),
+    note: m.tonight.moon.note[sampleMoon.band],
+    seenText: null,
+    notSeenYet: true,
+  },
+};
+const moonCardWashedOutLink = {
+  href: "#c-moon-card",
+  label: plural(locale, moonCardWashedOut, m.tonight.pages.seeWashedOut)({ count: String(moonCardWashedOut) }),
+};
 
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
@@ -2010,6 +2061,27 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 A specimen of --spacing-item (1.25rem); the states are StatPair's and FactList's above
               </p>
             </section>
+
+            <!-- The Moon card with the Moon as a target (ui-fact-rhythm) -->
+            <section class:list={block} aria-labelledby="c-moon-card">
+              <h3 id="c-moon-card" class:list={blockTitle}>
+                MoonCard with the Moon as a target
+              </h3>
+              <p class:list={blockNote}>
+                The Moon page's band: the phase and the disc with its facts beside it in one FactList (when it is up,
+                what it does to faint objects), the washed-out link after them, then the target block at the item role
+                under its rule: the stat pair, the hairline, and what you'll see, the whole-disc and detail eyepieces
+                and why. One state, so no range; the real page adds the time slider under the disc.
+              </p>
+              <div class="max-w-xl" data-moon-card-specimen>
+                <MoonCard card={moonTargetCard} logHref="/design" washedOut={moonCardWashedOutLink} />
+              </div>
+              <p class:list={notApplicable}>
+                hover, focus-visible — the hairline and quiet links' own (c-button) · disabled — offline mutes Mark
+                observed (data-needs-network) · error — N/A (a failed Moon target drops only the target) · empty — no
+                target: the band ends after the disc's facts · loading — the focused page's TonightPageSkeleton
+              </p>
+            </section>
           </div>
         </div>
       </Band>
@@ -3182,6 +3254,19 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div id="c-expect-details" class="max-w-md rounded-lg border border-border p-4">
                   <ObjectDetails
                     entry={expectSample}
+                    logHref="/design"
+                    finderHref="/design"
+                    expectation={{ key: "globularResolved", text: m.tonight.expect.phrase.globularResolved }}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>
+                  default · every fact of a row: what you'll see, the find/detail pair and why (ObjectDetails)
+                </p>
+                <div id="c-expect-details-pair" class="max-w-md rounded-lg border border-border p-4">
+                  <ObjectDetails
+                    entry={expectPairSample}
                     logHref="/design"
                     finderHref="/design"
                     expectation={{ key: "globularResolved", text: m.tonight.expect.phrase.globularResolved }}

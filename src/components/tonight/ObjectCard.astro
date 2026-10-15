@@ -36,7 +36,7 @@ const tipId = `not-seen-tip-${entry.id}`;
   data-object={entry.id}
   data-label={entry.label}
   data-not-seen-scope
-  class="relative scroll-mt-4 py-5 first:pt-0 last:pb-0"
+  class="relative scroll-mt-4 py-item first:pt-0 last:pb-0"
 >
   {/* Only the mark's button sits in the heading; its tooltip follows the heading (it must not be heading text). */}
   <h3 class="font-display text-title font-semibold break-words text-heading">
@@ -48,7 +48,7 @@ const tipId = `not-seen-tip-${entry.id}`;
     {entry.notSeenYet && <NotSeenMark variant="tip" id={tipId} />}
   </h3>
   {entry.notSeenYet && <NotSeenTip id={tipId} />}
-  <p class="mt-1 text-label text-muted-foreground">{detailLine}</p>
+  <p class="mt-line text-label text-muted-foreground">{detailLine}</p>
   {entry.seenText && <SeenTag text={entry.seenText} />}
 
   <ObjectDetails entry={entry} logHref={logHref} finderHref={finderHref} expectation={expectation} />

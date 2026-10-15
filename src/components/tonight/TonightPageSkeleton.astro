@@ -2,7 +2,8 @@
 /*
  * Stand-in for a focused Tonight page's island while it loads (tonight-dashboard): the same slim sky as
  * TonightPageSky, with the real back link and title (both known in the shell) and a bar for the context line, then
- * ruled placeholder rows at the focused pages' rhythm (one data point per line), so nothing jumps when the island
+ * ruled placeholder rows at the focused pages' rhythm (ui-fact-rhythm: the item role around each row, the stacked
+ * Window and Best cards, the facts under a hairline), so nothing jumps when the island
  * swaps in. Bars that stand for text take that text's type role and hold a non-breaking space, so they have its line
  * height. `layout="plan"` stands in for the Session plan
  * instead (ui-user-adjustments): one 44 px bar for the edit row above the plan (adjustable-session-plan: "Edit plan", or
@@ -87,9 +88,19 @@ const bar = "rounded bg-border motion-safe:animate-pulse";
         <div class:list={[bar, "mb-4 w-56 max-w-full text-title"]}>&nbsp;</div>
         <div class="divide-y divide-border">
           {Array.from({ length: rows }, () => (
-            <div class="space-y-3 py-5">
+            <div class="py-item">
               <div class:list={[bar, "h-6 w-1/2"]} />
-              <div class:list={[bar, "h-4 w-2/3"]} />
+              <div class:list={[bar, "mt-line h-4 w-2/3"]} />
+              {/* Window and Best: two cards stacked, each the full width of the column. */}
+              <div class="mt-group grid gap-line">
+                <div class:list={[bar, "h-14"]} />
+                <div class:list={[bar, "h-14"]} />
+              </div>
+              <div class="mt-group space-y-line border-t border-border pt-group">
+                <div class:list={[bar, "h-4 w-5/6"]} />
+                <div class:list={[bar, "h-4 w-3/4"]} />
+                <div class:list={[bar, "h-4 w-2/3"]} />
+              </div>
             </div>
           ))}
         </div>

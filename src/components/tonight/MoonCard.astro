@@ -3,7 +3,9 @@
 // window (the `MoonTimeSlider` island, which the server renders at the page-load moment), with when the Moon is up and
 // what it does to faint objects beside the disc, then, when the Moon is a target tonight (it passes the planets'
 // gate), its observing details with the shared TargetDetails layout. Without a civil window (high-latitude summer)
-// there are no states: only the phase shows, from local noon.
+// there are no states: only the phase shows, from local noon. The lines beside the disc are icon-led facts in one
+// FactList (ui-fact-rhythm): the island's children sit in a box-less `<astro-slot>`, so the slider's own spacing never
+// reaches them and the list carries it. Fact components stay server-side: the island only receives their markup.
 import { ArrowRight } from "lucide-react";
 
 import MoonTimeSlider from "@/components/tonight/MoonTimeSlider";
@@ -12,6 +14,8 @@ import NotSeenTip from "@/components/tonight/NotSeenTip.astro";
 import SeenTag from "@/components/tonight/SeenTag.astro";
 import TargetDetails from "@/components/tonight/TargetDetails.astro";
 import Band from "@/components/ui/Band.astro";
+import Fact from "@/components/ui/Fact.astro";
+import FactList from "@/components/ui/FactList.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import type { TonightMoonCard } from "@/lib/tonight/build";
@@ -45,28 +49,40 @@ const washedOutLink = buttonVariants({ variant: "quiet", size: "bare" });
       locale={locale}
       client:load
     >
-      {card.upText && <p class="font-semibold text-heading">{card.upText}</p>}
-      {card.faintText && <p class="text-foreground">{card.faintText}</p>}
-      {washedOut && (
-        <a href={washedOut.href} class:list={[washedOutLink]}>
-          {washedOut.label}
-          <ArrowRight aria-hidden="true" />
-        </a>
-      )}
+      <div class="space-y-line">
+        <FactList>
+          {card.upText && (
+            <Fact kind="when">
+              <span class="font-semibold text-heading">{card.upText}</span>
+            </Fact>
+          )}
+          {card.faintText && (
+            <Fact kind="moon">
+              <p>{card.faintText}</p>
+            </Fact>
+          )}
+        </FactList>
+        {washedOut && (
+          <a href={washedOut.href} class:list={[washedOutLink]}>
+            {washedOut.label}
+            <ArrowRight aria-hidden="true" />
+          </a>
+        )}
+      </div>
     </MoonTimeSlider>
   ) : (
     <p class="text-body font-semibold text-heading">{card.phaseText}</p>
   )}
 
   {target && (
-    <div class="relative mt-6 border-t border-border pt-6" data-not-seen-scope>
+    <div class="relative mt-item border-t border-border pt-item" data-not-seen-scope>
       {/* The Moon shows no visible name, so the mark takes the seen tag's place: the two never show together. */}
       {target.seenText ? (
         <SeenTag text={target.seenText} />
       ) : (
         target.notSeenYet && (
           <>
-            <p class="mt-3">
+            <p class="mt-line">
               <NotSeenMark variant="tip" id="not-seen-tip-moon" />
             </p>
             <NotSeenTip id="not-seen-tip-moon" />
@@ -82,9 +98,12 @@ const washedOutLink = buttonVariants({ variant: "quiet", size: "bare" });
         logHref={logHref}
         ariaLabel={t.moon.markObserved({ name: target.name })}
       >
+        <Fact kind="see" iconClass="text-primary-strong">
+          <p>{target.note}</p>
+        </Fact>
         {target.wholeDisc && (
-          <div class="space-y-2">
-            <p class="text-label text-foreground">
+          <Fact kind="eyepiece">
+            <p>
               {target.wholeDiscFits ? (
                 <>
                   {t.moon.wholeDiscWith} <span class="font-semibold text-heading">{target.wholeDisc.name}</span>{" "}
@@ -96,16 +115,16 @@ const washedOutLink = buttonVariants({ variant: "quiet", size: "bare" });
             </p>
             {target.detail && (
               /* The message reads on after the whole-disc part in lower case: its own line starts with a capital. */
-              <p class="text-label text-foreground first-letter:uppercase">
+              <p class="first-letter:uppercase">
                 {t.moon.detailWith} <span class="font-semibold text-heading">{target.detail.name}</span>{" "}
                 {t.object.magnification({ magnification: String(target.detail.magnification) })}
               </p>
             )}
-          </div>
+          </Fact>
         )}
-
-        <p class="text-label text-foreground">{target.reason}</p>
-        <p class="text-label text-muted-foreground">{target.note}</p>
+        <Fact kind="why" tone="muted">
+          <p>{target.reason}</p>
+        </Fact>
       </TargetDetails>
     </div>
   )}
