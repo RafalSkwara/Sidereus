@@ -55,7 +55,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 
 | ID   | Change ID            | Outcome (user can …)                                                                                                                                | Prerequisites | PRD refs                                                      | Status      |
 | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------- | ----------- |
-| S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | in-progress |
+| S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | done        |
 | S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | ready       |
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                            | S-02          | MS-01, FR-039, FR-007                                         | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | in-progress |
@@ -108,7 +108,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The first-screen spec, `VERDICT_MIN_HEIGHT_CLASS` and the skeleton must move together. The change is already running (`ui-refine` agent, branch `feat/ui-dashboard-tiles`). It is third in the cut order.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: Tonight navigation and Progress as a destination
 
@@ -259,3 +259,5 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 ## Done
 
 (`/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate. M-1's, M-2's and M-3's entries live in git history and in `context/archive/`.)
+
+- **S-01: user can read the dashboard's tiles and the verdict's event line in the same spacing rhythm and icon language as the focused pages, with no icons on the tile headings.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-dashboard-tiles/`. Lesson: —.
