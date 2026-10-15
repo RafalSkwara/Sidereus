@@ -35,7 +35,7 @@ This folder is the umbrella for the split in `audit.md` ("Proposed split into ch
 |---|---|---|
 | 1 | `ui-quiet-actions` | Done: merged in #163 (main c650a8a) and archived to `context/archive/2026-10-14-ui-quiet-actions/` |
 | 2 | `ui-fact-rhythm` | Done: merged in #167 (main 42ce808) and archived to `context/archive/2026-10-14-ui-fact-rhythm/` |
-| 3 | `ui-dashboard-tiles` | **Next** (not started; it did not fold into change 2) |
+| 3 | `ui-dashboard-tiles` | **In progress**: plan reviewed with the owner's answers; Phases 1-2 implemented on `feat/ui-dashboard-tiles` (5957d05, 33568c2), Phase 3 next |
 | 4 | `ui-tonight-nav` | Not started |
 | 5 | `ui-log-progress-gear` | Not started |
 

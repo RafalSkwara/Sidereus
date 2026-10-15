@@ -195,7 +195,7 @@ A reverted experiment (`evidence/exp/experiment.diff`) applied C1-C5 and was mea
 - `context/archive/2026-10-13-sky-events/reviews/plan-review.md:149-178`, F3 (owner): no reserved room for the event line, the one-line shift is accepted, and the phone spec hides the line while it measures.
 - `context/archive/2026-10-14-adjustable-session-plan/plan.md:92,607-612`, D13: the Plan tile follows the edited plan. This is implemented (`TonightTiles.astro:52-64`). Nothing is deferred to the dashboard, and the tile line keeps "First up / Next / Nothing left".
 - `context/archive/2026-10-14-ui-quiet-actions/`: the bare muted tile arrow (`TILE_CUE_CLASS`), already shipped.
-- `context/changes/ui-fact-rhythm/plan.md` (D1, F2, "What we're not doing"):
+- `context/archive/2026-10-14-ui-fact-rhythm/plan.md` (D1, F2, "What we're not doing"):
   - item = 20 px each side of the rule, and one-group rows use `py-item` too.
   - The stat pair is stacked.
   - The dashboard, `TonightTiles`, the verdict's event line and `tonight-phone.spec.ts` were left to this change.
@@ -203,7 +203,7 @@ A reverted experiment (`evidence/exp/experiment.diff`) applied C1-C5 and was mea
 ## Related Research
 
 - `context/changes/ui-refine/audit.md`: the umbrella audit (finding 4, S-07 notes, the split's change 3).
-- `context/changes/ui-fact-rhythm/research.md`: charges C1-C5 for the focused pages, and the role values.
+- `context/archive/2026-10-14-ui-fact-rhythm/research.md`: charges C1-C5 for the focused pages, and the role values.
 
 ## Open Questions
 
