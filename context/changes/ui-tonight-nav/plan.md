@@ -447,23 +447,23 @@ until their next online refresh, which is harmless.
 
 #### Automated
 
-- [x] 1.1 The navigation model tests pass — 380a33f
-- [x] 1.2 Types, lint and the unit suite pass — 380a33f
-- [x] 1.3 The build passes — 380a33f
-- [x] 1.4 The phase's e2e pass on the preview — 380a33f
+- [x] 1.1 The navigation model tests pass — 39bab83
+- [x] 1.2 Types, lint and the unit suite pass — 39bab83
+- [x] 1.3 The build passes — 39bab83
+- [x] 1.4 The phase's e2e pass on the preview — 39bab83
 
 #### Manual
 
-- [x] 1.5 The four-item bars read as one bar at every width, language and theme — 380a33f
+- [x] 1.5 The four-item bars read as one bar at every width, language and theme — 39bab83
 
 ### Phase 2: The Tonight sub-nav replaces the back link
 
 #### Automated
 
-- [x] 2.1 The model, copy and sub-nav helper tests pass — b1e7c8b
-- [x] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value — b1e7c8b
-- [x] 2.3 The build passes — b1e7c8b
-- [x] 2.4 The phase's e2e pass on the preview — b1e7c8b
+- [x] 2.1 The model, copy and sub-nav helper tests pass — e25d531
+- [x] 2.2 Types, lint and the unit suite pass, with no literal colour or arbitrary value — e25d531
+- [x] 2.3 The build passes — e25d531
+- [x] 2.4 The phase's e2e pass on the preview — e25d531
 
 #### Manual
 
@@ -474,18 +474,18 @@ until their next online refresh, which is harmless.
   > 390/1280 on both. Every page is 4/12 px shorter on the branch, skeleton and real alike (the sub-nav strip in place
   > of the back link). Moon reads −605/−480 on main and −601/−468 here only because its real page is shorter than the
   > viewport (scrollHeight clamped at 844/900), so only the skeleton shows that 4/12 px.
-- [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme — b1e7c8b
+- [x] 2.6 The sub-nav reads as selected, fades and continues the sky in every theme — e25d531
 
 ### Phase 3: States, specimens and the rule
 
 #### Automated
 
-- [x] 3.1 The nav type-roles guard passes and fails on a planted size — f3b3249
-- [x] 3.2 Types, lint and the unit suite pass — f3b3249
-- [x] 3.3 The build passes — f3b3249
-- [x] 3.4 The full e2e suite passes on the preview — f3b3249
+- [x] 3.1 The nav type-roles guard passes and fails on a planted size — 215769c
+- [x] 3.2 Types, lint and the unit suite pass — 215769c
+- [x] 3.3 The build passes — 215769c
+- [x] 3.4 The full e2e suite passes on the preview — 215769c
 
 #### Manual
 
-- [x] 3.5 `/design`'s sub-nav block shows every listed state — f3b3249
+- [x] 3.5 `/design`'s sub-nav block shows every listed state — 215769c
 - [ ] 3.6 The owner's walk on the preview

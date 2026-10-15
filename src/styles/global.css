@@ -599,10 +599,12 @@
  * The Tonight sub-nav's edge fade (ui-tonight-nav): the row scrolls sideways on a phone, and an edge with chips beyond
  * it fades out, so the row reads as one that continues. TonightSubNav's script sets `data-more-start` /
  * `data-more-end` from the scroll position (`subnav.ts`); without it there is no mask and the row is a plain scroll
- * row. An alpha mask only (its colour is ignored), so it fades whatever the theme paints, red included.
+ * row. An alpha mask only (its colour is ignored), so it fades whatever the theme paints, red included. The scroll
+ * padding keeps a chip that keyboard focus scrolls to clear of the fade, so its focus ring stays visible.
  */
 [data-subnav-row] {
   --subnav-fade: 2rem;
+  scroll-padding-inline: var(--subnav-fade);
 }
 
 [data-subnav-row][data-more-start] {

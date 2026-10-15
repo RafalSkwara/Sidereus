@@ -33,6 +33,8 @@ async function waitForIsland(page: Page) {
 test("each focused page has one sub-nav of seven chips with its own chip current, and no back link", async ({
   page,
 }) => {
+  // Onboarding plus six islands: more than the default 30 s on a slow runner.
+  test.setTimeout(120_000);
   await onboardInMadrid(page, "e2e-subnav");
 
   for (const item of FOCUSED) {
@@ -102,6 +104,16 @@ test("on a phone the current chip is scrolled into view without scrolling the pa
     // Seven chips never fit 390 px: the row was scrolled, so its start fades.
     if (href === "/tonight/nights") {
       await expect(row).toHaveAttribute("data-more-start", "");
+    }
+    // Events is already in view before any scroll, so only its centring proves the script ran for it.
+    if (href === "/tonight/events") {
+      await expect
+        .poll(async () => {
+          const [rowBox, chipBox] = [await row.boundingBox(), await chip.boundingBox()];
+          if (!rowBox || !chipBox) return Infinity;
+          return Math.abs(chipBox.x + chipBox.width / 2 - (rowBox.x + rowBox.width / 2));
+        })
+        .toBeLessThanOrEqual(2);
     }
 
     // The row scrolled sideways only: the page itself is still at the top, with the island in too.

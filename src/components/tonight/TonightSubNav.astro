@@ -79,18 +79,22 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
       row.toggleAttribute("data-more-start", start);
       row.toggleAttribute("data-more-end", end);
     };
-    // Once on load: the current chip into view, measured in the row's scrolled content (not `offsetLeft`, which
-    // counts from a further ancestor).
-    const chip = row.querySelector<HTMLElement>('[aria-current="page"]');
-    if (chip) {
-      const rowRect = row.getBoundingClientRect();
-      const chipRect = chip.getBoundingClientRect();
-      row.scrollLeft = scrollLeftFor(
-        { left: chipRect.left - rowRect.left + row.scrollLeft, width: chipRect.width },
-        { width: row.clientWidth, scrollWidth: row.scrollWidth },
-      );
-    }
-    markEdges();
+    // The current chip into view, measured in the row's scrolled content (not `offsetLeft`, which counts from a further
+    // ancestor). Once on load, and again once the web font is in: the swap can change the chips' widths.
+    const centre = () => {
+      const chip = row.querySelector<HTMLElement>('[aria-current="page"]');
+      if (chip) {
+        const rowRect = row.getBoundingClientRect();
+        const chipRect = chip.getBoundingClientRect();
+        row.scrollLeft = scrollLeftFor(
+          { left: chipRect.left - rowRect.left + row.scrollLeft, width: chipRect.width },
+          { width: row.clientWidth, scrollWidth: row.scrollWidth },
+        );
+      }
+      markEdges();
+    };
+    centre();
+    void document.fonts.ready.then(centre);
     row.addEventListener("scroll", markEdges, { passive: true });
     window.addEventListener("resize", markEdges, { passive: true });
   }
