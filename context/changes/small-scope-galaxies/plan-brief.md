@@ -2,6 +2,7 @@
 
 > Full plan: `context/changes/small-scope-galaxies/plan.md`
 > Research: `context/changes/small-scope-galaxies/research.md`
+> Plan review: `context/changes/small-scope-galaxies/reviews/plan-review.md` (owner decisions 2026-10-15)
 
 ## What & Why
 
@@ -21,6 +22,7 @@ M-4's north star (#172): galaxy advice in a small telescope has to agree with it
 - **The line:** in a 60 mm from a suburb, M31 reads "A faint grey smudge with a slightly brighter middle" (`galaxyBright` stays at 150 mm / Bortle 4).
 - **The ranking:** from a suburb with 60-80 mm, M101 and M33 drop out of the top 10, and M31 stays near the top.
 - **The reason line:** never says "Bright for your N mm" for a galaxy whose line says faint or at the limit.
+- **City skies (owner, F6):** with 60-80 mm under Bortle 7-8, M31 reads "A very faint grey smudge; use averted vision" and leaves the top 5. The line and the rank agree, as Telescope Advisor's "Very difficult" at Bortle 7-8 says.
 - **Checked against** an extended source-cited fixture and a new small-aperture ranking guard. The existing calibration oracle stays unchanged and green.
 
 ## Key Decisions Made
@@ -28,23 +30,24 @@ M-4's north star (#172): galaxy advice in a small telescope has to agree with it
 | Decision | Choice | Why (1 sentence) | Source |
 |---|---|---|---|
 | What separates M31 from M33 | OpenNGC `Hubble` type (bulge-type S0-Sb vs disc-type), extracted by the generator at the existing pin | Total magnitude can't (both are bright); morphology is the published reason M31 has a bright core and M33 doesn't | Research |
-| Core fix shape | Bulge-type spirals' core brighter by `EXPECT_BULGE_CORE_EXTRA_MAG` = 0.8 (window 0.76-0.86 from the M31 references) | Keeps disc-type references (M33, M101) untouched and D-3 monotonicity by construction | Research / Plan |
-| Ranking fix shape | Cap a galaxy's brightness credit by its contrast band: full at bright/smudge, `GALAXY_FAINT_BRIGHTNESS_CAP` at faint, 0 at limit | Ranking, reason line and line then read one measure; monotone in aperture, so invariant (g) holds | Plan |
-| Shared code | New `src/lib/engine/contrast.ts` | Avoids an `expectation.ts` ↔ `score.ts` import cycle | Plan |
+| Core fix shape | Bulge-type spirals' core brighter by `EXPECT_BULGE_CORE_EXTRA_MAG` = 0.8 (window 0.762-0.862 from the M31 references; margins 0.062 / 0.038) | Keeps disc-type references (M33, M101) untouched and D-3 monotonicity by construction | Research / Plan |
+| Ranking fix shape | Cap a galaxy's brightness credit by its contrast band: full at bright/smudge, `GALAXY_FAINT_BRIGHTNESS_CAP` = 0.1 at faint (owner, F1; working window about 0.06-0.2), 0 at limit | Ranking, reason line and line then read one measure; monotone in aperture, so invariant (g) holds | Plan |
+| Shared code | New `src/lib/engine/contrast.ts`, holding `telescopeLimitingMag` (re-exported by `score.ts`) | Avoids an `expectation.ts` ↔ `score.ts` import cycle | Plan / review F4 |
 | Washed-out rule, nebulae | Unchanged | Keeps the moonlight calibration and the slice's scope (galaxies) | Plan |
-| OD-1 M101 at a dark site, 80 mm | ★ line decides (stays ~#5 there, sources say `galaxySmudge`) / stricter small-aperture penalty | Sources say an 80 mm shows its core under dark skies | Owner (pending) |
-| OD-2 M31, 60 mm, Bortle 5 | ★ `galaxySmudge` / `galaxyBright` | Telescope Advisor's "Detectable but faint" at Bortle 5-6 vs Astronomy's "pierces all but the worst sky glow" | Owner (pending) |
-| OD-3 Generality | ★ every bulge-type spiral (28) / M31-only exception | Physics-based rule vs narrowest change | Owner (pending) |
-| OD-4 `galaxyLimit` galaxies | ★ stay listed, no brightness credit / never clear the bar | Still a fair try with an honest line, vs not a recommendation at all | Owner (pending) |
+| OD-1 M101 at a dark site, 80 mm | Line decides (stays ~#5 there, sources say `galaxySmudge`) | Sources say an 80 mm shows its core under dark skies | Owner |
+| OD-2 M31, 60 mm, Bortle 5 | `galaxySmudge` | Telescope Advisor's "Detectable but faint" at Bortle 5-6 | Owner |
+| OD-3 Generality | Every bulge-type spiral (28) | Physics-based rule, shared by the line and the ranking | Owner |
+| OD-4 `galaxyLimit` galaxies | Stay listed, no brightness credit | Still a fair try with an honest line | Owner |
+| F6 M31 in a city sky (60-80 mm, Bortle 7-8) | "Very faint" line, out of the top 5 | Follows the sources and keeps the line and rank in step | Owner |
 
 ## Scope
 
 **In scope:**
 - the `hubble` catalogue field;
 - the shared contrast module and the bulge core term;
-- 7 new small-scope references plus 1 named divergence (M33 at 80 mm / Bortle 6, 0.03 mag short of `limit`);
+- 7 new small-scope references plus 1 named divergence (M33 at 80 mm / Bortle 6, 0.03 mag short of `limit`): 27 references + 3 divergences;
 - the galaxy brightness cap;
-- the small-aperture guard and the reason/line consistency invariant;
+- the small-aperture guard (G1-G6) and the reason/line consistency invariant over every listed galaxy and both reasons;
 - CLAUDE.md, PRD Open Questions 5 and 17, the owner checklist.
 
 **Out of scope:**
@@ -65,17 +68,18 @@ The generator adds OpenNGC's `Hubble` string to each catalogue object. `contrast
 | Phase | What it delivers | Key risk |
 |---|---|---|
 | 1. Hubble type in the catalogue (Sonnet high) | `hubble` on every object, from the pinned OpenNGC via `catalogue:build` | Generator diff touches more than the new field |
-| 2. References and the bulge core term (Sonnet high) | 7 small-scope references red then green, the shared `contrast.ts`, `EXPECT_BULGE_CORE_EXTRA_MAG` | Narrow 0.76-0.86 window under OD-2 (a) |
-| 3. Ranking follows the line (Sonnet high) | Brightness cap, `small-scope.test.ts` G1-G5, calibration unchanged | Calibration overlap has zero slack (exactly 3 on every night) |
-| 4. Docs and owner checklist (Sonnet medium) | CLAUDE.md, PRD Open Questions 5 and 17, `manual-checks.md`, whole e2e and smoke before the PR | — |
+| 2. References and the bulge core term (Sonnet high) | 7 small-scope references (M31 60/B6 and 60/B8 red, then green), the shared `contrast.ts`, `EXPECT_BULGE_CORE_EXTRA_MAG` | Narrow 0.762-0.862 window |
+| 3. Ranking follows the line (Sonnet high) | Brightness cap 0.1, `small-scope.test.ts` G1-G6, calibration unchanged | Calibration overlap has zero slack (exactly 3 on every night); the reviewer's simulation keeps every top 5 |
+| 4. Docs and owner checklist (Sonnet medium; e2e and smoke by the lead agent) | CLAUDE.md, PRD Open Questions 5 and 17, `manual-checks.md`, whole e2e and smoke before the PR | Port clashes with other agents (use 4333 / 4400) |
 
-**Prerequisites:** `npm ci` in the worktree (done); network to raw.githubusercontent.com for `catalogue:build`; the owner's answers to OD-1 to OD-4 (they change constants and guard lines, not the phase structure).
+**Prerequisites:** `npm ci` in the worktree (done); network to raw.githubusercontent.com for `catalogue:build`. The owner's decisions are in (2026-10-15).
 **Estimated effort:** about 1-2 sessions across 4 phases.
 
 ## Open Risks & Assumptions
 
 - **Thin sources:** no verified page states a 60-80 mm aperture together with a Bortle class. Each small-scope entry combines a sky-class source with an aperture source, and Telescope Advisor carries three entries.
-- **Ripple:** the bulge term moves other bulge-type galaxies one band brighter at bright skies (14 at 150 mm / Bortle 7 at e = 1.25; fewer at 0.8). This is accepted as physics, and Phase 2 records the list.
+- **Ripple:** the bulge term moves other bulge-type galaxies one band brighter at bright skies. This is accepted as physics, and Phase 2 records the list at e = 0.8.
+- **Thin margins:** e = 0.8 sits 0.062 and 0.038 from its window's edges, so any change to the Bortle table or to M31's data flips a reference, loudly.
 - **Zero slack:** the calibration oracle is at exactly 3 of 5 overlap. The cap is expected to touch only M33 and M101 there, and both are outside the matched objects.
 
 ## Success Criteria (Summary)
