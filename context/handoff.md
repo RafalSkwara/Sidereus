@@ -1,6 +1,38 @@
-# Handoff — 2026-10-14 (S-04 and S-07 shipped)
+# Handoff — 2026-10-15 (M-3 closed, M-4 opened)
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
+
+## Update 2026-10-15 (supersedes every next step below)
+
+**M-3 "Find it and keep going" is closed.** S-08 adjustable-session-plan (#165) was the last slice. The closure check against PRD v3 is in the roadmap's Milestone History, and three new rules are in `lessons.md`.
+
+**M-4 "Finished and trustworthy" is open** (`context/foundation/roadmap.md`, owner's decisions of 2026-10-15). It brings no PRD change. Main goal: quality. North star: S-04.
+
+| Slice | Change ID | Issue | Board status |
+|---|---|---|---|
+| S-01 | `ui-dashboard-tiles` | #169 | in-progress |
+| S-02 | `ui-tonight-nav` | #170 | ready |
+| S-03 | `ui-log-progress-gear` | #171 | proposed |
+| S-04 | `small-scope-galaxies` (#159 + #21 item 3) | #172 | ready |
+| S-05 | `evening-showpieces` (#21 items 1, 4, 5 + PRD Primary criterion 2) | #173 | proposed |
+| S-06 | `auth-loose-ends` (ui-auth D1, D2) | #174 | ready |
+| S-07 | `error-visibility` (first-party only) | #175 | ready |
+
+- The PRD's hard deadline of **2026-11-04** still holds. **Cut order** (owner): drop S-06 first, then S-03, then S-01.
+- **S-07 uses first-party tools only:** Workers Logs, Cloudflare alerts and `/10x-observability-audit`. No new third party.
+
+**Running now:** S-01 `ui-dashboard-tiles` (`ui-refine` agent, branch `feat/ui-dashboard-tiles`, umbrella `context/changes/ui-refine/`). `ui-fact-rhythm` is merged (#167) but its archive is still pending.
+
+**Next:** `/10x-plan small-scope-galaxies` (S-04, the north star), with S-02 `ui-tonight-nav` through `/10x-ui` in parallel.
+
+**Owner to-dos (unchanged):**
+- ESA's licence reply (PRD Open Question 21);
+- the IAU MDC courtesy email;
+- the moonlight post-merge checks after 2026-10-22.
+
+---
+
+## Earlier: Handoff — 2026-10-14 (S-04 and S-07 shipped)
 
 ## Update 2026-10-14 (supersedes every next step below)
 

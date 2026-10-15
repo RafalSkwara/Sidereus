@@ -64,3 +64,36 @@
 - **Problem**: The worker registers on the first page and calls `clients.claim()`, but when it activates while a navigation is in flight, Chromium leaves the document that navigation creates uncontrolled, so `waitForFunction(() => navigator.serviceWorker.controller !== null)` never ends. Under CI load the install landed during the onboarding → `/tonight` redirect and the spec hit its 180 s timeout, then passed on retry, which `failOnFlakyTests` turns red (PR #165, CI run 38704238918).
 - **Rule**: Wait through `waitForServiceWorker(page)` in `tests/e2e/helpers.ts` (it awaits `navigator.serviceWorker.ready`, then reloads once if the page is still uncontrolled); `tests/e2e/service-worker-control.spec.ts` reproduces the race deterministically by holding the worker's `/offline` install fetch and a navigation in the proxy.
 - **Applies to**: implement, impl-review
+
+## Check the full plan in the island loader, and keep "unknown" apart from "free"
+
+- **Context**: Any full-plan feature (FR-045) that renders inside a Tonight or finder server island or behind a POST route: finder charts (M-3 S-03), what-to-expect lines (S-04), session-plan edits (S-08), and every paid feature after them.
+- **Problem**: `/_server-islands/*` is not behind the middleware, so an island URL captured from a full-plan page replays without the session. A plan check in the page shell alone would leak paid output. Separately, a failed plan read that falls back to `free` tells a paying user they lack the plan, or it stores or drops offline copies on a transient error. S-03, S-04 and S-08 each had to settle both points again in their own plan.
+- **Rule**:
+  - Check the plan in the shell (`requireFullPlan`) and again in the island's loader or the route, before any paid read or write.
+  - Compute paid output only after that check, never in `TonightView`.
+  - Keep three outcomes apart: `full`, an explicit `free`, and a failed read. Show the locked state only on an explicit `free`. On a failed read, show neither the locked state nor the paid output, and change no stored copy.
+  - Prove the gate over HTTP in `scripts/smoke.mjs`, including a replayed island URL signed out.
+- **Applies to**: plan, plan-review, implement, impl-review
+
+## Judge advice that no observer can check against source-cited references
+
+- **Context**: Any rule that tells a beginner what they will see or do, with numbers that no observer has calibrated: what-to-expect bands, finder hops and the naked-eye limit, ranking weights and penalties, event visibility (`top_blocker: skills`, roadmap Open Question 1).
+- **Problem**: Without an observer, a rule tuned until its own snapshot looks right proves nothing. A wrong line also reads as authoritative: #159 has M31 described as "very faint" next to "bright for your 60 mm".
+- **Rule**:
+  - Before changing a rule, add the cases it should get right to a test-only reference fixture. Give each entry at least two published sources, and include the hard cases.
+  - Keep the known misses in a named divergence list rather than loosening an entry.
+  - Treat a failing reference as a finding about the engine, never as a fixture to edit (as with `expect-reference.ts` and `beginner-reference.ts`).
+  - Every tuned number is a named candidate in `parameters.ts`.
+- **Applies to**: plan, plan-review, implement, impl-review
+
+## Pin a sampled scan against a brute-force reference, and measure budgets on the real encoding
+
+- **Context**: Engine searches that sample time on a grid (event visibility, pairings, windows, the night's track), and any plan that sets a size or weight budget for a generated file (star files, catalogues, bundles).
+- **Problem**:
+  - S-07's coarse grid missed short twilight visibility windows (sky-events impl review F1), and nothing caught it until review.
+  - S-03's star-file size estimate was off by 2x, because it was computed rather than measured on the gzip output.
+- **Rule**:
+  - Test every sampled scan against a brute-force fine-step reference over fixed windows that include the short cases.
+  - Measure every size budget on the real build output in its shipped encoding before the plan commits to it, and pin the result in a test or a build check.
+- **Applies to**: plan, implement, impl-review
