@@ -19,6 +19,7 @@ import {
 import type { FinderFrom } from "@/lib/finder/from";
 import type { TonightReturnPage } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
+import { logFailure } from "@/lib/observability/log-failure";
 import { openSkyChecksSince } from "@/lib/sky-checks/pending";
 import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
@@ -35,23 +36,6 @@ const EYEPIECES_FAILED: MessageKey = "tonight.eyepiecesFailed";
 const LOG_FAILED: MessageKey = "tonight.logFailed";
 const TONIGHT_FAILED: MessageKey = "tonight.failed";
 const PLAN_EDITS_FAILED: MessageKey = "errors.load.sessionPlan";
-
-/** A database error code shaped like PostgREST's or Postgres's (`42501`, `PGRST301`); anything else is not logged. */
-const CODE_SHAPE = /^[0-9A-Za-z_]{1,12}$/;
-
-/**
- * Traces a failed read of the saved Session plan (D14 keeps the page on the suggested plan, so without this line the
- * failure is invisible): a fixed line, the step word and the cause's code or, failing that, the error's or cause's
- * `name`; never a message, an id, a site or a coordinate. The thrown error keeps its `cause` (the store sets it).
- */
-function logPlanEditsFailure(error: unknown): void {
-  const cause = error instanceof Error ? error.cause : undefined;
-  const code = (cause as { code?: unknown } | null | undefined)?.code;
-  const nameOf = (value: unknown) => (value instanceof Error ? value.name : typeof value);
-  const detail = typeof code === "string" && CODE_SHAPE.test(code) ? code : nameOf(cause ?? error);
-  // eslint-disable-next-line no-console -- a fixed line, the step word and the cause's code or name, never a message.
-  console.error("tonight: plan edits read failed", detail);
-}
 
 /**
  * Reads the user's saved Session plan for one site and night: the target keys in their order, or `null` for none (and
@@ -185,7 +169,7 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
         ? input.readPlanEdits(site.id, nightDate).then(
             (edits) => ({ edits, error: null }),
             (error: unknown) => {
-              logPlanEditsFailure(error);
+              logFailure("tonight.plan-edits", error);
               return { edits: null, error: PLAN_EDITS_FAILED };
             },
           )

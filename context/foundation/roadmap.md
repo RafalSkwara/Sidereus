@@ -61,7 +61,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015                                         | proposed    |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link               | —             | MS-04                                                         | ready       |
-| S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                               | —             | MS-03                                                         | ready       |
+| S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                               | —             | MS-03                                                         | in-progress |
 
 ## Streams
 
@@ -191,7 +191,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The owner's limit is first-party tools only (Workers Logs, Cloudflare alerts), with no new third party.
   - A report must never carry private data (the NFR, and lessons.md on `no-console`).
   - The fixed log lines must keep their allowlist counts.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 

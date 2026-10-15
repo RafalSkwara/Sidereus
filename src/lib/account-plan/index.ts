@@ -1,5 +1,6 @@
 import type { MessageKey } from "@/i18n";
 import { ACCOUNT_PLAN_NEEDS_FULL, NOT_CONFIGURED } from "@/lib/api-errors";
+import { logFailure } from "@/lib/observability/log-failure";
 import { accountPlanStore } from "./store";
 
 /**
@@ -41,8 +42,8 @@ async function readPlan(locals: App.Locals): Promise<PlanReading> {
   if ("error" in result) {
     // The store reports a fixed code or the error's name, never the database's text. Without this line the failure is
     // invisible: access fails closed and the page shows the free state.
-    // eslint-disable-next-line no-console -- a fixed line and the store's fixed error code or name, never a message.
-    console.error("getAccountPlan: the plan read failed", result.code);
+    // The helper keeps the code only when it has a database code's shape.
+    logFailure("account.plan", { code: result.code });
     return { plan: "unknown", at: new Date() };
   }
   const plan = planFrom(result.plan);

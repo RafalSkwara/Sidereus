@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 import type { ForecastCache } from "./cache";
 import { FORECAST_CACHE_TTL_SECONDS, getForecast } from "./service";
@@ -352,5 +352,65 @@ describe("getForecast when the refresh fails in other ways than a 503", () => {
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
     expect(cache.puts).toHaveLength(0);
     expect(cache.store.get(KEY)).toBe(copy);
+  });
+});
+
+describe("getForecast's forecast.fetch line", () => {
+  let errors: MockInstance<typeof console.error>;
+
+  beforeEach(() => {
+    errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errors.mockRestore();
+  });
+
+  it("logs one fixed line with the step and the error's name only when the fetch is rejected", async () => {
+    const fake = fakeFetch(() => Promise.reject(new TypeError(`fetch failed for 52.23,21.01`)));
+    const result = await getForecast({
+      fetchFn: fake.fetchFn,
+      cache: memoryCache(),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(result).toBeNull();
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", { step: "forecast.fetch", name: "Error" });
+    const [, fields] = errors.mock.calls[0] as [string, object];
+    expect(Object.keys(fields).sort()).toEqual(["name", "step"]);
+    expect(JSON.stringify(errors.mock.calls)).not.toMatch(/52\.23|21\.01|127\.0|open-meteo/);
+  });
+
+  it("keeps serving the stored copy as a fallback, with the same single line", async () => {
+    const cache = memoryCache({ [KEY]: storedEntry(3 * 24 * 60, 42) });
+    const result = await getForecast({
+      fetchFn: fakeFetch(failingResponse).fetchFn,
+      cache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(result?.fallback).toBe(true);
+    expect(errors).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs nothing when the fetch succeeds or a fresh copy is served", async () => {
+    await getForecast({
+      fetchFn: fakeFetch(liveResponse).fetchFn,
+      cache: memoryCache(),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    await getForecast({
+      fetchFn: fakeFetch(failingResponse).fetchFn,
+      cache: memoryCache({ [KEY]: storedEntry(5, 42) }),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(errors).not.toHaveBeenCalled();
   });
 });

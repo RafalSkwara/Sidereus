@@ -268,13 +268,20 @@ describe("loadFinderFor for a full account", () => {
     mocks.loadFinderStars.mockRejectedValueOnce(secret);
     const load = await loadFinderFor(locals(), { target: "M31" });
     expect(load.kind).toBe("failed");
-    expect(logged).toHaveBeenCalledExactlyOnceWith("loadFinderFor: the star load failed", "RangeError");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.stars failed", {
+      step: "finder.stars",
+      name: "RangeError",
+    });
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
   });
 
   it("logs a failed chart the same way", async () => {
     mocks.loadFinderStars.mockResolvedValueOnce(null);
     const load = await loadFinderFor(locals(), { target: "M31" });
     expect(load.kind).toBe("failed");
-    expect(logged).toHaveBeenCalledExactlyOnceWith("loadFinderFor: the chart failed", "TypeError");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
+      step: "finder.chart",
+      name: "TypeError",
+    });
   });
 });

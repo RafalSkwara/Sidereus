@@ -18,6 +18,7 @@ import {
 } from "@/lib/engine";
 import { toEngineSite } from "@/lib/gear/store";
 import type { FinderFrom } from "@/lib/finder/from";
+import { logFailure } from "@/lib/observability/log-failure";
 import type { Locale } from "@/lib/preferences";
 import { isPlanetKey, type TargetKey } from "@/lib/targets";
 import type { TonightView } from "@/lib/tonight/build";
@@ -167,8 +168,7 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
   try {
     stars = await loadFinderStars();
   } catch (error) {
-    // eslint-disable-next-line no-console -- a fixed line and the error's name only, never its message (it could carry coordinates).
-    console.error("loadFinderFor: the star load failed", error instanceof Error ? error.name : typeof error);
+    logFailure("finder.stars", error);
     return { kind: "failed", view };
   }
 
@@ -190,8 +190,7 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
       eyepieceFieldDeg: finding === null ? null : finding.trueFovDeg,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console -- a fixed line and the error's name only, never its message (it could carry coordinates).
-    console.error("loadFinderFor: the chart failed", error instanceof Error ? error.name : typeof error);
+    logFailure("finder.chart", error);
     return { kind: "failed", view };
   }
 

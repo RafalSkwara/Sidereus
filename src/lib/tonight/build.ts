@@ -49,6 +49,7 @@ import {
 import type { FinderFrom } from "@/lib/finder/from";
 import type { ForecastResult } from "@/lib/forecast/service";
 import { toEngineSite, type EyepieceRecord, type SiteRecord, type TelescopeRecord } from "@/lib/gear/store";
+import { logFailure } from "@/lib/observability/log-failure";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { TonightSkyBody, TonightSkyView } from "@/lib/sky-view/view";
 import { nearestStateIndex } from "@/lib/moon-disc/state";
@@ -1409,10 +1410,8 @@ export function buildTonight(
         candidates,
       };
     } catch (error) {
-      // The page says the plan is unavailable; this leaves a trace for us. A fixed line and the error's name only:
-      // an engine message or stack could carry the site's coordinates, which never go into logs.
-      // eslint-disable-next-line no-console -- a fixed line and the error's name, never its message (see above).
-      console.error("buildTonight: the Session plan failed", error instanceof Error ? error.name : typeof error);
+      // The page says the plan is unavailable; this leaves a trace for us (the helper keeps only the error's name).
+      logFailure("tonight.session-plan", error);
       sessionPlan = null;
     }
   }
@@ -1433,10 +1432,8 @@ export function buildTonight(
         EVENT_WINDOW_NIGHTS,
       );
     } catch (error) {
-      // The page says the events are unavailable; this leaves a trace for us. A fixed line and the error's name only:
-      // an engine message or stack could carry the site's coordinates, which never go into logs.
-      // eslint-disable-next-line no-console -- a fixed line and the error's name, never its message (see above).
-      console.error("buildTonight: the sky events failed", error instanceof Error ? error.name : typeof error);
+      // The page says the events are unavailable; this leaves a trace for us (the helper keeps only the error's name).
+      logFailure("tonight.sky-events", error);
       skyEventsBlock = null;
     }
   }
