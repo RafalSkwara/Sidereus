@@ -1,4 +1,5 @@
 <!-- IMPL-REVIEW-REPORT -->
+
 # Implementation Review: Adjustable Session Plan (M-3 S-08)
 
 - **Plan**: context/changes/adjustable-session-plan/plan.md
@@ -12,33 +13,33 @@ Przegląd wykonali reviewer Opus i czterej podagenci Opus: zgodność z planem; 
 
 ## Verdicts
 
-| Dimension | Verdict |
-|-----------|---------|
-| Plan Adherence | WARNING |
-| Scope Discipline | PASS |
-| Safety & Quality | WARNING |
-| Architecture | PASS |
+| Dimension           | Verdict |
+| ------------------- | ------- |
+| Plan Adherence      | WARNING |
+| Scope Discipline    | PASS    |
+| Safety & Quality    | WARNING |
+| Architecture        | PASS    |
 | Pattern Consistency | WARNING |
-| Success Criteria | WARNING |
+| Success Criteria    | WARNING |
 
 ## Kryteria sukcesu: co sprawdzono
 
 Uruchomione na e57c574:
 
-| Polecenie | Wynik |
-|---|---|
-| `npm test` | 2162 passed, 1 skipped, 6 todo, exit 0 |
-| `npm run lint` | exit 0 |
-| `npx astro check` | 0 errors / 0 warnings / 0 hints |
-| `npx prettier --check CLAUDE.md context/foundation/test-plan.md context/foundation/prd.md` | czysto |
+| Polecenie                                                                                  | Wynik                                  |
+| ------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `npm test`                                                                                 | 2162 passed, 1 skipped, 6 todo, exit 0 |
+| `npm run lint`                                                                             | exit 0                                 |
+| `npx astro check`                                                                          | 0 errors / 0 warnings / 0 hints        |
+| `npx prettier --check CLAUDE.md context/foundation/test-plan.md context/foundation/prd.md` | czysto                                 |
 
 Podagenci uruchomili też suity cząstkowe:
 
-| Suita | Wynik |
-|---|---|
+| Suita                                                                  | Wynik   |
+| ---------------------------------------------------------------------- | ------- |
 | `src/lib/session-plans`, `plan-window`, `plan-edits`, `src/lib/finder` | 117/117 |
-| `src/lib/offline` | 180/180 |
-| `src/styles`, `src/i18n`, `plan-editor`, `plan-editor-view` | 28/28 |
+| `src/lib/offline`                                                      | 180/180 |
+| `src/styles`, `src/i18n`, `plan-editor`, `plan-editor-view`            | 28/28   |
 
 Nieuruchomione tutaj, bo potrzebują bazy, serwera albo zmieniają `dist`: 1.1–1.3, 1.6, 3.3, 4.3, 4.4, 5.3–5.5. Zaufanie do nich opiera się na notatce w Progress: e2e 72 passed, 4 pominięte; smoke plan 1–7; build.
 
@@ -139,9 +140,9 @@ Brak dowodów na odhaczanie na ślepo: każda pozycja ma SHA i ślad w diffie.
   - Kontrast między włączoną a wyłączoną ikoną:
 
     | Motyw | Włączona | Wyłączona | Kontrast |
-    |---|---|---|---|
-    | dark | #c3d0ff | #a9b1c5 | 1,41:1 |
-    | light | #23439f | #3c465c | 1,07:1 |
+    | ----- | -------- | --------- | -------- |
+    | dark  | #c3d0ff  | #a9b1c5   | 1,41:1   |
+    | light | #23439f  | #3c465c   | 1,07:1   |
 
   - W light to sama zmiana odcienia. Osoba z zaburzeniem widzenia barw nie odróżni nieaktywnego „Przesuń wyżej” w pierwszym wierszu, naciśnie go i nic się nie stanie.
   - Kryterium 5.6 sprawdzało to tylko w red.
@@ -176,20 +177,20 @@ Brak dowodów na odhaczanie na ślepo: każda pozycja ma SHA i ślad w diffie.
   - **`held`.** Teksty obiecują powrót zmian „gdy noc będzie nadawać się do obserwacji” (EN: „on a night that clears”). Lista jest jednak per (użytkownik, stanowisko, **noc**), więc wróci tylko, jeśli dzisiejsza noc się poprawi. Użytkownik czekający na jutrzejszą pogodną noc ich nie zobaczy.
   - **Pozostałe propozycje:**
 
-    | Klucz | Obecnie | Propozycja |
-    |---|---|---|
-    | moveUp | `Przesuń ${name} wyżej` | `Przesuń wyżej: ${name}` |
-    | moveDown | `Przesuń ${name} niżej` | `Przesuń niżej: ${name}` |
-    | remove | `Usuń ${name} z planu` | `Usuń z planu: ${name}` |
-    | held (PL) | Zapisane zmiany wrócą, gdy noc będzie nadawać się do obserwacji. | Zapisane zmiany na dziś wrócą, jeśli ta noc będzie nadawać się do obserwacji. |
-    | held (EN) | Your saved changes come back on a night that clears. | Your saved changes for tonight return if the night turns good enough to observe. |
-    | endsBeforePrevious | Jego okno kończy się przed najlepszą porą celu wyżej. | Okno kończy się przed najlepszą porą poprzedniego celu. |
-    | locked | W pełnym planie możesz zmieniać kolejność celów, usuwać je i dodawać nowe. | Pełny plan: możesz tu zmieniać kolejność celów, usuwać je i dodawać nowe. |
-    | reset / resetConfirm / resetDone | …plan proponowany… | …proponowany plan… (np. „Przywróć proponowany plan”, „Przywrócono proponowany plan.”) |
-    | saved | Plan zapisany | Zapisano plan. (wzór „Zapisano stanowisko.”) |
-    | addNoMatch | Nie pasuje żaden cel z oknem na dziś. | Żaden cel widoczny dziś nie pasuje. |
-    | addFull | Plan mieści do 30 celów. Usuń któryś, aby dodać nowy. | `Plan mieści najwyżej ${max} celów. Usuń jeden, aby dodać kolejny.` (z parametrem, zob. F10) |
-    | notVisible | Jeden z dodanych obiektów… | Jeden z dodanych celów nie ma dziś okna widoczności. |
+    | Klucz                            | Obecnie                                                                    | Propozycja                                                                                   |
+    | -------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+    | moveUp                           | `Przesuń ${name} wyżej`                                                    | `Przesuń wyżej: ${name}`                                                                     |
+    | moveDown                         | `Przesuń ${name} niżej`                                                    | `Przesuń niżej: ${name}`                                                                     |
+    | remove                           | `Usuń ${name} z planu`                                                     | `Usuń z planu: ${name}`                                                                      |
+    | held (PL)                        | Zapisane zmiany wrócą, gdy noc będzie nadawać się do obserwacji.           | Zapisane zmiany na dziś wrócą, jeśli ta noc będzie nadawać się do obserwacji.                |
+    | held (EN)                        | Your saved changes come back on a night that clears.                       | Your saved changes for tonight return if the night turns good enough to observe.             |
+    | endsBeforePrevious               | Jego okno kończy się przed najlepszą porą celu wyżej.                      | Okno kończy się przed najlepszą porą poprzedniego celu.                                      |
+    | locked                           | W pełnym planie możesz zmieniać kolejność celów, usuwać je i dodawać nowe. | Pełny plan: możesz tu zmieniać kolejność celów, usuwać je i dodawać nowe.                    |
+    | reset / resetConfirm / resetDone | …plan proponowany…                                                         | …proponowany plan… (np. „Przywróć proponowany plan”, „Przywrócono proponowany plan.”)        |
+    | saved                            | Plan zapisany                                                              | Zapisano plan. (wzór „Zapisano stanowisko.”)                                                 |
+    | addNoMatch                       | Nie pasuje żaden cel z oknem na dziś.                                      | Żaden cel widoczny dziś nie pasuje.                                                          |
+    | addFull                          | Plan mieści do 30 celów. Usuń któryś, aby dodać nowy.                      | `Plan mieści najwyżej ${max} celów. Usuń jeden, aby dodać kolejny.` (z parametrem, zob. F10) |
+    | notVisible                       | Jeden z dodanych obiektów…                                                 | Jeden z dodanych celów nie ma dziś okna widoczności.                                         |
 
 - **Fix**: Zastosować formy z dwukropkiem dla `moveUp`, `moveDown` i `remove` (EN może zostać albo przejść na „Move up: …”), poprawić `held` w obu językach i przyjąć pozostałe propozycje według uznania właściciela.
 - **Decision**: ACCEPTED (owner): the reviewer's Polish fixes, all rows of the table, with button names using a colon ("Przesuń wyżej: M31 · Galaktyka Andromedy", "Usuń z planu: Mars") and `held` saying the edits are saved for today (EN aligned); `addFull` takes `{ max }`.
