@@ -200,7 +200,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 | S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                  | in progress           | `ui-refine` agent, `feat/ui-dashboard-tiles` · GitHub #169            |
 | S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination      | yes                   | Run `/10x-ui` → `/10x-plan ui-tonight-nav` · GitHub #170              |
 | S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                        | no                    | After S-02 · GitHub #171                                              |
-| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)   | yes                   | North star · Run `/10x-plan small-scope-galaxies` · GitHub #172       |
+| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)   | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178) |
 | S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check     | no                    | After S-04 · GitHub #173                                              |
 | S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next) | yes                 | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174 |
 | S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)          | yes                   | Run `/10x-observability-audit` first · GitHub #175                    |
