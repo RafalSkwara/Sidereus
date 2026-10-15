@@ -846,11 +846,11 @@ There is no data migration. The planet fact wording changes for stored offline c
 
 #### Automated
 
-- [x] 1.1 Types and lint pass
-- [x] 1.2 The whole unit suite passes, including the new guard: `npm test`
-- [x] 1.3 `npm run build` succeeds
-- [x] 1.4 `sky-events.spec.ts` passes against a fresh local preview
-- [x] 1.5 `/design` on `astro dev` renders the role bars at 8, 24 and 40 px (after the preview is stopped)
+- [x] 1.1 Types and lint pass — 9385b8a
+- [x] 1.2 The whole unit suite passes, including the new guard: `npm test` — 9385b8a
+- [x] 1.3 `npm run build` succeeds — 9385b8a
+- [x] 1.4 `sky-events.spec.ts` passes against a fresh local preview — 9385b8a
+- [x] 1.5 `/design` on `astro dev` renders the role bars at 8, 24 and 40 px (after the preview is stopped) — 9385b8a
 
 #### Manual
 
