@@ -70,3 +70,9 @@ Temporary files (uncommitted):
 Order: `wrangler deploy -c dist/server/probe-wrangler.json`, then `wrangler secret bulk ~/probe-secrets.env --name sidereus-probe`. Between the two the Worker runs without Supabase (the app boots with `createClient()` null) and touches no data.
 
 Removal (after the checks are recorded): `npx wrangler delete sidereus-probe`; `npx wrangler kv namespace delete --namespace-id <id>` for both ids; delete `dist/server/probe-wrangler.json` and `~/probe-secrets.env`.
+
+## Decision and cleanup (owner, 2026-10-16)
+
+The probe Worker was skipped; `sidereus-probe` was never deployed. 1.9 and 1.10 are now owner manual checks on production: 1.9 on any `sidereus` invocation event in Workers Logs (`request.cf` geo fields and client IP absent), 1.10 on the first real `sidereus: <step> failed` line and its Issue (grouped by message, `step` filterable). D2 is revisited only if 1.10 shows a different grouping or an unfilterable `step`.
+
+Removed: KV namespaces `sidereus-probe-forecast-cache` (c49fa235…) and `sidereus-probe-session` (cf95030e…) deleted with `wrangler kv namespace delete`; `dist/server/probe-wrangler.json` deleted; `~/probe-secrets.env` never existed. `wrangler kv namespace list` afterwards shows only the production `FORECAST_CACHE` and `sidereus-session`. Left on the account: Version `5626dfff` (tag `probe`, no traffic; its Version URL is gone with Phase 6's `preview_urls: false`).
