@@ -393,21 +393,21 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 1.1 Reader tests pass: `npx vitest run scripts/lib/hipparcos.test.mjs` — 2bcff3d
-- [x] 1.2 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/hipparcos.mjs scripts/lib/hipparcos.test.mjs scripts/hipparcos-source-check.mjs vitest.config.ts eslint.config.js` — 2bcff3d
-- [x] 1.3 The pinned file verifies and counts match: `node scripts/hipparcos-source-check.mjs` reports 118,218 rows, 921 stars at V ≤ 4.5 and 25,723 at V ≤ 7.5, and lists the ten stars positioned from RAhms/DEdms — 2bcff3d
-- [x] 1.4 The whole unit suite still passes: `npm test` — 2bcff3d
+- [x] 1.1 Reader tests pass: `npx vitest run scripts/lib/hipparcos.test.mjs` — 90b345b
+- [x] 1.2 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/hipparcos.mjs scripts/lib/hipparcos.test.mjs scripts/hipparcos-source-check.mjs vitest.config.ts eslint.config.js` — 90b345b
+- [x] 1.3 The pinned file verifies and counts match: `node scripts/hipparcos-source-check.mjs` reports 118,218 rows, 921 stars at V ≤ 4.5 and 25,723 at V ≤ 7.5, and lists the ten stars positioned from RAhms/DEdms — 90b345b
+- [x] 1.4 The whole unit suite still passes: `npm test` — 90b345b
 
 ### Phase 2: Designation source data
 
 #### Automated
 
-- [x] 2.1 Designation helper tests pass: `npx vitest run scripts/lib/designations.test.mjs` — 35f7da7
-- [x] 2.2 The regeneration script completes and writes both tables: `npm run stars:designations` — 35f7da7
-- [x] 2.3 Table counts are plausible: at least 3,100 designated stars, 1,400 Bayer values and 2,500 Flamsteed values in `star-designations.json`, and at least 500 HIPs in `iau-star-names.json` — 35f7da7
-- [x] 2.4 The transform is deterministic: with the raw responses saved by the live run, `npm run stars:designations -- --from-raw <scratch dir>` run twice gives byte-identical tables (`cmp`) — 35f7da7
-- [x] 2.5 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/designations.mjs scripts/lib/designations.test.mjs scripts/build-star-designations.mjs` — 35f7da7
-- [x] 2.6 The whole unit suite still passes: `npm test` — 35f7da7
+- [x] 2.1 Designation helper tests pass: `npx vitest run scripts/lib/designations.test.mjs` — a668806
+- [x] 2.2 The regeneration script completes and writes both tables: `npm run stars:designations` — a668806
+- [x] 2.3 Table counts are plausible: at least 3,100 designated stars, 1,400 Bayer values and 2,500 Flamsteed values in `star-designations.json`, and at least 500 HIPs in `iau-star-names.json` — a668806
+- [x] 2.4 The transform is deterministic: with the raw responses saved by the live run, `npm run stars:designations -- --from-raw <scratch dir>` run twice gives byte-identical tables (`cmp`) — a668806
+- [x] 2.5 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/designations.mjs scripts/lib/designations.test.mjs scripts/build-star-designations.mjs` — a668806
+- [x] 2.6 The whole unit suite still passes: `npm test` — a668806
 
 #### Manual
 
@@ -419,12 +419,12 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 3.1 Build function tests pass: `npx vitest run scripts/lib/build-stars.test.mjs` — 395da5d
-- [x] 3.2 A scratch run succeeds and prints 921 bright stars and 25,723 finder stars: `STARS_OUT_DIR=<scratch dir outside the repo> npm run stars:build` — 395da5d
-- [x] 3.3 A second scratch run is byte-identical: the SHA-256 of all four scratch files is unchanged after re-running — 395da5d
-- [x] 3.4 The scratch finder file's gzip is under the 160,000-byte test budget, and its size is recorded in the phase's note — 395da5d
-- [x] 3.5 Lint passes with no warnings: `npx eslint --max-warnings 0 scripts/build-stars.mjs scripts/lib/` — 395da5d
-- [x] 3.6 The whole unit suite still passes (the committed files are untouched): `npm test` — 395da5d
+- [x] 3.1 Build function tests pass: `npx vitest run scripts/lib/build-stars.test.mjs` — e1ca576
+- [x] 3.2 A scratch run succeeds and prints 921 bright stars and 25,723 finder stars: `STARS_OUT_DIR=<scratch dir outside the repo> npm run stars:build` — e1ca576
+- [x] 3.3 A second scratch run is byte-identical: the SHA-256 of all four scratch files is unchanged after re-running — e1ca576
+- [x] 3.4 The scratch finder file's gzip is under the 160,000-byte test budget, and its size is recorded in the phase's note — e1ca576
+- [x] 3.5 Lint passes with no warnings: `npx eslint --max-warnings 0 scripts/build-stars.mjs scripts/lib/` — e1ca576
+- [x] 3.6 The whole unit suite still passes (the committed files are untouched): `npm test` — e1ca576
 
 #### Manual
 
@@ -435,14 +435,14 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 4.1 The whole unit suite passes: `npm test` — f512ee0
-- [x] 4.2 Type check passes: `npx astro check` — f512ee0
-- [x] 4.3 Lint passes with no warnings: `npm run lint` — f512ee0
-- [x] 4.4 Published-hop references and the coverage gate pass without any fixture edit: `npx vitest run src/lib/engine/finder.test.ts` — f512ee0
-- [x] 4.5 The explainer chart test passes after regeneration and the start star is still Alphecca: `npx vitest run src/lib/finder/example-chart.test.ts src/lib/finder/steps.test.ts` — f512ee0
-- [x] 4.6 The finder file's gzip is under the 160,000-byte budget on the real build output: `npx vitest run src/lib/catalogue/finder-stars.test.ts` — f512ee0
-- [x] 4.7 The production build passes, including the star-data leak check: `npm run build` — f512ee0
-- [x] 4.8 Since Phase 3, the diff touches only the four generated files, the files listed in this phase and the example chart: `git diff --stat <phase-3-commit>..HEAD` — f512ee0
+- [x] 4.1 The whole unit suite passes: `npm test` — 2728eaa
+- [x] 4.2 Type check passes: `npx astro check` — 2728eaa
+- [x] 4.3 Lint passes with no warnings: `npm run lint` — 2728eaa
+- [x] 4.4 Published-hop references and the coverage gate pass without any fixture edit: `npx vitest run src/lib/engine/finder.test.ts` — 2728eaa
+- [x] 4.5 The explainer chart test passes after regeneration and the start star is still Alphecca: `npx vitest run src/lib/finder/example-chart.test.ts src/lib/finder/steps.test.ts` — 2728eaa
+- [x] 4.6 The finder file's gzip is under the 160,000-byte budget on the real build output: `npx vitest run src/lib/catalogue/finder-stars.test.ts` — 2728eaa
+- [x] 4.7 The production build passes, including the star-data leak check: `npm run build` — 2728eaa
+- [x] 4.8 Since Phase 3, the diff touches only the four generated files, the files listed in this phase and the example chart: `git diff --stat <phase-3-commit>..HEAD` — 2728eaa
 
 #### Manual
 
@@ -452,12 +452,12 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 5.1 i18n parity and the whole unit suite pass: `npm test` — 39e68f7
-- [x] 5.2 Type check and lint pass: `npx astro check` and `npm run lint` — 39e68f7
-- [x] 5.3 Formatting passes on the changed Markdown and JSON: `npx prettier --check` on the changed files — 39e68f7
-- [x] 5.4 The full e2e suite passes against a fresh production preview and the local stack, counts reported in the PR: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` against a fresh `npm run build` preview (port 4337, forecast fixture 4403), the local stack's values inline and never exported (lessons: run the whole suite before a PR) — 39e68f7
-- [x] 5.5 The smoke walk passes against local Supabase: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=<preview URL> npm run smoke` — 39e68f7
-- [x] 5.6 No HYG reference remains outside archives and history: `grep -rn "HYG" src scripts CLAUDE.md` finds only the comments that explain the switch — 39e68f7
+- [x] 5.1 i18n parity and the whole unit suite pass: `npm test` — 455098a
+- [x] 5.2 Type check and lint pass: `npx astro check` and `npm run lint` — 455098a
+- [x] 5.3 Formatting passes on the changed Markdown and JSON: `npx prettier --check` on the changed files — 455098a
+- [x] 5.4 The full e2e suite passes against a fresh production preview and the local stack, counts reported in the PR: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` against a fresh `npm run build` preview (port 4337, forecast fixture 4403), the local stack's values inline and never exported (lessons: run the whole suite before a PR) — 455098a
+- [x] 5.5 The smoke walk passes against local Supabase: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=<preview URL> npm run smoke` — 455098a
+- [x] 5.6 No HYG reference remains outside archives and history: `grep -rn "HYG" src scripts CLAUDE.md` finds only the comments that explain the switch — 455098a
 
 #### Manual
 
