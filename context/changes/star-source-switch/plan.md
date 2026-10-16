@@ -402,12 +402,12 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 2.1 Designation helper tests pass: `npx vitest run scripts/lib/designations.test.mjs`
-- [x] 2.2 The regeneration script completes and writes both tables: `npm run stars:designations`
-- [x] 2.3 Table counts are plausible: at least 3,100 designated stars, 1,400 Bayer values and 2,500 Flamsteed values in `star-designations.json`, and at least 500 HIPs in `iau-star-names.json`
-- [x] 2.4 The transform is deterministic: with the raw responses saved by the live run, `npm run stars:designations -- --from-raw <scratch dir>` run twice gives byte-identical tables (`cmp`)
-- [x] 2.5 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/designations.mjs scripts/lib/designations.test.mjs scripts/build-star-designations.mjs`
-- [x] 2.6 The whole unit suite still passes: `npm test`
+- [x] 2.1 Designation helper tests pass: `npx vitest run scripts/lib/designations.test.mjs` — 35f7da7
+- [x] 2.2 The regeneration script completes and writes both tables: `npm run stars:designations` — 35f7da7
+- [x] 2.3 Table counts are plausible: at least 3,100 designated stars, 1,400 Bayer values and 2,500 Flamsteed values in `star-designations.json`, and at least 500 HIPs in `iau-star-names.json` — 35f7da7
+- [x] 2.4 The transform is deterministic: with the raw responses saved by the live run, `npm run stars:designations -- --from-raw <scratch dir>` run twice gives byte-identical tables (`cmp`) — 35f7da7
+- [x] 2.5 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/designations.mjs scripts/lib/designations.test.mjs scripts/build-star-designations.mjs` — 35f7da7
+- [x] 2.6 The whole unit suite still passes: `npm test` — 35f7da7
 
 #### Manual
 
