@@ -13,8 +13,8 @@ import { resolveTimeZone, type TimeZoneMode, type TimeZoneResolution } from "./t
  *
  * Privacy rules (PRD NFR): database error text can echo submitted values, coordinates included, so
  * it never leaves this module. Writes return a fixed, value-free message key (`@/i18n`) and, for anything
- * but a user-input failure, a `fault` holding only the PostgREST `code` and `status` and the kind
- * `classifyFault` gave them (`@/lib/observability/fault`); reads throw an `Error` whose message is such a
+ * but a user-input failure, a `fault` holding only the PostgREST `code` (a `PostgrestError` has no HTTP status; it
+ * stays on the response) and the kind `classifyFault` gave it (`@/lib/observability/fault`); reads throw an `Error` whose message is such a
  * key and whose `cause` is the same sanitized `StoreFault`. This module never logs: the caller decides how
  * a failure is traced.
  *

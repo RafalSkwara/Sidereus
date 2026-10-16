@@ -4,7 +4,7 @@ import type { MessageKey } from "@/i18n";
 import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
 import { reachedBySave } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
-import { editRedirect, logNotice, withMilestones } from "@/lib/observations/redirect";
+import { editRedirect, noticeRedirect, withMilestones } from "@/lib/observations/redirect";
 import { observationUpdateSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { saveFailureKey } from "@/lib/observability/save-failure";
@@ -53,5 +53,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(saveFailureKey("save.log", result));
   }
-  return context.redirect(withMilestones(logNotice("updated", parsed.data.target), celebrate));
+  return context.redirect(withMilestones(noticeRedirect("updated", parsed.data.target), celebrate));
 };

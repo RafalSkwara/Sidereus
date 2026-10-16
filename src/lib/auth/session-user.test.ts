@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import {
   AuthApiError,
   AuthInvalidJwtError,
+  AuthRefreshDiscardedError,
   AuthRetryableFetchError,
   AuthSessionMissingError,
   AuthUnknownError,
@@ -49,8 +50,13 @@ describe("the pinned lists, checked against the installed @supabase/auth-js", ()
   it("names exactly what the library's error classes are called", () => {
     expect(new AuthSessionMissingError().name).toBe("AuthSessionMissingError");
     expect(new AuthInvalidJwtError("x").name).toBe("AuthInvalidJwtError");
+    expect(new AuthRefreshDiscardedError().name).toBe("AuthRefreshDiscardedError");
     expect(new AuthRetryableFetchError("x", 503).name).toBe("AuthRetryableFetchError");
-    expect([...ROUTINE_ERROR_NAMES].sort()).toEqual(["AuthInvalidJwtError", "AuthSessionMissingError"]);
+    expect([...ROUTINE_ERROR_NAMES].sort()).toEqual([
+      "AuthInvalidJwtError",
+      "AuthRefreshDiscardedError",
+      "AuthSessionMissingError",
+    ]);
   });
 
   it("lists only codes the library declares (the ErrorCode union in error-codes.d.ts)", () => {
@@ -77,6 +83,9 @@ describe("the pinned lists, checked against the installed @supabase/auth-js", ()
     expect(new AuthSessionMissingError().code).toBeUndefined();
     expect(new AuthInvalidJwtError("x").code).toBe("invalid_jwt");
     expect(new AuthRetryableFetchError("x", 0).status).toBe(0);
+    // A concurrent sign-out or sign-in raced the refresh: auth-js itself treats it as a no-op, with a 409 and no code.
+    expect(new AuthRefreshDiscardedError().code).toBeUndefined();
+    expect(new AuthRefreshDiscardedError().status).toBe(409);
   });
 });
 
@@ -112,6 +121,10 @@ describe("sessionUser", () => {
       ],
       ["a missing session error", new AuthSessionMissingError()],
       ["an invalid JWT (a bad signature or structure)", new AuthInvalidJwtError("Invalid JWT signature")],
+      [
+        "a refresh discarded because the session changed mid-flight (AuthRefreshDiscardedError, status 409)",
+        new AuthRefreshDiscardedError(),
+      ],
     ];
 
     it.each(routine)("%s", async (_label, error) => {
@@ -121,7 +134,7 @@ describe("sessionUser", () => {
     });
   });
 
-  describe("a failure is signed out and leaves one auth.claims line with only its name and status", () => {
+  describe("a failure is signed out and leaves one auth.claims line with only its name, status and auth-js code", () => {
     const failures: [string, unknown, Record<string, unknown>][] = [
       [
         "a transient fetch failure with a 5xx status (AuthRetryableFetchError 503)",
@@ -136,12 +149,12 @@ describe("sessionUser", () => {
       [
         "a 5xx the library does not call retryable (AuthApiError 505)",
         new AuthApiError("m", 505, "unexpected_failure"),
-        { name: "AuthApiError", status: 505 },
+        { name: "AuthApiError", status: 505, code: "unexpected_failure" },
       ],
       [
         "a rate limit (AuthApiError 429)",
         new AuthApiError("m", 429, "over_request_rate_limit"),
-        { name: "AuthApiError", status: 429 },
+        { name: "AuthApiError", status: 429, code: "over_request_rate_limit" },
       ],
       [
         "an unknown error class (unknown is not benign)",
@@ -151,7 +164,7 @@ describe("sessionUser", () => {
       [
         "an unknown code on a 4xx",
         new AuthApiError("m", 400, "flow_state_not_found"),
-        { name: "AuthApiError", status: 400 },
+        { name: "AuthApiError", status: 400, code: "flow_state_not_found" },
       ],
       [
         "a timeout error (TimeoutError)",
@@ -166,7 +179,7 @@ describe("sessionUser", () => {
       [
         "a routine code on a 5xx status",
         new AuthApiError("m", 503, "session_expired"),
-        { name: "AuthApiError", status: 503 },
+        { name: "AuthApiError", status: 503, code: "session_expired" },
       ],
     ];
 

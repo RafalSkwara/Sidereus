@@ -7,7 +7,7 @@ import { isTargetKey, type TargetKey } from "@/lib/targets";
 /**
  * The edited session plans' data layer (roadmap M-3 S-08, adjustable-session-plan). Follows `@/lib/gear/store.ts`'s
  * privacy rules: database error text never leaves this module, writes return a fixed, value-free message key
- * (`@/i18n`) plus a sanitized `fault` (only the code and status, never for a user-input failure), the read throws an
+ * (`@/i18n`) plus a sanitized `fault` (only the code, never for a user-input failure), the read throws an
  * `Error` whose message is such a key and whose `cause` is a sanitized `StoreFault` (never the database error, whose
  * message can echo values), and this module never logs: the caller decides how a failure is traced.
  *

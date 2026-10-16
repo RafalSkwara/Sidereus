@@ -13,7 +13,8 @@ import { describe, expect, it } from "vitest";
  *
  * A site passes when its handler:
  *
- * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`), or
+ * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`) or `logReadFailure`
+ *   (`@/lib/observability/read-failure`, the pages' read failures, which picks one of the two by the fault), or
  * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters of Phases 7-9, recognised by
  *   name and only when the file imports them from `@/lib/observability/client` or `@/lib/offline/report` (for a
  *   `.catch(...)` or `.then(ok, ...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`),
@@ -43,7 +44,7 @@ const SELF = "src/lib/observability/silent-catch-guard.test.ts";
 const EXCLUDED_FILES = new Set(["src/lib/database.types.ts"]);
 const EXCLUDED_DIRS = ["src/lib/test-support/"];
 
-const LOG_NAMES = new Set(["logFailure", "logNotice"]);
+const LOG_NAMES = new Set(["logFailure", "logNotice", "logReadFailure"]);
 /** The modules the browser-side reporters are imported from (they do not exist before Phase 7). */
 const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/report"]);
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
@@ -105,11 +106,6 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 1,
     reason:
       "resets the memo only; the same rejection still reaches every awaiting caller, and the finder loader logs finder.stars",
-  },
-  "src/pages/log/progress.astro": {
-    count: 2,
-    reason:
-      "both handlers report through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through",
   },
   "src/lib/location/locate.ts": {
     count: 1,
@@ -254,7 +250,7 @@ function mentions(root: ts.Node, name: string): boolean {
 /** `catch` clauses nested inside a handler are sites of their own: a log there does not excuse the outer one. */
 const skipNestedCatch = (node: ts.Node): boolean => ts.isCatchClause(node);
 
-/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, an imported `report(...)` / `reportAnd(...)`. */
+/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, `logReadFailure(...)`, an imported `report(...)` / `reportAnd(...)`. */
 function isReportingCall(node: ts.Node, imports: Imports): boolean {
   if (!ts.isCallExpression(node)) return false;
   const callee = node.expression;
@@ -460,6 +456,11 @@ const SAMPLES: { name: string; silent: string; reported: string }[] = [
     name: "a constant return",
     silent: `async function load() {\n  try {\n    return await read();\n  } catch (error) {\n    return null;\n  }\n}\n`,
     reported: `async function load() {\n  try {\n    return await read();\n  } catch (error) {\n    logFailure("tonight.plan-edits", error);\n    return null;\n  }\n}\n`,
+  },
+  {
+    name: "a page read that falls back to a banner",
+    silent: `let loadError = null;\ntry {\n  rows = await store.list();\n} catch (error) {\n  loadError = "errors.load.observations";\n}\n`,
+    reported: `let loadError = null;\ntry {\n  rows = await store.list();\n} catch (error) {\n  logReadFailure("read.log", error);\n  loadError = "errors.load.observations";\n}\n`,
   },
   {
     name: "a .catch handler that returns a constant",

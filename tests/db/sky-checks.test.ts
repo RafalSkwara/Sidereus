@@ -188,12 +188,12 @@ describe("skyCheckStore", () => {
     const now = new Date();
 
     expect((await skyCheckStore.list(user, { page: 1, now })).entries).toEqual([]);
-    expect(await skyCheckStore.answer(user, row.id, "clear", now)).toMatchObject({
+    expect(await skyCheckStore.answer(user, row.id, "clear", now)).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
       fault: { kind: "no-rows" },
     });
-    expect(await skyCheckStore.skip(user, row.id, now)).toMatchObject({
+    expect(await skyCheckStore.skip(user, row.id, now)).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
       fault: { kind: "no-rows" },
@@ -254,12 +254,12 @@ describe("skyCheckStore", () => {
     const [answered] = await rows(user, site, "2026-09-19");
     expect(await skyCheckStore.answer(user, answered.id, "clear", new Date())).toEqual({ ok: true });
 
-    expect(await skyCheckStore.answer(user, noForecast.id, "clear", new Date())).toMatchObject({
+    expect(await skyCheckStore.answer(user, noForecast.id, "clear", new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
       fault: { kind: "no-rows" },
     });
-    expect(await skyCheckStore.skip(user, answered.id, new Date())).toMatchObject({
+    expect(await skyCheckStore.skip(user, answered.id, new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
       fault: { kind: "no-rows" },
@@ -270,7 +270,7 @@ describe("skyCheckStore", () => {
   it("cannot answer another user's night, and treats a malformed id as not found", async () => {
     await record(a, siteA, "2026-09-30", "go", past());
     const [row] = await rows(a, siteA, "2026-09-30");
-    expect(await skyCheckStore.answer(b, row.id, "clear", new Date())).toMatchObject({
+    expect(await skyCheckStore.answer(b, row.id, "clear", new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
       fault: { kind: "no-rows" },

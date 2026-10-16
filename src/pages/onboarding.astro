@@ -5,7 +5,7 @@ import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
 import { hasAnyGear } from "@/lib/onboarding/store";
-import { logFailure } from "@/lib/observability/log-failure";
+import { logReadFailure } from "@/lib/observability/read-failure";
 
 // `?error=` carries a message key; the island translates it.
 const error = Astro.url.searchParams.get("error");
@@ -20,7 +20,7 @@ if (supabase) {
     // Unknown whether the user has gear: show the setup anyway. `complete_onboarding` refuses a
     // user who already has a site or telescope, so a second run cannot duplicate anything. The read
     // failure is traced (code and name only), so the setup showing to a user with gear is explained.
-    logFailure("read.onboarding", error);
+    logReadFailure("read.onboarding", error);
   }
   if (onboarded) {
     return Astro.redirect("/tonight");

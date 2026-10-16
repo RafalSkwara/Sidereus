@@ -204,7 +204,7 @@ describe("the unique key", () => {
     expect(await sessionPlanStore.save(a.client, siteA, "2026-10-07", ["M31"])).toEqual({ ok: true });
 
     // B saving on A's site is refused, and A's plan is unchanged; a reset by B deletes nothing of A's.
-    expect(await sessionPlanStore.save(b.client, siteA, "2026-10-07", ["M42"])).toMatchObject({
+    expect(await sessionPlanStore.save(b.client, siteA, "2026-10-07", ["M42"])).toEqual({
       ok: false,
       message: "errors.save.sessionPlan",
       fault: { kind: "refused", code: "42501" },

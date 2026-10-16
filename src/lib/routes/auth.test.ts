@@ -15,7 +15,8 @@ import { POST as signup } from "@/pages/api/auth/signup";
 
 /**
  * The auth routes (error-visibility, Phase 5): every Auth failure that is not the user's mistake leaves one
- * `auth.signin` / `auth.signup` / `auth.signout` line with the error's name and status, and the redirect key is
+ * `auth.signin` / `auth.signup` / `auth.signout` line with the error's name, status and auth-js `code` (a code from the
+ * library's own `ErrorCode` list, `isLoggableCode`; an unknown one is dropped), and the redirect key is
  * the one it has always been. The email sits in the form and in every error's message, and reaches neither a line
  * nor a redirect.
  */
@@ -62,6 +63,7 @@ describe("POST /api/auth/signin", () => {
     expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signin failed", {
       step: "auth.signin",
       name: "AuthApiError",
+      code: "over_request_rate_limit",
       status: 429,
     });
     expect(logs.warns).not.toHaveBeenCalled();
@@ -150,6 +152,7 @@ describe("POST /api/auth/signup", () => {
     expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signup failed", {
       step: "auth.signup",
       name: "AuthApiError",
+      code: "unexpected_failure",
       status: 500,
     });
   });
@@ -157,7 +160,12 @@ describe("POST /api/auth/signup", () => {
   it("logs an email rate limit once and keeps its key", async () => {
     const location = await post({ error: new AuthApiError(leaky(), 429, "over_email_send_rate_limit") });
     expect(location.searchParams.get("error")).toBe("errors.auth.emailRateLimited");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signup failed", {
+      step: "auth.signup",
+      name: "AuthApiError",
+      code: "over_email_send_rate_limit",
+      status: 429,
+    });
   });
 
   it("logs a network failure once", async () => {

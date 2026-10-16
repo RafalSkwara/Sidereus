@@ -5,7 +5,7 @@ import type { OnboardingInput } from "./schemas";
 import { completeOnboarding, hasAnyGear } from "./store";
 
 // What talks to Supabase is covered by tests/db; here a fake client answers with an error that echoes submitted
-// values, and the store must keep only a code and a status.
+// values, and the store must keep only a code.
 
 const INPUT: OnboardingInput = {
   site: { latitudeDeg: 52.2297, longitudeDeg: 21.0122, bortle: 6, minAltitudeDeg: 20 },
@@ -14,20 +14,20 @@ const INPUT: OnboardingInput = {
 } as OnboardingInput;
 const OPTIONS = { siteName: "Home" };
 
-const failing = (code: string, status?: number) => fakeClient({ error: leakyPostgrestError(code, status) });
+const failing = (code: string) => fakeClient({ error: leakyPostgrestError(code) });
 
 describe("completeOnboarding", () => {
   it("returns ok when the function succeeds", async () => {
     expect(await completeOnboarding(fakeClient({}), INPUT, OPTIONS)).toEqual({ ok: true });
   });
 
-  it("a server fault keeps only its code and status next to the fixed key", async () => {
-    const result = await completeOnboarding(failing("XX000", 503), INPUT, OPTIONS);
+  it("a server fault keeps only its code next to the fixed key", async () => {
+    const result = await completeOnboarding(failing("XX000"), INPUT, OPTIONS);
     expect(result).toEqual({
       ok: false,
       reason: "failed",
       message: "errors.save.setup",
-      fault: { kind: "server", code: "XX000", status: 503 },
+      fault: { kind: "server", code: "XX000" },
     });
     expect(JSON.stringify(result)).not.toMatch(LEAK);
   });
@@ -70,18 +70,18 @@ describe("hasAnyGear", () => {
     expect(await hasAnyGear(fakeClient({ data: [] }))).toBe(false);
   });
 
-  it("throws its key with a StoreFault cause holding only the code and status, from either read", async () => {
+  it("throws its key with a StoreFault cause holding only the code, from either read", async () => {
     const sitesFail = fakeClient((table) =>
-      table === "sites" ? { error: leakyPostgrestError("XX000", 503) } : { data: [] },
+      table === "sites" ? { error: leakyPostgrestError("XX000") } : { data: [] },
     );
     const telescopesFail = fakeClient((table) =>
-      table === "telescopes" ? { error: leakyPostgrestError("XX000", 503) } : { data: [] },
+      table === "telescopes" ? { error: leakyPostgrestError("XX000") } : { data: [] },
     );
     for (const client of [sitesFail, telescopesFail]) {
       const thrown = (await hasAnyGear(client).catch((error: unknown) => error)) as Error;
       expect(thrown.message).toBe("errors.load.setup");
       expect(thrown.cause).toBeInstanceOf(StoreFault);
-      expect(thrown.cause).toMatchObject({ code: "XX000", status: 503 });
+      expect(thrown.cause).toMatchObject({ code: "XX000" });
       expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
       expect((thrown.cause as Error).message).not.toMatch(LEAK);
     }

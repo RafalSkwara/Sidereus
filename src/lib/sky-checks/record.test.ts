@@ -87,13 +87,12 @@ describe("recordSkyVerdict (error-visibility)", () => {
     expect(warnings).not.toHaveBeenCalled();
   });
 
-  it("logs a server fault as one error line with its code and status only", async () => {
-    await recordSkyVerdict(fakeClient({ error: leakyPostgrestError("XX000", 503) }), INPUT);
+  it("logs a server fault as one error line with its code only", async () => {
+    await recordSkyVerdict(fakeClient({ error: leakyPostgrestError("XX000") }), INPUT);
     expect(errors).toHaveBeenCalledTimes(1);
     expect(errors).toHaveBeenCalledWith("sidereus: tonight.sky-check-record failed", {
       step: "tonight.sky-check-record",
       code: "XX000",
-      status: 503,
     });
     expect(warnings).not.toHaveBeenCalled();
     expect(JSON.stringify([...errors.mock.calls, ...warnings.mock.calls])).not.toMatch(LEAK);

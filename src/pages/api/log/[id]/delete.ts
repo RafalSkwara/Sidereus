@@ -3,7 +3,7 @@ import { NOT_CONFIGURED } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
 import { reachedBySave } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
-import { LOG_LIST, logNotice } from "@/lib/observations/redirect";
+import { LOG_LIST, noticeRedirect } from "@/lib/observations/redirect";
 import { observationStore } from "@/lib/observations/store";
 import { saveFailureKey } from "@/lib/observability/save-failure";
 
@@ -36,5 +36,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok) {
     return fail(saveFailureKey("save.log", result));
   }
-  return context.redirect(logNotice("deleted", result.target));
+  return context.redirect(noticeRedirect("deleted", result.target));
 };

@@ -103,7 +103,7 @@ describe("listSeenEntries", () => {
   });
 
   it("throws a keyed error whose cause is a sanitized fault, never the database error", async () => {
-    const failure = leakyPostgrestError("XX000", 503);
+    const failure = leakyPostgrestError("XX000");
     const failing = {
       from: () => {
         const query = {
@@ -120,7 +120,7 @@ describe("listSeenEntries", () => {
     const cause = (thrown as Error).cause;
     expect(cause).toBeInstanceOf(StoreFault);
     expect(cause).not.toBe(failure);
-    expect(cause).toMatchObject({ code: "XX000", status: 503 });
+    expect(cause).toMatchObject({ code: "XX000" });
     expect(JSON.stringify(cause)).not.toMatch(LEAK);
   });
 });
@@ -180,12 +180,12 @@ function withGear(observations: FakeResult) {
 }
 
 describe("a failed write carries a sanitized fault", () => {
-  it("create: a server fault keeps only its code and status next to the fixed key", async () => {
-    const result = await observationStore.create(withGear({ error: leakyPostgrestError("XX000", 503) }), CREATE, NOW);
+  it("create: a server fault keeps only its code next to the fixed key", async () => {
+    const result = await observationStore.create(withGear({ error: leakyPostgrestError("XX000") }), CREATE, NOW);
     expect(result).toEqual({
       ok: false,
       message: "errors.save.observation",
-      fault: { kind: "server", code: "XX000", status: 503 },
+      fault: { kind: "server", code: "XX000" },
     });
     expect(JSON.stringify(result)).not.toMatch(LEAK);
   });
@@ -224,7 +224,7 @@ describe("a failed write carries a sanitized fault", () => {
     });
   });
 
-  it("update: a server fault keeps its code and status, a refusal is `refused`, a zero-row update is `no-rows`", async () => {
+  it("update: a server fault keeps its code, a refusal is `refused`, a zero-row update is `no-rows`", async () => {
     const updateAnswers = (answer: FakeResult) =>
       fakeClient((table, calls) => {
         if (table === "sites") return { data: SITE_ROW };
@@ -234,7 +234,7 @@ describe("a failed write carries a sanitized fault", () => {
       });
 
     const server = await observationStore.update(
-      updateAnswers({ error: leakyPostgrestError("XX000", 503) }),
+      updateAnswers({ error: leakyPostgrestError("XX000") }),
       OBSERVATION_ID,
       UPDATE,
       NOW,
@@ -242,7 +242,7 @@ describe("a failed write carries a sanitized fault", () => {
     expect(server).toEqual({
       ok: false,
       message: "errors.save.observation",
-      fault: { kind: "server", code: "XX000", status: 503 },
+      fault: { kind: "server", code: "XX000" },
     });
     expect(JSON.stringify(server)).not.toMatch(LEAK);
 
@@ -274,12 +274,12 @@ describe("a failed write carries a sanitized fault", () => {
 
   it("update: a failed lookup of the entry or of the user's sites keeps its code", async () => {
     const getFails = fakeClient((table) =>
-      table === "observations" ? { error: leakyPostgrestError("PGRST301", 401) } : { data: SITE_ROW },
+      table === "observations" ? { error: leakyPostgrestError("PGRST301") } : { data: SITE_ROW },
     );
     expect(await observationStore.update(getFails, OBSERVATION_ID, UPDATE, NOW)).toEqual({
       ok: false,
       message: "errors.save.observation",
-      fault: { kind: "session", code: "PGRST301", status: 401 },
+      fault: { kind: "session", code: "PGRST301" },
     });
 
     // No chosen site: the night bound reads every site of the user, and that read fails.
@@ -313,12 +313,10 @@ describe("a failed write carries a sanitized fault", () => {
   });
 
   it("remove: a server fault keeps its code, a malformed id has none, and a zero-row delete is `no-rows`", async () => {
-    expect(
-      await observationStore.remove(fakeClient({ error: leakyPostgrestError("XX000", 502) }), OBSERVATION_ID),
-    ).toEqual({
+    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("XX000") }), OBSERVATION_ID)).toEqual({
       ok: false,
       message: "errors.delete.observation",
-      fault: { kind: "server", code: "XX000", status: 502 },
+      fault: { kind: "server", code: "XX000" },
     });
     expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("22P02") }), "nope")).toEqual({
       ok: false,
@@ -341,14 +339,14 @@ describe("a failed read throws its key with a sanitized cause", () => {
   it.each([
     ["list", (c: TypedSupabaseClient) => observationStore.list(c, { page: 1 })],
     ["get", (c: TypedSupabaseClient) => observationStore.get(c, OBSERVATION_ID)],
-  ])("%s: the cause is a StoreFault holding only the code and status", async (_name, run) => {
-    const thrown = (await run(fakeClient({ error: leakyPostgrestError("XX000", 503) })).catch(
+  ])("%s: the cause is a StoreFault holding only the code", async (_name, run) => {
+    const thrown = (await run(fakeClient({ error: leakyPostgrestError("XX000") })).catch(
       (error: unknown) => error,
     )) as Error;
     expect(thrown.message).toBe("errors.load.observations");
     expect(thrown.cause).toBeInstanceOf(StoreFault);
-    expect(thrown.cause).toMatchObject({ code: "XX000", status: 503 });
-    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name", "status"]);
+    expect(thrown.cause).toMatchObject({ code: "XX000" });
+    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name"]);
     expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
     expect((thrown.cause as Error).message).not.toMatch(LEAK);
   });

@@ -9,7 +9,7 @@ import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
 import { eyepieceStore, type EyepieceRecord } from "@/lib/gear/store";
-import { logFailure } from "@/lib/observability/log-failure";
+import { logReadFailure } from "@/lib/observability/read-failure";
 
 const id = Astro.params.id ?? "";
 // `?error=` carries a message key; the form translates it.
@@ -24,7 +24,7 @@ if (supabase) {
   try {
     eyepiece = await eyepieceStore.get(supabase, id);
   } catch (error) {
-    logFailure("read.gear", error);
+    logReadFailure("read.gear", error);
     loadError = m.errors.load.eyepiece;
   }
   if (!eyepiece && !loadError) {

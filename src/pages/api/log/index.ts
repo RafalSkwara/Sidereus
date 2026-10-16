@@ -4,7 +4,7 @@ import type { MessageKey } from "@/i18n";
 import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
 import { reachedBySave } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
-import { formRedirect, logNotice, tonightReturnPath, withMilestones } from "@/lib/observations/redirect";
+import { formRedirect, noticeRedirect, tonightReturnPath, withMilestones } from "@/lib/observations/redirect";
 import { observationInputSchema, returnTargetSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
 import { saveFailureKey } from "@/lib/observability/save-failure";
@@ -67,7 +67,7 @@ export const POST: APIRoute = async (context) => {
   return context.redirect(
     withMilestones(
       manual
-        ? logNotice("saved", target)
+        ? noticeRedirect("saved", target)
         : `${tonightReturnPath(from)}?${new URLSearchParams({ logged: target }).toString()}`,
       celebrate,
     ),

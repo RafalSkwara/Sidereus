@@ -336,4 +336,22 @@ describe("loadTonight's failure lines (error-visibility)", () => {
     expect(tonightLines()[0][0]).toBe("sidereus: tonight.build failed");
     expectNoPrivateValue();
   });
+
+  it("also guards the choice of the site and telescope: a throw there ends as the tonight.failed state, not an uncaught one", async () => {
+    // `chooseOwned` is pure, so only a list whose `find` throws can reach the guard from outside.
+    const hostile = Object.assign([WARSAW], {
+      find: () => {
+        throw new RangeError(`find failed at ${String(WARSAW.latitudeDeg)}`);
+      },
+    });
+    mocks.listSites.mockResolvedValue(hostile);
+    const result = await load();
+    expect(result.tonightError).toBe("tonight.failed");
+    expect(result.view).toBeNull();
+    expect(result.needsSetup).toBe(false);
+    expect(result.sitesError).toBeNull();
+    expect(mocks.buildTonight).not.toHaveBeenCalled();
+    expect(tonightLines()).toEqual([["sidereus: tonight.build failed", { step: "tonight.build", name: "RangeError" }]]);
+    expectNoPrivateValue();
+  });
 });

@@ -5,7 +5,8 @@
  *
  * What a line may hold is the privacy rule, kept in this one file: a fixed message per step and the structured fields
  * `{ step, name?, code?, status? }`. `name` is an error's (or its cause's) name when it looks like an identifier,
- * `code` is a database code that passes `CODE_SHAPE`, `status` is an integer 100-599. The helper never reads
+ * `code` is one of a few closed shapes (`isLoggableCode`: a SQLSTATE, a PostgREST code, a forecast step or an auth-js
+ * error code), `status` is an integer 100-599. The helper never reads
  * `message` or `stack`, never passes an `Error` (or any object other than the fields) to the console, and never
  * throws, whatever it is given. No identifier, coordinate, email, URL or form value ever reaches a line (D4).
  */
@@ -37,8 +38,6 @@ export const FAILURE_STEPS = [
   "finder.stars",
   "finder.chart",
   "account.plan",
-  "milestones.read",
-  "milestones.record",
   "milestones.list",
   "progress.seen",
   "milestones.read-create",
@@ -72,8 +71,129 @@ export type ListedFailureStep = (typeof FAILURE_STEPS)[number];
 /** A step a line may name: a closed vocabulary, so a free-text value can never become the step. */
 export type FailureStep = ListedFailureStep;
 
-/** A database error code shaped like PostgREST's or Postgres's (`42501`, `PGRST301`); anything else is not logged. */
-export const CODE_SHAPE = /^[0-9A-Za-z_]{1,12}$/;
+/** Postgres's SQLSTATE: five digits or capitals (`42501`, `XX000`). */
+const SQLSTATE_SHAPE = /^[0-9A-Z]{5}$/;
+
+/** PostgREST's own codes (`PGRST301`). */
+const POSTGREST_SHAPE = /^PGRST\d{3}$/;
+
+/** The four steps of a `ForecastError`, which travels as the line's `code` (`open-meteo.ts`). */
+const FORECAST_STEPS: ReadonlySet<string> = new Set(["request", "http", "parse", "schema"]);
+
+/**
+ * The members of `@supabase/auth-js`'s `ErrorCode` union (`error-codes.d.ts`, 2.116.0), copied as an explicit
+ * allowlist: GoTrue's own words for what went wrong (`over_request_rate_limit`, `validation_failed`), never a value.
+ * `log-failure.test.ts` checks every entry against the installed copy. A code the library adds later is dropped from
+ * the line until it is added here (noise lost, never a leak).
+ */
+export const AUTH_ERROR_CODES: readonly string[] = [
+  "unexpected_failure",
+  "validation_failed",
+  "bad_json",
+  "email_exists",
+  "phone_exists",
+  "bad_jwt",
+  "not_admin",
+  "no_authorization",
+  "user_not_found",
+  "session_not_found",
+  "session_expired",
+  "refresh_token_not_found",
+  "refresh_token_already_used",
+  "flow_state_not_found",
+  "flow_state_expired",
+  "signup_disabled",
+  "user_banned",
+  "provider_email_needs_verification",
+  "invite_not_found",
+  "bad_oauth_state",
+  "bad_oauth_callback",
+  "oauth_provider_not_supported",
+  "unexpected_audience",
+  "single_identity_not_deletable",
+  "email_conflict_identity_not_deletable",
+  "identity_already_exists",
+  "email_provider_disabled",
+  "phone_provider_disabled",
+  "too_many_enrolled_mfa_factors",
+  "mfa_factor_name_conflict",
+  "mfa_factor_not_found",
+  "mfa_ip_address_mismatch",
+  "mfa_challenge_expired",
+  "mfa_verification_failed",
+  "mfa_verification_rejected",
+  "insufficient_aal",
+  "captcha_failed",
+  "saml_provider_disabled",
+  "manual_linking_disabled",
+  "sms_send_failed",
+  "email_not_confirmed",
+  "phone_not_confirmed",
+  "reauth_nonce_missing",
+  "saml_relay_state_not_found",
+  "saml_relay_state_expired",
+  "saml_idp_not_found",
+  "saml_assertion_no_user_id",
+  "saml_assertion_no_email",
+  "user_already_exists",
+  "sso_provider_not_found",
+  "saml_metadata_fetch_failed",
+  "saml_idp_already_exists",
+  "sso_domain_already_exists",
+  "saml_entity_id_mismatch",
+  "conflict",
+  "provider_disabled",
+  "user_sso_managed",
+  "reauthentication_needed",
+  "same_password",
+  "reauthentication_not_valid",
+  "otp_expired",
+  "otp_disabled",
+  "identity_not_found",
+  "weak_password",
+  "over_request_rate_limit",
+  "over_email_send_rate_limit",
+  "over_sms_send_rate_limit",
+  "bad_code_verifier",
+  "anonymous_provider_disabled",
+  "hook_timeout",
+  "hook_timeout_after_retry",
+  "hook_payload_over_size_limit",
+  "hook_payload_invalid_content_type",
+  "request_timeout",
+  "mfa_phone_enroll_not_enabled",
+  "mfa_phone_verify_not_enabled",
+  "mfa_totp_enroll_not_enabled",
+  "mfa_totp_verify_not_enabled",
+  "mfa_webauthn_enroll_not_enabled",
+  "mfa_webauthn_verify_not_enabled",
+  "mfa_recovery_codes_enroll_not_enabled",
+  "mfa_recovery_codes_verify_not_enabled",
+  "mfa_recovery_codes_locked",
+  "mfa_recovery_codes_sole_factor",
+  "mfa_verified_factor_exists",
+  "invalid_credentials",
+  "email_address_not_authorized",
+  "email_address_invalid",
+];
+
+const AUTH_ERROR_CODE_SET: ReadonlySet<string> = new Set(AUTH_ERROR_CODES);
+
+/**
+ * Whether a value may travel as a line's `code`: only a closed shape, so a value that merely looks like a short word
+ * (a catalogue id such as `M31`, a username, a site-id fragment) can never be logged by a future `{ code: value }`
+ * error. Exactly: a SQLSTATE, a PostgREST code, one of the four forecast steps or an auth-js `ErrorCode`. The one
+ * test the `code` of a line, of a `StoreFault` and of the account-plan fault all go through.
+ */
+export function isLoggableCode(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    (SQLSTATE_SHAPE.test(value) ||
+      POSTGREST_SHAPE.test(value) ||
+      FORECAST_STEPS.has(value) ||
+      AUTH_ERROR_CODE_SET.has(value))
+  );
+}
 
 /** A short identifier: what an error class is called (`TypeError`, `PostgrestError`), never a sentence or a value. */
 const NAME_SHAPE = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
@@ -128,7 +248,7 @@ function nameOf(value: unknown): string | undefined {
 
 function codeOf(value: unknown): string | undefined {
   const code = read(value, "code");
-  return typeof code === "string" && CODE_SHAPE.test(code) ? code : undefined;
+  return isLoggableCode(code) ? code : undefined;
 }
 
 function statusOf(extra: unknown): number | undefined {

@@ -25,25 +25,12 @@ import type { MilestoneRecordInput } from "./milestone-store";
  *   write. It never reads `after` and never celebrates; neither can reach anything.
  *
  * A failed milestone read or record never blocks or fails the write: it is traced under the route's own step word
- * (`logFailure`, `milestoneFailureStep`) and the save simply celebrates nothing. A failed write returns the write's
+ * (`logFailure`, `ROUTE_STEP_OF`) and the save simply celebrates nothing. A failed write returns the write's
  * own result unchanged, and in a counting save nothing is recorded after it.
  */
 
-/** The steps `logMilestoneFailure` can name; each is a fixed word, so the logged line is fixed too. */
-export type MilestoneStep = "read" | "record" | "list" | "seen";
-
 /** The save route a milestone step ran inside: a create, an edit or a delete of a log entry. */
 export type MilestoneRoute = "create" | "edit" | "delete";
-
-/**
- * The page's seen read is S-05's (observing progress), so its step names that feature, not milestones.
- */
-const FAILURE_STEP_OF: Record<MilestoneStep, FailureStep> = {
-  read: "milestones.read",
-  record: "milestones.record",
-  list: "milestones.list",
-  seen: "progress.seen",
-};
 
 /** The read and record steps a save route runs, told apart by the route (a closed word, never free text). */
 const ROUTE_STEP_OF: Record<"read" | "record", Record<MilestoneRoute, FailureStep>> = {
@@ -58,22 +45,6 @@ const ROUTE_STEP_OF: Record<"read" | "record", Record<MilestoneRoute, FailureSte
     delete: "milestones.record-delete",
   },
 };
-
-/** The step a failed milestone step is traced under: the route's own for a read or record inside a save route. */
-export function milestoneFailureStep(step: MilestoneStep, route?: MilestoneRoute): FailureStep {
-  return route !== undefined && (step === "read" || step === "record")
-    ? ROUTE_STEP_OF[step][route]
-    : FAILURE_STEP_OF[step];
-}
-
-/**
- * Traces a failed milestone step through the shared helper: its fixed line, the error's (or its cause's) name and a
- * shaped cause code, never a message (an error message could carry a coordinate or a value, which never go into logs).
- * A read or record inside a save route passes the route, so the create, edit and delete saves can be told apart.
- */
-export function logMilestoneFailure(step: MilestoneStep, error: unknown, route?: MilestoneRoute): void {
-  logFailure(milestoneFailureStep(step, route), error);
-}
 
 export interface ReachedBySaveOptions<Result extends { ok: boolean }> {
   /** Every entry that can count as seen, as `observationStore.listSeenEntries` reads them. */
@@ -114,7 +85,7 @@ async function traced<T>(step: "read" | "record", route: MilestoneRoute, call: (
   try {
     return await call();
   } catch (error) {
-    logFailure(milestoneFailureStep(step, route), error);
+    logFailure(ROUTE_STEP_OF[step][route], error);
     return null;
   }
 }

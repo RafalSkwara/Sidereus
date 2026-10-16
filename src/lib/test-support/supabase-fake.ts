@@ -20,16 +20,16 @@ export const LEAK = /52\.2297|21\.0122|ada\.lovelace|example\.test/;
 
 /**
  * A PostgREST-shaped error whose message, details and hint all hold the submitted values, as a failing insert's do.
- * `status` is set only when given (supabase-js leaves it on the response, but a proxy's error can carry one).
+ * It has no `status`, as the real `PostgrestError` has none: the HTTP status lives on the response, which the stores
+ * do not thread through (impl review F6), so a store fault in these tests carries a `code` only.
  */
-export function leakyPostgrestError(code: string, status?: number) {
+export function leakyPostgrestError(code: string) {
   return {
     name: "PostgrestError",
     message: `new row violates a constraint: Failing row contains (${COORDS}, ${EMAIL})`,
     details: `Key (latitude_deg)=(${COORDS}) belongs to ${EMAIL}`,
     hint: EMAIL,
     code,
-    ...(status === undefined ? {} : { status }),
   };
 }
 

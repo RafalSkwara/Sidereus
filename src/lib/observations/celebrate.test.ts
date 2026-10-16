@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import type { LogEntry } from "@/lib/engine";
 import type { MilestoneKey } from "@/lib/progress/milestones";
 
-import { logMilestoneFailure, reachedBySave } from "./celebrate";
+import { reachedBySave } from "./celebrate";
 import type { MilestoneRecordInput } from "./milestone-store";
 
 /**
@@ -383,54 +383,50 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
   });
 });
 
-describe("logMilestoneFailure", () => {
-  it("logs the fixed line for each step with the error's name only, never its message", () => {
-    for (const step of ["read", "record", "list", "seen"] as const) {
-      logMilestoneFailure(step, new RangeError("52.37,4.89 in a message"));
-    }
-
+describe("reachedBySave traces a failed milestone step under the route's own step", () => {
+  it("names the edit route for a failed read and a failed record, with the cause's code and never a message", async () => {
+    const fixture = new Fixture([M31]);
+    fixture.failRead = new Set([1]);
+    await reachedBySave({
+      read: fixture.read,
+      record: fixture.record,
+      counts: false,
+      route: "edit",
+      write: fixture.write(() => [{ ...M31, rating: 2 }]),
+    });
     expect(errors.mock.calls).toEqual([
-      ["sidereus: milestones.read failed", { step: "milestones.read", name: "RangeError" }],
-      ["sidereus: milestones.record failed", { step: "milestones.record", name: "RangeError" }],
-      ["sidereus: milestones.list failed", { step: "milestones.list", name: "RangeError" }],
-      ["sidereus: progress.seen failed", { step: "progress.seen", name: "RangeError" }],
+      ["sidereus: milestones.read-edit failed", { step: "milestones.read-edit", name: "Error" }],
+    ]);
+
+    errors.mockClear();
+    const recording = new Fixture([M31]);
+    recording.failRecord = new Error("load with 52.37,4.89 in it", { cause: { code: "08006", details: "52.37" } });
+    await reachedBySave({
+      read: recording.read,
+      record: recording.record,
+      counts: false,
+      route: "edit",
+      write: recording.write(() => [{ ...M31, rating: 2 }]),
+    });
+    expect(errors.mock.calls).toEqual([
+      ["sidereus: milestones.record-edit failed", { step: "milestones.record-edit", name: "Error", code: "08006" }],
     ]);
     expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });
 
-  it("names the route for a read or record step, with the cause's code, and ignores it for the page steps", () => {
-    const failure = new Error("load", { cause: { code: "08006", details: "52.37" } });
-    logMilestoneFailure("read", failure, "edit");
-    logMilestoneFailure("record", failure, "create");
-    logMilestoneFailure("record", failure, "delete");
-    logMilestoneFailure("list", failure, "create");
-
-    expect(errors.mock.calls).toEqual([
-      ["sidereus: milestones.read-edit failed", { step: "milestones.read-edit", name: "Error", code: "08006" }],
-      ["sidereus: milestones.record-create failed", { step: "milestones.record-create", name: "Error", code: "08006" }],
-      ["sidereus: milestones.record-delete failed", { step: "milestones.record-delete", name: "Error", code: "08006" }],
-      ["sidereus: milestones.list failed", { step: "milestones.list", name: "Error", code: "08006" }],
-    ]);
-    expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
-  });
-
-  it("names the cause when the error is a plain wrapper around it", () => {
-    logMilestoneFailure("list", new Error("load", { cause: new TypeError("boom") }));
-
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.list failed", {
-      step: "milestones.list",
+  it("names the delete route for a failed record, with the cause's name when the error is a plain wrapper", async () => {
+    const fixture = new Fixture([M31]);
+    fixture.failRecord = new Error("load", { cause: new TypeError("boom") });
+    await reachedBySave({
+      read: fixture.read,
+      record: fixture.record,
+      counts: false,
+      route: "delete",
+      write: fixture.write(() => []),
+    });
+    expect(errors).toHaveBeenCalledExactlyOnceWith("sidereus: milestones.record-delete failed", {
+      step: "milestones.record-delete",
       name: "TypeError",
     });
-  });
-
-  it("logs no value of a non-Error, and only a shaped code from the cause", () => {
-    logMilestoneFailure("seen", "52.37,4.89");
-    logMilestoneFailure("seen", new Error("load", { cause: { code: "42501", details: "52.37" } }));
-
-    expect(errors.mock.calls).toEqual([
-      ["sidereus: progress.seen failed", { step: "progress.seen" }],
-      ["sidereus: progress.seen failed", { step: "progress.seen", name: "Error", code: "42501" }],
-    ]);
-    expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });
 });

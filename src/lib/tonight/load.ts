@@ -158,18 +158,19 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
     openSkyChecks = skyCheckResult.items;
   }
 
-  // The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
-  // FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
-  // prefill all follow the chosen site.
-  const site = chooseOwned(sites, siteId);
-  const telescope = chooseOwned(telescopes, telescopeId);
-  const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
-
+  let site: SiteRecord | undefined;
+  let telescope: TelescopeRecord | undefined;
   let view: TonightView | null = null;
   let tonightError: MessageKey | null = null;
   let planEditsError: MessageKey | null = null;
-  if (site && telescope) {
-    try {
+  try {
+    // The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
+    // FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
+    // prefill all follow the chosen site. Chosen inside the guard with everything that follows (error-visibility
+    // Phase 3 §2): a throw here ends as the same notice as a failed build, and the choice made so far stays returned.
+    site = chooseOwned(sites, siteId);
+    telescope = chooseOwned(telescopes, telescopeId);
+    if (site && telescope) {
       // The one night date: the saved plan's read, the build and so the editor's form all name the same night. Inside
       // the guard because a bad stored time zone throws here; it ends as the same notice as a failed build.
       const tonightDate = tonightDateForSite(site, now);
@@ -214,11 +215,12 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
           withReachable: input.withReachable,
         },
       );
-    } catch (error) {
-      logFailure("tonight.build", error);
-      tonightError = TONIGHT_FAILED;
     }
+  } catch (error) {
+    logFailure("tonight.build", error);
+    tonightError = TONIGHT_FAILED;
   }
+  const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope && !tonightError;
 
   return {
     sites,

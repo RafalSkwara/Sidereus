@@ -1,10 +1,16 @@
-import { CODE_SHAPE } from "./log-failure";
+import { isLoggableCode } from "./log-failure";
 
 /**
  * The sanitized carrier for "what went wrong" in the data layer (error-visibility, Phase 2). A store keeps the
  * diagnosis it used to drop, without the one thing it must never keep: database error text can echo submitted values,
- * coordinates included (PRD NFR), so the carrier holds a shape-checked `code` and an integer `status` and nothing
- * else. It is safe to return, to keep as an `Error`'s `cause` and, later, to log.
+ * coordinates included (PRD NFR), so the carrier holds a checked `code` (`isLoggableCode`) and, when the thrown value
+ * carried one, an integer `status`, and nothing else. It is safe to return, to keep as an `Error`'s `cause` and, later,
+ * to log.
+ *
+ * A store fault carries a `code` only: supabase-js's `PostgrestError` has no `status` (the HTTP status lives on the
+ * response, which the stores do not thread through), so for a database request `status` is never set and
+ * `classifyFault` decides by `code` alone (impl review F6). `status` stays for the values that do carry one, such as
+ * a `ForecastError` or an auth-js error, so `classifyFault`'s "500 or more is the server" rule applies to them.
  *
  * `classifyFault` is the one rule that says whose fault a failure is. Server is the default, because an unknown code
  * is not benign: only the codes known to be the user's request, the session or a missing row are told apart. This
@@ -17,14 +23,20 @@ const STORE_FAULT_MESSAGE = "A database request failed";
 /** What a failed database request was, for the caller and for the log: only `server` is alertable. */
 export type FaultKind = "input" | "refused" | "session" | "no-rows" | "server";
 
-/** The fault a failed write carries next to its message key. A user-input failure carries none (kind `input`). */
+/**
+ * The fault a failed write carries next to its message key: the kind, the `code` and, only when the failure carried
+ * one, a `status` (a store's PostgREST error has none). A user-input failure carries none (kind `input`).
+ */
 export interface WriteFault {
   kind: Exclude<FaultKind, "input">;
   code?: string;
   status?: number;
 }
 
-/** A sanitized database fault: a fixed message, `name`, and the shaped `code` and `status` when they were present. */
+/**
+ * A sanitized database fault: a fixed message, `name`, and the checked `code` and the `status` when they were present
+ * (a PostgREST error gives a `code` only, see the module comment).
+ */
 export class StoreFault extends Error {
   override readonly name = "StoreFault";
   // `declare`: present only when the value was usable, never an own property holding `undefined`.
@@ -33,7 +45,7 @@ export class StoreFault extends Error {
 
   constructor(init: { code?: string; status?: number } = {}) {
     super(STORE_FAULT_MESSAGE);
-    if (init.code !== undefined && CODE_SHAPE.test(init.code)) {
+    if (isLoggableCode(init.code)) {
       this.code = init.code;
     }
     if (isStatus(init.status)) {
@@ -62,7 +74,7 @@ function read(source: unknown, key: string): unknown {
 
 function codeOf(source: unknown): string | undefined {
   const code = read(source, "code");
-  return typeof code === "string" && CODE_SHAPE.test(code) ? code : undefined;
+  return isLoggableCode(code) ? code : undefined;
 }
 
 function statusOf(source: unknown): number | undefined {
@@ -71,9 +83,9 @@ function statusOf(source: unknown): number | undefined {
 }
 
 /**
- * Builds a `StoreFault` from a PostgREST error or any thrown value, keeping only `code` and `status` (the error's own,
- * else its `cause`'s: a store that threw a keyed error leaves its fault there). It never copies `message`, `details`,
- * `hint` or `stack`, and never throws.
+ * Builds a `StoreFault` from a PostgREST error or any thrown value, keeping only `code` and, if the value has one,
+ * `status` (the error's own, else its `cause`'s: a store that threw a keyed error leaves its fault there). It never
+ * copies `message`, `details`, `hint` or `stack`, and never throws.
  */
 export function faultFrom(error: unknown): StoreFault {
   const cause = read(error, "cause");
@@ -99,7 +111,8 @@ const NO_ROWS_CODE = "PGRST116";
  * Whose fault a failed request was. Pure, with **server as the default**: no code at all (a network failure or a
  * timeout), `08*`, `53*`, `57*`, `58*`, `XX*`, schema drift (`42P01`, `42703`), `PGRST000` to `PGRST003` and every
  * unknown code are the server's, and so is any status of 500 or more, whatever the code says. Only `server` is
- * alertable.
+ * alertable. The status branch serves the faults that carry one (a forecast or auth error); a store's PostgREST error
+ * has a `code` only, so a database request is judged by its code.
  */
 export function classifyFault(fault: { code?: string; status?: number }): FaultKind {
   if (fault.status !== undefined && fault.status >= 500) {
@@ -132,7 +145,7 @@ export function noRowsFault(): WriteFault {
 /**
  * The `fault` field of a failed write, as `{ fault }` to spread into the result, or `{}` for a user-input failure
  * (`22P02`, `23514`, `23505`: the entity's own message key says it, and nothing is alertable). Takes a PostgREST
- * error, a `StoreFault` or any thrown value; only its `code` and `status` are read.
+ * error, a `StoreFault` or any thrown value; only its `code` and, if it has one, `status` are read.
  */
 export function withFault(error: unknown): { fault?: WriteFault } {
   const { code, status } = faultFrom(error);

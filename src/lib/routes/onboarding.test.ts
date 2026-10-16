@@ -44,14 +44,13 @@ async function post(options: { form?: Record<string, string>; error?: unknown; n
 
 describe("POST /api/onboarding", () => {
   it("redirects a server fault to the setup with the neutral key and logs one error line with the code", async () => {
-    const location = await post({ error: leakyPostgrestError("57014", 504) });
+    const location = await post({ error: leakyPostgrestError("57014") });
     expect(location.pathname).toBe("/onboarding");
     expect(location.searchParams.get("error")).toBe("errors.serverFault");
     expect(logs.errors).toHaveBeenCalledTimes(1);
     expect(logs.errors).toHaveBeenCalledWith("sidereus: save.onboarding failed", {
       step: "save.onboarding",
       code: "57014",
-      status: 504,
     });
     expect(logs.warns).not.toHaveBeenCalled();
   });

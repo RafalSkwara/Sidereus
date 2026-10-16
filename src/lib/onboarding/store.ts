@@ -11,8 +11,8 @@ import type { OnboardingInput } from "./schemas";
  *
  * Server-only (imports `timezone.ts`). Follows `@/lib/gear/store.ts`'s privacy rules: database
  * error text can echo submitted values, coordinates included, so it never leaves this module.
- * Failures return a fixed, value-free message key (`@/i18n`) plus a sanitized `fault` (only the code and
- * status, never for a user-input failure), reads throw an `Error` whose message is such a key and whose
+ * Failures return a fixed, value-free message key (`@/i18n`) plus a sanitized `fault` (only the code,
+ * never for a user-input failure), reads throw an `Error` whose message is such a key and whose
  * `cause` is a sanitized `StoreFault`, and this module never logs.
  */
 
@@ -36,7 +36,7 @@ const ALREADY_ONBOARDED = "already_onboarded";
 /** Postgres `check_violation`. */
 const CHECK_VIOLATION = "23514";
 
-/** `cause` is the caught value or the database error: only its code and status are kept, as the result's `fault`. */
+/** `cause` is the caught value or the database error: only its code is kept, as the result's `fault`. */
 function failed(message: MessageKey, cause: unknown): OnboardingResult {
   return { ok: false, reason: "failed", message, ...withFault(cause) };
 }

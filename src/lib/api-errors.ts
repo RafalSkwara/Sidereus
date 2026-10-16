@@ -64,9 +64,9 @@ const USER_MISTAKE_CODES: ReadonlySet<string> = new Set([
  * Leaves a line for an Auth failure an operator needs to see (`auth.signin`, `auth.signup`, `auth.signout`): a
  * network or timeout fault (no `code`), a 5xx, a rate limit, a confirmation-email fault, an unknown error. A wrong
  * password, an address that is already registered, a weak password and a malformed address are the user's mistakes
- * and stay silent, as does a sign-out whose session was already stale. Only the error's name and status reach the
- * line (and a short code), never its message, which can hold the email; the redirect key is `authErrorKey`'s and
- * does not depend on this.
+ * and stay silent, as does a sign-out whose session was already stale. Only the error's name, its status and its
+ * `code` reach the line, and the code only when it is one of auth-js's own `ErrorCode`s (`isLoggableCode`), never its
+ * message, which can hold the email; the redirect key is `authErrorKey`'s and does not depend on this.
  */
 export function logAuthFailure(
   step: "auth.signin" | "auth.signup" | "auth.signout",

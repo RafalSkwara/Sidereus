@@ -26,14 +26,13 @@ async function post(result: { data?: unknown; error?: unknown }) {
 
 describe("POST /api/gear/telescopes/[id]/delete", () => {
   it("redirects a server fault to the hub with the neutral key and logs one error line", async () => {
-    const location = await post({ error: leakyPostgrestError("57014", 500) });
+    const location = await post({ error: leakyPostgrestError("57014") });
     expect(location.pathname).toBe("/gear");
     expect(location.searchParams.get("error")).toBe("errors.serverFault");
     expect(logs.errors).toHaveBeenCalledTimes(1);
     expect(logs.errors).toHaveBeenCalledWith("sidereus: save.gear failed", {
       step: "save.gear",
       code: "57014",
-      status: 500,
     });
     expect(logs.warns).not.toHaveBeenCalled();
     expect(logs.everything()).not.toMatch(LEAK);

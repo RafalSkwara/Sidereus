@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   editRedirect,
   formRedirect,
-  logNotice,
+  noticeRedirect,
   parseLogPage,
   readLogNotice,
   readMilestoneParam,
@@ -120,11 +120,11 @@ describe("editRedirect", () => {
   });
 });
 
-describe("logNotice and readLogNotice", () => {
+describe("noticeRedirect and readLogNotice", () => {
   it("name the object by its target key", () => {
-    expect(logNotice("saved", "M31")).toBe("/log?saved=M31");
-    expect(logNotice("deleted", "jupiter")).toBe("/log?deleted=jupiter");
-    expect(readLogNotice(new URL(logNotice("updated", "M31"), "https://sidereus.test").searchParams)).toEqual({
+    expect(noticeRedirect("saved", "M31")).toBe("/log?saved=M31");
+    expect(noticeRedirect("deleted", "jupiter")).toBe("/log?deleted=jupiter");
+    expect(readLogNotice(new URL(noticeRedirect("updated", "M31"), "https://sidereus.test").searchParams)).toEqual({
       kind: "updated",
       target: "M31",
     });
@@ -172,7 +172,7 @@ describe("withMilestones", () => {
   });
 
   it("works on the URLs the routes build", () => {
-    expect(withMilestones(logNotice("updated", "M13"), ["first-globular"])).toBe(
+    expect(withMilestones(noticeRedirect("updated", "M13"), ["first-globular"])).toBe(
       "/log?updated=M13&milestone=first-globular",
     );
   });

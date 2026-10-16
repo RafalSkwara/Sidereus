@@ -375,8 +375,8 @@ describe("observationStore edits and deletions (S-07)", () => {
     expect(await observationStore.get(b.client, id)).toBeNull();
     expect(
       await observationStore.update(b.client, id, { target: "M92", night: "2026-09-25", rating: 1, ...gearB }, NOW),
-    ).toMatchObject({ ok: false, message: "errors.notFound.observation", fault: { kind: "no-rows" } });
-    expect(await observationStore.remove(b.client, id)).toMatchObject({
+    ).toEqual({ ok: false, message: "errors.notFound.observation", fault: { kind: "no-rows" } });
+    expect(await observationStore.remove(b.client, id)).toEqual({
       ok: false,
       message: "errors.notFound.observation",
       fault: { kind: "no-rows" },
@@ -397,7 +397,7 @@ describe("observationStore edits and deletions (S-07)", () => {
         { target: "M13", night: "2026-09-25", rating: 4, ...gearA },
         NOW,
       ),
-    ).toMatchObject({ ok: false, message: "errors.notFound.observation", fault: { kind: "no-rows" } });
+    ).toEqual({ ok: false, message: "errors.notFound.observation", fault: { kind: "no-rows" } });
   });
 
   it("keeps a deleted site and telescope on edit, with their name snapshots", async () => {

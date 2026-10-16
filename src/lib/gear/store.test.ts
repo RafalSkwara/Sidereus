@@ -5,7 +5,7 @@ import type { EyepieceInput, SiteInput, TelescopeInput } from "./schemas";
 import { eyepieceStore, siteStore, telescopeStore, type WriteResult } from "./store";
 
 // What talks to Supabase is covered by tests/db; here a fake client answers with an error that echoes the submitted
-// coordinates and an email, as a failing insert's message does, and the store must keep only a code and a status.
+// coordinates and an email, as a failing insert's message does, and the store must keep only a code.
 
 const SITE: SiteInput = {
   name: "Back garden",
@@ -19,7 +19,7 @@ const TELESCOPE: TelescopeInput = { name: "Dobsonian", apertureMm: 150, focalLen
 const EYEPIECE: EyepieceInput = { name: "25 mm", focalLengthMm: 25, afovDeg: 50, afovPreset: "plossl" };
 const ID = "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 
-const failing = (code: string, status?: number) => fakeClient({ error: leakyPostgrestError(code, status) });
+const failing = (code: string) => fakeClient({ error: leakyPostgrestError(code) });
 const emptyRows = fakeClient({ data: [] });
 
 /** Each entity's writes through the same fake, with the key a plain server fault keeps. */
@@ -36,14 +36,11 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => Promise<WriteR
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it.each(WRITES)(
-    "%s: a server fault keeps only its code and status next to the fixed key",
-    async (_name, run, key) => {
-      const result = await run(failing("XX000", 503));
-      expect(result).toEqual({ ok: false, message: key, fault: { kind: "server", code: "XX000", status: 503 } });
-      expect(JSON.stringify(result)).not.toMatch(LEAK);
-    },
-  );
+  it.each(WRITES)("%s: a server fault keeps only its code next to the fixed key", async (_name, run, key) => {
+    const result = await run(failing("XX000"));
+    expect(result).toEqual({ ok: false, message: key, fault: { kind: "server", code: "XX000" } });
+    expect(JSON.stringify(result)).not.toMatch(LEAK);
+  });
 
   it.each(WRITES)("%s: an RLS refusal (42501) is `refused`, with the same key", async (_name, run, key) => {
     expect(await run(failing("42501"))).toEqual({ ok: false, message: key, fault: { kind: "refused", code: "42501" } });
@@ -115,16 +112,15 @@ describe("a failed read throws its key with a sanitized cause", () => {
     ["eyepiece get", (c) => eyepieceStore.get(c, ID), "errors.load.eyepieces"],
   ];
 
-  it.each(READS)("%s: the cause is a StoreFault holding only the code and status", async (_name, run, key) => {
-    const thrown: unknown = await run(failing("XX000", 503)).catch((error: unknown) => error);
+  it.each(READS)("%s: the cause is a StoreFault holding only the code", async (_name, run, key) => {
+    const thrown: unknown = await run(failing("XX000")).catch((error: unknown) => error);
     expect(thrown).toBeInstanceOf(Error);
     const error = thrown as Error;
     expect(error.message).toBe(key);
     expect(error.cause).toBeInstanceOf(StoreFault);
     const cause = error.cause as StoreFault;
     expect(cause.code).toBe("XX000");
-    expect(cause.status).toBe(503);
-    expect(Object.keys(cause).sort()).toEqual(["code", "name", "status"]);
+    expect(Object.keys(cause).sort()).toEqual(["code", "name"]);
     expect(JSON.stringify(cause)).not.toMatch(LEAK);
     expect(cause.message).not.toMatch(LEAK);
     expect(String(cause.stack)).not.toMatch(LEAK);

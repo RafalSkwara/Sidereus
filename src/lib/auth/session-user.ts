@@ -3,11 +3,17 @@ import type { SessionUser, TypedSupabaseClient } from "@/lib/supabase";
 
 /**
  * The names of the auth-js errors that mean "this cookie is stale or changed", not "Auth is down": no session at all
- * (`AuthSessionMissingError`, which auth-js also makes of a `session_not_found` answer) and a token that does not
- * verify (`AuthInvalidJwtError`, whose own code is `invalid_jwt`). Confirmed against `@supabase/auth-js` 2.116.0's
- * `errors.ts`, and pinned against the installed copy in `session-user.test.ts`.
+ * (`AuthSessionMissingError`, which auth-js also makes of a `session_not_found` answer), a token that does not verify
+ * (`AuthInvalidJwtError`, whose own code is `invalid_jwt`) and a refresh whose result auth-js threw away because the
+ * session changed mid-flight (`AuthRefreshDiscardedError`, status 409 and no code: a concurrent sign-out raced it, and
+ * auth-js itself treats it as a no-op). Confirmed against `@supabase/auth-js` 2.116.0's `errors.ts`, and pinned
+ * against the installed copy in `session-user.test.ts`.
  */
-export const ROUTINE_ERROR_NAMES = ["AuthSessionMissingError", "AuthInvalidJwtError"] as const;
+export const ROUTINE_ERROR_NAMES = [
+  "AuthSessionMissingError",
+  "AuthInvalidJwtError",
+  "AuthRefreshDiscardedError",
+] as const;
 
 /**
  * The codes Auth answers with when the refresh token or the session behind a cookie is gone: the server's

@@ -4,7 +4,7 @@ import { fakeClient, leakyPostgrestError, LEAK } from "@/lib/test-support/supaba
 import { skyCheckStore } from "./store";
 
 // What talks to Supabase is covered by tests/db; here a fake client answers with an error that echoes submitted
-// values, and the store must keep only a code and a status.
+// values, and the store must keep only a code.
 
 const ID = "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
 const NOW = new Date("2026-10-10T22:00:00Z");
@@ -15,7 +15,7 @@ const RECORD = {
   darkStart: new Date("2026-10-10T18:20:00Z"),
 };
 
-const failing = (code: string, status?: number) => fakeClient({ error: leakyPostgrestError(code, status) });
+const failing = (code: string) => fakeClient({ error: leakyPostgrestError(code) });
 
 const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typeof skyCheckStore.record>][] = [
   ["record", (c) => skyCheckStore.record(c, RECORD)],
@@ -24,12 +24,12 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typ
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it.each(WRITES)("%s: a server fault keeps only its code and status next to the fixed key", async (_name, run) => {
-    const result = await run(failing("XX000", 503));
+  it.each(WRITES)("%s: a server fault keeps only its code next to the fixed key", async (_name, run) => {
+    const result = await run(failing("XX000"));
     expect(result).toEqual({
       ok: false,
       message: "errors.save.skyCheck",
-      fault: { kind: "server", code: "XX000", status: 503 },
+      fault: { kind: "server", code: "XX000" },
     });
     expect(JSON.stringify(result)).not.toMatch(LEAK);
   });
@@ -40,10 +40,10 @@ describe("a failed write carries a sanitized fault", () => {
       message: "errors.save.skyCheck",
       fault: { kind: "refused", code: "42501" },
     });
-    expect(await run(failing("PGRST301", 401))).toEqual({
+    expect(await run(failing("PGRST301"))).toEqual({
       ok: false,
       message: "errors.save.skyCheck",
-      fault: { kind: "session", code: "PGRST301", status: 401 },
+      fault: { kind: "session", code: "PGRST301" },
     });
   });
 
@@ -76,12 +76,12 @@ describe("a failed read throws its key with a sanitized cause", () => {
     ["tally", (c) => skyCheckStore.tally(c)],
   ];
 
-  it.each(READS)("%s: the cause is a StoreFault holding only the code and status", async (_name, run) => {
-    const thrown = (await run(failing("XX000", 503)).catch((error: unknown) => error)) as Error;
+  it.each(READS)("%s: the cause is a StoreFault holding only the code", async (_name, run) => {
+    const thrown = (await run(failing("XX000")).catch((error: unknown) => error)) as Error;
     expect(thrown.message).toBe("errors.load.skyChecks");
     expect(thrown.cause).toBeInstanceOf(StoreFault);
-    expect(thrown.cause).toMatchObject({ code: "XX000", status: 503 });
-    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name", "status"]);
+    expect(thrown.cause).toMatchObject({ code: "XX000" });
+    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name"]);
     expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
     expect((thrown.cause as Error).message).not.toMatch(LEAK);
   });

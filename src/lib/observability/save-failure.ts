@@ -10,8 +10,8 @@ import { logFailure, logNotice, type FailureStep } from "./log-failure";
  * the user's request or the session, not an outage: a warn-level notice and the entity's own key. A result without a
  * `fault` is a user mistake (an input check) and leaves no line.
  *
- * Only the fault's `code` and `status` reach the line (through `logFailure`'s own shape checks); nothing else of the
- * result is read.
+ * Only the fault's `code` and, when it has one, `status` reach the line (through `logFailure`'s own shape checks);
+ * nothing else of the result is read. A store's fault has a `code` only (a PostgREST error carries no status).
  */
 
 /** The redirect key of a server fault: neutral copy that fits a save and a delete (decision D3). */

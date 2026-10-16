@@ -1,4 +1,4 @@
-import { CODE_SHAPE } from "@/lib/observability/log-failure";
+import { isLoggableCode } from "@/lib/observability/log-failure";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
 /**
@@ -17,7 +17,7 @@ const NAME_SHAPE = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;
 function shaped(error: unknown): PlanReadFault {
   const fault: PlanReadFault = {};
   const code = (error as { code?: unknown } | null | undefined)?.code;
-  if (typeof code === "string" && CODE_SHAPE.test(code)) {
+  if (isLoggableCode(code)) {
     fault.code = code;
   }
   if (error instanceof Error && NAME_SHAPE.test(error.name)) {
