@@ -1,8 +1,11 @@
 ---
 /**
- * Data credits required by the OpenNGC (CC BY-SA 4.0), HYG (CC BY-SA 4.0), Hipparcos (ESA, CC BY-NC 3.0 IGO) and
- * Open-Meteo (CC BY 4.0) licences. HYG compiles Hipparcos, so ESA is credited beside it. The meteor showers of the
- * sky events page credit NASA (peak nights) and the IAU Meteor Data Center (radiants), as `LICENSE-DATA.md` promises.
+ * Data credits required by the OpenNGC (CC BY-SA 4.0), Hipparcos (ESA, CC BY-NC 3.0 IGO) and Open-Meteo (CC BY 4.0)
+ * licences. The stars are the Hipparcos Catalogue, Version 1, read directly (star-source-switch), so ESA's "Credit: ESA"
+ * and the citation it asked for are shown on every view that draws stars (the Tonight pages, the finder and the
+ * signed-out landing page), beside the credits for the designations (Wikidata, CC0) and the IAU star names. The meteor
+ * showers of the sky events page credit NASA (peak nights) and the IAU Meteor Data Center (radiants), as
+ * `LICENSE-DATA.md` promises.
  */
 import { getMessages } from "@/i18n";
 
@@ -18,14 +21,18 @@ const link =
     OpenNGC
   </a>{" "}
   (CC BY-SA 4.0) · {t.starData}{" "}
-  <a href="https://github.com/astronexus/HYG-Database" class:list={[link]} rel="noopener noreferrer">
-    HYG
-  </a>{" "}
-  (CC BY-SA 4.0) ·{" "}
   <a href="https://www.cosmos.esa.int/web/hipparcos/catalogues" class:list={[link]} rel="noopener noreferrer">
     Hipparcos,
   </a>{" "}
-  {t.hipparcosCredit} (CC BY-NC 3.0 IGO) · {t.weather}{" "}
+  {t.hipparcosCredit} (CC BY-NC 3.0 IGO) · {t.hipparcosCitation} · {t.designationData}{" "}
+  <a href="https://www.wikidata.org/" class:list={[link]} rel="noopener noreferrer">
+    Wikidata
+  </a>{" "}
+  (CC0),{" "}
+  <a href="https://exopla.net/star-names/modern-iau-star-names/" class:list={[link]} rel="noopener noreferrer">
+    IAU WGSN
+  </a>{" "}
+  ({t.iauFor}) · {t.weather}{" "}
   <a href="https://open-meteo.com/" class:list={[link]} rel="noopener noreferrer">
     Open-Meteo
   </a>{" "}

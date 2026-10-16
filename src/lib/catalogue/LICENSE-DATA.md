@@ -28,61 +28,104 @@ OpenNGC asks that the following acknowledgements accompany derived work:
 - This research has made use of the SIMBAD database, operated at CDS, Strasbourg, France.
 - OpenNGC used several HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj, smcclustrs).
 
-## Star catalogues (HYG)
+## Star catalogues (Hipparcos)
 
 `bright-stars.json`, `bright-stars.meta.json`, `finder-stars.json` and `finder-stars.meta.json` in this
-directory are **Adapted Material** derived from the [HYG database](https://github.com/astronexus/HYG-Database) v4.1 by David Nash (astronexus),
-file `hyg/CURRENT/hygdata_v41.csv` at commit `c7f7f883fe678cc7680169a50ccd7dcc49b060ce`
-(2025-02-14), via `scripts/build-stars.mjs` (one run writes both pairs).
-
-HYG is licensed under the
-[Creative Commons Attribution-ShareAlike 4.0 International licence](https://creativecommons.org/licenses/by-sa/4.0/)
-(CC BY-SA 4.0). Under its ShareAlike condition, the four generated files are themselves licensed
-**CC BY-SA 4.0**, independently of the licence that applies to the application code in this repository.
-
-Changes made to the source data are listed under `filter` and `normalisations` in
-`bright-stars.meta.json` and `finder-stars.meta.json`. In short: in `bright-stars.json` the database is
-filtered to stars of magnitude 4.5 or brighter (the Sun excluded), right ascension and declination are
-converted to J2000 unit vectors, proper names are kept only for the 40 brightest named stars plus
-Polaris (41 names), and every other column is dropped. In `finder-stars.json` the database is filtered
-to stars of magnitude 7.5 or brighter (the Sun excluded), right ascension and declination (in 0.01
-degrees) are packed into one integer per star, magnitudes (in 0.1) are stored as runs over the sorted
-stars, HYG ids order the stars but are not stored, and a sparse table keeps HYG's Bayer letter,
-Flamsteed number, constellation and proper name for the stars that have one of them; every other column is
-dropped. Polish star names are not part of the derived files; they live in `star-names.ts`.
-
-### Upstream: Hipparcos (ESA)
-
-HYG compiles the Hipparcos catalogue of the European Space Agency (ESA), which ESA publishes under the
+directory are **Adapted Material** derived from the Hipparcos Catalogue, Version 1 (ESA, 1997, _The Hipparcos
+and Tycho Catalogues_, ESA SP-1200), file `hip_main.dat` of VizieR catalogue I/239, via `scripts/build-stars.mjs`
+(one run writes both pairs). ESA publishes the catalogue under the
 [Creative Commons Attribution-NonCommercial 3.0 IGO licence](https://creativecommons.org/licenses/by-nc/3.0/igo/)
-(CC BY-NC 3.0 IGO, catalogue pages at <https://www.cosmos.esa.int/web/hipparcos/catalogues>). The credit
-ESA asks for is **Credit: ESA**; the app shows it beside HYG's (`Attribution.astro`).
+(CC BY-NC 3.0 IGO, catalogue pages at <https://www.cosmos.esa.int/web/hipparcos/catalogues>), and the four
+generated files are licensed under those same terms.
 
-The non-commercial condition applies to the star files in this directory as well: HYG's CC BY-SA 4.0
-grant cannot lift an upstream condition it does not own, so the files are CC BY-SA 4.0 only as far as
-that upstream licence allows. Commercial use needs ESA's authorisation; the owner's request to ESA
-(data.licences@esa.int) is pending, and until ESA answers the files must not be used to generate
-financial gain.
+- **Credit:** **Credit: ESA**, and the citation "ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200"
+  (`Attribution.astro` shows both on every view that draws stars, including the signed-out landing page; both
+  meta files carry them in `attribution`).
+- **No endorsement:** nothing here states or implies that ESA or its staff endorse Sidereus, and ESA's name and
+  logo are not used in marketing.
+- **Non-commercial:** commercial use needs ESA's written authorisation. Until ESA gives it, the files must not
+  be used to generate financial gain, and the app takes no payment.
+- **Not CC BY-SA any more:** HYG is no longer a source of any file here, and the star files are no longer
+  CC BY-SA 4.0. The OpenNGC files above (`messier*.json`, `caldwell*.json`) are still CC BY-SA 4.0.
+- **Rendered finder charts are derived from this data:** a finder chart is built from `finder-stars.json`, so
+  the same non-commercial condition and the same credit apply to the charts the app renders from it.
 
-#### ESA's reply (2026-10-16) and the switch under way
+### The source file
 
-ESA answered about 2026-10-16 (Head Scientist, ESA Space Science Archives): HYG v4.1 is a separately
-prepared third-party compilation, and ESA cannot grant commercial-use authorisation for HYG or for files
-derived from HYG; Tycho-2 is not an ESA product (its rights are held by E. Høg et al., 2000, so nothing
-in this directory is Tycho-2 and none is to be added); ESA can assess a direct use of Gaia DR3 once the
-table, fields and delivery are named; and ESA holds the rights to Hipparcos Version 1 and can assess its
-direct commercial use. The HYG provider cannot lift ESA's condition on the Hipparcos data inside HYG, so
-the files above stay non-commercial: **they must not be used to generate financial gain.**
+The generator reads one pinned, checksummed download and writes nothing until its length, row count and SHA-256
+match (`scripts/lib/hipparcos.mjs`, `HIPPARCOS_PIN`; the pin changes only by a deliberate edit):
 
-Owner decision (2026-10-16): the star files are being switched from HYG v4.1 to the Hipparcos Catalogue,
-Version 1, taken directly (VizieR I/239, `hip_main.dat`; ESA, 1997, ESA SP-1200), with Bayer, Flamsteed and
-proper-name designations from CC0 and IAU sources. The change is roadmap M-4 S-08, `star-source-switch`;
-until it merges, the HYG description above is still the truth, and this note is text only. The owner has
-asked ESA to include the direct use of Hipparcos Version 1 in its assessment (aimed at the end of November
-2026). Hipparcos Version 1 is CC BY-NC 3.0 IGO, which suits a free app; no payment is taken until ESA
-authorises in writing, and if ESA refuses the files revert or migrate to the SAO Star Catalog. The citation
-to add on the switch is "ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200", beside
-**Credit: ESA**. The correspondence and the reviewer's assessment (not legal advice) are in
+- URL: `https://cdsarc.cds.unistra.fr/ftp/cats/I/239/hip_main.dat`, with
+  `https://vizier.cfa.harvard.edu/ftp/cats/I/239/hip_main.dat` as the one retry (the same bytes);
+- 53,316,318 bytes, 118,218 rows;
+- SHA-256 `58ceabb104d647160d9437ce6e513a02a036bb4ad9f8879a5a22fd52943616e0`.
+
+Only these fields are read from the file (`fieldsUsed` in both meta files, `HIPPARCOS_FIELDS_USED` in the
+reader, which reads through that list and nothing else; no other field such as Hpmag or B-V is read):
+
+- HIP (the Hipparcos number), Vmag (V magnitude), RAdeg and DEdeg (right ascension and declination in degrees,
+  ICRS, epoch J1991.25), pmRA and pmDE (proper motions, which serve only to bring the positions to J2000);
+- RAhms and DEdms (the sexagesimal position), for the ten stars of magnitude 7.5 or brighter that have no
+  astrometric solution (no RAdeg or DEdeg): HIP 31067, 31500, 34716, 50572, 52800, 55203, 59273, 78727, 80579
+  and 115125. They have no proper motion, so their J1991.25 positions are used unpropagated (`positionFromSexagesimal`
+  in the meta files).
+
+### Designations and names
+
+The file has no designations, names or constellations, so those come from other sources; no Hipparcos value is
+stored in these tables.
+
+- **Bayer letters and Flamsteed numbers** come from `scripts/data/star-designations.json`, built from
+  [Wikidata](https://www.wikidata.org/) (structured data released under CC0 1.0) by `npm run stars:designations`.
+  A value is kept only when its constellation matches the one computed from the star's own Hipparcos position,
+  and is omitted when Wikidata gives several candidates and no citable source settles it;
+  `scripts/data/star-designation-overrides.json` (hand-edited, each entry citing its source) settles the rest.
+  The tables record the fetch date, queries and counts.
+- **Proper names** come from `scripts/data/iau-star-names.json`, the proper names and HIP numbers of the IAU
+  Working Group on Star Names (WGSN) list, read from <https://exopla.net/star-names/modern-iau-star-names/>. IAU
+  star names are in the public domain. The etymology texts and images on that page are CC BY and are **not**
+  used. Names that are not on the IAU list (for example "Castor B" or "Lacaille 9352") are not in the files.
+- **The constellation** of each designated star is computed by `astronomy-engine`'s `Constellation()` at its J2000
+  position.
+
+### Changes made
+
+Changes made to the source data are listed under `filter` and `normalisations` in `bright-stars.meta.json` and
+`finder-stars.meta.json`. In short:
+
+- Stars are filtered to Vmag 7.5 or brighter (`finder-stars.json`, 25,723 stars) and 4.5 or brighter
+  (`bright-stars.json`, 921 stars) among the rows that have a position (the one row without a Vmag, HIP 120412,
+  is left out).
+- Positions are moved from J1991.25 to J2000 by linear proper motion (pmRA and pmDE over 8.75 years), except for
+  the ten stars above, and converted to J2000 unit vectors (`bright-stars.json`, rounded to 5 decimals) or packed
+  into one integer per star in 0.01 degrees (`finder-stars.json`); magnitudes in the finder file are stored in
+  0.1 as runs over the sorted stars.
+- Stars are ordered by magnitude and then by HIP number. The bright file keeps the HIP number as `id`; the finder
+  file stores no HIP number, only the order it gives, which the finder chart's tie-break depends on.
+- Proper names are kept in the bright file only for the 40 brightest stars that have an IAU name, plus Polaris
+  (41 names); the finder file keeps a sparse table of Bayer letter, Flamsteed number, constellation and IAU name
+  for the stars that have one of them (3,277 stars). Every other column of the source is dropped. Polish star
+  names are not part of the derived files; they live in `star-names.ts`.
+
+To regenerate: `npm run stars:build` rebuilds the four files byte-identically from the pinned download and the two
+tables in `scripts/data/` (no other network call), and `npm run stars:designations` re-queries Wikidata and the
+WGSN page to rewrite those tables.
+
+### ESA's reply and the follow-up (2026-10-16)
+
+ESA answered about 2026-10-16 (Head Scientist, ESA Space Science Archives): the HYG database, which the
+files were built from before this change, is a separately prepared third-party compilation, and ESA could not
+grant commercial-use authorisation for it or for files derived from it; Tycho-2 is not an ESA product (its
+rights are held by E. Høg et al., 2000, so nothing in this directory is Tycho-2 and none is to be added); ESA
+can assess a direct use of Gaia DR3 once the table, fields and delivery are named; and ESA holds the rights to
+Hipparcos Version 1 and can assess its direct commercial use.
+
+The owner sent a follow-up on the same day, asking ESA to include the direct use of Hipparcos Version 1 in its
+assessment, with the field list above (including the RAhms and DEdms sentence for the ten stars) and the credit
+wording above (the draft is in `context/foundation/licensing/`). ESA aims to finish its commercial-use
+framework by the end of November 2026; **no answer to the follow-up is on file yet.** No payment is taken
+until ESA authorises in writing; if ESA refuses, the files revert or migrate to the SAO Star Catalog in a change
+of their own. The correspondence and the reviewer's assessment (not legal advice) are in
 `context/foundation/licensing/`.
 
 ## Meteor showers (hand-entered facts)

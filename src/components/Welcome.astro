@@ -3,11 +3,13 @@
  * The landing page's shell (ui-landing), signed-out visitors only (`src/pages/index.astro` redirects a signed-in user
  * to Tonight). Nightfall composition, as GearShell's sky-flow mode: the Topbar on a zenith strip that Tonight's sky
  * band (`TonightSky`) continues, holding the question as the page title, the two calls to action and the verdict
- * legend; then the ruled bands in the shared `max-w-3xl px-4` column.
+ * legend; then the ruled bands in the shared `max-w-3xl px-4` column. The footer carries the shared `Attribution`: the
+ * preview below draws Hipparcos stars, so the credit ESA asked for ("Credit: ESA", star-source-switch) shows here too.
  */
 import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
+import Attribution from "@/components/tonight/Attribution.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import Topbar from "@/components/Topbar.astro";
 import { VERDICT_TONES } from "@/components/tonight/verdict-tones";
@@ -102,5 +104,8 @@ const SCREENSHOT = { width: 1280, height: 1117 };
       {t.footerPrefix} <em>{t.footerWork}</em>
       {t.footerSuffix}
     </p>
+    <div class="mt-group">
+      <Attribution />
+    </div>
   </footer>
 </div>
