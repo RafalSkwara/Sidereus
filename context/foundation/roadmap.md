@@ -61,7 +61,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                         | —             | MS-01, FR-030, FR-039       | done        |
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
-| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | in-progress |
+| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | ready       |
@@ -167,7 +167,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Risk:**
   - Retuning the duration term reorders every night, so `calibration.test.ts` and the beginner reference must stay green without being regenerated.
   - Waits for S-04, so the PRD re-check runs once, after both retunes. It also closes S-03's open calibration sign-off (Progress 2.5 of the deep-sky-beyond-messier archive).
-- **Status:** in-progress
+- **Status:** done
 
 ### S-06: Auth loose ends
 
@@ -287,3 +287,4 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **S-04: user with a small telescope gets galaxy advice that agrees with itself: a big bright galaxy such as M31 is not called "very faint" beside "bright for your 60 mm"; a faint, low-surface-brightness galaxy such as M101 is not ranked high in an 80 mm.** — Archived 2026-10-15 → `context/archive/2026-10-15-small-scope-galaxies/`. Lesson: —.
 - **S-01: user can read the dashboard's tiles and the verdict's event line in the same spacing rhythm and icon language as the focused pages, with no icons on the tile headings.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-dashboard-tiles/`. Lesson: —.
 - **S-02: user can move between Tonight's focused pages in one tap through a sub-nav that replaces the back box, and reach Progress as the fourth destination in the tab bar and the top bar.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-tonight-nav/`. Lesson: —.
+- **S-05: user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.** — Archived 2026-10-16 → `context/archive/2026-10-16-evening-showpieces/`. The owner's manual rows 1.6, 2.5, 3.3, 4.5 (including the M39 July P3 non-pass, a twilight-definition difference) and 4.6 were covered by the owner's merge of PR #188. Known divergence kept: October M13/M15/M57 rank outside the top 5 (OD-1, duration saturation only). Lesson: —.
