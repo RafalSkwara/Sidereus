@@ -49,7 +49,6 @@ const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/r
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
 
 /** Reasons shared by many entries. */
-const AUDIT_P3 = "audit finding (flow A: Tonight and the forecast), fixed by Phase 3";
 const AUDIT_P4 = "audit finding (flow B: save routes, plan routes, page reads), fixed by Phase 4";
 const AUDIT_P5 = "audit finding (flow C and the finder: session, auth routes, finder), fixed by Phase 5";
 const CLIENT = "reported by Phases 7-9, or out of scope if that block is cut";
@@ -125,12 +124,12 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/lib/forecast/cache.ts": {
     count: 1,
     reason:
-      "withReadTimeout's `.then(resolve, reject)` forwards the rejection to the promise its caller awaits, so nothing is lost; the caller's catch in forecast/service.ts logs it as forecast.cache-read (Phase 3)",
+      "withReadTimeout's `.then(resolve, reject)` forwards the rejection to the promise its caller awaits, so nothing is lost; the caller's catch in forecast/service.ts logs it as forecast.cache-read",
   },
   "src/lib/forecast/open-meteo.ts": {
     count: 2,
     reason:
-      "throws fixed-message errors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); Phase 2 gives them a step and status and Phase 3 logs those, so the catches themselves stay allowlisted",
+      "throws fixed-message errors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); Phase 2 gives them a step and status and forecast/service.ts logs those as forecast.fetch, so the catches themselves stay allowlisted",
   },
   "src/lib/location/geocode.ts": {
     count: 1,
@@ -154,24 +153,6 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 1,
     reason:
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
-  },
-
-  // Phase 3: Tonight and the forecast. Phase 3 deletes these entries.
-  "src/lib/forecast/service.ts": {
-    count: 2,
-    reason: `${AUDIT_P3}: the stored-copy parse and the cache write log forecast.cache-read and forecast.cache-write`,
-  },
-  "src/lib/tonight/build.ts": {
-    count: 5,
-    reason: `${AUDIT_P3}: the planet, Moon and sky-view build catches log tonight.planets, tonight.moon and tonight.sky-view`,
-  },
-  "src/lib/tonight/load.ts": {
-    count: 2,
-    reason: `${AUDIT_P3}: the list read and the build log the failed step`,
-  },
-  "src/components/tonight/TonightContent.astro": {
-    count: 1,
-    reason: `${AUDIT_P3}: the fire-and-forget sky-check record swallows both its outcomes; Phase 3 §4 logs tonight.sky-check-record`,
   },
 
   // Phase 4: save routes, plan routes, page reads. Phase 4 deletes these entries.

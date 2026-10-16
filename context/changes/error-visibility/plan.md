@@ -663,7 +663,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 ## Progress
 
-> Status: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
+> Status (2026-10-16): Phase 2 and Phase 3 implemented locally on feat/error-visibility-2. Earlier: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
 >
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
@@ -703,16 +703,16 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields
-- [ ] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument
-- [ ] 3.3 `build.ts` catches: each of the five paths logs its step
-- [ ] 3.4 Silent-catch allowlist entries for these files removed, guard green
-- [ ] 3.5 Full unit suite, lint and types pass
-- [ ] 3.6 Dashboard e2e still green
+- [x] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields
+- [x] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument
+- [x] 3.3 `build.ts` catches: each of the five paths logs its step
+- [x] 3.4 Silent-catch allowlist entries for these files removed, guard green
+- [x] 3.5 Full unit suite, lint and types pass
+- [x] 3.6 Dashboard e2e still green
 
 #### Manual
 
-- [ ] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback
+- [x] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback (verified 2026-10-16 on a local preview, port 4333: three island requests, three lines `{ step: 'forecast.fetch', name: 'Error', code: 'request' }`, headline "No forecast", no error notice)
 
 ### Phase 4: Save routes, plan routes and page reads
 

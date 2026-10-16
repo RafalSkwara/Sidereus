@@ -54,7 +54,7 @@ export const skyCheckStore = {
   /**
    * Records the headline Tonight showed for the caller's site and night. Before `darkStart` a later view overwrites
    * it; after that the first record stands; an answered night never changes. A site that is not the caller's is
-   * silently skipped by the function.
+   * silently skipped by the function. The result's `fault` is traced by `recordSkyVerdict` (`record.ts`).
    */
   async record(
     client: TypedSupabaseClient,

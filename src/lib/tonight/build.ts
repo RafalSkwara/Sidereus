@@ -896,7 +896,7 @@ export function buildTonight(
   // window, peak and facts come from them, and one up only under cloud is left out. On a go or marginal night they are
   // judged over the whole planet window, as the deep-sky ranking is over the whole dark window. `clear` is `null`
   // without forecast hours to judge by (no weather data): the whole planet window counts. A failure here only drops
-  // the planets and the Moon target (`null`); nothing is logged.
+  // the planets and the Moon target (`null`), and leaves one `tonight.planets` line.
   let planetWindow: DarkWindow | null = null;
   let planetVerdict: Verdict | null = null;
   let gate: { window: Extract<DarkWindow, { kind: "window" }>; verdict: Verdict; clear: Interval[] | null } | null =
@@ -912,12 +912,13 @@ export function buildTonight(
         clear: cardPasses ? null : clearIntervals(planetWindow, hourly, VERDICT_THRESHOLDS.marginalCloudPct),
       };
     }
-  } catch {
+  } catch (error) {
+    logFailure("tonight.planets", error);
     gate = null;
   }
 
   // The planets, ranked once per build. A failure only drops the section (`null`), never the verdict, ranking, strip
-  // or Moon card; nothing is logged.
+  // or Moon card, and leaves one `tonight.planets` line.
   let solarSystem: TonightSolarSystem | null = null;
   try {
     if (gate !== null) {
@@ -962,7 +963,8 @@ export function buildTonight(
             : null,
       };
     }
-  } catch {
+  } catch (error) {
+    logFailure("tonight.planets", error);
     solarSystem = null;
     planPlanets = [];
   }
@@ -978,7 +980,7 @@ export function buildTonight(
 
   // The Moon card (moonlight-and-the-verdict), on every night: the Moon over the dark window, or civil dusk to dawn
   // without one, or only its phase at local noon without either. Its facts need no weather. A failure drops only the
-  // card; a failure in the Moon target drops only the target. Nothing is logged.
+  // card; a failure in the Moon target drops only the target. Each leaves one `tonight.moon` line.
   let moonCard: TonightMoonCard | null;
   try {
     let target: TonightMoonEntry | null = null;
@@ -1013,7 +1015,8 @@ export function buildTonight(
           };
           planMoon = entry;
         }
-      } catch {
+      } catch (error) {
+        logFailure("tonight.moon", error);
         target = null;
         planMoon = null;
       }
@@ -1060,7 +1063,8 @@ export function buildTonight(
         target,
       };
     }
-  } catch {
+  } catch (error) {
+    logFailure("tonight.moon", error);
     moonCard = null;
   }
 
@@ -1170,7 +1174,8 @@ export function buildTonight(
         endLabel: formatTime(range.end, timeZone),
         bodies: [...objectBodies, ...planetBodies, moonBody],
       };
-    } catch {
+    } catch (error) {
+      logFailure("tonight.sky-view", error);
       skyView = null;
     }
   }

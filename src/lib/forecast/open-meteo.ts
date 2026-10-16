@@ -25,15 +25,19 @@ export type ForecastStep = "request" | "http" | "parse" | "schema";
 
 /**
  * A failed forecast fetch. `message` is one of the two fixed texts above, `step` says where it failed and `status`
- * (an integer HTTP status) is set for `http` only. It holds no URL and no cause, so every property is safe to log.
+ * (an integer HTTP status) is set for `http` only. `code` repeats `step` under the name `logFailure` reads, so the
+ * `forecast.fetch` line says which step failed (the class name stays "Error"). It holds no URL and no cause, so every
+ * property is safe to log.
  */
 export class ForecastError extends Error {
   readonly step: ForecastStep;
+  readonly code: ForecastStep;
   readonly status?: number;
 
   constructor(step: ForecastStep, status?: number) {
     super(step === "parse" || step === "schema" ? FORECAST_RESPONSE_INVALID : FORECAST_REQUEST_FAILED);
     this.step = step;
+    this.code = step;
     if (status !== undefined) {
       this.status = status;
     }

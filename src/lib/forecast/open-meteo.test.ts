@@ -115,6 +115,7 @@ describe("fetchForecast", () => {
       const error = await fetchForecast(fakeFetch(respond).fetchFn, SITE, BASE).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ForecastError);
       expect((error as ForecastError).step).toBe(step);
+      expect((error as ForecastError).code).toBe(step);
       const seen: unknown[] = [];
       let node: unknown = error;
       while (node instanceof Error) {
@@ -136,7 +137,7 @@ describe("fetchForecast", () => {
           expect(text, `${step}: ${word}`).not.toContain(word);
         }
         for (const key of Object.getOwnPropertyNames(item)) {
-          expect(["stack", "message", "name", "step", "status"], `${step}: property ${key}`).toContain(key);
+          expect(["stack", "message", "name", "step", "code", "status"], `${step}: property ${key}`).toContain(key);
         }
       }
     }

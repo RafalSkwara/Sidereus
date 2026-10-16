@@ -4,7 +4,7 @@ import type { HourlyForecast } from "@/lib/engine";
 import { logFailure } from "@/lib/observability/log-failure";
 
 import type { ForecastCache } from "./cache";
-import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-meteo";
+import { fetchForecast, ForecastError, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-meteo";
 
 /**
  * Forecast service: one cached Open-Meteo forecast per site.
@@ -21,8 +21,14 @@ import { fetchForecast, OPEN_METEO_BASE_URL, type ForecastCoords } from "./open-
  *   in KV. Without such a copy the incomplete series is returned and stored, as any other 200.
  * - Cache read and write errors behave like a miss and never throw.
  *
- * Privacy: keys use the site id, never coordinates. The one line logged is a failed fetch (`forecast.fetch`, through
- * `logFailure`: the step and the error's name only); the cache catches stay silent for now.
+ * Every failure that one of these fallbacks hides leaves one line through `logFailure` (error-visibility): a failed
+ * fetch or bad body (`forecast.fetch`, with the failed step as `code` and the HTTP status when there is one), an incomplete series
+ * (`forecast.incomplete`), a cache read that throws or holds an unusable value (`forecast.cache-read`) and a failed
+ * cache write (`forecast.cache-write`, logged from inside `writeCache`, since a deferred write runs after the
+ * response). A line holds only the step, the error's name and the status; the behaviour of each fallback is
+ * unchanged.
+ *
+ * Privacy: keys use the site id, never coordinates, and no key, URL, message or coordinate ever reaches a line.
  */
 
 /** A cached forecast younger than this is served without a fetch (about 1 h per site). */
@@ -151,7 +157,10 @@ function fromStored(stored: StoredForecast, fallback: boolean): ForecastResult {
   };
 }
 
-/** The stored entry for `key`, or `null` on a miss, a read error or an unreadable value. */
+/**
+ * The stored entry for `key`, or `null` on a miss, a read error or an unreadable value; the last two leave a
+ * `forecast.cache-read` line (a miss does not).
+ */
 async function readCache(cache: ForecastCache, key: string): Promise<StoredForecast | null> {
   try {
     const raw = await cache.get(key);
@@ -159,8 +168,14 @@ async function readCache(cache: ForecastCache, key: string): Promise<StoredForec
       return null;
     }
     const parsed = storedSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : null;
-  } catch (_error) {
+    if (!parsed.success) {
+      // No error to pass: a ZodError's issues can quote the stored value, coordinates included.
+      logFailure("forecast.cache-read");
+      return null;
+    }
+    return parsed.data;
+  } catch (error) {
+    logFailure("forecast.cache-read", error);
     return null;
   }
 }
@@ -168,8 +183,9 @@ async function readCache(cache: ForecastCache, key: string): Promise<StoredForec
 async function writeCache(cache: ForecastCache, key: string, value: StoredForecast): Promise<void> {
   try {
     await cache.put(key, JSON.stringify(value), { expirationTtl: FORECAST_CACHE_TTL_SECONDS });
-  } catch (_error) {
-    // A failed write only costs a refetch next time.
+  } catch (error) {
+    // A failed write only costs a refetch next time, so it is only logged.
+    logFailure("forecast.cache-write", error);
   }
 }
 
@@ -199,15 +215,18 @@ export async function getForecast({
       fetchedAt: now,
       fallback: false,
     };
-    if (usable && !isCompleteForecast(result.forecast, now)) {
-      // An incomplete 200 is a failed refresh when the stored copy still covers the hours around now: keep the copy
-      // (no write) rather than overwrite it with a series that cannot judge tonight.
-      const copy = fromStored(stored, true);
-      if (coversStoredWindow(copy.forecast, now)) {
-        return copy;
+    if (!isCompleteForecast(result.forecast, now)) {
+      logFailure("forecast.incomplete");
+      if (usable) {
+        // An incomplete 200 is a failed refresh when the stored copy still covers the hours around now: keep the copy
+        // (no write) rather than overwrite it with a series that cannot judge tonight.
+        const copy = fromStored(stored, true);
+        if (coversStoredWindow(copy.forecast, now)) {
+          return copy;
+        }
       }
     }
-    // writeCache never rejects, so a deferred write cannot surface as an unhandled rejection.
+    // writeCache never rejects (it logs its own failure), so a deferred write cannot surface as an unhandled rejection.
     const write = writeCache(cache, key, toStored(result, coords));
     if (defer) {
       defer(write);
@@ -216,8 +235,9 @@ export async function getForecast({
     }
     return result;
   } catch (error) {
-    // The fallback below hides the outage from the page, so this line is its only trace (name only, never the message).
-    logFailure("forecast.fetch", error);
+    // The fallback below hides the outage from the page, so this line is its only trace: the error's name and, for an
+    // HTTP failure, its status (a ForecastError's name stays "Error", so its `code` carries the step); never the message, which no code reads.
+    logFailure("forecast.fetch", error, { status: error instanceof ForecastError ? error.status : undefined });
     return usable ? fromStored(stored, true) : null;
   }
 }

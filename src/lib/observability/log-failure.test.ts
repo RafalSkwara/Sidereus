@@ -303,7 +303,7 @@ describe("never throws", () => {
 });
 
 describe("FAILURE_STEPS", () => {
-  it("is a closed list of unique dotted words, including every step Phase 1 traces", () => {
+  it("is a closed list of unique dotted words, including every step Phases 1 and 3 trace", () => {
     expect(new Set(FAILURE_STEPS).size).toBe(FAILURE_STEPS.length);
     for (const step of FAILURE_STEPS) {
       expect(step, step).toMatch(/^[a-z]+\.[a-z][a-z-]*$/);
@@ -311,6 +311,20 @@ describe("FAILURE_STEPS", () => {
     expect(FAILURE_STEPS).toEqual(
       expect.arrayContaining([
         "forecast.fetch",
+        "forecast.incomplete",
+        "forecast.cache-read",
+        "forecast.cache-write",
+        "forecast.cache-missing",
+        "tonight.sites",
+        "tonight.telescopes",
+        "tonight.eyepieces",
+        "tonight.log",
+        "tonight.sky-checks",
+        "tonight.build",
+        "tonight.planets",
+        "tonight.moon",
+        "tonight.sky-view",
+        "tonight.sky-check-record",
         "tonight.session-plan",
         "tonight.sky-events",
         "tonight.plan-edits",
