@@ -114,7 +114,7 @@ Workers Logs adds one **invocation event** per request (`$cloudflare.$metadata.t
 
 Existing rows expire with the 7-day retention and cannot be deleted by us.
 
-**Traces** (`observability.traces` in `wrangler.jsonc`) are a separate store and #187 does not change them. Cloudflare's span attributes list city-level `geo.*` attributes (locality, region, country, continent, time zone), the autonomous system, the user agent, `url.full` and `url.path`, and KV key names, with no latitude, longitude, postal code or client IP, and no supported redaction. **Owner decision pending.** Options: turn traces off (the one thing lost is a per-fetch span for slow requests; a rounded duration field on our own notice line could replace it), as a follow-up PR. This change does not touch `traces`.
+**Traces** (`observability.traces` in `wrangler.jsonc`) are a separate store and #187 does not change them. Cloudflare's span attributes list city-level `geo.*` attributes (locality, region, country, continent, time zone), the autonomous system, the user agent, `url.full` and `url.path`, and KV key names, with no latitude, longitude, postal code or client IP, and no supported redaction. **Owner decision, 2026-10-16: keep traces enabled for now, no follow-up PR.** They carry city, region, country, continent, time zone, the user agent, `url.*` and KV key names **by platform design**, with no supported way to drop them, and they are under GDPR review (#191). Fallback if that review says no: turn traces off, and keep slow-request visibility with a rounded duration field on our own notice line. This change does not touch `traces`.
 
 Our own lines hold none of this (D4): no identifier, user, site, URL, value, coordinate or email.
 

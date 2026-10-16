@@ -94,3 +94,7 @@ Fallback applied now, separately: PR #187 (`fix/invocation-logs-off`, from main 
 Traces: Cloudflare's spans-and-attributes docs list `geo.locality.name` (city), `geo.locality.region`, `geo.country.code`, `geo.continent.code`, `geo.timezone`, `cloudflare.asn`, `user_agent.original`, `url.full`/`url.path` and KV key names on every span; no latitude, longitude, postal code or client IP. Turning traces off is proposed in the PR, not applied (owner decision).
 
 After #187 deploys, verify: (1) a fresh request leaves no `cf-worker-event` row; (2) an Issue is still created for a logged error (whether the "failed invocation" Issue kind needs the invocation event is undocumented); (3) whether the console lines of one request still share an invocation or request identifier (D4's correlation); the Phase 6 runbook's "What the invocation event holds" section records the result.
+
+## Traces decision (owner, 2026-10-16)
+
+Traces stay enabled; no follow-up PR. They carry city, region, country, continent, time zone, user agent, `url.*` and KV key names by platform design (no supported redaction or per-attribute control: traces docs, custom-spans, known-limitations, spans-and-attributes; read 2026-10-16), and are under GDPR review, issue #191. Fallback if the review says no: `traces.enabled: false` plus a rounded duration field on our own `logNotice` line for slow upstream calls.
