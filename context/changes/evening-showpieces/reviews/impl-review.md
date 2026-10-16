@@ -114,7 +114,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
   - Tradeoff: the record reads "6 pass, 1 time-clause miss" instead of a clean pass. That is still within "survives", given the stated cause.
   - Confidence: HIGH, because the plan text is explicit about stopping on a failing rule.
   - Blind spot: whether the owner reads P3's time clause as a condition for applying the rule (then the current text is right and needs only a sentence naming that reading).
-- **Decision**: PENDING
+- **Decision**: HELD for the owner (2026-10-16)
 
 ### F2 — Branch conflicts with origin/main on roadmap.md, and the S-05 row is malformed
 
@@ -125,7 +125,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
 - **Detail**: `origin/main` moved to d88045e (#186, the ESA/Hipparcos decision). It rewrote the M-4 slice table and added S-08. `git merge-tree origin/main HEAD` reports a content conflict in `roadmap.md`. This branch's S-05 row also ends in `in-progress|` with no padding.
   - Row 4.2 claims formatting passes, but `prettier --check` fails on `roadmap.md` and `handoff.md`. Both were already failing at the base, and the implementation notes mention only `handoff.md`.
 - **Fix**: Rebase onto `origin/main`. Keep main's table with S-05 set to `in-progress` and padded like the other rows. Re-run `npx prettier --check context/foundation/roadmap.md`, or note that the file was already unformatted at the base.
-- **Decision**: PENDING
+- **Decision**: APPLIED (2026-10-16): rebased onto origin/main d88045e, main's table kept with S-05 padded and set to `in-progress`; `roadmap.md` passes `prettier --check` after the rebase (the earlier failure was the malformed row), and `handoff.md` was already unformatted on the base (checked on `origin/main`), left as is by the orchestrator. The branch history changed, so the next push needs `--force-with-lease`.
 
 ### F3 — The D-5 fallback can name a below-mean component, which the docs say never happens
 
@@ -139,7 +139,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
   - The fallback is harmless to G5, as shown by the arithmetic above. The duration phrase states a length, so it stays true.
   - A related nuance: duration and brightness have no minimum spread. With many durations now saturated at 1, an entry at 0.98 among entries at 1 loses "Up for X" over a difference the viewer cannot see.
 - **Fix**: Add one clause to `en.ts` and to CLAUDE.md: "except when nothing is named for the entry: its lead is then its largest weighted eligible component and it has no second".
-- **Decision**: PENDING
+- **Decision**: HELD for the owner (2026-10-16)
 
 ### F4 — Two build.test.ts comments still give M3's old grid edge
 
@@ -149,7 +149,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
 - **Location**: src/lib/tonight/build.test.ts:1857, src/lib/tonight/build.test.ts:2053
 - **Detail**: "M3 is up 19:25-19:45 only" and "M3's window ended at 19:45" contradict the new pins at `:2018-2019` and `:2049` (19:51, Skyfield 19:51:44). The assertions are unaffected.
 - **Fix**: Change both comments to 19:51.
-- **Decision**: PENDING
+- **Decision**: APPLIED (2026-10-16): both comments now say 19:51.
 
 ### F5 — Two quoted fragments from the planner remain, against F6's "no verbatim text"
 
@@ -160,4 +160,4 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
 - **Detail**: Two quoted fragments from in-the-sky.org are committed: the page label `"(CEST)"` and the phrase `"not readily observable"`. Both are de minimis and carry no values, but F6 says "no verbatim text".
   - Separately, the evidence says "58 requests" while research and the plan say 56 pages. That is probably retries, but the record does not say so.
 - **Fix**: Paraphrase both fragments, for example "labelled as summer time" and "reported as not observable". Give the request count as "56 pages (58 requests incl. retries)", or whatever the true reason is.
-- **Decision**: PENDING
+- **Decision**: APPLIED (2026-10-16): both quoted fragments paraphrased; the evidence says 56 object pages plus a probe page and the terms page (58 fetches, about 68 attempts with retries).

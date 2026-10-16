@@ -273,3 +273,10 @@ Most top-5 edges are the dark window's own edge (the object is up at dusk or daw
 - `src/lib/engine/fixtures/README.md`: the Phase 1 row and the "Deep-sky windows" section were accurate; one sentence added that the
   same test checks each night's final top 5.
 - `context/handoff.md` was not prettier-clean before this edit either (its older slice table uses `|---|`); left as it was.
+
+## Impl-review follow-up (2026-10-16)
+
+- Rebased the branch onto origin/main d88045e (ESA/Hipparcos decision, #186). The roadmap's slice table conflicted twice; main's table was kept, with S-05 padded like the other rows and set to `planning` and then `in-progress` as the original commits did. `roadmap.md` passes `prettier --check`; `context/handoff.md` was already unformatted on `origin/main` and stays so.
+- build.test.ts comments for M3's window now say 19:51 (review F4).
+- research.md paraphrases two fragments of the planner's wording and the criterion-2 record explains 56 object pages versus 58 fetches (review F5).
+- Open: review F1 (the M39 July P3 wording) and F3 (the D-5 fallback wording) are with the owner.

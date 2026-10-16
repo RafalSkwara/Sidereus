@@ -19,7 +19,7 @@ Result: **survives.** For the top 5 the largest window-edge difference is 0.02 m
 
 **Planner:** in-the-sky.org (Dominic Ford), the "What's up" object pages for Warsaw, one page per object and night: `https://in-the-sky.org/data/object.php?id=<id>&town=756135&year=<year>&month=<month>&day=<day>`. Credit: data and statements on in-the-sky.org are the work of Dominic Ford; the site's terms allow redistribution with the copyright text and credit but not for profit, so, by the owner's decision of 2026-10-16, no text and no value from the site is stored in this repository. This record holds only the method, the rules and an agreement summary.
 
-**Method.** The pages were read once during the research phase on 2026-10-16 (58 requests, 2.5 s apart, a User-Agent naming the repository URL, no personal data) for the objects the probes expected in the top 5s; the raw capture is held outside the repository by the lead agent. The final top 5s above were compared with it by hand.
+**Method.** The pages were read once during the research phase on 2026-10-16 (56 object pages plus two others, a probe page and the terms page: 58 fetches, about 68 HTTP attempts counting retries, spaced at least 2.5 s apart, a User-Agent naming the repository URL, no personal data) for the objects the probes expected in the top 5s; the raw capture is held outside the repository by the lead agent. The final top 5s above were compared with it by hand.
 
 **Rules, fixed before the comparison so the engine could not shape them (plan Phase 4):**
 

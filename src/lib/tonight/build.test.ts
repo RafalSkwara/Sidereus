@@ -1854,7 +1854,7 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
   const keysOf = (view: TonightView): string[] => planOf(view).rows.map((row) => row.key);
 
   // Warsaw, 2026-10-10, Bortle 6, 150 mm: the suggested rows are M39, Neptune, Saturn, M31, NGC 869, M34, M45, Uranus,
-  // Jupiter and Mars. M3 is up 19:25-19:45 only, so by the end of the night its window is long over; NGC 4244 is
+  // Jupiter and Mars. M3 is up 19:25-19:51 only, so by the end of the night its window is long over; NGC 4244 is
   // reachable but below the bar (it is on no list); Mercury and the Moon are no targets that night.
   it("changes nothing without a saved list: not edited, nothing held, no candidates unless asked", () => {
     const plain = build();
@@ -2050,7 +2050,7 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
   });
 
   it("reads the tile's next target in the user's order: the first row whose window has not ended", () => {
-    // 03:30 local: M3's window ended at 19:45, M31's runs to 05:20.
+    // 03:30 local: M3's window ended at 19:51, M31's runs to 05:20.
     const late = new Date("2026-10-11T01:30:00Z");
     const forecast = result(uniformForecast("2026-10-10T00:00:00Z", 5), false, new Date(late.getTime() - 20 * 60_000));
     const plan = planOf(build({ now: late, forecast }, { planEdits: ["M3", "M31", "M13"] }));
