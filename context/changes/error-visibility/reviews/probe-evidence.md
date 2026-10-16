@@ -76,3 +76,11 @@ Removal (after the checks are recorded): `npx wrangler delete sidereus-probe`; `
 The probe Worker was skipped; `sidereus-probe` was never deployed. 1.9 and 1.10 are now owner manual checks on production: 1.9 on any `sidereus` invocation event in Workers Logs (`request.cf` geo fields and client IP absent), 1.10 on the first real `sidereus: <step> failed` line and its Issue (grouped by message, `step` filterable). D2 is revisited only if 1.10 shows a different grouping or an unfilterable `step`.
 
 Removed: KV namespaces `sidereus-probe-forecast-cache` (c49fa235…) and `sidereus-probe-session` (cf95030e…) deleted with `wrangler kv namespace delete`; `dist/server/probe-wrangler.json` deleted; `~/probe-secrets.env` never existed. `wrangler kv namespace list` afterwards shows only the production `FORECAST_CACHE` and `sidereus-session`. Left on the account: Version `5626dfff` (tag `probe`, no traffic; its Version URL is gone with Phase 6's `preview_urls: false`).
+
+## 1.10 result (owner, 2026-10-16, production)
+
+The owner found a real `sidereus: forecast.fetch failed` error in Workers Logs and its Issue.
+- **Grouping: confirmed.** The Issue groups repeated occurrences of the same message, so one fixed message per step (D2) groups per step.
+- **Field filter: failed.** Filtering on `step` as a field does not work: a two-argument `console.error(message, fields)` is not indexed as fields (impl review F4's worry). The message embeds the step (`sidereus: <step> failed` or `noted`), so a text search on the message finds each step.
+- **Decision (owner): keep D2 and the line shape unchanged.** Record the limitation: the runbook (Phase 6) and any saved query or alert describe searching **by message text**, never by the `step` field; the fields in the second argument stay for reading a line, not for filtering. Phase 6's runbook and the Phase 7 count query (D13) must use the message text.
+- 1.9 (invocation event `request.cf` geo fields) is still pending the owner.
