@@ -1,5 +1,6 @@
 import type { ZodError } from "zod";
 import { isMessageKey, type MessageKey } from "@/i18n";
+import { logFailure } from "@/lib/observability/log-failure";
 
 /**
  * The fixed `?error=` values API routes redirect with. Every one is a message key (`@/i18n`) that the
@@ -11,6 +12,20 @@ export const NOT_CONFIGURED: MessageKey = "errors.notConfigured";
 export const CHECK_FIELDS: MessageKey = "errors.checkFields";
 export const AUTH_NOT_CONFIGURED: MessageKey = "errors.auth.notConfigured";
 export const ACCOUNT_PLAN_NEEDS_FULL: MessageKey = "errors.accountPlan.needsFull";
+
+/**
+ * The posted form, or `null` when the body is not one (a wrong content type, a truncated upload): `formData()` rejects
+ * on it, which used to end as an uncaught 500. The route redirects with `CHECK_FIELDS`, the shape-error key, and the
+ * failure leaves a `request.form` line with only the thrown error's name.
+ */
+export async function readForm(request: Request): Promise<FormData | null> {
+  try {
+    return await request.formData();
+  } catch (error) {
+    logFailure("request.form", error);
+    return null;
+  }
+}
 
 /** The first issue's message when it is a catalogue key (the schemas only emit keys), else `CHECK_FIELDS`. */
 export function issueKey(error: ZodError): MessageKey {

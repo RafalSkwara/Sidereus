@@ -1580,6 +1580,7 @@ export const en = {
    * strings only: none of them may ever contain a submitted value.
    */
   errors: {
+    serverFault: "Something went wrong on our side, so nothing was changed. Try again in a moment.",
     generic: "Something went wrong. Please try again.",
     notConfigured: "The database is not configured.",
     checkFields: "Check the highlighted fields.",

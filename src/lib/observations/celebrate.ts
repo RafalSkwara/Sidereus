@@ -24,13 +24,16 @@ import type { MilestoneRecordInput } from "./milestone-store";
  * - A save that cannot count (an edit to a lower rating, a delete): read `before`, record `reached(before)`, then
  *   write. It never reads `after` and never celebrates; neither can reach anything.
  *
- * A failed milestone read or record never blocks or fails the write: it is traced (`logMilestoneFailure`) and the
- * save simply celebrates nothing. A failed write returns the write's own result unchanged, and in a counting save
- * nothing is recorded after it.
+ * A failed milestone read or record never blocks or fails the write: it is traced under the route's own step word
+ * (`logFailure`, `milestoneFailureStep`) and the save simply celebrates nothing. A failed write returns the write's
+ * own result unchanged, and in a counting save nothing is recorded after it.
  */
 
 /** The steps `logMilestoneFailure` can name; each is a fixed word, so the logged line is fixed too. */
 export type MilestoneStep = "read" | "record" | "list" | "seen";
+
+/** The save route a milestone step ran inside: a create, an edit or a delete of a log entry. */
+export type MilestoneRoute = "create" | "edit" | "delete";
 
 /**
  * The page's seen read is S-05's (observing progress), so its step names that feature, not milestones.
@@ -42,12 +45,34 @@ const FAILURE_STEP_OF: Record<MilestoneStep, FailureStep> = {
   seen: "progress.seen",
 };
 
+/** The read and record steps a save route runs, told apart by the route (a closed word, never free text). */
+const ROUTE_STEP_OF: Record<"read" | "record", Record<MilestoneRoute, FailureStep>> = {
+  read: {
+    create: "milestones.read-create",
+    edit: "milestones.read-edit",
+    delete: "milestones.read-delete",
+  },
+  record: {
+    create: "milestones.record-create",
+    edit: "milestones.record-edit",
+    delete: "milestones.record-delete",
+  },
+};
+
+/** The step a failed milestone step is traced under: the route's own for a read or record inside a save route. */
+export function milestoneFailureStep(step: MilestoneStep, route?: MilestoneRoute): FailureStep {
+  return route !== undefined && (step === "read" || step === "record")
+    ? ROUTE_STEP_OF[step][route]
+    : FAILURE_STEP_OF[step];
+}
+
 /**
  * Traces a failed milestone step through the shared helper: its fixed line, the error's (or its cause's) name and a
  * shaped cause code, never a message (an error message could carry a coordinate or a value, which never go into logs).
+ * A read or record inside a save route passes the route, so the create, edit and delete saves can be told apart.
  */
-export function logMilestoneFailure(step: MilestoneStep, error: unknown): void {
-  logFailure(FAILURE_STEP_OF[step], error);
+export function logMilestoneFailure(step: MilestoneStep, error: unknown, route?: MilestoneRoute): void {
+  logFailure(milestoneFailureStep(step, route), error);
 }
 
 export interface ReachedBySaveOptions<Result extends { ok: boolean }> {
@@ -57,6 +82,8 @@ export interface ReachedBySaveOptions<Result extends { ok: boolean }> {
   record: (states: MilestoneRecordInput[]) => Promise<MilestoneKey[]>;
   /** Whether this save can reach something: a create or an edit rated `LOG_PENALTY_MIN_RATING` or above. */
   counts: boolean;
+  /** The route running the save, so a failed milestone step is traced under the route's own step word. */
+  route: MilestoneRoute;
   /** The save itself; its result comes back unchanged. */
   write: () => Promise<Result>;
 }
@@ -83,11 +110,11 @@ function toRecord(...stateLists: readonly (readonly MilestoneState[])[]): Milest
 }
 
 /** A seam call whose failure is traced, not thrown: `null` for a failure. */
-async function traced<T>(step: MilestoneStep, call: () => Promise<T>): Promise<T | null> {
+async function traced<T>(step: "read" | "record", route: MilestoneRoute, call: () => Promise<T>): Promise<T | null> {
   try {
     return await call();
   } catch (error) {
-    logMilestoneFailure(step, error);
+    logFailure(milestoneFailureStep(step, route), error);
     return null;
   }
 }
@@ -101,9 +128,10 @@ export async function reachedBySave<Result extends { ok: boolean }>({
   read,
   record,
   counts,
+  route,
   write,
 }: ReachedBySaveOptions<Result>): Promise<{ result: Result; celebrate: MilestoneKey[] }> {
-  const beforeEntries = await traced("read", read);
+  const beforeEntries = await traced("read", route, read);
   const before = beforeEntries === null ? null : reachedStates(beforeEntries);
 
   if (!counts) {
@@ -111,7 +139,7 @@ export async function reachedBySave<Result extends { ok: boolean }>({
     if (before !== null) {
       const states = toRecord(before);
       if (states.length > 0) {
-        await traced("record", () => record(states));
+        await traced("record", route, () => record(states));
       }
     }
     return { result: await write(), celebrate: [] };
@@ -123,14 +151,14 @@ export async function reachedBySave<Result extends { ok: boolean }>({
   }
 
   // Read after the write even when `before` failed, so the after-state is still stored.
-  const afterEntries = await traced("read", read);
+  const afterEntries = await traced("read", route, read);
   const after = afterEntries === null ? null : reachedStates(afterEntries);
 
   const states = toRecord(before ?? [], after ?? []);
   if (states.length === 0) {
     return { result, celebrate: [] };
   }
-  const inserted = await traced("record", () => record(states));
+  const inserted = await traced("record", route, () => record(states));
   if (inserted === null || before === null || after === null) {
     return { result, celebrate: [] };
   }

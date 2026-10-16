@@ -41,6 +41,23 @@ export const FAILURE_STEPS = [
   "milestones.record",
   "milestones.list",
   "progress.seen",
+  "milestones.read-create",
+  "milestones.read-edit",
+  "milestones.read-delete",
+  "milestones.record-create",
+  "milestones.record-edit",
+  "milestones.record-delete",
+  "save.gear",
+  "save.log",
+  "save.sky-check",
+  "save.onboarding",
+  "save.plan",
+  "save.plan-reset",
+  "request.form",
+  "read.log",
+  "read.gear",
+  "read.sky-checks",
+  "read.onboarding",
 ] as const;
 
 /** The steps listed in `FAILURE_STEPS`. */

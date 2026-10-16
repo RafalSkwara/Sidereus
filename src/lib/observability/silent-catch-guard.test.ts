@@ -49,7 +49,6 @@ const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/r
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
 
 /** Reasons shared by many entries. */
-const AUDIT_P4 = "audit finding (flow B: save routes, plan routes, page reads), fixed by Phase 4";
 const AUDIT_P5 = "audit finding (flow C and the finder: session, auth routes, finder), fixed by Phase 5";
 const CLIENT = "reported by Phases 7-9, or out of scope if that block is cut";
 const INPUT =
@@ -107,15 +106,10 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     reason:
       "resets the memo only; the same rejection still reaches every awaiting caller, and the finder loader logs finder.stars",
   },
-  "src/lib/observations/celebrate.ts": {
-    count: 1,
-    reason:
-      "reports through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through (Phase 4 may call logFailure directly)",
-  },
   "src/pages/log/progress.astro": {
     count: 2,
     reason:
-      "both handlers report through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through (Phase 4 may call logFailure directly)",
+      "both handlers report through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through",
   },
   "src/lib/location/locate.ts": {
     count: 1,
@@ -153,33 +147,6 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 1,
     reason:
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
-  },
-
-  // Phase 4: save routes, plan routes, page reads. Phase 4 deletes these entries.
-  "src/pages/api/tonight/plan.ts": { count: 1, reason: `${AUDIT_P4}: the catch maps the error to a key with no line` },
-  "src/pages/api/tonight/plan/reset.ts": {
-    count: 1,
-    reason: `${AUDIT_P4}: the catch maps the error to a key with no line`,
-  },
-  "src/pages/gear/index.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/gear/sites/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/gear/telescopes/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/gear/eyepieces/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/log/index.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/log/new.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/log/sky.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/onboarding.astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: an unknown gear state shows the setup anyway, with no line`,
   },
 
   // Phase 5: sign-in, session and the finder.

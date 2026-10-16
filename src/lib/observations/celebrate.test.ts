@@ -89,6 +89,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M31]),
     });
 
@@ -106,6 +107,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M31]),
     });
 
@@ -119,6 +121,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M13]),
     });
 
@@ -139,6 +142,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, earlier]),
     });
 
@@ -152,6 +156,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write(() => [M13]),
     });
 
@@ -176,6 +181,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M31]),
     });
 
@@ -188,6 +194,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, { target: "M45", night: "2026-09-01", rating: 4 }]),
     });
 
@@ -203,6 +210,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M31]),
     });
 
@@ -211,7 +219,10 @@ describe("reachedBySave, a counting save", () => {
     expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
     expect(celebrate).toEqual([]);
     expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read-create failed", {
+      step: "milestones.read-create",
+      name: "Error",
+    });
   });
 
   it("records the before-state after a failed after-read, and celebrates nothing", async () => {
@@ -221,13 +232,17 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M13]),
     });
 
     expect(result).toEqual({ ok: true });
     expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read-create failed", {
+      step: "milestones.read-create",
+      name: "Error",
+    });
   });
 
   it("returns the write's failure unchanged and records and celebrates nothing", async () => {
@@ -236,6 +251,7 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.failingWrite,
     });
 
@@ -252,14 +268,15 @@ describe("reachedBySave, a counting save", () => {
       read: fixture.read,
       record: fixture.record,
       counts: true,
+      route: "create",
       write: fixture.write((log) => [...log, M31]),
     });
 
     expect(result).toEqual({ ok: true });
     expect(celebrate).toEqual([]);
     expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record failed", {
-      step: "milestones.record",
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record-create failed", {
+      step: "milestones.record-create",
       name: "TypeError",
     });
   });
@@ -272,6 +289,7 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
       read: fixture.read,
       record: fixture.record,
       counts: false,
+      route: "edit",
       write: fixture.write(() => [{ ...M31, rating: 2 }]),
     });
 
@@ -288,6 +306,7 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
       read: fixture.read,
       record: fixture.record,
       counts: false,
+      route: "delete",
       write: fixture.write(() => []),
     });
 
@@ -298,7 +317,13 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
 
   it("makes no record call when the log reached nothing", async () => {
     const fixture = new Fixture();
-    await reachedBySave({ read: fixture.read, record: fixture.record, counts: false, write: fixture.write(() => []) });
+    await reachedBySave({
+      read: fixture.read,
+      record: fixture.record,
+      counts: false,
+      route: "delete",
+      write: fixture.write(() => []),
+    });
 
     expect(fixture.calls).toEqual(["read", "write"]);
   });
@@ -310,13 +335,17 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
       read: fixture.read,
       record: fixture.record,
       counts: false,
+      route: "delete",
       write: fixture.write(() => []),
     });
 
     expect(result).toEqual({ ok: true });
     expect(fixture.calls).toEqual(["read", "write"]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read failed", { step: "milestones.read", name: "Error" });
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read-delete failed", {
+      step: "milestones.read-delete",
+      name: "Error",
+    });
   });
 
   it("still writes after a failed record, and traces it", async () => {
@@ -326,14 +355,15 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
       read: fixture.read,
       record: fixture.record,
       counts: false,
+      route: "delete",
       write: fixture.write(() => []),
     });
 
     expect(result).toEqual({ ok: true });
     expect(fixture.calls).toEqual(["read", "record", "write"]);
     expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record failed", {
-      step: "milestones.record",
+    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record-delete failed", {
+      step: "milestones.record-delete",
       name: "Error",
     });
   });
@@ -344,6 +374,7 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
       read: fixture.read,
       record: fixture.record,
       counts: false,
+      route: "delete",
       write: fixture.failingWrite,
     });
 
@@ -363,6 +394,22 @@ describe("logMilestoneFailure", () => {
       ["sidereus: milestones.record failed", { step: "milestones.record", name: "RangeError" }],
       ["sidereus: milestones.list failed", { step: "milestones.list", name: "RangeError" }],
       ["sidereus: progress.seen failed", { step: "progress.seen", name: "RangeError" }],
+    ]);
+    expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
+  });
+
+  it("names the route for a read or record step, with the cause's code, and ignores it for the page steps", () => {
+    const failure = new Error("load", { cause: { code: "08006", details: "52.37" } });
+    logMilestoneFailure("read", failure, "edit");
+    logMilestoneFailure("record", failure, "create");
+    logMilestoneFailure("record", failure, "delete");
+    logMilestoneFailure("list", failure, "create");
+
+    expect(errors.mock.calls).toEqual([
+      ["sidereus: milestones.read-edit failed", { step: "milestones.read-edit", name: "Error", code: "08006" }],
+      ["sidereus: milestones.record-create failed", { step: "milestones.record-create", name: "Error", code: "08006" }],
+      ["sidereus: milestones.record-delete failed", { step: "milestones.record-delete", name: "Error", code: "08006" }],
+      ["sidereus: milestones.list failed", { step: "milestones.list", name: "Error", code: "08006" }],
     ]);
     expect(JSON.stringify(errors.mock.calls)).not.toContain("52.37");
   });

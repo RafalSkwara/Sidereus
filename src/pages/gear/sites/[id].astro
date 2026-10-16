@@ -9,6 +9,7 @@ import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
 import { siteStore, type SiteRecord } from "@/lib/gear/store";
+import { logFailure } from "@/lib/observability/log-failure";
 
 const id = Astro.params.id ?? "";
 // `?error=` carries a message key; the form translates it.
@@ -22,7 +23,8 @@ let loadError: string | null = null;
 if (supabase) {
   try {
     site = await siteStore.get(supabase, id);
-  } catch {
+  } catch (error) {
+    logFailure("read.gear", error);
     loadError = m.errors.load.site;
   }
   if (!site && !loadError) {

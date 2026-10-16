@@ -12,6 +12,7 @@ import { logFormNights } from "@/lib/observations/log-night";
 import { LOG_LIST, tonightReturnPath } from "@/lib/observations/redirect";
 import { isCalendarDate, returnTargetSchema, type TonightReturnPage } from "@/lib/observations/schemas";
 import { targetOptions } from "@/lib/observations/target-options";
+import { logFailure } from "@/lib/observability/log-failure";
 import { parseTargetParam } from "@/lib/targets";
 import { isKnownTarget, targetLabel } from "@/lib/targets/labels";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,8 @@ let loadError: MessageKey | null = null;
 if (supabase && (object || manual)) {
   try {
     [sites, telescopes] = await Promise.all([siteStore.list(supabase), telescopeStore.list(supabase)]);
-  } catch {
+  } catch (error) {
+    logFailure("read.gear", error);
     loadError = "errors.load.setup";
   }
 }
