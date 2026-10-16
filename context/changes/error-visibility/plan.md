@@ -703,16 +703,16 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields
-- [x] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument
-- [x] 3.3 `build.ts` catches: each of the five paths logs its step
-- [x] 3.4 Silent-catch allowlist entries for these files removed, guard green
-- [x] 3.5 Full unit suite, lint and types pass
-- [x] 3.6 Dashboard e2e still green
+- [x] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields — af2bf9e
+- [x] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument — af2bf9e
+- [x] 3.3 `build.ts` catches: each of the five paths logs its step — af2bf9e
+- [x] 3.4 Silent-catch allowlist entries for these files removed, guard green — af2bf9e
+- [x] 3.5 Full unit suite, lint and types pass — af2bf9e
+- [x] 3.6 Dashboard e2e still green — af2bf9e
 
 #### Manual
 
-- [x] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback (verified 2026-10-16 on a local preview, port 4333: three island requests, three lines `{ step: 'forecast.fetch', name: 'Error', code: 'request' }`, headline "No forecast", no error notice)
+- [x] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback (verified 2026-10-16 on a local preview, port 4333: three island requests, three lines `{ step: 'forecast.fetch', name: 'Error', code: 'request' }`, headline "No forecast", no error notice) — af2bf9e
 
 ### Phase 4: Save routes, plan routes and page reads
 
