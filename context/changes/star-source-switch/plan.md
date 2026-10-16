@@ -435,14 +435,14 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 4.1 The whole unit suite passes: `npm test`
-- [x] 4.2 Type check passes: `npx astro check`
-- [x] 4.3 Lint passes with no warnings: `npm run lint`
-- [x] 4.4 Published-hop references and the coverage gate pass without any fixture edit: `npx vitest run src/lib/engine/finder.test.ts`
-- [x] 4.5 The explainer chart test passes after regeneration and the start star is still Alphecca: `npx vitest run src/lib/finder/example-chart.test.ts src/lib/finder/steps.test.ts`
-- [x] 4.6 The finder file's gzip is under the 160,000-byte budget on the real build output: `npx vitest run src/lib/catalogue/finder-stars.test.ts`
-- [x] 4.7 The production build passes, including the star-data leak check: `npm run build`
-- [x] 4.8 Since Phase 3, the diff touches only the four generated files, the files listed in this phase and the example chart: `git diff --stat <phase-3-commit>..HEAD`
+- [x] 4.1 The whole unit suite passes: `npm test` — f512ee0
+- [x] 4.2 Type check passes: `npx astro check` — f512ee0
+- [x] 4.3 Lint passes with no warnings: `npm run lint` — f512ee0
+- [x] 4.4 Published-hop references and the coverage gate pass without any fixture edit: `npx vitest run src/lib/engine/finder.test.ts` — f512ee0
+- [x] 4.5 The explainer chart test passes after regeneration and the start star is still Alphecca: `npx vitest run src/lib/finder/example-chart.test.ts src/lib/finder/steps.test.ts` — f512ee0
+- [x] 4.6 The finder file's gzip is under the 160,000-byte budget on the real build output: `npx vitest run src/lib/catalogue/finder-stars.test.ts` — f512ee0
+- [x] 4.7 The production build passes, including the star-data leak check: `npm run build` — f512ee0
+- [x] 4.8 Since Phase 3, the diff touches only the four generated files, the files listed in this phase and the example chart: `git diff --stat <phase-3-commit>..HEAD` — f512ee0
 
 #### Manual
 
