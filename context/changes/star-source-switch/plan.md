@@ -393,10 +393,10 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 1.1 Reader tests pass: `npx vitest run scripts/lib/hipparcos.test.mjs`
-- [x] 1.2 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/hipparcos.mjs scripts/lib/hipparcos.test.mjs scripts/hipparcos-source-check.mjs vitest.config.ts eslint.config.js`
-- [x] 1.3 The pinned file verifies and counts match: `node scripts/hipparcos-source-check.mjs` reports 118,218 rows, 921 stars at V ≤ 4.5 and 25,723 at V ≤ 7.5, and lists the ten stars positioned from RAhms/DEdms
-- [x] 1.4 The whole unit suite still passes: `npm test`
+- [x] 1.1 Reader tests pass: `npx vitest run scripts/lib/hipparcos.test.mjs` — 3b469eb
+- [x] 1.2 Lint passes with no warnings on the new files: `npx eslint --max-warnings 0 scripts/lib/hipparcos.mjs scripts/lib/hipparcos.test.mjs scripts/hipparcos-source-check.mjs vitest.config.ts eslint.config.js` — 3b469eb
+- [x] 1.3 The pinned file verifies and counts match: `node scripts/hipparcos-source-check.mjs` reports 118,218 rows, 921 stars at V ≤ 4.5 and 25,723 at V ≤ 7.5, and lists the ten stars positioned from RAhms/DEdms — 3b469eb
+- [x] 1.4 The whole unit suite still passes: `npm test` — 3b469eb
 
 ### Phase 2: Designation source data
 
