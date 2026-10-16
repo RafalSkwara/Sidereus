@@ -54,3 +54,19 @@ Removal: `npx wrangler delete sidereus-probe` (check with `--dry-run` first; no 
 ## Decision pending
 
 The orchestrator relays this to the owner. Nothing in steps 2 or 3 has been run.
+
+## Step 3 chosen (owner, 2026-10-16): prepared state, deploy NOT yet run
+
+Owner's one-time exception to "never deploy", for the Worker `sidereus-probe` only.
+
+Created so far (account, all new and empty; production untouched):
+- KV namespace `sidereus-probe-forecast-cache`, id `c49fa235e764434eb82fade69d948dc3`
+- KV namespace `sidereus-probe-session`, id `cf95030eecc0421ab886acf2b56c11be`
+
+Temporary files (uncommitted):
+- `dist/server/probe-wrangler.json` (gitignored build output): name `sidereus-probe`, the two KV ids above, `vars.FORECAST_BASE_URL = http://127.0.0.1:9`, observability and `issues` as in production, `preview_urls: false`, no placement. `wrangler deploy --dry-run -c` accepts it.
+- `~/probe-secrets.env` (owner creates; never read by the agent): `SUPABASE_URL=` and `SUPABASE_KEY=` (publishable key only), one per line.
+
+Order: `wrangler deploy -c dist/server/probe-wrangler.json`, then `wrangler secret bulk ~/probe-secrets.env --name sidereus-probe`. Between the two the Worker runs without Supabase (the app boots with `createClient()` null) and touches no data.
+
+Removal (after the checks are recorded): `npx wrangler delete sidereus-probe`; `npx wrangler kv namespace delete --namespace-id <id>` for both ids; delete `dist/server/probe-wrangler.json` and `~/probe-secrets.env`.
