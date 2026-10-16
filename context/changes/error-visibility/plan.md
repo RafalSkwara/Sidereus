@@ -663,7 +663,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 ## Progress
 
-> Status (2026-10-16): Phases 2, 3, 4 and 5 implemented locally on feat/error-visibility-2. Earlier: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
+> Status (2026-10-16): Phases 2, 3, 4, 5 and 6 implemented locally on feat/error-visibility-2. Earlier: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
 >
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
@@ -751,18 +751,18 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 6.1 Silent-catch guard passes with only reasoned entries
-- [ ] 6.2 Full unit suite, lint, types, build and DB suites pass
-- [ ] 6.3 Full e2e passes in CI with `failOnFlakyTests`
-- [ ] 6.4 Agent-hooks proof still passes
+- [x] 6.1 Silent-catch guard passes with only reasoned entries — 65bf325
+- [x] 6.2 Full unit suite, lint, types, build and DB suites pass — 65bf325
+- [ ] 6.3 Full e2e passes in CI with `failOnFlakyTests` (local run in CI mode, `CI=1`, 2026-10-16: 85 passed, 3 skipped, no flaky pass; still to be seen in CI on the PR)
+- [x] 6.4 Agent-hooks proof still passes — 65bf325
 
 #### Manual
 
-- [ ] 6.5 The owner creates the Issues automation; a deliberate forecast failure reaches the target as an Issue grouped by its message, a second step is its own Issue, and a stale-id update leaves a warn line and no Issue
-- [ ] 6.6 One Workers Logs line per flow and the invocation event around it (URL path, headers, script version; the `cf` geo fields were checked at 1.9) hold no coordinate, email, key or form value, and the runbook records what the invocation event holds
-- [ ] 6.7 If a line does not become an Issue, the fallback query is used and the gap is recorded as a follow-up
-- [ ] 6.8 Follow-up issues exist for release identity (D6), the island/404/500/plan-unknown UI (D7) and, only if the block was cut, client reporting (D5)
-- [ ] 6.9 After the probe, `wrangler.jsonc` pins `preview_urls: false` and the config pin test expects it, so no later version is public (owner, 2026-10-15)
+- [ ] 6.5 The owner creates the Issues automation; a deliberate forecast failure reaches the target as an Issue grouped by its message, a second step is its own Issue, and a stale-id update leaves a warn line and no Issue (owner, after the deploy; not run by the agent)
+- [ ] 6.6 One Workers Logs line per flow and the invocation event around it (URL path, headers, script version; the `cf` geo fields were checked at 1.9) hold no coordinate, email, key or form value, and the runbook records what the invocation event holds (owner, after the deploy; not run by the agent)
+- [ ] 6.7 If a line does not become an Issue, the fallback query is used and the gap is recorded as a follow-up (owner, after the deploy; not run by the agent)
+- [x] 6.8 Follow-up issues exist for release identity (D6), the island/404/500/plan-unknown UI (D7) and, only if the block was cut, client reporting (D5) (#189 release identity D6, #190 failure UI D7, both on the board; no client-reporting issue, Phases 7-9 are not cut)
+- [x] 6.9 After the probe, `wrangler.jsonc` pins `preview_urls: false` and the config pin test expects it, so no later version is public (owner, 2026-10-15) — 65bf325
 
 ### Phase 7: The client-error endpoint and the reporter core
 
