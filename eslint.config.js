@@ -76,7 +76,21 @@ const astroConfig = defineConfig({
 const scriptsConfig = defineConfig({
   files: ["scripts/**/*.mjs", "tests/e2e/**/*.mjs"],
   extends: [tseslint.configs.disableTypeChecked],
-  languageOptions: { globals: { console: true, process: true, fetch: true, URLSearchParams: true, URL: true } },
+  languageOptions: {
+    globals: {
+      console: true,
+      process: true,
+      fetch: true,
+      URLSearchParams: true,
+      URL: true,
+      AbortController: true,
+      Buffer: true,
+      ReadableStream: true,
+      Response: true,
+      clearTimeout: true,
+      setTimeout: true,
+    },
+  },
   rules: { "no-console": "off" },
 });
 

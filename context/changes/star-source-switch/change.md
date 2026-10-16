@@ -1,7 +1,7 @@
 ---
 change_id: star-source-switch
 title: Star source switch
-status: plan_reviewed
+status: implementing
 created: 2026-10-16
 updated: 2026-10-16
 archived_at: null
