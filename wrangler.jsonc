@@ -16,6 +16,10 @@
     "enabled": true,
     // The Open-Meteo request's query string carries site coordinates; keep it out of logs and traces.
     "redact_query_string": true,
+    // The invocation event stores the whole `request.cf` of every visitor (latitude, longitude, city, postal code, region),
+    // which is IP-derived location and cannot be redacted, so the event stays off. Our own console lines and Issues stay.
+    // src/lib/wrangler-config.test.ts fails if this goes.
+    "logs": { "enabled": true, "invocation_logs": false },
     // Per-fetch spans (Supabase, KV, Open-Meteo) so a slow request can be pinned to one call.
     "traces": { "enabled": true },
     // Every logged console.error becomes an Issue (the line shape is src/lib/observability/log-failure.ts). Keep it:
