@@ -1,7 +1,7 @@
 ---
 change_id: evening-showpieces
 title: Evening showpieces, window edges, PRD re-check (M-4 S-05, #173, #21 items 1, 4, 5)
-status: implementing
+status: implemented
 created: 2026-10-16
 updated: 2026-10-16
 archived_at: null

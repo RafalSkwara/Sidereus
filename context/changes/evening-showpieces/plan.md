@@ -389,10 +389,10 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [x] 4.1 Criterion-2 assertions pass for the three nights
-- [x] 4.2 Whole unit suite, type check, lint and formatting pass
-- [x] 4.3 Whole e2e suite and smoke pass against a fresh build, counts reported
-- [x] 4.4 DB suites pass
+- [x] 4.1 Criterion-2 assertions pass for the three nights — f06b420
+- [x] 4.2 Whole unit suite, type check, lint and formatting pass — f06b420
+- [x] 4.3 Whole e2e suite and smoke pass against a fresh build, counts reported — f06b420
+- [x] 4.4 DB suites pass — f06b420
 
 #### Manual
 
