@@ -110,17 +110,19 @@ describe("rankObjects (synthetic catalogue, Warsaw 2026-10-10)", () => {
   });
 
   it("never lifts an object whose own score is below the bar into the list", () => {
-    // A low-interest double star on the horizon's edge: dec 0° at vMag 10 just clears the bar, and each
-    // further 0.3 mag costs about 0.009, so at 10.3 it falls short by less than MESSIER_RANK_BONUS.
+    // A low-interest double star on the horizon's edge: dec 0° at vMag 11.2 just clears the bar, and each
+    // further 0.3 mag costs about 0.009, so at 11.5 it falls short by less than MESSIER_RANK_BONUS. (Before
+    // evening-showpieces the pair was 10 and 10.3: the duration term no longer divides a short pass by the
+    // whole night, so the same object scores higher and clears at fainter magnitudes.)
     const faint = (vMag: number): RankableObject =>
       synthetic(40, 0, { vMag, type: "double-star", surfaceBrightness: 22 });
-    const [reference] = rank([faint(10)]).entries;
+    const [reference] = rank([faint(11.2)]).entries;
     expect(reference.score.total).toBeGreaterThanOrEqual(MIN_OBJECT_SCORE);
     const shortfall = (0.3 * SCORE_WEIGHTS.brightness) / BRIGHTNESS_RAMP_MAG;
     expect(reference.score.total - shortfall).toBeLessThan(MIN_OBJECT_SCORE);
     expect(reference.score.total - shortfall + MESSIER_RANK_BONUS).toBeGreaterThan(MIN_OBJECT_SCORE);
 
-    const ranking = rank([faint(10.3)], { limit: Number.POSITIVE_INFINITY });
+    const ranking = rank([faint(11.5)], { limit: Number.POSITIVE_INFINITY });
     expect(ranking.clearedCount).toBe(0);
     expect(ranking.entries).toEqual([]);
   });
@@ -191,8 +193,8 @@ describe("rankObjects' reachable objects (adjustable-session-plan, Warsaw)", () 
     synthetic(messier, 0, { vMag, type: "double-star", surfaceBrightness: 22 });
 
   it("lists every scored object in catalogue order: the listed, the cleared beyond the limit and the below-bar ones", () => {
-    // M40 at vMag 10.3 scores but falls short of the bar (see the bonus test above); M9 never rises above 15°.
-    const catalogue = [synthetic(8, 89.9), faint(40, 10.3), synthetic(9, -60), synthetic(1, 89.9), synthetic(2, 89.9)];
+    // M40 at vMag 11.5 scores but falls short of the bar (see the bonus test above); M9 never rises above 15°.
+    const catalogue = [synthetic(8, 89.9), faint(40, 11.5), synthetic(9, -60), synthetic(1, 89.9), synthetic(2, 89.9)];
     const ranking = rank(catalogue, { limit: 1 });
     expect(ranking.entries.map((e) => e.object.id)).toEqual(["M1"]);
     expect(ranking.clearedCount).toBe(3);

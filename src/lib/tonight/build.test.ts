@@ -1876,13 +1876,14 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
             new Date(FULL_MOON_NIGHT.getTime() - 60_000),
           ),
         },
-        { planEdits: ["M33", "M1"] },
+        { planEdits: ["M33", "M65"] },
       ),
     );
-    expect(fullMoon.rows.map((row) => row.key)).toEqual(["M33", "M1"]);
-    // M33 is washed out, M1 is below the bar that night.
+    expect(fullMoon.rows.map((row) => row.key)).toEqual(["M33", "M65"]);
+    // M33 is washed out, M65 is below the bar that night (M1, the pick before evening-showpieces, now clears it:
+    // its duration no longer divides a short pass by the whole night).
     expect(fullMoon.rows[0].href).toBe("/tonight/targets#object-M33");
-    expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M1&");
+    expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M65&");
   });
 
   it("sets aside, in saved order and never as a row, every saved key with no window tonight", () => {

@@ -106,9 +106,26 @@ export const BRIGHTNESS_RAMP_MAG = 8;
  * Candidate (S-02 Phase 1 calibration, 2026-09-25): altitude at which an object counts as fully
  * well placed. The duration component credits each best-window sample by how far it sits between
  * the site's minimum altitude (0) and this altitude (1), so a long pass near the horizon no longer
- * scores like a long pass overhead.
+ * scores like a long pass overhead. Untouched by evening-showpieces: it is shared with the planets' and the
+ * Moon's windows, so the duration's saturation has its own constant, `DURATION_USEFUL_SPAN_MINUTES`.
  */
 export const WELL_PLACED_ALTITUDE_DEG = 40;
+
+/**
+ * Candidate (PRD Open Question 1; evening-showpieces, M-4 S-05, 2026-10-16): the span of a pass, minutes, from which
+ * the duration component counts it as fully long. The component is `min(1, window span ÷ this)` times the mean
+ * placement over the window's samples (`WELL_PLACED_ALTITUDE_DEG`), so a pass that fills a short night and one of
+ * the same length in a long night score alike; it used to be the window's share of the whole dark window, which
+ * ranked an evening pass of 4 h in a 10 h October night below the same pass in a short April night.
+ *
+ * Calibration (probe of 2026-10-16, Warsaw, Bortle 5, 150/750; not an observer's number): 60, 120 and 180 minutes
+ * leave the beginner-reference overlap at 3 to 4 on all four calibration nights and the 2026-10-10 fall check
+ * (`ranking.test.ts`) green; 120 is the middle, and Warsaw's July dark window is 131 minutes, so a span above it
+ * would scale every July object down. A saturation of 1 for every object (the upper bound) fails the oracle and
+ * the fall check, so duration is not removed, only capped. Brightness and type, not duration, bound how high the
+ * October evening globulars and M57 can rank (with duration 1, M13 would reach #10 to #17 and M57 #42 to #57 of about 118).
+ */
+export const DURATION_USEFUL_SPAN_MINUTES = 120;
 
 /**
  * Candidate (S-02 Phase 1 calibration, 2026-09-25): object types a beginner rarely finds rewarding

@@ -351,11 +351,11 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [x] 1.1 The reference test fails on the unchanged engine for the expected objects, and passes after the change
-- [x] 1.2 Window and invariant suites pass
-- [x] 1.3 Scores unchanged by construction (index-equality test) and the oracle green without regeneration
-- [x] 1.4 Whole unit suite passes
-- [x] 1.5 Type check and lint pass
+- [x] 1.1 The reference test fails on the unchanged engine for the expected objects, and passes after the change — 7fdc33b
+- [x] 1.2 Window and invariant suites pass — 7fdc33b
+- [x] 1.3 Scores unchanged by construction (index-equality test) and the oracle green without regeneration — 7fdc33b
+- [x] 1.4 Whole unit suite passes — 7fdc33b
+- [x] 1.5 Type check and lint pass — 7fdc33b
 
 #### Manual
 
@@ -365,10 +365,10 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [ ] 2.1 The synthetic relation fails on the old formula by construction and passes on the new one; the new relations and the source-cited guard pass
-- [ ] 2.2 Oracle, AF check and invariants green and unedited
-- [ ] 2.3 Determinism and purity pass
-- [ ] 2.4 Whole unit suite, type check and lint pass
+- [x] 2.1 The synthetic relation fails on the old formula by construction and passes on the new one; the new relations and the source-cited guard pass
+- [x] 2.2 Oracle, AF check and invariants green and unedited
+- [x] 2.3 Determinism and purity pass
+- [x] 2.4 Whole unit suite, type check and lint pass
 
 #### Manual
 
