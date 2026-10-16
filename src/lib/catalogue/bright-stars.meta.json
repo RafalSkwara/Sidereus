@@ -1,18 +1,130 @@
 {
-  "source": "https://github.com/astronexus/HYG-Database",
-  "url": "https://raw.githubusercontent.com/astronexus/HYG-Database/c7f7f883fe678cc7680169a50ccd7dcc49b060ce/hyg/CURRENT/hygdata_v41.csv",
-  "file": "hyg/CURRENT/hygdata_v41.csv",
-  "commit": "c7f7f883fe678cc7680169a50ccd7dcc49b060ce",
-  "commitDate": "2025-02-14",
-  "licence": "CC BY-SA 4.0",
-  "attribution": "HYG database, David Nash / astronexus",
-  "filter": "mag <= 4.5, Sol (id 0) excluded",
-  "count": 925,
+  "source": "https://www.cosmos.esa.int/web/hipparcos/catalogues",
+  "url": "https://cdsarc.cds.unistra.fr/ftp/cats/I/239/hip_main.dat",
+  "mirror": "https://vizier.cfa.harvard.edu/ftp/cats/I/239/hip_main.dat",
+  "file": "I/239/hip_main.dat",
+  "sha256": "58ceabb104d647160d9437ce6e513a02a036bb4ad9f8879a5a22fd52943616e0",
+  "bytes": 53316318,
+  "rows": 118218,
+  "epoch": "J1991.25 propagated to J2000 by proper motion; the ten stars without a solution keep their J1991.25 sexagesimal position",
+  "licence": "CC BY-NC 3.0 IGO",
+  "attribution": "Credit: ESA; ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200",
+  "commercialUse": "requires ESA authorisation",
+  "positionFromSexagesimal": {
+    "hips": [
+      31067,
+      31500,
+      34716,
+      50572,
+      52800,
+      55203,
+      59273,
+      78727,
+      80579,
+      115125
+    ],
+    "vmag": [
+      6.18,
+      7.37,
+      7.35,
+      7.19,
+      6.94,
+      3.79,
+      6.65,
+      4.16,
+      6.69,
+      5.19
+    ],
+    "note": "J1991.25, no proper motion, not propagated"
+  },
+  "fieldsUsed": [
+    {
+      "name": "HIP",
+      "index": 1
+    },
+    {
+      "name": "Vmag",
+      "index": 5
+    },
+    {
+      "name": "RAdeg",
+      "index": 8
+    },
+    {
+      "name": "DEdeg",
+      "index": 9
+    },
+    {
+      "name": "pmRA",
+      "index": 12
+    },
+    {
+      "name": "pmDE",
+      "index": 13
+    },
+    {
+      "name": "RAhms",
+      "index": 3,
+      "onlyWhen": "RAdeg and DEdeg are blank"
+    },
+    {
+      "name": "DEdms",
+      "index": 4,
+      "onlyWhen": "RAdeg and DEdeg are blank"
+    }
+  ],
+  "filter": "Vmag <= 4.5, Hipparcos stars with a position",
+  "count": 921,
   "namedCount": 41,
   "normalisations": [
-    "Sorted by mag, then HYG id",
-    "ra (hours) / dec (degrees) -> J2000 unit vector x, y, z, rounded to 5 dp",
-    "name: HYG proper, kept only for the 40 brightest stars that have one, plus Polaris",
-    "All other HYG columns dropped"
+    "Sorted by Vmag, then HIP number",
+    "id is the Hipparcos (HIP) number",
+    "RAdeg / DEdeg moved from J1991.25 to J2000 by linear proper motion (pmRA, pmDE over 8.75 years), then to a J2000 unit vector x, y, z, rounded to 5 dp; the ten stars without a solution use RAhms / DEdms unpropagated",
+    "name: IAU WGSN proper name, kept only for the 40 brightest stars that have one, plus Polaris (HIP 11767)",
+    "No other Hipparcos field is read"
+  ],
+  "inputs": [
+    {
+      "kind": "designations",
+      "name": "Wikidata",
+      "licence": "CC0 1.0",
+      "table": "scripts/data/star-designations.json",
+      "fetchedAt": "2026-10-16T20:13:58.333Z",
+      "counts": {
+        "hipparcosStars": 25723,
+        "wikidataHipsWithP528Designation": 3495,
+        "fromLabelFallback": {
+          "bayer": 15,
+          "flamsteed": 10
+        },
+        "unreadableBindings": 1,
+        "designated": 3222,
+        "bayer": 1471,
+        "flamsteed": 2639,
+        "both": 888,
+        "rejectedWikidataValues": {
+          "latin-letter": 447,
+          "component": 4,
+          "unrecognised": 1
+        },
+        "omittedByPolicy": 122,
+        "overrides": 18
+      },
+      "use": "Bayer letter and Flamsteed number by HIP number"
+    },
+    {
+      "kind": "names",
+      "name": "IAU Working Group on Star Names (WGSN)",
+      "licence": "public domain (IAU star names are not subject to copyright)",
+      "table": "scripts/data/iau-star-names.json",
+      "fetchedAt": "2026-10-16T20:13:58.333Z",
+      "counts": {
+        "wgsnRows": 640,
+        "wgsnRowsWithHip": 567,
+        "hips": 566,
+        "withinHipparcosVmag7_5": 498
+      },
+      "use": "proper name by HIP number"
+    }
   ]
 }
