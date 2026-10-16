@@ -266,3 +266,26 @@ describe("formatNightSpan", () => {
     expect(createFormatter("pl").formatNightSpan("2026-12-31")).toBe("31 gru/1 sty");
   });
 });
+
+describe("reasonLine (evening-showpieces)", () => {
+  const window = { start: new Date("2026-10-10T18:00:00Z"), end: new Date("2026-10-11T01:00:00Z") };
+  const components = { duration: 1, moon: 1, brightness: 1, sky: 1 };
+  const context = { apertureMm: 150, bortle: 6 };
+  const entry = (secondComponent: "brightness" | null) => ({
+    object: { vMag: 5 },
+    score: { window: { ...window, peak: undefined as never }, components },
+    leadComponent: "duration" as const,
+    secondComponent,
+  });
+
+  it("joins the lead and the runner-up with a separator", () => {
+    expect(createFormatter("en").reasonLine(entry("brightness"), context)).toBe(
+      "Up for 7 h of the dark window · bright for your 150 mm",
+    );
+  });
+
+  it("prints the lead phrase alone when only one reason is named, in both languages", () => {
+    expect(createFormatter("en").reasonLine(entry(null), context)).toBe("Up for 7 h of the dark window");
+    expect(createFormatter("pl").reasonLine(entry(null), context)).toBe("Na niebie przez 7 godz. w oknie ciemności");
+  });
+});

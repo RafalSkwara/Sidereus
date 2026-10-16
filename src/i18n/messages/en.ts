@@ -749,7 +749,13 @@ export const en = {
 
     direction: (p: { point: string; altitude: string }) => `${p.point}, ${p.altitude}°`,
 
-    /** FR-015: the leading component's phrase in sentence case, then the runner-up's in lower case. */
+    /**
+     * FR-015: the leading component's phrase in sentence case, then the runner-up's in lower case; a single named reason
+     * is the lead phrase alone, with no `line`. The Moon and sky phrases are chosen only when the listed entries differ
+     * on that component (`REASON_MIN_SPREAD`), and a phrase is given to an entry only when it is at least the listed
+     * mean on it, except when nothing is named for the entry: its lead is then its largest weighted eligible component,
+     * which may sit below the mean, and it has no second (`reasonComponents` in `src/lib/engine/ranking.ts`).
+     */
     reason: {
       line: (p: { lead: string; second: string }) => `${p.lead} · ${p.second}`,
       duration: {

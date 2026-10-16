@@ -12,6 +12,7 @@ import {
   observingNight,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
   planetTracks,
+  refinedWindow,
   type BestWindow,
   type DarkWindow,
   type EquatorialJ2000,
@@ -47,7 +48,8 @@ export function planetWindowFor(site: Site, night: string): DarkWindow {
 
 /**
  * A deep-sky object's best window over the night's dark window (the Sun below the Bortle class's threshold), or `null`
- * without a dark window or when the object never reaches the site's minimum altitude in it. The same as the window
+ * without a dark window or when the object never reaches the site's minimum altitude in it. Its edges are the true
+ * crossings of the minimum altitude (`refinedWindow`), not the grid samples. The same as the window
  * `rankObjects` scores the object over (`ranking.reachable`), minus the telescope's limiting magnitude.
  */
 export function deepSkyWindow(site: PlanWindowSite, night: string, object: EquatorialJ2000): BestWindow | null {
@@ -57,7 +59,8 @@ export function deepSkyWindow(site: PlanWindowSite, night: string, object: Equat
     return null;
   }
   const track = objectTrack(engineSite, { start: dark.start, end: dark.end }, object, DEFAULT_TRACK_STEP_MINUTES);
-  return bestWindow(track, site.minAltitudeDeg);
+  const refined = refinedWindow(track, site.minAltitudeDeg);
+  return refined === null ? null : { start: refined.start, end: refined.end, peak: refined.peak };
 }
 
 /**

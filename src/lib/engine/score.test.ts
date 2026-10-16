@@ -5,6 +5,7 @@ import { DEEP_SKY } from "@/lib/catalogue";
 import { contrastBand, telescopeLimitingMag } from "./contrast";
 import {
   BRIGHTNESS_RAMP_MAG,
+  DURATION_USEFUL_SPAN_MINUTES,
   GALAXY_FAINT_BRIGHTNESS_CAP,
   GALAXY_LIMIT_BRIGHTNESS_CAP,
   LOW_INTEREST_PENALTY,
@@ -102,21 +103,86 @@ describe("scoreObject", () => {
   });
 
   describe("duration", () => {
-    it("is 1 when the object is up for the whole dark window", () => {
-      expect(score().components.duration).toBe(1);
+    it("is 1 when the object is well placed for the whole useful span", () => {
+      // 13 samples at 40° are 120 minutes (DURATION_USEFUL_SPAN_MINUTES) of full placement.
+      expect(DURATION_USEFUL_SPAN_MINUTES).toBe(120);
+      expect(score({ track: track(Array.from({ length: 13 }, () => 40)) }).components.duration).toBe(1);
     });
 
     it("credits each best-window sample by its altitude between the minimum and WELL_PLACED_ALTITUDE_DEG", () => {
       expect(WELL_PLACED_ALTITUDE_DEG).toBe(40);
-      // Longest run above 15° is samples 4..7: 30°, 40°, 35°, 16° → 0.6 + 1 + 0.8 + 0.04 over a 25° span.
+      // Longest run above 15° is samples 4..7: 30°, 40°, 35°, 16° → 0.6 + 1 + 0.8 + 0.04 over a 25° span, averaged
+      // over the run's 4 samples and scaled by its 30 minutes of the useful span.
       const result = score({ track: track([20, 20, 5, 5, 30, 40, 35, 16, 10, 20]) });
-      expect(result.components.duration).toBeCloseTo((0.6 + 1 + 0.8 + 0.04) / 10, 12);
+      expect(result.components.duration).toBeCloseTo(
+        (30 / DURATION_USEFUL_SPAN_MINUTES) * ((0.6 + 1 + 0.8 + 0.04) / 4),
+        12,
+      );
       expect(result.window.peak.altitudeDeg).toBe(40);
     });
 
     it("scores a whole-night pass hugging the minimum altitude near 0, and caps samples above the reference at 1", () => {
       expect(score({ track: track([15, 15, 15, 15]) }).components.duration).toBe(0);
-      expect(score({ track: track([80, 85, 90, 85]) }).components.duration).toBe(1);
+      // Thirteen samples, so the pass is the full useful span and only the placement is left.
+      expect(score({ track: track([80, 85, 90, 85, 80, 85, 90, 85, 80, 85, 90, 85, 80]) }).components.duration).toBe(1);
+    });
+
+    // evening-showpieces (M-4 S-05): duration saturates at a useful span instead of dividing by the whole night.
+    describe("saturating at DURATION_USEFUL_SPAN_MINUTES", () => {
+      const STEP_MINUTES = 10;
+      /** A night of `nightSamples` samples with the object at `altitudeDeg` for `passSamples` of them, from sample 3. */
+      const night = (nightSamples: number, passSamples: number, altitudeDeg = 40) =>
+        track(Array.from({ length: nightSamples }, (_, i) => (i >= 3 && i < 3 + passSamples ? altitudeDeg : 5)));
+      const durationOf = (t: HorizontalPosition[]) => score({ track: t }).components.duration;
+
+      it("gives the same pass the same duration in a 6 h and a 12 h night", () => {
+        // 4 h = 24 steps = 25 samples; a 6 h night has 37 samples, a 12 h night 73. The old whole-night share was
+        // 25 / 37 against 25 / 73 for the very same pass.
+        const short = durationOf(night(37, 25));
+        const long = durationOf(night(73, 25));
+        expect(long).toBeCloseTo(short, 12);
+        expect(short).toBe(1);
+      });
+
+      it("rises with the window's length up to the span and not beyond it", () => {
+        const spanSamples = DURATION_USEFUL_SPAN_MINUTES / STEP_MINUTES + 1;
+        const below = [2, Math.floor(spanSamples / 2), spanSamples - 1].map((n) => durationOf(night(80, n)));
+        expect(below[0]).toBeGreaterThan(0);
+        expect(below[1]).toBeGreaterThan(below[0]);
+        expect(below[2]).toBeGreaterThan(below[1]);
+        expect(below[2]).toBeLessThan(1);
+        const atAndBeyond = [spanSamples, spanSamples + 1, 2 * spanSamples, 60].map((n) => durationOf(night(80, n)));
+        for (const value of atAndBeyond) {
+          expect(value).toBe(1);
+        }
+      });
+
+      it("scales a short pass by its span over DURATION_USEFUL_SPAN_MINUTES, times its mean placement", () => {
+        // Five samples at 27.5° (placement 0.5 over 15° to 40°): a span of 40 minutes.
+        const result = durationOf(night(40, 5, 27.5));
+        expect(result).toBeCloseTo((40 / DURATION_USEFUL_SPAN_MINUTES) * 0.5, 12);
+      });
+
+      it("scores a window of one sample 0, whatever its altitude", () => {
+        expect(durationOf(track([5, 90, 5]))).toBe(0);
+        expect(durationOf(track([90]))).toBe(0);
+      });
+
+      it("does not move when the window's start moves inside a sample step", () => {
+        // Same samples at or above 15°; only the sample before them moves, so the crossing between them moves.
+        const early = score({ track: track([14.9, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40]) });
+        const late = score({ track: track([0, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40]) });
+        expect(early.window.start.getTime()).not.toBe(late.window.start.getTime());
+        expect(early.components.duration).toBe(late.components.duration);
+        expect(early.total).toBe(late.total);
+      });
+
+      it("does not depend on the aperture", () => {
+        const t = night(50, 9, 30);
+        const at = (apertureMm: number) => score({ track: t, apertureMm }).components.duration;
+        expect(at(60)).toBe(at(150));
+        expect(at(150)).toBe(at(300));
+      });
     });
   });
 
@@ -225,11 +291,16 @@ describe("scoreObject", () => {
     });
 
     it("only counts an object a moonless night would list", () => {
-      // Lost in the moonlight at 40°, but up for one sample of ten in a 70 mm telescope: duration and brightness
-      // keep it under MIN_OBJECT_SCORE even at moon = 1, so the Moon is not what keeps it off the list.
-      const brief = { ...fullMoonNight, object: coreGalaxy(24), track: track([40, 5, 5, 5, 5, 5, 5, 5, 5, 5]) };
+      // Lost in the moonlight, but up for three samples at 30° (a pass of 20 minutes, placement 0.6 over 15° to 40°,
+      // so duration is 20 / DURATION_USEFUL_SPAN_MINUTES × 0.6 = 0.1; evening-showpieces: the old one-sample pass
+      // now scores 0, which keeps no galaxy of this brightness on the list at any aperture). In a 70 mm telescope
+      // duration and brightness keep it under MIN_OBJECT_SCORE even at moon = 1, so the Moon is not what keeps it off
+      // the list; in a 200 mm one the same pass would list it on a moonless night, so there the Moon is.
+      const brief = { ...fullMoonNight, object: coreGalaxy(24), track: track([30, 30, 30, 5, 5, 5, 5, 5, 5, 5]) };
       const night = { moonTrack: steadyMoon(10, 40, FULL), moonSeparationsDeg: apart(10, 30) };
-      expect(score({ ...brief, ...night, apertureMm: 200 }).washedOut).toBe(true);
+      const big = score({ ...brief, ...night, apertureMm: 200 });
+      expect(big.components.duration).toBeCloseTo((20 / DURATION_USEFUL_SPAN_MINUTES) * 0.6, 12);
+      expect(big.washedOut).toBe(true);
       const dim = score({ ...brief, ...night, apertureMm: 70 });
       expect(dim.washedOut).toBe(false);
       // Neither washed out nor cleared: it stays under the bar on its own score.
@@ -391,8 +462,8 @@ describe("scoreObject", () => {
       moonSeparationsDeg: apart(5, 60),
     });
     const { duration, moon: moonValue, brightness, sky } = result.components;
-    // Window samples 1..4 at 20°, 50°, 30°, 20° → 0.2 + 1 + 0.6 + 0.2 over 5 samples.
-    expect(duration).toBeCloseTo(0.4, 12);
+    // Window samples 1..4 at 20°, 50°, 30°, 20° → (0.2 + 1 + 0.6 + 0.2) / 4 = 0.5 placed, over 30 minutes of the span.
+    expect(duration).toBeCloseTo((30 / DURATION_USEFUL_SPAN_MINUTES) * 0.5, 12);
     expect(moonValue).toBeGreaterThan(0);
     expect(moonValue).toBeLessThan(1);
     // Limit 5.1 at Bortle 6 with a 7 mm aperture; 2 magnitudes inside it over the ramp.

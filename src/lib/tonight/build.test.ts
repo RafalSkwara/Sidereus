@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
+import { DEEP_SKY, findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import {
@@ -15,6 +15,8 @@ import {
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
+  rankObjects,
+  REASON_MIN_SPREAD,
   sunEvents,
   type Interval,
   type MoonDiscState,
@@ -187,7 +189,9 @@ describe("buildTonight", () => {
       expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
       expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
       expect(entry.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-      expect(entry.reason).toContain(" · ");
+      // One or two phrases: an entry with a single named reason carries the lead phrase alone (evening-showpieces).
+      expect(entry.reason.length).toBeGreaterThan(0);
+      expect(entry.reason.split(" · ").length).toBeLessThanOrEqual(2);
       expect(entry.pair).not.toBeNull();
     }
     const m31 = ranking.entries.find((entry) => entry.id === "M31");
@@ -1388,6 +1392,70 @@ describe("buildTonight's washed-out objects (moonlight-and-the-verdict)", () => 
   });
 });
 
+describe("buildTonight's reason lines (evening-showpieces)", () => {
+  /** An all-clear Warsaw night, as in the Moon tests above. */
+  function clearNight(date: string) {
+    const now = new Date(`${date}T16:00:00Z`);
+    return {
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast(`${date}T00:00:00Z`, 5), false, now),
+      now,
+    };
+  }
+
+  /**
+   * The listed entries' moon components and ids for a night, from the engine's own ranking over the same inputs
+   * `buildTonight` uses (the view exposes the reason text, not the components).
+   */
+  function listedMoonComponents(date: string): { ids: string[]; moon: number[] } {
+    const site = toEngineSite(WARSAW);
+    const dark = darkWindow(site, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(WARSAW.bortle));
+    if (dark.kind !== "window") {
+      throw new Error(`expected a dark window on ${date}`);
+    }
+    const ranked = rankObjects({
+      site,
+      bortle: WARSAW.bortle,
+      minAltitudeDeg: WARSAW.minAltitudeDeg,
+      darkWindow: dark,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      catalogue: DEEP_SKY,
+    });
+    return {
+      ids: ranked.entries.map((entry) => entry.object.id),
+      moon: ranked.entries.map((entry) => entry.score.components.moon),
+    };
+  }
+
+  const spreadOf = (values: readonly number[]): number => Math.max(...values) - Math.min(...values);
+
+  it("says nothing about moonlight on the moonless night of 2026-10-10", () => {
+    const view = buildTonight(clearNight("2026-10-10"), "en");
+    const entries = rankingOf(view).entries;
+    expect(entries.length).toBe(MAX_RANKED_OBJECTS);
+    const { ids, moon } = listedMoonComponents("2026-10-10");
+    // The precondition first, so a wrong date fails here and not as a vacuous pass below: the listed entries
+    // are the view's own, and the Moon does not set them apart.
+    expect(ids).toEqual(entries.map((entry) => entry.id));
+    expect(spreadOf(moon), `moon components ${moon.join(", ")}`).toBeLessThan(REASON_MIN_SPREAD);
+    for (const entry of entries) {
+      expect(entry.reason).not.toContain(en.tonight.reason.moon.lead);
+      expect(entry.reason).not.toContain(en.tonight.reason.moon.follow);
+    }
+  });
+
+  it("keeps the moon component eligible under the full Moon of 2026-10-26", () => {
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const { ids, moon } = listedMoonComponents("2026-10-26");
+    expect(ids).toEqual(rankingOf(view).entries.map((entry) => entry.id));
+    // Only eligibility is asserted, not which reason a line carries.
+    expect(spreadOf(moon), `moon components ${moon.join(", ")}`).toBeGreaterThanOrEqual(REASON_MIN_SPREAD);
+  });
+});
+
 describe("buildTonight's sky view (interactive-sky)", () => {
   const SOUTH: SiteRecord = {
     ...WARSAW,
@@ -1786,7 +1854,7 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
   const keysOf = (view: TonightView): string[] => planOf(view).rows.map((row) => row.key);
 
   // Warsaw, 2026-10-10, Bortle 6, 150 mm: the suggested rows are M39, Neptune, Saturn, M31, NGC 869, M34, M45, Uranus,
-  // Jupiter and Mars. M3 is up 19:25-19:45 only, so by the end of the night its window is long over; NGC 4244 is
+  // Jupiter and Mars. M3 is up 19:25-19:51 only, so by the end of the night its window is long over; NGC 4244 is
   // reachable but below the bar (it is on no list); Mercury and the Moon are no targets that night.
   it("changes nothing without a saved list: not edited, nothing held, no candidates unless asked", () => {
     const plain = build();
@@ -1847,7 +1915,8 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     const [m13, m31] = plan.rows;
     expect(m13).toMatchObject({ kind: "object", label: "M13", href: "/tonight/targets#object-M13" });
     expect(m13.name).toContain("M13 · ");
-    expect(m13.windowText).toBe("19:25–23:35");
+    // True crossing of 15° (evening-showpieces): Skyfield + DE421, one-minute grid, puts M13 at 23:42:10 (Warsaw, 2026-10-10).
+    expect(m13.windowText).toBe("19:25–23:42");
     expect(m13.track).toHaveLength(m31.track.length);
     expect(m13.peakAltitudeDeg).toBeGreaterThanOrEqual(WARSAW.minAltitudeDeg);
     expect(m13.windowEnd).toBeGreaterThan(m13.bestAt);
@@ -1875,13 +1944,14 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
             new Date(FULL_MOON_NIGHT.getTime() - 60_000),
           ),
         },
-        { planEdits: ["M33", "M1"] },
+        { planEdits: ["M33", "M65"] },
       ),
     );
-    expect(fullMoon.rows.map((row) => row.key)).toEqual(["M33", "M1"]);
-    // M33 is washed out, M1 is below the bar that night.
+    expect(fullMoon.rows.map((row) => row.key)).toEqual(["M33", "M65"]);
+    // M33 is washed out, M65 is below the bar that night (M1, the pick before evening-showpieces, now clears it:
+    // its duration no longer divides a short pass by the whole night).
     expect(fullMoon.rows[0].href).toBe("/tonight/targets#object-M33");
-    expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M1&");
+    expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M65&");
   });
 
   it("sets aside, in saved order and never as a row, every saved key with no window tonight", () => {
@@ -1945,7 +2015,8 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     expect(candidates.some((option) => rowKeys.has(option.key))).toBe(false);
     // Objects beyond the top five, below the bar, in their picker form, with the window as the detail.
     const m3 = candidates.find((option) => option.key === "M3");
-    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:45" });
+    // M3 sets through 15° at 19:51:44 (Skyfield + DE421, one-minute grid; the grid's 19:45 was the last 10-minute sample).
+    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:51" });
     expect(m3?.names).toContain("NGC 5272");
     expect(candidates.map((option) => option.key)).toContain("NGC4244");
     // Mercury and the Moon have no window tonight, so they are not offered; a planet that has one and is not a row would be.
@@ -1975,11 +2046,11 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
       "pl",
       { withSessionPlan: true, withPlanCandidates: true },
     );
-    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:45");
+    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:51");
   });
 
   it("reads the tile's next target in the user's order: the first row whose window has not ended", () => {
-    // 03:30 local: M3's window ended at 19:45, M31's runs to 05:20.
+    // 03:30 local: M3's window ended at 19:51, M31's runs to 05:20.
     const late = new Date("2026-10-11T01:30:00Z");
     const forecast = result(uniformForecast("2026-10-10T00:00:00Z", 5), false, new Date(late.getTime() - 20 * 60_000));
     const plan = planOf(build({ now: late, forecast }, { planEdits: ["M3", "M31", "M13"] }));

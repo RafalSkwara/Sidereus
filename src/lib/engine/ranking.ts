@@ -11,6 +11,7 @@ import {
   MAX_RANKED_OBJECTS,
   MESSIER_RANK_BONUS,
   MIN_OBJECT_SCORE,
+  REASON_MIN_SPREAD,
   SCORE_WEIGHTS,
 } from "./parameters";
 import { SCORE_COMPONENTS, scoreObject } from "./score";
@@ -87,7 +88,8 @@ export interface RankedEntry<
   /** `null` when the kit has no eyepieces. */
   pair: EyepiecePair<E> | NoEyepieceFits<E> | null;
   leadComponent: ScoreComponent;
-  secondComponent: ScoreComponent;
+  /** `null` when fewer than two reasons are named for the object (`reasonComponents`). */
+  secondComponent: ScoreComponent | null;
   /**
    * The key the ranking is ordered by: `score.total`, less `LOG_PENALTY` for a seen object, plus
    * `MESSIER_RANK_BONUS` for a Messier object.
@@ -141,57 +143,84 @@ export interface Ranking<
 
 export interface ReasonComponents {
   lead: ScoreComponent;
-  second: ScoreComponent;
+  /** `null` when fewer than two components are named for the entry: its reason line then carries one phrase. */
+  second: ScoreComponent | null;
 }
 
 /**
- * The top two components in `SCORE_COMPONENTS` order of a per-component value; a strictly larger
- * value is needed to overtake, so ties go to the earlier component.
+ * Slack, far below any score the engine can tell apart, for an entry that sits exactly on the listed mean: the mean of
+ * equal values need not round back to the value itself (0.1 three times averages to 0.10000000000000002).
  */
-function topTwo(value: (c: ScoreComponent) => number): ReasonComponents {
-  const [first, ...rest] = SCORE_COMPONENTS;
-  let lead: ScoreComponent = first;
-  for (const c of rest) {
-    if (value(c) > value(lead)) {
-      lead = c;
+const AT_MEAN_TOLERANCE = 1e-9;
+
+/**
+ * The best of `candidates` (kept in `SCORE_COMPONENTS` order) by the reason key: the largest positive weighted deviation
+ * if any candidate has one, else the largest weighted value. A strictly larger key is needed to overtake, so ties go to
+ * the earlier component. `null` for no candidates.
+ */
+function bestOf(
+  candidates: readonly ScoreComponent[],
+  deviation: (c: ScoreComponent) => number,
+  weighted: (c: ScoreComponent) => number,
+): ScoreComponent | null {
+  const key = candidates.some((c) => deviation(c) > 0) ? deviation : weighted;
+  let best: ScoreComponent | null = null;
+  for (const c of candidates) {
+    if (best === null || key(c) > key(best)) {
+      best = c;
     }
   }
-  let second: ScoreComponent | null = null;
-  for (const c of SCORE_COMPONENTS) {
-    if (c !== lead && (second === null || value(c) > value(second))) {
-      second = c;
-    }
-  }
-  if (second === null) {
-    throw new Error("reasonComponents: unreachable, there are four components");
-  }
-  return { lead, second };
+  return best;
 }
 
 /**
- * Each listed entry's leading and runner-up reason: the component c maximising
- * `SCORE_WEIGHTS[c] × (value_c − mean of value_c over the listed entries)`, i.e. what sets this
- * object apart from the others tonight. With a single entry there is nothing to compare against,
- * so the largest weighted value leads, and the same fallback applies to an entry that stands out on
- * no component (every lead ≤ 0). Ties go in the order duration, moon, brightness, sky.
+ * Each listed entry's leading and runner-up reason (FR-015): what sets the object apart from the others tonight, and only
+ * what is true of it.
+ *
+ * - Eligible components: `duration` and `brightness` always; `moon` and `sky` only when the listed entries' values for
+ *   that component differ (largest minus smallest) by at least `REASON_MIN_SPREAD`, so a moonless night never names the
+ *   Moon and a list with no sky penalty never names the sky. One entry has a spread of 0.
+ * - Named for an entry: an eligible component whose value is at least the listed mean ("Bright for your N mm" is a
+ *   positive claim, so it never labels the entry that is the list's weakest on it).
+ * - The lead is the named component with the largest positive weighted deviation, `SCORE_WEIGHTS[c] × (value_c − mean_c)`;
+ *   else the largest weighted value among the named; else, with nothing named, the largest weighted value among the
+ *   eligible. The second is chosen by the same key among the remaining named components, and is `null` when fewer than two
+ *   are named.
+ *
+ * With a single entry the mean is its own value, so duration and brightness are named. Ties go in the order duration,
+ * moon, brightness, sky.
  */
 export function reasonComponents(listed: readonly ScoreComponents[]): ReasonComponents[] {
-  if (listed.length === 1) {
-    const [only] = listed;
-    return [topTwo((c) => SCORE_WEIGHTS[c] * only[c])];
-  }
   const meanOf = (c: ScoreComponent): number =>
     listed.reduce((sum, components) => sum + components[c], 0) / listed.length;
+  const spreadOf = (c: ScoreComponent): number => {
+    const values = listed.map((components) => components[c]);
+    return Math.max(...values) - Math.min(...values);
+  };
   const mean: ScoreComponents = {
     duration: meanOf("duration"),
     moon: meanOf("moon"),
     brightness: meanOf("brightness"),
     sky: meanOf("sky"),
   };
+  const eligible = SCORE_COMPONENTS.filter(
+    (c) => c === "duration" || c === "brightness" || spreadOf(c) >= REASON_MIN_SPREAD,
+  );
   return listed.map((components) => {
-    const lead = (c: ScoreComponent): number => SCORE_WEIGHTS[c] * (components[c] - mean[c]);
-    const standsOut = SCORE_COMPONENTS.some((c) => lead(c) > 0);
-    return standsOut ? topTwo(lead) : topTwo((c) => SCORE_WEIGHTS[c] * components[c]);
+    const deviation = (c: ScoreComponent): number => SCORE_WEIGHTS[c] * (components[c] - mean[c]);
+    const weighted = (c: ScoreComponent): number => SCORE_WEIGHTS[c] * components[c];
+    const named = eligible.filter((c) => components[c] >= mean[c] - AT_MEAN_TOLERANCE);
+    // Duration and brightness are always eligible, so `eligible` and the lead are never empty.
+    const lead = bestOf(named.length > 0 ? named : eligible, deviation, weighted) ?? "duration";
+    const second =
+      named.length > 1
+        ? bestOf(
+            named.filter((c) => c !== lead),
+            deviation,
+            weighted,
+          )
+        : null;
+    return { lead, second };
   });
 }
 

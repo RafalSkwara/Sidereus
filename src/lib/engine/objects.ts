@@ -103,3 +103,52 @@ export function bestWindow(track: readonly HorizontalPosition[], minAltitudeDeg:
   }
   return { start: track[best.from].time, end: track[best.to].time, peak };
 }
+
+/**
+ * A `BestWindow` whose `start` and `end` are the true crossings of the minimum altitude, with the sample range of the
+ * unrefined run it refines: `track[firstIndex]` and `track[lastIndex]` are the first and last samples at or above the
+ * minimum. Scores read the window through these indices, never through the refined instants, so refining an edge
+ * never moves a score.
+ */
+export interface RefinedWindow extends BestWindow {
+  firstIndex: number;
+  lastIndex: number;
+}
+
+/** Where, between two samples, the altitude crosses `level` (linear in altitude), as an instant. */
+function crossingBetween(from: HorizontalPosition, to: HorizontalPosition, level: number): Date {
+  const fraction = (level - from.altitudeDeg) / (to.altitudeDeg - from.altitudeDeg);
+  const fromMs = from.time.getTime();
+  return new Date(Math.round(fromMs + (to.time.getTime() - fromMs) * fraction));
+}
+
+/**
+ * `bestWindow` with its edges moved from the grid samples to the true crossings of `minAltitudeDeg`, for fixed objects
+ * only (a deep-sky object's track is smooth and finite; a planet's or the Moon's masked track holds `-Infinity` outside
+ * its visible intervals, where interpolating is wrong, so those windows keep the grid edges).
+ *
+ * An edge that lies between two samples is the linear interpolation of the crossing between them: the sample at or above
+ * the minimum and its neighbour below it. A run that touches the first or the last sample of the track keeps that
+ * sample's instant on that side (the track's ends are the dark window's, which are exact already). A sample exactly at
+ * the minimum with both neighbours below gives a zero-length window at its instant; a one-sample run above the minimum
+ * gets a window of positive length around its sample. `peak` is the unrefined run's highest sample, and `firstIndex` /
+ * `lastIndex` are that run's sample range. Over a 10-minute step the chord is within about 0.012° of the diurnal curve
+ * and, on the rising (concave) side, inside it, so the refined edge errs on the conservative side.
+ */
+export function refinedWindow(track: readonly HorizontalPosition[], minAltitudeDeg: number): RefinedWindow | null {
+  const best = bestWindow(track, minAltitudeDeg);
+  if (best === null) {
+    return null;
+  }
+  // The window's own samples: `bestWindow` returns instants of the track, so they are found by time.
+  const firstIndex = track.findIndex((sample) => sample.time.getTime() === best.start.getTime());
+  const lastIndex = track.findIndex((sample, i) => i >= firstIndex && sample.time.getTime() === best.end.getTime());
+  if (firstIndex < 0 || lastIndex < 0) {
+    throw new Error("refinedWindow: window instant is not a sample of the track");
+  }
+  const start =
+    firstIndex === 0 ? best.start : crossingBetween(track[firstIndex - 1], track[firstIndex], minAltitudeDeg);
+  const end =
+    lastIndex === track.length - 1 ? best.end : crossingBetween(track[lastIndex], track[lastIndex + 1], minAltitudeDeg);
+  return { start, end, peak: best.peak, firstIndex, lastIndex };
+}

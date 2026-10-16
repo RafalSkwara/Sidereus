@@ -690,7 +690,10 @@ milestone, approximately 2026-09-30.
 
 1. **Component weights for the object score** - candidate (uncalibrated):
    altitude duration 0.35, moon interference 0.30, brightness versus limiting
-   magnitude 0.25, Bortle surface-brightness penalty 0.10.
+   magnitude 0.25, Bortle surface-brightness penalty 0.10. Note 2026-10-16
+   (evening-showpieces): the duration term is calibrated against the references
+   (it saturates at a 120-minute useful span, and the beginner-reference overlap
+   stays at 3 or more on every calibration night); the weights stay candidates.
 2. **Verdict cloud thresholds** - candidate (uncalibrated): go if there is a
    contiguous run of at least 2 hours below 30% cloud within the dark window;
    marginal if at least 1 hour below 65%; otherwise no-go. Humidity above 90%
@@ -718,7 +721,10 @@ milestone, approximately 2026-09-30.
    objects. A 25-degree default would have excluded roughly 28, including all of
    Sagittarius and Scorpius. Users with obstructed horizons raise it per site.
 9. **Ephemeris tolerance** - candidate (uncalibrated): 1 degree of altitude and
-   5 minutes of time against an independent planetarium reference.
+   5 minutes of time against an independent planetarium reference. Note
+   2026-10-16 (evening-showpieces): deep-sky window edges are now within 5
+   minutes of Skyfield with DE421 for the whole catalogue on three Warsaw nights,
+   and the final top 5 of each also holds the 1 degree peak tolerance.
 10. **Which telescope and eyepiece-kit presets ship** - the fixed, named preset
     set required by FR-006. Owner: user. Blocks the under-a-minute onboarding
     claim in Success Criteria.

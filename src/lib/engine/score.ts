@@ -4,10 +4,11 @@ import { contrastBand, telescopeLimitingMag } from "./contrast";
 import type { ContrastBand } from "./contrast";
 import type { MoonState } from "./moon";
 import { effectiveSurfaceBrightness, moonBrighteningMag, nlToMag, skyBrightnessNL } from "./moonlight";
-import { bestWindow } from "./objects";
+import { refinedWindow } from "./objects";
 import type { BestWindow } from "./objects";
 import {
   BRIGHTNESS_RAMP_MAG,
+  DURATION_USEFUL_SPAN_MINUTES,
   EXTINCTION_V,
   GALAXY_FAINT_BRIGHTNESS_CAP,
   GALAXY_LIMIT_BRIGHTNESS_CAP,
@@ -82,17 +83,6 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-/** Index of the sample at `time` within `track[from..]`; the window's samples come from the track itself. */
-function indexOfTime(track: readonly HorizontalPosition[], time: Date, from: number): number {
-  const ms = time.getTime();
-  for (let i = from; i < track.length; i++) {
-    if (track[i].time.getTime() === ms) {
-      return i;
-    }
-  }
-  throw new Error("scoreObject: window instant is not a sample of the track");
-}
-
 function skyPenalty(object: ScoredObject, bortle: number): number {
   const penalized =
     object.surfaceBrightness === null
@@ -106,9 +96,15 @@ function skyPenalty(object: ScoredObject, bortle: number): number {
  * dark window, or when it is fainter than the telescope's limiting magnitude (such an object is
  * physically impossible to see, so it never ranks).
  *
- * - `duration`: altitude-weighted share of the dark window: each best-window sample counts by how
- *   far it sits between `minAltitudeDeg` (0) and `WELL_PLACED_ALTITUDE_DEG` (1), summed and divided
- *   by the samples in the track.
+ * `window` holds the true crossings of `minAltitudeDeg` (`refinedWindow`); every component below is computed over the
+ * window's grid samples, so the edges' refinement leaves each of them unchanged.
+ *
+ * - `duration`: how long and how well placed the pass is, on its own terms and not as a share of the night
+ *   (evening-showpieces): the window's span in minutes over `DURATION_USEFUL_SPAN_MINUTES`, capped at 1, times the
+ *   mean placement over the window's samples, each sample counting by how far it sits between `minAltitudeDeg` (0)
+ *   and `WELL_PLACED_ALTITUDE_DEG` (1). The span is the first to the last sample of the grid run, never the
+ *   refined edges, and a one-sample window has span 0, so a pass that fills 4 h of a 6 h night and one that fills
+ *   4 h of a 12 h night score alike. It does not read the aperture.
  * - `moon`: the mean over best-window samples of `1 − sensitivity(type) × m_b ÷ MOONLIGHT_REF_MAG`, clamped to
  *   [0, 1], where `m_b` is how much the Moon brightens the sky at the object (`moonBrighteningMag`): one scale for
  *   every object, so a cluster beside a bright Moon and a galaxy far from a thin one compare fairly.
@@ -133,13 +129,16 @@ export function scoreObject(input: ScoreInput): ObjectScore | null {
   if (object.vMag > limitingMag) {
     return null;
   }
-  const window = bestWindow(track, minAltitudeDeg);
-  if (window === null) {
+  const refined = refinedWindow(track, minAltitudeDeg);
+  if (refined === null) {
     return null;
   }
-  const from = indexOfTime(track, window.start, 0);
-  const to = indexOfTime(track, window.end, from);
+  // The score reads the window's samples (the grid run), the answer carries its true edges: refining an edge never
+  // moves a component.
+  const { firstIndex: from, lastIndex: to } = refined;
+  const window: BestWindow = { start: refined.start, end: refined.end, peak: refined.peak };
   const windowSamples = to - from + 1;
+  const spanMinutes = (track[to].time.getTime() - track[from].time.getTime()) / 60_000;
 
   const span = Math.max(WELL_PLACED_ALTITUDE_DEG - minAltitudeDeg, Number.EPSILON);
   const sensitivity = moonlightSensitivity(object.type);
@@ -172,7 +171,7 @@ export function scoreObject(input: ScoreInput): ObjectScore | null {
   }
 
   const components: ScoreComponents = {
-    duration: placed / track.length,
+    duration: Math.min(1, spanMinutes / DURATION_USEFUL_SPAN_MINUTES) * (placed / windowSamples),
     moon: moonSum / windowSamples,
     brightness: brightnessOf(object, limitingMag, bortle, apertureMm),
     sky: 1 - skyPenalty(object, bortle),
