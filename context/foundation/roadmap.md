@@ -61,7 +61,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                         | —             | MS-01, FR-030, FR-039       | done        |
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
-| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | planning    |
+| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | in-progress |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | ready       |
@@ -167,7 +167,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Risk:**
   - Retuning the duration term reorders every night, so `calibration.test.ts` and the beginner reference must stay green without being regenerated.
   - Waits for S-04, so the PRD re-check runs once, after both retunes. It also closes S-03's open calibration sign-off (Progress 2.5 of the deep-sky-beyond-messier archive).
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-06: Auth loose ends
 

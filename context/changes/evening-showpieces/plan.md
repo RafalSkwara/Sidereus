@@ -351,11 +351,11 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [ ] 1.1 The reference test fails on the unchanged engine for the expected objects, and passes after the change
-- [ ] 1.2 Window and invariant suites pass
-- [ ] 1.3 Scores unchanged by construction (index-equality test) and the oracle green without regeneration
-- [ ] 1.4 Whole unit suite passes
-- [ ] 1.5 Type check and lint pass
+- [x] 1.1 The reference test fails on the unchanged engine for the expected objects, and passes after the change
+- [x] 1.2 Window and invariant suites pass
+- [x] 1.3 Scores unchanged by construction (index-equality test) and the oracle green without regeneration
+- [x] 1.4 Whole unit suite passes
+- [x] 1.5 Type check and lint pass
 
 #### Manual
 

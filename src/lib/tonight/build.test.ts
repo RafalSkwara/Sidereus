@@ -1847,7 +1847,8 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     const [m13, m31] = plan.rows;
     expect(m13).toMatchObject({ kind: "object", label: "M13", href: "/tonight/targets#object-M13" });
     expect(m13.name).toContain("M13 · ");
-    expect(m13.windowText).toBe("19:25–23:35");
+    // True crossing of 15° (evening-showpieces): Skyfield + DE421, one-minute grid, puts M13 at 23:42:10 (Warsaw, 2026-10-10).
+    expect(m13.windowText).toBe("19:25–23:42");
     expect(m13.track).toHaveLength(m31.track.length);
     expect(m13.peakAltitudeDeg).toBeGreaterThanOrEqual(WARSAW.minAltitudeDeg);
     expect(m13.windowEnd).toBeGreaterThan(m13.bestAt);
@@ -1945,7 +1946,8 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     expect(candidates.some((option) => rowKeys.has(option.key))).toBe(false);
     // Objects beyond the top five, below the bar, in their picker form, with the window as the detail.
     const m3 = candidates.find((option) => option.key === "M3");
-    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:45" });
+    // M3 sets through 15° at 19:51:44 (Skyfield + DE421, one-minute grid; the grid's 19:45 was the last 10-minute sample).
+    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:51" });
     expect(m3?.names).toContain("NGC 5272");
     expect(candidates.map((option) => option.key)).toContain("NGC4244");
     // Mercury and the Moon have no window tonight, so they are not offered; a planet that has one and is not a row would be.
@@ -1975,7 +1977,7 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
       "pl",
       { withSessionPlan: true, withPlanCandidates: true },
     );
-    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:45");
+    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:51");
   });
 
   it("reads the tile's next target in the user's order: the first row whose window has not ended", () => {

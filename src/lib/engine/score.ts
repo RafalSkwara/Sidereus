@@ -4,7 +4,7 @@ import { contrastBand, telescopeLimitingMag } from "./contrast";
 import type { ContrastBand } from "./contrast";
 import type { MoonState } from "./moon";
 import { effectiveSurfaceBrightness, moonBrighteningMag, nlToMag, skyBrightnessNL } from "./moonlight";
-import { bestWindow } from "./objects";
+import { refinedWindow } from "./objects";
 import type { BestWindow } from "./objects";
 import {
   BRIGHTNESS_RAMP_MAG,
@@ -82,17 +82,6 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-/** Index of the sample at `time` within `track[from..]`; the window's samples come from the track itself. */
-function indexOfTime(track: readonly HorizontalPosition[], time: Date, from: number): number {
-  const ms = time.getTime();
-  for (let i = from; i < track.length; i++) {
-    if (track[i].time.getTime() === ms) {
-      return i;
-    }
-  }
-  throw new Error("scoreObject: window instant is not a sample of the track");
-}
-
 function skyPenalty(object: ScoredObject, bortle: number): number {
   const penalized =
     object.surfaceBrightness === null
@@ -105,6 +94,9 @@ function skyPenalty(object: ScoredObject, bortle: number): number {
  * Scores one object's night, or returns `null` when it never clears `minAltitudeDeg` during the
  * dark window, or when it is fainter than the telescope's limiting magnitude (such an object is
  * physically impossible to see, so it never ranks).
+ *
+ * `window` holds the true crossings of `minAltitudeDeg` (`refinedWindow`); every component below is computed over the
+ * window's grid samples, so the edges' refinement leaves each of them unchanged.
  *
  * - `duration`: altitude-weighted share of the dark window: each best-window sample counts by how
  *   far it sits between `minAltitudeDeg` (0) and `WELL_PLACED_ALTITUDE_DEG` (1), summed and divided
@@ -133,12 +125,14 @@ export function scoreObject(input: ScoreInput): ObjectScore | null {
   if (object.vMag > limitingMag) {
     return null;
   }
-  const window = bestWindow(track, minAltitudeDeg);
-  if (window === null) {
+  const refined = refinedWindow(track, minAltitudeDeg);
+  if (refined === null) {
     return null;
   }
-  const from = indexOfTime(track, window.start, 0);
-  const to = indexOfTime(track, window.end, from);
+  // The score reads the window's samples (the grid run), the answer carries its true edges: refining an edge never
+  // moves a component.
+  const { firstIndex: from, lastIndex: to } = refined;
+  const window: BestWindow = { start: refined.start, end: refined.end, peak: refined.peak };
   const windowSamples = to - from + 1;
 
   const span = Math.max(WELL_PLACED_ALTITUDE_DEG - minAltitudeDeg, Number.EPSILON);
