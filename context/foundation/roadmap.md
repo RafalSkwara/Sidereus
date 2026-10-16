@@ -39,10 +39,12 @@ milestone_status: open
   - MS-04: Loose ends a user can hit in the auth flow:
     - a signed-in visitor who opens sign-in or sign-up goes on to Tonight;
     - sign-up continues to the page that was asked for (PRD Access Control, ui-auth D1 and D2).
+  - MS-05 (owner, 2026-10-16): The app is ready to take payments as far as star data goes. ESA cannot authorise HYG-derived files but offers to assess Hipparcos V1 used directly, so the star files come from V1 directly (S-08, PRD Open Question 21). No payment until ESA authorises.
 
 ## Vision recap
 
 A beginner with a first telescope can't tell whether tonight is worth setting up for, or what to point at. Sidereus answers both from their own site and kit, and since M-3 it also helps them find each target, says what it will look like, tracks their progress, flags sky events and lets them shape the night's plan. M-4 adds no new promise. It makes the existing one hold:
+
 - the advice must not contradict itself;
 - the look must be finished;
 - failures must be visible before anyone else relies on the app.
@@ -53,26 +55,28 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 
 ## At a glance
 
-| ID   | Change ID            | Outcome (user can …)                                                                                                                                | Prerequisites | PRD refs                                                      | Status      |
-| ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------- | ----------- |
-| S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                    | —             | MS-01, FR-030, FR-043                                         | done        |
-| S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                          | —             | MS-01, FR-030, FR-039                                         | done        |
-| S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                            | S-02          | MS-01, FR-039, FR-007                                         | proposed    |
-| S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high  | —             | MS-02, FR-038, FR-013                                         | done        |
-| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015                                         | proposed    |
-| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link               | —             | MS-04                                                         | ready       |
-| S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                               | —             | MS-03                                                         | in-progress |
+| ID   | Change ID            | Outcome (user can …)                                                                                                                                | Prerequisites | PRD refs                    | Status      |
+| ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ----------- |
+| S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                   | —             | MS-01, FR-030, FR-043       | done        |
+| S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                         | —             | MS-01, FR-030, FR-039       | done        |
+| S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
+| S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
+| S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | proposed    |
+| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
+| S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
+| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | ready       |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme                | Chain                     | Note                                                                                                                    |
-| ------ | -------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| A      | UI refinement        | `S-01`, `S-02` → `S-03`   | The `ui-refine` umbrella. `S-01` stands alone (already running); `S-03` follows `S-02`. The board has four Stream options. |
-| B      | Advice you can trust | `S-04` → `S-05`           | The north star first. The PRD's re-check closes the stream.                                                             |
-| C      | Seeing production    | `S-07`                    | Standalone; it makes the other streams' post-merge checks observable.                                                   |
-| D      | Auth loose ends      | `S-06`                    | Standalone and small; first in the cut order.                                                                           |
+| Stream | Theme                | Chain                   | Note                                                                                                                       |
+| ------ | -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| A      | UI refinement        | `S-01`, `S-02` → `S-03` | The `ui-refine` umbrella. `S-01` stands alone (already running); `S-03` follows `S-02`. The board has four Stream options. |
+| B      | Advice you can trust | `S-04` → `S-05`         | The north star first. The PRD's re-check closes the stream.                                                                |
+| C      | Seeing production    | `S-07`                  | Standalone; it makes the other streams' post-merge checks observable.                                                      |
+| D      | Auth loose ends      | `S-06`                  | Standalone and small; first in the cut order.                                                                              |
+| E      | Star data licensing  | `S-08`                  | Standalone; owner-mandated 2026-10-16, outside the cut order. The board has no Stream E option, so its Stream is blank.    |
 
 ## Baseline
 
@@ -193,22 +197,41 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The fixed log lines must keep their allowlist counts.
 - **Status:** in-progress
 
+### S-08: Star source switch
+
+- **Outcome:** user (the operator) can ship star files that come from the Hipparcos Catalogue, Version 1 (ESA, 1997; VizieR I/239, `hip_main.dat`) directly instead of through HYG, with Bayer, Flamsteed and proper-name designations from CC0 and IAU sources and the constellation computed, so that ESA's authorisation can cover the files and no third party's compilation of ESA's data is in the app. Charts and the live sky behave as before.
+- **Change ID:** star-source-switch
+- **PRD refs:** MS-05 (owner decision 2026-10-16: the app must be ready to take payments), PRD Open Question 21 (star paragraph)
+- **Prerequisites:** —
+- **Parallel with:** S-03, S-05, S-06, S-07
+- **Blockers:** —
+- **Unknowns:**
+  - ESA's answer on the direct use of Hipparcos V1 (assessment aimed at the end of November 2026; ESA may attach conditions or a fee). — Owner: user. Block: no. This slice does not wait for it: V1 is CC BY-NC 3.0 IGO, fine while the app is free.
+  - Whether the Wikidata and IAU designation sources cover the 3,342 stars that HYG names today, and how many stars ≤ 7.5 the V1 file yields (the assessment estimates about 25,713 against 25,791). — Owner: team. Block: no; the research settles it.
+- **Risk:**
+  - Both star pairs, the count guards, `stars.test.ts` and `finder-stars.test.ts` provenance assertions, the fixtures, `Attribution.astro` (new i18n keys in `en.ts` and `pl.ts`), `LICENSE-DATA.md` and the CLAUDE.md star tripwires all move together; the files stop being CC BY-SA and become NC under ESA's terms.
+  - The positions are J1991.25 and must be propagated to J2000 with the proper motions; the 925-star bright file is expected to stay unchanged.
+  - If ESA refuses or prices it out, the files revert or migrate to SAO in a change of their own.
+  - **No payment is taken until ESA authorises in writing.** Outside the cut order: the owner mandated it on 2026-10-16.
+- **Status:** ready
+
 ## Backlog Handoff
 
-| Roadmap ID | Change ID            | Suggested issue title                                         | Ready for `/10x-plan` | Notes                                                                 |
-| ---------- | -------------------- | ------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
-| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                  | done                  | Merged in #177, archived · GitHub #169                                |
-| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination      | done                  | Done: #182 merged, archived · GitHub #170 |
-| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                        | no                    | After S-02 · GitHub #171                                              |
-| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)   | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178) |
-| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check     | no                    | After S-04 · GitHub #173                                              |
-| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next) | yes                 | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174 |
-| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)          | yes                   | Run `/10x-observability-audit` first · GitHub #175                    |
+| Roadmap ID | Change ID            | Suggested issue title                                             | Ready for `/10x-plan` | Notes                                                                       |
+| ---------- | -------------------- | ----------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
+| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                      | done                  | Merged in #177, archived · GitHub #169                                      |
+| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination          | done                  | Done: #182 merged, archived · GitHub #170                                   |
+| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                            | no                    | After S-02 · GitHub #171                                                    |
+| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)       | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178)     |
+| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check         | no                    | After S-04 · GitHub #173                                                    |
+| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)   | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174      |
+| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)              | yes                   | Run `/10x-observability-audit` first · GitHub #175                          |
+| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | yes                   | Owner decision 2026-10-16 · Run `/10x-new star-source-switch` · GitHub #185 |
 
 ## Open Roadmap Questions
 
 1. **Judging advice without an observer** (carried from M-3). S-04 and S-05 are judged against source-cited references. The owner's own first nights, once they happen, are the first real check: sky-check tallies and log entries. — Owner: user. Block: none.
-2. **ESA licence reply** for the Hipparcos-derived stars (PRD Open Question 21, request sent 2026-10-14). It is external and does not block M-4. A refusal opens its own change to switch to SAO before any payment. — Owner: user. Block: none for M-4.
+2. **ESA's assessment of the direct use of Hipparcos V1** (PRD Open Question 21). ESA replied about 2026-10-16: it cannot authorise HYG or files derived from it, Tycho-2 is not its product, and it offers to assess Hipparcos Version 1 used directly, together with the commercial-use framework it aims to finish by the end of November 2026. The owner sends the reply (draft in `context/foundation/licensing/esa-reply-2026-10-16-draft.md`); S-08 switches the star files meanwhile. External; does not block M-4. A refusal reverts or migrates the files to SAO, in a change of its own, before any payment; no payment before ESA authorises in writing, and one lawyer check of its wording before the first. — Owner: user. Block: none for M-4.
 3. **Carry-overs that are not slices:**
    - #19, the Stellarium fixtures, which need values the owner reads by hand;
    - S-12's manual rows (Delta Optical has no entries);
@@ -217,11 +240,12 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
    - the IAU MDC courtesy email.
 
    — Owner: user, or team. Block: none.
+
 4. **PRD v4** opens with the next milestone that adds scope (payments or new observing features), not in M-4. — Owner: user. Block: none.
 
 ## Parked
 
-- **Ready to charge** (payments, pricing, a custom domain, an email sender for password reset (FR-003) and email verification, terms of use, usage analytics) — Why parked: option B of the M-4 draft. It needs PRD v4 and PRD Open Questions 21 and 22 answered.
+- **Ready to charge** (payments, pricing, a custom domain, an email sender for password reset (FR-003) and email verification, terms of use, usage analytics) — Why parked: option B of the M-4 draft. It needs PRD v4 and PRD Open Questions 21 and 22 answered, and the star source settled: S-08 done and ESA's written authorisation in hand (or SAO instead).
 - **An external error tracker** — Why parked: the owner's limit for S-07 (first-party tools only). If S-07's audit shows a gap they cannot close, the choice goes through `/10x-infra-research`.
 - **An admin interface for plans** — Why parked: PRD v3 Non-Goals; the operator uses one command.
 - **Choosing your own finder** (finder type and field per telescope) — Why parked: the finder chart assumes a standard finder (PRD Open Question 13); option C.

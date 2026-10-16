@@ -64,6 +64,27 @@ that upstream licence allows. Commercial use needs ESA's authorisation; the owne
 (data.licences@esa.int) is pending, and until ESA answers the files must not be used to generate
 financial gain.
 
+#### ESA's reply (2026-10-16) and the switch under way
+
+ESA answered about 2026-10-16 (Head Scientist, ESA Space Science Archives): HYG v4.1 is a separately
+prepared third-party compilation, and ESA cannot grant commercial-use authorisation for HYG or for files
+derived from HYG; Tycho-2 is not an ESA product (its rights are held by E. Høg et al., 2000, so nothing
+in this directory is Tycho-2 and none is to be added); ESA can assess a direct use of Gaia DR3 once the
+table, fields and delivery are named; and ESA holds the rights to Hipparcos Version 1 and can assess its
+direct commercial use. The HYG provider cannot lift ESA's condition on the Hipparcos data inside HYG, so
+the files above stay non-commercial: **they must not be used to generate financial gain.**
+
+Owner decision (2026-10-16): the star files are being switched from HYG v4.1 to the Hipparcos Catalogue,
+Version 1, taken directly (VizieR I/239, `hip_main.dat`; ESA, 1997, ESA SP-1200), with Bayer, Flamsteed and
+proper-name designations from CC0 and IAU sources. The change is roadmap M-4 S-08, `star-source-switch`;
+until it merges, the HYG description above is still the truth, and this note is text only. The owner has
+asked ESA to include the direct use of Hipparcos Version 1 in its assessment (aimed at the end of November
+2026). Hipparcos Version 1 is CC BY-NC 3.0 IGO, which suits a free app; no payment is taken until ESA
+authorises in writing, and if ESA refuses the files revert or migrate to the SAO Star Catalog. The citation
+to add on the switch is "ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200", beside
+**Credit: ESA**. The correspondence and the reviewer's assessment (not legal advice) are in
+`context/foundation/licensing/`.
+
 ## Meteor showers (hand-entered facts)
 
 `meteor-showers.ts` lists eight major annual meteor showers (the Quadrantids, Lyrids, Eta Aquariids,

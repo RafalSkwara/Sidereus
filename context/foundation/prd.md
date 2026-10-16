@@ -780,7 +780,8 @@ the plan of the slice that needs it.
     commercial forecast and geocoding plan (or provider) and confirm the map
     tiles' terms. Owner: user. Blocks: the payments milestone, not M-3.
     _Added by the S-03 plan (2026-10-13), star data:_ every star catalogue
-    complete to magnitude 7.5 is either ESA's Hipparcos, Tycho-2 or Gaia (CC BY-NC
+    complete to magnitude 7.5 is either ESA's Hipparcos, Tycho-2 (wrongly filed
+    under ESA: see the correction below) or Gaia (CC BY-NC
     3.0 IGO, "Credit: ESA"; commercial use needs ESA's authorisation) or a
     compilation of them (HYG, which the app uses, AT-HYG, SKY2000, UCAC4), or an
     old file with no licence (Yale BSC5 forbids altered copies without its
@@ -796,6 +797,37 @@ the plan of the slice that needs it.
     pre-existing gap outside S-03: the signed-out landing image
     `public/landing/tonight.png` shows the live sky's Hipparcos-derived stars
     without `Attribution`.
+    _ESA's reply and the owner's decision (2026-10-16), superseding the "if ESA
+    refuses" plan above:_ ESA (Head Scientist, ESA Space Science Archives)
+    answered about 2026-10-16. (1) HYG v4.1 is a separately prepared third-party
+    compilation: ESA cannot grant commercial-use authorisation for HYG or for files
+    derived from it, and any permission would have to come from the HYG provider.
+    (2) Tycho-2 is not an ESA product; its rights are held by E. Høg et al. (2000).
+    **Correction:** the sentence above, PRD wording earlier and the finder-chart
+    research (section 9, archived and immutable) wrongly filed Tycho-2 under ESA.
+    Sidereus never used it and does not. (3) Gaia DR3 can be assessed once the
+    table, the fields and the delivery are named. (4) ESA holds the rights to
+    Hipparcos Version 1 and can assess its direct commercial use, together with the
+    commercial-use framework it aims to finish by the end of November 2026. The HYG
+    provider cannot lift ESA's condition on the Hipparcos data inside HYG (CC BY-SA
+    4.0 covers only what its author owns), so asking him is a dead end for
+    permission. **Decision:** the app must be ready to take payments, with nothing
+    in the star data resting on an unassigned right. (a) Ask ESA to include the
+    direct use of Hipparcos Version 1 (VizieR I/239, `hip_main.dat`) in its
+    assessment; the owner sends the reply (draft:
+    `context/foundation/licensing/esa-reply-2026-10-16-draft.md`). (b) Switch both
+    star files from HYG v4.1 to Hipparcos V1 now and merge now: V1 is CC BY-NC 3.0
+    IGO, which is fine while the app is free of charge. This is roadmap M-4 S-08,
+    `star-source-switch` (GitHub #185); designations come from CC0 and IAU sources,
+    not from HYG or Yale BSC5. (c) If ESA refuses or prices it out, revert or
+    migrate to SAO in its own change (the SAO caveat above still applies). (d) No
+    payment is taken until ESA authorises in writing. (e) Gaia DR3 is not needed and
+    is skipped. (f) Before the first payment, one lawyer check of the authorisation's
+    wording (public repository, the browser-delivered 925-star file, where "Credit:
+    ESA" appears, fee, term). The reviewer's assessment (not legal advice) is
+    `context/foundation/licensing/esa-reply-assessment-2026-10-16.md`. On the switch
+    the credit stays "Hipparcos, Credit: ESA" and gains the citation "ESA, 1997, The
+    Hipparcos and Tycho Catalogues, ESA SP-1200".
 22. **Pricing, payment provider and the plan's name** - deferred to the
     payments milestone. Owner: user.
 23. **Paid features in a stored offline copy** - candidate: a copy keeps what
