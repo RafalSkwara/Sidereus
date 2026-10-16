@@ -734,18 +734,18 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 5.1 `sessionUser` table tests fail first, then pass (stale refresh token, expired session and invalid JWT silent; retryable fetch error, 503, timeout and unknown error logged; missing session silent; thrown error logged once)
-- [x] 5.2 The thin `onRequest` tests pass under the `astro:middleware` and `astro:env/server` mocks
-- [x] 5.3 Auth route tests: rate limit, 500 and network failure each log one line with the same key as today, `invalid_credentials` silent, no email in any argument
-- [x] 5.4 Finder loader tests: each way to `failed` logs a line, and throws outside the old `try` reach `failed`
-- [x] 5.5 Silent-catch allowlist entries for the touched files removed, guard green
-- [x] 5.6 Full unit suite, lint and types pass
-- [x] 5.7 E2E for sign-in and the finder stay green
-- [x] 5.8 Smoke walk including the finder gates passes against the local stack
+- [x] 5.1 `sessionUser` table tests fail first, then pass (stale refresh token, expired session and invalid JWT silent; retryable fetch error, 503, timeout and unknown error logged; missing session silent; thrown error logged once) — b14c51d
+- [x] 5.2 The thin `onRequest` tests pass under the `astro:middleware` and `astro:env/server` mocks — b14c51d
+- [x] 5.3 Auth route tests: rate limit, 500 and network failure each log one line with the same key as today, `invalid_credentials` silent, no email in any argument — b14c51d
+- [x] 5.4 Finder loader tests: each way to `failed` logs a line, and throws outside the old `try` reach `failed` — b14c51d
+- [x] 5.5 Silent-catch allowlist entries for the touched files removed, guard green — b14c51d
+- [x] 5.6 Full unit suite, lint and types pass — b14c51d
+- [x] 5.7 E2E for sign-in and the finder stay green — b14c51d
+- [x] 5.8 Smoke walk including the finder gates passes against the local stack — b14c51d
 
 #### Manual
 
-- [x] 5.9 With local Auth stopped and a signed-in session, a gated page redirects as before and the output holds `sidereus: auth.claims failed` with no email; with an old refresh token cookie it redirects and logs nothing (verified 2026-10-16 on a local preview, Auth faulted by a proxy answering 503: with an access token due for refresh, `GET /tonight` redirected to `/auth/signin?next=%2Ftonight` as before, after about 25 s of auth-js retries, and left `sidereus: auth.claims failed { step, name: 'AuthRetryableFetchError', status: 503 }`, no email; an unknown well-formed refresh token and a tampered one both redirected and logged nothing)
+- [x] 5.9 With local Auth stopped and a signed-in session, a gated page redirects as before and the output holds `sidereus: auth.claims failed` with no email; with an old refresh token cookie it redirects and logs nothing (verified 2026-10-16 on a local preview, Auth faulted by a proxy answering 503: with an access token due for refresh, `GET /tonight` redirected to `/auth/signin?next=%2Ftonight` as before, after about 25 s of auth-js retries, and left `sidereus: auth.claims failed { step, name: 'AuthRetryableFetchError', status: 503 }`, no email; an unknown well-formed refresh token and a tampered one both redirected and logged nothing) — b14c51d
 
 ### Phase 6: The operator path, proof and the rule
 
