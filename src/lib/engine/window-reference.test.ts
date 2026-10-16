@@ -2,7 +2,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { DEEP_SKY } from "@/lib/catalogue";
 import type { DeepSkyObject } from "@/lib/catalogue";
-import { ALTITUDE_TOLERANCE_DEG, DEFAULT_TRACK_STEP_MINUTES, TIME_TOLERANCE_MINUTES } from "@/lib/engine/parameters";
+import {
+  ALTITUDE_TOLERANCE_DEG,
+  DEFAULT_TRACK_STEP_MINUTES,
+  MAX_RANKED_OBJECTS,
+  TIME_TOLERANCE_MINUTES,
+} from "@/lib/engine/parameters";
 
 import { EYEPIECES, TELESCOPE, WARSAW, warsawDarkWindow } from "./fixtures";
 import skyfieldDeepSky from "./fixtures/skyfield/deep-sky-warsaw-2026.json";
@@ -135,8 +140,8 @@ function windowProblems(label: string, window: EngineWindow | null, expected: Re
   return problems;
 }
 
-function rankingOn(date: string): Ranking<DeepSkyObject, (typeof EYEPIECES)[number]> {
-  return rankObjects({
+function rankInput(date: string) {
+  return {
     site: WARSAW,
     bortle: BORTLE,
     minAltitudeDeg: MIN_ALTITUDE_DEG,
@@ -144,8 +149,12 @@ function rankingOn(date: string): Ranking<DeepSkyObject, (typeof EYEPIECES)[numb
     telescope: TELESCOPE,
     eyepieces: EYEPIECES,
     catalogue: DEEP_SKY,
-    limit: Number.POSITIVE_INFINITY,
-  });
+  };
+}
+
+/** Every cleared object listed, as `calibration.test.ts` ranks them. */
+function rankingOn(date: string): Ranking<DeepSkyObject, (typeof EYEPIECES)[number]> {
+  return rankObjects({ ...rankInput(date), limit: Number.POSITIVE_INFINITY });
 }
 
 describe("deep-sky window edges against Skyfield (Warsaw, Bortle 5, minimum altitude 15°)", () => {
@@ -257,6 +266,28 @@ describe("scores do not move: the refined window keeps the unrefined sample rang
         problems.push(`${date} ${object.id}: refined end is outside the interval after its last sample`);
       }
     }
+    expect(problems).toEqual([]);
+  });
+});
+
+/**
+ * PRD Primary criterion 2, ephemeris leg (evening-showpieces, Phase 4): the top five Tonight lists on each of the three
+ * nights, with the default limit (`MAX_RANKED_OBJECTS`) and the window each entry carries (what Targets and the Session
+ * plan show), against the Skyfield fixture within the PRD's 5 minutes and 1°. The ids come from the engine's ranking at
+ * run time and the expectations from the fixture, so neither is copied into the test; an object the fixture lacks fails
+ * by id. The planner leg is manual (`context/changes/evening-showpieces/evidence/prd-criterion-2.md`).
+ */
+describe("criterion 2: Tonight's top five against Skyfield", () => {
+  it.each(REFERENCE_NIGHTS)("holds each listed object's window edges and peak within the tolerance on %s", (date) => {
+    const { entries } = rankObjects(rankInput(date));
+    expect(entries).toHaveLength(MAX_RANKED_OBJECTS);
+    const problems = entries.flatMap(({ object, score }) =>
+      windowProblems(
+        `${date} ${object.id}`,
+        { start: score.window.start, end: score.window.end, peakAltitudeDeg: score.window.peak.altitudeDeg },
+        referenceOf(date).objects.get(object.id),
+      ),
+    );
     expect(problems).toEqual([]);
   });
 });

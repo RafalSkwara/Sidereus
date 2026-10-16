@@ -213,7 +213,8 @@ objects of `messier.json` and `caldwell.json` (J2000 coordinates read from those
 minute of a one-minute grid, the run's maximum altitude and its time, and null edges when the object never reaches 15°
 in the dark. `window-reference.test.ts` compares the engine's windows with it (every edge within
 `TIME_TOLERANCE_MINUTES`, the peak within `ALTITUDE_TOLERANCE_DEG`): the grid-edge windows of `bestWindow` miss it by 5
-to 10 minutes, the true crossings of `refinedWindow` pass. The file is prettier-stable JSON (no arrays).
+to 10 minutes, the true crossings of `refinedWindow` pass. The same test checks the final top 5 of each night (PRD
+criterion 2, ephemeris leg). The file is prettier-stable JSON (no arrays).
 
 ```bash
 python3 -m venv /tmp/skyfield-venv

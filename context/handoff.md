@@ -2,6 +2,29 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-16 (S-05 evening-showpieces, supersedes the S-05 line below)
+
+**S-05 `evening-showpieces` (#173) is implemented on `feat/evening-showpieces` through Phase 4 and awaits the reviewer's `/10x-impl-review`. There is no PR yet.** Plan: `context/changes/evening-showpieces/plan.md`; what each phase did and every edited pin: `implementation-notes.md` there.
+
+What changed:
+
+- **Window edges.** A deep-sky window opens and closes at the true crossing of the minimum altitude (`refinedWindow` in `objects.ts`), not at the 10-minute sample; planet and Moon windows are unchanged. Scores still read the grid samples, so no rank moved. A Skyfield + DE421 fixture (`scripts/deep-sky-reference.py`, all 171 objects on Warsaw 2026-04-15, 07-15, 10-15) and `window-reference.test.ts` hold every edge within 5 min and 1°, and the final top 5 of each night too (PRD criterion 2, ephemeris leg).
+- **Duration** saturates at a useful span: `min(1, windowMinutes / 120) × mean placement` (`DURATION_USEFUL_SPAN_MINUTES`, named candidate). Oracle overlap is 3 to 4 on all four calibration nights, the AF check is green.
+- **Reasons.** The moon and sky reasons appear only when the listed entries differ on them (`REASON_MIN_SPREAD` = 0.05), and a component is named only when the entry is at or above the list mean; a reason line may carry one phrase.
+- **Docs.** CLAUDE.md Engine paragraph, PRD Open Questions 1 and 9 (dated notes), the fixtures README.
+
+**Known divergence OD-1 (owner decision, 2026-10-16):** in October M13 ranks about #31, M15 #19 and M57 #46, outside the top 5. The structural penalty is gone, and a rank-only bonus for globular clusters and planetary nebulae is not part of this change.
+
+**Owner's remaining checks:**
+
+- Sign off S-03 item 2.5 (Messier bonus and the four top-10 snapshots) from `context/changes/evening-showpieces/evidence/calibration-after-s05.md`.
+- Read `context/changes/evening-showpieces/evidence/prd-criterion-2.md` (rules, agreement summary, the OD-1 divergence).
+- First-nights spot check: M13 and M57 windows on `/tonight/targets` match your planetarium, and no reason line mentions moonlight on a new-Moon night.
+
+**Next:** `/10x-impl-review evening-showpieces`, then the PR (the lead runs the whole e2e suite and smoke first).
+
+---
+
 ## Update 2026-10-15 (supersedes every next step below)
 
 **M-3 "Find it and keep going" is closed.** S-08 adjustable-session-plan (#165) was the last slice. The closure check against PRD v3 is in the roadmap's Milestone History, and three new rules are in `lessons.md`.

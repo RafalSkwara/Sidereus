@@ -235,3 +235,41 @@ M34 "Up for 9 h 55 min of the dark window · holds up under your Bortle 6 sky"; 
 `npm test` (133 files, 2591 passed), `npx astro check` (0 errors) and `npm run lint` pass. `small-scope.test.ts` (G5 included),
 `calibration.test.ts` and `fixtures/beginner-reference.ts` are untouched (`git diff` empty) and green; the AF check, the ranking
 invariants and the oracle are green, unedited.
+
+## Phase 4: criterion 2 ephemeris leg and documents (items 1 and 3; the planner record and e2e/smoke are the lead's)
+
+### Criterion-2 assertion (`src/lib/engine/window-reference.test.ts`)
+
+New describe "criterion 2: Tonight's top five against Skyfield", one test per night. It calls `rankObjects` with the same inputs as the
+other tests in the file (Warsaw, Bortle 5, 150/750, minimum altitude 15, `warsawDarkWindow(date, 5)`) and the default limit
+(`MAX_RANKED_OBJECTS`), asserts five entries, and holds each entry's `score.window` (the window Targets and the Session plan show)
+to its Skyfield entry through the file's `windowProblems` (5 min and 1° from `parameters.ts`; an object with no fixture entry fails
+as `<date> <id>: no Skyfield entry`). The ids are read from the ranking at run time, never copied. To share the inputs the file's
+`rankingOn` now builds on a new `rankInput(date)` (same object, `limit` left out); `rankingOn` still passes `Infinity`, so the
+earlier tests are unchanged. The test passes on the first run, so there was no red to record.
+
+Measured once with a scratch test (deleted, not kept), error of the engine's window against Skyfield (start / end in minutes,
+peak altitude in degrees, largest absolute value per night):
+
+| Night      | Top 5 (engine order)        | Largest edge error   | Largest peak difference |
+| ---------- | --------------------------- | -------------------- | ----------------------- |
+| 2026-04-15 | M3, M13, M92, M81, M44      | 0.02 min (M44 end)   | 0.005° (M3, M92)        |
+| 2026-07-15 | M39, M13, NGC7000, M31, M71 | 0.01 min             | 0.005° (M39, M13)       |
+| 2026-10-15 | M31, NGC869, M34, M45, M39  | 0.04 min (M45 start) | 0.043° (M39)            |
+
+Most top-5 edges are the dark window's own edge (the object is up at dusk or dawn), which is why the errors are so small.
+
+### Documents
+
+- `CLAUDE.md` (`AGENTS.md` is a symlink to it, so one edit covers both; `prettier --check AGENTS.md` refuses a symbolic link): one
+  paragraph appended to the Engine paragraph ("Duration, window edges and reasons"): the duration rule and OD-1, `refinedWindow` and its
+  deep-sky-only use, scores on the grid versus text on the refined edges (a one-sample window reads "Up for 14 min" with duration about
+  0), reason eligibility and naming with `REASON_MIN_SPREAD`, the Skyfield fixture and generator, and the test. No existing sentence in
+  CLAUDE.md described duration, window edges or the reason choice, so no sentence needed fixing; the Catalogue paragraph needed no
+  clause (its calibration sentence, overlap at least 3, is still true).
+- `context/foundation/prd.md`: one dated sentence each in Open Question 1 (duration calibrated against the references, weights stay
+  candidates) and Open Question 9 (deep-sky window edges within 5 minutes of Skyfield).
+- `context/handoff.md`: a dated "Update 2026-10-16" section at the top (state, what changed, OD-1, the owner's remaining checks).
+- `src/lib/engine/fixtures/README.md`: the Phase 1 row and the "Deep-sky windows" section were accurate; one sentence added that the
+  same test checks each night's final top 5.
+- `context/handoff.md` was not prettier-clean before this edit either (its older slice table uses `|---|`); left as it was.
