@@ -452,12 +452,12 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [x] 5.1 i18n parity and the whole unit suite pass: `npm test`
-- [x] 5.2 Type check and lint pass: `npx astro check` and `npm run lint`
-- [x] 5.3 Formatting passes on the changed Markdown and JSON: `npx prettier --check` on the changed files
-- [x] 5.4 The full e2e suite passes against a fresh production preview and the local stack, counts reported in the PR: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` against a fresh `npm run build` preview (port 4337, forecast fixture 4403), the local stack's values inline and never exported (lessons: run the whole suite before a PR)
-- [x] 5.5 The smoke walk passes against local Supabase: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=<preview URL> npm run smoke`
-- [x] 5.6 No HYG reference remains outside archives and history: `grep -rn "HYG" src scripts CLAUDE.md` finds only the comments that explain the switch
+- [x] 5.1 i18n parity and the whole unit suite pass: `npm test` — 39e68f7
+- [x] 5.2 Type check and lint pass: `npx astro check` and `npm run lint` — 39e68f7
+- [x] 5.3 Formatting passes on the changed Markdown and JSON: `npx prettier --check` on the changed files — 39e68f7
+- [x] 5.4 The full e2e suite passes against a fresh production preview and the local stack, counts reported in the PR: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` against a fresh `npm run build` preview (port 4337, forecast fixture 4403), the local stack's values inline and never exported (lessons: run the whole suite before a PR) — 39e68f7
+- [x] 5.5 The smoke walk passes against local Supabase: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=<preview URL> npm run smoke` — 39e68f7
+- [x] 5.6 No HYG reference remains outside archives and history: `grep -rn "HYG" src scripts CLAUDE.md` finds only the comments that explain the switch — 39e68f7
 
 #### Manual
 
