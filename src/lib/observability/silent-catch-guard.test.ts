@@ -49,7 +49,6 @@ const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/r
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
 
 /** Reasons shared by many entries. */
-const AUDIT_P5 = "audit finding (flow C and the finder: session, auth routes, finder), fixed by Phase 5";
 const CLIENT = "reported by Phases 7-9, or out of scope if that block is cut";
 const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
@@ -148,9 +147,6 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     reason:
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
   },
-
-  // Phase 5: sign-in, session and the finder.
-  "src/middleware.ts": { count: 1, reason: `${AUDIT_P5}: the thrown case of sessionUser reads as a sign-out` },
 
   // Phases 7-9: the browser side. Phases 8 and 9 delete these entries (all but the ones the reason says stay).
   "src/sw.ts": {

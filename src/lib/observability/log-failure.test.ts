@@ -303,7 +303,7 @@ describe("never throws", () => {
 });
 
 describe("FAILURE_STEPS", () => {
-  it("is a closed list of unique dotted words, including every step Phases 1, 3 and 4 trace", () => {
+  it("is a closed list of unique dotted words, including every step Phases 1, 3, 4 and 5 trace", () => {
     expect(new Set(FAILURE_STEPS).size).toBe(FAILURE_STEPS.length);
     for (const step of FAILURE_STEPS) {
       expect(step, step).toMatch(/^[a-z]+\.[a-z][a-z-]*$/);
@@ -352,6 +352,12 @@ describe("FAILURE_STEPS", () => {
         "read.gear",
         "read.sky-checks",
         "read.onboarding",
+        "auth.claims",
+        "auth.signin",
+        "auth.signup",
+        "auth.signout",
+        "config.supabase",
+        "finder.tonight",
       ]),
     );
   });

@@ -84,6 +84,11 @@ function tonightLoad(eyepieces: EyepieceRecord[], overrides: Partial<TonightLoad
 
 const logged = vi.spyOn(console, "error");
 
+/** Text a real failure could carry: the site's coordinates and an email. */
+const COORDS = "52.2297,21.0122";
+const EMAIL = "ada.lovelace@example.test";
+const LEAK = /52\.2297|21\.0122|ada\.lovelace|example\.test/;
+
 beforeEach(() => {
   mocks.planRead.mockReset();
   mocks.loadTonightFor.mockReset();
@@ -256,11 +261,10 @@ describe("loadFinderFor for a full account", () => {
     expect(await loadFinderFor(locals(), { target: null })).toEqual({ kind: "not-ranked", view: null });
   });
 
-  it("says no-gear without a site or a telescope, and failed when Tonight could not be built", async () => {
+  it("says no-gear without a site or a telescope, and logs nothing for it", async () => {
     mocks.loadTonightFor.mockResolvedValue(tonightLoad([], { site: undefined, view: null, needsSetup: true }));
     expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("no-gear");
-    mocks.loadTonightFor.mockResolvedValue(tonightLoad([], { view: null, tonightError: "tonight.failed" }));
-    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).not.toHaveBeenCalled();
   });
 
   it("logs a failed star load as a fixed line with the error's name only, and answers failed", async () => {
@@ -283,5 +287,86 @@ describe("loadFinderFor for a full account", () => {
       step: "finder.chart",
       name: "TypeError",
     });
+  });
+});
+
+describe("loadFinderFor's failed state leaves a line (error-visibility, Phase 5)", () => {
+  /** The cause of a swallowed list read or build is already logged by the Tonight loader; this line says the finder fell. */
+  const FELL = ["sidereus: finder.tonight failed", { step: "finder.tonight" }] as const;
+
+  it("logs finder.tonight once for a null load, which is never a chart", async () => {
+    mocks.loadTonightFor.mockResolvedValue(null);
+    expect(await loadFinderFor(locals(), { target: "M31" })).toEqual({ kind: "failed", view: null });
+    expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
+  });
+
+  it("logs finder.tonight once when Tonight could not be built (no view)", async () => {
+    mocks.loadTonightFor.mockResolvedValue(tonightLoad([], { view: null, tonightError: "tonight.failed" }));
+    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
+  });
+
+  it("logs finder.tonight once when the site read failed (an error key and no site)", async () => {
+    mocks.loadTonightFor.mockResolvedValue(
+      tonightLoad([], { site: undefined, view: null, sitesError: "gear.load.failed" as never }),
+    );
+    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
+  });
+
+  it("logs nothing at all for the other states: locked, not-ranked, no-gear and a chart", async () => {
+    await loadFinderFor(locals(), { target: "NGC9999" });
+    await loadFinderFor(locals(), { target: null });
+    await loadFinderFor(locals(), { target: "M31" });
+    mocks.planRead.mockResolvedValue({ plan: "free" });
+    await loadFinderFor(locals(), { target: "M31" });
+    expect(logged).not.toHaveBeenCalled();
+  });
+
+  it("does not add a finder.tonight line to the star and chart failures it already logs", async () => {
+    mocks.loadFinderStars.mockRejectedValueOnce(new RangeError("x"));
+    await loadFinderFor(locals(), { target: "M31" });
+    mocks.loadFinderStars.mockResolvedValueOnce(null);
+    await loadFinderFor(locals(), { target: "M31" });
+    expect(logged.mock.calls.map((call) => String(call[0]))).toEqual([
+      "sidereus: finder.stars failed",
+      "sidereus: finder.chart failed",
+    ]);
+  });
+
+  it("reaches failed, with a finder.chart line, when a call that used to sit outside the try throws", async () => {
+    // `findingEyepiece` reads the kit before the star file or the engine is touched; its throw used to fail the island.
+    const poisoned = new Proxy([] as EyepieceRecord[], {
+      get() {
+        throw new RangeError(`${COORDS} ${EMAIL}`);
+      },
+    });
+    mocks.loadTonightFor.mockResolvedValue(tonightLoad(WIDE_KIT, { eyepieces: poisoned }));
+    const load = await loadFinderFor(locals(), { target: "M31" });
+    expect(load.kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
+      step: "finder.chart",
+      name: "RangeError",
+    });
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(LEAK);
+  });
+
+  it("reaches failed when the planet or ranking row itself cannot be read", async () => {
+    const view = viewFor(WIDE_KIT);
+    const broken = {
+      ...view,
+      ranking: {
+        get entries(): never {
+          throw new TypeError(COORDS);
+        },
+      },
+    };
+    mocks.loadTonightFor.mockResolvedValue(tonightLoad(WIDE_KIT, { view: broken as unknown as TonightView }));
+    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
+      step: "finder.chart",
+      name: "TypeError",
+    });
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(LEAK);
   });
 });

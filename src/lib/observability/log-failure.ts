@@ -58,6 +58,12 @@ export const FAILURE_STEPS = [
   "read.gear",
   "read.sky-checks",
   "read.onboarding",
+  "auth.claims",
+  "auth.signin",
+  "auth.signup",
+  "auth.signout",
+  "config.supabase",
+  "finder.tonight",
 ] as const;
 
 /** The steps listed in `FAILURE_STEPS`. */

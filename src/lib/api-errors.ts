@@ -1,5 +1,6 @@
 import type { ZodError } from "zod";
 import { isMessageKey, type MessageKey } from "@/i18n";
+import { isRoutineSessionError, statusOfAuthError } from "@/lib/auth/session-user";
 import { logFailure } from "@/lib/observability/log-failure";
 
 /**
@@ -49,4 +50,34 @@ const AUTH_ERROR_KEYS: Readonly<Record<string, MessageKey>> = {
 export function authErrorKey(error: { code?: string }): MessageKey {
   const code = error.code;
   return code !== undefined && Object.hasOwn(AUTH_ERROR_KEYS, code) ? AUTH_ERROR_KEYS[code] : "errors.auth.generic";
+}
+
+/** The codes that are the user's own mistake at sign-in or sign-up: expected, no fault of ours, so no line. */
+const USER_MISTAKE_CODES: ReadonlySet<string> = new Set([
+  "invalid_credentials",
+  "user_already_exists",
+  "weak_password",
+  "email_address_invalid",
+]);
+
+/**
+ * Leaves a line for an Auth failure an operator needs to see (`auth.signin`, `auth.signup`, `auth.signout`): a
+ * network or timeout fault (no `code`), a 5xx, a rate limit, a confirmation-email fault, an unknown error. A wrong
+ * password, an address that is already registered, a weak password and a malformed address are the user's mistakes
+ * and stay silent, as does a sign-out whose session was already stale. Only the error's name and status reach the
+ * line (and a short code), never its message, which can hold the email; the redirect key is `authErrorKey`'s and
+ * does not depend on this.
+ */
+export function logAuthFailure(
+  step: "auth.signin" | "auth.signup" | "auth.signout",
+  error: { code?: string; status?: number },
+): void {
+  const code = error.code;
+  if (code !== undefined && USER_MISTAKE_CODES.has(code)) {
+    return;
+  }
+  if (step === "auth.signout" && isRoutineSessionError(error)) {
+    return;
+  }
+  logFailure(step, error, { status: statusOfAuthError(error) });
 }

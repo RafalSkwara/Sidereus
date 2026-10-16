@@ -1,25 +1,11 @@
 import { defineMiddleware } from "astro:middleware";
-import { createClient, type SessionUser, type TypedSupabaseClient } from "@/lib/supabase";
+import { sessionUser } from "@/lib/auth/session-user";
+import { createClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
 import { signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 
-/**
- * Verifies the access token locally (asymmetric signing keys, cached per isolate) instead of asking
- * Supabase Auth on every request; Supabase is only called when the token needs refreshing. Accepted
- * trade-off: a session revoked elsewhere stays valid here until its token expires (at most 1 h).
- * Any failure, a timeout included, counts as signed out.
- */
-async function sessionUser(supabase: TypedSupabaseClient): Promise<SessionUser | null> {
-  try {
-    const { data } = await supabase.auth.getClaims();
-    const claims = data?.claims;
-    return claims ? { id: claims.sub, email: claims.email ?? null } : null;
-  } catch {
-    return null;
-  }
-}
-
+// A thin wrapper: the session read and its failure trace are `sessionUser` (src/lib/auth/session-user.ts).
 export const onRequest = defineMiddleware(async (context, next) => {
   // Preferences resolve for every request, with or without Supabase, so Layout can theme the first paint.
   context.locals.theme = resolveTheme(context.cookies.get(THEME_COOKIE)?.value);

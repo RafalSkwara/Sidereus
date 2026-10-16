@@ -4,6 +4,7 @@ import type { AstroCookies } from "astro";
 import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
 import type { Database } from "@/lib/database.types";
 import { withTimeout } from "@/lib/fetch-timeout";
+import { logFailure } from "@/lib/observability/log-failure";
 import { withSessionMaxAge } from "@/lib/session-cookie";
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
@@ -21,8 +22,20 @@ export interface SessionUser {
  */
 export const SUPABASE_TIMEOUT_MS = 5000;
 
+/** Whether this isolate has already said that Supabase is not configured: once per isolate is enough. */
+let reportedMissingConfig = false;
+
+/**
+ * The cookie-backed client, or `null` when `SUPABASE_URL` / `SUPABASE_KEY` are unset. In a built (non-dev) app that
+ * is a bad deploy that signs every user out, so the first `null` of an isolate leaves one `config.supabase` line; a
+ * dev server without the variables is the normal local state and stays quiet.
+ */
 export function createClient(requestHeaders: Headers, cookies: AstroCookies): TypedSupabaseClient | null {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
+    if (!import.meta.env.DEV && !reportedMissingConfig) {
+      reportedMissingConfig = true;
+      logFailure("config.supabase");
+    }
     return null;
   }
   return createServerClient<Database>(SUPABASE_URL, SUPABASE_KEY, {

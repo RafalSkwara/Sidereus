@@ -121,8 +121,10 @@ function resolveTarget(view: TonightView, target: TargetKey, fromPlan: boolean):
 /**
  * The finder chart for one request. The plan guard runs FIRST: a free or signed-out request returns `locked` before
  * Tonight, the star file or the engine is touched (the shell's check does not protect `/_server-islands/*`), and an
- * unconfigured database returns `not-configured`. A failed star load or engine error is logged (a fixed line and the
- * error's name only: a message or stack could carry the site's coordinates) and becomes `failed`.
+ * unconfigured database returns `not-configured`. Every way to `failed` leaves one line (a fixed line and the error's
+ * name only: a message or stack could carry the site's coordinates): `finder.tonight` when Tonight did not load or
+ * build (the swallowed read or build behind it is logged by the Tonight loader, so this line only says the finder
+ * fell), `finder.stars` for the star file and `finder.chart` for anything else that throws on the way to the chart.
  */
 export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptions): Promise<FinderLoad> {
   const guard = await requireFullPlan(locals);
@@ -142,6 +144,7 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
   });
   if (load === null) {
     // Unreachable after the guard (it answers null only without a user or a database); never a chart.
+    logFailure("finder.tonight");
     return { kind: "failed", view: null };
   }
   const noGear = load.needsSetup || (!load.sitesError && !load.site) || (!load.telescopesError && !load.telescope);
@@ -150,37 +153,40 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
   }
   const { site, telescope, view } = load;
   if (!site || !telescope || !view) {
-    // A failed gear read or a failed build: the loader already turned it into a fixed error key, no chart.
+    // A failed gear read or a failed build: the loader already turned it into a fixed error key and logged its cause,
+    // so this line only states that the finder fell to `failed`. No chart.
+    logFailure("finder.tonight");
     return { kind: "failed", view };
   }
 
-  const resolved = resolveTarget(view, options.target, options.from === "plan");
-  if (resolved === null) {
-    return { kind: "not-ranked", view };
-  }
-
-  const locale: Locale = locals.locale;
-  const engineSite = toEngineSite(site);
-  const time = new Date(resolved.bestAt);
-  const finding = findingEyepiece(telescope, load.eyepieces, resolved.majorAxisArcmin);
-
-  let stars: Awaited<ReturnType<typeof loadFinderStars>>;
+  // Everything from here to the chart sits in one guard: a throw while resolving the row, reading the kit, in the engine
+  // or in the labels fails this one request to `failed` (a line, a 200) instead of the island answering with a 500.
   try {
-    stars = await loadFinderStars();
-  } catch (error) {
-    logFailure("finder.stars", error);
-    return { kind: "failed", view };
-  }
+    const resolved = resolveTarget(view, options.target, options.from === "plan");
+    if (resolved === null) {
+      return { kind: "not-ranked", view };
+    }
 
-  let chart: FinderChartData;
-  try {
+    const locale: Locale = locals.locale;
+    const engineSite = toEngineSite(site);
+    const time = new Date(resolved.bestAt);
+    const finding = findingEyepiece(telescope, load.eyepieces, resolved.majorAxisArcmin);
+
+    let stars: Awaited<ReturnType<typeof loadFinderStars>>;
+    try {
+      stars = await loadFinderStars();
+    } catch (error) {
+      logFailure("finder.stars", error);
+      return { kind: "failed", view };
+    }
+
     const target: FinderTarget = {
       vector: resolved.vector(engineSite, time),
       magnitude: resolved.magnitude(time),
       isPlanet: resolved.isPlanet,
       majorAxisArcmin: resolved.majorAxisArcmin,
     };
-    chart = finderChart({
+    const chart = finderChart({
       site: engineSite,
       time,
       bortle: site.bortle,
@@ -189,29 +195,29 @@ export async function loadFinderFor(locals: App.Locals, options: FinderLoadOptio
       stars,
       eyepieceFieldDeg: finding === null ? null : finding.trueFovDeg,
     });
+
+    const route = chart.start === null ? [] : [chart.start.index, ...chart.hops.map((hop) => hop.index)];
+    const labels: FinderChartLabels = {
+      target: resolved.name,
+      stars: Object.fromEntries(route.map((index) => [index, formatDesignation(stars[index].designation, locale)])),
+      eyepiece: finding === null ? null : { name: finding.eyepiece.name, fieldDeg: finding.trueFovDeg },
+      // The ranking's own refracted direction and time, so the chart's context line agrees with the row it opened from.
+      direction: resolved.bestDirection,
+      time: resolved.bestTime,
+    };
+    // The line above the chart (what-to-expect): a planet's own note, or the deep-sky object's phrase for this site and
+    // aperture in the request's language. Pure catalogue and gear data, nothing that carries coordinates.
+    const deepSkyKey =
+      resolved.planetNote === null ? expectationKeyFor(options.target, site.bortle, telescope.apertureMm) : null;
+    const expectation =
+      resolved.planetNote !== null
+        ? { key: options.target, text: resolved.planetNote }
+        : deepSkyKey === null
+          ? null
+          : { key: deepSkyKey, text: expectationText(deepSkyKey, getMessages(locale)) };
+    return { kind: "chart", view, chart, labels, expectation };
   } catch (error) {
     logFailure("finder.chart", error);
     return { kind: "failed", view };
   }
-
-  const route = chart.start === null ? [] : [chart.start.index, ...chart.hops.map((hop) => hop.index)];
-  const labels: FinderChartLabels = {
-    target: resolved.name,
-    stars: Object.fromEntries(route.map((index) => [index, formatDesignation(stars[index].designation, locale)])),
-    eyepiece: finding === null ? null : { name: finding.eyepiece.name, fieldDeg: finding.trueFovDeg },
-    // The ranking's own refracted direction and time, so the chart's context line agrees with the row it opened from.
-    direction: resolved.bestDirection,
-    time: resolved.bestTime,
-  };
-  // The line above the chart (what-to-expect): a planet's own note, or the deep-sky object's phrase for this site and
-  // aperture in the request's language. Pure catalogue and gear data, nothing that can fail or carry coordinates.
-  const deepSkyKey =
-    resolved.planetNote === null ? expectationKeyFor(options.target, site.bortle, telescope.apertureMm) : null;
-  const expectation =
-    resolved.planetNote !== null
-      ? { key: options.target, text: resolved.planetNote }
-      : deepSkyKey === null
-        ? null
-        : { key: deepSkyKey, text: expectationText(deepSkyKey, getMessages(locale)) };
-  return { kind: "chart", view, chart, labels, expectation };
 }
