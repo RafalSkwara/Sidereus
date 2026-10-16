@@ -35,7 +35,8 @@ export interface ReasonEntry {
   object: { vMag: number };
   score: Pick<ObjectScore, "window" | "components">;
   leadComponent: ScoreComponent;
-  secondComponent: ScoreComponent;
+  /** `null` when only one reason is named: the line carries the lead phrase alone. */
+  secondComponent: ScoreComponent | null;
 }
 
 export interface ReasonContext {
@@ -323,13 +324,15 @@ export function createFormatter(locale: Locale) {
 
   /**
    * The FR-015 reason line: the leading component's phrase, then the runner-up's, e.g.
-   * "Up for 5 h 10 min of the dark window · bright for your 150 mm".
+   * "Up for 5 h 10 min of the dark window · bright for your 150 mm". An entry with only one named reason
+   * (`secondComponent` is null) gets the lead phrase alone.
    */
   function reasonLine(entry: ReasonEntry, context: ReasonContext): string {
-    return m.tonight.reason.line({
-      lead: componentPhrase(entry.leadComponent, entry, context, "lead"),
-      second: componentPhrase(entry.secondComponent, entry, context, "follow"),
-    });
+    const lead = componentPhrase(entry.leadComponent, entry, context, "lead");
+    if (entry.secondComponent === null) {
+      return lead;
+    }
+    return m.tonight.reason.line({ lead, second: componentPhrase(entry.secondComponent, entry, context, "follow") });
   }
 
   /**

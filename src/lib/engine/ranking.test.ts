@@ -282,42 +282,96 @@ describe("reasonComponents", () => {
 
   it("leads with the weighted component that most sets each entry apart from the listed mean", () => {
     // Binary-exact values, so the means are exact: duration 0.625, moon 0.75, brightness 0.625, sky 0.75.
+    // Moon and sky are level across the list (spread 0, under REASON_MIN_SPREAD), so only duration and brightness are eligible.
     const reasons = reasonComponents([c(1, 0.75, 0.25, 0.75), c(0.25, 0.75, 1, 0.75), c(0.625, 0.75, 0.625, 0.75)]);
-    // A: duration +0.13125, brightness −0.09375 → duration, then moon (0, before sky).
-    expect(reasons[0]).toEqual({ lead: "duration", second: "moon" });
-    // B: duration −0.13125, brightness +0.09375 → brightness, then moon.
-    expect(reasons[1]).toEqual({ lead: "brightness", second: "moon" });
-    // C: every weighted deviation is 0, so it stands out on nothing → fall back to its largest
-    // weighted values: moon 0.225, duration 0.21875.
-    expect(reasons[2]).toEqual({ lead: "moon", second: "duration" });
+    // A: duration +0.13125 is named; brightness 0.25 is under the 0.625 mean, so it is not named → a lone reason.
+    expect(reasons[0]).toEqual({ lead: "duration", second: null });
+    // B: brightness +0.09375 is named; duration is under the mean → a lone reason.
+    expect(reasons[1]).toEqual({ lead: "brightness", second: null });
+    // C: level with the mean on both (named), no positive deviation → its largest weighted values:
+    // duration 0.21875, brightness 0.15625.
+    expect(reasons[2]).toEqual({ lead: "duration", second: "brightness" });
   });
 
   it("weights the deviation, so a smaller weighted gap loses to a bigger one", () => {
-    // Sky deviates by ±0.5 (weighted 0.05); moon by ±0.2 (weighted 0.06).
+    // Sky deviates by ±0.5 (weighted 0.05); moon by ±0.2 (weighted 0.06). Both differ across the list by at least
+    // REASON_MIN_SPREAD, so both are eligible; the means are duration 0.5, moon 0.7, brightness 0.5, sky 0.5.
     const reasons = reasonComponents([c(0.5, 0.9, 0.5, 1), c(0.5, 0.5, 0.5, 0)]);
     expect(reasons[0]).toEqual({ lead: "moon", second: "sky" });
-    // The second entry is below the mean on moon and sky and level on the rest → the weighted-value
-    // fallback: duration 0.175, moon 0.15.
-    expect(reasons[1]).toEqual({ lead: "duration", second: "moon" });
+    // The second entry is below the mean on moon and sky (not named) and level on duration and brightness (named):
+    // no positive deviation → the weighted values, duration 0.175 then brightness 0.125.
+    expect(reasons[1]).toEqual({ lead: "duration", second: "brightness" });
   });
 
   it("falls back to the largest weighted values for an entry that stands out on nothing", () => {
-    // The four tops stand out on brightness (above the 0.9 mean), so they lead with it; the weaker
-    // entry is level on three components and below on brightness, so it stands out on nothing and
-    // falls back to its largest weighted values (duration 0.35, moon 0.3).
+    // The four tops stand out on brightness (above the 0.9 mean), so they lead with it, then name duration (level with
+    // its mean). The weaker entry is level on duration and below on brightness, so only duration is named: a lone reason.
     const top = c(1, 1, 1, 1);
     const reasons = reasonComponents([top, top, top, top, c(1, 1, 0.5, 1)]);
     for (const reason of reasons.slice(0, 4)) {
       expect(reason).toEqual({ lead: "brightness", second: "duration" });
     }
-    expect(reasons[4]).toEqual({ lead: "duration", second: "moon" });
+    expect(reasons[4]).toEqual({ lead: "duration", second: null });
   });
 
-  it("leads with the largest weighted value for a single entry", () => {
-    // Weighted: duration 0.175, moon 0.27, brightness 0.25, sky 0.1.
-    expect(reasonComponents([c(0.5, 0.9, 1, 1)])).toEqual([{ lead: "moon", second: "brightness" }]);
-    // Weighted: duration 0.35, moon 0.3, brightness 0.25, sky 0.1.
-    expect(reasonComponents([c(1, 1, 1, 1)])).toEqual([{ lead: "duration", second: "moon" }]);
+  it("names duration and brightness for a single entry, by the largest weighted value", () => {
+    // One entry is its own mean: moon and sky cannot differ, so they are never eligible. Weighted: duration 0.175,
+    // brightness 0.25.
+    expect(reasonComponents([c(0.5, 0.9, 1, 1)])).toEqual([{ lead: "brightness", second: "duration" }]);
+    // Weighted: duration 0.35, brightness 0.25.
+    expect(reasonComponents([c(1, 1, 1, 1)])).toEqual([{ lead: "duration", second: "brightness" }]);
+    // The moon's weight (0.3) is the larger, but the moon is not eligible: duration 0.07, brightness 0.025.
+    expect(reasonComponents([c(0.2, 1, 0.1, 1)])).toEqual([{ lead: "duration", second: "brightness" }]);
+  });
+
+  it("never names the moon or the sky when five entries all have moon 1 and sky 1", () => {
+    const listed = [c(1, 1, 0.2, 1), c(0.8, 1, 0.6, 1), c(0.6, 1, 1, 1), c(0.4, 1, 0.4, 1), c(0.2, 1, 0.8, 1)];
+    for (const reason of reasonComponents(listed)) {
+      expect(["moon", "sky"]).not.toContain(reason.lead);
+      expect(["moon", "sky"]).not.toContain(reason.second);
+    }
+  });
+
+  it("makes the moon eligible when one entry is 0.4 among entries at 1, naming it for the entries at the top", () => {
+    // Moon spread 0.6, mean 0.88. Duration, brightness and sky are level, so the moon (+0.036 weighted) is the only
+    // positive deviation for the four entries at 1.
+    const listed = [c(0.5, 1, 0.5, 1), c(0.5, 1, 0.5, 1), c(0.5, 1, 0.5, 1), c(0.5, 1, 0.5, 1), c(0.5, 0.4, 0.5, 1)];
+    const reasons = reasonComponents(listed);
+    for (const reason of reasons.slice(0, 4)) {
+      expect(reason.lead).toBe("moon");
+    }
+    // The 0.4 entry is under the mean, so the moon is not true of it: it is never named for it.
+    expect(reasons[4].lead).not.toBe("moon");
+    expect(reasons[4].second).not.toBe("moon");
+  });
+
+  it("never gives the brightness phrase to an entry below the listed mean on brightness", () => {
+    // Brightness means 0.6; the 0.1 and 0.2 entries are under it, however large the other deviations are.
+    const listed = [c(0.1, 1, 1, 1), c(0.2, 1, 0.9, 1), c(1, 1, 0.1, 1), c(1, 1, 0.2, 1), c(0.9, 1, 0.8, 1)];
+    const reasons = reasonComponents(listed);
+    reasons.forEach((reason, i) => {
+      if (listed[i].brightness < 0.6) {
+        expect(reason.lead).not.toBe("brightness");
+        expect(reason.second).not.toBe("brightness");
+      }
+    });
+    // And it is named where it is true: the brightest entry leads with it.
+    expect(reasons[0].lead).toBe("brightness");
+  });
+
+  it("does not fall back to a below-mean brightness as the runner-up when the moon and the sky are lower still", () => {
+    // Means: duration 0.667, moon 0.733, brightness 0.517, sky 0.733. The first entry is under the mean on moon,
+    // brightness and sky, and above it on duration alone, so duration is the only component named for it. Brightness
+    // (weighted deviation −0.0167) is still the least negative of the other three, so a runner-up chosen by deviation alone would pick it.
+    const reasons = reasonComponents([c(1, 0.2, 0.45, 0.2), c(0.5, 1, 0.55, 1), c(0.5, 1, 0.55, 1)]);
+    expect(reasons[0]).toEqual({ lead: "duration", second: null });
+  });
+
+  it("gives an entry below the mean on both duration and brightness a lead from the eligible ones and no second", () => {
+    // Duration mean 0.6, brightness mean 0.6; the last entry is under both, so nothing is named for it: its lead
+    // is the largest weighted value among the eligible components (duration 0.07 against brightness 0.05).
+    const reasons = reasonComponents([c(1, 1, 1, 1), c(0.8, 1, 0.8, 1), c(0.2, 1, 0.2, 1)]);
+    expect(reasons[2]).toEqual({ lead: "duration", second: null });
   });
 });
 

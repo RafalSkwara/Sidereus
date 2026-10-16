@@ -365,10 +365,10 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [x] 2.1 The synthetic relation fails on the old formula by construction and passes on the new one; the new relations and the source-cited guard pass
-- [x] 2.2 Oracle, AF check and invariants green and unedited
-- [x] 2.3 Determinism and purity pass
-- [x] 2.4 Whole unit suite, type check and lint pass
+- [x] 2.1 The synthetic relation fails on the old formula by construction and passes on the new one; the new relations and the source-cited guard pass — 87325da
+- [x] 2.2 Oracle, AF check and invariants green and unedited — 87325da
+- [x] 2.3 Determinism and purity pass — 87325da
+- [x] 2.4 Whole unit suite, type check and lint pass — 87325da
 
 #### Manual
 
@@ -378,8 +378,8 @@ No data or schema change; no stored data depends on window edges (the Session pl
 
 #### Automated
 
-- [ ] 3.1 Reason tests pass, including the new ones, with G5 unedited
-- [ ] 3.2 Whole unit suite, i18n parity, type check and lint pass
+- [x] 3.1 Reason tests pass, including the new ones, with G5 unedited
+- [x] 3.2 Whole unit suite, i18n parity, type check and lint pass
 
 #### Manual
 

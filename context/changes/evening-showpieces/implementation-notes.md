@@ -157,3 +157,81 @@ The AF check (`ranking.test.ts`, 2026-10-10) and every other test passed unedite
 - Evening showpieces on Warsaw 2026-10-15 (118 cleared): M13 #31, M15 #19, M57 #46, M27 #30, M2 #35, all in the top half; M13 #2 on 2026-04-15 and #2 on 2026-07-15.
   The ranks and ids equal the probe's, so nothing in the engine differs from what was planned.
 - `evidence/calibration-after-s05.md` written from `CALIBRATION_SNAPSHOT=1` output (four top-10 tables, the overlap and matched ids, and the OD-1 known divergence).
+
+## Phase 3: reasons that distinguish something
+
+### The rule
+
+`reasonComponents` (`src/lib/engine/ranking.ts`) now follows plan D-5: `duration` and `brightness` are always eligible, `moon` and `sky` only
+when the listed entries' values differ (largest minus smallest) by at least `REASON_MIN_SPREAD` = 0.05 (new named candidate in
+`parameters.ts`, FR-015). An eligible component is named for an entry only when its value is at least the list mean (a `1e-9` slack,
+`AT_MEAN_TOLERANCE`, so that the mean of equal values, which need not round back to the value, does not un-name an entry sitting on it).
+The lead is the named component with the largest positive weighted deviation, else the largest weighted value among the named, else
+(nothing named) the largest weighted value among the eligible; the second is chosen by the same key over the remaining named
+components and is `null` when fewer than two are named. `topTwo` is gone (replaced by `bestOf` over a candidate set);
+`ReasonComponents.second` and `RankedEntry.secondComponent` are `ScoreComponent | null`; `reasonLine` (`format.ts`) prints the lead
+phrase alone for a null second (no new key, no new wording). `en.ts`'s `reason` comment documents it. `design.astro:856` now reads
+"Up for 7 h 50 min of the dark window · bright for your 150 mm."
+
+### Red run on the unchanged logic (new and rewritten tests written first; `REASON_MIN_SPREAD` already added to `parameters.ts` so the imports resolve)
+
+`npx vitest run src/lib/engine/ranking.test.ts src/lib/engine/small-scope.test.ts src/lib/tonight/build.test.ts`: 8 failed, 215 passed.
+
+- Red (7 in `ranking.test.ts`): the three rewritten cases and the rewritten single-entry case (all expect a null second or a brightness
+  runner-up), "never names the moon or the sky when five entries all have moon 1 and sky 1" (`['moon','sky'] not to include 'moon'`),
+  "does not fall back to a below-mean brightness as the runner-up when the moon and the sky are lower still" (old code gave the
+  runner-up `brightness`), "gives an entry below the mean on both duration and brightness a lead ... and no second" (old: `moon, sky`).
+- Red (1 in `build.test.ts`): "says nothing about moonlight on the moonless night of 2026-10-10", on the final assertion: the old
+  line read "Holds up under your Bortle 6 sky · holds up better in moonlight than the rest" for an entry. Its precondition (moon spread
+  under `REASON_MIN_SPREAD`) held on the old code too, as it is a property of the inputs.
+- Green on the old code by construction, so no red proof exists for them (both are positive-direction checks that the old code also
+  satisfies): "makes the moon eligible when one entry is 0.4 among entries at 1, naming it for the entries at the top" and "never gives
+  the brightness phrase to an entry below the listed mean on brightness" (the old runner-up fell on a level moon first). The red proof of
+  the brightness rule is the separate "does not fall back to a below-mean brightness ..." case above; the full-Moon eligibility test in
+  `build.test.ts` (2026-10-26) is likewise green on both.
+- `small-scope.test.ts` G5: green before and after, unedited.
+
+After the change: all three files pass (223 passed, 3 skipped).
+
+### Pins edited (the requirement changed: a reason is named only when eligible and true of the entry)
+
+The four `reasonComponents` cases, each derived by hand from the new rule (weights duration 0.35, moon 0.3, brightness 0.25, sky 0.1):
+
+| Case (purpose kept)                                                                                        | Old                                                                              | New                                                                                                                                            | Derivation                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "leads with the weighted component that most sets each entry apart from the listed mean" (3 entries)       | A `{duration, moon}`, B `{brightness, moon}`, C `{moon, duration}`               | A `{duration, null}`, B `{brightness, null}`, C `{duration, brightness}`                                                                       | Moon and sky are level (spread 0), so only duration (mean 0.625) and brightness (mean 0.625) are eligible. A: duration 1 named, brightness 0.25 under the mean. B: the reverse. C: both at the mean, named, no positive deviation, weighted values duration 0.21875 over brightness 0.15625.                                                                                                                          |
+| "weights the deviation, so a smaller weighted gap loses to a bigger one" (2 entries)                       | first `{moon, sky}`, second `{duration, moon}`                                   | first `{moon, sky}` (unchanged), second `{duration, brightness}`                                                                               | Moon spread 0.4 and sky spread 1 are eligible; means duration 0.5, moon 0.7, brightness 0.5, sky 0.5. First: all four named, deviations moon 0.06, sky 0.05, so moon then sky. Second: moon 0.5 < 0.7 and sky 0 < 0.5 are not named; duration and brightness are level (named), weighted 0.175 over 0.125. The plan said this case stays; its second entry moves because its old runner-up (moon) was below the mean. |
+| "falls back to the largest weighted values for an entry that stands out on nothing" (4 tops plus a weaker) | tops `{brightness, duration}`, weaker `{duration, moon}`                         | tops `{brightness, duration}` (unchanged), weaker `{duration, null}`                                                                           | Moon and sky level, so ineligible. Means duration 1, brightness 0.9. Tops: brightness +0.025 leads, duration (level) follows. Weaker: duration 1 named, brightness 0.5 under the mean, so a lone reason.                                                                                                                                                                                                              |
+| "leads with the largest weighted value for a single entry" (renamed "names duration and brightness ...")   | `c(0.5, 0.9, 1, 1)` → `{moon, brightness}`; `c(1, 1, 1, 1)` → `{duration, moon}` | `c(0.5, 0.9, 1, 1)` → `{brightness, duration}`; `c(1, 1, 1, 1)` → `{duration, brightness}`; new `c(0.2, 1, 0.1, 1)` → `{duration, brightness}` | One entry has spread 0 on every component: moon and sky are never eligible, duration and brightness are named (value = mean). Weighted: duration 0.175 vs brightness 0.25; duration 0.35 vs 0.25; duration 0.07 vs 0.025 (moon's 0.3 would win if it were eligible).                                                                                                                                                  |
+
+Other edit forced by the nullable second: `build.test.ts` "ranks a clear night, formats times ... pairs the kit's eyepieces" asserted
+`expect(entry.reason).toContain(" · ")` for every listed entry on 2026-10-10. The requirement changed (a one-reason entry now has a
+one-phrase line: M39 reads "Holds up under your Bortle 6 sky"), so it now asserts the reason is non-empty and has at most two phrases
+(`split(" · ").length <= 2`). Purpose kept (a reason line is present and well-formed); nothing else in the suite moved. No e2e spec
+asserts reason text (grepped `tests/e2e`).
+
+### New tests
+
+- `ranking.test.ts`: five entries all at moon 1 and sky 1 never name the moon or the sky; one entry at moon 0.4 among four at 1 makes
+  the moon eligible and the four at 1 lead with it (the 0.4 entry itself never gets it: it is under the mean, see UNCERTAINTIES);
+  an entry below the list mean on brightness is never given brightness, including as a runner-up when the moon and sky are lower still;
+  an entry below the mean on both duration and brightness gets the lead from the eligible ones and no second; one-entry lists name
+  duration and brightness.
+- `build.test.ts` ("buildTonight's reason lines (evening-showpieces)"): the listed entries' moon components come from `rankObjects` over
+  the same inputs as the view (the view exposes only the reason text), and the test first checks the engine's listed ids equal the view's.
+  2026-10-10 (Warsaw, Bortle 6, 150 mm, full catalogue, top 5): moon components 1, 1, 1, 1, 1, spread 0 < 0.05, so the precondition holds
+  (the Moon is new), and no listed `reason` contains `en.tonight.reason.moon.lead` or `.follow`. 2026-10-26 (full Moon): moon components
+  0.710, 0.811, 0.642, 0.787, 0.599, spread 0.212 >= 0.05, the moon is eligible (asserted only that, not which reason appears; the lines
+  there happen to read "Holds up better in moonlight than the rest" for M44 and M39).
+- `format.test.ts`: `reasonLine` joins two phrases with the separator and prints the lead alone for a null second, in English and Polish.
+
+### Reason lines after the change (probe, Warsaw 2026-10-10, Bortle 6, 150 mm, full catalogue; not kept)
+
+M31 and NGC869 "Up for 9 h 55 min of the dark window · bright for your 150 mm"; M45 "Bright for your 150 mm · holds up under your Bortle 6 sky";
+M34 "Up for 9 h 55 min of the dark window · holds up under your Bortle 6 sky"; M39 "Holds up under your Bortle 6 sky". No moonlight phrase.
+
+### Gates run in this phase
+
+`npm test` (133 files, 2591 passed), `npx astro check` (0 errors) and `npm run lint` pass. `small-scope.test.ts` (G5 included),
+`calibration.test.ts` and `fixtures/beginner-reference.ts` are untouched (`git diff` empty) and green; the AF check, the ranking
+invariants and the oracle are green, unedited.

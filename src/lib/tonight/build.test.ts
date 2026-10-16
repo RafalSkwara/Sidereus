@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
+import { DEEP_SKY, findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import {
@@ -15,6 +15,8 @@ import {
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
+  rankObjects,
+  REASON_MIN_SPREAD,
   sunEvents,
   type Interval,
   type MoonDiscState,
@@ -187,7 +189,9 @@ describe("buildTonight", () => {
       expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
       expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
       expect(entry.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-      expect(entry.reason).toContain(" · ");
+      // One or two phrases: an entry with a single named reason carries the lead phrase alone (evening-showpieces).
+      expect(entry.reason.length).toBeGreaterThan(0);
+      expect(entry.reason.split(" · ").length).toBeLessThanOrEqual(2);
       expect(entry.pair).not.toBeNull();
     }
     const m31 = ranking.entries.find((entry) => entry.id === "M31");
@@ -1385,6 +1389,70 @@ describe("buildTonight's washed-out objects (moonlight-and-the-verdict)", () => 
     expect(ranking.washedOutCount).toBe(0);
     expect(ranking.washedOutText).toBeNull();
     expect(ranking.washedOutEntries).toEqual([]);
+  });
+});
+
+describe("buildTonight's reason lines (evening-showpieces)", () => {
+  /** An all-clear Warsaw night, as in the Moon tests above. */
+  function clearNight(date: string) {
+    const now = new Date(`${date}T16:00:00Z`);
+    return {
+      site: WARSAW,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      forecast: result(uniformForecast(`${date}T00:00:00Z`, 5), false, now),
+      now,
+    };
+  }
+
+  /**
+   * The listed entries' moon components and ids for a night, from the engine's own ranking over the same inputs
+   * `buildTonight` uses (the view exposes the reason text, not the components).
+   */
+  function listedMoonComponents(date: string): { ids: string[]; moon: number[] } {
+    const site = toEngineSite(WARSAW);
+    const dark = darkWindow(site, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(WARSAW.bortle));
+    if (dark.kind !== "window") {
+      throw new Error(`expected a dark window on ${date}`);
+    }
+    const ranked = rankObjects({
+      site,
+      bortle: WARSAW.bortle,
+      minAltitudeDeg: WARSAW.minAltitudeDeg,
+      darkWindow: dark,
+      telescope: TELESCOPE,
+      eyepieces: EYEPIECES,
+      catalogue: DEEP_SKY,
+    });
+    return {
+      ids: ranked.entries.map((entry) => entry.object.id),
+      moon: ranked.entries.map((entry) => entry.score.components.moon),
+    };
+  }
+
+  const spreadOf = (values: readonly number[]): number => Math.max(...values) - Math.min(...values);
+
+  it("says nothing about moonlight on the moonless night of 2026-10-10", () => {
+    const view = buildTonight(clearNight("2026-10-10"), "en");
+    const entries = rankingOf(view).entries;
+    expect(entries.length).toBe(MAX_RANKED_OBJECTS);
+    const { ids, moon } = listedMoonComponents("2026-10-10");
+    // The precondition first, so a wrong date fails here and not as a vacuous pass below: the listed entries
+    // are the view's own, and the Moon does not set them apart.
+    expect(ids).toEqual(entries.map((entry) => entry.id));
+    expect(spreadOf(moon), `moon components ${moon.join(", ")}`).toBeLessThan(REASON_MIN_SPREAD);
+    for (const entry of entries) {
+      expect(entry.reason).not.toContain(en.tonight.reason.moon.lead);
+      expect(entry.reason).not.toContain(en.tonight.reason.moon.follow);
+    }
+  });
+
+  it("keeps the moon component eligible under the full Moon of 2026-10-26", () => {
+    const view = buildTonight(clearNight("2026-10-26"), "en");
+    const { ids, moon } = listedMoonComponents("2026-10-26");
+    expect(ids).toEqual(rankingOf(view).entries.map((entry) => entry.id));
+    // Only eligibility is asserted, not which reason a line carries.
+    expect(spreadOf(moon), `moon components ${moon.join(", ")}`).toBeGreaterThanOrEqual(REASON_MIN_SPREAD);
   });
 });
 

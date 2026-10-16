@@ -67,6 +67,15 @@ export const MIN_OBJECT_SCORE = 0.45;
 /** FR-013: the ranking lists at most this many objects. */
 export const MAX_RANKED_OBJECTS = 5;
 
+/**
+ * Candidate (FR-015, evening-showpieces D-5): the smallest spread (largest minus smallest value, 0-1) of the Moon or sky
+ * score component across the listed entries for that component to be a possible reason. Below it the listed entries do
+ * not differ on it, so a reason line never names it (on a moonless night nothing is "better in moonlight than the
+ * rest"). Duration and brightness are always eligible. Not calibrated against an observer: 0.05 is five points of a
+ * component that runs 0 to 1.
+ */
+export const REASON_MIN_SPREAD = 0.05;
+
 /** Candidate (PRD Open Question 4): largest useful exit pupil, mm, for the finding eyepiece. */
 export const EXIT_PUPIL_CEILING_MM = 5.5;
 
