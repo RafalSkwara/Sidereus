@@ -689,11 +689,11 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 2.1 Fault tests pass (classification table, `faultFrom` drops the message) — 78aa8a2
-- [x] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status` — 78aa8a2
-- [x] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL — 78aa8a2
-- [x] 2.4 Full unit suite, lint and types pass — 78aa8a2
-- [x] 2.5 DB suites unaffected — 78aa8a2
+- [x] 2.1 Fault tests pass (classification table, `faultFrom` drops the message) — 94edc49
+- [x] 2.2 Each store's failing-write and failing-read tests fail first, then pass, and carry only `code` and `status` — 94edc49
+- [x] 2.3 `open-meteo` tests assert `step` and `status` for a 503, a network failure, bad JSON and a schema mismatch, and that no property holds the URL — 94edc49
+- [x] 2.4 Full unit suite, lint and types pass — 94edc49
+- [x] 2.5 DB suites unaffected — 94edc49
 
 #### Manual
 
@@ -703,58 +703,58 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields — af2bf9e
-- [x] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument — af2bf9e
-- [x] 3.3 `build.ts` catches: each of the five paths logs its step — af2bf9e
-- [x] 3.4 Silent-catch allowlist entries for these files removed, guard green — af2bf9e
-- [x] 3.5 Full unit suite, lint and types pass — af2bf9e
-- [x] 3.6 Dashboard e2e still green — af2bf9e
+- [x] 3.1 Forecast service tests fail first for each failure shape, then pass, each asserting one `sidereus: forecast.* failed` line with only allowed fields — 7f5958a
+- [x] 3.2 `loadTonight` tests: each list read, the build and a bad time zone yield their notice state and one line, with no coordinates in any logged argument — 7f5958a
+- [x] 3.3 `build.ts` catches: each of the five paths logs its step — 7f5958a
+- [x] 3.4 Silent-catch allowlist entries for these files removed, guard green — 7f5958a
+- [x] 3.5 Full unit suite, lint and types pass — 7f5958a
+- [x] 3.6 Dashboard e2e still green — 7f5958a
 
 #### Manual
 
-- [x] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback (verified 2026-10-16 on a local preview, port 4333: three island requests, three lines `{ step: 'forecast.fetch', name: 'Error', code: 'request' }`, headline "No forecast", no error notice) — af2bf9e
+- [x] 3.7 With a dead `FORECAST_BASE_URL`, loading `/tonight` prints `sidereus: forecast.fetch failed` once per request and the page still shows the fallback (verified 2026-10-16 on a local preview, port 4333: three island requests, three lines `{ step: 'forecast.fetch', name: 'Error', code: 'request' }`, headline "No forecast", no error notice) — 7f5958a
 
 ### Phase 4: Save routes, plan routes and page reads
 
 #### Automated
 
-- [x] 4.1 `saveFailureKey` tests fail first, then pass (server fault: new key and error line; refused, session and no-rows: entity key and warn line; user mistake: no line) — bc15b93
-- [x] 4.2 Route tests per family (a delete route included): server fault redirects with `errors.serverFault` and logs one error line, RLS refusal keeps the entity key and logs a notice, validation unchanged, non-form body logs `request.form` — bc15b93
-- [x] 4.3 i18n parity and key tests pass — bc15b93
-- [x] 4.4 Silent-catch allowlist entries for the touched files removed, guard green — bc15b93
-- [x] 4.5 Full unit suite, lint and types pass — bc15b93
-- [x] 4.6 Existing e2e for the touched saves stay green — bc15b93
-- [x] 4.7 Smoke walk passes against the local stack — bc15b93
+- [x] 4.1 `saveFailureKey` tests fail first, then pass (server fault: new key and error line; refused, session and no-rows: entity key and warn line; user mistake: no line) — 842f619
+- [x] 4.2 Route tests per family (a delete route included): server fault redirects with `errors.serverFault` and logs one error line, RLS refusal keeps the entity key and logs a notice, validation unchanged, non-form body logs `request.form` — 842f619
+- [x] 4.3 i18n parity and key tests pass — 842f619
+- [x] 4.4 Silent-catch allowlist entries for the touched files removed, guard green — 842f619
+- [x] 4.5 Full unit suite, lint and types pass — 842f619
+- [x] 4.6 Existing e2e for the touched saves stay green — 842f619
+- [x] 4.7 Smoke walk passes against the local stack — 842f619
 
 #### Manual
 
-- [x] 4.8 With local Supabase stopped, saving and deleting a log entry show the neutral "Something went wrong on our side" message and the save leaves one `sidereus: save.log failed` line with no entry value (verified 2026-10-16 on a local preview with a fault-injecting proxy in front of local Supabase answering 503 to writes on `observations`, instead of stopping the shared stack: save and delete both redirected with `errors.serverFault` and showed the neutral message; each left one line `sidereus: save.log failed { step, code: 'PGRST000' }`, with no coordinate, note or entry value) — bc15b93
+- [x] 4.8 With local Supabase stopped, saving and deleting a log entry show the neutral "Something went wrong on our side" message and the save leaves one `sidereus: save.log failed` line with no entry value (verified 2026-10-16 on a local preview with a fault-injecting proxy in front of local Supabase answering 503 to writes on `observations`, instead of stopping the shared stack: save and delete both redirected with `errors.serverFault` and showed the neutral message; each left one line `sidereus: save.log failed { step, code: 'PGRST000' }`, with no coordinate, note or entry value) — 842f619
 
 ### Phase 5: Sign-in, session and the finder
 
 #### Automated
 
-- [x] 5.1 `sessionUser` table tests fail first, then pass (stale refresh token, expired session and invalid JWT silent; retryable fetch error, 503, timeout and unknown error logged; missing session silent; thrown error logged once) — b14c51d
-- [x] 5.2 The thin `onRequest` tests pass under the `astro:middleware` and `astro:env/server` mocks — b14c51d
-- [x] 5.3 Auth route tests: rate limit, 500 and network failure each log one line with the same key as today, `invalid_credentials` silent, no email in any argument — b14c51d
-- [x] 5.4 Finder loader tests: each way to `failed` logs a line, and throws outside the old `try` reach `failed` — b14c51d
-- [x] 5.5 Silent-catch allowlist entries for the touched files removed, guard green — b14c51d
-- [x] 5.6 Full unit suite, lint and types pass — b14c51d
-- [x] 5.7 E2E for sign-in and the finder stay green — b14c51d
-- [x] 5.8 Smoke walk including the finder gates passes against the local stack — b14c51d
+- [x] 5.1 `sessionUser` table tests fail first, then pass (stale refresh token, expired session and invalid JWT silent; retryable fetch error, 503, timeout and unknown error logged; missing session silent; thrown error logged once) — 35a30e4
+- [x] 5.2 The thin `onRequest` tests pass under the `astro:middleware` and `astro:env/server` mocks — 35a30e4
+- [x] 5.3 Auth route tests: rate limit, 500 and network failure each log one line with the same key as today, `invalid_credentials` silent, no email in any argument — 35a30e4
+- [x] 5.4 Finder loader tests: each way to `failed` logs a line, and throws outside the old `try` reach `failed` — 35a30e4
+- [x] 5.5 Silent-catch allowlist entries for the touched files removed, guard green — 35a30e4
+- [x] 5.6 Full unit suite, lint and types pass — 35a30e4
+- [x] 5.7 E2E for sign-in and the finder stay green — 35a30e4
+- [x] 5.8 Smoke walk including the finder gates passes against the local stack — 35a30e4
 
 #### Manual
 
-- [x] 5.9 With local Auth stopped and a signed-in session, a gated page redirects as before and the output holds `sidereus: auth.claims failed` with no email; with an old refresh token cookie it redirects and logs nothing (verified 2026-10-16 on a local preview, Auth faulted by a proxy answering 503: with an access token due for refresh, `GET /tonight` redirected to `/auth/signin?next=%2Ftonight` as before, after about 25 s of auth-js retries, and left `sidereus: auth.claims failed { step, name: 'AuthRetryableFetchError', status: 503 }`, no email; an unknown well-formed refresh token and a tampered one both redirected and logged nothing) — b14c51d
+- [x] 5.9 With local Auth stopped and a signed-in session, a gated page redirects as before and the output holds `sidereus: auth.claims failed` with no email; with an old refresh token cookie it redirects and logs nothing (verified 2026-10-16 on a local preview, Auth faulted by a proxy answering 503: with an access token due for refresh, `GET /tonight` redirected to `/auth/signin?next=%2Ftonight` as before, after about 25 s of auth-js retries, and left `sidereus: auth.claims failed { step, name: 'AuthRetryableFetchError', status: 503 }`, no email; an unknown well-formed refresh token and a tampered one both redirected and logged nothing) — 35a30e4
 
 ### Phase 6: The operator path, proof and the rule
 
 #### Automated
 
-- [x] 6.1 Silent-catch guard passes with only reasoned entries — 65bf325
-- [x] 6.2 Full unit suite, lint, types, build and DB suites pass — 65bf325
+- [x] 6.1 Silent-catch guard passes with only reasoned entries — 6460f7c
+- [x] 6.2 Full unit suite, lint, types, build and DB suites pass — 6460f7c
 - [ ] 6.3 Full e2e passes in CI with `failOnFlakyTests` (local run in CI mode, `CI=1`, 2026-10-16: 85 passed, 3 skipped, no flaky pass; still to be seen in CI on the PR)
-- [x] 6.4 Agent-hooks proof still passes — 65bf325
+- [x] 6.4 Agent-hooks proof still passes — 6460f7c
 
 #### Manual
 
@@ -762,7 +762,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 - [ ] 6.6 One Workers Logs line per flow and the invocation event around it (URL path, headers, script version; the `cf` geo fields were checked at 1.9) hold no coordinate, email, key or form value, and the runbook records what the invocation event holds (owner, after the deploy; not run by the agent)
 - [ ] 6.7 If a line does not become an Issue, the fallback query is used and the gap is recorded as a follow-up (owner, after the deploy; not run by the agent)
 - [x] 6.8 Follow-up issues exist for release identity (D6), the island/404/500/plan-unknown UI (D7) and, only if the block was cut, client reporting (D5) (#189 release identity D6, #190 failure UI D7, both on the board; no client-reporting issue, Phases 7-9 are not cut)
-- [x] 6.9 After the probe, `wrangler.jsonc` pins `preview_urls: false` and the config pin test expects it, so no later version is public (owner, 2026-10-15) — 65bf325
+- [x] 6.9 After the probe, `wrangler.jsonc` pins `preview_urls: false` and the config pin test expects it, so no later version is public (owner, 2026-10-15) — 6460f7c
 
 ### Phase 7: The client-error endpoint and the reporter core
 

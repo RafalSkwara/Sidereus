@@ -106,7 +106,7 @@ Workers Logs adds one **invocation event** per request (`$cloudflare.$metadata.t
 | Script version                             | Yes (D6, to confirm)                                                                                                                                                                       | Yes                                                                                                                                                                                                         |
 | **`request.cf`**                           | **Yes, in full, found 2026-10-16 (1.9 FAILED):** latitude, longitude, city, postal code, region, region code, metro code, time zone. A visitor's request carries their IP-derived location | **No.** It breaks "no coordinates in any report". It predates this change (`observability.enabled` was already on). The Logs field search does not find these names (not indexed) but the values are stored |
 
-**Fix: applied by PR #187** (`observability.logs: { enabled: true, invocation_logs: false }`, branch `fix/invocation-logs-off`; the owner merges). It is **not in this branch**. Confirm after it deploys:
+**Fix: applied by PR #187** (`observability.logs: { enabled: true, invocation_logs: false }`, merged 2026-10-16, so it is in this branch's base and goes live with the next deploy of `main`). Confirm after it deploys:
 
 1. A fresh request leaves no `cf-worker-event` row.
 2. An Issue is still created for a logged error. Whether the "failed invocation" Issue kind needs the invocation event is undocumented.
