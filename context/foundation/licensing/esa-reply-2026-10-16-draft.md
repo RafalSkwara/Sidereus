@@ -10,7 +10,7 @@ We understand the position on the HYG Database and on Tycho-2, and we withdraw b
 
 The details of the intended use are:
 
-- **Source and fields:** the file `hip_main.dat` from VizieR I/239. For each star we would use only the HIP identifier, the right ascension and declination in degrees (ICRS, epoch J1991.25), the V magnitude, and the proper motions in right ascension and declination, which serve only to bring the positions to epoch J2000.
+- **Source and fields:** the file `hip_main.dat` from VizieR I/239. For each star we would use only the HIP identifier, the right ascension and declination in degrees (ICRS, epoch J1991.25), the V magnitude, and the proper motions in right ascension and declination, which serve only to bring the positions to epoch J2000. For the ten stars brighter than magnitude 7.5 that have no astrometric solution (for example HIP 55203 and HIP 78727), we would take the position from the sexagesimal fields RAhms and DEdms instead.
 - **Derived products:**
   1. a file of the stars of magnitude 4.5 or brighter (about 925 stars: position, magnitude and HIP identifier), delivered to users' browsers as part of the web application to draw the night sky;
   2. a file of the stars of magnitude 7.5 or brighter (about 25,700 stars: position, magnitude and HIP identifier), kept on our server and used only to draw finder charts, which users receive as rendered images (SVG) of a few hundred stars each. Users never receive this second file.
