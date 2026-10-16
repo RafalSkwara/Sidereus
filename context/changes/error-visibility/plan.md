@@ -718,17 +718,17 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 4.1 `saveFailureKey` tests fail first, then pass (server fault: new key and error line; refused, session and no-rows: entity key and warn line; user mistake: no line)
-- [x] 4.2 Route tests per family (a delete route included): server fault redirects with `errors.serverFault` and logs one error line, RLS refusal keeps the entity key and logs a notice, validation unchanged, non-form body logs `request.form`
-- [x] 4.3 i18n parity and key tests pass
-- [x] 4.4 Silent-catch allowlist entries for the touched files removed, guard green
-- [x] 4.5 Full unit suite, lint and types pass
-- [x] 4.6 Existing e2e for the touched saves stay green
-- [x] 4.7 Smoke walk passes against the local stack
+- [x] 4.1 `saveFailureKey` tests fail first, then pass (server fault: new key and error line; refused, session and no-rows: entity key and warn line; user mistake: no line) — bc15b93
+- [x] 4.2 Route tests per family (a delete route included): server fault redirects with `errors.serverFault` and logs one error line, RLS refusal keeps the entity key and logs a notice, validation unchanged, non-form body logs `request.form` — bc15b93
+- [x] 4.3 i18n parity and key tests pass — bc15b93
+- [x] 4.4 Silent-catch allowlist entries for the touched files removed, guard green — bc15b93
+- [x] 4.5 Full unit suite, lint and types pass — bc15b93
+- [x] 4.6 Existing e2e for the touched saves stay green — bc15b93
+- [x] 4.7 Smoke walk passes against the local stack — bc15b93
 
 #### Manual
 
-- [x] 4.8 With local Supabase stopped, saving and deleting a log entry show the neutral "Something went wrong on our side" message and the save leaves one `sidereus: save.log failed` line with no entry value (verified 2026-10-16 on a local preview with a fault-injecting proxy in front of local Supabase answering 503 to writes on `observations`, instead of stopping the shared stack: save and delete both redirected with `errors.serverFault` and showed the neutral message; each left one line `sidereus: save.log failed { step, code: 'PGRST000' }`, with no coordinate, note or entry value)
+- [x] 4.8 With local Supabase stopped, saving and deleting a log entry show the neutral "Something went wrong on our side" message and the save leaves one `sidereus: save.log failed` line with no entry value (verified 2026-10-16 on a local preview with a fault-injecting proxy in front of local Supabase answering 503 to writes on `observations`, instead of stopping the shared stack: save and delete both redirected with `errors.serverFault` and showed the neutral message; each left one line `sidereus: save.log failed { step, code: 'PGRST000' }`, with no coordinate, note or entry value) — bc15b93
 
 ### Phase 5: Sign-in, session and the finder
 
