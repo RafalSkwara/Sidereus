@@ -84,3 +84,13 @@ The owner found a real `sidereus: forecast.fetch failed` error in Workers Logs a
 - **Field filter: failed.** Filtering on `step` as a field does not work: a two-argument `console.error(message, fields)` is not indexed as fields (impl review F4's worry). The message embeds the step (`sidereus: <step> failed` or `noted`), so a text search on the message finds each step.
 - **Decision (owner): keep D2 and the line shape unchanged.** Record the limitation: the runbook (Phase 6) and any saved query or alert describe searching **by message text**, never by the `step` field; the fields in the second argument stay for reading a line, not for filtering. Phase 6's runbook and the Phase 7 count query (D13) must use the message text.
 - 1.9 (invocation event `request.cf` geo fields) is still pending the owner.
+
+## 1.9 result (owner, 2026-10-16, production): FAILED, fallback applied
+
+A `sidereus` invocation event in Workers Logs carries the full `request.cf`: latitude, longitude, city, postalCode, region, regionCode, metroCode, timezone (the sample was Cloudflare's own request, but visitors' requests carry their IP-derived location). The Logs field search finds none of these names (not indexed), but the values are stored. This predates S-07.
+
+Fallback applied now, separately: PR #187 (`fix/invocation-logs-off`, from main d88045e) sets `observability.logs: { enabled: true, invocation_logs: false }` (key confirmed in wrangler 4.145's schema and upload code; the build carries it into `dist/server/wrangler.json`, dry-run accepts it), pins it in `src/lib/wrangler-config.test.ts` and adds a CLAUDE.md tripwire. Existing logs expire with the retention window (7 days on Paid) and cannot be deleted by us.
+
+Traces: Cloudflare's spans-and-attributes docs list `geo.locality.name` (city), `geo.locality.region`, `geo.country.code`, `geo.continent.code`, `geo.timezone`, `cloudflare.asn`, `user_agent.original`, `url.full`/`url.path` and KV key names on every span; no latitude, longitude, postal code or client IP. Turning traces off is proposed in the PR, not applied (owner decision).
+
+After #187 deploys, verify: (1) a fresh request leaves no `cf-worker-event` row; (2) an Issue is still created for a logged error (whether the "failed invocation" Issue kind needs the invocation event is undocumented); (3) whether the console lines of one request still share an invocation or request identifier (D4's correlation); the Phase 6 runbook's "What the invocation event holds" section records the result.
