@@ -419,12 +419,12 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Automated
 
-- [ ] 3.1 Build function tests pass: `npx vitest run scripts/lib/build-stars.test.mjs`
-- [ ] 3.2 A scratch run succeeds and prints 921 bright stars and 25,723 finder stars: `STARS_OUT_DIR=<scratch dir outside the repo> npm run stars:build`
-- [ ] 3.3 A second scratch run is byte-identical: the SHA-256 of all four scratch files is unchanged after re-running
-- [ ] 3.4 The scratch finder file's gzip is under the 160,000-byte test budget, and its size is recorded in the phase's note
-- [ ] 3.5 Lint passes with no warnings: `npx eslint --max-warnings 0 scripts/build-stars.mjs scripts/lib/`
-- [ ] 3.6 The whole unit suite still passes (the committed files are untouched): `npm test`
+- [x] 3.1 Build function tests pass: `npx vitest run scripts/lib/build-stars.test.mjs`
+- [x] 3.2 A scratch run succeeds and prints 921 bright stars and 25,723 finder stars: `STARS_OUT_DIR=<scratch dir outside the repo> npm run stars:build`
+- [x] 3.3 A second scratch run is byte-identical: the SHA-256 of all four scratch files is unchanged after re-running
+- [x] 3.4 The scratch finder file's gzip is under the 160,000-byte test budget, and its size is recorded in the phase's note
+- [x] 3.5 Lint passes with no warnings: `npx eslint --max-warnings 0 scripts/build-stars.mjs scripts/lib/`
+- [x] 3.6 The whole unit suite still passes (the committed files are untouched): `npm test`
 
 #### Manual
 
