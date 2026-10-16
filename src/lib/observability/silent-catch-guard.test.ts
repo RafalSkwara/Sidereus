@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
  *
  * Every other site is counted per file and compared with `ALLOWED_SILENT_CATCHES`, exactly like the no-console
  * guard's `ALLOWED_DISABLES`: more sites than the allowance fail (with their line numbers), and so does an
- * allowance that is not fully used, so a phase that fixes a file must delete its entry. Each entry carries the
+ * allowance that is not fully used, so a change that fixes a file must delete its entry. Each entry carries the
  * reason the sites are tolerated.
  *
  * Scope: `.ts` and `.tsx` under src (not tests, not `src/lib/test-support`, not generated files) and the frontmatter
@@ -54,13 +54,14 @@ const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
 const GEOLOCATION = "a denied or unavailable geolocation is the user's choice and would be noise";
 const STORE_FAULT =
-  "audit finding F8: the catch returns { ok: false, message, fault } with the sanitized fault built by faultFrom (Phase 2), and Phase 4's saveFailureKey logs it, so the catch itself stays allowlisted";
+  "audit finding F8: the catch returns { ok: false, message, fault } with the sanitized fault built by faultFrom, and the route's saveFailureKey logs it, so the catch itself stays allowlisted";
 
 /**
  * Every file with silent sites, the exact number of them and why they are tolerated. A catch, a `.catch(...)` or the
- * second argument of a `.then(ok, fail)` counts as one site. Later phases delete the entries of the phase groups
- * first; the "Permanent" entries never go (Phase 6 leaves those, plus the browser-side ones if Phases 7-9 are cut).
- * Reasons carry no line numbers: the guard's failure message names the lines.
+ * second argument of a `.then(ok, fail)` counts as one site. The "Permanent" entries stay for good; the browser-side
+ * ones are reported by the client reporting of Phases 7-9 (planned, a separate PR) and leave the list when each of
+ * those phases lands, or stay with their reason if that block is cut. Reasons carry no line numbers: the guard's
+ * failure message names the lines.
  */
 const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: string }>> = {
   // Permanent: justified and staying.
@@ -122,12 +123,12 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/lib/forecast/open-meteo.ts": {
     count: 2,
     reason:
-      "throws fixed-message errors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); Phase 2 gives them a step and status and forecast/service.ts logs those as forecast.fetch, so the catches themselves stay allowlisted",
+      "throws fixed-message ForecastErrors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); each carries a step and status, which forecast/service.ts logs as forecast.fetch, so the catches themselves stay allowlisted",
   },
   "src/lib/location/geocode.ts": {
     count: 1,
     reason:
-      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the island reports the failure as island.geocode (Phase 9)",
+      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the failure surfaces in the place search's rejection handler in LocationPicker.tsx, which Phase 9 reports as island.geocode, or is out of scope if that block is cut",
   },
   "src/lib/gear/store.ts": {
     count: 1,
@@ -148,10 +149,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
   },
 
-  // Phases 7-9: the browser side. Phases 8 and 9 delete these entries (all but the ones the reason says stay).
+  // The browser side (service worker and islands), where no server line can be written. The client reporting of
+  // Phases 7-9 (planned, a separate PR) is to report these and delete the entries; if that block is cut they stay.
   "src/sw.ts": {
     count: 26,
-    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks report through Phase 8's reportAnd and report. Four more catches pass today only through a conditional rethrow (they fall back to the stored copy, else rethrow): network-first fallback to the stored copy is the feature (D14); reported by Phases 8-9 only where the fault is not a routine network fault`,
+    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks would report through Phase 8's reportAnd and report. Four more catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14)`,
   },
   "src/lib/offline/register.ts": {
     count: 1,

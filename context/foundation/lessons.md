@@ -97,3 +97,14 @@
   - Test every sampled scan against a brute-force fine-step reference over fixed windows that include the short cases.
   - Measure every size budget on the real build output in its shipped encoding before the plan commits to it, and pin the result in a test or a build check.
 - **Applies to**: plan, implement, impl-review
+
+## A swallowed catch needs a line: one helper, a closed step vocabulary, sanitized causes
+
+- **Context**: Any Sidereus change that adds a `catch`, a `.catch(...)` or a `.then(ok, fail)` in runtime code, a store that reads or writes through PostgREST, or a new place that wants to log a failure (error-visibility, M-4 S-07).
+- **Problem**: The privacy rule ("no coordinates in logs") was met by logging nothing, so Open-Meteo, Supabase and Auth outages ended as 200s and 302s that no operator could see (audit RC1, RC2). A store that keeps the raw `PostgrestError` as a cause, or a route that passes an `Error` to `console.error`, would put a message that can echo a value into the logs (Cloudflare also keeps an `Error` argument's message and stack). Fields in a two-argument `console.error(message, fields)` are not indexed in Workers Logs, so a query on `step` finds nothing (production check, 2026-10-16).
+- **Rule**:
+  - A failure goes through `logFailure(step, error)` (or `logNotice` for an expected condition) from `src/lib/observability/log-failure.ts`, the only `console` site. Add the step to the closed `FAILURE_STEPS`; never pass an `Error`, a message, a URL or a value. This supersedes "a deliberate log needs an allowlisted disable" in the `no-console` lesson above, for failures.
+  - A new swallowed catch fails `src/lib/observability/silent-catch-guard.test.ts` unless it logs, rethrows with a cause, or has an allowlist entry with a real reason.
+  - A store returns a sanitized `fault` (or throws with a `StoreFault` as `cause`), never a PostgREST message; a server fault redirects with `errors.serverFault`.
+  - Search Workers Logs and write every alert by message text (`sidereus: <step> failed`), never by field; the runbook is `context/deployment/error-visibility.md`.
+- **Applies to**: plan, implement, impl-review

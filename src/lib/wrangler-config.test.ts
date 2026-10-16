@@ -37,8 +37,8 @@ describe("wrangler.jsonc pins the observability settings", () => {
     expect(observability.redact_query_string).toBe(true);
   });
 
-  it("keeps Version URLs on until Phase 6 decides otherwise", () => {
-    // Phase 6 sets this to false after the probe (owner, 2026-10-15); change this expectation in the same commit.
-    expect(config.preview_urls).toBe(true);
+  it("keeps Version URLs off, so no uploaded Worker version has a public URL", () => {
+    // Off since the probe ended (owner, 2026-10-15). Pinned in the file so a CI deploy cannot switch them back on.
+    expect(config.preview_urls).toBe(false);
   });
 });
