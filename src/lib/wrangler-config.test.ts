@@ -26,6 +26,13 @@ describe("wrangler.jsonc pins the observability settings", () => {
     expect(observability.issues).toEqual({ enabled: true });
   });
 
+  it("keeps the invocation event off while our own console lines stay on", () => {
+    // The invocation event stores the whole `request.cf` of every visitor (latitude, longitude, city, postal code,
+    // region: IP-derived location, no redaction option), found in production on 2026-10-16. Turning it back on stores
+    // visitor location again; deleting the `logs` block would too, since the event is on by default.
+    expect(observability.logs).toEqual({ enabled: true, invocation_logs: false });
+  });
+
   it("keeps the query string out of logs and traces, because it carries site coordinates", () => {
     expect(observability.redact_query_string).toBe(true);
   });
