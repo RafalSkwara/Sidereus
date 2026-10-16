@@ -114,7 +114,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
   - Tradeoff: the record reads "6 pass, 1 time-clause miss" instead of a clean pass. That is still within "survives", given the stated cause.
   - Confidence: HIGH, because the plan text is explicit about stopping on a failing rule.
   - Blind spot: whether the owner reads P3's time clause as a condition for applying the rule (then the current text is right and needs only a sentence naming that reading).
-- **Decision**: HELD for the owner (2026-10-16)
+- **Decision**: APPLIED (2026-10-16), owner decision: M39 (July) is counted as a P3 non-pass with its stated cause (the planner's twilight definition), reported separately from the six passes; the rule is not redefined after the data. `prd-criterion-2.md` restated; the owner reads it under manual row 4.5.
 
 ### F2 — Branch conflicts with origin/main on roadmap.md, and the S-05 row is malformed
 
@@ -139,7 +139,7 @@ E2E, smoke and `test:db` were not re-run: no server was needed, the author repor
   - The fallback is harmless to G5, as shown by the arithmetic above. The duration phrase states a length, so it stays true.
   - A related nuance: duration and brightness have no minimum spread. With many durations now saturated at 1, an entry at 0.98 among entries at 1 loses "Up for X" over a difference the viewer cannot see.
 - **Fix**: Add one clause to `en.ts` and to CLAUDE.md: "except when nothing is named for the entry: its lead is then its largest weighted eligible component and it has no second".
-- **Decision**: HELD for the owner (2026-10-16)
+- **Decision**: APPLIED (2026-10-16), owner decision: the fallback stays as implemented; the `en.ts` comment and CLAUDE.md now say that when nothing is named for an entry its lead may be a component below the list mean.
 
 ### F4 — Two build.test.ts comments still give M3's old grid edge
 

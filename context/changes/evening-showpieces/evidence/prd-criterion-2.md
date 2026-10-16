@@ -28,13 +28,13 @@ Result: **survives.** For the top 5 the largest window-edge difference is 0.02 m
 - P3: the engine's peak altitude is within 3° of the planner's highest altitude where the page states one and its time lies inside the engine's window.
 - A page that states no highest altitude is reported as "not stated" and neither passes nor fails P2 or P3.
 
-**Result: survives, within what the pages say.**
+**Result: survives, with one P3 non-pass (M39, July), within what the pages say.**
 
 - P1: **15 of 15** top-5 objects are shown as visible on their night.
 - P2 and P3: the pages state a highest altitude for **7 of 15** pairs (April 2 of 5, July 2 of 5, October 3 of 5); the other 8 are "not stated" (April 3, July 3, October 2).
   - P2 passes for all 7 stated (all well above 30°).
-  - P3 applies to 6 of the 7. The engine's peak altitude agrees with the planner's within 1.3°, and the peak times agree within 6 minutes, for M3 and M13 in April, M71 in July, and NGC869, M45 and M39 in October.
-  - For M39 in July the planner's highest point falls at its own dawn limit, after the engine's window ends (the planner's twilight rule is undocumented and differs from the engine's Bortle-5 dark window), so P3 does not apply and is not counted as a pass or a failure.
+  - P3 is judged on all 7 stated pairs: **6 pass, 1 non-pass.** For the 6 the engine's peak altitude agrees with the planner's within 1.3°, and the peak times agree within 6 minutes, for M3 and M13 in April, M71 in July, and NGC869, M45 and M39 in October.
+  - **Non-pass: M39 in July (P3 time clause not met).** The planner's highest point falls at its own dawn limit, after the engine's window ends, and the altitude half also misses by just over 3° for the same reason. The cause is a difference in twilight definition (the planner's is undocumented and later than the engine's Bortle-5 dark window), not an ephemeris error: the engine's own altitude at its window's end agrees with Skyfield (leg 1). It is reported as a non-pass, separately from the passes; the rule was not redefined after the data (owner decision of 2026-10-16).
 - Caveats observed about the planner: its twilight rule is undocumented and varies slightly by object, its sentences vary in shape, and a few objects give no numbers. It gives no ranking.
 
 **Planner note.** The planner gives per-object altitude, times and visibility and no ranking, so the ranking is checked against the published beginner list (each entry has at least two sources), not against a planner's ranked list. The PRD names no tool for the planner.
