@@ -448,6 +448,13 @@ export function overrideFor(entry, kind) {
   return entry[kind] === undefined ? undefined : { value: entry[kind], source: entry.source };
 }
 
+/** A fixed order for label candidates, so `omitted[].candidates` does not follow the SPARQL response's order. */
+const byConAndValue = (a, b) => {
+  const left = `${a.con} ${a.value}`;
+  const right = `${b.con} ${b.value}`;
+  return left < right ? -1 : left > right ? 1 : 0;
+};
+
 const BAYER_CATALOG_ID = "Q105616";
 const FLAMSTEED_CATALOG_ID = "Q111116";
 
@@ -552,7 +559,7 @@ export function buildDesignationTables({
     }
     let usedLabel = false;
     if (sources.bayer.size === 0 && sources.labelBayer.length > 0) {
-      bayerCandidates.push(...sources.labelBayer);
+      bayerCandidates.push(...[...sources.labelBayer].sort(byConAndValue));
       usedLabel = true;
     }
     const flamsteedCandidates = [];
@@ -566,7 +573,7 @@ export function buildDesignationTables({
     }
     let usedFlamsteedLabel = false;
     if (sources.flamsteed.size === 0 && sources.labelFlamsteed.length > 0) {
-      flamsteedCandidates.push(...sources.labelFlamsteed);
+      flamsteedCandidates.push(...[...sources.labelFlamsteed].sort(byConAndValue));
       usedFlamsteedLabel = true;
     }
 
@@ -622,6 +629,7 @@ export function buildDesignationTables({
       "A value is kept only when its constellation suffix equals the constellation computed (astronomy-engine Constellation, J2000) from the star's own Hipparcos position; Wikidata's coordinates are never used.",
       "Several different values in the computed constellation, or none in it, mean the value is omitted rather than guessed, unless an entry in star-designation-overrides.json gives the value or omit: true with a citable source.",
       'English item labels ("Beta2 Capricorni", "30 Sagittarii") are read only for a kind the item has no catalogue-code value of at all, and go through the same rules.',
+      "A Flamsteed value that is really a Gould number (Uranometria Argentina; the southern stars of Carina, Vela, Puppis, Chamaeleon and Circinus with numbers above Flamsteed's range) or that SIMBAD does not know is omitted by an entry in star-designation-overrides.json that says why.",
       "Each tuple is [bayer, flamsteed]; null means none. HYG is never read.",
     ],
     omitted,
@@ -634,7 +642,7 @@ export function buildDesignationTables({
     fetchedAt: inputs.fetchedAt,
     counts: nameCounts,
     rules: [
-      "Only the proper-name and HIP columns of the WGSN table are read; the page's etymology texts and images are not copied.",
+      "Only the proper-name, HIP and Bayer ID columns of the WGSN table are read (the Bayer ID only to tell the two rows of HIP 72105 apart); the page's etymology texts and images are not copied.",
       "One name per HIP. HIP 72105 appears twice (Izar, epsilon Boo, and Pulcherrima, epsilon Boo B): the row without a component letter in its Bayer ID is kept, so it is named Izar, and the other is listed in `dropped`.",
       "Every name is used for one HIP only.",
     ],

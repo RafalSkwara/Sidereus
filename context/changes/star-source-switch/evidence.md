@@ -63,3 +63,7 @@ Production preview on the rebased branch, local Supabase, forecast fixture. `rev
 - `npm run build`: passes, including the star-data leak check; the preview ran on port 4337 with the forecast fixture on 4403.
 - Smoke against local Supabase: all steps passed.
 - Whole e2e, `CI=1` (a pass only on retry fails the run): 86 passed, 3 skipped, 0 failed, 0 flaky. The skips are the opt-in landing capture, the no-darkness-window finder test (outside its window) and the old `/tonight/all#washed-out` bookmark test.
+
+## After the implementation review (2026-10-17)
+
+Follow-up branch `fix/star-source-review` (decisions in `reviews/impl-review.md`): nine Gould numbers and two values SIMBAD does not know are dropped, so the designated-star count is **3,212** (Flamsteed values 2,628) and not the 3,222 and 2,639 above; the bright file is unchanged. The landing image was re-captured on the Hipparcos data. Re-run: unit suite 2,681 passed, smoke 45 steps passed, whole e2e with `CI=1` 86 passed, 3 skipped, 0 flaky.

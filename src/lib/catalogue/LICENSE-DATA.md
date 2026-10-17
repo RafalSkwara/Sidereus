@@ -82,7 +82,8 @@ stored in these tables.
   `scripts/data/star-designation-overrides.json` (hand-edited, each entry citing its source) settles the rest.
   The tables record the fetch date, queries and counts.
 - **Proper names** come from `scripts/data/iau-star-names.json`, the proper names and HIP numbers of the IAU
-  Working Group on Star Names (WGSN) list, read from <https://exopla.net/star-names/modern-iau-star-names/>. IAU
+  Working Group on Star Names (WGSN) list, read from <https://exopla.net/star-names/modern-iau-star-names/> (a third-party page that lists the IAU's names; the credit in the app links to the IAU's own
+  [WGSN page](https://www.iau.org/WG280/WG280/Home.aspx)). IAU
   star names are in the public domain. The etymology texts and images on that page are CC BY and are **not**
   used. Names that are not on the IAU list (for example "Castor B" or "Lacaille 9352") are not in the files.
 - **The constellation** of each designated star is computed by `astronomy-engine`'s `Constellation()` at its J2000

@@ -55,6 +55,7 @@ const FINDER_PACKING_FLOOR_ARCSEC = 0.005 * Math.SQRT2 * 3600 + 0.1;
  * (SIMBAD's coordinate source is the Hipparcos re-reduction, 2007A&A...474..653V, except Unukalhai, Gaia, and the two
  * stars below, UCAC4: for the Hipparcos stars this checks our reader and the epoch propagation against a published
  * J2000 position, not against astrometry independent of Hipparcos; VizieR's TAP answered 503 that day).
+ * One source, by the owner's decision of 2026-10-17 (the plan asked for two; recorded in plan.md and impl-review.md).
  *
  * `mag` is the star's V magnitude, only to pick the star out of its neighbours (the finder file stores tenths);
  * `con` is the constellation the star is in. Alpheratz (alpha And, once delta Peg) and Elnath (beta Tau, once gamma

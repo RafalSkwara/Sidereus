@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
+  describeError,
   HIPPARCOS_FIELDS_USED,
   HIPPARCOS_PIN,
   parseRecord,
@@ -379,6 +380,18 @@ describe("readHipparcos", () => {
         message: /stalled: no data for 25 ms/,
       },
       {
+        name: "more bytes than the pin",
+        pin: goodPin,
+        respond: serve(Buffer.concat([bytes, Buffer.from(lines[0] + "\n", "latin1")])),
+        message: new RegExp(`got sha256 \\(not computed\\), more than ${bytes.length} bytes`),
+      },
+      {
+        name: "an HTML answer is a pin mismatch, not a parse error",
+        pin: goodPin,
+        respond: serve(Buffer.from("<html><body>503 Service Unavailable</body></html>\n", "latin1")),
+        message: /expected sha256 [0-9a-f]{64}, \d+ bytes, 4 rows; got sha256 [0-9a-f]{64}, \d+ bytes, 1 rows/,
+      },
+      {
         name: "HTTP error",
         pin: goodPin,
         respond: () => new Response("missing", { status: 404, statusText: "Not Found" }),
@@ -392,10 +405,15 @@ describe("readHipparcos", () => {
       const failure = await readHipparcos({ pin, fetch: fetchImpl, stallMs: 25 }).catch((error) => error);
       expect(failure, name).toBeInstanceOf(Error);
       expect(failure.message, name).toMatch(/failed on the pinned URL and the mirror/);
-      expect(failure.message, name).toMatch(new RegExp(`${PRIMARY.replaceAll(".", "\\.")}: .*`));
-      expect(failure.message, name).toMatch(message);
-      expect(failure.cause, name).toBeInstanceOf(Error);
-      expect(failure.cause.message, name).toMatch(message);
+      expect(failure.message, name).toContain(PRIMARY);
+      expect(failure.message, name).toContain(MIRROR);
+      // Both failures travel as the cause, so neither reason is lost, and `describeError` prints both.
+      expect(failure.cause, name).toBeInstanceOf(AggregateError);
+      expect(failure.cause.errors, name).toHaveLength(2);
+      for (const inner of failure.cause.errors) {
+        expect(inner.message, name).toMatch(message);
+      }
+      expect(describeError(failure), name).toMatch(message);
       expect(
         calls.map((c) => c.url),
         name,
@@ -424,5 +442,18 @@ describe("readHipparcos", () => {
     const clean = fakeFetch({ [PRIMARY]: serve(bytes), [MIRROR]: serve(flipped) });
     await readHipparcos({ pin: goodPin, fetch: clean.fetchImpl });
     expect(clean.calls.map((c) => c.url)).toEqual([PRIMARY]);
+  });
+  it("reports a record that does not parse only after the hash matches the pin, and aborts every download it started", async () => {
+    const broken = Buffer.from(text.replace(lines[3], "garbage".padEnd(450, " ")), "latin1");
+    const { fetchImpl, calls } = fakeFetch({ [PRIMARY]: serve(broken), [MIRROR]: serve(broken) });
+    const failure = await readHipparcos({ pin: pinFor(broken), fetch: fetchImpl }).catch((error) => error);
+    expect(failure).toBeInstanceOf(Error);
+    const printed = describeError(failure);
+    expect(printed).toMatch(/matches the pin but a record does not parse: Line 4/);
+    expect(printed).toContain(PRIMARY);
+    expect(printed).toContain(MIRROR);
+    for (const call of calls) {
+      expect(call.init.signal.aborted).toBe(true);
+    }
   });
 });

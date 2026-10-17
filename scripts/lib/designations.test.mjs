@@ -1,6 +1,7 @@
 // Tests for the designation rules without the network: strings and tables built here, never copies of Wikidata's
 // or the WGSN's data. The transform's determinism on the real responses is checked with `--from-raw` (see
 // scripts/build-star-designations.mjs).
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   buildDesignationTables,
@@ -11,6 +12,7 @@ import {
   GREEK_ABBREVIATIONS,
   labelDesignation,
   namesByHip,
+  overrideFor,
   parseIauTable,
   validateOverrides,
 } from "./designations.mjs";
@@ -322,5 +324,46 @@ describe("buildDesignationTables", () => {
 
   it("throws for an override on a star that is not in the Hipparcos rows", () => {
     expect(() => run({ 999: { omit: true, source: "x" } })).toThrow(/HIP 999/);
+  });
+});
+
+// The overrides reach the table only when `npm run stars:designations` runs (it needs the network), so a hand edit of
+// the overrides file that is not followed by a regeneration would change nothing and, without this, go unnoticed.
+describe("the committed designation table against the overrides file", () => {
+  const read = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), "utf8"));
+  const overrides = read("star-designation-overrides.json");
+  const table = read("star-designations.json");
+
+  const expected = Object.entries(overrides)
+    .flatMap(([hip, entry]) =>
+      ["bayer", "flamsteed"].flatMap((kind) => {
+        const override = overrideFor(entry, kind);
+        if (override === undefined) {
+          return [];
+        }
+        return [
+          {
+            hip: Number(hip),
+            kind,
+            decision: override.omit ? "override-omit" : "override",
+            value: override.omit ? null : override.value,
+            source: override.source,
+          },
+        ];
+      }),
+    )
+    .sort((a, b) => a.hip - b.hip || a.kind.localeCompare(b.kind));
+
+  it("records every override of the file, with its decision, value and source, and nothing else", () => {
+    const applied = [...table.meta.overridesApplied].sort((a, b) => a.hip - b.hip || a.kind.localeCompare(b.kind));
+    expect(applied).toEqual(expected);
+    expect(table.meta.counts.overrides).toBe(Object.keys(overrides).length);
+  });
+
+  it("holds each overridden value, or none where the override omits it", () => {
+    for (const { hip, kind, value } of expected) {
+      const tuple = table.stars[String(hip)] ?? [null, null];
+      expect(tuple[kind === "bayer" ? 0 : 1], `HIP ${hip} ${kind}`).toBe(value);
+    }
   });
 });

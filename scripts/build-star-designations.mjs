@@ -28,7 +28,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDesignationTables } from "./lib/designations.mjs";
-import { HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
+import { describeError, HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
 
 /** The project URL as the contact, never a person's address. */
 const USER_AGENT = "Sidereus (+https://github.com/RafalSkwara/Sidereus)";
@@ -68,15 +68,6 @@ const RAW_FILES = {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function describe(error) {
-  const lines = [error instanceof Error ? error.message : String(error)];
-  for (let cause = error instanceof Error ? error.cause : undefined; cause !== undefined;) {
-    lines.push(`  caused by: ${cause instanceof Error ? cause.message : String(cause)}`);
-    cause = cause instanceof Error ? cause.cause : undefined;
-  }
-  return lines.join("\n");
-}
-
 function parseArgs(argv) {
   const options = { saveRaw: null, fromRaw: null };
   for (let i = 0; i < argv.length; i++) {
@@ -112,7 +103,11 @@ async function politeFetch(url, init, label) {
       if (attempt >= MAX_RETRIES) {
         throw new Error(`${label}: request failed after ${attempt + 1} attempts`, { cause: error });
       }
-      await sleep(5_000 * 2 ** attempt);
+      const waitMs = 5_000 * 2 ** attempt;
+      console.log(
+        `${label}: request failed (${describeError(error).replace(/\n\s*/g, "; ")}), retrying in ${Math.round(waitMs / 1000)} s (${attempt + 1}/${MAX_RETRIES})`,
+      );
+      await sleep(waitMs);
       continue;
     } finally {
       clearTimeout(timer);
@@ -218,7 +213,15 @@ async function savedInputs(dir) {
     read(RAW_FILES.hipparcos),
     read(RAW_FILES.meta),
   ]);
-  return { designations, labels, wgsn, hipparcosRaw: JSON.parse(hipparcos), meta: JSON.parse(meta) };
+  const hipparcosRaw = JSON.parse(hipparcos);
+  // A saved run is held to the same pin as a live one: rows of any other file would build tables nothing pins.
+  const { sha256, bytes, rows } = hipparcosRaw.stats ?? {};
+  if (sha256 !== HIPPARCOS_PIN.sha256 || bytes !== HIPPARCOS_PIN.bytes || rows !== HIPPARCOS_PIN.rows) {
+    throw new Error(
+      `${path.join(dir, RAW_FILES.hipparcos)} is not the pinned Hipparcos file: expected sha256 ${HIPPARCOS_PIN.sha256}, ${HIPPARCOS_PIN.bytes} bytes, ${HIPPARCOS_PIN.rows} rows; saved ${sha256}, ${bytes} bytes, ${rows} rows`,
+    );
+  }
+  return { designations, labels, wgsn, hipparcosRaw, meta: JSON.parse(meta) };
 }
 
 async function main() {
@@ -286,6 +289,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(describe(error));
+  console.error(describeError(error));
   process.exit(1);
 });

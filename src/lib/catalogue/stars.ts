@@ -22,7 +22,7 @@ export interface BrightStar {
   name?: string;
 }
 
-/** 921 at the pinned Hipparcos file (919 with an astrometric solution plus ten positioned from RAhms/DEdms); the range leaves a margin of 10 either way. */
+/** 921 at the pinned Hipparcos file (919 with an astrometric solution plus ten positioned from RAhms/DEdms); the range 915 to 935 leaves a margin of 6 below and 14 above. */
 export const BRIGHT_STAR_COUNT_RANGE = { min: 915, max: 935 } as const;
 export const BRIGHT_STAR_MAX_MAG = 4.5;
 

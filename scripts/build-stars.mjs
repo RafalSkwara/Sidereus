@@ -28,7 +28,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Constellation } from "astronomy-engine";
-import { HIPPARCOS_FIELDS_USED, HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
+import { describeError, HIPPARCOS_FIELDS_USED, HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
 import {
   BUILD_LIMITS,
   brightJson,
@@ -88,6 +88,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.message : err);
+  console.error(describeError(err));
   process.exit(1);
 });

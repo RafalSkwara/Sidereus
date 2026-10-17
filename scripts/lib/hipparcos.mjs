@@ -169,6 +169,27 @@ export function propagateToJ2000(row) {
   return { ...row, raDeg, decDeg };
 }
 
+/**
+ * An error and everything it carries, one line each: the message, the cause chain ("caused by: ...") and, for an
+ * AggregateError, each of its errors with its own chain. Scripts print this instead of `error.message`, so a failure
+ * is never reported as a bare "fetch failed".
+ */
+export function describeError(error, indent = "") {
+  if (!(error instanceof Error)) {
+    return `${indent}${String(error)}`;
+  }
+  const lines = [`${indent}${error.message}`];
+  if (error instanceof AggregateError) {
+    for (const inner of error.errors) {
+      lines.push(describeError(inner, `${indent}  - `));
+    }
+  }
+  if (error.cause !== undefined) {
+    lines.push(describeError(error.cause, `${indent}  caused by: `));
+  }
+  return lines.join("\n");
+}
+
 function describeHeaders(res) {
   return `Last-Modified ${res.headers.get("last-modified") ?? "none"}, ETag ${res.headers.get("etag") ?? "none"}`;
 }
@@ -222,10 +243,22 @@ async function downloadVerified(url, { pin, fetchImpl, maxVmag, stallMs }) {
     let bytes = 0;
     let lineNo = 0;
     let pending = "";
+    // A record that does not parse is reported only after the hash: a corrupt or HTML answer is then reported as the
+    // pin mismatch it is, with the file's size, hash and headers, not as "Line N: ...".
+    let parseError = null;
 
     const handleLine = (line) => {
       lineNo++;
-      const row = parseRecord(line, lineNo, { maxVmag });
+      if (parseError !== null) {
+        return;
+      }
+      let row;
+      try {
+        row = parseRecord(line, lineNo, { maxVmag });
+      } catch (error) {
+        parseError = error;
+        return;
+      }
       if (row.vmag === null) {
         skipped.push({ hip: row.hip, lineNo });
       } else if (row.vmag <= maxVmag) {
@@ -262,7 +295,12 @@ async function downloadVerified(url, { pin, fetchImpl, maxVmag, stallMs }) {
     if (actual.sha256 !== pin.sha256 || actual.bytes !== pin.bytes || actual.rows !== pin.rows) {
       throw mismatchError(url, pin, actual, res);
     }
-    return { rows, skipped, stats: { url, ...actual } };
+    if (parseError !== null) {
+      throw new Error(`${url} matches the pin but a record does not parse: ${parseError.message}`, {
+        cause: parseError,
+      });
+    }
+    return { rows, skipped, stats: { url: res.url || url, ...actual } };
   } catch (error) {
     if (stalled) {
       throw new Error(`Download from ${url} stalled: no data for ${stallMs} ms`, { cause: error });
@@ -270,6 +308,8 @@ async function downloadVerified(url, { pin, fetchImpl, maxVmag, stallMs }) {
     throw error;
   } finally {
     clearTimeout(timer);
+    // Whatever threw, do not leave the socket open while the mirror is tried.
+    controller.abort();
   }
 }
 
@@ -282,7 +322,7 @@ async function downloadVerified(url, { pin, fetchImpl, maxVmag, stallMs }) {
  * `stats` is `{ url, sha256, bytes, rows }` of the file that verified (`url` tells whether the mirror was used).
  *
  * The pinned URL is tried once and, on any failure, the mirror once; the hash alone decides acceptance. When both
- * fail the error names both reasons and carries the mirror's as its cause.
+ * fail the error's cause is an AggregateError of both failures (`describeError` prints each with its own causes).
  *
  * Options (for tests): `pin`, `fetch`, `maxVmag`, `stallMs`.
  */
@@ -294,18 +334,19 @@ export async function readHipparcos({
 } = {}) {
   const context = { pin, fetchImpl, maxVmag, stallMs };
   let result;
-  try {
-    result = await downloadVerified(pin.url, context);
-  } catch (primaryError) {
+  const failures = [];
+  for (const url of [pin.url, pin.mirror]) {
     try {
-      result = await downloadVerified(pin.mirror, context);
-    } catch (mirrorError) {
-      const describe = (error) => (error instanceof Error ? error.message : String(error));
-      throw new Error(
-        `Hipparcos download failed on the pinned URL and the mirror.\n  ${pin.url}: ${describe(primaryError)}\n  ${pin.mirror}: ${describe(mirrorError)}`,
-        { cause: mirrorError },
-      );
+      result = await downloadVerified(url, context);
+      break;
+    } catch (error) {
+      failures.push(error);
     }
+  }
+  if (result === undefined) {
+    throw new Error(`Hipparcos download failed on the pinned URL and the mirror (${pin.url}, ${pin.mirror})`, {
+      cause: new AggregateError(failures, "the pinned URL and the mirror both failed"),
+    });
   }
 
   const { rows, skipped, stats } = result;
