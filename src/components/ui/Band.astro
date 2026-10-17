@@ -5,11 +5,14 @@
  * `id` is an anchor on the section (the Targets page's `#washed-out`, and hooks such as `section#nights` for e2e);
  * Tonight's tiles open pages, never anchors. `class` is merged last (the `#washed-out` band takes a scroll margin).
  * `headingHidden` keeps the heading for screen readers only, for a band whose page title already names it (the
- * Moon, Planets and Nights pages). `collapsed` (ui-progress-rewards, the progress page's Caldwell band, owner P8 A) puts
- * the heading in the `<summary>` of a native `<details>`, closed on load, with the content inside: no script and no
- * stored state, and the content stays in the DOM. The summary and chevron are `disclosure.ts`'s; the chevron turns
- * through the named group `group/band`, so a disclosure nested in the band keeps its own state. Only this Astro band collapses (no island needs it), so `band.tsx`
- * has no twin of the option.
+ * Moon, Planets and Nights pages). `collapsed` (ui-progress-rewards, the progress page's Caldwell band, owner P8 A)
+ * puts the content in a native `<details>`, closed on load: no script and no stored state, and the content stays in the
+ * DOM. The heading stays a real `h2` in the band's heading row, above the disclosure (owner, 2026-10-17, impl review
+ * F3: a heading inside a `<summary>` can drop out of a screen reader's heading list), and the `<summary>` is only the
+ * toggle, its visible text and accessible name saying what it does ("Show the Caldwell list" / "Hide …", swapped by
+ * the open state). The summary and chevron are `disclosure.ts`'s; the chevron and the label turn through the named
+ * group `group/band`, so a disclosure nested in the band keeps its own state. Only this Astro band collapses (no
+ * island needs it), so `band.tsx` has no twin of the option.
  */
 import { ChevronDown } from "lucide-react";
 
@@ -25,11 +28,11 @@ interface Props {
   class?: string;
   /** Keep the heading for screen readers only: the page's own title already says it. */
   headingHidden?: boolean;
-  /** The heading as the summary of a closed `<details>` holding the content (no `action` slot then). */
-  collapsed?: boolean;
+  /** The content in a closed `<details>`; its toggle reads `show` while closed and `hide` while open. */
+  collapsed?: { show: string; hide: string };
 }
 
-const { headingId, heading, id, class: className, headingHidden = false, collapsed = false } = Astro.props;
+const { headingId, heading, id, class: className, headingHidden = false, collapsed } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
@@ -38,19 +41,7 @@ const hasAction = Astro.slots.has("action");
   aria-labelledby={headingId}
   class:list={cn("border-border py-6 not-first:border-t first:pt-0 last:pb-0 sm:py-8", className)}
 >
-  {collapsed ? (
-    <details class="group/band" data-band-collapsible>
-      <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "justify-between gap-3")}>
-        <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
-          {heading}
-        </h2>
-        <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/band:rotate-180")} aria-hidden="true" />
-      </summary>
-      <div class="mt-3 sm:mt-4">
-        <slot />
-      </div>
-    </details>
-  ) : headingHidden ? (
+  {headingHidden ? (
     <h2 id={headingId} class="sr-only">
       {heading}
     </h2>
@@ -62,5 +53,18 @@ const hasAction = Astro.slots.has("action");
       {hasAction && <slot name="action" />}
     </div>
   )}
-  {!collapsed && <slot />}
+  {collapsed ? (
+    <details class="group/band" data-band-collapsible>
+      <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "gap-2 text-label font-semibold text-heading")}>
+        <span class="min-w-0 flex-1 break-words group-open/band:hidden">{collapsed.show}</span>
+        <span class="hidden min-w-0 flex-1 break-words group-open/band:inline">{collapsed.hide}</span>
+        <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/band:rotate-180")} aria-hidden="true" />
+      </summary>
+      <div class="mt-3 sm:mt-4">
+        <slot />
+      </div>
+    </details>
+  ) : (
+    <slot />
+  )}
 </section>

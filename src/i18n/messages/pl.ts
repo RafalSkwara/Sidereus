@@ -1256,6 +1256,8 @@ export const pl = {
     caldwell: "Caldwell",
     count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
     caldwellNote: "Lista obejmuje obiekty Caldwella widoczne ze średnich szerokości północnych.",
+    caldwellShow: "Pokaż listę Caldwella",
+    caldwellHide: "Ukryj listę Caldwella",
     seenHeading: "Zaobserwowane do tej pory",
     seen: "zaobserwowano",
     notSeen: "jeszcze nie zaobserwowano",

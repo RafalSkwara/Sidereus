@@ -1321,13 +1321,14 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 </div>
                 <div class:list={wideCell}>
                   <p class:list={stateLabel}>
-                    collapsed — the heading is a native details summary, closed on load (the progress page's Caldwell
-                    band, ui-progress-rewards); inside it a closed "Seen so far" list keeps its own chevron state
+                    collapsed — the heading stays in the row above; a native details holds the content, closed on load,
+                    its summary only the Show / Hide toggle (the progress page's Caldwell band, ui-progress-rewards);
+                    inside it a closed "Seen so far" list keeps its own chevron state
                   </p>
                   <Band
                     headingId="sample-collapsed-heading"
                     heading={`${m.progress.caldwell} · ${m.progress.count({ seen: String(progressMany.caldwell.seenCount), total: String(progressMany.caldwell.total) })}`}
-                    collapsed
+                    collapsed={{ show: m.progress.caldwellShow, hide: m.progress.caldwellHide }}
                   >
                     <p class="text-label text-muted-foreground">{m.progress.caldwellNote}</p>
                     <SeenList items={progressMany.caldwell.items} prefix="C" label="Caldwell: seen so far" />

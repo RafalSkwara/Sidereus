@@ -1517,6 +1517,9 @@ export const en = {
     /** Numbers arrive pre-formatted: "47 / 110". */
     count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
     caldwellNote: "The list covers the Caldwell objects visible from mid-northern latitudes.",
+    /** The Caldwell band's toggle (ui-progress-rewards, impl review F3): its visible text and accessible name. */
+    caldwellShow: "Show the Caldwell list",
+    caldwellHide: "Hide the Caldwell list",
     seenHeading: "Seen so far",
     seen: "seen",
     notSeen: "not seen",

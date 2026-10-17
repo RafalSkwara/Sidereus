@@ -9,7 +9,7 @@ Only a handful of key screenshots are committed, as compressed WebP (about 1.5 M
 Committed:
 
 - `impl/page-en-{dark,red,light}-390.webp`, `impl/page-pl-dark-320.webp`, `impl/page-en-dark-1440.webp`: the progress page, full height (Caldwell and "Seen so far" closed).
-- `impl/caldwell-open-red-390.webp`: the Caldwell band opened, red.
-- `impl/dialog-red-390.webp`, `impl/dialog-dark-1440.webp`: the celebration dialog with badges.
+- `impl/caldwell-open-red-390.webp`: the Caldwell band opened, red (retaken after impl review F3: the `h2` above, "Hide the Caldwell list" as the toggle).
+- `impl/dialog-red-390.webp`, `impl/dialog-pl-dark-320.webp` (320 × 568), `impl/dialog-dark-1440.webp`: the celebration dialog with badges; the first two retaken after impl review F5 (112 px badges and body-role names for several milestones; `dialog-dark-1440.webp` predates it).
 - `impl/design-c-milestone-badge-red-390.webp`: the `/design` badge specimens, red.
 - `badge-art/badge-art-sheet.webp`, `badge-art/badge-art-phone-{red,light}.webp`: the approved art (round 1, after the art decisions).

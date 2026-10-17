@@ -115,7 +115,7 @@ const nothingSeen =
         <Band
           headingId="progress-caldwell-heading"
           heading={`${t.caldwell} · ${t.count({ seen: String(progress.caldwell.seenCount), total: String(progress.caldwell.total) })}`}
-          collapsed
+          collapsed={{ show: t.caldwellShow, hide: t.caldwellHide }}
         >
           <p class="mb-group text-label text-muted-foreground">{t.caldwellNote}</p>
           <ChecklistLegend items={progress.caldwell.items} label={t.caldwell} />

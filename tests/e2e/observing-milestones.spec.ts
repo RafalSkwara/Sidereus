@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import type { MilestoneKey } from "@/lib/progress/milestones";
 import { createFormatter } from "@/lib/tonight/format";
@@ -144,6 +145,16 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expect(page.getByRole("link", { name: progress.toTonight })).toBeVisible();
   await expect(page.locator("#progress-milestones-heading")).toHaveText(copy.title);
   await expect(page.locator("[data-milestone]")).toHaveCount(11);
+  // The Caldwell band starts closed (owner P8 A). Its heading stays a real h2, outside the disclosure, and the summary
+  // is only the toggle, named for what it does (owner, 2026-10-17, impl review F3).
+  await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${progress.caldwell} · `) })).toBeVisible();
+  const caldwellToggle = page.locator("details[data-band-collapsible] > summary");
+  await expect(caldwellToggle.locator("h2")).toHaveCount(0);
+  await expect(caldwellToggle).toHaveAccessibleName(progress.caldwellShow);
+  await expect(chip("NGC188")).toBeHidden();
+  await caldwellToggle.click();
+  await expect(caldwellToggle).toHaveAccessibleName(progress.caldwellHide);
+  await expect(chip("NGC188")).toBeVisible();
 
   // 2. M31 rated 2 reaches nothing and ticks nothing: the first galaxy is still ahead, the count stays 0.
   await logEntry(page, "/log/new?object=M31&from=log", 2, /\/log(\?|$)/);
@@ -331,4 +342,36 @@ test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
   expect(night).toBe(madridDateDaysAgo(3, pinnedNow()));
   await expect(page.locator("[data-toast]")).toContainText(en.log.list.saved({ object: "M31" }));
   await expectNoCelebration(page);
+});
+
+test("a dialog that names several milestones keeps Continue on a 320 × 568 screen, in English and Polish", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  await onboardInMadrid(page, "e2e-milestones-several");
+  await page.setViewportSize({ width: 320, height: 568 });
+  const dialog = openCelebration(page);
+  // A save that reaches three milestones lands on a page with three `milestone` params; GearShell opens the dialog
+  // from them, as here. Two or more names get the 112 px badges, two to a row, and the names at the body role (owner,
+  // 2026-10-17, impl review F5). `showModal()` focuses Continue, which scrolls an overflowing dialog to it and hides the
+  // badges, so the check scrolls the dialog back to its top first: from there, Continue must be wholly on screen.
+  const expectContinueOnScreen = async (label: string) => {
+    await expect(dialog).toHaveCount(1);
+    await expect(dialog.locator("[data-milestone-badge]")).toHaveCount(3);
+    await dialog.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
+    await expect(dialog.getByRole("button", { name: label })).toBeInViewport({ ratio: 1 });
+  };
+  await page.goto("/log/progress?milestone=first-galaxy&milestone=messier-10&milestone=messier-25");
+  const badge = await dialog.locator('[data-milestone-badge="first-galaxy"]').boundingBox();
+  expect(badge?.width).toBe(112);
+  await expectContinueOnScreen(copy.celebration.continue);
+  // Polish names are the longest copy.
+  await context.addCookies([{ name: LOCALE_COOKIE, value: "pl", url: baseURL ?? "http://localhost:4321" }]);
+  await page.goto("/log/progress?milestone=first-galaxy&milestone=messier-10&milestone=messier-25");
+  await expectContinueOnScreen(pl.progress.milestones.celebration.continue);
 });
