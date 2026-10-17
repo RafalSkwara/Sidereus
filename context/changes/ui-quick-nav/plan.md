@@ -4,7 +4,8 @@
 >
 > **Implementation starts only after PR #212 (`feat/ui-sky-modes`) merges and this branch is rebased onto the new
 > `main`.** The plan is written against #212's version of `TopbarControls.tsx`, `global.css`, `Topbar.astro` and
-> `ui/segmented.tsx` (read at `origin/feat/ui-sky-modes` f6b8c97). The owner's questions are at the end, in Polish; the
+> `ui/segmented.tsx` (read at `origin/feat/ui-sky-modes` f6b8c97, re-checked at d94bb65 after #212's rebase onto main
+> with #217's app icon; plan review F6). The owner's questions are at the end, in Polish; the
 > plan is written on the recommended (⭐) answers.
 
 ## Overview
@@ -112,11 +113,20 @@ The quick nav is an **Astro component with a small client `<script>`**, not a Re
 
 ## Critical Implementation Details
 
-- **Focus and the top layer.** The popover sits in the top layer, but its tab order follows the invoker (HTML
-  popover focus navigation), so Tab from the button enters the panel. The script moves focus into the panel on the
-  `toggle` event (`newState === "open"`), to `[aria-current="page"]` if present, else the first link; native Esc then
-  restores focus to the button because focus was inside. Closing on `focusout` must ignore a `relatedTarget` inside the
-  panel or on the button, and must not steal focus (call `hidePopover()` only).
+- **DOM order (review F7).** Inside the `<nav>`, the `<div popover>` comes immediately after the `<button>`, so the
+  Tab order button → rows holds even in a browser without popover-invoker focus navigation; never move the panel to
+  the end of `<header>` or the body.
+- **Focus and the top layer.** The popover sits in the top layer; with the panel right after the trigger, Tab from
+  the button enters the panel. The script moves focus into the panel on the `toggle` event (`newState === "open"`),
+  to `[aria-current="page"]` if present, else the first link; native Esc then restores focus to the button because
+  focus was inside.
+- **Closing on focus leaving (review F1).** On `focusout`, close (`hidePopover()` only, never moving focus) **only when
+  `relatedTarget` is a concrete element outside both the panel and the trigger** (Tab past the last row). A `null`
+  `relatedTarget` is ignored: a tap on the panel's heading, handle or gap, and Safari's mouse/tap on a link (WebKit
+  does not focus links on click), both blur to `null`, and closing then would swallow the tap before `click`. Every
+  other dismissal (outside tap, Esc) is left to the native popover's light dismiss.
+- **Back/forward cache (review F4).** On `pagehide`, `hidePopover()` if open, so returning with Back never shows the
+  menu still open over the page the user left.
 - **Theme in the night-sky scope.** On `beforetoggle` (opening) copy `document.documentElement.dataset.theme` to the
   panel's `data-theme`, as #212's sky-mode control does: the theme can change on the page after render, so a
   server-rendered `data-theme` alone would be stale.
@@ -221,16 +231,21 @@ which has `aria-current="page"`. Esc: the panel is hidden, `aria-expanded="false
 
 **File**: `tests/e2e/navigation.spec.ts`
 
-**Intent**: Pin the two budget risks that today's checks miss: a new test at 320×700 in Polish on `/log` asserting the
-header does not overflow (`scrollWidth <= clientWidth`) and the last control ends at least 16 px from the viewport's
-right edge, with the quick-nav trigger visible; and the existing 768/1024 test also asserts that each pill link's
-label is one line (one client rect for its text range). Locate the pill as `header [data-topbar-nav]`.
+**Intent**: Pin the two budget risks that today's checks miss, with no new test (review F2): the existing 320×700
+Polish test on `/log` ("the TabBar's four Polish tabs fit a 320 px phone", `:35`, retitled "…tabs and the Topbar row
+fit a 320 px phone") also asserts that the header does not overflow (`scrollWidth <= clientWidth`), that the quick-nav
+trigger is visible, and that the last control ends at least 16 px from the viewport's right edge; the existing
+768/1024 test also asserts that each pill link's label is one line (one client rect for its text range), and its
+"the pill must end left of the controls" check measures to the left edge of `[data-quick-nav-trigger]`, the first
+control, instead of the settings button's parent (review F3: otherwise the pill could overlap the new button
+unseen). Locate the pill as `header [data-topbar-nav]`.
 
 **File**: `tests/e2e/tonight-subnav.spec.ts`
 
 **Intent**: Locate the pill bar as `header [data-topbar-nav]`; the page-wide "one `aria-current="page"`" checks
 (`:88-93`, `:125`) exclude `[data-quick-nav]`, with a comment recording the requirement change (owner 2026-10-17,
-D2), and on each focused page assert the quick nav's own mark is that page's row.
+D2). No new assertion on the menu's mark (review F2: `quick-nav.spec.ts` holds it, from the same
+`currentTonightPage` rule the sub-nav uses).
 
 **Contract**: these fail (red) before the component exists: no trigger, no `data-topbar-nav`.
 
@@ -255,9 +270,12 @@ text-selected-foreground`), other rows `text-heading hover:bg-accent`, icons mut
 `--ring` focus outline; the trigger is `TOPBAR_ICON_BUTTON_CLASS` with the `LayoutGrid` icon; the panel is
 `TOPBAR_PANEL_CLASS` with the sheet handle, a visible heading (`text-label`, muted) and the list. The client script
 does what "Critical Implementation Details" lists: `aria-expanded`, theme copy, focus on open, arrow / Home / End
-keys, close on focus leaving.
+keys, close when focus moves to an element outside the panel and the trigger (never on a `null` target), close on
+`pagehide`.
 
-**Contract**: markers `data-quick-nav` (the `<nav>`), `data-quick-nav-trigger`, `data-quick-nav-panel`; props for
+**Contract**: structure `<nav data-quick-nav>` > `<button data-quick-nav-trigger>` immediately followed by
+`<div popover data-quick-nav-panel>` (review F7); markers `data-quick-nav` (the `<nav>`), `data-quick-nav-trigger`,
+`data-quick-nav-panel`; props for
 `/design` only, as `TonightSubNav` has them: `current?: TonightNavItem["href"]` (no `aria-current`, no ids reused),
 `pinned?: { href; class }` and `inline?: true` (the panel rendered in flow, not as a popover, for the static
 specimens). No `data-needs-network`, no `view-transition-name`. Tokens only; the hardcoded-value scan stays at 0.
@@ -290,7 +308,7 @@ landmarks with one name.
 
 - `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it
 - `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported)
-- The hardcoded-value scan on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
+- `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
 - `npm run test:reference`, `npm run lint` and `npx astro check` pass
 
 #### Manual Verification:
@@ -383,8 +401,9 @@ the sentence in the same `CLAUDE.md` edit).
 
 - `quick-nav.spec.ts`: the keyboard-only journey from a non-Tonight screen to a focused page, `aria-expanded`, focus on
   open, `aria-current`, Esc, the page theme on the panel, and no trigger signed out.
-- `navigation.spec.ts`: the 320 px Polish row with its gutter; no wrapped pill label at 768 / 1024 px.
-- `tonight-subnav.spec.ts`: the re-scoped page-wide mark plus the menu's own mark.
+- `navigation.spec.ts` (no new test, review F2/F3): the existing 320 px Polish test also holds the Topbar row and its
+  gutter; the 768 / 1024 px test also holds one-line pill labels and measures the pill to the quick-nav trigger.
+- `tonight-subnav.spec.ts`: the page-wide mark re-scoped to exclude `[data-quick-nav]` (no new menu assertion).
 - Unchanged and still required green: `tonight-phone.spec.ts` (first screen at 390×844, no sideways scroll at 320/375
   in EN and PL on ten pages), `landing.spec.ts` (320/360 signed out), `red-night-mode.spec.ts`.
 
@@ -475,10 +494,14 @@ panel na stronie Cele)
 
 ## Open Risks & Assumptions
 
-- **#212 overlap.** Both changes edit `TopbarControls.tsx` (its class constants), `global.css` (`:root` and the
-  utilities) and the comment above `Topbar.astro`'s `<header>`. This plan assumes #212's `SEGMENT_FOCUS_CLASS` and
-  `--topbar-strip-height` land as read at f6b8c97; Phase 1 starts by checking them, and rebasing earlier than the
-  merge would replay #212's conflicts twice.
+- **#212 overlap** (re-checked at d94bb65, review F6: `git diff origin/main...origin/feat/ui-sky-modes --stat`, 97
+  files). Both changes edit `TopbarControls.tsx` (#212: its class constants and the language-loading state),
+  `global.css` (`:root` and the utilities), the comment above `Topbar.astro`'s `<header>`, `src/pages/design.astro`
+  (#212 +272 lines of specimens; this plan's Phase 3 adds the QuickNav block), the i18n catalogues and `CLAUDE.md`.
+  `tests/e2e/helpers.ts` changed on `main` since this branch's base (e563fda → 0b9fc6e, #217 / #218), so Phase 2's
+  specs are written against the rebased helpers. The names this plan uses (`SEGMENT_FOCUS_CLASS`,
+  `--topbar-strip-height`, `right-topbar-edge`, `sm:top-23` in `panelClass`) are unchanged at d94bb65. Phase 1 starts
+  by checking them; rebasing before the merge would replay #212's conflicts twice.
 - **320 px budget.** 19 px left after D8 (measured with Archivo loaded). Before the web font swaps in, the fallback
   font's wordmark may be wider for a moment; the fit check measures after `document.fonts.ready`. Any later Topbar
   control needs a new budget.
@@ -486,6 +509,22 @@ panel na stronie Cele)
 - **F6 amendment (D2).** The page-wide single `aria-current="page"` rule gets one exception (the menu's row);
   plan review should confirm the owner reads the 2026-10-17 requirement that way.
 - Safari's popover support (17+) is already relied on by the settings panel.
+
+## Plan review triage
+
+Review: `reviews/plan-review.md` (herdr `reviewer`, 2026-10-17, NEEDS ATTENTION, 0 critical · 3 warnings · 4
+observations). Triage by the orchestrator, applied 2026-10-17 (docs only; the owner's P1-P7 answers and #212's merge
+are still pending).
+
+| Finding | Decision | What changed in this plan |
+| ------- | -------- | ------------------------- |
+| F1 (warning) `focusout` closing swallows taps in Safari | Accepted | Critical Implementation Details: close only when `relatedTarget` is a concrete element outside the panel and the trigger; `null` ignored; every other dismissal left to the native light dismiss. Phase 2 › 3 Intent updated |
+| F2 (warning) test diet: new 320 px test, repeated menu marks | Accepted | Phase 2 › 1: the 320 px fit folded into the existing TabBar test (retitled); `tonight-subnav.spec.ts` only excludes `[data-quick-nav]` from the count; Testing Strategy updated |
+| F3 (warning) "pill ends before the controls" misses the new button | Accepted | Phase 2 › 1: the 768/1024 check measures the pill to `[data-quick-nav-trigger]` |
+| F4 (observation) bfcache restores an open menu | Accepted | Critical Implementation Details: `pagehide` closes the panel; Phase 2 › 3 Intent updated |
+| F5 (observation) the hardcoded-value scan has no command | Accepted | Criterion 2.3 (and its Progress row): `npm run test:guards` plus the `/10x-ui` grep on the four files |
+| F6 (observation) #212 moved past f6b8c97 | Accepted | Header and Open Risks: #212 at d94bb65 (97 files vs main); overlap adds `src/pages/design.astro`, the i18n catalogues, `CLAUDE.md` and `tests/e2e/helpers.ts` (changed on main since this branch's base) |
+| F7 (observation) DOM order of the panel | Accepted | Critical Implementation Details and Phase 2 › 3 Contract: `<nav>` > `<button>` immediately followed by `<div popover>` |
 
 ## References
 
@@ -520,7 +559,7 @@ panel na stronie Cele)
 
 - [ ] 2.1 `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it
 - [ ] 2.2 `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported)
-- [ ] 2.3 The hardcoded-value scan on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
+- [ ] 2.3 `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
 - [ ] 2.4 `npm run test:reference`, `npm run lint` and `npx astro check` pass
 
 #### Manual

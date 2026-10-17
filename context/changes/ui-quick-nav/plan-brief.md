@@ -71,7 +71,7 @@ focus on open, handles arrows and closes on focus leaving. Both panels share `TO
 
 ## Open Risks & Assumptions
 
-- #212 overlap in `TopbarControls.tsx`, `global.css` and `Topbar.astro`; the plan assumes its names as of f6b8c97.
+- #212 overlap in `TopbarControls.tsx`, `global.css` and `Topbar.astro`; the plan assumes its names as of d94bb65 (re-checked in plan review F6); `design.astro`, the i18n catalogues, `CLAUDE.md` and `tests/e2e/helpers.ts` overlap too.
 - The 320 px and 768 px margins are small; any later Topbar control needs a new measurement.
 - The F6 exception (menu's own `aria-current`) should be confirmed in plan review.
 - Seven owner questions (Polish, ⭐ defaults) in the plan; a different answer changes D4-D8 only.
