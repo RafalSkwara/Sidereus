@@ -8,8 +8,8 @@ import { onboardInMadrid, test, waitForHydration } from "./helpers";
 /*
  * Swipe down to close a bottom sheet (ui-quick-nav Phase 3, owner P6, 2026-10-17): the quick nav's sheet and the
  * settings sheet, the app's only two, share one helper (`src/lib/ui/sheet-swipe.ts`). This spec is the only protection
- * of the gesture: on a 320×568 phone the sheet sits under the Topbar strip and its heading stays put while the list
- * scrolls (P2 B); a short drag on the handle follows the finger and snaps back; a long swipe closes, from the handle or
+ * of the gesture: on a phone the sheet sits under the Topbar strip, and on a 480 px tall one, where the seven rows do
+ * not fit, the list scrolls inside the sheet while its heading stays put (P2 B, impl review F4); a short drag on the handle follows the finger and snaps back; a long swipe closes, from the handle or
  * from the list while it is at its top (and the row under the finger is not followed); the settings sheet closes with a
  * touch swipe and with a mouse drag on its handle (the pointer path); with reduced motion the sheet does not follow, a
  * long swipe just closes it. Esc still closes. Touch goes through CDP touch events (real `touchstart`/`touchmove`),
@@ -62,25 +62,38 @@ test("a bottom sheet follows a swipe down, snaps back after a short one and clos
   const cdp = await page.context().newCDPSession(page);
   const trigger = page.getByRole("button", { name: t.label });
 
-  // The quick-nav sheet on a 568 px phone: under the Topbar strip, all seven rows reachable, the heading fixed.
+  // The quick-nav sheet on a 480 px tall phone: under the Topbar strip, the list longer than the sheet's body and
+  // scrolled inside it to the last row, the heading fixed.
+  await page.setViewportSize({ width: 320, height: 480 });
   await trigger.click();
   const panel = quickPanel(page);
   await expect(panel).toBeVisible();
+  // Opening moves focus to the first row (the popover's `toggle` runs after it shows), which scrolls the list to its
+  // top: wait for it, or the scroll below can be undone by that focus.
+  await expect(panel.getByRole("link", { name: t.tonight, exact: true })).toBeFocused();
   const handle = panel.locator("[data-sheet-handle]");
-  const restingTop = await top(panel);
+  const body = panel.locator("[data-sheet-body]");
   const strip = await page.evaluate(() =>
     Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-strip-height")),
   );
-  expect(restingTop, "the sheet stays under the Topbar strip").toBeGreaterThanOrEqual(strip * 16);
+  expect(await top(panel), "the sheet stays under the Topbar strip").toBeGreaterThanOrEqual(strip * 16);
+  const overflow = await body.evaluate((element) => element.scrollHeight - element.clientHeight);
+  expect(overflow, "at 480 px the seven rows overflow the sheet's body, so it scrolls").toBeGreaterThan(0);
   const headingTop = await top(handle);
-  await panel.locator("[data-sheet-body]").evaluate((body) => {
-    body.scrollTo({ top: body.scrollHeight });
+  await body.evaluate((element) => {
+    element.scrollTo({ top: element.scrollHeight });
   });
+  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(panel.getByRole("link", { name: t.nights, exact: true })).toBeInViewport({ ratio: 1 });
   expect(await top(handle), "the heading does not scroll with the list").toBe(headingTop);
-  await panel.locator("[data-sheet-body]").evaluate((body) => {
-    body.scrollTo({ top: 0 });
+  await body.evaluate((element) => {
+    element.scrollTo({ top: 0 });
   });
+
+  // Back on a 568 px phone, the rest of the gestures.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect.poll(() => body.evaluate((element) => element.scrollHeight - element.clientHeight)).toBe(0);
+  const restingTop = await top(panel);
 
   // A short drag on the handle: the sheet follows the finger, then snaps back and stays open.
   await touchSwipe(cdp, await pointIn(handle, 8), 20, true);

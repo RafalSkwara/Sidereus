@@ -57,6 +57,8 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
   let gesture: { startY: number; fromHandle: boolean; dragging: boolean; height: number; samples: Sample[] } | null =
     null;
   let swallowClick = false;
+  /** Set while the sheet slides out (impl review F2): a tap then neither restarts a drag nor reaches a row. */
+  let closing = false;
   let settleTimer: number | undefined;
 
   const reset = () => {
@@ -85,6 +87,7 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
   };
 
   const close = () => {
+    closing = true;
     if (reducedMotion()) {
       panel.hidePopover();
       reset();
@@ -135,7 +138,9 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
     gesture.samples.push({ y, t });
     if (gesture.samples.length > 32) gesture.samples.shift();
     if (gesture.dragging && !reducedMotion()) panel.style.translate = `0 ${String(Math.max(0, dy))}px`;
-    return dy >= 0;
+    // Only a claimed drag cancels the browser's own move (impl review F1): a 1-2 px downward jitter at the start of a
+    // list scroll must not block it (iOS Safari holds a cancelled first `touchmove` against the whole touch).
+    return gesture.dragging && dy >= 0;
   };
 
   const end = () => {
@@ -156,6 +161,7 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
 
   // Touch: anywhere on the sheet, from the handle or from the body at its top.
   const onTouchStart = (event: TouchEvent) => {
+    if (closing) return;
     if (event.touches.length !== 1 || !canStart() || !(event.target instanceof Node)) {
       gesture = null;
       return;
@@ -172,7 +178,7 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
 
   // Mouse and pen: the handle zone only (a touch pointer is the touch path's).
   const onPointerDown = (event: PointerEvent) => {
-    if (event.pointerType === "touch" || event.button !== 0 || !canStart()) return;
+    if (closing || event.pointerType === "touch" || event.button !== 0 || !canStart()) return;
     handle?.setPointerCapture(event.pointerId);
     start(event.clientY, event.timeStamp, true);
   };
@@ -193,7 +199,7 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
   };
   // The click that ends a drag (a row's link under the finger) is not a tap.
   const onClick = (event: MouseEvent) => {
-    if (!swallowClick) return;
+    if (!swallowClick && !closing) return;
     swallowClick = false;
     event.preventDefault();
     event.stopPropagation();
@@ -202,6 +208,7 @@ export function attachSheetSwipe(panel: HTMLElement): () => void {
     if ((event as ToggleEvent).newState !== "closed") return;
     gesture = null;
     swallowClick = false;
+    closing = false;
     reset();
   };
 

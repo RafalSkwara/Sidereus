@@ -85,8 +85,10 @@ const headingId = `${idBase}-heading`;
 
 /** A specimen panel in flow: the panel's surface and padding without the popover's fixed placement. */
 const SPECIMEN_PANEL_CLASS = {
-  panel: "flex w-80 max-w-full flex-col rounded-2xl border border-border bg-surface p-4 text-foreground shadow-2xl",
-  sheet: "flex w-full max-w-xs flex-col rounded-t-2xl border-t border-border bg-surface p-5 text-foreground shadow-2xl",
+  panel:
+    "flex w-80 max-w-full flex-col rounded-2xl border border-border bg-surface p-4 text-foreground shadow-2xl red:border-control-border",
+  sheet:
+    "flex w-full max-w-xs flex-col rounded-t-2xl border-t border-border bg-surface p-5 text-foreground shadow-2xl red:border-control-border",
 } as const;
 ---
 
@@ -223,9 +225,10 @@ const SPECIMEN_PANEL_CLASS = {
       target.focus();
     });
 
-    panel.addEventListener("focusout", (event) => {
+    // On the `<nav>`, which holds the button and the panel, so Shift+Tab past the button closes it too (impl review F3).
+    nav.addEventListener("focusout", (event) => {
       const next = event.relatedTarget;
-      if (next instanceof Node && !panel.contains(next) && !trigger.contains(next) && panel.matches(":popover-open")) {
+      if (next instanceof Node && !nav.contains(next) && panel.matches(":popover-open")) {
         panel.hidePopover();
       }
     });

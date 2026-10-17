@@ -644,6 +644,19 @@ are still pending).
 | F6 (observation) #212 moved past f6b8c97 | Accepted | Header and Open Risks: #212 at d94bb65 (97 files vs main); overlap adds `src/pages/design.astro`, the i18n catalogues, `CLAUDE.md` and `tests/e2e/helpers.ts` (changed on main since this branch's base) |
 | F7 (observation) DOM order of the panel | Accepted | Critical Implementation Details and Phase 2 › 3 Contract: `<nav>` > `<button>` immediately followed by `<div popover>` |
 
+## Impl review triage
+
+Review: `reviews/impl-review.md` (#220, 2026-10-17, no critical findings). Triage by the lead, fixed in one commit
+("fix(ui-quick-nav): impl review F1–F4 and the red sheet edge").
+
+| Finding | Decision | Fix |
+| ------- | -------- | --- |
+| F1 (warning) a cancelled first `touchmove` can block the list's scroll on iOS | Fixed (variant A) | `sheet-swipe.ts` `move()` returns `gesture.dragging && dy >= 0`: nothing is cancelled inside the 8 px slop; an upward move in the body still releases the gesture. Device check stays in 3.4 |
+| F2 (warning) a tap during the close animation reopens the sheet and follows a row | Fixed | `closing` flag set in `close()`, cleared on the closed `toggle`: `touchstart` / `pointerdown` are ignored and the capture-phase click is swallowed while it is set |
+| F3 (observation) Shift+Tab past the button leaves the panel open | Fixed | The `focusout` listener moved from the panel to the `<nav>` (closes when focus leaves the nav for a concrete element; `null` still ignored); `quick-nav.spec.ts` adds the Shift+Tab step (red on the old listener) |
+| F4 (observation) the in-sheet scroll check is vacuous at 320×568 | Fixed | `sheet-swipe.spec.ts` checks the scroll at 320×480 (asserts the body overflows and scrolls, the heading stays), then returns to 320×568 for the gestures |
+| F5 (observation) manual checks, phase 1 shots, red sheet edge | Red edge fixed; the rest stays with the owner | In red the sheet's edge and grab bar use `--control-border` (`red:border-control-border`, `red:bg-control-border`; the existing token held to 3:1 on `--background` and `--surface` in every theme by `contrast.test.ts`, red with zero green and blue); also on the `/design` specimens. Before / after: `evidence/impl/red-edge-before-*-320-pl.png`, `red-edge-after-*-320-pl.png`, `red-edge-after-qn-panel-1440-en.png`. 1.5 is checked on the "after" shots (`settings-sheet-390-*`, `settings-panel-1440-*`) |
+
 ## References
 
 - Research and charges: `context/changes/ui-quick-nav/research.md`

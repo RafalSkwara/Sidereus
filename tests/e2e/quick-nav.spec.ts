@@ -89,4 +89,15 @@ test("keyboard only, the quick nav opens Tonight's pages from the log and marks 
   await expect(panel(page)).toBeHidden();
   await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
   await expect(trigger(page)).toBeFocused();
+
+  // Shift+Tab out past the button closes it too (impl review F3), as Tab past the last row does.
+  await page.keyboard.press("Enter");
+  await expect(row(page, t.moon)).toBeFocused();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Shift+Tab");
+  await expect(trigger(page)).toBeFocused();
+  await expect(panel(page)).toBeVisible();
+  await page.keyboard.press("Shift+Tab");
+  await expect(panel(page)).toBeHidden();
+  await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
 });

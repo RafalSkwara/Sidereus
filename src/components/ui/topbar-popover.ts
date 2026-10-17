@@ -32,6 +32,8 @@ export const TOPBAR_PANEL_CLASS = cn(
   "topbar-panel-max-h overflow-hidden p-5 shadow-2xl backdrop:bg-background/70 open:flex open:flex-col",
   "sm:inset-x-auto sm:topbar-panel-top sm:right-topbar-edge sm:bottom-auto sm:w-80",
   "sm:rounded-2xl sm:border sm:p-4 sm:backdrop:bg-transparent",
+  // Red has no hue to part the surface from the ground, so the edge is the 3:1 control border (a shape, not a hue).
+  "red:border-control-border",
 );
 
 /**
@@ -41,7 +43,7 @@ export const TOPBAR_PANEL_CLASS = cn(
 export const TOPBAR_SHEET_HANDLE_CLASS = "shrink-0 max-sm:touch-none";
 
 /** The grab bar itself: phones only, 16 px above the panel's content. */
-export const TOPBAR_SHEET_GRIP_CLASS = "mx-auto mb-4 h-1 w-10 rounded-full bg-border sm:hidden";
+export const TOPBAR_SHEET_GRIP_CLASS = "mx-auto mb-4 h-1 w-10 rounded-full bg-border red:bg-control-border sm:hidden";
 
 /**
  * The panel's scrolling body (`data-sheet-body`). A scroll box clips its children's focus outlines (2 px offset +
