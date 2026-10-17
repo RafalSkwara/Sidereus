@@ -16,6 +16,10 @@ import { madridDateDaysAgo, onboardInMadrid, test, waitForHydration } from "./he
  * the counts follow edits and deletes. Each test signs up its own fresh Madrid user on
  * the all-clear forecast fixture, so nothing depends on test order. The copy is read from the catalogue and the dates
  * go through the same formatter the page uses.
+ *
+ * Progress rewards (ui-progress-rewards) adds what a screenshot cannot show: a tile's screen-reader sentence carries
+ * its type and seen state (exact text: "not seen" contains "seen"), the legend's per-type count follows the log both
+ * ways, the dialog shows the milestone's badge, and the checklist markup stays inside its measured budget.
  */
 
 const progress = en.progress;
@@ -25,6 +29,16 @@ const LOG_FORM = 'form[action="/api/log"]';
 const EDIT_FORM = 'form[action^="/api/log/"]:not([action$="/delete"])';
 const DELETE_FORM = 'form[action$="/delete"]';
 const format = createFormatter("en");
+/** M31's English common name, from `messier.json` (the catalogue JSON does not load in Playwright). */
+const M31_NAME = "Andromeda Galaxy";
+/** A tile's screen-reader sentence: "M31, Andromeda Galaxy, galaxy, seen". */
+const tileSr = (seen: boolean) => [M31_NAME, progress.types.galaxy.one, seen ? progress.seen : progress.notSeen];
+/**
+ * The two checklist grids plus the icon sprite, in `outerHTML` characters, in this journey's state at step 3 (M31 seen):
+ * measured at 103,758 on the preview build (implementation-notes.md), pinned at about +10 %, so a tile that grows
+ * fails here and not in a user's data plan. The measure covers this change's markup only, never the page shell.
+ */
+const CHECKLIST_MARKUP_BUDGET = 114_000;
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -96,6 +110,14 @@ async function expectReached(page: Page, key: MilestoneKey, night: string) {
   await expect(milestone).toContainText(copy.reachedOn({ date: format.formatShortDate(night) }));
 }
 
+/** A dialog that a save opened, closed with Continue; nothing when the save celebrated nothing. */
+async function dismissCelebrationIfOpen(page: Page) {
+  await page.waitForLoadState("load");
+  const open = openCelebration(page);
+  if ((await open.count()) > 0) await open.getByRole("button", { name: copy.celebration.continue }).click();
+  await expect(open).toHaveCount(0);
+}
+
 /** The row is still ahead: no `data-reached`, and `status` (Not yet, or "x / N") as its note. */
 async function expectAhead(page: Page, key: MilestoneKey, status: string) {
   const milestone = row(page, key);
@@ -112,6 +134,11 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await onboardInMadrid(page, "e2e-milestones");
   const messierHeading = page.locator("#progress-messier-heading");
   const chip = (key: string) => page.locator(`[data-checklist-item="${key}"]`);
+  const tileSrText = (key: string) => chip(key).locator("[data-tile-sr]");
+  const messierLegend = (family: string) =>
+    page
+      .locator('section[aria-labelledby="progress-messier-heading"] [data-checklist-legend]')
+      .locator(`[data-legend-family="${family}"] [data-legend-count]`);
 
   // 1. Progress in the primary nav opens the page; nothing is seen yet, but every band shows, and no milestone is reached.
   await page.goto("/log");
@@ -133,6 +160,9 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expect(messierHeading).toContainText(count(0, 110));
   await expect(chip("M31")).toHaveCount(1);
   await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
+  await expect(chip("M31")).toHaveAttribute("data-family", "galaxy");
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(false)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
 
   // 3. Edited to 4, the entry reaches the milestone on the entry's own night, counts, its chip is ticked and it is
   // listed under seen.
@@ -146,8 +176,36 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expectReached(page, "first-galaxy", galaxyNight);
   await expect(messierHeading).toContainText(count(1, 110));
   await expect(chip("M31")).toHaveAttribute("data-seen", "");
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(true)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(1, 40));
   await expect(page.locator('[data-seen-item="M31"]')).toHaveCount(1);
   await expect(page.locator("[data-progress-empty]")).toHaveCount(0);
+  // The checklist markup budget, in this state: the two grids and the sprite only (never the shell).
+  const checklistMarkup = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-checklist-grid], [data-object-type-sprite]")]
+      .map((element) => element.outerHTML.length)
+      .reduce((sum, length) => sum + length, 0),
+  );
+  expect(checklistMarkup).toBeGreaterThan(0);
+  expect(checklistMarkup).toBeLessThan(CHECKLIST_MARKUP_BUDGET);
+
+  // 3b. Re-rated to 2, the entry un-sees M31: the tile, the legend and the count go back, while the first galaxy stays
+  // reached on its stored night. Then back to 4 (the galaxy is stored, so nothing celebrates), as step 5 expects.
+  form = await openEntry(page, "M31");
+  await rate(form, 2);
+  await form.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  await page.goto("/log/progress");
+  await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(false)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
+  await expect(messierHeading).toContainText(count(0, 110));
+  await expectReached(page, "first-galaxy", galaxyNight);
+  form = await openEntry(page, "M31");
+  await rate(form, 4);
+  await form.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  await dismissCelebrationIfOpen(page);
 
   // 4. Jupiter, logged from the planets page's form (straight to the form: it does not depend on Jupiter being up
   // tonight), reaches the first planet and shows the night it was logged as its first. It is no Messier object, so the
@@ -175,6 +233,9 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await page.goto("/log/progress");
   await expectReached(page, "first-galaxy", galaxyNight);
   await expectReached(page, "first-globular", galaxyNight);
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
+  await expect(messierLegend("globular")).toHaveText(count(1, 29));
+  await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
 
   // 6. Deleting the M13 entry takes the entries away, not the record: both milestones stay, on their stored nights,
   // while the counts follow the log and go back to 0.
@@ -212,6 +273,7 @@ test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
   await expect(celebration(page)).toHaveCount(1);
   await expect(openCelebration(page)).toHaveCount(1);
   await expect(openCelebration(page)).toContainText(copy.name["first-galaxy"]);
+  await expect(openCelebration(page).locator('[data-milestone-badge="first-galaxy"]')).toHaveCount(1);
   await expect(openCelebration(page).getByRole("link", { name: celebrationCopy.seeProgress })).toHaveAttribute(
     "href",
     "/log/progress",

@@ -1,5 +1,6 @@
 import { CALDWELL, MESSIER } from "@/lib/catalogue";
 import { MILESTONES, type MilestoneState } from "@/lib/progress/milestones";
+import { FAMILY_OF, OBJECT_FAMILIES } from "@/lib/progress/object-family";
 import { observingProgress } from "@/lib/progress/progress";
 
 /**
@@ -53,3 +54,16 @@ export const BADGE_AHEAD: readonly MilestoneState[] = MILESTONES.map(({ key }) =
   reachedNight: null,
   progress: AHEAD_PROGRESS[key],
 }));
+
+/**
+ * One seen and one not-seen tile per object family, from the 37-object log's Messier list (in catalogue order), so the
+ * tile specimens cover every icon in both states.
+ */
+export const FAMILY_TILES = OBJECT_FAMILIES.flatMap((family) =>
+  [true, false].flatMap((seen) => {
+    const item = progressMany.messier.items.find(
+      (candidate) => FAMILY_OF[candidate.type] === family && (candidate.seen !== null) === seen,
+    );
+    return item ? [item] : [];
+  }),
+);

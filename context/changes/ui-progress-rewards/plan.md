@@ -801,36 +801,36 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 #### Manual
 
 - [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop — ad33563
-- [ ] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
+- [x] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
 - [x] 2.7 The owner approved the badge art before it was ported — approved by the owner, 2026-10-17
 
 ### Phase 3: Tile checklists with a legend
 
 #### Automated
 
-- [x] 3.1 Types check: `npx astro check`
-- [x] 3.2 Reference and guard suites pass
-- [x] 3.3 Lint passes on the changed files
-- [x] 3.4 Build passes: `npm run build`
-- [x] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged
-- [x] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md`
+- [x] 3.1 Types check: `npx astro check` — 2bc1c05
+- [x] 3.2 Reference and guard suites pass — 2bc1c05
+- [x] 3.3 Lint passes on the changed files — 2bc1c05
+- [x] 3.4 Build passes: `npm run build` — 2bc1c05
+- [x] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged — 2bc1c05
+- [x] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md` — 2bc1c05
 
 #### Manual
 
-- [ ] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, names clear of the check at 320 px, the closed `<details>` work by keyboard
-- [ ] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader
+- [x] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, names clear of the check at 320 px, the closed `<details>` work by keyboard
+- [x] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader
 
 ### Phase 4: States, `/design`, the screenshot gate, the guard and the rule
 
 #### Automated
 
-- [ ] 4.1 Types check: `npx astro check`
-- [ ] 4.2 Reference and guard suites pass, incl. the extended rhythm guard
-- [ ] 4.3 Lint passes on the changed files
-- [ ] 4.4 Build passes: `npm run build`
-- [ ] 4.5 The whole e2e suite and smoke pass the way CI runs them
-- [ ] 4.6 Hardcoded-value scan on the view's files returns 0
+- [x] 4.1 Types check: `npx astro check`
+- [x] 4.2 Reference and guard suites pass, incl. the extended rhythm guard
+- [x] 4.3 Lint passes on the changed files
+- [x] 4.4 Build passes: `npm run build`
+- [x] 4.5 The whole e2e suite and smoke pass the way CI runs them
+- [x] 4.6 Hardcoded-value scan on the view's files returns 0
 
 #### Manual
 
-- [ ] 4.7 Screenshot gate: `/design` progress blocks and the signed-in page in dark, light and red, EN and PL, saved under `evidence/after/`
+- [x] 4.7 Screenshot gate: `/design` progress blocks and the signed-in page in dark, light and red, EN and PL, saved under `evidence/after/`

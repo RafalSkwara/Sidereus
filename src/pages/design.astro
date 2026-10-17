@@ -51,6 +51,7 @@ import { eventSamples, SAMPLE_EVENTS_NIGHT } from "@/components/design/event-sam
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import { nightSamples, SAMPLE_NIGHTS_ZONE } from "@/components/design/night-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import ChecklistLegend from "@/components/progress/ChecklistLegend.astro";
 import { OBJECT_FAMILY_ICONS } from "@/components/progress/progress-icons";
 import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
@@ -74,7 +75,7 @@ import { rangeClasses } from "@/components/tonight/range-classes";
 import FinderChart from "@/components/finder/FinderChart.astro";
 import FinderLocked from "@/components/finder/FinderLocked.astro";
 import { finderSamples } from "@/components/design/finder-samples";
-import { BADGE_AHEAD, BADGE_REACHED, progressMany } from "@/components/design/progress-samples";
+import { BADGE_AHEAD, BADGE_REACHED, FAMILY_TILES, progressMany } from "@/components/design/progress-samples";
 import Attribution from "@/components/tonight/Attribution.astro";
 import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
 import PlanNote from "@/components/tonight/PlanNote.astro";
@@ -3365,39 +3366,63 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
-          <!-- ChecklistGrid and SeenList -->
+          <!-- ChecklistGrid, ChecklistLegend and SeenList -->
           <section class:list={block} aria-labelledby="c-checklist">
             <h3 id="c-checklist" class:list={blockTitle}>
-              ChecklistGrid and SeenList
+              ChecklistGrid, ChecklistLegend and SeenList
             </h3>
             <p class:list={blockNote}>
-              The progress page's checklist: a chip per catalogue object (a seen chip is filled and carries a check in
-              its corner, so red mode tells it apart by fill and icon, not hue), then the seen objects as a list with
-              the night each was first logged with a rating of 3 or above.
+              The progress page's checklists (ui-progress-rewards, owner P4 B / P5 B / P6 A): a legend per list (each
+              object family's icon, name and seen / total), then a tile per catalogue object with its family's icon (one
+              sprite, rendered once on this page), the number and the name. A seen tile has a 2 px action border on the
+              action fill, the icon in the accent ink, a heavier number and a check, so red mode tells it apart by shape
+              and weight, not hue. Then the seen objects as a list with the night each was first logged, closed in a
+              details (owner P8 A).
             </p>
             <div class="flex flex-col gap-6">
+              {[
+                { label: "default · every family, seen and not seen", red: false },
+                { label: "red mode · every family, seen and not seen, with the legend", red: true },
+              ].map((sample) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>{sample.label}</p>
+                  <div
+                    data-theme={sample.red ? "red" : undefined}
+                    class:list={[
+                      "flex flex-col gap-6 rounded-lg",
+                      sample.red && "border border-border bg-background p-4 text-foreground",
+                    ]}
+                  >
+                    {sample.red && <ChecklistLegend items={progressMany.messier.items} label="Messier" />}
+                    <ChecklistGrid items={FAMILY_TILES} prefix="M" label="Messier" />
+                  </div>
+                </div>
+              ))}
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · Messier, 3 seen (a rating of 2 ticks nothing)</p>
-                <ChecklistGrid items={progressSome.messier.items} prefix="M" label="Messier" />
+                <p class:list={stateLabel}>default · Messier, the 37-object log: legend, tiles, SeenList (closed)</p>
+                <ChecklistLegend items={progressMany.messier.items} label="Messier" />
+                <ChecklistGrid items={progressMany.messier.items} prefix="M" label="Messier" />
+                <SeenList items={progressMany.messier.items} label="Messier: seen so far" />
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · SeenList for the same checklist (catalogue order, first night)</p>
-                <SeenList items={progressSome.messier.items} label="Messier: seen so far" />
+                <p class:list={stateLabel}>default · Caldwell, 6 seen (C numbers; the legend has no star groups)</p>
+                <ChecklistLegend items={progressMany.caldwell.items} label="Caldwell" />
+                <ChecklistGrid items={progressMany.caldwell.items} prefix="C" label="Caldwell" />
+                <SeenList items={progressMany.caldwell.items} prefix="C" label="Caldwell: seen so far" />
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · Caldwell, 1 seen (C numbers)</p>
-                <ChecklistGrid items={progressSome.caldwell.items} prefix="C" label="Caldwell" />
-                <SeenList items={progressSome.caldwell.items} prefix="C" label="Caldwell: seen so far" />
-              </div>
-              <div class:list={cell}>
-                <p class:list={stateLabel}>empty · nothing seen (every chip outlined; SeenList renders nothing)</p>
+                <p class:list={stateLabel}>
+                  empty · nothing seen (every legend count at 0, every tile outlined; SeenList renders nothing)
+                </p>
+                <ChecklistLegend items={progressNone.messier.items} label="Messier" />
                 <ChecklistGrid items={progressNone.messier.items} prefix="M" label="Messier" />
                 <SeenList items={progressNone.messier.items} label="Messier: seen so far" />
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, active, disabled — N/A (chips are not interactive: no links, no controls) · error —
-              N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
+              hover, focus-visible, active, disabled — N/A (tiles and legend rows are not interactive: no links, no
+              controls; the SeenList's summary is a native details toggle) · error — N/A (the page shows a ServerError
+              instead) · loading — N/A (server-rendered with the page)
             </p>
           </section>
 
