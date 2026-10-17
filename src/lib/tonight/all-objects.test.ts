@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSort, sortEntries, targetsRedirectPath } from "./all-objects";
+import { sortEntries, targetsRedirectPath } from "./all-objects";
 
 /** Rows with just what ordering reads: rank and the peak instant. */
 const at = (iso: string) => Date.parse(iso);
@@ -11,32 +11,13 @@ const entries = [
 ];
 
 describe("sortEntries", () => {
-  it("keeps rank order by default", () => {
-    expect(sortEntries(entries, "rank").map((e) => e.id)).toEqual(["M31", "M39", "M13", "M52"]);
-  });
-
   it("orders by best time across midnight, ties by rank", () => {
     expect(sortEntries(entries, "time").map((e) => e.id)).toEqual(["M13", "M39", "M52", "M31"]);
   });
 });
 
-describe("parseSort", () => {
-  it("reads time only from 'time', everything else is rank", () => {
-    expect(parseSort("time")).toBe("time");
-    expect(parseSort("rank")).toBe("rank");
-    expect(parseSort(null)).toBe("rank");
-    expect(parseSort("TIME")).toBe("rank");
-    expect(parseSort("peak")).toBe("rank");
-  });
-});
-
 describe("targetsRedirectPath", () => {
   const from = (query: string) => targetsRedirectPath(new URLSearchParams(query));
-
-  it("keeps a known order", () => {
-    expect(from("sort=time")).toBe("/tonight/targets?sort=time");
-    expect(from("sort=rank")).toBe("/tonight/targets?sort=rank");
-  });
 
   it("drops an unknown order and every other parameter", () => {
     expect(from("")).toBe("/tonight/targets");

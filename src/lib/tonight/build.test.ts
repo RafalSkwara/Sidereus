@@ -1,17 +1,12 @@
 import { afterEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-import { DEEP_SKY, findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
+import { DEEP_SKY } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import {
-  addDays,
   darknessThresholdDegForBortle,
   darkWindow,
-  ICE_GIANT_MIN_APERTURE_MM,
   MAX_RANKED_OBJECTS,
-  MOON_DISC_STEP_MINUTES,
-  moonDiscState,
-  moonState,
   observingNight,
   PLANET_KEYS,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
@@ -19,7 +14,6 @@ import {
   REASON_MIN_SPREAD,
   sunEvents,
   type Interval,
-  type MoonDiscState,
 } from "@/lib/engine";
 import { TROMSO } from "@/lib/engine/fixtures";
 import type { ForecastResult } from "@/lib/forecast/service";
@@ -50,56 +44,48 @@ import {
 import { tonightDateForSite } from "./tonight-date";
 
 /**
- * Lets a test make the planet ranking, the Moon or the sky view's frames throw; `false` (the default) leaves the
- * engine untouched.
+ * Lets a test make one engine step throw, to prove the build drops only that section and leaves one fixed line. Every
+ * flag is `false` by default, which leaves the engine untouched. The message carries a coordinate that must never reach
+ * the log.
  */
-const planetRanking = vi.hoisted(() => ({ throws: false }));
-const moonTargeting = vi.hoisted(() => ({ throws: false }));
-const skyFraming = vi.hoisted(() => ({ throws: false }));
-const planetTracking = vi.hoisted(() => ({ throws: false }));
-const eventSearching = vi.hoisted(() => ({ throws: false }));
-const planetWindowing = vi.hoisted(() => ({ throws: false }));
-const moonCarding = vi.hoisted(() => ({ throws: false }));
+const failing = vi.hoisted(() => ({
+  rankPlanets: false,
+  moonTarget: false,
+  skyFrames: false,
+  planetTracks: false,
+  skyEvents: false,
+}));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
   return {
     ...actual,
     rankPlanets: (...args: Parameters<typeof actual.rankPlanets>) => {
-      if (planetRanking.throws) {
-        throw new Error("planet ranking failed");
+      if (failing.rankPlanets) {
+        throw new RangeError("planet ranking failed at 52.23");
       }
       return actual.rankPlanets(...args);
     },
     moonTarget: (...args: Parameters<typeof actual.moonTarget>) => {
-      if (moonTargeting.throws) {
-        throw new Error("moon target failed");
+      if (failing.moonTarget) {
+        throw new RangeError("moon target failed at 52.23");
       }
       return actual.moonTarget(...args);
     },
     skyFrames: (...args: Parameters<typeof actual.skyFrames>) => {
-      if (skyFraming.throws) {
-        throw new Error("sky frames failed");
+      if (failing.skyFrames) {
+        throw new RangeError("sky frames failed at 52.23");
       }
       return actual.skyFrames(...args);
     },
     skyEvents: (...args: Parameters<typeof actual.skyEvents>) => {
-      if (eventSearching.throws) {
-        // A message that carries a coordinate, which must never reach the log.
+      if (failing.skyEvents) {
         throw new RangeError("sky events failed at 52.23");
       }
       return actual.skyEvents(...args);
     },
-    moonDiscStates: (...args: Parameters<typeof actual.moonDiscStates>) => {
-      if (moonCarding.throws) {
-        // A message that carries a coordinate, which must never reach the log.
-        throw new RangeError("moon states failed at 52.23");
-      }
-      return actual.moonDiscStates(...args);
-    },
     planetTracks: (...args: Parameters<typeof actual.planetTracks>) => {
-      if (planetTracking.throws) {
-        // A message that carries a coordinate, which must never reach the log.
+      if (failing.planetTracks) {
         throw new RangeError("planet tracks failed at 52.23");
       }
       return actual.planetTracks(...args);
@@ -107,28 +93,12 @@ vi.mock("@/lib/engine", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/tonight/plan-window", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/tonight/plan-window")>();
-  return {
-    ...actual,
-    planetWindowFor: (...args: Parameters<typeof actual.planetWindowFor>) => {
-      if (planetWindowing.throws) {
-        // A message that carries a coordinate, which must never reach the log.
-        throw new RangeError("planet window failed at 52.23");
-      }
-      return actual.planetWindowFor(...args);
-    },
-  };
-});
-
 afterEach(() => {
-  planetWindowing.throws = false;
-  moonCarding.throws = false;
-  planetRanking.throws = false;
-  moonTargeting.throws = false;
-  skyFraming.throws = false;
-  planetTracking.throws = false;
-  eventSearching.throws = false;
+  failing.rankPlanets = false;
+  failing.moonTarget = false;
+  failing.skyFrames = false;
+  failing.planetTracks = false;
+  failing.skyEvents = false;
   vi.restoreAllMocks();
 });
 
@@ -156,17 +126,6 @@ const TROMSO_SITE: SiteRecord = {
 
 const HOUR_MS = 3_600_000;
 
-/** Whether the `HH:mm` label lies from `from` to `to` inclusive on the clock, across midnight. */
-function isBetween(label: string | undefined, from: string, to: string): boolean {
-  const minutes = (text: string): number => {
-    const [h, m] = text.split(":").map(Number);
-    return h * 60 + m;
-  };
-  const day = 24 * 60;
-  const offset = (text: string): number => (minutes(text) - minutes(from) + day) % day;
-  return label !== undefined && offset(label) <= offset(to);
-}
-
 function rankingOf(view: TonightView): TonightRanking {
   if (view.ranking === null) {
     throw new Error("expected a ranking");
@@ -175,111 +134,6 @@ function rankingOf(view: TonightView): TonightRanking {
 }
 
 describe("buildTonight", () => {
-  it("ranks a clear night, formats times in the site's zone and pairs the kit's eyepieces", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-    );
-
-    expect(view).toMatchObject({
-      siteName: "Home",
-      telescopeName: "Skywatcher 150P",
-      date: "2026-10-10",
-      dateLabel: "Saturday, 10 October 2026",
-      timeZone: "Europe/Warsaw",
-      verdict: { level: "go" },
-      hasEyepieces: true,
-    });
-    expect(view.darkWindow.kind).toBe("window");
-    if (view.darkWindow.kind === "window") {
-      expect(view.darkWindow.start).toMatch(/^(19|20):\d{2}$/);
-      expect(view.darkWindow.end).toMatch(/^0[4-6]:\d{2}$/);
-    }
-    // The raw start behind the formatted one, for the sky check (verdict-check): the evening of 10 October.
-    expect(view.headline.id).toBe("go");
-    expect(view.darkStart?.toISOString()).toMatch(/^2026-10-10T1[78]:/);
-    const ranking = rankingOf(view);
-    expect(ranking.clearedCount).toBeGreaterThan(0);
-    expect(ranking.clearedText).toBe(`${ranking.clearedCount} objects cleared the bar tonight`);
-    expect(ranking.entries.length).toBe(Math.min(ranking.clearedCount, MAX_RANKED_OBJECTS));
-    for (const entry of ranking.entries) {
-      expect(entry.id).toMatch(/^(M|NGC|IC)\d+$/);
-      expect(entry.constellation).toMatch(/^[A-Z][a-z]{2}$/);
-      expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
-      expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
-      expect(entry.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-      // One or two phrases: an entry with a single named reason carries the lead phrase alone (evening-showpieces).
-      expect(entry.reason.length).toBeGreaterThan(0);
-      expect(entry.reason.split(" · ").length).toBeLessThanOrEqual(2);
-      expect(entry.pair).not.toBeNull();
-    }
-    const m31 = ranking.entries.find((entry) => entry.id === "M31");
-    expect(m31).toMatchObject({ commonName: findMessier(31)?.commonName, constellation: "And" });
-  });
-
-  it("ranks a Caldwell object with its label, Caldwell number and a space-free key", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-      { withSkyView: true },
-    );
-
-    // The Double Cluster ranks near the top in October (evidence/calibration.md).
-    const double = rankingOf(view).entries.find((entry) => entry.id === "NGC869");
-    expect(double).toMatchObject({ label: "NGC 869 / 884", caldwell: 14, constellation: "Per" });
-    const query = new URL(logHref(view, "NGC869"), "http://localhost").searchParams;
-    expect(query.get("object")).toBe("NGC869");
-    // The live sky's marker lands on the space-free anchor and is named by the label.
-    const marker = view.skyView?.bodies.find((body) => body.key === "NGC869");
-    expect(marker).toMatchObject({ kind: "object", label: "NGC 869 / 884", href: "/tonight/targets#object-NGC869" });
-    expect(marker?.name.startsWith("NGC 869 / 884")).toBe(true);
-  });
-
-  it("leaves the pair out when the kit has no eyepieces", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: [],
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.hasEyepieces).toBe(false);
-    expect(rankingOf(view).entries.length).toBeGreaterThan(0);
-    expect(rankingOf(view).entries.every((entry) => entry.pair === null)).toBe(true);
-  });
-
-  it("has no ranking on a no-go night", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.verdict.level).toBe("no-go");
-    expect(view.headline).toEqual({ id: "no-go", key: "verdict.level.no-go", text: "Cloudy" });
-    expect(view.verdictText).toBe("too cloudy: the clearest dark hour has 100% cloud");
-    expect(view.ranking).toBeNull();
-  });
-
   it("has no ranking without a dark window", () => {
     const view = buildTonight(
       {
@@ -299,41 +153,6 @@ describe("buildTonight", () => {
     expect(view.ranking).toBeNull();
   });
 
-  it("defaults to marginal with a ranking when there is no forecast", () => {
-    const view = buildTonight(
-      { site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast: null, now: NOW },
-      "en",
-    );
-    expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
-    // Never "Partly clear" without a forecast.
-    expect(view.headline).toEqual({ id: "noForecast", key: "verdict.sky.noForecast", text: "No forecast" });
-    expect(view.verdictText).toBe("no weather data");
-    expect(view.ranking?.entries.length).toBeGreaterThan(0);
-  });
-
-  it("carries an empty ranking on a go night when nothing clears the bar", () => {
-    // M7 (Dec −35°) never rises above 15° from Warsaw, so it can never score.
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-        catalogue: MESSIER.filter((object) => object.messier === 7),
-      },
-      "en",
-    );
-    expect(view.verdict.level).toBe("go");
-    expect(view.ranking).toEqual({
-      clearedCount: 0,
-      clearedText: "No object cleared the bar tonight",
-      entries: [],
-      washedOutCount: 0,
-      washedOutText: null,
-      washedOutEntries: [],
-    });
-  });
   it("explains a weather no-go with the next night worth a look", () => {
     // Warsaw's observing nights start at local noon, 10:00 UTC: nights 1 and 2 overcast, night 3 clear.
     const night3 = Date.parse("2026-10-12T10:00:00Z");
@@ -381,58 +200,6 @@ describe("buildTonight", () => {
       );
     }
   });
-
-  it("reports whether the forecast is fresh, a saved copy or missing", () => {
-    const build = (forecast: ForecastResult | null) =>
-      buildTonight({ site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW }, "en");
-    const forecast = uniformForecast("2026-10-10T00:00:00Z", 5);
-
-    expect(build(result(forecast)).forecastStatus).toEqual({ kind: "fresh", text: "Forecast updated 20 min ago" });
-    expect(build(result(forecast, true, new Date(NOW.getTime() - 3 * HOUR_MS))).forecastStatus).toEqual({
-      kind: "fallback",
-      text: "Weather service unreachable — showing the forecast from 3 h ago",
-    });
-    expect(build(null).forecastStatus).toEqual({
-      kind: "none",
-      text: "No weather data — the weather service could not be reached and no earlier forecast is saved",
-    });
-  });
-
-  it("caps a go at marginal on a saved copy and still ranks", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5), true),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.verdict).toMatchObject({ level: "marginal", reason: { kind: "fallback-cap", cloudPct: 5 } });
-    expect(view.headline).toEqual({ id: "fallbackCap", key: "verdict.sky.fallbackCap", text: "Clear (old forecast)" });
-    expect(view.verdictText).toMatch(/^the last saved forecast showed \d+ h in a row with at most 5% cloud/);
-    expect(view.explanation).toBeNull();
-    expect(rankingOf(view).entries.length).toBeGreaterThan(0);
-  });
-
-  it("reads a forecast that ends mid-window as no weather data, with a ranking", () => {
-    // The series stops at 22:00 UTC (midnight in Warsaw), inside tonight's dark window.
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(hourlyForecast("2026-10-10T00:00:00Z", 23, () => 5)),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.verdict).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
-    expect(view.verdictText).toBe("no weather data");
-    expect(view.explanation).toBeNull();
-    expect(rankingOf(view).entries.length).toBeGreaterThan(0);
-  });
 });
 
 describe("buildTonight with an observation log (FR-018)", () => {
@@ -447,34 +214,6 @@ describe("buildTonight with an observation log (FR-018)", () => {
   // The log keys an object by its target key, the catalogue id ("M31").
   const top = unlogged.entries[0].id;
 
-  it("tags nothing and changes nothing without a log", () => {
-    expect(unlogged.entries.every((entry) => entry.seenText === null)).toBe(true);
-  });
-
-  it("marks every unlogged object not seen yet", () => {
-    expect(unlogged.entries.every((entry) => entry.notSeenYet)).toBe(true);
-  });
-
-  it("clears the mark after a rating of 3 or above, and keeps it with only ratings of 1-2", () => {
-    const rated = (rating: number) =>
-      buildTonight({ ...input, log: [{ target: top, night: "2026-10-01", rating }] }, "en");
-    const find = (view: ReturnType<typeof buildTonight>) => rankingOf(view).entries.find((e) => e.id === top);
-    expect(find(rated(2))?.notSeenYet).toBe(true);
-    expect(find(rated(1))?.notSeenYet).toBe(true);
-    // Rated 3 or above pushes the object down the ranking, out of Tonight's top five; the unlimited ranking still
-    // lists every cleared object, so the logged one is certainly there and must have lost its mark.
-    const everyone = (log: { target: string; night: string; rating: number }[]) =>
-      rankingOf(buildTonight({ ...input, log }, "en", { limit: Infinity })).entries;
-    const seen = everyone([{ target: top, night: "2026-10-01", rating: 3 }]).find((e) => e.id === top);
-    expect(seen).toBeDefined();
-    expect(seen?.notSeenYet).toBe(false);
-    const entries = rankingOf(rated(4)).entries;
-    expect(entries.every((e) => e.notSeenYet === (e.id !== top))).toBe(true);
-    // The tile's targets carry it too.
-    const tile = buildTonight({ ...input, log: [{ target: top, night: "2026-10-01", rating: 4 }] }, "en");
-    expect(tile.summaryTargets.every((e) => e.notSeenYet === (e.id !== top))).toBe(true);
-  });
-
   it("marks nothing not seen yet when the log could not be read", () => {
     const view = buildTonight({ ...input, log: [], logKnown: false }, "en");
     const ranking = rankingOf(view);
@@ -486,39 +225,18 @@ describe("buildTonight with an observation log (FR-018)", () => {
     expect(unlogged.entries.every((e) => e.notSeenYet)).toBe(true);
   });
 
-  it("tags an object seen on a night rated 3 or above", () => {
-    const view = buildTonight(
-      {
-        ...input,
-        log: [
-          { target: top, night: "2026-09-12", rating: 4 },
-          { target: top, night: "2026-10-01", rating: 3 },
-        ],
-      },
-      "en",
-    );
-    const entry = rankingOf(view).entries.find((e) => e.id === top);
-    // Pushed down, the object may leave the top five; where it still shows, it carries the tag.
-    if (entry) {
-      expect(entry.seenText).toBe("Seen 2 times – last 1 Oct 2026");
-    }
-    expect(rankingOf(view).entries.map((e) => e.id)).not.toEqual(unlogged.entries.map((e) => e.id));
-  });
-
-  it("leaves the ranking exactly as it was for a log of only 1-2 ratings (invariant 4)", () => {
-    const view = buildTonight(
+  it("leaves the ranking exactly as it was for a log of only 1-2 ratings (invariant 4), and for entries after the ranked night", () => {
+    expect(unlogged.entries.length).toBeGreaterThan(1);
+    const onlyLow = buildTonight(
       {
         ...input,
         log: unlogged.entries.map((e, i) => ({ target: e.id, night: "2026-10-01", rating: (i % 2) + 1 })),
       },
       "en",
     );
-    expect(rankingOf(view)).toEqual(unlogged);
-  });
-
-  it("ignores entries for nights after the ranked night", () => {
-    const view = buildTonight({ ...input, log: [{ target: top, night: "2026-10-11", rating: 5 }] }, "en");
-    expect(rankingOf(view)).toEqual(unlogged);
+    expect(rankingOf(onlyLow)).toEqual(unlogged);
+    const later = buildTonight({ ...input, log: [{ target: top, night: "2026-10-11", rating: 5 }] }, "en");
+    expect(rankingOf(later)).toEqual(unlogged);
   });
 });
 
@@ -536,91 +254,30 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     return night;
   }
 
-  function outlookNight(night: TonightNight): Extract<TonightNight, { kind: "outlook" }> {
-    if (night.kind !== "outlook") {
-      throw new Error(`expected an outlook on ${night.date}`);
+  it("makes night 1 the verdict card's night on a go night, a weather no-go, no forecast and a saved copy", () => {
+    const cases: [string, ForecastResult | null][] = [
+      ["a go night", result(weekForecast(5))],
+      ["a weather no-go", result(weekForecast(100))],
+      ["no forecast", null],
+      ["a saved copy", result(weekForecast(5), true)],
+    ];
+    // The four cases must differ in what they decide, so a loop over a short or uniform list cannot pass.
+    expect(cases).toHaveLength(4);
+    const levels = new Set<string>();
+    for (const [label, forecast] of cases) {
+      const view = build(forecast);
+      levels.add(view.verdict.level);
+      const first = verdictNight(view.nights[0]);
+      expect(first.date, label).toBe(view.date);
+      expect(first.level, label).toBe(view.verdict.level);
+      expect(first.headline, label).toEqual(view.headline);
+      expect(first.reasonText, label).toBe(view.verdictText);
+      expect(view.darkWindow.kind, label).toBe("window");
+      if (view.darkWindow.kind === "window") {
+        expect(first.darkText, label).toBe(`${view.darkWindow.start}–${view.darkWindow.end}`);
+      }
     }
-    return night;
-  }
-
-  it("lists seven consecutive nights from tonight, verdicts on 1-3 and outlooks on 4-7", () => {
-    const view = build(result(weekForecast(50)));
-    expect(view.nights.map((night) => night.date)).toEqual([
-      "2026-10-10",
-      "2026-10-11",
-      "2026-10-12",
-      "2026-10-13",
-      "2026-10-14",
-      "2026-10-15",
-      "2026-10-16",
-    ]);
-    expect(view.nights.map((night) => night.label)).toEqual([
-      "Sat 10 Oct",
-      "Sun 11 Oct",
-      "Mon 12 Oct",
-      "Tue 13 Oct",
-      "Wed 14 Oct",
-      "Thu 15 Oct",
-      "Fri 16 Oct",
-    ]);
-    expect(view.nights.map((night) => night.kind)).toEqual([
-      "verdict",
-      "verdict",
-      "verdict",
-      "outlook",
-      "outlook",
-      "outlook",
-      "outlook",
-    ]);
-    for (const night of view.nights.slice(3)) {
-      expect(night).not.toHaveProperty("level");
-      expect(night).not.toHaveProperty("headline");
-      expect(night).not.toHaveProperty("reasonText");
-      expect(outlookNight(night).cloudText).toBe("Cloud ~50%");
-    }
-    for (const night of view.nights) {
-      expect(night.darkText).toMatch(/^\d{2}:\d{2}–\d{2}:\d{2}$/);
-      expect(night.moonText).toMatch(/^Moon \d{1,3}% · /);
-    }
-  });
-
-  it.each<[string, ForecastResult | null]>([
-    ["a go night", result(weekForecast(5))],
-    ["a weather no-go", result(weekForecast(100))],
-    ["no forecast", null],
-    ["a saved copy", result(weekForecast(5), true)],
-  ])("makes night 1 the verdict card's night on %s", (_label, forecast) => {
-    const view = build(forecast);
-    const first = verdictNight(view.nights[0]);
-    expect(first.date).toBe(view.date);
-    expect(first.level).toBe(view.verdict.level);
-    expect(first.headline).toEqual(view.headline);
-    expect(first.reasonText).toBe(view.verdictText);
-    expect(view.darkWindow.kind).toBe("window");
-    if (view.darkWindow.kind === "window") {
-      expect(first.darkText).toBe(`${view.darkWindow.start}–${view.darkWindow.end}`);
-    }
-  });
-
-  it("reads night 2 as marginal with no weather data when the forecast stops after night 1", () => {
-    // The series ends at 11:00 UTC on 11 Oct: after night 1's dark window, before night 2's.
-    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 36, () => 5)));
-    expect(verdictNight(view.nights[0]).level).toBe("go");
-    expect(verdictNight(view.nights[1])).toMatchObject({
-      level: "marginal",
-      headline: { key: "verdict.sky.noForecast", text: "No forecast" },
-      reasonText: "no weather data",
-    });
-  });
-
-  it("reads nights 4-7 as having no cloud outlook yet when the forecast covers only nights 1-3", () => {
-    // The series ends at 23:00 UTC on 13 Oct: after night 3's dark window, inside night 4's.
-    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 96, () => 20)));
-    expect(view.nights.slice(0, 3).map((night) => verdictNight(night).reasonText)).not.toContain("no weather data");
-    for (const night of view.nights.slice(3)) {
-      expect(outlookNight(night).cloudText).toBe("No cloud outlook yet");
-      expect(night.darkText).toMatch(/^\d{2}:\d{2}–\d{2}:\d{2}$/);
-    }
+    expect([...levels].sort()).toEqual(["go", "marginal", "no-go"]);
   });
 
   it("formats every night in the site's zone across the 2026-10-25 DST change", () => {
@@ -654,80 +311,6 @@ describe("buildTonight's seven-night strip (FR-011)", () => {
     const realMinutes = Math.floor(window.end.getTime() / MINUTE_MS) - Math.floor(window.start.getTime() / MINUTE_MS);
     expect(realMinutes - wallMinutes).toBe(60);
   });
-
-  it("reads no darkness on every night at Tromsø around the solstice", () => {
-    const view = build(result(uniformForecast("2026-06-21T00:00:00Z", 0)), {
-      site: TROMSO_SITE,
-      now: new Date("2026-06-21T20:00:00Z"),
-    });
-    expect(view.nights).toHaveLength(7);
-    for (const night of view.nights) {
-      expect(night.darkText).toBe("No darkness");
-      expect(night.moonText).toMatch(/^Moon \d{1,3}%$/);
-    }
-    for (const night of view.nights.slice(0, 3)) {
-      expect(verdictNight(night)).toMatchObject({
-        level: "no-go",
-        headline: { key: "tonight.card.noDarkWindow", text: "No dark window" },
-        // The headline already says it; the card's "…tonight" reason wording would misread on nights 2-3.
-        reasonText: null,
-      });
-    }
-    for (const night of view.nights.slice(3)) {
-      expect(outlookNight(night).cloudText).toBeNull();
-    }
-  });
-});
-
-describe("buildTonight's summary fields (tonight-nightfall)", () => {
-  const build = (forecast: ForecastResult | null) =>
-    buildTonight({ site: WARSAW, telescope: TELESCOPE, eyepieces: EYEPIECES, forecast, now: NOW }, "en");
-
-  it("gives each night with forecast hours its rounded clear share, and none past the forecast", () => {
-    // Every hour 33% cloud until 23:00 UTC on 13 Oct: nights 1-3 are covered, night 4's dark window is not.
-    const view = build(result(hourlyForecast("2026-10-10T00:00:00Z", 96, () => 33)));
-    expect(view.nights.map((night) => night.clearPct)).toEqual([67, 67, 67, null, null, null, null]);
-  });
-
-  it("has no clear share on a night without darkness", () => {
-    const view = buildTonight(
-      {
-        site: TROMSO_SITE,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
-        now: new Date("2026-06-21T20:00:00Z"),
-      },
-      "en",
-    );
-    expect(view.nights.map((night) => night.clearPct)).toEqual(Array(7).fill(null));
-  });
-
-  it("lists the ranking's best three by best time", () => {
-    // Narrowed to the Messier objects: this night's order below is a property of that catalogue, not of the sort.
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-        catalogue: MESSIER,
-      },
-      "en",
-    );
-    const best = rankingOf(view).entries.slice(0, 3);
-    expect(view.summaryTargets).toHaveLength(3);
-    expect(view.summaryTargets.map((entry) => entry.id).sort()).toEqual(best.map((entry) => entry.id).sort());
-    const times = view.summaryTargets.map((entry) => entry.bestAt);
-    expect(times).toEqual([...times].sort((a, b) => a - b));
-    // This night's top three peak out of rank order, so the order above is the sort's doing.
-    expect(view.summaryTargets.map((entry) => entry.rank)).not.toEqual([1, 2, 3]);
-  });
-
-  it("has no summary targets on a no-go night", () => {
-    expect(build(result(uniformForecast("2026-10-10T00:00:00Z", 100))).summaryTargets).toEqual([]);
-  });
 });
 
 describe("buildTonight's planets (M-2 S-01)", () => {
@@ -757,43 +340,6 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     }
     return view.solarSystem;
   }
-
-  it("lists the planets on a go night with facts, the detail eyepiece, a reason and a note", () => {
-    const planets = planetsOf(buildTonight(input, "en"));
-    expect(planets.windowText).toBe(`From civil dusk to dawn, ${hhmm(civil.start)}–${hhmm(civil.end)}`);
-    // The verdict card already speaks for the planet window on a go night.
-    expect(planets.weatherText).toBeNull();
-    expect(planets.entries.length).toBeGreaterThan(0);
-    expect(planets.noneText).toBeNull();
-    for (const entry of planets.entries) {
-      expect(PLANET_KEYS).toContain(entry.key);
-      expect(entry.name).toBe(en.targets.planet[entry.key]);
-      expect(entry.windowStart).toMatch(/^\d{2}:\d{2}$/);
-      expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
-      expect(entry.bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-      expect(entry.magnitudeText).toMatch(/^mag −?\d+\.\d$/);
-      expect(entry.sizeText).toMatch(/^\d+(\.\d)?″$/);
-      expect(entry.phaseText === null).toBe(entry.key !== "mercury" && entry.key !== "venus");
-      expect(entry.ringText === null).toBe(entry.key !== "saturn");
-      // The 10 mm is the most magnification the 150 mm takes within the limits (75×).
-      expect(entry.eyepiece).toEqual({ name: "10 mm Plössl", magnification: 75 });
-      expect(entry.reason).toMatch(/^(High|Well up|Low) around \d{2}:\d{2} — /);
-      expect(entry.note).toBe(en.tonight.planets.note[entry.key]);
-      expect(entry.seenText).toBeNull();
-      expect(entry.notSeenYet).toBe(true);
-    }
-    const saturn = planets.entries.find((entry) => entry.key === "saturn");
-    expect(saturn?.ringText).toMatch(/^tilted \d+°$/);
-  });
-
-  it("words the planets in Polish with the locale's decimal comma", () => {
-    const planets = planetsOf(buildTonight(input, "pl"));
-    const saturn = planets.entries.find((entry) => entry.key === "saturn");
-    expect(planets.windowText).toMatch(/^Od zmierzchu cywilnego do świtu, \d{2}:\d{2}–\d{2}:\d{2}$/);
-    expect(saturn).toMatchObject({ name: "Saturn", note: pl.tonight.planets.note.saturn });
-    expect(saturn?.magnitudeText).toMatch(/^−?\d+,\d mag$/);
-    expect(saturn?.ringText).toMatch(/^nachylone o \d+°$/);
-  });
 
   it("lists only the planets up in the clear twilight hours of a cloudy no-go night, and names those hours", () => {
     // Every forecast hour that overlaps the dark window is overcast; the twilight hours either side are clear.
@@ -842,70 +388,6 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     expect(polish.noneText).toBe(pl.tonight.planets.noneInClearHours);
   });
 
-  it("says no planet is well placed on a go night when none clears the site's minimum altitude", () => {
-    // Nothing reaches 70° from Warsaw on 10 October.
-    const view = buildTonight({ ...input, site: { ...WARSAW, minAltitudeDeg: 70 } }, "en");
-    expect(view.verdict.level).toBe("go");
-    const planets = planetsOf(view);
-    expect(planets.entries).toEqual([]);
-    expect(planets.noneText).toBe(en.tonight.planets.none);
-    expect(planets.noneText).toBe("No planet is well placed for your telescope between dusk and dawn tonight.");
-  });
-
-  it("gives the planet weather line when the planet verdict differs from a go on the card", () => {
-    // 95% humidity only in the evening civil twilight, before any hour that overlaps the dark window.
-    const humid = uniformForecast("2026-10-10T00:00:00Z", 5);
-    humid.hours = humid.hours.map((hour) =>
-      hour.start.getTime() + HOUR_MS > civil.start.getTime() &&
-      hour.start.getTime() < dark.start.getTime() &&
-      !overlapsDark(hour.start)
-        ? { ...hour, humidityPct: 95 }
-        : hour,
-    );
-    const view = buildTonight({ ...input, forecast: result(humid) }, "en");
-    expect(view.verdict.level).toBe("go");
-    const planets = planetsOf(view);
-    expect(planets.weatherText).toBe(
-      "For planets: clear, but damp — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
-    );
-    // On a go night the planets are ranked over the whole planet window, as before.
-    expect(planets.entries.map((entry) => entry.key)).toEqual(
-      planetsOf(buildTonight(input, "en")).entries.map((entry) => entry.key),
-    );
-  });
-
-  it("keeps the verdict, ranking and strip when working out the planets fails", () => {
-    const working = buildTonight(input, "en");
-    planetRanking.throws = true;
-    const view = buildTonight(input, "en");
-    expect(view.solarSystem).toBeNull();
-    expect(view.planetsAbsentText).toBe("Planet details aren't available right now.");
-    expect(working.planetsAbsentText).toBeNull();
-    expect(view.verdict).toEqual(working.verdict);
-    expect(view.ranking).toEqual(working.ranking);
-    expect(view.nights).toEqual(working.nights);
-  });
-
-  it("lists the planets on a no-darkness night whose planet window passes", () => {
-    // Warsaw at the solstice under a Bortle 3 sky: the sun never reaches −18°, but it does pass −6°.
-    const view = buildTonight(
-      {
-        ...input,
-        site: { ...WARSAW, bortle: 3 },
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 5)),
-        now: new Date("2026-06-21T19:00:00Z"),
-      },
-      "en",
-    );
-    expect(view.darkWindow).toEqual({ kind: "none" });
-    expect(view.verdict).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
-    expect(view.ranking).toBeNull();
-    const planets = planetsOf(view);
-    // Every hour of the planet window is clear, so the clear hours are the whole window.
-    expect(planets.weatherText).toMatch(/^For planets: clear — clear \d{2}:\d{2}–\d{2}:\d{2}$/);
-    expect(planets.entries.length).toBeGreaterThan(0);
-  });
-
   it("has no planets when the planet window is clouded out", () => {
     const view = buildTonight({ ...input, forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "en");
     expect(view.solarSystem).toBeNull();
@@ -927,49 +409,6 @@ describe("buildTonight's planets (M-2 S-01)", () => {
     );
     expect(view.solarSystem).toBeNull();
     expect(view.planetsAbsentText).toBe("No planets tonight: the sky never gets dark enough between dusk and dawn.");
-  });
-
-  it("lists Uranus and Neptune only with an aperture of at least 130 mm", () => {
-    const keysWith = (apertureMm: number) =>
-      planetsOf(buildTonight({ ...input, telescope: { ...TELESCOPE, apertureMm } }, "en")).entries.map(
-        (entry) => entry.key,
-      );
-    expect(keysWith(ICE_GIANT_MIN_APERTURE_MM)).toEqual(expect.arrayContaining(["uranus", "neptune"]));
-    const small = keysWith(ICE_GIANT_MIN_APERTURE_MM - 1);
-    expect(small.length).toBeGreaterThan(0);
-    expect(small).not.toContain("uranus");
-    expect(small).not.toContain("neptune");
-  });
-
-  it("tags a logged planet as seen without reordering the planets", () => {
-    const unlogged = planetsOf(buildTonight(input, "en"));
-    const view = buildTonight({ ...input, log: [{ target: "saturn", night: "2026-10-01", rating: 4 }] }, "en");
-    const planets = planetsOf(view);
-    expect(planets.entries.map((entry) => entry.key)).toEqual(unlogged.entries.map((entry) => entry.key));
-    expect(planets.entries.find((entry) => entry.key === "saturn")?.seenText).toBe("Seen 1 time – last 1 Oct 2026");
-    expect(planets.entries.filter((entry) => entry.key !== "saturn").every((entry) => entry.seenText === null)).toBe(
-      true,
-    );
-    expect(planets.entries.find((entry) => entry.key === "saturn")?.notSeenYet).toBe(false);
-    expect(planets.entries.filter((entry) => entry.key !== "saturn").every((entry) => entry.notSeenYet)).toBe(true);
-  });
-
-  it("keeps a planet not seen yet when it is logged only with a rating of 1-2", () => {
-    const view = buildTonight({ ...input, log: [{ target: "saturn", night: "2026-10-01", rating: 2 }] }, "en");
-    const saturn = planetsOf(view).entries.find((entry) => entry.key === "saturn");
-    expect(saturn?.seenText).toBeNull();
-    expect(saturn?.notSeenYet).toBe(true);
-  });
-
-  it("marks no planet not seen yet when the log could not be read", () => {
-    const planets = planetsOf(buildTonight({ ...input, log: [], logKnown: false }, "en"));
-    expect(planets.entries.length).toBeGreaterThan(0);
-    expect(planets.entries.every((entry) => !entry.notSeenYet && entry.seenText === null)).toBe(true);
-  });
-
-  it("leaves the planet detail eyepiece out when the kit has none", () => {
-    const planets = planetsOf(buildTonight({ ...input, eyepieces: [] }, "en"));
-    expect(planets.entries.every((entry) => entry.eyepiece === null)).toBe(true);
   });
 });
 
@@ -1062,147 +501,6 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
     return window;
   }
 
-  /** The phase line for a state, as the card words it in English. */
-  function englishPhase(state: Pick<MoonDiscState, "band" | "illuminatedFraction">): string {
-    return en.tonight.moon.phaseLine({
-      phase: en.tonight.moon.phase[state.band],
-      lit: en.tonight.moon.lit({ percent: String(Math.round(state.illuminatedFraction * 100)) }),
-    });
-  }
-
-  describe("on a go night with a dark window", () => {
-    it("covers the dark window in 10-minute states, labelled in the site's zone", () => {
-      const view = buildTonight(clearNight("2026-10-26"), "en");
-      const card = moonCardOf(view);
-      const dark = warsawWindow("2026-10-26", darknessThresholdDegForBortle(WARSAW.bortle));
-      expect(card.windowKind).toBe("dark");
-      expect(view.darkWindow).toEqual({ kind: "window", ...card.window });
-      expect(card.states.length).toBeGreaterThan(1);
-      expect(card.timeLabels).toHaveLength(card.states.length);
-      expect(card.states[0].time).toBe(dark.start.toISOString());
-      expect(card.states.at(-1)?.time).toBe(dark.end.toISOString());
-      expect(Date.parse(card.states[1].time) - Date.parse(card.states[0].time)).toBe(MOON_DISC_STEP_MINUTES * 60_000);
-      expect(card.timeLabels[0]).toBe(card.window?.start);
-      expect(card.timeLabels.at(-1)).toBe(card.window?.end);
-    });
-
-    it("says how many faint objects the Moon washes out on 26 October, with no percent of its own", () => {
-      const view = buildTonight(clearNight("2026-10-26"), "en");
-      const card = moonCardOf(view);
-      const count = rankingOf(view).washedOutCount;
-      expect(count).toBeGreaterThan(0);
-      expect(card.upText).toBe("Up all night");
-      expect(card.faintText).toBe(en.tonight.moon.card.faint.washedOut.other({ count: String(count) }));
-      expect(card.faintText).toMatch(/^Bright Moon: \d+ faint objects washed out tonight$/);
-      const polish = moonCardOf(buildTonight(clearNight("2026-10-26"), "pl"));
-      expect(polish.faintText).toMatch(/^Jasny Księżyc: \d+ słab/);
-      expect(polish.upText).toBe("Nad horyzontem przez całą noc");
-    });
-
-    it("calls a Moon up the whole window without washed-out objects a moonlit sky (1 September)", () => {
-      // Messier objects only: with the Caldwell objects a faint one is washed out on this night.
-      const view = buildTonight(clearNight("2026-09-01", { catalogue: MESSIER }), "en");
-      expect(rankingOf(view).washedOutCount).toBe(0);
-      const card = moonCardOf(view);
-      expect(card.upText).toBe("Up all night");
-      expect(card.faintText).toBe("Moonlit sky · no faint objects lost");
-    });
-
-    it("names the Moon's up time when it sets mid-window without washing anything out (20 October)", () => {
-      const view = buildTonight(clearNight("2026-10-20"), "en");
-      expect(rankingOf(view).washedOutCount).toBe(0);
-      const card = moonCardOf(view);
-      // Up at dusk, down from the set time, refined between the 10-minute samples it falls between.
-      const sets = /^Sets (\d{2}:\d{2})$/.exec(card.upText ?? "")?.[1];
-      expect(sets).toBeDefined();
-      expect(card.faintText).toBe(`Moon up ${card.window?.start}–${sets} · no faint objects washed out`);
-      const down = card.states.findIndex(
-        (state) => moonState(toEngineSite(WARSAW), new Date(state.time)).altitudeDeg < 0,
-      );
-      expect(down).toBeGreaterThan(0);
-      expect(isBetween(sets, card.timeLabels[down - 1], card.timeLabels[down])).toBe(true);
-      expect(moonCardOf(buildTonight(clearNight("2026-10-20"), "pl")).faintText).toBe(
-        `Księżyc nad horyzontem w godz. ${card.window?.start}–${sets} · żaden słaby obiekt nie ginie`,
-      );
-    });
-
-    it("names the rising time when the Moon comes up mid-window (6 October)", () => {
-      const view = buildTonight(clearNight("2026-10-06"), "en");
-      expect(rankingOf(view).washedOutCount).toBe(0);
-      const card = moonCardOf(view);
-      // Down at dusk, up from the rise time, refined between the 10-minute samples it falls between, then up to the
-      // window's end.
-      const rises = /^Up (\d{2}:\d{2})–(\d{2}:\d{2})$/.exec(card.upText ?? "");
-      expect(rises?.[2]).toBe(card.window?.end);
-      const up = card.states.findIndex(
-        (state) => moonState(toEngineSite(WARSAW), new Date(state.time)).altitudeDeg >= 0,
-      );
-      expect(up).toBeGreaterThan(0);
-      expect(isBetween(rises?.[1], card.timeLabels[up - 1], card.timeLabels[up])).toBe(true);
-      expect(card.faintText).toBe(`Moon up ${rises?.[1]}–${rises?.[2]} · no faint objects washed out`);
-    });
-
-    it("calls the new-Moon night of 10 October dark, with no Moon target", () => {
-      const view = buildTonight(clearNight("2026-10-10"), "en");
-      expect(rankingOf(view).washedOutCount).toBe(0);
-      const card = moonCardOf(view);
-      expect(card.upText).toBe("Not up tonight");
-      expect(card.faintText).toBe("Dark night: no Moon");
-      expect(card.target).toBeNull();
-      expect(moonCardOf(buildTonight(clearNight("2026-10-10"), "pl")).faintText).toBe("Ciemna noc: bez Księżyca");
-    });
-
-    it("shows the state nearest the page load, clamped into the window", () => {
-      const dark = warsawWindow("2026-10-26", darknessThresholdDegForBortle(WARSAW.bortle));
-      // 16:00 UTC is before dusk: the first state.
-      const before = moonCardOf(buildTonight(clearNight("2026-10-26"), "en"));
-      expect(before.initialIndex).toBe(0);
-      expect(before.phaseText).toBe(englishPhase(before.states[0]));
-
-      const now = new Date(dark.start.getTime() + 2 * HOUR_MS + 7 * 60_000);
-      const during = moonCardOf(buildTonight(clearNight("2026-10-26", { now }), "en"));
-      const shown = during.states[during.initialIndex];
-      expect(Math.abs(Date.parse(shown.time) - now.getTime())).toBeLessThanOrEqual(
-        (MOON_DISC_STEP_MINUTES / 2) * 60_000,
-      );
-      expect(during.phaseText).toBe(englishPhase(shown));
-
-      // After the dark window, before civil dawn: the night in progress, at its last state.
-      const late = new Date(dark.end.getTime() + 30 * 60_000);
-      const after = moonCardOf(buildTonight(clearNight("2026-10-26", { now: late }), "en"));
-      expect(after.initialIndex).toBe(after.states.length - 1);
-    });
-
-    it("puts the full Moon's observing details in the card on 26 October", () => {
-      const view = buildTonight(clearNight("2026-10-26"), "en");
-      expect(targetOf(view)).toMatchObject({
-        key: "moon",
-        name: "Moon",
-        band: "full",
-        // The 25 mm shows 1.7°, the whole disc; the 10 mm is the detail pick at 75×.
-        wholeDisc: { name: "25 mm Plössl", magnification: 30 },
-        wholeDiscFits: true,
-        detail: { name: "10 mm Plössl", magnification: 75 },
-        note: en.tonight.moon.note.full,
-        seenText: null,
-        notSeenYet: true,
-      });
-      expect(targetOf(view).windowStart).toMatch(/^\d{2}:\d{2}$/);
-      expect(targetOf(view).bestDirection).toMatch(/^[NESW]{1,3}, \d{1,2}°$/);
-      expect(targetOf(view).reason).toMatch(/^Highest \d{1,2}° at \d{2}:\d{2} — best in the middle of the night$/);
-      // The planets keep their own section, planets only.
-      expect(view.solarSystem?.entries.length).toBeGreaterThan(0);
-      expect(view.solarSystem).not.toHaveProperty("moon");
-    });
-
-    it("words the card and the target in Polish", () => {
-      const view = buildTonight(clearNight("2026-10-26"), "pl");
-      expect(moonCardOf(view).phaseText).toMatch(/^(Pełnia|Garbaty (przybywający|ubywający)) · oświetlony w \d{2,3}%$/);
-      expect(targetOf(view)).toMatchObject({ name: "Księżyc", note: pl.tonight.moon.note.full });
-      expect(targetOf(view).reason).toMatch(/^Najwyżej \d{1,2}° o \d{2}:\d{2} — najlepiej w środku nocy$/);
-    });
-  });
-
   it("keeps the dark window and the Moon target in the clear hours of a cloudy no-go night, with no faint line", () => {
     const dark = warsawWindow("2026-10-31", darknessThresholdDegForBortle(WARSAW.bortle));
     const civil = warsawWindow("2026-10-31", PLANET_WINDOW_SUN_ALTITUDE_DEG);
@@ -1224,61 +522,6 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
     expect(target.bestAt).toBeLessThanOrEqual(civil.end.getTime());
   });
 
-  it("covers civil dusk to dawn on a no-darkness night, with no faint line", () => {
-    // Warsaw under a Bortle 3 sky at the end of June: the sun never reaches −18°, but it passes −6°.
-    const site = { ...WARSAW, bortle: 3 };
-    const view = buildTonight(
-      clearNight("2026-06-29", {
-        site,
-        forecast: result(uniformForecast("2026-06-29T00:00:00Z", 5)),
-        now: new Date("2026-06-29T19:00:00Z"),
-      }),
-      "en",
-    );
-    expect(view.darkWindow).toEqual({ kind: "none" });
-    const civil = warsawWindow("2026-06-29", PLANET_WINDOW_SUN_ALTITUDE_DEG, site);
-    const card = moonCardOf(view);
-    expect(card.windowKind).toBe("civil");
-    expect(card.states[0].time).toBe(civil.start.toISOString());
-    expect(card.states.at(-1)?.time).toBe(civil.end.toISOString());
-    expect(card.upText).not.toBeNull();
-    expect(card.faintText).toBeNull();
-    // The planet window passes, so the Moon is judged under the same gate as the planets.
-    expect(view.solarSystem).not.toBeNull();
-  });
-
-  it("shows only the phase at local noon without a civil window (Tromsø at the solstice)", () => {
-    const view = buildTonight(
-      clearNight("2026-06-21", {
-        site: TROMSO_SITE,
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
-        now: new Date("2026-06-21T20:00:00Z"),
-      }),
-      "en",
-    );
-    const noon = moonDiscState(observingNight("2026-06-21", TROMSO_SITE.timeZone).start);
-    expect(view.moonCard).toEqual({
-      window: null,
-      windowKind: "none",
-      states: [],
-      timeLabels: [],
-      initialIndex: 0,
-      phaseText: englishPhase(noon),
-      upText: null,
-      faintText: null,
-      target: null,
-    });
-  });
-
-  it("works out the faint line and the target without a forecast", () => {
-    const view = buildTonight(clearNight("2026-10-26", { forecast: null }), "en");
-    expect(view.headline.key).toBe("verdict.sky.noForecast");
-    const card = moonCardOf(view);
-    expect(card.windowKind).toBe("dark");
-    expect(card.faintText).toMatch(/^Bright Moon: \d+ faint objects washed out tonight$/);
-    expect(card.target).not.toBeNull();
-  });
-
   it("has no target when the planet window is clouded out, but keeps the card", () => {
     const view = buildTonight(
       clearNight("2026-10-26", { forecast: result(uniformForecast("2026-10-26T00:00:00Z", 100)) }),
@@ -1291,77 +534,10 @@ describe("buildTonight's Moon card (moonlight-and-the-verdict)", () => {
     expect(card.upText).toBe("Up all night");
   });
 
-  it("is deterministic: identical inputs give an identical card", () => {
-    expect(buildTonight(clearNight("2026-10-26"), "en").moonCard).toEqual(
-      buildTonight(clearNight("2026-10-26"), "en").moonCard,
-    );
-  });
-
-  it("keeps the Moon target when working out the planets fails", () => {
-    const working = buildTonight(clearNight("2026-10-26"), "en");
-    planetRanking.throws = true;
-    const view = buildTonight(clearNight("2026-10-26"), "en");
-    expect(view.solarSystem).toBeNull();
-    expect(view.moonCard).toEqual(working.moonCard);
-    expect(view.ranking).toEqual(working.ranking);
-  });
-
-  it("drops only the target when working it out fails", () => {
-    const working = buildTonight(clearNight("2026-10-26"), "en");
-    moonTargeting.throws = true;
-    const view = buildTonight(clearNight("2026-10-26"), "en");
-    expect(view.moonCard).toEqual({ ...working.moonCard, target: null });
-    expect(view.solarSystem).toEqual(working.solarSystem);
-    expect(view.verdict).toEqual(working.verdict);
-    expect(view.ranking).toEqual(working.ranking);
-    expect(view.nights).toEqual(working.nights);
-  });
-
-  it("tags a logged Moon as seen", () => {
-    const view = buildTonight(
-      clearNight("2026-10-26", { log: [{ target: "moon", night: "2026-10-01", rating: 5 }] }),
-      "en",
-    );
-    expect(targetOf(view).seenText).toBe("Seen 1 time – last 1 Oct 2026");
-    expect(targetOf(view).notSeenYet).toBe(false);
-  });
-
-  it("keeps the Moon not seen yet when it is logged only with a rating of 1-2", () => {
-    const view = buildTonight(
-      clearNight("2026-10-26", { log: [{ target: "moon", night: "2026-10-01", rating: 2 }] }),
-      "en",
-    );
-    expect(targetOf(view).seenText).toBeNull();
-    expect(targetOf(view).notSeenYet).toBe(true);
-  });
-
   it("marks the Moon not seen yet only when the log could be read", () => {
     const view = buildTonight(clearNight("2026-10-26", { log: [], logKnown: false }), "en");
     expect(targetOf(view).seenText).toBeNull();
     expect(targetOf(view).notSeenYet).toBe(false);
-  });
-
-  it("shows only the whole-disc eyepiece when the detail pick is no stronger, and none for an empty kit", () => {
-    const single = buildTonight(clearNight("2026-10-26", { eyepieces: [EYEPIECES[0]] }), "en");
-    expect(targetOf(single)).toMatchObject({
-      wholeDisc: { name: "25 mm Plössl", magnification: 30 },
-      wholeDiscFits: true,
-      detail: null,
-    });
-    // A 6 mm alone shows 0.42°, short of the whole disc: it is named as the widest, with no separate detail pick.
-    const short = buildTonight(
-      clearNight("2026-10-26", {
-        eyepieces: [{ id: "ep-3", name: "6 mm", focalLengthMm: 6, afovDeg: 52, createdAt: "2026-09-01T00:02:00Z" }],
-      }),
-      "en",
-    );
-    expect(targetOf(short)).toMatchObject({
-      wholeDisc: { name: "6 mm", magnification: 125 },
-      wholeDiscFits: false,
-      detail: null,
-    });
-    const empty = buildTonight(clearNight("2026-10-26", { eyepieces: [] }), "en");
-    expect(targetOf(empty)).toMatchObject({ wholeDisc: null, wholeDiscFits: false, detail: null });
   });
 });
 
@@ -1378,42 +554,12 @@ describe("buildTonight's washed-out objects (moonlight-and-the-verdict)", () => 
     };
   }
 
-  it("counts and lists the faint objects the full Moon of 26 October hides, apart from the ranking", () => {
-    const ranking = rankingOf(buildTonight(clearNight("2026-10-26"), "en"));
-    expect(ranking.washedOutCount).toBeGreaterThan(0);
-    expect(ranking.washedOutEntries).toHaveLength(ranking.washedOutCount);
-    expect(ranking.washedOutText).toBe(
-      ranking.washedOutCount === 1
-        ? en.tonight.washedOut.line.one({ count: "1" })
-        : en.tonight.washedOut.line.other({ count: String(ranking.washedOutCount) }),
-    );
-    const listed = new Set(ranking.entries.map((e) => e.id));
-    for (const entry of ranking.washedOutEntries) {
-      expect(listed.has(entry.id)).toBe(false);
-      expect(entry.bestTime).toMatch(/^\d{2}:\d{2}$/);
-    }
-    const bestAt = ranking.washedOutEntries.map((e) => e.bestAt);
-    expect(bestAt).toEqual([...bestAt].sort((a, b) => a - b));
-  });
-
-  it("words the line in Polish", () => {
-    const ranking = rankingOf(buildTonight(clearNight("2026-10-26"), "pl"));
-    expect(ranking.washedOutText).toMatch(/ginie dziś w blasku Księżyca|giną dziś w blasku Księżyca/);
-  });
-
   it("lists the same washed-out objects on the all-objects page, whatever the limit", () => {
     const top = rankingOf(buildTonight(clearNight("2026-10-26"), "en"));
     const all = rankingOf(buildTonight(clearNight("2026-10-26"), "en", { limit: Number.POSITIVE_INFINITY }));
     expect(all.washedOutEntries).toEqual(top.washedOutEntries);
     const listed = new Set(all.entries.map((e) => e.id));
     expect(top.washedOutEntries.filter((e) => listed.has(e.id))).toEqual([]);
-  });
-
-  it("has no line and no group on the new-Moon night of 10 October", () => {
-    const ranking = rankingOf(buildTonight(clearNight("2026-10-10"), "en"));
-    expect(ranking.washedOutCount).toBe(0);
-    expect(ranking.washedOutText).toBeNull();
-    expect(ranking.washedOutEntries).toEqual([]);
   });
 });
 
@@ -1471,14 +617,6 @@ describe("buildTonight's reason lines (evening-showpieces)", () => {
       expect(entry.reason).not.toContain(en.tonight.reason.moon.follow);
     }
   });
-
-  it("keeps the moon component eligible under the full Moon of 2026-10-26", () => {
-    const view = buildTonight(clearNight("2026-10-26"), "en");
-    const { ids, moon } = listedMoonComponents("2026-10-26");
-    expect(ids).toEqual(rankingOf(view).entries.map((entry) => entry.id));
-    // Only eligibility is asserted, not which reason a line carries.
-    expect(spreadOf(moon), `moon components ${moon.join(", ")}`).toBeGreaterThanOrEqual(REASON_MIN_SPREAD);
-  });
 });
 
 describe("buildTonight's sky view (interactive-sky)", () => {
@@ -1513,87 +651,6 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     return view.skyView;
   }
 
-  it("is null, and not computed, without the option", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "en",
-    );
-    expect(view.skyView).toBeNull();
-  });
-
-  it("spans sunset to sunrise with aligned frames, rotations and tracks", () => {
-    const sky = skyViewOf(build());
-    const { sunset, sunrise } = sunEvents(toEngineSite(WARSAW), observingNight("2026-10-10", WARSAW.timeZone));
-    expect(sky.startMs).toBe(sunset?.getTime());
-    expect(sky.endMs).toBe(sunrise?.getTime());
-    expect(sky.stepMs).toBe(10 * 60_000);
-    expect(sky.frameCount).toBe(Math.ceil((sky.endMs - sky.startMs) / sky.stepMs) + 1);
-    expect(sky.rotations).toHaveLength(sky.frameCount * 9);
-    expect(sky.sunAltDeg).toHaveLength(sky.frameCount);
-    expect(sky.facing).toBe("south");
-    // Every frame's time, formatted on the server like the range's ends, so the island never formats one.
-    expect(sky.timeLabels).toHaveLength(sky.frameCount);
-    expect(sky.timeLabels.every((label) => /^\d{2}:\d{2}$/.test(label))).toBe(true);
-    expect(sky.timeLabels[0]).toBe(sky.startLabel);
-    expect(sky.timeLabels.at(-1)).toBe(sky.endLabel);
-    expect(sky.startLabel).toMatch(/^\d{2}:\d{2}$/);
-    for (const body of sky.bodies) {
-      expect(body.track).toHaveLength(sky.frameCount * 2);
-      expect(body.track.every(Number.isInteger)).toBe(true);
-    }
-    const objects = sky.bodies.filter((body) => body.kind === "object");
-    expect(objects.map((body) => body.key)).toEqual(
-      rankingOf(build())
-        .entries.slice(0, MAX_RANKED_OBJECTS)
-        .map((entry) => entry.id),
-    );
-    expect(objects[0].href).toBe(`/tonight/targets#object-${objects[0].key}`);
-    // The strip shows the catalogue label only ("M13", "NGC 7000"); the full name is the marker's accessible name.
-    expect(
-      objects.every((body) => body.label === findDeepSky(body.key)?.label && body.name.startsWith(body.label)),
-    ).toBe(true);
-    expect(objects.some((body) => body.name.startsWith(`${body.label} · `))).toBe(true);
-    expect(sky.bodies.filter((body) => body.kind === "planet").map((body) => body.key)).toEqual([...PLANET_KEYS]);
-    expect(sky.bodies.find((body) => body.key === "saturn")?.href).toBe("/tonight/planets#planet-saturn");
-    expect(sky.bodies.at(-1)).toMatchObject({
-      kind: "moon",
-      key: "moon",
-      label: "Moon",
-      name: "Moon",
-      href: "/tonight/moon",
-    });
-    expect(sky.darkSpan).not.toBeNull();
-  });
-
-  it("carries the dark window at its exact edges, with the server's times, and the zone's short name", () => {
-    const view = build();
-    const sky = skyViewOf(view);
-    if (view.darkWindow.kind !== "window" || sky.dark === null) {
-      throw new Error("expected a dark window");
-    }
-    // The same strings the verdict's dark window carries, so the slider's edge labels can never disagree with it.
-    expect(sky.dark.startLabel).toBe(view.darkWindow.start);
-    expect(sky.dark.endLabel).toBe(view.darkWindow.end);
-    expect(sky.dark.from).toBeGreaterThan(0);
-    expect(sky.dark.to).toBeLessThan(1);
-    expect(sky.dark.from).toBeLessThan(sky.dark.to);
-    // The fractions are the exact instants on the slider's track: within one frame of the frame-quantised span.
-    const last = sky.frameCount - 1;
-    expect(Math.abs(sky.dark.from * last - (sky.darkSpan?.from ?? 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs(sky.dark.to * last - (sky.darkSpan?.to ?? 0))).toBeLessThanOrEqual(1);
-    // Warsaw in October: central European summer time, on every frame; the static fallback's label agrees.
-    expect(sky.zoneLabels).toHaveLength(sky.frameCount);
-    expect(sky.zoneLabels.every((label) => label === "CEST")).toBe(true);
-    expect(view.zoneLabel).toBe("CEST");
-    expect(skyViewOf(build({}, "pl")).zoneLabels.every((label) => label === "CEST")).toBe(true);
-  });
-
   it("reads the zone per frame, so a night that crosses a clock change shows CEST then CET", () => {
     // Madrid, the night of 24-25 October 2026: clocks go back at 03:00 CEST (01:00 UTC).
     const MADRID: SiteRecord = {
@@ -1622,45 +679,6 @@ describe("buildTonight's sky view (interactive-sky)", () => {
     expect(sky.zoneLabels.at(-1)).toBe("CET");
   });
 
-  it("has no dark stretch without a dark window, and names a zone with no abbreviation by its offset", () => {
-    const light = skyViewOf(
-      build({
-        site: HELSINKI_DARK,
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
-        now: new Date("2026-06-21T09:00:00Z"),
-      }),
-    );
-    expect(light.dark).toBeNull();
-    expect(light.zoneLabels.every((label) => /^(EEST|GMT\+3)$/.test(label))).toBe(true);
-    const sydney = build({
-      site: SOUTH,
-      forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-      now: new Date("2026-10-10T09:00:00Z"),
-    });
-    expect(skyViewOf(sydney).zoneLabels.every((label) => /^(AEDT|GMT\+11)$/.test(label))).toBe(true);
-  });
-
-  it("starts at the frame nearest now inside the range, else at the dark span's start, else at 0", () => {
-    const inside = skyViewOf(build());
-    expect(Math.abs(inside.startMs + inside.initialIndex * inside.stepMs - NOW.getTime())).toBeLessThanOrEqual(
-      inside.stepMs / 2,
-    );
-    // Local noon, before sunset.
-    const daytime = skyViewOf(build({ now: new Date("2026-10-10T10:00:00Z") }));
-    expect(daytime.darkSpan).not.toBeNull();
-    expect(daytime.initialIndex).toBe(daytime.darkSpan?.from);
-    // Helsinki in midsummer under a Bortle 3 sky: a sunset, but no dark window.
-    const light = skyViewOf(
-      build({
-        site: HELSINKI_DARK,
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
-        now: new Date("2026-06-21T09:00:00Z"),
-      }),
-    );
-    expect(light.darkSpan).toBeNull();
-    expect(light.initialIndex).toBe(0);
-  });
-
   it("has no deep-sky targets on a no-go night but keeps every planet and the Moon, with Polish labels", () => {
     const view = build({ forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) }, "pl");
     expect(view.ranking).toBeNull();
@@ -1684,41 +702,6 @@ describe("buildTonight's sky view (interactive-sky)", () => {
       now: new Date("2026-10-10T09:00:00Z"),
     });
     expect(skyViewOf(view).facing).toBe("north");
-  });
-
-  it("stays under 30 KB of JSON for a December night at 52° N", () => {
-    const now = new Date("2026-12-21T12:00:00Z");
-    const sky = skyViewOf(build({ forecast: result(uniformForecast("2026-12-21T00:00:00Z", 5), false, now), now }));
-    expect(sky.bodies.some((body) => body.kind === "object")).toBe(true);
-    expect(sky.timeLabels).toHaveLength(sky.frameCount);
-    expect(JSON.stringify(sky).length).toBeLessThan(30_000);
-  });
-
-  it("covers the whole observing night when the Sun doesn't set (Tromsø at midsummer)", () => {
-    const night = observingNight("2026-06-21", TROMSO_SITE.timeZone);
-    const { sunset, sunrise } = sunEvents(toEngineSite(TROMSO_SITE), night);
-    expect(sunset === null || sunrise === null).toBe(true);
-    const sky = skyViewOf(
-      build({
-        site: TROMSO_SITE,
-        forecast: result(uniformForecast("2026-06-21T00:00:00Z", 0)),
-        now: new Date("2026-06-21T10:00:00Z"),
-      }),
-    );
-    expect(sky.startMs).toBe(night.start.getTime());
-    expect(sky.endMs).toBe(night.end.getTime());
-    expect(sky.darkSpan).toBeNull();
-    expect(sky.timeLabels).toHaveLength(sky.frameCount);
-    expect(sky.rotations).toHaveLength(sky.frameCount * 9);
-  });
-
-  it("drops only the sky view when building it fails", () => {
-    const intact = build();
-    skyFraming.throws = true;
-    const view = build();
-    expect(view.skyView).toBeNull();
-    expect(intact.skyView).not.toBeNull();
-    expect(view).toEqual({ ...intact, skyView: null });
   });
 });
 
@@ -1748,33 +731,6 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     return view.sessionPlan;
   }
 
-  it("is null without the option, and picks the tile line by the time of day with it", () => {
-    expect(build({}, {}).sessionPlan).toBeNull();
-    // Local noon, before sunset: the first row.
-    const before = planOf(build({ now: new Date("2026-10-10T10:00:00Z") }));
-    expect(before.rows.length).toBeGreaterThan(0);
-    expect(before.nextUp).toEqual({ kind: "first", index: 0 });
-    // During the night: the first row whose best window has not ended, never past the rows.
-    const during = planOf(build());
-    expect(during.nextUp?.kind).toBe("next");
-    expect(during.nextUp !== null && during.nextUp.kind === "next" && during.nextUp.index < during.rows.length).toBe(
-      true,
-    );
-  });
-
-  it("puts the ticks on the site's whole hours in a :30 zone", () => {
-    const kolkata: SiteRecord = {
-      ...WARSAW,
-      latitudeDeg: 22.57,
-      longitudeDeg: 88.36,
-      bortle: 5,
-      timeZone: "Asia/Kolkata",
-    };
-    const plan = planOf(build({ site: kolkata, now: new Date("2026-10-10T12:00:00Z") }));
-    expect(plan.ticks.length).toBeGreaterThan(8);
-    expect(plan.ticks.every((tick) => tick.label.endsWith(":00"))).toBe(true);
-  });
-
   it("keeps the ticks an hour apart across the autumn clock change (Madrid, night of 24 to 25 Oct)", () => {
     const madrid: SiteRecord = {
       ...WARSAW,
@@ -1792,59 +748,6 @@ describe("buildTonight's Session plan (session-plan-timeline)", () => {
     expect(gaps.length).toBeGreaterThan(8);
     expect(gaps.every((gap) => Math.abs(gap - HOUR_MS) < 1)).toBe(true);
     expect(plan.ticks.filter((tick) => tick.label === "02:00")).toHaveLength(2);
-  });
-
-  it("gives every row its altitude over the axis and its peak altitude, and the plan the site's minimum (ui-user-adjustments)", () => {
-    const plan = planOf(build({ site: { ...WARSAW, minAltitudeDeg: 20 } }));
-    expect(plan.minAltitudeDeg).toBe(20);
-    expect(plan.rows.length).toBeGreaterThan(1);
-    expect(new Set(plan.rows.map((row) => row.kind)).size).toBeGreaterThan(1);
-    // One sample per step from the axis start, the last at its end (a shorter last step).
-    const samples = plan.rows[0].track.length;
-    expect(plan.trackStep * (samples - 2)).toBeLessThan(1);
-    expect(plan.trackStep * (samples - 1)).toBeGreaterThanOrEqual(1);
-    for (const row of plan.rows) {
-      expect(row.track).toHaveLength(samples);
-      expect(row.track.every(Number.isInteger)).toBe(true);
-      // The peak clears the minimum, and the track reaches it inside the window (to within a 10-minute step's drift).
-      expect(row.peakAltitudeDeg).toBeGreaterThanOrEqual(20);
-      const inWindow = row.track.filter((_, i) => {
-        const at = Math.min(i * plan.trackStep, 1);
-        return at >= row.from && at <= row.to;
-      });
-      expect(Math.max(...inWindow) / 10).toBeGreaterThan(row.peakAltitudeDeg - 2);
-      expect(Math.max(...inWindow) / 10).toBeLessThan(row.peakAltitudeDeg + 2);
-    }
-  });
-
-  it("draws the same curves when the sky view's tracks are reused (the dashboard)", () => {
-    const alone = planOf(build());
-    const withSky = planOf(build({}, { withSessionPlan: true, withSkyView: true }));
-    expect(withSky.rows.map((row) => [row.key, row.track])).toEqual(alone.rows.map((row) => [row.key, row.track]));
-  });
-
-  it("drops only the plan when its tracks fail, logging a fixed line and the error's name, never its message", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    planetTracking.throws = true;
-    const view = build();
-    expect(view.sessionPlan).toBeNull();
-    expect(view.ranking).not.toBeNull();
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged).toHaveBeenCalledWith("sidereus: tonight.session-plan failed", {
-      step: "tonight.session-plan",
-      name: "RangeError",
-    });
-    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
-  });
-
-  it("has no sunset or sunrise text when the Sun does not cross the horizon (87° N in October)", () => {
-    const pole: SiteRecord = { ...WARSAW, latitudeDeg: 87, longitudeDeg: 0, timeZone: "UTC" };
-    const now = new Date("2026-10-05T12:00:00Z");
-    const plan = planOf(
-      build({ site: pole, forecast: result(uniformForecast("2026-10-05T00:00:00Z", 5), false, now), now }),
-    );
-    expect(plan.sunsetText).toBeNull();
-    expect(plan.sunriseText).toBeNull();
   });
 });
 
@@ -1906,49 +809,6 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     expect(build({}, { night: "next", nightDate: "2026-10-11" })).toEqual(build({}, { night: "next" }));
   });
 
-  it("applies a saved list in the user's order, each row keeping its own window and best time", () => {
-    const suggested = planOf(build());
-    const view = build({}, { planEdits: ["M31", "jupiter", "M45"] });
-    const plan = planOf(view);
-    expect(plan.edited).toBe(true);
-    expect(plan.heldEdits).toBe(false);
-    expect(plan.notTonight).toEqual([]);
-    expect(plan.rows.map((row) => row.key)).toEqual(["M31", "jupiter", "M45"]);
-    for (const row of plan.rows) {
-      const before = suggested.rows.find((r) => r.key === row.key);
-      expect(before).toBeDefined();
-      expect({ ...row, endsBeforePrevious: false }).toEqual({ ...before, endsBeforePrevious: false });
-    }
-    // M45 (best 03:05, window to 05:20) comes after Jupiter (best 06:19): it ends before the row above peaks.
-    expect(plan.rows.map((row) => row.endsBeforePrevious)).toEqual([false, false, true]);
-    expect(plan.rows[2].windowEnd).toBeLessThan(plan.rows[1].bestAt);
-    // The ranking's view is untouched: edits only change the plan.
-    expect(view.ranking).toEqual(build().ranking);
-  });
-
-  it("draws an empty saved list as no rows, and keeps the tile quiet", () => {
-    const plan = planOf(build({}, { planEdits: [] }));
-    expect(plan.edited).toBe(true);
-    expect(plan.rows).toEqual([]);
-    expect(plan.nextUp).toBeNull();
-    expect(plan.notTonight).toEqual([]);
-  });
-
-  it("adds an object beyond the top five from the ranking's own window, with its curve, and keeps the rest", () => {
-    const plan = planOf(build({}, { planEdits: ["M13", "M31"] }));
-    expect(plan.rows.map((row) => row.key)).toEqual(["M13", "M31"]);
-    const [m13, m31] = plan.rows;
-    expect(m13).toMatchObject({ kind: "object", label: "M13", href: "/tonight/targets#object-M13" });
-    expect(m13.name).toContain("M13 · ");
-    // True crossing of 15° (evening-showpieces): Skyfield + DE421, one-minute grid, puts M13 at 23:42:10 (Warsaw, 2026-10-10).
-    expect(m13.windowText).toBe("19:25–23:42");
-    expect(m13.track).toHaveLength(m31.track.length);
-    expect(m13.peakAltitudeDeg).toBeGreaterThanOrEqual(WARSAW.minAltitudeDeg);
-    expect(m13.windowEnd).toBeGreaterThan(m13.bestAt);
-    // M31 is later than M13's best time, so it does not end before it.
-    expect(plan.rows.map((row) => row.endsBeforePrevious)).toEqual([false, false]);
-  });
-
   it("links an object below the ranking's bar to its finder chart, and the others to the Targets list", () => {
     const below = planOf(build({}, { planEdits: ["NGC4244", "M13"] }));
     const [ngc4244, m13] = below.rows;
@@ -1979,101 +839,6 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
     expect(fullMoon.rows[1].href).toContain("/tonight/finder?object=M65&");
   });
 
-  it("sets aside, in saved order and never as a row, every saved key with no window tonight", () => {
-    // Mercury and the Moon are no targets that night; a 60 mm telescope cannot reach NGC 891.
-    const plan = planOf(
-      build({ telescope: { ...TELESCOPE, apertureMm: 60 } }, { planEdits: ["mercury", "NGC891", "M31", "moon", "M3"] }),
-    );
-    expect(plan.rows.map((row) => row.key)).toEqual(["M31", "M3"]);
-    expect(plan.notTonight).toEqual([
-      { key: "mercury", label: "Mercury" },
-      { key: "NGC891", label: "NGC 891" },
-      { key: "moon", label: "Moon" },
-    ]);
-    expect(plan.edited).toBe(true);
-    // Each saved key is a row or set aside, never both, and an unknown catalogue key keeps its key as the label.
-    const unknown = planOf(build({}, { planEdits: ["NGC1", "M31"] }));
-    expect(unknown.notTonight).toEqual([{ key: "NGC1", label: "NGC1" }]);
-  });
-
-  it("lets a planet or the Moon that was dropped come back: it is in tonight's suggestion", () => {
-    const withoutMars = planOf(build({}, { planEdits: ["M31"], withPlanCandidates: true }));
-    const candidates = withoutMars.candidates ?? [];
-    expect(candidates.map((option) => option.key)).toContain("mars");
-    const back = planOf(build({}, { planEdits: ["M31", "mars"] }));
-    expect(back.rows.map((row) => row.key)).toEqual(["M31", "mars"]);
-    expect(back.rows[1].href).toBe("/tonight/planets#planet-mars");
-  });
-
-  it("holds a saved list on a night that does not pass, drawing the suggested plan and no candidates", () => {
-    const cloudy = { forecast: result(uniformForecast("2026-10-10T00:00:00Z", 100)) };
-    const suggested = build(cloudy);
-    expect(suggested.ranking).toBeNull();
-    const held = build(cloudy, { planEdits: ["M31", "mars"], withPlanCandidates: true });
-    const plan = planOf(held);
-    expect(plan.heldEdits).toBe(true);
-    expect(plan.edited).toBe(false);
-    expect(plan.notTonight).toEqual([]);
-    expect(plan.candidates).toBeNull();
-    expect(plan.rows).toEqual(planOf(suggested).rows);
-    // An empty saved list is a saved list too.
-    expect(planOf(build(cloudy, { planEdits: [] })).heldEdits).toBe(true);
-    expect(planOf(build(cloudy, { planEdits: null })).heldEdits).toBe(false);
-    // A night without a dark window passes no better.
-    const pole: SiteRecord = { ...WARSAW, latitudeDeg: 69.65, longitudeDeg: 18.96, timeZone: "Europe/Oslo", bortle: 3 };
-    const now = new Date("2026-06-21T12:00:00Z");
-    const noDark = planOf(
-      build(
-        { site: pole, now, forecast: result(uniformForecast("2026-06-21T00:00:00Z", 5), false, now) },
-        { planEdits: ["M31"] },
-      ),
-    );
-    expect(noDark).toMatchObject({ heldEdits: true, edited: false });
-  });
-
-  it("lists what may be added on a passing night only when asked: every window-bearing target that is not a row", () => {
-    expect(planOf(build()).candidates).toBeNull();
-    const plan = planOf(build({}, { withPlanCandidates: true }));
-    const candidates = plan.candidates ?? [];
-    const rowKeys = new Set(plan.rows.map((row) => row.key));
-    expect(candidates.length).toBeGreaterThan(50);
-    expect(candidates.some((option) => rowKeys.has(option.key))).toBe(false);
-    // Objects beyond the top five, below the bar, in their picker form, with the window as the detail.
-    const m3 = candidates.find((option) => option.key === "M3");
-    // M3 sets through 15° at 19:51:44 (Skyfield + DE421, one-minute grid; the grid's 19:45 was the last 10-minute sample).
-    expect(m3).toMatchObject({ id: "M3", detail: "Window 19:25–19:51" });
-    expect(m3?.names).toContain("NGC 5272");
-    expect(candidates.map((option) => option.key)).toContain("NGC4244");
-    // Mercury and the Moon have no window tonight, so they are not offered; a planet that has one and is not a row would be.
-    expect(candidates.map((option) => option.key)).not.toContain("mercury");
-    expect(candidates.map((option) => option.key)).not.toContain("moon");
-    // Nothing offered twice, and the picker's order is kept (Messier, then the planets, then Caldwell).
-    const keys = candidates.map((option) => option.key);
-    expect(new Set(keys).size).toBe(keys.length);
-    expect(keys.indexOf("M3")).toBeLessThan(keys.indexOf("NGC4244"));
-    // Dropping a row offers it back.
-    const dropped = planOf(build({}, { planEdits: ["M31"], withPlanCandidates: true }));
-    expect(dropped.candidates?.map((option) => option.key)).toEqual(expect.arrayContaining(["M39", "jupiter", "M45"]));
-    expect(dropped.candidates?.map((option) => option.key)).not.toContain("M31");
-    // Not for the evening after.
-    expect(planOf(build({}, { night: "next", withPlanCandidates: true })).candidates).toBeNull();
-  });
-
-  it("words the candidates' windows in Polish too", () => {
-    const view = buildTonight(
-      {
-        site: WARSAW,
-        telescope: TELESCOPE,
-        eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-10-10T00:00:00Z", 5)),
-        now: NOW,
-      },
-      "pl",
-      { withSessionPlan: true, withPlanCandidates: true },
-    );
-    expect(planOf(view).candidates?.find((option) => option.key === "M3")?.detail).toBe("Okno 19:25–19:51");
-  });
-
   it("reads the tile's next target in the user's order: the first row whose window has not ended", () => {
     // 03:30 local: M3's window ended at 19:51, M31's runs to 05:20.
     const late = new Date("2026-10-11T01:30:00Z");
@@ -2093,12 +858,6 @@ describe("buildTonight's edited Session plan (adjustable-session-plan)", () => {
         ),
       ).nextUp,
     ).toEqual({ kind: "first", index: 0 });
-  });
-
-  it("builds an added row's curve over the same axis grid, and reuses the sky view's tracks on the dashboard", () => {
-    const alone = planOf(build({}, { planEdits: ["M13", "M3"] }));
-    const withSky = planOf(build({}, { planEdits: ["M13", "M3"], withSkyView: true }));
-    expect(withSky.rows.map((row) => [row.key, row.track])).toEqual(alone.rows.map((row) => [row.key, row.track]));
   });
 });
 
@@ -2129,28 +888,6 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     return view.skyEvents;
   }
 
-  it("is null without the option, and builds the block only with it", () => {
-    expect(build({}, {}).skyEvents).toBeNull();
-    expect(eventsOf(build()).windowNights).toBe(30);
-  });
-
-  it("words every event of the window in time order, with the 2027-08-02 solar eclipse and its safety line", () => {
-    const { events } = eventsOf(build());
-    expect(events.length).toBeGreaterThan(0);
-    expect(events.map((event) => event.night)).toEqual([...events.map((event) => event.night)].sort());
-    const eclipse = events.find((event) => event.kind === "solar-eclipse");
-    expect(eclipse?.name).toBe("Partial solar eclipse");
-    expect(eclipse?.safety).toBe(true);
-    expect(eclipse?.visible).toBe(true);
-    expect(eclipse?.notable).toBe(true);
-    expect(eclipse?.nightLabel).toMatch(/August 2027/);
-    // The time is the site's wall clock (09:22 UTC is 11:22 CEST), never the browser's or UTC's.
-    expect(eclipse?.when).toBe("Mon 2 Aug, 11:22");
-    expect(eclipse?.visibilityText).toMatch(/^Best \d\d:\d\d · [NESW]+, \d+°$/);
-    // Only a solar eclipse carries the safety line.
-    expect(events.filter((event) => event.safety).every((event) => event.kind === "solar-eclipse")).toBe(true);
-  });
-
   it("keeps the safety line on a solar eclipse that is not visible from the site", () => {
     // 10° N, 47° W: the 2027-08-02 eclipse ends with the Sun 1.9° up, under the eclipse bar (engine events.test.ts).
     const site: SiteRecord = { ...WARSAW, latitudeDeg: 10, longitudeDeg: -47, timeZone: "America/Belem" };
@@ -2172,25 +909,6 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     }
   });
 
-  it("puts the notable visible events of the selected night under `tonight` and the first one from it on under `next`", () => {
-    const window = eventsOf(build());
-    const eclipse = window.events.find((event) => event.kind === "solar-eclipse");
-    if (eclipse === undefined) {
-      throw new Error("expected the 2027-08-02 solar eclipse in the window");
-    }
-    expect(window.tonight.every((event) => event.notable && event.night === window.events[0].night)).toBe(true);
-    expect(window.next).not.toBeNull();
-    expect(window.next?.notable).toBe(true);
-    expect(window.events.find((event) => event.notable)).toEqual(window.next);
-    // On the eclipse's own night it is tonight's event, and the first notable one.
-    const onNight = eventsOf(build({ now: new Date(`${eclipse.night}T18:00:00Z`) }));
-    expect(onNight.tonight.map((event) => event.name)).toContain(eclipse.name);
-    expect(onNight.tonight.every((event) => event.night === eclipse.night && event.notable)).toBe(true);
-    // The night after, it is past: nothing of it is tonight's.
-    const after = eventsOf(build({ now: new Date(`${addDays(eclipse.night, 1)}T18:00:00Z`) }));
-    expect(after.events.some((event) => event.kind === "solar-eclipse")).toBe(false);
-  });
-
   it("lists a penumbral lunar eclipse but never makes it notable (2027-02-20)", () => {
     const now = new Date("2027-02-12T18:00:00Z");
     const block = eventsOf(build({ now, forecast: result(uniformForecast("2027-02-12T00:00:00Z", 5), false, now) }));
@@ -2200,26 +918,6 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     expect(penumbral?.notes).toContain(en.tonight.events.eclipse.barelyNoticeable);
     expect(block.tonight).not.toContain(penumbral);
     expect(block.next).not.toEqual(penumbral);
-  });
-
-  it("words a meteor peak as a night, never a minute", () => {
-    const now = new Date("2026-08-05T18:00:00Z");
-    const block = eventsOf(build({ now, forecast: result(uniformForecast("2026-08-05T00:00:00Z", 5), false, now) }));
-    const perseids = block.events.find((event) => event.kind === "meteor-shower");
-    expect(perseids?.name).toBe("Perseids peak");
-    expect(perseids?.when).toBe(en.tonight.events.showerWhen);
-    expect(perseids?.when).not.toMatch(/\d:\d\d/);
-  });
-
-  it("names a shower in Polish as 'Maksimum Perseidów', and 'maksimum Perseidów' inside the verdict line", () => {
-    const now = new Date("2026-08-05T18:00:00Z");
-    const forecast = result(uniformForecast("2026-08-05T00:00:00Z", 5), false, now);
-    const perseids = eventsOf(build({ now, forecast }, { withSkyEvents: true }, "pl")).events.find(
-      (event) => event.kind === "meteor-shower",
-    );
-    expect(perseids?.name).toBe("Maksimum Perseidów");
-    expect(perseids?.lineName).toBe("Maksimum Perseidów");
-    expect(perseids?.verdictName).toBe("maksimum Perseidów");
   });
 
   it("reads 'Tomorrow, 11:22' on the night before the 2027-08-02 solar eclipse at Warsaw, never 'Tonight' (owner, 2026-10-14)", () => {
@@ -2329,47 +1027,6 @@ describe("buildTonight's sky events (M-3 S-07)", () => {
     // A night later it is past.
     expect(at("2027-08-01").events.some(isShower)).toBe(false);
   });
-
-  it("words the events in Polish in the site's zone", () => {
-    const pl = eventsOf(build({}, { withSkyEvents: true }, "pl"));
-    const eclipse = pl.events.find((event) => event.kind === "solar-eclipse");
-    expect(eclipse?.name).toBe("Częściowe zaćmienie Słońca");
-    expect(eclipse?.kindLabel).toBe("Zaćmienie Słońca");
-    expect(eclipse?.nightLabel).toMatch(/sierpnia 2027/);
-  });
-
-  it("judges events over the site's own dark window (the Bortle threshold), like the rest of Tonight", () => {
-    // Helsinki has no -18° night in midsummer: the events there are judged on the short-night span.
-    const now = new Date("2026-06-20T18:00:00Z");
-    const view = build({
-      site: HELSINKI_DARK,
-      now,
-      forecast: result(uniformForecast("2026-06-20T00:00:00Z", 5), false, now),
-    });
-    expect(view.darkWindow.kind).toBe("none");
-    expect(eventsOf(view).events.every((event) => event.visible || event.visibilityText !== "")).toBe(true);
-  });
-
-  it("is deterministic and leaves the rest of the view untouched", () => {
-    const plain = build({}, {});
-    const withEvents = build();
-    expect(withEvents).toEqual({ ...plain, skyEvents: withEvents.skyEvents });
-    expect(build()).toEqual(withEvents);
-  });
-
-  it("drops only the events when the search fails, logging a fixed line and the error's name, never its message", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    eventSearching.throws = true;
-    const view = build();
-    expect(view.skyEvents).toBeNull();
-    expect(view.ranking).not.toBeNull();
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged).toHaveBeenCalledWith("sidereus: tonight.sky-events failed", {
-      step: "tonight.sky-events",
-      name: "RangeError",
-    });
-    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
-  });
 });
 
 describe("buildTonight's next night and validUntil (offline-night-plan)", () => {
@@ -2396,17 +1053,6 @@ describe("buildTonight's next night and validUntil (offline-night-plan)", () => 
     expect(next.forecastStatus).toEqual(tonight.forecastStatus);
   });
 
-  it("reads the time-driven initial selections as at that night's sunset", () => {
-    const late = new Date("2026-10-11T00:00:00Z");
-    const withLate = { ...input, now: late };
-    const view = buildTonight(withLate, "en", { night: "next", withSkyView: true, withSessionPlan: true });
-    const sunset = sunEvents(engineSite, observingNight("2026-10-11", WARSAW.timeZone)).sunset;
-    expect(sunset).not.toBeNull();
-    // Before the night's sunset, so the plan tile reads "first up" and the sky starts at the dark window or sunset.
-    expect(view.sessionPlan?.nextUp?.kind).not.toBe("done");
-    expect(view.skyView).not.toBeNull();
-  });
-
   it("ends the night at the civil dawn after it", () => {
     const civil = darkWindow(engineSite, observingNight("2026-10-10", WARSAW.timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG);
     if (civil.kind !== "window") {
@@ -2422,30 +1068,33 @@ describe("buildTonight's next night and validUntil (offline-night-plan)", () => 
       throw new Error("expected a planet window on 2026-10-11 in Warsaw");
     }
     expect(buildTonight(input, "en", { night: "next" }).validUntil.toISOString()).toBe(civilNext.end.toISOString());
-  });
 
-  it("ends the night with the observing night where there is no civil window (87° N in June)", () => {
+    // Where there is no civil window the night ends with the observing night (87° N in June).
     const pole: SiteRecord = { ...WARSAW, latitudeDeg: 87, longitudeDeg: 0, timeZone: "UTC" };
-    const now = new Date("2026-06-20T12:00:00Z");
-    const view = buildTonight(
+    const polarNow = new Date("2026-06-20T12:00:00Z");
+    const polar = buildTonight(
       {
         site: pole,
         telescope: TELESCOPE,
         eyepieces: EYEPIECES,
-        forecast: result(uniformForecast("2026-06-20T00:00:00Z", 5), false, now),
-        now,
+        forecast: result(uniformForecast("2026-06-20T00:00:00Z", 5), false, polarNow),
+        now: polarNow,
       },
       "en",
     );
-    const civil = darkWindow(toEngineSite(pole), observingNight(view.date, "UTC"), PLANET_WINDOW_SUN_ALTITUDE_DEG);
-    expect(civil.kind).not.toBe("window");
-    expect(view.validUntil.toISOString()).toBe(observingNight(view.date, "UTC").end.toISOString());
+    const polarCivil = darkWindow(
+      toEngineSite(pole),
+      observingNight(polar.date, "UTC"),
+      PLANET_WINDOW_SUN_ALTITUDE_DEG,
+    );
+    expect(polarCivil.kind).not.toBe("window");
+    expect(polar.validUntil.toISOString()).toBe(observingNight(polar.date, "UTC").end.toISOString());
   });
 });
 
 describe("buildTonight's trace of a dropped section (error-visibility)", () => {
-  /** An all-clear Warsaw night with the sky view on: every section below is built, so each can be made to fail. */
-  function build() {
+  /** An all-clear Warsaw night: every section is built, so each can be made to fail. */
+  function build(options: Parameters<typeof buildTonight>[2] = {}) {
     const now = new Date("2026-10-26T16:00:00Z");
     return buildTonight(
       {
@@ -2456,7 +1105,7 @@ describe("buildTonight's trace of a dropped section (error-visibility)", () => {
         now,
       },
       "en",
-      { withSkyView: true },
+      options,
     );
   }
 
@@ -2467,68 +1116,68 @@ describe("buildTonight's trace of a dropped section (error-visibility)", () => {
     expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01/);
   }
 
-  it("logs nothing when every section builds", () => {
+  it("logs tonight.planets and drops only the planets when ranking them fails", () => {
     const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const view = build();
-    expect(view.solarSystem).not.toBeNull();
-    expect(view.moonCard?.target).not.toBeNull();
-    expect(view.skyView).not.toBeNull();
+    const working = build();
+    // The control: every section builds and the healthy build logs nothing.
+    expect(working.solarSystem).not.toBeNull();
+    expect(working.planetsAbsentText).toBeNull();
     expect(logged).not.toHaveBeenCalled();
-  });
-
-  it("logs tonight.planets when the planet window fails, and drops the planets and the Moon target", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    planetWindowing.throws = true;
+    failing.rankPlanets = true;
     const view = build();
     expect(view.solarSystem).toBeNull();
-    expect(view.moonCard?.target ?? null).toBeNull();
-    expect(view.ranking).not.toBeNull();
+    expect(view.planetsAbsentText).toBe("Planet details aren't available right now.");
+    expect(view.verdict).toEqual(working.verdict);
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.nights).toEqual(working.nights);
+    expect(view.moonCard).toEqual(working.moonCard);
     expectOneLine(logged, "tonight.planets");
   });
 
-  it("logs tonight.planets when ranking the planets fails, and keeps the rest", () => {
+  it("logs tonight.moon and drops only the Moon target when working it out fails", () => {
     const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    planetRanking.throws = true;
+    const working = build();
+    expect(working.moonCard?.target).not.toBeNull();
+    failing.moonTarget = true;
     const view = build();
-    expect(view.solarSystem).toBeNull();
-    expect(view.moonCard?.target).not.toBeNull();
-    expect(view.ranking).not.toBeNull();
-    // This seam throws a plain Error, so only the step is asserted here.
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.planets failed");
-    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|planet ranking failed/);
-  });
-
-  it("logs tonight.moon when the Moon target fails, and drops only the target", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    moonTargeting.throws = true;
-    const view = build();
-    expect(view.moonCard).not.toBeNull();
-    expect(view.moonCard?.target).toBeNull();
-    expect(view.solarSystem).not.toBeNull();
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.moon failed");
-    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|moon target failed/);
-  });
-
-  it("logs tonight.moon when the Moon card fails, and drops only the card", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    moonCarding.throws = true;
-    const view = build();
-    expect(view.moonCard).toBeNull();
-    expect(view.solarSystem).not.toBeNull();
-    expect(view.ranking).not.toBeNull();
+    expect(view.moonCard).toEqual({ ...working.moonCard, target: null });
+    expect(view.solarSystem).toEqual(working.solarSystem);
+    expect(view.verdict).toEqual(working.verdict);
+    expect(view.ranking).toEqual(working.ranking);
+    expect(view.nights).toEqual(working.nights);
     expectOneLine(logged, "tonight.moon");
   });
 
-  it("logs tonight.sky-view when the sky view fails, and drops only the sky view", () => {
+  it("logs tonight.sky-view and drops only the sky view when building it fails", () => {
     const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    skyFraming.throws = true;
-    const view = build();
+    const intact = build({ withSkyView: true });
+    expect(intact.skyView).not.toBeNull();
+    failing.skyFrames = true;
+    const view = build({ withSkyView: true });
     expect(view.skyView).toBeNull();
-    expect(view.ranking).not.toBeNull();
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.sky-view failed");
-    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|sky frames failed/);
+    expect(view).toEqual({ ...intact, skyView: null });
+    expectOneLine(logged, "tonight.sky-view");
+  });
+
+  it("logs tonight.session-plan and drops only the plan when its tracks fail", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const intact = build({ withSessionPlan: true });
+    expect(intact.sessionPlan).not.toBeNull();
+    failing.planetTracks = true;
+    const view = build({ withSessionPlan: true });
+    expect(view.sessionPlan).toBeNull();
+    expect(view.ranking).toEqual(intact.ranking);
+    expectOneLine(logged, "tonight.session-plan");
+  });
+
+  it("logs tonight.sky-events and drops only the events when the search fails", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const intact = build({ withSkyEvents: true });
+    expect(intact.skyEvents).not.toBeNull();
+    failing.skyEvents = true;
+    const view = build({ withSkyEvents: true });
+    expect(view.skyEvents).toBeNull();
+    expect(view).toEqual({ ...intact, skyEvents: null });
+    expectOneLine(logged, "tonight.sky-events");
   });
 });

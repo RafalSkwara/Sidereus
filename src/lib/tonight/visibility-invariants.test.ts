@@ -374,9 +374,15 @@ describe("Session plan rows are visible over generated Tonight builds (Risk #3)"
     expect(mismatches.slice(0, 10), `${mismatches.length} cases with dropped or extra rows`).toEqual([]);
   });
 
-  it.each(CASES)("case $index: $site.label, night $date, Bortle $bortle", (c) => {
-    const { violations } = results[c.index];
-    expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
+  it("draws every Session plan row inside its independently recomputed window, in every generated case", () => {
+    // Non-vacuity first: one result per case, and rows were actually checked (the "enough" test above sets the floors).
+    expect(results).toHaveLength(CASES.length);
+    expect(CASES).toHaveLength(SEEDED_CASE_COUNT + POLAR_SUMMER.length + POLAR_NIGHT.length);
+    expect(results.filter((r) => r.rowsChecked > 0).length, "cases with rows checked").toBeGreaterThanOrEqual(30);
+    for (const c of CASES) {
+      const { violations } = results[c.index];
+      expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
+    }
   });
 
   it("builds no ranking, and does not throw, on a night without darkness", () => {
@@ -592,9 +598,14 @@ describe("An edited Session plan never draws a target outside its window (adjust
     results = CASES.map(analyseEdited);
   });
 
-  // First: a property that checks nothing passes for the wrong reason.
-  it("applies enough random lists, adds enough objects and sets enough keys aside to prove something", () => {
+  // One test: the non-vacuity counts come first (a property that checks nothing passes for the wrong reason), then
+  // every case is held to the rule with its index and inputs in the failure. The rows added beyond the suggestion
+  // come from `applyPlanEdits`' reachable list, so `checkRows` holds them to the independent oracle too (altitude and
+  // Sun against the test's own PRD thresholds); a saved key outside the suggestion and the reachable list must be set
+  // aside, never drawn (`wantRows`, `wantAside`). It replaces plan-edits.test.ts (test-suite-diet Phase 2).
+  it("applies enough random lists, adds enough objects and sets enough keys aside, and draws every edited row inside its window in every case", () => {
     const sum = (pick: (r: EditedResult) => number) => results.reduce((total, r) => total + pick(r), 0);
+    expect(results).toHaveLength(CASES.length);
     expect(results.filter((r) => r.passes).length, "passing nights").toBeGreaterThanOrEqual(30);
     expect(
       sum((r) => r.rowsChecked),
@@ -616,10 +627,9 @@ describe("An edited Session plan never draws a target outside its window (adjust
       sum((r) => r.heldChecked),
       "held lists checked",
     ).toBeGreaterThanOrEqual(30);
-  });
-
-  it.each(CASES)("case $index: $site.label, night $date, Bortle $bortle", (c) => {
-    const { violations } = results[c.index];
-    expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
+    for (const c of CASES) {
+      const { violations } = results[c.index];
+      expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
+    }
   });
 });

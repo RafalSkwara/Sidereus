@@ -64,7 +64,7 @@ import { cn } from "@/lib/utils";
  *
  * Browser-safe on purpose: it imports only `@/lib/sky-view/*`, `@/lib/compass`, the star catalogue (`stars.ts`, `star-names.ts`),
  * `sky-band`, `range-classes`, `@/i18n`, `cn` and `buttonVariants`, never astronomy-engine or the engine
- * (`TonightSkyView.test.ts`). Every time and zone shown is the server's (`view.timeLabels`, `view.zoneLabels`), so hydration never re-formats one.
+ * (`island-imports.test.ts`). Every time and zone shown is the server's (`view.timeLabels`, `view.zoneLabels`), so hydration never re-formats one.
  * JavaScript is required here, as everywhere in the Tonight island.
  */
 
