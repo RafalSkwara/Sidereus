@@ -43,30 +43,26 @@ function only(spy: MockInstance<typeof console.error> | MockInstance<typeof cons
 }
 
 describe("the line", () => {
-  it("logFailure writes one error-level line with a fixed message and the step", () => {
+  it("writes one fixed-message line per level with the step, the same fields for both, and no absent field", () => {
     logFailure("forecast.fetch");
     expect(only(errors)).toEqual(["sidereus: forecast.fetch failed", { step: "forecast.fetch" }]);
     expect(warns).not.toHaveBeenCalled();
-  });
+    errors.mockClear();
 
-  it("logNotice writes one warn-level line, worded as a notice, and never an error-level one", () => {
     logNotice("forecast.fetch", new RangeError("x"));
     expect(only(warns)).toEqual(["sidereus: forecast.fetch noted", { step: "forecast.fetch", name: "RangeError" }]);
     expect(errors).not.toHaveBeenCalled();
-  });
+    warns.mockClear();
 
-  it("keeps the same fields for both levels", () => {
     const error = Object.assign(new TypeError("m"), { code: "42501" });
     logFailure("tonight.plan-edits", error, { status: 503 });
     logNotice("tonight.plan-edits", error, { status: 503 });
     expect(only(errors)[1]).toEqual(only(warns)[1]);
     expect(only(errors)[1]).toEqual({ step: "tonight.plan-edits", name: "TypeError", code: "42501", status: 503 });
-  });
+    errors.mockClear();
 
-  it("leaves absent fields out, never present as undefined", () => {
     logFailure("finder.chart", "a thrown string");
-    const [, fields] = only(errors);
-    expect(Object.keys(fields as object)).toEqual(["step"]);
+    expect(Object.keys(only(errors)[1] as object)).toEqual(["step"]);
   });
 });
 
@@ -106,33 +102,36 @@ describe("what is never printed", () => {
 });
 
 describe("name", () => {
-  it("comes from the error when it is specific", () => {
-    logFailure("finder.chart", new RangeError("boom"));
-    expect(only(errors)[1]).toEqual({ step: "finder.chart", name: "RangeError" });
-  });
-
-  it("comes from the cause when the error has none of its own", () => {
-    logFailure("tonight.plan-edits", { cause: new TypeError("secret") });
-    expect(only(errors)[1]).toEqual({ step: "tonight.plan-edits", name: "TypeError" });
-  });
-
-  it("comes from the cause when the error is a plain Error wrapper around it", () => {
-    logFailure("tonight.plan-edits", new Error("errors.load.sessionPlan", { cause: new TypeError("secret") }));
-    expect(only(errors)[1]).toEqual({ step: "tonight.plan-edits", name: "TypeError" });
-  });
-
-  it("stays the error's own when a specific one wraps a different cause", () => {
-    logFailure("finder.chart", new RangeError("m", { cause: new TypeError("c") }));
-    expect(only(errors)[1]).toEqual({ step: "finder.chart", name: "RangeError" });
-  });
-
-  it("is Error for a bare Error", () => {
-    logFailure("finder.chart", new Error(COORDS));
-    expect(only(errors)[1]).toEqual({ step: "finder.chart", name: "Error" });
+  it("comes from a specific error, else from its cause (own or behind a plain Error wrapper), else is Error; never from a non-Error", () => {
+    const cases: [string, unknown, string | undefined][] = [
+      ["a specific error", new RangeError("boom"), "RangeError"],
+      ["an error with only a cause", { cause: new TypeError("secret") }, "TypeError"],
+      [
+        "a plain Error wrapping a cause",
+        new Error("errors.load.sessionPlan", { cause: new TypeError("secret") }),
+        "TypeError",
+      ],
+      ["a specific error over a different cause", new RangeError("m", { cause: new TypeError("c") }), "RangeError"],
+      ["a bare Error", new Error(COORDS), "Error"],
+      ["a plain object with a name", { name: "SiteName" }, undefined],
+      ["a string", "TypeError", undefined],
+      ["a number", 42, undefined],
+      ["a plain cause with a name", { cause: { name: "SiteName" } }, undefined],
+    ];
+    expect(cases.length).toBeGreaterThanOrEqual(9);
+    for (const [label, value, name] of cases) {
+      errors.mockClear();
+      logFailure("finder.chart", value);
+      expect(only(errors)[1], label).toEqual(
+        name === undefined ? { step: "finder.chart" } : { step: "finder.chart", name },
+      );
+    }
   });
 
   it("is dropped when it does not look like an identifier", () => {
-    for (const name of [COORDS, EMAIL, "has space", "", "x".repeat(60), "1Starts", "a-b"]) {
+    const names = [COORDS, EMAIL, "has space", "", "x".repeat(60), "1Starts", "a-b"];
+    expect(names).toHaveLength(7);
+    for (const name of names) {
       errors.mockClear();
       const error = new Error("m");
       error.name = name;
@@ -140,131 +139,50 @@ describe("name", () => {
       expect(only(errors)[1], JSON.stringify(name)).toEqual({ step: "finder.chart" });
     }
   });
-
-  it("is never taken from a value that is not an Error", () => {
-    logFailure("finder.chart", { name: "SiteName" });
-    logFailure("finder.chart", "TypeError");
-    logFailure("finder.chart", 42);
-    logFailure("finder.chart", { cause: { name: "SiteName" } });
-    for (const call of errors.mock.calls) {
-      expect(call[1]).toEqual({ step: "finder.chart" });
-    }
-  });
 });
 
 describe("code", () => {
-  it("passes through when it is a SQLSTATE, a PostgREST code, a forecast step or an auth-js code", () => {
-    for (const code of ["42501", "PGRST301", "23505", "XX000", "request", "http", "parse", "schema", "bad_jwt"]) {
+  it("passes through when it is a closed shape (SQLSTATE, PostgREST, forecast step, auth-js), from the error before its cause", () => {
+    // isLoggableCode accepts one example of each closed class, and the code of every ForecastError step.
+    const accepted = [
+      "42501", // a SQLSTATE
+      "XX000", // with letters
+      "P0001",
+      "HV00N",
+      "F0000",
+      "22P02",
+      "23505",
+      "PGRST301", // a PostgREST code
+      "PGRST116",
+      "request", // the forecast steps
+      "http",
+      "parse",
+      "schema",
+      "over_request_rate_limit", // an auth-js code
+      "validation_failed",
+      "refresh_token_not_found",
+      "email_address_invalid",
+      "bad_jwt",
+    ];
+    expect(accepted).toHaveLength(18);
+    for (const code of accepted) {
       errors.mockClear();
+      expect(isLoggableCode(code), code).toBe(true);
       logFailure("account.plan", Object.assign(new Error("m"), { code }));
       expect(only(errors)[1], code).toMatchObject({ code });
     }
-  });
-
-  it("comes from the cause when the error has none", () => {
-    logFailure("tonight.plan-edits", new Error("errors.load.sessionPlan", { cause: { code: "42501" } }));
-    expect(only(errors)[1]).toEqual({ step: "tonight.plan-edits", name: "Error", code: "42501" });
-  });
-
-  it("is prefered from the error over the cause", () => {
-    logFailure("tonight.plan-edits", Object.assign(new Error("m", { cause: { code: "PGRST301" } }), { code: "42501" }));
-    expect(only(errors)[1]).toMatchObject({ code: "42501" });
-  });
-
-  it("is dropped when it is not a closed shape, whatever it looks like (never a value that could be a name or a key)", () => {
-    for (const code of [
-      "M31",
-      "NGC7000",
-      "IC405",
-      "NGC40",
-      "IC342",
-      "A",
-      "abcdefghijkl", // 12 opaque characters
-      "a3f9c2d71b04", // a site-id fragment
-      "banana", // an unknown lowercase word
-      "Request", // not a forecast step
-      `permission denied at ${COORDS}`,
-      COORDS,
-      EMAIL,
-      "ada",
-      "",
-      "1234567890123",
-      "42 501",
-      "42-501",
-      "42501\n",
-      "4250", // not five characters
-      "425011",
-      "pgrst301",
-      "PGRST30",
-      "PGRST3011",
-    ]) {
-      errors.mockClear();
-      expect(isLoggableCode(code), JSON.stringify(code)).toBe(false);
-      logFailure("account.plan", Object.assign(new Error("m"), { code }));
-      expect(only(errors)[1], JSON.stringify(code)).not.toHaveProperty("code");
-    }
-  });
-
-  it("is dropped when it is not a string", () => {
-    for (const code of [42501, null, undefined, {}, ["42501"], true]) {
-      errors.mockClear();
-      expect(isLoggableCode(code)).toBe(false);
-      logFailure("account.plan", Object.assign(new Error("m"), { code }));
-      expect(only(errors)[1]).not.toHaveProperty("code");
-    }
-  });
-});
-
-describe("isLoggableCode: one accepted example of each closed class, and what it rejects", () => {
-  const ACCEPTED: [string, string][] = [
-    ["a SQLSTATE", "42501"],
-    ["a SQLSTATE with letters", "XX000"],
-    ["a SQLSTATE of a lettered class", "P0001"],
-    ["a SQLSTATE of a lettered class", "HV00N"],
-    ["a SQLSTATE of a lettered class", "F0000"],
-    ["a SQLSTATE of class 22", "22P02"],
-    ["a SQLSTATE of class 23", "23505"],
-    ["a PostgREST code", "PGRST301"],
-    ["a PostgREST code", "PGRST116"],
-    ["the forecast step request", "request"],
-    ["the forecast step http", "http"],
-    ["the forecast step parse", "parse"],
-    ["the forecast step schema", "schema"],
-    ["an auth-js code", "over_request_rate_limit"],
-    ["an auth-js code", "validation_failed"],
-    ["an auth-js code", "refresh_token_not_found"],
-    ["an auth-js code", "email_address_invalid"],
-  ];
-  const REJECTED: [string, string][] = [
-    ["a Messier id", "M31"],
-    ["a Caldwell id", "NGC7000"],
-    ["a five-character Caldwell id (class I, not a SQLSTATE class)", "IC405"],
-    ["a five-character Caldwell id", "NGC40"],
-    ["a five-character Caldwell id", "IC342"],
-    ["12 opaque characters", "a3f9c2d71b04"],
-    ["an email-like string", "ada@example.test"],
-    ["a coordinate-like string", "52.2297,21.0122"],
-    ["an unknown lowercase word", "banana"],
-    ["an unknown snake_case word", "some_new_code"],
-    ["a single letter", "A"],
-    ["a lowercase SQLSTATE shape", "xx000"],
-  ];
-
-  it.each(ACCEPTED)("accepts %s (%s)", (_class, code) => {
-    expect(isLoggableCode(code)).toBe(true);
-  });
-
-  it.each(REJECTED)("rejects %s (%s)", (_class, code) => {
-    expect(isLoggableCode(code)).toBe(false);
-  });
-
-  it("accepts the code of every ForecastError step, which is the step", () => {
     for (const step of ["request", "http", "parse", "schema"] as const) {
       expect(isLoggableCode(new ForecastError(step).code), step).toBe(true);
     }
-  });
 
-  it("keeps the auth-js allowlist to codes the installed library declares (the ErrorCode union in error-codes.d.ts)", () => {
+    errors.mockClear();
+    logFailure("tonight.plan-edits", new Error("errors.load.sessionPlan", { cause: { code: "42501" } }));
+    expect(only(errors)[1]).toEqual({ step: "tonight.plan-edits", name: "Error", code: "42501" });
+    errors.mockClear();
+    logFailure("tonight.plan-edits", Object.assign(new Error("m", { cause: { code: "PGRST301" } }), { code: "42501" }));
+    expect(only(errors)[1]).toMatchObject({ code: "42501" });
+
+    // The auth-js allowlist holds only codes the installed library declares (the ErrorCode union in error-codes.d.ts).
     const require = createRequire(import.meta.url);
     const declared = readFileSync(
       require.resolve("@supabase/auth-js/package.json").replace("package.json", "dist/main/lib/error-codes.d.ts"),
@@ -276,26 +194,67 @@ describe("isLoggableCode: one accepted example of each closed class, and what it
       expect(declared, code).toContain(`'${code}'`);
     }
   });
+
+  it("is dropped when it is not a closed shape, whatever it looks like, or not a string (never a value that could be a name or a key)", () => {
+    const rejected: unknown[] = [
+      "M31", // catalogue ids
+      "NGC7000",
+      "IC405", // five characters, class I is not a SQLSTATE class
+      "NGC40",
+      "IC342",
+      "A",
+      "abcdefghijkl", // 12 opaque characters
+      "a3f9c2d71b04", // a site-id fragment
+      "banana", // an unknown lowercase word
+      "some_new_code", // an unknown snake_case word
+      "Request", // not a forecast step
+      `permission denied at ${COORDS}`,
+      COORDS,
+      EMAIL,
+      "ada@example.test",
+      "ada",
+      "",
+      "1234567890123",
+      "42 501",
+      "42-501",
+      "42501\n",
+      "4250", // not five characters
+      "425011",
+      "xx000", // a lowercase SQLSTATE shape
+      "pgrst301",
+      "PGRST30",
+      "PGRST3011",
+      42501, // not strings
+      null,
+      undefined,
+      {},
+      ["42501"],
+      true,
+    ];
+    expect(rejected).toHaveLength(33);
+    rejected.forEach((code, i) => {
+      errors.mockClear();
+      const label = `case ${String(i)}: ${JSON.stringify(code)}`;
+      expect(isLoggableCode(code), label).toBe(false);
+      logFailure("account.plan", Object.assign(new Error("m"), { code }));
+      expect(only(errors)[1], label).not.toHaveProperty("code");
+    });
+  });
 });
 
 describe("status", () => {
-  it("is kept for an integer from 100 to 599", () => {
+  it("is kept for an integer from 100 to 599, ignored outside it, and read from the extra argument only", () => {
     for (const status of [100, 200, 404, 429, 503, 599]) {
       errors.mockClear();
       logFailure("forecast.fetch", undefined, { status });
       expect(only(errors)[1], String(status)).toEqual({ step: "forecast.fetch", status });
     }
-  });
-
-  it("is ignored outside that range, for a fraction, a non-number and a non-finite number", () => {
     for (const status of [99, 0, -1, 600, 1000, 503.5, Number.NaN, Infinity, "503", null, undefined, {}]) {
       errors.mockClear();
       logFailure("forecast.fetch", undefined, { status: status as number });
       expect(only(errors)[1], JSON.stringify(status)).toEqual({ step: "forecast.fetch" });
     }
-  });
-
-  it("is read from the extra argument only, never from the error", () => {
+    errors.mockClear();
     logFailure("forecast.fetch", Object.assign(new Error("m"), { status: 503 }));
     expect(only(errors)[1]).not.toHaveProperty("status");
   });
@@ -310,63 +269,61 @@ describe("never throws", () => {
       },
     });
 
-  it("for undefined, null, primitives, plain objects and functions", () => {
-    for (const value of [undefined, null, "text", 42, true, Symbol("s"), 10n, {}, [], () => 1, Object.create(null)]) {
-      expect(
-        () => {
-          logFailure("tonight.sky-events", value);
-          logNotice("tonight.sky-events", value);
-        },
-        typeof value,
-      ).not.toThrow();
-    }
-    expect(errors).toHaveBeenCalledTimes(11);
-    expect(warns).toHaveBeenCalledTimes(11);
-  });
-
-  it("for getters that throw, on the error and on its cause", () => {
-    for (const property of ["name", "code", "cause", "message", "stack"]) {
-      expect(() => {
-        logFailure("finder.chart", throwing(property));
-      }, property).not.toThrow();
-    }
+  it("for any value: primitives, functions, throwing getters, a hostile cause or extra, a cyclic cause, a revoked proxy", () => {
     const hostileCause = Object.defineProperty({}, "code", {
       get() {
         throw new Error("code getter");
       },
     });
-    expect(() => {
-      logFailure("finder.chart", new Error("m", { cause: hostileCause }));
-    }).not.toThrow();
-    expect(errors).toHaveBeenCalledTimes(6);
-    for (const call of errors.mock.calls) {
-      expect(JSON.stringify(call)).not.toMatch(LEAK);
-      expect((call[1] as { step: string }).step).toBe("finder.chart");
-    }
-  });
-
-  it("for a throwing extra argument, still writing the line", () => {
-    const extra = Object.defineProperty({}, "status", {
+    const hostileExtra = Object.defineProperty({}, "status", {
       get() {
         throw new Error("status getter");
       },
     });
-    expect(() => {
-      logFailure("forecast.fetch", new TypeError("m"), extra);
-    }).not.toThrow();
-    expect(only(errors)[1]).toEqual({ step: "forecast.fetch", name: "TypeError" });
-  });
-
-  it("for a cyclic cause and for a revoked proxy", () => {
-    const a: { cause?: unknown } = {};
-    a.cause = a;
+    const cyclic: { cause?: unknown } = {};
+    cyclic.cause = cyclic;
     const { proxy, revoke } = Proxy.revocable({}, {});
     revoke();
+    const values: unknown[] = [
+      undefined,
+      null,
+      "text",
+      42,
+      true,
+      Symbol("s"),
+      10n,
+      {},
+      [],
+      () => 1,
+      Object.create(null),
+      ...["name", "code", "cause", "message", "stack"].map(throwing),
+      new Error("m", { cause: hostileCause }),
+      cyclic,
+      proxy,
+    ];
+    expect(values).toHaveLength(19);
+    values.forEach((value, i) => {
+      expect(
+        () => {
+          logFailure("finder.chart", value);
+          logNotice("finder.chart", value);
+        },
+        `case ${String(i)}`,
+      ).not.toThrow();
+    });
+    expect(errors).toHaveBeenCalledTimes(values.length);
+    expect(warns).toHaveBeenCalledTimes(values.length);
+    for (const call of [...errors.mock.calls, ...warns.mock.calls]) {
+      expect(JSON.stringify(call)).not.toMatch(LEAK);
+      expect((call[1] as { step: string }).step).toBe("finder.chart");
+    }
+
+    // A throwing extra argument still writes the line.
+    errors.mockClear();
     expect(() => {
-      logFailure("finder.stars", a);
-      logFailure("finder.stars", proxy);
+      logFailure("forecast.fetch", new TypeError("m"), hostileExtra);
     }).not.toThrow();
-    expect(errors).toHaveBeenCalledTimes(2);
+    expect(only(errors)[1]).toEqual({ step: "forecast.fetch", name: "TypeError" });
   });
 
   it("when the console itself throws", () => {
@@ -384,12 +341,9 @@ describe("never throws", () => {
 });
 
 describe("FAILURE_STEPS", () => {
-  it("has no step nothing emits: the milestone read and record are told apart by route", () => {
+  it("is a closed list of unique dotted words, including every step Phases 1, 3, 4 and 5 trace and none that nothing emits", () => {
     expect(FAILURE_STEPS).not.toContain("milestones.read");
     expect(FAILURE_STEPS).not.toContain("milestones.record");
-  });
-
-  it("is a closed list of unique dotted words, including every step Phases 1, 3, 4 and 5 trace", () => {
     expect(new Set(FAILURE_STEPS).size).toBe(FAILURE_STEPS.length);
     for (const step of FAILURE_STEPS) {
       expect(step, step).toMatch(/^[a-z]+\.[a-z][a-z-]*$/);

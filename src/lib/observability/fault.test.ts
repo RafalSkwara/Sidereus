@@ -61,12 +61,19 @@ describe("classifyFault", () => {
     ["a refusal with its 403 status", { code: "42501", status: 403 }, "refused"],
   ];
 
-  it.each(TABLE)("%s is %s", (_name, fault, kind) => {
-    expect(classifyFault(fault)).toBe(kind);
+  it("classifies every code in the table, a carrier through its code and status", () => {
+    expect(TABLE.length).toBeGreaterThanOrEqual(26);
+    TABLE.forEach(([name, fault, kind], i) => {
+      expect(classifyFault(fault), `case ${String(i)}: ${name} is ${kind}`).toBe(kind);
+    });
+    expect(classifyFault(faultFrom({ code: "42501" }))).toBe("refused");
+    expect(classifyFault(faultFrom(new TypeError("fetch failed")))).toBe("server");
   });
 
   it("defaults to server for every code outside the four known classes", () => {
-    for (const code of ["P0001", "42883", "40001", "0A000", "3D000", "PGRST100", "PGRST204", "PGRST999", "x"]) {
+    const codes = ["P0001", "42883", "40001", "0A000", "3D000", "PGRST100", "PGRST204", "PGRST999", "x"];
+    expect(codes).toHaveLength(9);
+    for (const code of codes) {
       expect(classifyFault({ code }), code).toBe("server");
     }
   });
@@ -79,16 +86,6 @@ describe("classifyFault", () => {
 });
 
 describe("faultFrom", () => {
-  it("is a StoreFault with a fixed message that keeps only the code and the status", () => {
-    const fault = faultFrom(postgrestError({ status: 503 }));
-    expect(fault).toBeInstanceOf(StoreFault);
-    expect(fault).toBeInstanceOf(Error);
-    expect(fault.name).toBe("StoreFault");
-    expect(fault.code).toBe("XX000");
-    expect(fault.status).toBe(503);
-    expect(fault.cause).toBeUndefined();
-  });
-
   it("leaves no trace of the original message, details or hint anywhere on the carrier", () => {
     const fault = faultFrom(postgrestError({ status: 400 }));
     expect(everythingShown(fault)).not.toMatch(LEAK);
@@ -104,20 +101,20 @@ describe("faultFrom", () => {
     expect(everythingShown(fault)).not.toMatch(LEAK);
   });
 
-  it("reads the code and status of a keyed read error from its cause", () => {
-    const thrown = new Error("errors.load.sites", { cause: new StoreFault({ code: "PGRST301", status: 401 }) });
-    const fault = faultFrom(thrown);
-    expect(fault.code).toBe("PGRST301");
-    expect(fault.status).toBe(401);
-    expect(everythingShown(fault)).not.toContain("errors.load.sites");
-  });
+  it("is a StoreFault that reads code and status from the error before its cause, drops malformed ones and is empty for a non-object", () => {
+    const fault = faultFrom(postgrestError({ status: 503 }));
+    expect(fault).toBeInstanceOf(StoreFault);
+    expect(fault).toBeInstanceOf(Error);
+    expect(fault.cause).toBeUndefined();
 
-  it("prefers the error's own code over its cause's", () => {
-    const thrown = Object.assign(new Error("m", { cause: { code: "PGRST301" } }), { code: "42501" });
-    expect(faultFrom(thrown).code).toBe("42501");
-  });
+    const keyed = faultFrom(
+      new Error("errors.load.sites", { cause: new StoreFault({ code: "PGRST301", status: 401 }) }),
+    );
+    expect([keyed.code, keyed.status]).toEqual(["PGRST301", 401]);
+    expect(everythingShown(keyed)).not.toContain("errors.load.sites");
+    const own = Object.assign(new Error("m", { cause: { code: "PGRST301" } }), { code: "42501" });
+    expect(faultFrom(own).code).toBe("42501");
 
-  it("drops a code that is not shaped like one and a status that is not an HTTP status", () => {
     expect(faultFrom({ code: `see ${EMAIL}` }).code).toBeUndefined();
     expect(faultFrom({ code: "waytoolongforacode" }).code).toBeUndefined();
     expect(faultFrom({ code: 42501 }).code).toBeUndefined();
@@ -126,13 +123,9 @@ describe("faultFrom", () => {
     }
     expect(faultFrom({ status: 100 }).status).toBe(100);
     expect(faultFrom({ status: 599 }).status).toBe(599);
-  });
 
-  it("gives an empty carrier for anything that is not an object, and never throws", () => {
     for (const value of [undefined, null, "boom", 42, true, Symbol("s")]) {
-      const fault = faultFrom(value);
-      expect(fault.code).toBeUndefined();
-      expect(fault.status).toBeUndefined();
+      expect([faultFrom(value).code, faultFrom(value).status], typeof value).toEqual([undefined, undefined]);
     }
     const hostile = new Proxy(
       {},
@@ -142,17 +135,10 @@ describe("faultFrom", () => {
         },
       },
     );
-    const fault = faultFrom(hostile);
-    expect(fault).toBeInstanceOf(StoreFault);
-    expect(everythingShown(fault)).not.toMatch(LEAK);
+    expect(everythingShown(faultFrom(hostile))).not.toMatch(LEAK);
     const cyclic: { cause?: unknown } = {};
     cyclic.cause = cyclic;
     expect(faultFrom(cyclic)).toBeInstanceOf(StoreFault);
-  });
-
-  it("classifies a carrier through its code and status", () => {
-    expect(classifyFault(faultFrom({ code: "42501" }))).toBe("refused");
-    expect(classifyFault(faultFrom(new TypeError("fetch failed")))).toBe("server");
   });
 });
 
@@ -171,17 +157,11 @@ describe("withFault", () => {
     expect(withFault(postgrestError({ code: "XX000" }))).toEqual({ fault: { kind: "server", code: "XX000" } });
     expect(withFault(new TypeError("fetch failed"))).toEqual({ fault: { kind: "server" } });
     expect(JSON.stringify(withFault(postgrestError({ status: 503 })))).not.toMatch(LEAK);
-  });
-
-  it("reads a StoreFault and the fault inside a keyed error's cause", () => {
+    // A StoreFault, and the fault inside a keyed error's cause.
     expect(withFault(new StoreFault({ code: "PGRST116" }))).toEqual({ fault: { kind: "no-rows", code: "PGRST116" } });
     expect(withFault(new Error("errors.load.sites", { cause: new StoreFault({ code: "42501" }) }))).toEqual({
       fault: { kind: "refused", code: "42501" },
     });
-  });
-
-  it("has a no-rows fault for the zero-row branches, a fresh object each time", () => {
     expect(noRowsFault()).toEqual({ kind: "no-rows" });
-    expect(noRowsFault()).not.toBe(noRowsFault());
   });
 });

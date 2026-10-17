@@ -665,10 +665,10 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 4.1 `npm test` green; `guards` ≤ 25 tests; observability files ≤ 35; the slice ≤ 70
-- [ ] 4.2 Four break checks red then reverted (console.log in score.ts, new empty catch, message on a fault carrier, hex colour)
-- [ ] 4.3 `npm run test:guards` under 25 s locally
-- [ ] 4.4 `npm run lint`, `npx astro check` green
+- [x] 4.1 `npm test` green; `guards` ≤ 25 tests; observability files ≤ 35; the slice ≤ 70
+- [x] 4.2 Four break checks red then reverted (console.log in score.ts, new empty catch, message on a fault carrier, hex colour)
+- [x] 4.3 `npm run test:guards` under 25 s locally
+- [x] 4.4 `npm run lint`, `npx astro check` green
 
 #### Manual
 
