@@ -4,7 +4,12 @@ What Sidereus looks like now, and what the next session should do. Read this fir
 
 ## Update 2026-10-17 (owner polish)
 
-- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` (#214) in implementation.
+- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` merged (#220, GitHub #214) and archived; S-11 `ui-progress-rewards` (#215) is in planning, waiting on the owner's approval of the badge art.
+
+### Open owner checks
+
+- ui-quick-nav, iPhone Safari swipe (archived plan rows 3.4, 3.5): each bottom sheet follows the finger, snaps back, closes on a flick; the quick-nav list scrolls without moving the sheet and a drag from its top closes it; with Reduce motion on, no follow and a long swipe closes at once.
+- ui-quick-nav, VoiceOver (archived plan row 2.7): "Szybka nawigacja", collapsed and expanded, "bieżąca strona" on the current row.
 
 ---
 

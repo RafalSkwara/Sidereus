@@ -1,10 +1,10 @@
 ---
 change_id: ui-quick-nav
 title: Quick nav to Tonight's focused pages from every screen (Topbar icon button)
-status: implementing
+status: archived
 created: 2026-10-17
 updated: 2026-10-17
-archived_at: null
+archived_at: 2026-10-17T17:08:57Z
 ---
 
 ## Notes
