@@ -641,7 +641,7 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 - [x] 2.1 `npm test` green; the slice ≤ 30 files and ≤ 230 tests — fe2e90e
 - [x] 2.2 Four break checks red then reverted (clamped plan row, solar-safety line hidden, island imports the catalogue, incomplete 200 replaces a usable copy) — fe2e90e
-- [x] 2.3 `npm run lint`, `npx astro check` green; `test:reference` time recorded
+- [x] 2.3 `npm run lint`, `npx astro check` green; `test:reference` time recorded — fe2e90e
 
 #### Manual
 
