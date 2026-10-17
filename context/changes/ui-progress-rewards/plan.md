@@ -38,8 +38,8 @@ From `research.md` (charges and anchors there):
   icons for the six "first"/"all planets" milestones, and the numerals 10 / 25 / 50 / 110 / 61 for the five count
   milestones. Reached: solid 2 px `action-border` ring on `action-surface`, glyph in `primary-strong`, a check pip,
   name in heading ink and semibold, "Reached 14 Aug 2026". Ahead: dashed `control-border` ring, muted glyph, regular
-  muted name, "Not yet" or "37 / 50", and, when the milestone has progress above 0, a `primary-strong` arc over the
-  ring proportional to it.
+  muted name, "Not yet" or "37 / 50", and, when the milestone has progress above 0, a solid, wider `primary-strong`
+  arc over the ring proportional to it (ring and arc in one SVG, so red mode tells them apart by shape).
 - Each checklist band opens with a legend (one row per type family present in that list: icon, plural name,
   "seen / total"), then a 6-column (phone) / 10-column (`sm`) grid of tiles in catalogue order, each tile a type icon
   over "M31" / "C14". Seen: 2 px `action-border` on `action-surface`, icon in `primary-strong`, semibold number,
@@ -62,11 +62,13 @@ and PL.
   only); "37 / 50" exists today (`countState` caps at N, `:134-136`).
 - `src/components/ui/fact-icons.ts:2` — "one concept, one icon"; `src/components/NavIcon.astro:12-47` — the
   precedent for hand-drawn icons on lucide's 24-unit grid.
-- `src/components/island-imports.test.ts:52` — `FACT_FAMILY` keeps icon-set modules out of islands; the new
-  `progress-icons.ts` joins it.
+- `src/components/island-imports.test.ts:44-52` — `FACT_FAMILY` keeps icon-set modules out of the islands it checks
+  (`MoonTimeSlider`, `TonightSkyView`, `sky-view/*`); the new `progress-icons.ts` joins it. That is enough, since
+  `/log/progress` has no island. The test runs in `test:reference`, not `test:guards` (`vitest.config.ts:5-20`).
 - `src/styles/contrast.test.ts:104,130,134-140` — `primary-strong` on `action-surface` (4.5), `action-border` (3) on
-  background/surface/sky, `control-border` (3), `primary-strong` (3) on background/surface: every pair the new states
-  use is already pinned, so **no token is added**.
+  background/surface/sky, `control-border` (3), `primary-strong` (3) on background/surface are pinned. One pair the
+  seen tile uses is not: `heading` (the number) on `action-surface`; it passes today (red about 4.8:1) and Phase 2
+  adds it to the `action-surface` row (`:134`). **No token is added**.
 - `src/styles/rhythm-roles.test.ts:54-108` — `GUARDED` with exact count allowlists; a bare `gap-*` in a `grid` counts
   as vertical.
 - `tests/e2e/observing-milestones.spec.ts:88-106,113-191` — text and attribute hooks the new markup must keep.
@@ -93,7 +95,7 @@ then one component at a time on the view (badges, then tiles), then the states, 
 mapping is a `Record<…>` keyed by `MilestoneKey`, `DeepSkyType` or the family, so `astro check` (CI) fails on a
 missing key; no unit test restates a map (test-diet rubric). The only new tests are feature-level e2e assertions for
 what a screenshot cannot show: the tile's screen-reader text carries type and seen state, the legend count follows
-the log, the dialog shows the badge, and the page's HTML stays inside a measured budget.
+the log, the dialog shows the badge, and the checklist markup stays inside a measured budget.
 
 ## Critical Implementation Details
 
@@ -104,9 +106,13 @@ the log, the dialog shows the badge, and the page's HTML stays inside a measured
 - **Red mode by shape.** In red `primary` = `primary-strong` = `heading` (#ff0000). Seen vs. not seen must differ by
   border width (2 px vs 1 px), fill luminance (`action-surface` #2a0000 vs. none), weight (semibold vs. regular) and
   the check glyph; reached vs. ahead by solid vs. dashed ring, the check pip and the arc. Never by hue alone.
-- **The arc is SVG geometry, not a class.** Draw it with `pathLength="100"` and `stroke-dasharray="<pct> 100"` on a
-  circle rotated −90°, stroke `stroke-primary-strong`; the percentage is computed in the frontmatter from
-  `MilestoneState.progress`. This is an attribute value, not a Tailwind arbitrary value.
+- **The ahead ring and the arc are one SVG.** In red the arc (`primary-strong` #ff0000) is only about 1.5:1 against
+  the ring (`control-border` #c80000), so they must differ by shape: the `ahead` badge has no CSS border; one SVG
+  (one `viewBox`, one radius) draws the dashed ring in `stroke-control-border` and, over it, the arc **solid and one
+  unit wider** in `stroke-primary-strong`, in every theme. Draw the arc with `pathLength="100"` and
+  `stroke-dasharray="<pct> 100"` on the same circle rotated −90°; the percentage is computed in the frontmatter from
+  `MilestoneState.progress`. These are attribute values, not Tailwind arbitrary values. `reached` keeps the CSS
+  `rounded-full border-2` ring.
 - **Keep the e2e hooks and the text.** `data-milestone`, `data-reached`, `data-checklist-item`, `data-seen`,
   `data-seen-item`, `#progress-*-heading` and the strings `reachedOn` / `notYet` / `progress(seen,total)` stay, so
   `observing-milestones.spec.ts` keeps passing unchanged before the new assertions are added.
@@ -209,8 +215,8 @@ hover / focus / disabled / error / empty / loading N/A (decorative, `aria-hidden
 #### Automated Verification:
 
 - Types check: `npx astro sync && npx astro check`
-- Reference suite passes: `npm run test:reference`
-- Guards pass (island imports, no hardcoded colours): `npm run test:guards`
+- Reference suite passes, incl. the island-import guard: `npm run test:reference`
+- Guards pass (no hardcoded colours, red theme): `npm run test:guards`
 - Lint passes on the changed files: `npx eslint --max-warnings 0 src/lib/progress/object-family.ts src/components/progress/progress-icons.ts src/pages/design.astro src/components/island-imports.test.ts src/i18n/messages/en.ts src/i18n/messages/pl.ts`
 
 #### Manual Verification:
@@ -240,11 +246,22 @@ red-safe by shape.
 
 **Contract**: props `{ milestone: MilestoneKey; reached: boolean; progress?: { seen: number; total: number }; size?: "md" | "lg" }`;
 root `<span data-milestone-badge={milestone} aria-hidden="true">`. `md` = `size-16`, glyph `size-8` or a numeral in
-`font-display text-title font-semibold`; `lg` = `size-20`, glyph `size-10` or numeral `text-display`. Reached:
-`rounded-full border-2 border-action-border bg-action-surface text-primary-strong` plus a check pip in the lower right
-(`bg-primary text-primary-foreground`, `Check` with `strokeWidth` 3). Ahead: `rounded-full border-2 border-dashed
-border-control-border text-muted-foreground`; when `progress.seen > 0`, the arc described in Critical Implementation
-Details over the ring. No text inside it beyond the numeral; the meaning is in the list item's text.
+`font-display text-title font-semibold`; `lg` = `size-20`, glyph `size-10`, a 2-digit numeral in `text-display` and
+a 3-digit numeral ("110") in `text-title` (Archivo expanded at `text-display` would overflow the 76 px interior).
+Reached: `rounded-full border-2 border-action-border bg-action-surface text-primary-strong` plus a check pip in the
+lower right (`bg-primary text-primary-foreground`, `Check` with `strokeWidth` 3). Ahead: no CSS border, glyph
+`text-muted-foreground`, and one SVG for the dashed `control-border` ring plus, when `progress.seen > 0`, the solid,
+wider `primary-strong` arc (Critical Implementation Details). No text inside it beyond the numeral; the meaning is in
+the list item's text.
+
+#### 1b. The contrast pin for the seen number
+
+**File**: `src/styles/contrast.test.ts`
+
+**Intent**: Hold the pair the seen tile's number uses (`text-heading` on `action-surface`), which no row pins today.
+
+**Contract**: the `action-surface` row (`:134`) gets `heading` beside `primary-strong` in `fg` (floor 4.5, all four
+theme groups); its comment names the milestone badges and the seen tiles.
 
 #### 2. The Milestones band
 
@@ -274,7 +291,8 @@ Continue, See your progress, script, `specimen`, `idBase`) unchanged. Drop the `
 **Intent**: The badge in every state and the new band, with the dialog specimens picking up the badges.
 
 **Contract**: a `MilestoneBadge` block: reached icon, reached numeral, ahead with no progress ("Not yet"), ahead at
-0 / N, ahead at 37 / 50, ahead at 4 / 7, `lg` reached; plus a forced `data-theme="red"` row. The existing
+0 / N, ahead at 37 / 50, ahead at 4 / 7, `lg` reached icon, `lg` reached "25" and `lg` reached "110"; plus a forced
+`data-theme="red"` row. The existing
 `c-milestone-list` and `c-milestone-celebration` blocks render the new components from the same sample data
 (`:672-689`); add a sample with 37 Messier objects seen so the arc shows. Matrix notes: hover, focus-visible,
 disabled N/A (not interactive), error N/A (a failed stored read falls back to the derived states, a failed log read
@@ -285,9 +303,9 @@ shows the page's `ServerError`), empty = `milestonesNone`, loading N/A (server-r
 #### Automated Verification:
 
 - Types check: `npx astro check`
-- Reference and guard suites pass: `npm run test:reference && npm run test:guards`
-- Lint passes on the changed files: `npx eslint --max-warnings 0 src/components/progress src/pages/design.astro`
-- The milestone journey still passes unchanged: `npx playwright test tests/e2e/observing-milestones.spec.ts` (local recipe, see Testing Strategy)
+- Reference and guard suites pass, incl. the new contrast pin: `npm run test:reference && npm run test:guards`
+- Lint passes on the changed files: `npx eslint --max-warnings 0 src/components/progress src/pages/design.astro src/styles/contrast.test.ts`
+- The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px: `npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-phone.spec.ts` (local recipe, see Testing Strategy)
 
 #### Manual Verification:
 
@@ -305,7 +323,7 @@ confirmation from the human that the manual testing was successful before procee
 ### Overview
 
 Turn both checklists into type-icon tiles with a per-list legend, render the icons through one sprite, put the
-progress page on the rhythm roles, and measure the page's HTML.
+progress page on the rhythm roles, and measure the checklist markup.
 
 ### Changes Required:
 
@@ -318,8 +336,8 @@ so 171 tiles do not repeat the paths.
 
 **Contract**: `<svg aria-hidden="true" focusable="false" class="absolute size-0 overflow-hidden">` holding
 `<symbol id="progress-type-<family>" viewBox="0 0 24 24">` with the icon's nodes (render the icon component inside the
-symbol, or its node list, with `stroke="currentColor"`, width 2, round caps). Rendered once by the page and once by
-`/design`.
+symbol, or its node list, with `stroke="currentColor"`, width 2, round caps). Rendered once per document: by the page
+and, in this phase, by `/design` (see 5 below).
 
 #### 2. The tiles
 
@@ -333,8 +351,10 @@ justify-center rounded-lg font-mono text-caption`; seen `border-2 border-action-
 font-semibold text-heading` with the icon in `text-primary-strong` and a `Check` (`size-3`, stroke 3) at the top
 right; not seen `border border-border text-muted-foreground`. Icon: `<svg class="size-5"><use href="#progress-type-…"/></svg>`,
 `aria-hidden`. The visible "M31" / "C14" is `aria-hidden`; the `sr-only` text is
-"[C20, ]label[, common name], type (`types[family].one`), seen | not seen". Not interactive (no link, no button, no
-tabindex).
+"[C20, ]label[, common name], type (`types[family].one`), seen | not seen", in a span marked `data-tile-sr` so e2e can
+match it exactly. Not interactive (no link, no button, no tabindex). The corner check must not cover the centred icon
+at 320 px (tile about 41 px wide): if it does, move the icon and number lower (`justify-end` with the number's own
+padding) or make the check `size-2.5`.
 
 #### 3. The legend
 
@@ -355,8 +375,18 @@ per `familyCounts(items)` row: icon component (`size-5`, muted, `aria-hidden`), 
 
 **Contract**: `ObjectTypeSprite` once inside the loaded branch; in each checklist `Band`: (Caldwell note,) legend,
 grid at `mt-group`, SeenList at `mt-group`. Replace `mb-6`, `mt-3`, `py-3 first:pt-0 last:pb-0`, `mb-4` (`:69,71,84,110`)
-and SeenList's `mt-4`, `py-3` (`:27,31`) with `mt-group` / `mb-group`, `mt-line`, `py-item first:pt-0 last:pb-0`.
-Headings, ids, `data-*` hooks and strings unchanged.
+and SeenList's `mt-4`, `py-3` (`:27,31`) with `mt-group` / `mb-group`, `mt-line`, `py-item first:pt-0 last:pb-0`, and
+the Firsts row's `gap-y-1` (`:84`) with `gap-y-line` (the gap only shows when the row wraps). Headings, ids, `data-*`
+hooks and strings unchanged.
+
+#### 5. `/design` keeps its icons
+
+**File**: `src/pages/design.astro`
+
+**Intent**: The existing `c-checklist` block already renders `ChecklistGrid`; without the sprite its tiles would show
+empty `<use>`s until Phase 4.
+
+**Contract**: render `ObjectTypeSprite` once in the document (one line); Phase 4 only extends the specimens.
 
 ### Success Criteria:
 
@@ -364,15 +394,16 @@ Headings, ids, `data-*` hooks and strings unchanged.
 
 - Types check: `npx astro check`
 - Reference and guard suites pass: `npm run test:reference && npm run test:guards`
-- Lint passes on the changed files: `npx eslint --max-warnings 0 src/components/progress src/pages/log/progress.astro`
+- Lint passes on the changed files: `npx eslint --max-warnings 0 src/components/progress src/pages/log/progress.astro src/pages/design.astro`
 - Build passes: `npm run build`
-- The milestone journey still passes unchanged: `npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-subnav.spec.ts` (local recipe)
-- The page's HTML is measured on the preview build for a signed-in user with 37 Messier and 6 Caldwell objects seen (raw and gzip, before on `main`'s build and after), and recorded in `implementation-notes.md`
+- The milestone journey still passes unchanged, with no sideways scroll at 320/375 px: `npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-subnav.spec.ts tests/e2e/tonight-phone.spec.ts` (local recipe)
+- The checklist markup is measured on the preview build: the `outerHTML` length of the two `[data-checklist-grid]` blocks plus the sprite, in the e2e journey's state (0–1 seen) and with 37 Messier and 6 Caldwell seen, before (today's chips) and after, raw and gzip; recorded in `implementation-notes.md`
 
 #### Manual Verification:
 
 - Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red: no
-  sideways scroll, legend wraps, seen tiles tell apart by border, fill, weight and check in red, icons legible
+  sideways scroll, legend wraps, seen tiles tell apart by border, fill, weight and check in red, icons legible, and
+  the corner check does not cover the icon at 320 px (also on the `/design` tiles)
 - VoiceOver (or the accessibility tree in Playwright) reads a tile as "M31, Andromeda Galaxy, galaxy, seen"
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual
@@ -395,7 +426,7 @@ the rule in CLAUDE.md.
 
 **Intent**: Tiles and legend in every state next to the badges.
 
-**Contract**: the `c-checklist` block renders `ObjectTypeSprite` once and shows: a row of tiles covering all six
+**Contract**: the `c-checklist` block (using the sprite rendered once in Phase 3) shows: a row of tiles covering all six
 families seen and not seen, Messier with the 37-seen sample, Caldwell with its prefix, the legend for both lists, the
 empty list (`progressNone`), and a forced `data-theme="red"` copy of the tile row and legend. Matrix note: default
 shown; hover, focus-visible, disabled N/A (not interactive); error N/A (the page's `ServerError`); empty shown;
@@ -405,15 +436,28 @@ loading N/A (server-rendered with the page).
 
 **File**: `tests/e2e/observing-milestones.spec.ts`
 
-**Intent**: Pin what screenshots cannot: screen-reader text, a count that follows the log, the dialog's badge, the HTML
-budget. Clock-pinned through `tests/e2e/helpers.ts` like the rest of the spec.
+**Intent**: Pin what screenshots cannot: screen-reader text, a count that follows the log, the dialog's badge, the
+checklist markup budget. Clock-pinned through `tests/e2e/helpers.ts` like the rest of the spec.
 
-**Contract**: in the existing journey, after M31 is logged at rating 3+: `[data-checklist-item="M31"]` has
-`data-family="galaxy"` and its text contains `progress.types.galaxy.one` and `progress.seen`; the Messier legend's
-`[data-legend-family="galaxy"]` contains `count({seen:"1", total:"40"})`; after re-rating to 1-2 it is back to 0 / 40
-and the tile has no `data-seen`. In the celebration test, the open dialog holds `[data-milestone-badge="first-galaxy"]`.
-The `/log/progress` navigation response body is under the budget recorded in Phase 3 (raw bytes, with ~10 % headroom).
-No new spec file.
+**Contract**: in the existing journey (`observing-milestones.spec.ts:108-191`), with the expected strings built from
+`en` (label, `localCommonName`, `progress.types.<family>.one`, `progress.seen` / `progress.notSeen`, `progress.count`):
+
+- step 2 (M31 rated 2): the M31 tile's `[data-tile-sr]` has exactly the text "M31, Andromeda Galaxy, galaxy, not seen"
+  and `data-family="galaxy"`; the Messier legend's `[data-legend-family="galaxy"]` count is exactly `0 / 40`;
+- step 3 (edited to 4): the tile's sr text is exactly "M31, Andromeda Galaxy, galaxy, seen"; the galaxy legend count
+  is exactly `1 / 40`;
+- **new step 3b (rating changed to 1–2)**: edit the M31 entry from 4 to 2; the tile has no `data-seen` and its sr text
+  ends in "not seen", the galaxy legend is back to exactly `0 / 40`, the Messier heading to `0 / 110`, and
+  "First galaxy" stays reached on `galaxyNight` (the stored record); then edit it back to 4 (dismissing a dialog if
+  one opens, `dismissCelebrationIfOpen`) so step 5 starts as today;
+- step 5 (the entry becomes M13): galaxy legend exactly `0 / 40`, globular exactly `1 / 29`, M31 without `data-seen`;
+- in the celebration test, the open dialog holds `[data-milestone-badge="first-galaxy"]`;
+- the markup budget: in the journey's state, the summed `outerHTML` length of the two `[data-checklist-grid]` blocks
+  and the sprite is under the Phase 3 measurement plus about 10 %, so the pin follows this change's markup and not the
+  shell's.
+
+No new spec file. The sr strings are exact (`toHaveText`), never a substring: "not seen" contains "seen", and Polish
+"jeszcze nie zaobserwowano" contains "zaobserwowano".
 
 #### 3. Rhythm guard
 
@@ -434,7 +478,9 @@ allowlist (expected empty; any needed exception named with its reason).
 **Contract**: in "Observing progress" / "Observing milestones": `object-family.ts` (`FAMILY_OF`, `familyCounts`),
 `progress-icons.ts` (drawn icons, `OBJECT_FAMILY_ICONS`, `MILESTONE_GLYPHS`; one concept per icon; out of islands),
 `MilestoneBadge` (shared by `MilestoneList` and `MilestoneCelebration`), `ChecklistGrid` tiles through
-`ObjectTypeSprite`, `ChecklistLegend`, the e2e hooks (`data-family`, `data-legend-family`, `data-milestone-badge`).
+`ObjectTypeSprite`, `ChecklistLegend`, the e2e hooks (`data-family`, `data-legend-family`, `data-milestone-badge`,
+`data-tile-sr`). One sentence: the families are a display grouping; "First nebula" follows `NEBULA_TYPES`, which
+includes planetary nebulae, so M57 alone reaches it while the legend's "Nebulae" stays at 0 (both rules are right).
 In "UI (Nightfall)" Clickables: the action tokens now also serve the milestone badges and seen tiles (both
 non-interactive), and red tells their states by border width, dash, fill and glyph.
 
@@ -470,9 +516,12 @@ confirmation from the human that the manual testing was successful before procee
 
 ### Integration Tests:
 
-- `tests/e2e/observing-milestones.spec.ts` (extended, Phase 4): tile sr text with type and seen state, legend count
-  following the log, the dialog's badge, the HTML budget. The existing assertions stay unchanged and must pass at the
-  end of Phases 2 and 3.
+- `tests/e2e/observing-milestones.spec.ts` (extended, Phase 4): the exact sr text of a tile (type and seen state),
+  exact legend counts at steps 2, 3, 3b and 5, the new step 3b (an edit that drops the rating to 1–2 un-sees the tile
+  and lowers the counts while "First galaxy" stays reached), the dialog's badge, and the checklist markup budget. The
+  existing assertions stay unchanged and must pass at the end of Phases 2 and 3.
+- `tests/e2e/tonight-phone.spec.ts` (unchanged) already has `/log/progress` in `APP_PAGES` (`:51`) and fails on
+  sideways scroll at 320/375 px; Phases 2 and 3 run it.
 
 ### Running the e2e specs
 
@@ -491,14 +540,37 @@ only these two ports afterwards.
 ## Performance Considerations
 
 171 tiles render on the server on every request. The sprite keeps each tile to an `li`, one `svg` + `use`, one
-visible span and one `sr-only` span (plus the check when seen). Phase 3 measures the page's HTML on the preview build
-before and after; Phase 4 pins the result in the e2e spec (lessons: "measure every size budget on the real build
-output … and pin the result"). No client JavaScript is added to the page.
+visible span and one `sr-only` span (plus the check when seen). Phase 3 measures on the preview build,
+before and after for the checklist markup only (the two grids plus the sprite, `outerHTML`), not the whole document,
+so the Topbar, TabBar or shell of other changes cannot move it; Phase 4 pins that number in the e2e journey's own state
+(lessons: "measure every size budget on the real build output … and pin the result"). No client JavaScript is added
+to the page.
 
 ## Migration Notes
 
 None: no schema, no stored data, no service-worker change. The milestone record and the derived states are read as
 before.
+
+## Plan review triage
+
+Review: `context/changes/ui-progress-rewards/reviews/plan-review.md` (2026-10-17, NEEDS ATTENTION, 0 critical, 5
+warnings, 5 observations, all LOW). Triage by the orchestrator, applied to this plan (docs only).
+
+| Finding                                                    | Decision       | What changed in the plan                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1 "110" overflows the `lg` badge                          | Accepted       | Phase 2 §1: `lg` 3-digit numeral in `text-title`, 2-digit stays `text-display`; Phase 2 §4: `lg` "25" and "110" specimens.                                                                                                                                    |
+| F2 e2e assertion that cannot fail, step not in the journey | Accepted       | Phase 4 §2: exact sr text (`[data-tile-sr]`, `toHaveText`) and exact legend counts at steps 2, 3, 3b and 5; new step 3b (rating 4 → 2 un-sees M31, lowers the counts, "First galaxy" stays reached, then back to 4); Phase 3 §2 adds the `data-tile-sr` hook. |
+| F3 arc vs. dashed ring in red, overlay geometry            | Accepted       | Critical Implementation Details and Phase 2 §1: the ahead ring and the arc are one SVG, no CSS border on ahead; the arc is solid and one unit wider in every theme.                                                                                           |
+| F4 `/design` tiles without icons between Phases 3 and 4    | Accepted       | Phase 3 §5: `ObjectTypeSprite` rendered once on `/design` in Phase 3; Phase 4 §1 only extends the specimens; Phase 3 lint includes `design.astro`.                                                                                                            |
+| F5 `gap-y-1` in `progress.astro:84`                        | Accepted       | Phase 3 §4: `gap-y-1` → `gap-y-line`, so the Phase 4 allowlist stays empty.                                                                                                                                                                                   |
+| F6 corner check may cover the icon at 320 px               | Accepted       | Phase 3 §2: the check must clear the icon (fallback `justify-end` or `size-2.5`); Phase 3 manual check and Progress 3.7 include it.                                                                                                                           |
+| F7 one contrast pair unpinned; guard descriptions          | Accepted       | Phase 2 §1b: `heading` added to the `action-surface` row of `contrast.test.ts:134`; Key Discoveries corrected (the island guard covers three islands and runs in `test:reference`); Phase 1 criteria and Progress 1.2 / 1.3 relabelled.                       |
+| F8 "First nebula" vs. the legend's "Nebulae"               | Accepted as is | Phase 4 §4: one CLAUDE.md sentence that families are a display grouping and "First nebula" follows `NEBULA_TYPES`. No rule change.                                                                                                                            |
+| F9 the HTML budget measures the whole document             | Accepted       | Phase 3 criterion, Phase 4 §2 and Performance Considerations: measure and pin the `outerHTML` of the two grids plus the sprite in the journey's own state; Progress 3.6 relabelled.                                                                           |
+| F10 sideways-scroll guard not in Phases 2 and 3            | Accepted       | `tests/e2e/tonight-phone.spec.ts` added to the Playwright commands of Phases 2 and 3 (Progress 2.4, 3.5) and to Testing Strategy.                                                                                                                             |
+
+The reviewer agreed with every ⭐ recommendation in P1–P7 (with F1 for P3, F3 for P2 and F6 for P4). The owner's
+answers are still pending.
 
 ## QUESTIONS FOR OWNER
 
@@ -607,8 +679,8 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 #### Automated
 
 - [ ] 1.1 Types check: `npx astro sync && npx astro check`
-- [ ] 1.2 Reference suite passes: `npm run test:reference`
-- [ ] 1.3 Guards pass (island imports, no hardcoded colours): `npm run test:guards`
+- [ ] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference`
+- [ ] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards`
 - [ ] 1.4 Lint passes on the changed files
 
 #### Manual
@@ -620,9 +692,9 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 #### Automated
 
 - [ ] 2.1 Types check: `npx astro check`
-- [ ] 2.2 Reference and guard suites pass
+- [ ] 2.2 Reference and guard suites pass, incl. the new contrast pin
 - [ ] 2.3 Lint passes on the changed files
-- [ ] 2.4 The milestone journey still passes unchanged
+- [ ] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px
 
 #### Manual
 
@@ -637,12 +709,12 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 - [ ] 3.2 Reference and guard suites pass
 - [ ] 3.3 Lint passes on the changed files
 - [ ] 3.4 Build passes: `npm run build`
-- [ ] 3.5 The milestone journey and sub-nav specs still pass unchanged
-- [ ] 3.6 The page's HTML is measured before and after and recorded in `implementation-notes.md`
+- [ ] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged
+- [ ] 3.6 The checklist markup (grids plus sprite) is measured before and after and recorded in `implementation-notes.md`
 
 #### Manual
 
-- [ ] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red
+- [ ] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, the check clear of the icon at 320 px
 - [ ] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader
 
 ### Phase 4: States, `/design`, the screenshot gate, the guard and the rule
