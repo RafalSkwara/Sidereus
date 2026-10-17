@@ -2,7 +2,7 @@
 
 > Full plan: `context/changes/ui-quick-nav/plan.md`
 > Research: `context/changes/ui-quick-nav/research.md`
-> Roadmap M-4 S-10 · issue #214 · **starts only after PR #212 merges and the branch is rebased**
+> Roadmap M-4 S-10 · issue #214 · #212 merged (bb442bf), branch rebased; owner answered P1-P7 on 2026-10-17
 
 ## What & Why
 
@@ -33,12 +33,12 @@ the button), in dark, light and red, EN and PL, and fits 320 px with its gutter.
 | Current page | `aria-current="page"` on the menu's current row; the bars keep F6 | The owner's requirement; F6's page-wide single mark gets one exception, specs re-scoped | Plan (owner req.) |
 | Build | `QuickNav.astro` + small script, native `popover="auto"` | Server-rendered labels and marks, works before hydration, no React | Research |
 | Shared contract | `ui/topbar-popover.ts` (icon button, panel, handle) + `topbar-panel-top` from #212's strip token + `--breakpoint-xs` | A second Topbar popover must not copy the first by hand; no arbitrary values | Research (C2, C3) |
-| Icon | `LayoutGrid` | Not a second moon beside the theme button | Owner Q1 ⭐ |
-| Rows | Icon + name, no descriptions | Scannable, fits 568 px, no new copy | Owner Q2 ⭐ |
-| Where | Every signed-in page incl. Tonight pages; hidden signed out and on onboarding | Stable place; `/tonight*` is gated; no room at 320 px signed out | Owner Q3, Q4 ⭐ |
-| Order | [Tonight's pages][theme][settings] | Settings keeps the edge | Owner Q5 ⭐ |
-| Panel | Sheet below `sm`, panel from `sm`, like settings | Thumb reach, one look | Owner Q6 ⭐ |
-| 320 px | Wordmark at `text-label` below 360 px while the button shows (19 px left) | Keeps all 44 px controls and the signed-in theme button | Owner Q7 ⭐ |
+| Icon | `LayoutGrid` | Not a second moon beside the theme button | Owner P1 A |
+| Rows | Icon + name + one-line description (14 strings EN+PL); list scrolls inside the sheet on 568 px | Helps beginners choose | Owner P2 B |
+| Where | Every signed-in page incl. Tonight pages; hidden signed out and on onboarding | Stable place; `/tonight*` is gated; no room at 320 px signed out | Owner P3 A, P4 A |
+| Order | [Tonight's pages][theme][settings]; theme button shows a paintbrush | Settings keeps the edge; the moon read as "tonight" | Owner P5 A ➕ |
+| Panel | Sheet below `sm`, panel from `sm`, like settings; every bottom sheet closes with a swipe down (`src/lib/ui/sheet-swipe.ts`) | Thumb reach, one look, native feel | Owner P6 A ➕ |
+| 320 px | Wordmark at `text-label` below 360 px while the button shows (19 px left) | Keeps all 44 px controls and the signed-in theme button | Owner P7 A |
 | 768 px | Pill `whitespace-nowrap`, `md:px-3 lg:px-3.5` | No wrapped labels, ~6 px left | Plan |
 | Offline | Plain paths, no `data-needs-network` | Same rule as the sub-nav; stored copy or `/offline` | Research |
 
@@ -48,7 +48,7 @@ the button), in dark, light and red, EN and PL, and fits 320 px with its gutter.
 label (EN+PL), the e2e journey and fit checks, `/design` specimens, the screenshot gate, the `CLAUDE.md` rule.
 
 **Out of scope:** TabBar, pill destinations, sub-nav and tiles unchanged; no finder entry; no `role="menu"`; no
-offline marking of unstored pages; no descriptions; no settings-panel type-role pass; no roadmap edit; no pixel
+offline marking of unstored pages; no swipe on the centred dialogs; no settings-panel type-role pass; no roadmap edit; no pixel
 baselines.
 
 ## Architecture / Approach
@@ -64,7 +64,8 @@ focus on open, handles arrows and closes on focus leaving. Both panels share `TO
 | ----- | ---------------- | -------- |
 | 1. Rebase on #212 and the shared Topbar popover contract | `ui/topbar-popover.ts`, `--breakpoint-xs`, `topbar-panel-top`; settings panel unchanged | #212's names change before merge |
 | 2. The quick nav in the Topbar | Failing e2e first, then `QuickNav.astro`, budget fixes, re-scoped specs | 19 px (320) and ~6 px (768) of slack |
-| 3. States, the visual gate and the rule | `/design` 7-state matrix, `evidence/impl/` screenshots, `CLAUDE.md` rule | Screenshots drift from the mockups |
+| 3. Swipe down to close every bottom sheet | `sheet-swipe.ts` used by the quick nav and Settings, e2e swipe spec | Stealing the list's scroll on touch |
+| 4. States, the visual gate and the rule | `/design` 7-state matrix, `evidence/impl/` screenshots, `CLAUDE.md` rule | Screenshots drift from the mockups |
 
 **Prerequisites:** #212 merged; branch rebased; `npm ci`; local Supabase and the forecast fixture for e2e.
 **Estimated effort:** ~2 sessions across 3 phases.

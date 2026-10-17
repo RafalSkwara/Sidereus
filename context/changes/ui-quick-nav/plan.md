@@ -2,11 +2,11 @@
 
 > Roadmap M-4 **S-10** · GitHub issue **#214** · view: **Topbar** (`/10x-ui`) · research: `research.md` (charges C1-C5)
 >
-> **Implementation starts only after PR #212 (`feat/ui-sky-modes`) merges and this branch is rebased onto the new
-> `main`.** The plan is written against #212's version of `TopbarControls.tsx`, `global.css`, `Topbar.astro` and
-> `ui/segmented.tsx` (read at `origin/feat/ui-sky-modes` f6b8c97, re-checked at d94bb65 after #212's rebase onto main
-> with #217's app icon; plan review F6). The owner's questions are at the end, in Polish; the
-> plan is written on the recommended (⭐) answers.
+> **#212 (`feat/ui-sky-modes`) is merged (bb442bf) and this branch is rebased onto it (2026-10-17).** The plan is
+> written against #212's version of `TopbarControls.tsx`, `global.css`, `Topbar.astro` and `ui/segmented.tsx` (read at
+> `origin/feat/ui-sky-modes` f6b8c97, re-checked at d94bb65; plan review F6). The owner answered P1-P7 on 2026-10-17
+> ("Owner answers" below): A everywhere except **P2 B** (a one-line description per page), plus two scope additions:
+> the theme button's icon becomes a paintbrush, and every bottom sheet closes with a swipe down (new Phase 3).
 
 ## Overview
 
@@ -38,11 +38,20 @@ disclosure-navigation semantics, and fits the 320 px Polish Topbar after one bud
 ## Desired End State
 
 - Signed in, on every page except `/onboarding`, the Topbar shows a grid-icon button labelled "Tonight's pages" /
-  "Strony nocy" left of the theme button. It opens a panel titled with the same words and seven rows (icon + name,
-  44 px each); on a Tonight page that page's row is filled and carries `aria-current="page"`.
+  "Strony nocy" left of the theme button. It opens a panel titled with the same words and seven rows (icon, name and a
+  one-line description under it, owner P2 B); on a Tonight page that page's row is filled and carries
+  `aria-current="page"`.
 - Below `sm` the panel is a bottom sheet over the TabBar, from `sm` a panel under the bar at its right edge: the same
   look, handle, safe-area padding, light dismiss and Esc as the settings panel, in dark, light and red, EN and PL. On
-  Tonight's navy strip in the light theme the panel is light (it carries the page theme).
+  Tonight's navy strip in the light theme the panel is light (it carries the page theme). On a 568 px tall phone the
+  sheet fits under the Topbar strip: its list scrolls inside the sheet while the handle and heading stay put.
+- The theme button (cycle dark → light → red) shows a paintbrush in every theme (owner, 2026-10-17: the moon read as
+  "tonight"); the settings panel's theme segments keep their theme-specific icons (moon, sun, eye).
+- Every bottom sheet (the quick nav and the settings panel; no other sheet exists: the dialogs are centred modals and
+  #212's sky-mode menu is a dropdown) closes with a swipe down from its handle or heading, or from its content when
+  that is scrolled to the top, like a native phone sheet: it follows the finger, snaps back after a short drag and
+  closes past a distance or a flick; with reduced motion it does not follow, it only closes. Esc and the outside tap
+  are unchanged. One shared helper drives both sheets.
 - Keyboard: Tab reaches the button; Enter or Space opens; focus moves to the current page's row, else the first;
   ArrowUp / ArrowDown / Home / End move between rows; Enter follows a link; Esc closes and returns focus to the
   button; tabbing out of the panel closes it. A screen reader hears a "Quick navigation" landmark, a collapsed /
@@ -80,7 +89,9 @@ screenshot gate in `evidence/impl/`.
 - No `role="menu"` / `menuitem` (application menus of actions; navigation in a pop-up is a disclosure pattern).
 - No offline marking of pages that are not stored on the device (would need the worker's `list-copies` round trip on
   every open; the `/offline` fallback already lists what is stored). Deferred.
-- No descriptions under the names (owner Q2, default A) and no new page copy beyond one landmark label.
+- No new page copy beyond the landmark label and the seven one-line descriptions (owner P2 B: 14 strings, EN+PL).
+- No swipe on the centred modal dialogs (`DeleteButton`, `PlanResetButton`, `MilestoneCelebration`) or on #212's
+  sky-mode dropdown: they are not bottom sheets. No swipe from `sm`, where both panels hang under the bar.
 - No conversion of the settings panel's raw `text-sm` / `text-xs` to type roles (research, deferred charge).
 - No pixel baselines (`toHaveScreenshot`): the repo pins layout with bounding boxes; the gate is screenshots in
   `evidence/impl/`.
@@ -102,14 +113,16 @@ The quick nav is an **Astro component with a small client `<script>`**, not a Re
 | -- | -------- | ------- | --- |
 | D1 | Semantics | Disclosure navigation: `<nav aria-label={nav.quickNav}>` wrapping a `<button popovertarget aria-controls aria-expanded>` and the popover with a heading and a `<ul>` of links | APG's pattern for site navigation in a pop-up; keeps link semantics and `aria-current` |
 | D2 | Current page | `aria-current="page"` on the row of the exact current Tonight page (`currentTonightPage`), none elsewhere (finder, log, gear) | The owner's requirement (2026-10-17); it supersedes F6's "one `page` mark per page" for the menu only, whose panel is hidden until opened; the bars keep `ariaCurrentFor` |
-| D3 | Visibility | Signed in and not on `/onboarding` (owner Q4 ⭐A), on every other page including the dashboard and the focused pages (Q3 ⭐A) | One stable place; `/tonight*` is gated, and signed out the 320 px row has no room |
-| D4 | Icon | lucide `LayoutGrid` (Q1 ⭐A) | Distinct from the theme button's moon and the settings sliders (`evidence/icon-A-moon-beside-theme-375-dark.png`) |
-| D5 | Rows | Icon + name, 44 px (Q2 ⭐A): dashboard `NavIcon` "tonight", Targets `Crosshair`, Events `Sparkles`, Plan `ListOrdered`, Moon `Moon`, Planets `Orbit`, Nights `CalendarDays` | Scannable, fits a 568 px phone, reuses `tonight.subnav.*` labels |
-| D6 | Order | [Tonight's pages][theme][settings] (Q5 ⭐A) | Settings keeps the edge; the component renders before the island with no React change |
-| D7 | Panel form | Bottom sheet below `sm`, panel under the bar from `sm`, the settings panel's classes (Q6 ⭐A) | Thumb reach on a phone, one shared look |
-| D8 | 320 px budget | Below 360 px (`xs`), while the quick nav renders, the wordmark uses the `text-label` role (Q7 ⭐A): 19 px left | Keeps every control at 44 px and the signed-in theme button (red mode at the eyepiece) |
+| D3 | Visibility | Signed in and not on `/onboarding` (owner P4 A), on every other page including the dashboard and the focused pages (owner P3 A) | One stable place; `/tonight*` is gated, and signed out the 320 px row has no room |
+| D4 | Icon | lucide `LayoutGrid` (owner P1 A) | Distinct from the theme button and the settings sliders (`evidence/icon-A-moon-beside-theme-375-dark.png`) |
+| D5 | Rows | Icon, name (`tonight.subnav.*`) and a one-line muted description under it (owner P2 B, `tonight.quickNav.*`, 7 × EN+PL), each row at least 44 px: dashboard `NavIcon` "tonight", Targets `Crosshair`, Events `Sparkles`, Plan `ListOrdered`, Moon `Moon`, Planets `Orbit`, Nights `CalendarDays`. The sheet is capped under the Topbar strip (`topbar-panel-max-h`) and its list scrolls inside it; the handle and heading stay fixed | Helps a beginner choose; still usable on a 568 px phone |
+| D6 | Order | [Tonight's pages][theme][settings] (owner P5 A) | Settings keeps the edge; the component renders before the island with no React change |
+| D7 | Panel form | Bottom sheet below `sm`, panel under the bar from `sm`, the settings panel's classes (owner P6 A) | Thumb reach on a phone, one shared look |
+| D8 | 320 px budget | Below 360 px (`xs`), while the quick nav renders, the wordmark uses the `text-label` role (owner P7 A): 19 px left | Keeps every control at 44 px and the signed-in theme button (red mode at the eyepiece) |
 | D9 | 768 px | Pill segments `whitespace-nowrap`, `md:px-3 lg:px-3.5` (frees 16 px for the 10 px needed) | No label wraps; icons from `lg` are unchanged |
 | D10 | Offline | Plain `TONIGHT_NAV` paths, no `data-needs-network`, no view-transition names | Same rule as the sub-nav and the Tonight tab |
+| D11 | Theme button icon | lucide `Paintbrush` on the theme cycle button in every theme (owner, 2026-10-17); the settings panel's theme segments keep the moon / sun / eye | The moon read as "tonight" beside a navigation button; a segment names a theme, the button names the action |
+| D12 | Swipe to dismiss | One helper, `src/lib/ui/sheet-swipe.ts` (`attachSheetSwipe`), used by both sheets: below `sm` only; a drag starts on the sheet's handle zone (`data-sheet-handle`, handle + heading, `touch-none`), or for touch on its body while that is scrolled to the top; the sheet follows the finger (`translate`), closes past 30 % of its height or on a downward flick (≥ 0.5 px/ms after ≥ 24 px), else snaps back; reduced motion: no follow and no snap animation, a release past the threshold just closes. Touch through touch events (a non-passive `touchmove` that claims the gesture only once it is a downward drag, so the list still scrolls), mouse and pen through pointer events on the handle zone. Esc and light dismiss untouched. Transitions in `global.css` (`[data-sheet-drag]`), tokens only | A native-feeling sheet; one behaviour for both sheets; never steals a scroll |
 
 ## Critical Implementation Details
 
@@ -165,8 +178,10 @@ changed them before merging, adjust this plan's names first.
 arbitrary value) and a `topbar-panel-top` utility that places a Topbar panel 4 px under the strip
 (`calc(var(--topbar-strip-height) + 0.25rem)`, which resolves to today's 92 px from `sm`).
 
-**Contract**: `xs:` / `max-xs:` variants exist; `@utility topbar-panel-top`. No colour token, so no theme block, the
-contrast test and the red test are untouched.
+**Contract**: `xs:` / `max-xs:` variants exist; `@utility topbar-panel-top`; `@utility topbar-panel-max-h` (owner P2 B:
+a sheet never taller than the screen under the Topbar strip, `calc(100svh - var(--topbar-strip-height))`; from `sm` the
+panel also keeps a gap above the screen's bottom edge). No colour token, so no theme block, the contrast test and the
+red test are untouched.
 
 #### 3. Shared Topbar popover classes
 
@@ -184,9 +199,11 @@ renders the same pixels as before.
 **File**: `src/components/TopbarControls.tsx` (`TopbarControls` is not in `island-imports.test.ts`'s source lists on
 #212, so no allowlist edit is expected; re-check after the rebase)
 
-**Intent**: Replace the inline constants with the shared ones; nothing else changes.
+**Intent**: Replace the inline constants with the shared ones, and give the theme cycle button lucide's `Paintbrush`
+in every theme (D11, owner 2026-10-17). The theme segments in the panel keep `MoonIcon` / `SunIcon` / `RedEyeIcon`;
+the `/design` Topbar copy renders the same island, so it follows. No other place shows the button's icon.
 
-**Contract**: same markup and classes at runtime (the settings panel at 92 px from `sm`).
+**Contract**: same markup and classes at runtime (the settings panel at 92 px from `sm`), except the button's icon.
 
 ### Success Criteria:
 
@@ -199,7 +216,7 @@ renders the same pixels as before.
 
 #### Manual Verification:
 
-- The settings panel looks and sits as before at 375 and 1280 px in dark, light and red (before/after screenshots in `evidence/impl/phase1-*`)
+- The settings panel looks and sits as before at 375 and 1280 px in dark, light and red, and the theme button shows the paintbrush (before/after screenshots in `evidence/impl/phase1-*`)
 
 **Implementation Note**: After this phase and its automated checks, pause for the manual check before Phase 2 (in an
 autonomous multi-phase run, commit and defer the manual rows).
@@ -268,7 +285,9 @@ change.
 `currentTonightPage(Astro.url.pathname)` filled like the sub-nav's current chip (`bg-selected
 text-selected-foreground`), other rows `text-heading hover:bg-accent`, icons muted, each row `min-h-11` with the
 `--ring` focus outline; the trigger is `TOPBAR_ICON_BUTTON_CLASS` with the `LayoutGrid` icon; the panel is
-`TOPBAR_PANEL_CLASS` with the sheet handle, a visible heading (`text-label`, muted) and the list. The client script
+`TOPBAR_PANEL_CLASS` with the sheet handle, a visible heading (`text-label`, muted) and the list; each row's name
+(`text-label`, semibold) has its one-line description under it (`text-caption`, muted; the current row's in the
+selected foreground), from `tonight.quickNav[label]`; the list is the panel's scrolling body (owner P2 B). The client script
 does what "Critical Implementation Details" lists: `aria-expanded`, theme copy, focus on open, arrow / Home / End
 keys, close when focus moves to an element outside the panel and the trigger (never on a `null` target), close on
 `pagehide`.
@@ -300,7 +319,8 @@ names the quick nav and the 320 px budget (19 px left).
 landmarks with one name.
 
 **Contract**: `nav.quickNav`: EN "Quick navigation", PL "Szybka nawigacja". The button and the panel heading reuse
-`tonight.subnav.label` ("Tonight's pages" / "Strony nocy").
+`tonight.subnav.label` ("Tonight's pages" / "Strony nocy"). The descriptions are `tonight.quickNav` keyed by
+`TonightNavItem["label"]` (seven per language, owner P2 B), short enough for one line at 320 px.
 
 ### Success Criteria:
 
@@ -321,7 +341,86 @@ landmarks with one name.
 
 ---
 
-## Phase 3: States, the visual gate and the rule
+## Phase 3: Swipe down to close every bottom sheet
+
+### Overview
+
+Owner's scope addition (2026-10-17, P6): the quick-nav sheet and the settings sheet (the only bottom sheets; the
+dialogs are centred modals, #212's sky-mode menu is a dropdown) close with a swipe down, like a native phone sheet,
+through one shared helper (D12).
+
+### Changes Required:
+
+#### 1. The failing tests first
+
+**File**: `tests/e2e/sheet-swipe.spec.ts` (new; imports `test` from `./helpers`, clock-pinned, default `evening`)
+
+**Intent**: One signed-in user at 320×568 (the smallest phone the owner names), touch enabled. (a) The quick-nav sheet
+on `/log`: the sheet's top is under the Topbar strip, its heading stays in place while its list scrolls to the last row
+(owner P2 B), then a short drag down on the handle snaps the sheet back (still open, back at its resting place), and a
+long drag closes it, `aria-expanded="false"`. (b) The settings sheet: a long touch swipe (CDP touch events, the touch
+path) closes it, a long mouse drag on its handle (the pointer path) closes it again. Both sheets also still close on
+Esc (light dismiss is the native popover's own and is not re-tested).
+
+**Contract**: locators by role and name; `[data-sheet-handle]` for the drag's start point; no wait on animation
+timing beyond `expect.poll` on the sheet's box.
+
+#### 2. Tokens
+
+**File**: `src/styles/global.css`
+
+**Intent**: The sheet's drag states, tokens only: `[data-sheet-drag="settling"]` animates `translate` (200 ms,
+ease-out), `[data-sheet-drag="dragging"]` has no transition; none with reduced motion. A `touch-none` handle zone only
+below `sm`.
+
+**Contract**: no colour token; no arbitrary value in a view.
+
+#### 3. The helper
+
+**File**: `src/lib/ui/sheet-swipe.ts` (new, browser code, island-safe, no imports beyond the DOM)
+
+**Intent**: `attachSheetSwipe(panel)` finds `[data-sheet-handle]` and `[data-sheet-body]` inside the panel and returns
+a cleanup. Active only while the panel is open and the viewport is below `sm` (`matchMedia`). Touch: `touchstart`
+(passive) arms on the handle zone, or on the body when its `scrollTop` is 0; the first `touchmove` (non-passive) that
+moves down past an 8 px slop claims the gesture (`preventDefault`), one that moves up releases it to the scroll.
+Mouse and pen: `pointerdown` on the handle zone with pointer capture (touch pointers are left to the touch path). While
+dragging the panel follows (`style.translate`), clamped at 0 (no upward pull). Release: past 30 % of the panel's
+height, or a downward flick of at least 0.5 px/ms after 24 px, closes (`hidePopover()` after the slide-out, at once
+with reduced motion); otherwise it snaps back. With reduced motion the panel never follows. A click that ends a drag is
+swallowed so a drag over a row never follows its link. `toggle` closed resets the style.
+
+**Contract**: `export function attachSheetSwipe(panel: HTMLElement): () => void`; `data-sheet-drag` on the panel while
+dragging or settling; no `console`, no silent `catch`.
+
+#### 4. Both sheets use it
+
+**File**: `src/components/ui/topbar-popover.ts`, `src/components/TopbarControls.tsx`, `src/components/QuickNav.astro`
+
+**Intent**: The panel becomes a flex column capped by `topbar-panel-max-h`: a handle zone (`data-sheet-handle`: the
+handle bar, and the quick nav's heading) and a scrolling body (`data-sheet-body`, `overflow-y-auto`, with the safe-area
+padding). The settings island attaches the helper in an effect on its panel ref; the quick nav's script attaches it to
+each panel. `TOPBAR_SHEET_HANDLE_CLASS` names the handle zone's classes.
+
+**Contract**: the settings panel's look at rest is unchanged (the handle zone keeps the bar's 16 px under it).
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3`
+- `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass
+- `npm run test:reference`, `npm run lint` and `npx astro check` pass
+
+#### Manual Verification:
+
+- On an iPhone (Safari): each sheet follows the finger from its handle, snaps back after a short drag, closes on a flick; the quick-nav list scrolls without moving the sheet, and a drag down from its top closes it
+- With "Reduce motion" on: no follow, a long swipe closes at once
+
+**Implementation Note**: After this phase and its automated checks, pause for the manual checks before Phase 4.
+
+---
+
+## Phase 4: States, the visual gate and the rule
 
 ### Overview
 
@@ -336,7 +435,9 @@ the next Topbar control on the contract.
 
 **Intent**: A `QuickNav` block next to `TonightSubNav` with the 7-state matrix: trigger default, hover and
 focus-visible (pinned classes), expanded (pressed fill); the panel inline (`inline`) with Targets current, a hovered
-row and a focused row, on the night strip and on the plain ground, plus one phone-width (`max-w-xs`) panel.
+row and a focused row, on the night strip and on the plain ground, plus one phone-width (`max-w-xs`) panel with the
+descriptions, and the sheet mid-drag (a phone-width sheet held part-way down by its classes, `data-sheet-drag`
+specimen). The theme button's paintbrush shows in the `/design` Topbar copy (the same island).
 
 **Contract**: the N/A line: disabled N/A (the rows work offline, plain paths as the sub-nav); error N/A (no input);
 empty N/A (seven fixed pages); loading N/A (server-rendered in the Topbar, no data).
@@ -347,8 +448,9 @@ empty N/A (seven fixed pages); loading N/A (server-rendered in the Topbar, no da
 
 **Intent**: `/design`'s QuickNav block at 1280 and 375 px in dark, light and red (dev server on port 4345 only, stopped
 afterwards); the live app on the preview, signed in: `/log` at 320 px PL with the sheet open, a focused page at 375 px
-EN in light with the sheet open, `/log` at 768 px PL and 1280 px with the panel open. Compare with the mockups in
-`evidence/` and note any delta.
+EN in light with the sheet open, the sheet mid-swipe (a held drag), `/log` at 768 px PL and 1280 px with the panel
+open, and the 320 px PL Topbar; each in dark, light and red at 390 and 1440 px where it applies. Compare with the
+mockups in `evidence/` and note any delta.
 
 **Contract**: screenshots only; no `toHaveScreenshot` baseline.
 
@@ -360,7 +462,9 @@ EN in light with the sheet open, `/log` at 768 px PL and 1280 px with the panel 
 the `aria-current` amendment D2), the shared popover module ("a new Topbar control uses `TOPBAR_ICON_BUTTON_CLASS`, a
 new Topbar panel `TOPBAR_PANEL_CLASS` and `topbar-panel-top`"), the budget ("the 320 px Polish Topbar has 19 px left
 with the quick nav; a new Topbar control needs a measured budget and the `navigation.spec.ts` fit checks"), and that a
-new Tonight page joins `TONIGHT_NAV`, `TONIGHT_PAGES` and the quick nav's icon map.
+new Tonight page joins `TONIGHT_NAV`, `TONIGHT_PAGES`, the quick nav's icon map and its description
+(`tonight.quickNav`); the theme button's paintbrush; and the sheet rule ("a bottom sheet uses `attachSheetSwipe` from
+`src/lib/ui/sheet-swipe.ts` with a `data-sheet-handle` zone and a `data-sheet-body`").
 
 **Contract**: edits outside any generated block; no rule invites one-off values.
 
@@ -424,7 +528,21 @@ network request. The lucide icons are server-rendered SVG.
 
 None (no data, no route). Rollback is reverting the merge commit.
 
-## QUESTIONS FOR OWNER
+## Owner answers (2026-10-17)
+
+Relayed by the lead on 2026-10-17. Scope additions are marked ➕ and are folded into D4-D12 and the phases above.
+
+| Question | Answer | Where it lands |
+| -------- | ------ | -------------- |
+| P1 Icon | **A** `LayoutGrid` | D4, Phase 2 |
+| P2 Panel content | **B** icon + name + a one-line description per page, EN+PL (14 strings: 7 `TONIGHT_NAV` pages × 2 languages); the sheet must stay usable on a 568 px tall screen: scroll inside the sheet, the handle and heading fixed | D5, Phase 1 (`topbar-panel-max-h`), Phase 2 (component, copy), Phase 3 spec (568 px) |
+| P3 On Tonight pages too | **A** on every screen | D3 |
+| P4 Signed out | **A** hidden signed out, including `/onboarding` | D3 |
+| P5 Order | **A** [Tonight pages][Theme][Settings]. ➕ The theme button's icon becomes a paintbrush (the moon reads as "tonight"); the toggle gets the paintbrush, the dark / light / red segments keep their theme icons | D6, D11, Phase 1 |
+| P6 Panel form | **A** bottom sheet on the phone, panel from 640 px. ➕ This sheet and every existing bottom sheet (Settings; no other exists) close by swiping down from the handle or heading, or from the content scrolled to the top: drag with distance threshold plus velocity, follows the finger, snaps back on a short drag; reduced motion: no follow / snap animation, just close; Esc and light dismiss unchanged; one shared helper (`src/lib/ui/sheet-swipe.ts` + a handle element), tokens only; e2e swipes both sheets closed and a short drag snaps back | D7, D12, Phase 3 |
+| P7 320 px budget | **A** a smaller "Sidereus" below 360 px | D8 |
+
+## QUESTIONS FOR OWNER (answered, kept for the record)
 
 Plan jest napisany na rekomendowanych odpowiedziach (⭐). Zrzuty i makiety: `context/changes/ui-quick-nav/evidence/`
 (makiety z serwera deweloperskiego na prawdziwych tokenach; pasek z przyciskiem odtworzony ręcznie).
@@ -551,7 +669,7 @@ are still pending).
 
 #### Manual
 
-- [ ] 1.5 The settings panel looks and sits as before at 375 and 1280 px in dark, light and red (before/after screenshots in `evidence/impl/phase1-*`)
+- [ ] 1.5 The settings panel looks and sits as before at 375 and 1280 px in dark, light and red, and the theme button shows the paintbrush (before/after screenshots in `evidence/impl/phase1-*`)
 
 ### Phase 2: The quick nav in the Topbar
 
@@ -568,15 +686,28 @@ are still pending).
 - [ ] 2.6 Dark, light and red on `/log` and on a focused page: the panel follows the page theme, red tells the current row by its fill
 - [ ] 2.7 VoiceOver (macOS Safari): "Szybka nawigacja" landmark, "Strony nocy, przycisk, zwinięty / rozwinięty", the list, "bieżąca strona" on the current row; Esc returns to the button
 
-### Phase 3: States, the visual gate and the rule
+### Phase 3: Swipe down to close every bottom sheet
 
 #### Automated
 
-- [ ] 3.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass
-- [ ] 3.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR")
+- [ ] 3.1 `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3`
+- [ ] 3.2 `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass
+- [ ] 3.3 `npm run test:reference`, `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 3.3 `/design` shows every cell of the 7-state matrix or its N/A line, in dark, light and red
-- [ ] 3.4 The screenshot gate in `evidence/impl/` matches the agreed mockups (deltas explained)
-- [ ] 3.5 The `CLAUDE.md` rule reads correctly to a fresh agent: where the quick nav lives, the popover module, the budget
+- [ ] 3.4 On an iPhone (Safari): each sheet follows the finger from its handle, snaps back after a short drag, closes on a flick; the quick-nav list scrolls without moving the sheet, and a drag down from its top closes it
+- [ ] 3.5 With "Reduce motion" on: no follow, a long swipe closes at once
+
+### Phase 4: States, the visual gate and the rule
+
+#### Automated
+
+- [ ] 4.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [ ] 4.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR")
+
+#### Manual
+
+- [ ] 4.3 `/design` shows every cell of the 7-state matrix or its N/A line, in dark, light and red
+- [ ] 4.4 The screenshot gate in `evidence/impl/` matches the agreed mockups (deltas explained)
+- [ ] 4.5 The `CLAUDE.md` rule reads correctly to a fresh agent: where the quick nav lives, the popover module, the budget, the sheet swipe
