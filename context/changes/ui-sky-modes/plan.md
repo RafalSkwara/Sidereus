@@ -540,8 +540,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [x] 3.1 Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
-- [x] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
+- [x] 3.1 Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference` — bd90c21
+- [x] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts` — bd90c21
 
 #### Manual
 
@@ -552,10 +552,10 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [ ] 4.1 Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards`
-- [ ] 4.2 The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
-- [ ] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
-- [ ] 4.4 The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits
+- [x] 4.1 Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards`
+- [x] 4.2 The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
+- [x] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
+- [x] 4.4 The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits
 
 #### Manual
 

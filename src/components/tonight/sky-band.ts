@@ -33,8 +33,20 @@ export const GEAR_ROW_GRID_CLASS = "grid gap-3 sm:grid-cols-2";
  */
 export const GEAR_CARD_MIN_HEIGHT_CLASS = "min-h-34 sm:min-h-37";
 
+/**
+ * The live sky's modes (ui-sky-modes): the whole flex chain, shared by the island, the static band and the skeleton, so
+ * the mode sizes all three from CSS before hydration (`sky-hidden:` / `sky-expanded:` match only under a
+ * `[data-sky-mode]` scope: the Tonight dashboard's `<html>` and the `/design` specimens).
+ * - `SKY_FRAME_CLASS`: the band plus the slider row. In EXPANDED a flex column with `sky-expanded-height`, a
+ *   `min-height` (global.css), so it is `max(DEFAULT's band, the screen under the Topbar)`.
+ * - `SKY_BAND_CLASS`: the gradient band. In EXPANDED it takes the frame's spare height and lays out its own column.
+ * - The verdict container, the silhouette and the slider row never shrink; the strip's box (`STRIP_FIELD_CLASS`) grows.
+ */
+export const SKY_FRAME_CLASS = "sky-expanded:flex sky-expanded:sky-expanded-height sky-expanded:flex-col";
+export const SKY_BAND_CLASS = "sky-expanded:flex sky-expanded:flex-1 sky-expanded:flex-col";
+
 /** The slot's container over the sky: the shared `max-w-3xl px-4` column. */
-export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";
+export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl shrink-0 px-4 pt-3 pb-10 sm:pt-12 sm:pb-14";
 
 /**
  * The go/clear verdict's height (padding included), so the skeleton paints the same sky and nothing jumps.
@@ -48,16 +60,23 @@ export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl px-4 p
  *  - 640 px: pt-12 48 + 20 + 8 + headline (44 px) 44 + 4 + the reason on one line 24 + forecast line `mt-line` 8 + 20 +
  *    pb-14 56 = 232 px, `min-h-58` (4 px less than before, the forecast line's `mt-3` → `mt-line`). The skeleton
  *    measures 232 px too.
+ *  - HIDDEN (ui-sky-modes, plan review F2): the dark-window line (`text-label`, 20 px) shows under the date, since the
+ *    slider that carries the dark times is gone: 188 px at 360 px (`min-h-47`) and 252 px at 640 px (`min-h-63`);
+ *    the skeleton gives the line a bar of its own.
  */
-export const VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-58";
+export const VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-58 sky-hidden:min-h-47 sm:sky-hidden:min-h-63";
 
 /** The horizon silhouette in the ground colour, stretched to the band's width. */
 export const SILHOUETTE_VIEWBOX = "0 0 390 40";
 export const SILHOUETTE_PATH = "M0 40V22C40 14 72 28 112 21C152 14 182 3 232 12C282 21 324 8 390 17V40Z";
-export const SILHOUETTE_CLASS = "relative block h-8 w-full fill-background sm:h-12";
+export const SILHOUETTE_CLASS = "relative block h-8 w-full shrink-0 fill-background sm:h-12";
 
-/** The panorama strip: `h-52`, 208 px, which the projection draws into. */
-export const STRIP_HEIGHT_CLASS = "h-52";
+/**
+ * The panorama strip: `h-52`, 208 px, which the projection draws into (the static band's and the skeleton's box). Gone
+ * in HIDDEN; in EXPANDED it takes the band's spare height, never less than DEFAULT's.
+ */
+export const STRIP_HEIGHT_CLASS =
+  "h-52 sky-hidden:hidden sky-expanded:h-auto sky-expanded:min-h-52 sky-expanded:flex-1";
 export const STRIP_HEIGHT_PX = 208;
 
 /**
@@ -72,10 +91,10 @@ export const STRIP_OVERLAP_PX = 64;
 
 /**
  * The live panorama's box (ui-sky-modes): the strip plus the overlap, `h-68` = 208 + 64 = 272 px, pulled up by
- * `STRIP_OVERLAP_CLASS`, so DEFAULT's band is exactly the old one. The island's `ResizeObserver` watches this box (its
+ * `STRIP_OVERLAP_CLASS`, so DEFAULT's band is exactly the old one; gone in HIDDEN, growing in EXPANDED. The island's `ResizeObserver` watches this box (its
  * height comes from CSS, never from the SVG inside it) and draws the field at the measured size through `skyField`.
  */
-export const STRIP_FIELD_CLASS = "h-68";
+export const STRIP_FIELD_CLASS = "h-68 sky-hidden:hidden sky-expanded:h-auto sky-expanded:min-h-68 sky-expanded:flex-1";
 
 /**
  * The slider row on the ground under the silhouette, at a fixed height so the skeleton can reserve it. On a phone it
@@ -83,7 +102,7 @@ export const STRIP_FIELD_CLASS = "h-68";
  * 20 = 76 px. From `sm` it is today's two rows, 128 px. The labels are positioned under the track (see
  * `SLIDER_LABELS_CLASS`), so the row's height is its own and nothing the labels do can move the page.
  */
-export const SLIDER_ROW_CLASS = "mx-auto h-19 w-full max-w-3xl px-4 pt-2 sm:h-32";
+export const SLIDER_ROW_CLASS = "mx-auto h-19 w-full max-w-3xl shrink-0 px-4 pt-2 sm:h-32 sky-hidden:hidden";
 
 /**
  * The slider row's inner layout, shared by the island and the skeleton: one flex-wrap row whose children are placed

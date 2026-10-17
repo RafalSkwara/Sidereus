@@ -88,7 +88,15 @@ const darkLine =
 
 <section aria-labelledby={headingId}>
   <p class="text-label font-medium text-muted-foreground">{dateLabel}</p>
-  {darkLine && <p class:list={["text-label font-medium text-muted-foreground", withSlider && "sr-only"]}>{darkLine}</p>}
+  {/* Beside the live slider the line is for screen readers; in HIDDEN (no slider, ui-sky-modes) it shows. */}
+  {darkLine && (
+    <p
+      class:list={["text-label font-medium text-muted-foreground", withSlider && "sr-only sky-hidden:not-sr-only"]}
+      data-verdict-dark-line
+    >
+      {darkLine}
+    </p>
+  )}
   <h2 id={headingId} class="mt-line text-heading">
     <span class="flex items-start gap-3 font-display text-display font-semibold" data-sky-headline={headline.key}>
       <span

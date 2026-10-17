@@ -2341,7 +2341,12 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>with the line · over the live sky (deep night)</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSkyView view={panoramas[panoramas.length - 1].view} locale={locale} client:load>
+                    <TonightSkyView
+                      view={panoramas[panoramas.length - 1].view}
+                      locale={locale}
+                      mode="default"
+                      client:load
+                    >
                       <VerdictCard
                         level={panoramaView.verdict.level}
                         dateLabel={panoramaView.dateLabel}
@@ -2405,7 +2410,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>{panorama.label}</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSkyView view={panorama.view} locale={locale} client:load>
+                    <TonightSkyView view={panorama.view} locale={locale} mode="default" client:load>
                       <VerdictCard
                         level={panoramaView.verdict.level}
                         dateLabel={panoramaView.dateLabel}

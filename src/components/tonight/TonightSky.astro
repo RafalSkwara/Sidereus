@@ -12,6 +12,7 @@ import {
   SILHOUETTE_CLASS,
   SILHOUETTE_PATH,
   SILHOUETTE_VIEWBOX,
+  SKY_BAND_CLASS,
   STRIP_HEIGHT_CLASS,
   VERDICT_CONTAINER_CLASS,
   VERDICT_MIN_HEIGHT_CLASS,
@@ -54,7 +55,10 @@ const stars = Array.from({ length: STAR_COUNT }, () => ({
 }));
 ---
 
-<div class:list={["relative overflow-hidden bg-linear-to-b from-zenith to-horizon", night && "night-sky"]}>
+<!-- Under the dashboard's sky-mode scope (ui-sky-modes) the band follows the mode: a column that fills EXPANDED's frame. -->
+<div
+  class:list={["relative overflow-hidden bg-linear-to-b from-zenith to-horizon", SKY_BAND_CLASS, night && "night-sky"]}
+>
   <svg
     aria-hidden="true"
     focusable="false"

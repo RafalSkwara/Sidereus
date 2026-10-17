@@ -4,6 +4,8 @@ import {
   SILHOUETTE_CLASS,
   SILHOUETTE_PATH,
   SILHOUETTE_VIEWBOX,
+  SKY_BAND_CLASS,
+  SKY_FRAME_CLASS,
   SLIDER_LABELS_CLASS,
   SLIDER_LAYOUT_CLASS,
   SLIDER_NOW_CLASS,
@@ -18,11 +20,13 @@ import {
   VERDICT_MIN_HEIGHT_CLASS,
 } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
+import { SkyModeControl } from "@/components/tonight/sky-mode-control";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
 import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal, type CompassPoint } from "@/lib/compass";
+import { SKY_MODE_COOKIE, isSkyMode, preferenceCookie, type SkyMode } from "@/lib/preferences";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
 import { nearestToCentre } from "@/lib/sky-view/compass-marker";
 import { skyField } from "@/lib/sky-view/field";
@@ -76,6 +80,11 @@ type Locale = Parameters<typeof getMessages>[0];
 interface TonightSkyViewProps {
   view: SkyViewData;
   locale: Locale;
+  /**
+   * The sky's mode as the server rendered it (`locals.skyMode`, ui-sky-modes). After hydration the island follows the
+   * nearest `[data-sky-mode]` scope, which the layout's head script may have corrected for a stored offline copy.
+   */
+  mode: SkyMode;
   /** The verdict, server-rendered. */
   children?: ReactNode;
 }
@@ -187,12 +196,17 @@ interface PlacedBody {
   azDeg: number;
 }
 
-export default function TonightSkyView({ view, locale, children }: TonightSkyViewProps) {
+export default function TonightSkyView({ view, locale, mode: serverMode, children }: TonightSkyViewProps) {
   const m = getMessages(locale);
   const t = m.tonight.sky;
   const last = Math.max(0, view.frameCount - 1);
   const [index, setIndex] = useState(() => Math.min(Math.max(view.initialIndex, 0), last));
   const [box, setBox] = useState<FieldBox>(DEFAULT_BOX);
+  // Whether the box has been measured: before that, outside DEFAULT, the field stays invisible (SSR drew DEFAULT's box).
+  const [measured, setMeasured] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  // The mode (ui-sky-modes): the server's until the layout effect reads the nearest `[data-sky-mode]` scope.
+  const [mode, setMode] = useState<SkyMode>(serverMode);
   const scroller = useRef<HTMLDivElement>(null);
   // The panorama's box, whose height comes from CSS (the mode); the ResizeObserver watches it, never the SVG.
   const fieldBox = useRef<HTMLDivElement>(null);
@@ -249,9 +263,40 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   const zone = view.zoneLabels[index] ?? "";
   // The strip for the measured box (ui-sky-modes): 360° wide, altitude 0–90° over the whole field height, which covers
   // the strip plus the overlap behind the verdict. DEFAULT is today's 180° per inset viewport.
-  const geometry = skyField({ mode: "default", viewportPx: box.width, fieldHeightPx: box.height });
+  const geometry = skyField({ mode, viewportPx: box.width, fieldHeightPx: box.height });
   const stripWidth = geometry.stripWidthPx;
   const height = geometry.fieldHeightPx;
+
+  // The mode lives on the nearest `[data-sky-mode]` scope (the dashboard's `<html>`, a `/design` wrapper), which CSS
+  // sizes the band from; follow it, including a stored copy corrected before paint (Layout's head script).
+  useLayoutEffect(() => {
+    const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
+    if (!scope) return;
+    const read = () => {
+      const value = scope.dataset.skyMode;
+      if (isSkyMode(value)) setMode(value);
+    };
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(scope, { attributes: true, attributeFilter: ["data-sky-mode"] });
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  // A mode chosen in the menu: keep the azimuth in the middle of the view (leaving HIDDEN recentres on `facing`), then
+  // let CSS resize the band; the dashboard remembers it in the cookie, like the theme.
+  const chooseMode = (next: SkyMode) => {
+    if (next === mode) return;
+    const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
+    const strip = scroller.current;
+    placement.current =
+      mode === "hidden" || !strip || strip.scrollWidth <= 0
+        ? { kind: "centre", box: null }
+        : { kind: "keep", fraction: (strip.scrollLeft + strip.clientWidth / 2) / strip.scrollWidth, box: null };
+    if (scope) scope.dataset.skyMode = next;
+    if (scope === document.documentElement) document.cookie = preferenceCookie(SKY_MODE_COOKIE, next);
+    setMode(next);
+  };
 
   // Measure the panorama's box before the first paint (so a desktop doesn't flash the 390 px default) and on every
   // resize. `facing` goes to the middle at the first layout and when the width changes (or the field comes back from
@@ -279,6 +324,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       measured = next;
       wasHidden = false;
       setBox(next);
+      setMeasured(true);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -340,7 +386,8 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     let path = "";
     const named: LabelItem[] = [];
     const names = new Map<string, string>();
-    for (const star of BRIGHT_STARS) {
+    // HIDDEN draws no panorama: skip the star pass.
+    for (const star of mode === "hidden" ? [] : BRIGHT_STARS) {
       const point = rotateToHorizon(view.rotations, index, star.vector);
       // `!(> 0)` also skips NaN, which would otherwise put `MNaN` into the one path and blank the whole field.
       if (!(point.altDeg > 0)) continue;
@@ -355,7 +402,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       }
     }
     return { path, named, names };
-  }, [view.rotations, view.facing, index, stripWidth, height, locale]);
+  }, [view.rotations, view.facing, index, stripWidth, height, locale, mode]);
 
   // Bodies above the horizon at this frame, from the server's refracted tracks.
   const bodies = useMemo(
@@ -491,8 +538,12 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   ];
 
   return (
-    <div>
-      <div className="dusk-band night-sky relative overflow-hidden" style={bandStyle} data-sky-band>
+    <div ref={root} className={SKY_FRAME_CLASS} data-sky-mode-frame="live">
+      <div
+        className={cn("dusk-band night-sky relative overflow-hidden", SKY_BAND_CLASS)}
+        style={bandStyle}
+        data-sky-band
+      >
         {/*
          * Above the strip's overlap, and transparent to the pointer: the verdict has no links or buttons, so taps and
          * swipes anywhere over the overlap reach the panorama's markers and scroll. A link in the verdict would need
@@ -503,6 +554,18 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           className={cn(VERDICT_CONTAINER_CLASS, VERDICT_MIN_HEIGHT_CLASS, "pointer-events-none z-10")}
         >
           {children}
+          {/*
+           * The sky-view control (ui-sky-modes, owner answer Q1 A): at the column's top right, centred on the date line,
+           * in every mode; outside the verdict's flow, so no height moves. The only control over the verdict, so it takes
+           * pointer events back.
+           */}
+          <SkyModeControl
+            mode={mode}
+            locale={locale}
+            onChoose={chooseMode}
+            faceClassName={PAN_FACE_CLASS}
+            className="pointer-events-auto absolute -top-1 right-1 z-20 sm:top-8"
+          />
         </div>
 
         <div ref={fieldBox} className={cn("relative", STRIP_FIELD_CLASS, STRIP_OVERLAP_CLASS)}>
@@ -579,7 +642,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               width={stripWidth}
               height={height}
               viewBox={`0 0 ${String(stripWidth)} ${String(height)}`}
-              className="block"
+              className={cn("block", !measured && mode !== "default" && "invisible")}
               data-sky-frame={index}
             >
               <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
