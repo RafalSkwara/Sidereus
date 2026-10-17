@@ -662,10 +662,10 @@ are still pending).
 
 #### Automated
 
-- [x] 1.1 The branch is rebased on a `main` that contains #212, and `npm ci` succeeds
-- [x] 1.2 `npm run test:reference` passes
-- [x] 1.3 `npm run lint` and `npx astro check` pass
-- [x] 1.4 `npx playwright test navigation.spec.ts red-night-mode.spec.ts` passes against a local preview (BASE_URL on the agent's own port, never 4413)
+- [x] 1.1 The branch is rebased on a `main` that contains #212, and `npm ci` succeeds — e37c0a0
+- [x] 1.2 `npm run test:reference` passes — e37c0a0
+- [x] 1.3 `npm run lint` and `npx astro check` pass — e37c0a0
+- [x] 1.4 `npx playwright test navigation.spec.ts red-night-mode.spec.ts` passes against a local preview (BASE_URL on the agent's own port, never 4413) — e37c0a0
 
 #### Manual
 
@@ -675,10 +675,10 @@ are still pending).
 
 #### Automated
 
-- [ ] 2.1 `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it
-- [ ] 2.2 `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported)
-- [ ] 2.3 `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
-- [ ] 2.4 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [x] 2.1 `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it
+- [x] 2.2 `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported)
+- [x] 2.3 `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
+- [x] 2.4 `npm run test:reference`, `npm run lint` and `npx astro check` pass
 
 #### Manual
 

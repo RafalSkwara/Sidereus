@@ -1,9 +1,10 @@
 ---
 import NavIcon from "@/components/NavIcon.astro";
+import QuickNav from "@/components/QuickNav.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { getMessages } from "@/i18n";
 import { getAccountPlan } from "@/lib/account-plan";
-import { NAV_ITEMS, ariaCurrentFor, currentDestination, isCurrentPage } from "@/lib/navigation";
+import { NAV_ITEMS, appNavVisible, ariaCurrentFor, currentDestination, isCurrentPage } from "@/lib/navigation";
 
 const { user, theme, locale } = Astro.locals;
 // The account plan line in the settings panel (F-01 addendum): one lazy query per page, signed in only.
@@ -20,6 +21,8 @@ const links = NAV_ITEMS.map((item) => ({
   ariaCurrent: ariaCurrentFor(item.href, pathname),
 }));
 const onSignin = isCurrentPage(pathname, "/auth/signin");
+// The quick nav to Tonight's pages (ui-quick-nav): signed in and not on `/onboarding`, the TabBar's rule.
+const quickNav = appNavVisible(user !== null, pathname);
 // `/` is the signed-out landing and redirects a user to `/tonight` (ui-landing), so the logo skips that hop.
 // Focus is a `--ring` outline offset from the control, so it shows on the filled current segment too.
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -27,8 +30,11 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
 
 <!--
   One row at every width (top-nav-redesign). From `md` the destinations are a segmented pill in the right-hand
-  cluster, next to the eye and settings buttons; below `md` the tab bar (TabBar.astro, rendered by each shell)
-  carries them instead. Theme, language and sign-out live in TopbarControls' settings popover.
+  cluster, next to the quick nav, theme and settings buttons; below `md` the tab bar (TabBar.astro, rendered by each
+  shell) carries them instead. Theme, language and sign-out live in TopbarControls' settings popover. The quick nav
+  (QuickNav.astro, ui-quick-nav) opens Tonight's seven pages; with it, the 320 px Polish row has 19 px to spare once
+  the wordmark steps down to `text-label` below `xs` (D8), and the 768 px Polish pill about 6 px with its segments at
+  `md:px-3`, one line each (D9). A new Topbar control needs a measured budget and the `navigation.spec.ts` fit checks.
 -->
 {/* `h-16` plus GearShell's sky-flow padding is `--topbar-strip-height` (global.css, ui-sky-modes). */}
 <header class="flex h-16 items-center gap-3 sm:gap-4">
@@ -39,19 +45,27 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
     <svg viewBox="0 0 24 24" class="size-5.5 text-primary" fill="currentColor" aria-hidden="true">
       <path d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"></path>
     </svg>
-    <span class="font-display text-title font-semibold text-heading">{m.common.appName}</span>
+    <span class:list={["font-display text-title font-semibold text-heading", quickNav && "max-xs:text-label"]}>
+      {m.common.appName}
+    </span>
   </a>
 
   <div class="ml-auto flex items-center gap-1 sm:gap-3">
     {user && (
-      <nav aria-label={m.nav.primary} class="hidden gap-0.5 rounded-full border border-border p-0.5 md:flex">
+      <nav
+        aria-label={m.nav.primary}
+        data-topbar-nav
+        class="hidden gap-0.5 rounded-full border border-border p-0.5 md:flex"
+      >
         {links.map((link) => (
           <a
             href={link.href}
             aria-current={link.ariaCurrent}
             data-needs-network={link.needsNetwork ? "" : undefined}
             class:list={[
-              "group inline-flex h-11 items-center gap-1.5 rounded-full px-3.5 text-label font-semibold",
+              "group inline-flex h-11 items-center gap-1.5 rounded-full px-3.5 text-label font-semibold whitespace-nowrap",
+              // 12 px between `md` and `lg` (D9): with the quick nav, four Polish labels stay on one line at 768 px.
+              "md:px-3 lg:px-3.5",
               "transition duration-150 ease-out active:scale-95 motion-reduce:transition-none",
               focusRing,
               link.current
@@ -89,6 +103,10 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
         {m.nav.signIn}
       </a>
     )}
-    <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} accountPlan={accountPlan} client:load />
+    {/* One 8 px gap between the three buttons: the island's root is `display: contents` (D6: quick nav, theme, settings). */}
+    <div class="flex items-center gap-2">
+      {quickNav && <QuickNav />}
+      <TopbarControls theme={theme} locale={locale} email={user?.email ?? null} accountPlan={accountPlan} client:load />
+    </div>
   </div>
 </header>

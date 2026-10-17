@@ -18,6 +18,14 @@ export function isCurrentPage(pathname: string, href: string): boolean {
 }
 
 /**
+ * Whether the app's navigation shows (ui-quick-nav): signed in, and not during onboarding, where there is one way
+ * forward. The phone TabBar and the Topbar's quick nav share it, so they can never disagree.
+ */
+export function appNavVisible(signedIn: boolean, pathname: string): boolean {
+  return signedIn && !isCurrentPage(pathname, "/onboarding");
+}
+
+/**
  * The one current destination for a path: the most specific (longest) `href` that covers it, so `/log/progress` is
  * Progress and not also Log. Both bars mark only this item, since two current items would duplicate the
  * `nav-current` / `tab-current` view-transition names and abort the transition. `null` off every destination.

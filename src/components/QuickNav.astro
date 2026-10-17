@@ -1,0 +1,233 @@
+---
+/*
+ * The quick nav (ui-quick-nav, roadmap S-10): one Topbar button on every signed-in screen (not on `/onboarding`, the
+ * TabBar's rule, `appNavVisible`) that opens Tonight's seven pages (`TONIGHT_NAV`), so the Session plan or the Moon is
+ * two taps from the log or the gear. Disclosure navigation (APG), never `role="menu"`: a `<nav>` landmark ("Quick
+ * navigation", not the sub-nav's "Tonight's pages") holding the button (`aria-expanded`) and, right after it in the DOM
+ * (review F7: Tab from the button enters the panel in every browser), the native popover with a list of links. Each
+ * row is an icon, the page's name and a one-line description (owner P2 B); the current page's row is filled and
+ * carries `aria-current="page"` (owner 2026-10-17, D2: the one exception to "one `page` mark per page", in a panel
+ * that is hidden until opened).
+ *
+ * The panel is the settings panel's (`ui/topbar-popover.ts`): a bottom sheet below `sm`, under the bar from `sm`. It
+ * carries the page theme (`beforetoggle` copies `<html data-theme>`: on Tonight the Topbar sits in the `night-sky`
+ * scope, and the theme can change after render). The links are the sub-nav's plain paths (the site and telescope live
+ * in cookies), so offline they reach the stored copies, or `/offline`, as the sub-nav does: no `data-needs-network`,
+ * no view-transition name.
+ *
+ * `specimen` is for `/design` only: the trigger alone (`part: "trigger"`, with pinned classes or the open look), or
+ * the panel in flow (`"panel"` from `sm`, `"sheet"` on a phone, optionally held mid-drag), with a chosen current row
+ * (no `aria-current`, it is not the page) and a pinned row look. `idBase` keeps ids unique when `/design` shows several.
+ */
+import { CalendarDays, Crosshair, LayoutGrid, ListOrdered, Moon, Orbit, Sparkles } from "lucide-react";
+
+import NavIcon from "@/components/NavIcon.astro";
+import { SEGMENT_FOCUS_CLASS } from "@/components/ui/segmented";
+import {
+  TOPBAR_ICON_BUTTON_CLASS,
+  TOPBAR_PANEL_BODY_CLASS,
+  TOPBAR_PANEL_CLASS,
+  TOPBAR_SHEET_GRIP_CLASS,
+  TOPBAR_SHEET_HANDLE_CLASS,
+} from "@/components/ui/topbar-popover";
+import { getMessages } from "@/i18n";
+import { TONIGHT_NAV, currentTonightPage, type TonightNavItem } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+
+type Href = TonightNavItem["href"];
+
+interface Props {
+  idBase?: string;
+  specimen?:
+    | { part: "trigger"; class?: string; expanded?: boolean }
+    | {
+        part: "panel" | "sheet";
+        current?: Href;
+        pinned?: { href: Href; class: string };
+        /** The sheet held part-way down, as during a swipe (`data-sheet-drag="dragging"`). */
+        dragging?: boolean;
+      };
+}
+
+const { idBase = "quick-nav", specimen } = Astro.props;
+const { locale, theme } = Astro.locals;
+const m = getMessages(locale);
+const t = m.tonight.subnav;
+const describe = m.tonight.quickNav;
+
+// One icon per Tonight page; typed by the label, so a new page fails the type check until it has one. The dashboard
+// keeps the Tonight destination's hand-drawn moon (`NavIcon`).
+const ICONS = {
+  tonight: null,
+  targets: Crosshair,
+  events: Sparkles,
+  plan: ListOrdered,
+  moon: Moon,
+  planets: Orbit,
+  nights: CalendarDays,
+} satisfies Record<TonightNavItem["label"], typeof Moon | null>;
+
+const panelSpecimen = specimen && specimen.part !== "trigger" ? specimen : undefined;
+const current = panelSpecimen ? panelSpecimen.current : currentTonightPage(Astro.url.pathname);
+const rows = TONIGHT_NAV.map((item) => ({
+  href: item.href,
+  label: item.label,
+  name: t[item.label],
+  description: describe[item.label],
+  Icon: ICONS[item.label],
+  current: item.href === current,
+  pinned: panelSpecimen?.pinned?.href === item.href ? panelSpecimen.pinned.class : undefined,
+  nameId: `${idBase}-${item.label}-name`,
+  descriptionId: `${idBase}-${item.label}-description`,
+}));
+const panelId = `${idBase}-panel`;
+const headingId = `${idBase}-heading`;
+
+/** A specimen panel in flow: the panel's surface and padding without the popover's fixed placement. */
+const SPECIMEN_PANEL_CLASS = {
+  panel: "flex w-80 max-w-full flex-col rounded-2xl border border-border bg-surface p-4 text-foreground shadow-2xl",
+  sheet: "flex w-full max-w-xs flex-col rounded-t-2xl border-t border-border bg-surface p-5 text-foreground shadow-2xl",
+} as const;
+---
+
+{specimen?.part === "trigger" ? (
+  <button
+    type="button"
+    aria-label={t.label}
+    aria-expanded={specimen.expanded ? "true" : "false"}
+    class:list={cn(TOPBAR_ICON_BUTTON_CLASS, specimen.class)}
+  >
+    <LayoutGrid className="size-4.5" aria-hidden="true" />
+  </button>
+) : (
+  <nav aria-label={panelSpecimen ? undefined : m.nav.quickNav} data-quick-nav={panelSpecimen ? undefined : ""}>
+    {!panelSpecimen && (
+      <button
+        type="button"
+        popovertarget={panelId}
+        aria-controls={panelId}
+        aria-expanded="false"
+        aria-label={t.label}
+        title={t.label}
+        class:list={TOPBAR_ICON_BUTTON_CLASS}
+        data-quick-nav-trigger
+      >
+        <LayoutGrid className="size-4.5" aria-hidden="true" />
+      </button>
+    )}
+    <div
+      id={panelId}
+      popover={panelSpecimen ? undefined : "auto"}
+      data-theme={panelSpecimen ? undefined : theme}
+      data-quick-nav-panel={panelSpecimen ? undefined : ""}
+      data-sheet-drag={panelSpecimen?.dragging ? "dragging" : undefined}
+      class:list={cn(
+        panelSpecimen ? SPECIMEN_PANEL_CLASS[panelSpecimen.part] : TOPBAR_PANEL_CLASS,
+        panelSpecimen?.dragging && "translate-y-16",
+      )}
+    >
+      <div class:list={TOPBAR_SHEET_HANDLE_CLASS} data-sheet-handle>
+        <div class:list={cn(TOPBAR_SHEET_GRIP_CLASS, panelSpecimen?.part === "panel" && "hidden")} aria-hidden="true" />
+        <p id={headingId} class="mb-3 text-label font-semibold text-muted-foreground">
+          {t.label}
+        </p>
+      </div>
+      <div class:list={TOPBAR_PANEL_BODY_CLASS} data-sheet-body>
+        <ul aria-labelledby={headingId} class="pb-safe-area grid list-none gap-0.5 sm:pb-0">
+          {rows.map(({ Icon, ...row }) => (
+            <li>
+              <a
+                href={row.href}
+                aria-current={row.current && !panelSpecimen ? "page" : undefined}
+                aria-labelledby={row.nameId}
+                aria-describedby={row.descriptionId}
+                data-quick-nav-row
+                class:list={cn(
+                  "flex min-h-11 items-center gap-3 rounded-xl px-3 py-1.5 transition-colors",
+                  SEGMENT_FOCUS_CLASS,
+                  row.current ? "bg-selected text-selected-foreground" : "text-heading hover:bg-accent",
+                  row.pinned,
+                )}
+              >
+                {Icon ? (
+                  <Icon className={cn("size-5 shrink-0", !row.current && "text-muted-foreground")} aria-hidden="true" />
+                ) : (
+                  <NavIcon name="tonight" class:list={cn("size-5", !row.current && "text-muted-foreground")} />
+                )}
+                <span class="flex min-w-0 flex-col">
+                  <span id={row.nameId} class="text-label font-semibold">
+                    {row.name}
+                  </span>
+                  <span
+                    id={row.descriptionId}
+                    class:list={cn("text-caption", row.current ? "text-selected-foreground" : "text-muted-foreground")}
+                  >
+                    {row.description}
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </nav>
+)}
+
+<script>
+  /*
+   * The quick nav's behaviour (ui-quick-nav, "Critical Implementation Details"): `aria-expanded` from the popover's own
+   * state (WebKit does not derive it from `popovertarget`), the page theme copied as it opens, focus into the list on
+   * open (the current page's row, else the first), the arrows / Home / End between rows, closing when focus moves to
+   * an element outside the panel and the button (Tab past the last row; a `null` target, such as a tap on the heading or
+   * Safari's tap on a link, is ignored: review F1), and closing on `pagehide`, so Back never shows it still open (F4).
+   * Esc and the outside tap are the native popover's light dismiss.
+   */
+  for (const nav of document.querySelectorAll<HTMLElement>("[data-quick-nav]")) {
+    const trigger = nav.querySelector<HTMLButtonElement>("[data-quick-nav-trigger]");
+    const panel = nav.querySelector<HTMLElement>("[data-quick-nav-panel][popover]");
+    if (!trigger || !panel) continue;
+    const rows = () => [...panel.querySelectorAll<HTMLAnchorElement>("[data-quick-nav-row]")];
+
+    panel.addEventListener("beforetoggle", (event) => {
+      if ((event as ToggleEvent).newState !== "open") return;
+      const applied = document.documentElement.dataset.theme;
+      if (applied) panel.dataset.theme = applied;
+    });
+
+    panel.addEventListener("toggle", (event) => {
+      const open = (event as ToggleEvent).newState === "open";
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) (panel.querySelector<HTMLAnchorElement>('[aria-current="page"]') ?? rows()[0])?.focus();
+    });
+
+    panel.addEventListener("keydown", (event) => {
+      const list = rows();
+      const at = list.indexOf(document.activeElement as HTMLAnchorElement);
+      const target =
+        event.key === "ArrowDown"
+          ? list[Math.min(at + 1, list.length - 1)]
+          : event.key === "ArrowUp"
+            ? list[Math.max(at - 1, 0)]
+            : event.key === "Home"
+              ? list[0]
+              : event.key === "End"
+                ? list[list.length - 1]
+                : undefined;
+      if (!target) return;
+      event.preventDefault();
+      target.focus();
+    });
+
+    panel.addEventListener("focusout", (event) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && !panel.contains(next) && !trigger.contains(next) && panel.matches(":popover-open")) {
+        panel.hidePopover();
+      }
+    });
+
+    window.addEventListener("pagehide", () => {
+      if (panel.matches(":popover-open")) panel.hidePopover();
+    });
+  }
+</script>
