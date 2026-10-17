@@ -39,7 +39,7 @@ const { siteId: requestedSite, telescopeId: requestedTelescope } = requestedGear
 const night = requestedNight(Astro.url);
 ---
 
-<GearShell title={t.title} skyFlow>
+<GearShell title={t.title} skyFlow skyModeScope>
   {supabase ? (
     // The shell responds without waiting on Supabase, KV or Open-Meteo; the island streams the data in, sky first.
     <TonightContent server:defer siteId={requestedSite} telescopeId={requestedTelescope} notice={notice} night={night}>

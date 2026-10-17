@@ -4,12 +4,15 @@ import {
   SILHOUETTE_CLASS,
   SILHOUETTE_PATH,
   SILHOUETTE_VIEWBOX,
+  SKY_BAND_CLASS,
+  SKY_FRAME_CLASS,
   SLIDER_LABELS_CLASS,
   SLIDER_LAYOUT_CLASS,
   SLIDER_NOW_CLASS,
   SLIDER_ROW_CLASS,
   SLIDER_TIME_CLASS,
   SLIDER_TRACK_CLASS,
+  STRIP_FIELD_CLASS,
   STRIP_HEIGHT_PX,
   STRIP_OVERLAP_CLASS,
   STRIP_OVERLAP_PX,
@@ -17,13 +20,16 @@ import {
   VERDICT_MIN_HEIGHT_CLASS,
 } from "@/components/tonight/sky-band";
 import { rangeClasses } from "@/components/tonight/range-classes";
+import { SkyModeControl } from "@/components/tonight/sky-mode-control";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
 import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal, type CompassPoint } from "@/lib/compass";
+import { SKY_MODE_COOKIE, isSkyMode, preferenceCookie, type SkyMode, type Theme } from "@/lib/preferences";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
 import { nearestToCentre } from "@/lib/sky-view/compass-marker";
+import { skyField } from "@/lib/sky-view/field";
 import { nearestFrame } from "@/lib/sky-view/frames";
 import { bodyLabelRects, labelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
 import { project, starRadius } from "@/lib/sky-view/projection";
@@ -44,8 +50,9 @@ import { cn } from "@/lib/utils";
  * time slider from sunset to sunrise with the dark window marked on its track. The band's gradient follows the Sun
  * (`skyMix`, the `dusk-band` utility); its top stays `--zenith`, so it continues the Topbar's strip without a seam.
  *
- * The panorama covers 360° on a strip about twice the viewport wide (a little narrower, `EDGE_INSET_PX`, so E and W
- * show whole at load), scrolled at load to centre `facing`; swipe for the rest, or use the chevron at each edge
+ * The panorama covers 360° on a strip whose width and field `skyField` (`@/lib/sky-view/field`) computes from the
+ * measured box (about twice the viewport in DEFAULT, a little narrower, `EDGE_INSET_PX`, so E and W show whole at load),
+ * scrolled at load to centre `facing`; swipe for the rest, or use the chevron at each edge
  * (ui-sky-light), which pans most of a viewport and hides once its end is reached.
  * Its star field reaches `STRIP_OVERLAP_PX` (64 px) up behind the verdict's empty lower area. The verdict stays on top but
  * takes no pointer events (it has nothing interactive), so taps and swipes over the overlap reach the panorama. The
@@ -73,12 +80,22 @@ type Locale = Parameters<typeof getMessages>[0];
 interface TonightSkyViewProps {
   view: SkyViewData;
   locale: Locale;
+  /**
+   * The sky's mode as the server rendered it (`locals.skyMode`, ui-sky-modes). After hydration the island follows the
+   * nearest `[data-sky-mode]` scope, which the layout's head script may have corrected for a stored offline copy.
+   */
+  mode: SkyMode;
+  /**
+   * The page's theme (`locals.theme`): the sky-view menu renders it server-side, so a tap before hydration opens a
+   * panel in the page's theme, not the navy sky's around it (impl review F4).
+   */
+  theme: Theme;
   /** The verdict, server-rendered. */
   children?: ReactNode;
 }
 
-/** The strip's width before the browser measures it: a 390 px phone. */
-const DEFAULT_VIEWPORT_PX = 390;
+/** The panorama's box before the browser measures it: a 390 px phone, DEFAULT's 272 px field. */
+const DEFAULT_BOX = { width: 390, height: STRIP_HEIGHT_PX + STRIP_OVERLAP_PX } as const;
 /** Rough glyph widths of the caption role (12 px Archivo), for label placement without measuring text. */
 const BODY_CHAR_PX = 7;
 const STAR_CHAR_PX = 6.4;
@@ -92,6 +109,11 @@ const COMPASS_GAP_PX = 8;
 const COMPASS_MIN_TOP_PX = 4;
 /** How far a chevron pans the strip, as a share of the visible width (ui-sky-light). */
 const PAN_SHARE = 0.6;
+/**
+ * How far a mouse moves before a press on the strip becomes a drag (ui-sky-modes): below it the press stays a click (a
+ * marker opens), past it the strip follows the pointer and the click that ends the drag is swallowed.
+ */
+const DRAG_THRESHOLD_PX = 6;
 /** The least gap between two slider labels, px. */
 const LABEL_GAP_PX = 8;
 
@@ -102,16 +124,11 @@ const LABEL_GAP_PX = 8;
  */
 const PAN_BUTTON_CLASS =
   "group focus-visible:outline-ring absolute z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2";
-const PAN_FACE_CLASS =
+export const PAN_FACE_CLASS =
   "text-heading flex size-8 items-center justify-center opacity-80 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none";
 
 /** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
 const COMPASS_ROW_PX = 16;
-/**
- * How far inside the viewport's edges the 180° view's ends sit at load: the field is drawn this much narrower per side,
- * so the first view shows a little more than 180° and E and W (W and E facing north) are whole, not cut in half.
- */
-const EDGE_INSET_PX = 8;
 /** The caption role's line: a label's top to its baseline. */
 const CAPTION_BASELINE_PX = 11;
 /** The marker's bar under the compass label nearest the middle: 3 px under the baseline, 2 px thick, so it ends at the row's foot. */
@@ -137,10 +154,10 @@ const trackSpan = (fraction: number) => `calc((100% - 1.25rem) * ${fraction.toFi
 function placeAt(
   point: { altDeg: number; azDeg: number },
   facing: SkyViewData["facing"],
-  viewport: number,
+  stripWidth: number,
   height: number,
 ) {
-  const { x, y } = project(point, facing, viewport, height);
+  const { x, y } = project(point, facing, stripWidth, height);
   return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
 }
 
@@ -163,6 +180,19 @@ function nearestCompassKey(scroller: HTMLElement, compass: readonly CompassLabel
   return index < 0 ? null : compassKey(compass[index]);
 }
 
+/** The panorama's measured box, px. */
+interface FieldBox {
+  width: number;
+  height: number;
+}
+
+/**
+ * Where the scroll goes after the field is redrawn for `box` (ui-sky-modes, plan review F3): `centre` puts `facing` in
+ * the middle (the first layout, a width change, leaving HIDDEN); `keep` puts back the azimuth that was in the middle,
+ * as a fraction of the 360° strip (a height-only change, a mode change). `box: null` applies at the next redraw.
+ */
+type Placement = { kind: "centre"; box: FieldBox | null } | { kind: "keep"; fraction: number; box: FieldBox | null };
+
 interface PlacedBody {
   body: TonightSkyBody;
   x: number;
@@ -171,13 +201,29 @@ interface PlacedBody {
   azDeg: number;
 }
 
-export default function TonightSkyView({ view, locale, children }: TonightSkyViewProps) {
+export default function TonightSkyView({ view, locale, mode: serverMode, theme, children }: TonightSkyViewProps) {
   const m = getMessages(locale);
   const t = m.tonight.sky;
   const last = Math.max(0, view.frameCount - 1);
   const [index, setIndex] = useState(() => Math.min(Math.max(view.initialIndex, 0), last));
-  const [viewport, setViewport] = useState(DEFAULT_VIEWPORT_PX);
+  const [box, setBox] = useState<FieldBox>(DEFAULT_BOX);
+  // Whether the box has been measured: before that, outside DEFAULT, the field stays invisible (SSR drew DEFAULT's box).
+  const [measured, setMeasured] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  // The mode (ui-sky-modes): the server's until the layout effect reads the nearest `[data-sky-mode]` scope.
+  const [mode, setMode] = useState<SkyMode>(serverMode);
+  // Whether a `[data-sky-mode]` scope holds the island (impl review F5): the server renders the control (the dashboard
+  // always has the scope, and its menu opens before hydration); a scope-less specimen drops it once hydrated, since a
+  // mode chosen there could not resize the band and the trigger would name a mode the band does not show.
+  const [scoped, setScoped] = useState(true);
   const scroller = useRef<HTMLDivElement>(null);
+  // The panorama's box, whose height comes from CSS (the mode); the ResizeObserver watches it, never the SVG.
+  const fieldBox = useRef<HTMLDivElement>(null);
+  const placement = useRef<Placement | null>(null);
+  // A mouse drag on the strip (ui-sky-modes): the press, whether it has passed the threshold, and the click to swallow.
+  const drag = useRef<{ pointerId: number; startX: number; startScroll: number; active: boolean } | null>(null);
+  const swallowClick = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const verdict = useRef<HTMLDivElement>(null);
   const field = useRef<SVGSVGElement>(null);
   // The compass row's top in the field, once the verdict's text has been measured.
@@ -222,14 +268,75 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     element.scrollBy({ left: direction * element.clientWidth * PAN_SHARE, behavior: smooth ? "smooth" : "auto" });
   };
 
-  // Measure the strip's viewport before the first paint (so a desktop doesn't flash the 390 px default), and keep
-  // `facing` in the middle of it after every resize. React 19 runs layout effects only in the browser, without an SSR
-  // warning.
+  const time = view.timeLabels[index] ?? "";
+  const zone = view.zoneLabels[index] ?? "";
+  // The strip for the measured box (ui-sky-modes): 360° wide, altitude 0–90° over the whole field height, which covers
+  // the strip plus the overlap behind the verdict. DEFAULT is today's 180° per inset viewport.
+  const geometry = skyField({ mode, viewportPx: box.width, fieldHeightPx: box.height });
+  const stripWidth = geometry.stripWidthPx;
+  const height = geometry.fieldHeightPx;
+
+  // The mode lives on the nearest `[data-sky-mode]` scope (the dashboard's `<html>`, a `/design` wrapper), which CSS
+  // sizes the band from; follow it, including a stored copy corrected before paint (Layout's head script).
   useLayoutEffect(() => {
-    const element = scroller.current;
+    const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
+    if (!scope) {
+      setScoped(false);
+      return;
+    }
+    const read = () => {
+      const value = scope.dataset.skyMode;
+      if (isSkyMode(value)) setMode(value);
+    };
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(scope, { attributes: true, attributeFilter: ["data-sky-mode"] });
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  // A mode chosen in the menu: keep the azimuth in the middle of the view (leaving HIDDEN recentres on `facing`), then
+  // let CSS resize the band; the dashboard remembers it in the cookie, like the theme.
+  const chooseMode = (next: SkyMode) => {
+    const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
+    if (next === mode || !scope) return;
+    const strip = scroller.current;
+    placement.current =
+      mode === "hidden" || !strip || strip.scrollWidth <= 0
+        ? { kind: "centre", box: null }
+        : { kind: "keep", fraction: (strip.scrollLeft + strip.clientWidth / 2) / strip.scrollWidth, box: null };
+    scope.dataset.skyMode = next;
+    if (scope === document.documentElement) document.cookie = preferenceCookie(SKY_MODE_COOKIE, next);
+    setMode(next);
+  };
+
+  // Measure the panorama's box before the first paint (so a desktop doesn't flash the 390 px default) and on every
+  // resize. `facing` goes to the middle at the first layout and when the width changes (or the field comes back from
+  // HIDDEN, where the box is `display: none` and measures 0); a height-only change keeps the azimuth in the middle, so
+  // a phone's address bar or a mode change never swings the view. React 19 runs layout effects only in the browser.
+  useLayoutEffect(() => {
+    const element = fieldBox.current;
     if (!element) return;
+    let measured: FieldBox | null = null;
+    let wasHidden = false;
     const measure = () => {
-      if (element.clientWidth > 0) setViewport(element.clientWidth);
+      const width = element.clientWidth;
+      const height = element.clientHeight;
+      if (width <= 0 || height <= 0) {
+        wasHidden = true;
+        return;
+      }
+      if (measured && !wasHidden && measured.width === width && measured.height === height) return;
+      const next = { width, height };
+      const strip = scroller.current;
+      placement.current =
+        !measured || wasHidden || measured.width !== width || !strip
+          ? { kind: "centre", box: next }
+          : { kind: "keep", fraction: (strip.scrollLeft + strip.clientWidth / 2) / strip.scrollWidth, box: next };
+      measured = next;
+      wasHidden = false;
+      setBox(next);
+      setMeasured(true);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -238,11 +345,19 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       observer.disconnect();
     };
   }, []);
+  // After the field is redrawn for the measured box (or the strip's width changes for another reason), scroll as
+  // `placement` says.
   useLayoutEffect(() => {
     const element = scroller.current;
-    if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
+    const next = placement.current;
+    if (!element || !next || (next.box !== null && next.box !== box)) return;
+    placement.current = null;
+    element.scrollLeft =
+      next.kind === "centre"
+        ? (element.scrollWidth - element.clientWidth) / 2
+        : next.fraction * stripWidth - element.clientWidth / 2;
     readEdges();
-  }, [viewport]);
+  }, [box, stripWidth]);
 
   // Where the verdict's text ends, relative to the star field's top: the compass row goes just under it, never higher
   // than the field's top edge and never lower than the overlap's foot. Re-measured when the verdict reflows.
@@ -278,24 +393,17 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     };
   }, []);
 
-  const time = view.timeLabels[index] ?? "";
-  const zone = view.zoneLabels[index] ?? "";
-  // Half the field: the viewport less the edge insets, so the 180° view's ends sit inside the screen at load.
-  const half = Math.max(viewport - 2 * EDGE_INSET_PX, 1);
-  const stripWidth = half * 2;
-  // The star field: the strip plus the overlap behind the verdict; altitude 0–90° spans all of it.
-  const height = STRIP_HEIGHT_PX + STRIP_OVERLAP_PX;
-
   // Every star above the horizon as one path of circles, plus the named ones as label candidates.
   const stars = useMemo(() => {
     let path = "";
     const named: LabelItem[] = [];
     const names = new Map<string, string>();
-    for (const star of BRIGHT_STARS) {
+    // HIDDEN draws no panorama: skip the star pass.
+    for (const star of mode === "hidden" ? [] : BRIGHT_STARS) {
       const point = rotateToHorizon(view.rotations, index, star.vector);
       // `!(> 0)` also skips NaN, which would otherwise put `MNaN` into the one path and blank the whole field.
       if (!(point.altDeg > 0)) continue;
-      const { x, y } = placeAt(point, view.facing, half, height);
+      const { x, y } = placeAt(point, view.facing, stripWidth, height);
       const r = starRadius(star.mag);
       path += `M${(x - r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2 * r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2 * r).toFixed(2)} 0`;
       if (star.name) {
@@ -306,7 +414,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
       }
     }
     return { path, named, names };
-  }, [view.rotations, view.facing, index, half, height, locale]);
+  }, [view.rotations, view.facing, index, stripWidth, height, locale, mode]);
 
   // Bodies above the horizon at this frame, from the server's refracted tracks.
   const bodies = useMemo(
@@ -315,16 +423,16 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
         const altDeg = (body.track[2 * index] ?? 0) / 10;
         const azDeg = (body.track[2 * index + 1] ?? 0) / 10;
         if (!(altDeg > 0)) return [];
-        return [{ body, altDeg, azDeg, ...placeAt({ altDeg, azDeg }, view.facing, half, height) }];
+        return [{ body, altDeg, azDeg, ...placeAt({ altDeg, azDeg }, view.facing, stripWidth, height) }];
       }),
-    [view.bodies, view.facing, index, half, height],
+    [view.bodies, view.facing, index, stripWidth, height],
   );
 
   // The 16 points across the 360° strip; the one on the wrap edge (opposite `facing`) is drawn at both ends.
   const compass = useMemo(
     () =>
       COMPASS_POINTS.flatMap((point, i): CompassLabel[] => {
-        const { x } = placeAt({ altDeg: 0, azDeg: i * COMPASS_STEP_DEG }, view.facing, half, height);
+        const { x } = placeAt({ altDeg: 0, azDeg: i * COMPASS_STEP_DEG }, view.facing, stripWidth, height);
         // The point opposite `facing` sits on the strip's two real ends: anchor each copy inwards so it shows whole.
         if (x < 1) {
           return [
@@ -334,7 +442,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
         }
         return [{ point, x, anchor: "middle" }];
       }),
-    [view.facing, half, height, stripWidth],
+    [view.facing, height, stripWidth],
   );
 
   // Marks the compass label whose x is nearest the middle of the visible strip. The strip's content x is the SVG's x, so
@@ -351,7 +459,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
     if (!element) return;
     const key = nearestCompassKey(element, compass);
     setCurrentCompass((prev) => (prev === key ? prev : key));
-  }, [compass, viewport]);
+  }, [compass, box]);
 
   // The slider's edge labels: measure each (the browser's text widths, in the page's font) and the track, and show
   // those that fit. The texts are the server's; only their widths and places are decided here.
@@ -442,8 +550,12 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   ];
 
   return (
-    <div>
-      <div className="dusk-band night-sky relative overflow-hidden" style={bandStyle} data-sky-band>
+    <div ref={root} className={SKY_FRAME_CLASS} data-sky-mode-frame="live">
+      <div
+        className={cn("dusk-band night-sky relative overflow-hidden", SKY_BAND_CLASS)}
+        style={bandStyle}
+        data-sky-band
+      >
         {/*
          * Above the strip's overlap, and transparent to the pointer: the verdict has no links or buttons, so taps and
          * swipes anywhere over the overlap reach the panorama's markers and scroll. A link in the verdict would need
@@ -454,19 +566,90 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
           className={cn(VERDICT_CONTAINER_CLASS, VERDICT_MIN_HEIGHT_CLASS, "pointer-events-none z-10")}
         >
           {children}
+          {/*
+           * The sky-view control (ui-sky-modes, owner answer Q1 A): at the column's top right, centred on the date line,
+           * in every mode; outside the verdict's flow, so no height moves. The only control over the verdict, so it takes
+           * pointer events back.
+           */}
+          {scoped && (
+            <SkyModeControl
+              mode={mode}
+              locale={locale}
+              theme={theme}
+              onChoose={chooseMode}
+              faceClassName={PAN_FACE_CLASS}
+              className="pointer-events-auto absolute -top-1 right-1 z-20 sm:top-8"
+            />
+          )}
         </div>
 
-        <div className={cn("relative", STRIP_OVERLAP_CLASS)}>
+        <div ref={fieldBox} className={cn("relative", STRIP_FIELD_CLASS, STRIP_OVERLAP_CLASS)}>
           <div
             ref={scroller}
             role="region"
             aria-label={t.panorama}
             tabIndex={0}
-            className="scrollbar-hidden focus-visible:outline-ring relative overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
+            className={cn(
+              "scrollbar-hidden focus-visible:outline-ring relative h-full overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2",
+              // A mouse can drag the sky (ui-sky-modes): a grab cursor, and no text selection starting under the press.
+              "data-sky-dragging:cursor-grabbing pointer-fine:cursor-grab pointer-fine:select-none",
+            )}
             onScroll={() => {
               readEdges();
               readCentre();
             }}
+            // Mouse only: touch and pen keep the browser's own scrolling (a pen is subject to `touch-action` and would
+            // fight it; plan review F7). The drag starts past the threshold, so a plain click keeps its marker target.
+            onPointerDown={(event) => {
+              swallowClick.current = false;
+              if (event.pointerType !== "mouse" || event.button !== 0) return;
+              drag.current = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startScroll: event.currentTarget.scrollLeft,
+                active: false,
+              };
+            }}
+            onPointerMove={(event) => {
+              const current = drag.current;
+              if (current?.pointerId !== event.pointerId) return;
+              const dx = event.clientX - current.startX;
+              if (!current.active) {
+                if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+                current.active = true;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                setDragging(true);
+              }
+              event.currentTarget.scrollLeft = current.startScroll - dx;
+            }}
+            onPointerUp={(event) => {
+              const current = drag.current;
+              if (current?.pointerId !== event.pointerId) return;
+              drag.current = null;
+              if (!current.active) return;
+              // The click that ends a drag fires right after this, in the same task: swallow it, and only it.
+              swallowClick.current = true;
+              window.setTimeout(() => {
+                swallowClick.current = false;
+              }, 0);
+              setDragging(false);
+            }}
+            onPointerCancel={(event) => {
+              if (drag.current?.pointerId !== event.pointerId) return;
+              drag.current = null;
+              setDragging(false);
+            }}
+            onClickCapture={(event) => {
+              if (!swallowClick.current) return;
+              swallowClick.current = false;
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            // A marker is a link: the browser would start a link drag (and a ghost image) under a mouse drag.
+            onDragStart={(event) => {
+              event.preventDefault();
+            }}
+            data-sky-dragging={dragging ? "" : undefined}
             data-sky-strip
           >
             <svg
@@ -474,7 +657,7 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
               width={stripWidth}
               height={height}
               viewBox={`0 0 ${String(stripWidth)} ${String(height)}`}
-              className="block"
+              className={cn("block", !measured && mode !== "default" && "invisible")}
               data-sky-frame={index}
             >
               <g aria-hidden="true" className={cn(compassTop === null && "invisible")} data-sky-compass>
@@ -598,7 +781,8 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
                 type="button"
                 aria-label={side === "left" ? t.panLeft : t.panRight}
                 className={cn(PAN_BUTTON_CLASS, side === "left" ? "left-1" : "right-1", atEdge && "invisible")}
-                style={{ top: STRIP_OVERLAP_PX + STRIP_HEIGHT_PX / 2 }}
+                // The middle of the visible strip: the overlap plus half the rest of the measured field.
+                style={{ top: (height + STRIP_OVERLAP_PX) / 2 }}
                 onClick={() => {
                   pan(side === "left" ? -1 : 1);
                 }}

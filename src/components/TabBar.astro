@@ -25,6 +25,7 @@ const tabs = NAV_ITEMS.map((item) => ({
 {show && (
   <>
     <div class="pt-16 pb-safe-area md:hidden" aria-hidden="true"></div>
+    {/* `h-16` plus the top border is `--tabbar-height` (global.css, ui-sky-modes). */}
     <nav
       aria-label={m.nav.primary}
       data-tabbar

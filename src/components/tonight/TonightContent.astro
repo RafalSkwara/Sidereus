@@ -15,7 +15,12 @@ import { buttonVariants } from "@/components/ui/button";
 import EyepiecesPrompt from "@/components/tonight/EyepiecesPrompt.astro";
 import GearCard from "@/components/tonight/GearCard.astro";
 import OfflineCopy from "@/components/tonight/OfflineCopy.astro";
-import { GEAR_ROW_GAP_CLASS, GEAR_ROW_GRID_CLASS, TILES_GAP_CLASS } from "@/components/tonight/sky-band";
+import {
+  GEAR_ROW_GAP_CLASS,
+  GEAR_ROW_GRID_CLASS,
+  SKY_FRAME_CLASS,
+  TILES_GAP_CLASS,
+} from "@/components/tonight/sky-band";
 import SkyCheckCard from "@/components/tonight/SkyCheckCard.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView from "@/components/tonight/TonightSkyView";
@@ -130,7 +135,13 @@ const verdictEvent = view ? eventsVerdict(view.skyEvents, locale) : null;
   <>
     {/* The live sky (interactive-sky): the island owns the band, with the verdict passed in as static children. */}
     {view?.skyView ? (
-      <TonightSkyView view={view.skyView} locale={locale} client:load>
+      <TonightSkyView
+        view={view.skyView}
+        locale={locale}
+        mode={Astro.locals.skyMode}
+        theme={Astro.locals.theme}
+        client:load
+      >
         <h1 class="sr-only">{t.title}</h1>
         <VerdictCard
           level={view.verdict.level}
@@ -146,27 +157,34 @@ const verdictEvent = view ? eventsVerdict(view.skyEvents, locale) : null;
         />
       </TonightSkyView>
     ) : (
-      <TonightSky night verdict={view !== null}>
-        {view ? (
-          <>
-            <h1 class="sr-only">{t.title}</h1>
-            <VerdictCard
-              level={view.verdict.level}
-              dateLabel={view.dateLabel}
-              headline={view.headline}
-              text={view.verdictText}
-              darkWindow={view.darkWindow}
-              zoneLabel={view.zoneLabel}
-              withSlider={false}
-              forecastStatus={view.forecastStatus}
-              explanation={view.explanation}
-              event={verdictEvent}
-            />
-          </>
-        ) : (
-          <PageHeader title={t.title} />
-        )}
-      </TonightSky>
+      /*
+       * The static band. After a sky-view failure (a view, no `skyView`) it follows the mode in its frame, so it fills
+       * the height the skeleton reserved for EXPANDED (ui-sky-modes, plan review F4). A title-only band (the setup
+       * states) carries no verdict and stays a short header in every mode.
+       */
+      <div class:list={[view && SKY_FRAME_CLASS]} data-sky-mode-frame={view ? "static" : undefined}>
+        <TonightSky night verdict={view !== null}>
+          {view ? (
+            <>
+              <h1 class="sr-only">{t.title}</h1>
+              <VerdictCard
+                level={view.verdict.level}
+                dateLabel={view.dateLabel}
+                headline={view.headline}
+                text={view.verdictText}
+                darkWindow={view.darkWindow}
+                zoneLabel={view.zoneLabel}
+                withSlider={false}
+                forecastStatus={view.forecastStatus}
+                explanation={view.explanation}
+                event={verdictEvent}
+              />
+            </>
+          ) : (
+            <PageHeader title={t.title} />
+          )}
+        </TonightSky>
+      </div>
     )}
 
     {view && <OfflineCopy view={view} night={night} />}

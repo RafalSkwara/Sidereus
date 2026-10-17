@@ -60,6 +60,8 @@ export const en = {
     language: "Language",
     english: "English",
     polish: "Polski",
+    /** The language switch's hidden status while the page reloads in the chosen language. */
+    changingLanguage: "Changing language…",
   },
 
   config: {
@@ -862,8 +864,8 @@ export const en = {
 
     /** The interactive sky on the dashboard (interactive-sky): the panorama strip and its time slider. */
     sky: {
-      /** The swipeable panorama's accessible name. */
-      panorama: "Tonight's sky, swipe to look around",
+      /** The panorama's accessible name: a mouse drags it, a finger swipes it (ui-sky-modes). */
+      panorama: "Tonight's sky, drag or swipe to look around",
       /** The time slider's accessible name; its value reads as the time shown. */
       slider: "Time of night",
       /** Moves the sky to the frame nearest the current time (clamped into the range). */
@@ -881,6 +883,15 @@ export const en = {
       /** The panorama's edge chevrons (ui-sky-light): each pans the strip that way. */
       panLeft: "Scroll the sky left",
       panRight: "Scroll the sky right",
+      /** The sky-view menu (ui-sky-modes): hidden, as today, or expanded to the screen; a device preference. */
+      mode: {
+        /** The menu's heading and the group's name. */
+        label: "Sky view",
+        /** One per `SkyMode` (`@/lib/preferences`). */
+        options: { hidden: "Hidden", default: "Default", expanded: "Expanded" },
+        /** The menu button's accessible name: `mode` is one of `options`. */
+        trigger: (p: { mode: string }) => `Sky view: ${p.mode}`,
+      },
     },
 
     attribution: {

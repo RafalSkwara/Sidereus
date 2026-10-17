@@ -12,6 +12,7 @@ import {
   type Theme,
 } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
+import { SEGMENT_FOCUS_CLASS, SegmentedGroup } from "@/components/ui/segmented";
 
 interface TopbarControlsProps {
   theme: Theme;
@@ -26,20 +27,12 @@ const SETTINGS_ID = "settings-panel";
 const SIGN_OUT_CAPTION_ID = "settings-signout-offline";
 
 // Focus is a `--ring` outline offset from the control, so it shows on a pressed (filled) control too.
-const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const focusRing = SEGMENT_FOCUS_CLASS;
 const iconButton = cn(
   "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
   "text-muted-foreground transition-colors hover:text-heading",
   "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground",
   focusRing,
-);
-const groupClass = "grid auto-cols-fr grid-flow-col gap-0.5 rounded-full border border-border p-0.5";
-const segmentClass = cn(
-  "inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold",
-  "text-muted-foreground transition-colors hover:text-heading",
-  "aria-pressed:bg-selected aria-pressed:text-selected-foreground",
-  focusRing,
-  "disabled:cursor-progress",
 );
 const sectionLabel = "text-label font-semibold text-muted-foreground";
 /** A quiet text button in the panel: Install app, Sign out. */
@@ -231,61 +224,40 @@ export default function TopbarControls({
             <p id="settings-theme-label" className={sectionLabel}>
               {p.theme}
             </p>
-            <div role="group" aria-labelledby="settings-theme-label" className={groupClass}>
-              {themeSegments.map(({ value, label, short, icon }) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-label={label}
-                  aria-pressed={theme === value}
-                  className={segmentClass}
-                  onClick={() => {
-                    chooseTheme(value);
-                  }}
-                >
-                  {icon}
-                  <span aria-hidden="true">{short}</span>
-                </button>
-              ))}
-            </div>
+            <SegmentedGroup
+              labelledBy="settings-theme-label"
+              value={theme}
+              onChange={chooseTheme}
+              options={themeSegments.map(({ value, label, short, icon }) => ({
+                value,
+                label: short,
+                ariaLabel: label,
+                icon,
+              }))}
+            />
           </div>
 
           <div className="grid gap-1.5">
             <p id="settings-language-label" className={sectionLabel}>
               {p.language}
             </p>
-            <div
-              role="group"
-              aria-labelledby="settings-language-label"
-              aria-busy={pendingLocale !== null}
-              className={groupClass}
-            >
-              {localeSegments.map(({ value, text }) => (
-                <button
-                  key={value}
-                  type="button"
-                  lang={value}
-                  aria-pressed={locale === value}
-                  disabled={pendingLocale !== null}
-                  className={segmentClass}
-                  onClick={() => {
-                    chooseLocale(value);
-                  }}
-                >
-                  {pendingLocale === value ? (
-                    <>
-                      <span
-                        className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
-                        aria-hidden="true"
-                      />
-                      <span className="sr-only">{text}</span>
-                    </>
-                  ) : (
-                    text
-                  )}
-                </button>
-              ))}
-            </div>
+            {/*
+             * While the page reloads in the chosen language, that segment is busy (a spinner, `aria-busy`) and the
+             * other one is disabled; a hidden status says "Changing language…" (owner's answer to impl review F2).
+             */}
+            <SegmentedGroup
+              labelledBy="settings-language-label"
+              busyStatus={p.changingLanguage}
+              value={locale}
+              onChange={chooseLocale}
+              options={localeSegments.map(({ value, text }) => ({
+                value,
+                lang: value,
+                label: text,
+                busy: pendingLocale === value,
+                disabled: pendingLocale !== null && pendingLocale !== value,
+              }))}
+            />
           </div>
 
           {(install === "prompt" || install === "ios") && (

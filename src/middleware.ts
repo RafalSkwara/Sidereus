@@ -2,7 +2,14 @@ import { defineMiddleware } from "astro:middleware";
 import { SUPABASE_URL } from "astro:env/server";
 import { sessionUser } from "@/lib/auth/session-user";
 import { createClient } from "@/lib/supabase";
-import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
+import {
+  LOCALE_COOKIE,
+  SKY_MODE_COOKIE,
+  THEME_COOKIE,
+  resolveLocale,
+  resolveSkyMode,
+  resolveTheme,
+} from "@/lib/preferences";
 import { isAuthEntryPath, safeNextPath, signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 import { readTestNow } from "@/lib/clock";
@@ -15,6 +22,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.cookies.get(LOCALE_COOKIE)?.value,
     context.request.headers.get("accept-language"),
   );
+  // The live sky's mode (ui-sky-modes): read by the dashboard shell (its skeleton) and its server island alike.
+  context.locals.skyMode = resolveSkyMode(context.cookies.get(SKY_MODE_COOKIE)?.value);
 
   // The e2e clock seam (src/lib/clock.ts): the cookie is honoured against a loopback Supabase only.
   const testNow = readTestNow(context.request.headers.get("cookie"), SUPABASE_URL);

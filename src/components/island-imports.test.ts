@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  *   catalogue, `cn`, `buttonVariants`, `MoonDisc` and `range-classes`;
  * - Tonight's live sky (`TonightSkyView.tsx`, `range-classes.ts`, every `@/lib/sky-view/*` module, the island-safe star
  *   catalogue `stars.ts` / `star-names.ts` and `compass.ts`) may import only React, `@/lib/sky-view/*`, the star
- *   catalogue, `sky-band`, `range-classes`, the compass, the message catalogue, `cn`, `buttonVariants` and `lucide-react`;
+ *   catalogue, `sky-band`, `range-classes`, the compass, the message catalogue, `cn`, `buttonVariants`, `SegmentedGroup`, the sky-view control and `lucide-react`;
  * - neither may import astronomy-engine, the engine barrel or an engine module, `@/lib/tonight/format`, or
  *   `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser);
  * - no island (the slider, the live sky, every sky-view module) may import `Fact`, `FactList`, `StatCard`, `StatPair` or
@@ -29,6 +29,9 @@ const MOON_SOURCES = ["./tonight/MoonTimeSlider.tsx", "./tonight/MoonDisc.tsx", 
 const SKY_SOURCES = [
   here("./tonight/TonightSkyView.tsx"),
   here("./tonight/range-classes.ts"),
+  // The sky-view control and the shared segmented control it renders (ui-sky-modes, plan review F9).
+  here("./tonight/sky-mode-control.tsx"),
+  here("./ui/segmented.tsx"),
   ...readdirSync(SKY_VIEW_DIR)
     .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
     .map((name) => SKY_VIEW_DIR + name),
@@ -83,6 +86,9 @@ function isAllowedSkyImport(specifier: string): boolean {
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
     specifier === "@/components/ui/button" ||
+    // The sky-view menu's segmented control (ui-sky-modes), the one shared segmented control.
+    specifier === "@/components/ui/segmented" ||
+    specifier === "@/components/tonight/sky-mode-control" ||
     // The pan chevrons' icons (ui-sky-light): browser-safe SVG components, as in the other islands.
     specifier === "lucide-react"
   );
@@ -118,6 +124,7 @@ describe("island import guard", () => {
     const skySpecifiers = SKY_SOURCES.flatMap((source) => importSpecifiers(readFileSync(source, "utf8")));
     expect(skySpecifiers).toContain("@/lib/sky-view/rotate");
     expect(skySpecifiers).toContain("@/lib/catalogue/stars");
+    expect(skySpecifiers).toContain("@/components/ui/segmented");
 
     expect(
       offenders(MOON_SOURCES, (specifier) => !isAllowedMoonImport(specifier)),

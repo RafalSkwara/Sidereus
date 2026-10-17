@@ -300,3 +300,54 @@ test("a planet marker opens Planets", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1, name: en.tonight.summary.planets })).toBeVisible();
   }
 });
+
+// The only browser-level protection of the mouse drag (ui-sky-modes, Phase 3): a mouse user can pan the sky, and a drag
+// that starts and ends over a marker never opens it. Plain marker clicks stay covered by the two tests above.
+// It protects the outcome on Chromium, not each mechanism (impl review F3): once `setPointerCapture` runs on the
+// strip, Chromium sends the click that ends the drag to the strip, not the marker's `<a>`, so removing the click
+// swallow (`onClickCapture`) alone leaves this test green; it fails only if both the capture and the swallow go. The
+// swallow is the defence for WebKit, which no test here exercises.
+test("a mouse drag pans the panorama without opening a marker, and the arrow keys still pan it", async ({ page }) => {
+  const { slider, max } = await openSky(page, "e2e-sky-drag");
+  const marker = await findMarker(page, slider, max, "object");
+  if (marker === null) throw new Error("no ranked object is above the horizon in any frame of the pinned evening");
+  const strip = page.locator("[data-sky-strip]");
+  const scrollLeft = () => strip.evaluate((element) => element.scrollLeft);
+  const compassNow = () => page.locator("[data-sky-compass-current]").getAttribute("data-sky-compass-current");
+
+  const hit = page.locator(`[data-sky-body="object"][data-key="${marker.key}"] rect`);
+  // Hover first: Playwright scrolls the marker on screen and waits until it is the hit target, as a click does.
+  await hit.hover();
+  const box = await hit.boundingBox();
+  const before = await scrollLeft();
+  const compassBefore = await compassNow();
+  if (box === null) throw new Error(`marker ${marker.key} has no box`);
+  const viewport = page.viewportSize();
+  if (viewport === null) throw new Error("no viewport");
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  // Drag 200 px whichever way the strip has room to scroll and the pointer stays on the page: a drag to the left
+  // scrolls the strip forward (scrollLeft grows), to the right back.
+  const room = await strip.evaluate((element) => ({
+    back: element.scrollLeft,
+    forward: element.scrollWidth - element.clientWidth - element.scrollLeft,
+  }));
+  const dx = room.forward >= 200 && x - 200 > 0 ? -200 : room.back >= 200 && x + 200 < viewport.width ? 200 : 0;
+  if (dx === 0) throw new Error(`no room to drag 200 px from marker ${marker.key} at x ${String(x)}`);
+  await page.mouse.down();
+  await page.mouse.move(x + dx / 2, y, { steps: 10 });
+  await page.mouse.move(x + dx, y, { steps: 10 });
+  // The strip follows the mouse, so the marker moves with it: the press and the release are both over the marker.
+  await page.mouse.up();
+
+  await expect(strip).not.toHaveAttribute("data-sky-dragging");
+  expect(Math.abs((await scrollLeft()) - (before - dx)), "the strip follows the mouse").toBeLessThanOrEqual(2);
+  expect(await compassNow(), "the compass row's middle point moves with the view").not.toBe(compassBefore);
+
+  // The arrow keys still pan the focused strip (native scrolling), and nothing navigated meanwhile.
+  await strip.focus();
+  const afterDrag = await scrollLeft();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(scrollLeft, { message: "ArrowLeft scrolls the strip" }).toBeLessThan(afterDrag);
+  expect(new URL(page.url()).pathname, "a drag never opens a marker").toBe("/tonight");
+});

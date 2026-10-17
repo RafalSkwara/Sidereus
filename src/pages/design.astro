@@ -7,7 +7,21 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, Lock, MapPin, Pencil, Plus, RotateCcw, Save, Settings2, Telescope, X } from "lucide-react";
+import {
+  Check,
+  FoldVertical,
+  Lock,
+  Maximize2,
+  MapPin,
+  Pencil,
+  Plus,
+  RectangleHorizontal,
+  RotateCcw,
+  Save,
+  Settings2,
+  Telescope,
+  X,
+} from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -24,6 +38,7 @@ import { TILE_CONTENT_CLASS, TILE_ROW_CLASS } from "@/components/ui/tile";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import { SegmentedGroup } from "@/components/ui/segmented";
 import ComboboxDemo from "@/components/design/ComboboxDemo";
 import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -64,7 +79,15 @@ import TonightPageSkeleton from "@/components/tonight/TonightPageSkeleton.astro"
 import TonightPageSky from "@/components/tonight/TonightPageSky.astro";
 import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
-import TonightSkyView from "@/components/tonight/TonightSkyView";
+import TonightSkyView, { PAN_FACE_CLASS } from "@/components/tonight/TonightSkyView";
+import {
+  MODE_ICONS,
+  SKY_MODE_MENU_LABEL_CLASS,
+  SKY_MODE_MENU_SURFACE_CLASS,
+  SKY_MODE_TRIGGER_CLASS,
+  SkyModeControl,
+} from "@/components/tonight/sky-mode-control";
+import { SKY_MODES } from "@/lib/preferences";
 import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
 import TonightTiles from "@/components/tonight/TonightTiles.astro";
 import VerdictCard from "@/components/tonight/VerdictCard.astro";
@@ -814,6 +837,38 @@ const appIconGroups = [
       { src: "/maskable-icon-512x512.png", label: "128 · squircle", size: "size-32 rounded-3xl" },
       { src: "/maskable-icon-512x512.png", label: "128 · unmasked", size: "size-32" },
     ],
+  },
+] as const;
+
+// SegmentedGroup specimens (ui-sky-modes): static renders, so hover and focus are forced looks on inert copies.
+const segmentFocusSpecimen = "aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-ring";
+const segmentedSpecimens = [
+  { state: "default · horizontal", segmentClassName: undefined, disabled: false, live: true },
+  {
+    state: "hover · specimen (unpressed segments)",
+    segmentClassName: "not-aria-pressed:text-heading",
+    disabled: false,
+    live: false,
+  },
+  { state: "focus-visible · specimen (pressed)", segmentClassName: segmentFocusSpecimen, disabled: false, live: false },
+  { state: "disabled (one option)", segmentClassName: undefined, disabled: true, live: true },
+] as const;
+// The sky-view trigger's icons, as components (a React element would not render inside Astro markup).
+const DefaultModeIcon = MODE_ICONS.default;
+const ExpandedModeIcon = MODE_ICONS.expanded;
+const skyModeIcon = (icon: typeof FoldVertical) => createElement(icon, { className: "size-4" });
+const skyModeOptions = [
+  { value: "hidden", label: m.tonight.sky.mode.options.hidden, icon: skyModeIcon(FoldVertical) },
+  { value: "default", label: m.tonight.sky.mode.options.default, icon: skyModeIcon(RectangleHorizontal) },
+  { value: "expanded", label: m.tonight.sky.mode.options.expanded, icon: skyModeIcon(Maximize2) },
+] as const;
+const skyModeSpecimens = [
+  { state: "pressed · vertical (the sky-view menu)", value: "default", segmentClassName: undefined, live: true },
+  {
+    state: "focus-visible · vertical · specimen",
+    value: "expanded",
+    segmentClassName: segmentFocusSpecimen,
+    live: false,
   },
 ] as const;
 
@@ -1699,6 +1754,83 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </p>
             </section>
 
+            <!-- SegmentedGroup (ui-sky-modes): the one segmented control, horizontal (settings) and vertical (sky view) -->
+            <section class:list={block} aria-labelledby="c-segmented">
+              <h3 id="c-segmented" class:list={blockTitle}>
+                SegmentedGroup
+              </h3>
+              <div class:list={grid}>
+                {segmentedSpecimens.map(({ state, segmentClassName, disabled, live }) => (
+                  <div class:list={cell}>
+                    <p class:list={stateLabel}>{state}</p>
+                    <div inert={live ? undefined : true}>
+                      <SegmentedGroup
+                        label={m.preferences.theme}
+                        value="dark"
+                        onChange={() => undefined}
+                        segmentClassName={segmentClassName}
+                        options={[
+                          { value: "dark", label: m.preferences.darkShort, ariaLabel: m.preferences.dark },
+                          { value: "light", label: m.preferences.lightShort, ariaLabel: m.preferences.light },
+                          { value: "red", label: m.preferences.redShort, ariaLabel: m.preferences.red, disabled },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    loading · the language switch while the page reloads (the chosen language busy: spinner, aria-busy,
+                    an hourglass with reduced motion; the current one disabled, keeping its fill; a hidden status says "
+                    {m.preferences.changingLanguage}")
+                  </p>
+                  <div>
+                    <SegmentedGroup
+                      label={m.preferences.language}
+                      busyStatus={m.preferences.changingLanguage}
+                      value={locale}
+                      onChange={() => undefined}
+                      options={[
+                        {
+                          value: "en",
+                          lang: "en",
+                          label: m.preferences.english,
+                          busy: locale !== "en",
+                          disabled: locale === "en",
+                        },
+                        {
+                          value: "pl",
+                          lang: "pl",
+                          label: m.preferences.polish,
+                          busy: locale !== "pl",
+                          disabled: locale === "pl",
+                        },
+                      ]}
+                    />
+                  </div>
+                </div>
+                {skyModeSpecimens.map(({ state, value, segmentClassName, live }) => (
+                  <div class:list={cell}>
+                    <p class:list={stateLabel}>{state}</p>
+                    <div class="max-w-56" inert={live ? undefined : true}>
+                      <SegmentedGroup
+                        orientation="vertical"
+                        label={m.tonight.sky.mode.label}
+                        value={value}
+                        onChange={() => undefined}
+                        segmentClassName={segmentClassName}
+                        options={skyModeOptions}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p class:list={notApplicable}>
+                error — a choice always has a value, so the group never errors · empty — a group always has options ·
+                loading — the language switch above (the settings panel, while the page reloads)
+              </p>
+            </section>
+
             <!-- Band, React twin (ui-onboarding) -->
             <section class:list={block} aria-labelledby="c-band-react">
               <h3 id="c-band-react" class:list={blockTitle}>
@@ -2251,7 +2383,13 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>with the line · over the live sky (deep night)</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSkyView view={panoramas[panoramas.length - 1].view} locale={locale} client:load>
+                    <TonightSkyView
+                      view={panoramas[panoramas.length - 1].view}
+                      locale={locale}
+                      theme={theme}
+                      mode="default"
+                      client:load
+                    >
                       <VerdictCard
                         level={panoramaView.verdict.level}
                         dateLabel={panoramaView.dateLabel}
@@ -2315,7 +2453,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>{panorama.label}</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSkyView view={panorama.view} locale={locale} client:load>
+                    <TonightSkyView view={panorama.view} locale={locale} theme={theme} mode="default" client:load>
                       <VerdictCard
                         level={panoramaView.verdict.level}
                         dateLabel={panoramaView.dateLabel}
@@ -2339,6 +2477,121 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               and the slider for their outlines · disabled — N/A · error — without a sky view the dashboard keeps the
               static TonightSky · empty — no deep-sky markers on a no-go night (planets and the Moon stay) · loading —
               see TonightSkeleton (it reserves the strip and the slider row)
+            </p>
+          </section>
+
+          <!-- Sky modes (ui-sky-modes): the live sky in each mode, each in its own `data-sky-mode` scope -->
+          <section class:list={block} aria-labelledby="c-sky-modes">
+            <h3 id="c-sky-modes" class:list={blockTitle}>
+              Sky modes (TonightSkyView hidden, default, expanded)
+            </h3>
+            <p class:list={blockNote}>
+              Each specimen sits in its own <code>data-sky-mode</code> scope, as the dashboard's{" "}
+              <code>&lt;html&gt;</code>
+              is, so the <code>sky-hidden:</code> / <code>sky-expanded:</code> variants size it; EXPANDED is at its real
+              height (the screen under the Topbar strip, never shorter than DEFAULT). The menu here changes only its own
+              specimen (the cookie is the dashboard's).
+            </p>
+            {panoramas.length > 0 && (
+              <div class="grid gap-6 lg:grid-cols-3">
+                {SKY_MODES.map((mode) => (
+                  <div class:list={cell}>
+                    <p class:list={stateLabel}>{mode} · live</p>
+                    <div class="overflow-hidden rounded-lg" data-sky-mode={mode} data-sky-mode-specimen={mode}>
+                      <TonightSkyView view={panoramas[0].view} locale={locale} theme={theme} mode={mode} client:load>
+                        <VerdictCard
+                          level={panoramaView.verdict.level}
+                          dateLabel={panoramaView.dateLabel}
+                          headline={panoramaView.headline}
+                          text={panoramaView.verdictText}
+                          darkWindow={panoramaView.darkWindow}
+                          zoneLabel={panoramaView.zoneLabel}
+                          withSlider
+                          forecastStatus={panoramaView.forecastStatus}
+                          explanation={panoramaView.explanation}
+                          headingId={`verdict-heading-mode-${mode}`}
+                        />
+                      </TonightSkyView>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p class:list={notApplicable}>
+              hover, focus-visible — the markers', strip's and slider's own (TonightSkyView above) and the control's
+              (below) · disabled — N/A (the mode is a device setting and works offline) · error — without a sky view the
+              static TonightSky follows the mode and carries no control · empty — a no-go night, planets and the Moon
+              only · loading — TonightSkeleton per mode, same height (below, § TonightSkeleton)
+            </p>
+          </section>
+
+          <!-- Sky view control (ui-sky-modes) -->
+          <section class:list={block} aria-labelledby="c-sky-mode-control">
+            <h3 id="c-sky-mode-control" class:list={blockTitle}>
+              Sky view control
+            </h3>
+            <p class:list={blockNote}>
+              The 44 px trigger at the top right of the verdict's column (its face is the pan chevrons'), opening a
+              native popover with the three modes as a vertical SegmentedGroup. The static trigger opens its menu
+              without JavaScript; the forced looks are inert copies; the hydrated control is in each Sky modes specimen
+              above.
+            </p>
+            <div class:list={grid}>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>
+                  default · static (opens the menu without JavaScript, in the page's theme; the island places it under
+                  the trigger)
+                </p>
+                <div class="night-sky flex justify-end rounded-lg bg-zenith p-4">
+                  <SkyModeControl
+                    mode="default"
+                    locale={locale}
+                    theme={theme}
+                    onChoose={() => undefined}
+                    faceClassName={PAN_FACE_CLASS}
+                  />
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>hover · specimen (face at full opacity)</p>
+                <div class="night-sky flex justify-end rounded-lg bg-zenith p-4" inert>
+                  <span class:list={[SKY_MODE_TRIGGER_CLASS]}>
+                    <span class:list={[PAN_FACE_CLASS, "opacity-100"]}>
+                      <DefaultModeIcon className="size-5" aria-hidden="true" />
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>focus-visible · specimen (--ring outline)</p>
+                <div class="night-sky flex justify-end rounded-lg bg-zenith p-4" inert>
+                  <span class:list={[SKY_MODE_TRIGGER_CLASS, "outline-2 -outline-offset-2 outline-ring"]}>
+                    <span class:list={[PAN_FACE_CLASS, "opacity-100"]}>
+                      <ExpandedModeIcon className="size-5" aria-hidden="true" />
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div class:list={cell}>
+                <p class:list={stateLabel}>open menu · drawn inline (current mode pressed)</p>
+                <div class="night-sky rounded-lg bg-zenith p-4" inert>
+                  <div class:list={[SKY_MODE_MENU_SURFACE_CLASS, "ml-auto"]} data-theme={theme}>
+                    <p class:list={[SKY_MODE_MENU_LABEL_CLASS]}>{m.tonight.sky.mode.label}</p>
+                    <SegmentedGroup
+                      orientation="vertical"
+                      label={m.tonight.sky.mode.label}
+                      value="default"
+                      onChange={() => undefined}
+                      options={skyModeOptions}
+                      className="border-0 p-0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              disabled — N/A (works offline) · error — N/A (not rendered without a sky view) · empty — N/A · loading —
+              N/A (rendered with the island)
             </p>
           </section>
 
@@ -3164,6 +3417,17 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               <div class="overflow-hidden rounded-lg">
                 <TonightSkeleton />
               </div>
+            </div>
+            <!-- Per sky mode (ui-sky-modes): the frame reserves the chosen mode's height, so the island swaps in level. -->
+            <div class="grid gap-6 lg:grid-cols-3">
+              {SKY_MODES.map((mode) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>loading · {mode}</p>
+                  <div class="overflow-hidden rounded-lg" data-sky-mode={mode} data-sky-skeleton-specimen={mode}>
+                    <TonightSkeleton />
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
