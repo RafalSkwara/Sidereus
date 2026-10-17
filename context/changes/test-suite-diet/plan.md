@@ -725,7 +725,7 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 8.1 `npm run lint` passes and the hook skips the docs-only change
+- [x] 8.1 `npm run lint` passes and the hook skips the docs-only change
 
 #### Manual
 

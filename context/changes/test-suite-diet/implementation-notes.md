@@ -283,12 +283,12 @@ Six guard break checks, each red and restored with `git checkout --`: `Date.now(
 
 Prepared locally on `test-diet/phase-7` while #207 (Phase 6) awaited merge, then rebased onto main for its own PR against main (no stacked base). Smoke steps by the implementer first; two Sonnet agents (high) did the e2e and db trims; the implementer reviewed both reports, added a smoke step, ran the break proofs and the whole local CI-like runs.
 
-| Measure                                                     | Before                  | After                                                                          |
-| ----------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| e2e tests / spec files (`playwright test --list`)           | 77 in 32                | 56 in 29 (limit <= 72)                                                         |
-| db named tests (`vitest list --config vitest.db.config.ts`) | 117 (the plan said 118) | 100 (limit <= 100); 9 files, 191 after `each`                                  |
-| smoke                                                       | 60 step tuples          | 66 (the plan's steps 11 and 12 plus one for the sign-in form, plus read-backs) |
-| unit suite                                                  | 122 files / 813         | 122 / 813 (no unit test touched)                                               |
+| Measure                                                     | Before                  | After                                                                                         |
+| ----------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| e2e tests / spec files (`playwright test --list`)           | 77 in 32                | 56 in 29 (limit <= 72)                                                                        |
+| db named tests (`vitest list --config vitest.db.config.ts`) | 117 (the plan said 118) | 100 (limit <= 100); 9 files, 191 after `each`                                                 |
+| smoke                                                       | 60 step tuples          | 64 (the plan's steps 11 and 12, the sign-in form step and the read-backs; counted from a run) |
+| unit suite                                                  | 122 files / 813         | 122 / 813 (no unit test touched)                                                              |
 
 ### Smoke first (D4, 11 and 12, and one more)
 
@@ -329,3 +329,13 @@ Locally against a production preview and local Supabase, fresh build, fixture an
 ### Docs
 
 `test-plan.md` §4 (e2e 29 specs / 56 tests, db 9 files / 100 named tests) and §7 (the four owner-accepted gaps: the compass mapping, `Accept-Language`, a longitude echo in a schema message, the committed catalogue JSON's shape); `CLAUDE.md` still names `landing.spec.ts` for the ESA footer pin, which is kept. The `moon-as-target` known-skip text was already replaced in Phase 6.
+
+## Phase 8: Test-plan refresh and the lesson (2026-10-17)
+
+Docs only; prepared locally on `test-diet/phase-8` while Phase 7's PR awaited merge, then rebased onto main for its own PR against main.
+
+- `context/foundation/test-plan.md`: §4 unit row (the two projects with their counts: `reference` 108 files / 761 tests, `guards` 14 / 52; 813 in all, from 3,056), §6.6 a "Diet" note with the before and after table (Vitest files and tests, cold `npm test` 27.9 s -> 7.7 s, the hook about 13 s per Stop from 25-45 s, e2e 88 -> 56 tests with no date or state skip and a pinned clock, db 118 -> 100 named, smoke 45 -> 64 steps counted from a run) and where each kind of test moved, §7 the "Unit tests of implementation detail" bullet beside the four owner-accepted gaps (added in Phase 7), §8 the ledger dates (2026-10-17, strategy and stack dates unchanged).
+- `context/foundation/lessons.md`: "Name the risk a test is the only protection of before adding it" (prefer a relation over a value, a smoke step with a read-back over a schema test, one looping property over an `it.each` table, fold rows and assert counts first, keep slow guards out of the hook).
+- `context/handoff.md`: an "Update 2026-10-17" block (the two projects and commands, the pinned clock and its guard, the accepted gaps, how to run the CI-like local check, the S-06 note). `CLAUDE.md`: the "Unit tests live next to the code" paragraph (both projects, the hook runs `reference`, name the risk first); the Commands block already names `test:reference` and `test:guards` since Phase 0.
+- Checks: `npm run lint` passes; the end-of-turn hook skips the docs-only change (one real run on this branch: exit 0 in 0.1 s, nothing run).
+- Manual (8.2): the owner reads the §6.6 note and the before and after table.
