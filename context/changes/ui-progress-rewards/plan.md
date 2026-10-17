@@ -780,14 +780,14 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 #### Automated
 
-- [ ] 1.1 Types check: `npx astro sync && npx astro check`
-- [ ] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference`
-- [ ] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards`
-- [ ] 1.4 Lint passes on the changed files
+- [x] 1.1 Types check: `npx astro sync && npx astro check`
+- [x] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference`
+- [x] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards`
+- [x] 1.4 Lint passes on the changed files
 
 #### Manual
 
-- [ ] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px
+- [x] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px (`evidence/impl/p1-c-progress-icons-*-390.png`)
 
 ### Phase 2: Milestone badges on the page and in the dialog
 

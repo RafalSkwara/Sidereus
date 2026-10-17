@@ -14,8 +14,9 @@ import { describe, expect, it } from "vitest";
  *   catalogue, `sky-band`, `range-classes`, the compass, the message catalogue, `cn`, `buttonVariants`, `SegmentedGroup`, the sky-view control and `lucide-react`;
  * - neither may import astronomy-engine, the engine barrel or an engine module, `@/lib/tonight/format`, or
  *   `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser);
- * - no island (the slider, the live sky, every sky-view module) may import `Fact`, `FactList`, `StatCard`, `StatPair` or
- *   `fact-icons` (Astro components, and the whole lucide icon set), by alias or by a relative path.
+ * - no island (the slider, the live sky, every sky-view module) may import `Fact`, `FactList`, `StatCard`, `StatPair`,
+ *   `fact-icons` or `progress-icons` (Astro components, and icon sets built on the whole lucide set; the progress icons
+ *   are server-rendered on /log/progress only, ui-progress-rewards), by alias or by a relative path.
  */
 
 const SKY_VIEW_DIR = fileURLToPath(new URL("../lib/sky-view/", import.meta.url));
@@ -49,7 +50,7 @@ const ISLANDS = [
     .map((name) => SKY_VIEW_DIR + name),
 ];
 
-const FACT_FAMILY = new Set(["Fact", "FactList", "StatCard", "StatPair", "fact-icons"]);
+const FACT_FAMILY = new Set(["Fact", "FactList", "StatCard", "StatPair", "fact-icons", "progress-icons"]);
 
 /** Module specifiers of every static import, re-export and dynamic import in `source`. */
 function importSpecifiers(source: string): string[] {

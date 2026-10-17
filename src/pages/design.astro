@@ -51,6 +51,7 @@ import { eventSamples, SAMPLE_EVENTS_NIGHT } from "@/components/design/event-sam
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import { nightSamples, SAMPLE_NIGHTS_ZONE } from "@/components/design/night-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import { OBJECT_FAMILY_ICONS } from "@/components/progress/progress-icons";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
 import SeenList from "@/components/progress/SeenList.astro";
@@ -108,6 +109,7 @@ import {
 } from "@/lib/tonight/build";
 import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
 import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
+import { OBJECT_FAMILIES } from "@/lib/progress/object-family";
 import { observingProgress } from "@/lib/progress/progress";
 import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
@@ -3301,6 +3303,58 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               the page's data, nothing can fail in it) · empty — N/A (a seen target renders no mark at all, only the
               seen tag) · loading — see TonightSkeleton (the tile's legend line has a bar). Red mode: the sparkle shape
               and the button's ring carry it, not a hue.
+            </p>
+          </section>
+
+          <!-- Progress icons -->
+          <section class:list={block} aria-labelledby="c-progress-icons">
+            <h3 id="c-progress-icons" class:list={blockTitle}>
+              Progress icons
+            </h3>
+            <p class:list={blockNote}>
+              The checklists' object families (progress-icons.ts, ui-progress-rewards): lucide's Galaxy and five icons
+              drawn on lucide's grid. One concept per icon; none reuses an icon that means something else in the app.
+              Shown at 40, 28, 20 and 16 px in heading and muted ink, then in red mode.
+            </p>
+            {[
+              { label: "default · this page's theme", red: false },
+              { label: "red mode", red: true },
+            ].map((sample) => (
+              <div class:list={cell}>
+                <p class:list={stateLabel}>{sample.label}</p>
+                <div
+                  data-theme={sample.red ? "red" : undefined}
+                  class:list={[
+                    "grid grid-cols-2 gap-4 rounded-lg sm:grid-cols-3",
+                    sample.red && "border border-border bg-background p-4 text-foreground",
+                  ]}
+                >
+                  {OBJECT_FAMILIES.map((family) => {
+                    const Icon = OBJECT_FAMILY_ICONS[family];
+                    return (
+                      <div class="flex min-w-0 flex-col gap-2">
+                        <span class="flex items-end gap-3 text-heading">
+                          <Icon className="size-10" aria-hidden="true" />
+                          <Icon className="size-7" aria-hidden="true" />
+                          <Icon className="size-5" aria-hidden="true" />
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span class="flex items-end gap-3 text-muted-foreground">
+                          <Icon className="size-10" aria-hidden="true" />
+                          <Icon className="size-7" aria-hidden="true" />
+                          <Icon className="size-5" aria-hidden="true" />
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span class="font-mono text-sm text-muted-foreground">{family}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (decorative, aria-hidden; the legend's names and the tiles'
+              screen-reader sentences carry the meaning) · error, empty, loading — N/A (static icons)
             </p>
           </section>
 

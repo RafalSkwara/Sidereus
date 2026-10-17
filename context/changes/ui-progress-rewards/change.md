@@ -1,7 +1,7 @@
 ---
 change_id: ui-progress-rewards
 title: Progress rewards - a badge per milestone and type-icon tiles for the Messier and Caldwell checklists
-status: plan_reviewed
+status: implementing
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null
