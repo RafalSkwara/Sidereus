@@ -4,7 +4,7 @@
 
 The dashboard's live sky (`TonightSkyView`, `/tonight`) gets two owner requirements of 2026-10-17, run through `/10x-ui`:
 
-1. **Drag to pan:** a mouse (or pen) drag pans the panorama sideways; touch, touchpad, keyboard and the chevrons keep working; a drag never opens a marker, a plain click still does.
+1. **Drag to pan:** a mouse drag pans the panorama sideways; touch, pen, touchpad, keyboard and the chevrons keep working natively; a drag never opens a marker, a plain click still does.
 2. **Three modes:** DEFAULT (today, unchanged), HIDDEN (the panorama and slider collapsed, the verdict still readable) and EXPANDED (the whole phone screen, most of a desktop screen). Stars and planets stay in their true places in every mode: the projection is recomputed for the new size and field, never scaled by CSS. The mode is remembered per viewer in a cookie, server-rendered like the theme, so nothing flashes or jumps.
 
 The change also added four owner slices to `context/foundation/roadmap.md` (S-09 `ui-sky-modes`, S-10 `ui-quick-nav`, S-11 `ui-progress-rewards`, S-12 `app-icon`) and marked S-03 dropped; that edit is committed with this plan, not a phase.
@@ -30,7 +30,7 @@ From `research.md` (charges C1-C5) and the three research sweeps:
 - On a desktop, dragging the sky with the mouse pans it; releasing over a marker after a drag stays on `/tonight`; a plain click on a marker opens its page; Tab to the strip and the arrow keys pan it; on a phone, swiping works as today.
 - A 44 px sky-view button sits at the top right of the verdict's column in every mode; it opens a small menu with three choices (Hidden, Default, Expanded) as a `SegmentedGroup` (`aria-pressed`, visible focus, 44 px targets), in EN and PL, in the dark, light and red themes.
 - HIDDEN: the band is the verdict over the night gradient and the horizon silhouette, with the dark-window line visible; no panorama, no slider.
-- EXPANDED: on a phone the band runs from the Topbar to the TabBar; from `md` it fills 80 % of the screen under the Topbar; the field keeps true angular proportions (1° sideways = 1° upwards) until a view would exceed 180°, and every marker's height matches its altitude.
+- EXPANDED: on a phone the band runs from the Topbar to the TabBar (sized on `100svh`, so with the address bar hidden a gap of the bar's height stays under it; accepted, F3); from `md` the band is `max(DEFAULT's band, (100svh − Topbar strip) × share)`, the share one constant (`--sky-expanded-share`, 0.8 until the owner answers Q3; full screen would be 1.0); the field keeps true angular proportions (1° sideways = 1° upwards) until a view would exceed 180°, and every marker's height matches its altitude.
 - DEFAULT is pixel-for-pixel today's band; `tonight-phone.spec.ts` passes unchanged.
 - The choice is stored in the `sidereus-sky` cookie (one year, like the theme), rendered on `<html data-sky-mode>` by the server and corrected before paint for stored offline copies; the skeleton reserves the chosen mode's height, so the island swaps in without a jump.
 - `/design` shows `SegmentedGroup` and the sky in all three modes and the 7-state matrix; `CLAUDE.md` carries the rule.
@@ -51,7 +51,7 @@ Verification: the Success Criteria of each phase, the new e2e tests (drag, modes
 - No mode on the focused pages' quiet skies (`TonightPageSky`, `TonightSky quiet`) or the landing; the scope attribute exists only on the dashboard shell.
 - No zoom or pinch, no vertical panning, no dome or atlas view (Parked: "A sky atlas or planetarium view"); EXPANDED is the same horizon panorama, larger.
 - No change to DEFAULT's geometry (`h-52`, `-mt-16`, silhouette, 180° per view), its markers, labels, compass row or slider.
-- No drag handling for touch (native scrolling stays), no momentum or inertia after a mouse drag, no wheel hijacking.
+- No drag handling for touch or pen (native scrolling stays: a pen is subject to `touch-action` and would fight the browser's own scroll, F7), no momentum or inertia after a mouse drag, no wheel hijacking.
 - No account-level (database) storage of the mode: it is a device preference like the theme.
 - No change to `toast-region`'s TabBar offset (it keeps its `5rem`); the new chrome tokens are read by the sky only.
 - No VoiceOver pass over the live sky (roadmap Open Roadmap Questions 3); the new control gets names and keyboard checks only.
@@ -66,10 +66,12 @@ The key idea: **CSS decides the size, the island measures it.** The mode lives a
 ## Critical Implementation Details
 
 - **Scope, not global.** `Layout` renders `data-sky-mode` only when the page asks for it (the `/tonight` shell, through GearShell), and the inline script applies the cookie only when the attribute exists. Otherwise `/design` specimens in their own `data-sky-mode` wrappers would also match an `expanded` value on `<html>`.
-- **State sequencing on a mode change:** read the azimuth at the middle of the view first, then set the scope attribute and the cookie, then (after the `ResizeObserver` re-measures and the projection redraws) scroll so that azimuth is back in the middle. Recentring on `facing` stays the rule for the first layout and for a window resize, as today.
+- **State sequencing on a mode change:** read the azimuth at the middle of the view first, then set the scope attribute and the cookie, then (after the `ResizeObserver` re-measures and the projection redraws) scroll so that azimuth is back in the middle.
+- **When the view recentres (F3):** on `facing` only at the first layout and when the measured **width** changes (today's rule, `TonightSkyView.tsx:242-246`). A change of the height alone (a phone's address bar, EXPANDED's `svh` box) and a mode change keep the azimuth at the middle of the view. Leaving HIDDEN centres on `facing` (the scroller was `display: none`, so there is no azimuth to keep). Heights use `100svh`, never `dvh`, so scrolling the page on a phone does not resize the band.
+- **Before the first measurement (F4 c):** SSR draws the field at 390 × 272; in a mode other than DEFAULT the field stays `invisible` (as it does today while `compassTop === null`) until the first `ResizeObserver` measurement matches the mode, so stars never jump inside a taller field.
 - **Hydration:** the island's mode is a `useSyncExternalStore` over the scope attribute (subscribe with a `MutationObserver`), with the server snapshot from the `mode` prop. On a stored copy whose cookie changed since, the attribute is already corrected before paint and the client snapshot wins after hydration, exactly as `TopbarControls` handles the theme.
 - **Pointer capture and click:** start capturing only after the threshold, so a plain click keeps its normal target; after a drag, swallow the next `click` in the capture phase on the strip (and clear the flag on the next `pointerdown`, in case no click follows). Prevent `dragstart` on the markers so no link ghost appears.
-- **Failed sky view:** when `skyView` is null the island renders the static band; in HIDDEN or EXPANDED the skeleton had reserved that mode's height, so this error path jumps once. Accepted (it is already a degraded state); the static band carries no mode control.
+- **Failed sky view (F4 d):** when `skyView` is null the island renders the static band, and the static band **follows the mode** too: it sits in the same `SKY_FRAME_CLASS` frame and its strip box uses the same mode variants, so it fills the height the skeleton reserved and does not jump. The same holds for `tonight.astro`'s no-Supabase static band. The static band carries no mode control (the mode can be changed again once the sky view is back).
 
 ## Phase 1: Contract — the preference, the scope, the variants, the tokens and `SegmentedGroup`
 
@@ -104,8 +106,8 @@ Everything the view will read, with no visible change yet: the cookie and `local
 **Contract**:
 
 - `@custom-variant sky-hidden (&:where([data-sky-mode="hidden"] *));` and `sky-expanded` likewise (nearest-scope semantics are not needed: a page has one scope).
-- Tokens on `:root` (not theme blocks; they are not colours): `--topbar-strip-height` (4.5rem; 5.5rem from `sm`: GearShell's `pt-2 sm:pt-6` + Topbar's `h-16`), `--tabbar-height` (4rem + 1px: `TabBar`'s `h-16` and its top border), `--sky-expanded-share` (0.8, owner question Q3). A comment beside each names the classes it mirrors; `GearShell`, `Topbar` and `TabBar` get a one-line comment pointing back.
-- `@utility sky-expanded-height`: below `md`, `100dvh − topbar strip − tabbar − safe-area inset`; from `md` (no TabBar), `(100dvh − topbar strip) × share`.
+- Tokens on `:root` (not theme blocks; they are not colours): `--topbar-strip-height` (4.5rem; 5.5rem from `sm`: GearShell's `pt-2 sm:pt-6` + Topbar's `h-16`), `--tabbar-height` (4rem + 1px: `TabBar`'s `h-16` and its top border), `--sky-expanded-share` (0.8; **the single constant** for the desktop share, owner question Q3; full screen is 1). A comment beside each names the classes it mirrors; `GearShell`, `Topbar` and `TabBar` get a one-line comment pointing back.
+- `@utility sky-expanded-height` sets the frame's **`min-height`**, never `height` (F1): below `md`, `100svh − topbar strip − tabbar − safe-area inset`; from `md` (no TabBar), `(100svh − topbar strip) × share`. The frame is a flex column whose children keep DEFAULT's own minimums (the verdict's min-height, the strip's `min-h-68`, the silhouette, the slider row), so its used height is `max(DEFAULT's band, target)` with no second constant: on a 1280×720 laptop at 0.8 EXPANDED equals DEFAULT, at 1440×900 the field gains about 34 px (numbers in `research.md` § Heights). `svh`, not `dvh` (F3).
 
 #### 4. `SegmentedGroup`, the shared 44 px segmented control
 
@@ -121,7 +123,7 @@ Everything the view will read, with no visible change yet: the cookie and `local
 
 **Intent**: The control's names and the drag-aware panorama name.
 
-**Contract**: under `tonight.sky`: `mode.label` ("Sky view" / "Widok nieba"), `mode.options` per `SkyMode` (Q6 default: "Hidden" / "Default" / "Expanded"; "Ukryte" / "Domyślne" / "Rozwinięte"), `mode.trigger({ mode })` ("Sky view: Default" / "Widok nieba: Domyślne"); `panorama` becomes "Tonight's sky, drag or swipe to look around" / "Niebo dziś w nocy, przeciągnij lub przesuń, aby się rozejrzeć".
+**Contract**: under `tonight.sky`: `mode.label` ("Sky view" / "Widok nieba"), `mode.options` per `SkyMode` (Q6 default with F5's grammar: "Hidden" / "Default" / "Expanded"; "Ukryty" / "Domyślny" / "Rozwinięty", masculine to agree with "Widok"; pending Q6), `mode.trigger({ mode })` ("Sky view: Default" / "Widok nieba: Domyślny"); `panorama` becomes "Tonight's sky, drag or swipe to look around" / "Niebo dziś w nocy, przeciągnij lub przesuń, aby się rozejrzeć".
 
 #### 6. `/design` specimens for `SegmentedGroup`
 
@@ -176,7 +178,7 @@ Make the sky drawable at any size without distortion (charge C1): a pure field f
 
 **Intent**: The field's height comes from layout, not constants, so a CSS mode can resize it; the chevrons sit at the measured middle of the visible strip.
 
-**Contract**: the strip wrapper gets an explicit height class from `sky-band.ts` (`STRIP_FIELD_CLASS`: `h-68` = 208 + 64, keeping `-mt-16`, so DEFAULT's box is unchanged); one `ResizeObserver` on it sets `{ width, height }` state before paint (skip zero sizes: HIDDEN); every `placeAt` call, the label bounds and the compass row use `skyField(...)`'s output; the chevrons' `top` is the overlap plus half the visible strip, from the measured height. SSR keeps the 390 × 272 default. `PAN_FACE_CLASS` stays one literal (contrast test).
+**Contract**: the strip wrapper gets an explicit height class from `sky-band.ts` (`STRIP_FIELD_CLASS`: `h-68` = 208 + 64, keeping `-mt-16`, so DEFAULT's box is unchanged); one `ResizeObserver` **on that wrapper** (whose height comes from CSS, never on the scroller or the SVG, which would measure their own content, F4 b) sets `{ width, height }` state before paint (skip zero sizes: HIDDEN); the SVG's `height` is the measured height; every `placeAt` call, the label bounds and the compass row use `skyField(...)`'s output; the chevrons' `top` is the overlap plus half the visible strip, from the measured height. Recentring follows Critical Implementation Details (F3): `facing` at the first layout and on a width change only. SSR keeps the 390 × 272 default. `PAN_FACE_CLASS` stays one literal (contrast test).
 
 #### 3. The invariant test
 
@@ -192,7 +194,7 @@ Make the sky drawable at any size without distortion (charge C1): a pure field f
 
 - Type check, lint and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
 - The guards pass: `npm run test:guards`
-- The live-sky spec still passes unchanged against a fresh preview: `npx playwright test tests/e2e/tonight-sky.spec.ts`
+- The live-sky spec still passes unchanged against a fresh preview: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts` (Testing Strategy § Running the e2e specs)
 
 #### Manual Verification:
 
@@ -206,7 +208,7 @@ Make the sky drawable at any size without distortion (charge C1): a pure field f
 
 ### Overview
 
-A mouse or pen drag pans the strip; touch stays native; a drag never fires a marker (charge C4).
+A mouse drag pans the strip; touch and pen stay native (F7); a drag never fires a marker (charge C4).
 
 ### Changes Required:
 
@@ -216,7 +218,7 @@ A mouse or pen drag pans the strip; touch stays native; a drag never fires a mar
 
 **Intent**: Let a mouse pan the sky the way a finger already does, without stealing clicks or touches.
 
-**Contract**: on the `[data-sky-strip]` scroller: `pointerdown` (primary button, `pointerType` `mouse` or `pen`) records the start x, `scrollLeft` and pointer id; `pointermove` past `DRAG_THRESHOLD_PX` (6) starts the drag: `setPointerCapture`, `scrollLeft = start − dx`, a `data-sky-dragging` attribute (`cursor-grabbing`, `select-none`); `pointerup` / `pointercancel` end it and arm a one-shot click swallow (`onClickCapture`: `preventDefault` + `stopPropagation`); `dragstart` on markers is prevented. Resting cursor `cursor-grab` for fine pointers only. `readEdges` / `readCentre` keep running from the scroll events. Keyboard (the strip's `tabIndex={0}`, arrow keys) and the chevrons are untouched.
+**Contract**: on the `[data-sky-strip]` scroller: `pointerdown` (primary button, `pointerType === "mouse"` only; pen and touch stay native, F7) records the start x, `scrollLeft` and pointer id; `pointermove` past `DRAG_THRESHOLD_PX` (6) starts the drag: `setPointerCapture`, `scrollLeft = start − dx`, a `data-sky-dragging` attribute (`cursor-grabbing`); `pointerup` / `pointercancel` end it and arm a one-shot click swallow (`onClickCapture`: `preventDefault` + `stopPropagation`); `dragstart` on markers is prevented. The scroller is `select-none` for fine pointers at rest (`pointer-fine:select-none`), so the first pixels of a mouse drag never start a text selection of the SVG labels (F7). Resting cursor `cursor-grab` for fine pointers only. `readEdges` / `readCentre` keep running from the scroll events. Keyboard (the strip's `tabIndex={0}`, arrow keys) and the chevrons are untouched.
 
 #### 2. E2E: drag pans and never navigates
 
@@ -231,7 +233,7 @@ A mouse or pen drag pans the strip; touch stays native; a drag never fires a mar
 #### Automated Verification:
 
 - Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
-- The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `npx playwright test tests/e2e/tonight-sky.spec.ts`
+- The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts` (Testing Strategy § Running the e2e specs)
 
 #### Manual Verification:
 
@@ -256,7 +258,7 @@ The visible feature: the sky-view button and menu, the three layouts in the isla
 
 **Intent**: One 44 px button that is in the same place in every mode and opens a menu of the three modes (Q1 A).
 
-**Contract**: a bare icon button (the current mode's lucide icon: `FoldVertical`, `RectangleHorizontal`, `Maximize2`; face from `PAN_FACE_CLASS`, so the contrast test covers it; `--ring` focus outline; `aria-label` `t.mode.trigger`), `popoverTarget` to a native `popover="auto"` panel (`bg-surface`, bordered, `rounded-lg`, `data-theme` copied from `<html>` on `beforetoggle`, id from `useId`), holding `mode.label` and a vertical `SegmentedGroup`. Choosing a mode calls the island's `chooseMode`, hides the popover and returns focus to the button. Hooks: `data-sky-mode-trigger`, `data-sky-mode-option="<mode>"`. Added to the island import guard's `SKY_SOURCES`.
+**Contract**: a bare icon button (the current mode's lucide icon: `FoldVertical`, `RectangleHorizontal`, `Maximize2`; face from `PAN_FACE_CLASS`, so the contrast test covers it; `--ring` focus outline; `aria-label` `t.mode.trigger`), `popoverTarget` to a native `popover="auto"` panel (`bg-surface`, bordered, `rounded-lg`, `data-theme` copied from `<html>` on `beforetoggle`, id from `useId`), holding `mode.label` and a vertical `SegmentedGroup`. Choosing a mode calls the island's `chooseMode`, hides the popover and returns focus to the button. Hooks: `data-sky-mode-trigger`, `data-sky-mode-option="<mode>"`. `sky-mode-control.tsx` **and `ui/segmented.tsx`** are added to the island import guard's `SKY_SOURCES` (F9), so the shared control's own imports are checked too.
 
 #### 2. The island in three modes
 
@@ -268,7 +270,13 @@ The visible feature: the sky-view button and menu, the three layouts in the isla
 
 - Prop `mode: SkyMode` (server snapshot), passed by `TonightContent` from `Astro.locals.skyMode`; state = `useSyncExternalStore` over the nearest `[data-sky-mode]` scope (Critical Implementation Details).
 - `chooseMode(next)`: remember the azimuth at the view's middle, set the scope's `data-sky-mode`, write `document.cookie = preferenceCookie(SKY_MODE_COOKIE, next)`, then restore that azimuth to the middle after the redraw.
-- Shared classes in `sky-band.ts`: `SKY_FRAME_CLASS` (the island's root and the skeleton's wrapper: `sky-expanded:flex sky-expanded:flex-col sky-expanded:sky-expanded-height`), band `sky-expanded:flex-1`, `STRIP_FIELD_CLASS` gains `sky-hidden:hidden sky-expanded:h-auto sky-expanded:min-h-68 sky-expanded:flex-1` (never shorter than DEFAULT), `SLIDER_ROW_CLASS` gains `sky-hidden:hidden`. EXPANDED keeps the verdict, the slider and the TabBar (Q5 A).
+- Shared classes in `sky-band.ts`, the whole flex chain written out (F4 a), shared by the island, the static band and the skeleton:
+  - `SKY_FRAME_CLASS` (the island's root, the static band's wrapper and the skeleton's wrapper): `sky-expanded:flex sky-expanded:flex-col sky-expanded:sky-expanded-height` (a `min-height`, see Phase 1 §3);
+  - `SKY_BAND_CLASS` (the gradient band, today `dusk-band … relative overflow-hidden` in the island and `TonightSky`'s root): `sky-expanded:flex sky-expanded:flex-1 sky-expanded:flex-col`;
+  - the verdict container: `shrink-0` (its min-height variants below);
+  - `STRIP_FIELD_CLASS` (the strip wrapper the `ResizeObserver` watches): `h-68 sky-hidden:hidden sky-expanded:h-auto sky-expanded:min-h-68 sky-expanded:flex-1` (never shorter than DEFAULT);
+  - the silhouette and `SLIDER_ROW_CLASS`: `shrink-0`; the slider row gains `sky-hidden:hidden`.
+  EXPANDED keeps the verdict, the slider and the TabBar (Q5 A).
 - The control sits absolutely at the top right of the verdict's `max-w-3xl px-4` column (`pointer-events-auto z-20`, vertically on the date line: top 0 below `sm`, on the date line from `sm`), outside the verdict's flow, so DEFAULT's heights do not move.
 - `skyField` gets the mode; HIDDEN skips the star pass (no box).
 
@@ -278,7 +286,7 @@ The visible feature: the sky-view button and menu, the three layouts in the isla
 
 **Intent**: The skeleton reserves the chosen mode's height so the swap does not jump, and HIDDEN keeps the dark window readable (Q2 A).
 
-**Contract**: `TonightSky`'s `strip` box uses the strip classes with the mode variants (`h-52`, `sky-hidden:hidden`, `sky-expanded:flex-1 sky-expanded:min-h-52`); `TonightSkeleton` wraps the band and the slider row in `SKY_FRAME_CLASS`; `VerdictCard`'s dark line is `sr-only sky-hidden:not-sr-only` when `withSlider` (no vertical step classes change, so the rhythm allowances stay exact). Variants only match under a `[data-sky-mode]` scope, so the focused pages and the landing are untouched.
+**Contract**: `TonightSky`'s root takes `SKY_BAND_CLASS` and its `strip` box uses the strip classes with the mode variants (`h-52`, `sky-hidden:hidden`, `sky-expanded:flex-1 sky-expanded:min-h-52`); the static band (the island's `skyView`-null fallback and `tonight.astro`'s no-Supabase band) sits in `SKY_FRAME_CLASS`, so it follows the mode and fills the reserved height (F4 d); `TonightSkeleton` wraps the band and the slider row in `SKY_FRAME_CLASS`; `VerdictCard`'s dark line is `sr-only sky-hidden:not-sr-only` when `withSlider` (no vertical step classes change, so the rhythm allowances stay exact). **HIDDEN's verdict height (F2):** the visible dark line adds one `text-label` line (20 px) that DEFAULT's `VERDICT_MIN_HEIGHT_CLASS` does not hold, so the class gains a HIDDEN variant, re-measured at 360 and 640 px on the EN go verdict with the line visible (about `sky-hidden:min-h-47 sm:sky-hidden:min-h-63`), and `TonightSkeleton` gets a matching bar for the line (`hidden sky-hidden:block`, in the line's place). Variants only match under a `[data-sky-mode]` scope, so the focused pages and the landing are untouched.
 
 #### 4. E2E: modes
 
@@ -289,21 +297,22 @@ The visible feature: the sky-view button and menu, the three layouts in the isla
 **Contract**: three tests:
 
 - "a chosen mode is server-rendered on the next load and the skeleton keeps its height": for `expanded`, then `hidden`, then `default`: choose it through the control, expect `html[data-sky-mode]` and the `sidereus-sky` cookie; reload while holding `/_server-islands/**` in a `page.route` until the skeleton is measured; expect the shell's `<html>` to carry the mode, then release and expect the band's bottom within 1 px of the skeleton's.
-- "expanded fills the phone screen and redraws the sky at its size" (390×844): the band's bottom meets the TabBar's top (± 1 px); the field's SVG `height` attribute equals its rendered height and exceeds 272; every marker's `cy` matches its accessible name's altitude (`H − alt / 90 × H`, ± H / 90 + 1 px); at 1280×720 the band is 80 % of the screen under the Topbar strip (± 2 px).
-- "hidden keeps the verdict and the dark window and lifts the gear cards" (390×844): the headline and the dark-window line are visible, `[data-sky-strip]` and the slider are not, and the Telescope card ends above the TabBar.
+- "expanded fills the phone screen and redraws the sky at its size" (390×844): the band's bottom meets the TabBar's top (± 1 px); the field's SVG `height` attribute equals its rendered height and exceeds 272; every marker's `cy` matches its accessible name's altitude (`H − alt / 90 × H`, ± H / 90 + 1 px). Desktop at **1440×900** (F1): measure the DEFAULT band first, then in EXPANDED expect the band's height to be `max(share × (900 − the Topbar strip's bottom), DEFAULT's band)` ± 2 px, the share read from `--sky-expanded-share` on `<html>` (so the test follows the one constant if Q3 changes it).
+- "hidden keeps the verdict and the dark window and lifts the gear cards" (390×844): the headline and the dark-window line are visible, `[data-sky-strip]` and the slider are not, and the Telescope card ends above the TabBar. Then at **320 px in Polish** (F8; the `sidereus-lang=pl` cookie), in DEFAULT and in HIDDEN: the trigger's box intersects neither the date's nor the headline's text boxes (text boxes from a `Range` over each text node, not the full-width block).
 
 ### Success Criteria:
 
 #### Automated Verification:
 
 - Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards`
-- The new modes spec passes: `npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
-- The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
+- The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts` (Testing Strategy § Running the e2e specs)
+- The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts` (Testing Strategy § Running the e2e specs)
 - The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits
 
 #### Manual Verification:
 
 - On a phone: each mode looks right in dark, light and red; EXPANDED's stars sit where the DEFAULT ones were (same altitudes), the menu opens and closes with Esc and an outside tap, focus returns to the button
+- On a real phone in EXPANDED: scroll the page down to the cards and back; the panorama keeps its azimuth (no recentring while the address bar hides, F3)
 - Offline: switch the mode on a stored Tonight page, reload offline, the stored page shows the new mode without a flash
 
 **Implementation Note**: Pause for manual confirmation before Phase 5.
@@ -350,7 +359,7 @@ Show every state in the kitchen sink, gate on screenshots, and leave the rule fo
 
 **Intent**: The next agent keeps the contract.
 
-**Contract**: in "UI (Nightfall)": `SegmentedGroup` joins the Components list ("the one segmented control; never a local copy"); "Tonight's live sky" gains the modes (scope attribute, variants, `sky-band.ts` classes, `skyField`, "the projection is recomputed for the measured box, never CSS-scaled; DEFAULT's geometry is fixed"), the drag rule (mouse and pen only, 6 px threshold, click swallowed after a drag) and the control's place; "Phone first" notes that the first-screen pin is DEFAULT's; the Layout paragraph in Architecture names the `sidereus-sky` cookie beside the theme's.
+**Contract**: in "UI (Nightfall)": `SegmentedGroup` joins the Components list ("the one segmented control; never a local copy"); "Tonight's live sky" gains the modes (scope attribute, variants, `sky-band.ts` classes, `skyField`, "the projection is recomputed for the measured box, never CSS-scaled; DEFAULT's geometry is fixed", the `min-height` frame and `svh`, the recentring rule), the drag rule (mouse only, pen and touch native, 6 px threshold, `pointer-fine:select-none`, click swallowed after a drag) and the control's place; "Phone first" notes that the first-screen pin is DEFAULT's; the Layout paragraph in Architecture names the `sidereus-sky` cookie beside the theme's.
 
 ### Success Criteria:
 
@@ -375,8 +384,18 @@ Show every state in the kitchen sink, gate on screenshots, and leave the rule fo
 ### Integration Tests:
 
 - `tests/e2e/tonight-sky.spec.ts` + 1 test: drag pans, never navigates; arrows still pan (Phase 3).
-- `tests/e2e/tonight-sky-modes.spec.ts`, 3 tests: persistence and no-jump per mode, EXPANDED size and recomputed projection, HIDDEN content (Phase 4).
+- `tests/e2e/tonight-sky-modes.spec.ts`, 3 tests: persistence and no-jump per mode, EXPANDED size (phone, and 1440×900 against `max(share, DEFAULT)`) and recomputed projection, HIDDEN content and the 320 px Polish no-overlap of the trigger (Phase 4).
 - Unchanged and required green: `tonight-phone.spec.ts` (DEFAULT first screen, sideways scroll at 320/375 px with the new control present), `tonight-sky.spec.ts` marker clicks.
+
+### Running the e2e specs
+
+`playwright.config.ts` has no `webServer`, so every e2e command in this plan (`<e2e env>`) runs the way CI's `smoke` job does, with every npm/npx/node command behind the nvm prefix (`export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use >/dev/null &&`):
+
+1. local Supabase running (`npx supabase start`), its values from `npx supabase status -o env`;
+2. the forecast fixture: `node tests/e2e/forecast-fixture.mjs` (port 4400);
+3. the worktree's gitignored `.env` and `.dev.vars` hold the local stack's `SUPABASE_URL` / `SUPABASE_KEY` (anon) and `FORECAST_BASE_URL=http://127.0.0.1:4400`, never the secret key;
+4. a fresh `npm run build`, then `npm run preview -- --port 4345`;
+5. the command itself with the local stack's keys inline, never exported: `SUPABASE_URL=<API_URL> SUPABASE_KEY=<ANON_KEY> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=http://localhost:4345 npx playwright test <spec>`.
 
 ### Manual Testing Steps:
 
@@ -395,6 +414,23 @@ EXPANDED on a desktop draws the same 921 stars into a larger SVG; the per-frame 
 
 None: a missing or invalid cookie is DEFAULT, which is today's band.
 
+## Plan review triage
+
+Review: `reviews/plan-review.md` (2026-10-17, NEEDS ATTENTION, F1-F10). All ten findings accepted with the reviewer's fixes (owner's lead, 2026-10-17):
+
+| Finding | Decision | What changed |
+| ------- | -------- | ------------ |
+| F1 EXPANDED at 80 % is not taller than DEFAULT on laptops | accepted | `sky-expanded-height` is a `min-height` on a flex column, so the band is `max(DEFAULT, (100svh − Topbar strip) × share)`; the share is one constant (`--sky-expanded-share`, 0.8 until Q3); the e2e desktop check moved to 1440×900 and asserts `max(share, DEFAULT)` with the share read from the token; Q3 carries the real numbers (`research.md` § Heights) |
+| F2 HIDDEN's visible dark line adds 20 px the skeleton does not hold | accepted | `VERDICT_MIN_HEIGHT_CLASS` gains a re-measured HIDDEN variant; `TonightSkeleton` gets a matching `hidden sky-hidden:block` bar (Phase 4 §3) |
+| F3 `dvh` plus recentring on every resize loses the pan | accepted | `100svh`; recentre on `facing` only at the first layout and on a width change; a height-only or mode change keeps the middle azimuth; leaving HIDDEN centres on `facing`; manual phone-scroll step added (Critical Implementation Details, Phase 2 §2, 4.5) |
+| F4 EXPANDED's flex chain was underspecified | accepted | the full class chain in `sky-band.ts` (frame, band, verdict, strip wrapper, silhouette, slider); the `ResizeObserver` watches the strip wrapper; the field stays `invisible` until the first measurement in a non-DEFAULT mode; the static band follows the mode (Phase 4 §2-3, Critical Implementation Details) |
+| F5 Polish mode names disagreed in gender with "Widok nieba" | accepted | "Ukryty / Domyślny / Rozwinięty" under "Widok nieba" (pending Q6) |
+| F6 research counted the overlap twice | accepted | DEFAULT phone band 484 px, HIDDEN lifts the cards about 264 px (284 − 20); fixed in `research.md` and Q2 A |
+| F7 pen drag fights native scroll; selection starts before the threshold | accepted | mouse only, pen and touch native; the scroller is `pointer-fine:select-none` (Phase 3 §1, CLAUDE.md rule in Phase 5) |
+| F8 no check that the trigger clears the Polish date and headline at 320 px | accepted | a 320 px Polish no-overlap assertion in the HIDDEN test, in DEFAULT and HIDDEN (Phase 4 §4) |
+| F9 e2e commands need the prepared environment; `segmented.tsx` not scanned | accepted | `<e2e env>` on rows 2.3, 3.2, 4.2, 4.3, spelled out in Testing Strategy § Running the e2e specs; `ui/segmented.tsx` joins `SKY_SOURCES` (Phase 4 §1) |
+| F10 roadmap nits | accepted | S-09 `planned` everywhere, MS-06 after MS-05, Parked reads "badges to share" (`context/foundation/roadmap.md`) |
+
 ## QUESTIONS FOR OWNER
 
 Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacjach, więc implementacja może ruszyć bez odpowiedzi. Inna odpowiedź zmienia tylko fazę podaną przy pytaniu. Makiety leżą w `context/changes/ui-sky-modes/evidence/` (zrobione na `/design`; ikony i podpisy w makietach są robocze).
@@ -407,20 +443,31 @@ Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacj
 
 **Q2. Jak wygląda tryb UKRYTY?** (Faza 4)
 
-- ⭐ **A.** Werdykt na nocnym gradiencie i sylwetka horyzontu, bez panoramy i bez suwaka; linia ciemnego okna („Ciemno 19:45–05:00 CEST”) staje się widoczna. Makieta: `evidence/hidden-A-verdict-only-phone.png`. Karty sprzętu idą w górę o ok. 220 px na telefonie.
+- ⭐ **A.** Werdykt na nocnym gradiencie i sylwetka horyzontu, bez panoramy i bez suwaka; linia ciemnego okna („Ciemno 19:45–05:00 CEST”) staje się widoczna. Makieta: `evidence/hidden-A-verdict-only-phone.png`. Karty sprzętu idą w górę o ok. 264 px na telefonie (pasmo jest o 284 px niższe, a widoczna linia ciemnego okna dokłada 20 px; poprawione w triage F2/F6).
 - **B.** Cienki pas horyzontu (ok. 72 px) z planetami i gwiazdami nisko nad horyzontem, bez suwaka. Makieta: `evidence/hidden-B-thin-horizon-phone.png`. Minus: pokazuje tylko jedną chwilę bez możliwości przesunięcia czasu, bez kompasu łatwo go źle odczytać, więcej kodu.
 - **C.** Bez pasma nieba w ogóle: werdykt jako zwykły nagłówek na tle strony. Minus: łamie zasadę „niebo Tonight jest zawsze nocne” (Nightfall) i wymaga drugiej wersji `VerdictCard`.
 
-**Q3. Wysokość trybu ROZWINIĘTEGO na desktopie?** (Faza 1, token `--sky-expanded-share`) Makieta: `evidence/expanded-heights-desktop.png` (żółte ramki).
+**Q3. Wysokość trybu ROZWINIĘTEGO na desktopie?** (Faza 1, jedna stała: token `--sky-expanded-share`) Makieta: `evidence/expanded-heights-desktop.png` (żółte ramki; ramki są poglądowe, prawdziwe liczby niżej).
 
-- **A.** Cały ekran pod Topbarem. Plus: maksimum nieba. Minus: nic nie podpowiada, że pod spodem są karty i kafelki.
-- ⭐ **B.** 80 % ekranu pod Topbarem. Plus: dużo nieba, a górna krawędź kart wystaje i zaprasza do przewinięcia.
-- **C.** 2/3 ekranu. Plus: suwak i karty od razu widoczne. Minus: na laptopie 1280×720 zysk względem domyślnego jest niewielki.
+Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu − pasek Topbara 88 px) × udział)`: nigdy nie jest niższe od domyślnego (616 px od `sm`), bo werdykt, sylwetka i suwak zajmują 408 px. Pole nieba (to, co faktycznie rośnie) przy różnych ekranach, dziś 272 px:
+
+| Ekran     | 80 % (B) | cały ekran (A) | 2/3 (C) |
+| --------- | -------- | -------------- | ------- |
+| 1280×720  | 272 (bez zysku) | 288 (+16) | 272 (bez zysku) |
+| 1366×768  | 272 (bez zysku) | 336 (+64) | 272 (bez zysku) |
+| 1536×864  | 277 (+5)  | 432 (+160)    | 272 (bez zysku) |
+| 1440×900  | 306 (+34) | 468 (+196)    | 272 (bez zysku) |
+| 1920×1080 | 450 (+178) | 648 (+376)   | 317 (+45) |
+
+- **A.** Cały ekran pod Topbarem (udział 1,0). Plus: maksimum nieba; recenzent planu rekomenduje tę opcję. Minus: nic nie podpowiada, że pod spodem są karty i kafelki; na laptopie 1280×720 zysk i tak tylko 16 px.
+- ⭐ **B.** 80 % ekranu pod Topbarem (udział 0,8, wdrożone na razie). Plus: górna krawędź kart wystaje i zaprasza do przewinięcia. Minus: na laptopach 1280×720 i 1366×768 wygląda tak samo jak DOMYŚLNY, realny zysk dopiero od ok. 1440×900.
+- **C.** 2/3 ekranu. Minus: zysk dopiero na dużych monitorach.
+- Uwaga: realny zysk na laptopie wymagałby zmniejszenia odstępów werdyktu w tym trybie (osobna decyzja i nowy pomiar wysokości szkieletu); poza zakresem, chyba że właściciel o to poprosi.
 
 **Q4. Pole widzenia w trybie ROZWINIĘTYM?** (Faza 2, `skyField`)
 
 - **A.** 180° na szerokość ekranu, jak dziś, tylko wyżej. Plus: zgodne z decyzją interactive-sky („180° na widok, bez zoomu”). Minus: na telefonie gwiazdozbiory wychodzą ok. 3 razy wyższe niż szersze.
-- ⭐ **B.** Prawdziwe proporcje: 1° w poziomie = 1° w pionie, maksymalnie 180° na ekran (minimum 60°). Telefon 390×844 pokazuje ok. 68° naraz (resztę przeciągnięciem lub przesunięciem palcem), desktop zostaje przy 180°. Plus: gwiazdozbiory wyglądają jak na prawdziwym niebie. Minus: na telefonie więcej przesuwania; zmienia regułę „180° na widok” dla tego jednego trybu.
+- ⭐ **B.** Prawdziwe proporcje: 1° w poziomie = 1° w pionie, maksymalnie 180° na ekran (minimum 60°). Telefon 390×844 pokazuje ok. 68° naraz (resztę przeciągnięciem lub przesunięciem palcem), desktop zostaje przy 180° (prawdziwe proporcje wymagałyby pola ok. 712 px wysokości, więc na desktopie w praktyce to wariant A). Plus: gwiazdozbiory wyglądają jak na prawdziwym niebie. Minus: na telefonie więcej przesuwania; zmienia regułę „180° na widok” dla tego jednego trybu.
 - **C.** Stałe 120° na ekran przy każdej szerokości. Plus: kompromis, przewidywalny. Minus: ani prawdziwe proporcje, ani dzisiejszy widok.
 
 **Q5. Telefon w trybie ROZWINIĘTYM: co zostaje na ekranie?** (Faza 4) Makieta: `evidence/expanded-phone-whole-screen.png`.
@@ -431,7 +478,7 @@ Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacj
 
 **Q6. Nazwy trybów w menu?** (Faza 1, `en.ts` / `pl.ts`)
 
-- ⭐ **A.** „Ukryte / Domyślne / Rozwinięte” (EN „Hidden / Default / Expanded”), nagłówek „Widok nieba”. Plus: te same słowa co w wymaganiach.
+- ⭐ **A.** „Ukryty / Domyślny / Rozwinięty” (EN „Hidden / Default / Expanded”), nagłówek „Widok nieba”, przycisk „Widok nieba: Domyślny”. Formy męskie, bo zgadzają się z „Widok” (triage F5). Plus: te same słowa co w wymaganiach.
 - **B.** „Ukryj niebo / Zwykły / Pełny ekran” (EN „Hide the sky / Normal / Full screen”). Plus: opisują efekt. Minus: „Pełny ekran” nie jest prawdą na desktopie (80 %).
 
 ## References
@@ -468,7 +515,7 @@ Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacj
 
 - [ ] 2.1 Type check, lint and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
 - [ ] 2.2 The guards pass: `npm run test:guards`
-- [ ] 2.3 The live-sky spec still passes unchanged against a fresh preview: `npx playwright test tests/e2e/tonight-sky.spec.ts`
+- [ ] 2.3 The live-sky spec still passes unchanged against a fresh preview: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
 
 #### Manual
 
@@ -479,7 +526,7 @@ Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacj
 #### Automated
 
 - [ ] 3.1 Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
-- [ ] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `npx playwright test tests/e2e/tonight-sky.spec.ts`
+- [ ] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
 
 #### Manual
 
@@ -491,8 +538,8 @@ Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacj
 #### Automated
 
 - [ ] 4.1 Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards`
-- [ ] 4.2 The new modes spec passes: `npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
-- [ ] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
+- [ ] 4.2 The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
+- [ ] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
 - [ ] 4.4 The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits
 
 #### Manual

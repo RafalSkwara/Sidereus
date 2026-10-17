@@ -1,7 +1,7 @@
 ---
 change_id: ui-sky-modes
 title: Tonight's live sky - drag to pan and Hidden / Default / Expanded modes
-status: planned
+status: plan_reviewed
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null

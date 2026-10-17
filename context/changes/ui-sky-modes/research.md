@@ -88,14 +88,25 @@ Each charge: file and line, the effect on the user, and the planned fix (phase i
 
 ### Heights (sky-band.ts)
 
-- Verdict container `pt-3 pb-10 sm:pt-12 sm:pb-14` (`:37`), min-height `min-h-42 sm:min-h-58` (168 / 232 px, `:52`); silhouette `h-8 sm:h-12` (`:57`); strip `h-52` 208 px (`:60-61`) with the `-mt-16` 64 px overlap (`:70-71`); slider row `h-19 sm:h-32` (76 / 128 px, `:79`). Phone band (DEFAULT) = 168 + 208 − 64 + 32 + 76 = 420 px.
-- HIDDEN without strip and slider: 168 + 32 = 200 px on a phone (220 px less), 232 + 48 = 280 px from `sm`.
+- Verdict container `pt-3 pb-10 sm:pt-12 sm:pb-14` (`:37`), min-height `min-h-42 sm:min-h-58` (168 / 232 px, `:52`); silhouette `h-8 sm:h-12` (`:57`); strip `h-52` 208 px (`:60-61`) with the `-mt-16` 64 px overlap (`:70-71`); slider row `h-19 sm:h-32` (76 / 128 px, `:79`). The strip wrapper is 272 px tall (the SVG) and pulled up by `-mt-16`, so it adds 208 px. Phone band (DEFAULT) = 168 + 208 + 32 + 76 = 484 px; from `sm` 232 + 208 + 48 + 128 = 616 px. (Corrected in plan-review triage F6: an earlier draft subtracted the overlap twice and gave 420 px.)
+- HIDDEN without strip and slider: 168 + 32 = 200 px on a phone (284 px less), 232 + 48 = 280 px from `sm`; the visible dark-window line adds 20 px in HIDDEN (plan-review F2), so the cards rise about 264 px.
 - EXPANDED on a 390×844 phone: 844 − 72 (Topbar strip) − 65 (TabBar) = 707 px of band; the field gets 707 − 168 − 32 − 76 + 64 = 495 px (1.8 times today's 272).
 
 ### Projection and the field
 
 - Today, DEFAULT: degrees per px sideways = 180 / (viewport − 16); upwards = 90 / 272. Interactive-sky chose a 180° view on a strip twice the viewport (`context/archive/2026-10-05-interactive-sky/plan-brief.md:27`) and rejected "a dome or 360° squeeze view, and zoom" (`plan.md:76`). An EXPANDED field narrower than 180° is a change to that decision and goes to the owner (plan question Q4).
-- With equal scales in EXPANDED (1° sideways = 1° upwards), a 390 px phone with a 495 px field shows (390 − 16) / (495 / 90) ≈ 68° per screen; a 1440×900 desktop at 80 % of the screen under the 88 px Topbar strip has a band of about 650 px and a field of about 650 − 232 − 48 − 128 + 64 = 306 px (arithmetic, to be measured in Phase 2), 3.4 px per degree, which would show over 400°; it is clamped at 180°, so a desktop keeps today's sideways scale and only gains height. The strip must stay at least twice the viewport so the wrap point never shows twice.
+- With equal scales in EXPANDED (1° sideways = 1° upwards), a 390 px phone with a 495 px field shows (390 − 16) / (495 / 90) ≈ 68° per screen; a 1440×900 desktop at 80 % of the screen under the 88 px Topbar strip has a band of about 650 px and a field of about 650 − 232 − 48 − 128 + 64 = 306 px (arithmetic, to be measured in Phase 2), 3.4 px per degree, which would show over 400°; it is clamped at 180°, so a desktop keeps today's sideways scale and only gains height (a desktop reaches square degrees only with a field of about 712 px). The strip must stay at least twice the viewport so the wrap point never shows twice.
+- **Desktop EXPANDED against DEFAULT (plan-review F1).** From `sm` DEFAULT's band is 616 px, and the verdict plus silhouette plus slider take 408 px of it. The expanded band is therefore `max(616, (100svh − 88) × share)`:
+
+  | Screen    | 80 % band | field at 80 %     | 100 % band | field at 100 % |
+  | --------- | --------- | ----------------- | ---------- | -------------- |
+  | 1280×720  | 506       | floor: 272 (= DEFAULT) | 632   | 288            |
+  | 1366×768  | 544       | floor: 272        | 680        | 336            |
+  | 1536×864  | 621       | 277               | 776        | 432            |
+  | 1440×900  | 650       | 306               | 812        | 468            |
+  | 1920×1080 | 794       | 450               | 992        | 648            |
+
+  (field = band − 408 + 64.) On a 1280×720 or 1366×768 laptop EXPANDED at 80 % is DEFAULT's height; even full screen adds only 16 / 64 px of field there.
 
 ### Persistence
 

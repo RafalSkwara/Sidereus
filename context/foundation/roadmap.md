@@ -39,12 +39,12 @@ milestone_status: open
   - MS-04: Loose ends a user can hit in the auth flow:
     - a signed-in visitor who opens sign-in or sign-up goes on to Tonight;
     - sign-up continues to the page that was asked for (PRD Access Control, ui-auth D1 and D2).
+  - MS-05 (owner, 2026-10-16): The app is ready to take payments as far as star data goes. ESA cannot authorise HYG-derived files but offers to assess Hipparcos V1 used directly, so the star files come from V1 directly (S-08, PRD Open Question 21). No payment until ESA authorises.
   - MS-06 (owner, 2026-10-17): Four owner slices of UI polish and identity:
     - the live sky can be dragged with a mouse and shown hidden, as today or expanded, remembered per viewer (S-09);
     - Tonight's focused pages are one tap away from every screen (S-10);
     - progress rewards: milestone badges and Messier / Caldwell tile checklists on /log/progress (S-11, superseding the progress part of S-03);
     - an app icon chosen by the owner from three proposals (S-12).
-  - MS-05 (owner, 2026-10-16): The app is ready to take payments as far as star data goes. ESA cannot authorise HYG-derived files but offers to assess Hipparcos V1 used directly, so the star files come from V1 directly (S-08, PRD Open Question 21). No payment until ESA authorises.
 
 ## Vision recap
 
@@ -70,7 +70,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | done              |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
-| S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | planning    |
+| S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | planned     |
 | S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | proposed    |
 | S-11 | ui-progress-rewards  | see each milestone as a badge and the Messier and Caldwell lists as tile checklists on the progress page                                            | —             | MS-06, FR-039, FR-041       | proposed    |
 | S-12 | app-icon             | recognise Sidereus by an app icon the owner picked from three proposals, on the home screen, the browser tab and the install prompt                 | —             | MS-06, FR-032, FR-036       | proposed    |
@@ -239,7 +239,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The phone first screen (`tonight-phone.spec.ts`, 33 px of slack) must hold in the default mode, and the skeleton must reserve the right height in every mode (`sky-band.ts`).
   - The projection must be recomputed for each size, never stretched; the expanded view stays the horizon panorama, not an atlas (Parked: "A sky atlas or planetarium view").
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** planning
+- **Status:** planned
 
 ### S-10: Quick navigation to Tonight's pages
 
@@ -335,7 +335,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Astrophotography** — Why parked: PRD §Non-Goals.
 - **Hardware control** (GoTo mounts, telescope integration) — Why parked: PRD §Non-Goals.
 - **Notifications** (push, email, "clear tonight" alerts) — Why parked: PRD §Non-Goals; they would need a custom email sender.
-- **Social and sharing features, badges and leaderboards** — Why parked: PRD §Non-Goals; progress is private.
+- **Social and sharing features, badges to share and leaderboards** — Why parked: PRD §Non-Goals; progress is private.
 - **AI features** (planner chat, object descriptions, summaries) — Why parked: PRD §Non-Goals.
 - **Modelling seeing, transparency or light pollution** — Why parked: PRD §Non-Goals.
 - **Native mobile app** — Why parked: PRD §Non-Goals; the web app is installable (FR-032).
