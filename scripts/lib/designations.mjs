@@ -629,6 +629,7 @@ export function buildDesignationTables({
       "A value is kept only when its constellation suffix equals the constellation computed (astronomy-engine Constellation, J2000) from the star's own Hipparcos position; Wikidata's coordinates are never used.",
       "Several different values in the computed constellation, or none in it, mean the value is omitted rather than guessed, unless an entry in star-designation-overrides.json gives the value or omit: true with a citable source.",
       'English item labels ("Beta2 Capricorni", "30 Sagittarii") are read only for a kind the item has no catalogue-code value of at all, and go through the same rules.',
+      "A Flamsteed value that is really a Gould number (Uranometria Argentina; the southern stars of Carina, Vela, Puppis, Chamaeleon and Circinus with numbers above Flamsteed's range) or that SIMBAD does not know is omitted by an entry in star-designation-overrides.json that says why.",
       "Each tuple is [bayer, flamsteed]; null means none. HYG is never read.",
     ],
     omitted,

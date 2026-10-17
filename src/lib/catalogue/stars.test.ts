@@ -30,24 +30,27 @@ const FIELDS_USED = [
 /**
  * Independent published positions, ICRS J2000 (epoch 2000.0, proper motion applied), as decimal degrees.
  *
- * Read from SIMBAD's TAP service (the `basic` table: `ra`, `dec`, `pmra`, `pmdec`), accessed 2026-10-17, one query per
+ * Read from SIMBAD's TAP service (the `basic` table: `ra`, `dec`), accessed 2026-10-17, one query per
  * star, for example
- * https://simbad.cds.unistra.fr/simbad/sim-tap/sync?request=doQuery&lang=adql&format=json&query=SELECT%20ra,dec,pmra,pmdec%20FROM%20basic%20JOIN%20ident%20ON%20oidref=oid%20WHERE%20id=%27*%20alf%20CMa%27
+ * https://simbad.cds.unistra.fr/simbad/sim-tap/sync?request=doQuery&lang=adql&format=json&query=SELECT%20ra,dec%20FROM%20basic%20JOIN%20ident%20ON%20oidref=oid%20WHERE%20id=%27*%20alf%20CMa%27
  * (SIMBAD's coordinate source for all six is the Hipparcos re-reduction, 2007A&A...474..653V: it checks our reader and
  * the epoch propagation against a published J2000 position, not against astrometry independent of Hipparcos; VizieR's
  * TAP, which would have given a Gaia DR3 cross-read, answered 503 that day).
  *
  * `mag` is the star's Hipparcos V magnitude, only to pick the star out of its neighbours (SIMBAD's V differs by at
- * most 0.03, inside the 0.05 the test allows). `pmMasPerYear` is the proper motion (pmRA*cos(dec), pmDE) as SIMBAD
- * publishes it, for the propagation check below.
+ * most 0.03, inside the 0.05 the test allows).
+ *
+ * One source, by the owner's decision of 2026-10-17 (the plan asked for two; recorded in plan.md and impl-review.md).
+ * The 3 arcsecond tolerance is what makes this a propagation check: Hipparcos positions are J1991.25, and an
+ * unpropagated build leaves Arcturus about 20 arcseconds, and Sirius and Procyon about 11, from their J2000 position.
  */
 const REFERENCES = [
-  { name: "Sirius", ra: 101.2871553, dec: -16.7161159, mag: -1.44, pmMasPerYear: [-546.01, -1223.07] },
-  { name: "Arcturus", ra: 213.9153003, dec: 19.1824092, mag: -0.05, pmMasPerYear: [-1093.39, -2000.06] },
-  { name: "Vega", ra: 279.2347348, dec: 38.783689, mag: 0.03, pmMasPerYear: [200.94, 286.23] },
-  { name: "Procyon", ra: 114.8254979, dec: 5.2249876, mag: 0.4, pmMasPerYear: [-714.59, -1036.8] },
-  { name: "Capella", ra: 79.1723279, dec: 45.9979915, mag: 0.08, pmMasPerYear: [75.25, -426.89] },
-  { name: "Betelgeuse", ra: 88.792939, dec: 7.407064, mag: 0.45, pmMasPerYear: [27.54, 11.3] },
+  { name: "Sirius", ra: 101.2871553, dec: -16.7161159, mag: -1.44 },
+  { name: "Arcturus", ra: 213.9153003, dec: 19.1824092, mag: -0.05 },
+  { name: "Vega", ra: 279.2347348, dec: 38.783689, mag: 0.03 },
+  { name: "Procyon", ra: 114.8254979, dec: 5.2249876, mag: 0.4 },
+  { name: "Capella", ra: 79.1723279, dec: 45.9979915, mag: 0.08 },
+  { name: "Betelgeuse", ra: 88.792939, dec: 7.407064, mag: 0.45 },
 ] as const;
 
 /**
@@ -162,17 +165,6 @@ describe("bright-star catalogue", () => {
       expect(star.name, reference.name).toBe(reference.name);
       expect(Math.abs(star.mag - reference.mag), reference.name).toBeLessThanOrEqual(0.05);
       expect(arcsec, reference.name).toBeLessThanOrEqual(POSITION_TOLERANCE_ARCSEC);
-    }
-  });
-
-  it("would fail an unpropagated build: the references move far more than the tolerance in 8.75 years", () => {
-    // Hipparcos positions are J1991.25; leaving them there would put Arcturus about 20 arcseconds off and Sirius and
-    // Procyon about 11, against a tolerance of 3 (Vega, Capella and Betelgeuse move too little to tell).
-    const byName = new Map<string, (typeof REFERENCES)[number]>(REFERENCES.map((r) => [r.name, r]));
-    for (const name of ["Arcturus", "Sirius", "Procyon"]) {
-      const [pmRa, pmDec] = byName.get(name)?.pmMasPerYear ?? [0, 0];
-      const shiftArcsec = (Math.hypot(pmRa, pmDec) / 1000) * 8.75;
-      expect(shiftArcsec, name).toBeGreaterThan(POSITION_TOLERANCE_ARCSEC * 3);
     }
   });
 

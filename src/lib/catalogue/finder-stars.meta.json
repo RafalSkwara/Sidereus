@@ -75,7 +75,7 @@
   ],
   "filter": "Vmag <= 7.5, Hipparcos stars with a position, finder chart depth",
   "count": 25723,
-  "designatedCount": 3277,
+  "designatedCount": 3267,
   "normalisations": [
     "Sorted by Vmag rounded to 0.1 (Math.round(Vmag * 10)), then HIP number",
     "HIP numbers order the stars but are not stored: the file holds no HIP, only the order the HIP tie-break gives",
@@ -96,20 +96,20 @@
         "wikidataHipsWithP528Designation": 3495,
         "fromLabelFallback": {
           "bayer": 15,
-          "flamsteed": 10
+          "flamsteed": 6
         },
         "unreadableBindings": 1,
-        "designated": 3222,
+        "designated": 3212,
         "bayer": 1471,
-        "flamsteed": 2639,
-        "both": 888,
+        "flamsteed": 2628,
+        "both": 887,
         "rejectedWikidataValues": {
           "latin-letter": 447,
           "component": 4,
           "unrecognised": 1
         },
         "omittedByPolicy": 122,
-        "overrides": 18
+        "overrides": 29
       },
       "use": "Bayer letter and Flamsteed number by HIP number"
     },

@@ -13,10 +13,10 @@ One-off comparison for the `star-source-switch` change (Phase 2), made before th
 
 |                                       | HYG-era file | New table                                                             |
 | ------------------------------------- | ------------ | --------------------------------------------------------------------- |
-| Designated stars (Bayer or Flamsteed) | 3307         | 3222                                                                  |
+| Designated stars (Bayer or Flamsteed) | 3307         | 3212 (3222 before F5)                                                 |
 | Bayer values                          | 1535         | 1471                                                                  |
-| Flamsteed values                      | 2724         | 2639                                                                  |
-| Both Bayer and Flamsteed              | 952          | 888                                                                   |
+| Flamsteed values                      | 2724         | 2628 (2639 before F5)                                                 |
+| Both Bayer and Flamsteed              | 952          | 887 (888 before F5)                                                   |
 | Proper names (all stars at V <= 7.5)  | 377          | 498 IAU names within the Hipparcos rows (566 HIPs in the names table) |
 
 Of the 3290 matched stars that carried a Bayer or Flamsteed value in the HYG-era file, 101 carry neither in the new table (3.1 %). 17 HYG-era designated stars have no Hipparcos counterpart at all (HYG's non-Hipparcos Gliese and Yale companion rows: Alp 66 Gem (Castor B); Gam 29 Vir; Zet 79 UMa; Xi 53 UMa (Alula Australis); Xi 53 UMa (Alula Australis B); Xi Sco (Graffias); Xi Sco; Gam CrA; 36 Oph (Guniibuu B); Alp 42 Com; Tau 69 Oph; Mu 21 Dra (Alrakis); Eta 2 CrB; Mu-2 78 Cyg; 53 Aqr; Eta Car; Sig 17 CrB); they disappear with the source switch, as the research recorded.
@@ -321,27 +321,48 @@ These ten stars at V <= 7.5 have no astrometric solution in `hip_main.dat`, so t
 
 17 matched stars carry a proper name in the HYG-era file that is not an IAU WGSN name and so disappears: 82 G. Eri, Acrab B, Alya B, Alkalurops B, 268 G. Cet, Dziban B, Lalande 21185, p Eridani, Groombridge 1830, 96 G. Psc, Marsic B, Mesarthim, Albireo B, Ras Elased Australis, Cor Caroli B, Lacaille 8760, Lacaille 9352. 144 stars gain an IAU name the HYG-era file lacks. The names table has 566 HIPs (498 within the Hipparcos rows at V <= 7.5); HIP 72105 appears twice in the WGSN list (Izar and Pulcherrima) and keeps Izar.
 
-## Overrides (18)
+## Gould numbers and unconfirmed additions (owner decision, 2026-10-17, impl review F5)
+
+The 23 Flamsteed additions were first accepted as single Wikidata values. The implementation review found that several are Gould numbers (Uranometria Argentina, written "140 G. Puppis"), not Flamsteed numbers, and that SIMBAD, read once for them on 2026-10-17, does not know two of the values. The owner decided to drop them, each by an `omit: ["flamsteed"]` override that says why (the table's `rules` carry the rule):
+
+- **Gould numbers (9):** 140, 188 and 212 Pup (HIP 37379, 38146, 38423), 33, 53 and 113 Vel (41616, 42570, 45386), 191 Car (50847), 9 Cha (42794), 26 Cir (72773). Puppis keeps its genuine Flamsteed numbers 1 to 22.
+- **Not known to SIMBAD (2):** 70 Eri (HIP 7588, Achernar, which keeps its Bayer α) and 54 Oct (HIP 112355).
+- **Kept:** the other twelve additions (38 and 47 Oph, 30 and 70 Sgr, 2 Sct, 36 Aqr, 9 Sex by override, 87 Gem, 205 Dra, 36 Lup, 89 and 93 Cen). A SIMBAD identifier lookup of all 23 additions on 2026-10-17 knows every one of them except 54 Oct, 70 Eri, 53 Vel and 113 Vel (all four dropped above) and **30 Sgr (HIP 88760)**, which is kept because the owner's decision named only 70 Eri and 54 Oct; it is reported for a decision.
+
+Effect: Flamsteed values 2,639 to 2,628, designated stars 3,222 to 3,212; the bright file is unchanged and the finder file loses those eleven values.
+
+## Overrides (29)
 
 `scripts/data/star-designation-overrides.json`, each entry with a citable source (none cites HYG or the Yale Bright Star Catalogue):
 
-| HIP    | Override       | Source kind                                                                                                |
-| ------ | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| 8832   | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 9347   | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 13847  | bayer The-1    | IAU WGSN list                                                                                              |
-| 39953  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 40023  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 48552  | flamsteed 9    | Wikidata item statement                                                                                    |
-| 50583  | bayer Gam-1    | IAU WGSN list                                                                                              |
-| 69481  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 71762  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 81710  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 84345  | bayer Alp-1    | IAU WGSN list                                                                                              |
-| 86974  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 90968  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 90969  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 91926  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 101923 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 107310 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
-| 110960 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| HIP    | Override           | Source kind                                                                                                |
+| ------ | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 8832   | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 9347   | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 13847  | bayer The-1        | IAU WGSN list                                                                                              |
+| 39953  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 40023  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 48552  | flamsteed 9        | Wikidata item statement                                                                                    |
+| 50583  | bayer Gam-1        | IAU WGSN list                                                                                              |
+| 69481  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 71762  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 81710  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 84345  | bayer Alp-1        | IAU WGSN list                                                                                              |
+| 86974  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 90968  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 90969  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 91926  | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 101923 | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 107310 | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 110960 | omit ["bayer"]     | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 7588   | omit ["flamsteed"] | SIMBAD does not know the Wikidata value (owner decision F5)                                                |
+| 37379  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 38146  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 38423  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 41616  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 42570  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 42794  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 45386  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 50847  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 72773  | omit ["flamsteed"] | Gould number (owner decision F5)                                                                           |
+| 112355 | omit ["flamsteed"] | SIMBAD does not know the Wikidata value (owner decision F5)                                                |

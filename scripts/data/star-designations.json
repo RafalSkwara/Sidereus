@@ -33,26 +33,27 @@
       "wikidataHipsWithP528Designation": 3495,
       "fromLabelFallback": {
         "bayer": 15,
-        "flamsteed": 10
+        "flamsteed": 6
       },
       "unreadableBindings": 1,
-      "designated": 3222,
+      "designated": 3212,
       "bayer": 1471,
-      "flamsteed": 2639,
-      "both": 888,
+      "flamsteed": 2628,
+      "both": 887,
       "rejectedWikidataValues": {
         "latin-letter": 447,
         "component": 4,
         "unrecognised": 1
       },
       "omittedByPolicy": 122,
-      "overrides": 18
+      "overrides": 29
     },
     "rules": [
       "Values are Greek-letter Bayer (three-letter abbreviation, superscript digits as -n) and Flamsteed numbers; Latin-letter and component-letter values are dropped.",
       "A value is kept only when its constellation suffix equals the constellation computed (astronomy-engine Constellation, J2000) from the star's own Hipparcos position; Wikidata's coordinates are never used.",
       "Several different values in the computed constellation, or none in it, mean the value is omitted rather than guessed, unless an entry in star-designation-overrides.json gives the value or omit: true with a citable source.",
       "English item labels (\"Beta2 Capricorni\", \"30 Sagittarii\") are read only for a kind the item has no catalogue-code value of at all, and go through the same rules.",
+      "A Flamsteed value that is really a Gould number (Uranometria Argentina; the southern stars of Carina, Vela, Puppis, Chamaeleon and Circinus with numbers above Flamsteed's range) or that SIMBAD does not know is omitted by an entry in star-designation-overrides.json that says why.",
       "Each tuple is [bayer, flamsteed]; null means none. HYG is never read."
     ],
     "omitted": [
@@ -1162,6 +1163,13 @@
     ],
     "overridesApplied": [
       {
+        "hip": 7588,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"70 Eri\" as a Flamsteed number for this HIP; SIMBAD's identifier list (TAP `ident` table, read 2026-10-17) does not know that designation for this star, so nothing confirms it and the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
         "hip": 8832,
         "kind": "bayer",
         "decision": "override-omit",
@@ -1183,6 +1191,27 @@
         "source": "IAU WGSN star names list (https://exopla.net/star-names/modern-iau-star-names/, fetched 2026-10-16): Acamar, HIP 13847, Bayer ID \"θ1 Eri\"; Wikidata gives only the bare letter."
       },
       {
+        "hip": 37379,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"140 Pup\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"140 G. Pup\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (the French Wikipedia list of Puppis stars writes \"140 G. Puppis\") (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
+        "hip": 38146,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"188 Pup\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"188 G. Pup\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
+        "hip": 38423,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"212 Pup\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"212 G. Pup\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (the French Wikipedia list of Puppis stars writes \"212 G. Puppis\") (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
         "hip": 39953,
         "kind": "bayer",
         "decision": "override-omit",
@@ -1195,6 +1224,34 @@
         "decision": "override-omit",
         "value": null,
         "source": "Wikidata (CC0) P528 gives \"ψ² Cnc\" for this HIP; the one-off comparison with the former HYG-era finder file (designation-check.md) gave the bare letter. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+      },
+      {
+        "hip": 41616,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"33 Vel\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"33 G. Vel\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
+        "hip": 42570,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"53 Vel\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"53 G. Vel\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
+        "hip": 42794,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"9 Cha\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"9 G. Cha\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
+        "hip": 45386,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"113 Vel\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"113 G. Vel\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
       },
       {
         "hip": 48552,
@@ -1211,6 +1268,13 @@
         "source": "IAU WGSN star names list (https://exopla.net/star-names/modern-iau-star-names/, fetched 2026-10-16): Algieba, HIP 50583, Bayer ID \"γ1 Leo\"; Wikidata gives only the bare letter."
       },
       {
+        "hip": 50847,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"191 Car\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"191 G. Car\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
+      },
+      {
         "hip": 69481,
         "kind": "bayer",
         "decision": "override-omit",
@@ -1223,6 +1287,13 @@
         "decision": "override-omit",
         "value": null,
         "source": "Wikidata (CC0) P528 gives \"π Boo\" for this HIP; the one-off comparison with the former HYG-era finder file (designation-check.md) gave π¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+      },
+      {
+        "hip": 72773,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"26 Cir\" as a Flamsteed number for this HIP. A number of this size in this southern constellation is a Gould number (Uranometria Argentina, 1879, written \"26 G. Cir\": https://en.wikipedia.org/wiki/Gould_designation), not a Flamsteed number, so the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
       },
       {
         "hip": 81710,
@@ -1286,6 +1357,13 @@
         "decision": "override-omit",
         "value": null,
         "source": "Wikidata (CC0) P528 gives \"ζ Aqr\" for this HIP; the one-off comparison with the former HYG-era finder file (designation-check.md) gave ζ¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+      },
+      {
+        "hip": 112355,
+        "kind": "flamsteed",
+        "decision": "override-omit",
+        "value": null,
+        "source": "Wikidata (CC0) P528 gives \"54 Oct\" as a Flamsteed number for this HIP; SIMBAD's identifier list (TAP `ident` table, read 2026-10-17) does not know that designation for this star, so nothing confirms it and the Flamsteed value is omitted (owner decision 2026-10-17, impl review F5; omit when in doubt)."
       }
     ]
   },
@@ -1509,7 +1587,7 @@
     "7463": ["Tau",null],
     "7513": ["Ups",50],
     "7535": ["Pi",102],
-    "7588": ["Alp",70],
+    "7588": ["Alp",null],
     "7607": [null,51],
     "7650": [null,40],
     "7709": [null,103],
@@ -2400,7 +2478,6 @@
     "37265": ["Omi",71],
     "37279": ["Alp",10],
     "37300": [null,74],
-    "37379": [null,140],
     "37406": [null,23],
     "37447": ["Alp",26],
     "37609": [null,24],
@@ -2420,13 +2497,11 @@
     "38048": [null,5],
     "38070": ["Omi",null],
     "38106": [null,82],
-    "38146": [null,188],
     "38170": ["Xi",7],
     "38211": [null,6],
     "38372": [null,8],
     "38373": ["Zet",13],
     "38382": [null,9],
-    "38423": [null,212],
     "38427": [null,10],
     "38495": [null,84],
     "38538": ["Phi",83],
@@ -2491,7 +2566,6 @@
     "41404": ["Phi-2",23],
     "41574": [null,28],
     "41578": [null,29],
-    "41616": [null,33],
     "41704": ["Omi",1],
     "41816": ["Ups-1",30],
     "41822": ["The",31],
@@ -2517,12 +2591,10 @@
     "42523": [null,40],
     "42527": ["Pi-2",4],
     "42536": ["Omi",null],
-    "42570": [null,53],
     "42578": [null,42],
     "42604": [null,34],
     "42637": ["Eta",null],
     "42662": [null,9],
-    "42794": [null,9],
     "42795": [null,45],
     "42799": ["Eta",7],
     "42806": ["Gam",43],
@@ -2590,7 +2662,6 @@
     "45290": [null,36],
     "45333": [null,16],
     "45336": ["The",22],
-    "45386": [null,113],
     "45410": ["Pi-2",82],
     "45455": [null,17],
     "45493": [null,18],
@@ -2719,7 +2790,6 @@
     "50684": [null,23],
     "50755": [null,42],
     "50801": ["Mu",34],
-    "50847": [null,191],
     "50851": [null,43],
     "50857": [null,26],
     "50860": [null,27],
@@ -3213,7 +3283,6 @@
     "72659": ["Xi",37],
     "72683": ["Omi",null],
     "72702": [null,10],
-    "72773": [null,26],
     "72929": [null,12],
     "72934": ["Xi-1",13],
     "72965": ["Zet",null],
@@ -4337,7 +4406,6 @@
     "112203": ["Rho",null],
     "112211": [null,66],
     "112242": [null,13],
-    "112355": [null,54],
     "112358": [null,45],
     "112362": [null,20],
     "112374": ["Eta",null],
