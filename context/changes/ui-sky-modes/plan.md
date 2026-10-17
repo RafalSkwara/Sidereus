@@ -456,6 +456,18 @@ Five small drifts from the plan, found by `reviews/impl-review.md` F2 and accept
 4. **`SegmentedGroup` gives a disabled, unpressed segment `text-faint`**, so the settings panel's language switch changed while the reload runs (the plan said "unchanged for horizontal"). The owner's answer (2026-10-17) makes that state intentional: see the language switch's loading state in the impl review triage below.
 5. **The trigger sits at `-top-1 right-1 sm:top-8`**, not "top 0 below `sm`, on the date line from `sm`": its centre is 4 px above the date line's at both widths, and the 320 px Polish no-overlap test passes.
 
+## Impl review triage
+
+`reviews/impl-review.md` (no criticals), triaged by the orchestrator on 2026-10-17; all fixed after rebasing onto main (#210, #211, #217, #218):
+
+| Finding | Fix | Commit |
+| --- | --- | --- |
+| F1 | `sky-expanded:mt-auto` on `SILHOUETTE_CLASS` | d66796d |
+| F2 | the five deviations recorded above ("Implementation decisions"); owner's answer on the faded language segment: an intentional loading state (the chosen segment `aria-busy` with a spinner, a static hourglass under reduced motion, the other disabled, a visually hidden `role="status"` "Changing language…" / "Zmiana języka…"), in `SegmentedGroup`, with a `/design` specimen | d66796d, fc7fe99 |
+| F3 | the server-rendered test reads the raw HTML response; the drag test carries the comment | d66796d |
+| F4 | the sky-view menu carries `data-theme` from the server and closes on scroll | d66796d |
+| F5 | the mode button renders only when the mode marker exists | d66796d |
+
 ## QUESTIONS FOR OWNER
 
 Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacjach, więc implementacja może ruszyć bez odpowiedzi. Inna odpowiedź zmienia tylko fazę podaną przy pytaniu. Makiety leżą w `context/changes/ui-sky-modes/evidence/` (zrobione na `/design`; ikony i podpisy w makietach są robocze).
