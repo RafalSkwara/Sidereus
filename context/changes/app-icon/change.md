@@ -1,7 +1,7 @@
 ---
 change_id: app-icon
 title: New app icon (favicon and PWA icons), three proposals for the owner to pick
-status: new
+status: implemented
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null
@@ -33,3 +33,7 @@ Owner review (2026-10-17): 2-planet is dropped as the weakest; both stars (1-sta
 - **R2-2 gold star, navy** (`r2-2-gold-star-navy`): round 3's gold star (#fde68a, `--star-accent`'s base colour) on round 1's plain `--zenith` → `--horizon` tile, the companion now white (`--primary`). Fewest shapes: the favicon is one gold star on a flat `--zenith` tile, the cleanest of the four at 16 px.
 - **R2-3 rising star** (`r2-3-rising-star`): one large white star (round 1) whose lower arm sets behind a low ridge (round 3's horizon, flatter, glow higher up); no companion. The most distinctive silhouette, but at 16 px the cut-off arm makes it read as a short spire over a dark bar rather than an obvious star.
 - **R2-4 gold star, dusk** (`r2-4-gold-star-dusk`): round 3 with round 1's companion kept, same layout as R2-1 with the gold main star and the `--primary-strong` companion. Warmest of the four. Small sizes behave as R2-1, with a little less contrast between the star and the glow.
+
+## Final (owner's pick, 2026-10-17)
+
+R2-4's dusk composition (sky gradient, horizon, ground, the main star's position and size) with the main star white (`--primary` #f2f4f8) and no companion, in every variant; the favicon keeps R2-4's 16 px star geometry. Sources and previews in `evidence/icon-proposals/final/` (`final-sheet.png`, `design-specimen.png`); implementation and checks in `plan.md`. The icon is live in `public/` (`favicon.svg`, `favicon.png`, `favicon.ico`, `pwa-icon.svg`, `pwa-maskable.svg` and the generated PNGs), `npm run icons:build` runs one generator config per source, and `/design`'s band now reads the shipped files from `public/` instead of the proposals. Installed PWAs keep their cached icon until a fresh install or the browser refreshes the manifest.
