@@ -2,6 +2,12 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-17 (owner polish)
+
+- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, not archived yet); S-10 `ui-quick-nav` (#214) in implementation.
+
+---
+
 ## Update 2026-10-17 (test-suite-diet, supersedes the test-running lines below)
 
 **The test suite was cut and re-organised (`context/changes/test-suite-diet`, PRs #197-#207 and the Phase 7 and 8 PRs).** Read `implementation-notes.md` there for the per-phase counts, the pin ledger and the break proofs; `context/foundation/test-plan.md` §6.6 has the before and after.
