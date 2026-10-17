@@ -792,6 +792,8 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
+Open owner checks carried to context/handoff.md (2026-10-17): red mode at night on a phone, VoiceOver on a tile and on the Caldwell heading and toggle, the live celebration dialog after a real save (including the smaller names in a multi-milestone dialog), and whether a tile with no common name should show its type as its name. No Progress row is left unchecked for them.
+
 ### Phase 1: Contract — type families, the progress icon set, the copy
 
 #### Automated
