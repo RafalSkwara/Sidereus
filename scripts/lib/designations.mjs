@@ -641,7 +641,7 @@ export function buildDesignationTables({
     fetchedAt: inputs.fetchedAt,
     counts: nameCounts,
     rules: [
-      "Only the proper-name and HIP columns of the WGSN table are read; the page's etymology texts and images are not copied.",
+      "Only the proper-name, HIP and Bayer ID columns of the WGSN table are read (the Bayer ID only to tell the two rows of HIP 72105 apart); the page's etymology texts and images are not copied.",
       "One name per HIP. HIP 72105 appears twice (Izar, epsilon Boo, and Pulcherrima, epsilon Boo B): the row without a component letter in its Bayer ID is kept, so it is named Izar, and the other is listed in `dropped`.",
       "Every name is used for one HIP only.",
     ],

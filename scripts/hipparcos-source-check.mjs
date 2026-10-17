@@ -8,13 +8,14 @@
  * otherwise. The pin itself lives in scripts/lib/hipparcos.mjs and changes only by a deliberate edit.
  */
 import { describeError, HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
+import { BUILD_LIMITS } from "./lib/stars-build.mjs";
 
-const BRIGHT_MAX_MAG = 4.5;
-const FINDER_MAX_MAG = 7.5;
-/** 919 and 25,713 stars with a solution, plus the ten that have none (research.md section 4 and its follow-up). */
-const EXPECTED_BRIGHT = 921;
-const EXPECTED_FINDER = 25723;
-const EXPECTED_SEXAGESIMAL = [31067, 31500, 34716, 50572, 52800, 55203, 59273, 78727, 80579, 115125];
+const BRIGHT_MAX_MAG = BUILD_LIMITS.brightMaxVmag;
+const FINDER_MAX_MAG = BUILD_LIMITS.finderMaxVmag;
+/** The counts of the pinned file, shared with the build's own limits. */
+const EXPECTED_BRIGHT = BUILD_LIMITS.brightCount;
+const EXPECTED_FINDER = BUILD_LIMITS.finderCount;
+const EXPECTED_SEXAGESIMAL = BUILD_LIMITS.sexagesimalHips;
 
 async function main() {
   const { rows, skipped, stats } = await readHipparcos();
