@@ -14,7 +14,7 @@ import { observingNight } from "./night";
 import { objectTracks } from "./objects";
 import { PLANET_KEYS, planetTracks } from "./planets";
 import { skyFrames } from "./sky-frames";
-import { observerFor, sunAltitudeDeg, sunEvents } from "./sun";
+import { observerFor, sunEvents } from "./sun";
 import type { Interval } from "./types";
 
 const DEG = Math.PI / 180;
@@ -42,30 +42,20 @@ describe("skyFrames", () => {
   const night = warsawNight();
   const frames = skyFrames(WARSAW, night);
 
-  it("samples the same instants as every track over the same interval", () => {
+  it("places a J2000 star with the flattened matrix as astronomy-engine does, within 0.01°, on the same instants as every track", () => {
+    // The frames sample the same instants as every track over the same interval.
     const times = frames.map((frame) => frame.time.getTime());
     const [m13] = objectTracks(WARSAW, night, [messierTarget("M13")]);
     const planets = planetTracks(WARSAW, night, PLANET_KEYS);
     const moon = moonTrack(WARSAW, night);
-    for (const track of [m13, ...planets, moon]) {
+    const tracks = [m13, ...planets, moon];
+    expect(tracks).toHaveLength(PLANET_KEYS.length + 2);
+    for (const track of tracks) {
       expect(track.map((sample) => sample.time.getTime())).toEqual(times);
     }
     expect(times[0]).toBe(night.start.getTime());
     expect(times.at(-1)).toBe(night.end.getTime());
-  });
 
-  it("carries the Sun's altitude and a flattened rotation per frame", () => {
-    for (const frame of [frames[0], frames[Math.floor(frames.length / 2)]]) {
-      expect(frame.sunAltitudeDeg).toBe(sunAltitudeDeg(WARSAW, frame.time));
-      const { rot } = Rotation_EQJ_HOR(frame.time, observerFor(WARSAW));
-      expect(frame.rotation).toHaveLength(9);
-      expect(frame.rotation).toEqual(rot.flat());
-    }
-    // Deep in the night the Sun is far below the horizon.
-    expect(frames[Math.floor(frames.length / 2)].sunAltitudeDeg).toBeLessThan(-30);
-  });
-
-  it("places a J2000 star with the flattened matrix as astronomy-engine does, within 0.01°", () => {
     // Vega, Capella and Polaris (J2000 RA hours, Dec degrees).
     const stars = [
       { raHours: 18.6156, decDeg: 38.7837 },

@@ -158,20 +158,21 @@ function rankingOn(date: string): Ranking<DeepSkyObject, (typeof EYEPIECES)[numb
 }
 
 describe("deep-sky window edges against Skyfield (Warsaw, Bortle 5, minimum altitude 15°)", () => {
-  it("has a Skyfield entry for every catalogue object on every night, and the three nights asked for", () => {
+  it("has a Skyfield entry for every catalogue object on the three nights asked for, and starts and ends the dark window within the tolerance of Skyfield", () => {
     expect(REFERENCE_NIGHTS).toEqual(["2026-04-15", "2026-07-15", "2026-10-15"]);
+    expect(DEEP_SKY).toHaveLength(171);
     for (const date of REFERENCE_NIGHTS) {
       const missing = DEEP_SKY.filter((o) => !referenceOf(date).objects.has(o.id)).map((o) => o.id);
       expect(missing, `${date} lacks`).toEqual([]);
+      const dark = warsawDarkWindow(date, BORTLE);
+      const expected = referenceOf(date);
+      expect(Math.abs(minutesBetween(dark.start, expected.darkStart)), `${date} dark start`).toBeLessThanOrEqual(
+        TIME_TOLERANCE_MINUTES,
+      );
+      expect(Math.abs(minutesBetween(dark.end, expected.darkEnd)), `${date} dark end`).toBeLessThanOrEqual(
+        TIME_TOLERANCE_MINUTES,
+      );
     }
-    expect(DEEP_SKY).toHaveLength(171);
-  });
-
-  it.each(REFERENCE_NIGHTS)("starts and ends the dark window within the tolerance of Skyfield on %s", (date) => {
-    const dark = warsawDarkWindow(date, BORTLE);
-    const expected = referenceOf(date);
-    expect(Math.abs(minutesBetween(dark.start, expected.darkStart))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
-    expect(Math.abs(minutesBetween(dark.end, expected.darkEnd))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
   });
 
   describe("through rankObjects' reachable windows (what Targets, the Session plan and the reason line show)", () => {
@@ -238,32 +239,35 @@ function bruteForceRun(track: readonly HorizontalPosition[], min: number): { fro
 }
 
 describe("scores do not move: the refined window keeps the unrefined sample range", () => {
-  it.each(CALIBRATION_NIGHTS)("on %s, for every reachable object", (date) => {
-    const ranking = rankingOn(date);
-    const dark = warsawDarkWindow(date, BORTLE);
+  it("holds on the four calibration nights, for every reachable object", () => {
+    expect(CALIBRATION_NIGHTS).toHaveLength(4);
     const problems: string[] = [];
-    expect(ranking.reachable.length).toBeGreaterThan(50);
-    for (const { object } of ranking.reachable) {
-      const track = objectTrack(WARSAW, { start: dark.start, end: dark.end }, object, DEFAULT_TRACK_STEP_MINUTES);
-      const run = bruteForceRun(track, MIN_ALTITUDE_DEG);
-      const refined = refinedWindow(track, MIN_ALTITUDE_DEG);
-      if (run === null || refined === null) {
-        problems.push(`${date} ${object.id}: reachable but the run or the refined window is null`);
-        continue;
-      }
-      if (refined.firstIndex !== run.from || refined.lastIndex !== run.to) {
-        problems.push(
-          `${date} ${object.id}: refined samples ${refined.firstIndex}-${refined.lastIndex}, run ${run.from}-${run.to}`,
-        );
-      }
-      // The refined edges lie between the run's edge samples and their outside neighbours (or are the track's ends).
-      const earliest = run.from === 0 ? track[0].time : track[run.from - 1].time;
-      const latest = run.to === track.length - 1 ? track[run.to].time : track[run.to + 1].time;
-      if (refined.start < earliest || refined.start > track[run.from].time) {
-        problems.push(`${date} ${object.id}: refined start is outside the interval before its first sample`);
-      }
-      if (refined.end > latest || refined.end < track[run.to].time) {
-        problems.push(`${date} ${object.id}: refined end is outside the interval after its last sample`);
+    for (const date of CALIBRATION_NIGHTS) {
+      const ranking = rankingOn(date);
+      const dark = warsawDarkWindow(date, BORTLE);
+      expect(ranking.reachable.length, `${date}: reachable objects`).toBeGreaterThan(50);
+      for (const { object } of ranking.reachable) {
+        const track = objectTrack(WARSAW, { start: dark.start, end: dark.end }, object, DEFAULT_TRACK_STEP_MINUTES);
+        const run = bruteForceRun(track, MIN_ALTITUDE_DEG);
+        const refined = refinedWindow(track, MIN_ALTITUDE_DEG);
+        if (run === null || refined === null) {
+          problems.push(`${date} ${object.id}: reachable but the run or the refined window is null`);
+          continue;
+        }
+        if (refined.firstIndex !== run.from || refined.lastIndex !== run.to) {
+          problems.push(
+            `${date} ${object.id}: refined samples ${refined.firstIndex}-${refined.lastIndex}, run ${run.from}-${run.to}`,
+          );
+        }
+        // The refined edges lie between the run's edge samples and their outside neighbours (or are the track's ends).
+        const earliest = run.from === 0 ? track[0].time : track[run.from - 1].time;
+        const latest = run.to === track.length - 1 ? track[run.to].time : track[run.to + 1].time;
+        if (refined.start < earliest || refined.start > track[run.from].time) {
+          problems.push(`${date} ${object.id}: refined start is outside the interval before its first sample`);
+        }
+        if (refined.end > latest || refined.end < track[run.to].time) {
+          problems.push(`${date} ${object.id}: refined end is outside the interval after its last sample`);
+        }
       }
     }
     expect(problems).toEqual([]);

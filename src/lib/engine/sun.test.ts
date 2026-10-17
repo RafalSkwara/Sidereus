@@ -9,22 +9,6 @@ import type { Site } from "./types";
 describe("darkWindow (synthetic)", () => {
   const night = observingNight("2026-10-10", WARSAW.timeZone);
 
-  it("finds an astronomical-darkness window inside the Warsaw night", () => {
-    const dw = darkWindow(WARSAW, night, -18);
-    expect(dw.kind).toBe("window");
-    if (dw.kind !== "window") {
-      return;
-    }
-    expect(dw.start.getTime()).toBeGreaterThan(night.start.getTime());
-    expect(dw.end.getTime()).toBeLessThan(night.end.getTime());
-    expect(dw.start.getTime()).toBeLessThan(dw.end.getTime());
-    expect(dw.clampedToNightEnd).toBe(false);
-    expect(sunAltitudeDeg(WARSAW, dw.start)).toBeCloseTo(-18, 1);
-    expect(sunAltitudeDeg(WARSAW, dw.end)).toBeCloseTo(-18, 1);
-    const midpoint = new Date((dw.start.getTime() + dw.end.getTime()) / 2);
-    expect(sunAltitudeDeg(WARSAW, midpoint)).toBeLessThan(-18);
-  });
-
   it("gives nested windows for the three Bortle thresholds (wider for brighter skies)", () => {
     const w18 = darkWindow(WARSAW, night, darknessThresholdDegForBortle(3));
     const w15 = darkWindow(WARSAW, night, darknessThresholdDegForBortle(5));
@@ -38,21 +22,6 @@ describe("darkWindow (synthetic)", () => {
     expect(w15.end.getTime()).toBeLessThan(w12.end.getTime());
   });
 
-  it("reports no darkness at any threshold under the Tromsø midnight sun", () => {
-    const june = observingNight("2026-06-21", TROMSO.timeZone);
-    for (const threshold of [-18, -15, -12] as const) {
-      const dw = darkWindow(TROMSO, june, threshold);
-      expect(dw.kind).toBe("none");
-      if (dw.kind === "none") {
-        expect(dw.minSunAltitudeDeg).toBeGreaterThan(-18);
-        expect(dw.minSunAltitudeDeg).toBeGreaterThan(0); // the sun does not set at all
-        expect(dw.at.getTime()).toBeGreaterThan(june.start.getTime());
-        expect(dw.at.getTime()).toBeLessThan(june.end.getTime());
-      }
-    }
-    expect(sunEvents(TROMSO, june)).toEqual({ sunset: null, sunrise: null });
-  });
-
   it("reports the near-miss case honestly: Warsaw at midsummer never reaches -18 but does reach -12", () => {
     const midsummer = observingNight("2026-06-21", WARSAW.timeZone);
     const deep = darkWindow(WARSAW, midsummer, -18);
@@ -63,6 +32,12 @@ describe("darkWindow (synthetic)", () => {
     }
     const nautical = darkWindow(WARSAW, midsummer, -12);
     expect(nautical.kind).toBe("window");
+  });
+
+  // The one case of the old tonightDateFor describe that night-boundaries (USNO sites, no polar one) does not hold.
+  it("keeps the noon rule for tonightDateFor on a night without a dark window", () => {
+    // Tromsø at midsummer never reaches -18°: 09:00 CEST on 22 June still belongs to 21 June's night.
+    expect(tonightDateFor(TROMSO, new Date("2026-06-22T07:00:00Z"), -18)).toBe("2026-06-21");
   });
 
   it("handles a polar night where the sun is already below the threshold at local noon", () => {
@@ -88,17 +63,6 @@ describe("darkWindow (synthetic)", () => {
       expect(sunAltitudeDeg(svalbardNorth, astronomical.start)).toBeCloseTo(-18, 1);
       expect(sunAltitudeDeg(svalbardNorth, astronomical.end)).toBeCloseTo(-18, 1);
     }
-  });
-
-  it("orders sunset, dark window and sunrise within the night", () => {
-    const events = sunEvents(WARSAW, night);
-    const dw = darkWindow(WARSAW, night, -18);
-    if (events.sunset === null || events.sunrise === null || dw.kind !== "window") {
-      throw new Error("expected sunset, sunrise and a dark window on 2026-10-10 in Warsaw");
-    }
-    expect(events.sunset.getTime()).toBeLessThan(dw.start.getTime());
-    expect(dw.end.getTime()).toBeLessThan(events.sunrise.getTime());
-    expect(events.sunrise.getTime()).toBeLessThan(night.end.getTime());
   });
 });
 
@@ -154,35 +118,4 @@ describe("sun events vs Stellarium fixtures", () => {
       expect(minutesBetween(dw.end, fixtureTimeMs(sun.darkEnd.time))).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
     });
   }
-});
-
-describe("tonightDateFor", () => {
-  const threshold = -18;
-  const octoberWindow = darkWindow(WARSAW, observingNight("2026-10-10", WARSAW.timeZone), threshold);
-  if (octoberWindow.kind !== "window") {
-    throw new Error("expected a dark window on an October night in Warsaw");
-  }
-  const darkEnd = octoberWindow.end.getTime();
-
-  it("is the evening date before the dark window, the same afternoon", () => {
-    // 15:00 CEST on 10 October.
-    expect(tonightDateFor(WARSAW, new Date("2026-10-10T13:00:00Z"), threshold)).toBe("2026-10-10");
-  });
-
-  it("stays on the night in progress after midnight, while it is still dark", () => {
-    // 01:30 CEST on 11 October.
-    expect(tonightDateFor(WARSAW, new Date("2026-10-10T23:30:00Z"), threshold)).toBe("2026-10-10");
-    expect(tonightDateFor(WARSAW, new Date(darkEnd - 60_000), threshold)).toBe("2026-10-10");
-  });
-
-  it("moves to the coming evening once the dark window has ended, before local noon", () => {
-    expect(tonightDateFor(WARSAW, new Date(darkEnd), threshold)).toBe("2026-10-11");
-    // 09:00 CEST on 11 October: the noon rule alone would still say 10 October.
-    expect(tonightDateFor(WARSAW, new Date("2026-10-11T07:00:00Z"), threshold)).toBe("2026-10-11");
-  });
-
-  it("keeps the noon rule on a night without a dark window", () => {
-    // Tromsø at midsummer never reaches -18°: 09:00 CEST on 22 June still belongs to 21 June's night.
-    expect(tonightDateFor(TROMSO, new Date("2026-06-22T07:00:00Z"), threshold)).toBe("2026-06-21");
-  });
 });

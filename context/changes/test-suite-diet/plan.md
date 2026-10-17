@@ -616,10 +616,10 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 1.1 `npm test` green; engine files ≤ 25 and tests ≤ 310
-- [ ] 1.2 Three break checks red then reverted (window widened, bonus above the bar, pairing into daylight)
-- [ ] 1.3 `npm run test:guards` green with the updated `ALLOWED_DISABLES`
-- [ ] 1.4 `npm run lint`, `npx astro check` green; `test:reference` time recorded
+- [x] 1.1 `npm test` green; engine files ≤ 25 and tests ≤ 310
+- [x] 1.2 Three break checks red then reverted (window widened, bonus above the bar, pairing into daylight)
+- [x] 1.3 `npm run test:guards` green with the updated `ALLOWED_DISABLES`
+- [x] 1.4 `npm run lint`, `npx astro check` green; `test:reference` time recorded
 
 #### Manual
 

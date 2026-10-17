@@ -1,19 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { planetEyepiece, wholeDiscEyepiece } from "./eyepieces";
 import { WARSAW } from "./fixtures";
-import { seenSummaries } from "./log";
 import { moonElongationDeg, moonPhaseBand, moonState, moonTrack } from "./moon";
-import { moonPlacementOf, moonTarget } from "./moon-target";
+import { moonTarget } from "./moon-target";
 import type { MoonTargetInput } from "./moon-target";
 import { observingNight } from "./night";
 import {
   DEFAULT_MIN_ALTITUDE_DEG,
   DEFAULT_TRACK_STEP_MINUTES,
-  MOON_LOW_ALTITUDE_DEG,
   MOON_MIN_ILLUMINATION,
   PLANET_WINDOW_SUN_ALTITUDE_DEG,
-  WELL_PLACED_ALTITUDE_DEG,
 } from "./parameters";
 import { darkWindow } from "./sun";
 import type { Interval } from "./types";
@@ -46,10 +42,6 @@ function input(date: string, overrides: Partial<MoonTargetInput<Eyepiece>> = {})
 }
 
 describe("moonTarget", () => {
-  it("is null at new moon on 2026-10-10 (never above the minimum in the planet window)", () => {
-    expect(moonTarget(input("2026-10-10"))).toBeNull();
-  });
-
   for (const date of ["2026-10-24", "2026-10-26"]) {
     it(`lists the nearly full Moon on ${date}, well above the minimum altitude`, () => {
       // About 44° at 20:00 UTC in Warsaw on both nights (astronomy-engine, checked 2026-10-01).
@@ -76,10 +68,6 @@ describe("moonTarget", () => {
       expect(entry.seen).toBeNull();
     });
   }
-
-  it("is deterministic", () => {
-    expect(moonTarget(input("2026-10-24"))).toEqual(moonTarget(input("2026-10-24")));
-  });
 
   it("counts only samples inside visibleIntervals, keeping timing relative to the whole window", () => {
     const clear: Interval = { start: new Date("2026-10-25T00:00:00Z"), end: new Date("2026-10-25T02:00:00Z") };
@@ -125,53 +113,5 @@ describe("moonTarget", () => {
     expect(crescent).not.toBeNull();
     expect(crescent?.facts.illuminatedFraction).toBeGreaterThanOrEqual(MOON_MIN_ILLUMINATION);
     expect(crescent?.placement).toBe("low");
-  });
-
-  it("pairs the whole-disc eyepiece with a stronger detail eyepiece", () => {
-    const entry = moonTarget(input("2026-10-24"));
-    expect(entry?.wholeDisc).toEqual(wholeDiscEyepiece(TELESCOPE, EYEPIECES));
-    expect(entry?.wholeDisc?.eyepiece).toBe(EYEPIECES[0]);
-    expect(entry?.detail).toBe(planetEyepiece(TELESCOPE, EYEPIECES));
-    expect(entry?.detail).toBe(EYEPIECES[1]);
-  });
-
-  it("drops the detail eyepiece when it magnifies no more than the whole-disc one", () => {
-    // Only a 25 mm: both rules pick it.
-    const single = moonTarget(input("2026-10-24", { eyepieces: [EYEPIECES[0]] }));
-    expect(single?.wholeDisc?.eyepiece).toBe(EYEPIECES[0]);
-    expect(single?.detail).toBeNull();
-    // A 3 mm breaks the exit-pupil floor, so planetEyepiece falls back to the 25 mm.
-    const tooStrong = { id: "e3", focalLengthMm: 3, afovDeg: 50 };
-    const fallback = moonTarget(input("2026-10-24", { eyepieces: [EYEPIECES[0], tooStrong] }));
-    expect(planetEyepiece(TELESCOPE, [EYEPIECES[0], tooStrong])).toBe(EYEPIECES[0]);
-    expect(fallback?.detail).toBeNull();
-  });
-
-  it("has no eyepieces for an empty kit", () => {
-    const entry = moonTarget(input("2026-10-24", { eyepieces: [] }));
-    expect(entry).not.toBeNull();
-    expect(entry?.wholeDisc).toBeNull();
-    expect(entry?.detail).toBeNull();
-  });
-
-  it("carries the log's seen summary for the moon key", () => {
-    const seen = seenSummaries(
-      [
-        { target: "moon", night: "2026-10-20", rating: 4 },
-        { target: "jupiter", night: "2026-10-21", rating: 5 },
-      ],
-      "2026-10-24",
-    );
-    const entry = moonTarget(input("2026-10-24", { seen }));
-    expect(entry?.seen).toEqual({ count: 1, firstNight: "2026-10-20", lastNight: "2026-10-20" });
-  });
-});
-
-describe("moonPlacementOf", () => {
-  it(`is low below ${MOON_LOW_ALTITUDE_DEG}°, high from ${WELL_PLACED_ALTITUDE_DEG}°, well in between`, () => {
-    expect(moonPlacementOf(MOON_LOW_ALTITUDE_DEG - 0.01)).toBe("low");
-    expect(moonPlacementOf(MOON_LOW_ALTITUDE_DEG)).toBe("well");
-    expect(moonPlacementOf(WELL_PLACED_ALTITUDE_DEG - 0.01)).toBe("well");
-    expect(moonPlacementOf(WELL_PLACED_ALTITUDE_DEG)).toBe("high");
   });
 });

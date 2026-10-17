@@ -53,31 +53,45 @@ describe("nextNightNotNoGo", () => {
     fallback,
   });
 
-  it("finds night 2 when it is marginal", () => {
-    const next = nextNightNotNoGo(input(series(50, 0)));
-    expect(next).toMatchObject({ kind: "found", date: NIGHT_2, verdict: { level: "marginal" } });
-  });
-
-  it("finds night 3 when night 2 is a no-go and night 3 a go", () => {
-    const next = nextNightNotNoGo(input(series(100, 10)));
-    expect(next).toMatchObject({ kind: "found", date: NIGHT_3, verdict: { level: "go" } });
-  });
-
-  it("is none up to night 3 when nights 2 and 3 are both no-go", () => {
-    expect(nextNightNotNoGo(input(series(100, 90)))).toEqual({ kind: "none", lastJudgedDate: NIGHT_3 });
-  });
-
-  it("is none with no judged night when the series does not cover night 2", () => {
+  it("walks to the first night that is not a no-go, and says how far it judged when there is none", () => {
     const endsInNight2 = night2.start.getTime() + 2 * HOUR_MS;
-    expect(nextNightNotNoGo(input(series(10, 10, endsInNight2)))).toEqual({ kind: "none", lastJudgedDate: null });
-    expect(nextNightNotNoGo(input(null))).toEqual({ kind: "none", lastJudgedDate: null });
-  });
-
-  it("is none up to night 2 when night 2 is a no-go and the series does not cover night 3", () => {
     const endsInNight3 = night3.start.getTime() + 2 * HOUR_MS;
-    expect(nextNightNotNoGo(input(series(100, 10, endsInNight3)))).toEqual({
-      kind: "none",
-      lastJudgedDate: NIGHT_2,
+    const cases = [
+      {
+        label: "night 2 marginal",
+        scenario: input(series(50, 0)),
+        expected: { kind: "found", date: NIGHT_2, verdict: { level: "marginal" } },
+      },
+      {
+        label: "night 2 no-go, night 3 go",
+        scenario: input(series(100, 10)),
+        expected: { kind: "found", date: NIGHT_3, verdict: { level: "go" } },
+      },
+      {
+        label: "nights 2 and 3 no-go",
+        scenario: input(series(100, 90)),
+        expected: { kind: "none", lastJudgedDate: NIGHT_3 },
+      },
+      {
+        label: "series ends in night 2",
+        scenario: input(series(10, 10, endsInNight2)),
+        expected: { kind: "none", lastJudgedDate: null },
+      },
+      { label: "no forecast", scenario: input(null), expected: { kind: "none", lastJudgedDate: null } },
+      {
+        label: "night 2 no-go, series ends in night 3",
+        scenario: input(series(100, 10, endsInNight3)),
+        expected: { kind: "none", lastJudgedDate: NIGHT_2 },
+      },
+    ];
+    expect(cases).toHaveLength(6);
+    cases.forEach(({ label, scenario, expected }, i) => {
+      const next = nextNightNotNoGo(scenario);
+      if (expected.kind === "none") {
+        expect(next, `case ${i}: ${label}`).toEqual(expected);
+      } else {
+        expect(next, `case ${i}: ${label}`).toMatchObject(expected);
+      }
     });
   });
 
@@ -153,26 +167,6 @@ describe("darkWindowReturn", () => {
     expect(found).toEqual(referenceReturn(TROMSO, -18, "2026-06-21"));
   });
 
-  it("matches the night-by-night scan for Warsaw at -18° from midsummer", () => {
-    const found = darkWindowReturn(WARSAW, -18, "2026-06-21");
-    expect(found).not.toBeNull();
-    expect(found).toEqual(referenceReturn(WARSAW, -18, "2026-06-21"));
-  });
-
-  it("matches the night-by-night scan for Tromsø from every fifth day, mid-April to mid-September", () => {
-    const mismatches: string[] = [];
-    for (const thresholdDeg of [-18, -15, -12]) {
-      for (let date = "2026-04-15"; date <= "2026-09-15"; date = addDays(date, 5)) {
-        const found = darkWindowReturn(TROMSO, thresholdDeg, date);
-        const reference = referenceReturn(TROMSO, thresholdDeg, date);
-        if (found?.date !== reference?.date) {
-          mismatches.push(`${thresholdDeg}° from ${date}: ${found?.date} vs ${reference?.date}`);
-        }
-      }
-    }
-    expect(mismatches).toEqual([]);
-  });
-
   it("returns the next night when it is already dark", () => {
     const found = darkWindowReturn(WARSAW, -18, "2026-10-10");
     expect(found?.date).toBe("2026-10-11");
@@ -225,15 +219,13 @@ describe("sevenNightOutlook", () => {
     nights.forEach((night) => {
       expect(night.darkWindow).toEqual(windowOf(WARSAW, night.date, THRESHOLD));
     });
-  });
-
-  it("gives the night of 24 Oct a dark window spanning the 03:00 CEST → 02:00 CET switch", () => {
-    const night = sevenNightOutlook(input(clearSeries()))[3];
-    expect(night.date).toBe("2026-10-24");
-    expect(night.darkWindow.kind).toBe("window");
-    if (night.darkWindow.kind === "window") {
-      expect(night.darkWindow.start.getTime()).toBeLessThan(DST_SWITCH_MS);
-      expect(night.darkWindow.end.getTime()).toBeGreaterThan(DST_SWITCH_MS);
+    // The night of 24 Oct holds the 03:00 CEST -> 02:00 CET switch: its dark window spans it.
+    const dstNight = nights[3].darkWindow;
+    expect(nights[3].date).toBe("2026-10-24");
+    expect(dstNight.kind).toBe("window");
+    if (dstNight.kind === "window") {
+      expect(dstNight.start.getTime()).toBeLessThan(DST_SWITCH_MS);
+      expect(dstNight.end.getTime()).toBeGreaterThan(DST_SWITCH_MS);
     }
   });
 

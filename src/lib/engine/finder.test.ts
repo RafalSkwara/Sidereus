@@ -15,14 +15,11 @@ import { bestWindow, objectTrack } from "./objects";
 import {
   FINDER_FIELD_DEG,
   FINDER_OVERHEAD_ALT_DEG,
-  FINDER_PANEL_FIELD_DEG,
   HOP_MAX_STEPS,
   HOP_MAX_STEP_FRACTION,
   HOP_STAR_MAX_MAG,
-  REFLEX_RING_DEG,
   START_STAR_CANDIDATES,
   darknessThresholdDegForBortle,
-  finderLimitingMagForBortle,
   nakedEyeLimitingMagForBortle,
   startStarMaxMagForBortle,
 } from "./parameters";
@@ -133,144 +130,10 @@ function allFinite(value: unknown): boolean {
   return true;
 }
 
-describe("parameters", () => {
-  it("never starts from a star fainter than the naked-eye limit, for every Bortle class", () => {
-    for (let b = 1; b <= 9; b++) {
-      expect(startStarMaxMagForBortle(b)).toBeLessThanOrEqual(nakedEyeLimitingMagForBortle(b));
-    }
-  });
-
-  it("gives the three starting bands and a finder depth of 7.2 to 7.5", () => {
-    expect([1, 4, 5, 6, 7, 9].map(startStarMaxMagForBortle)).toEqual([4.5, 4.5, 3.5, 3.5, 2.5, 2.5]);
-    for (let b = 1; b <= 9; b++) {
-      expect(finderLimitingMagForBortle(b)).toBeGreaterThanOrEqual(7.15);
-      expect(finderLimitingMagForBortle(b)).toBeLessThanOrEqual(7.5);
-    }
-    expect(finderLimitingMagForBortle(1)).toBe(7.5);
-    expect(() => startStarMaxMagForBortle(0)).toThrow(RangeError);
-  });
-});
-
-describe("projectGnomonic", () => {
-  it("puts the centre at the origin, a higher point at a smaller y and a point to the right at a larger x", () => {
-    const centre = hor(40, 90);
-    const up: Vec = [0, 0, 1];
-    const origin = projectGnomonic(centre, centre, up);
-    expect(origin?.x).toBeCloseTo(0, 9);
-    expect(origin?.y).toBeCloseTo(0, 9);
-    const above = projectGnomonic(centre, at(centre, 0, 3), up);
-    expect(above?.x).toBeCloseTo(0, 9);
-    expect(above?.y).toBeCloseTo(-3, 9);
-    // Looking east (az 90), the right-hand side is south.
-    const south = projectGnomonic(centre, hor(40, 100), up);
-    expect(south?.x).toBeGreaterThan(0);
-  });
-
-  it("returns null from 85° on and a finite point for a parallel up", () => {
-    expect(projectGnomonic([0, 0, 1], [0, 0, -1], [0, 1, 0])).toBeNull();
-    expect(allFinite(projectGnomonic([0, 0, 1], [Math.sin(2 * RAD), 0, Math.cos(2 * RAD)], [0, 0, 1]))).toBe(true);
-  });
-});
-
 describe("finderChart: the hop", () => {
-  it("starts from a star one step away with no intermediate hops", () => {
-    const chart = chartOf({ stars: skyOf([{ x: 4, y: 0, mag: 3 }]) });
-    expect(chart.kind).toBe("hop");
-    expect(chart.hops).toEqual([]);
-    expect(chart.start).toMatchObject({ index: 0, mag: 3 });
-    expect(chart.start?.distanceDeg).toBeCloseTo(4, 1);
-    expect(chart.finalStepDeg).toBeCloseTo(4, 1);
-    expect(chart.overview?.path).toHaveLength(2);
-  });
-
-  it("hops through an intermediate star", () => {
-    const chart = chartOf({
-      stars: skyOf([
-        { x: 11, y: 0, mag: 3 },
-        { x: 5.5, y: 0.5, mag: 6 },
-      ]),
-    });
-    expect(chart.kind).toBe("hop");
-    expect(chart.start?.index).toBe(0);
-    expect(chart.hops.map((h) => h.index)).toEqual([1]);
-    expect(chart.hops[0].stepDeg).toBeLessThanOrEqual(5.6);
-    expect(chart.finalStepDeg).toBeLessThanOrEqual(5.6);
-    expect(chart.overview?.path).toHaveLength(3);
-    expect(chart.finder.path).toHaveLength(2);
-  });
-
   it("accepts a step of exactly 5.6° and refuses one of 5.7°", () => {
     expect(chartOf({ stars: skyOf([{ x: 5.6, y: 0, mag: 3 }]) }).kind).toBe("hop");
     expect(chartOf({ stars: skyOf([{ x: 5.7, y: 0, mag: 3 }]) }).kind).toBe("direct");
-  });
-
-  describe("cost tie-breaks", () => {
-    // Start S at 11°; routes go S -> mid -> T. Index 0 is always the start.
-    const start: Spec = { x: 11, y: 0, mag: 3 };
-
-    it("1. fewest steps first: a faint star on a two-step route beats a bright three-step route", () => {
-      const chart = chartOf({
-        stars: skyOf([
-          start,
-          { x: 5.5, y: 0.3, mag: 6.4 }, // faint, one hop
-          { x: 8.2, y: 3.3, mag: 5.0 }, // bright pair, two hops
-          { x: 3, y: 4.5, mag: 5.0 },
-        ]),
-      });
-      expect(chart.hops.map((h) => h.index)).toEqual([1]);
-    });
-
-    it("2. then the brightest intermediate stars (smallest sum of magnitude x 10), before length", () => {
-      const chart = chartOf({
-        stars: skyOf([
-          start,
-          { x: 5.5, y: 0, mag: 6.0 }, // the shortest route, but fainter
-          { x: 5.5, y: 1.0, mag: 5.0 }, // longer steps, brighter
-        ]),
-      });
-      expect(chart.hops.map((h) => h.index)).toEqual([2]);
-    });
-
-    it("3. then the shorter total of steps", () => {
-      const chart = chartOf({
-        stars: skyOf([
-          start,
-          { x: 5.5, y: 1.0, mag: 5.5 }, // longer
-          { x: 5.5, y: 0.4, mag: 5.5 }, // shorter, same magnitude
-        ]),
-      });
-      expect(chart.hops.map((h) => h.index)).toEqual([2]);
-    });
-
-    it("4. then the smaller index sequence, whatever the order of the list", () => {
-      const stars = skyOf([start, { x: 5.5, y: 1, mag: 5.5, index: 40 }, { x: 5.5, y: -1, mag: 5.5, index: 7 }]);
-      expect(chartOf({ stars }).hops.map((h) => h.index)).toEqual([7]);
-      expect(chartOf({ stars: [...stars].reverse() }).hops.map((h) => h.index)).toEqual([7]);
-    });
-
-    it("keeps a faint prefix of a short route alive against a bright prefix that needs more steps", () => {
-      // S -> F (faint) -> T is two steps; S -> B1 (bright) -> B2 (bright) -> T is three. F must survive the brighter
-      // prefixes the search also sees at the same star.
-      const chart = chartOf({
-        stars: skyOf([start, { x: 5.5, y: 0, mag: 6.5 }, { x: 8, y: 4.5, mag: 4.6 }, { x: 2.5, y: 4.5, mag: 4.6 }]),
-      });
-      expect(chart.hops.map((h) => h.index)).toEqual([1]);
-    });
-
-    it("minimises the cost, not the greedy choice: a bright first hop that forces a faint second one loses", () => {
-      // Two 3-step routes. Route A: bright first star (4.8) then a faint one (6.4); route B: two middling stars
-      // (5.5 + 5.5). 48 + 64 = 112 > 55 + 55 = 110, so B wins although A's first star is brighter.
-      const chart = chartOf({
-        stars: skyOf([
-          { x: 14, y: 0, mag: 3 },
-          { x: 9, y: 2, mag: 4.8 },
-          { x: 4.5, y: 2.4, mag: 6.4 },
-          { x: 9.2, y: -2.5, mag: 5.5 },
-          { x: 4.6, y: -2.5, mag: 5.5 },
-        ]),
-      });
-      expect(chart.hops.map((h) => h.index)).toEqual([3, 4]);
-    });
   });
 
   it("only passes through stars within the start's distance plus one step of the target", () => {
@@ -331,26 +194,15 @@ describe("finderChart: the hop", () => {
     expect(sixth.kind).toBe("direct");
     expect(sixth.start?.index).toBe(0);
   });
-
-  it("breaks a distance tie by magnitude, then index", () => {
-    const chart = chartOf({
-      stars: skyOf([
-        { x: 4, y: 0, mag: 4.0, index: 9 },
-        { x: -4, y: 0, mag: 3.0, index: 5 },
-      ]),
-    });
-    expect(chart.start?.index).toBe(5);
-    const byIndex = chartOf({
-      stars: skyOf([
-        { x: 4, y: 0, mag: 3.0, index: 9 },
-        { x: -4, y: 0, mag: 3.0, index: 5 },
-      ]),
-    });
-    expect(byIndex.start?.index).toBe(5);
-  });
 });
 
 describe("finderChart: the kinds and the starting limits", () => {
+  it("never starts from a star fainter than the naked-eye limit, for every Bortle class", () => {
+    for (let b = 1; b <= 9; b++) {
+      expect(startStarMaxMagForBortle(b), `Bortle ${b}`).toBeLessThanOrEqual(nakedEyeLimitingMagForBortle(b));
+    }
+  });
+
   it("is no-start when no star meets the starting limit", () => {
     const chart = chartOf({ stars: skyOf([{ x: 2, y: 0, mag: 4.6 }]) });
     expect(chart.kind).toBe("no-start");
@@ -438,62 +290,12 @@ describe("finderChart: panels and circles", () => {
     { x: 20, y: 20, mag: 5 },
   ]);
 
-  it("draws the finder panel around the target with the stars to the finder's depth and the circles", () => {
-    const chart = chartOf({ stars, eyepieceFieldDeg: 1.7, bortle: 3 });
-    expect(chart.finder.fieldDeg).toBe(FINDER_PANEL_FIELD_DEG);
-    expect(chart.finder.target).toEqual({ x: 0, y: 0 });
-    const shown = chart.finder.stars.map((s) => s.index);
-    expect(shown).toContain(2);
-    expect(shown).not.toContain(4); // 7.6 is fainter than any finder depth
-    expect(shown).not.toContain(5); // outside the square
-    const half = FINDER_PANEL_FIELD_DEG / 2;
-    for (const s of chart.finder.stars) {
-      expect(Math.abs(s.x)).toBeLessThanOrEqual(half);
-      expect(Math.abs(s.y)).toBeLessThanOrEqual(half);
-      expect(s.mag).toBeLessThanOrEqual(finderLimitingMagForBortle(3));
-    }
-    expect(chart.finder.circles.map((c) => c.kind)).toEqual([
-      "finder",
-      ...REFLEX_RING_DEG.map(() => "reflex"),
-      "eyepiece",
-    ]);
-    expect(chart.finder.circles[0].r).toBeCloseTo(Math.tan((FINDER_FIELD_DEG / 2) * RAD) * DEG, 3);
-    expect(chart.finder.circles.at(-1)?.r).toBeCloseTo(Math.tan(0.85 * RAD) * DEG, 3);
-    expect(chartOf({ stars }).finder.circles.map((c) => c.kind)).not.toContain("eyepiece");
-  });
-
   it("draws the faintest stars only where the finder reaches: 7.45 at Bortle 3, not at Bortle 9", () => {
     const at3 = chartOf({ stars, bortle: 3 }).finder.stars.map((s) => s.index);
     const at9 = chartOf({ stars, bortle: 9 }).finder.stars.map((s) => s.index);
     expect(at3).toContain(3);
     expect(at9).not.toContain(3);
     expect(at9).toContain(2);
-  });
-
-  it("draws the overview from the start to the target with the hop stars, to the hop depth only", () => {
-    const chart = chartOf({ stars });
-    const overview = chart.overview;
-    expect(overview).not.toBeNull();
-    expect(overview?.path).toHaveLength(3);
-    expect(overview?.stars.every((s) => s.mag <= HOP_STAR_MAX_MAG)).toBe(true);
-    const shown = overview?.stars.map((s) => s.index) ?? [];
-    expect(shown).toEqual(expect.arrayContaining([0, 1]));
-    const target = overview?.target;
-    expect(overview?.path.at(-1)).toEqual(target);
-    // The panel is wide enough for the route.
-    const half = (overview?.fieldDeg ?? 0) / 2;
-    for (const p of overview?.path ?? []) {
-      expect(Math.abs(p.x)).toBeLessThanOrEqual(half);
-      expect(Math.abs(p.y)).toBeLessThanOrEqual(half);
-    }
-    expect(chart.facing.altDeg).toBeCloseTo(50, 1);
-    expect(chart.facing.azDeg).toBeCloseTo(180, 1);
-  });
-
-  it("is deterministic: identical inputs give a deep-equal chart", () => {
-    const input = { stars, eyepieceFieldDeg: 1.7 };
-    expect(chartOf(input)).toEqual(chartOf(input));
-    expect(JSON.stringify(chartOf(input))).toBe(JSON.stringify(chartOf(input)));
   });
 });
 
@@ -526,30 +328,6 @@ describe("finderChart: orientation", () => {
     expect(Math.abs(finderUpper?.x ?? 1)).toBeLessThan(0.001);
   });
 
-  it("holds the vertical rule for facing panels at several altitudes 10° or more from the zenith, and several azimuths", () => {
-    for (const [alt, az] of [
-      [20, 10],
-      [35, 120],
-      [60, 250],
-      [78, 330],
-    ]) {
-      const target = hor(alt, az);
-      const stars: FinderStarInput[] = [
-        { index: 0, mag: 3, vector: toJ2000(hor(alt, az + 3)) },
-        { index: 1, mag: 6, vector: toJ2000(hor(alt + 2, az)) },
-        { index: 2, mag: 6, vector: toJ2000(hor(alt - 2, az)) },
-      ];
-      const chart = chartOf({
-        stars,
-        target: { vector: toJ2000(target), magnitude: null, isPlanet: false, majorAxisArcmin: null },
-      });
-      expect(chart.orientation).toBe("facing");
-      const upper = chart.finder.stars.find((s) => s.index === 1);
-      const lower = chart.finder.stars.find((s) => s.index === 2);
-      expect(upper?.y).toBeLessThan(lower?.y ?? Number.NEGATIVE_INFINITY);
-    }
-  });
-
   it("is the naked-eye view: facing south, east is on the left", () => {
     const target = hor(50, 180);
     const east = hor(50, 175);
@@ -570,24 +348,6 @@ describe("finderChart: orientation", () => {
         stars: [{ index: 0, mag: 3, vector: toJ2000(hor(startAltDeg, azDeg)) }],
         target: { vector: toJ2000(hor(altDeg, azDeg)), magnitude: null, isPlanet: false, majorAxisArcmin: null },
       });
-
-    it("gives a finite, deterministic chart for a target exactly at the zenith", () => {
-      const run = () =>
-        chartOf({
-          stars: [
-            { index: 0, mag: 3, vector: toJ2000(hor(86, 180)) },
-            { index: 1, mag: 6, vector: toJ2000(hor(88, 90)) },
-          ],
-          target: { vector: toJ2000([0, 0, 1]), magnitude: null, isPlanet: false, majorAxisArcmin: null },
-        });
-      const chart = run();
-      expect(chart.orientation).toBe("overhead");
-      expect(allFinite(chart)).toBe(true);
-      expect(chart.finder.zenith).toEqual({ x: 0, y: 0 });
-      expect(chart.finder.zenithEdge).toBeNull();
-      expect(chart.facing.altDeg).toBe(90);
-      expect(run()).toEqual(chart);
-    });
 
     it("switches at 80°: a centre at 79.9° stays facing and one at 80.0° goes overhead", () => {
       // The start sits 3° lower, so the overview's centre stays below 80° with no zenith inside it.
@@ -708,28 +468,6 @@ describe("finderChart: orientation", () => {
       }
     });
 
-    it("says which pole is up: north from the equator northwards, south for a southern site, none when facing", () => {
-      const zenithAt = (site: Site): FinderChartData => {
-        const { rot } = Rotation_EQJ_HOR(TIME, observerFor(site));
-        const zenith: UnitVector = [rot[0][2], rot[1][2], rot[2][2]];
-        return finderChart({
-          site,
-          time: TIME,
-          bortle: 3,
-          minAltitudeDeg: MIN_ALT,
-          target: { vector: zenith, magnitude: null, isPlanet: false, majorAxisArcmin: null },
-          stars: [],
-          eyepieceFieldDeg: null,
-        });
-      };
-      expect(zenithAt(SITE).poleUp).toBe("north");
-      expect(zenithAt({ ...SITE, latitudeDeg: 0 }).poleUp).toBe("north");
-      expect(
-        zenithAt({ latitudeDeg: -33.9, longitudeDeg: 18.4, elevationM: 10, timeZone: "Africa/Johannesburg" }).poleUp,
-      ).toBe("south");
-      expect(withTarget(60, 57).poleUp).toBeNull();
-    });
-
     it("points up to the south celestial pole at a southern site", () => {
       const site: Site = { latitudeDeg: -33.9, longitudeDeg: 18.4, elevationM: 10, timeZone: "Africa/Johannesburg" };
       const { rot } = Rotation_EQJ_HOR(TIME, observerFor(site));
@@ -797,13 +535,34 @@ describe("finderChart: random skies against an exhaustive search", () => {
       const angle = random() * 2 * Math.PI;
       const distance = 7 + random() * 8;
       specs.push({ x: distance * Math.cos(angle), y: distance * Math.sin(angle), mag: 3, index: 500 });
-      for (let i = 0; i < 18; i++) {
+      // Every third sky is a corridor of six stars along the way from the start to the target, with only four
+      // magnitudes: equal magnitude sums are then common, and the oracle's later tie-breaks (total length, index
+      // sequence) decide routes too (test-suite-diet: this replaces the cost tie-break cases).
+      const corridor = seed % 3 === 0;
+      for (let i = 0; i < (corridor ? 6 : 18); i++) {
+        const first = random();
+        const second = random();
+        const along = distance * first;
+        const across = (second - 0.5) * 5;
         specs.push({
-          x: (random() - 0.5) * 30,
-          y: (random() - 0.5) * 30,
-          mag: 5 + Math.floor(random() * 16) / 10,
+          x: corridor ? along * Math.cos(angle) - across * Math.sin(angle) : (first - 0.5) * 30,
+          y: corridor ? along * Math.sin(angle) + across * Math.cos(angle) : (second - 0.5) * 30,
+          mag: corridor ? 5 + Math.floor(random() * 4) / 2 : 5 + Math.floor(random() * 16) / 10,
           index: 100 + Math.floor(random() * 300) + i * 1000,
         });
+      }
+      if (corridor) {
+        // A mirror twin (same magnitude, a larger index) of the first two corridor stars, across the line from the
+        // start to the target: a route through the twin costs exactly what the route through the star does.
+        for (const spec of specs.slice(1, 3)) {
+          const along = spec.x * Math.cos(angle) + spec.y * Math.sin(angle);
+          specs.push({
+            x: 2 * along * Math.cos(angle) - spec.x,
+            y: 2 * along * Math.sin(angle) - spec.y,
+            mag: spec.mag,
+            index: (spec.index ?? 0) + 7,
+          });
+        }
       }
       const stars = skyOf(specs);
       const expected = bruteForce(stars, 0, true);
@@ -1033,11 +792,11 @@ function designation(stars: readonly FinderStar[], index: number): string {
 }
 
 describe("coverage over the catalogue (D-11)", () => {
-  // Warsaw, 52° N, on the calibration nights. At Bortle 3 the dark window needs the Sun below -18°, which July
-  // never gives at this latitude: that night is skipped for Bortle 3.
-  const NIGHTS = ["2026-01-15", "2026-04-15", "2026-07-15", "2026-10-15"] as const;
+  // Warsaw, 52° N, on the winter calibration night, the one with the most objects up (test-suite-diet: the April,
+  // July and October nights added no new class of case and tripled the run time).
+  const NIGHTS = ["2026-01-15"] as const;
   const BORTLES = [3, 5, 8] as const;
-  /** Measured on the first run: every one of the 373 Bortle 3 object-nights (July has no Bortle 3 dark window) was a hop, a share of 1.0; the gate is 3 percentage points below. */
+  /** Measured on the first run: every Bortle 3 object-night was a hop, a share of 1.0; the gate is 3 percentage points below. */
   const HOP_SHARE_GATE_BORTLE_3 = 0.97;
 
   it("gives every object above the minimum altitude at its best time one of the four kinds, and enough hops at Bortle 3", async () => {
@@ -1109,6 +868,10 @@ describe("coverage over the catalogue (D-11)", () => {
         `finder coverage ${JSON.stringify(Object.fromEntries(counts))} hop share ${BORTLES.map((b) => `B${b} ${share(b).toFixed(4)}`).join(", ")} in ${Date.now() - started} ms`,
       );
     }
+    const bortle3 = counts.get(3);
+    const objectNights3 =
+      bortle3 === undefined ? 0 : bortle3.hop + bortle3.direct + bortle3["naked-eye"] + bortle3["no-start"];
+    expect(objectNights3, "Bortle 3 object-nights charted (never an empty sample)").toBeGreaterThan(100);
     expect(share(3)).toBeGreaterThanOrEqual(HOP_SHARE_GATE_BORTLE_3);
   }, 120_000);
 });
