@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Proposal 1, star. Sky: token zenith #050916 to token horizon #1b2a55 (dark theme). Main star: token primary #f2f4f8. Companion: token primary-strong #c3d0ff. -->
+  <defs>
+    <linearGradient id="p1-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050916"/>
+      <stop offset="1" stop-color="#1b2a55"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#p1-sky)"/>
+  <path fill="#f2f4f8" d="M240 82Q240 272 390 272Q240 272 240 462Q240 272 90 272Q240 272 240 82Z"/>
+  <path fill="#c3d0ff" d="M392 74Q392 128 436 128Q392 128 392 182Q392 128 348 128Q392 128 392 74Z"/>
+</svg>

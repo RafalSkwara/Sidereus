@@ -778,6 +778,50 @@ const moonCardWashedOutLink = {
   label: plural(locale, moonCardWashedOut, m.tonight.pages.seeWashedOut)({ count: String(moonCardWashedOut) }),
 };
 
+// App icon proposals (app-icon): the three candidate icons, read as text from the change's evidence folder (in
+// `context/changes/` now, `context/archive/` once archived; a glob, so the page still builds when neither matches)
+// and drawn as `<img>` data URIs, so red mode filters them like any image. Server-side `?raw` strings only: nothing
+// is emitted as a client asset, so the service worker never precaches a proposal.
+const appIconFiles = import.meta.glob<string>("/context/*/app-icon/evidence/icon-proposals/*/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const appIconSvg = (proposal: string, file: string) => {
+  const entry = Object.entries(appIconFiles).find(([path]) => path.endsWith(`/${proposal}/${file}`));
+  return entry ? `data:image/svg+xml,${encodeURIComponent(entry[1])}` : null;
+};
+const appIconProposals = [
+  {
+    dir: "1-star",
+    name: "1 · Star",
+    note: "Four-point star (primary) with a primary-strong companion on the zenith-to-horizon sky.",
+  },
+  {
+    dir: "2-planet",
+    name: "2 · Ringed planet",
+    note: "Primary-strong planet, marginal ring cut in front of it, a primary star.",
+  },
+  {
+    dir: "3-free",
+    name: "3 · Horizon star",
+    note: "Tonight's band: star-accent star over a dusk-glow horizon and a background ground.",
+  },
+].map((proposal) => ({
+  ...proposal,
+  favicon: appIconSvg(proposal.dir, "favicon.svg"),
+  icon: appIconSvg(proposal.dir, "icon.svg"),
+  maskable: appIconSvg(proposal.dir, "maskable.svg"),
+}));
+// favicon.svg at the tab sizes, icon.svg at the home-screen sizes, maskable.svg in a launcher's circle crop.
+const appIconSizes = [
+  { label: "16 · favicon", file: "favicon", size: "size-4" },
+  { label: "32 · favicon", file: "favicon", size: "size-8" },
+  { label: "64 · icon", file: "icon", size: "size-16" },
+  { label: "128 · icon", file: "icon", size: "size-32" },
+  { label: "128 · maskable, circle", file: "maskable", size: "size-32 rounded-full" },
+] as const;
+
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
 const blockNote = "text-sm text-muted-foreground";
@@ -905,6 +949,39 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               ))}
             </ul>
           </div>
+        </div>
+      </Band>
+
+      <Band headingId="app-icon-heading" heading="App icon proposals">
+        <div class="flex flex-col gap-6" data-app-icon-proposals>
+          <p class:list={blockNote}>
+            Proposals for the app-icon change, not in use: the favicon and the home-screen icons are still generated
+            from public/pwa-icon.svg. Literal hex inside each SVG (an icon cannot read the tokens); the files and their
+            PNG previews live in context/changes/app-icon/evidence/icon-proposals/.
+          </p>
+          {appIconProposals.map((proposal) => (
+            <section class="flex flex-col gap-3" aria-labelledby={`app-icon-${proposal.dir}`}>
+              <h3 id={`app-icon-${proposal.dir}`} class:list={groupTitle}>
+                {proposal.name}
+              </h3>
+              <p class:list={blockNote}>{proposal.note}</p>
+              <ul class="flex flex-wrap items-end gap-6">
+                {appIconSizes.map((spec) => {
+                  const src = proposal[spec.file];
+                  return (
+                    <li class="flex flex-col items-center gap-2">
+                      {src ? (
+                        <img src={src} alt="" class:list={["shrink-0", spec.size]} />
+                      ) : (
+                        <span class:list={["shrink-0 rounded-lg border border-dashed border-border", spec.size]} />
+                      )}
+                      <span class:list={stateLabel}>{spec.label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
         </div>
       </Band>
 

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Proposal 2, ringed planet. Sky: token zenith #050916 to token horizon #1b2a55. Planet: token primary-strong #c3d0ff. Ring: token marginal #f1cf6b. Star: token primary #f2f4f8. -->
+  <defs>
+    <linearGradient id="p2-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050916"/>
+      <stop offset="1" stop-color="#1b2a55"/>
+    </linearGradient>
+    <!-- The front arc of the ring cuts a groove into the planet, so the ring reads in front of it at any size. -->
+    <mask id="p2-groove" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <path transform="translate(256 268) rotate(-22)" d="M-208 0A208 60 0 0 0 208 0" fill="none" stroke="#000" stroke-width="62"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" fill="url(#p2-sky)"/>
+  <ellipse transform="translate(256 268) rotate(-22)" rx="208" ry="60" fill="none" stroke="#f1cf6b" stroke-width="30"/>
+  <circle cx="256" cy="268" r="118" fill="#c3d0ff" mask="url(#p2-groove)"/>
+  <path transform="translate(256 268) rotate(-22)" d="M-208 0A208 60 0 0 0 208 0" fill="none" stroke="#f1cf6b" stroke-width="30" stroke-linecap="round"/>
+  <path fill="#f2f4f8" d="M112 80Q112 116 142 116Q112 116 112 152Q112 116 82 116Q112 116 112 80Z"/>
+</svg>

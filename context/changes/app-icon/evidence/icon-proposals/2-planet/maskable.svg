@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Proposal 2, maskable: full-bleed sky, the planet, ring and star scaled to 0.8 about the centre (safe circle r = 204.8). -->
+  <defs>
+    <linearGradient id="p2m-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050916"/>
+      <stop offset="1" stop-color="#1b2a55"/>
+    </linearGradient>
+    <mask id="p2m-groove" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <path transform="translate(256 268) rotate(-22)" d="M-208 0A208 60 0 0 0 208 0" fill="none" stroke="#000" stroke-width="62"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" fill="url(#p2m-sky)"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <ellipse transform="translate(256 268) rotate(-22)" rx="208" ry="60" fill="none" stroke="#f1cf6b" stroke-width="30"/>
+    <circle cx="256" cy="268" r="118" fill="#c3d0ff" mask="url(#p2m-groove)"/>
+    <path transform="translate(256 268) rotate(-22)" d="M-208 0A208 60 0 0 0 208 0" fill="none" stroke="#f1cf6b" stroke-width="30" stroke-linecap="round"/>
+    <path fill="#f2f4f8" d="M112 80Q112 116 142 116Q112 116 112 152Q112 116 82 116Q112 116 112 80Z"/>
+  </g>
+</svg>
