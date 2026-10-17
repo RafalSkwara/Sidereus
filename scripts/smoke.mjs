@@ -309,6 +309,13 @@ const steps = [
     { status: 302, location: "/tonight", exact: true },
   ],
   [
+    // Impl review F1: the walk's save carries `next`, so the route's default (`next ?? "/tonight"`) is pinned here, on
+    // the "already has gear" branch, without a second account.
+    "onboarding post without a page to continue to lands on tonight once set up",
+    () => request("/api/onboarding", { method: "POST", form: onboarding }),
+    { status: 302, location: "/tonight", exact: true },
+  ],
+  [
     "onboarding redirects once set up to the page to continue to",
     () => request("/onboarding?next=%2Fgear"),
     { status: 302, location: "/gear", exact: true },
