@@ -780,27 +780,27 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 #### Automated
 
-- [x] 1.1 Types check: `npx astro sync && npx astro check`
-- [x] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference`
-- [x] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards`
-- [x] 1.4 Lint passes on the changed files
+- [x] 1.1 Types check: `npx astro sync && npx astro check` — 4fa2a3a
+- [x] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference` — 4fa2a3a
+- [x] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards` — 4fa2a3a
+- [x] 1.4 Lint passes on the changed files — 4fa2a3a
 
 #### Manual
 
-- [x] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px (`evidence/impl/p1-c-progress-icons-*-390.png`)
+- [x] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px — 4fa2a3a
 
 ### Phase 2: Milestone badges on the page and in the dialog
 
 #### Automated
 
-- [ ] 2.1 Types check: `npx astro check`
-- [ ] 2.2 Reference and guard suites pass, incl. the new contrast pin
-- [ ] 2.3 Lint passes on the changed files
-- [ ] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px
+- [x] 2.1 Types check: `npx astro check`
+- [x] 2.2 Reference and guard suites pass, incl. the new contrast pin
+- [x] 2.3 Lint passes on the changed files
+- [x] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px
 
 #### Manual
 
-- [ ] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop
+- [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop
 - [ ] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
 - [x] 2.7 The owner approved the badge art before it was ported — approved by the owner, 2026-10-17
 

@@ -1,16 +1,19 @@
 ---
 // The milestone celebration (observing-milestones Phase 6, the owner's pick on 2026-10-13: the modal dialog). A native
-// <dialog> on a night-sky card, opened by the script below with `showModal()` as the page loads: the Award, the label
-// (plural when a save reaches several), the names joined as a list, "Continue" (closes it; Esc closes it natively and
-// focus goes back where the browser puts it) and "See your progress" (/log/progress). No timer and no date.
+// <dialog> on a night-sky card, opened by the script below with `showModal()` as the page loads: each reached
+// milestone's own badge (`MilestoneBadge`, `lg`; ui-progress-rewards, so the dialog and the progress page match), the
+// label (plural when a save reaches several), the names joined as a list, "Continue" (closes it; Esc closes it natively
+// and focus goes back where the browser puts it) and "See your progress" (/log/progress). No timer and no date.
 // `GearShell` renders it for a signed-in user whose URL carries valid `milestone` params. When it opens, the script
 // removes every `milestone` param with `history.replaceState` (`withoutParams`, the toasts' helper), so a reload never
 // replays it.
 // `specimen` is for /design: the card sits inline in a <div>, not in a modal, and the script finds nothing to open or
 // close. `idBase` keeps ids unique when /design shows several.
-// Red mode has no hue, so the Award chip, the rules and the weight carry the look, never a colour. Colours are tokens.
-import { ArrowRight, Award } from "lucide-react";
+// Red mode has no hue, so the badges' rings and pips, the rules and the weight carry the look, never a colour. Colours
+// are tokens.
+import { ArrowRight } from "lucide-react";
 
+import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, plural } from "@/i18n";
 import { PROGRESS_PAGE } from "@/lib/observations/redirect";
@@ -71,9 +74,11 @@ const CARD_STARS = [
         ))}
       </svg>
       <div class="relative flex flex-col items-center">
-        <span class="flex size-20 items-center justify-center rounded-full border border-action-border bg-action-surface text-primary-strong">
-          <Award className="size-12" aria-hidden="true" />
-        </span>
+        <div class="flex flex-wrap justify-center gap-3">
+          {keys.map((key) => (
+            <MilestoneBadge milestone={key} reached size="lg" idBase={`${idBase}-${key}`} />
+          ))}
+        </div>
         <p id={labelId} class="mt-4 text-label font-semibold text-muted-foreground">
           {reached}
         </p>

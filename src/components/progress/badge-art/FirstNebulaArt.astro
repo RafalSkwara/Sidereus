@@ -1,0 +1,160 @@
+---
+// The "first-nebula" badge's illustration (ui-progress-rewards), in the 120-unit badge space; MilestoneBadge clips it and
+// draws the disc, ring, arc and pip. Generated from the owner-approved art (round 1b) by
+// context/changes/ui-progress-rewards/evidence/badge-art/port.mjs: change the art there and re-run, never by hand.
+// Tokens only (var(--…)); value steps by opacity; red mode reads by shape and value.
+export interface Props {
+  /** Prefix for this badge's gradient and clip ids, unique on the page. */
+  idBase: string;
+}
+
+const { idBase } = Astro.props;
+---
+
+<g fill="var(--star)">
+  <circle cx="26.2" cy="49.4" r="0.97" />
+  <circle cx="69.7" cy="62.7" r="0.75" />
+  <circle cx="39.7" cy="76.3" r="0.9" />
+  <circle cx="57.9" cy="40.2" r="0.87" />
+  <circle cx="74.1" cy="40.6" r="0.69" />
+  <circle cx="67" cy="60.6" r="1.02" />
+  <circle cx="54.9" cy="50.5" r="0.85" />
+  <circle cx="62.4" cy="67.3" r="0.93" />
+  <circle cx="63.5" cy="47.7" r="0.74" />
+  <circle cx="95.2" cy="68" r="0.42" />
+  <circle cx="60.2" cy="14.9" r="0.47" />
+  <circle cx="58.9" cy="41.8" r="0.56" />
+  <circle cx="80" cy="51.6" r="0.35" />
+  <circle cx="103.4" cy="50.6" r="0.45" />
+</g>
+<g fill="var(--star-accent)">
+  <circle cx="88.5" cy="48.3" r="1.03" />
+  <circle cx="39.3" cy="41.5" r="0.7" />
+  <circle cx="68.2" cy="97.8" r="0.75" />
+  <circle cx="93.2" cy="23.4" r="0.61" />
+</g>
+<defs>
+  <radialGradient id={`${idBase}-glow`} cx="55%" cy="50%" r="55%">
+    <stop offset="0" stop-color="var(--primary-strong)" stop-opacity="0.45" />
+    <stop offset="1" stop-color="var(--primary-strong)" stop-opacity="0" />
+  </radialGradient>
+  <radialGradient id={`${idBase}-dusk`} cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="var(--dusk-glow)" stop-opacity="1" />
+    <stop offset="1" stop-color="var(--dusk-glow)" stop-opacity="0" />
+  </radialGradient>
+  <radialGradient id={`${idBase}-warm`} cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="var(--dusk-glow-horizon)" stop-opacity="0.9" />
+    <stop offset="1" stop-color="var(--dusk-glow-horizon)" stop-opacity="0" />
+  </radialGradient>
+</defs>
+<ellipse cx="60" cy="58" rx="50" ry="40" transform="rotate(-28 60 58)" fill={`url(#${idBase}-dusk)`} />
+<ellipse cx="52" cy="66" rx="26" ry="18" transform="rotate(-20 52 66)" fill={`url(#${idBase}-warm)`} />
+<ellipse cx="62" cy="56" rx="44" ry="30" transform="rotate(-28 62 56)" fill={`url(#${idBase}-glow)`} />
+<path
+  d="M90.5 39.4C90.2 41.2 88.1 43.6 85.9 46.1C83.6 48.6 81.3 51.2 76.8 54.7C72.3 58.1 64.2 64.2 59.1 66.7C54 69.2 49.4 69.5 46.1 69.6C42.8 69.7 37.6 69.9 39.6 67.3C41.6 64.7 52.9 57.6 58.1 54C63.3 50.4 65.7 48.8 70.6 45.8C75.5 42.7 84.4 36.8 87.7 35.7C91.1 34.6 90.8 37.7 90.5 39.4Z"
+  fill="var(--moon-lit)"
+  opacity="0.16"
+/>
+<path
+  d="M88.6 48.3C88.6 49.8 79.6 55.6 74.8 59.1C70 62.5 65.6 66 59.9 69C54.1 72.1 45.4 75.6 40.1 77.4C34.9 79.1 31.8 79.2 28.4 79.4C25.1 79.7 18.8 80.7 20 78.9C21.1 77 29.5 71.7 35.2 68.3C40.9 64.9 47.7 61.7 54.3 58.7C60.9 55.7 68.9 52.1 74.6 50.3C80.3 48.6 88.6 46.9 88.6 48.3Z"
+  fill="var(--moon-lit)"
+  opacity="0.14"
+/>
+<path
+  d="M79 29.7C79.1 31 78.2 33.2 76.2 35.7C74.2 38.3 70.8 41.2 67.1 44.9C63.4 48.6 56.9 56 53.9 58C50.9 59.9 51 56.6 49.2 56.5C47.5 56.4 43.2 58.8 43.4 57.4C43.6 56 47.4 51.8 50.5 48.2C53.6 44.6 57.8 39.2 62 35.8C66.2 32.3 72.8 28.8 75.6 27.8C78.4 26.8 78.9 28.4 79 29.7Z"
+  fill="var(--primary-strong)"
+  opacity="0.35"
+/>
+<path
+  d="M70.5 44.4C70.1 45.8 64.4 48.5 61.3 50.6C58.3 52.6 56.4 54.9 52.1 56.7C47.7 58.5 40.1 60.4 35.2 61.2C30.3 62 24.3 62.4 22.7 61.6C21.2 60.8 24.1 58.1 25.8 56.3C27.6 54.4 29.4 52.2 33.1 50.6C36.7 49 42.5 48.3 47.7 46.8C52.8 45.4 60.1 42.4 63.9 42C67.7 41.6 70.9 43 70.5 44.4Z"
+  fill="var(--primary-strong)"
+  opacity="0.3"
+/>
+<path
+  d="M98.8 53.1C98.8 54.3 93.1 59.4 90 62.5C86.8 65.5 83.9 68.3 79.8 71.4C75.8 74.4 70.8 77.8 65.8 80.8C60.7 83.8 52.4 88.7 49.6 89.3C46.7 90 46.3 87.6 48.7 84.8C51.1 82.1 59.8 76.5 64.1 72.8C68.5 69.1 70.8 65.6 75.1 62.6C79.3 59.7 85.6 56.8 89.6 55.2C93.5 53.6 98.7 51.9 98.8 53.1Z"
+  fill="var(--primary-strong)"
+  opacity="0.28"
+/>
+<path
+  d="M76.1 49.2C76.7 50.7 72.5 54.7 71 57.4C69.4 60 69.5 62.8 67.1 64.8C64.7 66.9 59.5 69.2 56.4 69.7C53.3 70.2 49.7 69.2 48.4 67.9C47 66.5 47.7 63.7 48.1 61.6C48.6 59.6 49.4 57.8 51.1 55.5C52.7 53.2 55.3 49.2 58 48C60.7 46.8 64.1 48 67.1 48.2C70.1 48.5 75.5 47.7 76.1 49.2Z"
+  fill="var(--moon-lit)"
+  opacity="0.3"
+/>
+<path
+  d="M69.9 51.8C70 52.9 70 53.8 69.6 54.9C69.1 56 68.2 57.4 67.1 58.2C66 59 64.1 59.4 62.9 59.5C61.6 59.6 60.5 59.3 59.6 58.9C58.7 58.4 57.7 57.9 57.3 56.9C56.9 55.9 56.5 54.1 57.4 52.8C58.3 51.4 60.7 49.6 62.6 48.9C64.5 48.1 67.3 47.7 68.5 48.2C69.8 48.7 69.7 50.7 69.9 51.8Z"
+  fill="var(--moon-lit)"
+  opacity="0.45"
+/>
+<path
+  d="M55.9 68.4C56 69.4 55.5 70.8 53.2 72.1C51 73.4 46 75.5 42.5 76.2C38.9 76.9 35.8 75.9 32.1 76.1C28.4 76.3 21.3 77.7 20.4 77.3C19.5 76.8 24.9 74.4 26.7 73.2C28.4 72.1 28.6 71.3 30.8 70.5C32.9 69.7 35.9 69.3 39.5 68.5C43.1 67.7 49.7 65.8 52.4 65.8C55.1 65.8 55.7 67.3 55.9 68.4Z"
+  fill="var(--moon-lit)"
+  opacity="0.12"
+/>
+<path
+  d="M91.8 33.9C92.4 34.6 94.6 33.6 94.2 35.1C93.8 36.6 91.5 40.5 89.3 42.8C87.2 45.2 83.7 47.5 81.3 49.1C78.9 50.8 76.2 52.8 75.2 52.9C74.1 53 74.9 51 74.9 49.8C75 48.5 74 47.3 75.5 45.5C76.9 43.7 80.8 41.2 83.4 38.8C86 36.5 89.5 32 90.9 31.2C92.3 30.3 91.3 33.3 91.8 33.9Z"
+  fill="var(--moon-lit)"
+  opacity="0.14"
+/>
+<path
+  d="M20 58C32 50 46 52 58 44S80 34 96 36"
+  fill="none"
+  stroke="var(--moon-lit)"
+  stroke-width="1.1"
+  stroke-linecap="round"
+  opacity="0.5"
+/>
+<path
+  d="M24 84C38 78 52 80 66 72S88 64 104 58"
+  fill="none"
+  stroke="var(--primary-strong)"
+  stroke-width="1.1"
+  stroke-linecap="round"
+  opacity="0.5"
+/>
+<path
+  d="M34 40C44 36 52 38 62 32"
+  fill="none"
+  stroke="var(--moon-lit)"
+  stroke-width="0.8"
+  stroke-linecap="round"
+  opacity="0.35"
+/>
+<path
+  d="M44 92C56 88 66 90 78 84"
+  fill="none"
+  stroke="var(--primary-strong)"
+  stroke-width="0.8"
+  stroke-linecap="round"
+  opacity="0.35"
+/>
+<path
+  d="M30 76C40 70 47 71 55 64C62 58 66 60 74 55C80 51 88 49 96 44C88 52 80 56 74 60C66 65 62 63 56 69C48 76 40 76 30 76Z"
+  fill="var(--moon-dark)"
+  opacity="0.6"
+/>
+<path
+  d="M64 48.5Q65.43 53.57 70.5 55Q65.43 56.43 64 61.5Q62.57 56.43 57.5 55Q62.57 53.57 64 48.5Z"
+  fill="var(--moon-lit)"
+  opacity="1"
+/>
+<path
+  d="M60 57.4Q60.572 59.428 62.6 60Q60.572 60.572 60 62.6Q59.428 60.572 57.4 60Q59.428 59.428 60 57.4Z"
+  fill="var(--moon-lit)"
+  opacity="0.95"
+/>
+<path
+  d="M68 58.8Q68.484 60.516 70.2 61Q68.484 61.484 68 63.2Q67.516 61.484 65.8 61Q67.516 60.516 68 58.8Z"
+  fill="var(--moon-lit)"
+  opacity="0.9"
+/>
+<path
+  d="M80 41Q80.66 43.34 83 44Q80.66 44.66 80 47Q79.34 44.66 77 44Q79.34 43.34 80 41Z"
+  fill="var(--moon-lit)"
+  opacity="0.8"
+/>
+<path
+  d="M42 67.2Q42.616 69.384 44.8 70Q42.616 70.616 42 72.8Q41.384 70.616 39.2 70Q41.384 69.384 42 67.2Z"
+  fill="var(--moon-lit)"
+  opacity="0.75"
+/>
+<circle cx="56" cy="50" r="0.9" fill="var(--moon-lit)" />

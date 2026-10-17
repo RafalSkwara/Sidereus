@@ -52,6 +52,7 @@ import NightStrip from "@/components/tonight/NightStrip.astro";
 import { nightSamples, SAMPLE_NIGHTS_ZONE } from "@/components/design/night-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
 import { OBJECT_FAMILY_ICONS } from "@/components/progress/progress-icons";
+import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
 import SeenList from "@/components/progress/SeenList.astro";
@@ -72,6 +73,7 @@ import { rangeClasses } from "@/components/tonight/range-classes";
 import FinderChart from "@/components/finder/FinderChart.astro";
 import FinderLocked from "@/components/finder/FinderLocked.astro";
 import { finderSamples } from "@/components/design/finder-samples";
+import { BADGE_AHEAD, BADGE_REACHED, progressMany } from "@/components/design/progress-samples";
 import Attribution from "@/components/tonight/Attribution.astro";
 import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
 import PlanNote from "@/components/tonight/PlanNote.astro";
@@ -686,6 +688,8 @@ const progressNone = observingProgress([]);
 // stored record alone, as after its entry was deleted).
 const milestonesNone = milestonesOf(progressNone);
 const milestonesSome = withStored(milestonesOf(progressSome), new Map([["first-moon", "2026-08-20"]]));
+// ui-progress-rewards: the art round's 37-object log, so "50 Messier objects" shows 37 / 50 with its arc.
+const milestonesMany = milestonesOf(progressMany);
 
 // The celebration dialog's specimens (Phase 6): one milestone, and three (a save that reaches several at once).
 const celebrateOne: MilestoneKey[] = ["first-galaxy"];
@@ -3394,16 +3398,80 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
+          <!-- MilestoneBadge -->
+          <section class:list={block} aria-labelledby="c-milestone-badge">
+            <h3 id="c-milestone-badge" class:list={blockTitle}>
+              MilestoneBadge
+            </h3>
+            <p class:list={blockNote}>
+              One milestone's medallion (ui-progress-rewards, the owner-approved art): its own illustration in a ring,
+              shared by the Milestones band (md, 112 px) and the celebration dialog (lg, 128 px). Reached: the sky disc,
+              the full art, a solid ring and the check pip. Ahead: the art dimmed, a dashed ring and, with progress
+              above 0, a solid, wider arc. Red mode tells them apart by shape (ring, pip, arc), not hue; in the light
+              theme the badge stays a navy night window. The forced red rows show on the dark page only (on the light
+              page the badge's night-sky scope takes the navy tokens).
+            </p>
+            {[
+              { label: "default · reached, md", states: BADGE_REACHED, red: false },
+              {
+                label: "default · ahead, md (Not yet, 4 / 7, 7 / 10, 18 / 25, 37 / 50, 37 / 110, 5 / 61)",
+                states: BADGE_AHEAD,
+                red: false,
+              },
+              { label: "red mode · reached", states: BADGE_REACHED, red: true },
+              { label: "red mode · ahead", states: BADGE_AHEAD, red: true },
+            ]
+              // A forced red row cannot render on the light page: the badge's `night-sky` scope matches the light
+              // page's `[data-theme="light"] .night-sky` and takes the navy tokens. Switch the page to red instead.
+              .filter((sample) => !(sample.red && theme === "light"))
+              .map((sample, row) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>{sample.label}</p>
+                  <div
+                    data-theme={sample.red ? "red" : undefined}
+                    class:list={[
+                      "flex flex-wrap gap-3 rounded-lg",
+                      sample.red && "border border-border bg-background p-4 text-foreground",
+                    ]}
+                  >
+                    {sample.states.map((state) => (
+                      <MilestoneBadge
+                        milestone={state.key}
+                        reached={state.reachedNight !== null}
+                        progress={state.progress}
+                        idBase={`design-badge-${row}-${state.key}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            <div class:list={cell}>
+              <p class:list={stateLabel}>default · lg, reached (the dialog's size)</p>
+              <div class="flex flex-wrap gap-3">
+                {(["first-galaxy", "messier-25", "messier-110"] as const).map((key) => (
+                  <MilestoneBadge milestone={key} reached size="lg" idBase={`design-badge-lg-${key}`} />
+                ))}
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (decorative, aria-hidden, not interactive) · error — N/A (a
+              failed stored read falls back to the derived states; a failed log read shows the page's ServerError) ·
+              empty — every badge ahead at "Not yet" (the ahead row, and MilestoneList's empty sample) · loading — N/A
+              (server-rendered with the page)
+            </p>
+          </section>
+
           <!-- MilestoneList -->
           <section class:list={block} aria-labelledby="c-milestone-list">
             <h3 id="c-milestone-list" class:list={blockTitle}>
               MilestoneList
             </h3>
             <p class:list={blockNote}>
-              The progress page's first band: every milestone in its fixed order. A reached one has a check, a heavier
-              name in the heading ink and the night it was reached; one still ahead is muted, with "Not yet" or how far
-              along a count milestone is. Red mode tells them apart by the check and the weight, not by a hue. The Moon
-              here is reached from the stored record alone.
+              The progress page's first band: every milestone in its fixed order as a grid of badges (two per row on a
+              phone, four from sm). A reached one has its full badge, a heavier name in the heading ink and the night it
+              was reached; one still ahead is dimmed and muted, with "Not yet" or how far along it is (and the arc). Red
+              mode tells them apart by the ring, the pip and the weight, not by a hue. The Moon here is reached from the
+              stored record alone.
             </p>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>
@@ -3411,12 +3479,16 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <MilestoneList states={milestonesSome} headingId="design-milestones-some-heading" />
               </div>
               <div class:list={cell}>
+                <p class:list={stateLabel}>default · the 37-object log (37 / 50 with its arc, 6 / 61 Caldwell)</p>
+                <MilestoneList states={milestonesMany} headingId="design-milestones-many-heading" />
+              </div>
+              <div class:list={cell}>
                 <p class:list={stateLabel}>empty · none reached (every row muted, count milestones at 0)</p>
                 <MilestoneList states={milestonesNone} headingId="design-milestones-none-heading" />
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, active, disabled — N/A (rows are not interactive: no links, no controls) · error —
+              hover, focus-visible, active, disabled — N/A (items are not interactive: no links, no controls) · error —
               N/A (a failed stored read falls back to the derived states, and a failed log read shows a ServerError
               instead of the page) · loading — N/A (server-rendered with the page)
             </p>
@@ -3429,11 +3501,11 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <p class:list={blockNote}>
               The modal dialog a save that reaches a milestone opens over the page it returns to (observing-milestones,
-              the owner's pick of 2026-10-13): the Award, the label, the names, Continue and See your progress. No timer
-              and no date. Here it is a specimen: the card sits inline instead of in the top layer, and nothing opens or
-              closes. The real pages show it for a signed-in user with ?milestone=first-galaxy in the URL, once, and its
-              script removes the param. Red mode tells the Award chip, the rules and the heavier names apart by shape
-              and weight, not by hue.
+              the owner's pick of 2026-10-13): each reached milestone's badge, the label, the names, Continue and See
+              your progress. No timer and no date. Here it is a specimen: the card sits inline instead of in the top
+              layer, and nothing opens or closes. The real pages show it for a signed-in user with
+              ?milestone=first-galaxy in the URL, once, and its script removes the param. Red mode tells the badges, the
+              rules and the heavier names apart by shape and weight, not by hue.
             </p>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>
