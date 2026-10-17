@@ -43,18 +43,13 @@ Re-verified against `origin/main` e563fda (after S-07's logging conventions and 
 - No D1 redirect for `/auth/confirm-email` (the D1 wording names sign-in and sign-up only).
 - No change to `src/sw.ts`, `AUTH_POSTS`, the purge rules or `safeNextPath` itself.
 - No new log step: an unsafe `next` is ignored, so no new failure branch exists (S-07 conventions stay as they are).
-- No new strings, unless the owner answers the question below with yes.
+- No new strings (the owner declined a sign-up note, see below).
 - No unit tests of implementation detail: no test of the middleware branch, `withNext` or the new route branches by mocks (the diet rubric); HTTP smoke steps and one browser journey hold the behaviour.
 - No change to the database, RLS or `PROTECTED_ROUTES`.
 
-## QUESTION FOR OWNER (Polish)
+## Owner decision: no sign-up note
 
-**Czy na stronie rejestracji pokazać krótką notkę, gdy ktoś trafia na nią z zamkniętego linku?** Na stronie logowania taka notka już jest („Zaloguj się, aby kontynuować."), pokazywana, gdy w adresie jest bezpieczne `?next=`. Odpowiednik na rejestracji brzmiałby „Załóż konto, aby kontynuować." (EN: "Sign up to continue."), ten sam odrzucalny `Notice` w tonie informacyjnym.
-
-- **Domyślnie: nie.** Osoba, która kliknęła „Załóż konto" na stronie logowania, widziała notkę o jeden ekran wcześniej, a rejestracja i tak kończy się onboardingiem, więc dodatkowy tekst niewiele wyjaśnia.
-- **Jeśli tak:** dodatkowy klucz `auth.signUp.continueNote` w `en.ts` i `pl.ts` (test parytetu kluczy go obejmie), render w `signup.astro` pod tym samym warunkiem co na logowaniu, jedna asercja tekstu w teście e2e z Fazy 3. Reszta planu się nie zmienia.
-
-Plan jest kompletny bez odpowiedzi (wykonuje się wariant domyślny).
+Decided by the owner on 2026-10-17: **no** "Sign up to continue." note on the sign-up page. The sign-in page's own note ("Sign in to continue.") is the only cue on the way, since the only route to `/auth/signup?next=…` is the "Sign up" link on that page. No new keys, no copy in this change. (A cue on the onboarding step, if ever wanted, is a separate, later copy decision.)
 
 ## Implementation Approach
 

@@ -26,13 +26,13 @@ Signed in, both auth pages answer a 302. From `/log` the path sign-in → sign-u
 | One rule for a safe `next` | `safeNextPath`; new `withNext(path, next)` builds the URLs | No second spelling of the rule; `signInUrl` keeps its output | Research |
 | Logging | None new | An unsafe `next` is ignored, so no new failure branch; S-07 conventions unchanged | Research |
 | Tests | No new unit test; smoke steps with exact `Location`s; one e2e journey; manual purge check | Test-diet rubric: HTTP smoke and one journey hold the behaviour, a unit test would restate the code | Plan (owner preference) |
-| Note on the sign-up page from a gated link | Not added (default) | Open question for the owner, in the plan; answering yes adds one key and one assertion | Owner question |
+| Note on the sign-up page from a gated link | Not added | Owner decision, 2026-10-17: the sign-in note one click earlier is the only cue | Owner |
 
 ## Scope
 
 **In scope:** the middleware redirect (D1); `next` through the sign-in link, sign-up page, form and route, confirm-email and onboarding (D2); smoke steps; one e2e journey; the `CLAUDE.md` and test-plan counts.
 
-**Out of scope:** `next` in the Supabase email, a D1 redirect on `/auth/confirm-email`, any change to `src/sw.ts` or `safeNextPath`, new logs, new strings (unless the owner says yes), database changes.
+**Out of scope:** `next` in the Supabase email, a D1 redirect on `/auth/confirm-email`, any change to `src/sw.ts` or `safeNextPath`, new logs, new strings, database changes.
 
 ## Architecture / Approach
 
@@ -51,7 +51,6 @@ Signed in, both auth pages answer a 302. From `/log` the path sign-in → sign-u
 
 ## Open Risks & Assumptions
 
-- The "Sign up to continue." note is the owner's call (default: no).
 - The hosted project's confirmation email link carries no `next`; that stays parked with password reset (FR-003).
 - Assumes a form action's query string survives a `POST` (true in browsers; the smoke step reads the rendered action and the e2e journey proves the submit).
 
