@@ -1,11 +1,12 @@
 ---
-// The progress page's "Milestones" band (observing-milestones, M-3 S-06, FR-041, US-06): every milestone of the fixed
-// set in `MILESTONES` order, the reached ones with a check, the name and the night they were reached ("Reached 12 Sep
-// 2026"), the ones still ahead muted with "Not yet" or, for a count milestone, how far along ("7 / 10"). A reached
-// row is a check plus a heavier name in the heading ink, a row still ahead is an empty slot plus a regular muted name,
-// so red mode tells them apart by icon and weight, not hue. `data-milestone` (the key) and `data-reached` (present
-// only when reached) are the e2e hooks. The row wraps, so a long Polish name stays inside a 320 px column.
-import { Check } from "lucide-react";
+// The progress page's "Milestones" band (observing-milestones, M-3 S-06, FR-041, US-06; badges since
+// ui-progress-rewards): every milestone of the fixed set in `MILESTONES` order as a grid of badges, two per row on a
+// phone and four from `sm`. Each item is its `MilestoneBadge` (reached or ahead, with the progress arc), the name and
+// the night it was reached ("Reached 12 Sep 2026") or, still ahead, "Not yet" or how far along ("7 / 10"). A reached
+// item adds a heavier name in the heading ink to the badge's solid ring and pip, so red mode tells the states apart by
+// shape and weight, not hue. `data-milestone` (the key) and `data-reached` (present only when reached) are the e2e
+// hooks. The name wraps, so a long Polish name stays inside its 320 px column.
+import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 
 import Band from "@/components/ui/Band.astro";
 import { getMessages } from "@/i18n";
@@ -26,34 +27,35 @@ const format = createFormatter(locale);
 ---
 
 <Band headingId={headingId} heading={t.title}>
-  <ul class="divide-y divide-border" data-milestone-list>
+  <ul class="grid grid-cols-2 gap-x-4 gap-y-group sm:grid-cols-4" data-milestone-list>
     {states.map((state) => {
       const reached = state.reachedNight !== null;
       return (
         <li
-          class="flex items-baseline gap-x-3 py-3 first:pt-0 last:pb-0"
+          class="flex min-w-0 flex-col items-center text-center"
           data-milestone={state.key}
           data-reached={reached ? "" : undefined}
         >
-          <span class="flex size-4 shrink-0 translate-y-0.5 items-center justify-center">
-            {reached && <Check className="size-4 text-heading" aria-hidden="true" />}
+          <MilestoneBadge
+            milestone={state.key}
+            reached={reached}
+            progress={state.progress}
+            idBase={`${headingId}-${state.key}`}
+          />
+          <span
+            class:list={[
+              "mt-line w-full text-label break-words",
+              reached ? "font-semibold text-heading" : "font-normal text-muted-foreground",
+            ]}
+          >
+            {t.name[state.key]}
           </span>
-          <span class="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <span
-              class:list={[
-                "text-body break-words",
-                reached ? "font-semibold text-heading" : "font-normal text-muted-foreground",
-              ]}
-            >
-              {t.name[state.key]}
-            </span>
-            <span class="text-label text-muted-foreground">
-              {state.reachedNight !== null
-                ? t.reachedOn({ date: format.formatShortDate(state.reachedNight) })
-                : state.progress
-                  ? t.progress({ seen: String(state.progress.seen), total: String(state.progress.total) })
-                  : t.notYet}
-            </span>
+          <span class="text-caption text-muted-foreground">
+            {state.reachedNight !== null
+              ? t.reachedOn({ date: format.formatShortDate(state.reachedNight) })
+              : state.progress
+                ? t.progress({ seen: String(state.progress.seen), total: String(state.progress.total) })
+                : t.notYet}
           </span>
         </li>
       );

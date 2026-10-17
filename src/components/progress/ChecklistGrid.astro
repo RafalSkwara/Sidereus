@@ -1,13 +1,16 @@
 ---
-// The progress page's checklist at a glance (observing-progress, M-3 S-05): one chip per catalogue object in
-// catalogue order, "M31" or "C14", the seen ones filled with a check in the corner. Seen is fill plus icon, never hue,
-// so red mode tells the two apart. The number sits low in a fixed-height chip and the icon high in its corner, so
-// "M110" and the icon fit a 320 px cell without overlapping. Each chip reads aloud as its Caldwell number (a Caldwell
-// chip shows "C20", so it says it too), its label, its localised common name and then "seen" or "not seen". `data-checklist-item` / `data-seen` (present only when seen) are the e2e hooks.
-import { Check } from "lucide-react";
-
+// The progress page's checklist (observing-progress, M-3 S-05; tiles since ui-progress-rewards, owner P4 B / P5 B): one
+// tile per catalogue object in catalogue order, two per row on a phone and four from `sm`, each with its family's icon
+// (`ObjectTypeSprite`, one `<use>`), the number ("M31" / "C14") and the name (the localised common name, else a Caldwell
+// object's designation, else the family's name). Seen is told by shape and weight, never hue alone, so red mode reads
+// it: a 2 px `action-border` on the `action-surface` fill, the icon in `primary-strong`, a semibold number and a check
+// in the top-right corner (the text column keeps clear of it); not seen is a 1 px `border` with muted icon and text.
+// Not interactive. The visible parts are `aria-hidden`; one `sr-only` sentence (`data-tile-sr`) reads "[C20, ]label[,
+// common name], type, seen | not seen". `data-checklist-item` / `data-seen` (present only when seen) / `data-family`
+// are the e2e hooks. Needs `ObjectTypeSprite` once in the document.
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
+import { FAMILY_OF } from "@/lib/progress/object-family";
 import type { ChecklistItem } from "@/lib/progress/progress";
 
 interface Props {
@@ -23,30 +26,55 @@ const { locale } = Astro.locals;
 const t = getMessages(locale).progress;
 ---
 
-<ul aria-label={label} class="grid grid-cols-6 gap-1.5 sm:grid-cols-10" data-checklist-grid>
+<ul aria-label={label} class="grid grid-cols-2 gap-line sm:grid-cols-4" data-checklist-grid>
   {items.map((item) => {
     const seen = item.seen !== null;
-    const name = localCommonName(item.id, item.commonName, locale);
+    const family = FAMILY_OF[item.type];
+    const common = localCommonName(item.id, item.commonName, locale);
+    const name = common ?? (prefix === "C" ? item.label : t.types[family].one);
     return (
       <li
         data-checklist-item={item.id}
         data-seen={seen ? "" : undefined}
+        data-family={family}
         class:list={[
-          "relative flex h-12 min-w-0 items-end justify-center rounded-lg border pb-1.5 font-mono text-label",
-          seen
-            ? "border-primary bg-primary font-semibold text-primary-foreground"
-            : "border-border bg-surface text-muted-foreground",
+          "relative flex min-h-16 min-w-0 items-center gap-2 rounded-lg px-2",
+          seen ? "border-2 border-action-border bg-action-surface" : "border border-border",
         ]}
       >
-        {seen && <Check className="absolute top-1 right-1 size-3" aria-hidden="true" />}
-        <span aria-hidden="true">
-          {prefix}
-          {item.number}
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          class:list={["size-7 shrink-0", seen ? "text-primary-strong" : "text-muted-foreground"]}
+        >
+          <use href={`#progress-type-${family}`} />
+        </svg>
+        <span aria-hidden="true" class:list={["flex min-w-0 flex-col", seen && "pr-3"]}>
+          <span class:list={["text-label", seen ? "font-semibold text-heading" : "text-muted-foreground"]}>
+            {prefix}
+            {item.number}
+          </span>
+          <span
+            class:list={["line-clamp-2 text-caption break-words", seen ? "text-foreground" : "text-muted-foreground"]}
+          >
+            {name}
+          </span>
         </span>
-        <span class="sr-only">
-          {prefix === "C" && `${prefix}${item.number}, `}
-          {item.label}
-          {name ? `, ${name}` : ""}, {seen ? t.seen : t.notSeen}
+        {seen && (
+          <svg aria-hidden="true" focusable="false" class="absolute top-1 right-1 size-3.5 text-primary-strong">
+            <use href="#progress-check" />
+          </svg>
+        )}
+        <span class="sr-only" data-tile-sr>
+          {[
+            prefix === "C" ? `${prefix}${item.number}` : null,
+            item.label,
+            common,
+            t.types[family].one,
+            seen ? t.seen : t.notSeen,
+          ]
+            .filter(Boolean)
+            .join(", ")}
         </span>
       </li>
     );

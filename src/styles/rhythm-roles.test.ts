@@ -105,6 +105,14 @@ const GUARDED: Record<string, Allowance> = {
   "components/tonight/TonightSkeleton.astro": { "mt-1": 1, "mt-6": 1 },
   // ui-dashboard-tiles Phase 2: the verdict on the roles; the headline → reason `mt-1` and the dot's first-line nudge.
   "components/tonight/VerdictCard.astro": { "mt-1": 1, "mt-2.5": 1, "sm:mt-3.5": 1 },
+  // ui-progress-rewards: the progress page and its components on the roles (badge grid, tiles, legend, the closed
+  // Seen-so-far list, the Firsts rows), no exception.
+  "components/progress/MilestoneList.astro": {},
+  "components/progress/MilestoneBadge.astro": {},
+  "components/progress/ChecklistGrid.astro": {},
+  "components/progress/ChecklistLegend.astro": {},
+  "components/progress/SeenList.astro": {},
+  "pages/log/progress.astro": {},
 };
 
 /** Replaces comment text with spaces, keeping newlines so line numbers still match the file. */

@@ -12,6 +12,7 @@
 
 import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
 import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
+import type { ObjectFamily } from "@/lib/progress/object-family";
 
 /** One form per `Intl.PluralRules` category; `few` and `many` are only needed where a locale uses them. */
 export interface PluralForms<T = string> {
@@ -1516,11 +1517,28 @@ export const en = {
     /** Numbers arrive pre-formatted: "47 / 110". */
     count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
     caldwellNote: "The list covers the Caldwell objects visible from mid-northern latitudes.",
+    /** The Caldwell band's toggle (ui-progress-rewards, impl review F3): its visible text and accessible name. */
+    caldwellShow: "Show the Caldwell list",
+    caldwellHide: "Hide the Caldwell list",
     seenHeading: "Seen so far",
     seen: "seen",
     notSeen: "not seen",
     empty: "Nothing seen yet.",
     toTonight: "See what to point at tonight",
+    /**
+     * The checklists' object families (ui-progress-rewards): `one` in a tile's screen-reader sentence ("M31, Andromeda
+     * Galaxy, galaxy, seen"), `heading` in the legend.
+     */
+    types: {
+      galaxy: { one: "galaxy", heading: "Galaxies" },
+      globular: { one: "globular cluster", heading: "Globular clusters" },
+      "open-cluster": { one: "open cluster", heading: "Open clusters" },
+      nebula: { one: "nebula", heading: "Nebulae" },
+      planetary: { one: "planetary nebula", heading: "Planetary nebulae" },
+      stars: { one: "star group", heading: "Stars and asterisms" },
+    } satisfies Record<ObjectFamily, { one: string; heading: string }>,
+    /** The legend's accessible name: "Messier by type". */
+    legendLabel: (p: { list: string }) => `${p.list} by type`,
     /** The milestones band (observing-milestones, M-3 S-06): the fixed set, each reached on a night or still ahead. */
     milestones: {
       title: "Milestones",

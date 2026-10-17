@@ -51,8 +51,12 @@ import { eventSamples, SAMPLE_EVENTS_NIGHT } from "@/components/design/event-sam
 import NightStrip from "@/components/tonight/NightStrip.astro";
 import { nightSamples, SAMPLE_NIGHTS_ZONE } from "@/components/design/night-samples";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import ChecklistLegend from "@/components/progress/ChecklistLegend.astro";
+import { OBJECT_FAMILY_ICONS } from "@/components/progress/progress-icons";
+import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
+import ObjectTypeSprite from "@/components/progress/ObjectTypeSprite.astro";
 import SeenList from "@/components/progress/SeenList.astro";
 import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
@@ -71,6 +75,7 @@ import { rangeClasses } from "@/components/tonight/range-classes";
 import FinderChart from "@/components/finder/FinderChart.astro";
 import FinderLocked from "@/components/finder/FinderLocked.astro";
 import { finderSamples } from "@/components/design/finder-samples";
+import { BADGE_AHEAD, BADGE_REACHED, FAMILY_TILES, progressMany } from "@/components/design/progress-samples";
 import Attribution from "@/components/tonight/Attribution.astro";
 import PlanEditRow from "@/components/tonight/PlanEditRow.astro";
 import PlanNote from "@/components/tonight/PlanNote.astro";
@@ -108,6 +113,7 @@ import {
 } from "@/lib/tonight/build";
 import { EXAMPLE_FINDER_CHART, exampleLabels } from "@/lib/finder/example-chart";
 import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
+import { OBJECT_FAMILIES } from "@/lib/progress/object-family";
 import { observingProgress } from "@/lib/progress/progress";
 import { createFormatter, zoneLabel, type ForecastStatus } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
@@ -684,6 +690,8 @@ const progressNone = observingProgress([]);
 // stored record alone, as after its entry was deleted).
 const milestonesNone = milestonesOf(progressNone);
 const milestonesSome = withStored(milestonesOf(progressSome), new Map([["first-moon", "2026-08-20"]]));
+// ui-progress-rewards: the art round's 37-object log, so "50 Messier objects" shows 37 / 50 with its arc.
+const milestonesMany = milestonesOf(progressMany);
 
 // The celebration dialog's specimens (Phase 6): one milestone, and three (a save that reaches several at once).
 const celebrateOne: MilestoneKey[] = ["first-galaxy"];
@@ -885,6 +893,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
 
 <Layout title="Design · Sidereus">
   <div class="min-h-screen w-full bg-background text-foreground">
+    {/* The checklist tiles' icon sprite, once per document (ui-progress-rewards). */}
+    <ObjectTypeSprite />
     <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
       <div class="mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-4 pt-4 sm:px-8 sm:pt-6">
         <span class="flex shrink-0 items-center gap-2.5">
@@ -1307,10 +1317,26 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     <p class="text-label text-muted-foreground">{m.tonight.planets.none}</p>
                   </Band>
                 </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    collapsed — the heading stays in the row above; a native details holds the content, closed on load,
+                    its summary only the Show / Hide toggle (the progress page's Caldwell band, ui-progress-rewards);
+                    inside it a closed "Seen so far" list keeps its own chevron state
+                  </p>
+                  <Band
+                    headingId="sample-collapsed-heading"
+                    heading={`${m.progress.caldwell} · ${m.progress.count({ seen: String(progressMany.caldwell.seenCount), total: String(progressMany.caldwell.total) })}`}
+                    collapsed={{ show: m.progress.caldwellShow, hide: m.progress.caldwellHide }}
+                  >
+                    <p class="text-label text-muted-foreground">{m.progress.caldwellNote}</p>
+                    <SeenList items={progressMany.caldwell.items} prefix="C" label="Caldwell: seen so far" />
+                  </Band>
+                </div>
               </div>
               <p class:list={notApplicable}>
-                hover, focus-visible, disabled — N/A (not interactive; rows and the action are links) · error — a failed
-                band holds a ServerError · loading — N/A
+                hover, focus-visible — the collapsed band's summary only (hover it, or Tab to it; Enter or Space opens
+                and closes it); the other bands are not interactive (rows and the action are links) · disabled — N/A ·
+                error — a failed band holds a ServerError · loading — N/A
               </p>
             </section>
 
@@ -3302,39 +3328,178 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </p>
           </section>
 
-          <!-- ChecklistGrid and SeenList -->
-          <section class:list={block} aria-labelledby="c-checklist">
-            <h3 id="c-checklist" class:list={blockTitle}>
-              ChecklistGrid and SeenList
+          <!-- Progress icons -->
+          <section class:list={block} aria-labelledby="c-progress-icons">
+            <h3 id="c-progress-icons" class:list={blockTitle}>
+              Progress icons
             </h3>
             <p class:list={blockNote}>
-              The progress page's checklist: a chip per catalogue object (a seen chip is filled and carries a check in
-              its corner, so red mode tells it apart by fill and icon, not hue), then the seen objects as a list with
-              the night each was first logged with a rating of 3 or above.
+              The checklists' object families (progress-icons.ts, ui-progress-rewards): lucide's Galaxy and five icons
+              drawn on lucide's grid. One concept per icon; none reuses an icon that means something else in the app.
+              Shown at 40, 28, 20 and 16 px in heading and muted ink, then in red mode.
+            </p>
+            {[
+              { label: "default · this page's theme", red: false },
+              { label: "red mode", red: true },
+            ].map((sample) => (
+              <div class:list={cell}>
+                <p class:list={stateLabel}>{sample.label}</p>
+                <div
+                  data-theme={sample.red ? "red" : undefined}
+                  class:list={[
+                    "grid grid-cols-2 gap-4 rounded-lg sm:grid-cols-3",
+                    sample.red && "border border-border bg-background p-4 text-foreground",
+                  ]}
+                >
+                  {OBJECT_FAMILIES.map((family) => {
+                    const Icon = OBJECT_FAMILY_ICONS[family];
+                    return (
+                      <div class="flex min-w-0 flex-col gap-2">
+                        <span class="flex items-end gap-3 text-heading">
+                          <Icon className="size-10" aria-hidden="true" />
+                          <Icon className="size-7" aria-hidden="true" />
+                          <Icon className="size-5" aria-hidden="true" />
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span class="flex items-end gap-3 text-muted-foreground">
+                          <Icon className="size-10" aria-hidden="true" />
+                          <Icon className="size-7" aria-hidden="true" />
+                          <Icon className="size-5" aria-hidden="true" />
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span class="font-mono text-sm text-muted-foreground">{family}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (decorative, aria-hidden; the legend's names and the tiles'
+              screen-reader sentences carry the meaning) · error, empty, loading — N/A (static icons)
+            </p>
+          </section>
+
+          <!-- ChecklistGrid, ChecklistLegend and SeenList -->
+          <section class:list={block} aria-labelledby="c-checklist">
+            <h3 id="c-checklist" class:list={blockTitle}>
+              ChecklistGrid, ChecklistLegend and SeenList
+            </h3>
+            <p class:list={blockNote}>
+              The progress page's checklists (ui-progress-rewards, owner P4 B / P5 B / P6 A): a legend per list (each
+              object family's icon, name and seen / total), then a tile per catalogue object with its family's icon (one
+              sprite, rendered once on this page), the number and the name. A seen tile has a 2 px action border on the
+              action fill, the icon in the accent ink, a heavier number and a check, so red mode tells it apart by shape
+              and weight, not hue. Then the seen objects as a list with the night each was first logged, closed in a
+              details (owner P8 A).
             </p>
             <div class="flex flex-col gap-6">
+              {[
+                { label: "default · every family, seen and not seen", red: false },
+                { label: "red mode · every family, seen and not seen, with the legend", red: true },
+              ].map((sample) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>{sample.label}</p>
+                  <div
+                    data-theme={sample.red ? "red" : undefined}
+                    class:list={[
+                      "flex flex-col gap-6 rounded-lg",
+                      sample.red && "border border-border bg-background p-4 text-foreground",
+                    ]}
+                  >
+                    {sample.red && <ChecklistLegend items={progressMany.messier.items} label="Messier" />}
+                    <ChecklistGrid items={FAMILY_TILES} prefix="M" label="Messier" />
+                  </div>
+                </div>
+              ))}
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · Messier, 3 seen (a rating of 2 ticks nothing)</p>
-                <ChecklistGrid items={progressSome.messier.items} prefix="M" label="Messier" />
+                <p class:list={stateLabel}>default · Messier, the 37-object log: legend, tiles, SeenList (closed)</p>
+                <ChecklistLegend items={progressMany.messier.items} label="Messier" />
+                <ChecklistGrid items={progressMany.messier.items} prefix="M" label="Messier" />
+                <SeenList items={progressMany.messier.items} label="Messier: seen so far" />
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · SeenList for the same checklist (catalogue order, first night)</p>
-                <SeenList items={progressSome.messier.items} label="Messier: seen so far" />
+                <p class:list={stateLabel}>default · Caldwell, 6 seen (C numbers; the legend has no star groups)</p>
+                <ChecklistLegend items={progressMany.caldwell.items} label="Caldwell" />
+                <ChecklistGrid items={progressMany.caldwell.items} prefix="C" label="Caldwell" />
+                <SeenList items={progressMany.caldwell.items} prefix="C" label="Caldwell: seen so far" />
               </div>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · Caldwell, 1 seen (C numbers)</p>
-                <ChecklistGrid items={progressSome.caldwell.items} prefix="C" label="Caldwell" />
-                <SeenList items={progressSome.caldwell.items} prefix="C" label="Caldwell: seen so far" />
-              </div>
-              <div class:list={cell}>
-                <p class:list={stateLabel}>empty · nothing seen (every chip outlined; SeenList renders nothing)</p>
+                <p class:list={stateLabel}>
+                  empty · nothing seen (every legend count at 0, every tile outlined; SeenList renders nothing)
+                </p>
+                <ChecklistLegend items={progressNone.messier.items} label="Messier" />
                 <ChecklistGrid items={progressNone.messier.items} prefix="M" label="Messier" />
                 <SeenList items={progressNone.messier.items} label="Messier: seen so far" />
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, active, disabled — N/A (chips are not interactive: no links, no controls) · error —
-              N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
+              hover, focus-visible — the SeenList's summary (a native details toggle: hover it, or Tab to it and press
+              Enter); tiles and legend rows are not interactive (no links, no controls) · active, disabled — N/A · error
+              — N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
+            </p>
+          </section>
+
+          <!-- MilestoneBadge -->
+          <section class:list={block} aria-labelledby="c-milestone-badge">
+            <h3 id="c-milestone-badge" class:list={blockTitle}>
+              MilestoneBadge
+            </h3>
+            <p class:list={blockNote}>
+              One milestone's medallion (ui-progress-rewards, the owner-approved art): its own illustration in a ring,
+              shared by the Milestones band (md, 112 px) and the celebration dialog (lg, 128 px). Reached: the sky disc,
+              the full art, a solid ring and the check pip. Ahead: the art dimmed, a dashed ring and, with progress
+              above 0, a solid, wider arc. Red mode tells them apart by shape (ring, pip, arc), not hue; in the light
+              theme the badge stays a navy night window. The forced red rows show on the dark page only (on the light
+              page the badge's night-sky scope takes the navy tokens).
+            </p>
+            {[
+              { label: "default · reached, md", states: BADGE_REACHED, red: false },
+              {
+                label: "default · ahead, md (Not yet, 4 / 7, 7 / 10, 18 / 25, 37 / 50, 37 / 110, 5 / 61)",
+                states: BADGE_AHEAD,
+                red: false,
+              },
+              { label: "red mode · reached", states: BADGE_REACHED, red: true },
+              { label: "red mode · ahead", states: BADGE_AHEAD, red: true },
+            ]
+              // A forced red row cannot render on the light page: the badge's `night-sky` scope matches the light
+              // page's `[data-theme="light"] .night-sky` and takes the navy tokens. Switch the page to red instead.
+              .filter((sample) => !(sample.red && theme === "light"))
+              .map((sample, row) => (
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>{sample.label}</p>
+                  <div
+                    data-theme={sample.red ? "red" : undefined}
+                    class:list={[
+                      "flex flex-wrap gap-3 rounded-lg",
+                      sample.red && "border border-border bg-background p-4 text-foreground",
+                    ]}
+                  >
+                    {sample.states.map((state) => (
+                      <MilestoneBadge
+                        milestone={state.key}
+                        reached={state.reachedNight !== null}
+                        progress={state.progress}
+                        idBase={`design-badge-${row}-${state.key}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            <div class:list={cell}>
+              <p class:list={stateLabel}>default · lg, reached (the dialog's size)</p>
+              <div class="flex flex-wrap gap-3">
+                {(["first-galaxy", "messier-25", "messier-110"] as const).map((key) => (
+                  <MilestoneBadge milestone={key} reached size="lg" idBase={`design-badge-lg-${key}`} />
+                ))}
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              hover, focus-visible, active, disabled — N/A (decorative, aria-hidden, not interactive) · error — N/A (a
+              failed stored read falls back to the derived states; a failed log read shows the page's ServerError) ·
+              empty — every badge ahead at "Not yet" (the ahead row, and MilestoneList's empty sample) · loading — N/A
+              (server-rendered with the page)
             </p>
           </section>
 
@@ -3344,10 +3509,11 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               MilestoneList
             </h3>
             <p class:list={blockNote}>
-              The progress page's first band: every milestone in its fixed order. A reached one has a check, a heavier
-              name in the heading ink and the night it was reached; one still ahead is muted, with "Not yet" or how far
-              along a count milestone is. Red mode tells them apart by the check and the weight, not by a hue. The Moon
-              here is reached from the stored record alone.
+              The progress page's first band: every milestone in its fixed order as a grid of badges (two per row on a
+              phone, four from sm). A reached one has its full badge, a heavier name in the heading ink and the night it
+              was reached; one still ahead is dimmed and muted, with "Not yet" or how far along it is (and the arc). Red
+              mode tells them apart by the ring, the pip and the weight, not by a hue. The Moon here is reached from the
+              stored record alone.
             </p>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>
@@ -3355,12 +3521,16 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <MilestoneList states={milestonesSome} headingId="design-milestones-some-heading" />
               </div>
               <div class:list={cell}>
+                <p class:list={stateLabel}>default · the 37-object log (37 / 50 with its arc, 6 / 61 Caldwell)</p>
+                <MilestoneList states={milestonesMany} headingId="design-milestones-many-heading" />
+              </div>
+              <div class:list={cell}>
                 <p class:list={stateLabel}>empty · none reached (every row muted, count milestones at 0)</p>
                 <MilestoneList states={milestonesNone} headingId="design-milestones-none-heading" />
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, active, disabled — N/A (rows are not interactive: no links, no controls) · error —
+              hover, focus-visible, active, disabled — N/A (items are not interactive: no links, no controls) · error —
               N/A (a failed stored read falls back to the derived states, and a failed log read shows a ServerError
               instead of the page) · loading — N/A (server-rendered with the page)
             </p>
@@ -3373,11 +3543,11 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <p class:list={blockNote}>
               The modal dialog a save that reaches a milestone opens over the page it returns to (observing-milestones,
-              the owner's pick of 2026-10-13): the Award, the label, the names, Continue and See your progress. No timer
-              and no date. Here it is a specimen: the card sits inline instead of in the top layer, and nothing opens or
-              closes. The real pages show it for a signed-in user with ?milestone=first-galaxy in the URL, once, and its
-              script removes the param. Red mode tells the Award chip, the rules and the heavier names apart by shape
-              and weight, not by hue.
+              the owner's pick of 2026-10-13): each reached milestone's badge, the label, the names, Continue and See
+              your progress. No timer and no date. Here it is a specimen: the card sits inline instead of in the top
+              layer, and nothing opens or closes. The real pages show it for a signed-in user with
+              ?milestone=first-galaxy in the URL, once, and its script removes the param. Red mode tells the badges, the
+              rules and the heavier names apart by shape and weight, not by hue.
             </p>
             <div class="flex flex-col gap-6">
               <div class:list={cell}>

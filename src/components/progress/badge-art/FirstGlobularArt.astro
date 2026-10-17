@@ -1,0 +1,229 @@
+---
+// The "first-globular" badge's illustration (ui-progress-rewards), in the 120-unit badge space; MilestoneBadge clips it and
+// draws the disc, ring, arc and pip. Generated from the owner-approved art (round 1b) by scripts/badge-art/port.mjs
+// (`npm run badge-art:port`): change the art in scripts/badge-art/render.mjs and re-run, never by hand.
+// Tokens only (var(--…)); value steps by opacity; red mode reads by shape and value.
+export interface Props {
+  /** Prefix for this badge's gradient and clip ids, unique on the page. */
+  idBase: string;
+}
+
+const { idBase } = Astro.props;
+---
+
+<g fill="var(--star)">
+  <circle cx="69.2" cy="100.4" r="0.65" />
+  <circle cx="16.3" cy="46.3" r="0.4" />
+  <circle cx="76.3" cy="15.9" r="1.02" />
+  <circle cx="68.7" cy="16.5" r="0.36" />
+  <circle cx="106.1" cy="65.4" r="0.47" />
+  <circle cx="100.8" cy="35" r="0.98" />
+  <circle cx="49" cy="105.4" r="0.66" />
+  <circle cx="102.4" cy="72.1" r="0.83" />
+</g>
+<g fill="var(--star-accent)">
+  <circle cx="105.9" cy="49.9" r="0.48" />
+  <circle cx="38.3" cy="97.8" r="1.03" />
+</g>
+<defs>
+  <radialGradient id={`${idBase}-glow`}>
+    <stop offset="0" stop-color="var(--moon-lit)" stop-opacity="0.85" />
+    <stop offset="0.3" stop-color="var(--primary-strong)" stop-opacity="0.45" />
+    <stop offset="1" stop-color="var(--primary-strong)" stop-opacity="0" />
+  </radialGradient>
+</defs>
+<circle cx="60" cy="60" r="34.5" fill={`url(#${idBase}-glow)`} />
+<g fill="var(--moon-lit)" opacity="0.9">
+  <circle cx="61.3" cy="60.6" r="0.79" />
+  <circle cx="59.9" cy="60.9" r="0.72" />
+  <circle cx="57.8" cy="64.9" r="1.08" />
+  <circle cx="61.3" cy="58.3" r="0.82" />
+  <circle cx="60.6" cy="59.3" r="0.92" />
+  <circle cx="50.3" cy="55.8" r="0.8" />
+  <circle cx="56.7" cy="61.8" r="1.06" />
+  <circle cx="53.4" cy="59.3" r="1.07" />
+  <circle cx="60.3" cy="58.6" r="0.82" />
+  <circle cx="60.1" cy="51.8" r="0.98" />
+  <circle cx="58.9" cy="59.7" r="0.92" />
+  <circle cx="54.8" cy="57.2" r="0.75" />
+  <circle cx="60.3" cy="59.6" r="0.56" />
+  <circle cx="60.1" cy="60" r="0.95" />
+  <circle cx="61.9" cy="62.4" r="0.76" />
+  <circle cx="57.3" cy="62.4" r="0.58" />
+  <circle cx="60.7" cy="60.6" r="0.81" />
+  <circle cx="60" cy="52.6" r="0.8" />
+  <circle cx="48.7" cy="28" r="0.54" />
+  <circle cx="60" cy="60.7" r="0.55" />
+  <circle cx="65.3" cy="54.5" r="0.8" />
+  <circle cx="64.6" cy="63.5" r="0.95" />
+  <circle cx="59.4" cy="55.7" r="0.96" />
+  <circle cx="59.2" cy="60.4" r="1.08" />
+  <circle cx="55.7" cy="64.2" r="0.71" />
+  <circle cx="55.6" cy="64.4" r="0.63" />
+  <circle cx="55.2" cy="54.6" r="0.55" />
+  <circle cx="64.1" cy="69.5" r="0.85" />
+  <circle cx="65.2" cy="65.9" r="0.82" />
+  <circle cx="62.4" cy="53.6" r="0.9" />
+  <circle cx="66.9" cy="54.8" r="0.8" />
+  <circle cx="52.8" cy="58.4" r="0.82" />
+  <circle cx="55.5" cy="54" r="1.01" />
+  <circle cx="52.5" cy="55.8" r="0.65" />
+  <circle cx="71.1" cy="63" r="0.93" />
+  <circle cx="55.9" cy="66.7" r="0.59" />
+  <circle cx="67.1" cy="67.2" r="0.62" />
+  <circle cx="61.9" cy="61.7" r="0.66" />
+  <circle cx="61" cy="71.2" r="1.01" />
+  <circle cx="53.2" cy="60.1" r="0.58" />
+  <circle cx="70.6" cy="55.6" r="0.99" />
+  <circle cx="61.1" cy="59.2" r="0.84" />
+  <circle cx="51.9" cy="70.4" r="0.68" />
+  <circle cx="47.4" cy="62.1" r="0.7" />
+  <circle cx="59.9" cy="59.9" r="1.14" />
+  <circle cx="56.3" cy="59.2" r="0.65" />
+  <circle cx="60" cy="60.1" r="1.13" />
+  <circle cx="53" cy="65.7" r="1.04" />
+  <circle cx="62.1" cy="61.1" r="0.69" />
+  <circle cx="59.4" cy="60.5" r="0.85" />
+  <circle cx="62.5" cy="59.5" r="0.65" />
+  <circle cx="60.8" cy="60.7" r="0.68" />
+  <circle cx="53.3" cy="60.8" r="0.66" />
+  <circle cx="60.2" cy="62.9" r="0.81" />
+  <circle cx="51.7" cy="66.4" r="0.72" />
+  <circle cx="66.3" cy="60.5" r="0.58" />
+  <circle cx="69.4" cy="56.3" r="0.9" />
+  <circle cx="64.7" cy="60.1" r="0.65" />
+  <circle cx="56.5" cy="58.2" r="0.92" />
+  <circle cx="60" cy="60.2" r="0.8" />
+  <circle cx="54.2" cy="62.4" r="0.82" />
+  <circle cx="58.6" cy="62.9" r="0.66" />
+  <circle cx="59.9" cy="61.3" r="1.01" />
+  <circle cx="59.6" cy="61.4" r="0.64" />
+  <circle cx="51" cy="62.4" r="0.91" />
+  <circle cx="61" cy="61.3" r="0.76" />
+  <circle cx="60.6" cy="61.2" r="0.56" />
+  <circle cx="60.1" cy="59.9" r="1.08" />
+  <circle cx="62" cy="55.2" r="0.8" />
+  <circle cx="61.1" cy="65.2" r="0.67" />
+  <circle cx="59.7" cy="59.4" r="0.56" />
+  <circle cx="60.2" cy="62.6" r="0.93" />
+  <circle cx="60.7" cy="62.6" r="0.91" />
+  <circle cx="56.8" cy="69.3" r="0.67" />
+  <circle cx="60.2" cy="60.8" r="1.05" />
+  <circle cx="52.2" cy="59.9" r="0.78" />
+  <circle cx="68" cy="62.9" r="0.55" />
+  <circle cx="62" cy="59.1" r="1.08" />
+  <circle cx="65.7" cy="59.8" r="0.77" />
+  <circle cx="57.4" cy="59" r="1.1" />
+  <circle cx="55.7" cy="60.1" r="0.83" />
+  <circle cx="61.7" cy="60.3" r="1.07" />
+  <circle cx="53.9" cy="50.9" r="0.69" />
+  <circle cx="57.8" cy="52.5" r="0.71" />
+  <circle cx="61.2" cy="62.4" r="0.59" />
+  <circle cx="59.4" cy="46.4" r="0.56" />
+  <circle cx="58.4" cy="60.2" r="1.12" />
+  <circle cx="72.2" cy="62.7" r="0.88" />
+  <circle cx="69.3" cy="62.2" r="0.83" />
+  <circle cx="48.3" cy="65.5" r="1.06" />
+  <circle cx="58.2" cy="68.8" r="0.9" />
+  <circle cx="61.2" cy="56.6" r="0.57" />
+  <circle cx="57.8" cy="49.6" r="0.95" />
+  <circle cx="57.3" cy="64.8" r="0.57" />
+  <circle cx="67.9" cy="57.4" r="0.58" />
+  <circle cx="60.8" cy="60.4" r="1" />
+  <circle cx="64.2" cy="61.1" r="0.86" />
+  <circle cx="59.1" cy="70.8" r="0.93" />
+  <circle cx="58.8" cy="61.4" r="1.04" />
+  <circle cx="64.3" cy="61.7" r="1.03" />
+  <circle cx="65.7" cy="59.8" r="0.95" />
+  <circle cx="64.7" cy="69.1" r="0.68" />
+  <circle cx="59.4" cy="59.6" r="1.03" />
+  <circle cx="57.5" cy="56.8" r="0.74" />
+  <circle cx="59.2" cy="58.2" r="0.59" />
+  <circle cx="59.4" cy="55.8" r="0.78" />
+  <circle cx="60" cy="61.7" r="0.75" />
+  <circle cx="60.3" cy="59.9" r="0.74" />
+  <circle cx="66" cy="60.4" r="1.01" />
+  <circle cx="60.5" cy="64.6" r="0.79" />
+  <circle cx="60.4" cy="60.1" r="0.65" />
+  <circle cx="62.8" cy="65.9" r="1.09" />
+  <circle cx="53" cy="56.7" r="0.82" />
+  <circle cx="55" cy="55.4" r="0.99" />
+  <circle cx="54.9" cy="58.5" r="1.04" />
+  <circle cx="59.7" cy="64.9" r="1.09" />
+  <circle cx="58.8" cy="59.5" r="0.56" />
+  <circle cx="57.2" cy="56.9" r="1.06" />
+  <circle cx="63" cy="60.8" r="1.12" />
+  <circle cx="60" cy="60" r="0.7" />
+</g>
+<g fill="var(--primary-strong)" opacity="0.5">
+  <circle cx="48.5" cy="86.3" r="1.07" />
+</g>
+<g fill="var(--primary-strong)" opacity="0.7">
+  <circle cx="43.2" cy="74.8" r="0.56" />
+  <circle cx="48.6" cy="81.1" r="1.04" />
+  <circle cx="43.4" cy="74.9" r="1.13" />
+  <circle cx="75.9" cy="58.3" r="0.63" />
+  <circle cx="40" cy="66.9" r="0.93" />
+  <circle cx="42.2" cy="57.7" r="1.06" />
+  <circle cx="78.6" cy="66.1" r="0.83" />
+</g>
+<g fill="var(--moon-lit)" opacity="0.5">
+  <circle cx="67" cy="72.8" r="0.67" />
+  <circle cx="78" cy="80.2" r="0.88" />
+</g>
+<g fill="var(--primary-strong)" opacity="0.6">
+  <circle cx="70.7" cy="70.6" r="0.86" />
+  <circle cx="53.4" cy="80.9" r="0.59" />
+</g>
+<g fill="var(--star-accent)">
+  <circle cx="81.9" cy="83" r="0.89" />
+  <circle cx="43.8" cy="84.2" r="0.87" />
+  <circle cx="33.4" cy="45.4" r="0.75" />
+</g>
+<g fill="var(--primary-strong)" opacity="0.9">
+  <circle cx="45.8" cy="91.9" r="1" />
+  <circle cx="68.9" cy="75.1" r="0.92" />
+  <circle cx="46.8" cy="47.5" r="0.85" />
+  <circle cx="35" cy="46.6" r="0.83" />
+  <circle cx="54.2" cy="86.5" r="0.76" />
+</g>
+<g fill="var(--moon-lit)" opacity="0.6">
+  <circle cx="48.9" cy="68.3" r="1.18" />
+  <circle cx="78.7" cy="43.3" r="1.11" />
+</g>
+<g fill="var(--star-accent)" opacity="0.6">
+  <circle cx="48.9" cy="49.7" r="0.5" />
+</g>
+<g fill="var(--primary-strong)" opacity="0.8">
+  <circle cx="76.3" cy="65.7" r="1.02" />
+  <circle cx="76.6" cy="52.9" r="0.71" />
+</g>
+<g fill="var(--moon-lit)" opacity="0.8">
+  <circle cx="36.8" cy="58.2" r="0.71" />
+</g>
+<g fill="var(--star-accent)" opacity="0.7">
+  <circle cx="44.1" cy="69.8" r="1.09" />
+  <circle cx="74" cy="64.5" r="1.04" />
+</g>
+<g fill="var(--moon-lit)" opacity="0.7">
+  <circle cx="77.1" cy="58.1" r="0.53" />
+</g>
+<g fill="var(--star-accent)" opacity="0.9">
+  <circle cx="46.3" cy="89.6" r="0.61" />
+</g>
+<path
+  d="M40.68 40.68000000000001Q41.8944 44.985600000000005 46.2 46.2Q41.8944 47.4144 40.68 51.72Q39.4656 47.4144 35.16 46.2Q39.4656 44.985600000000005 40.68 40.68000000000001Z"
+  fill="var(--moon-lit)"
+  opacity="1"
+/>
+<path
+  d="M83 65.52000000000001Q84.012 69.108 87.6 70.12Q84.012 71.132 83 74.72Q81.988 71.132 78.4 70.12Q81.988 69.108 83 65.52000000000001Z"
+  fill="var(--moon-lit)"
+  opacity="1"
+/>
+<path
+  d="M65.52 27.8Q66.3296 30.6704 69.2 31.48Q66.3296 32.2896 65.52 35.160000000000004Q64.71039999999999 32.2896 61.839999999999996 31.48Q64.71039999999999 30.6704 65.52 27.8Z"
+  fill="var(--moon-lit)"
+  opacity="1"
+/>
+<circle cx="60" cy="60" r="4.14" fill="var(--moon-lit)" />

@@ -4,7 +4,9 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
 import ChecklistGrid from "@/components/progress/ChecklistGrid.astro";
+import ChecklistLegend from "@/components/progress/ChecklistLegend.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
+import ObjectTypeSprite from "@/components/progress/ObjectTypeSprite.astro";
 import SeenList from "@/components/progress/SeenList.astro";
 import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
@@ -23,7 +25,10 @@ import { cn } from "@/lib/utils";
 // The progress page (observing-progress, M-3 S-05, FR-039/FR-040): the planets and the Moon as firsts, then the
 // Messier and Caldwell checklists, all from the user's entries rated 3 or above through the ranking's own "seen" rule.
 // It opens with the milestones (observing-milestones, M-3 S-06): the stored record laid over what the log derives, so a
-// milestone stays listed after the entry that reached it is deleted or re-rated.
+// milestone stays listed after the entry that reached it is deleted or re-rated. Since ui-progress-rewards the checklists
+// are tiles with a per-type legend (their icons from the one `ObjectTypeSprite`), and, to keep the phone page short
+// (owner P8 A), the Caldwell band and both "Seen so far" lists start closed as native `<details>`: no script, nothing
+// stored, the content stays in the DOM. Messier stays open.
 const { supabase, locale } = Astro.locals;
 const m = getMessages(locale);
 const t = m.progress;
@@ -65,10 +70,11 @@ const nothingSeen =
   ) : (
     progress && (
       <div>
+        <ObjectTypeSprite />
         {nothingSeen && (
-          <div class="mb-6" data-progress-empty>
+          <div class="mb-group" data-progress-empty>
             <p class="text-body text-foreground">{t.empty}</p>
-            <a href="/tonight" class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), "mt-3")}>
+            <a href="/tonight" class:list={cn(buttonVariants({ variant: "quiet", size: "bare" }), "mt-line")}>
               <Telescope aria-hidden="true" />
               {t.toTonight}
             </a>
@@ -81,7 +87,7 @@ const nothingSeen =
           <ul class="divide-y divide-border" data-progress-firsts>
             {progress.firsts.map((first) => (
               <li
-                class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 first:pt-0 last:pb-0"
+                class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-line py-item first:pt-0 last:pb-0"
                 data-first={first.key}
               >
                 <span class="text-body font-semibold break-words text-heading">
@@ -99,16 +105,23 @@ const nothingSeen =
           headingId="progress-messier-heading"
           heading={`${t.messier} · ${t.count({ seen: String(progress.messier.seenCount), total: String(progress.messier.total) })}`}
         >
-          <ChecklistGrid items={progress.messier.items} prefix="M" label={t.messier} />
+          <ChecklistLegend items={progress.messier.items} label={t.messier} />
+          <div class="mt-group">
+            <ChecklistGrid items={progress.messier.items} prefix="M" label={t.messier} />
+          </div>
           <SeenList items={progress.messier.items} label={`${t.messier}: ${t.seenHeading}`} />
         </Band>
 
         <Band
           headingId="progress-caldwell-heading"
           heading={`${t.caldwell} · ${t.count({ seen: String(progress.caldwell.seenCount), total: String(progress.caldwell.total) })}`}
+          collapsed={{ show: t.caldwellShow, hide: t.caldwellHide }}
         >
-          <p class="mb-4 text-label text-muted-foreground">{t.caldwellNote}</p>
-          <ChecklistGrid items={progress.caldwell.items} prefix="C" label={t.caldwell} />
+          <p class="mb-group text-label text-muted-foreground">{t.caldwellNote}</p>
+          <ChecklistLegend items={progress.caldwell.items} label={t.caldwell} />
+          <div class="mt-group">
+            <ChecklistGrid items={progress.caldwell.items} prefix="C" label={t.caldwell} />
+          </div>
           <SeenList items={progress.caldwell.items} prefix="C" label={`${t.caldwell}: ${t.seenHeading}`} />
         </Band>
       </div>

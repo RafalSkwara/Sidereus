@@ -1,6 +1,7 @@
 import type { Messages } from "@/i18n";
 import type { ShowerKey } from "@/lib/catalogue/meteor-showers";
 import type { ElongationBody, OppositionBody } from "@/lib/engine/events";
+import type { ObjectFamily } from "@/lib/progress/object-family";
 
 /**
  * The Polish catalogue. It must match `en` key for key (`satisfies Messages`) and overrides every
@@ -1255,11 +1256,22 @@ export const pl = {
     caldwell: "Caldwell",
     count: (p: { seen: string; total: string }) => `${p.seen} / ${p.total}`,
     caldwellNote: "Lista obejmuje obiekty Caldwella widoczne ze średnich szerokości północnych.",
+    caldwellShow: "Pokaż listę Caldwella",
+    caldwellHide: "Ukryj listę Caldwella",
     seenHeading: "Zaobserwowane do tej pory",
     seen: "zaobserwowano",
     notSeen: "jeszcze nie zaobserwowano",
     empty: "Nic jeszcze nie zaobserwowano.",
     toTonight: "Zobacz, co warto obejrzeć dziś w nocy",
+    types: {
+      galaxy: { one: "galaktyka", heading: "Galaktyki" },
+      globular: { one: "gromada kulista", heading: "Gromady kuliste" },
+      "open-cluster": { one: "gromada otwarta", heading: "Gromady otwarte" },
+      nebula: { one: "mgławica", heading: "Mgławice" },
+      planetary: { one: "mgławica planetarna", heading: "Mgławice planetarne" },
+      stars: { one: "grupa gwiazd", heading: "Gwiazdy i asteryzmy" },
+    } satisfies Record<ObjectFamily, { one: string; heading: string }>,
+    legendLabel: (p: { list: string }) => `${p.list} według typu`,
     milestones: {
       title: "Kamienie milowe",
       reachedOn: (p) => `Osiągnięto: ${p.date}`,

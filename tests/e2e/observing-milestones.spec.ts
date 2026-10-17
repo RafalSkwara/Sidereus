@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import type { MilestoneKey } from "@/lib/progress/milestones";
 import { createFormatter } from "@/lib/tonight/format";
@@ -16,6 +17,10 @@ import { madridDateDaysAgo, onboardInMadrid, test, waitForHydration } from "./he
  * the counts follow edits and deletes. Each test signs up its own fresh Madrid user on
  * the all-clear forecast fixture, so nothing depends on test order. The copy is read from the catalogue and the dates
  * go through the same formatter the page uses.
+ *
+ * Progress rewards (ui-progress-rewards) adds what a screenshot cannot show: a tile's screen-reader sentence carries
+ * its type and seen state (exact text: "not seen" contains "seen"), the legend's per-type count follows the log both
+ * ways, the dialog shows the milestone's badge, and the checklist markup stays inside its measured budget.
  */
 
 const progress = en.progress;
@@ -25,6 +30,16 @@ const LOG_FORM = 'form[action="/api/log"]';
 const EDIT_FORM = 'form[action^="/api/log/"]:not([action$="/delete"])';
 const DELETE_FORM = 'form[action$="/delete"]';
 const format = createFormatter("en");
+/** M31's English common name, from `messier.json` (the catalogue JSON does not load in Playwright). */
+const M31_NAME = "Andromeda Galaxy";
+/** A tile's screen-reader sentence: "M31, Andromeda Galaxy, galaxy, seen". */
+const tileSr = (seen: boolean) => [M31_NAME, progress.types.galaxy.one, seen ? progress.seen : progress.notSeen];
+/**
+ * The two checklist grids plus the icon sprite, in `outerHTML` characters, in this journey's state at step 3 (M31 seen):
+ * measured at 103,758 on the preview build (implementation-notes.md), pinned at about +10 %, so a tile that grows
+ * fails here and not in a user's data plan. The measure covers this change's markup only, never the page shell.
+ */
+const CHECKLIST_MARKUP_BUDGET = 114_000;
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -112,6 +127,11 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await onboardInMadrid(page, "e2e-milestones");
   const messierHeading = page.locator("#progress-messier-heading");
   const chip = (key: string) => page.locator(`[data-checklist-item="${key}"]`);
+  const tileSrText = (key: string) => chip(key).locator("[data-tile-sr]");
+  const messierLegend = (family: string) =>
+    page
+      .locator('section[aria-labelledby="progress-messier-heading"] [data-checklist-legend]')
+      .locator(`[data-legend-family="${family}"] [data-legend-count]`);
 
   // 1. Progress in the primary nav opens the page; nothing is seen yet, but every band shows, and no milestone is reached.
   await page.goto("/log");
@@ -125,6 +145,16 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expect(page.getByRole("link", { name: progress.toTonight })).toBeVisible();
   await expect(page.locator("#progress-milestones-heading")).toHaveText(copy.title);
   await expect(page.locator("[data-milestone]")).toHaveCount(11);
+  // The Caldwell band starts closed (owner P8 A). Its heading stays a real h2, outside the disclosure, and the summary
+  // is only the toggle, named for what it does (owner, 2026-10-17, impl review F3).
+  await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${progress.caldwell} · `) })).toBeVisible();
+  const caldwellToggle = page.locator("details[data-band-collapsible] > summary");
+  await expect(caldwellToggle.locator("h2")).toHaveCount(0);
+  await expect(caldwellToggle).toHaveAccessibleName(progress.caldwellShow);
+  await expect(chip("NGC188")).toBeHidden();
+  await caldwellToggle.click();
+  await expect(caldwellToggle).toHaveAccessibleName(progress.caldwellHide);
+  await expect(chip("NGC188")).toBeVisible();
 
   // 2. M31 rated 2 reaches nothing and ticks nothing: the first galaxy is still ahead, the count stays 0.
   await logEntry(page, "/log/new?object=M31&from=log", 2, /\/log(\?|$)/);
@@ -133,6 +163,9 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expect(messierHeading).toContainText(count(0, 110));
   await expect(chip("M31")).toHaveCount(1);
   await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
+  await expect(chip("M31")).toHaveAttribute("data-family", "galaxy");
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(false)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
 
   // 3. Edited to 4, the entry reaches the milestone on the entry's own night, counts, its chip is ticked and it is
   // listed under seen.
@@ -146,8 +179,37 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await expectReached(page, "first-galaxy", galaxyNight);
   await expect(messierHeading).toContainText(count(1, 110));
   await expect(chip("M31")).toHaveAttribute("data-seen", "");
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(true)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(1, 40));
   await expect(page.locator('[data-seen-item="M31"]')).toHaveCount(1);
   await expect(page.locator("[data-progress-empty]")).toHaveCount(0);
+  // The checklist markup budget, in this state: the two grids and the sprite only (never the shell).
+  const checklistMarkup = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-checklist-grid], [data-object-type-sprite]")]
+      .map((element) => element.outerHTML.length)
+      .reduce((sum, length) => sum + length, 0),
+  );
+  expect(checklistMarkup).toBeGreaterThan(0);
+  expect(checklistMarkup).toBeLessThan(CHECKLIST_MARKUP_BUDGET);
+
+  // 3b. Re-rated to 2, the entry un-sees M31: the tile, the legend and the count go back, while the first galaxy stays
+  // reached on its stored night. Then back to 4 (the galaxy is stored, so nothing celebrates), as step 5 expects.
+  form = await openEntry(page, "M31");
+  await rate(form, 2);
+  await form.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  await page.goto("/log/progress");
+  await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
+  await expect(tileSrText("M31")).toHaveText(["M31", ...tileSr(false)].join(", "));
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
+  await expect(messierHeading).toContainText(count(0, 110));
+  await expectReached(page, "first-galaxy", galaxyNight);
+  form = await openEntry(page, "M31");
+  await rate(form, 4);
+  await form.locator('button[type="submit"]').click();
+  await expect(page).toHaveURL(/\/log(\?|$)/);
+  // "First galaxy" is stored, so the save that reaches it again celebrates nothing (impl review F4).
+  await expectNoCelebration(page);
 
   // 4. Jupiter, logged from the planets page's form (straight to the form: it does not depend on Jupiter being up
   // tonight), reaches the first planet and shows the night it was logged as its first. It is no Messier object, so the
@@ -175,6 +237,9 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await page.goto("/log/progress");
   await expectReached(page, "first-galaxy", galaxyNight);
   await expectReached(page, "first-globular", galaxyNight);
+  await expect(messierLegend("galaxy")).toHaveText(count(0, 40));
+  await expect(messierLegend("globular")).toHaveText(count(1, 29));
+  await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
 
   // 6. Deleting the M13 entry takes the entries away, not the record: both milestones stay, on their stored nights,
   // while the counts follow the log and go back to 0.
@@ -212,6 +277,7 @@ test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
   await expect(celebration(page)).toHaveCount(1);
   await expect(openCelebration(page)).toHaveCount(1);
   await expect(openCelebration(page)).toContainText(copy.name["first-galaxy"]);
+  await expect(openCelebration(page).locator('[data-milestone-badge="first-galaxy"]')).toHaveCount(1);
   await expect(openCelebration(page).getByRole("link", { name: celebrationCopy.seeProgress })).toHaveAttribute(
     "href",
     "/log/progress",
@@ -276,4 +342,36 @@ test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
   expect(night).toBe(madridDateDaysAgo(3, pinnedNow()));
   await expect(page.locator("[data-toast]")).toContainText(en.log.list.saved({ object: "M31" }));
   await expectNoCelebration(page);
+});
+
+test("a dialog that names several milestones keeps Continue on a 320 × 568 screen, in English and Polish", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  await onboardInMadrid(page, "e2e-milestones-several");
+  await page.setViewportSize({ width: 320, height: 568 });
+  const dialog = openCelebration(page);
+  // A save that reaches three milestones lands on a page with three `milestone` params; GearShell opens the dialog
+  // from them, as here. Two or more names get the 112 px badges, two to a row, and the names at the body role (owner,
+  // 2026-10-17, impl review F5). `showModal()` focuses Continue, which scrolls an overflowing dialog to it and hides the
+  // badges, so the check scrolls the dialog back to its top first: from there, Continue must be wholly on screen.
+  const expectContinueOnScreen = async (label: string) => {
+    await expect(dialog).toHaveCount(1);
+    await expect(dialog.locator("[data-milestone-badge]")).toHaveCount(3);
+    await dialog.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    expect(await dialog.evaluate((element) => element.scrollTop)).toBe(0);
+    await expect(dialog.getByRole("button", { name: label })).toBeInViewport({ ratio: 1 });
+  };
+  await page.goto("/log/progress?milestone=first-galaxy&milestone=messier-10&milestone=messier-25");
+  const badge = await dialog.locator('[data-milestone-badge="first-galaxy"]').boundingBox();
+  expect(badge?.width).toBe(112);
+  await expectContinueOnScreen(copy.celebration.continue);
+  // Polish names are the longest copy.
+  await context.addCookies([{ name: LOCALE_COOKIE, value: "pl", url: baseURL ?? "http://localhost:4321" }]);
+  await page.goto("/log/progress?milestone=first-galaxy&milestone=messier-10&milestone=messier-25");
+  await expectContinueOnScreen(pl.progress.milestones.celebration.continue);
 });

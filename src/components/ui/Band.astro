@@ -5,8 +5,18 @@
  * `id` is an anchor on the section (the Targets page's `#washed-out`, and hooks such as `section#nights` for e2e);
  * Tonight's tiles open pages, never anchors. `class` is merged last (the `#washed-out` band takes a scroll margin).
  * `headingHidden` keeps the heading for screen readers only, for a band whose page title already names it (the
- * Moon, Planets and Nights pages).
+ * Moon, Planets and Nights pages). `collapsed` (ui-progress-rewards, the progress page's Caldwell band, owner P8 A)
+ * puts the content in a native `<details>`, closed on load: no script and no stored state, and the content stays in the
+ * DOM. The heading stays a real `h2` in the band's heading row, above the disclosure (owner, 2026-10-17, impl review
+ * F3: a heading inside a `<summary>` can drop out of a screen reader's heading list), and the `<summary>` is only the
+ * toggle, its visible text and accessible name saying what it does ("Show the Caldwell list" / "Hide …", swapped by
+ * the open state). The summary and chevron are `disclosure.ts`'s; the chevron and the label turn through the named
+ * group `group/band`, so a disclosure nested in the band keeps its own state. Only this Astro band collapses (no
+ * island needs it), so `band.tsx` has no twin of the option.
  */
+import { ChevronDown } from "lucide-react";
+
+import { DISCLOSURE_CHEVRON_CLASS, DISCLOSURE_SUMMARY_CLASS } from "@/components/ui/disclosure";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -18,9 +28,11 @@ interface Props {
   class?: string;
   /** Keep the heading for screen readers only: the page's own title already says it. */
   headingHidden?: boolean;
+  /** The content in a closed `<details>`; its toggle reads `show` while closed and `hide` while open. */
+  collapsed?: { show: string; hide: string };
 }
 
-const { headingId, heading, id, class: className, headingHidden = false } = Astro.props;
+const { headingId, heading, id, class: className, headingHidden = false, collapsed } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
@@ -41,5 +53,18 @@ const hasAction = Astro.slots.has("action");
       {hasAction && <slot name="action" />}
     </div>
   )}
-  <slot />
+  {collapsed ? (
+    <details class="group/band" data-band-collapsible>
+      <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "gap-2 text-label font-semibold text-heading")}>
+        <span class="min-w-0 flex-1 break-words group-open/band:hidden">{collapsed.show}</span>
+        <span class="hidden min-w-0 flex-1 break-words group-open/band:inline">{collapsed.hide}</span>
+        <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/band:rotate-180")} aria-hidden="true" />
+      </summary>
+      <div class="mt-3 sm:mt-4">
+        <slot />
+      </div>
+    </details>
+  ) : (
+    <slot />
+  )}
 </section>

@@ -1,11 +1,17 @@
 ---
 // The seen objects of one checklist, in catalogue order (observing-progress, M-3 S-05): "M31 · Andromeda Galaxy" (a Caldwell
-// row leads with its number, "C20 · NGC 7000 · North America Nebula") and the night it was first logged with a rating of 3 or above. Renders nothing while none is seen. The row wraps, so
-// a long Polish name stays inside a 320 px column.
+// row leads with its number, "C20 · NGC 7000 · North America Nebula") and the night it was first logged with a rating
+// of 3 or above. It is the only place the first night shows. Since ui-progress-rewards (owner P8 A) it sits in a native
+// `<details>`, closed on load, whose summary reads "Seen so far · 5"; no script, and the rows stay in the DOM. Renders
+// nothing while none is seen. The row wraps, so a long Polish name stays inside a 320 px column.
+import { ChevronDown } from "lucide-react";
+
+import { DISCLOSURE_CHEVRON_CLASS, DISCLOSURE_SUMMARY_CLASS } from "@/components/ui/disclosure";
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { ChecklistItem } from "@/lib/progress/progress";
 import { createFormatter } from "@/lib/tonight/format";
+import { cn } from "@/lib/utils";
 
 interface Props {
   /** The checklist's items; only the seen ones are listed. */
@@ -24,22 +30,30 @@ const seen = items.flatMap((item) => (item.seen ? [{ item, seen: item.seen }] : 
 ---
 
 {seen.length > 0 && (
-  <ul aria-label={label} class="mt-4 divide-y divide-border" data-seen-list>
-    {seen.map(({ item, seen: summary }) => {
-      const name = localCommonName(item.id, item.commonName, locale);
-      return (
-        <li class="py-3 first:pt-0 last:pb-0" data-seen-item={item.id}>
-          <p class="text-body font-semibold break-words text-heading">
-            {prefix === "C" && `${prefix}${item.number} · `}
-            {item.label}
-            {name && <span class="font-normal text-foreground"> · {name}</span>}
-            <span class="font-normal text-muted-foreground">
-              {" · "}
-              {t.firstSeen({ date: format.formatShortDate(summary.firstNight) })}
-            </span>
-          </p>
-        </li>
-      );
-    })}
-  </ul>
+  <details class="group/seen mt-group" data-seen-details>
+    {/* Closed on load (owner P8 A): the tiles above already name every seen object. Its own named group, so the
+    chevron follows this list and not the Caldwell band around it (impl review F1). */}
+    <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "gap-2 text-label font-semibold text-heading")}>
+      <span class="min-w-0 flex-1 break-words">{`${t.seenHeading} · ${String(seen.length)}`}</span>
+      <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/seen:rotate-180")} aria-hidden="true" />
+    </summary>
+    <ul aria-label={label} class="mt-line divide-y divide-border" data-seen-list>
+      {seen.map(({ item, seen: summary }) => {
+        const name = localCommonName(item.id, item.commonName, locale);
+        return (
+          <li class="py-item first:pt-0 last:pb-0" data-seen-item={item.id}>
+            <p class="text-body font-semibold break-words text-heading">
+              {prefix === "C" && `${prefix}${item.number} · `}
+              {item.label}
+              {name && <span class="font-normal text-foreground"> · {name}</span>}
+              <span class="font-normal text-muted-foreground">
+                {" · "}
+                {t.firstSeen({ date: format.formatShortDate(summary.firstNight) })}
+              </span>
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  </details>
 )}
