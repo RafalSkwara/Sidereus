@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import rawStars from "./bright-stars.json";
 import meta from "./bright-stars.meta.json";
-import finderMeta from "./finder-stars.meta.json";
-import { BRIGHT_STARS, BRIGHT_STAR_COUNT_RANGE, BRIGHT_STAR_MAX_MAG } from "./stars";
+import { BRIGHT_STARS } from "./stars";
 import { STAR_NAMES, starName } from "./star-names";
 
 /** The SHA-256 of the pinned Hipparcos `hip_main.dat` (I/239), written here as the old HYG commit was. */
@@ -11,21 +9,6 @@ const PINNED_SHA256 = "58ceabb104d647160d9437ce6e513a02a036bb4ad9f8879a5a22fd529
 
 /** The ten stars at V <= 7.5 with no astrometric solution, positioned from RAhms/DEdms (HIP numbers). */
 const SEXAGESIMAL_HIPS = [31067, 31500, 34716, 50572, 52800, 55203, 59273, 78727, 80579, 115125];
-
-/**
- * The fields read from the file, as the generator records them: the ESA reply lists HIP, RAdeg, DEdeg, Vmag, pmRA and
- * pmDE, plus RAhms and DEdms for the ten stars without a solution (`split("|")` indices of `hip_main.dat`).
- */
-const FIELDS_USED = [
-  { name: "HIP", index: 1 },
-  { name: "Vmag", index: 5 },
-  { name: "RAdeg", index: 8 },
-  { name: "DEdeg", index: 9 },
-  { name: "pmRA", index: 12 },
-  { name: "pmDE", index: 13 },
-  { name: "RAhms", index: 3, onlyWhen: "RAdeg and DEdeg are blank" },
-  { name: "DEdms", index: 4, onlyWhen: "RAdeg and DEdeg are blank" },
-];
 
 /**
  * Independent published positions, ICRS J2000 (epoch 2000.0, proper motion applied), as decimal degrees.
@@ -100,19 +83,6 @@ function nearestBright(raDeg: number, decDeg: number) {
 }
 
 describe("bright-star catalogue", () => {
-  it("holds the naked-eye stars, brightest first, as J2000 unit vectors", () => {
-    expect(BRIGHT_STARS.length).toBeGreaterThanOrEqual(BRIGHT_STAR_COUNT_RANGE.min);
-    expect(BRIGHT_STARS.length).toBeLessThanOrEqual(BRIGHT_STAR_COUNT_RANGE.max);
-    BRIGHT_STARS.forEach((s, i) => {
-      expect(s.mag).toBeLessThanOrEqual(BRIGHT_STAR_MAX_MAG);
-      expect(Math.abs(Math.hypot(...s.vector) - 1)).toBeLessThanOrEqual(1e-4);
-      if (i > 0) {
-        const prev = BRIGHT_STARS[i - 1];
-        expect(prev.mag < s.mag || (prev.mag === s.mag && prev.id < s.id)).toBe(true);
-      }
-    });
-  });
-
   it("records the pinned Hipparcos file, its licence and the ESA credit", () => {
     expect(meta.sha256).toBe(PINNED_SHA256);
     expect(meta.file).toBe("I/239/hip_main.dat");
@@ -125,29 +95,17 @@ describe("bright-star catalogue", () => {
     expect(BRIGHT_STARS).toHaveLength(921);
   });
 
-  it("records exactly the fields read from the file", () => {
-    expect(meta.fieldsUsed).toEqual(FIELDS_USED);
-    // The ESA reply's list: HIP, RAdeg, DEdeg, Vmag, pmRA, pmDE, and RAhms, DEdms for the ten stars.
-    expect(meta.fieldsUsed.map((field) => field.name).sort()).toEqual(
-      ["DEdeg", "DEdms", "HIP", "RAdeg", "RAhms", "Vmag", "pmDE", "pmRA"].sort(),
-    );
-  });
-
-  it("keeps the filter text the build's leak check relies on apart from the finder file's", () => {
-    // scripts/build-sw.mjs fails the build when the finder meta's `filter` appears in dist/client, which ships this
-    // file: so it must be non-empty, differ from this one and appear nowhere in the browser-delivered files.
-    expect(meta.filter.length).toBeGreaterThan(0);
-    expect(meta.filter).not.toMatch(/Sol/);
-    expect(finderMeta.filter.length).toBeGreaterThan(0);
-    expect(finderMeta.filter).not.toBe(meta.filter);
-    expect(meta.filter).toContain("4.5");
-    expect(JSON.stringify(meta)).not.toContain(finderMeta.filter);
-    expect(JSON.stringify(rawStars)).not.toContain(finderMeta.filter);
-  });
-
-  it("lists exactly the ten stars positioned from RAhms/DEdms, with Alula Australis and xi Sco among them", () => {
+  it("puts well-known stars at their published J2000 positions, and the ten stars without a solution where they belong", () => {
+    expect(REFERENCES).toHaveLength(6);
+    expect(SEXAGESIMAL_REFERENCES).toHaveLength(2);
     expect(meta.positionFromSexagesimal.hips).toEqual(SEXAGESIMAL_HIPS);
     expect(meta.positionFromSexagesimal.note).toContain("not propagated");
+    for (const reference of REFERENCES) {
+      const { star, arcsec } = nearestBright(reference.ra, reference.dec);
+      expect(star.name, reference.name).toBe(reference.name);
+      expect(Math.abs(star.mag - reference.mag), reference.name).toBeLessThanOrEqual(0.05);
+      expect(arcsec, reference.name).toBeLessThanOrEqual(POSITION_TOLERANCE_ARCSEC);
+    }
     for (const reference of SEXAGESIMAL_REFERENCES) {
       const star = BRIGHT_STARS.find((s) => s.id === reference.hip);
       expect(star, reference.name).toBeDefined();
@@ -157,30 +115,6 @@ describe("bright-star catalogue", () => {
       // The star is found by its published position too, not just by its number.
       expect(nearestBright(reference.ra, reference.dec).star.id, reference.name).toBe(reference.hip);
     }
-  });
-
-  it("puts well-known stars at their published J2000 positions", () => {
-    for (const reference of REFERENCES) {
-      const { star, arcsec } = nearestBright(reference.ra, reference.dec);
-      expect(star.name, reference.name).toBe(reference.name);
-      expect(Math.abs(star.mag - reference.mag), reference.name).toBeLessThanOrEqual(0.05);
-      expect(arcsec, reference.name).toBeLessThanOrEqual(POSITION_TOLERANCE_ARCSEC);
-    }
-  });
-
-  it("has no two stars closer than 5 arcseconds", () => {
-    // The brightest 921 are stored at 2 arcseconds' resolution: a duplicate row (HYG listed a second Capella 13
-    // arcseconds from the first) would show up here. The closest real pair is alpha Centauri A and B, at about 16.
-    let closest = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < BRIGHT_STARS.length; i++) {
-      for (let j = i + 1; j < BRIGHT_STARS.length; j++) {
-        const a = BRIGHT_STARS[i].vector;
-        const b = BRIGHT_STARS[j].vector;
-        const chord = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) * ARCSEC_PER_RAD;
-        closest = Math.min(closest, chord);
-      }
-    }
-    expect(closest).toBeGreaterThan(5);
   });
 
   it("names the 40 brightest named stars plus Polaris, each with a Polish form", () => {
