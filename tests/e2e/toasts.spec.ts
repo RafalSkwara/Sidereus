@@ -15,9 +15,8 @@ import { onboardInMadrid, test } from "./helpers";
  * render, `/tonight?skyChecked=1` a notice inside the Tonight server island (it arrives after load). The ten seconds
  * run on Playwright's fake clock (`page.clock`), installed after onboarding so the sign-up flow keeps real time.
  *
- * The "closed offline notice stays closed" check adds `data-from-device` to `<html>` by hand, which is what makes
- * the page script show the stored copy's notice. It tests that script, not the service worker; the stored-copy
- * behaviour with a really unreachable server is in offline.spec.ts.
+ * The offline notice's × (it closes and stays closed while the page re-applies its state) is asserted in
+ * offline.spec.ts, against a really unreachable server; the × button's 44 px size is not asserted (test-suite-diet).
  */
 
 const PHONE = { width: 390, height: 844 };
@@ -87,20 +86,6 @@ test("the × closes a toast, and a reload does not show it again", async ({ page
   await expect(page.getByRole("status")).toHaveCount(0);
 });
 
-test("the × is a 44 px icon button with the localised label and no text", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-toasts-button");
-
-  // Measure at rest: the entrance animation's transform would shave a sub-pixel off the box.
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(SAVED_SITE);
-  const close = closeOf(page);
-  await expect(close).toBeVisible();
-  const box = await close.boundingBox();
-  expect(box?.width).toBeGreaterThanOrEqual(44);
-  expect(box?.height).toBeGreaterThanOrEqual(44);
-  await expect(close).toHaveText("");
-});
-
 test("a toast is gone after ten seconds, unless it is hovered or focused", async ({ page }) => {
   await onboardInMadrid(page, "e2e-toasts-timer");
   await page.setViewportSize(DESKTOP);
@@ -148,47 +133,4 @@ test("a toast in Tonight's server island is adopted when it arrives, and clears 
 
   await closeOf(page).click();
   await expect(toastOf(page)).toHaveCount(0);
-});
-
-test("a closed offline notice stays closed while the page keeps updating", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-toasts-offline");
-
-  await page.goto("/tonight");
-  await expect(page.locator("[data-offline-copy]")).toBeAttached();
-  const prepared = page.locator('[data-offline-notice="prepared"]');
-  await expect(prepared).toBeHidden();
-
-  // Mark the page as served from the device, then change the DOM so the page script re-applies its state.
-  const touchDom = () =>
-    page.evaluate(() => {
-      document.body.appendChild(document.createElement("div"));
-    });
-  await page.evaluate(() => document.documentElement.setAttribute("data-from-device", ""));
-  await touchDom();
-  await expect(prepared).toBeVisible();
-
-  await prepared.getByRole("button", { name: en.common.close }).click();
-  await expect(prepared).toBeHidden();
-  await expect(prepared).toHaveAttribute("data-dismissed", "");
-
-  await touchDom();
-  await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-  // The page script re-applies its state on the next animation frame: wait for two before asserting it stayed hidden.
-  await page.evaluate(
-    () =>
-      new Promise<void>((done) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            done();
-          });
-        });
-      }),
-  );
-  await expect(prepared).toBeHidden();
-  await expect(page.locator("[data-offline-notice]:visible")).toHaveCount(0);
-
-  // The next page load starts over.
-  await page.reload();
-  await expect(page.locator("[data-offline-copy]")).toBeAttached();
-  await expect(prepared).not.toHaveAttribute("data-dismissed");
 });

@@ -167,39 +167,22 @@ describe("the target key (the log's closed grammar; the app validates the catalo
     return data;
   }
 
-  it.each([["M31"], ["M57"], ["M1"], ["M110"], ["jupiter"], ["moon"], ["NGC7000"], ["IC405"]])(
-    "stores the target %j as given",
-    async (target) => {
-      const { data, error } = await a.client
-        .from("observations")
-        .insert({ ...entry(gearA), target })
-        .select("id")
-        .single();
-      expect(error).toBeNull();
-      if (!data) throw new Error("A could not insert");
-      expect(await row(data.id)).toEqual({ target });
-    },
-  );
+  // One row per branch of the grammar (the Messier ceiling, a planet word, a deep-sky number); the edit test below
+  // takes M1, M42, saturn, moon, IC405 and M31 through the same check.
+  it.each([["M110"], ["jupiter"], ["NGC7000"]])("stores the target %j as given", async (target) => {
+    const { data, error } = await a.client
+      .from("observations")
+      .insert({ ...entry(gearA), target })
+      .select("id")
+      .single();
+    expect(error).toBeNull();
+    if (!data) throw new Error("A could not insert");
+    expect(await row(data.id)).toEqual({ target });
+  });
 
-  it.each([
-    ["M0"],
-    ["M111"],
-    ["m31"],
-    ["31"],
-    ["Jupiter"],
-    ["pluto"],
-    ["Moon"],
-    ["luna"],
-    ["sun"],
-    [""],
-    ["NGC0"],
-    ["NGC07000"],
-    ["NGC10000"],
-    ["NGC 7000"],
-    ["ngc7000"],
-    ["IC"],
-    ["IC0"],
-  ])("rejects the target %j", async (target) => {
+  // Both Messier bounds, the NGC digit ceiling and the IC floor; case, unknown words and spacing are refused by the
+  // update table below through the same check.
+  it.each([["M0"], ["M111"], ["NGC10000"], ["IC0"]])("rejects the target %j", async (target) => {
     const { error } = await a.client.from("observations").insert({ ...entry(gearA), target });
     expect(error).not.toBeNull();
   });

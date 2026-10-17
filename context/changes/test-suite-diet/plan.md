@@ -712,9 +712,9 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 7.1 `playwright test --list` ≤ 72 tests; whole suite green locally incl. a `--repeat-each 2 --workers 4` run
-- [ ] 7.2 db suite ≤ 100 named tests and green locally
-- [ ] 7.3 `npm run smoke` green with steps 11 and 12
+- [x] 7.1 `playwright test --list` ≤ 72 tests; whole suite green locally incl. a `--repeat-each 2 --workers 4` run — db88164
+- [x] 7.2 db suite ≤ 100 named tests and green locally — db88164
+- [x] 7.3 `npm run smoke` green with steps 11 and 12 — db88164
 - [ ] 7.4 The PR's `smoke` job green with no retried test
 
 #### Manual

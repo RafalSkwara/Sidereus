@@ -241,6 +241,13 @@ const steps = [
     { status: 302, location: "/auth/signin?next=%2Flog", exact: true },
   ],
   [
+    // test-suite-diet: converted from `sign-in-continue.spec.ts`, the one thing the redirect steps do not pin: the sign-in
+    // page puts the page to continue to into its form (the hidden `next` that `POST /api/auth/signin` reads).
+    "the sign-in page carries the page to continue to in its form",
+    () => request("/auth/signin?next=%2Flog", { body: true }),
+    { status: 200, bodyIncludes: ['name="next" value="/log"'] },
+  ],
+  [
     "tonight redirects anonymous user, remembering the page",
     () => request("/tonight"),
     { status: 302, location: "/auth/signin?next=%2Ftonight", exact: true },
@@ -558,7 +565,29 @@ const steps = [
     },
   ],
   [
-    "plan 11: none of the refusals (plans 8 to 10 and 12) wrote a list, so the island still shows the suggested plan",
+    // test-suite-diet D4 (11), converted from `session-plan-edit.spec.ts` "a save for a night that is over ...": a posted
+    // night that is not tonight's is refused with the fixed `nightOver` key, and the stale night never reaches the
+    // location. Plan 11 below reads back that nothing was saved.
+    "plan 13: a save for a night that is over is refused with the nightOver key, and the night never comes back",
+    () =>
+      request(SAVE_PLAN, {
+        method: "POST",
+        form: [
+          ["site", planSiteId],
+          ["night", "2020-01-01"],
+          ["targets", "M31"],
+        ],
+      }),
+    {
+      status: 302,
+      location: () => planLocation("error=errors.sessionPlan.nightOver"),
+      exact: true,
+      needsPlanGrant: true,
+      absent: "2020-01-01",
+    },
+  ],
+  [
+    "plan 11: none of the refusals (plans 8 to 10, 12 and 13) wrote a list, so the island still shows the suggested plan",
     () => replayPlanIsland(),
     {
       status: 200,
@@ -566,6 +595,18 @@ const steps = [
       bodyIncludes: ['data-session-plan-state="suggested"'],
       bodyExcludes: [EDITED, HELD, LOCKED],
     },
+  ],
+  [
+    // test-suite-diet D4 (12): one gear UPDATE route over HTTP (the create routes are walked above): a changed name comes
+    // back as the saved notice and is read back on /gear.
+    "gear: updating a site redirects to gear with the saved notice",
+    () => request(`/api/gear/sites/${planSiteId}`, { method: "POST", form: { ...site, name: "Smoke site renamed" } }),
+    { status: 302, location: "/gear?saved=site", exact: true, needsPlanGrant: true },
+  ],
+  [
+    "gear: the renamed site is on the gear page",
+    () => request("/gear", { body: true }),
+    { status: 200, bodyIncludes: ["Smoke site renamed"], needsPlanGrant: true },
   ],
   [
     // A well-formed id that matches no row: the route answers with the store's fixed "not found" key.

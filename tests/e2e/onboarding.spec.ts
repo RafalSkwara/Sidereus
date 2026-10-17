@@ -1,16 +1,35 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, type BrowserContext, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import type { TelescopeEntry } from "@/lib/gear/catalogue/types";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { MADRID_LABEL, MADRID_RESULT, ONBOARDING_FORM, signUp, stubPlaceSearch, test } from "./helpers";
+import {
+  MADRID_LABEL,
+  MADRID_RESULT,
+  ONBOARDING_FORM,
+  signUp,
+  stubPlaceSearch,
+  test,
+  waitForHydration,
+} from "./helpers";
 
 /*
  * First-run onboarding end to end (S-03). Runs against a production preview backed by local Supabase
  * (email confirmation off, so sign-up leaves the browser signed in), with FORECAST_BASE_URL pointing at
  * `tests/e2e/forecast-fixture.mjs` (an all-clear sky). Place search is stubbed in the browser, so no
- * test talks to Open-Meteo.
+ * test talks to Open-Meteo. An abandoned onboarding's way back to setup is asserted in telescope-selector.spec.ts.
  */
+
+const TELESCOPE_FORM = 'form[action="/api/gear/telescopes"]';
+
+// The catalogue entry the picks below choose, read from the data file so the form's fields are compared with the entry.
+const catalogue = JSON.parse(
+  readFileSync(path.join(process.cwd(), "src/lib/gear/catalogue/telescopes.json"), "utf8"),
+) as TelescopeEntry[];
+const heritage = catalogue.find((entry) => entry.id === "skywatcher-heritage-130p");
 
 // Madrid: at about 40°N there is a dark window in every season.
 const MADRID = { latitude: MADRID_RESULT.latitude, longitude: MADRID_RESULT.longitude };
@@ -61,7 +80,10 @@ test.describe("onboarding in English", () => {
     await expect(firstRow.getByText(/25 mm/).first()).toBeVisible();
   });
 
-  test("a catalogue telescope brings its own eyepieces", async ({ page }) => {
+  test("a catalogue telescope brings its own eyepieces, and a catalogue pick fills the telescope form", async ({
+    page,
+  }) => {
+    if (!heritage) throw new Error("Heritage-130P is missing from the telescope catalogue");
     await stubPlaceSearch(page);
 
     await signUp(page, "e2e-catalogue");
@@ -97,6 +119,27 @@ test.describe("onboarding in English", () => {
     const firstRow = page.locator('section[aria-labelledby="targets-heading"] li[data-object]').first();
     await expect(firstRow).toBeVisible();
     await expect(firstRow.getByText(/25 mm/).first()).toBeVisible();
+
+    // The same catalogue pick on the gear page's own telescope form (gear-catalogue): typing a model and pressing Enter
+    // fills the form's fields, which then save like hand-typed ones. Enter, not ArrowDown: typing already highlights
+    // the best match.
+    await page.goto("/gear/telescopes/new");
+    await waitForHydration(page, TELESCOPE_FORM);
+    const form = page.locator(TELESCOPE_FORM);
+    // Options load after hydration; focusing opens the full list once they have, and Enter on an empty list would submit.
+    const formCombobox = form.getByRole("combobox", { name: en.gearCatalogue.telescope.label });
+    await formCombobox.click();
+    await expect(page.getByRole("option").first()).toBeVisible();
+    await formCombobox.fill("heritage 130");
+    await formCombobox.press("Enter");
+    await expect(form.locator("#name")).toHaveValue(heritage.name);
+    await expect(form.locator("#apertureMm")).toHaveValue(String(heritage.apertureMm));
+    await expect(form.locator("#focalLengthMm")).toHaveValue(String(heritage.focalLengthMm));
+
+    await form.locator('button[type="submit"]').click();
+    // The save shows a toast first, then the toast script removes the param from the URL.
+    await expect(page.getByRole("status")).toHaveText(en.gear.notice.saved.telescope);
+    await expect(page).toHaveURL(/\/gear$/);
   });
 
   test.describe("with geolocation", () => {
@@ -111,17 +154,5 @@ test.describe("onboarding in English", () => {
       await expect(page.getByText(en.location.usingDevice)).toBeVisible();
       await expect(onboardingSubmit(page)).toBeEnabled();
     });
-  });
-
-  test("abandoned onboarding: Tonight offers the way back to setup", async ({ page }) => {
-    await signUp(page, "e2e");
-
-    await page.goto("/tonight");
-
-    await expect(page.getByText(en.tonight.setupPrompt)).toBeVisible();
-    await expect(page.getByRole("link", { name: en.tonight.setup, exact: true })).toHaveAttribute(
-      "href",
-      "/onboarding",
-    );
   });
 });

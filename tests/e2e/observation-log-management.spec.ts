@@ -9,8 +9,8 @@ import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } fro
 /*
  * The observation log, end to end (S-07, FR-017 / FR-021 / FR-022), walked by one user from the shared
  * onboarding in Madrid: add an entry by hand, edit it, move it to a telescope and delete that telescope, then
- * delete the entry. The Tonight ranking is not asserted here (real clock); how edits and deletions feed it is
- * pinned by tests/db/observations.test.ts.
+ * delete the entry. The Tonight ranking is not asserted here; how edits and deletions feed it is pinned by
+ * tests/db/observations.test.ts. An entry id that matches no row is a 404 in smoke.
  */
 
 const t = en.log;
@@ -150,12 +150,4 @@ test("a user adds, edits and deletes log entries, including one whose telescope 
   await expect(page.getByRole("status")).toHaveText(t.list.deleted({ object: "M31" }));
   await expect(page).toHaveURL(/\/log$/);
   await expect(page.getByText(t.list.empty)).toBeVisible();
-});
-
-test("an unknown entry reads as not found", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-log-missing");
-
-  const response = await page.goto("/log/00000000-0000-4000-8000-000000000000");
-  expect(response?.status()).toBe(404);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(t.notFound);
 });

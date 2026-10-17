@@ -10,8 +10,8 @@ import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, test, waitFor
  * removes and adds targets and saves them in one POST; the saved order reaches another device, the keyboard keeps its
  * place (and the status region says what each Move, Remove and Add did, F6), Save waits for a change, Reset asks once
  * and gives focus back to its trigger, a free account gets the lock line instead of an editor, offline only the network
- * controls mute, and a refused save comes back as an inline alert. The held state's Reset needs a night that does not
- * pass, which the all-clear fixture never gives: it is checked by hand. Each test signs up its own fresh Madrid user
+ * controls mute (a save for a night that is over is refused by the route, which a smoke step pins). The held state's
+ * Reset needs a night that does not pass, which the all-clear fixture never gives: it is checked by hand. Each test signs up its own fresh Madrid user
  * and, where it edits, grants the full plan through the operator command (`requirePlanGrant`, the local stack's key
  * inline on the command); a held plan (`planEditable`) skips the editing tests, and a locked or unavailable one fails
  * them. Same setup as the other specs: a production preview on local Supabase with the all-clear forecast fixture.
@@ -290,22 +290,4 @@ test("offline, Edit, Save and Reset are disabled while Move, Remove and Cancel s
   } finally {
     await context.setOffline(false);
   }
-});
-
-test("a save for a night that is over comes back as an inline alert", async ({ page }) => {
-  test.setTimeout(120_000);
-  const { suggested } = await fullUserOnPlan(page, "e2e-plan-stale");
-
-  await openEditor(page);
-  // A change first: Save waits for one.
-  await control(page, "move-down", suggested[0]).click();
-  // The form as a page left open past its night would post it: a night that is no longer tonight.
-  await page.locator('[data-plan-editor-save] input[name="night"]').evaluate((input: HTMLInputElement) => {
-    input.value = "2000-01-01";
-  });
-  await page.getByRole("button", { name: t.save }).click();
-
-  await expect(page).toHaveURL((url) => url.searchParams.get("error") === "errors.sessionPlan.nightOver");
-  await expect(page.getByRole("alert").filter({ hasText: en.errors.sessionPlan.nightOver })).toBeVisible();
-  await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "suggested");
 });

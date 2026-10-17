@@ -11,12 +11,16 @@ import { madridDateDaysAgo, onboardInMadrid, test, waitForHydration } from "./he
 /*
  * Observing milestones (M-3 S-06, FR-041, US-06): the record half and the celebration. A milestone is stored at save,
  * never for an entry rated 1-2, and stays listed on `/log/progress` after the entry that reached it was edited away or
- * deleted; the save that stores it opens the celebration dialog, once. Each test signs up its own fresh Madrid user on
+ * deleted; the save that stores it opens the celebration dialog, once. The record test also carries the progress page's
+ * counts (M-3 S-05, FR-039 / FR-040): only entries rated 3 or above count and tick, a planet's first night is shown, and
+ * the counts follow edits and deletes. Each test signs up its own fresh Madrid user on
  * the all-clear forecast fixture, so nothing depends on test order. The copy is read from the catalogue and the dates
  * go through the same formatter the page uses.
  */
 
-const copy = en.progress.milestones;
+const progress = en.progress;
+const copy = progress.milestones;
+const count = (seen: number, total: number) => progress.count({ seen: String(seen), total: String(total) });
 const LOG_FORM = 'form[action="/api/log"]';
 const EDIT_FORM = 'form[action^="/api/log/"]:not([action$="/delete"])';
 const DELETE_FORM = 'form[action$="/delete"]';
@@ -101,18 +105,37 @@ async function expectAhead(page: Page, key: MilestoneKey, status: string) {
   await expect(milestone).toContainText(status);
 }
 
-test("records a milestone once, at save, and keeps it listed", async ({ page }) => {
-  test.setTimeout(180_000);
+test("records a milestone once, at save, keeps it listed, and the progress page counts only entries rated 3 or above", async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
   await onboardInMadrid(page, "e2e-milestones");
+  const messierHeading = page.locator("#progress-messier-heading");
+  const chip = (key: string) => page.locator(`[data-checklist-item="${key}"]`);
 
-  // 1. M31 rated 2 reaches nothing: the first galaxy is still ahead.
-  await logEntry(page, "/log/new?object=M31&from=log", 2, /\/log(\?|$)/);
-  await page.goto("/log/progress");
+  // 1. Progress in the primary nav opens the page; nothing is seen yet, but every band shows, and no milestone is reached.
+  await page.goto("/log");
+  await page.getByRole("navigation", { name: en.nav.primary }).getByRole("link", { name: en.nav.progress }).click();
+  await expect(page).toHaveURL(/\/log\/progress$/);
+  await expect(messierHeading).toContainText(count(0, 110));
+  await expect(page.locator("#progress-caldwell-heading")).toContainText(count(0, 61));
+  await expect(page.locator("[data-progress-firsts] li")).toHaveCount(8);
+  await expect(page.locator("[data-checklist-item]")).toHaveCount(171);
+  await expect(page.locator("[data-progress-empty]")).toContainText(progress.empty);
+  await expect(page.getByRole("link", { name: progress.toTonight })).toBeVisible();
   await expect(page.locator("#progress-milestones-heading")).toHaveText(copy.title);
   await expect(page.locator("[data-milestone]")).toHaveCount(11);
-  await expectAhead(page, "first-galaxy", copy.notYet);
 
-  // 2. Edited to 4, the entry reaches it, on the entry's own night.
+  // 2. M31 rated 2 reaches nothing and ticks nothing: the first galaxy is still ahead, the count stays 0.
+  await logEntry(page, "/log/new?object=M31&from=log", 2, /\/log(\?|$)/);
+  await page.goto("/log/progress");
+  await expectAhead(page, "first-galaxy", copy.notYet);
+  await expect(messierHeading).toContainText(count(0, 110));
+  await expect(chip("M31")).toHaveCount(1);
+  await expect(chip("M31")).not.toHaveAttribute("data-seen", /.*/);
+
+  // 3. Edited to 4, the entry reaches the milestone on the entry's own night, counts, its chip is ticked and it is
+  // listed under seen.
   let form = await openEntry(page, "M31");
   const galaxyNight = await form.locator("#night").inputValue();
   await expect(form.getByRole("radio", { name: "2", exact: true })).toBeChecked();
@@ -121,15 +144,24 @@ test("records a milestone once, at save, and keeps it listed", async ({ page }) 
   await expect(page).toHaveURL(/\/log(\?|$)/);
   await page.goto("/log/progress");
   await expectReached(page, "first-galaxy", galaxyNight);
+  await expect(messierHeading).toContainText(count(1, 110));
+  await expect(chip("M31")).toHaveAttribute("data-seen", "");
+  await expect(page.locator('[data-seen-item="M31"]')).toHaveCount(1);
+  await expect(page.locator("[data-progress-empty]")).toHaveCount(0);
 
-  // 3. Jupiter, logged from the planets page's form (straight to the form: it does not depend on Jupiter being up
-  // tonight), reaches the first planet. It is no Messier object, so the Messier count stays at the galaxy alone.
+  // 4. Jupiter, logged from the planets page's form (straight to the form: it does not depend on Jupiter being up
+  // tonight), reaches the first planet and shows the night it was logged as its first. It is no Messier object, so the
+  // Messier count stays at the galaxy alone.
   const jupiterNight = await logEntry(page, "/log/new?object=jupiter&from=planets", 3, /\/tonight\/planets(\?|$)/);
   await page.goto("/log/progress");
   await expectReached(page, "first-planet", jupiterNight);
   await expectAhead(page, "messier-10", copy.progress({ seen: "1", total: "10" }));
+  await expect(page.locator('[data-first="jupiter"]')).toContainText(
+    progress.firstSeen({ date: format.formatShortDate(jupiterNight) }),
+  );
+  await expect(page.locator('[data-first="saturn"]')).toContainText(progress.notYet);
 
-  // 4. The M31 entry becomes M13, still rated 4: the globular is reached, and the first galaxy stays, on its stored
+  // 5. The M31 entry becomes M13, still rated 4: the globular is reached, and the first galaxy stays, on its stored
   // night, though no entry holds a galaxy any more.
   form = await openEntry(page, "M31");
   const picker = form.getByRole("combobox", { name: en.log.picker.label });
@@ -144,7 +176,8 @@ test("records a milestone once, at save, and keeps it listed", async ({ page }) 
   await expectReached(page, "first-galaxy", galaxyNight);
   await expectReached(page, "first-globular", galaxyNight);
 
-  // 5. Deleting the M13 entry takes the entries away, not the record: both milestones stay, on their stored nights.
+  // 6. Deleting the M13 entry takes the entries away, not the record: both milestones stay, on their stored nights,
+  // while the counts follow the log and go back to 0.
   await openEntry(page, "M13");
   await waitForHydration(page, DELETE_FORM);
   await page.getByRole("button", { name: en.log.delete }).click();
@@ -153,8 +186,9 @@ test("records a milestone once, at save, and keeps it listed", async ({ page }) 
   await page.goto("/log/progress");
   await expectReached(page, "first-galaxy", galaxyNight);
   await expectReached(page, "first-globular", galaxyNight);
-  // The Messier count follows the log (nothing is seen now), while the record keeps what was reached.
   await expectAhead(page, "messier-10", copy.progress({ seen: "0", total: "10" }));
+  await expect(messierHeading).toContainText(count(0, 110));
+  await expect(chip("M13")).not.toHaveAttribute("data-seen", /.*/);
 });
 
 test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
