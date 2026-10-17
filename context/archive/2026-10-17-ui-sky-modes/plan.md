@@ -543,8 +543,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Manual
 
-- [ ] 1.5 The settings panel's theme and language controls look and behave as before in dark, light and red at 390 and 1440 px (screenshot beside `evidence/current-*`)
-- [ ] 1.6 `/design` § SegmentedGroup shows every state, focus ring visible in all three themes
+- [x] 1.5 The settings panel's theme and language controls look and behave as before in dark, light and red at 390 and 1440 px (screenshot beside `evidence/current-*`) — covered by owner's merge of #212, 2026-10-17
+- [x] 1.6 `/design` § SegmentedGroup shows every state, focus ring visible in all three themes — covered by owner's merge of #212, 2026-10-17
 
 ### Phase 2: Field — `skyField()` and a measured projection, DEFAULT unchanged
 
@@ -556,7 +556,7 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Manual
 
-- [ ] 2.4 `/design` § TonightSkyView at 390 and 1440 px matches `evidence/current-phone-dark.png` and `evidence/current-desktop-dark.png` (same stars, labels, compass, chevrons)
+- [x] 2.4 `/design` § TonightSkyView at 390 and 1440 px matches `evidence/current-phone-dark.png` and `evidence/current-desktop-dark.png` (same stars, labels, compass, chevrons) — covered by owner's merge of #212, 2026-10-17
 
 ### Phase 3: Drag to pan
 
@@ -567,8 +567,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Manual
 
-- [ ] 3.3 On a desktop with a mouse: drag pans smoothly both ways, releasing over a marker stays put, a click on a marker opens its page, chevrons still pan
-- [ ] 3.4 On a phone (real device or a touch emulator): swipe still scrolls, a tap on a marker still opens it
+- [x] 3.3 On a desktop with a mouse: drag pans smoothly both ways, releasing over a marker stays put, a click on a marker opens its page, chevrons still pan — covered by owner's merge of #212, 2026-10-17
+- [x] 3.4 On a phone (real device or a touch emulator): swipe still scrolls, a tap on a marker still opens it — covered by owner's merge of #212, 2026-10-17
 
 ### Phase 4: Modes in the view — the control, HIDDEN, EXPANDED, the skeleton
 
@@ -581,8 +581,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Manual
 
-- [ ] 4.5 On a phone: each mode looks right in dark, light and red; EXPANDED's stars sit where the DEFAULT ones were (same altitudes), the menu opens and closes with Esc and an outside tap, focus returns to the button
-- [ ] 4.6 Offline: switch the mode on a stored Tonight page, reload offline, the stored page shows the new mode without a flash
+- [x] 4.5 On a phone: each mode looks right in dark, light and red; EXPANDED's stars sit where the DEFAULT ones were (same altitudes), the menu opens and closes with Esc and an outside tap, focus returns to the button — covered by owner's merge of #212, 2026-10-17
+- [x] 4.6 Offline: switch the mode on a stored Tonight page, reload offline, the stored page shows the new mode without a flash — covered by owner's merge of #212, 2026-10-17
 
 ### Phase 5: States, `/design`, the screenshot gate and the rule
 
@@ -593,5 +593,5 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Manual
 
-- [ ] 5.3 The screenshot gate: every cell of the 7-state table is visible (or N/A with its reason) in the saved screenshots, in all three themes, at 1440 and 390 px
-- [ ] 5.4 `CLAUDE.md`'s new lines read correctly against the code (paths and names exist)
+- [x] 5.3 The screenshot gate: every cell of the 7-state table is visible (or N/A with its reason) in the saved screenshots, in all three themes, at 1440 and 390 px — covered by owner's merge of #212, 2026-10-17
+- [x] 5.4 `CLAUDE.md`'s new lines read correctly against the code (paths and names exist) — covered by owner's merge of #212, 2026-10-17

@@ -70,10 +70,10 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | done              |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
-| S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | in-progress |
-| S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | proposed    |
+| S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | done        |
+| S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | in-progress |
 | S-11 | ui-progress-rewards  | see each milestone as a badge and the Messier and Caldwell lists as tile checklists on the progress page                                            | —             | MS-06, FR-039, FR-041       | proposed    |
-| S-12 | app-icon             | recognise Sidereus by an app icon the owner picked from three proposals, on the home screen, the browser tab and the install prompt                 | —             | MS-06, FR-032, FR-036       | proposed    |
+| S-12 | app-icon             | recognise Sidereus by an app icon the owner picked from three proposals, on the home screen, the browser tab and the install prompt                 | —             | MS-06, FR-032, FR-036       | done        |
 
 ## Streams
 
@@ -239,7 +239,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The phone first screen (`tonight-phone.spec.ts`, 33 px of slack) must hold in the default mode, and the skeleton must reserve the right height in every mode (`sky-band.ts`).
   - The projection must be recomputed for each size, never stretched; the expanded view stays the horizon panorama, not an atlas (Parked: "A sky atlas or planetarium view").
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-10: Quick navigation to Tonight's pages
 
@@ -255,7 +255,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The Topbar's right-hand cluster is tight at 320 px (the theme button already hides there when signed out), and the popover sits in the `night-sky` scope, so it carries `data-theme`.
   - The links keep `?site=` and `?telescope=` and the offline rules of `TONIGHT_PAGES`; the menu must not duplicate `TONIGHT_NAV`.
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-11: Progress rewards
 
@@ -288,7 +288,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - Every size the manifest and `apple-touch-icon` need comes from one source through the existing PWA assets config (`pwa-assets.config.mjs`), and the service worker's precache list follows.
   - The icon must read on light and dark home screens; the in-app red mode does not apply to it.
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -302,10 +302,10 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 | S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)     | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174              |
 | S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)                | yes                   | Run `/10x-observability-audit` first · GitHub #175                                  |
 | S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision)   | done                  | Done: #193 + #195 merged, archived · GitHub #185                                    |
-| S-09       | ui-sky-modes         | M-4 S-09 · Live sky: drag to pan, hidden / default / expanded modes | planned               | Plan: `context/changes/ui-sky-modes/plan.md`, owner questions inside · no issue yet |
-| S-10       | ui-quick-nav         | M-4 S-10 · Quick navigation to Tonight's pages from every screen    | yes                   | Run `/10x-ui` for the Topbar · no issue yet                                         |
-| S-11       | ui-progress-rewards  | M-4 S-11 · Progress rewards: milestone badges, tile checklists      | yes                   | Supersedes S-03's progress part (#171) · no issue yet                               |
-| S-12       | app-icon             | M-4 S-12 · App icon: three proposals, owner picks                   | yes                   | Proposals first, then the owner's pick · no issue yet                               |
+| S-09       | ui-sky-modes         | M-4 S-09 · Live sky: drag to pan, hidden / default / expanded modes | done                  | Done: #212 merged, archived · GitHub #213 |
+| S-10       | ui-quick-nav         | M-4 S-10 · Quick navigation to Tonight's pages from every screen    | yes                   | Run `/10x-ui` for the Topbar · GitHub #214                                         |
+| S-11       | ui-progress-rewards  | M-4 S-11 · Progress rewards: milestone badges, tile checklists      | yes                   | Supersedes S-03's progress part (#171) · GitHub #215                               |
+| S-12       | app-icon             | M-4 S-12 · App icon: three proposals, owner picks                   | yes                   | Proposals first, then the owner's pick · Done: #217 merged, archived · GitHub #216                               |
 
 ## Open Roadmap Questions
 
@@ -370,3 +370,5 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **S-05: user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.** — Archived 2026-10-16 → `context/archive/2026-10-16-evening-showpieces/`. The owner's manual rows 1.6, 2.5, 3.3, 4.5 (including the M39 July P3 non-pass, a twilight-definition difference) and 4.6 were covered by the owner's merge of PR #188. Known divergence kept: October M13/M15/M57 rank outside the top 5 (OD-1, duration saturation only). Lesson: —.
 - **S-08: user (the operator) can ship star files that come from the Hipparcos Catalogue, Version 1 directly instead of through HYG, with designations from CC0 and IAU sources, so ESA's authorisation can cover them.** — Archived 2026-10-17 → `context/archive/2026-10-16-star-source-switch/`. The owner's manual rows were covered by the owner's merge of PRs #193 and #195. F1 accepted: reference positions cite SIMBAD only. F5: the Gould numbers were dropped from the Flamsteed values. ESA's authorisation is still pending: no payments are taken until it arrives in writing. Lesson: —.
 - **S-06: user who opens sign-in or sign-up while signed in lands on Tonight, and a visitor who signs up from a gated link continues to that page afterwards.** — Archived 2026-10-17 → `context/archive/2026-10-17-auth-loose-ends/`. The owner's manual rows 1.4, 1.5, 2.4-2.7 and 3.6 were covered by the owner's merge of PR #211. Lesson: —.
+- **S-09: user can drag the live sky sideways with a mouse and show it hidden, as today or expanded, with every star in its true place and the choice remembered on the device.** — Archived 2026-10-17 → `context/archive/2026-10-17-ui-sky-modes/`. The owner's manual rows 1.5, 1.6, 2.4, 3.3, 3.4, 4.5, 4.6, 5.3 and 5.4 were covered by the owner's merge of PR #212 (GitHub #213). Lesson: —.
+- **S-12: user can recognise Sidereus by an app icon the owner picked from three proposals, used for the favicon, the installed app's icon and the install prompt.** — Archived 2026-10-17 → `context/archive/2026-10-17-app-icon/`. The owner's manual row 3.3 (the post-deploy PWA icon check) was covered by the owner's merge of PR #217 (GitHub #216). Lesson: —.

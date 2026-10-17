@@ -86,5 +86,5 @@ The band reads the shipped files; capture in `final/design-specimen.png` (`captu
 #### Manual
 
 - [x] 3.2 `final/design-specimen.png` shows the band in dark, light and red; red mode turns the icon red through the `#red-only` image filter — 21022a3
-- [ ] 3.3 After merge and deploy, a fresh PWA install (or a manifest refresh) shows the new home-screen icon; the tab shows the new favicon after a hard reload
+- [x] 3.3 After merge and deploy, a fresh PWA install (or a manifest refresh) shows the new home-screen icon; the tab shows the new favicon after a hard reload — covered by owner's merge of #217, 2026-10-17
 - [x] 3.4 Star centred (owner correction): the weighted centroid of the star's pixels sits within 0.02 px of width / 2 in every raster (16, 32, 64, 180, 192, 512, maskable 512), the ICO's image is pixel-identical to `favicon.png`, and `final-sheet.png` and `design-specimen.png` are re-rendered
