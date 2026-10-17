@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Round 2, proposal 1. sky token zenith #050916, token horizon #1b2a55, token dusk-glow-horizon #6a3226; ground token background #070a12; star token primary #f2f4f8; companion token primary-strong #c3d0ff. -->
+  <defs>
+    <linearGradient id="r21-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.55" stop-color="#1b2a55"/><stop offset="0.76" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#r21-sky)"/>
+  <path fill="#070a12" d="M0 400Q128 336 272 364T512 350V512H0Z"/>
+  <path fill="#f2f4f8" d="M236 64Q236 206 348 206Q236 206 236 348Q236 206 124 206Q236 206 236 64Z"/>
+  <path fill="#c3d0ff" d="M392 62Q392 110 432 110Q392 110 392 158Q392 110 352 110Q392 110 392 62Z"/>
+</svg>

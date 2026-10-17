@@ -778,7 +778,7 @@ const moonCardWashedOutLink = {
   label: plural(locale, moonCardWashedOut, m.tonight.pages.seeWashedOut)({ count: String(moonCardWashedOut) }),
 };
 
-// App icon proposals (app-icon): the three candidate icons, read as text from the change's evidence folder (in
+// App icon proposals (app-icon): the round-2 candidate icons (round 1 stays in the evidence folder), read as text from the change's evidence folder (in
 // `context/changes/` now, `context/archive/` once archived; a glob, so the page still builds when neither matches)
 // and drawn as `<img>` data URIs, so red mode filters them like any image. Server-side `?raw` strings only: nothing
 // is emitted as a client asset, so the service worker never precaches a proposal.
@@ -793,19 +793,24 @@ const appIconSvg = (proposal: string, file: string) => {
 };
 const appIconProposals = [
   {
-    dir: "1-star",
-    name: "1 · Star",
-    note: "Four-point star (primary) with a primary-strong companion on the zenith-to-horizon sky.",
+    dir: "r2-1-white-star-dusk",
+    name: "R2-1 · White star, dusk",
+    note: "Round 1's white star (primary) and primary-strong companion over round 3's dusk-glow horizon and ground.",
   },
   {
-    dir: "2-planet",
-    name: "2 · Ringed planet",
-    note: "Primary-strong planet, marginal ring cut in front of it, a primary star.",
+    dir: "r2-2-gold-star-navy",
+    name: "R2-2 · Gold star, navy",
+    note: "The horizon proposal's gold star (star-accent base) with a primary companion on the plain zenith-to-horizon tile.",
   },
   {
-    dir: "3-free",
-    name: "3 · Horizon star",
-    note: "Tonight's band: star-accent star over a dusk-glow horizon and a background ground.",
+    dir: "r2-3-rising-star",
+    name: "R2-3 · Rising star",
+    note: "One large white star (primary) rising: its lower arm sets behind a low ridge (background) under the dusk glow.",
+  },
+  {
+    dir: "r2-4-gold-star-dusk",
+    name: "R2-4 · Gold star, dusk",
+    note: "The horizon proposal with the companion kept: gold star, primary-strong companion, dusk-glow horizon.",
   },
 ].map((proposal) => ({
   ...proposal,
@@ -955,9 +960,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
       <Band headingId="app-icon-heading" heading="App icon proposals">
         <div class="flex flex-col gap-6" data-app-icon-proposals>
           <p class:list={blockNote}>
-            Proposals for the app-icon change, not in use: the favicon and the home-screen icons are still generated
-            from public/pwa-icon.svg. Literal hex inside each SVG (an icon cannot read the tokens); the files and their
-            PNG previews live in context/changes/app-icon/evidence/icon-proposals/.
+            Round-2 proposals for the app-icon change, not in use: the home-screen icons are still generated from
+            public/pwa-icon.svg and the tab still shows public/favicon.png. Literal hex inside each SVG (an icon cannot
+            read the tokens); the files, their PNG previews and round 1 live in
+            context/changes/app-icon/evidence/icon-proposals/.
           </p>
           {appIconProposals.map((proposal) => (
             <section class="flex flex-col gap-3" aria-labelledby={`app-icon-${proposal.dir}`}>

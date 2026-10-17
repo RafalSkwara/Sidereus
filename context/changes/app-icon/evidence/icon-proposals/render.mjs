@@ -1,7 +1,8 @@
 // One-off capture for the app-icon change: renders each proposal's SVGs to PNG previews with sharp (the same
 // librsvg-based rasteriser @vite-pwa/assets-generator uses) and lays them out in comparison.png with Playwright.
 // Run from the worktree root (Node from .nvmrc):
-//   node context/changes/app-icon/evidence/icon-proposals/render.mjs
+//   node context/changes/app-icon/evidence/icon-proposals/render.mjs        (round 1 -> comparison.png)
+//   node context/changes/app-icon/evidence/icon-proposals/render.mjs r2     (round 2 -> comparison-r2.png)
 // Colours on the sheet are the Nightfall --background of each theme (dark #070a12, light #fbfcfd, red #080000); the
 // red view also runs the icon through the app's #red-only luminance filter (Layout.astro), as red mode does to <img>.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -11,11 +12,22 @@ import sharp from "sharp";
 import { chromium } from "playwright";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const proposals = [
-  { dir: "1-star", name: "1 · Star" },
-  { dir: "2-planet", name: "2 · Ringed planet" },
-  { dir: "3-free", name: "3 · Horizon star" },
-];
+const round = process.argv[2] === "r2" ? "r2" : "r1";
+const rounds = {
+  r1: [
+    { dir: "1-star", name: "1 · Star" },
+    { dir: "2-planet", name: "2 · Ringed planet" },
+    { dir: "3-free", name: "3 · Horizon star" },
+  ],
+  r2: [
+    { dir: "r2-1-white-star-dusk", name: "R2-1 · White star, dusk" },
+    { dir: "r2-2-gold-star-navy", name: "R2-2 · Gold star, navy" },
+    { dir: "r2-3-rising-star", name: "R2-3 · Rising star" },
+    { dir: "r2-4-gold-star-dusk", name: "R2-4 · Gold star, dusk" },
+  ],
+};
+const proposals = rounds[round];
+const sheet = round === "r2" ? "comparison-r2.png" : "comparison.png";
 // favicon.svg serves the small sizes, icon.svg the home-screen sizes; maskable.svg is rendered at 512.
 const renders = [
   { file: "favicon.svg", size: 16, out: "favicon-16.png" },
@@ -69,7 +81,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
   section { padding: 20px 24px; color: var(--ink); background: var(--bg); }
   h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
   .row { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 14px; }
-  .name { width: 120px; font-weight: 600; align-self: center; }
+  .name { width: 150px; font-weight: 600; align-self: center; }
   figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .slot { height: 128px; display: flex; align-items: flex-end; }
   figcaption { font-size: 11px; opacity: 0.8; white-space: nowrap; }
@@ -88,8 +100,8 @@ ${grounds
 </body></html>`;
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1180, height: 800 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: 1220, height: 800 }, deviceScaleFactor: 1 });
 await page.setContent(html);
-await page.screenshot({ path: join(here, "comparison.png"), fullPage: true });
+await page.screenshot({ path: join(here, sheet), fullPage: true });
 await browser.close();
-console.log("rendered", proposals.length, "proposals and comparison.png");
+console.log("rendered", proposals.length, "proposals and", sheet);

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Round 2, proposal 3. sky token zenith #050916, token horizon #1b2a55, token dusk-glow-horizon #6a3226; ground token background #070a12; star token primary #f2f4f8. -->
+  <defs>
+    <linearGradient id="r23-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.45" stop-color="#1b2a55"/><stop offset="0.7" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#r23-sky)"/>
+  <path fill="#f2f4f8" d="M256 90Q256 276 402 276Q256 276 256 462Q256 276 110 276Q256 276 256 90Z"/>
+  <path fill="#070a12" d="M0 372Q256 328 512 372V512H0Z"/>
+</svg>

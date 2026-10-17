@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Round 2, proposal 2, maskable: background full bleed (a launcher crop only trims it); the stars are scaled to 0.8 about the centre, inside the safe circle r = 204.8. -->
+  <defs>
+    <linearGradient id="r22m-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="1" stop-color="#1b2a55"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#r22m-sky)"/>
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <path fill="#fde68a" d="M240 82Q240 272 390 272Q240 272 240 462Q240 272 90 272Q240 272 240 82Z"/>
+    <path fill="#f2f4f8" d="M392 74Q392 128 436 128Q392 128 392 182Q392 128 348 128Q392 128 392 74Z"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Round 2, proposal 3, favicon (16 and 32 px): the same sky, a thicker star rising behind a flatter ridge. -->
+  <defs>
+    <linearGradient id="r23f-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.45" stop-color="#1b2a55"/><stop offset="0.72" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#r23f-sky)"/>
+  <path fill="#f2f4f8" d="M16 3Q17.7 14.8 27 16.5Q17.7 18.2 16 30Q14.3 18.2 5 16.5Q14.3 14.8 16 3Z"/>
+  <path fill="#070a12" d="M0 23.5Q16 20.5 32 23.5V25Q32 32 25 32H7Q0 32 0 25Z"/>
+</svg>
