@@ -1,7 +1,7 @@
 ---
 change_id: test-suite-diet
 title: Test-suite diet: cut the unit layer to feature-level protection
-status: planned
+status: plan_reviewed
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null

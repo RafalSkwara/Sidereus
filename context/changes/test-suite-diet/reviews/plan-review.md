@@ -5,7 +5,7 @@
 - **Plan**: `context/changes/test-suite-diet/plan.md` (commit b22c460, oparty o 82e35cf)
 - **Data**: 2026-10-17
 - **Recenzent**: herdr agent `reviewer` (Opus), plus jeden read-only subagent Opus, który próbkował werdykty i piny na `origin/main` 85aa123
-- **Tryb**: recenzja papierowa w trybie herdr. Ten plik jest jedynym zapisem. `change.md` zostaje bez zmian (status `planned`), triage robi właściciel lub orkiestrator.
+- **Tryb**: recenzja papierowa w trybie herdr. Ten plik jest jedynym zapisem. `change.md` is `plan_reviewed` after the triage recorded at the end of this file.
 - **Faz**: 8 (0-7). **Findings**: 0 krytycznych, 6 ostrzeżeń, 3 obserwacje.
 
 ```
@@ -76,7 +76,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Tradeoff: Fazy 2-3 rosną o ok. 180 testów statycznych do oceny.
   - Confidence: HIGH (merge'e i pliki #195 sprawdzone przez `gh pr view`, liczniki policzone z `git show origin/main`).
   - Blind spot: dokładna liczba z runnera na `main` nie była mierzona.
-- **Decision**: PENDING
+- **Decision**: APPLIED (orchestrator, owner D8). Baseline re-measured on origin/main 85aa123: 156 files / 3,054 tests, 27.9 s cold (research "Baseline refresh"; plan "Current State Analysis"). Order: Phase 0 now; Phases 1-4 cut the S-07 files with their slices (fixed targets in the plan); Phase 5 only for the star provenance, scripts/lib and landing-screenshot after #195; Phases 6-7 last. S-06 coordination note in Phase 3 (whoever lands second rebases).
 
 ### F2 — Kontrakt Fazy 0 wypuszcza `scripts/**/*.test.mjs` z `npm test`
 
@@ -89,7 +89,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Projekt `unit` z planu bierze tylko `src/**`, a `guards` ma listę pięciu plików, więc `build-stars.test.mjs` (33), `designations.test.mjs` (21) i `hipparcos.test.mjs` (17) przestają się uruchamiać.
   - Faza 5 dopisuje do `guards` tylko „catalogue provenance files”.
 - **Fix**: `unit.include` = `["src/**/*.test.ts", "scripts/**/*.test.mjs"]` (albo `scripts/**` w `guards`). Kryterium 0.1 ma porównywać `numTotalTests` z liczbą zmierzoną na `main` tuż przed zmianą. Do 0.4 dopisać mocniejszą asercję: `toContain("vitest run --project unit")` w `agent-hooks.test.ts:223`.
-- **Decision**: PENDING
+- **Decision**: APPLIED. Phase 0: `reference` include = ["src/**/*.test.ts", "scripts/**/*.test.mjs"]; criterion 0.1 compares with the count measured on main just before the change; agent-hooks "lets a clean change finish" asserts `vitest run --project reference` (projects renamed per F6/D1).
 
 ### F3 — Piny naprawionych błędów przycinane bez nazwania (D9 jest tylko ogólny)
 
@@ -116,7 +116,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Tradeoff: ok. 1-2 godz. pracy nad planem i kilka testów więcej.
   - Confidence: HIGH (każdy pin otwarty na `origin/main`).
   - Blind spot: pliki z werdyktem TRIM bez pinów w research były próbkowane, nie czytane w całości.
-- **Decision**: PENDING
+- **Decision**: APPLIED. Plan section "Pin ledger (F3, D9)": file -> pin title -> kept | replaced by | dropped (owner). orderHints keeps one case in plan-editor.test.ts; tonight/visibility-invariants keeps the edited-plan describe as its own test; agent-hooks keeps the three regression pins (path > 255 bytes, /dev/zero symlink, subagent vs parent) -> 10 tests; format keeps the sun-depth truncation and low-wording pins.
 
 ### F4 — Faza 6 kasuje `landing.spec.ts`, który od S-08 pinuje „Credit: ESA”
 
@@ -130,7 +130,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Research (82e35cf) widział tylko CTA i 302, więc werdykt „TRIM → smoke” jest nieaktualny.
   - `landing-screenshot.spec.ts` zmienia też #195.
 - **Fix**: zostawić testy ESA/stopki z `landing.spec.ts`. Do smoke przenieść tylko CTA hrefs i 302 signed-in. Przeniesienie `landing-screenshot` do skryptu zrobić po merge'u #195 i poprawić komendę w CLAUDE.md (sekcja Landing).
-- **Decision**: PENDING
+- **Decision**: APPLIED (owner D5). landing.spec.ts keeps the ESA credit and the 320/360 px footer test; only the CTA and signed-in 302 tests move to smoke (steps 7, 8 in Phase 3). landing-screenshot moves to a script in Phase 5, after #195, with the CLAUDE.md Landing command updated.
 
 ### F5 — Kotwice linii w research są błędne lub przesunięte
 
@@ -142,7 +142,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - `finder.test.ts` nie zmienił się od 82e35cf, a mimo to `:428`, `:546` i `:652` to test planety, test „facing” i fallback zenitu. Brute force to jeden test w `:791` (describe `:780`, „agrees with a brute-force enumeration of every simple route on 150 skies”). Opublikowane hopy są w `:914`, piny zenith-edge w `:619-691`.
   - S-07 przesunął wszystkie kotwice `build.test.ts` o +26 (np. `:1927` → `:1953`), `load.test.ts` o +5, `finder/load:105` → `:110`, `observations/store:73` → `:76`.
 - **Fix**: w planie i notatkach faz wskazywać testy tytułem describe/it, nie numerem linii. Poprawić kotwicę finder na „random skies against an exhaustive search”.
-- **Decision**: PENDING
+- **Decision**: APPLIED. The plan references every test by describe/it title (ledger and phase contracts); the finder anchor reads "agrees with a brute-force enumeration of every simple route on 150 skies" and "published hops (D-11)". Research line anchors stay as of 82e35cf and are labelled so in the Baseline refresh.
 
 ### F6 — Plan mógłby ciąć głębiej, a cele S-07 i `scripts/lib` są nieustalone
 
@@ -166,7 +166,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Confidence: MED (szacunki per plik z próbki, nie z pełnego odczytu).
   - Blind spot: niezmierzone czasy po głębszym cięciu (zysk dla hooka jest już głównie w przeniesieniu guards).
 - **Fix B**: zostawić 650-750 jak w planie, ale dopisać cele dla S-07 i `scripts/lib` i zmienić nazwę `unit` → `reference`.
-- **Decision**: PENDING
+- **Decision**: DECLINED by the owner (D1): the author's plan stands, about 700-820 tests on the new base (the same cut ratio as 650-750 on the old one). Taken from Fix B: fixed per-file targets for the S-07 suites (about 450 -> about 110) and scripts/lib (71 -> about 12, exact after #195), and the projects renamed `reference` / `guards` at no cost.
 
 ### F7 — Funkcje, które zostaną bez żadnego testu, nie są nazwane jako akceptowane
 
@@ -180,7 +180,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Brak echa długości geograficznej (`gear/schemas.test.ts:65`) trzyma tylko konstrukcja „komunikaty to klucze”, a smoke ma tylko `latitude 95`.
   - To zgodne z intencją właściciela, ale nie są to duplikaty, tylko świadome odsłonięcie.
 - **Fix**: wpisać te trzy jako „dropped (owner)” w ledgerze z F3 i w test-plan §7, albo zostawić `tonight-sky` t6.
-- **Decision**: PENDING
+- **Decision**: APPLIED (owner D5, D9). Recorded as dropped (owner) in the ledger and for test-plan §7 in Phase 7: the compass mapping (unit test and tonight-sky "the compass row marks..." removed), Accept-Language negotiation and the one-year cookie (preferences), the longitude echo in schema messages (error-key construction prevents it; smoke pins latitude 95 and the Phase 3 coordinate steps), plus the committed catalogue JSON shape (D7).
 
 ### F8 — Redukcja stref w night-boundaries: UTC + Warszawa to dwie strefy po tej samej stronie
 
@@ -193,7 +193,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Tabele stref procesu w runtime są jedyną ochroną tych klas błędów.
   - UTC i Warszawa (+1/+2) nie trafią w błędy strefy procesu za UTC ani przy +13/+14.
 - **Fix**: zostawić dwie strefy o przeciwnych znakach z `RUNNER_ZONES` (np. ujemną amerykańską i +13/+14), a nie UTC + Warszawa. `log-night` może zostać w jednej strefie, bo `night-boundaries` trzyma regułę.
-- **Decision**: PENDING
+- **Decision**: APPLIED. Engine and tonight night-boundaries run under America/Los_Angeles (-7/-8) and Pacific/Kiritimati (+14); log-night runs in one zone (America/Los_Angeles).
 
 ### F9 — Dokumenty i tripwire'y: brakuje kilku pozycji w listach „Docs” faz
 
@@ -209,7 +209,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - test-plan §5 wiersz end-of-turn („whole unit suite”, Faza 0 ma) i §6 listy `runner-zone-guard`, `log-night`, `load.test`.
   - Przeniesienie colour, rhythm i runner-zone guards do `guards` (tylko CI) oznacza, że agent dowie się o kolorze hex dopiero w CI. Akceptowalne, ale warto to zapisać w §5.
 - **Fix**: w każdej fazie „Docs” zastąpić prozę wynikiem `grep -rn '<usuwany plik>' CLAUDE.md context/foundation/` dołączanym do notatki fazy.
-- **Decision**: PENDING
+- **Decision**: APPLIED. Every phase has a Docs item listing the files the grep found (CLAUDE.md tripwires for messier/caldwell -> "provenance; the shape is the generator's", stars/finder-stars -> build-sw.mjs; UI section guard names; test-plan §5/§6 rows; error-visibility.md; the ESA assessment and roadmap mentions get a dated note). Phase notes paste the grep output. The CI-only reporting of the colour, rhythm and runner-zone guards is recorded in §5 (Phase 0 docs).
 
 ## Komendy weryfikacyjne
 
@@ -234,4 +234,4 @@ Zweryfikowane i poprawne, bez osobnych findings:
 
 ## Triage summary
 
-Wszystkie findings mają `Decision: PENDING`. Wznowienie: `/10x-plan-review context/changes/test-suite-diet/reviews/plan-review.md`. Proponowana kolejność: F2 i F1 przed Fazą 0, potem F3 (ledger) i F5, równolegle decyzja właściciela o F6. F4 i F7-F9 można zebrać w jednej poprawce planu.
+Triaged 2026-10-17 by the owner (D1-D9, relayed by the orchestrator) and applied by the author in plan.md (commit after this file). F1-F5, F7-F9 applied; F6 declined (the author's cut depth stands; Fix B's targets and project names taken). The plan was rebased onto origin/main 85aa123 and the baseline re-measured. `change.md` is `plan_reviewed`.
