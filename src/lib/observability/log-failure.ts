@@ -71,8 +71,12 @@ export type ListedFailureStep = (typeof FAILURE_STEPS)[number];
 /** A step a line may name: a closed vocabulary, so a free-text value can never become the step. */
 export type FailureStep = ListedFailureStep;
 
-/** Postgres's SQLSTATE: five digits or capitals (`42501`, `XX000`). */
-const SQLSTATE_SHAPE = /^[0-9A-Z]{5}$/;
+/**
+ * Postgres's SQLSTATE: five digits or capitals with a real class (`42501`, `XX000`). A class starts with a digit, or is
+ * one of the four lettered classes (`F0` configuration file, `HV` foreign data wrapper, `P0` PL/pgSQL, `XX` internal),
+ * so a five-character catalogue id (`IC405`, `NGC40`, `IC342`) never passes as one.
+ */
+const SQLSTATE_SHAPE = /^(?:[0-9][0-9A-Z]|F0|HV|P0|XX)[0-9A-Z]{3}$/;
 
 /** PostgREST's own codes (`PGRST301`). */
 const POSTGREST_SHAPE = /^PGRST\d{3}$/;

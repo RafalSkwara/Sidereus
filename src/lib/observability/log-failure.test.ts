@@ -175,6 +175,9 @@ describe("code", () => {
     for (const code of [
       "M31",
       "NGC7000",
+      "IC405",
+      "NGC40",
+      "IC342",
       "A",
       "abcdefghijkl", // 12 opaque characters
       "a3f9c2d71b04", // a site-id fragment
@@ -216,6 +219,9 @@ describe("isLoggableCode: one accepted example of each closed class, and what it
   const ACCEPTED: [string, string][] = [
     ["a SQLSTATE", "42501"],
     ["a SQLSTATE with letters", "XX000"],
+    ["a SQLSTATE of a lettered class", "P0001"],
+    ["a SQLSTATE of a lettered class", "HV00N"],
+    ["a SQLSTATE of a lettered class", "F0000"],
     ["a SQLSTATE of class 22", "22P02"],
     ["a SQLSTATE of class 23", "23505"],
     ["a PostgREST code", "PGRST301"],
@@ -232,6 +238,9 @@ describe("isLoggableCode: one accepted example of each closed class, and what it
   const REJECTED: [string, string][] = [
     ["a Messier id", "M31"],
     ["a Caldwell id", "NGC7000"],
+    ["a five-character Caldwell id (class I, not a SQLSTATE class)", "IC405"],
+    ["a five-character Caldwell id", "NGC40"],
+    ["a five-character Caldwell id", "IC342"],
     ["12 opaque characters", "a3f9c2d71b04"],
     ["an email-like string", "ada@example.test"],
     ["a coordinate-like string", "52.2297,21.0122"],
