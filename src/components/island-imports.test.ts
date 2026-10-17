@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  *   catalogue, `cn`, `buttonVariants`, `MoonDisc` and `range-classes`;
  * - Tonight's live sky (`TonightSkyView.tsx`, `range-classes.ts`, every `@/lib/sky-view/*` module, the island-safe star
  *   catalogue `stars.ts` / `star-names.ts` and `compass.ts`) may import only React, `@/lib/sky-view/*`, the star
- *   catalogue, `sky-band`, `range-classes`, the compass, the message catalogue, `cn`, `buttonVariants` and `lucide-react`;
+ *   catalogue, `sky-band`, `range-classes`, the compass, the message catalogue, `cn`, `buttonVariants`, `SegmentedGroup` and `lucide-react`;
  * - neither may import astronomy-engine, the engine barrel or an engine module, `@/lib/tonight/format`, or
  *   `@/lib/catalogue` / `./index` (which would ship `messier.json` to the browser);
  * - no island (the slider, the live sky, every sky-view module) may import `Fact`, `FactList`, `StatCard`, `StatPair` or
@@ -83,6 +83,8 @@ function isAllowedSkyImport(specifier: string): boolean {
     specifier === "@/i18n" ||
     specifier === "@/lib/utils" ||
     specifier === "@/components/ui/button" ||
+    // The sky-view menu's segmented control (ui-sky-modes), the one shared segmented control.
+    specifier === "@/components/ui/segmented" ||
     // The pan chevrons' icons (ui-sky-light): browser-safe SVG components, as in the other islands.
     specifier === "lucide-react"
   );

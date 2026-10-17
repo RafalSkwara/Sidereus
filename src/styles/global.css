@@ -21,6 +21,14 @@
 @custom-variant night (&:where(:root:not([data-theme="light"]) *, .night-sky, .night-sky *));
 
 /*
+ * The live sky's modes (ui-sky-modes): `sky-hidden:` and `sky-expanded:` match inside a `[data-sky-mode]` scope, which
+ * only the Tonight dashboard's `<html>` (Layout's `skyModeScope`) and the `/design` specimens' wrappers carry, so the
+ * island, the static band and the skeleton all size themselves from the mode before hydration. A page has one scope.
+ */
+@custom-variant sky-hidden (&:where([data-sky-mode="hidden"] *));
+@custom-variant sky-expanded (&:where([data-sky-mode="expanded"] *));
+
+/*
  * Nightfall palette (direction "C · Nightfall", values in context/changes/visual-redesign/tokens-nightfall.md).
  * Dark is the default; light ("day") is opt-in via data-theme="light", and red night mode (S-10, FR-024) via
  * data-theme="red". Contrast floors for all three are pinned by src/styles/contrast.test.ts.
@@ -497,6 +505,38 @@
  */
 @utility pb-safe-area {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/*
+ * The shell's chrome heights (ui-sky-modes), read by the live sky's EXPANDED mode only (not colours, so outside the
+ * theme blocks): `--topbar-strip-height` mirrors GearShell's sky-flow strip (`pt-2 sm:pt-6` around Topbar's `h-16`),
+ * `--tabbar-height` the TabBar's `h-16` plus its 1 px top border (its `pb-safe-area` is added where it is used).
+ * `--sky-expanded-share` is the one constant for EXPANDED's share of the screen under the Topbar from `md` (owner
+ * question Q3: 0.8 for now, 1 would be the whole screen).
+ */
+:root {
+  --topbar-strip-height: 4.5rem;
+  --tabbar-height: calc(4rem + 1px);
+  --sky-expanded-share: 0.8;
+
+  @media (width >= 40rem) {
+    --topbar-strip-height: 5.5rem;
+  }
+}
+
+/*
+ * EXPANDED's frame (ui-sky-modes): a `min-height`, never a `height`, on a flex column whose children keep DEFAULT's own
+ * minimums (the verdict's min-height, the strip's `min-h-68`, the silhouette, the slider row), so the band is
+ * `max(DEFAULT's band, target)`. Below `md` the target is the screen between the Topbar strip and the TabBar; from `md`
+ * (no TabBar) the share of the screen under the strip. `svh`, never `dvh`: a phone's address bar hiding while the page
+ * scrolls must not resize the sky (plan review F3).
+ */
+@utility sky-expanded-height {
+  min-height: calc(100svh - var(--topbar-strip-height) - var(--tabbar-height) - env(safe-area-inset-bottom));
+
+  @media (width >= 48rem) {
+    min-height: calc((100svh - var(--topbar-strip-height)) * var(--sky-expanded-share));
+  }
 }
 
 @utility right-topbar-edge {

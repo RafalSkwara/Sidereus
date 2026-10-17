@@ -770,7 +770,7 @@ export const pl = {
     },
 
     sky: {
-      panorama: "Niebo dziś w nocy, przesuń, aby się rozejrzeć",
+      panorama: "Niebo dziś w nocy, przeciągnij lub przesuń, aby się rozejrzeć",
       slider: "Pora nocy",
       now: "Teraz",
       zone: (p) => p.zone,
@@ -778,6 +778,12 @@ export const pl = {
       bodyLabel: (p) => `${p.name}, ${p.alt}° nad horyzontem, kierunek ${p.direction}, o ${p.time}`,
       panLeft: "Przewiń niebo w lewo",
       panRight: "Przewiń niebo w prawo",
+      // Masculine forms, to agree with "Widok" (plan review F5): "Widok nieba: Domyślny".
+      mode: {
+        label: "Widok nieba",
+        options: { hidden: "Ukryty", default: "Domyślny", expanded: "Rozwinięty" },
+        trigger: (p) => `Widok nieba: ${p.mode}`,
+      },
     },
 
     attribution: {

@@ -499,10 +499,10 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [ ] 1.1 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
-- [ ] 1.2 The reference suite passes: `npm run test:reference`
-- [ ] 1.3 The guards pass (island imports, contrast, colours, rhythm): `npm run test:guards`
-- [ ] 1.4 The hardcoded-value scan on the touched view files returns 0 hits (the `/10x-ui` regex over `TopbarControls.tsx`, `segmented.tsx`)
+- [x] 1.1 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
+- [x] 1.2 The reference suite passes: `npm run test:reference`
+- [x] 1.3 The guards pass (island imports, contrast, colours, rhythm): `npm run test:guards`
+- [x] 1.4 The hardcoded-value scan on the touched view files returns 0 hits (the `/10x-ui` regex over `TopbarControls.tsx`, `segmented.tsx`)
 
 #### Manual
 

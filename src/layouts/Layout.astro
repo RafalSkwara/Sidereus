@@ -5,20 +5,30 @@ import ToastRegion from "@/components/ui/ToastRegion.astro";
 import { getMessages, translateKey } from "@/i18n";
 import { missingConfigs } from "@/lib/config-status";
 import { NEEDS_CONNECTION_ID } from "@/lib/offline/page-state";
-import { THEMES, THEME_COOKIE } from "@/lib/preferences";
+import { SKY_MODES, SKY_MODE_COOKIE, THEMES, THEME_COOKIE } from "@/lib/preferences";
 
 interface Props {
   title?: string;
+  /**
+   * The live sky's mode scope (ui-sky-modes): only the Tonight dashboard renders `data-sky-mode` on `<html>`, so the
+   * `sky-hidden:` / `sky-expanded:` variants match nowhere else (the `/design` specimens carry their own scopes).
+   */
+  skyModeScope?: boolean;
 }
 
-const { theme, locale, user } = Astro.locals;
+const { theme, locale, user, skyMode } = Astro.locals;
 const m = getMessages(locale);
-const { title = m.common.appName } = Astro.props;
+const { title = m.common.appName, skyModeScope = false } = Astro.props;
 ---
 
 <!doctype html>
 {/* S-06: a page rendered for no user asks the service worker to purge any stored copies (page-state.ts). */}
-<html lang={locale} data-theme={theme} data-signed-out={user ? undefined : true}>
+<html
+  lang={locale}
+  data-theme={theme}
+  data-sky-mode={skyModeScope ? skyMode : undefined}
+  data-signed-out={user ? undefined : true}
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -36,18 +46,30 @@ const { title = m.common.appName } = Astro.props;
      * S-06: a stored page carries the theme it was prepared with; the theme cookie (set by TopbarControls, readable
      * by JS) is the current choice, applied before paint so a theme switched offline holds across stored pages.
      * Inline (a processed script is a deferred module, too late for paint), so the themes come in by define:vars.
-     * No valid cookie: the server's data-theme stays.
+     * No valid cookie: the server's data-theme stays. The live sky's mode (ui-sky-modes) follows the same rule, and only
+     * where the page renders the attribute (the Tonight dashboard), so no other page gains a scope.
      */}
-    <script is:inline define:vars={{ themes: THEMES, themeCookie: THEME_COOKIE }}>
-      const match = document.cookie.match(new RegExp("(?:^|;\\s*)" + themeCookie + "=([^;]*)"));
-      let chosen = null;
-      try {
-        chosen = match ? decodeURIComponent(match[1]) : null;
-      } catch {
-        // A malformed cookie: the server's data-theme stays.
+    <script
+      is:inline
+      define:vars={{ themes: THEMES, themeCookie: THEME_COOKIE, skyModes: SKY_MODES, skyCookie: SKY_MODE_COOKIE }}
+    >
+      const root = document.documentElement;
+      const readCookie = (name) => {
+        const match = document.cookie.match(new RegExp("(?:^|;\\s*)" + name + "=([^;]*)"));
+        try {
+          return match ? decodeURIComponent(match[1]) : null;
+        } catch {
+          // A malformed cookie: the server's attribute stays.
+          return null;
+        }
+      };
+      const chosen = readCookie(themeCookie);
+      if (chosen && themes.includes(chosen) && root.dataset.theme !== chosen) {
+        root.dataset.theme = chosen;
       }
-      if (chosen && themes.includes(chosen) && document.documentElement.dataset.theme !== chosen) {
-        document.documentElement.dataset.theme = chosen;
+      const sky = readCookie(skyCookie);
+      if (root.hasAttribute("data-sky-mode") && sky && skyModes.includes(sky) && root.dataset.skyMode !== sky) {
+        root.dataset.skyMode = sky;
       }
     </script>
   </head>

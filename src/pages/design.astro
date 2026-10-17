@@ -7,7 +7,21 @@
 // components, so real hover and real focus (Tab) can be checked there. The Tonight band shows Tonight's sky, tiles
 // and skeleton (tonight-nightfall) the same way, plus the focused pages' slim sky and its skeleton (tonight-dashboard).
 import { createElement } from "react";
-import { Check, Lock, MapPin, Pencil, Plus, RotateCcw, Save, Settings2, Telescope, X } from "lucide-react";
+import {
+  Check,
+  FoldVertical,
+  Lock,
+  Maximize2,
+  MapPin,
+  Pencil,
+  Plus,
+  RectangleHorizontal,
+  RotateCcw,
+  Save,
+  Settings2,
+  Telescope,
+  X,
+} from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -24,6 +38,7 @@ import { TILE_CONTENT_CLASS, TILE_ROW_CLASS } from "@/components/ui/tile";
 import { FormField } from "@/components/forms/FormField";
 import { ServerError } from "@/components/forms/ServerError";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
+import { SegmentedGroup } from "@/components/ui/segmented";
 import ComboboxDemo from "@/components/design/ComboboxDemo";
 import { Band as ReactBand } from "@/components/ui/band";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -814,6 +829,35 @@ const appIconGroups = [
       { src: "/maskable-icon-512x512.png", label: "128 · squircle", size: "size-32 rounded-3xl" },
       { src: "/maskable-icon-512x512.png", label: "128 · unmasked", size: "size-32" },
     ],
+  },
+] as const;
+
+// SegmentedGroup specimens (ui-sky-modes): static renders, so hover and focus are forced looks on inert copies.
+const segmentFocusSpecimen = "aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-ring";
+const segmentedSpecimens = [
+  { state: "default · horizontal", segmentClassName: undefined, disabled: false, live: true },
+  {
+    state: "hover · specimen (unpressed segments)",
+    segmentClassName: "not-aria-pressed:text-heading",
+    disabled: false,
+    live: false,
+  },
+  { state: "focus-visible · specimen (pressed)", segmentClassName: segmentFocusSpecimen, disabled: false, live: false },
+  { state: "disabled (one option)", segmentClassName: undefined, disabled: true, live: true },
+] as const;
+const skyModeIcon = (icon: typeof FoldVertical) => createElement(icon, { className: "size-4" });
+const skyModeOptions = [
+  { value: "hidden", label: m.tonight.sky.mode.options.hidden, icon: skyModeIcon(FoldVertical) },
+  { value: "default", label: m.tonight.sky.mode.options.default, icon: skyModeIcon(RectangleHorizontal) },
+  { value: "expanded", label: m.tonight.sky.mode.options.expanded, icon: skyModeIcon(Maximize2) },
+] as const;
+const skyModeSpecimens = [
+  { state: "pressed · vertical (the sky-view menu)", value: "default", segmentClassName: undefined, live: true },
+  {
+    state: "focus-visible · vertical · specimen",
+    value: "expanded",
+    segmentClassName: segmentFocusSpecimen,
+    live: false,
   },
 ] as const;
 
@@ -1696,6 +1740,52 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
               <p class:list={notApplicable}>
                 error — a choice always has a default, so the group never errors · empty, loading — N/A
+              </p>
+            </section>
+
+            <!-- SegmentedGroup (ui-sky-modes): the one segmented control, horizontal (settings) and vertical (sky view) -->
+            <section class:list={block} aria-labelledby="c-segmented">
+              <h3 id="c-segmented" class:list={blockTitle}>
+                SegmentedGroup
+              </h3>
+              <div class:list={grid}>
+                {segmentedSpecimens.map(({ state, segmentClassName, disabled, live }) => (
+                  <div class:list={cell}>
+                    <p class:list={stateLabel}>{state}</p>
+                    <div inert={live ? undefined : true}>
+                      <SegmentedGroup
+                        label={m.preferences.theme}
+                        value="dark"
+                        onChange={() => undefined}
+                        segmentClassName={segmentClassName}
+                        options={[
+                          { value: "dark", label: m.preferences.darkShort, ariaLabel: m.preferences.dark },
+                          { value: "light", label: m.preferences.lightShort, ariaLabel: m.preferences.light },
+                          { value: "red", label: m.preferences.redShort, ariaLabel: m.preferences.red, disabled },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {skyModeSpecimens.map(({ state, value, segmentClassName, live }) => (
+                  <div class:list={cell}>
+                    <p class:list={stateLabel}>{state}</p>
+                    <div class="max-w-56" inert={live ? undefined : true}>
+                      <SegmentedGroup
+                        orientation="vertical"
+                        label={m.tonight.sky.mode.label}
+                        value={value}
+                        onChange={() => undefined}
+                        segmentClassName={segmentClassName}
+                        options={skyModeOptions}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p class:list={notApplicable}>
+                error — a choice always has a value, so the group never errors · empty — a group always has options ·
+                loading — the language switch's spinner (settings panel, while the page reloads)
               </p>
             </section>
 

@@ -1,4 +1,4 @@
-// Theme and language preferences, remembered on the device in cookies (PRD FR-025, FR-026).
+// Theme, language and sky-view preferences, remembered on the device in cookies (PRD FR-025, FR-026; ui-sky-modes).
 // Pure and island-safe: no astro:* or server-only imports, so the middleware and the
 // TopbarControls island share the same names and rules.
 
@@ -8,14 +8,24 @@ export type Theme = (typeof THEMES)[number];
 export const LOCALES = ["en", "pl"] as const;
 export type Locale = (typeof LOCALES)[number];
 
+/**
+ * The dashboard's live sky (ui-sky-modes): HIDDEN (the verdict over the night gradient, no panorama), DEFAULT (today's
+ * band) and EXPANDED (the screen). A device preference like the theme: rendered on the Tonight dashboard's
+ * `<html data-sky-mode>` and corrected before paint for stored offline copies (Layout.astro).
+ */
+export const SKY_MODES = ["hidden", "default", "expanded"] as const;
+export type SkyMode = (typeof SKY_MODES)[number];
+
 export const THEME_COOKIE = "sidereus-theme";
 export const LOCALE_COOKIE = "sidereus-lang";
+export const SKY_MODE_COOKIE = "sidereus-sky";
 
 /** One year, in seconds. */
 export const PREFERENCE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const DEFAULT_THEME: Theme = "dark";
 export const DEFAULT_LOCALE: Locale = "en";
+export const DEFAULT_SKY_MODE: SkyMode = "default";
 
 export function isTheme(value: unknown): value is Theme {
   return (THEMES as readonly unknown[]).includes(value);
@@ -23,6 +33,15 @@ export function isTheme(value: unknown): value is Theme {
 
 export function isLocale(value: unknown): value is Locale {
   return (LOCALES as readonly unknown[]).includes(value);
+}
+
+export function isSkyMode(value: unknown): value is SkyMode {
+  return (SKY_MODES as readonly unknown[]).includes(value);
+}
+
+/** A valid cookie wins; otherwise the default band. */
+export function resolveSkyMode(cookie?: string): SkyMode {
+  return isSkyMode(cookie) ? cookie : DEFAULT_SKY_MODE;
 }
 
 /** Dark is the default (PRD NFR); light and red night mode (FR-024) are opt-in and never follow the OS setting. */
@@ -64,6 +83,9 @@ export function resolveLocale(cookie?: string, acceptLanguage?: string | null): 
 }
 
 /** `document.cookie` assignment string for a preference cookie. */
-export function preferenceCookie(name: typeof THEME_COOKIE | typeof LOCALE_COOKIE, value: string): string {
+export function preferenceCookie(
+  name: typeof THEME_COOKIE | typeof LOCALE_COOKIE | typeof SKY_MODE_COOKIE,
+  value: string,
+): string {
   return `${name}=${encodeURIComponent(value)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE}; SameSite=Lax`;
 }

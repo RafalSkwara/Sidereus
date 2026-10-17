@@ -18,9 +18,11 @@ interface Props {
    * before.
    */
   skyFlow?: boolean;
+  /** The Tonight dashboard (ui-sky-modes): renders the live sky's `data-sky-mode` scope on `<html>` (Layout). */
+  skyModeScope?: boolean;
 }
 
-const { title, skyFlow = false } = Astro.props;
+const { title, skyFlow = false, skyModeScope = false } = Astro.props;
 const m = getMessages(Astro.locals.locale);
 // The milestone celebration (observing-milestones Phase 6): a modal dialog, so it is position-independent and lives in
 // the shell. Signed in only, with the `milestone` keys validated against the fixed set, so a crafted link shows a
@@ -33,10 +35,11 @@ const skyHeader = Astro.slots.has("header");
 const subnav = Astro.slots.has("subnav");
 ---
 
-<Layout title={m.common.pageTitle({ title })}>
+<Layout title={m.common.pageTitle({ title })} skyModeScope={skyModeScope}>
   <div class="flex min-h-screen w-full flex-col bg-background text-foreground">
     {skyFlow ? (
       <div class="night-sky bg-zenith">
+        {/* The strip's height (`pt-2 sm:pt-6` + the Topbar's `h-16`) is `--topbar-strip-height` in global.css. */}
         <div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-8 sm:pt-6">
           <Topbar />
         </div>

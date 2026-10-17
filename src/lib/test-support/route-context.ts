@@ -35,7 +35,7 @@ export function routeContext(options: RouteContextOptions = {}): RouteContext {
     request,
     url: new URL(request.url),
     params,
-    locals: { supabase, user, locale: "en", theme: "dark" },
+    locals: { supabase, user, locale: "en", theme: "dark", skyMode: "default" },
     redirect: (path: string) => new Response(null, { status: 302, headers: { Location: path } }),
   } as unknown as RouteContext;
 }
