@@ -58,8 +58,8 @@ function newlyBetween(before: readonly LogEntry[], after: readonly LogEntry[]): 
 const PLANETS = ["mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune"];
 
 describe("MILESTONES and isMilestoneKey (owner decision 1, PRD FR-041)", () => {
-  it("is the fixed set of eleven, in the order the page shows them", () => {
-    expect(MILESTONES.map((m) => m.key)).toEqual([
+  it("is the fixed set of eleven, in the order the page shows them, and the key guard accepts exactly those", () => {
+    const keys = [
       "first-moon",
       "first-planet",
       "all-planets",
@@ -71,41 +71,28 @@ describe("MILESTONES and isMilestoneKey (owner decision 1, PRD FR-041)", () => {
       "messier-50",
       "messier-110",
       "caldwell-all",
-    ]);
-  });
+    ];
+    expect(keys).toHaveLength(11);
+    expect(MILESTONES.map((m) => m.key)).toEqual(keys);
 
-  it("accepts exactly the eleven keys", () => {
     for (const { key } of MILESTONES) {
-      expect(isMilestoneKey(key)).toBe(true);
+      expect(isMilestoneKey(key), key).toBe(true);
     }
-    for (const bad of [
-      "",
-      "first",
-      "messier-11",
-      "FIRST-MOON",
-      "first-moon ",
-      10,
-      null,
-      undefined,
-      {},
-      ["first-moon"],
-    ]) {
-      expect(isMilestoneKey(bad)).toBe(false);
-    }
+    const bad = ["", "first", "messier-11", "FIRST-MOON", "first-moon ", 10, null, undefined, {}, ["first-moon"]];
+    expect(bad).toHaveLength(10);
+    bad.forEach((value, i) => {
+      expect(isMilestoneKey(value), `bad value ${i}: ${JSON.stringify(value)}`).toBe(false);
+    });
   });
 });
 
 describe("milestonesOf", () => {
-  it("returns all eleven in MILESTONES order, none reached, for an empty log", () => {
+  it("returns all eleven in MILESTONES order, none reached, with progress only on the count and all-of-a-set milestones, for an empty log; and reaches nothing for objects logged only at rating 1 or 2", () => {
     const states = milestonesOf(observingProgress([]));
+    expect(states).toHaveLength(11);
     expect(states.map((s) => s.key)).toEqual(MILESTONES.map((m) => m.key));
     expect(states.every((s) => s.reachedNight === null)).toBe(true);
-  });
-
-  it("carries progress only for the count and all-of-a-set milestones", () => {
-    const states = milestonesOf(observingProgress([]));
-    const withProgress = Object.fromEntries(states.map((s) => [s.key, s.progress]));
-    expect(withProgress).toEqual({
+    expect(Object.fromEntries(states.map((s) => [s.key, s.progress]))).toEqual({
       "first-moon": undefined,
       "first-planet": undefined,
       "all-planets": { seen: 0, total: 7 },
@@ -118,9 +105,7 @@ describe("milestonesOf", () => {
       "messier-110": { seen: 0, total: 110 },
       "caldwell-all": { seen: 0, total: 61 },
     });
-  });
 
-  it("reaches nothing for objects logged only at rating 1 or 2", () => {
     const entries: LogEntry[] = [
       ...messierUpTo(10).map((target, i) => ({ target, night: night(i), rating: 2 })),
       { target: "M31", night: night(20), rating: 1 },
@@ -132,237 +117,273 @@ describe("milestonesOf", () => {
     expect(stateOf(entries, "messier-10").progress).toEqual({ seen: 0, total: 10 });
   });
 
-  describe("first of a kind: the earliest first night in the group", () => {
-    it("reaches first-moon on the Moon's first rated-3 night", () => {
-      const entries: LogEntry[] = [
-        { target: "moon", night: night(9), rating: 4 },
-        { target: "moon", night: night(5), rating: 3 },
-        { target: "moon", night: night(2), rating: 2 },
-      ];
-      expect(stateOf(entries, "first-moon").reachedNight).toBe(night(5));
-      expect(reachedKeys(entries)).toEqual(["first-moon"]);
-    });
-
-    it("reaches first-planet on the earliest first night of any planet, and not for the Moon", () => {
-      const entries: LogEntry[] = [
-        { target: "saturn", night: night(12), rating: 4 },
-        { target: "mars", night: night(7), rating: 3 },
-        { target: "jupiter", night: night(30), rating: 5 },
-        { target: "moon", night: night(1), rating: 5 },
-      ];
-      expect(stateOf(entries, "first-planet").reachedNight).toBe(night(7));
-      expect(stateOf([{ target: "moon", night: night(1), rating: 5 }], "first-planet").reachedNight).toBeNull();
-    });
-
-    it("reaches first-galaxy from a Messier galaxy and from a Caldwell galaxy alone", () => {
-      expect(stateOf([{ target: "M31", night: night(3), rating: 4 }], "first-galaxy").reachedNight).toBe(night(3));
-      expect(stateOf([{ target: "IC342", night: night(4), rating: 3 }], "first-galaxy").reachedNight).toBe(night(4));
-    });
-
-    it("dates a first-of-a-kind at the earliest night across both checklists", () => {
-      const entries: LogEntry[] = [
-        { target: "M31", night: night(10), rating: 4 },
-        { target: "IC342", night: night(5), rating: 4 },
-        { target: "M33", night: night(8), rating: 4 },
-      ];
-      expect(stateOf(entries, "first-galaxy").reachedNight).toBe(night(5));
-    });
-
-    it("reaches first-globular from a globular cluster and not from other kinds", () => {
-      expect(stateOf([{ target: "M13", night: night(2), rating: 4 }], "first-globular").reachedNight).toBe(night(2));
-      const others = logged(["M31", "M45", "M27", "M42", "M1"]);
-      expect(stateOf(others, "first-globular").reachedNight).toBeNull();
-    });
-
-    it.each([
-      ["nebula", "M8"],
-      ["emission-nebula", "M43"],
-      ["reflection-nebula", "M78"],
-      ["planetary-nebula", "M27"],
-      ["supernova-remnant", "M1"],
-      ["cluster-with-nebula", "M42"],
-    ])("reaches first-nebula from a %s (%s)", (_type, target) => {
-      expect(stateOf([{ target, night: night(6), rating: 4 }], "first-nebula").reachedNight).toBe(night(6));
-    });
-
-    it("reaches first-nebula from a Caldwell nebula too", () => {
-      // NGC7000 is Caldwell 20, an emission nebula.
-      expect(stateOf([{ target: "NGC7000", night: night(6), rating: 4 }], "first-nebula").reachedNight).toBe(night(6));
-    });
-
-    it("does not reach first-nebula from a globular, a galaxy or an open cluster", () => {
-      expect(stateOf(logged(["M13", "M31", "M45"]), "first-nebula").reachedNight).toBeNull();
-    });
-
-    it("moves the date earlier when an earlier first night is added", () => {
-      const later: LogEntry[] = [{ target: "M31", night: night(10), rating: 4 }];
-      const earlier: LogEntry[] = [...later, { target: "M32", night: night(4), rating: 3 }];
-      expect(stateOf(later, "first-galaxy").reachedNight).toBe(night(10));
-      expect(stateOf(earlier, "first-galaxy").reachedNight).toBe(night(4));
-    });
-  });
-
-  describe("all-planets: the latest first night, once all seven are seen", () => {
-    it("waits for the seventh planet and shows how far along it is", () => {
-      const six = logged(PLANETS.slice(0, 6));
-      expect(stateOf(six, "all-planets")).toEqual({
-        key: "all-planets",
-        reachedNight: null,
-        progress: { seen: 6, total: 7 },
-      });
-    });
-
-    it("is dated at the first night of the planet that completed the set, whatever the order of the entries", () => {
-      const entries: LogEntry[] = [
-        { target: "neptune", night: night(40), rating: 4 },
-        { target: "mercury", night: night(3), rating: 4 },
-        { target: "venus", night: night(9), rating: 4 },
-        { target: "mars", night: night(5), rating: 4 },
-        { target: "jupiter", night: night(2), rating: 4 },
-        { target: "saturn", night: night(20), rating: 4 },
-        { target: "uranus", night: night(11), rating: 4 },
-        // A later night for an already seen planet does not move the date.
-        { target: "mercury", night: night(60), rating: 5 },
-      ];
-      expect(stateOf(entries, "all-planets")).toEqual({
-        key: "all-planets",
-        reachedNight: night(40),
-        progress: { seen: 7, total: 7 },
-      });
-    });
-
-    it("does not count the Moon as a planet", () => {
-      const entries = [...logged(PLANETS.slice(0, 6)), { target: "moon", night: night(30), rating: 5 }];
-      expect(stateOf(entries, "all-planets").reachedNight).toBeNull();
-      expect(stateOf(entries, "all-planets").progress).toEqual({ seen: 6, total: 7 });
-    });
-  });
-
-  describe("Messier counts: the N-th earliest first night", () => {
-    it("reaches messier-10 on the night of the tenth earliest first night, not the last entry in the array", () => {
-      // Ten objects on nights 2, 4, ..., 20, listed latest first, plus an eleventh on night 30.
-      const entries: LogEntry[] = [
-        ...messierUpTo(10)
-          .map((target, i) => ({ target, night: night(2 * (i + 1)), rating: 4 }))
-          .reverse(),
-        { target: "M11", night: night(30), rating: 4 },
-      ];
-      expect(stateOf(entries, "messier-10")).toEqual({
-        key: "messier-10",
-        reachedNight: night(20),
-        progress: { seen: 10, total: 10 },
-      });
-    });
-
-    it("is not reached by nine objects, and shows nine of ten", () => {
-      const entries = logged(messierUpTo(9));
-      expect(stateOf(entries, "messier-10")).toEqual({
-        key: "messier-10",
-        reachedNight: null,
-        progress: { seen: 9, total: 10 },
-      });
-    });
-
-    it("counts two entries for one object once", () => {
-      const entries: LogEntry[] = [
-        ...logged(messierUpTo(9)),
-        // The ninth object again, on another night, and the first on its own night twice.
-        { target: "M9", night: night(50), rating: 5 },
-        { target: "M1", night: night(0), rating: 5 },
-      ];
-      expect(stateOf(entries, "messier-10").reachedNight).toBeNull();
-      expect(stateOf(entries, "messier-10").progress?.seen).toBe(9);
-    });
-
-    it("does not count Caldwell objects or the planets towards the Messier counts", () => {
-      const entries = [...logged(messierUpTo(5)), ...logged(["NGC869", "NGC7000", "IC342", "jupiter", "moon"], 10)];
-      expect(stateOf(entries, "messier-10").progress?.seen).toBe(5);
-      expect(stateOf(entries, "messier-10").reachedNight).toBeNull();
-    });
-
-    it("dates each count at its own N-th night and caps the progress at N", () => {
-      const entries = logged(messierUpTo(30));
-      expect(stateOf(entries, "messier-10")).toMatchObject({
-        reachedNight: night(9),
-        progress: { seen: 10, total: 10 },
-      });
-      expect(stateOf(entries, "messier-25")).toMatchObject({
-        reachedNight: night(24),
-        progress: { seen: 25, total: 25 },
-      });
-      expect(stateOf(entries, "messier-50")).toMatchObject({ reachedNight: null, progress: { seen: 30, total: 50 } });
-      expect(reachedKeys(entries)).toContain("messier-25");
-      expect(reachedKeys(entries)).not.toContain("messier-50");
-    });
-
-    it("reaches messier-50 and not messier-110 at fifty", () => {
-      const entries = logged(messierUpTo(50));
-      expect(stateOf(entries, "messier-50")).toMatchObject({
-        reachedNight: night(49),
-        progress: { seen: 50, total: 50 },
-      });
-      expect(stateOf(entries, "messier-110")).toMatchObject({ reachedNight: null, progress: { seen: 50, total: 110 } });
-    });
-
-    it("reaches messier-110 on the latest first night once all 110 are seen, NGC 5866 (M102) included", () => {
-      const all = logged(messierUpTo(110));
-      expect(all.some((entry) => entry.target === "M102")).toBe(true);
-      expect(stateOf(all, "messier-110")).toEqual({
-        key: "messier-110",
-        reachedNight: night(109),
-        progress: { seen: 110, total: 110 },
-      });
-      // Without M45 (the 45th entry), 109 are seen.
-      const missingOne = all.filter((entry) => entry.target !== "M45");
-      expect(stateOf(missingOne, "messier-110")).toMatchObject({
-        reachedNight: null,
-        progress: { seen: 109, total: 110 },
-      });
-    });
-  });
-
-  describe("caldwell-all: the latest first night, once all 61 are seen", () => {
-    const ids = CALDWELL.map((object) => object.id);
-
-    it("is not reached by 60 and shows 60 of 61", () => {
-      expect(stateOf(logged(ids.slice(1)), "caldwell-all")).toEqual({
-        key: "caldwell-all",
-        reachedNight: null,
-        progress: { seen: 60, total: 61 },
-      });
-    });
-
-    it("is dated at the latest first night when all 61 are seen", () => {
-      // The first object is seen last: night 100, after the other sixty on nights 0-59.
-      const entries: LogEntry[] = [
-        ...logged(ids.slice(1)),
-        { target: ids[0], night: night(100), rating: 3 },
-        // A later night for an object already seen does not move the date.
-        { target: ids[5], night: night(200), rating: 5 },
-      ];
-      expect(stateOf(entries, "caldwell-all")).toEqual({
-        key: "caldwell-all",
-        reachedNight: night(100),
-        progress: { seen: 61, total: 61 },
-      });
-    });
-
-    it("is not reached by 61 Messier objects", () => {
-      expect(stateOf(logged(messierUpTo(61)), "caldwell-all")).toMatchObject({
-        reachedNight: null,
-        progress: { seen: 0, total: 61 },
-      });
-    });
-  });
-
-  it("follows the log: removing the only reaching entry un-reaches the derived state", () => {
-    const entries: LogEntry[] = [
-      { target: "M31", night: night(3), rating: 4 },
-      { target: "moon", night: night(4), rating: 4 },
+  it("dates a first of a kind at the earliest first night in its group, across both checklists", () => {
+    const rows: [string, LogEntry[], MilestoneKey, string | null][] = [
+      [
+        "first-moon: the Moon's first rated-3 night",
+        [
+          { target: "moon", night: night(9), rating: 4 },
+          { target: "moon", night: night(5), rating: 3 },
+          { target: "moon", night: night(2), rating: 2 },
+        ],
+        "first-moon",
+        night(5),
+      ],
+      [
+        "first-planet: the earliest first night of any planet, not the Moon's",
+        [
+          { target: "saturn", night: night(12), rating: 4 },
+          { target: "mars", night: night(7), rating: 3 },
+          { target: "jupiter", night: night(30), rating: 5 },
+          { target: "moon", night: night(1), rating: 5 },
+        ],
+        "first-planet",
+        night(7),
+      ],
+      ["first-planet: not for the Moon alone", [{ target: "moon", night: night(1), rating: 5 }], "first-planet", null],
+      ["first-galaxy: a Messier galaxy", [{ target: "M31", night: night(3), rating: 4 }], "first-galaxy", night(3)],
+      [
+        "first-galaxy: a Caldwell galaxy alone",
+        [{ target: "IC342", night: night(4), rating: 3 }],
+        "first-galaxy",
+        night(4),
+      ],
+      [
+        "first-galaxy: the earliest night across both checklists",
+        [
+          { target: "M31", night: night(10), rating: 4 },
+          { target: "IC342", night: night(5), rating: 4 },
+          { target: "M33", night: night(8), rating: 4 },
+        ],
+        "first-galaxy",
+        night(5),
+      ],
+      [
+        "first-galaxy: the date moves earlier when an earlier first night is added",
+        [
+          { target: "M31", night: night(10), rating: 4 },
+          { target: "M32", night: night(4), rating: 3 },
+        ],
+        "first-galaxy",
+        night(4),
+      ],
+      [
+        "first-galaxy: the later date before that is added",
+        [{ target: "M31", night: night(10), rating: 4 }],
+        "first-galaxy",
+        night(10),
+      ],
+      [
+        "first-globular: a globular cluster",
+        [{ target: "M13", night: night(2), rating: 4 }],
+        "first-globular",
+        night(2),
+      ],
+      ["first-globular: not other kinds", logged(["M31", "M45", "M27", "M42", "M1"]), "first-globular", null],
+      ["first-nebula: a nebula (M8)", [{ target: "M8", night: night(6), rating: 4 }], "first-nebula", night(6)],
+      [
+        "first-nebula: an emission nebula (M43)",
+        [{ target: "M43", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: a reflection nebula (M78)",
+        [{ target: "M78", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: a planetary nebula (M27)",
+        [{ target: "M27", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: a supernova remnant (M1)",
+        [{ target: "M1", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: a cluster with nebula (M42)",
+        [{ target: "M42", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: a Caldwell nebula (NGC7000, Caldwell 20)",
+        [{ target: "NGC7000", night: night(6), rating: 4 }],
+        "first-nebula",
+        night(6),
+      ],
+      [
+        "first-nebula: not a globular, a galaxy or an open cluster",
+        logged(["M13", "M31", "M45"]),
+        "first-nebula",
+        null,
+      ],
     ];
-    expect(reachedKeys(entries)).toEqual(["first-moon", "first-galaxy"]);
-    const withoutGalaxy = entries.filter((entry) => entry.target !== "M31");
-    expect(reachedKeys(withoutGalaxy)).toEqual(["first-moon"]);
+    expect(rows).toHaveLength(18);
+    for (const [label, entries, key, expected] of rows) {
+      expect(stateOf(entries, key).reachedNight, label).toBe(expected);
+    }
+    // The Moon's first night is also the only milestone that log reaches.
+    expect(reachedKeys(rows[0][1])).toEqual(["first-moon"]);
+  });
+
+  it("dates an all-of-a-set milestone at the latest first night once the whole set is seen (all-planets, caldwell-all) and shows how far along it is", () => {
+    const ids = CALDWELL.map((object) => object.id);
+    expect(ids).toHaveLength(61);
+    const rows: [
+      string,
+      LogEntry[],
+      MilestoneKey,
+      { reachedNight: string | null; progress: { seen: number; total: number } },
+    ][] = [
+      [
+        "six planets wait for the seventh",
+        logged(PLANETS.slice(0, 6)),
+        "all-planets",
+        { reachedNight: null, progress: { seen: 6, total: 7 } },
+      ],
+      [
+        "dated at the planet that completed the set, whatever the order, a later night of a seen planet moves nothing",
+        [
+          { target: "neptune", night: night(40), rating: 4 },
+          { target: "mercury", night: night(3), rating: 4 },
+          { target: "venus", night: night(9), rating: 4 },
+          { target: "mars", night: night(5), rating: 4 },
+          { target: "jupiter", night: night(2), rating: 4 },
+          { target: "saturn", night: night(20), rating: 4 },
+          { target: "uranus", night: night(11), rating: 4 },
+          { target: "mercury", night: night(60), rating: 5 },
+        ],
+        "all-planets",
+        { reachedNight: night(40), progress: { seen: 7, total: 7 } },
+      ],
+      [
+        "the Moon is not a planet",
+        [...logged(PLANETS.slice(0, 6)), { target: "moon", night: night(30), rating: 5 }],
+        "all-planets",
+        { reachedNight: null, progress: { seen: 6, total: 7 } },
+      ],
+      [
+        "60 Caldwell objects are 60 of 61",
+        logged(ids.slice(1)),
+        "caldwell-all",
+        { reachedNight: null, progress: { seen: 60, total: 61 } },
+      ],
+      [
+        "all 61, the last seen on night 100; a later night of a seen object moves nothing",
+        [
+          ...logged(ids.slice(1)),
+          { target: ids[0], night: night(100), rating: 3 },
+          { target: ids[5], night: night(200), rating: 5 },
+        ],
+        "caldwell-all",
+        { reachedNight: night(100), progress: { seen: 61, total: 61 } },
+      ],
+      [
+        "61 Messier objects are no Caldwell objects",
+        logged(messierUpTo(61)),
+        "caldwell-all",
+        { reachedNight: null, progress: { seen: 0, total: 61 } },
+      ],
+    ];
+    expect(rows).toHaveLength(6);
+    for (const [label, entries, key, expected] of rows) {
+      expect(stateOf(entries, key), label).toEqual({ key, ...expected });
+    }
+  });
+
+  it("dates a Messier count at its N-th earliest first night, counts an object once, caps the progress at N and counts neither Caldwell objects nor planets", () => {
+    interface Expected {
+      reachedNight: string | null;
+      progress: { seen: number; total: number };
+    }
+    const rows: [string, LogEntry[], MilestoneKey, Expected][] = [
+      [
+        "messier-10 on the tenth earliest first night, not the last entry in the array",
+        [
+          ...messierUpTo(10)
+            .map((target, i) => ({ target, night: night(2 * (i + 1)), rating: 4 }))
+            .reverse(),
+          { target: "M11", night: night(30), rating: 4 },
+        ],
+        "messier-10",
+        { reachedNight: night(20), progress: { seen: 10, total: 10 } },
+      ],
+      [
+        "nine objects are nine of ten",
+        logged(messierUpTo(9)),
+        "messier-10",
+        { reachedNight: null, progress: { seen: 9, total: 10 } },
+      ],
+      [
+        "two entries for one object count once",
+        [
+          ...logged(messierUpTo(9)),
+          { target: "M9", night: night(50), rating: 5 },
+          { target: "M1", night: night(0), rating: 5 },
+        ],
+        "messier-10",
+        { reachedNight: null, progress: { seen: 9, total: 10 } },
+      ],
+      [
+        "Caldwell objects and planets do not count",
+        [...logged(messierUpTo(5)), ...logged(["NGC869", "NGC7000", "IC342", "jupiter", "moon"], 10)],
+        "messier-10",
+        { reachedNight: null, progress: { seen: 5, total: 10 } },
+      ],
+      [
+        "thirty objects: messier-10 on its tenth night",
+        logged(messierUpTo(30)),
+        "messier-10",
+        { reachedNight: night(9), progress: { seen: 10, total: 10 } },
+      ],
+      [
+        "thirty objects: messier-25 on its 25th night",
+        logged(messierUpTo(30)),
+        "messier-25",
+        { reachedNight: night(24), progress: { seen: 25, total: 25 } },
+      ],
+      [
+        "thirty objects: messier-50 not yet",
+        logged(messierUpTo(30)),
+        "messier-50",
+        { reachedNight: null, progress: { seen: 30, total: 50 } },
+      ],
+      [
+        "fifty objects: messier-50 on its 50th night",
+        logged(messierUpTo(50)),
+        "messier-50",
+        { reachedNight: night(49), progress: { seen: 50, total: 50 } },
+      ],
+      [
+        "fifty objects: messier-110 not yet",
+        logged(messierUpTo(50)),
+        "messier-110",
+        { reachedNight: null, progress: { seen: 50, total: 110 } },
+      ],
+      [
+        "all 110 (NGC 5866 as M102 included)",
+        logged(messierUpTo(110)),
+        "messier-110",
+        { reachedNight: night(109), progress: { seen: 110, total: 110 } },
+      ],
+      [
+        "109 without M45",
+        logged(messierUpTo(110)).filter((entry) => entry.target !== "M45"),
+        "messier-110",
+        { reachedNight: null, progress: { seen: 109, total: 110 } },
+      ],
+    ];
+    expect(rows).toHaveLength(11);
+    expect(logged(messierUpTo(110)).some((entry) => entry.target === "M102")).toBe(true);
+    for (const [label, entries, key, expected] of rows) {
+      expect(stateOf(entries, key), label).toEqual({ key, ...expected });
+    }
   });
 });
 
@@ -426,19 +447,6 @@ describe("withStored", () => {
     return state;
   };
 
-  it("returns the derived states unchanged when nothing is stored", () => {
-    expect(withStored(derived(nine), new Map())).toEqual(derived(nine));
-    expect(withStored(derived([]), new Map())).toEqual(derived([]));
-  });
-
-  it("keeps every milestone in MILESTONES order", () => {
-    const stored = new Map<MilestoneKey, string>([
-      ["caldwell-all", night(40)],
-      ["first-moon", night(2)],
-    ]);
-    expect(withStored(derived([]), stored).map((state) => state.key)).toEqual(MILESTONES.map((m) => m.key));
-  });
-
   it("shows a stored milestone as reached even when the log no longer reaches it", () => {
     const stored = new Map<MilestoneKey, string>([["first-galaxy", night(3)]]);
     // The entry that reached it was deleted: the derived state has nothing, the stored night stands.
@@ -446,24 +454,29 @@ describe("withStored", () => {
     expect(stateIn(withStored(derived([]), stored), "first-galaxy").reachedNight).toBe(night(3));
   });
 
-  it("lets the stored night win over the derived one", () => {
+  it("lets the stored night win over the derived one, and the derived state stand for a key that is not stored, so milestones from before the record still show", () => {
     const entries: LogEntry[] = [{ target: "M31", night: night(9), rating: 4 }];
-    const stored = new Map<MilestoneKey, string>([["first-galaxy", night(3)]]);
+    const storedGalaxy = new Map<MilestoneKey, string>([["first-galaxy", night(3)]]);
     expect(stateIn(derived(entries), "first-galaxy").reachedNight).toBe(night(9));
-    expect(stateIn(withStored(derived(entries), stored), "first-galaxy").reachedNight).toBe(night(3));
-  });
+    expect(stateIn(withStored(derived(entries), storedGalaxy), "first-galaxy").reachedNight).toBe(night(3));
 
-  it("lets the derived state stand for a key that is not stored, so milestones from before the record still show", () => {
-    const stored = new Map<MilestoneKey, string>([["first-moon", night(2)]]);
-    const states = withStored(derived(nine), stored);
+    const storedMoon = new Map<MilestoneKey, string>([["first-moon", night(2)]]);
+    const states = withStored(derived(nine), storedMoon);
     expect(stateIn(states, "first-globular").reachedNight).toBe(night(0));
     expect(stateIn(states, "first-moon").reachedNight).toBe(night(2));
   });
 
-  it("takes progress from the derived state, for a stored count milestone too", () => {
-    const stored = new Map<MilestoneKey, string>([["messier-10", night(30)]]);
-    const states = withStored(derived(nine), stored);
-    expect(stateIn(states, "messier-10")).toEqual({
+  it("returns the derived states unchanged when nothing is stored, in MILESTONES order, and takes progress from the derived state", () => {
+    expect(withStored(derived(nine), new Map())).toEqual(derived(nine));
+    expect(withStored(derived([]), new Map())).toEqual(derived([]));
+
+    const stored = new Map<MilestoneKey, string>([
+      ["caldwell-all", night(40)],
+      ["first-moon", night(2)],
+    ]);
+    expect(withStored(derived([]), stored).map((state) => state.key)).toEqual(MILESTONES.map((m) => m.key));
+
+    expect(stateIn(withStored(derived(nine), new Map([["messier-10", night(30)]])), "messier-10")).toEqual({
       key: "messier-10",
       reachedNight: night(30),
       progress: { seen: 9, total: 10 },

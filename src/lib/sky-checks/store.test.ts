@@ -24,49 +24,51 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typ
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it.each(WRITES)("%s: a server fault keeps only its code next to the fixed key", async (_name, run) => {
-    const result = await run(failing("XX000"));
-    expect(result).toEqual({
-      ok: false,
-      message: "errors.save.skyCheck",
-      fault: { kind: "server", code: "XX000" },
-    });
-    expect(JSON.stringify(result)).not.toMatch(LEAK);
-  });
-
-  it.each(WRITES)("%s: an RLS refusal is `refused`, a session fault is `session`", async (_name, run) => {
-    expect(await run(failing("42501"))).toEqual({
-      ok: false,
-      message: "errors.save.skyCheck",
-      fault: { kind: "refused", code: "42501" },
-    });
-    expect(await run(failing("PGRST301"))).toEqual({
-      ok: false,
-      message: "errors.save.skyCheck",
-      fault: { kind: "session", code: "PGRST301" },
-    });
-  });
-
-  it.each(WRITES)("%s: a user-input failure has no fault", async (_name, run) => {
-    for (const code of ["22P02", "23514"]) {
-      const result = await run(failing(code));
-      expect(result.ok, code).toBe(false);
-      expect(result, code).not.toHaveProperty("fault");
+  it("keeps only its code for a server fault, is `refused` or `session` by code, and has no fault for user input, in every write", async () => {
+    expect(WRITES).toHaveLength(3);
+    for (const [name, run] of WRITES) {
+      const server = await run(failing("XX000"));
+      expect(server, `${name}: server fault`).toEqual({
+        ok: false,
+        message: "errors.save.skyCheck",
+        fault: { kind: "server", code: "XX000" },
+      });
+      expect(JSON.stringify(server), `${name}: server fault`).not.toMatch(LEAK);
+      expect(await run(failing("42501")), `${name}: RLS`).toEqual({
+        ok: false,
+        message: "errors.save.skyCheck",
+        fault: { kind: "refused", code: "42501" },
+      });
+      expect(await run(failing("PGRST301")), `${name}: session`).toEqual({
+        ok: false,
+        message: "errors.save.skyCheck",
+        fault: { kind: "session", code: "PGRST301" },
+      });
+      for (const code of ["22P02", "23514"]) {
+        const result = await run(failing(code));
+        expect(result.ok, `${name}: ${code}`).toBe(false);
+        // A malformed id is its own not-found key (below); either way no fault is carried.
+        expect(result, `${name}: ${code}`).not.toHaveProperty("fault");
+      }
     }
   });
 
-  it.each(WRITES.slice(1))(
-    "%s: a malformed id is not found, and a zero-row update is `no-rows`",
-    async (_name, run) => {
-      expect(await run(failing("22P02"))).toEqual({ ok: false, message: "errors.notFound.skyCheck" });
-      expect(await run(fakeClient({ data: [] }))).toEqual({
+  it("answers a malformed id as not found, a zero-row update as `no-rows`, and a changed row as ok, in answer and skip", async () => {
+    const updates = WRITES.slice(1);
+    expect(updates.map(([name]) => name)).toEqual(["answer", "skip"]);
+    for (const [name, run] of updates) {
+      expect(await run(failing("22P02")), `${name}: malformed id`).toEqual({
+        ok: false,
+        message: "errors.notFound.skyCheck",
+      });
+      expect(await run(fakeClient({ data: [] })), `${name}: zero rows`).toEqual({
         ok: false,
         message: "errors.notFound.skyCheck",
         fault: { kind: "no-rows" },
       });
-      expect(await run(fakeClient({ data: [{ id: ID }] }))).toEqual({ ok: true });
-    },
-  );
+      expect(await run(fakeClient({ data: [{ id: ID }] })), `${name}: changed a row`).toEqual({ ok: true });
+    }
+  });
 });
 
 describe("a failed read throws its key with a sanitized cause", () => {
@@ -76,13 +78,16 @@ describe("a failed read throws its key with a sanitized cause", () => {
     ["tally", (c) => skyCheckStore.tally(c)],
   ];
 
-  it.each(READS)("%s: the cause is a StoreFault holding only the code", async (_name, run) => {
-    const thrown = (await run(failing("XX000")).catch((error: unknown) => error)) as Error;
-    expect(thrown.message).toBe("errors.load.skyChecks");
-    expect(thrown.cause).toBeInstanceOf(StoreFault);
-    expect(thrown.cause).toMatchObject({ code: "XX000" });
-    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name"]);
-    expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
-    expect((thrown.cause as Error).message).not.toMatch(LEAK);
+  it("holds only the code in a StoreFault cause, in every read", async () => {
+    expect(READS).toHaveLength(3);
+    for (const [name, run] of READS) {
+      const thrown = (await run(failing("XX000")).catch((error: unknown) => error)) as Error;
+      expect(thrown.message, name).toBe("errors.load.skyChecks");
+      expect(thrown.cause, name).toBeInstanceOf(StoreFault);
+      expect(thrown.cause, name).toMatchObject({ code: "XX000" });
+      expect(Object.keys(thrown.cause as object).sort(), name).toEqual(["code", "name"]);
+      expect(JSON.stringify(thrown.cause), name).not.toMatch(LEAK);
+      expect((thrown.cause as Error).message, name).not.toMatch(LEAK);
+    }
   });
 });

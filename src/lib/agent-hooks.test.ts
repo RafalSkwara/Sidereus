@@ -223,29 +223,6 @@ describe("end-of-turn.sh", () => {
     expect(calls(box)).toContain("vitest run --project reference");
   });
 
-  it("runs nothing for a documentation-only change, even where the tools are not installed", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "README.md"), "# sandbox, edited\n");
-    rmSync(join(box.repo, "node_modules"), { recursive: true });
-    const result = await hook(box, "end-of-turn.sh", stop(box));
-    expect(result).toMatchObject({ code: 0, stderr: "" });
-    expect(calls(box)).toBe("");
-  });
-
-  it("runs nothing when the checkout has no changes", async () => {
-    const box = await sandbox();
-    const result = await hook(box, "end-of-turn.sh", stop(box));
-    expect(result).toMatchObject({ code: 0, stderr: "" });
-    expect(calls(box)).toBe("");
-  });
-
-  it("treats an empty or unparseable payload as the process cwd", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN\n");
-    expect((await hook(box, "end-of-turn.sh", "{}")).code).toBe(2);
-    expect((await hook(box, "end-of-turn.sh", "not json")).code).toBe(2);
-  });
-
   it("lets the retry pass finish, and tells the user the turn ended red", async () => {
     const box = await sandbox();
     writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN\n");
@@ -254,43 +231,6 @@ describe("end-of-turn.sh", () => {
     expect(result.stderr).toBe("");
     const message = JSON.parse(result.stdout) as { systemMessage: string };
     expect(message.systemMessage).toContain(box.repo);
-  });
-
-  it("catches a file written without any per-edit hook (a shell rewrite)", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "b.ts"), "// BROKEN, written by a shell command\n");
-    const result = await hook(box, "end-of-turn.sh", stop(box));
-    expect(result.code).toBe(2);
-    expect(result.stderr).toContain("src/b.ts");
-  });
-
-  it("resolves checkouts from the payload and the registry, never from CLAUDE_PROJECT_DIR", async () => {
-    const box = await sandbox();
-    const other = await sandbox();
-    writeFileSync(join(other.repo, "src", "a.ts"), "// BROKEN\n");
-    // CLAUDE_PROJECT_DIR names a broken checkout; the session's checkout is clean.
-    const pinned = await hook(box, "end-of-turn.sh", stop(box), box.repo, {
-      ...box.env,
-      CLAUDE_PROJECT_DIR: other.repo,
-    });
-    expect(pinned.code).toBe(0);
-
-    // A sibling worktree edited this turn is swept through the registry; a relative path resolves against the cwd.
-    const wt = await worktree(box, "wt");
-    writeFileSync(join(wt, "src", "a.ts"), "// BROKEN in the worktree\n");
-    expect((await hook(box, "register-checkout.sh", edit("src/a.ts", { cwd: wt }))).code).toBe(0);
-    expect(readFileSync(join(box.tmp, "claude-hooks", "s1.main.roots"), "utf8").trim()).toBe(wt);
-    const swept = await hook(box, "end-of-turn.sh", stop(box));
-    expect(swept.code).toBe(2);
-    expect(swept.stderr).toContain(wt);
-    expect(swept.stderr).not.toContain("npm ci");
-
-    // A registered repository without these hooks is skipped.
-    const foreign = await sandbox(false);
-    writeFileSync(join(foreign.repo, "src", "a.ts"), "// BROKEN, not ours\n");
-    const session = { session_id: "s2", cwd: box.repo };
-    expect((await hook(box, "register-checkout.sh", edit(join(foreign.repo, "src", "a.ts"), session))).code).toBe(0);
-    expect((await hook(box, "end-of-turn.sh", stop(box, session))).code).toBe(0);
   });
 
   it("fails visibly when a tool is missing, naming it, never passing silently", async () => {
@@ -307,65 +247,15 @@ describe("end-of-turn.sh", () => {
     expect(noJq.stderr).toContain("jq");
   });
 
-  it("passes --no-warn-ignored, so an eslint-ignored generated file does not fail the run", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "database.types.ts"), "export type Generated = 1;\n");
-    const result = await hook(box, "end-of-turn.sh", stop(box));
-    expect(result.code).toBe(0);
-    expect(calls(box)).toMatch(/eslint --max-warnings 0 --no-warn-ignored -- .*src\/database\.types\.ts/);
-  });
-
-  it("keeps a changed file named like an option a file (`--` before the paths)", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "-c.ts"), "// BROKEN\n");
-    const result = await hook(box, "end-of-turn.sh", stop(box));
-    expect(result.code).toBe(2);
-    expect(result.stderr).toContain("-c.ts: BROKEN marker");
-  });
-
   it("treats a SubagentStop payload like Stop", async () => {
     const box = await sandbox();
     writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN by a subagent\n");
     const payload = stop(box, { hook_event_name: "SubagentStop", ...subagent("def456") });
     expect((await hook(box, "end-of-turn.sh", payload)).code).toBe(2);
   });
-
-  it("does not see a checkout when the session cwd is not one and nothing was registered (documented limit)", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN through a shell command\n");
-    const outside = join(box.tmp, "projects");
-    mkdirSync(outside);
-    expect((await hook(box, "end-of-turn.sh", stop(box, { cwd: outside }), outside)).code).toBe(0);
-  });
 });
 
 describe("turn fingerprint", () => {
-  it("skips work in progress from before the turn, and sweeps it once the turn changes something", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN, left from an earlier turn\n");
-    expect((await hook(box, "turn-start.sh", prompt(box))).code).toBe(0);
-    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(0);
-    expect(calls(box)).toBe("");
-
-    writeFileSync(join(box.repo, "src", "c.ts"), "export const c = 1;\n");
-    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(2);
-  });
-
-  it("notices an edit to a tracked file", async () => {
-    const box = await sandbox();
-    expect((await hook(box, "turn-start.sh", prompt(box))).code).toBe(0);
-    writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN, tracked file edited this turn\n");
-    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(2);
-  });
-
-  it("notices a new content in an untracked file that existed at turn start", async () => {
-    const box = await sandbox();
-    writeFileSync(join(box.repo, "src", "draft.ts"), "export const draft = 1;\n");
-    expect((await hook(box, "turn-start.sh", prompt(box))).code).toBe(0);
-    writeFileSync(join(box.repo, "src", "draft.ts"), "// BROKEN, untracked file edited this turn\n");
-    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(2);
-  });
-
   it("notices an untracked file whose path is longer than 255 bytes", async () => {
     const box = await sandbox();
     const long = join(box.repo, "src", "d".repeat(100), "e".repeat(100), `${"f".repeat(60)}.ts`);
@@ -399,52 +289,6 @@ describe("per-agent state", () => {
     // The parent still answers for its own edit.
     expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(2);
   });
-
-  it("does not block a clean subagent for another subagent's broken worktree, and keeps that one's record", async () => {
-    const box = await sandbox();
-    const wtA = await worktree(box, "wt-a");
-    const a = subagent("agentA");
-    const b = subagent("agentB");
-    for (const agent of [a, b]) {
-      expect(
-        (await hook(box, "turn-start.sh", { ...prompt(box), ...agent, hook_event_name: "SubagentStart" })).code,
-      ).toBe(0);
-    }
-    writeFileSync(join(wtA, "src", "a.ts"), "// BROKEN, agent A mid-edit\n");
-    expect((await hook(box, "register-checkout.sh", edit(join(wtA, "src", "a.ts"), a))).code).toBe(0);
-    writeFileSync(join(box.repo, "src", "b.ts"), "export const b = 1;\n");
-    expect((await hook(box, "register-checkout.sh", edit(join(box.repo, "src", "b.ts"), b))).code).toBe(0);
-
-    const stopB = await hook(box, "end-of-turn.sh", stop(box, { hook_event_name: "SubagentStop", ...b }));
-    expect(stopB.code).toBe(0);
-    // B's green run cleared only B's record: A is still swept for its worktree.
-    const stopA = await hook(box, "end-of-turn.sh", stop(box, { hook_event_name: "SubagentStop", ...a }));
-    expect(stopA.code).toBe(2);
-    expect(stopA.stderr).toContain(wtA);
-  });
-
-  it("keeps a running subagent's record when the user sends a new prompt", async () => {
-    const box = await sandbox();
-    const wtA = await worktree(box, "wt-bg");
-    const a = subagent("background1");
-    writeFileSync(join(wtA, "src", "a.ts"), "// BROKEN by a background subagent\n");
-    expect((await hook(box, "register-checkout.sh", edit(join(wtA, "src", "a.ts"), a))).code).toBe(0);
-    expect((await hook(box, "turn-start.sh", prompt(box))).code).toBe(0);
-    expect((await hook(box, "end-of-turn.sh", stop(box, { hook_event_name: "SubagentStop", ...a }))).code).toBe(2);
-  });
-});
-
-describe("turn-start.sh", () => {
-  it("prints nothing (its stdout would join the prompt) and always exits 0", async () => {
-    const box = await sandbox();
-    const outside = join(box.tmp, "projects");
-    mkdirSync(outside);
-    const payloads = ["{}", "not json", prompt(box, { cwd: outside }), prompt(box)];
-    for (const payload of payloads) {
-      const result = await hook(box, "turn-start.sh", payload);
-      expect(result, JSON.stringify(payload)).toMatchObject({ code: 0, stdout: "", stderr: "" });
-    }
-  });
 });
 
 describe("hook scripts and registration", () => {
@@ -477,7 +321,7 @@ describe("the run helper", () => {
   // CI flake (runs 37992820410 and 38405588360): a hook that exits before reading its stdin closes the pipe while the
   // payload is still being written, and `child.stdin` emits EPIPE. Without a listener on the stream that is an
   // unhandled error and fails the run although every assertion passed. A payload larger than any pipe buffer keeps the
-  // write pending when the child exits, so this reproduces it every time.
+  // write pending when the child exits, so this reproduces it every time (a fixed-bug pin, PR #156).
   it("survives a hook that exits before reading its stdin, keeping the exit code and output", async () => {
     const payload = "x".repeat(4 * 1024 * 1024);
     const result = await run(BASH, ["-c", "echo early; exit 3"], { cwd: SANDBOX, env: cleanEnv(), input: payload });

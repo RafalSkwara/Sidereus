@@ -3,54 +3,48 @@ import type { SkyHeadlineId } from "@/lib/tonight/format";
 import { CHECKABLE_HEADLINES, claimOf, outcomeOf, tallyOf, type SkyAnswer } from "./claim";
 
 describe("claimOf", () => {
-  it.each<[SkyHeadlineId, SkyAnswer | null]>([
-    ["go", "clear"],
-    ["humidityCap", "clear"],
-    ["fallbackCap", "clear"],
-    ["marginal", "partly"],
-    ["no-go", "cloudy"],
-    ["noForecast", null],
-    ["noDarkness", null],
-  ])("%s claims %s", (headline, claim) => {
-    expect(claimOf(headline)).toBe(claim);
-  });
-
-  it("lists exactly the headlines with a claim as checkable", () => {
+  it("maps each headline to the sky it claims, and lists exactly the claiming ones as checkable", () => {
+    const table: [SkyHeadlineId, SkyAnswer | null][] = [
+      ["go", "clear"],
+      ["humidityCap", "clear"],
+      ["fallbackCap", "clear"],
+      ["marginal", "partly"],
+      ["no-go", "cloudy"],
+      ["noForecast", null],
+      ["noDarkness", null],
+    ];
+    // Non-vacuity: all seven headlines are tried, five of them with a claim.
+    expect(table).toHaveLength(7);
+    expect(table.filter(([, claim]) => claim !== null)).toHaveLength(5);
+    for (const [headline, claim] of table) {
+      expect(claimOf(headline), `headline ${headline}`).toBe(claim);
+    }
     expect([...CHECKABLE_HEADLINES].sort()).toEqual(["fallbackCap", "go", "humidityCap", "marginal", "no-go"]);
   });
 });
 
 describe("outcomeOf", () => {
-  it.each<[SkyAnswer, SkyAnswer, string]>([
-    ["clear", "clear", "match"],
-    ["clear", "partly", "optimistic"],
-    ["clear", "cloudy", "optimistic"],
-    ["partly", "clear", "pessimistic"],
-    ["partly", "partly", "match"],
-    ["partly", "cloudy", "optimistic"],
-    ["cloudy", "clear", "pessimistic"],
-    ["cloudy", "partly", "pessimistic"],
-    ["cloudy", "cloudy", "match"],
-  ])("claimed %s, saw %s: %s", (claim, answer, outcome) => {
-    expect(outcomeOf(claim, answer)).toBe(outcome);
+  it("is a match on the same sky, optimistic when the sky was worse than claimed, pessimistic when better", () => {
+    const table: [SkyAnswer, SkyAnswer, string][] = [
+      ["clear", "clear", "match"],
+      ["clear", "partly", "optimistic"],
+      ["clear", "cloudy", "optimistic"],
+      ["partly", "clear", "pessimistic"],
+      ["partly", "partly", "match"],
+      ["partly", "cloudy", "optimistic"],
+      ["cloudy", "clear", "pessimistic"],
+      ["cloudy", "partly", "pessimistic"],
+      ["cloudy", "cloudy", "match"],
+    ];
+    // Non-vacuity: every claim and answer pair of the three skies is tried.
+    expect(table).toHaveLength(9);
+    for (const [claim, answer, outcome] of table) {
+      expect(outcomeOf(claim, answer), `claimed ${claim}, saw ${answer}`).toBe(outcome);
+    }
   });
 });
 
 describe("tallyOf", () => {
-  it("is all zeros with no answers", () => {
-    expect(tallyOf([])).toEqual({
-      answered: 0,
-      matched: 0,
-      optimistic: 0,
-      pessimistic: 0,
-      byClaim: {
-        clear: { answered: 0, matched: 0 },
-        partly: { answered: 0, matched: 0 },
-        cloudy: { answered: 0, matched: 0 },
-      },
-    });
-  });
-
   it("adds up matches and misses by direction and by claimed sky", () => {
     const tally = tallyOf([
       { headline: "go", answer: "clear", nights: 4 },

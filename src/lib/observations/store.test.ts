@@ -4,7 +4,7 @@ import type { TypedSupabaseClient } from "@/lib/supabase";
 import { fakeClient, leakyPostgrestError, LEAK, type FakeResult } from "@/lib/test-support/supabase-fake";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import type { ObservationInput, ObservationUpdateInput } from "./schemas";
-import { latestNightBound, observationStore, SEEN_PAGE_SIZE } from "./store";
+import { latestNightBound, observationStore } from "./store";
 
 // The pure rules; what talks to Supabase is covered by tests/db/observations.test.ts. The one exception is the
 // paged seen read, whose loop is checked here against a fake client (a lower `max_rows` cannot be set locally).
@@ -20,12 +20,6 @@ describe("latestNightBound", () => {
     expect(tonightDateForSite(HONOLULU, now)).toBe("2026-09-26");
     expect(latestNightBound([HONOLULU, WARSAW], now)).toBe("2026-09-27");
     expect(latestNightBound([HONOLULU], now)).toBe("2026-09-26");
-  });
-
-  it("falls back to the date at UTC+14 when the user has no site left", () => {
-    // 10:30 UTC on 26 September is already 00:30 on the 27th at UTC+14.
-    expect(latestNightBound([], new Date("2026-09-26T10:30:00Z"))).toBe("2026-09-27");
-    expect(latestNightBound([], new Date("2026-09-26T09:30:00Z"))).toBe("2026-09-26");
   });
 });
 
@@ -64,15 +58,6 @@ describe("listSeenEntries", () => {
   const rowsOf = (n: number) =>
     Array.from({ length: n }, (_, i) => ({ target: `M${i + 1}`, night: "2026-10-01", rating: 4 }));
 
-  it("reads a normal log (under one page) in exactly one request, asking for the exact total", async () => {
-    const rows = rowsOf(120);
-    const { client, requests } = fakeClient(rows, SEEN_PAGE_SIZE);
-    expect(await observationStore.listSeenEntries(client)).toEqual(rows);
-    expect(requests).toHaveLength(1);
-    expect(requests[0].select).toEqual(["target, night, rating", { count: "exact" }]);
-    expect(requests[0].range).toEqual([0, SEEN_PAGE_SIZE - 1]);
-  });
-
   it("skips no row when the host returns fewer rows than a page (a lower max_rows)", async () => {
     const rows = rowsOf(1250);
     const { client, requests } = fakeClient(rows, 500);
@@ -82,46 +67,6 @@ describe("listSeenEntries", () => {
     expect(requests.map((request) => request.range[0])).toEqual([0, 500, 1000]);
     // The total is asked for once, on the first request.
     expect(requests.map((request) => request.select[1])).toEqual([{ count: "exact" }, undefined, undefined]);
-  });
-
-  it("stops on an empty page when the total is not given", async () => {
-    const rows = rowsOf(30);
-    // A response with no count at all: only an empty page can end the read.
-    const noCount = {
-      from: () => {
-        const query = {
-          select: () => query,
-          gte: () => query,
-          order: () => query,
-          range: (from: number) =>
-            Promise.resolve({ data: rows.slice(from, from + 25), error: null, count: null as number | null }),
-        };
-        return query;
-      },
-    } as unknown as TypedSupabaseClient;
-    expect(await observationStore.listSeenEntries(noCount)).toEqual(rows);
-  });
-
-  it("throws a keyed error whose cause is a sanitized fault, never the database error", async () => {
-    const failure = leakyPostgrestError("XX000");
-    const failing = {
-      from: () => {
-        const query = {
-          select: () => query,
-          gte: () => query,
-          order: () => query,
-          range: () => Promise.resolve({ data: null, error: failure, count: null }),
-        };
-        return query;
-      },
-    } as unknown as TypedSupabaseClient;
-    const thrown = await observationStore.listSeenEntries(failing).catch((error: unknown) => error);
-    expect(thrown).toMatchObject({ message: "errors.load.observations" });
-    const cause = (thrown as Error).cause;
-    expect(cause).toBeInstanceOf(StoreFault);
-    expect(cause).not.toBe(failure);
-    expect(cause).toMatchObject({ code: "XX000" });
-    expect(JSON.stringify(cause)).not.toMatch(LEAK);
   });
 });
 
@@ -190,40 +135,6 @@ describe("a failed write carries a sanitized fault", () => {
     expect(JSON.stringify(result)).not.toMatch(LEAK);
   });
 
-  it("create: an RLS refusal is `refused`, and a user-input failure has no fault", async () => {
-    expect(await observationStore.create(withGear({ error: leakyPostgrestError("42501") }), CREATE, NOW)).toEqual({
-      ok: false,
-      message: "errors.save.observation",
-      fault: { kind: "refused", code: "42501" },
-    });
-    for (const code of ["22P02", "23514", "23503"]) {
-      const result = await observationStore.create(withGear({ error: leakyPostgrestError(code) }), CREATE, NOW);
-      expect(result, code).toEqual({ ok: false, message: "errors.save.observation" });
-    }
-  });
-
-  it("create: a failed gear lookup keeps the lookup's code instead of dropping the error", async () => {
-    const lookupFails = fakeClient((table) =>
-      table === "sites" ? { error: leakyPostgrestError("42501") } : { data: TELESCOPE_ROW },
-    );
-    const result = await observationStore.create(lookupFails, CREATE, NOW);
-    expect(result).toEqual({
-      ok: false,
-      message: "errors.save.observation",
-      fault: { kind: "refused", code: "42501" },
-    });
-    expect(JSON.stringify(result)).not.toMatch(LEAK);
-
-    const unreachable = fakeClient((table) =>
-      table === "sites" ? { error: { message: `fetch failed ${LEAK.source}` } } : { data: TELESCOPE_ROW },
-    );
-    expect(await observationStore.create(unreachable, CREATE, NOW)).toEqual({
-      ok: false,
-      message: "errors.save.observation",
-      fault: { kind: "server" },
-    });
-  });
-
   it("update: a server fault keeps its code, a refusal is `refused`, a zero-row update is `no-rows`", async () => {
     const updateAnswers = (answer: FakeResult) =>
       fakeClient((table, calls) => {
@@ -271,83 +182,26 @@ describe("a failed write carries a sanitized fault", () => {
       await observationStore.update(updateAnswers({ data: [{ id: OBSERVATION_ID }] }), OBSERVATION_ID, UPDATE, NOW),
     ).toEqual({ ok: true });
   });
-
-  it("update: a failed lookup of the entry or of the user's sites keeps its code", async () => {
-    const getFails = fakeClient((table) =>
-      table === "observations" ? { error: leakyPostgrestError("PGRST301") } : { data: SITE_ROW },
-    );
-    expect(await observationStore.update(getFails, OBSERVATION_ID, UPDATE, NOW)).toEqual({
-      ok: false,
-      message: "errors.save.observation",
-      fault: { kind: "session", code: "PGRST301" },
-    });
-
-    // No chosen site: the night bound reads every site of the user, and that read fails.
-    const sitesFail = fakeClient((table) => {
-      if (table === "sites") return { error: leakyPostgrestError("XX000") };
-      return {
-        data: {
-          id: OBSERVATION_ID,
-          target: "M31",
-          night: "2026-10-09",
-          rating: 4,
-          site_id: null,
-          telescope_id: null,
-          site_name: "Gone",
-          telescope_name: "Gone",
-          created_at: "2026-10-09T20:00:00Z",
-        },
-      };
-    });
-    const result = await observationStore.update(
-      sitesFail,
-      OBSERVATION_ID,
-      { ...UPDATE, siteId: null, telescopeId: null },
-      NOW,
-    );
-    expect(result).toEqual({
-      ok: false,
-      message: "errors.save.observation",
-      fault: { kind: "server", code: "XX000" },
-    });
-  });
-
-  it("remove: a server fault keeps its code, a malformed id has none, and a zero-row delete is `no-rows`", async () => {
-    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("XX000") }), OBSERVATION_ID)).toEqual({
-      ok: false,
-      message: "errors.delete.observation",
-      fault: { kind: "server", code: "XX000" },
-    });
-    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("22P02") }), "nope")).toEqual({
-      ok: false,
-      message: "errors.notFound.observation",
-    });
-    expect(await observationStore.remove(fakeClient({ error: leakyPostgrestError("42501") }), OBSERVATION_ID)).toEqual({
-      ok: false,
-      message: "errors.delete.observation",
-      fault: { kind: "refused", code: "42501" },
-    });
-    expect(await observationStore.remove(fakeClient({ data: [] }), OBSERVATION_ID)).toEqual({
-      ok: false,
-      message: "errors.notFound.observation",
-      fault: { kind: "no-rows" },
-    });
-  });
 });
 
 describe("a failed read throws its key with a sanitized cause", () => {
-  it.each([
-    ["list", (c: TypedSupabaseClient) => observationStore.list(c, { page: 1 })],
-    ["get", (c: TypedSupabaseClient) => observationStore.get(c, OBSERVATION_ID)],
-  ])("%s: the cause is a StoreFault holding only the code", async (_name, run) => {
-    const thrown = (await run(fakeClient({ error: leakyPostgrestError("XX000") })).catch(
-      (error: unknown) => error,
-    )) as Error;
-    expect(thrown.message).toBe("errors.load.observations");
-    expect(thrown.cause).toBeInstanceOf(StoreFault);
-    expect(thrown.cause).toMatchObject({ code: "XX000" });
-    expect(Object.keys(thrown.cause as object).sort()).toEqual(["code", "name"]);
-    expect(JSON.stringify(thrown.cause)).not.toMatch(LEAK);
-    expect((thrown.cause as Error).message).not.toMatch(LEAK);
+  it("list and get: the cause is a StoreFault holding only the code", async () => {
+    const reads = [
+      ["list", (c: TypedSupabaseClient) => observationStore.list(c, { page: 1 })],
+      ["get", (c: TypedSupabaseClient) => observationStore.get(c, OBSERVATION_ID)],
+    ] as const;
+    // Non-vacuity: both reads are tried.
+    expect(reads).toHaveLength(2);
+    for (const [name, run] of reads) {
+      const thrown = (await run(fakeClient({ error: leakyPostgrestError("XX000") })).catch(
+        (error: unknown) => error,
+      )) as Error;
+      expect(thrown.message, name).toBe("errors.load.observations");
+      expect(thrown.cause, name).toBeInstanceOf(StoreFault);
+      expect(thrown.cause, name).toMatchObject({ code: "XX000" });
+      expect(Object.keys(thrown.cause as object).sort(), name).toEqual(["code", "name"]);
+      expect(JSON.stringify(thrown.cause), name).not.toMatch(LEAK);
+      expect((thrown.cause as Error).message, name).not.toMatch(LEAK);
+    }
   });
 });

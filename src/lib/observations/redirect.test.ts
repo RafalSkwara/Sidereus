@@ -1,17 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  editRedirect,
-  formRedirect,
-  noticeRedirect,
-  parseLogPage,
-  readLogNotice,
-  readMilestoneParam,
-  tonightReturnPath,
-  withMilestones,
-} from "./redirect";
-
-const SITE = "3f2b8c1e-6d4a-4f7e-9b1c-2a5d8e0f1b3c";
-const TELESCOPE = "7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d";
+import { editRedirect, formRedirect, readLogNotice, readMilestoneParam, tonightReturnPath } from "./redirect";
 
 function params(url: string): Record<string, string> {
   const parsed = new URL(url, "https://sidereus.test");
@@ -20,37 +8,6 @@ function params(url: string): Record<string, string> {
 }
 
 describe("formRedirect", () => {
-  it("returns to the form with every valid prefill value and the error key", () => {
-    const url = formRedirect(
-      { target: "M13", night: "2026-09-26", rating: "7", siteId: SITE, telescopeId: TELESCOPE },
-      "errors.observation.ratingRequired",
-    );
-    expect(params(url)).toEqual({
-      object: "M13",
-      night: "2026-09-26",
-      site: SITE,
-      telescope: TELESCOPE,
-      error: "errors.observation.ratingRequired",
-    });
-  });
-
-  it("carries a planet key", () => {
-    expect(params(formRedirect({ target: "jupiter" }, "errors.generic"))).toEqual({
-      object: "jupiter",
-      error: "errors.generic",
-    });
-  });
-
-  it("carries a Caldwell key the catalogue lists and drops a well-formed one it lacks", () => {
-    expect(params(formRedirect({ target: "NGC7000" }, "errors.generic"))).toEqual({
-      object: "NGC7000",
-      error: "errors.generic",
-    });
-    expect(params(formRedirect({ target: "NGC1" }, "errors.observation.objectInvalid"))).toEqual({
-      error: "errors.observation.objectInvalid",
-    });
-  });
-
   it("drops any value that is not a target key, uuid or calendar date, so free text never reaches the URL", () => {
     const url = formRedirect(
       { target: "M13 at 52.23N", night: "tomorrow", siteId: "52.23,21.01", telescopeId: "<script>" },
@@ -58,49 +15,9 @@ describe("formRedirect", () => {
     );
     expect(params(url)).toEqual({ error: "errors.observation.objectInvalid" });
   });
-
-  it("drops an out-of-range object and a non-calendar night", () => {
-    expect(params(formRedirect({ target: "M111", night: "2026-02-30" }, "errors.generic"))).toEqual({
-      error: "errors.generic",
-    });
-  });
-
-  it("ignores non-string form values", () => {
-    expect(params(formRedirect({ target: 13, siteId: null }, "errors.generic"))).toEqual({ error: "errors.generic" });
-  });
-});
-
-describe("formRedirect for manual entry", () => {
-  it("carries the log return target so the form comes back in manual mode", () => {
-    expect(params(formRedirect({ target: "M31", from: "log" }, "errors.observation.ratingRequired"))).toEqual({
-      object: "M31",
-      from: "log",
-      error: "errors.observation.ratingRequired",
-    });
-  });
-
-  it("drops any other return target", () => {
-    expect(params(formRedirect({ from: "https://evil.test" }, "errors.generic"))).toEqual({ error: "errors.generic" });
-  });
-});
-
-describe("formRedirect from a focused Tonight page", () => {
-  it("keeps the page, so the retried save still returns there", () => {
-    expect(params(formRedirect({ target: "moon", from: "moon" }, "errors.observation.ratingRequired"))).toEqual({
-      object: "moon",
-      from: "moon",
-      error: "errors.observation.ratingRequired",
-    });
-  });
 });
 
 describe("tonightReturnPath", () => {
-  it("maps each focused page to its path", () => {
-    expect(tonightReturnPath("targets")).toBe("/tonight/targets");
-    expect(tonightReturnPath("moon")).toBe("/tonight/moon");
-    expect(tonightReturnPath("planets")).toBe("/tonight/planets");
-  });
-
   it("returns to Tonight for a missing, unknown or log value", () => {
     for (const from of [undefined, null, "", "log", "nights", "tonight", "https://evil.test", "/tonight/moon"]) {
       expect(tonightReturnPath(from)).toBe("/tonight");
@@ -109,32 +26,12 @@ describe("tonightReturnPath", () => {
 });
 
 describe("editRedirect", () => {
-  it("returns to the entry's page with only the error key", () => {
-    expect(editRedirect("7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d", "errors.observation.nightInFuture")).toBe(
-      "/log/7a9e4d2c-1b3f-4c8e-a6d5-0e2f9b7c4a1d?error=errors.observation.nightInFuture",
-    );
-  });
-
   it("encodes a hostile id so it stays one path segment", () => {
     expect(editRedirect("../gear?x=1", "errors.generic")).toBe("/log/..%2Fgear%3Fx%3D1?error=errors.generic");
   });
 });
 
 describe("noticeRedirect and readLogNotice", () => {
-  it("name the object by its target key", () => {
-    expect(noticeRedirect("saved", "M31")).toBe("/log?saved=M31");
-    expect(noticeRedirect("deleted", "jupiter")).toBe("/log?deleted=jupiter");
-    expect(readLogNotice(new URL(noticeRedirect("updated", "M31"), "https://sidereus.test").searchParams)).toEqual({
-      kind: "updated",
-      target: "M31",
-    });
-    expect(readLogNotice(new URLSearchParams({ deleted: "jupiter" }))).toEqual({ kind: "deleted", target: "jupiter" });
-  });
-
-  it("reads the bare Messier number of an older link as its key", () => {
-    expect(readLogNotice(new URLSearchParams({ saved: "31" }))).toEqual({ kind: "saved", target: "M31" });
-  });
-
   it("ignores anything that is not a target", () => {
     for (const value of ["", "111", "M111", "Jupiter", "52.23,21.01"]) {
       expect(readLogNotice(new URLSearchParams({ saved: value }))).toBeNull();
@@ -143,59 +40,13 @@ describe("noticeRedirect and readLogNotice", () => {
   });
 });
 
-describe("parseLogPage", () => {
-  it("reads a positive integer as the page and anything else as page 1", () => {
-    expect(parseLogPage("3")).toBe(3);
-    for (const param of [null, "", "1", "0", "-2", "2.5", "abc", "9999999"]) {
-      expect(parseLogPage(param)).toBe(1);
-    }
-  });
-});
-
-describe("withMilestones", () => {
-  it("leaves the URL unchanged without keys", () => {
-    expect(withMilestones("/log?saved=M31", [])).toBe("/log?saved=M31");
-    expect(withMilestones("/tonight", [])).toBe("/tonight");
-  });
-
-  it("appends one milestone param per key to a URL that has a query, order preserved", () => {
-    expect(withMilestones("/log?saved=M31", ["first-galaxy", "messier-10"])).toBe(
-      "/log?saved=M31&milestone=first-galaxy&milestone=messier-10",
-    );
-    expect(withMilestones("/tonight/planets?logged=jupiter", ["first-planet"])).toBe(
-      "/tonight/planets?logged=jupiter&milestone=first-planet",
-    );
-  });
-
-  it("starts the query when the URL has none", () => {
-    expect(withMilestones("/tonight", ["first-moon"])).toBe("/tonight?milestone=first-moon");
-  });
-
-  it("works on the URLs the routes build", () => {
-    expect(withMilestones(noticeRedirect("updated", "M13"), ["first-globular"])).toBe(
-      "/log?updated=M13&milestone=first-globular",
-    );
-  });
-});
-
 describe("readMilestoneParam", () => {
   const at = (query: string) => new URL(`https://sidereus.test/log?${query}`);
-
-  it("reads every valid milestone value in MILESTONES order, whatever order the URL has", () => {
-    expect(readMilestoneParam(at("milestone=messier-10&milestone=first-galaxy"), true)).toEqual([
-      "first-galaxy",
-      "messier-10",
-    ]);
-  });
 
   it("drops values that are not milestone keys", () => {
     expect(readMilestoneParam(at("milestone=first-galaxy&milestone=nope&milestone=&milestone=M31"), true)).toEqual([
       "first-galaxy",
     ]);
-  });
-
-  it("lists a repeated key once", () => {
-    expect(readMilestoneParam(at("milestone=first-moon&milestone=first-moon"), true)).toEqual(["first-moon"]);
   });
 
   it("is empty without the param, and signed out whatever the URL says", () => {

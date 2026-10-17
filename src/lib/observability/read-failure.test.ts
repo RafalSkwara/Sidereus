@@ -30,58 +30,46 @@ afterEach(() => {
 const thrownRead = (code?: string) => new Error("errors.load.observations", { cause: new StoreFault({ code }) });
 
 describe("logReadFailure", () => {
-  it("logs a server fault as one error-level line with the step, the cause's name and its code", () => {
+  it("logs a server fault, a read with no code and a non-store error as one error-level line with the step, name and code", () => {
     logReadFailure("read.log", thrownRead("08006"));
-    expect(errors).toHaveBeenCalledExactlyOnceWith("sidereus: read.log failed", {
+    expect(errors).toHaveBeenLastCalledWith("sidereus: read.log failed", {
       step: "read.log",
       name: "StoreFault",
       code: "08006",
     });
-    expect(warns).not.toHaveBeenCalled();
-  });
-
-  it("logs a read that failed with no code (a network failure or a timeout) as an error-level line", () => {
     logReadFailure("read.gear", thrownRead());
-    expect(errors).toHaveBeenCalledExactlyOnceWith("sidereus: read.gear failed", {
-      step: "read.gear",
-      name: "StoreFault",
-    });
-    expect(warns).not.toHaveBeenCalled();
-  });
-
-  it("logs a thrown value that is not a store error (a RangeError) as a failure with its name", () => {
+    expect(errors).toHaveBeenLastCalledWith("sidereus: read.gear failed", { step: "read.gear", name: "StoreFault" });
     logReadFailure("read.sky-checks", new RangeError("bad zone"));
-    expect(errors).toHaveBeenCalledExactlyOnceWith("sidereus: read.sky-checks failed", {
+    expect(errors).toHaveBeenLastCalledWith("sidereus: read.sky-checks failed", {
       step: "read.sky-checks",
       name: "RangeError",
     });
-  });
+    expect(errors).toHaveBeenCalledTimes(3);
 
-  it.each([
-    ["an RLS refusal", "42501"],
-    ["a bad JWT", "PGRST301"],
-    ["an expired JWT", "PGRST302"],
-    ["a JWT that cannot be verified", "PGRST303"],
-  ])("logs %s (%s) as one warn-level notice, never an error line", (_label, code) => {
-    logReadFailure("read.onboarding", thrownRead(code));
-    expect(warns).toHaveBeenCalledExactlyOnceWith("sidereus: read.onboarding noted", {
-      step: "read.onboarding",
-      name: "StoreFault",
-      code,
-    });
-    expect(errors).not.toHaveBeenCalled();
-  });
-
-  it.each(["XX000", "42P01", "PGRST000", "ZZZ99", "PGRST116", "22P02"])(
-    "logs the code %s as an error-level failure",
-    (code) => {
+    // Every code that is not a refusal or a session fault stays an error-level failure.
+    const codes = ["XX000", "42P01", "PGRST000", "ZZZ99", "PGRST116", "22P02"];
+    expect(codes).toHaveLength(6);
+    for (const code of codes) {
+      errors.mockClear();
       logReadFailure("read.log", thrownRead(code));
-      expect(errors).toHaveBeenCalledTimes(1);
-      expect(warns).not.toHaveBeenCalled();
-    },
-  );
+      expect(errors, code).toHaveBeenCalledTimes(1);
+    }
+    expect(warns).not.toHaveBeenCalled();
+  });
 
-  it("reads the code of a StoreFault thrown directly, not only of its wrapper", () => {
+  it("logs a refusal or a session fault, wrapped or thrown directly, as one warn-level notice, never an error line", () => {
+    const codes = ["42501", "PGRST301", "PGRST302", "PGRST303"];
+    expect(codes).toHaveLength(4);
+    for (const code of codes) {
+      warns.mockClear();
+      logReadFailure("read.onboarding", thrownRead(code));
+      expect(warns, code).toHaveBeenCalledExactlyOnceWith("sidereus: read.onboarding noted", {
+        step: "read.onboarding",
+        name: "StoreFault",
+        code,
+      });
+    }
+    warns.mockClear();
     logReadFailure("read.gear", new StoreFault({ code: "42501" }));
     expect(warns).toHaveBeenCalledTimes(1);
     expect(errors).not.toHaveBeenCalled();

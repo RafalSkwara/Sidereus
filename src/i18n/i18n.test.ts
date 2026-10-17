@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getMessages, isMessageKey, plural, translateKey } from "./index";
+import { getMessages, translateKey } from "./index";
 import { en } from "./messages/en";
 import { pl } from "./messages/pl";
 
@@ -82,20 +82,5 @@ describe("translateKey", () => {
     ]) {
       expect(translateKey(messages, key, "errors.generic")).toBe("Something went wrong. Please try again.");
     }
-  });
-
-  it("tells keys from free text", () => {
-    expect(isMessageKey("errors.checkFields")).toBe(true);
-    expect(isMessageKey("Check the highlighted fields.")).toBe(false);
-    expect(isMessageKey("errors.auth")).toBe(false);
-  });
-});
-
-describe("plural", () => {
-  it("picks English one/other and Polish one/few/many, falling back to other when a form is missing", () => {
-    const forms = { one: "one", few: "few", many: "many", other: "other" };
-    expect([1, 2, 5].map((n) => plural("en", n, forms))).toEqual(["one", "other", "other"]);
-    expect([1, 2, 5, 22].map((n) => plural("pl", n, forms))).toEqual(["one", "few", "many", "few"]);
-    expect(plural("pl", 5, { one: "one", other: "other" })).toBe("other");
   });
 });

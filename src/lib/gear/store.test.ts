@@ -36,29 +36,41 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => Promise<WriteR
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it.each(WRITES)("%s: a server fault keeps only its code next to the fixed key", async (_name, run, key) => {
-    const result = await run(failing("XX000"));
-    expect(result).toEqual({ ok: false, message: key, fault: { kind: "server", code: "XX000" } });
-    expect(JSON.stringify(result)).not.toMatch(LEAK);
+  it("keeps only its code next to the fixed key for a server fault, in every write", async () => {
+    expect(WRITES).toHaveLength(9);
+    for (const [name, run, key] of WRITES) {
+      const result = await run(failing("XX000"));
+      expect(result, name).toEqual({ ok: false, message: key, fault: { kind: "server", code: "XX000" } });
+      expect(JSON.stringify(result), name).not.toMatch(LEAK);
+    }
   });
 
-  it.each(WRITES)("%s: an RLS refusal (42501) is `refused`, with the same key", async (_name, run, key) => {
-    expect(await run(failing("42501"))).toEqual({ ok: false, message: key, fault: { kind: "refused", code: "42501" } });
-  });
-
-  it.each(WRITES)("%s: an error without a code (a network failure) is a server fault", async (_name, run, key) => {
-    expect(await run(fakeClient({ error: { message: `fetch failed for ${LEAK.source}` } }))).toEqual({
-      ok: false,
-      message: key,
-      fault: { kind: "server" },
-    });
-  });
-
-  it.each(WRITES)("%s: a user-input failure has no fault", async (_name, run) => {
-    for (const code of ["22P02", "23514", "23505"]) {
-      const result = await run(failing(code));
-      expect(result.ok, code).toBe(false);
-      expect(result, code).not.toHaveProperty("fault");
+  it("classifies every write the same way: refused, codeless server, user input, no rows, ok", async () => {
+    expect(WRITES).toHaveLength(9);
+    for (const [name, run, key] of WRITES) {
+      expect(await run(failing("42501")), `${name}: RLS`).toEqual({
+        ok: false,
+        message: key,
+        fault: { kind: "refused", code: "42501" },
+      });
+      // A network failure has no code: still a server fault, and its message is dropped.
+      const codeless = await run(fakeClient({ error: { message: `fetch failed for ${LEAK.source}` } }));
+      expect(codeless, `${name}: codeless`).toEqual({ ok: false, message: key, fault: { kind: "server" } });
+      for (const code of ["22P02", "23514", "23505"]) {
+        const result = await run(failing(code));
+        expect(result.ok, `${name}: ${code}`).toBe(false);
+        expect(result, `${name}: ${code}`).not.toHaveProperty("fault");
+      }
+      expect(await run(fakeClient({ data: [{ id: ID }] })), `${name}: changed a row`).toEqual({ ok: true });
+    }
+    const updatesAndRemoves = WRITES.filter(([name]) => !name.endsWith("create"));
+    expect(updatesAndRemoves).toHaveLength(6);
+    for (const [name, run] of updatesAndRemoves) {
+      expect(await run(emptyRows), `${name}: zero rows`).toEqual({
+        ok: false,
+        message: `errors.notFound.${name.split(" ")[0]}`,
+        fault: { kind: "no-rows" },
+      });
     }
   });
 
@@ -71,23 +83,6 @@ describe("a failed write carries a sanitized fault", () => {
       ok: false,
       message: "errors.outOfRange",
     });
-  });
-
-  it.each(WRITES.filter(([name]) => !name.endsWith("create")))(
-    "%s: a zero-row result is `no-rows`, under the entity's not-found key",
-    async (name, run) => {
-      const entity = name.split(" ")[0];
-      expect(await run(emptyRows)).toEqual({
-        ok: false,
-        message: `errors.notFound.${entity}`,
-        fault: { kind: "no-rows" },
-      });
-    },
-  );
-
-  it("returns ok for a write that changed a row", async () => {
-    expect(await siteStore.update(fakeClient({ data: [{ id: ID }] }), ID, SITE)).toEqual({ ok: true });
-    expect(await siteStore.create(fakeClient({}), SITE)).toEqual({ ok: true });
   });
 
   it("carries a fault, not a dropped error, when the site's time zone cannot be resolved", async () => {
@@ -112,27 +107,28 @@ describe("a failed read throws its key with a sanitized cause", () => {
     ["eyepiece get", (c) => eyepieceStore.get(c, ID), "errors.load.eyepieces"],
   ];
 
-  it.each(READS)("%s: the cause is a StoreFault holding only the code", async (_name, run, key) => {
-    const thrown: unknown = await run(failing("XX000")).catch((error: unknown) => error);
-    expect(thrown).toBeInstanceOf(Error);
-    const error = thrown as Error;
-    expect(error.message).toBe(key);
-    expect(error.cause).toBeInstanceOf(StoreFault);
-    const cause = error.cause as StoreFault;
-    expect(cause.code).toBe("XX000");
-    expect(Object.keys(cause).sort()).toEqual(["code", "name"]);
-    expect(JSON.stringify(cause)).not.toMatch(LEAK);
-    expect(cause.message).not.toMatch(LEAK);
-    expect(String(cause.stack)).not.toMatch(LEAK);
-  });
+  it("holds only the code in a StoreFault cause, with or without a code, in every read", async () => {
+    expect(READS).toHaveLength(6);
+    for (const [name, run, key] of READS) {
+      const thrown: unknown = await run(failing("XX000")).catch((error: unknown) => error);
+      expect(thrown, name).toBeInstanceOf(Error);
+      const error = thrown as Error;
+      expect(error.message, name).toBe(key);
+      expect(error.cause, name).toBeInstanceOf(StoreFault);
+      const cause = error.cause as StoreFault;
+      expect(cause.code, name).toBe("XX000");
+      expect(Object.keys(cause).sort(), name).toEqual(["code", "name"]);
+      expect(JSON.stringify(cause), name).not.toMatch(LEAK);
+      expect(cause.message, name).not.toMatch(LEAK);
+      expect(String(cause.stack), name).not.toMatch(LEAK);
 
-  it.each(READS)("%s: an error without a code still leaves a cause without a message", async (_name, run) => {
-    const thrown = (await run(fakeClient({ error: { message: LEAK.source } })).catch(
-      (error: unknown) => error,
-    )) as Error;
-    expect(thrown.cause).toBeInstanceOf(StoreFault);
-    expect((thrown.cause as StoreFault).code).toBeUndefined();
-    expect((thrown.cause as StoreFault).message).not.toMatch(LEAK);
+      const codeless = (await run(fakeClient({ error: { message: LEAK.source } })).catch(
+        (caught: unknown) => caught,
+      )) as Error;
+      expect(codeless.cause, `${name}: codeless`).toBeInstanceOf(StoreFault);
+      expect((codeless.cause as StoreFault).code, `${name}: codeless`).toBeUndefined();
+      expect((codeless.cause as StoreFault).message, `${name}: codeless`).not.toMatch(LEAK);
+    }
   });
 
   it("still reads a malformed id as not found, not as a failure", async () => {
