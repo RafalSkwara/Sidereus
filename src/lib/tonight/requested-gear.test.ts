@@ -10,13 +10,12 @@ function cookies() {
 }
 
 describe("requestedGear", () => {
-  it("remembers a site picked on the page", () => {
-    const { jar, set } = cookies();
-    expect(requestedGear(new URL(`https://x.test/tonight?site=${SITE}`), jar).siteId).toBe(SITE);
-    expect(set).toHaveBeenCalledOnce();
-  });
-
   it("reads but never remembers the site of a next-night request", () => {
+    // Control: the same request for tonight does remember the site, so "not called" below is not vacuous.
+    const tonight = cookies();
+    requestedGear(new URL(`https://x.test/tonight?site=${SITE}`), tonight.jar);
+    expect(tonight.set).toHaveBeenCalledOnce();
+
     const { jar, set } = cookies();
     expect(requestedGear(new URL(`https://x.test/tonight?site=${SITE}&night=next`), jar).siteId).toBe(SITE);
     expect(set).not.toHaveBeenCalled();

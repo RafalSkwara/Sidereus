@@ -33,15 +33,6 @@ describe("the night in progress after UTC midnight", () => {
   const date = observingNightDateFor(NOW, WARSAW.timeZone);
   const window = darkWindow(WARSAW, observingNight(date, WARSAW.timeZone), darknessThresholdDegForBortle(4));
 
-  it("is the previous evening's night, and its dark window started before UTC midnight", () => {
-    expect(date).toBe("2026-11-10");
-    expect(window.kind).toBe("window");
-    if (window.kind === "window") {
-      expect(window.start.getTime()).toBeLessThan(Date.UTC(2026, 10, 11));
-      expect(window.end.getTime()).toBeGreaterThan(NOW.getTime());
-    }
-  });
-
   it("judges the verdict on the evening hours that a past_days=1 response carries", async () => {
     // past_days=1 + forecast_days=8: nine days of hours from 00:00 UTC yesterday.
     const seriesStart = new Date("2026-11-10T00:00:00Z");

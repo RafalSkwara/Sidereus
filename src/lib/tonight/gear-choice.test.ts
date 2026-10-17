@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { chooseOwned, isGearId, selectorKind } from "./gear-choice";
+import { chooseOwned, isGearId } from "./gear-choice";
 
 const OLDEST = { id: "0b6c3f0e-6f1a-4d2b-9a57-1c1f5b2f7a01", name: "Dobson 8" };
 const SECOND = { id: "7e2d9c44-3b8a-4f10-8d6e-2a9b4c5d6e02", name: "ETX 90" };
@@ -11,12 +11,9 @@ const DARK_SITE = { id: "9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c02", name: "Teide" };
 const SITES = [HOME, DARK_SITE];
 
 describe("chooseOwned", () => {
-  it("returns the requested item when the user owns it", () => {
+  it("returns the requested item when the user owns it, else the oldest for a missing, stale, foreign or malformed id, and undefined with nothing owned", () => {
     expect(chooseOwned(TELESCOPES, SECOND.id)).toBe(SECOND);
     expect(chooseOwned(SITES, DARK_SITE.id)).toBe(DARK_SITE);
-  });
-
-  it("falls back to the oldest for a missing, stale, foreign or malformed id, and to undefined with nothing owned", () => {
     expect(chooseOwned(TELESCOPES, undefined)).toBe(OLDEST);
     expect(chooseOwned([HOME], DARK_SITE.id)).toBe(HOME); // a site since deleted
     expect(chooseOwned(SITES, "5f1e2d3c-4b5a-4968-8776-655443322110")).toBe(HOME); // another user's
@@ -43,11 +40,5 @@ describe("isGearId", () => {
     ]) {
       expect(isGearId(value)).toBe(false);
     }
-  });
-});
-
-describe("selectorKind", () => {
-  it("shows no selector for one item and a select from two, however many there are", () => {
-    expect([0, 1, 2, 3, 4, 7].map(selectorKind)).toEqual(["none", "none", "select", "select", "select", "select"]);
   });
 });

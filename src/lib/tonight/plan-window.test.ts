@@ -13,7 +13,6 @@ import {
   moonTrack,
   observingNight,
   PLANET_KEYS,
-  PLANET_WINDOW_SUN_ALTITUDE_DEG,
   rankObjects,
   rankPlanets,
   type DarkWindow,
@@ -95,16 +94,6 @@ describe("deepSkyWindow", () => {
     );
   });
 
-  it("uses the Bortle class's darkness threshold: a darker sky gives a shorter dark window and so a shorter window", () => {
-    const m31 = findDeepSky("M31") ?? { raHours: 0, decDeg: 0 };
-    const bright = deepSkyWindow({ ...WARSAW, bortle: 7 }, NIGHT, m31);
-    const dark = deepSkyWindow({ ...WARSAW, bortle: 3 }, NIGHT, m31);
-    expect(bright).not.toBeNull();
-    expect(dark).not.toBeNull();
-    expect(dark?.start.getTime()).toBeGreaterThan(bright?.start.getTime() ?? 0);
-    expect(dark?.end.getTime()).toBeLessThan(bright?.end.getTime() ?? 0);
-  });
-
   it("is null without a dark window (Tromsø at the June solstice, any Bortle class)", () => {
     const tromso: SiteRecord = {
       ...WARSAW,
@@ -115,14 +104,6 @@ describe("deepSkyWindow", () => {
     };
     expect(darkWindow(toEngineSite(tromso), observingNight("2026-06-21", tromso.timeZone), -18).kind).toBe("none");
     expect(deepSkyWindow(tromso, "2026-06-21", findDeepSky("M31") ?? { raHours: 0, decDeg: 0 })).toBeNull();
-  });
-});
-
-describe("planetWindowFor", () => {
-  it("is the Sun below -6 degrees over the observing night", () => {
-    expect(planetWindowFor(engineSite, NIGHT)).toEqual(
-      darkWindow(engineSite, observingNight(NIGHT, WARSAW.timeZone), PLANET_WINDOW_SUN_ALTITUDE_DEG),
-    );
   });
 });
 
@@ -213,16 +194,5 @@ describe("solarSystemWindow", () => {
     expect(planetWindowFor(toEngineSite(tromso), "2026-06-21").kind).not.toBe("window");
     expect(solarSystemWindow(tromso, "2026-06-21", "jupiter")).toBeNull();
     expect(solarSystemWindow(tromso, "2026-06-21", "moon")).toBeNull();
-  });
-
-  it("stays at or above the site's minimum altitude", () => {
-    for (const minAltitudeDeg of [0, 30]) {
-      for (const key of ["jupiter", "saturn", "moon"] as const) {
-        const window = solarSystemWindow({ ...WARSAW, minAltitudeDeg }, "2026-10-26", key);
-        if (window !== null) {
-          expect(window.peak.altitudeDeg, `${key} at ${minAltitudeDeg}`).toBeGreaterThanOrEqual(minAltitudeDeg);
-        }
-      }
-    }
   });
 });

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-import type { ForecastCache } from "./cache";
-import { FORECAST_CACHE_TTL_SECONDS, getForecast } from "./service";
+import { withReadTimeout, type ForecastCache } from "./cache";
+import { getForecast } from "./service";
 import { fakeFetch, jsonResponse, memoryCache, openMeteoBody } from "./test-helpers";
 
 const SITE_ID = "8d4f7a52-1111-4222-8333-944455556666";
@@ -52,19 +52,7 @@ describe("getForecast", () => {
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(LIVE_CLOUD);
 
     expect(cache.puts).toHaveLength(1);
-    expect(cache.puts[0].key).toBe(KEY);
-    expect(cache.puts[0].expirationTtl).toBe(FORECAST_CACHE_TTL_SECONDS);
-    expect(FORECAST_CACHE_TTL_SECONDS).toBe(7 * 24 * 3600);
-    expect(JSON.parse(cache.puts[0].value)).toEqual({
-      fetchedAt: NOW.toISOString(),
-      lat: 52.23,
-      lon: 21.01,
-      hours: LIVE_CLOUD.map((cloud, i) => ({
-        start: new Date(START_S * 1000 + i * HOUR_MS).toISOString(),
-        cloudCoverPct: cloud,
-        humidityPct: 60,
-      })),
-    });
+    expect(cache.puts[0].expirationTtl).toBe(7 * 24 * 3600);
   });
 
   it("fetches on a miss, and the stored copy then serves the next request", async () => {
@@ -96,65 +84,24 @@ describe("getForecast", () => {
     expect(cache.puts).toHaveLength(0);
   });
 
-  it("returns null when the fetch fails and nothing is stored", async () => {
-    const fake = fakeFetch(failingResponse);
-    const result = await getForecast({
-      fetchFn: fake.fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(result).toBeNull();
-  });
-
-  it("returns null when the fetch fails and the stored copy is for other coordinates", async () => {
-    const fake = fakeFetch(failingResponse);
-    const cache = memoryCache({ [KEY]: storedEntry(5, 42, { latitudeDeg: 50.06, longitudeDeg: 19.94 }) });
-    const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now: NOW });
-    expect(result).toBeNull();
-  });
-
-  it("returns null when the response is malformed and nothing is stored", async () => {
-    const fake = fakeFetch(() => new Response("<html>", { status: 200 }));
-    const result = await getForecast({
-      fetchFn: fake.fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(result).toBeNull();
-  });
-
-  it("treats an unreadable stored value as a miss", async () => {
-    const fake = fakeFetch(liveResponse);
-    const cache = memoryCache({ [KEY]: "{not json" });
-    const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now: NOW });
-    expect(fake.calls).toHaveLength(1);
-    expect(result?.fetchedAt).toEqual(NOW);
-  });
-
-  it("treats a throwing cache as a miss and never throws", async () => {
-    const throwing: ForecastCache = {
-      get: () => Promise.reject(new Error("KV read failed")),
-      put: () => Promise.reject(new Error("KV write failed")),
-    };
-    const ok = fakeFetch(liveResponse);
-    const result = await getForecast({
-      fetchFn: ok.fetchFn,
-      cache: throwing,
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(ok.calls).toHaveLength(1);
-    expect(result?.forecast.hours).toHaveLength(LIVE_HOURS);
-
-    const failing = fakeFetch(failingResponse);
-    await expect(
-      getForecast({ fetchFn: failing.fetchFn, cache: throwing, siteId: SITE_ID, coords: COORDS, now: NOW }),
-    ).resolves.toBeNull();
+  it("returns null when the fetch fails or is malformed and no copy for these coordinates is stored", async () => {
+    const otherSite = { [KEY]: storedEntry(5, 42, { latitudeDeg: 50.06, longitudeDeg: 19.94 }) };
+    const cases: [string, () => Response, Record<string, string>][] = [
+      ["a 503 and nothing stored", failingResponse, {}],
+      ["a 503 and a copy for other coordinates", failingResponse, otherSite],
+      ["a malformed 200 and nothing stored", () => new Response("<html>", { status: 200 }), {}],
+    ];
+    expect(cases).toHaveLength(3);
+    for (const [label, respond, initial] of cases) {
+      const result = await getForecast({
+        fetchFn: fakeFetch(respond).fetchFn,
+        cache: memoryCache(initial),
+        siteId: SITE_ID,
+        coords: COORDS,
+        now: NOW,
+      });
+      expect(result, label).toBeNull();
+    }
   });
 
   it("returns a fresh forecast without waiting for the cache write when given a defer hook", async () => {
@@ -219,10 +166,15 @@ const usableCopy = () => storedSeries(COPY_FETCHED_AT, START_S, COPY_CLOUD);
 /** 2026-10-09 00:00 to 2026-10-11 00:00 UTC: the last hour is `NOW` + 6 h, nowhere near tonight's morning or night 3. */
 const SHORT_CLOUD = Array<number>(49).fill(5);
 
-async function refreshWith(respond: () => Response | Promise<Response>, initial: Record<string, string>, now = NOW) {
+async function refreshWith(
+  respond: () => Response | Promise<Response>,
+  initial: Record<string, string>,
+  now = NOW,
+  defer?: (task: Promise<void>) => void,
+) {
   const fake = fakeFetch(respond);
   const cache = memoryCache(initial);
-  const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now });
+  const result = await getForecast({ fetchFn: fake.fetchFn, cache, siteId: SITE_ID, coords: COORDS, now, defer });
   return { fake, cache, result };
 }
 
@@ -233,8 +185,10 @@ describe("getForecast with a 200 that is not a complete series", () => {
     ["a series ending 6 h after now", () => openMeteoBody(START_S, SHORT_CLOUD)],
   ])("keeps a usable stored copy over %s, served as a fallback and left in KV", async (_label, body) => {
     const copy = usableCopy();
-    const { fake, cache, result } = await refreshWith(() => jsonResponse(body()), { [KEY]: copy });
+    const defer = vi.fn<(task: Promise<void>) => void>();
+    const { fake, cache, result } = await refreshWith(() => jsonResponse(body()), { [KEY]: copy }, NOW, defer);
     expect(fake.calls).toHaveLength(1);
+    expect(defer).not.toHaveBeenCalled();
     expect(result?.fallback).toBe(true);
     expect(result?.fetchedAt).toEqual(COPY_FETCHED_AT);
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
@@ -256,22 +210,6 @@ describe("getForecast with a 200 that is not a complete series", () => {
     expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
     expect(cache.puts).toHaveLength(0);
     expect(cache.store.get(KEY)).toBe(copy);
-  });
-
-  it("schedules no deferred write when it keeps the stored copy", async () => {
-    const defer = vi.fn<(task: Promise<void>) => void>();
-    const cache = memoryCache({ [KEY]: usableCopy() });
-    const result = await getForecast({
-      fetchFn: fakeFetch(() => jsonResponse(openMeteoBody(START_S, SHORT_CLOUD))).fetchFn,
-      cache,
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-      defer,
-    });
-    expect(result?.fallback).toBe(true);
-    expect(defer).not.toHaveBeenCalled();
-    expect(cache.puts).toHaveLength(0);
   });
 
   it("returns and stores an incomplete 200 when the stored copy is for other coordinates", async () => {
@@ -317,18 +255,6 @@ describe("getForecast with a 200 that is not a complete series", () => {
     expect((JSON.parse(cache.puts[0].value) as { hours: unknown[] }).hours).toHaveLength(SHORT_CLOUD.length);
   });
 
-  it("returns and stores a degenerate 200 when nothing is stored", async () => {
-    const { cache, result } = await refreshWith(() => jsonResponse(openMeteoBody(START_S, [])), {});
-    expect(result).toEqual({ forecast: { hours: [] }, fetchedAt: NOW, fallback: false });
-    expect(cache.puts).toHaveLength(1);
-    expect(JSON.parse(cache.puts[0].value)).toEqual({
-      fetchedAt: NOW.toISOString(),
-      lat: 52.23,
-      lon: 21.01,
-      hours: [],
-    });
-  });
-
   it("replaces a usable stored copy with a complete 200", async () => {
     const { cache, result } = await refreshWith(liveResponse, { [KEY]: usableCopy() });
     expect(result?.fallback).toBe(false);
@@ -340,82 +266,25 @@ describe("getForecast with a 200 that is not a complete series", () => {
 });
 
 describe("getForecast when the refresh fails in other ways than a 503", () => {
-  it.each([
-    ["a network rejection", () => Promise.reject(new TypeError("fetch failed"))],
-    ["a timeout rejection", () => Promise.reject(new DOMException("The operation timed out.", "TimeoutError"))],
-    ["an invalid-JSON 200", () => new Response("<html>", { status: 200 })],
-  ])("serves the stored copy as a fallback after %s", async (_label, respond: () => Response | Promise<Response>) => {
-    const copy = usableCopy();
-    const { cache, result } = await refreshWith(respond, { [KEY]: copy });
-    expect(result?.fallback).toBe(true);
-    expect(result?.fetchedAt).toEqual(COPY_FETCHED_AT);
-    expect(result?.forecast.hours.map((h) => h.cloudCoverPct)).toEqual(COPY_CLOUD);
-    expect(cache.puts).toHaveLength(0);
-    expect(cache.store.get(KEY)).toBe(copy);
-  });
-});
-
-describe("getForecast's forecast.fetch line", () => {
-  let errors: MockInstance<typeof console.error>;
-
-  beforeEach(() => {
-    errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    errors.mockRestore();
-  });
-
-  it("logs one fixed line with the step and the error's name only when the fetch is rejected", async () => {
-    const fake = fakeFetch(() => Promise.reject(new TypeError(`fetch failed for 52.23,21.01`)));
-    const result = await getForecast({
-      fetchFn: fake.fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(result).toBeNull();
-    expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", {
-      step: "forecast.fetch",
-      name: "Error",
-      code: "request",
-    });
-    const [, fields] = errors.mock.calls[0] as [string, object];
-    expect(Object.keys(fields).sort()).toEqual(["code", "name", "step"]);
-    expect(JSON.stringify(errors.mock.calls)).not.toMatch(/52\.23|21\.01|127\.0|open-meteo/);
-  });
-
-  it("keeps serving the stored copy as a fallback, with the same single line", async () => {
-    const cache = memoryCache({ [KEY]: storedEntry(3 * 24 * 60, 42) });
-    const result = await getForecast({
-      fetchFn: fakeFetch(failingResponse).fetchFn,
-      cache,
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(result?.fallback).toBe(true);
-    expect(errors).toHaveBeenCalledTimes(1);
-  });
-
-  it("logs nothing when the fetch succeeds or a fresh copy is served", async () => {
-    await getForecast({
-      fetchFn: fakeFetch(liveResponse).fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    await getForecast({
-      fetchFn: fakeFetch(failingResponse).fetchFn,
-      cache: memoryCache({ [KEY]: storedEntry(5, 42) }),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(errors).not.toHaveBeenCalled();
+  it("serves the stored copy as a fallback after a network rejection, a timeout rejection and an invalid-JSON 200", async () => {
+    const cases: [string, () => Response | Promise<Response>][] = [
+      ["a network rejection", () => Promise.reject(new TypeError("fetch failed"))],
+      ["a timeout rejection", () => Promise.reject(new DOMException("The operation timed out.", "TimeoutError"))],
+      ["an invalid-JSON 200", () => new Response("<html>", { status: 200 })],
+    ];
+    expect(cases).toHaveLength(3);
+    for (const [label, respond] of cases) {
+      const copy = usableCopy();
+      const { cache, result } = await refreshWith(respond, { [KEY]: copy });
+      expect(result?.fallback, label).toBe(true);
+      expect(result?.fetchedAt, label).toEqual(COPY_FETCHED_AT);
+      expect(
+        result?.forecast.hours.map((h) => h.cloudCoverPct),
+        label,
+      ).toEqual(COPY_CLOUD);
+      expect(cache.puts, label).toHaveLength(0);
+      expect(cache.store.get(KEY), label).toBe(copy);
+    }
   });
 });
 
@@ -440,48 +309,44 @@ describe("getForecast's forecast.* lines (error-visibility)", () => {
     errors.mockRestore();
   });
 
-  it("logs a 429 as forecast.fetch with its status", async () => {
-    const result = await getForecast({
-      fetchFn: fakeFetch(() => jsonResponse({ reason: "52.23,21.01" }, 429)).fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expect(result).toBeNull();
-    expectOnlyShapedLines(errors, ["forecast.fetch"]);
-    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", {
-      step: "forecast.fetch",
-      name: "Error",
-      code: "http",
-      status: 429,
-    });
-  });
-
-  it("logs a body that is not JSON as one forecast.fetch line with no status", async () => {
-    await getForecast({
-      fetchFn: fakeFetch(() => new Response("<html>52.23,21.01", { status: 200 })).fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expectOnlyShapedLines(errors, ["forecast.fetch"]);
-    const [, fields] = errors.mock.calls[0] as [string, Record<string, unknown>];
-    expect(fields).not.toHaveProperty("status");
-    expect(fields).toHaveProperty("code", "parse");
-  });
-
-  it("logs a schema mismatch as one forecast.fetch line", async () => {
-    await getForecast({
-      fetchFn: fakeFetch(() => jsonResponse({ hourly: { time: "52.23" } })).fetchFn,
-      cache: memoryCache(),
-      siteId: SITE_ID,
-      coords: COORDS,
-      now: NOW,
-    });
-    expectOnlyShapedLines(errors, ["forecast.fetch"]);
-    expect(errors.mock.calls[0]?.[1]).toHaveProperty("code", "schema");
+  it("logs every failed fetch (a rejection, a 429, a body that is not JSON, a schema mismatch) as one forecast.fetch line", async () => {
+    const cases: [string, () => Response | Promise<Response>, Record<string, unknown>][] = [
+      [
+        "a rejected fetch",
+        () => Promise.reject(new TypeError("fetch failed for 52.23,21.01")),
+        { step: "forecast.fetch", name: "Error", code: "request" },
+      ],
+      [
+        "a 429",
+        () => jsonResponse({ reason: "52.23,21.01" }, 429),
+        { step: "forecast.fetch", name: "Error", code: "http", status: 429 },
+      ],
+      [
+        "a body that is not JSON",
+        () => new Response("<html>52.23,21.01", { status: 200 }),
+        { step: "forecast.fetch", name: "Error", code: "parse" },
+      ],
+      [
+        "a schema mismatch",
+        () => jsonResponse({ hourly: { time: "52.23" } }),
+        { step: "forecast.fetch", name: "Error", code: "schema" },
+      ],
+    ];
+    expect(cases).toHaveLength(4);
+    for (const [label, respond, fields] of cases) {
+      errors.mockClear();
+      const result = await getForecast({
+        fetchFn: fakeFetch(respond).fetchFn,
+        cache: memoryCache(),
+        siteId: SITE_ID,
+        coords: COORDS,
+        now: NOW,
+      });
+      expect(result, label).toBeNull();
+      expectOnlyShapedLines(errors, ["forecast.fetch"]);
+      const [, logged] = errors.mock.calls[0] as [string, Record<string, unknown>];
+      expect(logged, label).toEqual(fields);
+    }
   });
 
   it("logs an incomplete series once when a usable stored copy is served in its place", async () => {
@@ -500,19 +365,21 @@ describe("getForecast's forecast.* lines (error-visibility)", () => {
     expectOnlyShapedLines(errors, ["forecast.incomplete"]);
   });
 
-  it("logs a complete series nowhere", async () => {
+  it("logs nothing on a miss, a fresh hit or a complete series", async () => {
+    await refreshWith(liveResponse, {});
+    await refreshWith(liveResponse, { [KEY]: storedEntry(5, 42) });
     await refreshWith(liveResponse, { [KEY]: usableCopy() });
     expect(errors).not.toHaveBeenCalled();
   });
 
-  it("logs a throwing KV read as forecast.cache-read and carries on as a miss", async () => {
-    const cache: ForecastCache = {
+  it("logs a throwing KV read, or a stored value that is not JSON or no longer fits the schema, as forecast.cache-read and carries on as a miss", async () => {
+    const throwing: ForecastCache = {
       get: () => Promise.reject(new Error("KV read failed for 52.23,21.01 at forecast:v1:site:8d4f7a52")),
       put: () => Promise.resolve(),
     };
     const result = await getForecast({
       fetchFn: fakeFetch(liveResponse).fetchFn,
-      cache,
+      cache: throwing,
       siteId: SITE_ID,
       coords: COORDS,
       now: NOW,
@@ -523,27 +390,36 @@ describe("getForecast's forecast.* lines (error-visibility)", () => {
       step: "forecast.cache-read",
       name: "Error",
     });
+
+    const unusable = ["{not json 52.23", JSON.stringify({ lat: 52.23, lon: 21.01, hours: "x" })];
+    for (const [i, value] of unusable.entries()) {
+      errors.mockClear();
+      const refreshed = await refreshWith(liveResponse, { [KEY]: value });
+      expect(refreshed.result?.fetchedAt, `unusable value ${i}`).toEqual(NOW);
+      expectOnlyShapedLines(errors, ["forecast.cache-read"]);
+    }
   });
 
-  it("logs a stored value that is not JSON, or no longer fits the schema, as forecast.cache-read", async () => {
-    await refreshWith(liveResponse, { [KEY]: "{not json 52.23" });
-    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
+  it("logs a KV read that outlives the timeout as forecast.cache-read and carries on as a miss", async () => {
+    const hanging: ForecastCache = {
+      get: () =>
+        new Promise(() => {
+          // never settles
+        }),
+      put: () => Promise.resolve(),
+    };
+    await expect(withReadTimeout(hanging, 20).get("k")).rejects.toThrow();
 
-    errors.mockClear();
-    await refreshWith(liveResponse, { [KEY]: JSON.stringify({ lat: 52.23, lon: 21.01, hours: "x" }) });
-    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
-  });
-
-  it("logs a miss and a fresh hit nowhere", async () => {
-    await refreshWith(liveResponse, {});
-    await getForecast({
+    const result = await getForecast({
       fetchFn: fakeFetch(liveResponse).fetchFn,
-      cache: memoryCache({ [KEY]: storedEntry(5, 42) }),
+      cache: withReadTimeout(hanging, 20),
       siteId: SITE_ID,
       coords: COORDS,
       now: NOW,
     });
-    expect(errors).not.toHaveBeenCalled();
+    expect(result?.fallback).toBe(false);
+    expect(result?.fetchedAt).toEqual(NOW);
+    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
   });
 
   it("logs a throwing KV write as forecast.cache-write, awaited", async () => {

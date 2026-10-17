@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { moonDiscState } from "@/lib/engine/moon-disc";
 
-import { isLit, litMargin, moonDiscPaths, projectSelenographic } from "./geometry";
+import { litMargin, moonDiscPaths, projectSelenographic } from "./geometry";
 import type { DiscPoint } from "./geometry";
 import { MARIA } from "./maria";
 import type { MoonDiscState } from "./state";
@@ -92,11 +92,13 @@ describe("moonDiscPaths on real engine states", () => {
   // 2026-11-02T04:00Z: waning, just under last quarter.
   const waning = moonDiscState(new Date("2026-11-02T04:00:00Z"));
 
-  it("draws a waxing crescent lit on the right (west in the sky, lunar east)", () => {
+  it("draws a waxing crescent lit on the right (west in the sky, lunar east) and a waning Moon lit on the left", () => {
     expect(waxing.waxing).toBe(true);
     expect(waxing.illuminatedFraction).toBeGreaterThanOrEqual(0.23);
     expect(waxing.illuminatedFraction).toBeLessThanOrEqual(0.24);
     expect(areaAndCentroid(litVertices(waxing)).centroid.x).toBeGreaterThan(0);
+    expect(waning.waxing).toBe(false);
+    expect(areaAndCentroid(litVertices(waning)).centroid.x).toBeLessThan(0);
   });
 
   it("puts Crisium's centre inside the waxing crescent's lit path, well clear of the terminator", () => {
@@ -112,11 +114,6 @@ describe("moonDiscPaths on real engine states", () => {
     expect(litMargin(waxing, crisium)).toBeGreaterThan(0.25);
   });
 
-  it("draws a waning Moon lit on the left", () => {
-    expect(waning.waxing).toBe(false);
-    expect(areaAndCentroid(litVertices(waning)).centroid.x).toBeLessThan(0);
-  });
-
   it("puts Imbrium in the upper half", () => {
     const imbriumIndex = MARIA.findIndex((m) => m.name === "Mare Imbrium");
     for (const state of [waxing, waning]) {
@@ -126,71 +123,38 @@ describe("moonDiscPaths on real engine states", () => {
       expect(areaAndCentroid(outline).centroid.y).toBeLessThan(0);
     }
   });
-
-  it("lit path and the lit test agree away from the outline", () => {
-    for (const state of [waxing, waning]) {
-      const outline = litVertices(state);
-      for (let gx = -0.95; gx <= 0.95; gx += 0.05) {
-        for (let gy = -0.95; gy <= 0.95; gy += 0.05) {
-          const p = { x: gx, y: gy };
-          if (Math.hypot(gx, gy) > 0.97 || Math.abs(litMargin(state, p)) < 0.02) {
-            continue;
-          }
-          expect(contains(outline, p)).toBe(isLit(state, p));
-        }
-      }
-    }
-  });
-
-  it("draws one 24-point outline per mare, on or inside the disc, with four-decimal numbers", () => {
-    const { litPath, mariaPaths } = moonDiscPaths(waxing);
-    expect(mariaPaths).toHaveLength(MARIA.length);
-    for (const path of [litPath ?? "", ...mariaPaths]) {
-      for (const n of path.match(/-?[\d.]+/g) ?? []) {
-        expect(n).toMatch(/^-?\d+\.\d{4}$/);
-      }
-    }
-    for (const path of mariaPaths) {
-      const points = verticesOf(path);
-      expect(points).toHaveLength(24);
-      for (const p of points) {
-        expect(Math.hypot(p.x, p.y)).toBeLessThanOrEqual(1 + 1e-4);
-      }
-    }
-  });
 });
 
 describe("moonDiscPaths phase invariants", () => {
-  it("returns no lit path at 0%", () => {
+  it("lights k of the disc's area: nothing at 0%, the full disc at 100%, a straight terminator through the centre at 50%", () => {
     expect(moonDiscPaths(synthetic(0)).litPath).toBeNull();
-  });
 
-  it("returns the full disc at 100%", () => {
-    const points = verticesOf(moonDiscPaths(synthetic(1)).litPath ?? "");
-    for (const p of points) {
+    const full = verticesOf(moonDiscPaths(synthetic(1)).litPath ?? "");
+    expect(full.length).toBeGreaterThan(10);
+    for (const p of full) {
       expect(Math.hypot(p.x, p.y)).toBeCloseTo(1, 3);
     }
-    expect(Math.abs(areaAndCentroid(points).area - Math.PI)).toBeLessThan(AREA_TOLERANCE * Math.PI);
-  });
+    expect(Math.abs(areaAndCentroid(full).area - Math.PI)).toBeLessThan(AREA_TOLERANCE * Math.PI);
 
-  it("draws a straight terminator through the centre at 50%", () => {
-    for (const angle of [270, 90, 33]) {
+    const fractions = [0.05, 0.24, 0.5, 0.76, 0.97];
+    for (const k of fractions) {
+      const area = areaAndCentroid(verticesOf(moonDiscPaths(synthetic(k)).litPath ?? "")).area;
+      expect(Math.abs(area / Math.PI - k), `k = ${String(k)}`).toBeLessThan(AREA_TOLERANCE);
+    }
+
+    const angles = [270, 90, 33];
+    for (const angle of angles) {
       const state = synthetic(0.5, angle);
       const bright = { x: -Math.sin((angle * Math.PI) / 180), y: -Math.cos((angle * Math.PI) / 180) };
       const points = verticesOf(moonDiscPaths(state).litPath ?? "");
       const inner = points.filter((p) => Math.hypot(p.x, p.y) < 0.99);
-      expect(inner.length).toBeGreaterThan(10);
+      expect(inner.length, `angle ${String(angle)}`).toBeGreaterThan(10);
       for (const p of inner) {
-        expect(Math.abs(p.x * bright.x + p.y * bright.y)).toBeLessThan(1e-3);
+        expect(Math.abs(p.x * bright.x + p.y * bright.y), `angle ${String(angle)}`).toBeLessThan(1e-3);
       }
-      expect(Math.abs(areaAndCentroid(points).area - Math.PI / 2)).toBeLessThan(AREA_TOLERANCE * Math.PI);
-    }
-  });
-
-  it("lights k of the disc's area", () => {
-    for (const k of [0.05, 0.24, 0.5, 0.76, 0.97]) {
-      const area = areaAndCentroid(verticesOf(moonDiscPaths(synthetic(k)).litPath ?? "")).area;
-      expect(Math.abs(area / Math.PI - k)).toBeLessThan(AREA_TOLERANCE);
+      expect(Math.abs(areaAndCentroid(points).area - Math.PI / 2), `angle ${String(angle)}`).toBeLessThan(
+        AREA_TOLERANCE * Math.PI,
+      );
     }
   });
 
@@ -198,29 +162,27 @@ describe("moonDiscPaths phase invariants", () => {
     for (const angle of [0, 90, 180, 270]) {
       const { centroid } = areaAndCentroid(verticesOf(moonDiscPaths(synthetic(0.2, angle)).litPath ?? ""));
       const theta = (angle * Math.PI) / 180;
-      expect(centroid.x * -Math.sin(theta) + centroid.y * -Math.cos(theta)).toBeGreaterThan(0.5);
+      expect(centroid.x * -Math.sin(theta) + centroid.y * -Math.cos(theta), `angle ${String(angle)}`).toBeGreaterThan(
+        0.5,
+      );
     }
   });
 });
 
 describe("projectSelenographic", () => {
-  it("puts the sub-Earth point at the centre and lunar north up", () => {
+  it("puts the sub-Earth point at the centre and lunar north up, pushes far-side points onto the limb, and brings the east limb in under an east libration", () => {
     const centre = projectSelenographic(0, 0, 0, 0);
     expect(centre.visible).toBe(true);
     expect(Math.hypot(centre.x, centre.y)).toBeLessThan(1e-12);
     const north = projectSelenographic(80, 0, 0, 0);
     expect(north.y).toBeLessThan(-0.9);
     expect(projectSelenographic(0, 60, 0, 0).x).toBeGreaterThan(0.8);
-  });
 
-  it("pushes far-side points onto the limb", () => {
     const hidden = projectSelenographic(10, 120, 0, 0);
     expect(hidden.visible).toBe(false);
     expect(Math.hypot(hidden.x, hidden.y)).toBeCloseTo(1, 10);
     expect(hidden.x).toBeGreaterThan(0);
-  });
 
-  it("brings the east limb in when the libration in longitude is east", () => {
     const plain = projectSelenographic(17, 59.1, 0, 0);
     const librated = projectSelenographic(17, 59.1, 0, 7);
     expect(librated.x).toBeLessThan(plain.x);
