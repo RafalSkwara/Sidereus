@@ -44,8 +44,13 @@ export function isAuthEntryPath(pathname: string): boolean {
   return AUTH_ENTRY_PATHS.includes(path);
 }
 
+/** `path`, carrying `next` when it is a safe place to continue to afterwards; `path` unchanged otherwise. */
+export function withNext(path: string, next?: string | null): string {
+  const target = safeNextPath(next);
+  return target ? `${path}?next=${encodeURIComponent(target)}` : path;
+}
+
 /** The sign-in page, carrying `next` when it is a safe place to continue to afterwards. */
 export function signInUrl(next?: string | null): string {
-  const target = safeNextPath(next);
-  return target ? `${SIGN_IN_PATH}?next=${encodeURIComponent(target)}` : SIGN_IN_PATH;
+  return withNext(SIGN_IN_PATH, next);
 }

@@ -4,11 +4,13 @@ import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { getMessages } from "@/i18n";
+import { safeNextPath, withNext } from "@/lib/auth-redirect";
 import { hasAnyGear } from "@/lib/onboarding/store";
 import { logReadFailure } from "@/lib/observability/read-failure";
 
-// `?error=` carries a message key; the island translates it.
+// `?error=` carries a message key; the island translates it. `?next=` is the page to continue to once set up.
 const error = Astro.url.searchParams.get("error");
+const next = safeNextPath(Astro.url.searchParams.get("next"));
 const { supabase, locale } = Astro.locals;
 const t = getMessages(locale).onboarding;
 
@@ -23,7 +25,7 @@ if (supabase) {
     logReadFailure("read.onboarding", error);
   }
   if (onboarded) {
-    return Astro.redirect("/tonight");
+    return Astro.redirect(next ?? "/tonight");
   }
 }
 
@@ -35,7 +37,7 @@ const link =
 <GearShell title={t.title}>
   <PageHeader slot="header" title={t.title} subtitle={t.intro} />
   {supabase ? (
-    <OnboardingWizard action="/api/onboarding" serverError={error} locale={locale} client:load />
+    <OnboardingWizard action={withNext("/api/onboarding", next)} serverError={error} locale={locale} client:load />
   ) : (
     <DatabaseMissing />
   )}

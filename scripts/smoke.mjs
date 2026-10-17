@@ -248,20 +248,44 @@ const steps = [
     { status: 200, bodyIncludes: ['name="next" value="/log"'] },
   ],
   [
+    // auth-loose-ends D2, the risk: `next` lost on the click from sign-in to sign-up. Signed-out renders, so they sit
+    // before the walk signs up (a signed-in visitor gets the D1 redirect from both pages).
+    "the sign-in page's sign-up link carries the page to continue to",
+    () => request("/auth/signin?next=%2Flog", { body: true }),
+    { status: 200, bodyIncludes: ['href="/auth/signup?next=%2Flog"'] },
+  ],
+  [
+    "the sign-up page carries the page to continue to in its form",
+    () => request("/auth/signup?next=%2Flog", { body: true }),
+    { status: 200, bodyIncludes: ['name="next" value="/log"'] },
+  ],
+  [
     "tonight redirects anonymous user, remembering the page",
     () => request("/tonight"),
     { status: 302, location: "/auth/signin?next=%2Ftonight", exact: true },
   ],
   [
-    "signup creates account",
-    () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/onboarding", exact: true },
+    // auth-loose-ends D2: the walk's own sign-up carries `next`, so a new user still goes through first-run setup, with
+    // the page they asked for kept for its end. Without `next` the e2e `signUp` helper expects bare `/onboarding`.
+    "signup creates account, keeping the page to continue to through onboarding",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password, next: "/gear" } }),
+    { status: 302, location: "/onboarding?next=%2Fgear", exact: true },
   ],
   ["onboarding renders", () => request("/onboarding"), { status: 200 }],
+  [
+    "onboarding with a page to continue to posts its form there",
+    () => request("/onboarding?next=%2Fgear", { body: true }),
+    { status: 200, bodyIncludes: ['action="/api/onboarding?next=%2Fgear"'] },
+  ],
   [
     "invalid onboarding returns with error",
     () => request("/api/onboarding", { method: "POST", form: { ...onboarding, latitudeDeg: "95" } }),
     { status: 302, location: "/onboarding?error=errors.site.latitudeRange", exact: true, absent: "95" },
+  ],
+  [
+    "invalid onboarding keeps the page to continue to",
+    () => request("/api/onboarding?next=%2Fgear", { method: "POST", form: { ...onboarding, latitudeDeg: "95" } }),
+    { status: 302, location: "/onboarding?error=errors.site.latitudeRange&next=%2Fgear", exact: true, absent: "95" },
   ],
   [
     // test-suite-diet D4 (2): a body that is not valid eyepiece JSON comes back as a fixed key, never the payload.
@@ -275,14 +299,31 @@ const steps = [
   ],
   ["onboarding is still unsaved after the refusals: the form renders", () => request("/onboarding"), { status: 200 }],
   [
-    "onboarding saves and opens tonight",
-    () => request("/api/onboarding", { method: "POST", form: onboarding }),
-    { status: 302, location: "/tonight", exact: true },
+    "onboarding saves and continues to the requested page",
+    () => request("/api/onboarding?next=%2Fgear", { method: "POST", form: onboarding }),
+    { status: 302, location: "/gear", exact: true },
   ],
   [
     "onboarding redirects once set up",
     () => request("/onboarding"),
     { status: 302, location: "/tonight", exact: true },
+  ],
+  [
+    "onboarding redirects once set up to the page to continue to",
+    () => request("/onboarding?next=%2Fgear"),
+    { status: 302, location: "/gear", exact: true },
+  ],
+  [
+    // The account exists now (a user mistake: no log line). A failed sign-up keeps the session, so the walk stays signed in.
+    "signup with the same email keeps the page to continue to",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password, next: "/gear" } }),
+    { status: 302, location: "/auth/signup?error=errors.auth.userExists&next=%2Fgear", exact: true },
+  ],
+  [
+    // A sign-up redirect must not leave the origin through `next` (no open redirect).
+    "signup with the same email ignores an off-site next",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password, next: "//evil.example" } }),
+    { status: 302, location: "/auth/signup?error=errors.auth.userExists", exact: true },
   ],
   [
     "signin rejects wrong password",

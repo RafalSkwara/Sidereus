@@ -4,7 +4,7 @@ import SignInForm from "@/components/auth/SignInForm";
 import Notice from "@/components/ui/Notice.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
-import { safeNextPath } from "@/lib/auth-redirect";
+import { safeNextPath, withNext } from "@/lib/auth-redirect";
 import { cn } from "@/lib/utils";
 
 // `?error=` carries a message key; the form translates it. `?next=` is the page the user asked for (S-09).
@@ -25,7 +25,7 @@ const t = getMessages(locale).auth.signIn;
   <SignInForm serverError={error} locale={locale} next={next} client:load />
   <p class="mt-8 border-t border-border pt-4 text-body text-muted-foreground">
     {t.noAccount}{" "}
-    <a href="/auth/signup" class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
+    <a href={withNext("/auth/signup", next)} class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
       {t.signUpLink}
     </a>
   </p>

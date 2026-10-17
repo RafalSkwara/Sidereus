@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { safeNextPath } from "@/lib/auth-redirect";
 import { CHECK_FIELDS, NOT_CONFIGURED, issueKey, readForm } from "@/lib/api-errors";
 import { getMessages, type MessageKey } from "@/i18n";
 import { onboardingInputSchema } from "@/lib/onboarding/schemas";
@@ -15,10 +16,16 @@ const FORM = "/onboarding";
  * reaches the URL. A failed save goes through `saveFailureKey` (`save.onboarding`): a server fault logs one line with
  * only its code and status and redirects with `errors.serverFault`; a body that is not a form redirects with
  * `errors.checkFields` and logs `request.form`; nothing submitted is ever logged. A user who already has gear (a
- * retry or a double submit) is sent to Tonight as if the save had just succeeded.
+ * retry or a double submit) is sent on as if the save had just succeeded. "On" is the page the visitor asked for before
+ * sign-up (`?next=` on the action URL, read through `safeNextPath`), else Tonight; a failure keeps it beside the key.
  */
 export const POST: APIRoute = async (context) => {
-  const fail = (message: MessageKey) => context.redirect(`${FORM}?error=${encodeURIComponent(message)}`);
+  const next = safeNextPath(context.url.searchParams.get("next"));
+  const fail = (message: MessageKey) => {
+    const params = new URLSearchParams({ error: message });
+    if (next) params.set("next", next);
+    return context.redirect(`${FORM}?${params.toString()}`);
+  };
 
   const supabase = context.locals.supabase;
   if (!supabase) {
@@ -40,5 +47,5 @@ export const POST: APIRoute = async (context) => {
   if (!result.ok && result.reason === "failed") {
     return fail(saveFailureKey("save.onboarding", result));
   }
-  return context.redirect("/tonight");
+  return context.redirect(next ?? "/tonight");
 };
