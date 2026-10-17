@@ -9,7 +9,9 @@ maskable icon, the `/design` specimen, and the evidence.
 ## Decisions
 
 - **Geometry**: R2-4's sky gradient (`--zenith` → `--horizon` → `--dusk-glow-horizon`), its ground (`--background`)
-  and its main star's position and size, unchanged; the star turns white and the companion goes. The favicon keeps
+  and its main star's size and height, unchanged; the star turns white and the companion goes. Owner correction
+  (PR #217, 2026-10-17): with the companion gone the star is centred horizontally in every variant (R2-4 had it
+  20/512 left of centre to make room for the companion; the favicon star moves 1.5/32 to x = 16). The favicon keeps
   R2-4's favicon star (thicker waist), so it stays a star at 16 px. The maskable icon keeps the sky full bleed and
   draws the star at 0.8 about the centre (inside the safe circle r = 204.8).
 - **Pipeline**: `@vite-pwa/assets-generator` takes one source per run and applies every preset to it, so
@@ -59,29 +61,30 @@ The band reads the shipped files; capture in `final/design-specimen.png` (`captu
 
 #### Automated
 
-- [x] 1.1 `node context/changes/app-icon/evidence/icon-proposals/render.mjs final` writes the previews and `final-sheet.png` — fb42eed
+- [x] 1.1 `node context/changes/app-icon/evidence/icon-proposals/render.mjs final` writes the previews and `final-sheet.png` — 1bbf08d
 
 #### Manual
 
-- [x] 1.2 `final-sheet.png` shows the single white star legible at 16 and 32 px on dark, light and red, and whole inside the maskable circle and squircle — fb42eed
+- [x] 1.2 `final-sheet.png` shows the single white star legible at 16 and 32 px on dark, light and red, and whole inside the maskable circle and squircle — 1bbf08d
 
 ### Phase 2: Ship the icon
 
 #### Automated
 
-- [x] 2.1 `npm run icons:build` regenerates every PNG and the ICO from the three sources; the 512 PNG is pixel-identical to the evidence render — 01aa9c9
-- [x] 2.2 `npm run build` passes, and `dist/client/sw.js` precaches `favicon.svg` and `favicon.png` (build-sw check) — 01aa9c9
-- [x] 2.3 No proposal file or proposal text reaches `dist/` (grep for `icon-proposals`, the proposal names and comments) — 01aa9c9
-- [x] 2.4 The preview serves `/favicon.svg`, `/favicon.png`, `/favicon.ico` and the maskable files with 200, and the page head links the SVG before the PNG — 01aa9c9
-- [x] 2.5 After the worker installs, its cache holds `/favicon.svg` and `/favicon.png` (Chromium, preview on 4413) — 01aa9c9
+- [x] 2.1 `npm run icons:build` regenerates every PNG and the ICO from the three sources; the 512 PNG is pixel-identical to the evidence render — 1d3e1c6
+- [x] 2.2 `npm run build` passes, and `dist/client/sw.js` precaches `favicon.svg` and `favicon.png` (build-sw check) — 1d3e1c6
+- [x] 2.3 No proposal file or proposal text reaches `dist/` (grep for `icon-proposals`, the proposal names and comments) — 1d3e1c6
+- [x] 2.4 The preview serves `/favicon.svg`, `/favicon.png`, `/favicon.ico` and the maskable files with 200, and the page head links the SVG before the PNG — 1d3e1c6
+- [x] 2.5 After the worker installs, its cache holds `/favicon.svg` and `/favicon.png` (Chromium, preview on 4413) — 1d3e1c6
 
 ### Phase 3: /design specimen
 
 #### Automated
 
-- [x] 3.1 Lint, `astro check`, `npm test`, `npm run build`, the whole e2e suite and `npm run smoke` pass against the local stack — 81cd0f2
+- [x] 3.1 Lint, `astro check`, `npm test`, `npm run build`, the whole e2e suite and `npm run smoke` pass against the local stack — 21022a3
 
 #### Manual
 
-- [x] 3.2 `final/design-specimen.png` shows the band in dark, light and red; red mode turns the icon red through the `#red-only` image filter — 81cd0f2
+- [x] 3.2 `final/design-specimen.png` shows the band in dark, light and red; red mode turns the icon red through the `#red-only` image filter — 21022a3
 - [ ] 3.3 After merge and deploy, a fresh PWA install (or a manifest refresh) shows the new home-screen icon; the tab shows the new favicon after a hard reload
+- [x] 3.4 Star centred (owner correction): the weighted centroid of the star's pixels sits within 0.02 px of width / 2 in every raster (16, 32, 64, 180, 192, 512, maskable 512), the ICO's image is pixel-identical to `favicon.png`, and `final-sheet.png` and `design-specimen.png` are re-rendered
