@@ -60,6 +60,9 @@ test("a chosen mode is server-rendered on the next load and the skeleton keeps i
   await onboardInMadrid(page, "e2e-sky-modes-persist");
   await waitForSky(page);
 
+  // The trigger's drawing in every mode: one fixed icon, never the current mode's; the mode is in its name only
+  // (ui-sky-mode-trigger).
+  const triggerIcons = new Set<string>();
   // A phone first (the verdict fills its min-height exactly there), then a desktop.
   for (const [width, height, mode] of [
     [390, 844, "expanded"],
@@ -71,6 +74,9 @@ test("a chosen mode is server-rendered on the next load and the skeleton keeps i
   ] as const) {
     await page.setViewportSize({ width, height });
     await chooseMode(page, mode);
+    const trigger = page.locator("[data-sky-mode-trigger]");
+    await expect(trigger).toHaveAccessibleName(t.mode.trigger({ mode: t.mode.options[mode] }));
+    triggerIcons.add(await trigger.locator("svg").innerHTML());
     const cookie = (await context.cookies()).find((entry) => entry.name === SKY_MODE_COOKIE);
     expect(cookie?.value, `the ${mode} choice is remembered in the cookie`).toBe(mode);
 
@@ -104,6 +110,7 @@ test("a chosen mode is server-rendered on the next load and the skeleton keeps i
       `in ${mode} at ${String(width)} px the band's bottom stays where the skeleton's was`,
     ).toBeLessThanOrEqual(1);
   }
+  expect(triggerIcons.size, "the trigger shows the same icon in every mode").toBe(1);
 });
 
 test("expanded fills the phone screen and redraws the sky at its size", async ({ page }) => {
