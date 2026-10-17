@@ -3,15 +3,46 @@
 // Design evidence only, not product code. Run from the repo root:
 //   node context/changes/ui-progress-rewards/evidence/badge-art/render.mjs
 // The theme values come from src/styles/global.css at run time, so the sheets show the real tokens.
+//
+// Round 1 was approved by the owner on 2026-10-17. Three calls were left to the implementer (plan.md, "Badge art
+// decisions"), applied here as round 1b:
+//   (a) red mode: the large full-red areas (the reached Moon's body, the count numerals) carry `red-step`, one value
+//       step down in red only (`red:opacity-80` in the product, emulated by the sheet's CSS below);
+//   (b) the ahead art's opacity per theme (`ahead-art`: light 0.3, dark 0.4, red 0.6; product classes
+//       `opacity-30 dark:opacity-40 red:opacity-60`);
+//   (c) weight: dots are written grouped by fill and opacity with one-decimal coordinates (no visible change), and
+//       with ART_TRIM=1 (the default) fewer background and globular stars. ART_TRIM=0 renders round 1's counts.
+// The module is importable: `ART` is exported and the sheets render only when it runs as a script, so the product
+// port (`port.mjs`) writes the exact same art into src/components/progress/badge-art/.
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(join(process.cwd(), "package.json"));
 const OUT = dirname(fileURLToPath(import.meta.url));
 const v = (token) => `var(--${token})`;
 const f = (n) => +n.toFixed(2);
+const f1 = (n) => +n.toFixed(1);
+const TRIM = process.env.ART_TRIM !== "0";
+/** A dot count: round 1's when ART_TRIM=0, else the trimmed one. */
+const n = (round1, trimmed) => (TRIM ? trimmed : round1);
+
+/** Dots grouped by fill and opacity (one `<g>` per pair), so each circle carries only its geometry. */
+function dots(list) {
+  const groups = new Map();
+  for (const d of list) {
+    const key = `${d.fill}|${d.o ?? 1}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(`<circle cx="${f1(d.x)}" cy="${f1(d.y)}" r="${f(d.r)}"/>`);
+  }
+  return [...groups]
+    .map(([key, circles]) => {
+      const [fill, o] = key.split("|");
+      return `<g fill="${fill}"${o === "1" ? "" : ` opacity="${o}"`}>${circles.join("")}</g>`;
+    })
+    .join("");
+}
 
 /** Deterministic random numbers, so the art is the same on every run. */
 function rng(seed) {
@@ -28,17 +59,15 @@ function rng(seed) {
 /** A faint field of stars inside the disc, avoiding a central keep-out radius. */
 function starField(seed, count, keepOut = 0, accent = 0.25) {
   const r = rng(seed);
-  let out = "";
+  const list = [];
   for (let i = 0; i < count; i++) {
     const a = r() * Math.PI * 2;
     const d = keepOut + r() * (50 - keepOut);
-    const x = 60 + d * Math.cos(a);
-    const y = 60 + d * Math.sin(a);
     const size = 0.35 + r() * 0.7;
     const fill = r() < accent ? v("star-accent") : v("star");
-    out += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(size)}" fill="${fill}"/>`;
+    list.push({ x: 60 + d * Math.cos(a), y: 60 + d * Math.sin(a), r: size, fill });
   }
-  return out;
+  return dots(list);
 }
 
 /** A four-point glint, for bright stars. */
@@ -61,7 +90,7 @@ function blob(seed, cx, cy, rx, ry, n, jitter, rot = 0) {
     pts.push([cx + x0 * c - y0 * s, cy + x0 * s + y0 * c]);
   }
   // Catmull-Rom to cubic Bézier, closed.
-  let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  let d = `M${f1(pts[0][0])} ${f1(pts[0][1])}`;
   for (let i = 0; i < n; i++) {
     const p0 = pts[(i - 1 + n) % n];
     const p1 = pts[i];
@@ -69,7 +98,7 @@ function blob(seed, cx, cy, rx, ry, n, jitter, rot = 0) {
     const p3 = pts[(i + 2) % n];
     const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
     const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
-    d += `C${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(p2[0])} ${f(p2[1])}`;
+    d += `C${f1(c1[0])} ${f1(c1[1])} ${f1(c2[0])} ${f1(c2[1])} ${f1(p2[0])} ${f1(p2[1])}`;
   }
   return `${d}Z`;
 }
@@ -88,7 +117,8 @@ function moon(id) {
     [58, 88, 2],
   ];
   return `
-    ${starField(11, 16, 37)}
+    ${starField(11, n(16, 10), 37)}
+    <g class="red-step">
     <circle cx="60" cy="60" r="35" fill="${v("moon-lit")}" opacity="0.12"/>
     <circle cx="60" cy="60" r="33" fill="${v("moon-lit")}"/>
     <path d="${blob(3, 50, 49, 10, 7.5, 7, 0.25, 0.3)}" fill="${v("moon-mare")}" opacity="0.6"/>
@@ -115,7 +145,8 @@ function moon(id) {
       .join("")}
     <path d="M60 27A33 33 0 0 1 60 93A23 33 0 0 0 60 27Z" fill="${v("moon-dark")}" opacity="0.35"/>
     <path d="M60 27A33 33 0 0 1 60 93A15 33 0 0 0 60 27Z" fill="${v("moon-dark")}" opacity="0.88"/>
-    <circle cx="60" cy="60" r="33" fill="none" stroke="${v("moon-limb")}" stroke-width="1"/>`;
+    <circle cx="60" cy="60" r="33" fill="none" stroke="${v("moon-limb")}" stroke-width="1"/>
+    </g>`;
 }
 
 function ringedPlanet(id) {
@@ -140,7 +171,7 @@ function ringedPlanet(id) {
     [74.5, 10, "moon-mare", 0.85],
   ];
   return `
-    ${starField(21, 18, 0)}
+    ${starField(21, n(18, 12), 0)}
     <defs><clipPath id="${id}-planet"><circle cx="60" cy="60" r="21"/></clipPath></defs>
     <circle cx="101" cy="34" r="1.6" fill="${v("moon-lit")}"/>
     <circle cx="22" cy="84" r="1.1" fill="${v("moon-mare")}"/>
@@ -182,7 +213,7 @@ function allPlanets(id) {
   });
   const lightFrom = [2, 116];
   return `
-    ${starField(31, 24, 0)}
+    ${starField(31, n(24, 14), 0)}
     <defs>
       ${planets.map((p, i) => `<clipPath id="${id}-p${i}"><circle cx="${p.x}" cy="${p.y}" r="${p.r}"/></clipPath>`).join("")}
       <radialGradient id="${id}-sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${v("moon-lit")}"/><stop offset="0.45" stop-color="${v("moon-lit")}" stop-opacity="0.9"/><stop offset="0.6" stop-color="${v("primary-strong")}" stop-opacity="0.35"/><stop offset="1" stop-color="${v("primary-strong")}" stop-opacity="0"/></radialGradient>
@@ -219,23 +250,24 @@ function spiralPath(arm, from, to, offset = 0) {
   for (let t = from; t <= to; t += 0.16) {
     const r = 4.2 * Math.exp(0.26 * t);
     const a = t + arm * Math.PI + offset;
-    pts.push(`${f(r * Math.cos(a))} ${f(r * Math.sin(a))}`);
+    pts.push(`${f1(r * Math.cos(a))} ${f1(r * Math.sin(a))}`);
   }
   return `M${pts.join("L")}`;
 }
 
 function galaxy(id, { scale = 1, cx = 60, cy = 60, field = true, seed = 41 } = {}) {
   const r = rng(seed);
-  let knots = "";
+  const knotList = [];
   for (const arm of [0, 1]) {
     for (let t = 1.6; t < 9.4; t += 0.55) {
       const rr = 4.2 * Math.exp(0.26 * t) + (r() - 0.5) * 3;
       const a = t + arm * Math.PI + (r() - 0.5) * 0.25;
-      knots += `<circle cx="${f(rr * Math.cos(a))}" cy="${f(rr * Math.sin(a))}" r="${f(0.6 + r() * 0.8)}" fill="${v("moon-lit")}" opacity="${f(0.6 + r() * 0.4)}"/>`;
+      knotList.push({ x: rr * Math.cos(a), y: rr * Math.sin(a), r: 0.6 + r() * 0.8, fill: v("moon-lit"), o: f1(0.6 + r() * 0.4) });
     }
   }
+  const knots = dots(knotList);
   return `
-    ${field ? starField(seed + 1, 18, 0) : ""}
+    ${field ? starField(seed + 1, n(18, 12), 0) : ""}
     <defs>
       <radialGradient id="${id}-halo"><stop offset="0" stop-color="${v("primary-strong")}" stop-opacity="0.55"/><stop offset="1" stop-color="${v("primary-strong")}" stop-opacity="0"/></radialGradient>
       <radialGradient id="${id}-core"><stop offset="0" stop-color="${v("moon-lit")}"/><stop offset="0.35" stop-color="${v("moon-lit")}" stop-opacity="0.9"/><stop offset="1" stop-color="${v("primary-strong")}" stop-opacity="0"/></radialGradient>
@@ -252,9 +284,9 @@ function galaxy(id, { scale = 1, cx = 60, cy = 60, field = true, seed = 41 } = {
     </g>`;
 }
 
-function globular(id, { cx = 60, cy = 60, radius = 46, count = 210, field = true, seed = 51 } = {}) {
+function globular(id, { cx = 60, cy = 60, radius = 46, count = n(210, 150), field = true, seed = 51 } = {}) {
   const r = rng(seed);
-  let dots = "";
+  const list = [];
   for (let i = 0; i < count; i++) {
     const u = r();
     const d = Math.min(radius, (radius / 6.5) * Math.tan(u * 1.38));
@@ -264,8 +296,8 @@ function globular(id, { cx = 60, cy = 60, radius = 46, count = 210, field = true
     const inner = d < radius * 0.3;
     const size = (inner ? 0.55 : 0.45) + r() * (inner ? 0.6 : 0.85) * (1 - (d / radius) * 0.4);
     const fill = inner ? "moon-lit" : r() < 0.25 ? "star-accent" : r() < 0.55 ? "primary-strong" : "moon-lit";
-    const o = inner ? 0.95 : f(0.5 + r() * 0.5);
-    dots += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(size)}" fill="${v(fill)}" opacity="${o}"/>`;
+    const o = inner ? 0.9 : f1(0.5 + r() * 0.5);
+    list.push({ x, y, r: size, fill: v(fill), o });
   }
   const giants = [
     [cx - radius * 0.42, cy - radius * 0.3, radius * 0.12],
@@ -273,10 +305,10 @@ function globular(id, { cx = 60, cy = 60, radius = 46, count = 210, field = true
     [cx + radius * 0.12, cy - radius * 0.62, radius * 0.08],
   ];
   return `
-    ${field ? starField(seed + 1, 14, radius * 0.9) : ""}
+    ${field ? starField(seed + 1, n(14, 10), radius * 0.9) : ""}
     <defs><radialGradient id="${id}-glow"><stop offset="0" stop-color="${v("moon-lit")}" stop-opacity="0.85"/><stop offset="0.3" stop-color="${v("primary-strong")}" stop-opacity="0.45"/><stop offset="1" stop-color="${v("primary-strong")}" stop-opacity="0"/></radialGradient></defs>
     <circle cx="${cx}" cy="${cy}" r="${radius * 0.75}" fill="url(#${id}-glow)"/>
-    ${dots}
+    ${dots(list)}
     ${giants.map(([x, y, s]) => glint(f(x), f(y), f(s))).join("")}
     <circle cx="${cx}" cy="${cy}" r="${f(radius * 0.09)}" fill="${v("moon-lit")}"/>`;
 }
@@ -295,7 +327,7 @@ function nebula(id) {
     [84, 42, 14, 3.5, -0.8, "moon-lit", 0.14],
   ];
   return `
-    ${starField(61, 30, 0, 0.35)}
+    ${starField(61, n(30, 18), 0, 0.35)}
     <defs>
       <radialGradient id="${id}-glow" cx="55%" cy="50%" r="55%"><stop offset="0" stop-color="${v("primary-strong")}" stop-opacity="0.45"/><stop offset="1" stop-color="${v("primary-strong")}" stop-opacity="0"/></radialGradient>
       <radialGradient id="${id}-dusk" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${v("dusk-glow")}" stop-opacity="1"/><stop offset="1" stop-color="${v("dusk-glow")}" stop-opacity="0"/></radialGradient>
@@ -350,10 +382,10 @@ function numberArt(id, label, { size, motif, pips = 0, wreath = false, seed }) {
   const pipRow = Array.from({ length: pips }, (_, i) => glint(60 + (i - (pips - 1) / 2) * 11, 94, 3.6, v("moon-lit")))
     .join("");
   return `
-    ${starField(seed, 22, 0)}
+    ${starField(seed, n(22, 14), 0)}
     ${wreath ? laurel(160, 255, 40, false) + laurel(20, -75, 40, true) : ""}
     ${motif}
-    <text x="60" y="${y}" text-anchor="middle" style="font-family:'Archivo Variable',Archivo,sans-serif;font-stretch:125%;font-weight:700;font-size:${size}px;letter-spacing:-0.5px" fill="${v("moon-lit")}" stroke="${v("zenith")}" stroke-width="3" paint-order="stroke">${label}</text>
+    <text class="red-step" x="60" y="${y}" text-anchor="middle" style="font-family:'Archivo Variable',Archivo,sans-serif;font-stretch:125%;font-weight:700;font-size:${size}px;letter-spacing:-0.5px" fill="${v("moon-lit")}" stroke="${v("zenith")}" stroke-width="3" paint-order="stroke">${label}</text>
     ${pipRow}`;
 }
 
@@ -377,7 +409,7 @@ function planetaryMotif(cx, cy) {
     <circle cx="${cx}" cy="${cy}" r="1.4" fill="${v("moon-lit")}"/>`;
 }
 
-const ART = {
+export const ART = {
   "first-moon": moon,
   "first-planet": ringedPlanet,
   "all-planets": allPlanets,
@@ -388,7 +420,7 @@ const ART = {
     numberArt(id, "10", { size: 36, pips: 1, seed: 71, motif: galaxy(`${id}-m`, { scale: 0.34, cx: 60, cy: 34, field: false, seed: 72 }) }),
   "messier-25": (id) => numberArt(id, "25", { size: 36, pips: 2, seed: 73, motif: openCluster(60, 34, 1, 74) }),
   "messier-50": (id) =>
-    numberArt(id, "50", { size: 36, pips: 3, seed: 75, motif: globular(`${id}-m`, { cx: 60, cy: 33, radius: 12, count: 70, field: false, seed: 76 }) }),
+    numberArt(id, "50", { size: 36, pips: 3, seed: 75, motif: globular(`${id}-m`, { cx: 60, cy: 33, radius: 12, count: n(70, 50), field: false, seed: 76 }) }),
   "messier-110": (id) =>
     numberArt(id, "110", { size: 27, wreath: true, seed: 77, motif: `${glint(60, 34, 9)}${glint(48, 40, 3.2, v("moon-lit"), 0.85)}${glint(72, 40, 3.2, v("moon-lit"), 0.85)}` }),
   "caldwell-all": (id) => numberArt(id, "61", { size: 34, wreath: true, seed: 79, motif: planetaryMotif(60, 35) }),
@@ -430,7 +462,7 @@ function badge(key, reached, px, uid) {
       <clipPath id="${id}-clip"><circle cx="60" cy="60" r="51.5"/></clipPath>
     </defs>
     <circle cx="60" cy="60" r="58" fill="${reached ? `url(#${id}-sky)` : v("surface")}"/>
-    <g clip-path="url(#${id}-clip)" opacity="${reached ? 1 : 0.4}">${ART[key](id)}</g>
+    <g clip-path="url(#${id}-clip)"${reached ? "" : ` class="ahead-art"`}>${ART[key](id)}</g>
     ${
       reached
         ? `<circle cx="60" cy="60" r="54" fill="none" stroke="${v("action-border")}" stroke-width="4.5"/>
@@ -443,6 +475,15 @@ function badge(key, reached, px, uid) {
   </svg>`;
 }
 
+// ---------------------------------------------------------------- sheets (only when run as a script)
+
+/** Round 1b: the ahead art's opacity per theme, and red mode's one value step (ROUND1=1 renders round 1's values). */
+const ROUND1 = process.env.ROUND1 === "1";
+const AHEAD_OPACITY = ROUND1 ? { light: 0.4, dark: 0.4, red: 0.4 } : { light: 0.3, dark: 0.4, red: 0.6 };
+const RED_STEP = ROUND1 ? 1 : 0.8;
+const SUFFIX = process.env.SHEET_SUFFIX ?? "";
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 // ---------------------------------------------------------------- sources: one SVG per badge (art only)
 
 for (const key of KEYS) {
@@ -454,7 +495,7 @@ for (const key of KEYS) {
   <g clip-path="url(#${key}-src-clip)">${ART[key](`${key}-src`)}</g>
 </svg>
 `;
-  writeFileSync(join(OUT, `${key}.svg`), svg);
+  if (!SUFFIX) writeFileSync(join(OUT, `${key}.svg`), svg);
 }
 
 // ---------------------------------------------------------------- the theme tokens, straight from global.css
@@ -504,6 +545,11 @@ body{font-family:'Archivo Variable',sans-serif}
 .status{font-size:12px;line-height:16px;color:var(--muted-foreground)}
 .strip{display:flex;gap:8px;justify-content:center}
 .strip .k{font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:2px}
+/* Round 1b's per-theme classes, as the product's Tailwind variants write them. */
+.ahead-art{opacity:${AHEAD_OPACITY.light}}
+[data-theme="dark"] .ahead-art{opacity:${AHEAD_OPACITY.dark}}
+[data-theme="red"] .ahead-art{opacity:${AHEAD_OPACITY.red}}
+[data-theme="red"] .red-step{opacity:${RED_STEP}}
 </style>`;
 
 const THEMES = { dark: "Ciemny", light: "Jasny", red: "Czerwony" };
@@ -544,9 +590,10 @@ async function shoot(html, width, file, scale = 2) {
   await page.close();
   console.log(file);
 }
-await shoot(sheetHtml(), 1280, "badge-art-sheet.png");
-for (const theme of Object.keys(THEMES)) {
+await shoot(sheetHtml(), 1280, `badge-art-sheet${SUFFIX}.png`);
+if (!SUFFIX) for (const theme of Object.keys(THEMES)) {
   await shoot(pageHtml(theme, 2, 390), 390, `badge-art-phone-${theme}.png`);
   await shoot(pageHtml(theme, 4, 1280), 1280, `badge-art-desktop-${theme}.png`, 1);
 }
 await browser.close();
+}

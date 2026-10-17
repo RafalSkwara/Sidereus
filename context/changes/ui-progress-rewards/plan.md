@@ -12,7 +12,7 @@ token, no table, no route and no island.
 The owner answered P1–P7 on 2026-10-17 (**Owner answers** below): badges are rich illustrations inside a ring with a
 progress arc, bigger (two per row on a phone), and the checklists are larger tiles with icon, number and name. Phase 2
 starts only after the owner approves the badge art (`evidence/badge-art/`, round 1 committed with these answers).
-The new question P8 (phone scroll length of the larger tiles) is proposed with a ⭐ default that Phase 3 follows.
+The owner approved the badge art and answered P8 (A) on 2026-10-17 (**Owner decisions on the art and P8** below).
 
 ## Current State Analysis
 
@@ -601,6 +601,44 @@ before.
 | P6 Legend / filters  | **A** — legend with counts, no filters.                                                                                                                                                                                                                                | As planned.                                                                                                                                                                                                                                                                                                                                                                |
 | P7 Type icons        | **B** — lucide `Galaxy` + 5 custom lucide-style icons.                                                                                                                                                                                                                 | As planned (Phase 1).                                                                                                                                                                                                                                                                                                                                                      |
 
+## Owner decisions on the art and P8 (2026-10-17)
+
+The owner **approved badge-art round 1** (`evidence/badge-art/`, the sheets `badge-art-phone-{dark,light,red}.png`)
+and answered P8:
+
+| Decision        | Answer                                                                                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Badge art       | **Approved**, round 1. Phase 2 ports it (with the three calls below applied as round 1b).                                                                         |
+| Count tiers     | **Kept**: 1 / 2 / 3 stars under "10" / "25" / "50", and laurels on "110" and "61".                                                                                |
+| Light theme     | The badges **stay navy night windows** (the `night-sky` scope), on the page and in the dialog.                                                                    |
+| P8 phone length | **A**: the Caldwell band and both "Seen so far" lists start collapsed as plain `<details>`, no JS and no stored state; Messier stays open. Phase 3 §4 as written. |
+
+Three calls the owner left to the implementer, decided on round 1b (`render.mjs`, re-rendered; before:
+`badge-art-sheet-round1.png`, after: `badge-art-sheet.png` and the phone / desktop sheets):
+
+- **(a) Red mode, one value step down for the large full-red areas.** The reached Moon's body (disc, maria, craters,
+  terminator) and the count numerals carry `red:opacity-80` (`red-step` in the sheets): `#ff0000` over the black disc
+  becomes about `#cc0000`, the red scale's next step (`--muted-foreground` / `--moon-mare` are `#c40000`). _Why:_ at
+  112 px those were the only solid `#ff0000` areas of any size, brighter than the ring, the pip and the page's own
+  headings, which is the glare red mode exists to avoid; one step keeps them the brightest thing in the badge and keeps
+  every detail (the step is an opacity on the group, so maria and craters keep their relative values). Only red
+  changes; dark and light are as approved.
+- **(b) The ahead art's opacity, per theme: light 0.3, dark 0.4 (unchanged), red 0.6.** Product classes on the art
+  group: `opacity-30 dark:opacity-40 red:opacity-60` (the existing `dark:` and `red:` custom variants; `red:` is
+  registered after `dark:` so it wins in red; no token). _Why:_ at 0.4 the red art sat at about `#660000` on `#170000`,
+  barely there at night, and in light the navy disc plus 0.4 art read almost as heavy as a reached badge on the light
+  page. At 0.6 red ahead art is plainly visible yet well under the reached art (which is 1, or 0.8 for the stepped
+  areas, so a stepped ahead area is 0.48); at 0.3 light ahead reads as locked against the reached badges' full art.
+  The dashed ring, the missing pip, the muted name and the arc still carry the state in every theme.
+- **(c) Art weight: trimmed.** Dots are written grouped by fill and opacity (one `<g>` per pair, one-decimal
+  coordinates; path data to one decimal: at most 0.05 of a 120-unit badge, invisible at 112 px), and fewer stars:
+  background fields 16→10 (Moon), 18→12 (planet, galaxy), 24→14 (all planets), 30→18 (nebula), 22→14 (count
+  badges), 14→10 (globular field); the globular 210→150 dots and the "50" motif's 70→50. _Why:_ the eleven
+  illustrations went from **88.3 KB raw / 17.3 KB gzip to 62.1 KB raw / 11.0 KB gzip** (−30 % raw), and the page
+  renders each once. Looked at both renders (2x crops of every badge, dark rows differ by the trim only): the
+  globular's halo is a little sparser at its edge, its core and giants unchanged; every other badge reads the same.
+  Kept.
+
 ## Plan review triage
 
 Review: `context/changes/ui-progress-rewards/reviews/plan-review.md` (2026-10-17, NEEDS ATTENTION, 0 critical, 5
@@ -764,7 +802,7 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 - [ ] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop
 - [ ] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
-- [ ] 2.7 The owner approved the badge art before it was ported
+- [x] 2.7 The owner approved the badge art before it was ported — approved by the owner, 2026-10-17
 
 ### Phase 3: Tile checklists with a legend
 
