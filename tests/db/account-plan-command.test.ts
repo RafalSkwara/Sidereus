@@ -1,7 +1,8 @@
 /**
  * The operator command `scripts/account-plan.mjs` (roadmap F-01): proved against local Supabase without a TTY by
- * calling the exported `run` with a real admin client, a stubbed `readPassword` and a captured `out`, plus pure
- * unit cases for `parseArgs`.
+ * calling the exported `run` with a real admin client, a stubbed `readPassword` and a captured `out`, plus one
+ * spawn of the script itself for the entry checks (a malformed URL and a refused argument list). `parseArgs` has no
+ * unit cases of its own: every case below builds its options through it, and the spawn proves its refusals.
  *
  * Every case that touches an account asserts through the user's own `current_plan()`, the path the app reads, not
  * only through the command's output. The output is also checked for secrets: neither the secret key nor a typed
@@ -92,51 +93,10 @@ function expectNoSecrets(text: string, ...passwords: string[]) {
   for (const password of passwords) expect(text).not.toContain(password);
 }
 
-describe("parseArgs", () => {
-  it("accepts an email, an action and the flags that fit it", () => {
-    expect(parseArgs(["a@example.com", "full"])).toEqual({
-      ok: true,
-      email: "a@example.com",
-      action: "full",
-      create: false,
-      dryRun: false,
-      generate: false,
-      hosted: false,
-    });
-    expect(parseArgs(["A@Example.com", "full", "--create", "--generate", "--dry-run", "--hosted"])).toEqual({
-      ok: true,
-      email: "a@example.com",
-      action: "full",
-      create: true,
-      dryRun: true,
-      generate: true,
-      hosted: true,
-    });
-    expect(parsed(["a@example.com", "free", "--dry-run"]).action).toBe("free");
-    expect(parsed(["a@example.com", "show"]).action).toBe("show");
-  });
-
-  it("rejects an unknown action, an unknown flag and a wrong number of arguments", () => {
-    for (const argv of [
-      [],
-      ["a@example.com"],
-      ["a@example.com", "premium"],
-      ["a@example.com", "full", "--force"],
-      ["a@example.com", "full", "extra"],
-      ["not-an-email", "full"],
-    ]) {
-      const result = parseArgs(argv);
-      expect(result.ok, argv.join(" ")).toBe(false);
-      if (!result.ok) expect(result.error).not.toBe("");
-    }
-  });
-
-  it("rejects --create with free or show, and --generate without --create", () => {
-    expect(parseArgs(["a@example.com", "free", "--create"]).ok).toBe(false);
-    expect(parseArgs(["a@example.com", "show", "--create"]).ok).toBe(false);
-    expect(parseArgs(["a@example.com", "full", "--generate"]).ok).toBe(false);
-  });
-});
+async function accountExists(email: string): Promise<boolean> {
+  const found = await admin.auth.admin.listUsers({ perPage: 1000 });
+  return found.data.users.some((user) => user.email === email);
+}
 
 describe("account-plan command", () => {
   beforeAll(async () => {
@@ -144,53 +104,32 @@ describe("account-plan command", () => {
     if (error) throw new Error(`the secret key cannot read account_plans: ${error.message}`);
   });
 
-  it("--create full makes a confirmed account that signs in and reads full", async () => {
-    const email = uniqueEmail("create");
-    const { output, readPassword, opts } = options([email, "full", "--create"]);
-    const password = newPassword();
-    readPassword.mockResolvedValue(password);
-
-    expect(await run(opts)).toBe(0);
-    expect(readPassword).toHaveBeenCalledTimes(1);
-    expect(output.text()).toContain(host);
-    expect(await currentPlan(email, password)).toBe("full");
-    expectNoSecrets(output.text(), password);
-  });
-
-  it("rejects a typed password shorter than 12 characters without creating the account", async () => {
-    const email = uniqueEmail("short");
-    const { output, readPassword, opts } = options([email, "full", "--create"]);
-    readPassword.mockResolvedValue("short-pw");
-
-    expect(await run(opts)).toBe(2);
-    expect(output.text()).not.toContain("short-pw");
-    const found = await admin.auth.admin.listUsers({ perPage: 1000 });
-    expect(found.data.users.some((user) => user.email === email)).toBe(false);
-  });
-
-  it("--create --generate prints a random 20-character password once, and it signs in", async () => {
-    const email = uniqueEmail("generate");
-    const { output, readPassword, opts } = options([email, "full", "--create", "--generate"]);
-
-    expect(await run(opts)).toBe(0);
-    expect(readPassword).not.toHaveBeenCalled();
-
-    const withPassword = output.lines.filter((line) => /[A-Za-z0-9]{20}\b/.test(line));
-    expect(withPassword).toHaveLength(1);
-    const password = /([A-Za-z0-9]{20})\s*$/.exec(withPassword[0] ?? "")?.[1];
-    expect(password).toBeDefined();
-    expect(await currentPlan(email, password ?? "")).toBe("full");
-    expect(output.lines.filter((line) => line.includes(password ?? "")).length).toBe(1);
-    expect(output.text()).not.toContain(secretKey);
-  });
-
-  it("toggles free and full, each visible on the user's next current_plan()", async () => {
+  it("grants and demotes, each visible on the user's next current_plan(); a repeat or a dry run changes nothing", async () => {
     const account = await makeAccount("toggle");
 
-    const toFull = options([account.email, "full"]);
+    // Grant, finding the account whatever the case of the email.
+    const toFull = options([account.email.toUpperCase(), "full"]);
     expect(await run(toFull.opts)).toBe(0);
     expect(await currentPlan(account.email, account.password)).toBe("full");
+    expect(await storedPlan(account.userId)).toBe("full");
 
+    // A repeat prints `no change` and leaves the row untouched.
+    const before = await admin.from("account_plans").select("updated_at").eq("user_id", account.userId);
+    const repeat = options([account.email, "full"]);
+    expect(await run(repeat.opts)).toBe(0);
+    expect(repeat.output.text()).toContain("no change");
+    const after = await admin.from("account_plans").select("updated_at").eq("user_id", account.userId);
+    expect(after.data).toEqual(before.data);
+
+    // A dry run reports the change and leaves the row alone.
+    const dry = options([account.email, "free", "--dry-run"]);
+    expect(await run(dry.opts)).toBe(0);
+    expect(dry.output.text()).toContain("full");
+    expect(dry.output.text()).toContain("free");
+    expect(await storedPlan(account.userId)).toBe("full");
+    expect(await currentPlan(account.email, account.password)).toBe("full");
+
+    // Demote, then grant again.
     const toFree = options([account.email, "free"]);
     expect(await run(toFree.opts)).toBe(0);
     expect(await currentPlan(account.email, account.password)).toBe("free");
@@ -200,88 +139,84 @@ describe("account-plan command", () => {
     expect(await run(again.opts)).toBe(0);
     expect(await currentPlan(account.email, account.password)).toBe("full");
 
-    for (const { output } of [toFull, toFree, again]) {
+    for (const { output } of [toFull, repeat, dry, toFree, again]) {
       expect(output.text()).toContain(host);
       expectNoSecrets(output.text(), account.password);
     }
+
+    // An account without a row is already free: `free` is no change and writes no row.
+    const fresh = await makeAccount("already-free");
+    const alreadyFree = options([fresh.email, "free"]);
+    expect(await run(alreadyFree.opts)).toBe(0);
+    expect(alreadyFree.output.text()).toContain("no change");
+    expect(await storedPlan(fresh.userId)).toBeUndefined();
   });
 
-  it("finds the account whatever the case of the email", async () => {
-    const account = await makeAccount("case");
-    const { opts } = options([account.email.toUpperCase(), "full"]);
+  it("--create makes a confirmed account that signs in and reads full, and every refused or dry run creates nothing", async () => {
+    // A typed password.
+    const email = uniqueEmail("create");
+    const typed = options([email, "full", "--create"]);
+    const password = newPassword();
+    typed.readPassword.mockResolvedValue(password);
+    expect(await run(typed.opts)).toBe(0);
+    expect(typed.readPassword).toHaveBeenCalledTimes(1);
+    expect(typed.output.text()).toContain(host);
+    expect(await currentPlan(email, password)).toBe("full");
+    expectNoSecrets(typed.output.text(), password);
 
-    expect(await run(opts)).toBe(0);
-    expect(await storedPlan(account.userId)).toBe("full");
-  });
+    // A generated password is printed once, 20 characters long, and signs in.
+    const generatedEmail = uniqueEmail("generate");
+    const generated = options([generatedEmail, "full", "--create", "--generate"]);
+    expect(await run(generated.opts)).toBe(0);
+    expect(generated.readPassword).not.toHaveBeenCalled();
+    const withPassword = generated.output.lines.filter((line) => /[A-Za-z0-9]{20}\b/.test(line));
+    expect(withPassword).toHaveLength(1);
+    const generatedPassword = /([A-Za-z0-9]{20})\s*$/.exec(withPassword[0] ?? "")?.[1];
+    expect(generatedPassword).toBeDefined();
+    expect(await currentPlan(generatedEmail, generatedPassword ?? "")).toBe("full");
+    expect(generated.output.lines.filter((line) => line.includes(generatedPassword ?? "")).length).toBe(1);
+    expect(generated.output.text()).not.toContain(secretKey);
 
-  it("a repeat prints `no change` and exits 0", async () => {
-    const account = await makeAccount("repeat");
-    expect(await run(options([account.email, "full"]).opts)).toBe(0);
-    const before = await admin.from("account_plans").select("updated_at").eq("user_id", account.userId);
-
-    const { output, opts } = options([account.email, "full"]);
-    expect(await run(opts)).toBe(0);
-    expect(output.text()).toContain("no change");
-
-    const after = await admin.from("account_plans").select("updated_at").eq("user_id", account.userId);
-    expect(after.data).toEqual(before.data);
-  });
-
-  it("an account without a row is already free: `free` is no change and writes no row", async () => {
-    const account = await makeAccount("already-free");
-    const { output, opts } = options([account.email, "free"]);
-
-    expect(await run(opts)).toBe(0);
-    expect(output.text()).toContain("no change");
-    expect(await storedPlan(account.userId)).toBeUndefined();
-  });
-
-  it("--dry-run reports the change and leaves the row alone", async () => {
-    const account = await makeAccount("dry");
-    expect(await run(options([account.email, "full"]).opts)).toBe(0);
-
-    const { output, opts } = options([account.email, "free", "--dry-run"]);
-    expect(await run(opts)).toBe(0);
-    expect(output.text()).toContain("full");
-    expect(output.text()).toContain("free");
-    expect(await storedPlan(account.userId)).toBe("full");
-    expect(await currentPlan(account.email, account.password)).toBe("full");
-  });
-
-  it("--dry-run --create writes nothing and asks for no password", async () => {
-    const email = uniqueEmail("dry-create");
-    const { readPassword, opts } = options([email, "full", "--create", "--dry-run"]);
-
-    expect(await run(opts)).toBe(0);
-    expect(readPassword).not.toHaveBeenCalled();
-    const found = await admin.auth.admin.listUsers({ perPage: 1000 });
-    expect(found.data.users.some((user) => user.email === email)).toBe(false);
-  });
-
-  it("an unknown email exits 1 and creates nothing", async () => {
-    const email = uniqueEmail("unknown");
-    for (const action of ["full", "free", "show"]) {
-      const { output, readPassword, opts } = options([email, action]);
-      expect(await run(opts)).toBe(1);
-      expect(readPassword).not.toHaveBeenCalled();
-      expect(output.text()).toContain(host);
-    }
-    const found = await admin.auth.admin.listUsers({ perPage: 1000 });
-    expect(found.data.users.some((user) => user.email === email)).toBe(false);
-  });
-
-  it("--create on an existing account prints `account exists`, sets full and never asks for a password", async () => {
+    // An existing account prints `account exists`, gets the plan and is never asked for a password.
     const account = await makeAccount("exists");
-    const { output, readPassword, opts } = options([account.email, "full", "--create"]);
-
-    expect(await run(opts)).toBe(0);
-    expect(output.text()).toContain("account exists");
-    expect(readPassword).not.toHaveBeenCalled();
+    const exists = options([account.email, "full", "--create"]);
+    expect(await run(exists.opts)).toBe(0);
+    expect(exists.output.text()).toContain("account exists");
+    expect(exists.readPassword).not.toHaveBeenCalled();
     expect(await currentPlan(account.email, account.password)).toBe("full");
-    expectNoSecrets(output.text(), account.password);
+    expectNoSecrets(exists.output.text(), account.password);
+
+    // A typed password shorter than 12 characters is refused without creating the account.
+    const shortEmail = uniqueEmail("short");
+    const short = options([shortEmail, "full", "--create"]);
+    short.readPassword.mockResolvedValue("short-pw");
+    expect(await run(short.opts)).toBe(2);
+    expect(short.output.text()).not.toContain("short-pw");
+    expect(await accountExists(shortEmail)).toBe(false);
+
+    // A dry run writes nothing and asks for no password.
+    const dryEmail = uniqueEmail("dry-create");
+    const dry = options([dryEmail, "full", "--create", "--dry-run"]);
+    expect(await run(dry.opts)).toBe(0);
+    expect(dry.readPassword).not.toHaveBeenCalled();
+    expect(await accountExists(dryEmail)).toBe(false);
+
+    // A prompt refused as a usage error (mismatch, no terminal) exits 2; any other failure exits 1; neither creates.
+    const mismatchEmail = uniqueEmail("mismatch");
+    const mismatch = options([mismatchEmail, "full", "--create"]);
+    mismatch.readPassword.mockRejectedValue(new UsageError("the two passwords do not match"));
+    expect(await run(mismatch.opts)).toBe(2);
+    expect(mismatch.output.text()).toContain("do not match");
+    expect(await accountExists(mismatchEmail)).toBe(false);
+
+    const cancelEmail = uniqueEmail("cancel");
+    const cancelled = options([cancelEmail, "full", "--create"]);
+    cancelled.readPassword.mockRejectedValue(new Error("cancelled"));
+    expect(await run(cancelled.opts)).toBe(1);
+    expect(await accountExists(cancelEmail)).toBe(false);
   });
 
-  it("show prints the email, the user id, the host and the plan", async () => {
+  it("show prints the email, the user id, the host and the plan; an unknown email exits 1 and creates nothing", async () => {
     const account = await makeAccount("show");
 
     const free = options([account.email, "show"]);
@@ -294,9 +229,18 @@ describe("account-plan command", () => {
     expect(full.output.text()).toContain(`${account.email} (${account.userId}) on ${host}: full`);
     expect(await storedPlan(account.userId)).toBe("full");
     expectNoSecrets(full.output.text(), account.password);
+
+    const email = uniqueEmail("unknown");
+    for (const action of ["full", "free", "show"]) {
+      const { output, readPassword, opts } = options([email, action]);
+      expect(await run(opts)).toBe(1);
+      expect(readPassword).not.toHaveBeenCalled();
+      expect(output.text()).toContain(host);
+    }
+    expect(await accountExists(email)).toBe(false);
   });
 
-  it("a non-local URL without --hosted exits 2 before any admin call", async () => {
+  it("refuses a non-local URL without --hosted before any admin call, names the host with it, and refuses a malformed URL", async () => {
     const touched: string[] = [];
     const trap = new Proxy(
       {},
@@ -307,19 +251,17 @@ describe("account-plan command", () => {
         },
       },
     );
-    const { output, readPassword, opts } = options(["someone@example.com", "full", "--create"], {
+    const refused = options(["someone@example.com", "full", "--create"], {
       admin: trap,
       url: "https://abcdefgh.supabase.co",
     });
-
-    expect(await run(opts)).toBe(2);
+    expect(await run(refused.opts)).toBe(2);
     expect(touched).toEqual([]);
-    expect(readPassword).not.toHaveBeenCalled();
-    expect(output.text()).toContain("--hosted");
-    expect(output.text()).toContain("abcdefgh.supabase.co");
-  });
+    expect(refused.readPassword).not.toHaveBeenCalled();
+    expect(refused.output.text()).toContain("--hosted");
+    expect(refused.output.text()).toContain("abcdefgh.supabase.co");
 
-  it("a non-local URL with --hosted names the host and proceeds", async () => {
+    // Positive control: --hosted lets the same URL through to the first admin call, which finds no such user.
     const calls: string[] = [];
     const fake = {
       auth: {
@@ -331,57 +273,52 @@ describe("account-plan command", () => {
         },
       },
     };
-    const { output, opts } = options(["someone@example.com", "show", "--hosted"], {
+    const proceeds = options(["someone@example.com", "show", "--hosted"], {
       admin: fake,
       url: "https://abcdefgh.supabase.co",
     });
-
-    expect(await run(opts)).toBe(1);
+    expect(await run(proceeds.opts)).toBe(1);
     expect(calls).toEqual(["listUsers"]);
-    expect(output.lines[0]).toContain("abcdefgh.supabase.co");
-  });
+    expect(proceeds.output.lines[0]).toContain("abcdefgh.supabase.co");
 
-  it("a malformed URL exits 2 before any admin call", async () => {
-    const { opts } = options(["someone@example.com", "show"], { url: "not a url", admin: {} });
-    expect(await run(opts)).toBe(2);
-  });
-
-  it("a password prompt refused as a usage error (mismatch, no terminal) exits 2 and creates nothing", async () => {
-    const email = uniqueEmail("mismatch");
-    const { output, readPassword, opts } = options([email, "full", "--create"]);
-    readPassword.mockRejectedValue(new UsageError("the two passwords do not match"));
-
-    expect(await run(opts)).toBe(2);
-    expect(output.text()).toContain("do not match");
-    const found = await admin.auth.admin.listUsers({ perPage: 1000 });
-    expect(found.data.users.some((user) => user.email === email)).toBe(false);
-  });
-
-  it("any other failure of the password prompt still exits 1", async () => {
-    const { readPassword, opts } = options([uniqueEmail("cancel"), "full", "--create"]);
-    readPassword.mockRejectedValue(new Error("cancelled"));
-
-    expect(await run(opts)).toBe(1);
+    const malformed = options(["someone@example.com", "show"], { url: "not a url", admin: {} });
+    expect(await run(malformed.opts)).toBe(2);
   });
 });
 
 describe("account-plan script entry", () => {
-  it("a malformed SUPABASE_URL exits 2 with the hint and no stack trace, and never prints the key", () => {
-    const dummyKey = "sb_secret_dummy_not_a_real_key";
-    const script = fileURLToPath(new URL("../../scripts/account-plan.mjs", import.meta.url));
-    const result = spawnSync(process.execPath, [script, "someone@example.com", "show"], {
+  const script = fileURLToPath(new URL("../../scripts/account-plan.mjs", import.meta.url));
+  const dummyKey = "sb_secret_dummy_not_a_real_key";
+
+  function spawn(argv: string[], supabaseUrl: string) {
+    return spawnSync(process.execPath, [script, ...argv], {
       env: {
         PATH: process.env.PATH ?? "",
-        SUPABASE_URL: "not a url",
+        SUPABASE_URL: supabaseUrl,
         SUPABASE_KEY: "dummy",
         SUPABASE_SECRET_KEY: dummyKey,
       },
       encoding: "utf8",
     });
+  }
 
+  it("a malformed SUPABASE_URL exits 2 with the hint and no stack trace, and never prints the key; a refused argument list exits 2 with the usage", () => {
+    const result = spawn(["someone@example.com", "show"], "not a url");
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("SUPABASE_URL is not a valid URL");
     expect(result.stderr).not.toMatch(/\bat .*\(|node:internal|Error:/);
     expect(result.stdout + result.stderr).not.toContain(dummyKey);
+
+    // The parseArgs refusals, through the entry point: an unknown action, --create with free, --generate alone.
+    for (const argv of [
+      ["someone@example.com", "premium"],
+      ["someone@example.com", "free", "--create"],
+      ["someone@example.com", "full", "--generate"],
+    ]) {
+      const refused = spawn(argv, url);
+      expect(refused.status, argv.join(" ")).toBe(2);
+      expect(refused.stderr, argv.join(" ")).toContain("usage:");
+      expect(refused.stdout + refused.stderr).not.toContain(dummyKey);
+    }
   });
 });

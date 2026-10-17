@@ -1,6 +1,5 @@
 import { expect, type Page } from "@playwright/test";
 
-import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
@@ -10,8 +9,8 @@ import { onboardInMadrid, test } from "./helpers";
  * The four destinations (ui-tonight-nav Phase 1): Tonight, Log, Progress and My gear in the phone TabBar and the
  * Topbar pill. Polish carries the longest labels, so the fit checks run in Polish: the TabBar at 320 px (four equal
  * cells, no label spilling out of its cell) and the Topbar row at 768 px (text-only segments) and 1024 px (segments
- * with their icons). Then one current item per bar: on `/log/progress` it is Progress, never Progress and Log, which
- * would duplicate the view-transition names. Plain server-rendered pages, so each check waits for `main` and the fonts.
+ * with their icons). The one-current-item-per-bar check lives in `tonight-subnav.spec.ts`. Plain server-rendered pages,
+ * so each check waits for `main` and the fonts.
  */
 
 const BARS = {
@@ -97,23 +96,5 @@ test("the Topbar row with four Polish segments fits at 768 and 1024 px", async (
       pillBox.x + pillBox.width,
       `the pill must end left of the controls at ${String(width)} px`,
     ).toBeLessThanOrEqual(controls.x);
-  }
-});
-
-test("each bar marks exactly one current destination", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-nav-current");
-
-  for (const [path, label] of [
-    ["/log/progress", en.nav.progress],
-    ["/log", en.nav.log],
-    ["/log/sky", en.nav.log],
-  ] as const) {
-    await openPage(page, path);
-    // Both bars are in the DOM at every width (one is hidden by CSS), so count in each regardless of visibility.
-    for (const [bar, selector] of Object.entries(BARS)) {
-      const current = page.locator(`${selector} [aria-current="page"]`);
-      await expect(current, `${bar} on ${path}: one current item`).toHaveCount(1);
-      await expect(current, `${bar} on ${path}: the current item`).toHaveText(label);
-    }
   }
 });

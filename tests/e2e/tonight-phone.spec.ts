@@ -1,6 +1,5 @@
 import { expect, type Page } from "@playwright/test";
 
-import { STRIP_HEIGHT_PX, STRIP_OVERLAP_PX } from "@/components/tonight/sky-band";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
@@ -25,8 +24,9 @@ import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, test, waitFor
  *    marker on its root: the spec hides the wrapper, so the icon and the wrapper's margin go too;
  *  - no sideways scroll at 320×568 and 375×667 on nine pages, in EN and PL, and none with the Session plan's editor open
  *    (adjustable-session-plan Phase 5: a full-plan user, granted through the operator command; skipped on a night that
- *    does not pass);
- *  - the panorama keeps its height, `STRIP_HEIGHT_PX` plus the `-mt-16` overlap (`STRIP_OVERLAP_PX`, 64 px).
+ *    does not pass).
+ *
+ * The panorama's height (`STRIP_HEIGHT_PX` plus the overlap) is not asserted here any more (test-suite-diet).
  */
 
 const LOCALES = ["en", "pl"] as const;
@@ -191,24 +191,4 @@ test("the open plan editor does not scroll sideways at 320 and 375 px, in Englis
     }
   }
   expect(overflowing, "the open editor scrolls sideways").toEqual([]);
-});
-
-test("the panorama keeps its height on a phone and on a desktop", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-phone-strip");
-
-  for (const viewport of [
-    { width: 375, height: 667 },
-    { width: 1280, height: 900 },
-  ]) {
-    await page.setViewportSize(viewport);
-    await page.goto("/tonight");
-    const svg = page.locator("[data-sky-strip] svg");
-    await expect(svg).toBeVisible();
-    await page.evaluate(() => document.fonts.ready);
-    const box = await svg.boundingBox();
-    expect(
-      box?.height,
-      `the panorama's height must stay STRIP_HEIGHT_PX + STRIP_OVERLAP_PX at ${String(viewport.width)} px`,
-    ).toBe(STRIP_HEIGHT_PX + STRIP_OVERLAP_PX);
-  }
 });

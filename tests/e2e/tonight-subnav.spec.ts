@@ -20,7 +20,7 @@ import { onboardInMadrid, requirePlanGrant, setPlan, test } from "./helpers";
 const t = en.tonight;
 /** The six focused pages: the sub-nav's items without the dashboard. */
 const FOCUSED = TONIGHT_NAV.filter((item) => item.href !== "/tonight");
-/** The main bars, as in `navigation.spec.ts`. Both are in the DOM at every width (one is hidden by CSS). */
+/** The main bars. Both are in the DOM at every width (one is hidden by CSS). */
 const BARS = ["[data-tabbar]", "header nav"] as const;
 
 test.beforeEach(async ({ context, baseURL }) => {
@@ -42,13 +42,33 @@ async function expectBarsMarkTonight(page: Page, value: "page" | "true") {
   }
 }
 
-test("each focused page has one sub-nav of seven chips with its own chip current, and no back link", async ({
+test("each bar and each Tonight page marks one current destination; the sub-nav, its absences and Plan one tap away", async ({
   page,
 }) => {
-  // Onboarding plus six islands: more than the default 30 s on a slow runner.
-  test.setTimeout(120_000);
-  await onboardInMadrid(page, "e2e-subnav");
+  requirePlanGrant("tonight-subnav");
+  // Onboarding plus six islands, the dashboard, the finder and the plan: more than the default 30 s on a slow runner.
+  test.setTimeout(180_000);
+  const email = await onboardInMadrid(page, "e2e-subnav");
+  await setPlan(email, "full");
 
+  // The main bars (Topbar pill and TabBar) mark exactly one current destination: on `/log/progress` it is Progress,
+  // never Progress and Log, which would duplicate the view-transition names (navigation).
+  for (const [path, label] of [
+    ["/log/progress", en.nav.progress],
+    ["/log", en.nav.log],
+    ["/log/sky", en.nav.log],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.locator("main")).toBeVisible();
+    // Both bars are in the DOM at every width (one is hidden by CSS), so count in each regardless of visibility.
+    for (const bar of BARS) {
+      const current = page.locator(`${bar} [aria-current="page"]`);
+      await expect(current, `${bar} on ${path}: one current item`).toHaveCount(1);
+      await expect(current, `${bar} on ${path}: the current item`).toHaveText(label);
+    }
+  }
+
+  // Each focused page has one sub-nav of seven chips with its own chip current, and no back link.
   for (const item of FOCUSED) {
     await page.goto(item.href);
     const nav = subnav(page);
@@ -73,23 +93,25 @@ test("each focused page has one sub-nav of seven chips with its own chip current
       .evaluateAll((marks) => marks.map((mark) => mark.getAttribute("href")));
     expect(pageMarks.filter((href) => !href?.startsWith("/tonight/targets?sort="))).toEqual([item.href]);
   }
-});
 
-test("the dashboard has no sub-nav", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-subnav-dashboard");
+  // Plan is one tap from Targets.
+  await page.goto("/tonight/targets");
+  await subnav(page).getByRole("link", { name: t.subnav.plan, exact: true }).click();
+  await expect(page).toHaveURL(/\/tonight\/plan$/);
+  await expect(page.getByRole("heading", { level: 1, name: t.summary.plan })).toBeVisible();
+  await expect(subnav(page).getByRole("link", { name: t.subnav.plan, exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 
+  // The dashboard has no sub-nav: it is Tonight itself, so the bars mark it as the page.
+  await page.goto("/tonight");
   await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
   await expect(page.locator("[data-tonight-subnav]")).toHaveCount(0);
   await expect(subnav(page)).toHaveCount(0);
-  // The dashboard is Tonight itself: the bars mark it as the page.
   await expectBarsMarkTonight(page, "page");
-});
 
-test("the finder chart has no sub-nav and keeps its back link to Targets", async ({ page }) => {
-  requirePlanGrant("tonight-subnav");
-  const email = await onboardInMadrid(page, "e2e-subnav-finder");
-  await setPlan(email, "full");
-
+  // The finder chart has no sub-nav and keeps its back link to Targets.
   await page.goto("/tonight/finder?object=M31&from=targets");
   // Whichever state the night gives (a chart, or M31 not ranked), the page sky carries the back link.
   await expect(page.locator("[data-finder-state]")).toBeAttached();
@@ -145,17 +167,4 @@ test("on a phone the current chip is scrolled into view without scrolling the pa
     await waitForIsland(page);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   }
-});
-
-test("Plan is one tap from Targets", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-subnav-tap");
-
-  await page.goto("/tonight/targets");
-  await subnav(page).getByRole("link", { name: t.subnav.plan, exact: true }).click();
-  await expect(page).toHaveURL(/\/tonight\/plan$/);
-  await expect(page.getByRole("heading", { level: 1, name: t.summary.plan })).toBeVisible();
-  await expect(subnav(page).getByRole("link", { name: t.subnav.plan, exact: true })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
 });

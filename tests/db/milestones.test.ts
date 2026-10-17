@@ -90,23 +90,6 @@ describe("observing milestones", () => {
     expect(await rows(a.client)).toHaveLength(2);
   });
 
-  it("makes no request for an empty input", async () => {
-    // Count the requests that reach PostgREST through this user's client (sign-up's auth calls happen before).
-    let requests = 0;
-    const counting: typeof fetch = (input, init) => {
-      if (String(input instanceof Request ? input.url : input).includes("/rest/v1/")) requests += 1;
-      return fetch(input, init);
-    };
-    const c = await signUp("c", counting);
-    expect(await milestoneStore.record(c.client, [])).toEqual([]);
-    expect(requests).toBe(0);
-    // Positive control: one key makes exactly one request.
-    expect(await milestoneStore.record(c.client, [{ key: "first-moon", reachedNight: "2026-09-26" }])).toEqual([
-      "first-moon",
-    ]);
-    expect(requests).toBe(1);
-  });
-
   it("gives a milestone to exactly one of two records at the same moment (two saves can't both celebrate)", async () => {
     const results = await Promise.all([
       milestoneStore.record(a.client, [{ key: "first-moon", reachedNight: "2026-09-26" }]),

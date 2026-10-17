@@ -278,3 +278,54 @@ Six guard break checks, each red and restored with `git checkout --`: `Date.now(
 ### Docs
 
 `CLAUDE.md` tripwire (the clock, the cookie and its exact-loopback condition, the guard, "never add a date-conditional skip") and the Commands block (`E2E_CLOCK`, `SMOKE_CLOCK`); `context/foundation/lessons.md` ("An e2e test never reads the real clock ..."); `context/foundation/test-plan.md` §6.5 (the plan-editing spec bullet; the known-limit bullet replaced by "The clock"). CI runs the default scenario (owner decision 6.6); the three-hour check is the recorded local run above.
+
+## Phase 7: E2E and db trims (2026-10-17)
+
+Prepared locally on `test-diet/phase-7` while #207 (Phase 6) awaited merge, then rebased onto main for its own PR against main (no stacked base). Smoke steps by the implementer first; two Sonnet agents (high) did the e2e and db trims; the implementer reviewed both reports, added a smoke step, ran the break proofs and the whole local CI-like runs.
+
+| Measure                                                     | Before                  | After                                                                          |
+| ----------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| e2e tests / spec files (`playwright test --list`)           | 77 in 32                | 56 in 29 (limit <= 72)                                                         |
+| db named tests (`vitest list --config vitest.db.config.ts`) | 117 (the plan said 118) | 100 (limit <= 100); 9 files, 191 after `each`                                  |
+| smoke                                                       | 60 step tuples          | 66 (the plan's steps 11 and 12 plus one for the sign-in form, plus read-backs) |
+| unit suite                                                  | 122 files / 813         | 122 / 813 (no unit test touched)                                               |
+
+### Smoke first (D4, 11 and 12, and one more)
+
+- (11) "plan 13": a save for a stale night (`2020-01-01`) is refused with `?error=errors.sessionPlan.nightOver`, `exact`, `absent: "2020-01-01"`; "plan 11" (the island still `suggested`) is its read-back. Converted from `session-plan-edit` "a save for a night that is over comes back as an inline alert".
+- (12) "gear: updating a site redirects to gear with the saved notice" (`POST /api/gear/sites/<id>` with a changed name -> `/gear?saved=site`) and "gear: the renamed site is on the gear page" (the read-back).
+- New, found by the e2e agent: "the sign-in page carries the page to continue to in its form" (`GET /auth/signin?next=%2Flog` carries `name="next" value="/log"`), the one thing the redirect steps did not pin of `sign-in-continue.spec.ts`; the spec was deleted after it landed.
+- Deliberate breaks on a rebuilt preview, source restored in the same command: the `nightOver` comparison removed (plan 13 red: it saved the list), the gear route skipping its write (the read-back "the renamed site is on the gear page" red), the hidden `next` input removed from `SignInForm` (the new step red).
+
+### E2E (77 -> 56): deleted, with where each rule is held
+
+- `sign-in-continue.spec.ts` (rubric c): the smoke steps for the `next` redirects and the continuation, plus the new form step.
+- `landing.spec.ts`: the CTA-links and the signed-in 302 tests (c): smoke "home carries both call-to-action links when signed out" and "home sends a signed-in user to tonight". **Kept (owner decision F4, a licence pin):** the "Credit: ESA" and Hipparcos footer assertions and the footer-credit-wraps-at-320/360 px test in English and Polish (landing is 2 tests).
+- `toasts.spec.ts`: the 44 px x button (b, a restated size) and "a closed offline notice stays closed ..." (a: `offline.spec`'s closed-notice leg; **gap noted:** the toast test also dispatched `pageshow` and checked that a reload resets the dismissal, which `offline.spec` does not).
+- `observing-progress.spec.ts`: the two tooltip-mechanics tests (hover with the quarter-pixel mouse loop, touch) (d, owner decision D5; **gap noted:** the Tab and Esc legs survive in the kept test, hover and touch have no other test or unit test of `not-seen-tip.ts`).
+- `red-night-mode.spec.ts`: the underline and credit-colour tests (b, computed-style restatements; `offline.spec` still checks a red-mode offline quiet link loses its underline).
+- `tonight-phone.spec.ts`: "the panorama keeps its height ..." (b, against the imported constants); the first-screen and no-sideways-scroll tests untouched.
+- `onboarding.spec.ts`: the abandoned-onboarding test (a: `telescope-selector`'s last lines assert the `setupPrompt` and the link to `/onboarding`, the same `needsSetup` branch).
+- `observation-log-management.spec.ts`: the 404 (c): smoke "log: an entry id that matches no row is a 404".
+- `session-plan-edit.spec.ts`: "a save for a night that is over ..." (c): smoke plan 13 (**not pinned anywhere:** the page rendering the error key as an inline alert).
+
+### Merges
+
+`gear-catalogue.spec.ts` into `onboarding.spec.ts`'s catalogue-telescope test (deleted); `moon-as-target.spec.ts` + `planets-on-tonight.spec.ts`'s mark-a-planet test + `observation-log.spec.ts`'s mark-observed-from-Targets test into one `mark-observed.spec.ts` test pinned to `evening` (the Moon save, the first planet, the first Targets row, the seen tags, the "rating required" check, the log listing all three; the first two files deleted); `observing-milestones.spec.ts`'s first test with `observing-progress.spec.ts`'s progress counts (one user walks the empty counts, M31 at 2, the edit to 4, Jupiter at 3, the M31 to M13 swap and the delete; 240 s timeout); `sky-events.spec.ts`'s second test into its first (English, then the Polish cookie); `navigation.spec.ts`'s third test with `tonight-subnav.spec.ts`'s tests 1, 2, 3 and 5 into one full-plan test in `tonight-subnav.spec.ts`.
+
+### Kept against the plan
+
+- `observation-log.spec.ts` "the log form turns away an object outside the catalogue" (`/log/new?object=111`): the smoke step the plan names pins a different rule (an unknown entry id is a 404); nothing else covers `objectNotFound` on `/log/new`.
+- `session-plan-store` "reset into save": not merged. The Phase 7 contract says every service-worker spec stays untouched, and the plan lists this merge; the contract wins (a 180 s test x3 remains).
+
+### DB (117 -> 100)
+
+`account-plan-command` 21 -> 5 (grant and demote merged into one test; `--create`; `show`; the hosted-URL refusal with the malformed URL and the `--hosted` positive control folded in; one spawn of the script that also exercises the usage refusals: an unknown action, `free --create`, `full --generate` exit 2 with `usage:` and no key printed). The three `parseArgs` units went (a: every `run` case builds its options through `parseArgs`, the uppercase email lowercases there, and the spawn test holds the refusals); the two "fake" tests were merged, not dropped, because nothing else held them. `observations`: the target-grammar tables 8 + 17 rows -> 3 accepted (`M110`, `jupiter`, `NGC7000`) + 4 rejected (`M0`, `M111`, `NGC10000`, `IC0`); the dropped rows are held by the same regex classes and by the edit-test rows. `session-plans`: `refuses %s` 13 -> 4 rows (`M111`, `NGC10000`, `["M31","","M42"]`, `["M31,M42"]`); **noted:** a wrong-case planet word (`Jupiter`) is no longer refused in `session_plans` by a row (the observations table still refuses it). `milestones`: "record makes no request for an empty input" dropped (it counts requests). Isolation, structure, account-plans, onboarding and sky-checks unchanged.
+
+### Verification
+
+Locally against a production preview and local Supabase, fresh build, fixture and keys inline (`CI=1`): the whole e2e suite with `--repeat-each 2 --workers 4`: 112 passed (56 x 2), 0 failed, 0 skipped, in 1.9 min; `npm run smoke` all steps green; `npm run test:db` 9 files / 191 tests green; `npm test` (813), `npm run lint`, `npx astro check` (0 errors), `tsc` green; the clock guard passes. The PR's `smoke` job runs the same in CI (7.4 stays open until it is green with no retried test).
+
+### Docs
+
+`test-plan.md` §4 (e2e 29 specs / 56 tests, db 9 files / 100 named tests) and §7 (the four owner-accepted gaps: the compass mapping, `Accept-Language`, a longitude echo in a schema message, the committed catalogue JSON's shape); `CLAUDE.md` still names `landing.spec.ts` for the ESA footer pin, which is kept. The `moon-as-target` known-skip text was already replaced in Phase 6.

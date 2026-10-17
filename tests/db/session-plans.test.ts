@@ -265,20 +265,13 @@ describe("the targets checks", () => {
     expect(await sessionPlanStore.get(a.client, siteA, "2026-11-02")).toEqual([]);
   });
 
+  // One row per rule: the key grammar (a Messier ceiling; an NGC digit ceiling), the no-empty check and the
+  // no-comma check, which the joined-string grammar match cannot see ("" and "M31,M42" both pass it).
   it.each([
     ["a Messier number out of range", ["M111"]],
-    ["a Messier number with a leading zero", ["M031"]],
-    ["M0", ["M0"]],
-    ["an NGC number of zero", ["NGC0"]],
     ["an NGC number with five digits", ["NGC10000"]],
-    ["an NGC number with a leading zero", ["NGC0123"]],
-    ["an unknown word", ["Foo"]],
-    ["a key in the wrong case", ["Jupiter"]],
-    ["a key with a space", ["M 31"]],
-    ["an empty element", [""]],
     ["an empty element between keys", ["M31", "", "M42"]],
     ["an element carrying a comma", ["M31,M42"]],
-    ["a valid key next to a bad one", ["M31", "M111"]],
   ])("refuses %s", async (_label, targets) => {
     // Nothing is stored on a refusal, so one night serves every case.
     const { error } = await insert(targets, "2026-12-20");

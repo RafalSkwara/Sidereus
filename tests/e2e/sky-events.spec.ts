@@ -45,33 +45,10 @@ async function readRow(row: Locator) {
   };
 }
 
-test("the events page lists the next nights' events with their visibility, or says there are none", async ({
-  page,
-}) => {
+/** Every row states a name and a time and is either marked Visible (with when to look) or says why not (English page). */
+async function expectRowFacts(page: Page) {
   const t = en.tonight;
-  await onboardInMadrid(page, "e2e-events");
-  await openEvents(page);
-
-  await expect(page).toHaveTitle(en.common.pageTitle({ title: t.summary.events }));
-  await expect(page.getByRole("heading", { level: 1, name: t.summary.events })).toBeVisible();
-  // The sub-nav in the shell's strip names this page as the current one (ui-tonight-nav); exact, as a label can be a
-  // substring of another ("Plan" of "Planets").
-  await expect(
-    page.getByRole("navigation", { name: t.subnav.label }).getByRole("link", { name: t.subnav.events, exact: true }),
-  ).toHaveAttribute("aria-current", "page");
-  // Times are the site's: Madrid's zone is named.
-  await expect(page.getByText(t.pages.events.timesIn({ zone: "Europe/Madrid" }), { exact: true })).toBeVisible();
-
   const rows = page.locator(ROWS);
-  const empty = page.locator(EMPTY);
-  await expect(rows.first().or(empty)).toBeVisible();
-
-  if ((await rows.count()) === 0) {
-    await expect(empty).toHaveText(t.events.empty({ count: String(EVENT_WINDOW_NIGHTS) }));
-    return;
-  }
-  await expect(empty).toHaveCount(0);
-
   const reasons = Object.values(t.events.reason);
   for (const row of await rows.all()) {
     const facts = await readRow(row);
@@ -103,25 +80,52 @@ test("the events page lists the next nights' events with their visibility, or sa
   await expect(page.locator('[data-visible="true"] [data-event-not-visible-mark]')).toHaveCount(0);
   // Rows are grouped under a heading per night.
   await expect(page.locator("[data-events-night] h3").first()).toBeVisible();
-});
+}
 
-test("the events page is in Polish for a Polish user, with the same shape", async ({ page, context, baseURL }) => {
-  const t = pl.tonight;
-  await onboardInMadrid(page, "e2e-events-pl");
-  await context.addCookies([{ name: LOCALE_COOKIE, value: "pl", url: baseURL ?? "http://localhost:4321" }]);
+test("the events page lists the next nights' events with their visibility, or says there are none, in English and Polish", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const t = en.tonight;
+  await onboardInMadrid(page, "e2e-events");
   await openEvents(page);
 
+  await expect(page).toHaveTitle(en.common.pageTitle({ title: t.summary.events }));
   await expect(page.getByRole("heading", { level: 1, name: t.summary.events })).toBeVisible();
+  // The sub-nav in the shell's strip names this page as the current one (ui-tonight-nav); exact, as a label can be a
+  // substring of another ("Plan" of "Planets").
+  await expect(
+    page.getByRole("navigation", { name: t.subnav.label }).getByRole("link", { name: t.subnav.events, exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  // Times are the site's: Madrid's zone is named.
+  await expect(page.getByText(t.pages.events.timesIn({ zone: "Europe/Madrid" }), { exact: true })).toBeVisible();
+
   const rows = page.locator(ROWS);
   const empty = page.locator(EMPTY);
   await expect(rows.first().or(empty)).toBeVisible();
+
   if ((await rows.count()) === 0) {
     await expect(empty).toHaveText(t.events.empty({ count: String(EVENT_WINDOW_NIGHTS) }));
+  } else {
+    await expect(empty).toHaveCount(0);
+    await expectRowFacts(page);
+  }
+
+  // The same page in Polish (a Polish user), with the same shape.
+  const tPl = pl.tonight;
+  await context.addCookies([{ name: LOCALE_COOKIE, value: "pl", url: baseURL ?? "http://localhost:4321" }]);
+  await openEvents(page);
+
+  await expect(page.getByRole("heading", { level: 1, name: tPl.summary.events })).toBeVisible();
+  await expect(rows.first().or(empty)).toBeVisible();
+  if ((await rows.count()) === 0) {
+    await expect(empty).toHaveText(tPl.events.empty({ count: String(EVENT_WINDOW_NIGHTS) }));
   } else {
     const marks = await page.locator("[data-event-visible-mark], [data-event-not-visible-mark]").allTextContents();
     expect(marks.length).toBe(await rows.count());
     for (const mark of marks) {
-      expect([t.events.visible, t.events.notVisible]).toContain(mark.trim());
+      expect([tPl.events.visible, tPl.events.notVisible]).toContain(mark.trim());
     }
   }
 });
