@@ -303,6 +303,10 @@ test("a planet marker opens Planets", async ({ page }) => {
 
 // The only browser-level protection of the mouse drag (ui-sky-modes, Phase 3): a mouse user can pan the sky, and a drag
 // that starts and ends over a marker never opens it. Plain marker clicks stay covered by the two tests above.
+// It protects the outcome on Chromium, not each mechanism (impl review F3): once `setPointerCapture` runs on the
+// strip, Chromium sends the click that ends the drag to the strip, not the marker's `<a>`, so removing the click
+// swallow (`onClickCapture`) alone leaves this test green; it fails only if both the capture and the swallow go. The
+// swallow is the defence for WebKit, which no test here exercises.
 test("a mouse drag pans the panorama without opening a marker, and the arrow keys still pan it", async ({ page }) => {
   const { slider, max } = await openSky(page, "e2e-sky-drag");
   const marker = await findMarker(page, slider, max, "object");

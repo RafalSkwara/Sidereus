@@ -26,7 +26,7 @@ import { getMessages } from "@/i18n";
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
 import { starName } from "@/lib/catalogue/star-names";
 import { COMPASS_POINTS, COMPASS_STEP_DEG, compassPoint, isCardinal, type CompassPoint } from "@/lib/compass";
-import { SKY_MODE_COOKIE, isSkyMode, preferenceCookie, type SkyMode } from "@/lib/preferences";
+import { SKY_MODE_COOKIE, isSkyMode, preferenceCookie, type SkyMode, type Theme } from "@/lib/preferences";
 import { mixPercentages, skyMix } from "@/lib/sky-view/colour";
 import { nearestToCentre } from "@/lib/sky-view/compass-marker";
 import { skyField } from "@/lib/sky-view/field";
@@ -85,6 +85,11 @@ interface TonightSkyViewProps {
    * nearest `[data-sky-mode]` scope, which the layout's head script may have corrected for a stored offline copy.
    */
   mode: SkyMode;
+  /**
+   * The page's theme (`locals.theme`): the sky-view menu renders it server-side, so a tap before hydration opens a
+   * panel in the page's theme, not the navy sky's around it (impl review F4).
+   */
+  theme: Theme;
   /** The verdict, server-rendered. */
   children?: ReactNode;
 }
@@ -196,7 +201,7 @@ interface PlacedBody {
   azDeg: number;
 }
 
-export default function TonightSkyView({ view, locale, mode: serverMode, children }: TonightSkyViewProps) {
+export default function TonightSkyView({ view, locale, mode: serverMode, theme, children }: TonightSkyViewProps) {
   const m = getMessages(locale);
   const t = m.tonight.sky;
   const last = Math.max(0, view.frameCount - 1);
@@ -207,6 +212,10 @@ export default function TonightSkyView({ view, locale, mode: serverMode, childre
   const root = useRef<HTMLDivElement>(null);
   // The mode (ui-sky-modes): the server's until the layout effect reads the nearest `[data-sky-mode]` scope.
   const [mode, setMode] = useState<SkyMode>(serverMode);
+  // Whether a `[data-sky-mode]` scope holds the island (impl review F5): the server renders the control (the dashboard
+  // always has the scope, and its menu opens before hydration); a scope-less specimen drops it once hydrated, since a
+  // mode chosen there could not resize the band and the trigger would name a mode the band does not show.
+  const [scoped, setScoped] = useState(true);
   const scroller = useRef<HTMLDivElement>(null);
   // The panorama's box, whose height comes from CSS (the mode); the ResizeObserver watches it, never the SVG.
   const fieldBox = useRef<HTMLDivElement>(null);
@@ -271,7 +280,10 @@ export default function TonightSkyView({ view, locale, mode: serverMode, childre
   // sizes the band from; follow it, including a stored copy corrected before paint (Layout's head script).
   useLayoutEffect(() => {
     const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
-    if (!scope) return;
+    if (!scope) {
+      setScoped(false);
+      return;
+    }
     const read = () => {
       const value = scope.dataset.skyMode;
       if (isSkyMode(value)) setMode(value);
@@ -286,14 +298,14 @@ export default function TonightSkyView({ view, locale, mode: serverMode, childre
   // A mode chosen in the menu: keep the azimuth in the middle of the view (leaving HIDDEN recentres on `facing`), then
   // let CSS resize the band; the dashboard remembers it in the cookie, like the theme.
   const chooseMode = (next: SkyMode) => {
-    if (next === mode) return;
     const scope = root.current?.closest<HTMLElement>("[data-sky-mode]");
+    if (next === mode || !scope) return;
     const strip = scroller.current;
     placement.current =
       mode === "hidden" || !strip || strip.scrollWidth <= 0
         ? { kind: "centre", box: null }
         : { kind: "keep", fraction: (strip.scrollLeft + strip.clientWidth / 2) / strip.scrollWidth, box: null };
-    if (scope) scope.dataset.skyMode = next;
+    scope.dataset.skyMode = next;
     if (scope === document.documentElement) document.cookie = preferenceCookie(SKY_MODE_COOKIE, next);
     setMode(next);
   };
@@ -559,13 +571,16 @@ export default function TonightSkyView({ view, locale, mode: serverMode, childre
            * in every mode; outside the verdict's flow, so no height moves. The only control over the verdict, so it takes
            * pointer events back.
            */}
-          <SkyModeControl
-            mode={mode}
-            locale={locale}
-            onChoose={chooseMode}
-            faceClassName={PAN_FACE_CLASS}
-            className="pointer-events-auto absolute -top-1 right-1 z-20 sm:top-8"
-          />
+          {scoped && (
+            <SkyModeControl
+              mode={mode}
+              locale={locale}
+              theme={theme}
+              onChoose={chooseMode}
+              faceClassName={PAN_FACE_CLASS}
+              className="pointer-events-auto absolute -top-1 right-1 z-20 sm:top-8"
+            />
+          )}
         </div>
 
         <div ref={fieldBox} className={cn("relative", STRIP_FIELD_CLASS, STRIP_OVERLAP_CLASS)}>

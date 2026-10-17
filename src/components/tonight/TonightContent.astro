@@ -135,7 +135,13 @@ const verdictEvent = view ? eventsVerdict(view.skyEvents, locale) : null;
   <>
     {/* The live sky (interactive-sky): the island owns the band, with the verdict passed in as static children. */}
     {view?.skyView ? (
-      <TonightSkyView view={view.skyView} locale={locale} mode={Astro.locals.skyMode} client:load>
+      <TonightSkyView
+        view={view.skyView}
+        locale={locale}
+        mode={Astro.locals.skyMode}
+        theme={Astro.locals.theme}
+        client:load
+      >
         <h1 class="sr-only">{t.title}</h1>
         <VerdictCard
           level={view.verdict.level}

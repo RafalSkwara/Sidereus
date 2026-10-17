@@ -446,6 +446,16 @@ Relayed by the orchestrator; they replace the ⭐ defaults where they differ.
 
 The orchestrator also pins three review points: **F4** the pre-hydration SVG is DEFAULT's 390 × 272 px box in every mode (invisible until measured outside DEFAULT), and the static band after a sky-view failure follows the mode (one rule, Critical Implementation Details); **F6** the corrected figure is 284 px; **F7** mouse only, no pen.
 
+## Implementation decisions (impl review F2)
+
+Five small drifts from the plan, found by `reviews/impl-review.md` F2 and accepted as implementation decisions (2026-10-17):
+
+1. **The title-only bands do not follow the mode.** `tonight.astro`'s no-Supabase band and `TonightContent`'s title-only setup band stay a short header in every mode; only the static band after a sky-view failure follows it (F4 d above reads "the static band follows the mode": that is the failure band). CLAUDE.md already says "a title-only setup band does not".
+2. **The island reads the mode with `useState` plus a `MutationObserver` in a layout effect**, not `useSyncExternalStore`: the same outcome before paint (the layout effect reads the nearest `[data-sky-mode]` scope and follows the head script's correction), and no hydration warnings were seen.
+3. **The option hook is `data-segment="<mode>"`**, which `SegmentedGroup` puts on every segment, not a separate `data-sky-mode-option`.
+4. **`SegmentedGroup` gives a disabled, unpressed segment `text-faint`**, so the settings panel's language switch changed while the reload runs (the plan said "unchanged for horizontal"). The owner's answer (2026-10-17) makes that state intentional: see the language switch's loading state in the impl review triage below.
+5. **The trigger sits at `-top-1 right-1 sm:top-8`**, not "top 0 below `sm`, on the date line from `sm`": its centre is 4 px above the date line's at both widths, and the 320 px Polish no-overlap test passes.
+
 ## QUESTIONS FOR OWNER
 
 Każde pytanie ma rekomendowaną opcję (⭐); plan jest napisany na rekomendacjach, więc implementacja może ruszyć bez odpowiedzi. Inna odpowiedź zmienia tylko fazę podaną przy pytaniu. Makiety leżą w `context/changes/ui-sky-modes/evidence/` (zrobione na `/design`; ikony i podpisy w makietach są robocze).

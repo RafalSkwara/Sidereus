@@ -66,10 +66,14 @@ export const VERDICT_CONTAINER_CLASS = "relative mx-auto w-full max-w-3xl shrink
  */
 export const VERDICT_MIN_HEIGHT_CLASS = "min-h-42 sm:min-h-58 sky-hidden:min-h-47 sm:sky-hidden:min-h-63";
 
-/** The horizon silhouette in the ground colour, stretched to the band's width. */
+/**
+ * The horizon silhouette in the ground colour, stretched to the band's width. In EXPANDED it sits at the frame's foot
+ * (`mt-auto`): the static band after a sky-view failure has no strip box to take the spare height, so without it the
+ * horizon would float under the verdict (impl review F1); in the island the strip box already takes that height.
+ */
 export const SILHOUETTE_VIEWBOX = "0 0 390 40";
 export const SILHOUETTE_PATH = "M0 40V22C40 14 72 28 112 21C152 14 182 3 232 12C282 21 324 8 390 17V40Z";
-export const SILHOUETTE_CLASS = "relative block h-8 w-full shrink-0 fill-background sm:h-12";
+export const SILHOUETTE_CLASS = "relative block h-8 w-full shrink-0 fill-background sm:h-12 sky-expanded:mt-auto";
 
 /**
  * The panorama strip: `h-52`, 208 px, which the projection draws into (the static band's and the skeleton's box). Gone

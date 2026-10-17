@@ -2355,6 +2355,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     <TonightSkyView
                       view={panoramas[panoramas.length - 1].view}
                       locale={locale}
+                      theme={theme}
                       mode="default"
                       client:load
                     >
@@ -2421,7 +2422,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class:list={cell}>
                   <p class:list={stateLabel}>{panorama.label}</p>
                   <div class="overflow-hidden rounded-lg">
-                    <TonightSkyView view={panorama.view} locale={locale} mode="default" client:load>
+                    <TonightSkyView view={panorama.view} locale={locale} theme={theme} mode="default" client:load>
                       <VerdictCard
                         level={panoramaView.verdict.level}
                         dateLabel={panoramaView.dateLabel}
@@ -2466,7 +2467,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                   <div class:list={cell}>
                     <p class:list={stateLabel}>{mode} · live</p>
                     <div class="overflow-hidden rounded-lg" data-sky-mode={mode} data-sky-mode-specimen={mode}>
-                      <TonightSkyView view={panoramas[0].view} locale={locale} mode={mode} client:load>
+                      <TonightSkyView view={panoramas[0].view} locale={locale} theme={theme} mode={mode} client:load>
                         <VerdictCard
                           level={panoramaView.verdict.level}
                           dateLabel={panoramaView.dateLabel}
@@ -2500,16 +2501,21 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             </h3>
             <p class:list={blockNote}>
               The 44 px trigger at the top right of the verdict's column (its face is the pan chevrons'), opening a
-              native popover with the three modes as a vertical SegmentedGroup. The live trigger opens its menu without
-              JavaScript; the forced looks are inert copies.
+              native popover with the three modes as a vertical SegmentedGroup. The static trigger opens its menu
+              without JavaScript; the forced looks are inert copies; the hydrated control is in each Sky modes specimen
+              above.
             </p>
             <div class:list={grid}>
               <div class:list={cell}>
-                <p class:list={stateLabel}>default · live (opens the menu)</p>
+                <p class:list={stateLabel}>
+                  default · static (opens the menu without JavaScript, in the page's theme; the island places it under
+                  the trigger)
+                </p>
                 <div class="night-sky flex justify-end rounded-lg bg-zenith p-4">
                   <SkyModeControl
                     mode="default"
                     locale={locale}
+                    theme={theme}
                     onChoose={() => undefined}
                     faceClassName={PAN_FACE_CLASS}
                   />

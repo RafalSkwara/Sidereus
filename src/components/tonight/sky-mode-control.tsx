@@ -2,7 +2,7 @@ import { FoldVertical, Maximize2, RectangleHorizontal, type LucideIcon } from "l
 import { useEffect, useId, useRef } from "react";
 import { SegmentedGroup } from "@/components/ui/segmented";
 import { getMessages } from "@/i18n";
-import { SKY_MODES, type Locale, type SkyMode } from "@/lib/preferences";
+import { SKY_MODES, type Locale, type SkyMode, type Theme } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 
 /*
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
  * verdict's column, in the same place in every mode, opening a small native popover with the three modes as a vertical
  * `SegmentedGroup`. The native popover opens before hydration, closes on Esc or an outside tap and returns focus to the
  * button; choosing a mode closes it and puts focus back on the button too. The panel carries the page's theme (it sits
- * inside the band's `night-sky` scope), copied from `<html>` as it opens.
+ * inside the band's `night-sky` scope): rendered by the server, so a tap before hydration gets it too, and copied from
+ * `<html>` as it opens, which follows a theme changed since (impl review F4). The panel is placed under the trigger as
+ * it opens and closes when the page scrolls the trigger away, so it never hangs detached in the viewport.
  *
  * Island-safe: React, lucide, `SegmentedGroup`, the catalogue, the preferences and `cn` (`island-imports.test.ts`).
  */
@@ -36,10 +38,14 @@ const PANEL_CLASS = cn("fixed inset-auto m-0", SKY_MODE_MENU_SURFACE_CLASS);
 export const SKY_MODE_MENU_LABEL_CLASS = "text-label px-2 pt-1 pb-2 font-semibold text-muted-foreground";
 /** The gap between the trigger and the menu, px. */
 const PANEL_GAP_PX = 4;
+/** How far the trigger may move under an open menu (a page scroll) before the menu closes, px. */
+const DETACH_PX = 1;
 
 interface SkyModeControlProps {
   mode: SkyMode;
   locale: Locale;
+  /** The page's theme (`locals.theme`), rendered on the panel by the server. */
+  theme: Theme;
   /** Applies a mode (the island remembers it and redraws). */
   onChoose: (mode: SkyMode) => void;
   /** The icon's face, the pan chevrons' (`PAN_FACE_CLASS`, pinned by the contrast test). */
@@ -47,7 +53,7 @@ interface SkyModeControlProps {
   className?: string;
 }
 
-export function SkyModeControl({ mode, locale, onChoose, faceClassName, className }: SkyModeControlProps) {
+export function SkyModeControl({ mode, locale, theme, onChoose, faceClassName, className }: SkyModeControlProps) {
   const t = getMessages(locale).tonight.sky.mode;
   const id = useId();
   const panelId = `sky-mode-${id.replace(/:/g, "")}`;
@@ -56,23 +62,38 @@ export function SkyModeControl({ mode, locale, onChoose, faceClassName, classNam
   const trigger = useRef<HTMLButtonElement>(null);
   const Icon = MODE_ICONS[mode];
 
-  // As it opens, the panel takes the page's theme (not the navy sky's around it: ui-sky-light's rule for popovers in the
-  // scope) and its place under the trigger.
+  // As it opens, the panel takes the page's current theme (not the navy sky's around it: ui-sky-light's rule for
+  // popovers in the scope) and its place under the trigger. While it is open, a page scroll that moves the trigger
+  // closes it (impl review F4): the panel is `fixed` from one measurement. Comparing the trigger's place with the one
+  // measured at opening ignores a scroll event that a scroll-into-view queued just before the tap.
   useEffect(() => {
     const element = panel.current;
     if (!element) return;
+    let openedAt: number | null = null;
+    const detach = () => {
+      const box = trigger.current?.getBoundingClientRect();
+      if (openedAt === null || !box || Math.abs(box.top - openedAt) <= DETACH_PX) return;
+      element.hidePopover();
+    };
     const prepare = (event: Event) => {
-      if ((event as ToggleEvent).newState !== "open") return;
-      const theme = document.documentElement.dataset.theme;
-      if (theme) element.dataset.theme = theme;
+      if ((event as ToggleEvent).newState !== "open") {
+        openedAt = null;
+        window.removeEventListener("scroll", detach);
+        return;
+      }
+      const applied = document.documentElement.dataset.theme;
+      if (applied) element.dataset.theme = applied;
       const box = trigger.current?.getBoundingClientRect();
       if (!box) return;
       element.style.top = `${String(Math.round(box.bottom + PANEL_GAP_PX))}px`;
       element.style.right = `${String(Math.round(document.documentElement.clientWidth - box.right))}px`;
+      openedAt = box.top;
+      window.addEventListener("scroll", detach, { passive: true });
     };
     element.addEventListener("beforetoggle", prepare);
     return () => {
       element.removeEventListener("beforetoggle", prepare);
+      window.removeEventListener("scroll", detach);
     };
   }, []);
 
@@ -98,6 +119,7 @@ export function SkyModeControl({ mode, locale, onChoose, faceClassName, classNam
         role="dialog"
         aria-labelledby={labelId}
         className={PANEL_CLASS}
+        data-theme={theme}
         data-sky-mode-menu
       >
         <p id={labelId} className={SKY_MODE_MENU_LABEL_CLASS}>

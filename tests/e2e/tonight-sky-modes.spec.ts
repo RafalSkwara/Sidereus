@@ -83,8 +83,14 @@ test("a chosen mode is server-rendered on the next load and the skeleton keeps i
       await held;
       await route.continue();
     });
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("html"), `the shell renders ${mode} on <html>`).toHaveAttribute("data-sky-mode", mode);
+    const response = await page.reload({ waitUntil: "domcontentloaded" });
+    if (response === null) throw new Error(`the reload in ${mode} returned no response`);
+    // The raw HTML, not the DOM: the head script rewrites <html data-sky-mode> from the cookie before paint, so only the
+    // response shows that the server itself read the cookie (impl review F3).
+    expect(await response.text(), `the server renders ${mode} on <html>`).toMatch(
+      new RegExp(`<html[^>]*\\sdata-sky-mode="${mode}"`),
+    );
+    await expect(page.locator("html"), `the shell shows ${mode} on <html>`).toHaveAttribute("data-sky-mode", mode);
     await expect(page.locator('[data-sky-mode-frame="skeleton"]')).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     const skeleton = await frameBox(page, "skeleton");
