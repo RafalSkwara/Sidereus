@@ -690,9 +690,9 @@ are still pending).
 
 #### Automated
 
-- [x] 3.1 `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3`
-- [x] 3.2 `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass
-- [x] 3.3 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [x] 3.1 `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3` — fefccc2
+- [x] 3.2 `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass — fefccc2
+- [x] 3.3 `npm run test:reference`, `npm run lint` and `npx astro check` pass — fefccc2
 
 #### Manual
 
@@ -703,8 +703,8 @@ are still pending).
 
 #### Automated
 
-- [ ] 4.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass
-- [ ] 4.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR")
+- [x] 4.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [x] 4.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR")
 
 #### Manual
 
