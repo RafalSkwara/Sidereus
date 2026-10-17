@@ -64,7 +64,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
-| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | ready       |
+| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | in-progress |
 
 ## Streams
 
@@ -213,7 +213,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The positions are J1991.25 and must be propagated to J2000 with the proper motions; the 925-star bright file is expected to stay unchanged.
   - If ESA refuses or prices it out, the files revert or migrate to SAO in a change of their own.
   - **No payment is taken until ESA authorises in writing.** Outside the cut order: the owner mandated it on 2026-10-16.
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 

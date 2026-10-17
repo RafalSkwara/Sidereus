@@ -1,0 +1,168 @@
+[
+  {
+    "page": "landing",
+    "width": 320,
+    "lang": "en",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "landing",
+    "width": 360,
+    "lang": "en",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "landing",
+    "width": 320,
+    "lang": "pl",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "landing",
+    "width": 360,
+    "lang": "pl",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "tonight",
+    "width": 320,
+    "lang": "en",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "tonight",
+    "width": 360,
+    "lang": "en",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "tonight",
+    "width": 320,
+    "lang": "pl",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "tonight",
+    "width": 360,
+    "lang": "pl",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "finder-locked",
+    "width": 320,
+    "lang": "en",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "finder-locked",
+    "width": 360,
+    "lang": "en",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "finder-locked",
+    "width": 320,
+    "lang": "pl",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "finder-locked",
+    "width": 360,
+    "lang": "pl",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "finderChart": {
+      "orientation": null,
+      "text": "Facing WNW, 49° up at 20:48 Up is up in the sky, as you face it. Both charts are drawn this way. Overview M13 η Her Finder view M13 η Her Finder field, 7° Reflex finder rings, 0.5°, 2° and 4° Eyepiece circle: 25 mm Plössl, 1.7° How to find it Find η Her, magnitude 3.5, 50° up in the WNW. Move 2.5° down and to the left to reach M13. A straight-through finder shows the sky upside down, and a right-angle finder shows it mirror-reversed. Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+    }
+  },
+  {
+    "page": "finder-chart",
+    "width": 320,
+    "lang": "en",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "finder-chart",
+    "width": 360,
+    "lang": "en",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Object data: OpenNGC (CC BY-SA 4.0) · Star data: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Star designations: Wikidata (CC0), IAU WGSN (names) · Weather: Open-Meteo (CC BY 4.0) · Meteor showers: NASA (peak nights), IAU Meteor Data Center (radiants)"
+  },
+  {
+    "page": "finder-chart",
+    "width": 320,
+    "lang": "pl",
+    "scrollWidth": 320,
+    "clientWidth": 320,
+    "bodyScrollWidth": 320,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  },
+  {
+    "page": "finder-chart",
+    "width": 360,
+    "lang": "pl",
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "bodyScrollWidth": 360,
+    "insideViewport": true,
+    "text": "Dane obiektów: OpenNGC (CC BY-SA 4.0) · Dane gwiazd: Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO) · ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200 · Oznaczenia gwiazd: Wikidata (CC0), IAU WGSN (nazwy) · Pogoda: Open-Meteo (CC BY 4.0) · Roje meteorów: NASA (noce maksimum), IAU Meteor Data Center (radianty)"
+  }
+]

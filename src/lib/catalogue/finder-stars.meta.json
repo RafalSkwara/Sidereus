@@ -1,20 +1,131 @@
 {
-  "source": "https://github.com/astronexus/HYG-Database",
-  "url": "https://raw.githubusercontent.com/astronexus/HYG-Database/c7f7f883fe678cc7680169a50ccd7dcc49b060ce/hyg/CURRENT/hygdata_v41.csv",
-  "file": "hyg/CURRENT/hygdata_v41.csv",
-  "commit": "c7f7f883fe678cc7680169a50ccd7dcc49b060ce",
-  "commitDate": "2025-02-14",
-  "licence": "CC BY-SA 4.0",
-  "attribution": "HYG database, David Nash / astronexus; Hipparcos, Credit: ESA (CC BY-NC 3.0 IGO)",
-  "filter": "mag <= 7.5, Sol (id 0) excluded",
-  "count": 25791,
-  "designatedCount": 3342,
+  "source": "https://www.cosmos.esa.int/web/hipparcos/catalogues",
+  "url": "https://cdsarc.cds.unistra.fr/ftp/cats/I/239/hip_main.dat",
+  "mirror": "https://vizier.cfa.harvard.edu/ftp/cats/I/239/hip_main.dat",
+  "file": "I/239/hip_main.dat",
+  "sha256": "58ceabb104d647160d9437ce6e513a02a036bb4ad9f8879a5a22fd52943616e0",
+  "bytes": 53316318,
+  "rows": 118218,
+  "epoch": "J1991.25 propagated to J2000 by proper motion; the ten stars without a solution keep their J1991.25 sexagesimal position",
+  "licence": "CC BY-NC 3.0 IGO",
+  "attribution": "Credit: ESA; ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200",
+  "commercialUse": "requires ESA authorisation",
+  "positionFromSexagesimal": {
+    "hips": [
+      31067,
+      31500,
+      34716,
+      50572,
+      52800,
+      55203,
+      59273,
+      78727,
+      80579,
+      115125
+    ],
+    "vmag": [
+      6.18,
+      7.37,
+      7.35,
+      7.19,
+      6.94,
+      3.79,
+      6.65,
+      4.16,
+      6.69,
+      5.19
+    ],
+    "note": "J1991.25, no proper motion, not propagated"
+  },
+  "fieldsUsed": [
+    {
+      "name": "HIP",
+      "index": 1
+    },
+    {
+      "name": "Vmag",
+      "index": 5
+    },
+    {
+      "name": "RAdeg",
+      "index": 8
+    },
+    {
+      "name": "DEdeg",
+      "index": 9
+    },
+    {
+      "name": "pmRA",
+      "index": 12
+    },
+    {
+      "name": "pmDE",
+      "index": 13
+    },
+    {
+      "name": "RAhms",
+      "index": 3,
+      "onlyWhen": "RAdeg and DEdeg are blank"
+    },
+    {
+      "name": "DEdms",
+      "index": 4,
+      "onlyWhen": "RAdeg and DEdeg are blank"
+    }
+  ],
+  "filter": "Vmag <= 7.5, Hipparcos stars with a position, finder chart depth",
+  "count": 25723,
+  "designatedCount": 3277,
   "normalisations": [
-    "Sorted by mag (rounded to 0.1), then HYG id",
-    "pos: one comma-joined string of integers, one per star, raCenti * 18001 + (decCenti + 9000), with raCenti the right ascension in 0.01 degrees (0..35999, 36000 wrapped to 0) and decCenti the declination in 0.01 degrees (-9000..9000)",
+    "Sorted by Vmag rounded to 0.1 (Math.round(Vmag * 10)), then HIP number",
+    "HIP numbers order the stars but are not stored: the file holds no HIP, only the order the HIP tie-break gives",
+    "pos: one comma-joined string of integers, one per star, raCenti * 18001 + (decCenti + 9000), with raCenti the J2000 right ascension in 0.01 degrees (0..35999, 36000 wrapped to 0) and decCenti the declination in 0.01 degrees (-9000..9000); positions as in the bright file",
     "mag: runs of [tenths, count] over the sorted stars, tenths being the magnitude as an integer in 0.1",
-    "HYG ids order the stars but are not stored",
-    "designations: sparse, keyed by star index; each a tuple [bayer, flamsteed, con, proper] with null for an absent field (HYG bayer: Greek abbreviation with a -n component suffix; flam: integer), kept only for stars that have a bayer, flam or proper",
-    "All other HYG columns dropped"
+    "designations: sparse, keyed by star index; each a tuple [bayer, flamsteed, con, proper] with null for an absent field (bayer: Greek abbreviation with a -n component suffix; flamsteed: integer), kept only for stars that have a Bayer letter, Flamsteed number or IAU name; constellation: IAU abbreviation from astronomy-engine Constellation() at the star's J2000 position",
+    "No other Hipparcos field is read"
+  ],
+  "inputs": [
+    {
+      "kind": "designations",
+      "name": "Wikidata",
+      "licence": "CC0 1.0",
+      "table": "scripts/data/star-designations.json",
+      "fetchedAt": "2026-10-16T20:13:58.333Z",
+      "counts": {
+        "hipparcosStars": 25723,
+        "wikidataHipsWithP528Designation": 3495,
+        "fromLabelFallback": {
+          "bayer": 15,
+          "flamsteed": 10
+        },
+        "unreadableBindings": 1,
+        "designated": 3222,
+        "bayer": 1471,
+        "flamsteed": 2639,
+        "both": 888,
+        "rejectedWikidataValues": {
+          "latin-letter": 447,
+          "component": 4,
+          "unrecognised": 1
+        },
+        "omittedByPolicy": 122,
+        "overrides": 18
+      },
+      "use": "Bayer letter and Flamsteed number by HIP number"
+    },
+    {
+      "kind": "names",
+      "name": "IAU Working Group on Star Names (WGSN)",
+      "licence": "public domain (IAU star names are not subject to copyright)",
+      "table": "scripts/data/iau-star-names.json",
+      "fetchedAt": "2026-10-16T20:13:58.333Z",
+      "counts": {
+        "wgsnRows": 640,
+        "wgsnRowsWithHip": 567,
+        "hips": 566,
+        "withinHipparcosVmag7_5": 498
+      },
+      "use": "proper name by HIP number"
+    }
   ]
 }

@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/preferences";
 
 /**
- * Localised bright-star names. The generated catalogue (`bright-stars.json`) carries HYG's English
+ * Localised bright-star names. The generated catalogue (`bright-stars.json`) carries the IAU's English
  * proper names and is never edited; a locale lists every named star here by its English name.
  * A name that reads the same in the locale maps to itself, so `stars.test.ts` can tell a deliberate
  * match from a missing entry. Anything not listed falls back to the English name.
@@ -56,7 +56,7 @@ export const STAR_NAMES: Record<Exclude<Locale, "en">, Readonly<Partial<Record<s
   },
 };
 
-/** The name of the star HYG calls `name` for `locale`, or `name` itself. */
+/** The name of the star the catalogue calls `name` for `locale`, or `name` itself. */
 export function starName(name: string, locale: Locale): string {
   if (locale === "en") {
     return name;

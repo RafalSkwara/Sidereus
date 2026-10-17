@@ -17,7 +17,7 @@
  * Sources were read through WebFetch/WebSearch summaries on 2026-10-13, the same way as `beginner-reference.ts`.
  */
 
-/** A star as HYG designates it: a Bayer letter (HYG's three-letter abbreviation) or a Flamsteed number, in a constellation. */
+/** A star as the star file designates it: a Bayer letter (the file's three-letter abbreviation) or a Flamsteed number, in a constellation. */
 export interface RouteStar {
   label: string;
   bayer?: string;

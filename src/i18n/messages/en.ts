@@ -887,6 +887,11 @@ export const en = {
       objectData: "Object data:",
       starData: "Star data:",
       hipparcosCredit: "Credit: ESA",
+      /** The citation ESA asked for beside the credit, never translated. */
+      hipparcosCitation: "ESA, 1997, The Hipparcos and Tycho Catalogues, ESA SP-1200",
+      /** Bayer letters and Flamsteed numbers (Wikidata, CC0) and proper names (the IAU WGSN list). */
+      designationData: "Star designations:",
+      iauFor: "names",
       weather: "Weather:",
       /** Sky events (S-07): the meteor showers' peak nights come from NASA, the radiants from the IAU MDC. */
       meteorData: "Meteor showers:",

@@ -1,0 +1,74 @@
+{
+  "8832": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"γ Ari\" for this HIP; a second compilation gives γ². The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "9347": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"υ¹ Cet\" for this HIP; a second compilation gives the bare letter. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "13847": {
+    "bayer": "The-1",
+    "source": "IAU WGSN star names list (https://exopla.net/star-names/modern-iau-star-names/, fetched 2026-10-16): Acamar, HIP 13847, Bayer ID \"θ1 Eri\"; Wikidata gives only the bare letter."
+  },
+  "39953": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"γ Vel\" for this HIP; a second compilation gives γ². The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "40023": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"ψ² Cnc\" for this HIP; a second compilation gives the bare letter. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "48552": {
+    "flamsteed": 9,
+    "source": "Wikidata (CC0) item Q66481576: P528 catalog code \"9 Sex\" (Flamsteed) for HIP 48552, English label \"9 Sextantis\"; \"8 Sex\" is the statement of the other star, item Q5178157 (HIP 48437). Pinned so a later Wikidata edit cannot change it."
+  },
+  "50583": {
+    "bayer": "Gam-1",
+    "source": "IAU WGSN star names list (https://exopla.net/star-names/modern-iau-star-names/, fetched 2026-10-16): Algieba, HIP 50583, Bayer ID \"γ1 Leo\"; Wikidata gives only the bare letter."
+  },
+  "69481": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"κ Boo\" for this HIP; a second compilation gives κ¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "71762": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"π Boo\" for this HIP; a second compilation gives π¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "81710": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"η TrA\" for this HIP; a second compilation gives η¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "84345": {
+    "bayer": "Alp-1",
+    "source": "IAU WGSN star names list (https://exopla.net/star-names/modern-iau-star-names/, fetched 2026-10-16): Rasalgethi, HIP 84345, Bayer ID \"α1 Her\"; Wikidata gives only the bare letter."
+  },
+  "86974": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"μ¹ Her\" for this HIP; a second compilation gives the bare letter. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "90968": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"κ² CrA\" for this HIP; a second compilation gives κ¹ (the two components' digits are swapped). The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "90969": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"κ¹ CrA\" for this HIP; a second compilation gives κ² (the two components' digits are swapped). The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "91926": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"ε Lyr\" for this HIP; a second compilation gives ε². The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "101923": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"τ² Cap\" for this HIP; a second compilation gives the bare letter. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "107310": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"μ Cyg\" for this HIP; a second compilation gives μ¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  },
+  "110960": {
+    "omit": ["bayer"],
+    "source": "Wikidata (CC0) P528 gives \"ζ Aqr\" for this HIP; a second compilation gives ζ¹. The two differ in the component digit, the IAU WGSN list does not name this star, and no other published tie-break was found, so the Bayer value is omitted (omit when in doubt; see context/changes/star-source-switch/designation-check.md)."
+  }
+}

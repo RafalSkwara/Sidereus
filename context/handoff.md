@@ -49,7 +49,7 @@ What changed:
 **Next:** `/10x-plan small-scope-galaxies` (S-04, the north star), with S-02 `ui-tonight-nav` through `/10x-ui` in parallel.
 
 **Owner to-dos (unchanged):**
-- ESA's licence reply (PRD Open Question 21);
+- ESA's answer to the follow-up on direct use of Hipparcos V1 (PRD Open Question 21; the owner sent it 2026-10-16);
 - the IAU MDC courtesy email;
 - the moonlight post-merge checks after 2026-10-22.
 
@@ -71,7 +71,7 @@ What changed:
 
 **Owner to-dos:**
 
-- **ESA licence** for the Hipparcos-derived stars (PRD OQ21): the owner **sent** the request on 2026-10-14 and awaits the reply. SAO stays the fallback before any payment.
+- **ESA licence** for the Hipparcos stars (PRD OQ21): ESA replied on 2026-10-16 (it cannot authorise HYG-derived files; it can assess direct use of Hipparcos V1), and the owner sent the follow-up the same day, including the RAhms/DEdms sentence for the ten stars without an astrometric solution. V1 direct is in place (S-08 `star-source-switch`, `LICENSE-DATA.md`). No payment before ESA authorises in writing; SAO is the reverse path if ESA refuses.
 - **IAU MDC courtesy email**: still the owner's to send (draft `context/archive/2026-10-13-sky-events/iau-mdc-request.md`).
 
 **Next:**
@@ -91,7 +91,7 @@ What changed:
 **Shipped and live** (production https://sidereus.sidereus.workers.dev, deployed by main CI run 38412547105):
 
 - **S-06 observing-milestones** (#127): merged as #153, archived in #154 (`context/archive/2026-10-11-observing-milestones/`). 11 milestones in the `observing_milestones` table (RLS; self-only inserts accepted and pinned), celebrated once at save in a modal dialog (variant C), listed on `/log/progress`. e2e saves rated 3+ must call `dismissCelebrationIfOpen` (`tests/e2e/helpers.ts`).
-- **S-03 finder-chart** (#124): merged as #155. `/tonight/finder?object=…` behind the full plan (page and island both gated), HYG v4.1 stars to mag 7.5 (server-only), offline charts, zenith edge arrow. The owner did every manual check on 2026-10-13.
+- **S-03 finder-chart** (#124): merged as #155. `/tonight/finder?object=…` behind the full plan (page and island both gated), Hipparcos stars to mag 7.5 (server-only; HYG v4.1 until S-08 `star-source-switch` replaced it), offline charts, zenith edge arrow. The owner did every manual check on 2026-10-13.
 - **EPIPE flake fix**: #156. `src/lib/agent-hooks.test.ts` `run()` now ignores EPIPE on `child.stdin`; a deterministic test pins it.
 
 **Awaiting the owner's merge:** **#157** `chore/archive-finder-chart`, the S-03 archive. It closes #124 and carries this handoff. After it merges, `git checkout main && git pull` in the main checkout and delete that branch.
@@ -110,7 +110,7 @@ What changed:
 
 **Still open beyond M-3's slices:**
 
-- The owner's ESA licence request for Hipparcos-derived stars (PRD OQ21). The draft is `context/archive/2026-10-11-finder-chart/esa-licence-request.md`. Fallback before any payment: switch both star files to SAO.
+- ESA's answer to the owner's follow-up on direct use of Hipparcos V1 (PRD OQ21; ESA replied 2026-10-16, the follow-up draft is `context/foundation/licensing/esa-reply-2026-10-16-draft.md`). The star files already come from V1 direct (S-08). No payment before ESA authorises in writing; SAO is the reverse path if ESA refuses.
 - M-3 S-04 what-to-expect (#125) and S-08 adjustable-session-plan (#129) are not started.
 - A local branch `feat/ui-auth` is left behind: its worktree is removed and its commits are in main, but `git branch -d` refused because of a stale upstream. Delete it with `-D` only with the owner's OK.
 

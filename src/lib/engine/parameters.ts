@@ -637,7 +637,7 @@ export const FINDER_APERTURE_MM = 30;
  */
 export const REFLEX_RING_DEG: readonly number[] = [0.5, 2, 4];
 
-/** Candidate (S-03 planning, 2026-10-11, D-2): the faintest star the finder chart draws; HYG is evenly complete to about 7.5. */
+/** Candidate (S-03 planning, 2026-10-11, D-2): the faintest star the finder chart draws; the Hipparcos Catalogue is evenly complete to about 7.5. */
 export const FINDER_CHART_MAX_MAG = 7.5;
 
 /**

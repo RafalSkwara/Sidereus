@@ -750,9 +750,11 @@ the plan of the slice that needs it.
     redistributable subset of the same source, loaded only with the chart;
     licence and page weight are checked in the plan.
     _Settled as a candidate in the S-03 plan (2026-10-13):_ a second server-only
-    file of 25,791 stars to magnitude 7.5 from the same pinned HYG v4.1 source
-    (122 KB gzip), drawn to a finder depth of 7.2-7.5 by Bortle class; the
-    licence question is open, see item 21 (`finder-chart/plan.md` D-2, D-5).
+    file of stars to magnitude 7.5 (25,791 from the same pinned HYG v4.1 source,
+    122 KB gzip, when this was settled; 25,723 from the pinned Hipparcos V1 file,
+    about 146 KB gzip, since roadmap S-08, `star-source-switch`), drawn to a finder
+    depth of 7.2-7.5 by Bortle class; the licence question is open, see item 21
+    (`finder-chart/plan.md` D-2, D-5).
 15. **Naked-eye limit for the starting star** - candidate (uncalibrated): by
     Bortle class, magnitude 4.5 at Bortle 1-4, 3.5 at 5-6, 2.5 at 7-9.
     _Settled as a candidate in the S-03 plan (2026-10-13):_ kept as written
@@ -829,11 +831,22 @@ the plan of the slice that needs it.
     migrate to SAO in its own change (the SAO caveat above still applies). (d) No
     payment is taken until ESA authorises in writing. (e) Gaia DR3 is not needed and
     is skipped. (f) Before the first payment, one lawyer check of the authorisation's
-    wording (public repository, the browser-delivered 925-star file, where "Credit:
+    wording (public repository, the browser-delivered bright-star file, where "Credit:
     ESA" appears, fee, term). The reviewer's assessment (not legal advice) is
     `context/foundation/licensing/esa-reply-assessment-2026-10-16.md`. On the switch
     the credit stays "Hipparcos, Credit: ESA" and gains the citation "ESA, 1997, The
     Hipparcos and Tycho Catalogues, ESA SP-1200".
+    _Done (2026-10-16, roadmap S-08 `star-source-switch`, on its PR):_ the switch in
+    (b) is implemented. Both star files are generated from the pinned Hipparcos V1
+    `hip_main.dat` (921 and 25,723 stars; the ten stars with no astrometric solution
+    take their position from RAhms and DEdms), with designations from Wikidata (CC0)
+    and names from the IAU WGSN list; HYG is no longer a source. `Attribution` shows
+    "Credit: ESA" and the citation on every view that draws stars, and the signed-out
+    landing page now carries it too, which closes the gap noted above. The owner sent
+    the follow-up to ESA on 2026-10-16, including the RAhms and DEdms sentence; no
+    answer yet. No payment is taken until ESA authorises in writing; SAO stays the
+    reverse path in (c). `LICENSE-DATA.md` records the pin, the fields used and the
+    changes made.
 22. **Pricing, payment provider and the plan's name** - deferred to the
     payments milestone. Owner: user.
 23. **Paid features in a stored offline copy** - candidate: a copy keeps what
