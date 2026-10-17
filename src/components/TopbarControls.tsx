@@ -11,8 +11,16 @@ import {
   type Locale,
   type Theme,
 } from "@/lib/preferences";
+import { Paintbrush } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SEGMENT_FOCUS_CLASS, SegmentedGroup } from "@/components/ui/segmented";
+import {
+  TOPBAR_ICON_BUTTON_CLASS,
+  TOPBAR_PANEL_BODY_CLASS,
+  TOPBAR_PANEL_CLASS,
+  TOPBAR_SHEET_GRIP_CLASS,
+  TOPBAR_SHEET_HANDLE_CLASS,
+} from "@/components/ui/topbar-popover";
 
 interface TopbarControlsProps {
   theme: Theme;
@@ -28,29 +36,11 @@ const SIGN_OUT_CAPTION_ID = "settings-signout-offline";
 
 // Focus is a `--ring` outline offset from the control, so it shows on a pressed (filled) control too.
 const focusRing = SEGMENT_FOCUS_CLASS;
-const iconButton = cn(
-  "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border",
-  "text-muted-foreground transition-colors hover:text-heading",
-  "aria-pressed:border-selected aria-pressed:bg-selected aria-pressed:text-selected-foreground",
-  focusRing,
-);
 const sectionLabel = "text-label font-semibold text-muted-foreground";
 /** A quiet text button in the panel: Install app, Sign out. */
 const textAction = cn(
   "text-muted-foreground hover:text-heading inline-flex min-h-11 cursor-pointer items-center rounded-md text-sm transition-colors",
   focusRing,
-);
-
-/*
- * Native popover (`popover` + `popovertarget`): it opens before hydration, closes on Esc or an outside tap and
- * returns focus to the settings button. A bottom sheet on phones, a panel under the bar from `sm`.
- */
-const panelClass = cn(
-  "fixed inset-x-0 top-auto bottom-0 m-0 w-full max-w-none rounded-t-2xl border-0 border-t border-border bg-surface text-foreground",
-  "p-5 shadow-2xl backdrop:bg-background/70",
-  // Under the Topbar from `sm`, its right edge aligned with the bar's (`right-topbar-edge`, global.css).
-  "sm:inset-x-auto sm:top-23 sm:right-topbar-edge sm:bottom-auto sm:w-80",
-  "sm:rounded-2xl sm:border sm:p-4 sm:backdrop:bg-transparent",
 );
 
 function Icon({ children }: { children: ReactNode }) {
@@ -111,7 +101,8 @@ function reloadInLocale(next: Locale) {
 }
 
 /**
- * The stateful end of the top bar: the theme button (cycles dark → light → red, shows the current theme) and the
+ * The stateful end of the top bar: the theme button (cycles dark → light → red; a paintbrush in every theme, owner
+ * 2026-10-17, since a moon beside the quick nav read as "tonight"; its label names the current and next theme) and the
  * settings popover (who is signed in, theme, language, install, sign out). One island, so the button and the settings theme
  * control never disagree. The server already rendered
  * the resolved theme on <html data-theme>; this island mirrors choices into the attribute and the cookies.
@@ -175,19 +166,19 @@ export default function TopbarControls({
         title={p.cycle({ current: current.short, next: upcoming.short })}
         // Signed out, the Topbar also carries the sign-in link, and in Polish the row overflows a 320 px phone; the
         // theme stays one tap away in the settings panel there. Signed in, the button stays (red mode at the eyepiece).
-        className={cn(iconButton, !email && "max-sm:hidden")}
+        className={cn(TOPBAR_ICON_BUTTON_CLASS, !email && "max-sm:hidden")}
         onClick={() => {
           chooseTheme(nextTheme(theme));
         }}
       >
-        {current.icon}
+        <Paintbrush className="size-4.5" aria-hidden="true" />
       </button>
       <button
         type="button"
         popoverTarget={SETTINGS_ID}
         aria-label={m.nav.settings}
         aria-haspopup="dialog"
-        className={iconButton}
+        className={TOPBAR_ICON_BUTTON_CLASS}
       >
         <SlidersIcon />
       </button>
@@ -202,100 +193,104 @@ export default function TopbarControls({
         role="dialog"
         aria-label={m.nav.settings}
         data-theme={theme}
-        className={panelClass}
+        className={TOPBAR_PANEL_CLASS}
       >
-        <div className="bg-border mx-auto mb-4 h-1 w-10 rounded-full sm:hidden" aria-hidden="true" />
-        {/* The phone sheet clears the home indicator (`pb-safe-area`, global.css). */}
-        <div className="pb-safe-area grid gap-4 sm:pb-0">
-          {email && (
-            <div className="border-border grid gap-0.5 border-b pb-3">
-              <p className="text-faint text-xs">{m.nav.signedInAs}</p>
-              {/* A full-plan account's email is golden: the only sign of the plan for now (F-01 addendum). */}
-              <p
-                className={cn("truncate text-sm", accountPlan === "full" ? "text-plan-full" : "text-heading")}
-                data-account-plan={accountPlan ?? undefined}
-              >
-                {email}
-              </p>
-            </div>
-          )}
-
-          <div className="grid gap-1.5">
-            <p id="settings-theme-label" className={sectionLabel}>
-              {p.theme}
-            </p>
-            <SegmentedGroup
-              labelledBy="settings-theme-label"
-              value={theme}
-              onChange={chooseTheme}
-              options={themeSegments.map(({ value, label, short, icon }) => ({
-                value,
-                label: short,
-                ariaLabel: label,
-                icon,
-              }))}
-            />
-          </div>
-
-          <div className="grid gap-1.5">
-            <p id="settings-language-label" className={sectionLabel}>
-              {p.language}
-            </p>
-            {/*
-             * While the page reloads in the chosen language, that segment is busy (a spinner, `aria-busy`) and the
-             * other one is disabled; a hidden status says "Changing language…" (owner's answer to impl review F2).
-             */}
-            <SegmentedGroup
-              labelledBy="settings-language-label"
-              busyStatus={p.changingLanguage}
-              value={locale}
-              onChange={chooseLocale}
-              options={localeSegments.map(({ value, text }) => ({
-                value,
-                lang: value,
-                label: text,
-                busy: pendingLocale === value,
-                disabled: pendingLocale !== null && pendingLocale !== value,
-              }))}
-            />
-          </div>
-
-          {(install === "prompt" || install === "ios") && (
-            <div className="border-border grid gap-1 border-t pt-3">
-              <button
-                type="button"
-                className={textAction}
-                aria-expanded={install === "ios" ? iosHintOpen : undefined}
-                aria-controls={install === "ios" ? "settings-install-hint" : undefined}
-                onClick={() => {
-                  if (install === "prompt") {
-                    void promptInstall();
-                  } else {
-                    setIosHintOpen((open) => !open);
-                  }
-                }}
-              >
-                {m.offline.install.action}
-              </button>
-              {install === "ios" && (
-                <p id="settings-install-hint" hidden={!iosHintOpen} className="text-foreground text-sm">
-                  {m.offline.install.iosHint}
+        <div className={TOPBAR_SHEET_HANDLE_CLASS} data-sheet-handle>
+          <div className={TOPBAR_SHEET_GRIP_CLASS} aria-hidden="true" />
+        </div>
+        <div className={TOPBAR_PANEL_BODY_CLASS} data-sheet-body>
+          {/* The phone sheet clears the home indicator (`pb-safe-area`, global.css). */}
+          <div className="pb-safe-area grid gap-4 sm:pb-0">
+            {email && (
+              <div className="border-border grid gap-0.5 border-b pb-3">
+                <p className="text-faint text-xs">{m.nav.signedInAs}</p>
+                {/* A full-plan account's email is golden: the only sign of the plan for now (F-01 addendum). */}
+                <p
+                  className={cn("truncate text-sm", accountPlan === "full" ? "text-plan-full" : "text-heading")}
+                  data-account-plan={accountPlan ?? undefined}
+                >
+                  {email}
                 </p>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {email && (
-            <form method="POST" action="/api/auth/signout" className="border-border border-t pt-3">
-              {/* Signing out needs the network (S-06): disabled offline, with the caption under it (page-state.ts). */}
-              <button type="submit" className={textAction} data-needs-network={SIGN_OUT_CAPTION_ID}>
-                {m.nav.signOut}
-              </button>
-              <p id={SIGN_OUT_CAPTION_ID} className="text-muted-foreground offline:block hidden text-sm">
-                {m.offline.needsConnection}
+            <div className="grid gap-1.5">
+              <p id="settings-theme-label" className={sectionLabel}>
+                {p.theme}
               </p>
-            </form>
-          )}
+              <SegmentedGroup
+                labelledBy="settings-theme-label"
+                value={theme}
+                onChange={chooseTheme}
+                options={themeSegments.map(({ value, label, short, icon }) => ({
+                  value,
+                  label: short,
+                  ariaLabel: label,
+                  icon,
+                }))}
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <p id="settings-language-label" className={sectionLabel}>
+                {p.language}
+              </p>
+              {/*
+               * While the page reloads in the chosen language, that segment is busy (a spinner, `aria-busy`) and the
+               * other one is disabled; a hidden status says "Changing language…" (owner's answer to impl review F2).
+               */}
+              <SegmentedGroup
+                labelledBy="settings-language-label"
+                busyStatus={p.changingLanguage}
+                value={locale}
+                onChange={chooseLocale}
+                options={localeSegments.map(({ value, text }) => ({
+                  value,
+                  lang: value,
+                  label: text,
+                  busy: pendingLocale === value,
+                  disabled: pendingLocale !== null && pendingLocale !== value,
+                }))}
+              />
+            </div>
+
+            {(install === "prompt" || install === "ios") && (
+              <div className="border-border grid gap-1 border-t pt-3">
+                <button
+                  type="button"
+                  className={textAction}
+                  aria-expanded={install === "ios" ? iosHintOpen : undefined}
+                  aria-controls={install === "ios" ? "settings-install-hint" : undefined}
+                  onClick={() => {
+                    if (install === "prompt") {
+                      void promptInstall();
+                    } else {
+                      setIosHintOpen((open) => !open);
+                    }
+                  }}
+                >
+                  {m.offline.install.action}
+                </button>
+                {install === "ios" && (
+                  <p id="settings-install-hint" hidden={!iosHintOpen} className="text-foreground text-sm">
+                    {m.offline.install.iosHint}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {email && (
+              <form method="POST" action="/api/auth/signout" className="border-border border-t pt-3">
+                {/* Signing out needs the network (S-06): disabled offline, with the caption under it (page-state.ts). */}
+                <button type="submit" className={textAction} data-needs-network={SIGN_OUT_CAPTION_ID}>
+                  {m.nav.signOut}
+                </button>
+                <p id={SIGN_OUT_CAPTION_ID} className="text-muted-foreground offline:block hidden text-sm">
+                  {m.offline.needsConnection}
+                </p>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

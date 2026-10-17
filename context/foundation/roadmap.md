@@ -71,7 +71,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
 | S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | in-progress |
-| S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | proposed    |
+| S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | in-progress |
 | S-11 | ui-progress-rewards  | see each milestone as a badge and the Messier and Caldwell lists as tile checklists on the progress page                                            | —             | MS-06, FR-039, FR-041       | proposed    |
 | S-12 | app-icon             | recognise Sidereus by an app icon the owner picked from three proposals, on the home screen, the browser tab and the install prompt                 | —             | MS-06, FR-032, FR-036       | proposed    |
 
@@ -255,7 +255,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - The Topbar's right-hand cluster is tight at 320 px (the theme button already hides there when signed out), and the popover sits in the `night-sky` scope, so it carries `data-theme`.
   - The links keep `?site=` and `?telescope=` and the offline rules of `TONIGHT_PAGES`; the menu must not duplicate `TONIGHT_NAV`.
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-11: Progress rewards
 

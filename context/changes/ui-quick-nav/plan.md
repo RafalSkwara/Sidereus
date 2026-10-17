@@ -662,10 +662,10 @@ are still pending).
 
 #### Automated
 
-- [ ] 1.1 The branch is rebased on a `main` that contains #212, and `npm ci` succeeds
-- [ ] 1.2 `npm run test:reference` passes
-- [ ] 1.3 `npm run lint` and `npx astro check` pass
-- [ ] 1.4 `npx playwright test navigation.spec.ts red-night-mode.spec.ts` passes against a local preview (BASE_URL on the agent's own port, never 4413)
+- [x] 1.1 The branch is rebased on a `main` that contains #212, and `npm ci` succeeds
+- [x] 1.2 `npm run test:reference` passes
+- [x] 1.3 `npm run lint` and `npx astro check` pass
+- [x] 1.4 `npx playwright test navigation.spec.ts red-night-mode.spec.ts` passes against a local preview (BASE_URL on the agent's own port, never 4413)
 
 #### Manual
 
