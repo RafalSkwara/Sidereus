@@ -62,7 +62,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
-| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | in-progress       |
+| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | done              |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
 
@@ -179,7 +179,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Small. `safeNextPath` stays the one rule for a safe `next`, and the offline purge on sign-in or sign-up must keep working. It is first in the cut order.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-07: Production error visibility
 
@@ -289,3 +289,4 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **S-02: user can move between Tonight's focused pages in one tap through a sub-nav that replaces the back box, and reach Progress as the fourth destination in the tab bar and the top bar.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-tonight-nav/`. Lesson: —.
 - **S-05: user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.** — Archived 2026-10-16 → `context/archive/2026-10-16-evening-showpieces/`. The owner's manual rows 1.6, 2.5, 3.3, 4.5 (including the M39 July P3 non-pass, a twilight-definition difference) and 4.6 were covered by the owner's merge of PR #188. Known divergence kept: October M13/M15/M57 rank outside the top 5 (OD-1, duration saturation only). Lesson: —.
 - **S-08: user (the operator) can ship star files that come from the Hipparcos Catalogue, Version 1 directly instead of through HYG, with designations from CC0 and IAU sources, so ESA's authorisation can cover them.** — Archived 2026-10-17 → `context/archive/2026-10-16-star-source-switch/`. The owner's manual rows were covered by the owner's merge of PRs #193 and #195. F1 accepted: reference positions cite SIMBAD only. F5: the Gould numbers were dropped from the Flamsteed values. ESA's authorisation is still pending: no payments are taken until it arrives in writing. Lesson: —.
+- **S-06: user who opens sign-in or sign-up while signed in lands on Tonight, and a visitor who signs up from a gated link continues to that page afterwards.** — Archived 2026-10-17 → `context/archive/2026-10-17-auth-loose-ends/`. The owner's manual rows 1.4, 1.5, 2.4-2.7 and 3.6 were covered by the owner's merge of PR #211. Lesson: —.
