@@ -512,12 +512,12 @@
  * theme blocks): `--topbar-strip-height` mirrors GearShell's sky-flow strip (`pt-2 sm:pt-6` around Topbar's `h-16`),
  * `--tabbar-height` the TabBar's `h-16` plus its 1 px top border (its `pb-safe-area` is added where it is used).
  * `--sky-expanded-share` is the one constant for EXPANDED's share of the screen under the Topbar from `md` (owner
- * question Q3: 0.8 for now, 1 would be the whole screen).
+ * answer Q3 A, 2026-10-17: 1, the whole screen under the Topbar, never shorter than DEFAULT).
  */
 :root {
   --topbar-strip-height: 4.5rem;
   --tabbar-height: calc(4rem + 1px);
-  --sky-expanded-share: 0.8;
+  --sky-expanded-share: 1;
 
   @media (width >= 40rem) {
     --topbar-strip-height: 5.5rem;
