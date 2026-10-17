@@ -1,5 +1,5 @@
-import { createLucideIcon, FoldVertical, Maximize2, RectangleHorizontal, type LucideIcon } from "lucide-react";
-import { useEffect, useId, useRef } from "react";
+import { FoldVertical, Maximize2, RectangleHorizontal, type LucideIcon } from "lucide-react";
+import { useEffect, useId, useRef, type ComponentProps } from "react";
 import { SegmentedGroup } from "@/components/ui/segmented";
 import { getMessages } from "@/i18n";
 import { SKY_MODES, type Locale, type SkyMode, type Theme } from "@/lib/preferences";
@@ -28,16 +28,32 @@ const MODE_ICONS: Record<SkyMode, LucideIcon> = {
 };
 
 /**
- * "Change the sky view", lucide-style (24 grid, stroke 2, round caps), simplified for its 20 px size: a star over one
- * peak on the horizon, and the up / down cue for the band's height. Read by shape alone, so red mode needs no hue.
+ * "Change the sky view", lucide-style (stroke 2, round caps): option C's star over the hills on the horizon (owner, on
+ * #222: exactly as drawn there), and the up / down cue for the band's height beside it. The grid is 34 x 24, drawn at
+ * 28 x 20 px (`h-5 w-7`), so the cue gets its own room instead of squeezing the horizon. Read by shape alone, so red
+ * mode needs no hue.
  */
-export const SkyViewIcon = createLucideIcon("sky-view", [
-  ["path", { d: "M7 3.5 8 6l2.5 1L8 8l-1 2.5L6 8 3.5 7 6 6z", key: "star" }],
-  ["path", { d: "M2 19h12", key: "horizon" }],
-  ["path", { d: "m4 19 4-5 4 5", key: "peak" }],
-  ["path", { d: "m16 9 3-3 3 3", key: "up" }],
-  ["path", { d: "m16 15 3 3 3-3", key: "down" }],
-]);
+export function SkyViewIcon({ className, ...props }: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 34 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("h-5 w-7", className)}
+      {...props}
+    >
+      <path d="M9 3.75l1.2 2.8L13 7.75 10.2 8.95 9 11.75 7.8 8.95 5 7.75l2.8-1.2z" />
+      <path d="m4 20.25 5-5 3.5 3.5L15 16.25l2 2" />
+      <path d="M4 20.25h13" />
+      <path d="m23 9 3-3 3 3" />
+      <path d="m23 15 3 3 3-3" />
+    </svg>
+  );
+}
 
 /** The trigger: a bare 44 px target like the pan chevrons, its face passed in so the contrast test covers it. */
 export const SKY_MODE_TRIGGER_CLASS =
@@ -124,7 +140,7 @@ export function SkyModeControl({ mode, locale, theme, onChoose, faceClassName, c
         data-sky-mode-trigger={mode}
       >
         <span className={faceClassName}>
-          <SkyViewIcon className="size-5" aria-hidden="true" />
+          <SkyViewIcon aria-hidden="true" />
         </span>
       </button>
       <div
