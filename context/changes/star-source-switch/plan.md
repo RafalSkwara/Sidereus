@@ -462,4 +462,4 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 #### Manual
 
 - [x] 5.7 The credit line reads correctly and the landing footer renders in English and Polish on Tonight, a finder chart and the signed-out landing at 320 and 360 px, without sideways scroll — bca5748
-- [ ] 5.8 The PR description states the counts, the ten stars positioned from RAhms/DEdms, the Polish and non-IAU name changes, and that no payment is enabled
+- [x] 5.8 The PR description states the counts, the ten stars positioned from RAhms/DEdms, the Polish and non-IAU name changes, and that no payment is enabled — PR description
