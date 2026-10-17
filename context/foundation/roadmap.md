@@ -28,7 +28,7 @@ milestone_status: open
   - PRD v3 references;
   - `context/changes/ui-refine/audit.md`, including the owner's decisions 1-5 recorded there.
 - **Done when:** every S-NN below is `done`, or cut by the cut order below, or moved to Parked by the owner.
-- **Cut order (owner, 2026-10-15):** the PRD's hard deadline of 2026-11-04 still holds. If time runs short, drop **S-06** first, then **S-03**, then **S-01**. The cut order lists what to drop first, not a priority label.
+- **Cut order (owner, 2026-10-15):** the PRD's hard deadline of 2026-11-04 still holds. If time runs short, drop **S-06** first, then **S-03**, then **S-01**. The cut order lists what to drop first, not a priority label. **S-03 is dropped** (owner, 2026-10-17): its progress part moves to S-11 and the rest goes to Parked. The owner's slices of 2026-10-17 (S-09 to S-12) are outside the cut order until the owner places them.
 - **Scope anchors:**
   - MS-01: Finish the UI refinement the owner asked for on 2026-10-14: separate the data more visibly, make the buttons quieter, update the navigation. These are changes 3-5 of the `ui-refine` split (`context/changes/ui-refine/`).
   - MS-02: The advice agrees with itself and with published references:
@@ -39,6 +39,11 @@ milestone_status: open
   - MS-04: Loose ends a user can hit in the auth flow:
     - a signed-in visitor who opens sign-in or sign-up goes on to Tonight;
     - sign-up continues to the page that was asked for (PRD Access Control, ui-auth D1 and D2).
+  - MS-06 (owner, 2026-10-17): Four owner slices of UI polish and identity:
+    - the live sky can be dragged with a mouse and shown hidden, as today or expanded, remembered per viewer (S-09);
+    - Tonight's focused pages are one tap away from every screen (S-10);
+    - progress rewards: milestone badges and Messier / Caldwell tile checklists on /log/progress (S-11, superseding the progress part of S-03);
+    - an app icon chosen by the owner from three proposals (S-12).
   - MS-05 (owner, 2026-10-16): The app is ready to take payments as far as star data goes. ESA cannot authorise HYG-derived files but offers to assess Hipparcos V1 used directly, so the star files come from V1 directly (S-08, PRD Open Question 21). No payment until ESA authorises.
 
 ## Vision recap
@@ -59,24 +64,29 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ----------- |
 | S-01 | ui-dashboard-tiles   | read the dashboard's tiles and the verdict's event line in the same rhythm and icon language as the focused pages                                   | —             | MS-01, FR-030, FR-043       | done        |
 | S-02 | ui-tonight-nav       | move between Tonight's focused pages in one tap, and reach Progress as a fourth destination                                                         | —             | MS-01, FR-030, FR-039       | done        |
-| S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
+| S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | dropped     |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | done              |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
+| S-09 | ui-sky-modes         | drag the live sky with a mouse, and show it hidden, as today or expanded to the screen, with every star in its true place and the choice remembered | —             | MS-06, FR-030, FR-025       | planning    |
+| S-10 | ui-quick-nav         | reach any of Tonight's focused pages from every screen through one icon button in the top bar                                                       | S-02          | MS-06, FR-030               | proposed    |
+| S-11 | ui-progress-rewards  | see each milestone as a badge and the Messier and Caldwell lists as tile checklists on the progress page                                            | —             | MS-06, FR-039, FR-041       | proposed    |
+| S-12 | app-icon             | recognise Sidereus by an app icon the owner picked from three proposals, on the home screen, the browser tab and the install prompt                 | —             | MS-06, FR-032, FR-036       | proposed    |
 
 ## Streams
 
 Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
 
-| Stream | Theme                | Chain                   | Note                                                                                                                       |
-| ------ | -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| A      | UI refinement        | `S-01`, `S-02` → `S-03` | The `ui-refine` umbrella. `S-01` stands alone (already running); `S-03` follows `S-02`. The board has four Stream options. |
-| B      | Advice you can trust | `S-04` → `S-05`         | The north star first. The PRD's re-check closes the stream.                                                                |
-| C      | Seeing production    | `S-07`                  | Standalone; it makes the other streams' post-merge checks observable.                                                      |
-| D      | Auth loose ends      | `S-06`                  | Standalone and small; first in the cut order.                                                                              |
-| E      | Star data licensing  | `S-08`                  | Standalone; owner-mandated 2026-10-16, outside the cut order. The board has no Stream E option, so its Stream is blank.    |
+| Stream | Theme                | Chain                          | Note                                                                                                                                                                                                   |
+| ------ | -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A      | UI refinement        | `S-01`, `S-02` → `S-03`        | The `ui-refine` umbrella. `S-01` stands alone (already running); `S-03` follows `S-02`. The board has four Stream options. S-03 is dropped (owner, 2026-10-17); its progress part is S-11 in Stream F. |
+| B      | Advice you can trust | `S-04` → `S-05`                | The north star first. The PRD's re-check closes the stream.                                                                                                                                            |
+| C      | Seeing production    | `S-07`                         | Standalone; it makes the other streams' post-merge checks observable.                                                                                                                                  |
+| D      | Auth loose ends      | `S-06`                         | Standalone and small; first in the cut order.                                                                                                                                                          |
+| E      | Star data licensing  | `S-08`                         | Standalone; owner-mandated 2026-10-16, outside the cut order. The board has no Stream E option, so its Stream is blank.                                                                                |
+| F      | Owner polish         | `S-09`, `S-10`, `S-11`, `S-12` | The owner's slices of 2026-10-17, independent of each other; S-10 builds on S-02's sub-nav. The board may have no Stream F option.                                                                     |
 
 ## Baseline
 
@@ -137,7 +147,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Waits for S-02, where the Progress link leaves the Log header. It is second in the cut order.
-- **Status:** proposed
+- **Status:** dropped (owner, 2026-10-17): the progress part is superseded by S-11 `ui-progress-rewards`; the gear and log rows are in Parked.
 
 ### S-04: Galaxies in a small telescope
 
@@ -215,18 +225,87 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - **No payment is taken until ESA authorises in writing.** Outside the cut order: the owner mandated it on 2026-10-16.
 - **Status:** done
 
+### S-09: Sky modes and drag to pan
+
+- **Outcome:** user can drag the live sky sideways with a mouse (touch, keyboard and the chevrons keep working, and a drag never opens a marker), and switch it between hidden (the verdict still readable), as today, and expanded (the whole phone screen, most of a desktop screen), with every star and planet in its true place at every size and the choice remembered on the device without a flash.
+- **Change ID:** ui-sky-modes
+- **PRD refs:** MS-06, FR-030, FR-025 (the remembered-on-the-device pattern) (owner decision 2026-10-17)
+- **Prerequisites:** —
+- **Parallel with:** S-06, S-07, S-10, S-11, S-12
+- **Blockers:** —
+- **Unknowns:**
+  - Where the mode control sits, what hidden shows, the expanded height on a desktop and the expanded field of view: the owner's questions in the change's plan (`context/changes/ui-sky-modes/plan.md`, with mockups). — Owner: user. Block: no; the plan carries a recommended default for each.
+- **Risk:**
+  - The phone first screen (`tonight-phone.spec.ts`, 33 px of slack) must hold in the default mode, and the skeleton must reserve the right height in every mode (`sky-band.ts`).
+  - The projection must be recomputed for each size, never stretched; the expanded view stays the horizon panorama, not an atlas (Parked: "A sky atlas or planetarium view").
+  - Outside the cut order: the owner mandated it on 2026-10-17.
+- **Status:** planning
+
+### S-10: Quick navigation to Tonight's pages
+
+- **Outcome:** user can open any of Tonight's focused pages (targets, events, plan, Moon, planets, nights) from every screen through a new icon button at the top right of the Topbar, which opens a popover menu of those pages.
+- **Change ID:** ui-quick-nav
+- **PRD refs:** MS-06, FR-030 (owner decision 2026-10-17)
+- **Prerequisites:** S-02
+- **Parallel with:** S-06, S-07, S-09, S-11, S-12
+- **Blockers:** —
+- **Unknowns:**
+  - Whether the button shows on the Tonight pages too, beside the sub-nav, and how it fits the Polish Topbar at 320 px. — Owner: user. Block: no.
+- **Risk:**
+  - The Topbar's right-hand cluster is tight at 320 px (the theme button already hides there when signed out), and the popover sits in the `night-sky` scope, so it carries `data-theme`.
+  - The links keep `?site=` and `?telescope=` and the offline rules of `TONIGHT_PAGES`; the menu must not duplicate `TONIGHT_NAV`.
+  - Outside the cut order: the owner mandated it on 2026-10-17.
+- **Status:** proposed
+
+### S-11: Progress rewards
+
+- **Outcome:** user can see each of the 11 milestones as a badge (reached or still ahead) and the Messier and Caldwell lists as tile checklists on `/log/progress`. It supersedes the progress part of S-03 (`ui-log-progress-gear`, #171).
+- **Change ID:** ui-progress-rewards
+- **PRD refs:** MS-06, FR-039, FR-041 (owner decision 2026-10-17)
+- **Prerequisites:** —
+- **Parallel with:** S-06, S-07, S-09, S-10, S-12
+- **Blockers:** —
+- **Unknowns:**
+  - The badge artwork (lucide icons in a medallion or drawn badges) and whether the tiles show a thumbnail or only the label. — Owner: user. Block: no.
+- **Risk:**
+  - Badges stay private progress, never shared or ranked (Parked: social features, badges and leaderboards).
+  - `observingProgress` and `withStored` stay the one rule; the page must not count differently from the celebration.
+  - Red mode needs every badge state told apart by shape, not colour alone.
+  - Outside the cut order: the owner mandated it on 2026-10-17.
+- **Status:** proposed
+
+### S-12: App icon
+
+- **Outcome:** user can recognise Sidereus by an app icon the owner picked from three proposals, used for the favicon, the installed app's icon and the install prompt.
+- **Change ID:** app-icon
+- **PRD refs:** MS-06, FR-032, FR-036 (owner decision 2026-10-17)
+- **Prerequisites:** —
+- **Parallel with:** S-06, S-07, S-09, S-10, S-11
+- **Blockers:** —
+- **Unknowns:**
+  - Which of the three proposals the owner picks. — Owner: user. Block: yes, for the build.
+- **Risk:**
+  - Every size the manifest and `apple-touch-icon` need comes from one source through the existing PWA assets config (`pwa-assets.config.mjs`), and the service worker's precache list follows.
+  - The icon must read on light and dark home screens; the in-app red mode does not apply to it.
+  - Outside the cut order: the owner mandated it on 2026-10-17.
+- **Status:** proposed
+
 ## Backlog Handoff
 
-| Roadmap ID | Change ID            | Suggested issue title                                             | Ready for `/10x-plan` | Notes                                                                   |
-| ---------- | -------------------- | ----------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
-| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                      | done                  | Merged in #177, archived · GitHub #169                                  |
-| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination          | done                  | Done: #182 merged, archived · GitHub #170                               |
-| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                            | no                    | After S-02 · GitHub #171                                                |
-| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)       | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178) |
-| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check         | no                    | After S-04 · GitHub #173                                                |
-| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)   | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174  |
-| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)              | yes                   | Run `/10x-observability-audit` first · GitHub #175                      |
-| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | done                  | Done: #193 + #195 merged, archived · GitHub #185                        |
+| Roadmap ID | Change ID            | Suggested issue title                                               | Ready for `/10x-plan` | Notes                                                                               |
+| ---------- | -------------------- | ------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------- |
+| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                        | done                  | Merged in #177, archived · GitHub #169                                              |
+| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination            | done                  | Done: #182 merged, archived · GitHub #170                                           |
+| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                              | dropped               | Dropped (owner, 2026-10-17): progress → S-11, rows → Parked · GitHub #171           |
+| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)         | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178)             |
+| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check           | no                    | After S-04 · GitHub #173                                                            |
+| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)     | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174              |
+| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)                | yes                   | Run `/10x-observability-audit` first · GitHub #175                                  |
+| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision)   | done                  | Done: #193 + #195 merged, archived · GitHub #185                                    |
+| S-09       | ui-sky-modes         | M-4 S-09 · Live sky: drag to pan, hidden / default / expanded modes | planned               | Plan: `context/changes/ui-sky-modes/plan.md`, owner questions inside · no issue yet |
+| S-10       | ui-quick-nav         | M-4 S-10 · Quick navigation to Tonight's pages from every screen    | yes                   | Run `/10x-ui` for the Topbar · no issue yet                                         |
+| S-11       | ui-progress-rewards  | M-4 S-11 · Progress rewards: milestone badges, tile checklists      | yes                   | Supersedes S-03's progress part (#171) · no issue yet                               |
+| S-12       | app-icon             | M-4 S-12 · App icon: three proposals, owner picks                   | yes                   | Proposals first, then the owner's pick · no issue yet                               |
 
 ## Open Roadmap Questions
 
@@ -263,6 +342,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **OAuth sign-in, a read-only demo account** — Why parked: PRD §Access Control, post-MVP.
 - **Preview environments with a separate database** — Why parked: deferred until payments are on the table.
 - **Forecast caching by grid cell shared between nearby users** — Why parked: only needed beyond the target scale.
+- **Gear and log rows labelled with fact icons, and the Log header's last link (the rest of S-03 `ui-log-progress-gear`, #171)** — Why parked: the owner dropped S-03 on 2026-10-17; its progress part became S-11.
 
 ## Milestone History
 
