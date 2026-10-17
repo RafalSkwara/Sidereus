@@ -191,3 +191,39 @@ Per file (before -> after): `agent-hooks` 25 -> 11, `no-console-guard` 8 -> 5, `
 ### File floor, docs
 
 `no-console-guard`'s floor (>= 300 source files under `src`): 431 files with the guard's extensions at the time of the run, 315 non-test and 116 test; the floor holds. Docs grep (`grep -rnE 'messier\.test|caldwell\.test|silent-catch|log-failure|runner-zone|fetch-timeout|virtual-modules|rhythm-roles|navigation\.test|i18n\.test' CLAUDE.md context/foundation context/deployment`): CLAUDE.md OpenNGC tripwire rewritten ("assert only their provenance; the shape is the generator's at `catalogue:build`"); test-plan.md §6.2 helper and runner-zone guard lines updated (two zones; four tests; guards project); lessons.md and `error-visibility.md` name `silent-catch-guard.test.ts` and `log-failure.ts` correctly, no change; `context/handoff.md:95` (the EPIPE pin) is true again. `npm run lint`, `npx astro check` (0 errors), `npm run test:guards` (25 tests, 5.2 s) green.
+
+## Phase 5: Star provenance, scripts/lib, the landing capture (2026-10-17)
+
+Branch `test-diet/phase-5`, stacked on `test-diet/phase-4` (PR #203). #195 was already merged when Phase 0 started, so this phase did not wait. Two Sonnet subagents (high) cut the star and `scripts/lib` tests; the implementer did the `guards` project, the capture script, the docs, the build leak proof, and the whole smoke and e2e runs.
+
+| Measure                                  | Before                | After                                                   |
+| ---------------------------------------- | --------------------- | ------------------------------------------------------- |
+| `stars` + `finder-stars` + `scripts/lib` | 8 + 26 + 74 = 108     | 3 + 4 + 13 = 20 (limit <= 20)                           |
+| whole suite                              | 119 files / 893 tests | 119 / 805 (limit <= 820 across both projects)           |
+| `reference` project cold                 | 4.3 s                 | 4.3 s (107 files / 758 tests)                           |
+| `guards` project cold                    | 25 tests, 5.2 s       | 12 files / 47 tests, 4.9 s                              |
+| e2e (`CI=1`, local preview)              | 87 passed, 3 skipped  | 87 passed, 2 skipped (the landing capture skip is gone) |
+
+Per file (before -> after): `catalogue/stars` 8 -> 3, `catalogue/finder-stars` 26 -> 4, `scripts/lib/build-stars.test.mjs` 33 -> 4, `designations.test.mjs` 23 -> 4, `hipparcos.test.mjs` 18 -> 5 (the propagate case folded into the `parseRecord` test to meet the 20). The plan's "71" for `scripts/lib` was 74 on the merged files.
+
+`guards` now also holds the four provenance files (`messier`, `caldwell`, `stars`, `finder-stars`) and `scripts/lib/*.test.mjs` (`vitest.config.ts`); the hook's `reference` project no longer runs them.
+
+### Ledger rows of this phase
+
+- catalogue/finder-stars "Credit: ESA", the HYG/Hipparcos pins, the gzip budget: kept. "records the pinned Hipparcos file, its licence and the ESA credit" (both files) holds the `hip_main.dat` `PINNED_SHA256`, the url equal to the bright meta, the licence, "Credit: ESA", "SP-1200", `commercialUse` and the counts; "records exactly the fields read from the file, the same as the bright file" holds `HIPPARCOS_FIELDS_USED` / `FIELDS_USED` and the sexagesimal hips; "gzips to under 160,000 bytes" unchanged. The 41 Polish star names test kept. One independent-reference position test per file kept (the SIMBAD/J2000 positions added by #195, so `stars` is at 3, not 2).
+- scripts/lib: the pin ("carries the verified pin"), "lists exactly the fields the licence request names, and reads no field outside that table", the metas' source, licence (CC BY-NC 3.0 IGO) and ESA authorisation, the 921 / 25,723 counts, and the refusal loop (a flipped byte, wrong length, Content-Encoding, a stall, an unpinned row without Vmag): kept. Decoder tables, the Bayer letter table and restated rounding went (b).
+- Dropped as (b) (accepted gap, D7): the committed star JSON's shape checks, including "has no two stars closer than 5 arcseconds" (the guard against HYG's duplicate Capella; the source is now a pinned, SHA-checked file read by a deterministic generator) and the bright-vs-finder cross-file consistency checks. The server-only import scan of `finder-stars` went (the stronger gate is `scripts/build-sw.mjs`).
+
+### Break checks
+
+- "Credit: ESA" removed from `finder-stars.meta.json`: "records the pinned Hipparcos file, its licence and the ESA credit" red, file restored.
+- `npm run build` fails when the finder star file reaches the browser bundle: a static `import finderStarsLeak from "@/lib/catalogue/finder-stars.json"` added to `MoonTimeSlider.tsx` made the build exit 1 with "build-sw: the finder star file leaked into the browser bundle (dist/client/_astro/MoonTimeSlider.CaZfzXEo.js)"; restored, rebuilt clean.
+- The agents also ran: the `magnitudeTenths` rounding, the `Content-Encoding` refusal, the `chooseDesignation` ambiguity rule.
+
+### Landing capture
+
+`tests/e2e/landing-screenshot.spec.ts` (an opt-in spec) became `scripts/capture-landing.mjs` with `npm run capture:landing` (`BASE_URL=… npm run capture:landing`, the same setup as the onboarding spec: local Supabase, the forecast fixture, Madrid stubbed). It ran once against the local preview and produced the screenshot (the file was restored, the image is not part of this change). CLAUDE.md's Landing bullet names the new command.
+
+### Docs
+
+Docs grep (`grep -rnE 'stars\.test|finder-stars\.test|the same test scans|landing-screenshot|CAPTURE_LANDING' CLAUDE.md context/foundation context/deployment`): CLAUDE.md tripwires for the bright and finder star files (provenance and licence only; "the same test scans for it" -> `scripts/build-sw.mjs`), the Agent hooks sentence (the `guards` project holds the provenance pins), the Landing bullet; `test-plan.md` §4 (`guards`); a dated note in `roadmap.md` (the S-08 item) and in `esa-reply-assessment-2026-10-16.md` (item 7); `README.md` and `LICENSE-DATA.md` name none of these tests. Dead exports now referenced by no test: `FINDER_STAR_COUNT_RANGE`, `FINDER_STAR_MAX_MAG`, `BRIGHT_STAR_COUNT_RANGE`, `BRIGHT_STAR_MAX_MAG`, `unpackPosition`, `unpackMagnitudes` (left in place; no `src/` change in this phase). `npm run lint`, `npx astro check` (0 errors), smoke (all steps) green.
