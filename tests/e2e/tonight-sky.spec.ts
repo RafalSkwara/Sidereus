@@ -91,6 +91,84 @@ function forward(a: number, b: number): number {
   return (((b - a) % 1440) + 1440) % 1440;
 }
 
+const MADRID = "Europe/Madrid";
+
+/** Madrid's wall-clock minutes of the day at `instant` (epoch ms). */
+function madridMinutes(instant: number): number {
+  return minutes(
+    new Intl.DateTimeFormat("en-GB", { timeZone: MADRID, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
+      new Date(instant),
+    ),
+  );
+}
+
+/** The instant (epoch ms) of Madrid's wall-clock `minuteOfDay` on `date` (`YYYY-MM-DD`, plus `addDays`). */
+function madridInstant(date: string, addDays: number, minuteOfDay: number): number {
+  const [year, month, day] = date.split("-").map(Number);
+  const wall = Date.UTC(year, month - 1, day + addDays, 0, minuteOfDay);
+  const offsetAt = (instant: number) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: MADRID,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      })
+        .formatToParts(new Date(instant))
+        .map((part) => [part.type, part.value]),
+    );
+    const shown = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+    return shown - Math.floor(instant / 1000) * 1000;
+  };
+  return wall - offsetAt(wall - offsetAt(wall));
+}
+
+/**
+ * The slider's range as instants. The labels are wall-clock times only, so the night's own date
+ * (`data-night-date`, the night the page shows) places them: sunset on that date, sunrise on the next day. Reading
+ * the labels as times of the day alone would take the morning before the range for its end.
+ */
+async function rangeOf(page: Page) {
+  const startMin = minutes((await page.locator("[data-sky-start]").textContent()) ?? "");
+  const endMin = minutes((await page.locator("[data-sky-end]").textContent()) ?? "");
+  const night = (await page.locator("[data-offline-copy]").first().getAttribute("data-night-date")) ?? "";
+  expect(night).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  return {
+    night,
+    startMin,
+    endMin,
+    start: madridInstant(night, 0, startMin),
+    end: madridInstant(night, endMin < startMin ? 1 : 0, endMin),
+  };
+}
+
+/**
+ * What Now must do at `now`: before the range it goes to the first frame, after it to the last, and inside it to the
+ * frame within half a step (5 minutes, plus one for the clock turning between reading it and the click).
+ */
+async function expectNowFrame(page: Page, slider: Locator, range: Awaited<ReturnType<typeof rangeOf>>, now: number) {
+  const time = page.locator("[data-sky-time]");
+  const max = Number(await slider.getAttribute("max"));
+  const shown = (await time.textContent()) ?? "";
+  const value = await slider.inputValue();
+  if (now <= range.start) {
+    expect(value, "before the range, Now is the first frame").toBe("0");
+    expect(shown).toBe((await page.locator("[data-sky-start]").textContent()) ?? "");
+  } else if (now >= range.end) {
+    expect(value, "after the range, Now is the last frame").toBe(String(max));
+    expect(shown).toBe((await page.locator("[data-sky-end]").textContent()) ?? "");
+  } else {
+    const at = madridMinutes(now);
+    const off = Math.min(forward(at, minutes(shown)), forward(minutes(shown), at));
+    expect(off).toBeLessThanOrEqual(6);
+  }
+  await expect(slider).toHaveAttribute("aria-valuetext", shown);
+}
+
 test("the slider moves the bodies, and Home, End and Now reach their frames", async ({ page }) => {
   const { slider, max } = await openSky(page, "e2e-sky-slider");
   expect(max).toBeGreaterThan(1);
@@ -127,29 +205,33 @@ test("the slider moves the bodies, and Home, End and Now reach their frames", as
   }
   expect(moved, "no body was up in two neighbouring frames").toBe(true);
 
-  // Now goes to the frame nearest the current time, clamped into the range: inside it, a frame within half a step
-  // (5 minutes, plus one for the clock turning between reading it and the click); outside it, an end of the range.
+  // Now goes to the frame nearest the current time, clamped into the range (`expectNowFrame`). The real clock decides
+  // which case this run is in; the next test pins each one.
   await slider.press("End");
-  const now = minutes(
-    new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Madrid",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).format(new Date()),
-  );
+  const range = await rangeOf(page);
+  const now = Date.now();
   await page.getByRole("button", { name: t.now }).click();
-  const shown = (await time.textContent()) ?? "";
-  const start = minutes(startLabel);
-  if (forward(start, now) <= forward(start, minutes(endLabel))) {
-    const off = Math.min(forward(now, minutes(shown)), forward(minutes(shown), now));
-    expect(off).toBeLessThanOrEqual(6);
-  } else {
-    const value = await slider.inputValue();
-    expect(value === "0" || value === String(max)).toBe(true);
-    expect(shown).toBe(value === "0" ? startLabel : endLabel);
+  await expectNowFrame(page, slider, range, now);
+});
+
+test("Now clamps into the night's range at any hour, dawn to sunrise included", async ({ page }) => {
+  const { slider } = await openSky(page, "e2e-sky-now");
+  const range = await rangeOf(page);
+  // Sunset and sunrise (the labels) are on a 24-hour clock, so the morning before the range reads as inside it.
+  expect(range.startMin).toBeGreaterThan(range.endMin);
+
+  const pins = [
+    // From civil dawn the page shows the evening ahead: the minutes just before sunrise, on the night's own date, are
+    // hours before the range (CI failed here: Now was expected within 6 minutes of a time that is 11 hours away).
+    { name: "the morning before the range", instant: madridInstant(range.night, 0, range.endMin - 10) },
+    { name: "inside the range", instant: range.start + 90 * 60_000 },
+    { name: "after the range", instant: range.end + 10 * 60_000 },
+  ];
+  for (const pin of pins) {
+    await page.clock.setFixedTime(pin.instant);
+    await page.getByRole("button", { name: t.now }).click();
+    await expectNowFrame(page, slider, range, pin.instant);
   }
-  await expect(slider).toHaveAttribute("aria-valuetext", shown);
 });
 
 test("an object marker opens Targets with its row in view", async ({ page }) => {
