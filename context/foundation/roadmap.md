@@ -3,7 +3,7 @@ project: Sidereus
 version: 4
 status: draft
 created: 2026-09-30
-updated: 2026-10-16
+updated: 2026-10-17
 prd_version: 3
 main_goal: quality
 top_blocker: skills # advice judged without an observer; the owner kept it for M-4 (2026-10-15)
@@ -64,7 +64,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
-| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | in-progress |
+| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done |
 
 ## Streams
 
@@ -210,10 +210,10 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - Whether the Wikidata and IAU designation sources cover the 3,342 stars that HYG names today, and how many stars ≤ 7.5 the V1 file yields (the assessment estimates about 25,713 against 25,791). — Owner: team. Block: no; the research settles it.
 - **Risk:**
   - Both star pairs, the count guards, `stars.test.ts` and `finder-stars.test.ts` provenance assertions, the fixtures, `Attribution.astro` (new i18n keys in `en.ts` and `pl.ts`), `LICENSE-DATA.md` and the CLAUDE.md star tripwires all move together; the files stop being CC BY-SA and become NC under ESA's terms.
-  - The positions are J1991.25 and must be propagated to J2000 with the proper motions; the 925-star bright file is expected to stay unchanged.
+  - The positions are J1991.25 and must be propagated to J2000 with the proper motions; the bright file is expected to stay unchanged (in the end it went from 925 to 921 stars).
   - If ESA refuses or prices it out, the files revert or migrate to SAO in a change of their own.
   - **No payment is taken until ESA authorises in writing.** Outside the cut order: the owner mandated it on 2026-10-16.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -226,7 +226,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 | S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check         | no                    | After S-04 · GitHub #173                                                    |
 | S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)   | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174      |
 | S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)              | yes                   | Run `/10x-observability-audit` first · GitHub #175                          |
-| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | yes                   | Owner decision 2026-10-16 · Run `/10x-new star-source-switch` · GitHub #185 |
+| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | done                  | Done: #193 + #195 merged, archived · GitHub #185                            |
 
 ## Open Roadmap Questions
 
@@ -288,3 +288,4 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **S-01: user can read the dashboard's tiles and the verdict's event line in the same spacing rhythm and icon language as the focused pages, with no icons on the tile headings.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-dashboard-tiles/`. Lesson: —.
 - **S-02: user can move between Tonight's focused pages in one tap through a sub-nav that replaces the back box, and reach Progress as the fourth destination in the tab bar and the top bar.** — Archived 2026-10-15 → `context/archive/2026-10-15-ui-tonight-nav/`. Lesson: —.
 - **S-05: user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.** — Archived 2026-10-16 → `context/archive/2026-10-16-evening-showpieces/`. The owner's manual rows 1.6, 2.5, 3.3, 4.5 (including the M39 July P3 non-pass, a twilight-definition difference) and 4.6 were covered by the owner's merge of PR #188. Known divergence kept: October M13/M15/M57 rank outside the top 5 (OD-1, duration saturation only). Lesson: —.
+- **S-08: user (the operator) can ship star files that come from the Hipparcos Catalogue, Version 1 directly instead of through HYG, with designations from CC0 and IAU sources, so ESA's authorisation can cover them.** — Archived 2026-10-17 → `context/archive/2026-10-16-star-source-switch/`. The owner's manual rows were covered by the owner's merge of PRs #193 and #195. F1 accepted: reference positions cite SIMBAD only. F5: the Gould numbers were dropped from the Flamsteed values. ESA's authorisation is still pending: no payments are taken until it arrives in writing. Lesson: —.
