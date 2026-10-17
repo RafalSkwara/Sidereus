@@ -35,8 +35,22 @@ export function safeNextPath(value: unknown): string | null {
   return pathname + search;
 }
 
+/** The two pages a signed-in visitor has no use for; `/auth/confirm-email` is not one of them. */
+const AUTH_ENTRY_PATHS = [SIGN_IN_PATH, "/auth/signup"];
+
+/** Whether `pathname` is the sign-in or sign-up page, with or without one trailing slash (`trailingSlash: "ignore"`). */
+export function isAuthEntryPath(pathname: string): boolean {
+  const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return AUTH_ENTRY_PATHS.includes(path);
+}
+
+/** `path`, carrying `next` when it is a safe place to continue to afterwards; `path` unchanged otherwise. */
+export function withNext(path: string, next?: string | null): string {
+  const target = safeNextPath(next);
+  return target ? `${path}?next=${encodeURIComponent(target)}` : path;
+}
+
 /** The sign-in page, carrying `next` when it is a safe place to continue to afterwards. */
 export function signInUrl(next?: string | null): string {
-  const target = safeNextPath(next);
-  return target ? `${SIGN_IN_PATH}?next=${encodeURIComponent(target)}` : SIGN_IN_PATH;
+  return withNext(SIGN_IN_PATH, next);
 }

@@ -62,7 +62,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-03 | ui-log-progress-gear | see progress as a bar over a quieter checklist, and gear and log rows labelled with icons                                                           | S-02          | MS-01, FR-039, FR-007       | proposed    |
 | S-04 | small-scope-galaxies | get galaxy advice in a small telescope that agrees with itself: big bright galaxies are not called "very faint", and faint ones are not ranked high | —             | MS-02, FR-038, FR-013       | done        |
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
-| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
+| S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | in-progress       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
 | S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
 
@@ -179,7 +179,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Small. `safeNextPath` stays the one rule for a safe `next`, and the offline purge on sign-in or sign-up must keep working. It is first in the cut order.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-07: Production error visibility
 

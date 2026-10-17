@@ -97,6 +97,8 @@ export const PASSWORD = "E2e-Test-Passw0rd!";
 
 export const SIGNUP_FORM = 'form[action="/api/auth/signup"]';
 export const ONBOARDING_FORM = 'form[action="/api/onboarding"]';
+/** The onboarding form whatever its `?next=` (the visit from a gated link posts to `/api/onboarding?next=%2Flog`). */
+export const ONBOARDING_FORM_PREFIX = 'form[action^="/api/onboarding"]';
 
 /**
  * Waits until React has hydrated the element matching `selector` inside an island, so typing and clicks reach
@@ -167,19 +169,37 @@ export async function stubMapTiles(page: Page): Promise<{ count(): number }> {
   return { count: () => requests };
 }
 
-/** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`), lands on /onboarding and returns the email. */
-export async function signUp(page: Page, emailPrefix: string): Promise<string> {
-  const email = `${emailPrefix}-${randomUUID()}@example.com`;
-  await page.goto("/auth/signup");
+/**
+ * Fills the sign-up form already open on `page` (waits for its island to hydrate first) and submits it: no navigation
+ * and no assertion on where it lands, so a spec can start from `/auth/signup` or from a link that carries `next`.
+ */
+export async function fillSignUpForm(page: Page, email: string) {
   await waitForHydration(page, SIGNUP_FORM);
   const signup = page.locator(SIGNUP_FORM);
   await signup.locator("#email").fill(email);
   await signup.locator("#password").fill(PASSWORD);
   await signup.locator("#confirmPassword").fill(PASSWORD);
   await signup.locator('button[type="submit"]').click();
+}
+
+/** Signs up a fresh user (`<emailPrefix>-<uuid>@example.com`), lands on /onboarding and returns the email. */
+export async function signUp(page: Page, emailPrefix: string): Promise<string> {
+  const email = `${emailPrefix}-${randomUUID()}@example.com`;
+  await page.goto("/auth/signup");
+  await fillSignUpForm(page, email);
   await expect(page).toHaveURL(/\/onboarding$/);
   await waitForHydration(page, ONBOARDING_FORM);
   return email;
+}
+
+/**
+ * Completes the onboarding form open on `page` in Madrid with the default kit and submits it: no assertion on where it
+ * lands. The form is found by prefix because its action carries `?next=` when the visit came from a gated link.
+ */
+export async function completeOnboardingInMadrid(page: Page) {
+  await page.locator("#place-search").fill("Madrid");
+  await page.getByRole("list", { name: en.location.resultsLabel }).getByRole("button", { name: MADRID_LABEL }).click();
+  await page.locator(`${ONBOARDING_FORM_PREFIX} button[type="submit"]`).click();
 }
 
 /** Signs up a fresh user and completes onboarding in Madrid with the default kit, landing on Tonight; returns the email. */
@@ -187,9 +207,7 @@ export async function onboardInMadrid(page: Page, emailPrefix: string): Promise<
   await stubPlaceSearch(page);
   const email = await signUp(page, emailPrefix);
 
-  await page.locator("#place-search").fill("Madrid");
-  await page.getByRole("list", { name: en.location.resultsLabel }).getByRole("button", { name: MADRID_LABEL }).click();
-  await page.locator(`${ONBOARDING_FORM} button[type="submit"]`).click();
+  await completeOnboardingInMadrid(page);
   await expect(page).toHaveURL(/\/tonight$/);
   return email;
 }

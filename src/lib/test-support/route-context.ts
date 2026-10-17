@@ -21,7 +21,7 @@ export interface RouteContextOptions {
   user?: { id: string } | null;
 }
 
-/** A context with the `request`, `params`, `redirect` and the `locals` the routes read; every other field is absent. */
+/** A context with the `request`, `url`, `params`, `redirect` and the `locals` the routes read; every other field is absent. */
 export function routeContext(options: RouteContextOptions = {}): RouteContext {
   const { form = {}, body, params = {}, supabase = null, user = { id: "user-1" } } = options;
   const request = body
@@ -33,6 +33,7 @@ export function routeContext(options: RouteContextOptions = {}): RouteContext {
     : new Request("http://localhost/api/test", { method: "POST", body: formBody(form) });
   return {
     request,
+    url: new URL(request.url),
     params,
     locals: { supabase, user, locale: "en", theme: "dark" },
     redirect: (path: string) => new Response(null, { status: 302, headers: { Location: path } }),

@@ -3,19 +3,21 @@ import AuthShell from "@/components/AuthShell.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages } from "@/i18n";
+import { safeNextPath, signInUrl } from "@/lib/auth-redirect";
 import { cn } from "@/lib/utils";
 
-// `?error=` carries a message key; the form translates it.
+// `?error=` carries a message key; the form translates it. `?next=` is the page to continue to after onboarding.
 const error = Astro.url.searchParams.get("error");
+const next = safeNextPath(Astro.url.searchParams.get("next"));
 const { locale } = Astro.locals;
 const t = getMessages(locale).auth.signUp;
 ---
 
 <AuthShell title={t.title} subtitle={t.subtitle}>
-  <SignUpForm serverError={error} locale={locale} client:load />
+  <SignUpForm serverError={error} locale={locale} next={next} client:load />
   <p class="mt-8 border-t border-border pt-4 text-body text-muted-foreground">
     {t.haveAccount}{" "}
-    <a href="/auth/signin" class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
+    <a href={signInUrl(next)} class:list={cn(buttonVariants({ variant: "link" }), "px-1 text-body")}>
       {t.signInLink}
     </a>
   </p>
