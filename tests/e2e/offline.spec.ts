@@ -1,9 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, signOut, waitForServiceWorker } from "./helpers";
+import { onboardInMadrid, signOut, test, waitForServiceWorker } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -36,11 +36,16 @@ function storedCopies(page: Page) {
   );
 }
 
+// clock: real (the service worker compares each copy's `preparedAt` with its own real clock to expire it, and `page.clock`
+// does not reach the worker's scope); the expectations come from page data (`data-night-date`, `html[data-from-device]`).
+test.use({ clock: "real" });
+
 test("Tonight pages opened online are there offline, and signing out removes them", async ({ browser }, testInfo) => {
   test.setTimeout(120_000);
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
   await proxy.start();
   // Its own context on the proxy's origin, so the service worker registers there.
+  // clock: real (the worker's own clock decides expiry; see the `test.use` above)
   const context = await browser.newContext({ baseURL: proxy.origin });
   try {
     // Red night mode: offline, a quiet link must lose the resting underline red mode gives it (ui-quiet-actions).
@@ -116,9 +121,26 @@ test("Tonight pages opened online are there offline, and signing out removes the
           )
           .toEqual({ underline: "none", iconMatches: true });
       }
+      // A navigation would land on /log, or /offline with the network gone. The click's default is what starts it, so
+      // the proof is that the page prevented it: a capture listener at the window sees the click first, and a task
+      // queued from it reads `defaultPrevented` once every other handler has run. Polled, never a fixed wait.
+      await page.evaluate(() => {
+        window.addEventListener(
+          "click",
+          (event) => {
+            setTimeout(() => {
+              Object.assign(window, { clickPrevented: event.defaultPrevented });
+            }, 0);
+          },
+          { capture: true, once: true },
+        );
+      });
       await log.click({ force: true });
-      // A navigation would land on /log, or /offline with the network gone: give it time to happen, then check.
-      await page.waitForTimeout(1000);
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { clickPrevented?: boolean }).clickPrevented), {
+          message: "the offline page swallows the click on a link that needs the network",
+        })
+        .toBe(true);
       await expect(page).toHaveURL(new RegExp(`${path}$`));
       await expect(page.getByRole("heading", { level: 1, name: en.log.list.title })).toHaveCount(0);
       await expect(page.getByRole("heading", { level: 1, name: en.offline.page.title })).toHaveCount(0);

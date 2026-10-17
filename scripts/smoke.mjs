@@ -11,6 +11,7 @@
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { DEFAULT_SCENARIO, SCENARIOS } from "../tests/e2e/clock-scenarios.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const email = `smoke-${Date.now()}@example.com`;
@@ -105,15 +106,25 @@ async function setPlan(plan) {
 }
 
 /**
- * Smoke's no-darkness window at its 52 N site (Bortle 6, dark threshold -15): about 8 June to 2 July, where the
- * ranking is empty and M13 is "not ranked". Same window as tests/e2e/helpers.ts.
+ * The smoke's clock (test-suite-diet Phase 6): the same pinned moments as the e2e suite (`tests/e2e/clock-scenarios.mjs`),
+ * sent as the loopback-only cookie `sidereus-test-now` that the server's clock seam reads (src/lib/clock.ts). The default
+ * is `evening`, a dark, clear night at the smoke site, so the ranked steps always have a ranking. `SMOKE_CLOCK=noDarkness`
+ * (21 June at this 52 N site, Bortle 6: no astronomical darkness, the ranking is empty and M13 is "not ranked") walks the
+ * other branch; `civilDawn` and `deepNight` walk the hours around the night's edge; `real` sends no cookie.
  */
-function inNoDarknessWindow(now = new Date()) {
+const SMOKE_CLOCK = process.env.SMOKE_CLOCK ?? DEFAULT_SCENARIO;
+if (SMOKE_CLOCK !== "real" && !(SMOKE_CLOCK in SCENARIOS)) {
+  throw new Error(`SMOKE_CLOCK=${SMOKE_CLOCK} is not a scenario: ${Object.keys(SCENARIOS).join(", ")} or real`);
+}
+if (SMOKE_CLOCK !== "real") jar.set("sidereus-test-now", SCENARIOS[SMOKE_CLOCK]);
+// Only the explicit `real` mode reads the real month (about 8 June to 2 July at this site); every pinned run knows its branch.
+const realMonthHasNoDarkness = () => {
+  const now = new Date();
   const month = now.getUTCMonth() + 1;
   const day = now.getUTCDate();
   return (month === 6 && day >= 8) || (month === 7 && day <= 2);
-}
-
+};
+const NO_DARKNESS_RUN = SMOKE_CLOCK === "noDarkness" || (SMOKE_CLOCK === "real" && realMonthHasNoDarkness());
 // The finder chart's server island (finder-chart Phase 6). The shell's preload link carries its signed URL; the island
 // route is not behind the middleware, so replaying that URL is the HTTP proof that the island itself checks the plan.
 const FINDER_ISLAND_PATH = "/_server-islands/FinderContent";
@@ -345,7 +356,7 @@ const steps = [
     {
       status: 200,
       // In the no-darkness window nothing is ranked, so there is no count line for the locked line to sit under.
-      ...(inNoDarknessWindow()
+      ...(NO_DARKNESS_RUN
         ? { skippedNote: "no astronomical darkness", bodyExcludes: ['data-expect="'] }
         : { bodyIncludes: ["data-expect-locked"], bodyExcludes: ['data-expect="'] }),
     },
@@ -373,7 +384,7 @@ const steps = [
       status: 200,
       needsPlanGrant: true,
       // In the no-darkness window nothing is ranked, so M13 is "not ranked" instead of a chart.
-      ...(inNoDarknessWindow()
+      ...(NO_DARKNESS_RUN
         ? { skippedNote: "no astronomical darkness", bodyIncludes: ['data-finder-state="not-ranked"'] }
         : { bodyIncludes: ["data-finder-chart", 'data-expect="'] }),
     },
@@ -384,7 +395,7 @@ const steps = [
     {
       status: 200,
       needsPlanGrant: true,
-      ...(inNoDarknessWindow()
+      ...(NO_DARKNESS_RUN
         ? { skippedNote: "no astronomical darkness", bodyExcludes: ["data-expect-locked"] }
         : { bodyIncludes: ['data-expect="'], bodyExcludes: ["data-expect-locked"] }),
     },

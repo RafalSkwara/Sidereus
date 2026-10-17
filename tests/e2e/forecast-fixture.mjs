@@ -5,16 +5,20 @@
 // It serves the shape `src/lib/forecast/open-meteo.ts` parses and ignores the query string (coordinates included).
 
 import { createServer } from "node:http";
+import { fixtureHours } from "./clock-scenarios.mjs";
 
 const PORT = Number(process.env.FIXTURE_PORT ?? 4400);
 const HOST = process.env.FIXTURE_HOST ?? "127.0.0.1";
-const HOUR_S = 3600;
 
-/** Hourly unix seconds from the current UTC hour minus 48 h to plus 216 h: covers past_days=1 and forecast_days=8. */
+/**
+ * Hourly unix seconds: the sorted union of the -48 h / +216 h windows (past_days=1 and forecast_days=8, with margin)
+ * around the real current hour AND around every named clock scenario (`clock-scenarios.mjs`), so a test pinned to
+ * another date still gets a complete, all-clear series. The forecast parser drops nulls and the completeness check reads
+ * only the series' first and last hour, so the gaps between windows are accepted; each pinned night sees its own whole
+ * window. No environment variable and no restart between scenarios.
+ */
 function allClearForecast() {
-  const currentHour = Math.floor(Date.now() / 1000 / HOUR_S) * HOUR_S;
-  const time = [];
-  for (let t = currentHour - 48 * HOUR_S; t <= currentHour + 216 * HOUR_S; t += HOUR_S) time.push(t);
+  const time = fixtureHours();
   return {
     hourly: {
       time,

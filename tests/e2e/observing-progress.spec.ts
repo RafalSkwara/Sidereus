@@ -1,10 +1,10 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import { createFormatter } from "@/lib/tonight/format";
 
-import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * Observing progress (M-3 S-05, FR-039/FR-040). The Tonight half: the "not seen yet" mark on Tonight's targets follows

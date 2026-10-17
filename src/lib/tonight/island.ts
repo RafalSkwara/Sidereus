@@ -1,6 +1,7 @@
 // The wiring every Tonight server island repeats around `loadTonight` (tonight-dashboard): the signed-out guard, the
 // Worker's KV forecast cache, the forecast base URL and `waitUntil`, so each island loads in one call. Server-only:
 // it reaches `cloudflare:workers` through `kv-cache.ts` and `astro:env/server`, so no test or browser island imports it.
+import { requestNow } from "@/lib/clock";
 import { FORECAST_BASE_URL } from "astro:env/server";
 
 import { kvForecastCache } from "@/lib/forecast/kv-cache";
@@ -52,7 +53,7 @@ export async function loadTonightFor(locals: App.Locals, options: TonightIslandL
     locale: locals.locale,
     siteId: options.siteId,
     telescopeId: options.telescopeId,
-    now: new Date(),
+    now: requestNow(locals),
     cache: kvForecastCache(),
     forecastBaseUrl: FORECAST_BASE_URL,
     defer: islandDefer(locals),

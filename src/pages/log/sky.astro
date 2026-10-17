@@ -1,4 +1,5 @@
 ---
+import { requestNow } from "@/lib/clock";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import GearShell from "@/components/gear/GearShell.astro";
 import { ServerError } from "@/components/forms/ServerError";
@@ -38,7 +39,7 @@ let tally: Tally | null = null;
 let loadError: MessageKey | null = null;
 if (supabase) {
   try {
-    const now = new Date();
+    const now = requestNow(Astro.locals);
     const [list, rows] = await Promise.all([
       skyCheckStore.list(supabase, { page, now }),
       skyCheckStore.tally(supabase),

@@ -2,17 +2,86 @@ import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test as base, type BrowserContext, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { en } from "@/i18n/messages/en";
 import type { Database } from "@/lib/database.types";
+import { TEST_NOW_COOKIE } from "@/lib/clock";
+import { DEFAULT_SCENARIO, SCENARIOS, type ScenarioName } from "./clock-scenarios.mjs";
 
 /*
  * Shared steps for the e2e specs. They run against a production preview on local Supabase with
  * FORECAST_BASE_URL pointing at `tests/e2e/forecast-fixture.mjs` (an all-clear sky); place search is stubbed
  * with Madrid, so no spec depends on Open-Meteo's geocoding.
  */
+
+/*
+ * The clock (test-suite-diet Phase 6): no test reads the real wall-clock hour or date.
+ *
+ * `test` below is the one every spec imports (never `@playwright/test`: the guard `src/lib/e2e-clock-guard.test.ts`
+ * fails otherwise). Its automatic fixture puts BOTH clocks on one named moment of `clock-scenarios.mjs` before any
+ * `goto`: the browser's through `context.clock.install` (the live sky's current-time slider, toasts) and the server's
+ * through the cookie `sidereus-test-now` (src/lib/clock.ts: honoured only against a loopback Supabase), so "deep night"
+ * and "the civil-dawn window" are reachable at any real hour. `page.clock` alone moves only the browser, and the
+ * server renders every Tonight answer from its own clock.
+ *
+ * - The default scenario is `evening` (a dark, editable night with a Moon and a planet up); `E2E_CLOCK=<name>` changes
+ *   only that default, for tests that pin nothing. A test that needs a moment says so, `test.use({ clock: "civilDawn" })`
+ *   or `pinContext`, and that always wins.
+ * - `test.use({ clock: "real" })` opts out and needs a reason comment on the same or the previous line: the service
+ *   worker specs (the worker compares its own real clock with the copy's `preparedAt`), which read their expectations
+ *   from page data (`data-night-date`, `html[data-from-device]`) instead of computing a date.
+ * - Read an expectation from page data rather than pinning when the assertion is about *which* night or time the page
+ *   shows (`data-night-date`, as #198 did), not about the page changing with the hour. `pinnedNow()` gives Node-side
+ *   assertions the instant the browser's clock reads now (pinned plus the time elapsed since).
+ * - A spec that makes its own context (`browser.newContext({ baseURL: proxy.origin })`) bypasses the fixture: it calls
+ *   `pinContext(context, scenario, origin)` right after, or says `// clock: real (<why>)`.
+ */
+export type ClockOption = ScenarioName | "real";
+
+function defaultClock(): ClockOption {
+  const wanted = process.env.E2E_CLOCK;
+  if (wanted === undefined || wanted === "") return DEFAULT_SCENARIO;
+  if (wanted === "real" || wanted in SCENARIOS) return wanted as ClockOption;
+  throw new Error(`E2E_CLOCK=${wanted} is not a scenario: ${Object.keys(SCENARIOS).join(", ")} or real`);
+}
+
+/** Installs the scenario's browser clock on `context` and sets the server's cookie for `origin`. Call it before any `goto`. */
+export async function pinContext(context: BrowserContext, scenario: ClockOption, origin: string): Promise<void> {
+  if (scenario === "real") return;
+  const instant = SCENARIOS[scenario];
+  await context.clock.install({ time: new Date(instant) });
+  await context.addCookies([{ name: TEST_NOW_COOKIE, value: instant, url: origin }]);
+}
+
+interface ClockFixtures {
+  /** The scenario this test runs on: a named moment, or "real" (with a reason comment at `test.use`). */
+  clock: ClockOption;
+  /** The instant the browser's clock reads now: the pinned one plus the time elapsed since the fixture installed it. */
+  pinnedNow: () => Date;
+  /** Automatic: puts both clocks on the scenario before any navigation. Always true. */
+  pinClock: boolean;
+}
+
+export const test = base.extend<ClockFixtures>({
+  clock: [defaultClock(), { option: true }],
+  pinnedNow: async ({ clock }, provide) => {
+    const startedAt = Date.now();
+    await provide(() =>
+      clock === "real" ? new Date() : new Date(Date.parse(SCENARIOS[clock]) + (Date.now() - startedAt)),
+    );
+  },
+  pinClock: [
+    async ({ context, baseURL, clock }, provide) => {
+      await pinContext(context, clock, baseURL ?? "http://localhost:4321");
+      await provide(true);
+    },
+    { auto: true },
+  ],
+});
+
+export { expect };
 
 export const MADRID_RESULT = {
   id: 3117735,
@@ -156,9 +225,9 @@ export async function seedSkyCheck(email: string, { night, headline }: { night: 
   if (error) throw new Error(`seeding the sky check failed: ${error.message}`);
 }
 
-/** The date `days` before today in Madrid, `YYYY-MM-DD` (the e2e site's time zone). */
-export function madridDateDaysAgo(days: number): string {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date());
+/** The date `days` before `now` (the test's `pinnedNow()`) in Madrid, `YYYY-MM-DD` (the e2e site's time zone). */
+export function madridDateDaysAgo(days: number, now: Date): string {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(now);
   const [year, month, day] = isoDateParts(today);
   return new Date(Date.UTC(year, month, day - days)).toISOString().slice(0, 10);
 }
@@ -185,7 +254,7 @@ export function requirePlanGrant(spec: string) {
         "pass them inline on the e2e command.",
     );
   }
-  test.skip(true, "no SUPABASE_SECRET_KEY");
+  base.skip(true, "no SUPABASE_SECRET_KEY");
 }
 
 /** Grants or removes the full plan with the operator command; the key stays in the child's inherited environment. */
@@ -202,8 +271,8 @@ export async function setPlan(email: string, plan: "full" | "free") {
  * Whether tonight's Session plan can be edited (adjustable-session-plan, F10, F8): waits for the plan island's readiness
  * marker (`data-session-plan-state`, not `[data-offline-copy]` alone, which the failure states omit) and says whether it
  * reads `suggested` or `edited`, the two states the edits apply in. Only `held` (a list saved for a night that does not
- * pass, the one legitimate reason) is `false`, and a spec skips on it with
- * `test.skip(!(await planEditable(page)), "…")`. `locked`, `unavailable` or a missing marker fail the test: for a
+ * pass) is `false`. A spec asserts `expect(await planEditable(page)).toBe(true)` and never skips: a fresh user has saved
+ * nothing, so `held` cannot happen for it. `locked`, `unavailable` or a missing marker fail the test: for a
  * full-plan user on the fixture's clear night they mean a regression (a broken plan or `session_plans` read), never a
  * reason to skip.
  */
@@ -219,13 +288,17 @@ export async function planEditable(page: Page): Promise<boolean> {
 }
 
 /**
- * Smoke's no-darkness window at its 52° N site (8 June to 2 July), where the ranking can be empty. Madrid keeps its
- * darkness all year, so this only errs on the safe side.
+ * The key of the first Messier object on tonight's Targets list, read from the page: an object that has a row on every
+ * night, for a spec that must not name one (`M13` is only up in some seasons). A Messier key is its own label, which the
+ * "Finder chart for <label>" link and the chart's title use (a Caldwell key such as `NGC869` is not: its label is
+ * "NGC 869"). Fails when the list holds none, never skips.
  */
-export function inNoDarknessWindow(now = new Date()): boolean {
-  const month = now.getUTCMonth() + 1;
-  const day = now.getUTCDate();
-  return (month === 6 && day >= 8) || (month === 7 && day <= 2);
+export async function firstTargetKey(page: Page): Promise<string> {
+  const row = page.locator('[data-object^="M"]').first();
+  await expect(row, "Targets lists at least one Messier object").toBeAttached();
+  const key = await row.getAttribute("data-object");
+  if (!key || !/^M\d+$/.test(key)) throw new Error(`the first Messier row has the key "${String(key)}"`);
+  return key;
 }
 
 /** The "Finder chart" link of `target`'s row on Targets: in the best five, or in the rest behind its button. */

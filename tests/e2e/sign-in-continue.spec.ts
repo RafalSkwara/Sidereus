@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { PASSWORD, onboardInMadrid, signOut, waitForHydration } from "./helpers";
+import { onboardInMadrid, PASSWORD, signOut, test, waitForHydration } from "./helpers";
 
 /*
  * Continue after sign-in (S-09, PRD Access Control): a signed-out visit to a gated page goes to sign-in, which

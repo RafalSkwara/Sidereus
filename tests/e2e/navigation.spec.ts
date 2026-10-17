@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid } from "./helpers";
+import { onboardInMadrid, test } from "./helpers";
 
 /*
  * The four destinations (ui-tonight-nav Phase 1): Tonight, Log, Progress and My gear in the phone TabBar and the

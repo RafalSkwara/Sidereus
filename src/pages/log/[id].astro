@@ -1,4 +1,5 @@
 ---
+import { requestNow } from "@/lib/clock";
 import DatabaseMissing from "@/components/gear/DatabaseMissing.astro";
 import DeleteButton from "@/components/gear/DeleteButton";
 import GearShell from "@/components/gear/GearShell.astro";
@@ -60,7 +61,7 @@ const label = entry ? targetLabel(entry.target, locale) : null;
 const objectId = label?.id ?? "";
 const commonName = label?.name ?? null;
 // Only a hint for the date picker; the store checks the chosen site's own night.
-const maxNight = latestNightBound(sites, new Date());
+const maxNight = latestNightBound(sites, requestNow(Astro.locals));
 // "Entry not found" only when the entry is really missing; a load error or a missing database keeps a neutral title.
 const title = entry ? t.editTitle({ object: objectId }) : supabase && !loadError ? t.notFound : t.kicker;
 ---

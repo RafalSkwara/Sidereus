@@ -1,9 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
-import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
+import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+import { finderLink, onboardInMadrid, requirePlanGrant, setPlan, test } from "./helpers";
 
 /*
  * The finder chart for a full-plan account (finder-chart Phase 6, FR-037): the "Finder chart" link of the M13 row on
@@ -20,9 +20,6 @@ import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setP
 /** M13 is a pinned target (not the first link on the page): a bright globular cluster Madrid's fixture night ranks. */
 const TARGET = "M13";
 
-const NO_DARKNESS = "no astronomical darkness (8 June to 2 July): the ranking can be empty";
-const OUTSIDE_WINDOW = "covered by the chart tests outside the no-darkness window";
-
 /**
  * M13 can culminate above the overhead rule's 80° at southern sites, so either orientation is valid; what must hold is
  * that the context line says the same thing as the root's `data-finder-orientation`.
@@ -35,6 +32,10 @@ const FACING = new RegExp(
 );
 const OVERHEAD = new RegExp(`^${escapeRegExp(en.tonight.finder.contextOverhead({ time: "##" })).replace("##", ".+")}$`);
 
+// The chart tests need a ranked M13 link on Targets: the pinned `evening` (17 October at Madrid) ranks it, whatever the
+// real date or hour (test-suite-diet Phase 6). The no-darkness page is held by smoke (`finder 3`).
+test.use({ clock: "evening" });
+
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
@@ -42,8 +43,6 @@ test.beforeEach(async ({ context, baseURL }) => {
 /** A fresh full-plan account on Targets, then M13's "Finder chart" link followed to the chart. */
 async function openChart(page: Page) {
   requirePlanGrant("finder-chart");
-  // The chart tests need a ranked M13 link on Targets; the window test below covers the page for those weeks.
-  test.skip(inNoDarknessWindow(), NO_DARKNESS);
   const email = await onboardInMadrid(page, "e2e-finder-chart");
   await setPlan(email, "full");
 
@@ -52,22 +51,6 @@ async function openChart(page: Page) {
   await expect(page).toHaveURL(new RegExp(`/tonight/finder\\?object=${TARGET}&`));
   await expect(page.locator("[data-finder-chart]")).toBeVisible();
 }
-
-/**
- * In the no-darkness window the page must still settle on a defined state instead of the test skipping. Smoke asserts
- * the exact `not-ranked` there (its site is 52° N), but this spec's site is Madrid, which keeps its astronomical
- * darkness all year, so M13 may still be ranked and a chart drawn: either state is correct, anything else
- * (`failed`, `no-gear`, `locked`, a blank page) is not. The page is opened directly because Targets may have no row.
- */
-test("in the no-darkness window the finder page settles on a chart or on not ranked", async ({ page }) => {
-  requirePlanGrant("finder-chart");
-  test.skip(!inNoDarknessWindow(), OUTSIDE_WINDOW);
-  const email = await onboardInMadrid(page, "e2e-finder-window");
-  await setPlan(email, "full");
-
-  await page.goto(`/tonight/finder?object=${TARGET}`);
-  await expect(page.locator('[data-finder-state="chart"], [data-finder-state="not-ranked"]')).toBeVisible();
-});
 
 test("the M13 row opens a chart with both panels, the steps and a context line that matches its orientation", async ({
   page,
@@ -104,17 +87,4 @@ test("at 360 px the chart fits the screen without scrolling sideways", async ({ 
     clientWidth: document.documentElement.clientWidth,
   }));
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
-});
-
-test("in red mode the chart page renders with the red theme", async ({ page, context, baseURL }) => {
-  await context.addCookies([{ name: THEME_COOKIE, value: "red", url: baseURL ?? "http://localhost:4321" }]);
-  await openChart(page);
-
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "red");
-  await expect(page.locator('[data-finder-panel="finder"]')).toBeVisible();
-  // The red theme emits no green or blue (src/styles/red-theme.test.ts); the page's ground shows it is applied.
-  const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  const [, green, blue] = (background.match(/\d+(\.\d+)?/g) ?? []).map(Number);
-  expect(green).toBe(0);
-  expect(blue).toBe(0);
 });

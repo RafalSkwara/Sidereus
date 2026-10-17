@@ -1,9 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, stubMapTiles, waitForHydration } from "./helpers";
+import { onboardInMadrid, stubMapTiles, test, waitForHydration } from "./helpers";
 
 /*
  * "Pick from map" on the add/edit site form (S-09). Choosing it is the user's consent, so before the click the
@@ -14,6 +14,11 @@ import { onboardInMadrid, stubMapTiles, waitForHydration } from "./helpers";
 const NEW_SITE_FORM = 'form[action="/api/gear/sites"]';
 const EDIT_SITE_FORM = 'form[action^="/api/gear/sites/"]';
 const TWO_DECIMALS = /^-?\d+(\.\d{1,2})?$/;
+
+// clock: real (nothing here depends on the date, and Leaflet's tap-versus-drag detection reads `Date` and timers that a
+// fake browser clock perturbs under load: the tap after the map's opening animation was lost in 3 of 16 parallel runs
+// pinned to `evening`, 0 of 32 on the real clock; measured in test-suite-diet Phase 6).
+test.use({ clock: "real" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);

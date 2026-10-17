@@ -1,11 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import type { SkyEventKind } from "@/lib/engine";
 import { EVENT_WINDOW_NIGHTS, OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid } from "./helpers";
+import { onboardInMadrid, test } from "./helpers";
 
 /*
  * Tonight as a dashboard, end to end (tonight-dashboard, roadmap S-11): under the sky, six tiles (the second, "Sky

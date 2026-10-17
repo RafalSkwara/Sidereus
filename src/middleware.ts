@@ -1,9 +1,11 @@
 import { defineMiddleware } from "astro:middleware";
+import { SUPABASE_URL } from "astro:env/server";
 import { sessionUser } from "@/lib/auth/session-user";
 import { createClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
 import { signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
+import { readTestNow } from "@/lib/clock";
 
 // A thin wrapper: the session read and its failure trace are `sessionUser` (src/lib/auth/session-user.ts).
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -13,6 +15,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.cookies.get(LOCALE_COOKIE)?.value,
     context.request.headers.get("accept-language"),
   );
+
+  // The e2e clock seam (src/lib/clock.ts): the cookie is honoured against a loopback Supabase only.
+  const testNow = readTestNow(context.request.headers.get("cookie"), SUPABASE_URL);
+  if (testNow) {
+    context.locals.testNow = testNow;
+  }
 
   const supabase = createClient(context.request.headers, context.cookies);
   // One per-request client: the same instance resolves the user and serves DB queries in pages and routes.

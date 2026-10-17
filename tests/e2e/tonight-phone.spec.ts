@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { STRIP_HEIGHT_PX, STRIP_OVERLAP_PX } from "@/components/tonight/sky-band";
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForHydration } from "./helpers";
+import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, test, waitForHydration } from "./helpers";
 
 /*
  * The phone-first Tonight, pinned with bounding boxes (ui-mobile-pass, roadmap M-3 S-01); no pixel baselines. Same
@@ -49,6 +49,9 @@ const TONIGHT_PAGES = [
 ];
 /** The other app pages checked for sideways scroll: plain server-rendered. */
 const APP_PAGES = ["/gear", "/log", "/log/progress"];
+
+// The first screen, the editor and the suggested plan are the pinned evening's (a dark, clear, editable night).
+test.use({ clock: "evening" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -170,7 +173,7 @@ test("the open plan editor does not scroll sideways at 320 and 375 px, in Englis
     for (const viewport of NARROW_VIEWPORTS) {
       await page.setViewportSize(viewport);
       await page.goto("/tonight/plan");
-      test.skip(!(await planEditable(page)), "tonight's plan is not editable (the night does not pass)");
+      expect(await planEditable(page), "a fresh full-plan user's plan is editable").toBe(true);
       const edit = '[data-plan-editor="closed"] button';
       await waitForHydration(page, edit);
       await page.locator(edit).click();

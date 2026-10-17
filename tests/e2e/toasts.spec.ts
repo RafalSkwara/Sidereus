@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import { TOAST_MS } from "@/lib/toasts";
 
-import { onboardInMadrid } from "./helpers";
+import { onboardInMadrid, test } from "./helpers";
 
 /*
  * Notifications (ui-user-adjustments, Phase 2): a success notice is a fixed, closable, 10-second toast that removes
@@ -104,7 +104,7 @@ test("the × is a 44 px icon button with the localised label and no text", async
 test("a toast is gone after ten seconds, unless it is hovered or focused", async ({ page }) => {
   await onboardInMadrid(page, "e2e-toasts-timer");
   await page.setViewportSize(DESKTOP);
-  await page.clock.install();
+  // The clock fixture (helpers.ts) already installed the fake clock, so `fastForward` below drives the toast timer.
 
   // Alone, it goes when its ten seconds are up.
   await page.goto(SAVED_SITE);

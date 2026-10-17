@@ -6,6 +6,8 @@ const GUARD_FILES = [
   "src/lib/no-console-guard.test.ts",
   "src/lib/agent-hooks.test.ts",
   "src/lib/runner-zone-guard.test.ts",
+  "src/lib/e2e-clock-guard.test.ts",
+  "src/lib/e2e-clock-scenarios.test.ts",
   "src/styles/no-hardcoded-colors.test.ts",
   "src/styles/rhythm-roles.test.ts",
   // The provenance and licence pins (test-suite-diet D7, Phase 5): the OpenNGC and Hipparcos pins, ESA's credit, the

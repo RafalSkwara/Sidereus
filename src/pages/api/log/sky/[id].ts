@@ -1,3 +1,4 @@
+import { requestNow } from "@/lib/clock";
 import type { APIRoute } from "astro";
 import { CHECK_FIELDS, issueKey, NOT_CONFIGURED, readForm } from "@/lib/api-errors";
 import { saveFailureKey } from "@/lib/observability/save-failure";
@@ -31,7 +32,7 @@ export const POST: APIRoute = async (context) => {
   }
 
   const id = context.params.id ?? "";
-  const now = new Date();
+  const now = requestNow(context.locals);
   const { action } = parsed.data;
   const result =
     action === "skip"

@@ -15,6 +15,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL ?? "http://localhost:4321",
     trace: "retain-on-failure",
+    // The e2e site is Madrid: labels read the same locally (Warsaw) and in CI (UTC), and a pinned instant is absolute.
+    timezoneId: "Europe/Madrid",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });

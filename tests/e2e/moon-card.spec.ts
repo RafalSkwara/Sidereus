@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The Moon card's time slider, end to end (moonlight-and-the-verdict; on the Moon page since tonight-dashboard): moving
@@ -19,6 +19,9 @@ import { onboardInMadrid, waitForHydration } from "./helpers";
 
 const MOON_CARD = 'section[aria-labelledby="moon-heading"]';
 
+// The Moon and the planet are the pinned evening's (17 October at Madrid), whatever the real date or hour.
+test.use({ clock: "evening" });
+
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
@@ -32,9 +35,8 @@ test("the Moon page's slider redraws the Moon across the window and Now restores
   const card = page.locator(MOON_CARD);
   await expect(card.getByRole("heading", { level: 2, name: en.tonight.moon.card.kicker })).toBeVisible();
   const slider = card.getByRole("slider", { name: en.tonight.moon.card.slider });
-  if ((await slider.count()) === 0) {
-    test.skip(true, "the Moon card has fewer than two states tonight, so there is no slider");
-  }
+  // The pinned evening has the Moon up for several hours of the window, so the card has the slider; none is a regression.
+  await expect(slider, "the Moon card has two or more states on the pinned evening").toHaveCount(1);
   await waitForHydration(page, `${MOON_CARD} input[type="range"]`);
 
   const time = card.locator("[data-moon-time]");

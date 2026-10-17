@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { waitForServiceWorker } from "./helpers";
+import { test, waitForServiceWorker } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -10,12 +10,16 @@ import { Proxy } from "./offline-proxy";
  * The race is made deterministic through the proxy: the worker's install waits on its own fetch of `/offline` (held
  * 3 s); once the proxy holds it, a navigation starts and is held 5 s, so the worker activates while it is in flight.
  */
+// clock: real (the race is the real worker's install and activation, held in the proxy; no date is read).
+test.use({ clock: "real" });
+
 test("the worker helper ends with the page controlled when the worker activated during a navigation", async ({
   browser,
 }, testInfo) => {
   test.setTimeout(30_000);
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
   await proxy.start();
+  // clock: real (the race is the real worker's install and activation, held in the proxy; no date is read)
   const context = await browser.newContext({ baseURL: proxy.origin });
   try {
     const page = await context.newPage();

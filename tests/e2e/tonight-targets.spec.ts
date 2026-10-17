@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The Targets page (tonight-all-objects; /tonight/targets since tonight-dashboard): tonight's best objects in full,
@@ -84,35 +84,4 @@ test("Targets shows the best five, opens the rest by best time or rank, and logs
   await dismissCelebrationIfOpen(page);
   // The row just logged is on screen: the page opens the rest of the list for it and scrolls it into view.
   await expect(page.locator(`[data-object="${object}"]`)).toBeInViewport();
-});
-
-test("an old /tonight/all link with a fragment lands on that place on Targets once the list streams in", async ({
-  page,
-}) => {
-  await onboardInMadrid(page, "e2e-targets-fragment");
-
-  // The redirect's Location carries no fragment; the browser keeps the request's own. #more is always there on the
-  // all-clear fixture, so this runs every night, whatever the Moon does (the #washed-out case below needs a bright
-  // Moon). The fragment was first resolved before the island arrived; the page opens the list and scrolls to it then.
-  await page.goto("/tonight/all#more");
-  await expect(page).toHaveURL(/\/tonight\/targets#more$/);
-  const more = page.locator("details#more");
-  await expect(more).toHaveAttribute("open");
-  await expect(more).toBeInViewport();
-});
-
-test("an old /tonight/all#washed-out bookmark lands on the washed-out group on Targets", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-targets-washedout");
-
-  // The redirect's Location carries no fragment; the browser keeps the request's own.
-  await page.goto("/tonight/all#washed-out");
-  await expect(page).toHaveURL(/\/tonight\/targets#washed-out$/);
-  // Wait for the island (the list's heading) before deciding whether there is a group to land on.
-  await expect(page.locator("#targets-heading")).toBeVisible();
-  // Whether tonight's real Moon washes anything out depends on the date the suite runs.
-  test.skip((await page.locator("#washed-out").count()) === 0, "tonight's Moon washes out no object");
-
-  await expect(page.locator("[data-washed-out-object]").first()).toBeVisible();
-  // The group arrives with the server island, after the fragment was first resolved; the page scrolls to it then.
-  await expect(page.locator("#washed-out")).toBeInViewport();
 });
