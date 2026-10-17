@@ -4,7 +4,7 @@ What Sidereus looks like now, and what the next session should do. Read this fir
 
 ## Update 2026-10-17 (owner polish)
 
-- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, not archived yet); S-10 `ui-quick-nav` (#214) in implementation.
+- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` (#214) in implementation.
 
 ---
 

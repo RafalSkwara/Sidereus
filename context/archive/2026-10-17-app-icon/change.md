@@ -1,10 +1,10 @@
 ---
 change_id: app-icon
 title: New app icon (favicon and PWA icons), three proposals for the owner to pick
-status: implemented
+status: archived
 created: 2026-10-17
 updated: 2026-10-17
-archived_at: null
+archived_at: 2026-10-17T15:28:28Z
 ---
 
 ## Notes
