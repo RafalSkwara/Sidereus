@@ -8,6 +8,13 @@ const GUARD_FILES = [
   "src/lib/runner-zone-guard.test.ts",
   "src/styles/no-hardcoded-colors.test.ts",
   "src/styles/rhythm-roles.test.ts",
+  // The provenance and licence pins (test-suite-diet D7, Phase 5): the OpenNGC and Hipparcos pins, ESA's credit, the
+  // generators' refusals. They change with the data, never with a code edit, so they report in CI only.
+  "src/lib/catalogue/messier.test.ts",
+  "src/lib/catalogue/caldwell.test.ts",
+  "src/lib/catalogue/stars.test.ts",
+  "src/lib/catalogue/finder-stars.test.ts",
+  "scripts/lib/*.test.mjs",
 ];
 
 // Unit tests cover pure TypeScript under src/lib and do not need the Astro pipeline.

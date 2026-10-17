@@ -678,10 +678,10 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 5.1 `npm test` green; stars + finder-stars + scripts/lib ≤ 20 tests; unit total ≤ 820 across both projects
-- [ ] 5.2 Break check red then reverted (ESA credit removed)
-- [ ] 5.3 `npm run build` still fails on a finder-stars leak to dist/client
-- [ ] 5.4 `npm run lint`, `npx astro check` green; both project times recorded
+- [x] 5.1 `npm test` green; stars + finder-stars + scripts/lib ≤ 20 tests; unit total ≤ 820 across both projects
+- [x] 5.2 Break check red then reverted (ESA credit removed)
+- [x] 5.3 `npm run build` still fails on a finder-stars leak to dist/client
+- [x] 5.4 `npm run lint`, `npx astro check` green; both project times recorded
 
 #### Manual
 

@@ -275,6 +275,8 @@ Through the change chain, never in `context/archive/`:
    `attribution` and a new `upstream` entry per source; `EXPECTED_COUNT` / `FINDER_EXPECTED_COUNT` per source;
    `stars.test.ts` and `finder-stars.test.ts` provenance assertions (today they pin "CC BY-SA 4.0" and the HYG
    commit); CLAUDE.md's two star tripwires and the Catalogue paragraph.
+   (Note 2026-10-17, test-suite-diet Phase 5: those two tests now hold only the provenance and licence pins, including
+   "Credit: ESA", and run in the `guards` project; the shape and count checks moved to the generators.)
 8. **New change folder for the ESA correspondence:** the sent request is archived and immutable; the reply draft
    above and ESA's letter belong in a new `context/changes/<id>/` (or `context/foundation/` beside this file) so
    the thread is on record without touching the archive.
