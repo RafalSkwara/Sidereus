@@ -421,66 +421,76 @@ Only after `fix/star-source-review` (#195) is on main.
 
 ## Phase 6: Clock-pinned e2e
 
-> **Amendment (owner-approved 2026-10-17, relayed by the orchestrator; to be reviewed before it is implemented).** Not in the plan the plan review saw. It sits before the e2e trims so Phase 7 trims tests that already run on a fixed moment, and so no trim re-adds a conditional skip.
+> **Amendment (owner-approved 2026-10-17, relayed by the orchestrator).** Not in the plan the plan review saw. Reviewed by the reviewer the same day: REVISE, A1-A7 applied below (`reviews/plan-review.md`, "Amendment review (Phase 6)"). **Owner decision 6.6 (2026-10-17): the server time seam is accepted (the test cookie is honoured only when the hostname of `SUPABASE_URL` is exactly a loopback host, ignored in production, with a unit test pinning the hosted and malformed cases), and CI runs the default scenario.** It sits before the e2e trims so Phase 7 trims tests that already run on a fixed moment and no trim re-adds a conditional skip.
 
 ### Overview
 
-No e2e or smoke test depends on the real wall-clock hour or date. Evidence: #198 (tonight-sky slider test, red on main only between civil dawn and sunrise, 06:16 UTC) and the audit of `tests/e2e` on origin/main 557a625: `inNoDarknessWindow()` skips 7 tests in 3 specs (`finder-chart` ×2, `finder-offline`, `what-to-expect` ×4; the 8 June to 2 July window), and state-dependent skips ("no planet is up in Madrid tonight" in `planets-on-tonight` ×2, `moon-as-target`, `moon-card`, `tonight-sky` ×2, "washes out no object" in `tonight-targets`, `planEditable` → `held` in `session-plan-edit`, `session-plan-store`, `tonight-phone`) turn green-by-skipping on most nights and red-by-surprise on a few. `madridDateDaysAgo` and `seedSkyCheck` read the real date too.
+No e2e or smoke test depends on the real wall-clock hour or date. Evidence: #198 (tonight-sky slider test, red on main only between civil dawn and sunrise, 06:16 UTC) and the audit of `tests/e2e` on origin/main 557a625: `inNoDarknessWindow()` skips 7 tests in 3 specs (`finder-chart` x2, `finder-offline`, `what-to-expect` x4; the 8 June to 2 July window), and state-dependent skips ("no planet is up in Madrid tonight" in `planets-on-tonight` x2, `moon-as-target`, `moon-card`, `tonight-sky` x2, "washes out no object" in `tonight-targets`, `planEditable` -> `held` in `session-plan-edit`, `session-plan-store`, `tonight-phone`) turn green-by-skipping on most nights and red-by-surprise on a few. `madridDateDaysAgo` and `seedSkyCheck` read the real date too.
 
-**What `page.clock` alone cannot do.** The server renders every Tonight answer from its own clock (`src/lib/tonight/island.ts` passes `now: new Date()`; the plan, log and sky-check routes and pages read `new Date()` too), and `tests/e2e/forecast-fixture.mjs` builds its hours from `Date.now()`. Playwright's `page.clock` moves only the browser's clock (the live sky's current-time slider, toasts), so on its own it cannot put a test into "deep night" or "the civil-dawn window". The server's `now` is therefore part of the phase (item 1), not an option.
+**What `page.clock` alone cannot do.** The server renders every Tonight answer from its own clock (`src/lib/tonight/island.ts` passes `now: new Date()`; the plan, log and sky-check routes and pages read `new Date()` too), and `tests/e2e/forecast-fixture.mjs` builds its hours from `Date.now()`. `page.clock` moves only the browser's clock, so on its own it cannot put a test into "deep night" or "the civil-dawn window". The server's `now` is therefore part of the phase (item 1).
+
+**Order and base (A5, A6).** The phase starts from main after #198 merged (rebase when it does; the tonight-sky "Now" assertion, `tonight-sky.spec.ts` around the slider's "Now" button, then reads `pinnedNow()` instead of the real `new Date()`). Step 0 applies the pure deletions of Phase 7 item 2 that touch the specs below, with ledger rows (`finder-chart` t1/t4, `what-to-expect` t1/t2/t4, `tonight-sky` t4-t7, `tonight-targets` t2/t3, `planets-on-tonight` t2, `session-plan-edit` t2/t5/t7), and only then converts the tests that survive; merges stay in Phase 7, which counts those deletions as done.
 
 ### Changes Required:
 
-#### 1. A server clock seam, test-only
+#### 0. The deletions first (A5)
 
-**Files**: a new `src/lib/clock.ts` (`serverNow(request)`), its callers (`src/lib/tonight/island.ts`, `src/pages/api/tonight/plan.ts`, `plan/reset.ts`, `src/pages/api/log/**`, `src/pages/log/{sky,new,[id]}.astro`: the places that read `new Date()` for a night), `tests/e2e/forecast-fixture.mjs`
+**Files**: the specs and tests named above.
 
-**Intent**: One function turns a cookie `sidereus-test-now=<ISO instant>` into the request's `now`, and returns `new Date()` otherwise. Cookie, not a request header: it travels with every same-origin request including the service worker's own fetches and the server-island fetch, and it needs no rebuild between scenarios (a `.dev.vars` variable is copied into `dist/server/.dev.vars` at build time).
+**Contract**: delete exactly the Phase 7 item 2 tests listed above (no merges), each with a ledger line in the phase note ("held by smoke step N / by spec X", as Phase 7 item 2 says), before anything is converted. A skip that sits inside a deleted test goes with it.
 
-**Contract**: honoured only when `SUPABASE_URL` is a loopback address (`127.0.0.1` or `localhost`, the same test `scripts/account-plan.mjs` uses for the local stack), so a production Worker, whose Supabase is the hosted project, ignores a forged cookie and no visitor can move the server's clock; the cookie value is validated as an ISO instant, anything else is ignored. The cookie never reaches a log or a URL. The forecast fixture takes the same instant from a `FIXTURE_NOW` environment variable (default the real hour) so its 48 h before / 216 h after hours surround the pinned moment. **What stays real, and why:** the database clock (`record_sky_verdict` decides "before the dark window starts" with the database's `now()`, test-plan §6.5) and Supabase's token expiry; `sky-checks.spec` seeds its rows by RPC with explicit times and keeps doing so, and the plan's note lists it as the one spec whose server-side leg stays on the real clock. Not a behaviour change under `src/` when the cookie is absent: `serverNow` is `new Date()`.
+#### 1. A server clock seam, test-only (owner decision 6.6)
 
-**Open question for the plan reviewer**: the seam is a product-code change guarded by "loopback Supabase". The alternative is not to pin the server and to pick the scenario by waiting for the real hour, which cannot give the three hours the success criteria demand. If the reviewer rejects the seam, this phase shrinks to items 2 (browser clock plus data-driven expectations), 3 (conversions that need no server pin) and 4, and the civil-dawn criterion moves to "asserted from page data (`data-night-date`, `held`) at whatever hour CI runs".
+**Files**: a new `src/lib/clock.ts` (`serverNow(request)`), and only the callers whose `new Date()` **decides the night** (`src/lib/tonight/island.ts`, `src/pages/api/tonight/plan.ts` and `plan/reset.ts` (the posted night against `tonightDateForSite`), `src/pages/api/log/**`, `src/pages/log/{sky,new,[id]}.astro`), plus `tests/e2e/forecast-fixture.mjs`.
 
-#### 2. The helper
+**Intent**: One function turns a cookie `sidereus-test-now=<ISO instant>` into the request's `now`, and returns `new Date()` otherwise. A cookie, not a request header: it travels with every same-origin request including the service worker's own fetches and the server-island fetch, and it needs no rebuild between scenarios.
 
-**File**: `tests/e2e/helpers.ts`
+**Contract**: honoured only when `new URL(SUPABASE_URL).hostname` is exactly `127.0.0.1`, `localhost` or `[::1]` (an exact comparison, never `startsWith` or `includes`: `127.0.0.1.evil.example` and `localhost.example.com` are hosted); a production Worker, whose Supabase is the hosted project set by the operator, ignores a forged cookie; the cookie value is validated as an ISO instant, anything else is ignored; the cookie never reaches a log or a URL. **Classification of every clock read (A2).** The phase note lists every `new Date()` / `Date.now()` / `performance.now()` outside tests with one of two labels: "decides the night -> `serverNow`" (the callers above) or "metadata or service worker -> real, with the reason", e.g. `session-plans/store.ts` `updated_at`, `account-plan/index.ts` plan-read time, `OfflineCopy.astro` `preparedAt` (the worker compares it with its own real clock to expire a copy), everything in `src/sw.ts` and `src/lib/offline/*`. The database clock stays real too (`record_sky_verdict` updates only while `pg_catalog.now() < existing.dark_start`; with a past pinned date the first write lands and later views do not overwrite it; not a bug, written in the note), and Supabase auth runs only on the server. Not a behaviour change under `src/` when the cookie is absent: `serverNow` is `new Date()`.
 
-**Contract**: `pinClock(context | page, scenario)` sets both clocks to one named instant: `page.clock.install({ time })` for the browser (then `resume()` so timers run) and the `sidereus-test-now` cookie for the server. Scenarios are named constants at the e2e site (Madrid) on one fixed date, written as literals with the engine's or USNO's reading in a comment and verified by a helper test: `evening` (21:30 local, Moon and a planet up, the plan editable), `deepNight` (01:30, the night in progress), `civilDawn` (between civil dawn and sunrise, where "tonight" rolls to the evening ahead and a saved plan is `held`), `daytime` (14:00), plus one `fullMoonEvening` and one `noDarkness` (a 52° N site, 21 June, where the ranking can be empty) for the specs that need them. The default scenario is `evening`; `E2E_CLOCK=<scenario>` overrides it for a whole run. The helper's doc comment says when to read an expectation from page data instead of pinning: when the assertion is about _which_ night or time the page shows (read `data-night-date`, as #198 did), not about the page changing with the hour.
+#### 2. One scenario module, the fixture and the helper (A1, A7)
 
-#### 3. Audit and convert
+**Files**: a new `tests/e2e/clock-scenarios.mjs` (imported by the helper and by `forecast-fixture.mjs`), `tests/e2e/forecast-fixture.mjs`, `tests/e2e/helpers.ts`, `playwright.config.ts`
 
-**Files**: every spec under `tests/e2e/` that skips on a date, a Moon, a planet or a night state, or reads the real date: `finder-chart`, `finder-offline`, `what-to-expect` (drop `inNoDarknessWindow`; the no-darkness "settles on a defined state" test runs under `noDarkness`), `moon-as-target`, `moon-card`, `planets-on-tonight`, `tonight-sky`, `tonight-targets` (pin `fullMoonEvening` where the washed-out list is the subject), `session-plan-edit`, `session-plan-store`, `tonight-phone` (pin `evening`; one new test pins `civilDawn` and asserts `held`), `helpers.ts` (`madridDateDaysAgo` and `seedSkyCheck` take the pinned date), `scripts/smoke.mjs` (its no-darkness branch keys off the real month: pin it the same way through the cookie, or assert both branches). A test that cannot be made to always run is deleted with a ledger line saying where its rule is held, never skipped.
+**Contract (module and fixture)**: `clock-scenarios.mjs` exports the named instants at the e2e site (Madrid): `evening` (21:30 local, Moon and a planet up, the plan editable), `deepNight` (01:30, the night in progress), `civilDawn` (between civil dawn and sunrise, where "tonight" rolls to the evening ahead and a saved plan is `held`), `daytime` (14:00), `fullMoonEvening`, and `noDarkness` (a 52° N site, 21 June, where the ranking can be empty). All dates sit inside the data the engine and the sky-event catalogue cover (2026-2027); a helper test in the `guards` project asserts each instant is inside that range and that the engine's own reading matches its label (Sun below -6° for `evening`, above civil dawn for `civilDawn`, and so on). The fixture serves the sorted union of the -48 h / +216 h windows around **every** scenario instant and around the real current hour, with no environment variable and no restart between scenarios. The forecast parser drops null hours and `isCompleteForecast` (`src/lib/forecast/service.ts`) checks only the series' minimum and maximum, so a series with gaps between windows is accepted and each pinned night sees its own whole window (hours in a gap would count as not clear, which no scenario reads). The phase proves it with a test that two scenarios in a row, on different dates, both get a "go" night; if the forecast cache (fresh or stale by `now`) serves a copy written under another pinned instant, the seam bypasses the cache read for a cookie-pinned request, decided with that test's evidence.
 
-**Contract**: after the phase no spec contains `test.skip` with a condition that reads a date, `inNoDarknessWindow`, a locator count or a page state; the only skips left are environment ones (`requirePlanGrant`'s missing key locally, `CAPTURE_LANDING`, `landing-screenshot` if it still exists). Where a precondition is needed (a planet is up, the plan is editable), the test asserts it and fails, instead of skipping.
+**Contract (helper)**: an automatic fixture through `test.extend` in `helpers.ts` with a `clock` option (a scenario name or `"real"`, default `evening`) installs `context.clock.install({ time })` for the browser **before any `goto`** and sets the `sidereus-test-now` cookie for the server; `playwright.config.ts` sets `timezoneId: "Europe/Madrid"` so labels read the same locally and in CI. `E2E_CLOCK=<scenario>` changes only the **default** for tests that pin nothing; an explicit pin (`test.use({ clock: "civilDawn" })`, or a scenario named in the test) always wins (A3). `pinnedNow()` returns the pinned instant for Node-side assertions (the real `Date` under `"real"`). The helper's doc comment says when to read an expectation from page data instead of pinning: when the assertion is about _which_ night or time the page shows (read `data-night-date`, as #198 did).
 
-#### 4. The guard
+**Service worker and offline specs stay on the real clock (A2).** `offline`, `service-worker-control`, `finder-offline`, `session-plan-store` (the stored-copy legs), and every other spec that exercises the worker opt out with `test.use({ clock: "real" })` and a one-line reason, and read their expectations from page data (`data-night-date`, `html[data-from-device]`, the copy's state). `page.clock` is believed not to reach the service worker's own scope; a one-off probe records it in the phase note, and the opt-out does not depend on the answer. `finder-offline` drops its date skip (item 3).
+
+#### 3. Audit and convert the survivors
+
+**Files**: every spec under `tests/e2e/` that skips on a date, a Moon, a planet or a night state, or reads the real date: `finder-chart`, `finder-offline`, `what-to-expect` (drop `inNoDarknessWindow`; the no-darkness "settles on a defined state" test runs under `noDarkness`), `moon-as-target`, `moon-card`, `planets-on-tonight`, `tonight-sky` (the "Now" assertion reads `pinnedNow()`), `tonight-targets` (pin `fullMoonEvening` where the washed-out list is the subject), `session-plan-edit`, `session-plan-store`, `tonight-phone` (pin `evening`; one new test pins `civilDawn` and asserts `held`, and `deepNight` gets one explicit test of the night in progress, so the hours that broke #198 are in every normal run), `helpers.ts` (`madridDateDaysAgo`, `seedSkyCheck` take the pinned date; `inNoDarknessWindow` is deleted), `scripts/smoke.mjs` (its no-darkness branch keys off the real month: it sends the cookie, or asserts both branches).
+
+**Contract**: after the phase no spec contains `test.skip`, `test.fixme` or `testInfo.skip`, nor an early `return` on a missing precondition; the only skips are the named environmental ones (`requirePlanGrant`'s missing key locally in `helpers.ts`, and `CAPTURE_LANDING` in `landing-screenshot.spec.ts` while that spec exists; Phase 5 moves it to a script). Where a precondition is needed (a planet is up, the plan is editable), the test asserts it and fails instead of skipping. A test that cannot be made to always run is deleted with a ledger line saying where its rule is held. The phase note lists which specs are hour-agnostic (they run under the default scenario whatever `E2E_CLOCK` says).
+
+#### 4. The guard (A4)
 
 **File**: `src/lib/e2e-clock-guard.test.ts`, added to the `guards` project's file list
 
-**Contract**: scans `tests/e2e/*.ts` and `*.mjs` and fails on `Date.now(`, `new Date()` with no argument, `performance.now(`, `waitForTimeout(` and any `test.skip(` whose condition mentions a date, `inNoDarknessWindow` or a locator, outside `helpers.ts` (the one place allowed to read the real clock, for the cookie and for `madridDateDaysAgo`'s default); a spec that visits `/tonight`, `/log` or `/gear` must call `pinClock` or carry a one-line `// clock: data-driven (<why>)` marker. Paired with in-memory samples, one violating and one clean per rule (the no-console lesson: a guard needs a positive control). The server seam gets a unit test next to `clock.ts` (cookie honoured on a loopback `SUPABASE_URL`, ignored on a hosted one and on a malformed value).
+**Contract**: an allowlist, not heuristics. Scans `tests/e2e/*.spec.ts` and `helpers.ts`; `forecast-fixture.mjs`, `offline-proxy.ts` and `clock-scenarios.mjs` are excluded by name. It fails on: any `test.skip`, `test.fixme`, `testInfo.skip` or `.fixme(` outside a named list of environmental skips (`requirePlanGrant`, `CAPTURE_LANDING`), in any form (`if (x) test.skip(true, ...)` included); `Date.now(`, `new Date()` with no argument, `performance.now(` outside `helpers.ts`; `waitForTimeout(` anywhere (`offline.spec.ts`'s `waitForTimeout(1000)` becomes an `expect.poll`); a spec that imports `test` from `@playwright/test` instead of `./helpers`. No "visits `/tonight`" heuristic: the automatic fixture pins every test through the `./helpers` import, and `test.use({ clock: "real" })` must carry a reason comment on the same or the previous line. Paired with in-memory samples, one violating and one clean per rule (the no-console lesson: a guard needs a positive control). The server seam gets its unit test next to `clock.ts` (cookie honoured for `127.0.0.1`, `localhost` and `[::1]`; ignored for a hosted URL, `127.0.0.1.evil.example`, `localhost.example.com`, an empty or missing `SUPABASE_URL`, and a malformed or out-of-range cookie value).
 
 #### 5. Lesson and tripwire
 
-`context/foundation/lessons.md`: one entry, "An e2e test never reads the real clock: pin the browser and the server, or read the page's own date"; `CLAUDE.md` tripwires: one line naming `pinClock`, the `sidereus-test-now` cookie (loopback only), the guard, and "never add a date-conditional skip".
+`context/foundation/lessons.md`: one entry, "An e2e test never reads the real clock: pin the browser and the server, or read the page's own date"; `CLAUDE.md` tripwires: one line naming the `./helpers` `test`, the `clock` option and `E2E_CLOCK` (default only), the `sidereus-test-now` cookie (exact loopback hostname only), the guard, and "never add a date-conditional skip".
 
 #### 6. Docs (F9)
 
-`context/foundation/test-plan.md` §6.5 (known skips: the Moon, planet and no-darkness skips are gone; the sky-check spec's database-clock leg stays), `CLAUDE.md` Commands (`E2E_CLOCK`), and the e2e paragraph of the Tonight section where a spec says "tonight".
+`context/foundation/test-plan.md` §6.5 (known skips: the Moon, planet and no-darkness skips are gone; the database-clock leg of `sky-checks.spec` and the service-worker specs stay on the real clock), `CLAUDE.md` Commands (`E2E_CLOCK`), and the e2e paragraph of the Tonight section where a spec says "tonight".
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- The whole e2e suite passes at three pinned hours: `E2E_CLOCK=evening`, `deepNight` and `civilDawn`, locally against a production preview with local Supabase, each run once with `--repeat-each 2 --workers 4`; counts per run pasted in the phase note
-- `grep -rn 'test.skip' tests/e2e` shows only the environment skips (`requirePlanGrant`, `CAPTURE_LANDING`); zero date-conditional skips; `inNoDarknessWindow` no longer exists
-- `npm run test:guards` green with `e2e-clock-guard.test.ts`; break checks red then reverted: `Date.now()` in a spec, a new `test.skip(inNoDarknessWindow())`, a `/tonight` spec without `pinClock`
-- Unit test of `serverNow`: cookie honoured on loopback only, ignored when hosted or malformed; `npm run build` output unchanged in behaviour with no cookie (smoke green unmodified)
+- The whole e2e suite is green with `E2E_CLOCK` unset and with `E2E_CLOCK=evening`, `deepNight` and `civilDawn`, each run with `--repeat-each 2 --workers 4`, locally against a production preview with local Supabase. `E2E_CLOCK` changes only the default of tests that pin nothing: tests with an explicit pin (the `civilDawn` `held` test, the `deepNight` test, `fullMoonEvening`, `noDarkness`) are in every run, so the hours that broke #198 are covered in CI by the default run without a matrix. Counts per run and the list of hour-agnostic specs are pasted in the phase note
+- `grep -rnE 'test\.(skip|fixme)|testInfo\.skip' tests/e2e` prints exactly the environmental skips (the `requirePlanGrant` line in `helpers.ts` and, while it exists, the `CAPTURE_LANDING` line in `landing-screenshot.spec.ts`), the output pasted in the note (comments that merely mention `test.skip` are reworded); `inNoDarknessWindow` no longer exists
+- `npm run test:guards` green with `e2e-clock-guard.test.ts` and the scenario-range helper test; break checks red then reverted: `Date.now()` in a spec, `if (x) test.skip(true, ...)`, `import { test } from "@playwright/test"` in a spec, a `waitForTimeout`
+- Unit test of `serverNow` (hostname exact, hosted and malformed cases as in item 4); `npm run build` behaviour unchanged with no cookie (smoke green unmodified); two scenarios in a row both get a "go" night (item 2)
 - `npm run smoke` green at the real hour and with the cookie set to `civilDawn` and `noDarkness` (the no-darkness branch always exercised)
 - `npm run lint`, `npx astro check` green
 
 #### Manual Verification:
 
-- The owner confirms the seam's guard (loopback `SUPABASE_URL` only) is acceptable in product code, and that CI runs the default scenario while the three-hour check is a recorded local run (or asks for a CI matrix)
+- Owner decision 6.6 recorded (2026-10-17): the server time seam, guarded by an exact loopback hostname, is accepted in product code, and CI runs the default scenario while the three-hour check is a recorded local run
 
 ---
 
@@ -502,7 +512,7 @@ Research §3.1 and §3.2 with D5 and D6 applied.
 
 Delete `sign-in-continue.spec.ts` (smoke 3, 10, 12); `landing.spec.ts`: keep "the footer credit wraps without sideways scroll at 320 and 360 px, in English and Polish" and the ESA credit assertion (F4), drop the CTA and 302 tests (smoke 7, 8); trim `finder-chart` t1/t4, `what-to-expect` t1/t2/t4, `tonight-sky` t4-t7 (the compass test dropped as an owner decision, ledger), `toasts` t3/t6, `observing-progress` t2/t3, `red-night-mode` t2/t3, `tonight-targets` t2/t3, `tonight-phone` t4, `onboarding` t4, `planets-on-tonight` t2, `session-plan-edit` t2/t5/t7, `observation-log` t2, `observation-log-management` t2; merge `gear-catalogue` into `onboarding` t2, `moon-as-target` + `planets-on-tonight` t1 + `observation-log` t1 into one mark-observed journey, `observing-milestones` t1 with `observing-progress` t4, `sky-events` t2 into t1, `navigation` t3 with `tonight-subnav` t1/t2/t3/t5, `session-plan-store` reset into save. `landing-screenshot` was handled in Phase 5.
 
-**Contract**: no `waitForTimeout`, no new retries, no date-conditional skip (Phase 6's guard enforces it: a merged journey keeps `pinClock`); `tonight-phone` t1/t2 and every service-worker spec untouched.
+**Contract**: the pure deletions of Phase 6 step 0 are already done (their ledger rows are in the Phase 6 note); no `waitForTimeout`, no new retries, no date-conditional skip (Phase 6's guard enforces it: a merged journey keeps `pinClock`); `tonight-phone` t1/t2 and every service-worker spec untouched.
 
 #### 3. DB
 
@@ -681,15 +691,15 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 6.1 Whole e2e suite green at `evening`, `deepNight` and `civilDawn`, each with `--repeat-each 2 --workers 4`
-- [ ] 6.2 Zero date-conditional skips in `tests/e2e`; `inNoDarknessWindow` removed
-- [ ] 6.3 `e2e-clock-guard.test.ts` in `guards`; three break checks red then reverted
-- [ ] 6.4 `serverNow` unit test (loopback only) and smoke green at the real hour, `civilDawn` and `noDarkness`
+- [ ] 6.1 Whole e2e suite green by default and with `E2E_CLOCK` = `evening`, `deepNight`, `civilDawn` (explicit pins win), each with `--repeat-each 2 --workers 4`
+- [ ] 6.2 Only the environmental skips left (exact grep output in the note); `inNoDarknessWindow` removed
+- [ ] 6.3 `e2e-clock-guard.test.ts` and the scenario-range test in `guards`; four break checks red then reverted
+- [ ] 6.4 `serverNow` unit test (exact loopback hostname) and smoke green at the real hour, `civilDawn` and `noDarkness`
 - [ ] 6.5 `npm run lint`, `npx astro check` green
 
 #### Manual
 
-- [ ] 6.6 The owner accepts the loopback-guarded seam and the CI scope
+- [x] 6.6 The owner accepted the loopback-guarded seam and the CI scope (decision 2026-10-17, relayed by the orchestrator)
 
 ### Phase 7: E2E and db trims
 

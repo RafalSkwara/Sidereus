@@ -32,16 +32,16 @@
 
 ## Verdicts
 
-| Dimension | Verdict | Findings |
-| --- | --- | --- |
-| Claim Accuracy | WARNING | F2, F5 |
-| Substance | PASS | |
-| Feasibility | PASS | |
-| Sequencing | WARNING | F1 |
-| Architecture Fit | PASS | |
-| Scope Discipline | WARNING | F6 |
-| Verifiability | WARNING | F1, F6 |
-| Coverage | WARNING | F3, F4, F7 |
+| Dimension        | Verdict | Findings   |
+| ---------------- | ------- | ---------- |
+| Claim Accuracy   | WARNING | F2, F5     |
+| Substance        | PASS    |            |
+| Feasibility      | PASS    |            |
+| Sequencing       | WARNING | F1         |
+| Architecture Fit | PASS    |            |
+| Scope Discipline | WARNING | F6         |
+| Verifiability    | WARNING | F1, F6     |
+| Coverage         | WARNING | F3, F4, F7 |
 
 Zweryfikowane i poprawne, bez osobnych findings:
 
@@ -89,7 +89,7 @@ Zweryfikowane i poprawne, bez osobnych findings:
   - Projekt `unit` z planu bierze tylko `src/**`, a `guards` ma listę pięciu plików, więc `build-stars.test.mjs` (33), `designations.test.mjs` (21) i `hipparcos.test.mjs` (17) przestają się uruchamiać.
   - Faza 5 dopisuje do `guards` tylko „catalogue provenance files”.
 - **Fix**: `unit.include` = `["src/**/*.test.ts", "scripts/**/*.test.mjs"]` (albo `scripts/**` w `guards`). Kryterium 0.1 ma porównywać `numTotalTests` z liczbą zmierzoną na `main` tuż przed zmianą. Do 0.4 dopisać mocniejszą asercję: `toContain("vitest run --project unit")` w `agent-hooks.test.ts:223`.
-- **Decision**: APPLIED. Phase 0: `reference` include = ["src/**/*.test.ts", "scripts/**/*.test.mjs"]; criterion 0.1 compares with the count measured on main just before the change; agent-hooks "lets a clean change finish" asserts `vitest run --project reference` (projects renamed per F6/D1).
+- **Decision**: APPLIED. Phase 0: `reference` include = ["src/**/\*.test.ts", "scripts/**/*.test.mjs"]; criterion 0.1 compares with the count measured on main just before the change; agent-hooks "lets a clean change finish" asserts `vitest run --project reference` (projects renamed per F6/D1).
 
 ### F3 — Piny naprawionych błędów przycinane bez nazwania (D9 jest tylko ogólny)
 
@@ -213,12 +213,12 @@ Zweryfikowane i poprawne, bez osobnych findings:
 
 ## Komendy weryfikacyjne
 
-| Komenda z planu | Stan |
-| --- | --- |
-| `npm test`, `npm run lint`, `npx astro check` | istnieją (`package.json:17`, CI `ci`) |
-| `npm run test:unit`, `npm run test:guards`, `vitest run --project unit` | jeszcze nie istnieją, tworzy je Faza 0 (oczekiwane) |
+| Komenda z planu                                                                                                          | Stan                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `npm test`, `npm run lint`, `npx astro check`                                                                            | istnieją (`package.json:17`, CI `ci`)                                                               |
+| `npm run test:unit`, `npm run test:guards`, `vitest run --project unit`                                                  | jeszcze nie istnieją, tworzy je Faza 0 (oczekiwane)                                                 |
 | `npx vitest list --config vitest.db.config.ts`, `npx playwright test --list`, `npm run smoke`, `npm run catalogue:build` | istnieją; nieuruchamiane (smoke i db wymagają lokalnego Supabase, `catalogue:build` zapisuje pliki) |
-| krok CI drift OpenNGC | wykonalny: generator deterministyczny, sieć do `raw.githubusercontent.com` |
+| krok CI drift OpenNGC                                                                                                    | wykonalny: generator deterministyczny, sieć do `raw.githubusercontent.com`                          |
 
 ## Rekomendacje do dziewięciu pytań właściciela (plan-brief)
 
@@ -235,3 +235,72 @@ Zweryfikowane i poprawne, bez osobnych findings:
 ## Triage summary
 
 Triaged 2026-10-17 by the owner (D1-D9, relayed by the orchestrator) and applied by the author in plan.md (commit after this file). F1-F5, F7-F9 applied; F6 declined (the author's cut depth stands; Fix B's targets and project names taken). The plan was rebased onto origin/main 85aa123 and the baseline re-measured. `change.md` is `plan_reviewed`.
+
+## Amendment review (Phase 6)
+
+Reviewer: herdr `reviewer` (Opus), 2026-10-17. Scope: only the owner-approved amendment in `392f76e` (Phase 6 "Clock-pinned e2e" and the renumbering to 7 and 8). Read from `origin/test-diet/phase-1` with `git show` / `git grep`; nothing was run.
+
+**Verdict: REVISE.** The design is right in its main idea. `page.clock` alone is not enough, a server seam is needed, and the "loopback `SUPABASE_URL`" guard is safe. As written, though, the phase will not reach green: the forecast fixture and the service worker stay on the real clock (A1, A2). The three-hour criterion contradicts the explicit pins (A3), and the guard is red on day one and also lets the existing skips through (A4). All of these can be fixed in the plan text before implementation starts.
+
+### Odpowiedź na pytanie otwarte (szew)
+
+**Akceptuję szew.** E2E testuje ten sam build produkcyjny, który idzie na produkcję, więc flaga z czasu builda niczego by nie odróżniła. Właściwym sygnałem jest `SUPABASE_URL` (`astro:env/server`, `src/lib/supabase.ts:4`), bo na produkcji to hostowany projekt, ustawiony przez operatora, a nie przez odwiedzającego. Warunki: porównywać `new URL(SUPABASE_URL).hostname` dokładnie z `127.0.0.1`, `localhost` i `::1` (bez `startsWith` i `includes`). Ciasteczko ma wpływać tylko na odczyty, które wyznaczają noc. Znaczniki metadanych zostają realne (`session-plans/store.ts:54` `updated_at`, `account-plan/index.ts:52-65`). Test jednostkowy z przypadkiem hostowanym i zniekształconym zostaje, jak w planie.
+
+### A1 — Fixture prognozy nie pokryje przypiętych chwil (BLOKER, CONFIRMED)
+
+- `tests/e2e/forecast-fixture.mjs:15` buduje godziny od `Date.now()`. `src/lib/forecast/service.ts:107-114,218-224` sprawdza kompletność i okno względem wstrzykniętego `now`, czyli po zmianie względem `serverNow`. Gdy noc jest przypięta do stałej daty, a `FIXTURE_NOW` ma domyślnie realną godzinę, każda prognoza będzie „incomplete” i Tonight nie da werdyktu „go”.
+- Jedno `FIXTURE_NOW` na proces też nie wystarczy. Scenariusze per test na inne daty (`noDarkness` 21 czerwca, `fullMoonEvening`) leżą poza oknem −48/+216 h. Zmiana `E2E_CLOCK` wymagałaby restartu fixture, a CI go nie restartuje.
+- **Fix**: scenariusze trzymać w jednym module `.mjs` (np. `tests/e2e/clock-scenarios.mjs`), który importują helper i fixture. Fixture serwuje posortowaną sumę okien −48/+216 h wokół każdego scenariusza i realnej godziny, bez zmiennej środowiskowej. Przed decyzją sprawdzić, że parser (`open-meteo.ts:~102`) i `isCompleteForecast` przyjmują nieciągłą serię. Jeśli nie, fixture serwuje ciągły zakres od najwcześniejszego do najpóźniejszego scenariusza (rok godzin to około 9 tys. punktów, co jest akceptowalne). To samo dotyczy smoke z ciasteczkiem `civilDawn` i `noDarkness`.
+
+### A2 — Service worker zostaje na realnym zegarze (BLOKER, CONFIRMED w kodzie; zasięg `page.clock` PLAUSIBLE)
+
+- `src/sw.ts:169,454,673,806` (`expire`, `needsNextCopy`, `chooseCopy`, `listCopies`) i `:160-165,329` czytają realny `Date`. Kopię offline renderuje serwer (`OfflineCopy.astro:35` `preparedAt`, `data-night-date` z przypiętego `view.date`). Kopia z przypiętej, przeszłej nocy wygaśnie w SW od razu albo nie zostanie wybrana. `page.clock` wstrzykuje się do ramek strony, a według mojej wiedzy nie do service workera; trzeba to potwierdzić jednorazową sondą. `OfflineCopy.astro` i `offline/page-state.ts` nie ma na liście wywołań w pozycji 1.
+- Dotyczy to `finder-offline` (na liście konwersji), `offline.spec` i `service-worker-control`.
+- **Fix**: specy SW i offline jawnie zostają na realnym zegarze, z oczekiwaniami czytanymi z danych strony (`data-night-date`, stan kopii). `finder-offline` zamiast pomijać w oknie bez ciemności używa obiektu, który ma wiersz w każdą noc, albo sprawdza „settles on a defined state” jak `what-to-expect`. Ma to zgadzać się z regułą Fazy 7 „every service-worker spec untouched”. W planie trzeba dopisać klasyfikację odczytów zegara: „wyznacza noc → `serverNow`”, „metadane lub SW → realne, z powodem”.
+
+### A3 — Semantyka `E2E_CLOCK` kontra jawne piny; kryterium 6.1 jest niespójne (MAJOR)
+
+- Kryterium „cały suite zielony przy `E2E_CLOCK=civilDawn`” stoi w sprzeczności z pozycją 3: testy wymagające edytowalnego planu albo widocznej planety mają asercje warunków wstępnych, więc przy `civilDawn` i `deepNight` muszą być czerwone. Pinują `evening` jawnie, czyli `E2E_CLOCK` ich nie dotyczy, ale plan tego nie mówi.
+- **Fix**: zapisać, że `E2E_CLOCK` zmienia tylko domyślny scenariusz testów bez jawnego pinu, a jawne piny wygrywają. Kryterium 6.1 brzmi wtedy: „testy bez jawnego pinu zielone przy trzech godzinach; jawne `civilDawn` (`held`) i `deepNight` są w zwykłym przebiegu”. Dzięki temu klasa #198 jest pokryta w CI za darmo, bez macierzy. W notatce fazy wypisać, które specy są agnostyczne wobec godziny.
+
+### A4 — Strażnik: fałszywe alarmy i przecieki (MAJOR, CONFIRMED)
+
+- Fałszywe alarmy od pierwszego dnia: `forecast-fixture.mjs:15` (`Date.now()`, a skan obejmuje `*.mjs`) i `offline.spec.ts:121` (`waitForTimeout(1000)`). `offline.spec` nie ma na liście pozycji 3, a Faza 7 każe nie ruszać speców SW.
+- Przecieki: obecne pomijania mają postać `if (…) test.skip(true, …)` (`moon-as-target:38`, `moon-card:36`, `planets-on-tonight:39,94`). Warunek nie jest w wywołaniu, więc reguła „condition mentions a date or locator” ich nie złapie. Nie łapie też `test.fixme`, `testInfo.skip` ani wcześniejszego `return` (`tonight-sky:159` `if (!marker) return;`). Wykrywanie „spec odwiedza `/tonight`” po literale nie widzi helperów (`openSky`, rejestracja kończąca się na `/tonight`).
+- Odczyt zegara po stronie Node w specu (`tonight-sky:139`, przycisk „Now”) przy przypiętej przeglądarce porównuje dwa różne zegary.
+- **Fix**: strażnik oparty na liście dozwolonych zamiast heurystyk. Zakazać każdego `test.skip`, `test.fixme` i `testInfo.skip` poza nazwaną listą pomijań środowiskowych (`requirePlanGrant`, `CAPTURE_LANDING`). Przypinanie zrobić jako automatyczną fixture w `helpers.ts` (`test.extend` z opcją `clock`, domyślnie `evening`, rezygnacja przez `test.use({ clock: "real" })` z komentarzem powodu). Strażnik sprawdza wtedy tylko, że spec importuje `test` z `./helpers`, a nie z `@playwright/test`. Jawnie wyłączyć `forecast-fixture.mjs` i `offline-proxy.ts`. `waitForTimeout` w `offline.spec` zamienić na `expect.poll` albo dopisać go do listy dozwolonych z powodem. Helper udostępnia `pinnedNow()` do asercji po stronie Node.
+
+### A5 — Interakcja z Fazą 7: konwersje do kosza (MEDIUM)
+
+- Faza 6 konwertuje testy, które Faza 7 kasuje: `what-to-expect` t1/t2/t4 (3 z 4 pomijań `inNoDarknessWindow`), `finder-chart` t1/t4, `tonight-sky` t4-t7 (w tym pomijania markerów `:158,:170`), `tonight-targets` t2/t3, `planets-on-tonight` t2, `session-plan-edit` t2/t5/t7, a `moon-as-target` jest scalany.
+- **Fix**: Faza 6 zaczyna od samych usunięć z pozycji 2 Fazy 7 (bez scaleń), z wierszami ledgera, i konwertuje tylko testy, które przeżyją. Ewentualnie przenieść te usunięcia do Fazy 6 jawnie. Kolejność „pin przed trimami” zostaje dla scaleń.
+
+### A6 — #198 nie jest zmergowany (MEDIUM, CONFIRMED: `gh pr view 198` OPEN)
+
+- Na gałęzi `tonight-sky.spec.ts:132-150` nadal liczy „Now” z realnego `new Date()`. Faza 6 musi wyjść z main po #198 albo go wchłonąć, a asercja „Now” ma liczyć od `pinnedNow()`.
+
+### A7 — Drobne (MINOR)
+
+- `page.clock.install` musi być wywołane przed `goto`. Zegar jest wspólny dla kontekstu i po instalacji płynie, więc `resume()` jest najpewniej zbędne (do sprawdzenia, nieszkodliwe).
+- Stała data scenariuszy musi leżeć w zakresie danych (katalog zdarzeń `sky-events`, efemerydy). Zapisać rok i dodać test helpera, który tego pilnuje, inaczej problem wróci jako wygasające dane.
+- Baza: `record_sky_verdict` aktualizuje tylko przy `pg_catalog.now() < existing.dark_start` (`20261003120000_sky_checks.sql:104-105`), co plan poprawnie zostawia realne. Przy przeszłej stałej dacie pierwszy zapis wchodzi, kolejne widoki go nie nadpisują. Warto zapisać to w notatce, bo nie jest to błąd. Auth Supabase działa tylko po stronie serwera (bez `createBrowserClient` w przeglądarce), więc przypięta przeglądarka go nie dotyka.
+- Kryterium 6.2: `grep -rn 'test.skip' tests/e2e` pokaże też `helpers.ts:188` i komentarz `helpers.ts:206`. Trzeba wpisać dokładnie oczekiwane wyjście.
+- Przeglądarka nie ma `timezoneId` (CI to UTC, lokalnie Warszawa). Chwile ISO są absolutne, więc nie ma to wpływu na stan, ale warto ustawić `timezoneId: "Europe/Madrid"` dla spójnych etykiet.
+
+### Koszt CI
+
+- Pomijalny przy domyślnym scenariuszu w CI: jedna instalacja zegara na test, a strażnik to milisekundy w `guards`. Konwersja pomijań na zawsze wykonywane testy dodaje około 15 faktycznie uruchamianych testów w dni, w które wcześniej je pomijano (rzędu kilkunastu sekund). Nie ma macierzy CI. Pokrycie `civilDawn`/`deepNight` daje A3, a przebieg trzygodzinny zostaje lokalnym, zapisanym w notatce (3 × `--repeat-each 2` to około 6× czas e2e lokalnie).
+
+### Weryfikowalność kryteriów
+
+| Kryterium                                             | Stan                                                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 6.1 trzy godziny                                      | niespójne, dopóki nie wejdzie A3; po A3 sprawdzalne                                               |
+| 6.2 zero pomijań warunkowych                          | sprawdzalne po doprecyzowaniu oczekiwanego wyjścia grep (A7)                                      |
+| 6.3 strażnik + 3 break checki                         | sprawdzalne; dodać break check `if (x) test.skip(true)` i import `test` z `@playwright/test` (A4) |
+| 6.4 `serverNow` + smoke przy `civilDawn`/`noDarkness` | sprawdzalne po A1 (fixture)                                                                       |
+| 6.6 decyzja właściciela                               | sprawdzalna; rekomendacja: zaakceptować szew i domyślny scenariusz w CI                           |
+
+### Amendment triage (2026-10-17)
+
+Applied by the implementer in plan.md Phase 6: A1 (one scenario module, the fixture serves the union of windows; parser and `isCompleteForecast` checked: gaps accepted), A2 (service worker and offline specs stay on the real clock, every clock read classified), A3 (`E2E_CLOCK` changes only the default, explicit pins win, 6.1 rewritten), A4 (allowlist guard, automatic fixture through `test.extend`, `./helpers` import), A5 (Phase 7's pure deletions first), A6 (base on main after #198), A7 (fixed date range plus helper test, exact grep output, `timezoneId`). Owner decision 6.6: the seam is accepted (exact loopback hostname) and CI runs the default scenario.
