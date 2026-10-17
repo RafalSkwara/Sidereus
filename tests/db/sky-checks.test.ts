@@ -191,8 +191,13 @@ describe("skyCheckStore", () => {
     expect(await skyCheckStore.answer(user, row.id, "clear", now)).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
+      fault: { kind: "no-rows" },
     });
-    expect(await skyCheckStore.skip(user, row.id, now)).toEqual({ ok: false, message: "errors.notFound.skyCheck" });
+    expect(await skyCheckStore.skip(user, row.id, now)).toEqual({
+      ok: false,
+      message: "errors.notFound.skyCheck",
+      fault: { kind: "no-rows" },
+    });
   });
 
   it("lists checkable nights newest first, leaving out nights with no forecast", async () => {
@@ -252,10 +257,12 @@ describe("skyCheckStore", () => {
     expect(await skyCheckStore.answer(user, noForecast.id, "clear", new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
+      fault: { kind: "no-rows" },
     });
     expect(await skyCheckStore.skip(user, answered.id, new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
+      fault: { kind: "no-rows" },
     });
     expect(await rows(user, site, "2026-09-18")).toMatchObject([{ answer: null }]);
   });
@@ -266,6 +273,7 @@ describe("skyCheckStore", () => {
     expect(await skyCheckStore.answer(b, row.id, "clear", new Date())).toEqual({
       ok: false,
       message: "errors.notFound.skyCheck",
+      fault: { kind: "no-rows" },
     });
     expect(await skyCheckStore.answer(a, "not-a-uuid", "clear", new Date())).toEqual({
       ok: false,

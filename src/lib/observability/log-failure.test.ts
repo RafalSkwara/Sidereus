@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-import { CODE_SHAPE, FAILURE_STEPS, logFailure, logNotice } from "./log-failure";
+import { ForecastError } from "@/lib/forecast/open-meteo";
+
+import { AUTH_ERROR_CODES, FAILURE_STEPS, isLoggableCode, logFailure, logNotice } from "./log-failure";
 
 /**
  * The helper is the one place the app writes a failure to the console, and what it may write is the privacy rule:
@@ -149,8 +153,8 @@ describe("name", () => {
 });
 
 describe("code", () => {
-  it("passes through when it has the shape of a Postgres or PostgREST code", () => {
-    for (const code of ["42501", "PGRST301", "23505", "XX000", "A"]) {
+  it("passes through when it is a SQLSTATE, a PostgREST code, a forecast step or an auth-js code", () => {
+    for (const code of ["42501", "PGRST301", "23505", "XX000", "request", "http", "parse", "schema", "bad_jwt"]) {
       errors.mockClear();
       logFailure("account.plan", Object.assign(new Error("m"), { code }));
       expect(only(errors)[1], code).toMatchObject({ code });
@@ -167,18 +171,35 @@ describe("code", () => {
     expect(only(errors)[1]).toMatchObject({ code: "42501" });
   });
 
-  it("is dropped when it fails CODE_SHAPE", () => {
+  it("is dropped when it is not a closed shape, whatever it looks like (never a value that could be a name or a key)", () => {
     for (const code of [
+      "M31",
+      "NGC7000",
+      "IC405",
+      "NGC40",
+      "IC342",
+      "A",
+      "abcdefghijkl", // 12 opaque characters
+      "a3f9c2d71b04", // a site-id fragment
+      "banana", // an unknown lowercase word
+      "Request", // not a forecast step
       `permission denied at ${COORDS}`,
+      COORDS,
       EMAIL,
+      "ada",
       "",
-      "1234567890123", // 13 characters
+      "1234567890123",
       "42 501",
       "42-501",
       "42501\n",
+      "4250", // not five characters
+      "425011",
+      "pgrst301",
+      "PGRST30",
+      "PGRST3011",
     ]) {
       errors.mockClear();
-      expect(CODE_SHAPE.test(code), JSON.stringify(code)).toBe(false);
+      expect(isLoggableCode(code), JSON.stringify(code)).toBe(false);
       logFailure("account.plan", Object.assign(new Error("m"), { code }));
       expect(only(errors)[1], JSON.stringify(code)).not.toHaveProperty("code");
     }
@@ -187,13 +208,73 @@ describe("code", () => {
   it("is dropped when it is not a string", () => {
     for (const code of [42501, null, undefined, {}, ["42501"], true]) {
       errors.mockClear();
+      expect(isLoggableCode(code)).toBe(false);
       logFailure("account.plan", Object.assign(new Error("m"), { code }));
       expect(only(errors)[1]).not.toHaveProperty("code");
     }
   });
+});
 
-  it("is the same shape the Session plan trace already used (moved here, exported)", () => {
-    expect(CODE_SHAPE.source).toBe("^[0-9A-Za-z_]{1,12}$");
+describe("isLoggableCode: one accepted example of each closed class, and what it rejects", () => {
+  const ACCEPTED: [string, string][] = [
+    ["a SQLSTATE", "42501"],
+    ["a SQLSTATE with letters", "XX000"],
+    ["a SQLSTATE of a lettered class", "P0001"],
+    ["a SQLSTATE of a lettered class", "HV00N"],
+    ["a SQLSTATE of a lettered class", "F0000"],
+    ["a SQLSTATE of class 22", "22P02"],
+    ["a SQLSTATE of class 23", "23505"],
+    ["a PostgREST code", "PGRST301"],
+    ["a PostgREST code", "PGRST116"],
+    ["the forecast step request", "request"],
+    ["the forecast step http", "http"],
+    ["the forecast step parse", "parse"],
+    ["the forecast step schema", "schema"],
+    ["an auth-js code", "over_request_rate_limit"],
+    ["an auth-js code", "validation_failed"],
+    ["an auth-js code", "refresh_token_not_found"],
+    ["an auth-js code", "email_address_invalid"],
+  ];
+  const REJECTED: [string, string][] = [
+    ["a Messier id", "M31"],
+    ["a Caldwell id", "NGC7000"],
+    ["a five-character Caldwell id (class I, not a SQLSTATE class)", "IC405"],
+    ["a five-character Caldwell id", "NGC40"],
+    ["a five-character Caldwell id", "IC342"],
+    ["12 opaque characters", "a3f9c2d71b04"],
+    ["an email-like string", "ada@example.test"],
+    ["a coordinate-like string", "52.2297,21.0122"],
+    ["an unknown lowercase word", "banana"],
+    ["an unknown snake_case word", "some_new_code"],
+    ["a single letter", "A"],
+    ["a lowercase SQLSTATE shape", "xx000"],
+  ];
+
+  it.each(ACCEPTED)("accepts %s (%s)", (_class, code) => {
+    expect(isLoggableCode(code)).toBe(true);
+  });
+
+  it.each(REJECTED)("rejects %s (%s)", (_class, code) => {
+    expect(isLoggableCode(code)).toBe(false);
+  });
+
+  it("accepts the code of every ForecastError step, which is the step", () => {
+    for (const step of ["request", "http", "parse", "schema"] as const) {
+      expect(isLoggableCode(new ForecastError(step).code), step).toBe(true);
+    }
+  });
+
+  it("keeps the auth-js allowlist to codes the installed library declares (the ErrorCode union in error-codes.d.ts)", () => {
+    const require = createRequire(import.meta.url);
+    const declared = readFileSync(
+      require.resolve("@supabase/auth-js/package.json").replace("package.json", "dist/main/lib/error-codes.d.ts"),
+      "utf8",
+    );
+    expect(AUTH_ERROR_CODES.length).toBeGreaterThan(80);
+    expect(new Set(AUTH_ERROR_CODES).size).toBe(AUTH_ERROR_CODES.length);
+    for (const code of AUTH_ERROR_CODES) {
+      expect(declared, code).toContain(`'${code}'`);
+    }
   });
 });
 
@@ -303,7 +384,12 @@ describe("never throws", () => {
 });
 
 describe("FAILURE_STEPS", () => {
-  it("is a closed list of unique dotted words, including every step Phase 1 traces", () => {
+  it("has no step nothing emits: the milestone read and record are told apart by route", () => {
+    expect(FAILURE_STEPS).not.toContain("milestones.read");
+    expect(FAILURE_STEPS).not.toContain("milestones.record");
+  });
+
+  it("is a closed list of unique dotted words, including every step Phases 1, 3, 4 and 5 trace", () => {
     expect(new Set(FAILURE_STEPS).size).toBe(FAILURE_STEPS.length);
     for (const step of FAILURE_STEPS) {
       expect(step, step).toMatch(/^[a-z]+\.[a-z][a-z-]*$/);
@@ -311,16 +397,51 @@ describe("FAILURE_STEPS", () => {
     expect(FAILURE_STEPS).toEqual(
       expect.arrayContaining([
         "forecast.fetch",
+        "forecast.incomplete",
+        "forecast.cache-read",
+        "forecast.cache-write",
+        "forecast.cache-missing",
+        "tonight.sites",
+        "tonight.telescopes",
+        "tonight.eyepieces",
+        "tonight.log",
+        "tonight.sky-checks",
+        "tonight.build",
+        "tonight.planets",
+        "tonight.moon",
+        "tonight.sky-view",
+        "tonight.sky-check-record",
         "tonight.session-plan",
         "tonight.sky-events",
         "tonight.plan-edits",
         "finder.stars",
         "finder.chart",
         "account.plan",
-        "milestones.read",
-        "milestones.record",
         "milestones.list",
         "progress.seen",
+        "milestones.read-create",
+        "milestones.read-edit",
+        "milestones.read-delete",
+        "milestones.record-create",
+        "milestones.record-edit",
+        "milestones.record-delete",
+        "save.gear",
+        "save.log",
+        "save.sky-check",
+        "save.onboarding",
+        "save.plan",
+        "save.plan-reset",
+        "request.form",
+        "read.log",
+        "read.gear",
+        "read.sky-checks",
+        "read.onboarding",
+        "auth.claims",
+        "auth.signin",
+        "auth.signup",
+        "auth.signout",
+        "config.supabase",
+        "finder.tonight",
       ]),
     );
   });

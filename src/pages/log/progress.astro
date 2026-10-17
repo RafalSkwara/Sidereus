@@ -10,9 +10,9 @@ import Band from "@/components/ui/Band.astro";
 import PageHeader from "@/components/ui/PageHeader.astro";
 import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
-import { logMilestoneFailure } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
 import { observationStore } from "@/lib/observations/store";
+import { logFailure } from "@/lib/observability/log-failure";
 import { milestonesOf, withStored, type MilestoneKey } from "@/lib/progress/milestones";
 import { observingProgress, type ObservingProgress } from "@/lib/progress/progress";
 import type { TargetKey } from "@/lib/targets";
@@ -34,13 +34,13 @@ let stored = new Map<MilestoneKey, string>();
 if (supabase) {
   // The stored read starts beside the seen read. A failed one falls back to the derived states, with a trace.
   const storedRead = milestoneStore.listReached(supabase).catch((error: unknown) => {
-    logMilestoneFailure("list", error);
+    logFailure("milestones.list", error);
     return new Map<MilestoneKey, string>();
   });
   try {
     progress = observingProgress(await observationStore.listSeenEntries(supabase));
   } catch (error) {
-    logMilestoneFailure("seen", error);
+    logFailure("progress.seen", error);
     loadError = "errors.load.observations";
   }
   stored = await storedRead;

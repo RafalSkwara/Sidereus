@@ -2,6 +2,7 @@ import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
 import { LOG_PENALTY_MIN_RATING, type LogEntry } from "@/lib/engine";
 import { siteStore, telescopeStore, type SiteRecord, type WriteResult } from "@/lib/gear/store";
+import { faultFrom, noRowsFault, withFault, type WriteFault } from "@/lib/observability/fault";
 import type { TargetKey } from "@/lib/targets";
 import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import type { TypedSupabaseClient } from "@/lib/supabase";
@@ -10,7 +11,9 @@ import type { ObservationInput, ObservationUpdateInput } from "./schemas";
 /**
  * The observation log's data layer (roadmap S-06). Follows `@/lib/gear/store.ts`'s privacy rules:
  * database error text never leaves this module, writes return a fixed, value-free message key
- * (`@/i18n`), reads throw an `Error` whose message is such a key, and this module never logs.
+ * (`@/i18n`) plus a sanitized `fault` (only the code, never for a user-input failure), reads throw
+ * an `Error` whose message is such a key and whose `cause` is a sanitized `StoreFault`, and this module never
+ * logs.
  *
  * The chosen site and telescope are read through RLS before inserting: that proves they are the
  * caller's (the table's policies check it again), supplies the name snapshots that keep an entry
@@ -53,7 +56,7 @@ export interface ObservationRecord {
   createdAt: string;
 }
 
-export type DeleteResult = { ok: true; target: TargetKey } | { ok: false; message: MessageKey };
+export type DeleteResult = { ok: true; target: TargetKey } | { ok: false; message: MessageKey; fault?: WriteFault };
 
 /** The column's check constraint is the target key grammar, so a stored value is always a key. */
 function asTargetKey(value: string): TargetKey {
@@ -109,8 +112,8 @@ export const observationStore = {
         siteStore.get(client, input.siteId),
         telescopeStore.get(client, input.telescopeId),
       ]);
-    } catch {
-      return { ok: false, message: SAVE_FAILED };
+    } catch (error) {
+      return { ok: false, message: SAVE_FAILED, ...withFault(error) };
     }
     if (!site || !telescope) {
       return { ok: false, message: GEAR_NOT_FOUND };
@@ -128,7 +131,7 @@ export const observationStore = {
       site_name: site.name,
       telescope_name: telescope.name,
     });
-    return error ? { ok: false, message: SAVE_FAILED } : { ok: true };
+    return error ? { ok: false, message: SAVE_FAILED, ...withFault(error) } : { ok: true };
   },
 
   /**
@@ -148,7 +151,7 @@ export const observationStore = {
       .order("id", { ascending: true })
       .range(offset, offset + LOG_PAGE_SIZE);
     if (error) {
-      throw new Error(LOAD_FAILED);
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return { entries: data.slice(0, LOG_PAGE_SIZE).map(toObservationRecord), hasOlder: data.length > LOG_PAGE_SIZE };
   },
@@ -160,7 +163,7 @@ export const observationStore = {
       if (error.code === INVALID_TEXT) {
         return null;
       }
-      throw new Error(LOAD_FAILED);
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return data ? toObservationRecord(data) : null;
   },
@@ -186,11 +189,11 @@ export const observationStore = {
         input.siteId ? siteStore.get(client, input.siteId) : null,
         input.telescopeId ? telescopeStore.get(client, input.telescopeId) : null,
       ]);
-    } catch {
-      return { ok: false, message: SAVE_FAILED };
+    } catch (error) {
+      return { ok: false, message: SAVE_FAILED, ...withFault(error) };
     }
     if (!existing) {
-      return { ok: false, message: NOT_FOUND };
+      return { ok: false, message: NOT_FOUND, fault: noRowsFault() };
     }
     if (!input.siteId && existing.siteId) {
       return { ok: false, message: SITE_REQUIRED };
@@ -205,8 +208,8 @@ export const observationStore = {
     let latestNight;
     try {
       latestNight = site ? tonightDateForSite(site, now) : latestNightBound(await siteStore.list(client), now);
-    } catch {
-      return { ok: false, message: SAVE_FAILED };
+    } catch (error) {
+      return { ok: false, message: SAVE_FAILED, ...withFault(error) };
     }
     // ISO dates compare correctly as strings.
     if (input.night > latestNight) {
@@ -227,19 +230,21 @@ export const observationStore = {
       .eq("id", id)
       .select("id");
     if (error) {
-      return { ok: false, message: SAVE_FAILED };
+      return { ok: false, message: SAVE_FAILED, ...withFault(error) };
     }
-    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND };
+    return data.length > 0 ? { ok: true } : { ok: false, message: NOT_FOUND, fault: noRowsFault() };
   },
 
   /** Deletes one entry and names its target for the log's notice. Another user's entry reads as not found. */
   async remove(client: TypedSupabaseClient, id: string): Promise<DeleteResult> {
     const { data, error } = await client.from("observations").delete().eq("id", id).select("target");
     if (error) {
-      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : DELETE_FAILED };
+      return { ok: false, message: error.code === INVALID_TEXT ? NOT_FOUND : DELETE_FAILED, ...withFault(error) };
     }
     const deleted = data.at(0);
-    return deleted ? { ok: true, target: asTargetKey(deleted.target) } : { ok: false, message: NOT_FOUND };
+    return deleted
+      ? { ok: true, target: asTargetKey(deleted.target) }
+      : { ok: false, message: NOT_FOUND, fault: noRowsFault() };
   },
 
   /**
@@ -267,7 +272,7 @@ export const observationStore = {
         .order("id", { ascending: true })
         .range(from, from + SEEN_PAGE_SIZE - 1);
       if (error) {
-        throw new Error(LOAD_FAILED, { cause: error });
+        throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
       }
       if (from === 0) {
         total = count;

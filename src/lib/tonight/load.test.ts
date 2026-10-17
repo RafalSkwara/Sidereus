@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 import { memoryCache } from "@/lib/forecast/test-helpers";
 import type { EyepieceRecord, SiteRecord, TelescopeRecord } from "@/lib/gear/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
+
+import { skyCheckStore } from "@/lib/sky-checks/store";
 
 import { loadTonight, type PlanEditsReader } from "./load";
 import { EYEPIECES, NOW, TELESCOPE, WARSAW } from "./test-fixtures";
@@ -247,5 +249,109 @@ describe("loadTonight's saved Session plan (adjustable-session-plan)", () => {
     const result = await load({ readPlanEdits });
     expect(result.tonightError).toBe("tonight.failed");
     expect(result.view).toBeNull();
+  });
+});
+
+describe("loadTonight's failure lines (error-visibility)", () => {
+  let errors: MockInstance<typeof console.error>;
+
+  beforeEach(() => {
+    errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errors.mockRestore();
+  });
+
+  /** The Tonight loader's own lines: the unreachable forecast (failingFetch) adds its `forecast.fetch` line too. */
+  const tonightLines = () => errors.mock.calls.filter(([line]) => String(line).startsWith("sidereus: tonight."));
+
+  /** The coordinate canary: the fake site's coordinates sit in every thrown message, and must reach no argument. */
+  const messageWithCoordinates = (what: string) =>
+    new Error(`${what} failed at ${String(WARSAW.latitudeDeg)},${String(WARSAW.longitudeDeg)} (site ${WARSAW.id})`);
+  const readFault = (key: string, code = "08006") =>
+    new Error(key, { cause: Object.assign(messageWithCoordinates("select"), { code }) });
+  const expectNoPrivateValue = () => {
+    expect(JSON.stringify(errors.mock.calls)).not.toMatch(/52\.23|21\.01|site-1|select|errors\.load|tonight\.failed/);
+  };
+
+  it.each([
+    ["sites", "errors.load.sites", () => mocks.listSites],
+    ["telescopes", "errors.load.telescopes", () => mocks.listTelescopes],
+    ["eyepieces", "tonight.eyepiecesFailed", () => mocks.listEyepieces],
+    ["log", "tonight.logFailed", () => mocks.listLog],
+  ] as const)("logs one tonight.%s line, with the cause's code, when that list fails", async (name, key, mock) => {
+    mock().mockRejectedValue(readFault(key));
+    const result = await load();
+    expect([result.sitesError, result.telescopesError, result.eyepiecesError, result.logError].filter(Boolean)).toEqual(
+      [key],
+    );
+    expect(tonightLines()).toEqual([
+      [`sidereus: tonight.${name} failed`, { step: `tonight.${name}`, name: "Error", code: "08006" }],
+    ]);
+    expectNoPrivateValue();
+  });
+
+  it("logs one tonight.sky-checks line when the optional sky-check read fails, and still shows Tonight", async () => {
+    const openRecent = vi.spyOn(skyCheckStore, "openRecent").mockRejectedValue(readFault("errors.load.skyChecks"));
+    try {
+      const result = await load({ withSkyChecks: true });
+      expect(result.openSkyChecks).toEqual([]);
+      expect(result.view).not.toBeNull();
+      expect(tonightLines()).toEqual([
+        ["sidereus: tonight.sky-checks failed", { step: "tonight.sky-checks", name: "Error", code: "08006" }],
+      ]);
+      expectNoPrivateValue();
+    } finally {
+      openRecent.mockRestore();
+    }
+  });
+
+  it("logs nothing when every list loads", async () => {
+    await load({ withSkyChecks: false });
+    expect(tonightLines()).toEqual([]);
+  });
+
+  it("logs tonight.build, with the error's name only, when the build throws", async () => {
+    mocks.buildTonight.mockImplementationOnce(() => {
+      throw new RangeError(`build failed at ${String(WARSAW.latitudeDeg)},${String(WARSAW.longitudeDeg)}`);
+    });
+    const result = await load();
+    expect(result.tonightError).toBe("tonight.failed");
+    expect(tonightLines()).toEqual([["sidereus: tonight.build failed", { step: "tonight.build", name: "RangeError" }]]);
+    expectNoPrivateValue();
+  });
+
+  it("turns a bad stored time zone into the tonight.failed state with a tonight.build line, not an uncaught throw", async () => {
+    mocks.listSites.mockResolvedValue([{ ...WARSAW, timeZone: "Mars/Olympus_Mons" }]);
+    const readPlanEdits = vi.fn<PlanEditsReader>().mockResolvedValue(null);
+    const result = await load({ withSessionPlan: true, readPlanEdits });
+    expect(result.tonightError).toBe("tonight.failed");
+    expect(result.view).toBeNull();
+    expect(result.site?.id).toBe(WARSAW.id);
+    expect(result.telescopes).toEqual([TELESCOPE]);
+    expect(readPlanEdits).not.toHaveBeenCalled();
+    expect(mocks.buildTonight).not.toHaveBeenCalled();
+    expect(tonightLines()).toHaveLength(1);
+    expect(tonightLines()[0][0]).toBe("sidereus: tonight.build failed");
+    expectNoPrivateValue();
+  });
+
+  it("also guards the choice of the site and telescope: a throw there ends as the tonight.failed state, not an uncaught one", async () => {
+    // `chooseOwned` is pure, so only a list whose `find` throws can reach the guard from outside.
+    const hostile = Object.assign([WARSAW], {
+      find: () => {
+        throw new RangeError(`find failed at ${String(WARSAW.latitudeDeg)}`);
+      },
+    });
+    mocks.listSites.mockResolvedValue(hostile);
+    const result = await load();
+    expect(result.tonightError).toBe("tonight.failed");
+    expect(result.view).toBeNull();
+    expect(result.needsSetup).toBe(false);
+    expect(result.sitesError).toBeNull();
+    expect(mocks.buildTonight).not.toHaveBeenCalled();
+    expect(tonightLines()).toEqual([["sidereus: tonight.build failed", { step: "tonight.build", name: "RangeError" }]]);
+    expectNoPrivateValue();
   });
 });

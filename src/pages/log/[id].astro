@@ -13,6 +13,7 @@ import { siteStore, telescopeStore, type SiteRecord, type TelescopeRecord } from
 import { LOG_LIST } from "@/lib/observations/redirect";
 import { latestNightBound, observationStore, type ObservationRecord } from "@/lib/observations/store";
 import { targetOptions } from "@/lib/observations/target-options";
+import { logReadFailure } from "@/lib/observability/read-failure";
 import { targetLabel } from "@/lib/targets/labels";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,13 @@ if (supabase) {
     observationStore.get(supabase, id),
     Promise.all([siteStore.list(supabase), telescopeStore.list(supabase)]),
   ]);
+  // Each rejection is traced with its thrown cause, whichever one the page words (the entry's takes the banner).
+  if (entryResult.status === "rejected") {
+    logReadFailure("read.log", entryResult.reason);
+  }
+  if (gearResult.status === "rejected") {
+    logReadFailure("read.gear", gearResult.reason);
+  }
   if (entryResult.status === "rejected") {
     loadError = "errors.load.observations";
   } else if (gearResult.status === "rejected") {

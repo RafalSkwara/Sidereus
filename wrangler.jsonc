@@ -26,8 +26,9 @@
     // a dashboard-only switch is turned off by the next deploy, and src/lib/wrangler-config.test.ts fails if it goes.
     "issues": { "enabled": true },
   },
-  // Version URLs (the probe procedure in context/changes/error-visibility/plan.md): pinned so a CI deploy cannot turn them off.
-  "preview_urls": true,
+  // Version URLs are off: the probe that needed them is over (owner, 2026-10-15), and pinning the setting here means a
+  // CI deploy cannot turn them back on, so no later Worker version has a public URL.
+  "preview_urls": false,
   // Lets Cloudflare run the Worker near Supabase when a request makes several round trips to it.
   "placement": { "mode": "smart" },
 }

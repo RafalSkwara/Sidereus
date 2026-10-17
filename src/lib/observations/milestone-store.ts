@@ -1,11 +1,13 @@
 import type { MessageKey } from "@/i18n";
+import { faultFrom } from "@/lib/observability/fault";
 import { isMilestoneKey, type MilestoneKey } from "@/lib/progress/milestones";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
 /**
  * The stored milestones' data layer (roadmap M-3 S-06). Follows `store.ts`: database error text never leaves this
- * module, failures throw an `Error` whose message is a fixed message key and whose `cause` is the database error
- * (as `listSeenEntries` does), and this module never logs: the caller decides how a failure is traced.
+ * module, failures throw an `Error` whose message is a fixed message key and whose `cause` is a sanitized `StoreFault`
+ * holding only the database error's code (as `listSeenEntries` does), and this module never logs: the caller decides
+ * how a failure is traced.
  *
  * The table holds each milestone once per user (`observing_milestones_user_key_key`), so the milestone reads are
  * small (at most one row per `MILESTONES` key) and never meet PostgREST's `max_rows`.
@@ -28,7 +30,7 @@ export const milestoneStore = {
   async listReached(client: TypedSupabaseClient): Promise<Map<MilestoneKey, string>> {
     const { data, error } = await client.from("observing_milestones").select("key, reached_night").order("key");
     if (error) {
-      throw new Error(LOAD_FAILED, { cause: error });
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     const reached = new Map<MilestoneKey, string>();
     for (const row of data) {
@@ -56,7 +58,7 @@ export const milestoneStore = {
       )
       .select("key");
     if (error) {
-      throw new Error(LOAD_FAILED, { cause: error });
+      throw new Error(LOAD_FAILED, { cause: faultFrom(error) });
     }
     return data.map((row) => row.key).filter(isMilestoneKey);
   },

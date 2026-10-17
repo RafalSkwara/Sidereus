@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 import { DEEP_SKY, findDeepSky, findMessier, MESSIER } from "@/lib/catalogue";
 import { en } from "@/i18n/messages/en";
@@ -58,6 +58,8 @@ const moonTargeting = vi.hoisted(() => ({ throws: false }));
 const skyFraming = vi.hoisted(() => ({ throws: false }));
 const planetTracking = vi.hoisted(() => ({ throws: false }));
 const eventSearching = vi.hoisted(() => ({ throws: false }));
+const planetWindowing = vi.hoisted(() => ({ throws: false }));
+const moonCarding = vi.hoisted(() => ({ throws: false }));
 
 vi.mock("@/lib/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/engine")>();
@@ -88,6 +90,13 @@ vi.mock("@/lib/engine", async (importOriginal) => {
       }
       return actual.skyEvents(...args);
     },
+    moonDiscStates: (...args: Parameters<typeof actual.moonDiscStates>) => {
+      if (moonCarding.throws) {
+        // A message that carries a coordinate, which must never reach the log.
+        throw new RangeError("moon states failed at 52.23");
+      }
+      return actual.moonDiscStates(...args);
+    },
     planetTracks: (...args: Parameters<typeof actual.planetTracks>) => {
       if (planetTracking.throws) {
         // A message that carries a coordinate, which must never reach the log.
@@ -98,7 +107,23 @@ vi.mock("@/lib/engine", async (importOriginal) => {
   };
 });
 
+vi.mock("@/lib/tonight/plan-window", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tonight/plan-window")>();
+  return {
+    ...actual,
+    planetWindowFor: (...args: Parameters<typeof actual.planetWindowFor>) => {
+      if (planetWindowing.throws) {
+        // A message that carries a coordinate, which must never reach the log.
+        throw new RangeError("planet window failed at 52.23");
+      }
+      return actual.planetWindowFor(...args);
+    },
+  };
+});
+
 afterEach(() => {
+  planetWindowing.throws = false;
+  moonCarding.throws = false;
   planetRanking.throws = false;
   moonTargeting.throws = false;
   skyFraming.throws = false;
@@ -2415,5 +2440,95 @@ describe("buildTonight's next night and validUntil (offline-night-plan)", () => 
     const civil = darkWindow(toEngineSite(pole), observingNight(view.date, "UTC"), PLANET_WINDOW_SUN_ALTITUDE_DEG);
     expect(civil.kind).not.toBe("window");
     expect(view.validUntil.toISOString()).toBe(observingNight(view.date, "UTC").end.toISOString());
+  });
+});
+
+describe("buildTonight's trace of a dropped section (error-visibility)", () => {
+  /** An all-clear Warsaw night with the sky view on: every section below is built, so each can be made to fail. */
+  function build() {
+    const now = new Date("2026-10-26T16:00:00Z");
+    return buildTonight(
+      {
+        site: WARSAW,
+        telescope: TELESCOPE,
+        eyepieces: EYEPIECES,
+        forecast: result(uniformForecast("2026-10-26T00:00:00Z", 5), false, now),
+        now,
+      },
+      "en",
+      { withSkyView: true },
+    );
+  }
+
+  /** The one line a failing step must leave: the fixed message, the step and the error's name, no coordinate. */
+  function expectOneLine(logged: MockInstance<typeof console.error>, step: string): void {
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledWith(`sidereus: ${step} failed`, { step, name: "RangeError" });
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01/);
+  }
+
+  it("logs nothing when every section builds", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const view = build();
+    expect(view.solarSystem).not.toBeNull();
+    expect(view.moonCard?.target).not.toBeNull();
+    expect(view.skyView).not.toBeNull();
+    expect(logged).not.toHaveBeenCalled();
+  });
+
+  it("logs tonight.planets when the planet window fails, and drops the planets and the Moon target", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    planetWindowing.throws = true;
+    const view = build();
+    expect(view.solarSystem).toBeNull();
+    expect(view.moonCard?.target ?? null).toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expectOneLine(logged, "tonight.planets");
+  });
+
+  it("logs tonight.planets when ranking the planets fails, and keeps the rest", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    planetRanking.throws = true;
+    const view = build();
+    expect(view.solarSystem).toBeNull();
+    expect(view.moonCard?.target).not.toBeNull();
+    expect(view.ranking).not.toBeNull();
+    // This seam throws a plain Error, so only the step is asserted here.
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.planets failed");
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|planet ranking failed/);
+  });
+
+  it("logs tonight.moon when the Moon target fails, and drops only the target", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    moonTargeting.throws = true;
+    const view = build();
+    expect(view.moonCard).not.toBeNull();
+    expect(view.moonCard?.target).toBeNull();
+    expect(view.solarSystem).not.toBeNull();
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.moon failed");
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|moon target failed/);
+  });
+
+  it("logs tonight.moon when the Moon card fails, and drops only the card", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    moonCarding.throws = true;
+    const view = build();
+    expect(view.moonCard).toBeNull();
+    expect(view.solarSystem).not.toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expectOneLine(logged, "tonight.moon");
+  });
+
+  it("logs tonight.sky-view when the sky view fails, and drops only the sky view", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    skyFraming.throws = true;
+    const view = build();
+    expect(view.skyView).toBeNull();
+    expect(view.ranking).not.toBeNull();
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(logged.mock.calls[0][0]).toBe("sidereus: tonight.sky-view failed");
+    expect(JSON.stringify(logged.mock.calls)).not.toMatch(/52\.23|21\.01|sky frames failed/);
   });
 });

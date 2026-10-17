@@ -377,9 +377,13 @@ describe("getForecast's forecast.fetch line", () => {
     });
     expect(result).toBeNull();
     expect(errors).toHaveBeenCalledTimes(1);
-    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", { step: "forecast.fetch", name: "Error" });
+    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", {
+      step: "forecast.fetch",
+      name: "Error",
+      code: "request",
+    });
     const [, fields] = errors.mock.calls[0] as [string, object];
-    expect(Object.keys(fields).sort()).toEqual(["name", "step"]);
+    expect(Object.keys(fields).sort()).toEqual(["code", "name", "step"]);
     expect(JSON.stringify(errors.mock.calls)).not.toMatch(/52\.23|21\.01|127\.0|open-meteo/);
   });
 
@@ -412,5 +416,168 @@ describe("getForecast's forecast.fetch line", () => {
       now: NOW,
     });
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+/** Every logged argument is a fixed per-step line plus only the shaped fields: the privacy rule of the flow tests. */
+function expectOnlyShapedLines(spy: MockInstance<typeof console.error>, steps: string[]): void {
+  expect(spy.mock.calls.map(([line]) => String(line))).toEqual(steps.map((step) => `sidereus: ${step} failed`));
+  for (const [, fields] of spy.mock.calls as [string, Record<string, unknown>][]) {
+    expect(Object.keys(fields).every((key) => ["step", "name", "code", "status"].includes(key))).toBe(true);
+  }
+  // The coordinate canary: the fake site's coordinates sit in every thrown message below, and in the request URL.
+  expect(JSON.stringify(spy.mock.calls)).not.toMatch(/52\.23|21\.01|127\.0|open-meteo|forecast:v1|8d4f7a52/);
+}
+
+describe("getForecast's forecast.* lines (error-visibility)", () => {
+  let errors: MockInstance<typeof console.error>;
+
+  beforeEach(() => {
+    errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errors.mockRestore();
+  });
+
+  it("logs a 429 as forecast.fetch with its status", async () => {
+    const result = await getForecast({
+      fetchFn: fakeFetch(() => jsonResponse({ reason: "52.23,21.01" }, 429)).fetchFn,
+      cache: memoryCache(),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(result).toBeNull();
+    expectOnlyShapedLines(errors, ["forecast.fetch"]);
+    expect(errors).toHaveBeenCalledWith("sidereus: forecast.fetch failed", {
+      step: "forecast.fetch",
+      name: "Error",
+      code: "http",
+      status: 429,
+    });
+  });
+
+  it("logs a body that is not JSON as one forecast.fetch line with no status", async () => {
+    await getForecast({
+      fetchFn: fakeFetch(() => new Response("<html>52.23,21.01", { status: 200 })).fetchFn,
+      cache: memoryCache(),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expectOnlyShapedLines(errors, ["forecast.fetch"]);
+    const [, fields] = errors.mock.calls[0] as [string, Record<string, unknown>];
+    expect(fields).not.toHaveProperty("status");
+    expect(fields).toHaveProperty("code", "parse");
+  });
+
+  it("logs a schema mismatch as one forecast.fetch line", async () => {
+    await getForecast({
+      fetchFn: fakeFetch(() => jsonResponse({ hourly: { time: "52.23" } })).fetchFn,
+      cache: memoryCache(),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expectOnlyShapedLines(errors, ["forecast.fetch"]);
+    expect(errors.mock.calls[0]?.[1]).toHaveProperty("code", "schema");
+  });
+
+  it("logs an incomplete series once when a usable stored copy is served in its place", async () => {
+    const { result } = await refreshWith(() => jsonResponse(openMeteoBody(START_S, SHORT_CLOUD)), {
+      [KEY]: usableCopy(),
+    });
+    expect(result?.fallback).toBe(true);
+    expectOnlyShapedLines(errors, ["forecast.incomplete"]);
+    expect(errors).toHaveBeenCalledWith("sidereus: forecast.incomplete failed", { step: "forecast.incomplete" });
+  });
+
+  it("logs an incomplete series once when there is no stored copy, and still returns and stores it", async () => {
+    const { cache, result } = await refreshWith(() => jsonResponse(openMeteoBody(START_S, SHORT_CLOUD)), {});
+    expect(result?.fallback).toBe(false);
+    expect(cache.puts).toHaveLength(1);
+    expectOnlyShapedLines(errors, ["forecast.incomplete"]);
+  });
+
+  it("logs a complete series nowhere", async () => {
+    await refreshWith(liveResponse, { [KEY]: usableCopy() });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("logs a throwing KV read as forecast.cache-read and carries on as a miss", async () => {
+    const cache: ForecastCache = {
+      get: () => Promise.reject(new Error("KV read failed for 52.23,21.01 at forecast:v1:site:8d4f7a52")),
+      put: () => Promise.resolve(),
+    };
+    const result = await getForecast({
+      fetchFn: fakeFetch(liveResponse).fetchFn,
+      cache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(result?.fallback).toBe(false);
+    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
+    expect(errors).toHaveBeenCalledWith("sidereus: forecast.cache-read failed", {
+      step: "forecast.cache-read",
+      name: "Error",
+    });
+  });
+
+  it("logs a stored value that is not JSON, or no longer fits the schema, as forecast.cache-read", async () => {
+    await refreshWith(liveResponse, { [KEY]: "{not json 52.23" });
+    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
+
+    errors.mockClear();
+    await refreshWith(liveResponse, { [KEY]: JSON.stringify({ lat: 52.23, lon: 21.01, hours: "x" }) });
+    expectOnlyShapedLines(errors, ["forecast.cache-read"]);
+  });
+
+  it("logs a miss and a fresh hit nowhere", async () => {
+    await refreshWith(liveResponse, {});
+    await getForecast({
+      fetchFn: fakeFetch(liveResponse).fetchFn,
+      cache: memoryCache({ [KEY]: storedEntry(5, 42) }),
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("logs a throwing KV write as forecast.cache-write, awaited", async () => {
+    const cache: ForecastCache = {
+      get: () => Promise.resolve(null),
+      put: () => Promise.reject(new Error("KV write failed for 52.23,21.01")),
+    };
+    const result = await getForecast({
+      fetchFn: fakeFetch(liveResponse).fetchFn,
+      cache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+    });
+    expect(result?.forecast.hours).toHaveLength(LIVE_HOURS);
+    expectOnlyShapedLines(errors, ["forecast.cache-write"]);
+  });
+
+  it("logs a throwing KV write from inside the deferred task", async () => {
+    const cache: ForecastCache = {
+      get: () => Promise.resolve(null),
+      put: () => Promise.reject(new Error("KV write failed for 52.23,21.01")),
+    };
+    const deferred: Promise<void>[] = [];
+    await getForecast({
+      fetchFn: fakeFetch(liveResponse).fetchFn,
+      cache,
+      siteId: SITE_ID,
+      coords: COORDS,
+      now: NOW,
+      defer: (task) => deferred.push(task),
+    });
+    expect(deferred).toHaveLength(1);
+    await expect(deferred[0]).resolves.toBeUndefined();
+    expectOnlyShapedLines(errors, ["forecast.cache-write"]);
   });
 });

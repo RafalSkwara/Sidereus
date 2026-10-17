@@ -207,6 +207,7 @@ describe("the unique key", () => {
     expect(await sessionPlanStore.save(b.client, siteA, "2026-10-07", ["M42"])).toEqual({
       ok: false,
       message: "errors.save.sessionPlan",
+      fault: { kind: "refused", code: "42501" },
     });
     expect(await sessionPlanStore.reset(b.client, siteA, "2026-10-07")).toEqual({ ok: true });
     expect(await sessionPlanStore.get(a.client, siteA, "2026-10-07")).toEqual(["M31"]);

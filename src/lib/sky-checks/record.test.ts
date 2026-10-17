@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { recordableVerdict } from "./record";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
+import { fakeClient, leakyPostgrestError, LEAK } from "@/lib/test-support/supabase-fake";
+import type { TypedSupabaseClient } from "@/lib/supabase";
+import { recordableVerdict, recordSkyVerdict } from "./record";
 
 const DARK_START = new Date("2026-10-10T18:20:00Z");
 
@@ -61,5 +63,71 @@ describe("recordableVerdict", () => {
         darkStart: DARK_START,
       }),
     ).toMatchObject({ headline: "noForecast" });
+  });
+});
+
+describe("recordSkyVerdict (error-visibility)", () => {
+  const INPUT = { siteId: "site-1", night: "2026-10-10", headline: "go" as const, darkStart: DARK_START };
+  let errors: MockInstance<typeof console.error>;
+  let warnings: MockInstance<typeof console.warn>;
+
+  beforeEach(() => {
+    errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    warnings = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errors.mockRestore();
+    warnings.mockRestore();
+  });
+
+  it("logs nothing when the record is stored", async () => {
+    await expect(recordSkyVerdict(fakeClient({}), INPUT)).resolves.toBeUndefined();
+    expect(errors).not.toHaveBeenCalled();
+    expect(warnings).not.toHaveBeenCalled();
+  });
+
+  it("logs a server fault as one error line with its code only", async () => {
+    await recordSkyVerdict(fakeClient({ error: leakyPostgrestError("XX000") }), INPUT);
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(errors).toHaveBeenCalledWith("sidereus: tonight.sky-check-record failed", {
+      step: "tonight.sky-check-record",
+      code: "XX000",
+    });
+    expect(warnings).not.toHaveBeenCalled();
+    expect(JSON.stringify([...errors.mock.calls, ...warnings.mock.calls])).not.toMatch(LEAK);
+  });
+
+  it("logs a fault with no code (a network failure) as an error line with the step only", async () => {
+    await recordSkyVerdict(fakeClient({ error: { message: `fetch failed for ${LEAK.source}` } }), INPUT);
+    expect(errors).toHaveBeenCalledWith("sidereus: tonight.sky-check-record failed", {
+      step: "tonight.sky-check-record",
+    });
+  });
+
+  it("logs a refusal or a stale session as a warn-level notice, never an error", async () => {
+    for (const code of ["42501", "PGRST301"]) {
+      warnings.mockClear();
+      await recordSkyVerdict(fakeClient({ error: leakyPostgrestError(code) }), INPUT);
+      expect(warnings).toHaveBeenCalledTimes(1);
+      expect(warnings).toHaveBeenCalledWith("sidereus: tonight.sky-check-record noted", {
+        step: "tonight.sky-check-record",
+        code,
+      });
+    }
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("logs a rejection with the error's name only, and never rejects itself", async () => {
+    const client = {
+      rpc: () => Promise.reject(new RangeError("rpc failed for 52.2297,21.0122")),
+    } as unknown as TypedSupabaseClient;
+    await expect(recordSkyVerdict(client, INPUT)).resolves.toBeUndefined();
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(errors).toHaveBeenCalledWith("sidereus: tonight.sky-check-record failed", {
+      step: "tonight.sky-check-record",
+      name: "RangeError",
+    });
+    expect(JSON.stringify(errors.mock.calls)).not.toMatch(LEAK);
   });
 });

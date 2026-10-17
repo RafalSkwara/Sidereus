@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { LOG_LIST, parseLogPage, readLogNotice } from "@/lib/observations/redirect";
 import { observationStore, type ObservationRecord } from "@/lib/observations/store";
+import { logReadFailure } from "@/lib/observability/read-failure";
 import { SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { targetLabel } from "@/lib/targets/labels";
 import { createFormatter } from "@/lib/tonight/format";
@@ -35,7 +36,8 @@ let loadError: MessageKey | null = null;
 if (supabase) {
   try {
     ({ entries, hasOlder } = await observationStore.list(supabase, { page }));
-  } catch {
+  } catch (error) {
+    logReadFailure("read.log", error);
     loadError = "errors.load.observations";
   }
 }

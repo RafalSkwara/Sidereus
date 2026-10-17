@@ -17,6 +17,7 @@ import { claimOf, outcomeOf, tallyOf, type Outcome, type Tally } from "@/lib/sky
 import { answerLabel, headlineLevel } from "@/lib/sky-checks/labels";
 import { hasSkyCheckedNotice, SKY_CHECKS_PAGE } from "@/lib/sky-checks/redirect";
 import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
+import { logReadFailure } from "@/lib/observability/read-failure";
 import { createFormatter, SKY_HEADLINE_KEYS } from "@/lib/tonight/format";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +45,8 @@ if (supabase) {
     ]);
     ({ entries, hasOlder } = list);
     tally = tallyOf(rows);
-  } catch {
+  } catch (error) {
+    logReadFailure("read.sky-checks", error);
     loadError = "errors.load.skyChecks";
   }
 }

@@ -35,7 +35,7 @@ export function keysWithoutWindow(site: PlanWindowSite, night: string, keys: rea
 
 /**
  * The message key of a thrown store error: stores throw an `Error` whose message is a fixed key (`@/i18n`) and whose
- * `cause` is the database's error, which never leaves the store. Anything else becomes `fallback`.
+ * `cause` is a sanitized `StoreFault` (the database error's code, never its message). Anything else becomes `fallback`.
  */
 export function thrownKey(error: unknown, fallback: MessageKey): MessageKey {
   return error instanceof Error && isMessageKey(error.message) ? error.message : fallback;

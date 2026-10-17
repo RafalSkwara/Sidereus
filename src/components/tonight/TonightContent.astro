@@ -25,8 +25,7 @@ import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { getAccountPlan } from "@/lib/account-plan";
 import { readPlanEditsFor } from "@/lib/session-plans/read";
 import { pendingCheck } from "@/lib/sky-checks/pending";
-import { recordableVerdict } from "@/lib/sky-checks/record";
-import { skyCheckStore } from "@/lib/sky-checks/store";
+import { recordableVerdict, recordSkyVerdict } from "@/lib/sky-checks/record";
 import { islandDefer, loadTonightFor } from "@/lib/tonight/island";
 import type { TonightLoad } from "@/lib/tonight/load";
 import type { TonightNotice } from "@/lib/tonight/notice";
@@ -103,15 +102,11 @@ const {
 } = load ?? NOTHING_LOADED;
 
 // Record the headline this view shows for the sky check (verdict-check). Fire and forget: it runs after the
-// response, and a failure is swallowed (never logged, never shown) so the check can never cost Tonight its render.
+// response, and a failure is traced (`tonight.sky-check-record`, in `recordSkyVerdict`) but never shown, so the check
+// can never cost Tonight its render.
 const recordable = supabase && night === "tonight" ? recordableVerdict(view) : null;
 if (supabase && recordable) {
-  islandDefer(Astro.locals)(
-    skyCheckStore.record(supabase, recordable).then(
-      () => undefined,
-      () => undefined,
-    ),
-  );
+  islandDefer(Astro.locals)(recordSkyVerdict(supabase, recordable));
 }
 // The sky question for a recent night at the shown site (verdict-check); `null` when there is nothing to ask.
 const skyCheck = night === "tonight" && site && view ? pendingCheck(openSkyChecks, site.id, view.date) : null;

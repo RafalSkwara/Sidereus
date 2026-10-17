@@ -1322,6 +1322,7 @@ export const pl = {
   },
 
   errors: {
+    serverFault: "Coś poszło nie tak po naszej stronie, więc nic nie zostało zmienione. Spróbuj ponownie za chwilę.",
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
     notConfigured: "Baza danych nie jest skonfigurowana.",
     checkFields: "Sprawdź zaznaczone pola.",

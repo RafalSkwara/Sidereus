@@ -13,7 +13,10 @@ import { describe, expect, it } from "vitest";
  *
  * A site passes when its handler:
  *
- * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`), or
+ * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`), `logReadFailure`
+ *   (`@/lib/observability/read-failure`, the pages' read failures, which picks one of the two by the fault) or
+ *   `saveFailureKey` (`@/lib/observability/save-failure`, the save routes' one step: it logs a server fault, a refusal
+ *   and a session fault, and stays silent only for the user's own input mistake), or
  * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters of Phases 7-9, recognised by
  *   name and only when the file imports them from `@/lib/observability/client` or `@/lib/offline/report` (for a
  *   `.catch(...)` or `.then(ok, ...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`),
@@ -25,7 +28,7 @@ import { describe, expect, it } from "vitest";
  *
  * Every other site is counted per file and compared with `ALLOWED_SILENT_CATCHES`, exactly like the no-console
  * guard's `ALLOWED_DISABLES`: more sites than the allowance fail (with their line numbers), and so does an
- * allowance that is not fully used, so a phase that fixes a file must delete its entry. Each entry carries the
+ * allowance that is not fully used, so a change that fixes a file must delete its entry. Each entry carries the
  * reason the sites are tolerated.
  *
  * Scope: `.ts` and `.tsx` under src (not tests, not `src/lib/test-support`, not generated files) and the frontmatter
@@ -43,27 +46,25 @@ const SELF = "src/lib/observability/silent-catch-guard.test.ts";
 const EXCLUDED_FILES = new Set(["src/lib/database.types.ts"]);
 const EXCLUDED_DIRS = ["src/lib/test-support/"];
 
-const LOG_NAMES = new Set(["logFailure", "logNotice"]);
+const LOG_NAMES = new Set(["logFailure", "logNotice", "logReadFailure", "saveFailureKey"]);
 /** The modules the browser-side reporters are imported from (they do not exist before Phase 7). */
 const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/report"]);
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
 
 /** Reasons shared by many entries. */
-const AUDIT_P3 = "audit finding (flow A: Tonight and the forecast), fixed by Phase 3";
-const AUDIT_P4 = "audit finding (flow B: save routes, plan routes, page reads), fixed by Phase 4";
-const AUDIT_P5 = "audit finding (flow C and the finder: session, auth routes, finder), fixed by Phase 5";
 const CLIENT = "reported by Phases 7-9, or out of scope if that block is cut";
 const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
 const GEOLOCATION = "a denied or unavailable geolocation is the user's choice and would be noise";
 const STORE_FAULT =
-  "audit finding F8: the catch returns { ok: false, message, fault } and keeps the fault in the result (Phase 2), and Phase 4's saveFailureKey logs it, so the catch itself stays allowlisted";
+  "audit finding F8: the catch returns { ok: false, message, fault } with the sanitized fault built by faultFrom, and the route's saveFailureKey logs it, so the catch itself stays allowlisted";
 
 /**
  * Every file with silent sites, the exact number of them and why they are tolerated. A catch, a `.catch(...)` or the
- * second argument of a `.then(ok, fail)` counts as one site. Later phases delete the entries of the phase groups
- * first; the "Permanent" entries never go (Phase 6 leaves those, plus the browser-side ones if Phases 7-9 are cut).
- * Reasons carry no line numbers: the guard's failure message names the lines.
+ * second argument of a `.then(ok, fail)` counts as one site. The "Permanent" entries stay for good; the browser-side
+ * ones are reported by the client reporting of Phases 7-9 (planned, a separate PR) and leave the list when each of
+ * those phases lands, or stay with their reason if that block is cut. Reasons carry no line numbers: the guard's
+ * failure message names the lines.
  */
 const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: string }>> = {
   // Permanent: justified and staying.
@@ -71,6 +72,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 5,
     reason:
       "the logger must never throw: a getter, proxy or console that fails cannot be reported anywhere else (it would recurse), so each of the five reads and writes falls back to no field or no line",
+  },
+  "src/lib/observability/fault.ts": {
+    count: 1,
+    reason:
+      "faultFrom runs in a failure path and must never throw: a getter or proxy that fails while its code, status or cause is read cannot be reported anywhere else, so the read falls back to no field",
   },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
@@ -95,22 +101,13 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   },
   "src/lib/account-plan/store.ts": {
     count: 1,
-    reason: "returns the error's name as the result's code; the caller, account-plan/index.ts, logs account.plan",
+    reason:
+      "returns the shaped code and name of the error as the result's fault; the caller, account-plan/index.ts, logs account.plan",
   },
   "src/lib/catalogue/finder-stars.ts": {
     count: 1,
     reason:
       "resets the memo only; the same rejection still reaches every awaiting caller, and the finder loader logs finder.stars",
-  },
-  "src/lib/observations/celebrate.ts": {
-    count: 1,
-    reason:
-      "reports through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through (Phase 4 may call logFailure directly)",
-  },
-  "src/pages/log/progress.astro": {
-    count: 2,
-    reason:
-      "both handlers report through logMilestoneFailure, a one-line wrapper over logFailure that this guard does not see through (Phase 4 may call logFailure directly)",
   },
   "src/lib/location/locate.ts": {
     count: 1,
@@ -119,21 +116,30 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/lib/forecast/cache.ts": {
     count: 1,
     reason:
-      "withReadTimeout's `.then(resolve, reject)` forwards the rejection to the promise its caller awaits, so nothing is lost; the caller's catch in forecast/service.ts logs it as forecast.cache-read (Phase 3)",
+      "withReadTimeout's `.then(resolve, reject)` forwards the rejection to the promise its caller awaits, so nothing is lost; the caller's catch in forecast/service.ts logs it as forecast.cache-read",
   },
   "src/lib/forecast/open-meteo.ts": {
     count: 2,
     reason:
-      "throws fixed-message errors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); Phase 2 gives them a step and status and Phase 3 logs those, so the catches themselves stay allowlisted",
+      "throws fixed-message ForecastErrors without a cause on purpose (the cause can quote the request URL, which carries the coordinates); each carries a step and status, which forecast/service.ts logs as forecast.fetch, so the catches themselves stay allowlisted",
   },
   "src/lib/location/geocode.ts": {
     count: 1,
     reason:
-      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the island reports the failure as island.geocode (Phase 9)",
+      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the failure surfaces in the place search's rejection handler in LocationPicker.tsx, which Phase 9 reports as island.geocode, or is out of scope if that block is cut",
   },
-  "src/lib/gear/store.ts": { count: 1, reason: `${STORE_FAULT} (toSiteColumns)` },
-  "src/lib/observations/store.ts": { count: 3, reason: `${STORE_FAULT} (the gear lookups and the latest-night bound)` },
-  "src/lib/onboarding/store.ts": { count: 1, reason: `${STORE_FAULT} (the time zone resolution)` },
+  "src/lib/gear/store.ts": {
+    count: 1,
+    reason: `${STORE_FAULT} (toSiteColumns, whose fault the create and update results carry)`,
+  },
+  "src/lib/observations/store.ts": {
+    count: 3,
+    reason: `${STORE_FAULT} (the gear lookups of create and update and the latest-night bound)`,
+  },
+  "src/lib/onboarding/store.ts": {
+    count: 1,
+    reason: `${STORE_FAULT} (the time zone resolution of completeOnboarding)`,
+  },
 
   "src/lib/offline/install.ts": {
     count: 1,
@@ -141,58 +147,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
   },
 
-  // Phase 3: Tonight and the forecast. Phase 3 deletes these entries.
-  "src/lib/forecast/service.ts": {
-    count: 2,
-    reason: `${AUDIT_P3}: the stored-copy parse and the cache write log forecast.cache-read and forecast.cache-write`,
-  },
-  "src/lib/tonight/build.ts": {
-    count: 5,
-    reason: `${AUDIT_P3}: the planet, Moon and sky-view build catches log tonight.planets, tonight.moon and tonight.sky-view`,
-  },
-  "src/lib/tonight/load.ts": {
-    count: 2,
-    reason: `${AUDIT_P3}: the list read and the build log the failed step`,
-  },
-  "src/components/tonight/TonightContent.astro": {
-    count: 1,
-    reason: `${AUDIT_P3}: the fire-and-forget sky-check record swallows both its outcomes; Phase 3 §4 logs tonight.sky-check-record`,
-  },
-
-  // Phase 4: save routes, plan routes, page reads. Phase 4 deletes these entries.
-  "src/pages/api/tonight/plan.ts": { count: 1, reason: `${AUDIT_P4}: the catch maps the error to a key with no line` },
-  "src/pages/api/tonight/plan/reset.ts": {
-    count: 1,
-    reason: `${AUDIT_P4}: the catch maps the error to a key with no line`,
-  },
-  "src/pages/gear/index.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/gear/sites/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/gear/telescopes/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/gear/eyepieces/[id].astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: a failed read behind a "could not load" banner`,
-  },
-  "src/pages/log/index.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/log/new.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/log/sky.astro": { count: 1, reason: `${AUDIT_P4}: a failed read behind a "could not load" banner` },
-  "src/pages/onboarding.astro": {
-    count: 1,
-    reason: `${AUDIT_P4}: an unknown gear state shows the setup anyway, with no line`,
-  },
-
-  // Phase 5: sign-in, session and the finder.
-  "src/middleware.ts": { count: 1, reason: `${AUDIT_P5}: the thrown case of sessionUser reads as a sign-out` },
-
-  // Phases 7-9: the browser side. Phases 8 and 9 delete these entries (all but the ones the reason says stay).
+  // The browser side (service worker and islands), where no server line can be written. The client reporting of
+  // Phases 7-9 (planned, a separate PR) is to report these and delete the entries; if that block is cut they stay.
   "src/sw.ts": {
     count: 26,
-    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks report through Phase 8's reportAnd and report. Four more catches pass today only through a conditional rethrow (they fall back to the stored copy, else rethrow): network-first fallback to the stored copy is the feature (D14); reported by Phases 8-9 only where the fault is not a routine network fault`,
+    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks would report through Phase 8's reportAnd and report. Four more catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14)`,
   },
   "src/lib/offline/register.ts": {
     count: 1,
@@ -293,7 +252,7 @@ function mentions(root: ts.Node, name: string): boolean {
 /** `catch` clauses nested inside a handler are sites of their own: a log there does not excuse the outer one. */
 const skipNestedCatch = (node: ts.Node): boolean => ts.isCatchClause(node);
 
-/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, an imported `report(...)` / `reportAnd(...)`. */
+/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, `logReadFailure(...)`, `saveFailureKey(...)`, an imported `report(...)` / `reportAnd(...)`. */
 function isReportingCall(node: ts.Node, imports: Imports): boolean {
   if (!ts.isCallExpression(node)) return false;
   const callee = node.expression;
@@ -476,6 +435,11 @@ function violationsOf(
 /** In-memory samples of the shapes the audit found: each is silent as written and passes once it reports. */
 const SAMPLES: { name: string; silent: string; reported: string }[] = [
   {
+    name: "a failed read turned into a redirect key without saveFailureKey",
+    silent: `try {\n  await read();\n} catch (error) {\n  return fail(thrownKey(error, "errors.save.sessionPlan"));\n}\n`,
+    reported: `try {\n  await read();\n} catch (error) {\n  return fail(saveFailureKey("save.plan", { message: thrownKey(error, "errors.save.sessionPlan"), ...withFault(error) }));\n}\n`,
+  },
+  {
     name: "an empty block with a comment",
     silent: `try {\n  await save();\n} catch {\n  // never mind\n}\n`,
     reported: `import { logFailure } from "@/lib/observability/log-failure";\ntry {\n  await save();\n} catch (error) {\n  logFailure("forecast.fetch", error);\n}\n`,
@@ -499,6 +463,11 @@ const SAMPLES: { name: string; silent: string; reported: string }[] = [
     name: "a constant return",
     silent: `async function load() {\n  try {\n    return await read();\n  } catch (error) {\n    return null;\n  }\n}\n`,
     reported: `async function load() {\n  try {\n    return await read();\n  } catch (error) {\n    logFailure("tonight.plan-edits", error);\n    return null;\n  }\n}\n`,
+  },
+  {
+    name: "a page read that falls back to a banner",
+    silent: `let loadError = null;\ntry {\n  rows = await store.list();\n} catch (error) {\n  loadError = "errors.load.observations";\n}\n`,
+    reported: `let loadError = null;\ntry {\n  rows = await store.list();\n} catch (error) {\n  logReadFailure("read.log", error);\n  loadError = "errors.load.observations";\n}\n`,
   },
   {
     name: "a .catch handler that returns a constant",

@@ -19,7 +19,7 @@ import {
 import type { FinderFrom } from "@/lib/finder/from";
 import type { TonightReturnPage } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
-import { logFailure } from "@/lib/observability/log-failure";
+import { logFailure, type FailureStep } from "@/lib/observability/log-failure";
 import { openSkyChecksSince } from "@/lib/sky-checks/pending";
 import { skyCheckStore, type SkyCheckRecord } from "@/lib/sky-checks/store";
 import type { TypedSupabaseClient } from "@/lib/supabase";
@@ -107,14 +107,19 @@ export interface TonightLoad {
   planEditsError: MessageKey | null;
 }
 
-/** Loads one list; a failure only affects what depends on it, never the whole page. */
+/**
+ * Loads one list; a failure only affects what depends on it, never the whole page. It leaves one line for `step`
+ * (error-visibility), made from the thrown store error and its sanitized cause, never from a message.
+ */
 async function load<T>(
+  step: FailureStep,
   list: () => Promise<T[]>,
   failed: MessageKey,
 ): Promise<{ items: T[]; error: MessageKey | null }> {
   try {
     return { items: await list(), error: null };
-  } catch {
+  } catch (error) {
+    logFailure(step, error);
     return { items: [], error: failed };
   }
 }
@@ -133,13 +138,17 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
 
   if (supabase) {
     const [siteResult, telescopeResult, eyepieceResult, logResult, skyCheckResult] = await Promise.all([
-      load(() => siteStore.list(supabase), SITES_FAILED),
-      load(() => telescopeStore.list(supabase), TELESCOPES_FAILED),
-      load(() => eyepieceStore.list(supabase), EYEPIECES_FAILED),
-      load(() => observationStore.listSeenEntries(supabase), LOG_FAILED),
+      load("tonight.sites", () => siteStore.list(supabase), SITES_FAILED),
+      load("tonight.telescopes", () => telescopeStore.list(supabase), TELESCOPES_FAILED),
+      load("tonight.eyepieces", () => eyepieceStore.list(supabase), EYEPIECES_FAILED),
+      load("tonight.log", () => observationStore.listSeenEntries(supabase), LOG_FAILED),
       // The question is optional, so a failed read only hides it: its error is dropped.
       input.withSkyChecks
-        ? load(() => skyCheckStore.openRecent(supabase, { sinceNight: openSkyChecksSince(now) }), LOG_FAILED)
+        ? load(
+            "tonight.sky-checks",
+            () => skyCheckStore.openRecent(supabase, { sinceNight: openSkyChecksSince(now) }),
+            LOG_FAILED,
+          )
         : { items: [], error: null },
     ]);
     ({ items: sites, error: sitesError } = siteResult);
@@ -149,32 +158,34 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
     openSkyChecks = skyCheckResult.items;
   }
 
-  // The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
-  // FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
-  // prefill all follow the chosen site.
-  const site = chooseOwned(sites, siteId);
-  const telescope = chooseOwned(telescopes, telescopeId);
-  const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope;
-
+  let site: SiteRecord | undefined;
+  let telescope: TelescopeRecord | undefined;
   let view: TonightView | null = null;
   let tonightError: MessageKey | null = null;
   let planEditsError: MessageKey | null = null;
-  if (site && telescope) {
-    // The one night date: the saved plan's read, the build and so the editor's form all name the same night.
-    const tonightDate = tonightDateForSite(site, now);
-    const nightDate = input.night === "next" ? addDays(tonightDate, 1) : tonightDate;
-    // Only tonight has edits (D9). Started before the forecast so the two reads overlap; it never rejects.
-    const editsRead =
-      input.readPlanEdits && input.night !== "next"
-        ? input.readPlanEdits(site.id, nightDate).then(
-            (edits) => ({ edits, error: null }),
-            (error: unknown) => {
-              logFailure("tonight.plan-edits", error);
-              return { edits: null, error: PLAN_EDITS_FAILED };
-            },
-          )
-        : null;
-    try {
+  try {
+    // The site and the telescope are the ones picked on the page when the user owns them, else the oldest (FR-012,
+    // FR-019); both lists are in `created_at` order. The forecast, the verdict, the ranking, the strip and the log
+    // prefill all follow the chosen site. Chosen inside the guard with everything that follows (error-visibility
+    // Phase 3 §2): a throw here ends as the same notice as a failed build, and the choice made so far stays returned.
+    site = chooseOwned(sites, siteId);
+    telescope = chooseOwned(telescopes, telescopeId);
+    if (site && telescope) {
+      // The one night date: the saved plan's read, the build and so the editor's form all name the same night. Inside
+      // the guard because a bad stored time zone throws here; it ends as the same notice as a failed build.
+      const tonightDate = tonightDateForSite(site, now);
+      const nightDate = input.night === "next" ? addDays(tonightDate, 1) : tonightDate;
+      // Only tonight has edits (D9). Started before the forecast so the two reads overlap; it never rejects.
+      const editsRead =
+        input.readPlanEdits && input.night !== "next"
+          ? input.readPlanEdits(site.id, nightDate).then(
+              (edits) => ({ edits, error: null }),
+              (error: unknown) => {
+                logFailure("tonight.plan-edits", error);
+                return { edits: null, error: PLAN_EDITS_FAILED };
+              },
+            )
+          : null;
       // getForecast never throws: an outage with nothing cached yields null, and the verdict turns marginal;
       // a saved copy served in an outage, or in place of an incomplete 200, comes back flagged `fallback`, and
       // buildTonight caps it at marginal.
@@ -204,10 +215,12 @@ export async function loadTonight(input: LoadTonightInput): Promise<TonightLoad>
           withReachable: input.withReachable,
         },
       );
-    } catch {
-      tonightError = TONIGHT_FAILED;
     }
+  } catch (error) {
+    logFailure("tonight.build", error);
+    tonightError = TONIGHT_FAILED;
   }
+  const needsSetup = supabase !== null && !sitesError && !telescopesError && !site && !telescope && !tonightError;
 
   return {
     sites,

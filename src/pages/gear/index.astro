@@ -16,6 +16,7 @@ import {
   type TelescopeRecord,
 } from "@/lib/gear/store";
 import { presetForAfov } from "@/lib/gear/eyepiece-presets";
+import { logReadFailure } from "@/lib/observability/read-failure";
 import { getMessages, translateKey, type MessageKey } from "@/i18n";
 import { formatLocaleTag } from "@/lib/tonight/format";
 
@@ -59,7 +60,8 @@ async function load<T>(
 ): Promise<{ items: T[]; error: MessageKey | null }> {
   try {
     return { items: await list(), error: null };
-  } catch {
+  } catch (error) {
+    logReadFailure("read.gear", error);
     return { items: [], error: failed };
   }
 }

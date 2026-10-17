@@ -1,13 +1,16 @@
 import type { APIRoute } from "astro";
-import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
+import { CHECK_FIELDS, NOT_CONFIGURED, issueKey, readForm } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
 import { eyepieceInputSchema } from "@/lib/gear/schemas";
 import { eyepieceStore } from "@/lib/gear/store";
+import { saveFailureKey } from "@/lib/observability/save-failure";
 
 /*
  * Every `?error=` value is a fixed message key (`@/i18n`): schema and store messages are keys by
- * design (`issueKey` drops anything else), so no submitted value ever reaches the URL. Nothing is
- * logged.
+ * design (`issueKey` drops anything else), so no submitted value ever reaches the URL.
+ * A failed write goes through `saveFailureKey` (`save.gear`): a server fault logs one line with only its code
+ * and status and redirects with `errors.serverFault`; nothing submitted is ever logged. A body that is not a
+ * form redirects with `errors.checkFields` and logs `request.form`.
  */
 export const POST: APIRoute = async (context) => {
   const id = context.params.id ?? "";
@@ -19,14 +22,18 @@ export const POST: APIRoute = async (context) => {
     return fail(NOT_CONFIGURED);
   }
 
-  const parsed = eyepieceInputSchema.safeParse(Object.fromEntries(await context.request.formData()));
+  const form = await readForm(context.request);
+  if (!form) {
+    return fail(CHECK_FIELDS);
+  }
+  const parsed = eyepieceInputSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) {
     return fail(issueKey(parsed.error));
   }
 
   const result = await eyepieceStore.update(supabase, id, parsed.data);
   if (!result.ok) {
-    return fail(result.message);
+    return fail(saveFailureKey("save.gear", result));
   }
   return context.redirect("/gear?saved=eyepiece");
 };

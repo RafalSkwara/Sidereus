@@ -1,12 +1,13 @@
 import type { APIRoute } from "astro";
-import { NOT_CONFIGURED, issueKey } from "@/lib/api-errors";
+import { CHECK_FIELDS, NOT_CONFIGURED, issueKey, readForm } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
 import { LOG_PENALTY_MIN_RATING } from "@/lib/engine";
 import { reachedBySave } from "@/lib/observations/celebrate";
 import { milestoneStore } from "@/lib/observations/milestone-store";
-import { editRedirect, logNotice, withMilestones } from "@/lib/observations/redirect";
+import { editRedirect, noticeRedirect, withMilestones } from "@/lib/observations/redirect";
 import { observationUpdateSchema } from "@/lib/observations/schemas";
 import { observationStore } from "@/lib/observations/store";
+import { saveFailureKey } from "@/lib/observability/save-failure";
 import { isKnownTarget } from "@/lib/targets/labels";
 
 /*
@@ -14,8 +15,11 @@ import { isKnownTarget } from "@/lib/targets/labels";
  * back to the entry's page with a fixed message key only (`editRedirect`), so no typed value reaches the URL.
  * Every edit goes through `reachedBySave`: one rated `LOG_PENALTY_MIN_RATING` or above counts (it stores what it
  * reached and carries the newly stored milestones to the log as `milestone=<key>` params, fixed keys only), a lower
- * one stores what the log had reached before it can be lost and never celebrates. Nothing is logged except
- * `reachedBySave`'s fixed trace of a failed milestone step, which never fails the save.
+ * one stores what the log had reached before it can be lost and never celebrates. A failed write goes through
+ * `saveFailureKey` (`save.log`): a server fault logs one line with only its code and status and redirects with
+ * `errors.serverFault`; a body that is not a form redirects with `errors.checkFields` and logs `request.form`.
+ * `reachedBySave` traces a failed milestone step under its own `milestones.*-edit` word, which never fails the save;
+ * no value is ever logged.
  */
 export const POST: APIRoute = async (context) => {
   const id = context.params.id ?? "";
@@ -26,7 +30,11 @@ export const POST: APIRoute = async (context) => {
     return fail(NOT_CONFIGURED);
   }
 
-  const parsed = observationUpdateSchema.safeParse(Object.fromEntries(await context.request.formData()));
+  const form = await readForm(context.request);
+  if (!form) {
+    return fail(CHECK_FIELDS);
+  }
+  const parsed = observationUpdateSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) {
     return fail(issueKey(parsed.error));
   }
@@ -39,10 +47,11 @@ export const POST: APIRoute = async (context) => {
     read: () => observationStore.listSeenEntries(supabase),
     record: (states) => milestoneStore.record(supabase, states),
     counts: parsed.data.rating >= LOG_PENALTY_MIN_RATING,
+    route: "edit",
     write: () => observationStore.update(supabase, id, parsed.data, new Date()),
   });
   if (!result.ok) {
-    return fail(result.message);
+    return fail(saveFailureKey("save.log", result));
   }
-  return context.redirect(withMilestones(logNotice("updated", parsed.data.target), celebrate));
+  return context.redirect(withMilestones(noticeRedirect("updated", parsed.data.target), celebrate));
 };

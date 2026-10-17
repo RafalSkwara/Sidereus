@@ -1,5 +1,8 @@
+import { logFailure, logNotice } from "@/lib/observability/log-failure";
+import type { TypedSupabaseClient } from "@/lib/supabase";
 import type { TonightView } from "@/lib/tonight/build";
 import type { RecordedHeadline } from "./claim";
+import { skyCheckStore } from "./store";
 
 /** What Tonight hands to `skyCheckStore.record` for the night it shows. */
 export interface RecordableVerdict {
@@ -24,4 +27,27 @@ export function recordableVerdict(
     return null;
   }
   return { siteId: view.siteId, night: view.date, headline, darkStart: view.darkStart };
+}
+
+/**
+ * Records the headline the way Tonight does, fire and forget, and traces both ways it can fail
+ * (error-visibility): a result that is not ok logs `tonight.sky-check-record` with the fault's code and status
+ * (`logFailure` for a server fault or one without a code, `logNotice` for a refusal, a stale session or a zero-row
+ * outcome: the user's request or session, not an outage), and a rejection logs the error's name. It never rejects, so
+ * the caller can hand it to the Worker's `waitUntil` as is, and nothing it logs can cost Tonight its render.
+ */
+export function recordSkyVerdict(client: TypedSupabaseClient, input: RecordableVerdict): Promise<void> {
+  return skyCheckStore.record(client, input).then(
+    (result) => {
+      if (result.ok) {
+        return;
+      }
+      const { fault } = result;
+      const log = fault === undefined || fault.kind === "server" ? logFailure : logNotice;
+      log("tonight.sky-check-record", fault, { status: fault?.status });
+    },
+    (error: unknown) => {
+      logFailure("tonight.sky-check-record", error);
+    },
+  );
 }

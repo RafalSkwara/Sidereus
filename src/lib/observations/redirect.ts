@@ -81,7 +81,7 @@ export type LogNotice = "saved" | "updated" | "deleted";
 const LOG_NOTICES: readonly LogNotice[] = ["saved", "updated", "deleted"];
 
 /** The log after a successful write, naming the object the notice is about by its target key only. */
-export function logNotice(kind: LogNotice, target: TargetKey): string {
+export function noticeRedirect(kind: LogNotice, target: TargetKey): string {
   return `${LOG_LIST}?${new URLSearchParams({ [kind]: target }).toString()}`;
 }
 
@@ -115,7 +115,7 @@ export function readMilestoneParam(url: URL, signedIn: boolean): MilestoneKey[] 
 }
 
 /**
- * The notice the log shows for its query (`logNotice`), or `null`. A bare Messier number, as links from before
+ * The notice the log shows for its query (the one `noticeRedirect` writes), or `null`. A bare Messier number, as links from before
  * target keys carry it, reads as that object's key.
  */
 export function readLogNotice(params: URLSearchParams): { kind: LogNotice; target: TargetKey } | null {

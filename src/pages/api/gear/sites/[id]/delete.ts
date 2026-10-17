@@ -2,11 +2,14 @@ import type { APIRoute } from "astro";
 import { NOT_CONFIGURED } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
 import { siteStore } from "@/lib/gear/store";
+import { saveFailureKey } from "@/lib/observability/save-failure";
 
 /*
  * Deletes one site. RLS makes another user's site indistinguishable from a missing one, so both
  * come back as the store's fixed "not found" key. Failures land on the hub, which shows the
- * `?error=` banner. Nothing is logged.
+ * `?error=` banner.
+ * A failed delete goes through `saveFailureKey` (`save.gear`): a server fault logs one line with only its code
+ * and status and redirects with `errors.serverFault`; nothing submitted is ever logged.
  */
 export const POST: APIRoute = async (context) => {
   const fail = (message: MessageKey) => context.redirect(`/gear?error=${encodeURIComponent(message)}`);
@@ -18,7 +21,7 @@ export const POST: APIRoute = async (context) => {
 
   const result = await siteStore.remove(supabase, context.params.id ?? "");
   if (!result.ok) {
-    return fail(result.message);
+    return fail(saveFailureKey("save.gear", result));
   }
   return context.redirect("/gear?deleted=site");
 };
