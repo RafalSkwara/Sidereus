@@ -324,7 +324,7 @@ Prepared locally on `test-diet/phase-7` while #207 (Phase 6) awaited merge, then
 
 ### Verification
 
-Locally against a production preview and local Supabase, fresh build, fixture and keys inline (`CI=1`): the whole e2e suite with `--repeat-each 2 --workers 4`: 112 passed (56 x 2), 0 failed, 0 skipped, in 1.9 min; `npm run smoke` all steps green; `npm run test:db` 9 files / 191 tests green; `npm test` (813), `npm run lint`, `npx astro check` (0 errors), `tsc` green; the clock guard passes. The PR's `smoke` job runs the same in CI (7.4 stays open until it is green with no retried test).
+Locally against a production preview and local Supabase, fresh build, fixture and keys inline (`CI=1`): the whole e2e suite with `--repeat-each 2 --workers 4`: 112 passed (56 x 2), 0 failed, 0 skipped, in 1.9 min; `npm run smoke` all steps green; `npm run test:db` 9 files / 191 tests green; `npm test` (813), `npm run lint`, `npx astro check` (0 errors), `tsc` green; the clock guard passes. The PR's `smoke` job (#208, CI run 39028953437) was green with `ci`; `failOnFlakyTests` would have failed it on a retried pass (7.4 done).
 
 ### Docs
 
