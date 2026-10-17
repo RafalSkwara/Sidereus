@@ -220,7 +220,7 @@ describe("end-of-turn.sh", () => {
     writeFileSync(join(box.repo, "src", "a.ts"), "export const a = 2;\n");
     const result = await hook(box, "end-of-turn.sh", stop(box));
     expect(result).toMatchObject({ code: 0, stderr: "" });
-    expect(calls(box)).toContain("vitest run");
+    expect(calls(box)).toContain("vitest run --project reference");
   });
 
   it("runs nothing for a documentation-only change, even where the tools are not installed", async () => {

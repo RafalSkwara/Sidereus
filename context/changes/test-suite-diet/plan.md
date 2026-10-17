@@ -536,11 +536,11 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [ ] 0.1 `npm test` runs both projects green with the test count measured on main just before the change
-- [ ] 0.2 `npm run test:reference` excludes the five guard files and finishes under 15 s cold locally
-- [ ] 0.3 `npm run test:guards` runs exactly the five guard files
-- [ ] 0.4 `agent-hooks.test.ts` green and its clean case records `vitest run --project reference`
-- [ ] 0.5 `npm run lint` and `npx astro check` pass
+- [x] 0.1 `npm test` runs both projects green with the test count measured on main just before the change
+- [x] 0.2 `npm run test:reference` excludes the five guard files and finishes under 15 s cold locally
+- [x] 0.3 `npm run test:guards` runs exactly the five guard files
+- [x] 0.4 `agent-hooks.test.ts` green and its clean case records `vitest run --project reference`
+- [x] 0.5 `npm run lint` and `npx astro check` pass
 - [ ] 0.6 The `ci` job on the PR runs `npm test` green
 
 #### Manual
