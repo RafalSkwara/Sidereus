@@ -544,6 +544,47 @@
 }
 
 /*
+ * The Topbar's panels (ui-quick-nav: the settings panel and the quick nav, `ui/topbar-popover.ts`). From `sm` a panel
+ * hangs 4 px under the Topbar strip (`sm:topbar-panel-top`). `topbar-panel-max-h` caps a panel: below `sm` the bottom
+ * sheet never rises over the Topbar strip (a 568 px phone keeps the bar in view and the sheet's body scrolls), from
+ * `sm` the panel under the strip keeps a 20 px gap above the screen's bottom edge.
+ */
+@utility topbar-panel-top {
+  top: calc(var(--topbar-strip-height) + 0.25rem);
+}
+
+@utility topbar-panel-max-h {
+  max-height: calc(100svh - var(--topbar-strip-height));
+
+  @media (width >= 40rem) {
+    max-height: calc(100svh - var(--topbar-strip-height) - 1.5rem);
+  }
+}
+
+/*
+ * Swipe down to close a bottom sheet (ui-quick-nav D12, `src/lib/ui/sheet-swipe.ts`): while a finger drags it the sheet
+ * follows with no transition (`dragging`); on release it slides out or snaps back (`settling`). With reduced motion
+ * neither animates (the script never moves the sheet then, and closes it at once).
+ */
+[data-sheet-drag="settling"] {
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sheet-drag] {
+    transition: none;
+  }
+}
+
+/*
+ * `xs` (ui-quick-nav, D8): the one breakpoint below `sm`, for the 320 px Topbar budget (`max-xs:text-label` on the
+ * wordmark while the quick nav shows), so it needs no arbitrary `max-[360px]:` variant.
+ */
+@theme {
+  --breakpoint-xs: 22.5rem;
+}
+
+/*
  * Toasts (ui-user-adjustments, Phase 2). `toast-region` is the fixed placement of the one toast container
  * (ToastRegion.astro) and, until the toast script adopts it, of a server-rendered toast Notice, so that never paints
  * inline and jumps. Below `md` it sits at the bottom, above the TabBar when one is rendered (the TabBar's

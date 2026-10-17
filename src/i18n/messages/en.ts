@@ -44,6 +44,8 @@ export const en = {
     signOut: "Sign out",
     settings: "Settings",
     primary: "Main",
+    /** The quick nav's landmark (ui-quick-nav): not "Tonight's pages", the sub-nav's name on the focused pages. */
+    quickNav: "Quick navigation",
     signedInAs: "Signed in as",
   },
 
@@ -1209,6 +1211,17 @@ export const en = {
       moon: "Moon",
       planets: "Planets",
       nights: "Nights",
+    },
+
+    /** The quick nav's one-line description under each page's name (ui-quick-nav, owner P2 B), keyed like `subnav`. */
+    quickNav: {
+      tonight: "Tonight's verdict at a glance",
+      targets: "What to observe, best first",
+      events: "Eclipses, showers, close pairs",
+      plan: "Tonight's targets by time",
+      moon: "Phase, rise and set",
+      planets: "Which planets are up tonight",
+      nights: "The outlook for seven nights",
     },
 
     /** The summary under the sky (tonight-nightfall): since tonight-dashboard, tiles that each open a page. */

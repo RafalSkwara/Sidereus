@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import Layout from "@/layouts/Layout.astro";
+import QuickNav from "@/components/QuickNav.astro";
 import TopbarControls from "@/components/TopbarControls";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -3474,6 +3475,78 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
             <p class:list={notApplicable}>
               disabled — N/A (the links work offline: the same plain paths as the tiles) · error — N/A (no input) ·
               empty — N/A (the list is fixed) · loading — N/A (server-rendered in the shell, there before the island)
+            </p>
+          </section>
+
+          <!-- QuickNav (ui-quick-nav) -->
+          <section class:list={block} aria-labelledby="c-quick-nav">
+            <h3 id="c-quick-nav" class:list={blockTitle}>
+              QuickNav
+            </h3>
+            <p class:list={blockNote}>
+              The Topbar's way to Tonight's seven pages from every signed-in screen: a 44 px button (beside the theme
+              button's paintbrush and the settings sliders) opening a sheet on a phone and a panel under the bar from
+              sm. The live one is in the Topbar of any signed-in page; these specimens render the trigger and the panel
+              in flow with Targets current (no aria-current: it is not the page).
+            </p>
+            <div class="flex flex-col gap-6">
+              <div class:list={cell}>
+                <p class:list={stateLabel}>trigger · default · hover · focus-visible · expanded (open)</p>
+                <div class="night-sky flex items-center gap-4 rounded-lg bg-zenith p-4">
+                  <QuickNav idBase="qn-trigger-default" specimen={{ part: "trigger" }} />
+                  <QuickNav idBase="qn-trigger-hover" specimen={{ part: "trigger", class: "text-heading" }} />
+                  <QuickNav idBase="qn-trigger-focus" specimen={{ part: "trigger", class: focusRing }} />
+                  <QuickNav idBase="qn-trigger-open" specimen={{ part: "trigger", expanded: true }} />
+                </div>
+              </div>
+              <div class:list={grid}>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>panel · from sm · on the night strip · Targets current</p>
+                  <div class="night-sky rounded-lg bg-zenith p-4">
+                    <QuickNav idBase="qn-panel-night" specimen={{ part: "panel", current: "/tonight/targets" }} />
+                  </div>
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>panel · hover · specimen (Events)</p>
+                  <QuickNav
+                    idBase="qn-panel-hover"
+                    specimen={{
+                      part: "panel",
+                      current: "/tonight/targets",
+                      pinned: { href: "/tonight/events", class: "bg-accent" },
+                    }}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>panel · focus-visible · specimen (Plan)</p>
+                  <QuickNav
+                    idBase="qn-panel-focus"
+                    specimen={{
+                      part: "panel",
+                      current: "/tonight/targets",
+                      pinned: { href: "/tonight/plan", class: focusRing },
+                    }}
+                  />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>sheet · phone width · Nights current</p>
+                  <QuickNav idBase="qn-sheet" specimen={{ part: "sheet", current: "/tonight/nights" }} />
+                </div>
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>sheet · mid-swipe (held 64 px down, data-sheet-drag)</p>
+                  <div class="h-96 max-w-xs overflow-hidden rounded-lg border border-border bg-background/70">
+                    <QuickNav
+                      idBase="qn-sheet-drag"
+                      specimen={{ part: "sheet", current: "/tonight/targets", dragging: true }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class:list={notApplicable}>
+              disabled — N/A (the rows work offline: the sub-nav's plain paths, a stored copy or /offline) · error — N/A
+              (no input) · empty — N/A (the seven pages are fixed) · loading — N/A (server-rendered in the Topbar, no
+              data)
             </p>
           </section>
 

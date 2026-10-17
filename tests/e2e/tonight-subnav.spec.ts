@@ -21,7 +21,7 @@ const t = en.tonight;
 /** The six focused pages: the sub-nav's items without the dashboard. */
 const FOCUSED = TONIGHT_NAV.filter((item) => item.href !== "/tonight");
 /** The main bars. Both are in the DOM at every width (one is hidden by CSS). */
-const BARS = ["[data-tabbar]", "header nav"] as const;
+const BARS = ["[data-tabbar]", "header [data-topbar-nav]"] as const;
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -86,10 +86,12 @@ test("each bar and each Tonight page marks one current destination; the sub-nav,
     await expect(page.locator("main").getByRole("link", { name: en.nav.tonight, exact: true })).toHaveCount(0);
 
     // The bars mark Tonight as the section, so the chip is the page's one `aria-current="page"`. Targets' own Order
-    // control marks its current order the same way (its links carry `?sort=`): that is not the page's mark.
+    // control marks its current order the same way (its links carry `?sort=`): that is not the page's mark. The quick
+    // nav's closed menu marks its own current row too (requirement change, owner 2026-10-17, ui-quick-nav D2), so it is
+    // left out of the count; quick-nav.spec.ts holds its mark.
     await expectBarsMarkTonight(page, "true");
     const pageMarks = await page
-      .locator('[aria-current="page"]')
+      .locator('[aria-current="page"]:not([data-quick-nav] *)')
       .evaluateAll((marks) => marks.map((mark) => mark.getAttribute("href")));
     expect(pageMarks.filter((href) => !href?.startsWith("/tonight/targets?sort="))).toEqual([item.href]);
   }
@@ -120,7 +122,8 @@ test("each bar and each Tonight page marks one current destination; the sub-nav,
     "href",
     "/tonight/targets",
   );
-  // Below `/tonight`, so the bars mark Tonight as the section; with no sub-nav, nothing on the page is the page.
+  // Below `/tonight`, so the bars mark Tonight as the section; with no sub-nav, nothing on the page is the page (the
+  // finder is not on the quick nav either, ui-quick-nav D2).
   await expectBarsMarkTonight(page, "true");
   await expect(page.locator('[aria-current="page"]')).toHaveCount(0);
 });

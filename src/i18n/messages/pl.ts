@@ -32,6 +32,7 @@ export const pl = {
     signOut: "Wyloguj się",
     settings: "Ustawienia",
     primary: "Główna nawigacja",
+    quickNav: "Szybka nawigacja",
     signedInAs: "Zalogowano jako",
   },
 
@@ -1023,6 +1024,16 @@ export const pl = {
       moon: "Księżyc",
       planets: "Planety",
       nights: "Noce",
+    },
+
+    quickNav: {
+      tonight: "Werdykt nocy w skrócie",
+      targets: "Co obserwować, od najlepszych",
+      events: "Zaćmienia, roje, zbliżenia",
+      plan: "Cele nocy według godzin",
+      moon: "Faza, wschód i zachód",
+      planets: "Które planety są dziś na niebie",
+      nights: "Prognoza na siedem nocy",
     },
 
     summary: {
