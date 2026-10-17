@@ -4,12 +4,13 @@ import { createClient } from "@/lib/supabase";
 
 /*
  * `?error=` carries a message key only: Supabase's error text is mapped by its code, never forwarded. A failure that is
- * not the user's mistake (a network fault, a 5xx, a rate limit, a confirmation-email fault) also leaves an
- * `auth.signup` line with the error's name and status, never the email; a body that is not a form redirects with the
- * shape key and logs `request.form`.
+ * not the user's mistake (a network fault, a 5xx, a confirmation-email fault) also leaves an `auth.signup` line with
+ * the error's name and status, never the email, and a rate limit a warn-level notice; a body that is not a form
+ * redirects with the shape key and leaves a `request.form` notice (the route is public, so a scanner's body is not an
+ * Issue).
  */
 export const POST: APIRoute = async (context) => {
-  const form = await readForm(context.request);
+  const form = await readForm(context.request, { publicRoute: true });
   if (form === null) {
     return context.redirect(`/auth/signup?error=${encodeURIComponent(CHECK_FIELDS)}`);
   }

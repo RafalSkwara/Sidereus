@@ -13,8 +13,10 @@ import { describe, expect, it } from "vitest";
  *
  * A site passes when its handler:
  *
- * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`) or `logReadFailure`
- *   (`@/lib/observability/read-failure`, the pages' read failures, which picks one of the two by the fault), or
+ * - calls `logFailure` or `logNotice` (`@/lib/observability/log-failure`), `logReadFailure`
+ *   (`@/lib/observability/read-failure`, the pages' read failures, which picks one of the two by the fault) or
+ *   `saveFailureKey` (`@/lib/observability/save-failure`, the save routes' one step: it logs a server fault, a refusal
+ *   and a session fault, and stays silent only for the user's own input mistake), or
  * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters of Phases 7-9, recognised by
  *   name and only when the file imports them from `@/lib/observability/client` or `@/lib/offline/report` (for a
  *   `.catch(...)` or `.then(ok, ...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`),
@@ -44,7 +46,7 @@ const SELF = "src/lib/observability/silent-catch-guard.test.ts";
 const EXCLUDED_FILES = new Set(["src/lib/database.types.ts"]);
 const EXCLUDED_DIRS = ["src/lib/test-support/"];
 
-const LOG_NAMES = new Set(["logFailure", "logNotice", "logReadFailure"]);
+const LOG_NAMES = new Set(["logFailure", "logNotice", "logReadFailure", "saveFailureKey"]);
 /** The modules the browser-side reporters are imported from (they do not exist before Phase 7). */
 const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/report"]);
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
@@ -250,7 +252,7 @@ function mentions(root: ts.Node, name: string): boolean {
 /** `catch` clauses nested inside a handler are sites of their own: a log there does not excuse the outer one. */
 const skipNestedCatch = (node: ts.Node): boolean => ts.isCatchClause(node);
 
-/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, `logReadFailure(...)`, an imported `report(...)` / `reportAnd(...)`. */
+/** A call that writes the failure down: `logFailure(...)`, `logNotice(...)`, `logReadFailure(...)`, `saveFailureKey(...)`, an imported `report(...)` / `reportAnd(...)`. */
 function isReportingCall(node: ts.Node, imports: Imports): boolean {
   if (!ts.isCallExpression(node)) return false;
   const callee = node.expression;
@@ -432,6 +434,11 @@ function violationsOf(
 
 /** In-memory samples of the shapes the audit found: each is silent as written and passes once it reports. */
 const SAMPLES: { name: string; silent: string; reported: string }[] = [
+  {
+    name: "a failed read turned into a redirect key without saveFailureKey",
+    silent: `try {\n  await read();\n} catch (error) {\n  return fail(thrownKey(error, "errors.save.sessionPlan"));\n}\n`,
+    reported: `try {\n  await read();\n} catch (error) {\n  return fail(saveFailureKey("save.plan", { message: thrownKey(error, "errors.save.sessionPlan"), ...withFault(error) }));\n}\n`,
+  },
   {
     name: "an empty block with a comment",
     silent: `try {\n  await save();\n} catch {\n  // never mind\n}\n`,

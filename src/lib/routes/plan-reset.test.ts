@@ -14,8 +14,8 @@ import { POST } from "@/pages/api/tonight/plan/reset";
 
 /**
  * `POST /api/tonight/plan/reset` (error-visibility, Phase 4): the session plan's reset goes through `saveFailureKey` as
- * `save.plan-reset`, and the catch around the route's own reads logs the step with the cause's name and code instead of
- * only mapping it to a key. A full-plan account is read through the same fake client.
+ * `save.plan-reset`, and the catch around the route's own reads takes the same step, classified by the cause's code (a server fault
+ * is the neutral key and an error line, a refusal or session fault a notice with the store's key). A full-plan account is read through the same fake client.
  */
 
 const TONIGHT = tonightDateForSite(
@@ -80,15 +80,34 @@ describe("POST /api/tonight/plan/reset", () => {
     expect(logs.errors).not.toHaveBeenCalled();
   });
 
-  it("logs a failed read of the route's own checks with the step, the cause's name and code, and keeps the key", async () => {
+  it("sends a server fault on a read before the write through the same step: the neutral key and one error line", async () => {
     const location = await post({ siteError: leakyPostgrestError("08006") });
-    expect(location.searchParams.get("error")).toBe("errors.load.sites");
+    expect(location.searchParams.get("error")).toBe("errors.serverFault");
     expect(logs.errors).toHaveBeenCalledTimes(1);
     expect(logs.errors).toHaveBeenCalledWith("sidereus: save.plan-reset failed", {
       step: "save.plan-reset",
-      name: "StoreFault",
       code: "08006",
     });
+    expect(logs.warns).not.toHaveBeenCalled();
+  });
+
+  it("sends a read that fails without a code (a throw of our own) the same way, as the server's", async () => {
+    const location = await post({ siteError: new Error(LEAK.source) });
+    expect(location.searchParams.get("error")).toBe("errors.serverFault");
+    expect(logs.errors).toHaveBeenCalledTimes(1);
+    expect(logs.errors).toHaveBeenCalledWith("sidereus: save.plan-reset failed", { step: "save.plan-reset" });
+  });
+
+  it("sends an RLS refusal (42501) or a session fault on a read as a notice and keeps the store's key", async () => {
+    for (const code of ["42501", "PGRST301"]) {
+      logs.errors.mockClear();
+      logs.warns.mockClear();
+      const location = await post({ siteError: leakyPostgrestError(code) });
+      expect(location.searchParams.get("error")).toBe("errors.load.sites");
+      expect(logs.warns).toHaveBeenCalledTimes(1);
+      expect(logs.warns).toHaveBeenCalledWith("sidereus: save.plan-reset noted", { step: "save.plan-reset", code });
+      expect(logs.errors).not.toHaveBeenCalled();
+    }
   });
 
   it("redirects a validation failure as before and logs nothing", async () => {

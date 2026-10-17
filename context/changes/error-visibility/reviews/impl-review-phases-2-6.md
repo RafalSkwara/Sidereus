@@ -54,7 +54,7 @@
   - Tradeoff: a bad stored time zone (a code fault, not an outage) would also show the neutral server copy. That is arguably right, since it is not the user's input.
   - Confidence: HIGH — the same pattern already runs in `observations/store.ts` and every other route.
   - Blind spot: whether the owner wants "could not load sites" kept for a read-before-write. The plan never asked.
-- **Decision**: Taken (owner, 2026-10-16): the plan routes' read-before-write failures go through `saveFailureKey("save.plan" | "save.plan-reset", { message, ...withFault(error) })`, so they show `errors.serverFault` and are classified (a `42501` or session fault on the read is a notice); the two route tests and runbook row 62 are updated. Not applied yet (the owner wrapped up for the day): next session.
+- **Decision**: Taken (owner, 2026-10-16): the plan routes' read-before-write failures go through `saveFailureKey("save.plan" | "save.plan-reset", { message, ...withFault(error) })`, so they show `errors.serverFault` and are classified (a `42501` or session fault on the read is a notice); the two route tests and runbook row 62 are updated. Applied 2026-10-17: both route catches call `saveFailureKey(step, { message: thrownKey(...), ...withFault(error) })`; the plan-save and plan-reset tests cover a server fault, a code-less throw, `42501` and `PGRST301` on the site read; runbook row 62 is corrected.
 
 ### F2 — milestone-store keeps the raw PostgrestError as `cause` (check 2.6 fails)
 
@@ -85,7 +85,7 @@
   - Tradeoff: an abuse burst against sign-in shows only as warn lines. The runbook's count-query idea (D13) covers it once it is verified.
   - Confidence: MED — the GoTrue `validation_failed` paths come from reading GoTrue, not from a local run.
   - Blind spot: whether hosted Supabase has email confirmations on, which decides whether `email_not_confirmed` occurs at all.
-- **Decision**: Taken (owner, 2026-10-16): add `validation_failed` and `email_not_confirmed` to `USER_MISTAKE_CODES` (confirmations are off in hosted Supabase today and the owner turns them on before payments); the two rate-limit codes and `request.form` on the public auth routes become `logNotice` (warn, no Issue), with `routes/auth.test.ts` extended. Not applied yet: next session.
+- **Decision**: Taken (owner, 2026-10-16): add `validation_failed` and `email_not_confirmed` to `USER_MISTAKE_CODES` (confirmations are off in hosted Supabase today and the owner turns them on before payments); the two rate-limit codes and `request.form` on the public auth routes become `logNotice` (warn, no Issue), with `routes/auth.test.ts` extended. Applied 2026-10-17: `validation_failed` and `email_not_confirmed` are in `USER_MISTAKE_CODES`; the two rate-limit codes log through `logNotice`; `readForm(request, { publicRoute: true })` (sign-in and sign-up only) logs `request.form` as a notice, every other route keeps the error-level line; `routes/auth.test.ts` covers each; runbook rows 63 and 67 are updated.
 
 ### F4 — Runbook and plan text out of step with #187 and the owner's 1.10 findings
 

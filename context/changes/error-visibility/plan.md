@@ -664,7 +664,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 ## Progress
 
-> Status (2026-10-16): Phases 2, 3, 4, 5 and 6 implemented locally on feat/error-visibility-2. Earlier: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
+> Status (2026-10-17): Phases 2-6 implemented locally on feat/error-visibility-2; impl review F1 and F3 applied (F5 waits for the owner's trace check). Earlier: Phase 1 implemented and gated locally (automated rows 1.1-1.7 done); manual rows 1.8-1.10 and the e2e/smoke run pending; awaiting /10x-impl-review before push.
 >
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
@@ -754,7 +754,7 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 - [x] 6.1 Silent-catch guard passes with only reasoned entries — 6460f7c
 - [x] 6.2 Full unit suite, lint, types, build and DB suites pass — 6460f7c
-- [ ] 6.3 Full e2e passes in CI with `failOnFlakyTests` (local run in CI mode, `CI=1`, 2026-10-16: 85 passed, 3 skipped, no flaky pass; still to be seen in CI on the PR)
+- [ ] 6.3 Full e2e passes in CI with `failOnFlakyTests` (local run in CI mode, `CI=1`, 2026-10-16 and again 2026-10-17 after review F1 and F3: 85 passed, 3 skipped, no flaky pass; still to be seen in CI on the PR)
 - [x] 6.4 Agent-hooks proof still passes — 6460f7c
 
 #### Manual

@@ -3,7 +3,7 @@ import type { MessageKey } from "@/i18n";
 import { requireFullPlan } from "@/lib/account-plan";
 import { CHECK_FIELDS, issueKey, NOT_CONFIGURED, readForm } from "@/lib/api-errors";
 import { siteStore } from "@/lib/gear/store";
-import { logFailure } from "@/lib/observability/log-failure";
+import { withFault } from "@/lib/observability/fault";
 import { saveFailureKey } from "@/lib/observability/save-failure";
 import { keysWithoutWindow, newKeys, thrownKey } from "@/lib/session-plans/checks";
 import { planErrorRedirect, planSavedRedirect, PLAN_SAVED } from "@/lib/session-plans/redirect";
@@ -21,8 +21,9 @@ import { tonightDateForSite } from "@/lib/tonight/tonight-date";
  * `/tonight/plan` with a fixed `?error=<message key>`; the site's id is put into the URL only when it is shaped like
  * one. Nothing else from the form (keys, night, coordinates) reaches a URL or a log. A failed write goes through
  * `saveFailureKey` (`save.plan`): a server fault logs one line with only its code and status and redirects with
- * `errors.serverFault`. A failed read of the route's own checks logs `save.plan` with the cause's name and code and
- * keeps its key; a body that is not a form redirects with `errors.checkFields` and logs `request.form`.
+ * `errors.serverFault`. A failed read of the route's own checks takes the same step, classified by its cause's code
+ * (`withFault`): a server fault shows `errors.serverFault` too, a refusal or session fault keeps the store's key with a
+ * notice. A body that is not a form redirects with `errors.checkFields` and logs `request.form` as a notice.
  */
 export const POST: APIRoute = async (context) => {
   const form = await readForm(context.request);
@@ -65,10 +66,12 @@ export const POST: APIRoute = async (context) => {
       return fail("errors.sessionPlan.notVisible");
     }
   } catch (error) {
-    // A failed read: traced with the step, the cause's name and code, and answered with the store's fixed key (its
-    // database error stays inside the store).
-    logFailure("save.plan", error);
-    return fail(thrownKey(error, "errors.save.sessionPlan"));
+    // A failed read takes the same step as a failed write (D3): a server fault is an error line and the neutral
+    // `errors.serverFault`, a refusal or session fault a notice and the store's fixed key (its database error stays
+    // inside the store). A throw with no code, such as a bad stored time zone, counts as the server's.
+    return fail(
+      saveFailureKey("save.plan", { message: thrownKey(error, "errors.save.sessionPlan"), ...withFault(error) }),
+    );
   }
 
   const result = await sessionPlanStore.save(supabase, siteId, night, targets);
