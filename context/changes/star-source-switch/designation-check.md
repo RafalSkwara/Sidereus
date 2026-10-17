@@ -4,7 +4,7 @@ One-off comparison for the `star-source-switch` change (Phase 2), made before th
 
 ## Method
 
-- The throwaway script that produced this file lives outside the repository (the session scratchpad). It reads the HYG-era `finder-stars.json` from the working tree (still HYG-era until Phase 4), decodes it (`pos` = `raCenti * 18001 + decCenti + 9000`, magnitude-tenth runs, designations keyed by index) and matches each star to a Hipparcos star by position (within 0.05 degree, magnitude within 0.25) as the nearest unused pair. This is the only place HYG-era data is read: the regeneration script `scripts/build-star-designations.mjs` never reads HYG, and no override cites it.
+- The throwaway script that produced this file lives outside the repository (the session scratchpad). It reads the HYG-era `finder-stars.json` from the working tree (still HYG-era until Phase 4), decodes it (`pos` = `raCenti * 18001 + decCenti + 9000`, magnitude-tenth runs, designations keyed by index) and matches each star to a Hipparcos star by position (within 0.05 degree, magnitude within 0.25) as the nearest unused pair. This is the only place HYG-era data is read: the regeneration script `scripts/build-star-designations.mjs` never reads HYG, and no override takes a value from it: the fourteen `omit` overrides name this comparison as the reason for the omission (the HYG-era file disagreed with Wikidata on a component digit), and every one of them removes a value rather than adding one.
 - 25,713 of the 25,723 Hipparcos stars at V <= 7.5 match a HYG-era star (the ten stars without an astrometric solution do not, see below). Everything is keyed by HIP in the new table, so unlike a position join the Trapezium, close doubles and component stars cannot be mixed up.
 - Independent check: the IAU Working Group on Star Names list (`https://exopla.net/star-names/modern-iau-star-names/`, public-domain names, fetched 2026-10-16) carries a Bayer ID for each named star. It is a published source that neither Wikidata nor HYG feeds, so it is used both as the cross-check below and as the citable source of an override.
 - Decision rules: a value is never guessed. A disagreement is settled by an override that cites a published source (the IAU WGSN list, or Wikidata's own statement of the star's catalogue record), or the value is omitted (`omit`). A gap (the HYG-era file has a value, the table has none) is an accepted omission.
@@ -53,7 +53,7 @@ The two files give the same star different Bayer values. Almost all differ only 
 | 107310 | Cyg | Mu-1 Cyg  | Mu Cyg                            | none        | Omitted (override): no citable tie-break for the component digit.            |
 | 110960 | Aqr | Zet-1 Aqr | Zet Aqr                           | none        | Omitted (override): no citable tie-break for the component digit.            |
 
-Rule applied: a disagreement that the IAU WGSN list settles is settled by it (an override to its specific form, or no change where it agrees with the table). One it does not settle is omitted: with only two compilations and no published tie-break, a wrong component digit would be a wrong designation, and an omitted Bayer value only costs a label (Flamsteed and the proper name still show).
+Rule applied: a disagreement that the IAU WGSN list settles is settled by it (an override to its specific form, or no change where it agrees with the table). One it does not settle is omitted: with only two compilations (Wikidata and the HYG-era file) and no published tie-break, a wrong component digit would be a wrong designation, and an omitted Bayer value only costs a label (Flamsteed and the proper name still show).
 
 ## Flamsteed disagreements (1) and the conflicts the research quoted
 
@@ -325,23 +325,23 @@ These ten stars at V <= 7.5 have no astrometric solution in `hip_main.dat`, so t
 
 `scripts/data/star-designation-overrides.json`, each entry with a citable source (none cites HYG or the Yale Bright Star Catalogue):
 
-| HIP    | Override       | Source kind                                                         |
-| ------ | -------------- | ------------------------------------------------------------------- |
-| 8832   | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 9347   | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 13847  | bayer The-1    | IAU WGSN list                                                       |
-| 39953  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 40023  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 48552  | flamsteed 9    | Wikidata item statement                                             |
-| 50583  | bayer Gam-1    | IAU WGSN list                                                       |
-| 69481  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 71762  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 81710  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 84345  | bayer Alp-1    | IAU WGSN list                                                       |
-| 86974  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 90968  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 90969  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 91926  | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 101923 | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 107310 | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
-| 110960 | omit ["bayer"] | Wikidata statement against a second compilation, no tie-break found |
+| HIP    | Override       | Source kind                                                                                                |
+| ------ | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| 8832   | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 9347   | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 13847  | bayer The-1    | IAU WGSN list                                                                                              |
+| 39953  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 40023  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 48552  | flamsteed 9    | Wikidata item statement                                                                                    |
+| 50583  | bayer Gam-1    | IAU WGSN list                                                                                              |
+| 69481  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 71762  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 81710  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 84345  | bayer Alp-1    | IAU WGSN list                                                                                              |
+| 86974  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 90968  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 90969  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 91926  | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 101923 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 107310 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |
+| 110960 | omit ["bayer"] | Omitted: the one-off HYG-era comparison disagreed with Wikidata on the component digit, no tie-break found |

@@ -7,7 +7,7 @@
  * Exit 0 when the pin verifies and the counts are the recorded ones; non-zero with the reader's mismatch report
  * otherwise. The pin itself lives in scripts/lib/hipparcos.mjs and changes only by a deliberate edit.
  */
-import { HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
+import { describeError, HIPPARCOS_PIN, readHipparcos } from "./lib/hipparcos.mjs";
 
 const BRIGHT_MAX_MAG = 4.5;
 const FINDER_MAX_MAG = 7.5;
@@ -15,15 +15,6 @@ const FINDER_MAX_MAG = 7.5;
 const EXPECTED_BRIGHT = 921;
 const EXPECTED_FINDER = 25723;
 const EXPECTED_SEXAGESIMAL = [31067, 31500, 34716, 50572, 52800, 55203, 59273, 78727, 80579, 115125];
-
-function describe(error) {
-  const lines = [error instanceof Error ? error.message : String(error)];
-  for (let cause = error instanceof Error ? error.cause : undefined; cause !== undefined;) {
-    lines.push(`  caused by: ${cause instanceof Error ? cause.message : String(cause)}`);
-    cause = cause instanceof Error ? cause.cause : undefined;
-  }
-  return lines.join("\n");
-}
 
 async function main() {
   const { rows, skipped, stats } = await readHipparcos();
@@ -58,6 +49,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(describe(err));
+  console.error(describeError(err));
   process.exit(1);
 });

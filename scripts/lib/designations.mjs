@@ -448,6 +448,13 @@ export function overrideFor(entry, kind) {
   return entry[kind] === undefined ? undefined : { value: entry[kind], source: entry.source };
 }
 
+/** A fixed order for label candidates, so `omitted[].candidates` does not follow the SPARQL response's order. */
+const byConAndValue = (a, b) => {
+  const left = `${a.con} ${a.value}`;
+  const right = `${b.con} ${b.value}`;
+  return left < right ? -1 : left > right ? 1 : 0;
+};
+
 const BAYER_CATALOG_ID = "Q105616";
 const FLAMSTEED_CATALOG_ID = "Q111116";
 
@@ -552,7 +559,7 @@ export function buildDesignationTables({
     }
     let usedLabel = false;
     if (sources.bayer.size === 0 && sources.labelBayer.length > 0) {
-      bayerCandidates.push(...sources.labelBayer);
+      bayerCandidates.push(...[...sources.labelBayer].sort(byConAndValue));
       usedLabel = true;
     }
     const flamsteedCandidates = [];
@@ -566,7 +573,7 @@ export function buildDesignationTables({
     }
     let usedFlamsteedLabel = false;
     if (sources.flamsteed.size === 0 && sources.labelFlamsteed.length > 0) {
-      flamsteedCandidates.push(...sources.labelFlamsteed);
+      flamsteedCandidates.push(...[...sources.labelFlamsteed].sort(byConAndValue));
       usedFlamsteedLabel = true;
     }
 
