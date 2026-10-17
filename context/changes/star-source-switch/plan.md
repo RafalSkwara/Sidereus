@@ -411,9 +411,9 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Manual
 
-- [ ] 2.7 `designation-check.md` shows every disagreement with the HYG-era table and the decision taken for it, and no designation was guessed
-- [ ] 2.8 Ten stars from the table (five Bayer, five Flamsteed, including one multi-value star) are confirmed against a published source named in `designation-check.md`
-- [ ] 2.9 Every route star of the published-hop references and the example chart's designated stars resolves to a HIP with identical `bayer` / `flamsteed` / `con`, recorded in `designation-check.md`
+- [x] 2.7 `designation-check.md` shows every disagreement with the HYG-era table and the decision taken for it, and no designation was guessed — bca5748
+- [x] 2.8 Ten stars from the table (five Bayer, five Flamsteed, including one multi-value star) are confirmed against a published source named in `designation-check.md` — bca5748
+- [x] 2.9 Every route star of the published-hop references and the example chart's designated stars resolves to a HIP with identical `bayer` / `flamsteed` / `con`, recorded in `designation-check.md` — bca5748
 
 ### Phase 3: Build script on the new source
 
@@ -428,8 +428,8 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Manual
 
-- [ ] 3.7 The comparison of the scratch output with the committed HYG-era files (position offsets against the old file, named stars gained and lost, designated count, stars at the 4.5 and 7.5 thresholds) is reviewed and each difference is explained by the research (non-Hipparcos rows removed, 10 stars without a solution, 23 non-IAU names, designation omissions)
-- [ ] 3.8 In that comparison ν And and 24 UMa keep magnitude tenths 45, and the ten RAhms/DEdms stars are placed against the reference routes and the field of the example chart (M13 in Hercules, with α, ε, ν¹ and υ Coronae Borealis)
+- [x] 3.7 The comparison of the scratch output with the committed HYG-era files (position offsets against the old file, named stars gained and lost, designated count, stars at the 4.5 and 7.5 thresholds) is reviewed and each difference is explained by the research (non-Hipparcos rows removed, 10 stars without a solution, 23 non-IAU names, designation omissions) — bca5748
+- [x] 3.8 In that comparison ν And and 24 UMa keep magnitude tenths 45, and the ten RAhms/DEdms stars are placed against the reference routes and the field of the example chart (M13 in Hercules, with α, ε, ν¹ and υ Coronae Borealis) — bca5748
 
 ### Phase 4: Switch the committed files, consumers, tests and fixtures
 
@@ -446,7 +446,7 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Manual
 
-- [ ] 4.9 A local preview shows Tonight's live sky with the star field and a labelled bright-star set, and one finder chart (for example M13) with its start star and hops, without a visible hole, duplicate star or wrong constellation label; two screenshots are saved next to the plan review notes
+- [x] 4.9 A local preview shows Tonight's live sky with the star field and a labelled bright-star set, and one finder chart (for example M13) with its start star and hops, without a visible hole, duplicate star or wrong constellation label; two screenshots are saved next to the plan review notes — bca5748
 
 ### Phase 5: Notices, attribution, docs and the PR
 
@@ -461,5 +461,5 @@ Make every notice say what the files now are, add the credits ESA was promised, 
 
 #### Manual
 
-- [ ] 5.7 The credit line reads correctly and the landing footer renders in English and Polish on Tonight, a finder chart and the signed-out landing at 320 and 360 px, without sideways scroll
+- [x] 5.7 The credit line reads correctly and the landing footer renders in English and Polish on Tonight, a finder chart and the signed-out landing at 320 and 360 px, without sideways scroll — bca5748
 - [ ] 5.8 The PR description states the counts, the ten stars positioned from RAhms/DEdms, the Polish and non-IAU name changes, and that no payment is enabled
