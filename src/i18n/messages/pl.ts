@@ -48,6 +48,7 @@ export const pl = {
     language: "Język",
     english: "English",
     polish: "Polski",
+    changingLanguage: "Zmiana języka…",
   },
 
   config: {

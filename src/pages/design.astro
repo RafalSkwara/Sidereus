@@ -1778,6 +1778,37 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     </div>
                   </div>
                 ))}
+                <div class:list={cell}>
+                  <p class:list={stateLabel}>
+                    loading · the language switch while the page reloads (the chosen language busy: spinner, aria-busy,
+                    an hourglass with reduced motion; the current one disabled, keeping its fill; a hidden status says "
+                    {m.preferences.changingLanguage}")
+                  </p>
+                  <div>
+                    <SegmentedGroup
+                      label={m.preferences.language}
+                      busyStatus={m.preferences.changingLanguage}
+                      value={locale}
+                      onChange={() => undefined}
+                      options={[
+                        {
+                          value: "en",
+                          lang: "en",
+                          label: m.preferences.english,
+                          busy: locale !== "en",
+                          disabled: locale === "en",
+                        },
+                        {
+                          value: "pl",
+                          lang: "pl",
+                          label: m.preferences.polish,
+                          busy: locale !== "pl",
+                          disabled: locale === "pl",
+                        },
+                      ]}
+                    />
+                  </div>
+                </div>
                 {skyModeSpecimens.map(({ state, value, segmentClassName, live }) => (
                   <div class:list={cell}>
                     <p class:list={stateLabel}>{state}</p>
@@ -1796,7 +1827,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
               <p class:list={notApplicable}>
                 error — a choice always has a value, so the group never errors · empty — a group always has options ·
-                loading — the language switch's spinner (settings panel, while the page reloads)
+                loading — the language switch above (the settings panel, while the page reloads)
               </p>
             </section>
 

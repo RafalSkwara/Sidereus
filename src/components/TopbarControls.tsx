@@ -241,27 +241,21 @@ export default function TopbarControls({
             <p id="settings-language-label" className={sectionLabel}>
               {p.language}
             </p>
+            {/*
+             * While the page reloads in the chosen language, that segment is busy (a spinner, `aria-busy`) and the
+             * other one is disabled; a hidden status says "Changing language…" (owner's answer to impl review F2).
+             */}
             <SegmentedGroup
               labelledBy="settings-language-label"
-              busy={pendingLocale !== null}
+              busyStatus={p.changingLanguage}
               value={locale}
               onChange={chooseLocale}
               options={localeSegments.map(({ value, text }) => ({
                 value,
                 lang: value,
-                disabled: pendingLocale !== null,
-                label:
-                  pendingLocale === value ? (
-                    <>
-                      <span
-                        className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
-                        aria-hidden="true"
-                      />
-                      <span className="sr-only">{text}</span>
-                    </>
-                  ) : (
-                    text
-                  ),
+                label: text,
+                busy: pendingLocale === value,
+                disabled: pendingLocale !== null && pendingLocale !== value,
               }))}
             />
           </div>

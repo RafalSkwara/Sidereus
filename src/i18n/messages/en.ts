@@ -60,6 +60,8 @@ export const en = {
     language: "Language",
     english: "English",
     polish: "Polski",
+    /** The language switch's hidden status while the page reloads in the chosen language. */
+    changingLanguage: "Changing language…",
   },
 
   config: {
