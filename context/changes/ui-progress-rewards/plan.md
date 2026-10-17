@@ -780,57 +780,57 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 #### Automated
 
-- [x] 1.1 Types check: `npx astro sync && npx astro check` — 4fa2a3a
-- [x] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference` — 4fa2a3a
-- [x] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards` — 4fa2a3a
-- [x] 1.4 Lint passes on the changed files — 4fa2a3a
+- [x] 1.1 Types check: `npx astro sync && npx astro check` — 9028b0b
+- [x] 1.2 Reference suite passes, incl. the island-import guard: `npm run test:reference` — 9028b0b
+- [x] 1.3 Guards pass (no hardcoded colours, red theme): `npm run test:guards` — 9028b0b
+- [x] 1.4 Lint passes on the changed files — 9028b0b
 
 #### Manual
 
-- [x] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px — 4fa2a3a
+- [x] 1.5 `/design` "Progress icons" block screenshotted in dark, light and red at 390 px — 9028b0b
 
 ### Phase 2: Milestone badges on the page and in the dialog
 
 #### Automated
 
-- [x] 2.1 Types check: `npx astro check` — ad33563
-- [x] 2.2 Reference and guard suites pass, incl. the new contrast pin — ad33563
-- [x] 2.3 Lint passes on the changed files — ad33563
-- [x] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px — ad33563
+- [x] 2.1 Types check: `npx astro check` — f7c654c
+- [x] 2.2 Reference and guard suites pass, incl. the new contrast pin — f7c654c
+- [x] 2.3 Lint passes on the changed files — f7c654c
+- [x] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px — f7c654c
 
 #### Manual
 
-- [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop — ad33563
-- [x] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge — f08b319
+- [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop — f7c654c
+- [x] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge — ea48c6d
 - [x] 2.7 The owner approved the badge art before it was ported — approved by the owner, 2026-10-17
 
 ### Phase 3: Tile checklists with a legend
 
 #### Automated
 
-- [x] 3.1 Types check: `npx astro check` — 2bc1c05
-- [x] 3.2 Reference and guard suites pass — 2bc1c05
-- [x] 3.3 Lint passes on the changed files — 2bc1c05
-- [x] 3.4 Build passes: `npm run build` — 2bc1c05
-- [x] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged — 2bc1c05
-- [x] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md` — 2bc1c05
+- [x] 3.1 Types check: `npx astro check` — 5fa88fb
+- [x] 3.2 Reference and guard suites pass — 5fa88fb
+- [x] 3.3 Lint passes on the changed files — 5fa88fb
+- [x] 3.4 Build passes: `npm run build` — 5fa88fb
+- [x] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged — 5fa88fb
+- [x] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md` — 5fa88fb
 
 #### Manual
 
-- [x] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, names clear of the check at 320 px, the closed `<details>` work by keyboard — f08b319
-- [x] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader — f08b319
+- [x] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, names clear of the check at 320 px, the closed `<details>` work by keyboard — ea48c6d
+- [x] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader — ea48c6d
 
 ### Phase 4: States, `/design`, the screenshot gate, the guard and the rule
 
 #### Automated
 
-- [x] 4.1 Types check: `npx astro check` — f08b319
-- [x] 4.2 Reference and guard suites pass, incl. the extended rhythm guard — f08b319
-- [x] 4.3 Lint passes on the changed files — f08b319
-- [x] 4.4 Build passes: `npm run build` — f08b319
-- [x] 4.5 The whole e2e suite and smoke pass the way CI runs them — f08b319
-- [x] 4.6 Hardcoded-value scan on the view's files returns 0 — f08b319
+- [x] 4.1 Types check: `npx astro check` — ea48c6d
+- [x] 4.2 Reference and guard suites pass, incl. the extended rhythm guard — ea48c6d
+- [x] 4.3 Lint passes on the changed files — ea48c6d
+- [x] 4.4 Build passes: `npm run build` — ea48c6d
+- [x] 4.5 The whole e2e suite and smoke pass the way CI runs them — ea48c6d
+- [x] 4.6 Hardcoded-value scan on the view's files returns 0 — ea48c6d
 
 #### Manual
 
-- [x] 4.7 Screenshot gate: `/design` progress blocks and the signed-in page in dark, light and red, EN and PL, saved under `evidence/after/` — f08b319
+- [x] 4.7 Screenshot gate: `/design` progress blocks and the signed-in page in dark, light and red, EN and PL, saved under `evidence/after/` — ea48c6d
