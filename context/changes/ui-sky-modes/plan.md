@@ -566,8 +566,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [x] 5.1 The whole e2e suite and smoke pass the way CI runs them (fresh `npm run build`, forecast fixture, local stack keys inline): `npm run test:e2e` and `npm run smoke`
-- [x] 5.2 Lint, type check and both Vitest projects pass: `npx astro check && npm run lint && npm test`
+- [x] 5.1 The whole e2e suite and smoke pass the way CI runs them (fresh `npm run build`, forecast fixture, local stack keys inline): `npm run test:e2e` and `npm run smoke` — 82b1acf
+- [x] 5.2 Lint, type check and both Vitest projects pass: `npx astro check && npm run lint && npm test` — 82b1acf
 
 #### Manual
 
