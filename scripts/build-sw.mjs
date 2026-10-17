@@ -44,11 +44,15 @@ await build({
   },
 });
 
+const TAB_ICONS = ["favicon.svg", "favicon.png"];
+
 const { count, size, warnings } = await injectManifest({
   swSrc: swPath,
   swDest: swPath,
   globDirectory: clientDir,
-  globPatterns: ["_astro/**/*.{js,css,woff2}"],
+  // The tab icon (app-icon) too, so a page served from the device keeps it offline; the home-screen PNGs are fetched
+  // by the browser at install, not by pages, and stay out. Unhashed names, so Workbox revisions them by content.
+  globPatterns: ["_astro/**/*.{js,css,woff2}", ...TAB_ICONS],
   // "Pick from map" (S-09) loads Leaflet only after its click; users who never open the map never download it.
   globIgnores: ["_astro/map-panel.*", "_astro/leaflet*"],
   // Hashed file names carry their own revision.
@@ -57,14 +61,21 @@ const { count, size, warnings } = await injectManifest({
 for (const warning of warnings) {
   console.warn(`build-sw: ${warning}`);
 }
-if (count === 0) {
+if (count <= TAB_ICONS.length) {
   console.error("build-sw: the precache manifest is empty; no /_astro assets matched.");
   process.exit(1);
 }
 
 // injectManifest returns no entry list, so the written worker is the evidence that the map stayed out.
-if (/map-panel|leaflet/.test(await readFile(swPath, "utf8"))) {
+const swText = await readFile(swPath, "utf8");
+if (/map-panel|leaflet/.test(swText)) {
   console.error("build-sw: map assets leaked into the precache manifest");
+  process.exit(1);
+}
+// A glob that names no file matches nothing silently: the tab icons must be in public/ and in the manifest.
+const missingIcons = TAB_ICONS.filter((icon) => !swText.includes(`"${icon}"`));
+if (missingIcons.length > 0) {
+  console.error(`build-sw: the tab icon is missing from the precache manifest (${missingIcons.join(", ")})`);
   process.exit(1);
 }
 

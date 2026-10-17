@@ -23,7 +23,7 @@
     "catalogue:build": "node scripts/build-catalogue.mjs",
     "stars:build": "node scripts/build-stars.mjs",
     "stars:designations": "node scripts/build-star-designations.mjs",
-    "icons:build": "pwa-assets-generator",
+    "icons:build": "pwa-assets-generator --config pwa-assets.config.mjs && pwa-assets-generator --config pwa-assets.maskable.config.mjs && pwa-assets-generator --config pwa-assets.favicon.config.mjs",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
     "cf:types": "wrangler types"
   },
