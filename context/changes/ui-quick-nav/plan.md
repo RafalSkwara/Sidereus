@@ -703,8 +703,8 @@ are still pending).
 
 #### Automated
 
-- [x] 4.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass
-- [x] 4.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR")
+- [x] 4.1 `npm run test:reference`, `npm run lint` and `npx astro check` pass — 2c1d184
+- [x] 4.2 The whole e2e suite (`npm run test:e2e`) and `npm run smoke` pass locally the way CI runs them (lessons: "Run the whole e2e suite before a PR") — 2c1d184
 
 #### Manual
 
