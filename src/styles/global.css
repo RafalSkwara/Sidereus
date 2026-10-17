@@ -562,6 +562,21 @@
 }
 
 /*
+ * Swipe down to close a bottom sheet (ui-quick-nav D12, `src/lib/ui/sheet-swipe.ts`): while a finger drags it the sheet
+ * follows with no transition (`dragging`); on release it slides out or snaps back (`settling`). With reduced motion
+ * neither animates (the script never moves the sheet then, and closes it at once).
+ */
+[data-sheet-drag="settling"] {
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sheet-drag] {
+    transition: none;
+  }
+}
+
+/*
  * `xs` (ui-quick-nav, D8): the one breakpoint below `sm`, for the 320 px Topbar budget (`max-xs:text-label` on the
  * wordmark while the quick nav shows), so it needs no arbitrary `max-[360px]:` variant.
  */

@@ -181,13 +181,17 @@ const SPECIMEN_PANEL_CLASS = {
    * open (the current page's row, else the first), the arrows / Home / End between rows, closing when focus moves to
    * an element outside the panel and the button (Tab past the last row; a `null` target, such as a tap on the heading or
    * Safari's tap on a link, is ignored: review F1), and closing on `pagehide`, so Back never shows it still open (F4).
-   * Esc and the outside tap are the native popover's light dismiss.
+   * Esc and the outside tap are the native popover's light dismiss; a swipe down closes the phone sheet
+   * (`attachSheetSwipe`, shared with the settings sheet).
    */
+  import { attachSheetSwipe } from "@/lib/ui/sheet-swipe";
+
   for (const nav of document.querySelectorAll<HTMLElement>("[data-quick-nav]")) {
     const trigger = nav.querySelector<HTMLButtonElement>("[data-quick-nav-trigger]");
     const panel = nav.querySelector<HTMLElement>("[data-quick-nav-panel][popover]");
     if (!trigger || !panel) continue;
     const rows = () => [...panel.querySelectorAll<HTMLAnchorElement>("[data-quick-nav-row]")];
+    attachSheetSwipe(panel);
 
     panel.addEventListener("beforetoggle", (event) => {
       if ((event as ToggleEvent).newState !== "open") return;

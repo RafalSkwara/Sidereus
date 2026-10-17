@@ -675,10 +675,10 @@ are still pending).
 
 #### Automated
 
-- [x] 2.1 `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it
-- [x] 2.2 `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported)
-- [x] 2.3 `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits
-- [x] 2.4 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [x] 2.1 `quick-nav.spec.ts` and the new `navigation.spec.ts` checks fail before the component and pass after it — 962653f
+- [x] 2.2 `npx playwright test quick-nav.spec.ts navigation.spec.ts tonight-subnav.spec.ts tonight-phone.spec.ts landing.spec.ts` passes on a fresh `npm run build` + preview, the forecast fixture and local Supabase (keys inline, never exported) — 962653f
+- [x] 2.3 `npm run test:guards` passes (it holds `no-hardcoded-colors.test.ts`, which `test:reference` does not run) and the `/10x-ui` hardcoded-value grep (research "Pre-audit") on `Topbar.astro`, `QuickNav.astro`, `TopbarControls.tsx`, `ui/topbar-popover.ts` returns 0 hits — 962653f
+- [x] 2.4 `npm run test:reference`, `npm run lint` and `npx astro check` pass — 962653f
 
 #### Manual
 
@@ -690,9 +690,9 @@ are still pending).
 
 #### Automated
 
-- [ ] 3.1 `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3`
-- [ ] 3.2 `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass
-- [ ] 3.3 `npm run test:reference`, `npm run lint` and `npx astro check` pass
+- [x] 3.1 `sheet-swipe.spec.ts` fails before the helper and passes after it, `--repeat-each=3`
+- [x] 3.2 `quick-nav.spec.ts`, `navigation.spec.ts` and `red-night-mode.spec.ts` still pass
+- [x] 3.3 `npm run test:reference`, `npm run lint` and `npx astro check` pass
 
 #### Manual
 

@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { AccountPlan } from "@/lib/account-plan";
 import { getMessages } from "@/i18n";
 import { installState, promptInstall, subscribeInstallState } from "@/lib/offline/install";
@@ -12,6 +12,7 @@ import {
   type Theme,
 } from "@/lib/preferences";
 import { Paintbrush } from "lucide-react";
+import { attachSheetSwipe } from "@/lib/ui/sheet-swipe";
 import { cn } from "@/lib/utils";
 import { SEGMENT_FOCUS_CLASS, SegmentedGroup } from "@/components/ui/segmented";
 import {
@@ -132,6 +133,9 @@ export default function TopbarControls({
   // S-06: "Install app" shows only where it can do something; the server renders it hidden ("none").
   const install = useSyncExternalStore(subscribeInstallState, installState, () => "none" as const);
   const [iosHintOpen, setIosHintOpen] = useState(false);
+  // A swipe down closes the phone sheet (ui-quick-nav D12), with the quick nav's shared helper.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => (panelRef.current ? attachSheetSwipe(panelRef.current) : undefined), []);
 
   function chooseTheme(next: Theme) {
     if (next === theme) return;
@@ -188,6 +192,7 @@ export default function TopbarControls({
        * the settings sheet should still look like the rest of the page, not like the navy sky behind it.
        */}
       <div
+        ref={panelRef}
         id={SETTINGS_ID}
         popover="auto"
         role="dialog"
