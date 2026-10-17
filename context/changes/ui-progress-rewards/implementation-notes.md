@@ -49,3 +49,10 @@ inline on the commands only):
   `page-pl-{dark,light,red}-320`), the Caldwell band opened (`caldwell-open-*`), the live dialog with three badges
   (`dialog-*`), and `/design`'s blocks (`design-c-{progress-icons,milestone-badge,milestone-celebration}-*-{390,1440}`,
   `design-c-checklist-*-390`). The plan named `evidence/after/`; the lead asked for `evidence/impl/`.
+
+## Deviation: the art is picked by a switch, not a `MILESTONE_ART` record (impl review F7)
+
+Phase 2 planned `badge-art/index.ts` with `MILESTONE_ART: Readonly<Record<MilestoneKey, AstroComponent>>`. The
+type-aware lint types an .astro component used as a value as `error`, so the record failed `no-unsafe-assignment` in a
+`.ts` module and in an .astro frontmatter alike. `MilestoneBadge` renders the art through an exhaustive `switch` in its
+template whose `never` default fails `astro check` on a milestone without art: the same guarantee the record gave.

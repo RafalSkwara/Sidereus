@@ -1319,10 +1319,25 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                     <p class="text-label text-muted-foreground">{m.tonight.planets.none}</p>
                   </Band>
                 </div>
+                <div class:list={wideCell}>
+                  <p class:list={stateLabel}>
+                    collapsed — the heading is a native details summary, closed on load (the progress page's Caldwell
+                    band, ui-progress-rewards); inside it a closed "Seen so far" list keeps its own chevron state
+                  </p>
+                  <Band
+                    headingId="sample-collapsed-heading"
+                    heading={`${m.progress.caldwell} · ${m.progress.count({ seen: String(progressMany.caldwell.seenCount), total: String(progressMany.caldwell.total) })}`}
+                    collapsed
+                  >
+                    <p class="text-label text-muted-foreground">{m.progress.caldwellNote}</p>
+                    <SeenList items={progressMany.caldwell.items} prefix="C" label="Caldwell: seen so far" />
+                  </Band>
+                </div>
               </div>
               <p class:list={notApplicable}>
-                hover, focus-visible, disabled — N/A (not interactive; rows and the action are links) · error — a failed
-                band holds a ServerError · loading — N/A
+                hover, focus-visible — the collapsed band's summary only (hover it, or Tab to it; Enter or Space opens
+                and closes it); the other bands are not interactive (rows and the action are links) · disabled — N/A ·
+                error — a failed band holds a ServerError · loading — N/A
               </p>
             </section>
 
@@ -3420,9 +3435,9 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               </div>
             </div>
             <p class:list={notApplicable}>
-              hover, focus-visible, active, disabled — N/A (tiles and legend rows are not interactive: no links, no
-              controls; the SeenList's summary is a native details toggle) · error — N/A (the page shows a ServerError
-              instead) · loading — N/A (server-rendered with the page)
+              hover, focus-visible — the SeenList's summary (a native details toggle: hover it, or Tab to it and press
+              Enter); tiles and legend rows are not interactive (no links, no controls) · active, disabled — N/A · error
+              — N/A (the page shows a ServerError instead) · loading — N/A (server-rendered with the page)
             </p>
           </section>
 

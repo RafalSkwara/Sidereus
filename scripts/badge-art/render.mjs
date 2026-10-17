@@ -1,11 +1,12 @@
-// Badge-art round 1 (ui-progress-rewards): builds the 11 milestone illustrations as SVG (tokens only, `var(--…)`),
-// writes one art file per badge next to this script, and renders comparison sheets through Playwright.
-// Design evidence only, not product code. Run from the repo root:
-//   node context/changes/ui-progress-rewards/evidence/badge-art/render.mjs
+// The milestone badges' art (ui-progress-rewards): the source of the 11 illustrations, as SVG in theme tokens only
+// (`var(--…)`). As a script it writes one SVG per badge to `scripts/badge-art/art/` (the reviewable sources) and renders
+// comparison sheets through Playwright as PNGs into `scripts/badge-art/out/` (gitignored; `--out <dir>` picks another
+// folder). PNGs never go into git. Run from the repo root: `npm run badge-art:render`. The product components come from
+// `port.mjs` (`npm run badge-art:port`), never by hand.
 // The theme values come from src/styles/global.css at run time, so the sheets show the real tokens.
 //
-// Round 1 was approved by the owner on 2026-10-17. Three calls were left to the implementer (plan.md, "Badge art
-// decisions"), applied here as round 1b:
+// Round 1 was approved by the owner on 2026-10-17. Three calls were left to the implementer (the change's plan.md, "Owner
+// decisions on the art and P8"), applied here as round 1b:
 //   (a) red mode: the large full-red areas (the reached Moon's body, the count numerals) carry `red-step`, one value
 //       step down in red only (`red:opacity-80` in the product, emulated by the sheet's CSS below);
 //   (b) the ahead art's opacity per theme (`ahead-art`: light 0.3, dark 0.4, red 0.6; product classes
@@ -14,13 +15,18 @@
 //       with ART_TRIM=1 (the default) fewer background and globular stars. ART_TRIM=0 renders round 1's counts.
 // The module is importable: `ART` is exported and the sheets render only when it runs as a script, so the product
 // port (`port.mjs`) writes the exact same art into src/components/progress/badge-art/.
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(join(process.cwd(), "package.json"));
-const OUT = dirname(fileURLToPath(import.meta.url));
+const HERE = dirname(fileURLToPath(import.meta.url));
+/** The SVG sources (committed). */
+const ART_DIR = join(HERE, "art");
+/** The rendered PNG sheets: `--out <dir>`, else `scripts/badge-art/out/` (gitignored). */
+const outIndex = process.argv.indexOf("--out");
+const OUT = outIndex > 0 && process.argv[outIndex + 1] ? resolve(process.argv[outIndex + 1]) : join(HERE, "out");
 const v = (token) => `var(--${token})`;
 const f = (n) => +n.toFixed(2);
 const f1 = (n) => +n.toFixed(1);
@@ -105,7 +111,7 @@ function blob(seed, cx, cy, rx, ry, n, jitter, rot = 0) {
 
 // ---------------------------------------------------------------- the art, each in the 120-unit badge space
 
-function moon(id) {
+function moon(_id) {
   const craters = [
     [70, 63, 5.2],
     [49, 80, 3.6],
@@ -230,7 +236,10 @@ function allPlanets(id) {
         let g = `<g clip-path="url(#${id}-p${i})"><circle cx="${p.x}" cy="${p.y}" r="${p.r}" fill="${v(p.fill)}" opacity="${p.o}"/>`;
         if (p.bands) {
           g += [-6.2, -2.8, 1, 4.6, 7.4]
-            .map((o, k) => `<rect x="${p.x - p.r}" y="${f(p.y + o)}" width="${p.r * 2}" height="${k % 2 ? 2 : 1.3}" fill="${v(k === 2 ? "primary-strong" : "moon-mare")}" opacity="0.9"/>`)
+            .map(
+              (o, k) =>
+                `<rect x="${p.x - p.r}" y="${f(p.y + o)}" width="${p.r * 2}" height="${k % 2 ? 2 : 1.3}" fill="${v(k === 2 ? "primary-strong" : "moon-mare")}" opacity="0.9"/>`,
+            )
             .join("");
           g += `<ellipse cx="${p.x + 3}" cy="${p.y + 3.4}" rx="2" ry="1.2" fill="${v("moon-dark")}" opacity="0.55"/>`;
         }
@@ -262,7 +271,13 @@ function galaxy(id, { scale = 1, cx = 60, cy = 60, field = true, seed = 41 } = {
     for (let t = 1.6; t < 9.4; t += 0.55) {
       const rr = 4.2 * Math.exp(0.26 * t) + (r() - 0.5) * 3;
       const a = t + arm * Math.PI + (r() - 0.5) * 0.25;
-      knotList.push({ x: rr * Math.cos(a), y: rr * Math.sin(a), r: 0.6 + r() * 0.8, fill: v("moon-lit"), o: f1(0.6 + r() * 0.4) });
+      knotList.push({
+        x: rr * Math.cos(a),
+        y: rr * Math.sin(a),
+        r: 0.6 + r() * 0.8,
+        fill: v("moon-lit"),
+        o: f1(0.6 + r() * 0.4),
+      });
     }
   }
   const knots = dots(knotList);
@@ -343,7 +358,10 @@ function nebula(id) {
       "M34 40C44 36 52 38 62 32",
       "M44 92C56 88 66 90 78 84",
     ]
-      .map((d, i) => `<path d="${d}" fill="none" stroke="${v(i % 2 ? "primary-strong" : "moon-lit")}" stroke-width="${i < 2 ? 1.1 : 0.8}" stroke-linecap="round" opacity="${i < 2 ? 0.5 : 0.35}"/>`)
+      .map(
+        (d, i) =>
+          `<path d="${d}" fill="none" stroke="${v(i % 2 ? "primary-strong" : "moon-lit")}" stroke-width="${i < 2 ? 1.1 : 0.8}" stroke-linecap="round" opacity="${i < 2 ? 0.5 : 0.35}"/>`,
+      )
       .join("")}
     <path d="M30 76C40 70 47 71 55 64C62 58 66 60 74 55C80 51 88 49 96 44C88 52 80 56 74 60C66 65 62 63 56 69C48 76 40 76 30 76Z" fill="${v("moon-dark")}" opacity="0.6"/>
     ${glint(64, 55, 6.5)}
@@ -379,8 +397,9 @@ function laurel(a0, a1, r, mirror) {
 
 function numberArt(id, label, { size, motif, pips = 0, wreath = false, seed }) {
   const y = wreath ? 72 : 76;
-  const pipRow = Array.from({ length: pips }, (_, i) => glint(60 + (i - (pips - 1) / 2) * 11, 94, 3.6, v("moon-lit")))
-    .join("");
+  const pipRow = Array.from({ length: pips }, (_, i) =>
+    glint(60 + (i - (pips - 1) / 2) * 11, 94, 3.6, v("moon-lit")),
+  ).join("");
   return `
     ${starField(seed, n(22, 14), 0)}
     ${wreath ? laurel(160, 255, 40, false) + laurel(20, -75, 40, true) : ""}
@@ -396,7 +415,9 @@ function openCluster(cx, cy, s, seed) {
     const x = cx + (r() - 0.5) * 30 * s;
     const y = cy + (r() - 0.5) * 16 * s;
     const big = i < 4;
-    out += big ? glint(f(x), f(y), f((2.2 + r() * 1.8) * s)) : `<circle cx="${f(x)}" cy="${f(y)}" r="${f((0.6 + r() * 0.5) * s)}" fill="${v("moon-lit")}"/>`;
+    out += big
+      ? glint(f(x), f(y), f((2.2 + r() * 1.8) * s))
+      : `<circle cx="${f(x)}" cy="${f(y)}" r="${f((0.6 + r() * 0.5) * s)}" fill="${v("moon-lit")}"/>`;
   }
   return out;
 }
@@ -417,12 +438,27 @@ export const ART = {
   "first-globular": (id) => globular(id),
   "first-nebula": nebula,
   "messier-10": (id) =>
-    numberArt(id, "10", { size: 36, pips: 1, seed: 71, motif: galaxy(`${id}-m`, { scale: 0.34, cx: 60, cy: 34, field: false, seed: 72 }) }),
+    numberArt(id, "10", {
+      size: 36,
+      pips: 1,
+      seed: 71,
+      motif: galaxy(`${id}-m`, { scale: 0.34, cx: 60, cy: 34, field: false, seed: 72 }),
+    }),
   "messier-25": (id) => numberArt(id, "25", { size: 36, pips: 2, seed: 73, motif: openCluster(60, 34, 1, 74) }),
   "messier-50": (id) =>
-    numberArt(id, "50", { size: 36, pips: 3, seed: 75, motif: globular(`${id}-m`, { cx: 60, cy: 33, radius: 12, count: n(70, 50), field: false, seed: 76 }) }),
+    numberArt(id, "50", {
+      size: 36,
+      pips: 3,
+      seed: 75,
+      motif: globular(`${id}-m`, { cx: 60, cy: 33, radius: 12, count: n(70, 50), field: false, seed: 76 }),
+    }),
   "messier-110": (id) =>
-    numberArt(id, "110", { size: 27, wreath: true, seed: 77, motif: `${glint(60, 34, 9)}${glint(48, 40, 3.2, v("moon-lit"), 0.85)}${glint(72, 40, 3.2, v("moon-lit"), 0.85)}` }),
+    numberArt(id, "110", {
+      size: 27,
+      wreath: true,
+      seed: 77,
+      motif: `${glint(60, 34, 9)}${glint(48, 40, 3.2, v("moon-lit"), 0.85)}${glint(72, 40, 3.2, v("moon-lit"), 0.85)}`,
+    }),
   "caldwell-all": (id) => numberArt(id, "61", { size: 34, wreath: true, seed: 79, motif: planetaryMotif(60, 35) }),
 };
 
@@ -447,7 +483,19 @@ const AHEAD = {
   "messier-110": [37, 110],
   "caldwell-all": [5, 61],
 };
-const DATES = ["14 sie 2026", "10 sie 2026", "3 wrz 2026", "17 cze 2026", "23 cze 2026", "1 cze 2026", "26 cze 2026", "16 sie 2026", "2 wrz 2026", "9 paź 2026", "12 paź 2026"];
+const DATES = [
+  "14 sie 2026",
+  "10 sie 2026",
+  "3 wrz 2026",
+  "17 cze 2026",
+  "23 cze 2026",
+  "1 cze 2026",
+  "26 cze 2026",
+  "16 sie 2026",
+  "2 wrz 2026",
+  "9 paź 2026",
+  "12 paź 2026",
+];
 const KEYS = Object.keys(ART);
 
 // ---------------------------------------------------------------- the badge frame (the component's job)
@@ -484,10 +532,10 @@ const RED_STEP = ROUND1 ? 1 : 0.8;
 const SUFFIX = process.env.SHEET_SUFFIX ?? "";
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-// ---------------------------------------------------------------- sources: one SVG per badge (art only)
+  // ---------------------------------------------------------------- sources: one SVG per badge (art only)
 
-for (const key of KEYS) {
-  const svg = `<!-- ui-progress-rewards badge art, round 1: ${key}. The illustration only, in the 120-unit badge space; the
+  for (const key of KEYS) {
+    const svg = `<!-- ui-progress-rewards badge art, round 1: ${key}. The illustration only, in the 120-unit badge space; the
      ring, disc, arc and check pip belong to MilestoneBadge. Colours are theme tokens (var(--…)) read inside a
      .night-sky scope; detail is by shape, line and value so the red theme (one hue) still reads. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
@@ -495,40 +543,47 @@ for (const key of KEYS) {
   <g clip-path="url(#${key}-src-clip)">${ART[key](`${key}-src`)}</g>
 </svg>
 `;
-  if (!SUFFIX) writeFileSync(join(OUT, `${key}.svg`), svg);
-}
+    if (!SUFFIX) writeFileSync(join(ART_DIR, `${key}.svg`), svg);
+  }
 
-// ---------------------------------------------------------------- the theme tokens, straight from global.css
+  // ---------------------------------------------------------------- the theme tokens, straight from global.css
 
-const css = readFileSync(join(process.cwd(), "src/styles/global.css"), "utf8");
-const tokenBlocks = [];
-{
-  let depth = 0;
-  let start = 0;
-  let selector = "";
-  for (let i = 0; i < css.length; i++) {
-    const ch = css[i];
-    if (ch === "{") {
-      if (depth === 0) {
-        selector = css.slice(start, i).replace(/\/\*[\s\S]*?\*\//g, "").split(";").pop().trim();
-        start = i + 1;
-      }
-      depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth === 0) {
-        const body = css.slice(start, i);
-        if (/^(:root|\[data-theme|\.night-sky)/.test(selector) && !selector.startsWith("@")) {
-          const decls = body.replace(/\/\*[\s\S]*?\*\//g, "").match(/--[\w-]+\s*:[^;]+;/g);
-          if (decls) tokenBlocks.push(`${selector} { ${decls.join(" ")} }`);
+  const css = readFileSync(join(process.cwd(), "src/styles/global.css"), "utf8");
+  const tokenBlocks = [];
+  {
+    let depth = 0;
+    let start = 0;
+    let selector = "";
+    for (let i = 0; i < css.length; i++) {
+      const ch = css[i];
+      if (ch === "{") {
+        if (depth === 0) {
+          selector = css
+            .slice(start, i)
+            .replace(/\/\*[\s\S]*?\*\//g, "")
+            .split(";")
+            .pop()
+            .trim();
+          start = i + 1;
         }
-        start = i + 1;
+        depth++;
+      } else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          const body = css.slice(start, i);
+          if (/^(:root|\[data-theme|\.night-sky)/.test(selector) && !selector.startsWith("@")) {
+            const decls = body.replace(/\/\*[\s\S]*?\*\//g, "").match(/--[\w-]+\s*:[^;]+;/g);
+            if (decls) tokenBlocks.push(`${selector} { ${decls.join(" ")} }`);
+          }
+          start = i + 1;
+        }
       }
     }
   }
-}
-const font = readFileSync(require.resolve("@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2")).toString("base64");
-const head = `<meta charset="utf-8"><style>
+  const font = readFileSync(
+    require.resolve("@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2"),
+  ).toString("base64");
+  const head = `<meta charset="utf-8"><style>
 @font-face{font-family:'Archivo Variable';src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:100 900;font-stretch:62% 125%}
 ${tokenBlocks.join("\n")}
 *{box-sizing:border-box;margin:0}
@@ -552,13 +607,19 @@ body{font-family:'Archivo Variable',sans-serif}
 [data-theme="red"] .red-step{opacity:${RED_STEP}}
 </style>`;
 
-const THEMES = { dark: "Ciemny", light: "Jasny", red: "Czerwony" };
-const item = (key, i, reached, px, uid) => `<div class="item ${reached ? "reached" : "ahead"}">${badge(key, reached, px, uid)}
+  const THEMES = { dark: "Ciemny", light: "Jasny", red: "Czerwony" };
+  const item = (
+    key,
+    i,
+    reached,
+    px,
+    uid,
+  ) => `<div class="item ${reached ? "reached" : "ahead"}">${badge(key, reached, px, uid)}
   <div class="name">${NAMES[key]}</div>
   <div class="status">${reached ? `Osiągnięto: ${DATES[i]}` : AHEAD[key] ? `${AHEAD[key][0]} / ${AHEAD[key][1]}` : "Jeszcze nie"}</div></div>`;
 
-function pageHtml(theme, cols, width) {
-  return `<!doctype html><html data-theme="${theme}"><head>${head}</head><body><div class="page" data-theme="${theme}" style="width:${width}px">
+  function pageHtml(theme, cols, width) {
+    return `<!doctype html><html data-theme="${theme}"><head>${head}</head><body><div class="page" data-theme="${theme}" style="width:${width}px">
   <div style="max-width:768px;margin:0 auto">
   <div class="title">Kamienie milowe · runda 1</div><div class="sub">Motyw: ${THEMES[theme]} · odznaka 112 px · ${cols === 2 ? "telefon 390 px, 2 w rzędzie" : "desktop 1280 px, 4 w rzędzie"}</div>
   <div class="section">ZDOBYTE</div>
@@ -566,34 +627,36 @@ function pageHtml(theme, cols, width) {
   <div class="section">PRZED TOBĄ</div>
   <div class="grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${KEYS.map((k, i) => item(k, i, false, 112, `a${i}`)).join("")}</div>
   </div></div></body></html>`;
-}
+  }
 
-function sheetHtml() {
-  const row = (theme, reached) =>
-    `<div class="strip">${KEYS.map((k, i) => `<div>${badge(k, reached, 104, `${theme}${reached ? "r" : "a"}${i}`)}<div class="k">${k}</div></div>`).join("")}</div>`;
-  return `<!doctype html><html><head>${head}</head><body>${Object.keys(THEMES)
-    .map(
-      (t) => `<div class="page" data-theme="${t}" style="width:1280px;padding:16px 20px">
+  function sheetHtml() {
+    const row = (theme, reached) =>
+      `<div class="strip">${KEYS.map((k, i) => `<div>${badge(k, reached, 104, `${theme}${reached ? "r" : "a"}${i}`)}<div class="k">${k}</div></div>`).join("")}</div>`;
+    return `<!doctype html><html><head>${head}</head><body>${Object.keys(THEMES)
+      .map(
+        (t) => `<div class="page" data-theme="${t}" style="width:1280px;padding:16px 20px">
       <div class="sub" style="margin:0 0 8px">${THEMES[t]} · zdobyte (góra) i przed tobą (dół: 4/7, 7/10, 18/25, 37/50, 37/110, 5/61, pierwsze bez łuku)</div>
       ${row(t, true)}<div style="height:12px"></div>${row(t, false)}</div>`,
-    )
-    .join("")}</body></html>`;
-}
+      )
+      .join("")}</body></html>`;
+  }
 
-const { chromium } = require("@playwright/test");
-const browser = await chromium.launch();
-async function shoot(html, width, file, scale = 2) {
-  const page = await browser.newPage({ viewport: { width, height: 800 }, deviceScaleFactor: scale });
-  await page.setContent(html, { waitUntil: "load" });
-  await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: join(OUT, file), fullPage: true });
-  await page.close();
-  console.log(file);
-}
-await shoot(sheetHtml(), 1280, `badge-art-sheet${SUFFIX}.png`);
-if (!SUFFIX) for (const theme of Object.keys(THEMES)) {
-  await shoot(pageHtml(theme, 2, 390), 390, `badge-art-phone-${theme}.png`);
-  await shoot(pageHtml(theme, 4, 1280), 1280, `badge-art-desktop-${theme}.png`, 1);
-}
-await browser.close();
+  mkdirSync(OUT, { recursive: true });
+  const { chromium } = require("@playwright/test");
+  const browser = await chromium.launch();
+  async function shoot(html, width, file, scale = 2) {
+    const page = await browser.newPage({ viewport: { width, height: 800 }, deviceScaleFactor: scale });
+    await page.setContent(html, { waitUntil: "load" });
+    await page.evaluate("document.fonts.ready");
+    await page.screenshot({ path: join(OUT, file), fullPage: true });
+    await page.close();
+    console.log(file);
+  }
+  await shoot(sheetHtml(), 1280, `badge-art-sheet${SUFFIX}.png`);
+  if (!SUFFIX)
+    for (const theme of Object.keys(THEMES)) {
+      await shoot(pageHtml(theme, 2, 390), 390, `badge-art-phone-${theme}.png`);
+      await shoot(pageHtml(theme, 4, 1280), 1280, `badge-art-desktop-${theme}.png`, 1);
+    }
+  await browser.close();
 }

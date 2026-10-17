@@ -110,14 +110,6 @@ async function expectReached(page: Page, key: MilestoneKey, night: string) {
   await expect(milestone).toContainText(copy.reachedOn({ date: format.formatShortDate(night) }));
 }
 
-/** A dialog that a save opened, closed with Continue; nothing when the save celebrated nothing. */
-async function dismissCelebrationIfOpen(page: Page) {
-  await page.waitForLoadState("load");
-  const open = openCelebration(page);
-  if ((await open.count()) > 0) await open.getByRole("button", { name: copy.celebration.continue }).click();
-  await expect(open).toHaveCount(0);
-}
-
 /** The row is still ahead: no `data-reached`, and `status` (Not yet, or "x / N") as its note. */
 async function expectAhead(page: Page, key: MilestoneKey, status: string) {
   const milestone = row(page, key);
@@ -205,7 +197,8 @@ test("records a milestone once, at save, keeps it listed, and the progress page 
   await rate(form, 4);
   await form.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/log(\?|$)/);
-  await dismissCelebrationIfOpen(page);
+  // "First galaxy" is stored, so the save that reaches it again celebrates nothing (impl review F4).
+  await expectNoCelebration(page);
 
   // 4. Jupiter, logged from the planets page's form (straight to the form: it does not depend on Jupiter being up
   // tonight), reaches the first planet and shows the night it was logged as its first. It is no Messier object, so the

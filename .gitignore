@@ -44,3 +44,6 @@ yarn-error.log*
 .claude/*
 !.claude/settings.json
 !.claude/hooks/
+
+# Badge-art sheets rendered by scripts/badge-art/render.mjs (PNGs never go into git)
+scripts/badge-art/out/

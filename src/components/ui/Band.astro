@@ -7,11 +7,13 @@
  * `headingHidden` keeps the heading for screen readers only, for a band whose page title already names it (the
  * Moon, Planets and Nights pages). `collapsed` (ui-progress-rewards, the progress page's Caldwell band, owner P8 A) puts
  * the heading in the `<summary>` of a native `<details>`, closed on load, with the content inside: no script and no
- * stored state, and the content stays in the DOM. Only this Astro band collapses (no island needs it), so `band.tsx`
+ * stored state, and the content stays in the DOM. The summary and chevron are `disclosure.ts`'s; the chevron turns
+ * through the named group `group/band`, so a disclosure nested in the band keeps its own state. Only this Astro band collapses (no island needs it), so `band.tsx`
  * has no twin of the option.
  */
 import { ChevronDown } from "lucide-react";
 
+import { DISCLOSURE_CHEVRON_CLASS, DISCLOSURE_SUMMARY_CLASS } from "@/components/ui/disclosure";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -37,22 +39,12 @@ const hasAction = Astro.slots.has("action");
   class:list={cn("border-border py-6 not-first:border-t first:pt-0 last:pb-0 sm:py-8", className)}
 >
   {collapsed ? (
-    <details class="group" data-band-collapsible>
-      {/* At least 44 px; the hover tint and the ring run a little past the heading, inside the column. */}
-      <summary
-        class:list={[
-          "-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-2 [&::-webkit-details-marker]:hidden",
-          "transition-colors hover:bg-accent motion-reduce:transition-none",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        ]}
-      >
+    <details class="group/band" data-band-collapsible>
+      <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "justify-between gap-3")}>
         <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
           {heading}
         </h2>
-        <ChevronDown
-          className="size-5 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
-          aria-hidden="true"
-        />
+        <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/band:rotate-180")} aria-hidden="true" />
       </summary>
       <div class="mt-3 sm:mt-4">
         <slot />

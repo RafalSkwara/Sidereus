@@ -6,10 +6,12 @@
 // nothing while none is seen. The row wraps, so a long Polish name stays inside a 320 px column.
 import { ChevronDown } from "lucide-react";
 
+import { DISCLOSURE_CHEVRON_CLASS, DISCLOSURE_SUMMARY_CLASS } from "@/components/ui/disclosure";
 import { getMessages } from "@/i18n";
 import { localCommonName } from "@/lib/catalogue/common-names";
 import type { ChecklistItem } from "@/lib/progress/progress";
 import { createFormatter } from "@/lib/tonight/format";
+import { cn } from "@/lib/utils";
 
 interface Props {
   /** The checklist's items; only the seen ones are listed. */
@@ -28,20 +30,12 @@ const seen = items.flatMap((item) => (item.seen ? [{ item, seen: item.seen }] : 
 ---
 
 {seen.length > 0 && (
-  <details class="group mt-group" data-seen-details>
-    {/* At least 44 px. Closed on load (owner P8 A): the tiles above already name every seen object. */}
-    <summary
-      class:list={[
-        "-mx-2 flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 [&::-webkit-details-marker]:hidden",
-        "text-label font-semibold text-heading transition-colors hover:bg-accent motion-reduce:transition-none",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-      ]}
-    >
+  <details class="group/seen mt-group" data-seen-details>
+    {/* Closed on load (owner P8 A): the tiles above already name every seen object. Its own named group, so the
+    chevron follows this list and not the Caldwell band around it (impl review F1). */}
+    <summary class:list={cn(DISCLOSURE_SUMMARY_CLASS, "gap-2 text-label font-semibold text-heading")}>
       <span class="min-w-0 flex-1 break-words">{`${t.seenHeading} · ${String(seen.length)}`}</span>
-      <ChevronDown
-        className="size-5 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
-        aria-hidden="true"
-      />
+      <ChevronDown className={cn(DISCLOSURE_CHEVRON_CLASS, "group-open/seen:rotate-180")} aria-hidden="true" />
     </summary>
     <ul aria-label={label} class="mt-line divide-y divide-border" data-seen-list>
       {seen.map(({ item, seen: summary }) => {
