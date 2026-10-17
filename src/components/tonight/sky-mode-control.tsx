@@ -1,4 +1,4 @@
-import { FoldVertical, Maximize2, RectangleHorizontal, type LucideIcon } from "lucide-react";
+import { createLucideIcon, FoldVertical, Maximize2, RectangleHorizontal, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 import { SegmentedGroup } from "@/components/ui/segmented";
 import { getMessages } from "@/i18n";
@@ -14,14 +14,30 @@ import { cn } from "@/lib/utils";
  * `<html>` as it opens, which follows a theme changed since (impl review F4). The panel is placed under the trigger as
  * it opens and closes when the page scrolls the trigger away, so it never hangs detached in the viewport.
  *
+ * The trigger always shows `SkyViewIcon`, never the current mode's icon (ui-sky-mode-trigger, owner pick C): the mode
+ * icons are the menu's options, and DEFAULT's rectangle on the trigger read as an image that failed to load. The
+ * current mode stays in the accessible name and in `data-sky-mode-trigger`.
+ *
  * Island-safe: React, lucide, `SegmentedGroup`, the catalogue, the preferences and `cn` (`island-imports.test.ts`).
  */
 
-export const MODE_ICONS: Record<SkyMode, LucideIcon> = {
+const MODE_ICONS: Record<SkyMode, LucideIcon> = {
   hidden: FoldVertical,
   default: RectangleHorizontal,
   expanded: Maximize2,
 };
+
+/**
+ * "Change the sky view", lucide-style (24 grid, stroke 2, round caps), simplified for its 20 px size: a star over one
+ * peak on the horizon, and the up / down cue for the band's height. Read by shape alone, so red mode needs no hue.
+ */
+export const SkyViewIcon = createLucideIcon("sky-view", [
+  ["path", { d: "M7 3.5 8 6l2.5 1L8 8l-1 2.5L6 8 3.5 7 6 6z", key: "star" }],
+  ["path", { d: "M2 19h12", key: "horizon" }],
+  ["path", { d: "m4 19 4-5 4 5", key: "peak" }],
+  ["path", { d: "m16 9 3-3 3 3", key: "up" }],
+  ["path", { d: "m16 15 3 3 3-3", key: "down" }],
+]);
 
 /** The trigger: a bare 44 px target like the pan chevrons, its face passed in so the contrast test covers it. */
 export const SKY_MODE_TRIGGER_CLASS =
@@ -60,7 +76,6 @@ export function SkyModeControl({ mode, locale, theme, onChoose, faceClassName, c
   const labelId = `${panelId}-label`;
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const Icon = MODE_ICONS[mode];
 
   // As it opens, the panel takes the page's current theme (not the navy sky's around it: ui-sky-light's rule for
   // popovers in the scope) and its place under the trigger. While it is open, a page scroll that moves the trigger
@@ -109,7 +124,7 @@ export function SkyModeControl({ mode, locale, theme, onChoose, faceClassName, c
         data-sky-mode-trigger={mode}
       >
         <span className={faceClassName}>
-          <Icon className="size-5" aria-hidden="true" />
+          <SkyViewIcon className="size-5" aria-hidden="true" />
         </span>
       </button>
       <div

@@ -82,11 +82,11 @@ import TonightSkeleton from "@/components/tonight/TonightSkeleton.astro";
 import TonightSky from "@/components/tonight/TonightSky.astro";
 import TonightSkyView, { PAN_FACE_CLASS } from "@/components/tonight/TonightSkyView";
 import {
-  MODE_ICONS,
   SKY_MODE_MENU_LABEL_CLASS,
   SKY_MODE_MENU_SURFACE_CLASS,
   SKY_MODE_TRIGGER_CLASS,
   SkyModeControl,
+  SkyViewIcon,
 } from "@/components/tonight/sky-mode-control";
 import { SKY_MODES } from "@/lib/preferences";
 import TonightSubNav from "@/components/tonight/TonightSubNav.astro";
@@ -854,9 +854,7 @@ const segmentedSpecimens = [
   { state: "focus-visible · specimen (pressed)", segmentClassName: segmentFocusSpecimen, disabled: false, live: false },
   { state: "disabled (one option)", segmentClassName: undefined, disabled: true, live: true },
 ] as const;
-// The sky-view trigger's icons, as components (a React element would not render inside Astro markup).
-const DefaultModeIcon = MODE_ICONS.default;
-const ExpandedModeIcon = MODE_ICONS.expanded;
+// The sky-view menu's icons, as components (a React element would not render inside Astro markup).
 const skyModeIcon = (icon: typeof FoldVertical) => createElement(icon, { className: "size-4" });
 const skyModeOptions = [
   { value: "hidden", label: m.tonight.sky.mode.options.hidden, icon: skyModeIcon(FoldVertical) },
@@ -2532,10 +2530,10 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               Sky view control
             </h3>
             <p class:list={blockNote}>
-              The 44 px trigger at the top right of the verdict's column (its face is the pan chevrons'), opening a
-              native popover with the three modes as a vertical SegmentedGroup. The static trigger opens its menu
-              without JavaScript; the forced looks are inert copies; the hydrated control is in each Sky modes specimen
-              above.
+              The 44 px trigger at the top right of the verdict's column (its face is the pan chevrons'; always the
+              sky-view icon, whatever the mode, which only the accessible name says), opening a native popover with the
+              three modes as a vertical SegmentedGroup. The static trigger opens its menu without JavaScript; the forced
+              looks are inert copies; the hydrated control is in each Sky modes specimen above.
             </p>
             <div class:list={grid}>
               <div class:list={cell}>
@@ -2558,7 +2556,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class="night-sky flex justify-end rounded-lg bg-zenith p-4" inert>
                   <span class:list={[SKY_MODE_TRIGGER_CLASS]}>
                     <span class:list={[PAN_FACE_CLASS, "opacity-100"]}>
-                      <DefaultModeIcon className="size-5" aria-hidden="true" />
+                      <SkyViewIcon className="size-5" aria-hidden="true" />
                     </span>
                   </span>
                 </div>
@@ -2568,7 +2566,7 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
                 <div class="night-sky flex justify-end rounded-lg bg-zenith p-4" inert>
                   <span class:list={[SKY_MODE_TRIGGER_CLASS, "outline-2 -outline-offset-2 outline-ring"]}>
                     <span class:list={[PAN_FACE_CLASS, "opacity-100"]}>
-                      <ExpandedModeIcon className="size-5" aria-hidden="true" />
+                      <SkyViewIcon className="size-5" aria-hidden="true" />
                     </span>
                   </span>
                 </div>
