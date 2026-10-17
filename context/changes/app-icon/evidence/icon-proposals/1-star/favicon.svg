@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Proposal 1, favicon (16 and 32 px): flat token zenith #050916 tile, one token primary #f2f4f8 star, no companion. -->
+  <rect width="32" height="32" rx="7" fill="#050916"/>
+  <path fill="#f2f4f8" d="M16 2Q17.7 14.3 27.5 16Q17.7 17.7 16 30Q14.3 17.7 4.5 16Q14.3 14.3 16 2Z"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Round 2, proposal 1, favicon (16 and 32 px): the same sky and ground, the main star with a thicker waist, the companion as a small spark top right. -->
+  <defs>
+    <linearGradient id="r21f-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.55" stop-color="#1b2a55"/><stop offset="0.78" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#r21f-sky)"/>
+  <path fill="#070a12" d="M0 25Q8 21.5 17 23T32 22V25Q32 32 25 32H7Q0 32 0 25Z"/>
+  <path fill="#f2f4f8" d="M14.5 2.5Q15.8 11.7 23 13Q15.8 14.3 14.5 23.5Q13.2 14.3 6 13Q13.2 11.7 14.5 2.5Z"/>
+  <path fill="#c3d0ff" d="M25 2.5Q25.5 6 28.3 6.5Q25.5 7 25 10.5Q24.5 7 21.7 6.5Q24.5 6 25 2.5Z"/>
+</svg>

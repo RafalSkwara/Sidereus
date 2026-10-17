@@ -778,6 +778,45 @@ const moonCardWashedOutLink = {
   label: plural(locale, moonCardWashedOut, m.tonight.pages.seeWashedOut)({ count: String(moonCardWashedOut) }),
 };
 
+// App icon (app-icon): the shipped files, read from public/ by URL, so the specimen shows exactly what the tab, the
+// home screen and a launcher get. `npm run icons:build` writes the PNGs and the ICO from public/pwa-icon.svg,
+// public/pwa-maskable.svg and public/favicon.svg (pwa-assets*.config.mjs); the sources and the comparison sheet are in
+// the app-icon change's evidence (icon-proposals/final/).
+const appIconGroups = [
+  {
+    id: "tab",
+    title: "Tab",
+    note: "favicon.svg is linked first; favicon.png (32 px) is the fallback. The 16 px star has a thicker waist so it stays a star.",
+    items: [
+      { src: "/favicon.svg", label: "16 · svg", size: "size-4" },
+      { src: "/favicon.png", label: "16 · png", size: "size-4" },
+      { src: "/favicon.svg", label: "32 · svg", size: "size-8" },
+      { src: "/favicon.png", label: "32 · png", size: "size-8" },
+    ],
+  },
+  {
+    id: "home",
+    title: "Home screen",
+    note: "The manifest's 64, 192 and 512 icons and the apple-touch icon (iOS rounds its corners).",
+    items: [
+      { src: "/pwa-64x64.png", label: "64 · pwa-64x64", size: "size-16" },
+      { src: "/pwa-192x192.png", label: "96 · pwa-192x192", size: "size-24" },
+      { src: "/apple-touch-icon-180x180.png", label: "128 · apple-touch 180", size: "size-32 rounded-3xl" },
+      { src: "/pwa-512x512.png", label: "128 · pwa-512x512", size: "size-32" },
+    ],
+  },
+  {
+    id: "maskable",
+    title: "Maskable",
+    note: "The sky and ground run full bleed; the star sits inside the central safe circle, so any launcher mask keeps it whole.",
+    items: [
+      { src: "/maskable-icon-512x512.png", label: "128 · circle", size: "size-32 rounded-full" },
+      { src: "/maskable-icon-512x512.png", label: "128 · squircle", size: "size-32 rounded-3xl" },
+      { src: "/maskable-icon-512x512.png", label: "128 · unmasked", size: "size-32" },
+    ],
+  },
+] as const;
+
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
 const blockTitle = "font-display text-title font-semibold text-heading";
 const blockNote = "text-sm text-muted-foreground";
@@ -905,6 +944,34 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
               ))}
             </ul>
           </div>
+        </div>
+      </Band>
+
+      <Band headingId="app-icon-heading" heading="App icon">
+        <div class="flex flex-col gap-6" data-app-icon>
+          <p class:list={blockNote}>
+            A white star (primary) over a dusk horizon (zenith, horizon, dusk-glow-horizon) and the ground (background),
+            as literal hex inside each file, since an icon cannot read the tokens. States: the theme switch shows dark,
+            light and red; in red the page's image filter turns the icon red like any image, but the browser tab and an
+            installed icon sit outside the page and keep their colours. Hover, focus, disabled, loading, error and empty
+            do not apply to a static image.
+          </p>
+          {appIconGroups.map((group) => (
+            <section class="flex flex-col gap-3" aria-labelledby={`app-icon-${group.id}`}>
+              <h3 id={`app-icon-${group.id}`} class:list={groupTitle}>
+                {group.title}
+              </h3>
+              <p class:list={blockNote}>{group.note}</p>
+              <ul class="flex flex-wrap items-end gap-6">
+                {group.items.map((item) => (
+                  <li class="flex flex-col items-center gap-2">
+                    <img src={item.src} alt="" class:list={["shrink-0", item.size]} />
+                    <span class:list={stateLabel}>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
       </Band>
 

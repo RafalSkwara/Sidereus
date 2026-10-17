@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Proposal 2, favicon (16 and 32 px): flat token zenith #050916 tile, token primary-strong #c3d0ff planet, thicker token marginal #f1cf6b ring, no star. -->
+  <defs>
+    <mask id="p2f-groove" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff"/>
+      <path transform="translate(16 16.5) rotate(-22)" d="M-14 0A14 4.6 0 0 0 14 0" fill="none" stroke="#000" stroke-width="5.4"/>
+    </mask>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#050916"/>
+  <ellipse transform="translate(16 16.5) rotate(-22)" rx="14" ry="4.6" fill="none" stroke="#f1cf6b" stroke-width="2.8"/>
+  <circle cx="16" cy="16.5" r="9" fill="#c3d0ff" mask="url(#p2f-groove)"/>
+  <path transform="translate(16 16.5) rotate(-22)" d="M-14 0A14 4.6 0 0 0 14 0" fill="none" stroke="#f1cf6b" stroke-width="2.8" stroke-linecap="round"/>
+</svg>

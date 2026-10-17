@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="#050916"/><path fill="#f2f4f8" transform="translate(12 12) scale(0.7) translate(-12 -12)" d="M12 2 13.8 10.2 22 12l-8.2 1.8L12 22l-1.8-8.2L2 12l8.2-1.8Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Sidereus app icon (app-icon, owner's pick 2026-10-17): R2-4's dusk composition with a single white star, centred horizontally (owner, 2026-10-17). sky token zenith #050916, token horizon #1b2a55, token dusk-glow-horizon #6a3226; ground token background #070a12; star token primary #f2f4f8. -->
+  <defs>
+    <linearGradient id="si-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.55" stop-color="#1b2a55"/><stop offset="0.76" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#si-sky)"/>
+  <path fill="#070a12" d="M0 400Q128 336 272 364T512 350V512H0Z"/>
+  <path fill="#f2f4f8" d="M256 64Q256 206 368 206Q256 206 256 348Q256 206 144 206Q256 206 256 64Z"/>
+</svg>

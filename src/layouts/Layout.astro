@@ -22,7 +22,12 @@ const { title = m.common.appName } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    {/*
+     * app-icon: the tab icon, the SVG first and its 32 px PNG as the fallback (both from public/favicon.svg, see
+     * pwa-assets.favicon.config.mjs); /favicon.ico needs no link, it answers clients that ask for it unprompted.
+     */}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     {/* S-06: installable. The theme colour lives in the manifest (literal hex is not allowed under src/). */}
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />

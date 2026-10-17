@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Proposal 3, favicon (16 and 32 px): the same sky stops (token zenith, token horizon, token dusk-glow-horizon), a flatter token background #070a12 ground and a larger #fde68a star. -->
+  <defs>
+    <linearGradient id="p3f-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050916"/>
+      <stop offset="0.55" stop-color="#1b2a55"/>
+      <stop offset="0.78" stop-color="#6a3226"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#p3f-sky)"/>
+  <path fill="#070a12" d="M0 25Q8 21.5 17 23T32 22V25Q32 32 25 32H7Q0 32 0 25Z"/>
+  <path fill="#fde68a" d="M16 2.5Q17.3 11.7 24.5 13Q17.3 14.3 16 23.5Q14.7 14.3 7.5 13Q14.7 11.7 16 2.5Z"/>
+</svg>

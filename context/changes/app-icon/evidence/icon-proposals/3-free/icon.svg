@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Proposal 3, horizon star: Tonight's band as a glyph. Sky: token zenith #050916, token horizon #1b2a55, then token dusk-glow-horizon #6a3226 at the horizon line. Ground: token background #070a12. Star: token star-accent's base colour #fde68a (the token is that colour at 30 %). -->
+  <defs>
+    <linearGradient id="p3-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050916"/>
+      <stop offset="0.55" stop-color="#1b2a55"/>
+      <stop offset="0.76" stop-color="#6a3226"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#p3-sky)"/>
+  <path fill="#070a12" d="M0 400Q128 336 272 364T512 350V512H0Z"/>
+  <path fill="#fde68a" d="M256 52Q256 208 380 208Q256 208 256 364Q256 208 132 208Q256 208 256 52Z"/>
+</svg>
