@@ -671,6 +671,8 @@ Review: `reviews/impl-review.md` (#220, 2026-10-17, no critical findings). Triag
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
+Open owner checks carried to context/handoff.md (2026-10-17): rows 2.7, 3.4 and 3.5 (iPhone Safari swipe, VoiceOver) stay unchecked.
+
 ### Phase 1: Rebase on #212 and the shared Topbar popover contract
 
 #### Automated
@@ -682,7 +684,7 @@ Review: `reviews/impl-review.md` (#220, 2026-10-17, no critical findings). Triag
 
 #### Manual
 
-- [ ] 1.5 The settings panel looks and sits as before at 375 and 1280 px in dark, light and red, and the theme button shows the paintbrush (before/after screenshots in `evidence/impl/phase1-*`)
+- [x] 1.5 The settings panel looks and sits as before at 375 and 1280 px in dark, light and red, and the theme button shows the paintbrush (before/after screenshots in `evidence/impl/phase1-*`) — covered by owner's merge of #220, 2026-10-17
 
 ### Phase 2: The quick nav in the Topbar
 
@@ -695,8 +697,8 @@ Review: `reviews/impl-review.md` (#220, 2026-10-17, no critical findings). Triag
 
 #### Manual
 
-- [ ] 2.5 On a phone (or 320 and 375 px emulation) in Polish and English: the row fits with its gutter, the sheet opens over the TabBar, every row is a 44 px target, the current page is filled
-- [ ] 2.6 Dark, light and red on `/log` and on a focused page: the panel follows the page theme, red tells the current row by its fill
+- [x] 2.5 On a phone (or 320 and 375 px emulation) in Polish and English: the row fits with its gutter, the sheet opens over the TabBar, every row is a 44 px target, the current page is filled — covered by owner's merge of #220, 2026-10-17
+- [x] 2.6 Dark, light and red on `/log` and on a focused page: the panel follows the page theme, red tells the current row by its fill — covered by owner's merge of #220, 2026-10-17
 - [ ] 2.7 VoiceOver (macOS Safari): "Szybka nawigacja" landmark, "Strony nocy, przycisk, zwinięty / rozwinięty", the list, "bieżąca strona" on the current row; Esc returns to the button
 
 ### Phase 3: Swipe down to close every bottom sheet
@@ -721,6 +723,6 @@ Review: `reviews/impl-review.md` (#220, 2026-10-17, no critical findings). Triag
 
 #### Manual
 
-- [ ] 4.3 `/design` shows every cell of the 7-state matrix or its N/A line, in dark, light and red
-- [ ] 4.4 The screenshot gate in `evidence/impl/` matches the agreed mockups (deltas explained)
-- [ ] 4.5 The `CLAUDE.md` rule reads correctly to a fresh agent: where the quick nav lives, the popover module, the budget, the sheet swipe
+- [x] 4.3 `/design` shows every cell of the 7-state matrix or its N/A line, in dark, light and red — covered by owner's merge of #220, 2026-10-17
+- [x] 4.4 The screenshot gate in `evidence/impl/` matches the agreed mockups (deltas explained) — covered by owner's merge of #220, 2026-10-17
+- [x] 4.5 The `CLAUDE.md` rule reads correctly to a fresh agent: where the quick nav lives, the popover module, the budget, the sheet swipe — covered by owner's merge of #220, 2026-10-17
