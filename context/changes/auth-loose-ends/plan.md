@@ -317,5 +317,5 @@ None: no schema, no data, no environment change. Rollback is reverting the PR; n
 
 #### Manual
 
-- [x] 3.5 Service worker purge still works: in a production preview with the worker active, sign in, open Tonight so a copy is stored, delete only the auth cookie in DevTools (the copy stays), sign up a new account from `/auth/signup`, and `/offline` lists no stored page
+- [x] 3.5 Service worker purge still works: in a production preview with the worker active, sign in, open Tonight so a copy is stored, delete only the auth cookie in DevTools (the copy stays), sign up a new account from `/auth/signup`, and `/offline` lists no stored page — fd1a24b
 - [ ] 3.6 The docs read correctly: the new `CLAUDE.md` sentence and the test counts match what the diff added
