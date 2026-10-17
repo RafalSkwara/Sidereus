@@ -17,71 +17,85 @@ function clientAnswering(answer: () => Promise<unknown>): TypedSupabaseClient {
   return { from: () => query } as unknown as TypedSupabaseClient;
 }
 
+/** An error as the client returns it: an `Error` carrying a PostgREST code and a message that can echo a value. */
+function failure(name: string, code: string, message: string): Error {
+  return Object.assign(new Error(message), { name, code });
+}
+
+/** A client that throws a value that is not an `Error`, which a driver can do. */
+function rejecting(value: unknown): () => Promise<unknown> {
+  // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- a client can throw a non-Error.
+  return () => Promise.reject(value);
+}
+
 describe("accountPlanStore.read", () => {
-  it("returns the stored plan, and none for a user without a row", async () => {
-    const full = clientAnswering(() => Promise.resolve({ data: { plan: "full" }, error: null }));
-    expect(await accountPlanStore.read(full, USER_ID)).toEqual({ plan: "full" });
-    const none = clientAnswering(() => Promise.resolve({ data: null, error: null }));
-    expect(await accountPlanStore.read(none, USER_ID)).toEqual({ plan: undefined });
-  });
-
-  /** An error as the client returns it: an `Error` carrying a PostgREST code and a message that can echo a value. */
-  function failure(name: string, code: string, message: string): Error {
-    return Object.assign(new Error(message), { name, code });
-  }
-
-  it("reports the database error's code and name apart, never its message", async () => {
-    const refused = clientAnswering(() =>
-      Promise.resolve({
-        data: null,
-        error: failure("PostgrestError", "42501", "permission denied for table account_plans"),
-      }),
-    );
-    expect(await accountPlanStore.read(refused, USER_ID)).toEqual({
-      error: true,
-      code: "42501",
-      name: "PostgrestError",
-    });
-  });
-
-  it("reports the name alone when the code is empty, as for a failed fetch", async () => {
-    const unreachable = clientAnswering(() =>
-      Promise.resolve({ data: null, error: failure("PostgrestError", "", "TypeError: fetch failed") }),
-    );
-    expect(await accountPlanStore.read(unreachable, USER_ID)).toEqual({ error: true, name: "PostgrestError" });
-  });
-
-  it("keeps a long class name as a name, never as a code", async () => {
-    const authFetch = clientAnswering(() =>
-      Promise.resolve({ data: null, error: failure("AuthRetryableFetchError", "", "fetch failed for a@example.test") }),
-    );
-    expect(await accountPlanStore.read(authFetch, USER_ID)).toEqual({ error: true, name: "AuthRetryableFetchError" });
-    // A code that does not have a code's shape is dropped, not logged as something else.
-    const odd = clientAnswering(() =>
-      Promise.resolve({ data: null, error: failure("PostgrestError", "has a space or is too long", "x") }),
-    );
-    expect(await accountPlanStore.read(odd, USER_ID)).toEqual({ error: true, name: "PostgrestError" });
-  });
-
-  it("reports a thrown error by its name only", async () => {
-    const thrown = clientAnswering(() => Promise.reject(new TypeError("secret detail")));
-    expect(await accountPlanStore.read(thrown, USER_ID)).toEqual({ error: true, name: "TypeError" });
-    const coded = clientAnswering(() =>
-      Promise.reject(failure("DriverError", "08006", "connection to a@example.test")),
-    );
-    expect(await accountPlanStore.read(coded, USER_ID)).toEqual({ error: true, code: "08006", name: "DriverError" });
-  });
-
-  it("takes a name only from an Error and drops a name that is not an identifier", async () => {
-    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- a client can throw a non-Error.
-    const text = clientAnswering(() => Promise.reject("a string"));
-    expect(await accountPlanStore.read(text, USER_ID)).toEqual({ error: true });
-    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- a client can throw a non-Error.
-    const plain = clientAnswering(() => Promise.reject({ name: "PostgrestError", code: "42501", message: "x" }));
-    expect(await accountPlanStore.read(plain, USER_ID)).toEqual({ error: true, code: "42501" });
-    const sentence = clientAnswering(() =>
-      Promise.reject(Object.assign(new Error("x"), { name: "failed for a@b.test" })),
-    );
-    expect(await accountPlanStore.read(sentence, USER_ID)).toEqual({ error: true });
+  it("returns the stored plan, and reports a failure by code and name apart, never by message", async () => {
+    const cases: { name: string; answer: () => Promise<unknown>; expected: object }[] = [
+      {
+        name: "a stored plan",
+        answer: () => Promise.resolve({ data: { plan: "full" }, error: null }),
+        expected: { plan: "full" },
+      },
+      {
+        name: "a user without a row",
+        answer: () => Promise.resolve({ data: null, error: null }),
+        expected: { plan: undefined },
+      },
+      {
+        name: "a database error: code and name apart",
+        answer: () =>
+          Promise.resolve({
+            data: null,
+            error: failure("PostgrestError", "42501", "permission denied for table account_plans"),
+          }),
+        expected: { error: true, code: "42501", name: "PostgrestError" },
+      },
+      {
+        name: "an empty code, as for a failed fetch: the name alone",
+        answer: () => Promise.resolve({ data: null, error: failure("PostgrestError", "", "TypeError: fetch failed") }),
+        expected: { error: true, name: "PostgrestError" },
+      },
+      {
+        name: "a long class name stays a name, never a code",
+        answer: () =>
+          Promise.resolve({
+            data: null,
+            error: failure("AuthRetryableFetchError", "", "fetch failed for a@example.test"),
+          }),
+        expected: { error: true, name: "AuthRetryableFetchError" },
+      },
+      {
+        name: "a code without a code's shape is dropped",
+        answer: () =>
+          Promise.resolve({ data: null, error: failure("PostgrestError", "has a space or is too long", "x") }),
+        expected: { error: true, name: "PostgrestError" },
+      },
+      {
+        name: "a thrown error: its name only",
+        answer: () => Promise.reject(new TypeError("secret detail")),
+        expected: { error: true, name: "TypeError" },
+      },
+      {
+        name: "a thrown error with a code",
+        answer: () => Promise.reject(failure("DriverError", "08006", "connection to a@example.test")),
+        expected: { error: true, code: "08006", name: "DriverError" },
+      },
+      { name: "a thrown string", answer: rejecting("a string"), expected: { error: true } },
+      {
+        name: "a thrown plain object: a name only from an Error",
+        answer: rejecting({ name: "PostgrestError", code: "42501", message: "x" }),
+        expected: { error: true, code: "42501" },
+      },
+      {
+        name: "a name that is not an identifier is dropped",
+        answer: () => Promise.reject(Object.assign(new Error("x"), { name: "failed for a@b.test" })),
+        expected: { error: true },
+      },
+    ];
+    // Non-vacuity: every answer shape is tried.
+    expect(cases).toHaveLength(11);
+    for (const { name, answer, expected } of cases) {
+      expect(await accountPlanStore.read(clientAnswering(answer), USER_ID), name).toEqual(expected);
+    }
   });
 });

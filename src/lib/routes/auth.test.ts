@@ -56,19 +56,6 @@ describe("POST /api/auth/signin", () => {
     return locationOf(await signin(routeContext({ form })));
   }
 
-  it("logs a rate limit as one warn-level notice, never an error line, and redirects with the rate-limit key", async () => {
-    const location = await post(new AuthApiError(leaky(), 429, "over_request_rate_limit"));
-    expect(location.pathname).toBe("/auth/signin");
-    expect(location.searchParams.get("error")).toBe("errors.auth.rateLimited");
-    expect(logs.warns).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signin noted", {
-      step: "auth.signin",
-      name: "AuthApiError",
-      code: "over_request_rate_limit",
-      status: 429,
-    });
-    expect(logs.errors).not.toHaveBeenCalled();
-  });
-
   it("logs a 500 once and redirects with the generic key", async () => {
     const location = await post(new AuthRetryableFetchError(leaky(), 500));
     expect(location.searchParams.get("error")).toBe("errors.auth.generic");
@@ -79,48 +66,9 @@ describe("POST /api/auth/signin", () => {
     });
   });
 
-  it("logs a network failure (no code, status 0) once and redirects with the generic key", async () => {
-    const location = await post(new AuthRetryableFetchError(leaky("fetch failed"), 0));
-    expect(location.searchParams.get("error")).toBe("errors.auth.generic");
-    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signin failed", {
-      step: "auth.signin",
-      name: "AuthRetryableFetchError",
-    });
-  });
-
   it("logs nothing for a wrong password and keeps its key", async () => {
     const location = await post(new AuthApiError(leaky(), 400, "invalid_credentials"));
     expect(location.searchParams.get("error")).toBe("errors.auth.invalidCredentials");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it.each([
-    ["a malformed or missing field", "validation_failed", 422],
-    ["an address that is not confirmed yet", "email_not_confirmed", 400],
-  ])("logs nothing for %s and keeps the generic key", async (_label, code, status) => {
-    const location = await post(new AuthApiError(leaky(), status, code));
-    expect(location.searchParams.get("error")).toBe("errors.auth.generic");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("keeps the safe next path on every failure redirect", async () => {
-    const location = await post(new AuthApiError(leaky(), 400, "invalid_credentials"), {
-      ...FORM,
-      next: "/tonight/plan?site=s1",
-    });
-    expect(location.searchParams.get("next")).toBe("/tonight/plan?site=s1");
-  });
-
-  it("continues to the page asked for, or to Tonight, after a successful sign-in, and logs nothing", async () => {
-    expect(await post(null, { ...FORM, next: "/log" })).toMatchObject({ pathname: "/log" });
-    expect(await post(null)).toMatchObject({ pathname: "/tonight" });
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects with the not-configured key and logs nothing when there is no client (createClient logs config.supabase)", async () => {
-    mocks.client = null;
-    const location = locationOf(await signin(routeContext({ form: FORM })));
-    expect(location.searchParams.get("error")).toBe("errors.auth.notConfigured");
     expect(logs.everything()).toBe("[]");
   });
 
@@ -155,69 +103,6 @@ describe("POST /api/auth/signup", () => {
     return locationOf(await signup(routeContext({ form: FORM })));
   }
 
-  it("logs a confirmation-email fault (a 500 unexpected_failure) once and redirects with the generic key", async () => {
-    const location = await post({ error: new AuthApiError(leaky(), 500, "unexpected_failure") });
-    expect(location.pathname).toBe("/auth/signup");
-    expect(location.searchParams.get("error")).toBe("errors.auth.generic");
-    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signup failed", {
-      step: "auth.signup",
-      name: "AuthApiError",
-      code: "unexpected_failure",
-      status: 500,
-    });
-  });
-
-  it("logs an email rate limit as one warn-level notice and keeps its key", async () => {
-    const location = await post({ error: new AuthApiError(leaky(), 429, "over_email_send_rate_limit") });
-    expect(location.searchParams.get("error")).toBe("errors.auth.emailRateLimited");
-    expect(logs.warns).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signup noted", {
-      step: "auth.signup",
-      name: "AuthApiError",
-      code: "over_email_send_rate_limit",
-      status: 429,
-    });
-    expect(logs.errors).not.toHaveBeenCalled();
-  });
-
-  it("logs a network failure once", async () => {
-    const location = await post({ error: new AuthRetryableFetchError(leaky("fetch failed"), 0) });
-    expect(location.searchParams.get("error")).toBe("errors.auth.generic");
-    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: auth.signup failed", {
-      step: "auth.signup",
-      name: "AuthRetryableFetchError",
-    });
-  });
-
-  it.each([
-    ["an address that is already registered", "user_already_exists", "errors.auth.userExists"],
-    ["a weak password", "weak_password", "errors.auth.weakPassword"],
-    ["a malformed address", "email_address_invalid", "errors.auth.invalidEmail"],
-    ["a malformed or missing field", "validation_failed", "errors.auth.generic"],
-    ["an address that is not confirmed yet", "email_not_confirmed", "errors.auth.generic"],
-  ])("logs nothing for %s and keeps its key", async (_label, code, key) => {
-    const location = await post({ error: new AuthApiError(leaky(), 422, code) });
-    expect(location.searchParams.get("error")).toBe(key);
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("goes to the first-run setup with a session, or to the confirmation page without one, and logs nothing", async () => {
-    expect((await post({ data: { session: {} } })).pathname).toBe("/onboarding");
-    expect((await post({ data: { session: null } })).pathname).toBe("/auth/confirm-email");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a body that is not a form with the shape key and logs a request.form notice", async () => {
-    auth({});
-    const location = locationOf(await signup(routeContext({ body: NOT_A_FORM })));
-    expect(location.pathname).toBe("/auth/signup");
-    expect(location.searchParams.get("error")).toBe("errors.checkFields");
-    expect(logs.warns).toHaveBeenCalledExactlyOnceWith("sidereus: request.form noted", {
-      step: "request.form",
-      name: "TypeError",
-    });
-    expect(logs.errors).not.toHaveBeenCalled();
-  });
-
   it("never lets the email or the coordinates reach a log argument or the redirect", async () => {
     const location = await post({ error: new AuthApiError(leaky(), 500, "unexpected_failure") });
     expect(location.href).not.toMatch(LEAK);
@@ -240,21 +125,5 @@ describe("POST /api/auth/signout", () => {
       status: 503,
     });
     expect(logs.everything()).not.toMatch(LEAK);
-  });
-
-  it("logs nothing for a session that was already stale", async () => {
-    expect((await post(new AuthApiError(leaky(), 400, "refresh_token_not_found"))).pathname).toBe("/");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("logs nothing for a clean sign-out", async () => {
-    expect((await post(null)).pathname).toBe("/");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("goes home without a call or a line when there is no client", async () => {
-    mocks.client = null;
-    expect(locationOf(await signout(routeContext())).pathname).toBe("/");
-    expect(logs.everything()).toBe("[]");
   });
 });

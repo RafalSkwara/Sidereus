@@ -17,14 +17,6 @@ describe("authErrorKey", () => {
 });
 
 describe("issueKey", () => {
-  it("passes a schema's key through", () => {
-    const parsed = siteInputSchema.safeParse({ name: "Home", latitudeDeg: "95" });
-    expect(parsed.success).toBe(false);
-    if (!parsed.success) {
-      expect(issueKey(parsed.error)).toBe("errors.site.latitudeRange");
-    }
-  });
-
   it("never lets a non-key message into the URL", () => {
     const parsed = siteInputSchema.safeParse(null);
     expect(parsed.success).toBe(false);

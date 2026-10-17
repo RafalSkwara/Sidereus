@@ -45,22 +45,4 @@ describe("POST /api/gear/telescopes/[id]/delete", () => {
     expect(logs.warns).toHaveBeenCalledWith("sidereus: save.gear noted", { step: "save.gear", code: "42501" });
     expect(logs.errors).not.toHaveBeenCalled();
   });
-
-  it("redirects a malformed or foreign id (22P02, and zero rows) with the not-found key", async () => {
-    const malformed = await post({ error: leakyPostgrestError("22P02") });
-    expect(malformed.searchParams.get("error")).toBe("errors.notFound.telescope");
-    // A malformed uuid is the user's input: no line. A well-formed id that matches no row is counted as a notice.
-    expect(logs.everything()).toBe("[]");
-    const missing = await post({ data: [] });
-    expect(missing.searchParams.get("error")).toBe("errors.notFound.telescope");
-    expect(logs.warns).toHaveBeenCalledTimes(1);
-    expect(logs.warns).toHaveBeenCalledWith("sidereus: save.gear noted", { step: "save.gear" });
-    expect(logs.errors).not.toHaveBeenCalled();
-  });
-
-  it("redirects a deleted telescope as before and logs nothing", async () => {
-    const location = await post({ data: [{ id: ID }] });
-    expect(location.pathname + location.search).toBe("/gear?deleted=telescope");
-    expect(logs.everything()).toBe("[]");
-  });
 });

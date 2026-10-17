@@ -217,7 +217,18 @@ function savedListMarker(body) {
 
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
+  [
+    // test-suite-diet D4 (7): what landing.spec's CTA test pinned in the browser, over HTTP.
+    "home carries both call-to-action links when signed out",
+    () => request("/", { body: true }),
+    { status: 200, bodyIncludes: ['href="/auth/signup"', 'href="/auth/signin"'] },
+  ],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "log redirects anonymous user, remembering the page",
+    () => request("/log"),
+    { status: 302, location: "/auth/signin?next=%2Flog", exact: true },
+  ],
   [
     "tonight redirects anonymous user, remembering the page",
     () => request("/tonight"),
@@ -234,6 +245,17 @@ const steps = [
     () => request("/api/onboarding", { method: "POST", form: { ...onboarding, latitudeDeg: "95" } }),
     { status: 302, location: "/onboarding?error=errors.site.latitudeRange", exact: true, absent: "95" },
   ],
+  [
+    // test-suite-diet D4 (2): a body that is not valid eyepiece JSON comes back as a fixed key, never the payload.
+    "malformed onboarding eyepieces return with a fixed error and no payload",
+    () =>
+      request("/api/onboarding", {
+        method: "POST",
+        form: { ...onboarding, eyepieces: '[{"name":"Evil 52.23"' },
+      }),
+    { status: 302, location: "/onboarding?error=errors.onboarding.eyepiecesMalformed", exact: true, absent: "52.23" },
+  ],
+  ["onboarding is still unsaved after the refusals: the form renders", () => request("/onboarding"), { status: 200 }],
   [
     "onboarding saves and opens tonight",
     () => request("/api/onboarding", { method: "POST", form: onboarding }),
@@ -512,7 +534,20 @@ const steps = [
     },
   ],
   [
-    "plan 11: none of the refusals wrote a list, so the island still shows the suggested plan",
+    // test-suite-diet D4 (3): a coordinate pair posted as the site is refused with the save key and never reaches the
+    // location (`site=` is added only for a well-formed id); plan 11 below reads back that nothing was saved.
+    "plan 12: a coordinate pair as the site is refused, and the location holds neither the pair nor a site",
+    () => postPlan(SAVE_PLAN, ["M31"], "52.23,21.01"),
+    {
+      status: 302,
+      location: "/tonight/plan?error=errors.save.sessionPlan",
+      exact: true,
+      needsPlanGrant: true,
+      absent: "52.23",
+    },
+  ],
+  [
+    "plan 11: none of the refusals (plans 8 to 10 and 12) wrote a list, so the island still shows the suggested plan",
     () => replayPlanIsland(),
     {
       status: 200,
@@ -530,6 +565,49 @@ const steps = [
         form: { action: "clear", from: "sky" },
       }),
     { status: 302, location: "/log/sky?error=errors.notFound.skyCheck", exact: true },
+  ],
+  [
+    // test-suite-diet D4 (4): the `from` of a sky-check answer is an enum; anything else, an off-site URL included, falls
+    // back to the sky checks page, so the redirect stays on this origin.
+    "answering a sky check with an off-site from stays on this origin",
+    () =>
+      request("/api/log/sky/00000000-0000-4000-8000-000000000000", {
+        method: "POST",
+        form: { action: "clear", from: "https://evil.example" },
+      }),
+    { status: 302, location: "/log/sky?error=errors.notFound.skyCheck", exact: true, absent: "evil" },
+  ],
+  [
+    // test-suite-diet D4 (1): a coordinate pair as the log target returns a fixed key, never the value.
+    "log: a coordinate pair as the target is refused with a fixed key and no value",
+    () =>
+      request("/api/log", {
+        method: "POST",
+        form: { target: "52.23,21.01", rating: "3", night: "2019-03-07" },
+      }),
+    {
+      status: 302,
+      location: "/log/new?night=2019-03-07&error=errors.observation.objectInvalid",
+      exact: true,
+      absent: "52.23",
+    },
+  ],
+  [
+    "log: the refused entry wrote nothing, the log page holds neither the value nor the night",
+    () => request("/log", { body: true }),
+    { status: 200, bodyExcludes: ["52.23", "2019-03-07"] },
+  ],
+  [
+    "log: an entry id that matches no row is a 404",
+    () => request("/log/00000000-0000-4000-8000-000000000000"),
+    { status: 404 },
+  ],
+  ["home sends a signed-in user to tonight", () => request("/"), { status: 302, location: "/tonight", exact: true }],
+  [
+    // The fragment of /tonight/all#more never reaches the server; the legacy page redirects whole.
+    "the legacy all-objects page redirects to the targets list",
+    () => request("/tonight/all"),
+    { status: 301, location: "/tonight/targets", exact: true },
   ],
   ["dashboard redirects to tonight", () => request("/dashboard"), { status: 302, location: "/tonight", exact: true }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
@@ -586,6 +664,27 @@ const steps = [
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["gear redirects after signout", () => request("/gear"), { status: 302, location: "/auth/signin" }],
   ["tonight redirects after signout", () => request("/tonight"), { status: 302, location: "/auth/signin" }],
+  [
+    // test-suite-diet D4 (6): a signed-out log POST goes to sign-in and writes nothing, read back as the user below.
+    "log: a signed-out POST goes to sign-in",
+    () =>
+      request("/api/log", {
+        method: "POST",
+        form: { target: "M31", rating: "3", night: "2019-03-08" },
+      }),
+    { status: 302, location: "/auth/signin", exact: true },
+  ],
+  [
+    "signin again to read back what the signed-out POST did",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/tonight", exact: true },
+  ],
+  [
+    "log: the signed-out POST wrote nothing for the user",
+    () => request("/log", { body: true }),
+    { status: 200, bodyExcludes: ["2019-03-08"] },
+  ],
+  ["signout again", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
 ];
 
 let failed = 0;

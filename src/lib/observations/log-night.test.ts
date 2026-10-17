@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { RUNNER_ZONES, expectRunnerZoneActive, useRunnerZone } from "@/lib/engine/fixtures/runner-zones";
+import { expectRunnerZoneActive, useRunnerZone, type RunnerZone } from "@/lib/engine/fixtures/runner-zones";
 import { USNO_CIVIL_DAWN } from "@/lib/engine/fixtures/usno";
 import type { Site } from "@/lib/engine";
 import type { SiteRecord } from "@/lib/gear/store";
@@ -53,7 +53,10 @@ const TRAPS: Record<string, string[]> = {
   ],
 };
 
-describe.each(RUNNER_ZONES)("the log form's nights (runner zone %s)", (runnerZone) => {
+// One zone only (test-suite-diet F8): the rule that no zone changes a night is held by the night-boundaries suites.
+const runnerZone: RunnerZone = "America/Los_Angeles";
+
+describe(`the log form's nights (runner zone ${runnerZone})`, () => {
   useRunnerZone(runnerZone);
 
   it("runs in the runner zone it claims", () => {
