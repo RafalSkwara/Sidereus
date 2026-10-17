@@ -5,8 +5,13 @@
  * `id` is an anchor on the section (the Targets page's `#washed-out`, and hooks such as `section#nights` for e2e);
  * Tonight's tiles open pages, never anchors. `class` is merged last (the `#washed-out` band takes a scroll margin).
  * `headingHidden` keeps the heading for screen readers only, for a band whose page title already names it (the
- * Moon, Planets and Nights pages).
+ * Moon, Planets and Nights pages). `collapsed` (ui-progress-rewards, the progress page's Caldwell band, owner P8 A) puts
+ * the heading in the `<summary>` of a native `<details>`, closed on load, with the content inside: no script and no
+ * stored state, and the content stays in the DOM. Only this Astro band collapses (no island needs it), so `band.tsx`
+ * has no twin of the option.
  */
+import { ChevronDown } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -18,9 +23,11 @@ interface Props {
   class?: string;
   /** Keep the heading for screen readers only: the page's own title already says it. */
   headingHidden?: boolean;
+  /** The heading as the summary of a closed `<details>` holding the content (no `action` slot then). */
+  collapsed?: boolean;
 }
 
-const { headingId, heading, id, class: className, headingHidden = false } = Astro.props;
+const { headingId, heading, id, class: className, headingHidden = false, collapsed = false } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
@@ -29,7 +36,29 @@ const hasAction = Astro.slots.has("action");
   aria-labelledby={headingId}
   class:list={cn("border-border py-6 not-first:border-t first:pt-0 last:pb-0 sm:py-8", className)}
 >
-  {headingHidden ? (
+  {collapsed ? (
+    <details class="group" data-band-collapsible>
+      {/* At least 44 px; the hover tint and the ring run a little past the heading, inside the column. */}
+      <summary
+        class:list={[
+          "-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-2 [&::-webkit-details-marker]:hidden",
+          "transition-colors hover:bg-accent motion-reduce:transition-none",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        ]}
+      >
+        <h2 id={headingId} class="font-display text-title font-semibold break-words text-heading">
+          {heading}
+        </h2>
+        <ChevronDown
+          className="size-5 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
+          aria-hidden="true"
+        />
+      </summary>
+      <div class="mt-3 sm:mt-4">
+        <slot />
+      </div>
+    </details>
+  ) : headingHidden ? (
     <h2 id={headingId} class="sr-only">
       {heading}
     </h2>
@@ -41,5 +70,5 @@ const hasAction = Astro.slots.has("action");
       {hasAction && <slot name="action" />}
     </div>
   )}
-  <slot />
+  {!collapsed && <slot />}
 </section>

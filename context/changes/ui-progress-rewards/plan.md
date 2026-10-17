@@ -793,14 +793,14 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 #### Automated
 
-- [x] 2.1 Types check: `npx astro check`
-- [x] 2.2 Reference and guard suites pass, incl. the new contrast pin
-- [x] 2.3 Lint passes on the changed files
-- [x] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px
+- [x] 2.1 Types check: `npx astro check` — ad33563
+- [x] 2.2 Reference and guard suites pass, incl. the new contrast pin — ad33563
+- [x] 2.3 Lint passes on the changed files — ad33563
+- [x] 2.4 The milestone journey still passes unchanged, and the page has no sideways scroll at 320/375 px — ad33563
 
 #### Manual
 
-- [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop
+- [x] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop — ad33563
 - [ ] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
 - [x] 2.7 The owner approved the badge art before it was ported — approved by the owner, 2026-10-17
 
@@ -808,12 +808,12 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 #### Automated
 
-- [ ] 3.1 Types check: `npx astro check`
-- [ ] 3.2 Reference and guard suites pass
-- [ ] 3.3 Lint passes on the changed files
-- [ ] 3.4 Build passes: `npm run build`
-- [ ] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged
-- [ ] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md`
+- [x] 3.1 Types check: `npx astro check`
+- [x] 3.2 Reference and guard suites pass
+- [x] 3.3 Lint passes on the changed files
+- [x] 3.4 Build passes: `npm run build`
+- [x] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged
+- [x] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md`
 
 #### Manual
 

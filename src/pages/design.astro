@@ -55,6 +55,7 @@ import { OBJECT_FAMILY_ICONS } from "@/components/progress/progress-icons";
 import MilestoneBadge from "@/components/progress/MilestoneBadge.astro";
 import MilestoneCelebration from "@/components/progress/MilestoneCelebration.astro";
 import MilestoneList from "@/components/progress/MilestoneList.astro";
+import ObjectTypeSprite from "@/components/progress/ObjectTypeSprite.astro";
 import SeenList from "@/components/progress/SeenList.astro";
 import NotSeenLegend from "@/components/tonight/NotSeenLegend.astro";
 import NotSeenMark from "@/components/tonight/NotSeenMark.astro";
@@ -893,6 +894,8 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
 
 <Layout title="Design · Sidereus">
   <div class="min-h-screen w-full bg-background text-foreground">
+    {/* The checklist tiles' icon sprite, once per document (ui-progress-rewards). */}
+    <ObjectTypeSprite />
     <div class="border-b border-border bg-linear-to-b from-zenith to-horizon">
       <div class="mx-auto flex h-16 w-full max-w-5xl items-center gap-4 px-4 pt-4 sm:px-8 sm:pt-6">
         <span class="flex shrink-0 items-center gap-2.5">

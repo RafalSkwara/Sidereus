@@ -1,0 +1,27 @@
+---
+// The checklist tiles' icon sprite (ui-progress-rewards): one hidden SVG of `<symbol>`s, one per object family
+// (`progress-type-<family>`, from `OBJECT_FAMILY_ICONS`) plus the seen check (`progress-check`), so the 171 tiles each
+// carry one `<use>` instead of the icon's paths. Each symbol holds the lucide icon itself (an `<svg>` drawn in
+// `currentColor`), so a tile's `<use>` takes its colour from the tile's text colour. Hidden by size and overflow, never
+// `display: none`, which makes some engines drop the referenced symbols. Render it once per document: the progress page
+// and /design.
+import { Check } from "lucide-react";
+
+import { OBJECT_FAMILIES } from "@/lib/progress/object-family";
+
+import { OBJECT_FAMILY_ICONS } from "./progress-icons";
+---
+
+<svg aria-hidden="true" focusable="false" class="absolute size-0 overflow-hidden" data-object-type-sprite>
+  {OBJECT_FAMILIES.map((family) => {
+    const Icon = OBJECT_FAMILY_ICONS[family];
+    return (
+      <symbol id={`progress-type-${family}`} viewBox="0 0 24 24">
+        <Icon />
+      </symbol>
+    );
+  })}
+  <symbol id="progress-check" viewBox="0 0 24 24">
+    <Check />
+  </symbol>
+</svg>

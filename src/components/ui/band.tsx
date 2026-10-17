@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /*
  * The Nightfall band for React islands (ui-onboarding): the twin of `Band.astro`, for an island whose content spans
  * several bands inside one form (onboarding's Where / Sky / Kit), where the Astro component cannot render. Same markup
- * and classes as `Band.astro`; change both together. A full-width, unboxed section with a rule between it and the band
+ * and classes as `Band.astro`; change both together (`Band.astro`'s `collapsed` option has no twin: no island needs it). A full-width, unboxed section with a rule between it and the band
  * before it, a `text-title` heading that labels it, and an optional `action` beside the heading.
  */
 interface BandProps {

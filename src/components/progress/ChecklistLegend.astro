@@ -1,0 +1,40 @@
+---
+// The legend above a checklist (ui-progress-rewards, owner P6 A): one row per object family the list holds, in
+// `OBJECT_FAMILIES` order, with its icon, its plural name and how many of them are seen ("11 / 40"). It explains the
+// tiles' icons and shows progress per type; no filters. Two columns on a phone, three from `sm`; a long Polish name
+// wraps. `data-legend-family` (the family) and `data-legend-count` (the count alone) are the e2e hooks.
+import { getMessages } from "@/i18n";
+import { familyCounts } from "@/lib/progress/object-family";
+import type { ChecklistItem } from "@/lib/progress/progress";
+
+import { OBJECT_FAMILY_ICONS } from "./progress-icons";
+
+interface Props {
+  items: readonly ChecklistItem[];
+  /** The list's name ("Messier"), for the legend's accessible name ("Messier by type"). */
+  label: string;
+}
+
+const { items, label } = Astro.props;
+const { locale } = Astro.locals;
+const t = getMessages(locale).progress;
+---
+
+<ul
+  aria-label={t.legendLabel({ list: label })}
+  class="grid grid-cols-2 gap-x-4 gap-y-line sm:grid-cols-3"
+  data-checklist-legend
+>
+  {familyCounts(items).map(({ family, seen, total }) => {
+    const Icon = OBJECT_FAMILY_ICONS[family];
+    return (
+      <li class="flex min-w-0 items-center gap-2" data-legend-family={family}>
+        <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span class="min-w-0 flex-1 text-label break-words text-foreground">{t.types[family].heading}</span>
+        <span class="shrink-0 font-mono text-caption text-muted-foreground" data-legend-count>
+          {t.count({ seen: String(seen), total: String(total) })}
+        </span>
+      </li>
+    );
+  })}
+</ul>
