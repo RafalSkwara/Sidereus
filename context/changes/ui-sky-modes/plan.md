@@ -552,10 +552,10 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [x] 4.1 Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards`
-- [x] 4.2 The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts`
-- [x] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts`
-- [x] 4.4 The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits
+- [x] 4.1 Type check, lint, reference and guards pass: `npx astro check && npm run lint && npm run test:reference && npm run test:guards` — 82018a1
+- [x] 4.2 The new modes spec passes: `<e2e env> npx playwright test tests/e2e/tonight-sky-modes.spec.ts` — 82018a1
+- [x] 4.3 The first-screen pin and the live-sky spec pass unchanged in DEFAULT: `<e2e env> npx playwright test tests/e2e/tonight-phone.spec.ts tests/e2e/tonight-sky.spec.ts` — 82018a1
+- [x] 4.4 The hardcoded-value scan on `TonightSkyView.tsx`, `sky-mode-control.tsx`, `sky-band.ts`, `TonightSky.astro`, `TonightSkeleton.astro`, `VerdictCard.astro` returns 0 hits — 82018a1
 
 #### Manual
 
@@ -566,8 +566,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [ ] 5.1 The whole e2e suite and smoke pass the way CI runs them (fresh `npm run build`, forecast fixture, local stack keys inline): `npm run test:e2e` and `npm run smoke`
-- [ ] 5.2 Lint, type check and both Vitest projects pass: `npx astro check && npm run lint && npm test`
+- [x] 5.1 The whole e2e suite and smoke pass the way CI runs them (fresh `npm run build`, forecast fixture, local stack keys inline): `npm run test:e2e` and `npm run smoke`
+- [x] 5.2 Lint, type check and both Vitest projects pass: `npx astro check && npm run lint && npm test`
 
 #### Manual
 

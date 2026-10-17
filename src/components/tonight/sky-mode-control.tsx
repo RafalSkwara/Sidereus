@@ -3,6 +3,7 @@ import { useEffect, useId, useRef } from "react";
 import { SegmentedGroup } from "@/components/ui/segmented";
 import { getMessages } from "@/i18n";
 import { SKY_MODES, type Locale, type SkyMode } from "@/lib/preferences";
+import { cn } from "@/lib/utils";
 
 /*
  * The live sky's mode control (ui-sky-modes, owner answer Q1 A): one 44 px icon button at the top right of the
@@ -14,22 +15,25 @@ import { SKY_MODES, type Locale, type SkyMode } from "@/lib/preferences";
  * Island-safe: React, lucide, `SegmentedGroup`, the catalogue, the preferences and `cn` (`island-imports.test.ts`).
  */
 
-const MODE_ICONS: Record<SkyMode, LucideIcon> = {
+export const MODE_ICONS: Record<SkyMode, LucideIcon> = {
   hidden: FoldVertical,
   default: RectangleHorizontal,
   expanded: Maximize2,
 };
 
 /** The trigger: a bare 44 px target like the pan chevrons, its face passed in so the contrast test covers it. */
-const TRIGGER_CLASS =
+export const SKY_MODE_TRIGGER_CLASS =
   "group pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 
 /**
  * The menu: a bordered surface panel in the top layer, placed under the trigger with its right edge on the button's
  * as it opens (computed geometry, the trigger's own box).
  */
-const PANEL_CLASS =
-  "fixed inset-auto m-0 w-56 rounded-lg border border-border bg-surface p-2 text-foreground shadow-2xl";
+export const SKY_MODE_MENU_SURFACE_CLASS =
+  "w-56 rounded-lg border border-border bg-surface p-2 text-foreground shadow-2xl";
+const PANEL_CLASS = cn("fixed inset-auto m-0", SKY_MODE_MENU_SURFACE_CLASS);
+/** The menu's heading. */
+export const SKY_MODE_MENU_LABEL_CLASS = "text-label px-2 pt-1 pb-2 font-semibold text-muted-foreground";
 /** The gap between the trigger and the menu, px. */
 const PANEL_GAP_PX = 4;
 
@@ -80,7 +84,7 @@ export function SkyModeControl({ mode, locale, onChoose, faceClassName, classNam
         popoverTarget={panelId}
         aria-label={t.trigger({ mode: t.options[mode] })}
         aria-haspopup="dialog"
-        className={TRIGGER_CLASS}
+        className={SKY_MODE_TRIGGER_CLASS}
         data-sky-mode-trigger={mode}
       >
         <span className={faceClassName}>
@@ -96,7 +100,7 @@ export function SkyModeControl({ mode, locale, onChoose, faceClassName, classNam
         className={PANEL_CLASS}
         data-sky-mode-menu
       >
-        <p id={labelId} className="text-label text-muted-foreground px-2 pt-1 pb-2 font-semibold">
+        <p id={labelId} className={SKY_MODE_MENU_LABEL_CLASS}>
           {t.label}
         </p>
         <SegmentedGroup

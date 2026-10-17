@@ -119,7 +119,7 @@ const LABEL_GAP_PX = 8;
  */
 const PAN_BUTTON_CLASS =
   "group focus-visible:outline-ring absolute z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:-outline-offset-2";
-const PAN_FACE_CLASS =
+export const PAN_FACE_CLASS =
   "text-heading flex size-8 items-center justify-center opacity-80 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none";
 
 /** The compass row's height: its lowest top keeps it this far above the labels, which start at the overlap's foot. */
