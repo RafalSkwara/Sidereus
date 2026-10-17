@@ -651,11 +651,11 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [x] 3.1 `npm test` green; leaf files ≤ 32 and ≤ 180 tests; S-07 route and store files ≤ 75 tests
-- [x] 3.2 The 10 smoke steps pass locally and each refusal fails when its `absent:` value or read-back is removed
-- [x] 3.3 Three break checks red then reverted (chart kept after explicit free, milestone lost on delete, PostgREST message in a store fault)
-- [x] 3.4 `npm run lint`, `npx astro check` green; `test:reference` time recorded
-- [x] 3.5 Whole e2e suite and smoke green locally before the PR
+- [x] 3.1 `npm test` green; leaf files ≤ 32 and ≤ 180 tests; S-07 route and store files ≤ 75 tests — e1eee5e
+- [x] 3.2 The 10 smoke steps pass locally and each refusal fails when its `absent:` value or read-back is removed — e1eee5e
+- [x] 3.3 Three break checks red then reverted (chart kept after explicit free, milestone lost on delete, PostgREST message in a store fault) — e1eee5e
+- [x] 3.4 `npm run lint`, `npx astro check` green; `test:reference` time recorded — e1eee5e
+- [x] 3.5 Whole e2e suite and smoke green locally before the PR — e1eee5e
 
 #### Manual
 
