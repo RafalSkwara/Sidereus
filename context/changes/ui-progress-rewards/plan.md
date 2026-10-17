@@ -9,8 +9,10 @@ seen / not-seen state that red mode tells apart by shape and weight. The celebra
 This is a `/10x-ui` change on one view (`/log/progress`) against the existing Nightfall design system; it adds no
 token, no table, no route and no island.
 
-The plan is written on the ⭐ recommended answer of every question in **QUESTIONS FOR OWNER** below; a different
-answer changes only the phase named at the question.
+The owner answered P1–P7 on 2026-10-17 (**Owner answers** below): badges are rich illustrations inside a ring with a
+progress arc, bigger (two per row on a phone), and the checklists are larger tiles with icon, number and name. Phase 2
+starts only after the owner approves the badge art (`evidence/badge-art/`, round 1 committed with these answers).
+The new question P8 (phone scroll length of the larger tiles) is proposed with a ⭐ default that Phase 3 follows.
 
 ## Current State Analysis
 
@@ -33,18 +35,21 @@ From `research.md` (charges and anchors there):
 
 ## Desired End State
 
-- The Milestones band is a grid of 11 badges (3 columns on a phone, 4 from `sm`), in `MILESTONES` order. Each badge
-  is a medallion with its own glyph: the Moon, a ringed planet, a solar system, the galaxy, globular and nebula type
-  icons for the six "first"/"all planets" milestones, and the numerals 10 / 25 / 50 / 110 / 61 for the five count
-  milestones. Reached: solid 2 px `action-border` ring on `action-surface`, glyph in `primary-strong`, a check pip,
-  name in heading ink and semibold, "Reached 14 Aug 2026". Ahead: dashed `control-border` ring, muted glyph, regular
-  muted name, "Not yet" or "37 / 50", and, when the milestone has progress above 0, a solid, wider `primary-strong`
-  arc over the ring proportional to it (ring and arc in one SVG, so red mode tells them apart by shape).
+- The Milestones band is a grid of 11 badges (2 columns on a phone, 4 from `sm`), in `MILESTONES` order. Each badge
+  is a 112 px medallion (128 px in the dialog): a ring around its own illustration, drawn in theme tokens inside a
+  `night-sky` scope, so in the light theme it is a small night window (owner decision pending on that, see the art
+  round): a cratered gibbous Moon, a banded ringed planet, the seven planets in a row by the Sun, a spiral galaxy, a
+  dense globular cluster, a layered nebula, and for the five count milestones the number plus a small motif (P3 C).
+  Reached: solid `action-border` ring, the art in full, a check pip, name in heading ink and semibold, "Reached
+  14 Aug 2026". Ahead: dashed `control-border` ring, the art muted, regular muted name, "Not yet" or "37 / 50", and,
+  when the milestone has progress above 0, a solid, wider `primary-strong` arc over the ring proportional to it (ring
+  and arc in one SVG, so red mode tells them apart by shape).
 - Each checklist band opens with a legend (one row per type family present in that list: icon, plural name,
-  "seen / total"), then a 6-column (phone) / 10-column (`sm`) grid of tiles in catalogue order, each tile a type icon
-  over "M31" / "C14". Seen: 2 px `action-border` on `action-surface`, icon in `primary-strong`, semibold number,
-  check in a corner. Not seen: 1 px `border`, muted icon and number. Each tile reads aloud as
-  "[C20,] label, common name, type, seen / not seen". The SeenList stays under each grid.
+  "seen / total"), then a 2-column (phone) / 4-column (`sm`) grid of tiles in catalogue order (P4 B), each tile a
+  type icon beside "M31" / "C14" and the object's name (its common name, else its designation). Seen: 2 px
+  `action-border` on `action-surface`, icon in `primary-strong`, semibold number, check in a corner (P5 B). Not seen:
+  1 px `border`, muted icon and text. Each tile reads aloud as "[C20,] label, common name, type, seen / not seen".
+  Following P8 ⭐ (proposed), the Caldwell band and each SeenList are native `<details>`, closed by default.
 - The celebration dialog shows each reached milestone's badge (large size) instead of the one `Award`.
 - `/design` shows the badge, the tile, the legend and the icon set in the 7-state matrix, with a forced red sample.
 - The progress components are on the rhythm roles and in the rhythm guard; CLAUDE.md names the new module, the
@@ -81,9 +86,10 @@ and PL.
 - No change to the rules: `observingProgress`, `milestonesOf`, `withStored`, `NEBULA_TYPES`, the stored record and
   the celebration's save order stay as they are.
 - No new milestone, no migration, no new token, no new island, no client script on `/log/progress`.
-- No interactive tiles, no filters and no sorting (question P6 default); no thumbnails or photos of objects.
-- No change to the SeenList's content (research charge 5, deferred: it is the only place a name and first night show,
-  and e2e pins it); only its spacing moves to the roles.
+- No interactive tiles, no filters and no sorting (P6 A); no thumbnails or photos of objects.
+- No change to the SeenList's content (research charge 5: it is the only place the first night shows, and e2e pins
+  it); its spacing moves to the roles and, with P8 ⭐, it sits in a closed `<details>`.
+- No raster images for the badges: the art is inline SVG in tokens, so it follows the theme.
 - No offline storage of `/log/progress` (stays network-only) and no service-worker change.
 - No change to the Firsts band's content (spacing only), the empty state's copy, or the Topbar/TabBar icon.
 - No roadmap edit in this change (PR #219 is editing `roadmap.md`; the lead flips S-11's status).
@@ -106,13 +112,14 @@ the log, the dialog shows the badge, and the checklist markup stays inside a mea
 - **Red mode by shape.** In red `primary` = `primary-strong` = `heading` (#ff0000). Seen vs. not seen must differ by
   border width (2 px vs 1 px), fill luminance (`action-surface` #2a0000 vs. none), weight (semibold vs. regular) and
   the check glyph; reached vs. ahead by solid vs. dashed ring, the check pip and the arc. Never by hue alone.
-- **The ahead ring and the arc are one SVG.** In red the arc (`primary-strong` #ff0000) is only about 1.5:1 against
-  the ring (`control-border` #c80000), so they must differ by shape: the `ahead` badge has no CSS border; one SVG
-  (one `viewBox`, one radius) draws the dashed ring in `stroke-control-border` and, over it, the arc **solid and one
-  unit wider** in `stroke-primary-strong`, in every theme. Draw the arc with `pathLength="100"` and
-  `stroke-dasharray="<pct> 100"` on the same circle rotated −90°; the percentage is computed in the frontmatter from
-  `MilestoneState.progress`. These are attribute values, not Tailwind arbitrary values. `reached` keeps the CSS
-  `rounded-full border-2` ring.
+- **The ring and the arc are one SVG with the art.** Each badge is one SVG (one `viewBox`, 120 units): the disc, the
+  ring, the art clipped inside it, the arc and the check pip. In red the arc (`primary-strong` #ff0000) is only about
+  1.5:1 against the ring (`control-border` #c80000), so they differ by shape: reached = a solid `action-border` ring;
+  ahead = a dashed `control-border` ring and, over it, the arc **solid and wider** in `primary-strong`, in every
+  theme. Draw the arc with `pathLength="100"` and `stroke-dasharray="<pct> 100"` on the ring's circle rotated −90°;
+  the percentage is computed in the frontmatter from `MilestoneState.progress`. Colours are `var(--token)` fills and
+  strokes (and `opacity` for value steps), never literals; the art's detail must come from shape, line and value,
+  since red mode is one hue.
 - **Keep the e2e hooks and the text.** `data-milestone`, `data-reached`, `data-checklist-item`, `data-seen`,
   `data-seen-item`, `#progress-*-heading` and the strings `reachedOn` / `notYet` / `progress(seen,total)` stay, so
   `observing-milestones.spec.ts` keeps passing unchanged before the new assertions are added.
@@ -144,15 +151,12 @@ supernova-remnant, cluster-with-nebula → nebula; asterism, double-star, other 
 **File**: `src/components/progress/progress-icons.ts` (new)
 
 **Intent**: The one vocabulary of progress icons, like `fact-icons.ts`: the drawn icons (via lucide's
-`createLucideIcon`, so they behave like any lucide icon), the family → icon map and the milestone → glyph map.
-Server-rendered only.
+`createLucideIcon`, so they behave like any lucide icon), and the family → icon map. The milestone badges
+are illustrations, not icons (Phase 2). Server-rendered only.
 
-**Contract**: exports `Globular`, `OpenCluster`, `Nebula`, `Planetary`, `StarGroup`, `RingedPlanet`, `SolarSystem`
-(each a `LucideIcon`); `OBJECT_FAMILY_ICONS: Readonly<Record<ObjectFamily, LucideIcon>>` (galaxy → lucide `Galaxy`,
-the rest → the drawn ones); `MILESTONE_GLYPHS: Readonly<Record<MilestoneKey, { icon: LucideIcon } | { numeral: string }>>`
-(first-moon → `Moon`, first-planet → `RingedPlanet`, all-planets → `SolarSystem`, first-galaxy → `Galaxy`,
-first-globular → `Globular`, first-nebula → `Nebula`; messier-10/25/50/110 → "10"/"25"/"50"/"110", caldwell-all →
-"61"). The header comment states the rule: an icon here means one concept, and none reuses `Sparkles`, `Sparkle`,
+**Contract**: exports `Globular`, `OpenCluster`, `Nebula`, `Planetary`, `StarGroup` (each a `LucideIcon`);
+`OBJECT_FAMILY_ICONS: Readonly<Record<ObjectFamily, LucideIcon>>` (galaxy → lucide `Galaxy`, the rest → the drawn
+ones; P7 B). The header comment states the rule: an icon here means one concept, and none reuses `Sparkles`, `Sparkle`,
 `Cloud`, `CircleDot`, `Orbit`, `Ellipse` or `Award`. The drawn nodes are the owner-reviewed drafts
 (`evidence/owner-questions/q7-type-icons-*`), 24-unit grid, stroke 2, round caps and joins:
 
@@ -169,10 +173,6 @@ path "M21 15c-1 2.5-4 3.5-6 2.5-2 2-6 2-7.5 0C5 18 3 16.5 3 13" strokeDasharray 
 circles (10,12.5,r0.8) (14.5,11.5,r0.5)
 // star group (asterism)
 path "m5 17 7-10 7 6"; circles r1.5 at (5,17) (12,7) (19,13)
-// ringed planet
-circle (12,12,r5.5); path "M7.2 15.5C3.6 17.6 1.6 19.6 2.3 20.6c1 1.5 7-1 13.2-5.5S23 6.1 21.8 4.6c-.7-.9-3-.3-6 1.4"
-// solar system
-circle (12,12,r2); circle (12,12,r6); path "M21.5 9.5A10 10 0 1 1 14.5 2.3"; circles r1.3 at (18,12) (18.5,4.5)
 ```
 
 #### 3. Keep the icon set out of islands
@@ -202,12 +202,11 @@ nebula" / "Planetary nebulae"; stars "star group" / "Stars and asterisms"; `lege
 
 **File**: `src/pages/design.astro`
 
-**Intent**: A "Progress icons" block showing every family icon and every milestone glyph at 40 / 20 / 16 px with its
-key, in heading and muted ink, plus a `data-theme="red"` copy, so the set is reviewable in each theme before any view
+**Intent**: A "Progress icons" block showing every family icon at 40 / 28 / 20 / 16 px with its key, in heading and muted ink, plus a `data-theme="red"` copy, so the set is reviewable in each theme before any view
 uses it.
 
 **Contract**: a new `<section aria-labelledby="c-progress-icons">` next to the progress blocks (`:3306` onwards),
-built from `OBJECT_FAMILIES`, `OBJECT_FAMILY_ICONS`, `MILESTONES` and `MILESTONE_GLYPHS`; the matrix note marks
+built from `OBJECT_FAMILIES` and `OBJECT_FAMILY_ICONS`; the matrix note marks
 hover / focus / disabled / error / empty / loading N/A (decorative, `aria-hidden`).
 
 ### Success Criteria:
@@ -233,26 +232,44 @@ confirmation from the human that the manual testing was successful before procee
 
 ### Overview
 
-Add the shared badge, turn the Milestones band into a badge grid, and show the badges in the celebration dialog.
+**Prerequisite:** the owner has approved the badge art (`evidence/badge-art/`, round 1 or a later round). Port the
+approved art, add the shared badge, turn the Milestones band into a badge grid, and show the badges in the
+celebration dialog.
 
 ### Changes Required:
 
-#### 1. The badge
+#### 1. The badge art
+
+**File**: `src/components/progress/badge-art/` (new: one `<Key>Art.astro` per milestone) and
+`src/components/progress/badge-art/index.ts`
+
+**Intent**: The 11 approved illustrations, ported from `evidence/badge-art/<key>.svg`, as server-rendered SVG
+fragments in token colours, so every badge has its own reward-feeling picture.
+
+**Contract**: each art component renders the `<g>` of its illustration in the 120-unit badge space, clipped by the
+badge, with fills and strokes as `var(--…)` tokens (`--moon-lit`, `--moon-mare`, `--moon-dark`, `--moon-limb`,
+`--primary-strong`, `--heading`, `--star`, `--star-accent`, `--dusk-glow`, `--dusk-glow-horizon`, `--zenith`,
+`--horizon`) and `opacity` for value steps, never a literal colour. Count badges draw the number (Archivo, the
+`font-display` family) plus a small motif (P3 C); "110" is sized so it fits inside the ring (review F1). Gradients and
+clip paths take ids prefixed by the badge's `idBase`, so several badges on one page never collide.
+`MILESTONE_ART: Readonly<Record<MilestoneKey, AstroComponent>>` in `index.ts`, so a missing key fails `astro check`.
+Generated dot fields (globular, star fields) are written out as static coordinates, never computed at request time,
+and kept to the counts in the approved art.
+
+#### 1a. The badge
 
 **File**: `src/components/progress/MilestoneBadge.astro` (new)
 
 **Intent**: The decorative medallion of one milestone in one state, shared by the list and the dialog; tokens only,
 red-safe by shape.
 
-**Contract**: props `{ milestone: MilestoneKey; reached: boolean; progress?: { seen: number; total: number }; size?: "md" | "lg" }`;
-root `<span data-milestone-badge={milestone} aria-hidden="true">`. `md` = `size-16`, glyph `size-8` or a numeral in
-`font-display text-title font-semibold`; `lg` = `size-20`, glyph `size-10`, a 2-digit numeral in `text-display` and
-a 3-digit numeral ("110") in `text-title` (Archivo expanded at `text-display` would overflow the 76 px interior).
-Reached: `rounded-full border-2 border-action-border bg-action-surface text-primary-strong` plus a check pip in the
-lower right (`bg-primary text-primary-foreground`, `Check` with `strokeWidth` 3). Ahead: no CSS border, glyph
-`text-muted-foreground`, and one SVG for the dashed `control-border` ring plus, when `progress.seen > 0`, the solid,
-wider `primary-strong` arc (Critical Implementation Details). No text inside it beyond the numeral; the meaning is in
-the list item's text.
+**Contract**: props `{ milestone: MilestoneKey; reached: boolean; progress?: { seen: number; total: number }; size?: "md" | "lg"; idBase?: string }`;
+root `<svg data-milestone-badge={milestone} viewBox="0 0 120 120" aria-hidden="true" focusable="false">` inside a
+`night-sky` scope. `md` = `size-28` (112 px), `lg` = `size-32` (128 px). Layers: the disc (reached: zenith → horizon
+gradient; ahead: `--surface`), the art from `MILESTONE_ART` (ahead: muted with a lower group opacity), the ring
+(reached: solid `--action-border`; ahead: dashed `--control-border`), the arc (ahead with `progress.seen > 0`; Critical
+Implementation Details), and the check pip in the lower right (reached: `--primary` disc, `--primary-foreground`
+check). No text beyond the count badges' numbers; the meaning is in the list item's text.
 
 #### 1b. The contrast pin for the seen number
 
@@ -269,7 +286,7 @@ theme groups); its comment names the milestone badges and the seen tiles.
 
 **Intent**: A grid of 11 badge items instead of rows; same states, same strings, same hooks.
 
-**Contract**: `<ul data-milestone-list class="grid grid-cols-3 gap-x-3 gap-y-group sm:grid-cols-4">`; each
+**Contract**: `<ul data-milestone-list class="grid grid-cols-2 gap-x-4 gap-y-group sm:grid-cols-4">`; each
 `<li data-milestone={key} data-reached?>` is a centred column: `MilestoneBadge` (`md`), the name (`text-label`,
 `break-words`; reached `font-semibold text-heading`, ahead `text-muted-foreground`) at `mt-line`, then the status line
 (`text-caption text-muted-foreground`): `reachedOn`, `progress(seen,total)` or `notYet`, as today. Rhythm roles only.
@@ -290,9 +307,9 @@ Continue, See your progress, script, `specimen`, `idBase`) unchanged. Drop the `
 
 **Intent**: The badge in every state and the new band, with the dialog specimens picking up the badges.
 
-**Contract**: a `MilestoneBadge` block: reached icon, reached numeral, ahead with no progress ("Not yet"), ahead at
-0 / N, ahead at 37 / 50, ahead at 4 / 7, `lg` reached icon, `lg` reached "25" and `lg` reached "110"; plus a forced
-`data-theme="red"` row. The existing
+**Contract**: a `MilestoneBadge` block: all 11 badges reached and ahead (ahead at "Not yet", 4 / 7, 7 / 10,
+18 / 25, 37 / 50, 37 / 110, 5 / 61, as in the art round), `lg` reached "first-galaxy", "messier-25" and
+"messier-110"; plus a forced `data-theme="red"` row. The existing
 `c-milestone-list` and `c-milestone-celebration` blocks render the new components from the same sample data
 (`:672-689`); add a sample with 37 Messier objects seen so the arc shows. Matrix notes: hover, focus-visible,
 disabled N/A (not interactive), error N/A (a failed stored read falls back to the derived states, a failed log read
@@ -310,8 +327,10 @@ shows the page's `ServerError`), empty = `milestonesNone`, loading N/A (server-r
 #### Manual Verification:
 
 - `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop: reached and
-  ahead tell apart by shape in red; Polish names wrap inside the 3-column grid at 320 px without sideways scroll
+  ahead tell apart by shape in red, every art matches its approved round; Polish names wrap inside the 2-column grid
+  at 320 px without sideways scroll
 - Live dialog after a save that reaches "First galaxy" shows the galaxy badge (local preview)
+- The owner approved the badge art before it was ported (`evidence/badge-art/`)
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual
 confirmation from the human that the manual testing was successful before proceeding to the next phase.
@@ -322,8 +341,9 @@ confirmation from the human that the manual testing was successful before procee
 
 ### Overview
 
-Turn both checklists into type-icon tiles with a per-list legend, render the icons through one sprite, put the
-progress page on the rhythm roles, and measure the checklist markup.
+Turn both checklists into larger tiles (icon, number, name; P4 B) with a per-list legend, render the icons through
+one sprite, collapse the Caldwell band and the SeenLists (P8 ⭐, proposed), put the progress page on the rhythm roles,
+and measure the checklist markup.
 
 ### Changes Required:
 
@@ -331,11 +351,11 @@ progress page on the rhythm roles, and measure the checklist markup.
 
 **File**: `src/components/progress/ObjectTypeSprite.astro` (new)
 
-**Intent**: One hidden SVG of six `<symbol>`s (one per family, from `OBJECT_FAMILY_ICONS`) that the tiles reference,
-so 171 tiles do not repeat the paths.
+**Intent**: One hidden SVG of six `<symbol>`s (one per family, from `OBJECT_FAMILY_ICONS`) plus one for the seen check,
+that the tiles reference, so 171 tiles do not repeat the paths.
 
 **Contract**: `<svg aria-hidden="true" focusable="false" class="absolute size-0 overflow-hidden">` holding
-`<symbol id="progress-type-<family>" viewBox="0 0 24 24">` with the icon's nodes (render the icon component inside the
+`<symbol id="progress-type-<family>" viewBox="0 0 24 24">` (and `progress-check`) with the icon's nodes (render the icon component inside the
 symbol, or its node list, with `stroke="currentColor"`, width 2, round caps). Rendered once per document: by the page
 and, in this phase, by `/design` (see 5 below).
 
@@ -343,18 +363,21 @@ and, in this phase, by `/design` (see 5 below).
 
 **File**: `src/components/progress/ChecklistGrid.astro`
 
-**Intent**: Each object a tile: type icon over the number, seen by weight and shape, read aloud with its type.
+**Intent**: Each object a tile with its type icon, number and name (P4 B), seen by weight and shape (P5 B), read
+aloud with its type.
 
-**Contract**: `<ul aria-label={label} class="grid grid-cols-6 gap-line sm:grid-cols-10" data-checklist-grid>`; each
-`<li data-checklist-item={id} data-seen? data-family={family}>`: `relative flex h-14 min-w-0 flex-col items-center
-justify-center rounded-lg font-mono text-caption`; seen `border-2 border-action-border bg-action-surface
-font-semibold text-heading` with the icon in `text-primary-strong` and a `Check` (`size-3`, stroke 3) at the top
-right; not seen `border border-border text-muted-foreground`. Icon: `<svg class="size-5"><use href="#progress-type-…"/></svg>`,
-`aria-hidden`. The visible "M31" / "C14" is `aria-hidden`; the `sr-only` text is
-"[C20, ]label[, common name], type (`types[family].one`), seen | not seen", in a span marked `data-tile-sr` so e2e can
-match it exactly. Not interactive (no link, no button, no tabindex). The corner check must not cover the centred icon
-at 320 px (tile about 41 px wide): if it does, move the icon and number lower (`justify-end` with the number's own
-padding) or make the check `size-2.5`.
+**Contract**: `<ul aria-label={label} class="grid grid-cols-2 gap-line sm:grid-cols-4" data-checklist-grid>`; each
+`<li data-checklist-item={id} data-seen? data-family={family}>`: `relative flex min-h-16 min-w-0 items-center gap-2
+rounded-lg px-2` (horizontal padding only; the height centres the content); the icon `<svg class="size-7 shrink-0"><use
+href="#progress-type-…"/></svg>`; a text column with the number ("M31" / "C14", `text-label`) and the name
+(`text-caption`, `line-clamp-2`, `break-words`: `localCommonName`, else the designation `label` for a Caldwell object,
+else the type's `one` name). Seen: `border-2 border-action-border bg-action-surface`, number `font-semibold
+text-heading`, icon `text-primary-strong`, name `text-foreground`, and the check (`<use href="#progress-check"/>`,
+`size-3.5`) at the top right; not seen: `border border-border`, number, name and icon `text-muted-foreground`. The
+visible parts are `aria-hidden`; one `sr-only` span marked `data-tile-sr` reads
+"[C20, ]label[, common name], type (`types[family].one`), seen | not seen", so e2e can match it exactly. Not
+interactive (no link, no button, no tabindex). The check sits in the corner away from the left-hand icon; the name
+must keep clear of it (right padding on the text column when seen).
 
 #### 3. The legend
 
@@ -371,10 +394,16 @@ per `familyCounts(items)` row: icon component (`size-5`, muted, `aria-hidden`), 
 
 **File**: `src/pages/log/progress.astro`, `src/components/progress/SeenList.astro`
 
-**Intent**: Render the sprite once, a legend above each grid, and move the page's own spacing to the roles.
+**Intent**: Render the sprite once, a legend above each grid, keep the phone page short (P8 ⭐), and move the page's
+own spacing to the roles.
 
 **Contract**: `ObjectTypeSprite` once inside the loaded branch; in each checklist `Band`: (Caldwell note,) legend,
-grid at `mt-group`, SeenList at `mt-group`. Replace `mb-6`, `mt-3`, `py-3 first:pt-0 last:pb-0`, `mb-4` (`:69,71,84,110`)
+grid at `mt-group`, SeenList at `mt-group`. P8 ⭐ (proposed, follow the owner's answer): the Caldwell band's content
+(note, legend, grid, SeenList) sits in a native `<details>` closed by default, its `<summary>` holding the band's
+heading with the count (`#progress-caldwell-heading` keeps its id and text) and a muted chevron, 44 px tall; each
+SeenList sits in a closed `<details>` whose summary reads `seenHeading` with the number seen. No script, no stored
+open state. `[data-checklist-item]` and `[data-seen-item]` stay in the DOM when closed, so the existing e2e counts
+hold; the new e2e steps open the Caldwell `<details>` before asserting visible Caldwell content. Replace `mb-6`, `mt-3`, `py-3 first:pt-0 last:pb-0`, `mb-4` (`:69,71,84,110`)
 and SeenList's `mt-4`, `py-3` (`:27,31`) with `mt-group` / `mb-group`, `mt-line`, `py-item first:pt-0 last:pb-0`, and
 the Firsts row's `gap-y-1` (`:84`) with `gap-y-line` (the gap only shows when the row wraps). Headings, ids, `data-*`
 hooks and strings unchanged.
@@ -397,13 +426,14 @@ empty `<use>`s until Phase 4.
 - Lint passes on the changed files: `npx eslint --max-warnings 0 src/components/progress src/pages/log/progress.astro src/pages/design.astro`
 - Build passes: `npm run build`
 - The milestone journey still passes unchanged, with no sideways scroll at 320/375 px: `npx playwright test tests/e2e/observing-milestones.spec.ts tests/e2e/tonight-subnav.spec.ts tests/e2e/tonight-phone.spec.ts` (local recipe)
-- The checklist markup is measured on the preview build: the `outerHTML` length of the two `[data-checklist-grid]` blocks plus the sprite, in the e2e journey's state (0–1 seen) and with 37 Messier and 6 Caldwell seen, before (today's chips) and after, raw and gzip; recorded in `implementation-notes.md`
+- The checklist markup is measured on the preview build: the `outerHTML` length of the two `[data-checklist-grid]` blocks plus the sprite, in the e2e journey's state (0–1 seen) and with 37 Messier and 6 Caldwell seen, before (today's chips) and after, raw and gzip, plus the phone scroll height of `/log/progress` at 390 px with Caldwell closed and open; recorded in `implementation-notes.md`
 
 #### Manual Verification:
 
 - Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red: no
-  sideways scroll, legend wraps, seen tiles tell apart by border, fill, weight and check in red, icons legible, and
-  the corner check does not cover the icon at 320 px (also on the `/design` tiles)
+  sideways scroll, legend wraps, seen tiles tell apart by border, fill, weight and check in red, icons legible, long
+  Polish names clamp to two lines without running under the check at 320 px (also on the `/design` tiles), and the
+  closed Caldwell and SeenList `<details>` open and close by keyboard
 - VoiceOver (or the accessibility tree in Playwright) reads a tile as "M31, Andromeda Galaxy, galaxy, seen"
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual
@@ -476,9 +506,10 @@ allowlist (expected empty; any needed exception named with its reason).
 **Intent**: Tell the next agent where the progress vocabulary lives and how its states read.
 
 **Contract**: in "Observing progress" / "Observing milestones": `object-family.ts` (`FAMILY_OF`, `familyCounts`),
-`progress-icons.ts` (drawn icons, `OBJECT_FAMILY_ICONS`, `MILESTONE_GLYPHS`; one concept per icon; out of islands),
+`progress-icons.ts` (drawn type icons, `OBJECT_FAMILY_ICONS`; one concept per icon; out of islands),
 `MilestoneBadge` (shared by `MilestoneList` and `MilestoneCelebration`), `ChecklistGrid` tiles through
-`ObjectTypeSprite`, `ChecklistLegend`, the e2e hooks (`data-family`, `data-legend-family`, `data-milestone-badge`,
+`ObjectTypeSprite`, `ChecklistLegend`, the badge art (`badge-art/`, `MILESTONE_ART`: tokens only, value steps by
+`opacity`, detail by shape so red mode reads), the closed Caldwell and SeenList `<details>` (P8), the e2e hooks (`data-family`, `data-legend-family`, `data-milestone-badge`,
 `data-tile-sr`). One sentence: the families are a display grouping; "First nebula" follows `NEBULA_TYPES`, which
 includes planetary nebulae, so M57 alone reaches it while the legend's "Nebulae" stays at 0 (both rules are right).
 In "UI (Nightfall)" Clickables: the action tokens now also serve the milestone badges and seen tiles (both
@@ -510,7 +541,7 @@ confirmation from the human that the manual testing was successful before procee
 ### Unit Tests:
 
 - None new. The mappings are `Record`s keyed by `MilestoneKey`, `DeepSkyType` and `ObjectFamily`: a missing key fails
-  `astro check` (CI), so "every milestone has a glyph" and "every type has a family" are compile-time invariants.
+  `astro check` (CI), so "every milestone has its art" (`MILESTONE_ART`) and "every type has a family" are compile-time invariants.
   `familyCounts` is shown on `/design` and pinned by the e2e legend count.
 - Guards that grow: `island-imports.test.ts` (`progress-icons`), `rhythm-roles.test.ts` (six files).
 
@@ -536,11 +567,18 @@ only these two ports afterwards.
 3. Log enough objects to pass 37 Messier: "50 Messier objects" shows 37 / 50 and the arc at about three quarters.
 4. Repeat 2-3 in red mode at 390 px and in Polish at 320 px.
 5. Re-rate M31 to 2: the tile goes back to not seen, the legend to 0 / 40, "First galaxy" stays reached (stored).
+6. Open the closed Caldwell band and a SeenList by keyboard (P8 ⭐): the tiles and rows show; reload: closed again.
 
 ## Performance Considerations
 
-171 tiles render on the server on every request. The sprite keeps each tile to an `li`, one `svg` + `use`, one
-visible span and one `sr-only` span (plus the check when seen). Phase 3 measures on the preview build,
+171 tiles render on the server on every request. With P4 B each tile carries its name, so it is heavier than a dense
+chip: an estimate of about 0.55–0.65 KB raw per tile (the `li` and its classes, one `svg` + `use` for the icon and one
+for the check, the number, the name, the `sr-only` sentence) gives roughly 95–110 KB raw for the two grids and
+6–9 KB gzip; today's chips are about 0.3–0.4 KB each. The sprite holds the type icons and the check, so no path
+repeats. On a 390 px phone a tile row is about 72 px (`min-h-16` plus the `line` gap): Messier is 55 rows (about
+3,960 px, some 5½ screens) and Caldwell 31 rows (about 2,230 px); P8 ⭐ keeps Caldwell closed, so the phone page
+grows by Messier only. The 11 badges add their art once each (the globular's dot field is the largest; keep the
+approved counts). Phase 3 measures on the preview build,
 before and after for the checklist markup only (the two grids plus the sprite, `outerHTML`), not the whole document,
 so the Topbar, TabBar or shell of other changes cannot move it; Phase 4 pins that number in the e2e journey's own state
 (lessons: "measure every size budget on the real build output … and pin the result"). No client JavaScript is added
@@ -550,6 +588,18 @@ to the page.
 
 None: no schema, no stored data, no service-worker change. The milestone record and the derived states are read as
 before.
+
+## Owner answers (2026-10-17)
+
+| Question             | Answer                                                                                                                                                                                                                                                                 | What it changes                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1 Badge style       | **C** — the art sits inside a ring with a progress arc. The badges must feel like a reward: each of the 11 gets its own rich, detailed, illustration-style picture, as detailed as the size allows, and the badges are bigger. The simple mockup icons are not enough. | Phase 2: `badge-art/` (11 illustrations, `MILESTONE_ART`) replaces the glyph map; `MilestoneBadge` is one SVG (disc, art, ring, arc, pip) at 112 px (`md`) and 128 px (`lg`, dialog). Phase 1 drops `RingedPlanet`, `SolarSystem` and `MILESTONE_GLYPHS`. Phase 2 waits for the owner's approval of the art round (`evidence/badge-art/`).                                 |
+| P2 Reached vs. ahead | **B** — dashed outline + progress arc + text, with the P1 ring; in red the arc is solid and thicker (review F3).                                                                                                                                                       | Critical Implementation Details: ring and arc in the badge's one SVG.                                                                                                                                                                                                                                                                                                      |
+| P3 Count badges      | **C** — the number plus a small motif; the badges are bigger and two per row on a phone is fine.                                                                                                                                                                       | Phase 2: count badges' art = number + motif; `MilestoneList` grid `grid-cols-2 sm:grid-cols-4`. Review F1 is now handled inside the art ("110" sized to fit the ring).                                                                                                                                                                                                     |
+| P4 Grid              | **B** (changed from the ⭐) — larger tiles with icon + number + name, 2 columns on a phone, 4 on desktop. Re-check the weight budget (F9) and the phone scroll length; propose mitigations, no filters.                                                                | Phase 3 tiles: `grid-cols-2 sm:grid-cols-4`, icon left, number and name; the check moves into the sprite; Performance Considerations has the estimate (about 95–110 KB raw for the grids, Messier about 3,960 px on a phone); the mitigation is the new question P8. Review F6 (check over the centred icon) no longer applies; the name keeps clear of the check instead. |
+| P5 Seen state        | **B** — dark action surface + thick outline + check.                                                                                                                                                                                                                   | As planned.                                                                                                                                                                                                                                                                                                                                                                |
+| P6 Legend / filters  | **A** — legend with counts, no filters.                                                                                                                                                                                                                                | As planned.                                                                                                                                                                                                                                                                                                                                                                |
+| P7 Type icons        | **B** — lucide `Galaxy` + 5 custom lucide-style icons.                                                                                                                                                                                                                 | As planned (Phase 1).                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Plan review triage
 
@@ -656,6 +706,20 @@ ma własne ikony (Księżyc, planeta z pierścieniem, układ planet, galaktyka, 
   Minus: `Grip` wygląda jak uchwyt, `CloudFog` jak pogoda, `Disc` jak płyta; lepsze odpowiedniki (`Sparkles`,
   `Cloud`, `CircleDot`) już znaczą co innego w aplikacji.
 
+**P8 (nowe, po odpowiedzi B na P4). Jak skrócić stronę na telefonie?** (Faza 3) Większe kafelki z nazwą to na
+390 px ok. 72 px na rząd po 2 kafelki: Messier 55 rzędów (ok. 3960 px, ponad 5 ekranów), Caldwell 31 rzędów
+(ok. 2230 px). Filtrów nie dodajemy (P6 A). Plan jest napisany na ⭐; inna odpowiedź zmienia tylko Fazę 3 §4.
+
+- ⭐ **A. Caldwell i listy „Zaobserwowane do tej pory” zwinięte domyślnie.** Pasmo Caldwella to natywne
+  `<details>` (nagłówek z licznikiem „Caldwell · 5 / 61” widoczny, kafelki po rozwinięciu), lista zaobserwowanych pod
+  każdą siatką też zwinięta (nazwy są już na kafelkach). Plus: zero JavaScriptu, strona rośnie tylko o Messiera, nic
+  nie znika z DOM (czytnik ekranu i testy). Minus: Caldwell o jedno dotknięcie dalej, stan rozwinięcia nie jest
+  zapamiętywany.
+- **B. Wszystko rozwinięte + skróty na górze strony** („Messier · Caldwell” jako linki do pasm). Plus: nic nie jest
+  schowane. Minus: strona dalej ma ok. 6000 px kafelków na telefonie.
+- **C. Legenda jako skróty do typów.** Wymagałoby grupowania kafelków według typu (to była odrzucona opcja C z P4),
+  więc kolejność katalogowa by znikła. Minus: zmienia odpowiedź na P4.
+
 Bez pytania, w planie: okno gratulacji pokaże odznakę zdobytego kamienia (albo kilka obok siebie) zamiast
 ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-red-390.png`,
 `plan-celebration-light-390.png`.
@@ -700,6 +764,7 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 
 - [ ] 2.5 `/design` badge, band and dialog blocks screenshotted in dark, light and red at 390 px and desktop
 - [ ] 2.6 Live dialog after a save that reaches "First galaxy" shows the galaxy badge
+- [ ] 2.7 The owner approved the badge art before it was ported
 
 ### Phase 3: Tile checklists with a legend
 
@@ -710,11 +775,11 @@ ogólnego `Award`. Makiety: `plan-celebration-dark-390.png`, `plan-celebration-r
 - [ ] 3.3 Lint passes on the changed files
 - [ ] 3.4 Build passes: `npm run build`
 - [ ] 3.5 The milestone journey, sub-nav and phone specs still pass unchanged
-- [ ] 3.6 The checklist markup (grids plus sprite) is measured before and after and recorded in `implementation-notes.md`
+- [ ] 3.6 The checklist markup (grids plus sprite) and the phone scroll height are measured before and after and recorded in `implementation-notes.md`
 
 #### Manual
 
-- [ ] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, the check clear of the icon at 320 px
+- [ ] 3.7 Signed-in `/log/progress` with the 37-object log at 320, 390 px and desktop, EN and PL, dark, light and red, names clear of the check at 320 px, the closed `<details>` work by keyboard
 - [ ] 3.8 A tile reads as "M31, Andromeda Galaxy, galaxy, seen" to a screen reader
 
 ### Phase 4: States, `/design`, the screenshot gate, the guard and the rule

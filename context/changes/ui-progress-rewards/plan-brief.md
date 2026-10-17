@@ -19,28 +19,30 @@ already carries OpenNGC's type.
 
 ## Desired End State
 
-A badge grid (3 columns on a phone, 4 from `sm`): a medallion per milestone with its own glyph (Moon, ringed planet,
-solar system, galaxy, globular, nebula, or the numerals 10 / 25 / 50 / 110 / 61); reached = solid ring on the action
-surface + check pip + bold name + date; ahead = dashed ring, muted glyph, "Not yet" or "37 / 50" and a solid, wider progress arc drawn in one SVG with the ring.
-Each checklist has a per-type legend ("Galaxies 11 / 40") over a 6 / 10-column tile grid; a seen tile has a 2 px
-action border, action fill, accent icon, bold number and a check, and reads aloud with its type and state. The dialog
-shows the same badges.
+A badge grid (2 columns on a phone, 4 from `sm`): a 112 px medallion per milestone, a ring around its own
+illustration in theme tokens (cratered Moon, banded ringed planet, the planets by the Sun, spiral galaxy, dense
+globular, layered nebula, and the number plus a small motif for the five count milestones); reached = solid ring, full
+art, check pip, bold name, date; ahead = dashed ring, muted art, "Not yet" or "37 / 50" and a solid, wider progress
+arc. Each checklist has a per-type legend ("Galaxies 11 / 40") over a 2 / 4-column grid of larger tiles (icon, number,
+name); a seen tile has a 2 px action border, action fill, accent icon, bold number and a check, and reads aloud with
+its type and state. Caldwell and the seen lists start closed (P8 ⭐, proposed). The dialog shows the same badges.
 
 ## Key Decisions Made
 
-| Decision               | Choice                                                                             | Why (1 sentence)                                                                       | Source                    |
-| ---------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------- |
-| Badge style (P1)       | ⭐ Medallion with a glyph                                                          | Matches the dialog's medallion and the Progress nav icon; simplest markup.             | Plan (owner question)     |
-| Reached vs. ahead (P2) | ⭐ Dashed ring + progress arc + text                                               | Progress readable in red mode by shape, not hue.                                       | Plan (owner question)     |
-| Count-badge glyph (P3) | ⭐ Numerals 10 / 25 / 50 / 110 / 61                                                | Each badge distinct and says how many; `Award` already means Progress.                 | Plan (owner question)     |
-| Grid layout (P4)       | ⭐ Dense tiles, icon + number, catalogue order                                     | Whole list on one or two phone screens; gaps and types visible.                        | Plan (owner question)     |
-| Seen state (P5)        | ⭐ Action fill + 2 px border + check                                               | Clear in all themes, no bright red slab at night.                                      | Plan (owner question)     |
-| Legend / filters (P6)  | ⭐ Legend with per-type counts, no filters                                         | No JS, no new page state; explains icons and shows progress per type.                  | Plan (owner question)     |
-| Type icons (P7)        | ⭐ lucide `Galaxy` + 5 drawn icons                                                 | lucide's stand-ins look like other things or already mean other concepts.              | Research + owner question |
-| Six type families      | galaxy, globular, open cluster, nebula, planetary, stars                           | Covers all 12 OpenNGC types used; Caldwell has no "stars".                             | Research                  |
-| Tokens                 | None added                                                                         | Every pair used is in the contrast test; review F7 adds `heading` on `action-surface`. | Research                  |
-| Tile icons             | One `<symbol>` sprite + `<use>`                                                    | 110 inline-icon tiles measured 102 KB raw; the sprite removes the repetition.          | Research                  |
-| Tests                  | e2e assertions only (sr text, legend count, dialog badge, checklist markup budget) | Maps are `Record`s checked by `astro check`; no restating unit tests.                  | Plan (test-diet rubric)   |
+| Decision                    | Choice                                                                             | Why (1 sentence)                                                                       | Source                  |
+| --------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------- |
+| Badge style (P1)            | **Owner: C** — rich illustration inside a ring with a progress arc, bigger badges  | The badges must feel like a reward; art approved per round before Phase 2.             | Owner 2026-10-17        |
+| Reached vs. ahead (P2)      | **Owner: B** — dashed ring + progress arc + text                                   | In red the arc is solid and thicker (review F3).                                       | Owner 2026-10-17        |
+| Count badges (P3)           | **Owner: C** — number + small motif; 2 badges per phone row                        | Distinct per milestone and says how many.                                              | Owner 2026-10-17        |
+| Grid layout (P4)            | **Owner: B** — larger tiles, icon + number + name, 2 / 4 columns                   | Names visible; costs scroll length (P8) and weight (measured, F9).                     | Owner 2026-10-17        |
+| Seen state (P5)             | **Owner: B** — action fill + 2 px border + check                                   | Clear in all themes, no bright red slab at night.                                      | Owner 2026-10-17        |
+| Legend / filters (P6)       | **Owner: A** — legend with per-type counts, no filters                             | No JS, no new page state.                                                              | Owner 2026-10-17        |
+| Type icons (P7)             | **Owner: B** — lucide `Galaxy` + 5 drawn icons                                     | lucide's stand-ins look like other things or already mean other concepts.              | Owner 2026-10-17        |
+| Six type families           | galaxy, globular, open cluster, nebula, planetary, stars                           | Covers all 12 OpenNGC types used; Caldwell has no "stars".                             | Research                |
+| Tokens                      | None added                                                                         | Every pair used is in the contrast test; review F7 adds `heading` on `action-surface`. | Research                |
+| Tile icons                  | One `<symbol>` sprite + `<use>`                                                    | 110 inline-icon tiles measured 102 KB raw; the sprite removes the repetition.          | Research                |
+| Phone length (P8, proposed) | ⭐ Caldwell band and seen lists in closed `<details>`                              | Larger tiles make Messier about 3,960 px on a phone; no filters (P6).                  | Plan (owner question)   |
+| Tests                       | e2e assertions only (sr text, legend count, dialog badge, checklist markup budget) | Maps are `Record`s checked by `astro check`; no restating unit tests.                  | Plan (test-diet rubric) |
 
 ## Scope
 
@@ -59,15 +61,15 @@ Pure display mappings (`FAMILY_OF`, `MILESTONE_GLYPHS`) over the existing rule (
 
 ## Phases at a Glance
 
-| Phase               | What it delivers                                                            | Key risk                                         |
-| ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------ |
-| 1. Contract         | Type families, the progress icon set, EN + PL copy, `/design` icon sheet    | Drawn icons illegible at 16 px                   |
-| 2. Milestone badges | `MilestoneBadge`, badge grid, badges in the dialog                          | Long Polish names in a 3-column grid at 320 px   |
-| 3. Tile checklists  | Sprite, tiles, legend, page spacing, markup measured                        | Red-mode legibility of not-seen tiles; HTML size |
-| 4. States and rule  | `/design` matrix, e2e assertions, rhythm guard, CLAUDE.md, full e2e + smoke | Other specs depending on old markup              |
+| Phase               | What it delivers                                                                         | Key risk                                   |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1. Contract         | Type families, the progress icon set, EN + PL copy, `/design` icon sheet                 | Drawn icons illegible at 16 px             |
+| 2. Milestone badges | Approved badge art ported, `MilestoneBadge`, 2/4-column badge grid, badges in the dialog | Art too busy or illegible in red at 112 px |
+| 3. Tile checklists  | Sprite, larger tiles with names, legend, closed Caldwell (P8), spacing, markup measured  | Phone scroll length; HTML weight           |
+| 4. States and rule  | `/design` matrix, e2e assertions, rhythm guard, CLAUDE.md, full e2e + smoke              | Other specs depending on old markup        |
 
-**Prerequisites:** none (no migration); local Supabase and the e2e recipe for Phases 2-4 (ports 4413 / 4414).
-**Estimated effort:** about 2 sessions across 4 phases.
+**Prerequisites:** the owner's approval of the badge art (`evidence/badge-art/`) before Phase 2; no migration; local Supabase and the e2e recipe for Phases 2-4 (ports 4413 / 4414).
+**Estimated effort:** about 2-3 sessions across 4 phases, plus art rounds with the owner.
 
 ## Open Risks & Assumptions
 
