@@ -499,10 +499,10 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [x] 1.1 Type check and lint pass: `npx astro sync && npx astro check && npm run lint`
-- [x] 1.2 The reference suite passes: `npm run test:reference`
-- [x] 1.3 The guards pass (island imports, contrast, colours, rhythm): `npm run test:guards`
-- [x] 1.4 The hardcoded-value scan on the touched view files returns 0 hits (the `/10x-ui` regex over `TopbarControls.tsx`, `segmented.tsx`)
+- [x] 1.1 Type check and lint pass: `npx astro sync && npx astro check && npm run lint` — 50f6357
+- [x] 1.2 The reference suite passes: `npm run test:reference` — 50f6357
+- [x] 1.3 The guards pass (island imports, contrast, colours, rhythm): `npm run test:guards` — 50f6357
+- [x] 1.4 The hardcoded-value scan on the touched view files returns 0 hits (the `/10x-ui` regex over `TopbarControls.tsx`, `segmented.tsx`) — 50f6357
 
 #### Manual
 
@@ -513,9 +513,9 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [ ] 2.1 Type check, lint and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
-- [ ] 2.2 The guards pass: `npm run test:guards`
-- [ ] 2.3 The live-sky spec still passes unchanged against a fresh preview: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
+- [x] 2.1 Type check, lint and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
+- [x] 2.2 The guards pass: `npm run test:guards`
+- [x] 2.3 The live-sky spec still passes unchanged against a fresh preview: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
 
 #### Manual
 

@@ -2,9 +2,12 @@ import { HorizonFromVector, MakeTime, Observer, RotateVector, Rotation_EQJ_HOR, 
 import { describe, expect, it } from "vitest";
 
 import { BRIGHT_STARS } from "@/lib/catalogue/stars";
+import { EDGE_INSET_PX, EXPANDED_MIN_SPAN_DEG, MAX_SPAN_DEG, skyField } from "@/lib/sky-view/field";
 import { bodyLabelRects, leaderLine, placeLabels, type LabelItem } from "@/lib/sky-view/labels";
+import { project, type Facing } from "@/lib/sky-view/projection";
 import { rotateToHorizon } from "@/lib/sky-view/rotate";
 import { fractionToX, placeSliderLabels, type SliderLabelId } from "@/lib/sky-view/slider-labels";
+import { SKY_MODES } from "@/lib/preferences";
 
 /** The interactive sky's browser maths (interactive-sky), pinned where the screenshots can't show it. */
 
@@ -39,6 +42,58 @@ describe("rotateToHorizon", () => {
         }
       }
     }
+  });
+});
+
+describe("the field in every sky mode (ui-sky-modes)", () => {
+  // The only unit-level protection that a mode or a resize cannot misplace the sky: a scale or wrap error would put a
+  // star at the wrong altitude or azimuth once the field is redrawn for another box.
+  it("spans 360° and 0–90° on any box, keeps square degrees in EXPANDED until clamped, and never shows the wrap twice", () => {
+    const boxes = [
+      { width: 390, height: 272 },
+      { width: 390, height: 495 },
+      { width: 320, height: 272 },
+      { width: 1440, height: 306 },
+      { width: 844, height: 200 },
+    ];
+    const facings: Facing[] = ["south", "north"];
+    const cases = SKY_MODES.flatMap((mode) => boxes.flatMap((box) => facings.map((facing) => ({ mode, box, facing }))));
+    expect(cases).toHaveLength(3 * 5 * 2);
+    let unclamped = 0;
+    for (const { mode, box, facing } of cases) {
+      const name = `${mode} ${String(box.width)}×${String(box.height)} facing ${facing}`;
+      const field = skyField({ mode, viewportPx: box.width, fieldHeightPx: box.height });
+      const { stripWidthPx: W, fieldHeightPx: H, viewSpanDeg } = field;
+      const inner = box.width - 2 * EDGE_INSET_PX;
+      expect(H, name).toBe(box.height);
+      // The strip's ends are `facing ± 180°`, its middle is `facing`.
+      const facingAz = facing === "south" ? 180 : 0;
+      expect(project({ altDeg: 0, azDeg: facingAz }, facing, W, H).x, name).toBeCloseTo(W / 2, 6);
+      expect(project({ altDeg: 0, azDeg: facingAz - 179.999 }, facing, W, H).x / W, name).toBeCloseTo(0, 4);
+      expect(project({ altDeg: 0, azDeg: facingAz + 179.999 }, facing, W, H).x / W, name).toBeCloseTo(1, 4);
+      // 1° of azimuth is W / 360 px anywhere on the strip; altitude 90 maps to the top, 0 to the bottom.
+      const a = project({ altDeg: 30, azDeg: facingAz + 10 }, facing, W, H);
+      const b = project({ altDeg: 31, azDeg: facingAz + 11 }, facing, W, H);
+      expect(b.x - a.x, name).toBeCloseTo(W / 360, 6);
+      expect(a.y - b.y, name).toBeCloseTo(H / 90, 6);
+      expect(project({ altDeg: 90, azDeg: facingAz }, facing, W, H).y, name).toBeCloseTo(0, 6);
+      expect(project({ altDeg: 0, azDeg: facingAz }, facing, W, H).y, name).toBeCloseTo(H, 6);
+      // The inset viewport shows `viewSpanDeg` of the 360° strip; the strip is at least twice it.
+      expect((inner / W) * 360, name).toBeCloseTo(viewSpanDeg, 6);
+      expect(W, name).toBeGreaterThanOrEqual(2 * inner - 1e-9);
+      if (mode === "expanded") {
+        expect(viewSpanDeg, name).toBeGreaterThanOrEqual(EXPANDED_MIN_SPAN_DEG);
+        expect(viewSpanDeg, name).toBeLessThanOrEqual(MAX_SPAN_DEG);
+        if (viewSpanDeg > EXPANDED_MIN_SPAN_DEG && viewSpanDeg < MAX_SPAN_DEG) {
+          unclamped += 1;
+          expect(W / 360, `${name}: px per degree sideways = upwards`).toBeCloseTo(H / 90, 6);
+        }
+      } else {
+        expect(viewSpanDeg, name).toBe(MAX_SPAN_DEG);
+      }
+    }
+    // Non-vacuity: some EXPANDED boxes (the tall phone fields) take square degrees.
+    expect(unclamped).toBeGreaterThanOrEqual(2);
   });
 });
 

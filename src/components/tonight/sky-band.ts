@@ -71,6 +71,13 @@ export const STRIP_OVERLAP_CLASS = "-mt-16";
 export const STRIP_OVERLAP_PX = 64;
 
 /**
+ * The live panorama's box (ui-sky-modes): the strip plus the overlap, `h-68` = 208 + 64 = 272 px, pulled up by
+ * `STRIP_OVERLAP_CLASS`, so DEFAULT's band is exactly the old one. The island's `ResizeObserver` watches this box (its
+ * height comes from CSS, never from the SVG inside it) and draws the field at the measured size through `skyField`.
+ */
+export const STRIP_FIELD_CLASS = "h-68";
+
+/**
  * The slider row on the ground under the silhouette, at a fixed height so the skeleton can reserve it. On a phone it
  * is one row (time and zone, track, Now) plus the labels under the track: pt-2 8 + h-11 44 + mt-1 4 + the label line
  * 20 = 76 px. From `sm` it is today's two rows, 128 px. The labels are positioned under the track (see
