@@ -118,3 +118,15 @@
   - A hand-made context (`browser.newContext`) calls `pinContext`; the service worker specs, whose worker compares a copy's `preparedAt` with its own real clock, opt out with `test.use({ clock: "real" })` and a reason, and read their expectations from page data (`data-night-date`, `html[data-from-device]`).
   - Never skip on a date, a Moon, a planet or a night state: assert the precondition and fail. `src/lib/e2e-clock-guard.test.ts` fails on a skip, `Date.now(`, `new Date()`, `waitForTimeout`, a `test` import from `@playwright/test`, an unexplained `clock: "real"` and a `newContext` that neither pins nor says why.
 - **Applies to**: plan, implement, impl-review
+
+## Name the risk a test is the only protection of before adding it
+
+- **Context**: Any Sidereus change that adds or grows a test: a unit test, a smoke step, an e2e spec or a db case (test-suite-diet, 2026-10-17).
+- **Problem**: The suite reached 3,054 unit tests in 156 files, 72% of them one of: an `it.each` row of one property, a formula or constant restated, a schema accept or reject table, mock choreography, or a matcher self-test. Every agent Stop re-ran all of it plus the static guards (25-45 s), and each test read as a protection while most were restatements of the code.
+- **Rule**:
+  - Before adding a test, write down the user-visible risk or invariant it is the only protection of; if a smoke step, an e2e journey, a db test or another unit test already holds it, do not add it.
+  - Prefer a relation over a value (an independent reference or an invariant over generated cases), a smoke step with a read-back over a schema test for a refusal, and one looping property over an `it.each` table.
+  - Fold rows into one test that asserts its counts first and names the case in every failure, so an empty sample cannot pass.
+  - A pin for a fixed bug keeps its title, and a trim cites the pin ledger row it keeps.
+  - Keep slow static guards out of the agent's end-of-turn loop (the `guards` project is CI only).
+- **Applies to**: plan, implement, impl-review

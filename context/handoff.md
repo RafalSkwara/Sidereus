@@ -2,6 +2,18 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-17 (test-suite-diet, supersedes the test-running lines below)
+
+**The test suite was cut and re-organised (`context/changes/test-suite-diet`, PRs #197-#207 and the Phase 7 and 8 PRs).** Read `implementation-notes.md` there for the per-phase counts, the pin ledger and the break proofs; `context/foundation/test-plan.md` §6.6 has the before and after.
+
+- **Two Vitest projects.** `npm run test:reference` (fast, 108 files / 761 tests, about 4 s; what the end-of-turn hook runs) and `npm run test:guards` (the static guards, the e2e clock guard and the catalogue provenance pins, CI only); `npm test` runs both (122 files / 813). Unit tests went from 3,056 to 813; e2e from 88 to 56 tests; db named tests from 118 to 100; smoke from 45 to 64 steps.
+- **E2E on a pinned clock.** No e2e or smoke step reads the real hour or date: every spec imports `test` from `tests/e2e/helpers.ts`, whose automatic fixture pins the browser and the server (the loopback-only cookie `sidereus-test-now`, `src/lib/clock.ts`) to a moment of `tests/e2e/clock-scenarios.mjs` (default `evening`; `E2E_CLOCK=deepNight|civilDawn|...` changes the default; the service worker specs and `site-map` stay real, with reasons). Smoke takes `SMOKE_CLOCK`. `src/lib/e2e-clock-guard.test.ts` enforces it. Never add a date-conditional skip.
+- **Owner-accepted gaps** (test-plan §7): the compass mapping, `Accept-Language` negotiation, a longitude echo in a schema message, the committed catalogue JSON's shape (the generators assert it at regeneration). `agent-hooks.test.ts` keeps the EPIPE regression pin (PR #156).
+- **Local runs** the way CI does them: a fresh `npm run build`, the forecast fixture (`node tests/e2e/forecast-fixture.mjs`, port via `FIXTURE_PORT`), the preview, local Supabase, the keys inline on the command (never exported); the lessons name the rest.
+- **One open S-06 note:** the auth smoke steps assert only the `?next=` continuation and the off-site refusal; whichever of S-06 (`feat/auth-loose-ends`) and these lands second rebases.
+
+---
+
 ## Update 2026-10-16 (S-05 evening-showpieces, supersedes the S-05 line below)
 
 **S-05 `evening-showpieces` (#173) is implemented on `feat/evening-showpieces` through Phase 4 and awaits the reviewer's `/10x-impl-review`. There is no PR yet.** Plan: `context/changes/evening-showpieces/plan.md`; what each phase did and every edited pin: `implementation-notes.md` there.
@@ -31,15 +43,15 @@ What changed:
 
 **M-4 "Finished and trustworthy" is open** (`context/foundation/roadmap.md`, owner's decisions of 2026-10-15). It brings no PRD change. Main goal: quality. North star: S-04.
 
-| Slice | Change ID | Issue | Board status |
-|---|---|---|---|
-| S-01 | `ui-dashboard-tiles` | #169 | in-progress |
-| S-02 | `ui-tonight-nav` | #170 | ready |
-| S-03 | `ui-log-progress-gear` | #171 | proposed |
-| S-04 | `small-scope-galaxies` (#159 + #21 item 3) | #172 | ready |
-| S-05 | `evening-showpieces` (#21 items 1, 4, 5 + PRD Primary criterion 2) | #173 | proposed |
-| S-06 | `auth-loose-ends` (ui-auth D1, D2) | #174 | ready |
-| S-07 | `error-visibility` (first-party only) | #175 | ready |
+| Slice | Change ID                                                          | Issue | Board status |
+| ----- | ------------------------------------------------------------------ | ----- | ------------ |
+| S-01  | `ui-dashboard-tiles`                                               | #169  | in-progress  |
+| S-02  | `ui-tonight-nav`                                                   | #170  | ready        |
+| S-03  | `ui-log-progress-gear`                                             | #171  | proposed     |
+| S-04  | `small-scope-galaxies` (#159 + #21 item 3)                         | #172  | ready        |
+| S-05  | `evening-showpieces` (#21 items 1, 4, 5 + PRD Primary criterion 2) | #173  | proposed     |
+| S-06  | `auth-loose-ends` (ui-auth D1, D2)                                 | #174  | ready        |
+| S-07  | `error-visibility` (first-party only)                              | #175  | ready        |
 
 - The PRD's hard deadline of **2026-11-04** still holds. **Cut order** (owner): drop S-06 first, then S-03, then S-01.
 - **S-07 uses first-party tools only:** Workers Logs, Cloudflare alerts and `/10x-observability-audit`. No new third party.
@@ -49,6 +61,7 @@ What changed:
 **Next:** `/10x-plan small-scope-galaxies` (S-04, the north star), with S-02 `ui-tonight-nav` through `/10x-ui` in parallel.
 
 **Owner to-dos (unchanged):**
+
 - ESA's answer to the follow-up on direct use of Hipparcos V1 (PRD Open Question 21; the owner sent it 2026-10-16);
 - the IAU MDC courtesy email;
 - the moonlight post-merge checks after 2026-10-22.
