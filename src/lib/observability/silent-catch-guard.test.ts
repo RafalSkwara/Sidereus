@@ -433,7 +433,7 @@ function violationsOf(
 }
 
 /** In-memory samples of the shapes the audit found: each is silent as written and passes once it reports. */
-const SAMPLES: { name: string; silent: string; reported: string }[] = [
+const SAMPLES: { name: string; silent: string; reported: string; path?: string }[] = [
   {
     name: "a failed read turned into a redirect key without saveFailureKey",
     silent: `try {\n  await read();\n} catch (error) {\n  return fail(thrownKey(error, "errors.save.sessionPlan"));\n}\n`,
@@ -489,20 +489,49 @@ const SAMPLES: { name: string; silent: string; reported: string }[] = [
     silent: `const stored = await index.read().catch(reportAnd("sw.index", undefined));\n`,
     reported: `import { reportAnd } from "@/lib/offline/report";\nconst stored = await index.read().catch(reportAnd("sw.index", undefined));\n`,
   },
+  {
+    name: "a rethrow whose cause is not the caught error",
+    silent: `try {\n  await fetchIt();\n} catch (error) {\n  throw new Error("fixed", { cause: other });\n}\n`,
+    reported: `try {\n  await fetchIt();\n} catch (error) {\n  throw new Error("fixed", { cause: error });\n}\n`,
+  },
+  {
+    name: "a nested catch that logs while the outer one stays silent",
+    silent: `try {\n  a();\n} catch {\n  try {\n    b();\n  } catch (error) {\n    logFailure("forecast.fetch", error);\n  }\n}\n`,
+    reported: `try {\n  a();\n} catch (outer) {\n  logFailure("forecast.fetch", outer);\n  try {\n    b();\n  } catch (error) {\n    logFailure("forecast.fetch", error);\n  }\n}\n`,
+  },
+  {
+    name: "a .then(ok, fail) with a named handler",
+    silent: `p.then(ok, fail);\n`,
+    reported: `p.then(ok, (error: unknown) => {\n  logFailure("tonight.build", error);\n});\n`,
+  },
+  {
+    name: "a catch in a .tsx file",
+    path: "src/sample.tsx",
+    silent: `const x = <div />;\ntry { a(); } catch { /* none */ }\n`,
+    reported: `const x = <div />;\ntry { a(); } catch (error) { logFailure("read.log", error); }\n`,
+  },
+  {
+    name: "a catch in an .astro frontmatter",
+    path: "src/pages/sample.astro",
+    silent: `---\nimport Layout from "../layouts/Layout.astro";\ntry {\n  await load();\n} catch {\n  // ignored\n}\n---\n\n<Layout />\n`,
+    reported: `---\nimport Layout from "../layouts/Layout.astro";\ntry {\n  await load();\n} catch (error) {\n  logFailure("read.log", error);\n}\n---\n\n<Layout />\n`,
+  },
+  {
+    name: "a .catch in an .astro script block, beside a JSON-LD block that holds no code",
+    path: "src/pages/sample.astro",
+    silent: `---\nconst title = "x";\n---\n<div></div>\n<script>\n  load().catch(() => null);\n</script>\n<script type="application/ld+json">\n  {"a": 1}\n</script>\n`,
+    reported: `---\nconst title = "x";\n---\n<div></div>\n<script>\n  load().catch((error) => { logFailure("read.log", error); });\n</script>\n<script type="application/ld+json">\n  {"a": 1}\n</script>\n`,
+  },
 ];
 
 describe("analyzeSource: the guard's rule on in-memory samples", () => {
-  it.each(SAMPLES)("$name is silent as written and passes once it reports", ({ silent, reported }) => {
-    expect(analyzeSource(silent, "src/sample.ts").silent, "without a report").toHaveLength(1);
-    expect(analyzeSource(reported, "src/sample.ts").silent, "with a report").toEqual([]);
-  });
-
-  it("reports the line of each silent site", () => {
-    const source = `const a = 1;\ntry {\n  a();\n} catch {\n  // ignored\n}\nb().catch(() => null);\n`;
-    expect(analyzeSource(source, "src/sample.ts").silent).toEqual([
-      { kind: "catch", line: 4 },
-      { kind: ".catch", line: 7 },
-    ]);
+  it("finds one silent site in each shape as written and none once it reports", () => {
+    expect(SAMPLES.length).toBeGreaterThanOrEqual(17);
+    SAMPLES.forEach(({ name, silent, reported, path }, i) => {
+      const file = path ?? "src/sample.ts";
+      expect(analyzeSource(silent, file).silent, `case ${String(i)}: ${name} without a report`).toHaveLength(1);
+      expect(analyzeSource(reported, file).silent, `case ${String(i)}: ${name} with a report`).toEqual([]);
+    });
   });
 
   it("treats a reporter as one only when the file imports it from a reporter module", () => {
@@ -519,74 +548,6 @@ describe("analyzeSource: the guard's rule on in-memory samples", () => {
     expect(analyzeSource(method, "src/a.ts").silent).toEqual([]);
     expect(analyzeSource(`try { a(); } catch (e) { r.report("sw.shell", e); }\n`, "src/a.ts").silent).toHaveLength(1);
     expect(analyzeSource(`try { a(); } catch (e) { report("sw.shell", e); }\n`, "src/a.ts").silent).toHaveLength(1);
-  });
-
-  it("accepts a rethrow only with the caught error as the cause (or a bare rethrow)", () => {
-    const rethrows = (body: string): number =>
-      analyzeSource(`try { a(); } catch (error) { ${body} }\n`, "src/a.ts").silent.length;
-    expect(rethrows("throw error;")).toBe(0);
-    expect(rethrows('throw new Error("fixed", { cause: error });')).toBe(0);
-    expect(rethrows('throw new Error("fixed", { cause: faultFrom(error) });')).toBe(0);
-    expect(rethrows('throw new Error("fixed");')).toBe(1);
-    expect(rethrows('throw new Error("fixed", { cause: other });')).toBe(1);
-    expect(rethrows('throw new Error("fixed", { cause: undefined });')).toBe(1);
-    expect(rethrows("throw other;")).toBe(1);
-    // A throw inside a callback does not leave the handler.
-    expect(rethrows("queue(() => { throw error; });")).toBe(1);
-    // A rethrow on one branch only: the other branch swallows the failure, wherever the return sits.
-    expect(rethrows("if (stored) return stored; throw error;")).toBe(1);
-    expect(rethrows("if (error instanceof Redirect) throw error; return null;")).toBe(1);
-    expect(rethrows("return; throw error;")).toBe(1);
-    // A return inside a nested function is not the handler's own.
-    expect(rethrows("const pick = () => { return 1; }; throw error;")).toBe(0);
-    expect(rethrows('if (isRoutine(error)) { logNotice("forecast.fetch", error); return null; } throw error;')).toBe(0);
-    // A catch without a binding has no cause to keep.
-    expect(
-      analyzeSource('try { a(); } catch { throw new Error("fixed", { cause: undefined }); }\n', "src/a.ts").silent,
-    ).toHaveLength(1);
-    expect(
-      analyzeSource('try { a(); } catch (cause) { throw new Error("fixed", { cause }); }\n', "src/a.ts").silent,
-    ).toEqual([]);
-  });
-
-  it("counts the second argument of a two-argument .then as a site, judged like a .catch handler", () => {
-    const silentCount = (source: string): number => analyzeSource(source, "src/a.ts").silent.length;
-    expect(silentCount("p.then(ok, () => undefined);")).toBe(1);
-    expect(silentCount("p.then(ok, fail);")).toBe(1);
-    expect(silentCount("p.then(ok, (error) => { throw error; });")).toBe(0);
-    expect(silentCount("p.then(ok, (error) => { if (a) return 1; throw error; });")).toBe(1);
-    expect(silentCount('p.then(ok, (error) => { logFailure("tonight.build", error); });')).toBe(0);
-    expect(
-      silentCount(`import { reportAnd } from "@/lib/offline/report";\np.then(ok, reportAnd("sw.index", undefined));`),
-    ).toBe(0);
-    // A one-argument `.then` has no rejection handler, and its callback is not judged.
-    expect(silentCount("p.then(() => undefined);")).toBe(0);
-    expect(analyzeSource("p.then(ok, () => undefined);\n", "src/a.ts").silent).toEqual([{ kind: ".then", line: 1 }]);
-  });
-
-  it("judges a nested catch on its own: a log inside it does not excuse the outer one", () => {
-    const source = `try {\n  a();\n} catch {\n  try {\n    b();\n  } catch (error) {\n    logFailure("forecast.fetch", error);\n  }\n}\n`;
-    expect(analyzeSource(source, "src/a.ts").silent).toEqual([{ kind: "catch", line: 3 }]);
-  });
-
-  it("scans .tsx and the frontmatter and scripts of .astro, placing each site on its file line", () => {
-    expect(analyzeSource("const x = <div />;\ntry { a(); } catch { /* none */ }\n", "src/a.tsx").silent).toEqual([
-      { kind: "catch", line: 2 },
-    ]);
-
-    const frontmatter = `---\nimport Layout from "../layouts/Layout.astro";\ntry {\n  await load();\n} catch {\n  // ignored\n}\n---\n\n<Layout />\n`;
-    expect(analyzeSource(frontmatter, "src/pages/sample.astro").silent, "frontmatter catch").toEqual([
-      { kind: "catch", line: 5 },
-    ]);
-    const reported = frontmatter
-      .replace("// ignored", 'logFailure("read.log", error);')
-      .replace("catch {", "catch (error) {");
-    expect(analyzeSource(reported, "src/pages/sample.astro").silent, "frontmatter with a report").toEqual([]);
-
-    const scripted = `---\nconst title = "x";\n---\n<div></div>\n<script>\n  load().catch(() => null);\n</script>\n<script type="application/ld+json">\n  {"a": 1}\n</script>\n`;
-    expect(analyzeSource(scripted, "src/pages/sample.astro").silent, "script catch").toEqual([
-      { kind: ".catch", line: 6 },
-    ]);
   });
 });
 

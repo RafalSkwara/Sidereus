@@ -266,12 +266,18 @@ describe("runner-zone guard", () => {
       ["/* new Date(y, m) is local */ const t = new Date(ms);", "a block comment that mentions new Date(y, m)"],
     ];
 
-    it.each(OFFENDING)("flags %s (%s)", (snippet) => {
-      expect(findRunnerZoneReads(snippet).length).toBeGreaterThan(0);
+    it("flags every offending sample (non-vacuity: the sample count first)", () => {
+      expect(OFFENDING).toHaveLength(26);
+      for (const [snippet, label] of OFFENDING) {
+        expect(findRunnerZoneReads(snippet).length, `should flag: ${snippet} (${label})`).toBeGreaterThan(0);
+      }
     });
 
-    it.each(ALLOWED)("does not flag %s (%s)", (snippet) => {
-      expect(findRunnerZoneReads(snippet)).toEqual([]);
+    it("flags no allowed sample (non-vacuity: the sample count first)", () => {
+      expect(ALLOWED).toHaveLength(21);
+      for (const [snippet, label] of ALLOWED) {
+        expect(findRunnerZoneReads(snippet), `should not flag: ${snippet} (${label})`).toEqual([]);
+      }
     });
 
     it("reports the line and the rule of each hit", () => {

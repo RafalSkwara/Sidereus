@@ -110,54 +110,50 @@ const files = sourceFiles(SRC_DIR)
   .sort();
 
 describe("countDisables", () => {
-  it("counts next-line, line and block disables naming no-console, with or without a reason", () => {
-    expect(
-      countDisables(
-        [
+  it("counts disables as ESLint reads them: rules, reasons, dash runs, inline config and rule-less disables", () => {
+    const samples: { label: string; lines: string[]; expected: DisableCounts }[] = [
+      {
+        label: "next-line, line and block disables naming no-console, with or without a reason",
+        lines: [
           "// eslint-disable-next-line no-console",
           "x(); // eslint-disable-line no-console -- reason",
           "/* eslint-disable no-console */",
           "/* eslint-disable react-hooks/exhaustive-deps, no-console */",
           "/* eslint-enable no-console */",
           "// eslint-disable-next-line no-control-regex",
-        ].join("\n"),
-      ),
-    ).toEqual({ noConsole: 4, unreasoned: 3, ruleless: 0, configComments: 0 });
-  });
-
-  it("splits the reason as ESLint does, so a longer dash run still names the rule", () => {
-    expect(
-      countDisables(
-        [
+        ],
+        expected: { noConsole: 4, unreasoned: 3, ruleless: 0, configComments: 0 },
+      },
+      {
+        label: "a longer dash run still splits the reason as ESLint does",
+        lines: [
           "// eslint-disable-next-line no-console --- reason",
           "x(); // eslint-disable-line no-console ---- why",
           "/* eslint-disable no-console -- a reason */",
           "// eslint-disable-next-line no-console --",
-        ].join("\n"),
-      ),
-    ).toEqual({ noConsole: 4, unreasoned: 1, ruleless: 0, configComments: 0 });
-  });
-
-  it("counts inline config comments that set no-console", () => {
-    expect(
-      countDisables(
-        [
+        ],
+        expected: { noConsole: 4, unreasoned: 1, ruleless: 0, configComments: 0 },
+      },
+      {
+        label: "inline config comments that set no-console",
+        lines: [
           '/* eslint no-console: "off" */',
           "/* eslint no-console: 0 */",
           '/* eslint eqeqeq: "error", no-console: ["off"] */',
           '/* eslint eqeqeq: "error" */',
-        ].join("\n"),
-      ),
-    ).toEqual({ noConsole: 0, unreasoned: 0, ruleless: 0, configComments: 3 });
-  });
-
-  it("flags a disable that names no rule", () => {
-    expect(countDisables("// eslint-disable-next-line\n/* eslint-disable */\n// eslint-disable -- why")).toEqual({
-      noConsole: 0,
-      unreasoned: 0,
-      ruleless: 3,
-      configComments: 0,
-    });
+        ],
+        expected: { noConsole: 0, unreasoned: 0, ruleless: 0, configComments: 3 },
+      },
+      {
+        label: "a disable that names no rule",
+        lines: ["// eslint-disable-next-line", "/* eslint-disable */", "// eslint-disable -- why"],
+        expected: { noConsole: 0, unreasoned: 0, ruleless: 3, configComments: 0 },
+      },
+    ];
+    expect(samples).toHaveLength(4);
+    for (const sample of samples) {
+      expect(countDisables(sample.lines.join("\n")), sample.label).toEqual(sample.expected);
+    }
   });
 });
 
