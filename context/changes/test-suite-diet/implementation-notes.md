@@ -339,3 +339,17 @@ Docs only; prepared locally on `test-diet/phase-8` while Phase 7's PR awaited me
 - `context/handoff.md`: an "Update 2026-10-17" block (the two projects and commands, the pinned clock and its guard, the accepted gaps, how to run the CI-like local check, the S-06 note). `CLAUDE.md`: the "Unit tests live next to the code" paragraph (both projects, the hook runs `reference`, name the risk first); the Commands block already names `test:reference` and `test:guards` since Phase 0.
 - Checks: `npm run lint` passes; the end-of-turn hook skips the docs-only change (one real run on this branch: exit 0 in 0.1 s, nothing run).
 - Manual (8.2): the owner reads the §6.6 note and the before and after table.
+
+## Close-out (2026-10-17)
+
+All phases merged to main: #197, #199, #202, #205, #206, #207, #208, #209.
+
+**Owner's manual rows.** 7.5 (the phone first screen stays pinned and the ESA footer test is still in the suite) and 8.2 (the owner reads the §6.6 note and the before/after table) were covered by the owner's merge of #208 and #209; the rows stay unticked in the plan's Progress because no separate confirmation was recorded.
+
+**Final before -> after** (from the Phase 8 section and `test-plan.md` §6.6):
+- Vitest: 3,056 tests -> 813 (`reference` 108 files / 761 tests, `guards` 14 / 52); cold `npm test` 27.9 s -> 7.7 s; the Stop hook about 13 s (was 25-45 s).
+- e2e: 88 -> 56 tests, no date or state skip, pinned clock.
+- db: 118 -> 100 named tests.
+- smoke: 45 -> 64 steps.
+
+**Accepted gaps** (owner-accepted, `test-plan.md` §7): the compass mapping, `Accept-Language` negotiation, a longitude echo in a schema message, the committed catalogue JSON's shape.
