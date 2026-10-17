@@ -95,6 +95,11 @@ const COMPASS_GAP_PX = 8;
 const COMPASS_MIN_TOP_PX = 4;
 /** How far a chevron pans the strip, as a share of the visible width (ui-sky-light). */
 const PAN_SHARE = 0.6;
+/**
+ * How far a mouse moves before a press on the strip becomes a drag (ui-sky-modes): below it the press stays a click (a
+ * marker opens), past it the strip follows the pointer and the click that ends the drag is swallowed.
+ */
+const DRAG_THRESHOLD_PX = 6;
 /** The least gap between two slider labels, px. */
 const LABEL_GAP_PX = 8;
 
@@ -192,6 +197,10 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
   // The panorama's box, whose height comes from CSS (the mode); the ResizeObserver watches it, never the SVG.
   const fieldBox = useRef<HTMLDivElement>(null);
   const placement = useRef<Placement | null>(null);
+  // A mouse drag on the strip (ui-sky-modes): the press, whether it has passed the threshold, and the click to swallow.
+  const drag = useRef<{ pointerId: number; startX: number; startScroll: number; active: boolean } | null>(null);
+  const swallowClick = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const verdict = useRef<HTMLDivElement>(null);
   const field = useRef<SVGSVGElement>(null);
   // The compass row's top in the field, once the verdict's text has been measured.
@@ -502,11 +511,67 @@ export default function TonightSkyView({ view, locale, children }: TonightSkyVie
             role="region"
             aria-label={t.panorama}
             tabIndex={0}
-            className="scrollbar-hidden focus-visible:outline-ring relative h-full overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2"
+            className={cn(
+              "scrollbar-hidden focus-visible:outline-ring relative h-full overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2",
+              // A mouse can drag the sky (ui-sky-modes): a grab cursor, and no text selection starting under the press.
+              "data-sky-dragging:cursor-grabbing pointer-fine:cursor-grab pointer-fine:select-none",
+            )}
             onScroll={() => {
               readEdges();
               readCentre();
             }}
+            // Mouse only: touch and pen keep the browser's own scrolling (a pen is subject to `touch-action` and would
+            // fight it; plan review F7). The drag starts past the threshold, so a plain click keeps its marker target.
+            onPointerDown={(event) => {
+              swallowClick.current = false;
+              if (event.pointerType !== "mouse" || event.button !== 0) return;
+              drag.current = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startScroll: event.currentTarget.scrollLeft,
+                active: false,
+              };
+            }}
+            onPointerMove={(event) => {
+              const current = drag.current;
+              if (current?.pointerId !== event.pointerId) return;
+              const dx = event.clientX - current.startX;
+              if (!current.active) {
+                if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+                current.active = true;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                setDragging(true);
+              }
+              event.currentTarget.scrollLeft = current.startScroll - dx;
+            }}
+            onPointerUp={(event) => {
+              const current = drag.current;
+              if (current?.pointerId !== event.pointerId) return;
+              drag.current = null;
+              if (!current.active) return;
+              // The click that ends a drag fires right after this, in the same task: swallow it, and only it.
+              swallowClick.current = true;
+              window.setTimeout(() => {
+                swallowClick.current = false;
+              }, 0);
+              setDragging(false);
+            }}
+            onPointerCancel={(event) => {
+              if (drag.current?.pointerId !== event.pointerId) return;
+              drag.current = null;
+              setDragging(false);
+            }}
+            onClickCapture={(event) => {
+              if (!swallowClick.current) return;
+              swallowClick.current = false;
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            // A marker is a link: the browser would start a link drag (and a ghost image) under a mouse drag.
+            onDragStart={(event) => {
+              event.preventDefault();
+            }}
+            data-sky-dragging={dragging ? "" : undefined}
             data-sky-strip
           >
             <svg

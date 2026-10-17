@@ -540,8 +540,8 @@ Pasmo ROZWINIĘTE na desktopie ma wysokość `max(DOMYŚLNE, (wysokość ekranu 
 
 #### Automated
 
-- [ ] 3.1 Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
-- [ ] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
+- [x] 3.1 Lint, type check and the reference suite pass: `npx astro check && npm run lint && npm run test:reference`
+- [x] 3.2 The live-sky spec passes, the new drag test included and the marker-click tests unchanged: `<e2e env> npx playwright test tests/e2e/tonight-sky.spec.ts`
 
 #### Manual
 
