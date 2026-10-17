@@ -778,53 +778,43 @@ const moonCardWashedOutLink = {
   label: plural(locale, moonCardWashedOut, m.tonight.pages.seeWashedOut)({ count: String(moonCardWashedOut) }),
 };
 
-// App icon proposals (app-icon): the round-2 candidate icons (round 1 stays in the evidence folder), read as text from the change's evidence folder (in
-// `context/changes/` now, `context/archive/` once archived; a glob, so the page still builds when neither matches)
-// and drawn as `<img>` data URIs, so red mode filters them like any image. Server-side `?raw` strings only: nothing
-// is emitted as a client asset, so the service worker never precaches a proposal.
-const appIconFiles = import.meta.glob<string>("/context/*/app-icon/evidence/icon-proposals/*/*.svg", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
-const appIconSvg = (proposal: string, file: string) => {
-  const entry = Object.entries(appIconFiles).find(([path]) => path.endsWith(`/${proposal}/${file}`));
-  return entry ? `data:image/svg+xml,${encodeURIComponent(entry[1])}` : null;
-};
-const appIconProposals = [
+// App icon (app-icon): the shipped files, read from public/ by URL, so the specimen shows exactly what the tab, the
+// home screen and a launcher get. `npm run icons:build` writes the PNGs and the ICO from public/pwa-icon.svg,
+// public/pwa-maskable.svg and public/favicon.svg (pwa-assets*.config.mjs); the sources and the comparison sheet are in
+// the app-icon change's evidence (icon-proposals/final/).
+const appIconGroups = [
   {
-    dir: "r2-1-white-star-dusk",
-    name: "R2-1 · White star, dusk",
-    note: "Round 1's white star (primary) and primary-strong companion over round 3's dusk-glow horizon and ground.",
+    id: "tab",
+    title: "Tab",
+    note: "favicon.svg is linked first; favicon.png (32 px) is the fallback. The 16 px star has a thicker waist so it stays a star.",
+    items: [
+      { src: "/favicon.svg", label: "16 · svg", size: "size-4" },
+      { src: "/favicon.png", label: "16 · png", size: "size-4" },
+      { src: "/favicon.svg", label: "32 · svg", size: "size-8" },
+      { src: "/favicon.png", label: "32 · png", size: "size-8" },
+    ],
   },
   {
-    dir: "r2-2-gold-star-navy",
-    name: "R2-2 · Gold star, navy",
-    note: "The horizon proposal's gold star (star-accent base) with a primary companion on the plain zenith-to-horizon tile.",
+    id: "home",
+    title: "Home screen",
+    note: "The manifest's 64, 192 and 512 icons and the apple-touch icon (iOS rounds its corners).",
+    items: [
+      { src: "/pwa-64x64.png", label: "64 · pwa-64x64", size: "size-16" },
+      { src: "/pwa-192x192.png", label: "96 · pwa-192x192", size: "size-24" },
+      { src: "/apple-touch-icon-180x180.png", label: "128 · apple-touch 180", size: "size-32 rounded-3xl" },
+      { src: "/pwa-512x512.png", label: "128 · pwa-512x512", size: "size-32" },
+    ],
   },
   {
-    dir: "r2-3-rising-star",
-    name: "R2-3 · Rising star",
-    note: "One large white star (primary) rising: its lower arm sets behind a low ridge (background) under the dusk glow.",
+    id: "maskable",
+    title: "Maskable",
+    note: "The sky and ground run full bleed; the star sits inside the central safe circle, so any launcher mask keeps it whole.",
+    items: [
+      { src: "/maskable-icon-512x512.png", label: "128 · circle", size: "size-32 rounded-full" },
+      { src: "/maskable-icon-512x512.png", label: "128 · squircle", size: "size-32 rounded-3xl" },
+      { src: "/maskable-icon-512x512.png", label: "128 · unmasked", size: "size-32" },
+    ],
   },
-  {
-    dir: "r2-4-gold-star-dusk",
-    name: "R2-4 · Gold star, dusk",
-    note: "The horizon proposal with the companion kept: gold star, primary-strong companion, dusk-glow horizon.",
-  },
-].map((proposal) => ({
-  ...proposal,
-  favicon: appIconSvg(proposal.dir, "favicon.svg"),
-  icon: appIconSvg(proposal.dir, "icon.svg"),
-  maskable: appIconSvg(proposal.dir, "maskable.svg"),
-}));
-// favicon.svg at the tab sizes, icon.svg at the home-screen sizes, maskable.svg in a launcher's circle crop.
-const appIconSizes = [
-  { label: "16 · favicon", file: "favicon", size: "size-4" },
-  { label: "32 · favicon", file: "favicon", size: "size-8" },
-  { label: "64 · icon", file: "icon", size: "size-16" },
-  { label: "128 · icon", file: "icon", size: "size-32" },
-  { label: "128 · maskable, circle", file: "maskable", size: "size-32 rounded-full" },
 ] as const;
 
 const block = "flex flex-col gap-4 border-t border-border pt-6 first:border-t-0 first:pt-0";
@@ -957,34 +947,28 @@ const groupTitle = "text-label font-semibold text-muted-foreground";
         </div>
       </Band>
 
-      <Band headingId="app-icon-heading" heading="App icon proposals">
-        <div class="flex flex-col gap-6" data-app-icon-proposals>
+      <Band headingId="app-icon-heading" heading="App icon">
+        <div class="flex flex-col gap-6" data-app-icon>
           <p class:list={blockNote}>
-            Round-2 proposals for the app-icon change, not in use: the home-screen icons are still generated from
-            public/pwa-icon.svg and the tab still shows public/favicon.png. Literal hex inside each SVG (an icon cannot
-            read the tokens); the files, their PNG previews and round 1 live in
-            context/changes/app-icon/evidence/icon-proposals/.
+            A white star (primary) over a dusk horizon (zenith, horizon, dusk-glow-horizon) and the ground (background),
+            as literal hex inside each file, since an icon cannot read the tokens. States: the theme switch shows dark,
+            light and red; in red the page's image filter turns the icon red like any image, but the browser tab and an
+            installed icon sit outside the page and keep their colours. Hover, focus, disabled, loading, error and empty
+            do not apply to a static image.
           </p>
-          {appIconProposals.map((proposal) => (
-            <section class="flex flex-col gap-3" aria-labelledby={`app-icon-${proposal.dir}`}>
-              <h3 id={`app-icon-${proposal.dir}`} class:list={groupTitle}>
-                {proposal.name}
+          {appIconGroups.map((group) => (
+            <section class="flex flex-col gap-3" aria-labelledby={`app-icon-${group.id}`}>
+              <h3 id={`app-icon-${group.id}`} class:list={groupTitle}>
+                {group.title}
               </h3>
-              <p class:list={blockNote}>{proposal.note}</p>
+              <p class:list={blockNote}>{group.note}</p>
               <ul class="flex flex-wrap items-end gap-6">
-                {appIconSizes.map((spec) => {
-                  const src = proposal[spec.file];
-                  return (
-                    <li class="flex flex-col items-center gap-2">
-                      {src ? (
-                        <img src={src} alt="" class:list={["shrink-0", spec.size]} />
-                      ) : (
-                        <span class:list={["shrink-0 rounded-lg border border-dashed border-border", spec.size]} />
-                      )}
-                      <span class:list={stateLabel}>{spec.label}</span>
-                    </li>
-                  );
-                })}
+                {group.items.map((item) => (
+                  <li class="flex flex-col items-center gap-2">
+                    <img src={item.src} alt="" class:list={["shrink-0", item.size]} />
+                    <span class:list={stateLabel}>{item.label}</span>
+                  </li>
+                ))}
               </ul>
             </section>
           ))}
