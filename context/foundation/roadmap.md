@@ -288,7 +288,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - Every size the manifest and `apple-touch-icon` need comes from one source through the existing PWA assets config (`pwa-assets.config.mjs`), and the service worker's precache list follows.
   - The icon must read on light and dark home screens; the in-app red mode does not apply to it.
   - Outside the cut order: the owner mandated it on 2026-10-17.
-- **Status:** done (owner picked the icon; PR #217 merged 2026-10-17, archive pending)
+- **Status:** done
 
 ## Backlog Handoff
 
