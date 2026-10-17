@@ -50,40 +50,37 @@ const FINDER_PACKING_FLOOR_ARCSEC = 0.005 * Math.SQRT2 * 3600 + 0.1;
 /**
  * Independent published positions, ICRS J2000 (epoch 2000.0, proper motion applied), as degrees.
  *
- * J2000 ICRS values as published by SIMBAD, entered from memory by the implementing agent; not yet cross-read against a
- * second published source (lessons: two sources per reference) — to be confirmed in review.
+ * Read from SIMBAD's TAP service (the `basic` table: `ra`, `dec`), accessed 2026-10-17, one query per star, for example
+ * https://simbad.cds.unistra.fr/simbad/sim-tap/sync?request=doQuery&lang=adql&format=json&query=SELECT%20ra,dec%20FROM%20basic%20JOIN%20ident%20ON%20oidref=oid%20WHERE%20id=%27*%20alf%20CMa%27
+ * (SIMBAD's coordinate source is the Hipparcos re-reduction, 2007A&A...474..653V, except Unukalhai, Gaia, and the two
+ * stars below, UCAC4: for the Hipparcos stars this checks our reader and the epoch propagation against a published
+ * J2000 position, not against astrometry independent of Hipparcos; VizieR's TAP answered 503 that day).
  *
  * `mag` is the star's V magnitude, only to pick the star out of its neighbours (the finder file stores tenths);
  * `con` is the constellation the star is in. Alpheratz (alpha And, once delta Peg) and Elnath (beta Tau, once gamma
  * Aur) sit on a constellation boundary, which the IAU boundaries of 1930 put in Andromeda and Taurus; Unukalhai is
  * alpha Serpentis (Serpens Caput).
  */
-const hms = (h: number, m: number, s: number) => (h + m / 60 + s / 3600) * 15;
-const dms = (sign: 1 | -1, d: number, m: number, s: number) => sign * (d + m / 60 + s / 3600);
 const REFERENCES = [
-  { name: "Sirius", ra: hms(6, 45, 8.917), dec: dms(-1, 16, 42, 58.02), mag: -1.44, con: "CMa" },
-  { name: "Arcturus", ra: hms(14, 15, 39.672), dec: dms(1, 19, 10, 56.67), mag: -0.05, con: "Boo" },
-  { name: "Vega", ra: hms(18, 36, 56.336), dec: dms(1, 38, 47, 1.28), mag: 0.03, con: "Lyr" },
-  { name: "Procyon", ra: hms(7, 39, 18.12), dec: dms(1, 5, 13, 29.96), mag: 0.4, con: "CMi" },
-  { name: "Capella", ra: hms(5, 16, 41.359), dec: dms(1, 45, 59, 52.77), mag: 0.08, con: "Aur" },
-  { name: "Betelgeuse", ra: hms(5, 55, 10.305), dec: dms(1, 7, 24, 25.43), mag: 0.45, con: "Ori" },
-  { name: "Polaris", ra: hms(2, 31, 49.09), dec: dms(1, 89, 15, 50.8), mag: 1.97, con: "UMi" },
-  { name: "Unukalhai (alpha Ser)", ra: hms(15, 44, 16.07), dec: dms(1, 6, 25, 32.3), mag: 2.65, con: "Ser" },
-  { name: "Alpheratz (alpha And)", ra: hms(0, 8, 23.26), dec: dms(1, 29, 5, 25.6), mag: 2.06, con: "And" },
-  { name: "Elnath (beta Tau)", ra: hms(5, 26, 17.51), dec: dms(1, 28, 36, 26.8), mag: 1.65, con: "Tau" },
+  { name: "Sirius", ra: 101.2871553, dec: -16.7161159, mag: -1.44, con: "CMa" },
+  { name: "Arcturus", ra: 213.9153003, dec: 19.1824092, mag: -0.05, con: "Boo" },
+  { name: "Vega", ra: 279.2347348, dec: 38.783689, mag: 0.03, con: "Lyr" },
+  { name: "Procyon", ra: 114.8254979, dec: 5.2249876, mag: 0.4, con: "CMi" },
+  { name: "Capella", ra: 79.1723279, dec: 45.9979915, mag: 0.08, con: "Aur" },
+  { name: "Betelgeuse", ra: 88.792939, dec: 7.407064, mag: 0.45, con: "Ori" },
+  { name: "Polaris", ra: 37.9545607, dec: 89.264109, mag: 1.97, con: "UMi" },
+  { name: "Unukalhai (alpha Ser)", ra: 236.0669755, dec: 6.4256302, mag: 2.65, con: "Ser" },
+  { name: "Alpheratz (alpha And)", ra: 2.0969162, dec: 29.0904311, mag: 2.06, con: "And" },
+  { name: "Elnath (beta Tau)", ra: 81.5729713, dec: 28.6074517, mag: 1.65, con: "Tau" },
 ] as const;
 
-/** The two naked-eye stars with no astrometric solution in the file (ICRS J2000, as published by SIMBAD, from memory). */
+/**
+ * The two naked-eye stars with no astrometric solution in the file (ICRS J2000, decimal degrees), from the same SIMBAD
+ * TAP table, accessed 2026-10-17 (`id` = `HIP 55203` and `HIP 78727`; coordinate source 2012yCat.1322....0Z, UCAC4).
+ */
 const SEXAGESIMAL_REFERENCES = [
-  {
-    name: "Alula Australis (xi UMa)",
-    ra: hms(11, 18, 10.9),
-    dec: dms(1, 31, 31, 45),
-    mag: 3.79,
-    tenths: 38,
-    con: "UMa",
-  },
-  { name: "xi Sco", ra: hms(16, 4, 22.0), dec: dms(-1, 11, 22, 24), mag: 4.16, tenths: 42, con: "Sco" },
+  { name: "Alula Australis (xi UMa)", ra: 169.5455495, dec: 31.5292889, mag: 3.79, tenths: 38, con: "UMa" },
+  { name: "xi Sco", ra: 241.0922274, dec: -11.3731039, mag: 4.16, tenths: 42, con: "Sco" },
 ] as const;
 
 /** Half an arcminute: these stars sit at their J1991.25 position, unpropagated, and a binary's differs from the published one. */
