@@ -79,6 +79,8 @@ test.describe("landing screenshot", () => {
     // The dashboard's tiles (tonight-dashboard): the screenshot is of /tonight, so wait for "Point here first".
     await expect(page.locator('[data-tonight-tiles] a[href="/tonight/targets"] li').first()).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
+    // The onboarding click leaves the pointer over the first tile, which would draw its hover state.
+    await page.mouse.move(0, 0);
 
     await page.screenshot({ path: OUTPUT, clip: { x: 0, y: 0, ...VIEWPORT } });
   });
