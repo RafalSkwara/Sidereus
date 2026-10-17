@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Stop and SubagentStop (test rollout Phase 5, testing-quality-gates-wiring): before an agent finishes, run the whole
-# unit suite and lint the changed files of every Sidereus checkout this agent changed, and send it back once with
+# fast suite (the `reference` Vitest project; the slow static guards are the `guards` project and run in CI only,
+# test-suite-diet D2) and lint the changed files of every Sidereus checkout this agent changed, and send it back once with
 # what failed. Rules: the 10x-configure-hook skill (references/anthropic.md). Exit 2 + stderr is the only signal that
 # reaches the agent; on the retry pass (`stop_hook_active`, or Cursor's `loop_count`) it may finish, and a run that
 # is still red is reported to the user as a systemMessage instead. SubagentStop carries the same `stop_hook_active`
@@ -125,8 +126,8 @@ EOF
     SUMMARY="$SUMMARY eslint $# file(s);"
   fi
   if [ "$NEEDS_TESTS" = 1 ]; then
-    OUT=$(node_modules/.bin/vitest run 2>&1 </dev/null) || add_report "Unit tests fail ($ROOT):" "$OUT"
-    SUMMARY="$SUMMARY vitest run;"
+    OUT=$(node_modules/.bin/vitest run --project reference 2>&1 </dev/null) || add_report "Unit tests fail ($ROOT):" "$OUT"
+    SUMMARY="$SUMMARY vitest reference;"
   fi
 done <<EOF
 $ROOTS
