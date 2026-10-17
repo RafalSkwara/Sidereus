@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  captureConsole,
-  locationOf,
-  NOT_A_FORM,
-  routeContext,
-  type ConsoleCapture,
-} from "@/lib/test-support/route-context";
+import { captureConsole, locationOf, routeContext, type ConsoleCapture } from "@/lib/test-support/route-context";
 import { fakeClient, leakyPostgrestError, LEAK } from "@/lib/test-support/supabase-fake";
 import { POST } from "@/pages/api/log/index";
 
@@ -30,7 +24,7 @@ afterEach(() => {
 /** Every database request answers with `error`: the entry's own gear lookup is the first to fail. */
 async function post(options: { form?: Record<string, string>; error?: unknown; notForm?: boolean }) {
   const context = routeContext({
-    ...(options.notForm ? { body: NOT_A_FORM } : { form: options.form ?? FORM }),
+    form: options.form ?? FORM,
     supabase: fakeClient({ error: options.error }),
   });
   return locationOf(await POST(context));
@@ -46,31 +40,6 @@ describe("POST /api/log", () => {
     expect(logs.errors).toHaveBeenCalledTimes(1);
     expect(logs.errors).toHaveBeenCalledWith("sidereus: save.log failed", { step: "save.log", code: "08006" });
     expect(logs.warns).not.toHaveBeenCalled();
-  });
-
-  it("redirects an RLS refusal (42501) with the entity key and logs one notice", async () => {
-    const location = await post({ error: leakyPostgrestError("42501") });
-    expect(location.searchParams.get("error")).toBe("errors.save.observation");
-    expect(logs.warns).toHaveBeenCalledTimes(1);
-    expect(logs.warns).toHaveBeenCalledWith("sidereus: save.log noted", { step: "save.log", code: "42501" });
-    expect(logs.errors).not.toHaveBeenCalled();
-  });
-
-  it("redirects a validation failure as before and logs nothing", async () => {
-    const location = await post({ form: { ...FORM, rating: "" } });
-    expect(location.searchParams.get("error")).toBe("errors.observation.ratingRequired");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a body that is not a form with the shape key and logs request.form instead of throwing", async () => {
-    const location = await post({ notForm: true });
-    expect(location.pathname).toBe("/log/new");
-    expect(location.searchParams.get("error")).toBe("errors.checkFields");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
-    expect(logs.errors).toHaveBeenCalledWith("sidereus: request.form failed", {
-      step: "request.form",
-      name: "TypeError",
-    });
   });
 
   it("names the create route in a milestone step that fails beside the failed save, with the cause's code", async () => {

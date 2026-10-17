@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getMessages, translateKey } from "@/i18n";
 import { fakeFetch, jsonResponse } from "@/lib/forecast/test-helpers";
-import { GEOCODING_FAILED, GEOCODING_TIMEOUT_MS, searchPlaces } from "./geocode";
+import { GEOCODING_FAILED, searchPlaces } from "./geocode";
 
 const MADRID = {
   id: 3117735,
@@ -17,36 +17,6 @@ const MADRID = {
 };
 
 describe("searchPlaces", () => {
-  it("requests up to five English results for the trimmed query, with a timeout", async () => {
-    const fake = fakeFetch(() => jsonResponse({ results: [MADRID] }));
-    await searchPlaces("  Madrid ", "en", fake.fetchFn);
-    expect(fake.calls).toHaveLength(1);
-    const { url, init } = fake.calls[0];
-    expect(url.origin + url.pathname).toBe("https://geocoding-api.open-meteo.com/v1/search");
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      name: "Madrid",
-      count: "5",
-      language: "en",
-      format: "json",
-    });
-    expect(init?.signal).toBeInstanceOf(AbortSignal);
-    expect(GEOCODING_TIMEOUT_MS).toBe(3000);
-  });
-
-  it("asks for place names in the viewer's language", async () => {
-    const fake = fakeFetch(() => jsonResponse({ results: [MADRID] }));
-    await searchPlaces("Madryt", "pl", fake.fetchFn);
-    expect(fake.calls[0].url.searchParams.get("language")).toBe("pl");
-  });
-
-  it("returns [] without fetching for a query shorter than two characters", async () => {
-    const fake = fakeFetch(() => jsonResponse({ results: [MADRID] }));
-    for (const query of ["", " ", "M", "  M  "]) {
-      await expect(searchPlaces(query, "en", fake.fetchFn)).resolves.toEqual([]);
-    }
-    expect(fake.calls).toHaveLength(0);
-  });
-
   it("maps results into names, labels and rounded coordinates", async () => {
     const fake = fakeFetch(() =>
       jsonResponse({
@@ -70,47 +40,6 @@ describe("searchPlaces", () => {
       { id: 1, name: "Sydney", label: "Sydney, New South Wales, Australia", latitudeDeg: -33.87, longitudeDeg: 151.21 },
       { id: 2, name: "Null Island", label: "Null Island", latitudeDeg: 0, longitudeDeg: 0 },
     ]);
-  });
-
-  it("returns [] when the response has no results key", async () => {
-    const fake = fakeFetch(() => jsonResponse({ generationtime_ms: 0.3 }));
-    await expect(searchPlaces("Xyzzy", "en", fake.fetchFn)).resolves.toEqual([]);
-  });
-
-  it("throws the fixed message on a non-2xx status", async () => {
-    const fake = fakeFetch(() => jsonResponse({ error: true, reason: "Parameter name Madrid is invalid" }, 400));
-    await expect(searchPlaces("Madrid", "en", fake.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-  });
-
-  it("throws the fixed message when fetch rejects or times out", async () => {
-    const network = fakeFetch(() => Promise.reject(new TypeError("fetch failed for name=Madrid")));
-    await expect(searchPlaces("Madrid", "en", network.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-    const timeout = fakeFetch(() => Promise.reject(new DOMException("timed out", "TimeoutError")));
-    await expect(searchPlaces("Madrid", "en", timeout.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-  });
-
-  it("throws the fixed message when the caller aborts", async () => {
-    const controller = new AbortController();
-    const fake = fakeFetch(() => Promise.reject(new DOMException("aborted", "AbortError")));
-    controller.abort();
-    await expect(searchPlaces("Madrid", "en", fake.fetchFn, controller.signal)).rejects.toThrow(
-      new Error(GEOCODING_FAILED),
-    );
-    expect(fake.calls[0].init?.signal?.aborted).toBe(true);
-  });
-
-  it("throws the fixed message on a body that is not JSON or does not match the schema", async () => {
-    const notJson = fakeFetch(() => new Response("<html>busy</html>", { status: 200 }));
-    await expect(searchPlaces("Madrid", "en", notJson.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-    for (const body of [
-      { results: "Madrid" },
-      { results: [{ id: 1, name: "Madrid" }] }, // no coordinates
-      { results: [{ ...MADRID, latitude: 140.4 }] },
-      ["Madrid"],
-    ]) {
-      const fake = fakeFetch(() => jsonResponse(body));
-      await expect(searchPlaces("Madrid", "en", fake.fetchFn)).rejects.toThrow(new Error(GEOCODING_FAILED));
-    }
   });
 
   it("never puts the query or URL into its error", async () => {

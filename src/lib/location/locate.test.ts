@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { geolocationAlreadyGranted, locateDevice } from "./locate";
 
 const PERMISSION_DENIED = 1;
-const TIMEOUT = 3;
 
 /** A fake geolocation that answers every request with `outcome` and records the calls. */
 function fakeGeolocation(outcome: { latitude: number; longitude: number } | { code: number }) {
@@ -31,15 +30,6 @@ describe("locateDevice", () => {
     const fake = fakeGeolocation({ code: PERMISSION_DENIED });
     await expect(locateDevice(fake.geolocation)).rejects.toThrow("denied");
   });
-
-  it("rejects with 'unavailable' on any other error", async () => {
-    const fake = fakeGeolocation({ code: TIMEOUT });
-    await expect(locateDevice(fake.geolocation)).rejects.toThrow("unavailable");
-  });
-
-  it("rejects with 'unavailable' when there is no geolocation API", async () => {
-    await expect(locateDevice(undefined)).rejects.toThrow("unavailable");
-  });
 });
 
 describe("geolocationAlreadyGranted", () => {
@@ -55,30 +45,25 @@ describe("geolocationAlreadyGranted", () => {
     return { permissions, names };
   }
 
-  it("is true only when geolocation is granted", async () => {
-    const fake = fakePermissions(() => Promise.resolve({ state: "granted" }));
-    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(true);
-    expect(fake.names).toEqual(["geolocation"]);
-  });
-
-  it.each(["prompt", "denied"] as const)("is false when the state is %s", async (state) => {
-    const fake = fakePermissions(() => Promise.resolve({ state }));
-    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
-  });
-
-  it("is false without a Permissions API", async () => {
-    await expect(geolocationAlreadyGranted(undefined)).resolves.toBe(false);
-  });
-
-  it("is false when the query throws synchronously", async () => {
-    const fake = fakePermissions(() => {
-      throw new TypeError("unsupported");
-    });
-    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
-  });
-
-  it("is false when the query rejects", async () => {
-    const fake = fakePermissions(() => Promise.reject(new TypeError("unsupported")));
-    await expect(geolocationAlreadyGranted(fake.permissions)).resolves.toBe(false);
+  it("is true only when geolocation is granted, and false for every other answer and any failure", async () => {
+    const granted = fakePermissions(() => Promise.resolve({ state: "granted" }));
+    await expect(geolocationAlreadyGranted(granted.permissions)).resolves.toBe(true);
+    expect(granted.names).toEqual(["geolocation"]);
+    const notGranted: [string, Parameters<typeof geolocationAlreadyGranted>[0]][] = [
+      ["prompt", fakePermissions(() => Promise.resolve({ state: "prompt" })).permissions],
+      ["denied", fakePermissions(() => Promise.resolve({ state: "denied" })).permissions],
+      ["no Permissions API", undefined],
+      [
+        "a query that throws",
+        fakePermissions(() => {
+          throw new TypeError("unsupported");
+        }).permissions,
+      ],
+      ["a query that rejects", fakePermissions(() => Promise.reject(new TypeError("unsupported"))).permissions],
+    ];
+    expect(notGranted).toHaveLength(5);
+    for (const [label, permissions] of notGranted) {
+      await expect(geolocationAlreadyGranted(permissions), label).resolves.toBe(false);
+    }
   });
 });

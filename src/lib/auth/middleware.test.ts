@@ -1,4 +1,4 @@
-import { AuthApiError, AuthRetryableFetchError } from "@supabase/supabase-js";
+import { AuthRetryableFetchError } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { captureConsole, type ConsoleCapture } from "@/lib/test-support/route-context";
@@ -66,12 +66,10 @@ describe("onRequest", () => {
     expect(locals.user).toBeNull();
     expect(next).not.toHaveBeenCalled();
     expect(logs.everything()).toBe("[]");
-  });
 
-  it("sends a gated API POST without a user to plain sign-in", async () => {
-    mocks.getClaims.mockResolvedValue({ data: null, error: null });
-    const { response } = await run("/api/log", "POST");
-    expect(response.headers.get("Location")).toBe("/auth/signin");
+    // A gated API POST has no page to come back to: plain sign-in.
+    const post = await run("/api/log", "POST");
+    expect(post.response.headers.get("Location")).toBe("/auth/signin");
   });
 
   it("still redirects when Auth is down (a 503), and now leaves one auth.claims line without the email", async () => {
@@ -87,23 +85,15 @@ describe("onRequest", () => {
     expect(logs.everything()).not.toMatch(LEAK);
   });
 
-  it("redirects a stale refresh token the same way and logs nothing", async () => {
-    mocks.getClaims.mockResolvedValue({ data: null, error: new AuthApiError("m", 400, "refresh_token_not_found") });
-    const { response } = await run("/tonight");
-    expect(response.status).toBe(302);
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("passes a gated page on for a signed-in user and puts the user on locals", async () => {
+  it("passes a gated page on for a signed-in user, and an ungated page on without one, whatever Auth says, still logging a real failure", async () => {
     withUser();
-    const { response, next, locals } = await run("/tonight");
-    expect(response.status).toBe(200);
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(locals.user).toEqual({ id: SUB, email: EMAIL });
-    expect(response.headers.get("Vary")).toBe("Cookie, Accept-Language");
-  });
+    const signedIn = await run("/tonight");
+    expect(signedIn.response.status).toBe(200);
+    expect(signedIn.next).toHaveBeenCalledTimes(1);
+    expect(signedIn.locals.user).toEqual({ id: SUB, email: EMAIL });
+    expect(signedIn.response.headers.get("Vary")).toBe("Cookie, Accept-Language");
+    expect(logs.everything()).toBe("[]");
 
-  it("passes an ungated page on without a user, whatever Auth says, and still logs a real failure", async () => {
     mocks.getClaims.mockResolvedValue({ data: null, error: new AuthRetryableFetchError("down", 503) });
     const { response, next } = await run("/");
     expect(response.status).toBe(200);

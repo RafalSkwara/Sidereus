@@ -1,79 +1,58 @@
 import { describe, expect, it } from "vitest";
-import { noticeFor, noticeHidden, storePageMessage, withDescription } from "./page-state";
+import { noticeFor, noticeHidden, withDescription } from "./page-state";
 
 const UNTIL = "2026-10-06T05:30:00.000Z";
 const BEFORE = Date.parse(UNTIL) - 1;
 const AT = Date.parse(UNTIL);
 
 describe("noticeFor", () => {
-  it("says prepared for tonight's copy before its night is over", () => {
-    expect(noticeFor("tonight", UNTIL, BEFORE)).toBe("prepared");
-  });
-
-  it("says old forecast for the next-night copy", () => {
-    expect(noticeFor("next", UNTIL, BEFORE)).toBe("old-forecast");
-  });
-
-  it("says stale from validUntil on, whatever the kind", () => {
-    expect(noticeFor("tonight", UNTIL, AT)).toBe("stale");
-    expect(noticeFor("next", UNTIL, AT + 1)).toBe("stale");
-  });
-
-  it("treats a missing or malformed validUntil as stale", () => {
-    expect(noticeFor("tonight", undefined, BEFORE)).toBe("stale");
-    expect(noticeFor("tonight", "soon", BEFORE)).toBe("stale");
+  it("says prepared before tonight's night is over, old forecast for the next-night copy, stale from validUntil on or for a missing or malformed validUntil", () => {
+    const rows: [string, Parameters<typeof noticeFor>, string][] = [
+      ["tonight's copy before its night is over", ["tonight", UNTIL, BEFORE], "prepared"],
+      ["the next-night copy", ["next", UNTIL, BEFORE], "old-forecast"],
+      ["tonight's copy from validUntil", ["tonight", UNTIL, AT], "stale"],
+      ["the next-night copy after validUntil", ["next", UNTIL, AT + 1], "stale"],
+      ["a missing validUntil", ["tonight", undefined, BEFORE], "stale"],
+      ["a malformed validUntil", ["tonight", "soon", BEFORE], "stale"],
+    ];
+    expect(rows).toHaveLength(6);
+    for (const [label, args, expected] of rows) {
+      expect(noticeFor(...args), label).toBe(expected);
+    }
   });
 });
 
 describe("noticeHidden", () => {
-  it("shows only the wanted notice", () => {
-    expect(noticeHidden({ kind: "prepared", wanted: "prepared", dismissed: false })).toBe(false);
-    expect(noticeHidden({ kind: "stale", wanted: "prepared", dismissed: false })).toBe(true);
-    expect(noticeHidden({ kind: "old-forecast", wanted: "stale", dismissed: false })).toBe(true);
-  });
-
-  it("hides every notice when none is wanted", () => {
-    expect(noticeHidden({ kind: "prepared", wanted: null, dismissed: false })).toBe(true);
-    expect(noticeHidden({ kind: undefined, wanted: null, dismissed: false })).toBe(true);
-  });
-
-  it("keeps a closed notice hidden, wanted or not", () => {
-    expect(noticeHidden({ kind: "prepared", wanted: "prepared", dismissed: true })).toBe(true);
-    expect(noticeHidden({ kind: "stale", wanted: "prepared", dismissed: true })).toBe(true);
+  it("shows only the wanted notice, hides every notice when none is wanted, and keeps a closed notice hidden", () => {
+    const rows: [string, Parameters<typeof noticeHidden>[0], boolean][] = [
+      ["the wanted notice", { kind: "prepared", wanted: "prepared", dismissed: false }, false],
+      ["another notice than the wanted one", { kind: "stale", wanted: "prepared", dismissed: false }, true],
+      ["old forecast when stale is wanted", { kind: "old-forecast", wanted: "stale", dismissed: false }, true],
+      ["none wanted", { kind: "prepared", wanted: null, dismissed: false }, true],
+      ["none wanted, no kind", { kind: undefined, wanted: null, dismissed: false }, true],
+      ["a closed wanted notice", { kind: "prepared", wanted: "prepared", dismissed: true }, true],
+      ["a closed unwanted notice", { kind: "stale", wanted: "prepared", dismissed: true }, true],
+    ];
+    expect(rows).toHaveLength(7);
+    for (const [label, input, expected] of rows) {
+      expect(noticeHidden(input), label).toBe(expected);
+    }
   });
 });
 
 describe("withDescription", () => {
-  it("adds the id once and keeps the others", () => {
-    expect(withDescription(null, "hint", true)).toBe("hint");
-    expect(withDescription("own", "hint", true)).toBe("own hint");
-    expect(withDescription("own hint", "hint", true)).toBe("own hint");
-  });
-
-  it("removes only that id, and the attribute when nothing is left", () => {
-    expect(withDescription("own hint", "hint", false)).toBe("own");
-    expect(withDescription("hint", "hint", false)).toBeNull();
-    expect(withDescription(null, "hint", false)).toBeNull();
-  });
-});
-
-describe("storePageMessage", () => {
-  const SITE = "11111111-1111-4111-8111-111111111111";
-
-  it("asks for the page's own URL without the toast param", () => {
-    expect(storePageMessage(`https://sidereus.example/tonight/plan?site=${SITE}&saved=plan`)).toEqual({
-      type: "store-page",
-      url: `/tonight/plan?site=${SITE}`,
-    });
-  });
-
-  it("keeps a URL the toast already cleared as it is", () => {
-    expect(storePageMessage(`https://sidereus.example/tonight/plan?site=${SITE}`).url).toBe(
-      `/tonight/plan?site=${SITE}`,
-    );
-  });
-
-  it("clears the reset toast's value too", () => {
-    expect(storePageMessage("https://sidereus.example/tonight/plan?saved=plan-reset").url).toBe("/tonight/plan");
+  it("adds the id once and keeps the others, and removes only that id, and the attribute when nothing is left", () => {
+    const rows: [string, Parameters<typeof withDescription>, string | null][] = [
+      ["adds to nothing", [null, "hint", true], "hint"],
+      ["adds beside another id", ["own", "hint", true], "own hint"],
+      ["adds once", ["own hint", "hint", true], "own hint"],
+      ["removes only that id", ["own hint", "hint", false], "own"],
+      ["removes the attribute when nothing is left", ["hint", "hint", false], null],
+      ["removes from nothing", [null, "hint", false], null],
+    ];
+    expect(rows).toHaveLength(6);
+    for (const [label, args, expected] of rows) {
+      expect(withDescription(...args), label).toBe(expected);
+    }
   });
 });

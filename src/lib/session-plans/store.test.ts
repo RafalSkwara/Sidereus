@@ -17,33 +17,27 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typ
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it.each(WRITES)("%s: a server fault keeps only its code next to the fixed key", async (_name, run) => {
-    const result = await run(failing("XX000"));
-    expect(result).toEqual({
-      ok: false,
-      message: "errors.save.sessionPlan",
-      fault: { kind: "server", code: "XX000" },
-    });
-    expect(JSON.stringify(result)).not.toMatch(LEAK);
-  });
-
-  it.each(WRITES)("%s: an RLS refusal (a plan on another user's site) is `refused`", async (_name, run) => {
-    expect(await run(failing("42501"))).toEqual({
-      ok: false,
-      message: "errors.save.sessionPlan",
-      fault: { kind: "refused", code: "42501" },
-    });
-  });
-
-  it.each(WRITES)("%s: a user-input failure has no fault", async (_name, run) => {
-    for (const code of ["22P02", "23514"]) {
-      const result = await run(failing(code));
-      expect(result, code).toEqual({ ok: false, message: "errors.save.sessionPlan" });
+  it("keeps only its code for a server fault, is `refused` for RLS, has no fault for user input, and is ok on success, in save and reset", async () => {
+    expect(WRITES).toHaveLength(2);
+    for (const [name, run] of WRITES) {
+      const server = await run(failing("XX000"));
+      expect(server, `${name}: server fault`).toEqual({
+        ok: false,
+        message: "errors.save.sessionPlan",
+        fault: { kind: "server", code: "XX000" },
+      });
+      expect(JSON.stringify(server), `${name}: server fault`).not.toMatch(LEAK);
+      // A plan on another user's site.
+      expect(await run(failing("42501")), `${name}: RLS`).toEqual({
+        ok: false,
+        message: "errors.save.sessionPlan",
+        fault: { kind: "refused", code: "42501" },
+      });
+      for (const code of ["22P02", "23514"]) {
+        expect(await run(failing(code)), `${name}: ${code}`).toEqual({ ok: false, message: "errors.save.sessionPlan" });
+      }
+      expect(await run(fakeClient({})), `${name}: success`).toEqual({ ok: true });
     }
-  });
-
-  it.each(WRITES)("%s: returns ok when the request succeeds", async (_name, run) => {
-    expect(await run(fakeClient({}))).toEqual({ ok: true });
   });
 });
 

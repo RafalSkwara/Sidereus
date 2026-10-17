@@ -47,7 +47,7 @@ afterEach(() => {
 describe("the pinned lists, checked against the installed @supabase/auth-js", () => {
   const require = createRequire(import.meta.url);
 
-  it("names exactly what the library's error classes are called", () => {
+  it("names exactly what the library's error classes are called, lists only codes it declares, and knows how it words its routine errors", () => {
     expect(new AuthSessionMissingError().name).toBe("AuthSessionMissingError");
     expect(new AuthInvalidJwtError("x").name).toBe("AuthInvalidJwtError");
     expect(new AuthRefreshDiscardedError().name).toBe("AuthRefreshDiscardedError");
@@ -57,9 +57,8 @@ describe("the pinned lists, checked against the installed @supabase/auth-js", ()
       "AuthRefreshDiscardedError",
       "AuthSessionMissingError",
     ]);
-  });
 
-  it("lists only codes the library declares (the ErrorCode union in error-codes.d.ts)", () => {
+    // The ErrorCode union in error-codes.d.ts.
     const declared = readFileSync(
       require.resolve("@supabase/auth-js/package.json").replace("package.json", "dist/main/lib/error-codes.d.ts"),
       "utf8",
@@ -75,11 +74,9 @@ describe("the pinned lists, checked against the installed @supabase/auth-js", ()
       "session_not_found",
       "validation_failed",
     ]);
-  });
 
-  it("knows how the library words its own routine errors: a missing session has no code, an invalid JWT's is invalid_jwt", () => {
-    // Both are routine by NAME; neither carries one of the listed codes, so a name check alone is not enough for a
-    // server-sent code and a code check alone is not enough for these two.
+    // A missing session and an invalid JWT are routine by NAME, and neither carries one of the listed codes, so a
+    // name check alone is not enough for a server-sent code and a code check alone is not enough for these two.
     expect(new AuthSessionMissingError().code).toBeUndefined();
     expect(new AuthInvalidJwtError("x").code).toBe("invalid_jwt");
     expect(new AuthRetryableFetchError("x", 0).status).toBe(0);
@@ -90,25 +87,17 @@ describe("the pinned lists, checked against the installed @supabase/auth-js", ()
 });
 
 describe("sessionUser", () => {
-  it("returns the user from the verified claims and logs nothing", async () => {
-    const user = await sessionUser(clientWith(() => Promise.resolve({ data: { claims: CLAIMS }, error: null })));
-    expect(user).toEqual({ id: CLAIMS.sub, email: EMAIL });
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("gives a null email when the claims have none", async () => {
-    const user = await sessionUser(
-      clientWith(() => Promise.resolve({ data: { claims: { sub: CLAIMS.sub } }, error: null })),
-    );
-    expect(user).toEqual({ id: CLAIMS.sub, email: null });
-  });
-
-  it("reads a missing session ({ data: null, error: null }) as signed out and logs nothing", async () => {
+  it("reads the verified claims as the user, and a missing session or a routine error (a stale or changed cookie) as signed out and silent", async () => {
+    expect(await sessionUser(clientWith(() => Promise.resolve({ data: { claims: CLAIMS }, error: null })))).toEqual({
+      id: CLAIMS.sub,
+      email: EMAIL,
+    });
+    expect(
+      await sessionUser(clientWith(() => Promise.resolve({ data: { claims: { sub: CLAIMS.sub } }, error: null }))),
+    ).toEqual({ id: CLAIMS.sub, email: null });
     expect(await sessionUser(clientWith(() => Promise.resolve({ data: null, error: null })))).toBeNull();
     expect(logs.everything()).toBe("[]");
-  });
 
-  describe("a routine error (a stale or changed cookie) is signed out and silent", () => {
     const routine: [string, unknown][] = [
       ["a stale refresh token (refresh_token_not_found)", new AuthApiError("m", 400, "refresh_token_not_found")],
       ["a reused refresh token (refresh_token_already_used)", new AuthApiError("m", 400, "refresh_token_already_used")],
@@ -126,15 +115,15 @@ describe("sessionUser", () => {
         new AuthRefreshDiscardedError(),
       ],
     ];
-
-    it.each(routine)("%s", async (_label, error) => {
-      expect(await sessionUser(failing(error))).toBeNull();
-      expect(logs.everything()).toBe("[]");
-      expect(isRoutineSessionError(error)).toBe(true);
-    });
+    expect(routine).toHaveLength(9);
+    for (const [label, error] of routine) {
+      expect(await sessionUser(failing(error)), label).toBeNull();
+      expect(logs.everything(), label).toBe("[]");
+      expect(isRoutineSessionError(error), label).toBe(true);
+    }
   });
 
-  describe("a failure is signed out and leaves one auth.claims line with only its name, status and auth-js code", () => {
+  it("reads a failure as signed out and leaves one auth.claims line with only its name, status and auth-js code", async () => {
     const failures: [string, unknown, Record<string, unknown>][] = [
       [
         "a transient fetch failure with a 5xx status (AuthRetryableFetchError 503)",
@@ -181,47 +170,22 @@ describe("sessionUser", () => {
         new AuthApiError("m", 503, "session_expired"),
         { name: "AuthApiError", status: 503, code: "session_expired" },
       ],
+      // A value that is not an Error (a string, an empty object) is a failure with only the step.
+      ["a string", "boom", {}],
+      ["an empty object", {}, {}],
     ];
-
-    it.each(failures)("%s", async (_label, error, fields) => {
-      expect(await sessionUser(failing(error))).toBeNull();
-      expect(isRoutineSessionError(error)).toBe(false);
-      expect(logs.errors).toHaveBeenCalledTimes(1);
-      expect(logs.errors).toHaveBeenCalledWith("sidereus: auth.claims failed", { step: "auth.claims", ...fields });
-      expect(logs.warns).not.toHaveBeenCalled();
-    });
-
-    it("reads a value that is not an Error (a string, an empty object) as a failure with only the step", async () => {
-      expect(await sessionUser(failing("boom"))).toBeNull();
-      expect(await sessionUser(failing({}))).toBeNull();
-      expect(logs.errors).toHaveBeenCalledTimes(2);
-      expect(logs.errors).toHaveBeenNthCalledWith(1, "sidereus: auth.claims failed", { step: "auth.claims" });
-    });
-  });
-
-  describe("a thrown error (non-auth: auth-js rethrows those) is signed out and logs the same step once", () => {
-    it("logs the thrown error's name", async () => {
-      const user = await sessionUser(clientWith(() => Promise.reject(new TypeError("crypto.subtle is gone"))));
-      expect(user).toBeNull();
-      expect(logs.errors).toHaveBeenCalledTimes(1);
-      expect(logs.errors).toHaveBeenCalledWith("sidereus: auth.claims failed", {
+    expect(failures).toHaveLength(11);
+    for (const [label, error, fields] of failures) {
+      logs.errors.mockClear();
+      expect(await sessionUser(failing(error)), label).toBeNull();
+      expect(isRoutineSessionError(error), label).toBe(false);
+      expect(logs.errors, label).toHaveBeenCalledTimes(1);
+      expect(logs.errors, label).toHaveBeenCalledWith("sidereus: auth.claims failed", {
         step: "auth.claims",
-        name: "TypeError",
+        ...fields,
       });
-    });
-
-    it("also survives a getClaims that throws synchronously", async () => {
-      const user = await sessionUser(
-        clientWith(() => {
-          throw new RangeError("x");
-        }),
-      );
-      expect(user).toBeNull();
-      expect(logs.errors).toHaveBeenCalledWith("sidereus: auth.claims failed", {
-        step: "auth.claims",
-        name: "RangeError",
-      });
-    });
+      expect(logs.warns, label).not.toHaveBeenCalled();
+    }
   });
 
   it("never lets an email or coordinates placed in an error's message, cause or details reach a log argument", async () => {
@@ -238,5 +202,26 @@ describe("sessionUser", () => {
     }
     expect(logs.errors).toHaveBeenCalledTimes(cases.length * 2);
     expect(logs.everything()).not.toMatch(LEAK);
+  });
+
+  it("is signed out and logs the thrown error's name once, whether getClaims rejects or throws synchronously (auth-js rethrows non-auth errors)", async () => {
+    expect(await sessionUser(clientWith(() => Promise.reject(new TypeError("crypto.subtle is gone"))))).toBeNull();
+    expect(logs.errors).toHaveBeenCalledTimes(1);
+    expect(logs.errors).toHaveBeenCalledWith("sidereus: auth.claims failed", {
+      step: "auth.claims",
+      name: "TypeError",
+    });
+
+    const user = await sessionUser(
+      clientWith(() => {
+        throw new RangeError("x");
+      }),
+    );
+    expect(user).toBeNull();
+    expect(logs.errors).toHaveBeenCalledTimes(2);
+    expect(logs.errors).toHaveBeenLastCalledWith("sidereus: auth.claims failed", {
+      step: "auth.claims",
+      name: "RangeError",
+    });
   });
 });

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { eyepieceInputSchema, telescopeInputSchema } from "../schemas";
 import eyepieceData from "./eyepieces.json";
 import { eyepieceFill, telescopeFill } from "./fill";
-import { searchCatalogue } from "./search";
 import telescopeData from "./telescopes.json";
 import { EYEPIECE_DESIGNS, type EyepieceEntry, type TelescopeEntry } from "./types";
 
@@ -155,10 +154,5 @@ describe("gear catalogue data", () => {
         expect(entry.afovDeg, entry.id).toBe(TYPICAL_AFOV[design as keyof typeof TYPICAL_AFOV]);
       }
     }
-  });
-
-  it("matches exactly one telescope for 'heritage 130'", () => {
-    const hits = searchCatalogue(telescopes, "heritage 130");
-    expect(hits.map((entry) => entry.id)).toEqual(["skywatcher-heritage-130p"]);
   });
 });

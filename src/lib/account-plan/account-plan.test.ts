@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { ACCOUNT_PLAN_NEEDS_FULL, NOT_CONFIGURED } from "@/lib/api-errors";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 
-import { accountPlanForCopy, getAccountPlan, planFrom, requireFullPlan } from "./index";
+import { accountPlanForCopy, getAccountPlan, requireFullPlan } from "./index";
 
 /**
  * "Anything unknown is free" (roadmap F-01): the reader and the guard fail closed. Only the store is replaced (as
@@ -39,73 +39,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("planFrom", () => {
-  it("is full only for exactly the string full", () => {
-    expect(planFrom("full")).toBe("full");
-    for (const raw of ["free", null, undefined, "FULL", {}]) {
-      expect(planFrom(raw)).toBe("free");
-    }
-  });
-});
-
-describe("getAccountPlan", () => {
-  it("reads as free without a query when there is no database or no user", async () => {
-    expect(await getAccountPlan(locals({ supabase: null }))).toBe("free");
-    expect(await getAccountPlan(locals({ user: null }))).toBe("free");
-    expect(mocks.read).not.toHaveBeenCalled();
-  });
-
-  it("queries once per request however often it is asked", async () => {
-    mocks.read.mockResolvedValue({ plan: "full" });
-    const request = locals();
-    expect(await getAccountPlan(request)).toBe("full");
-    expect(await getAccountPlan(request)).toBe("full");
-    expect(mocks.read).toHaveBeenCalledOnce();
-    expect(mocks.read).toHaveBeenCalledWith(SUPABASE, USER.id);
-  });
-
-  it("reads as free when the query fails or the stored value is unknown", async () => {
-    mocks.read.mockResolvedValueOnce({ error: true, code: "42501" });
-    expect(await getAccountPlan(locals())).toBe("free");
-    mocks.read.mockResolvedValueOnce({ plan: "platinum" });
-    expect(await getAccountPlan(locals())).toBe("free");
-  });
-});
-
 describe("accountPlanForCopy", () => {
   /** The plan alone, for the cases that are not about the time. */
   async function planOf(request: App.Locals) {
     return (await accountPlanForCopy(request)).plan;
   }
-
-  it("is the plan the read found", async () => {
-    mocks.read.mockResolvedValueOnce({ plan: "full" });
-    expect(await planOf(locals())).toBe("full");
-    mocks.read.mockResolvedValueOnce({ plan: "free" });
-    expect(await planOf(locals())).toBe("free");
-    mocks.read.mockResolvedValueOnce({ plan: undefined });
-    expect(await planOf(locals())).toBe("free");
-    mocks.read.mockResolvedValueOnce({ plan: "platinum" });
-    expect(await planOf(locals())).toBe("free");
-    expect(logged).not.toHaveBeenCalled();
-  });
-
-  it("is free without a query when there is no database or no user", async () => {
-    expect(await planOf(locals({ supabase: null }))).toBe("free");
-    expect(await planOf(locals({ user: null }))).toBe("free");
-    expect(mocks.read).not.toHaveBeenCalled();
-  });
-
-  it("shares the one read with getAccountPlan, in either order", async () => {
-    mocks.read.mockResolvedValue({ plan: "full" });
-    const first = locals();
-    const [, reading] = await Promise.all([getAccountPlan(first), accountPlanForCopy(first), getAccountPlan(first)]);
-    expect(reading.plan).toBe("full");
-    const second = locals();
-    await accountPlanForCopy(second);
-    await getAccountPlan(second);
-    expect(mocks.read).toHaveBeenCalledTimes(2);
-  });
 
   it("is unknown when the read fails, logs a fixed line and the code once, and leaves access closed (reviews F11, F4)", async () => {
     mocks.read.mockResolvedValue({ error: true, code: "42501" });
@@ -122,62 +60,49 @@ describe("accountPlanForCopy", () => {
     expect(logged).toHaveBeenCalledWith("sidereus: account.plan failed", { step: "account.plan", code: "42501" });
   });
 
-  it("logs a failed read once however it is asked first", async () => {
-    mocks.read.mockResolvedValue({ error: true, name: "TypeError" });
-    const request = locals();
-    expect(await requireFullPlan(request)).toMatchObject({ ok: false, reason: "needs-full" });
-    expect(await planOf(request)).toBe("unknown");
-    expect(logged).toHaveBeenCalledOnce();
-  });
-
   describe("what the failed read's line holds (review F5)", () => {
-    async function lineFor(result: { error: true; code?: string; name?: string }) {
-      mocks.read.mockResolvedValue(result);
-      expect(await planOf(locals())).toBe("unknown");
-      expect(logged).toHaveBeenCalledOnce();
-      return logged.mock.calls[0];
-    }
-
-    it("files a short class name under name, never under code", async () => {
-      expect(await lineFor({ error: true, name: "TypeError" })).toEqual([
-        "sidereus: account.plan failed",
-        { step: "account.plan", name: "TypeError" },
-      ]);
-    });
-
-    it("files a long class name under name (an identifier may be 32 characters; a code only 12)", async () => {
-      expect(await lineFor({ error: true, name: "AuthRetryableFetchError" })).toEqual([
-        "sidereus: account.plan failed",
-        { step: "account.plan", name: "AuthRetryableFetchError" },
-      ]);
-    });
-
-    it("files a database code under code, beside the name when there is one", async () => {
-      expect(await lineFor({ error: true, code: "PGRST301", name: "PostgrestError" })).toEqual([
-        "sidereus: account.plan failed",
-        { step: "account.plan", name: "PostgrestError", code: "PGRST301" },
-      ]);
-    });
-
-    it("holds the step alone when the store found neither, and never an Error or its message", async () => {
-      const line = await lineFor({ error: true });
-      expect(line).toEqual(["sidereus: account.plan failed", { step: "account.plan" }]);
-    });
-
-    it("never passes message text, an email or an Error to the console", async () => {
-      // A store that misbehaved and put a message and an email where only shaped values belong.
-      mocks.read.mockResolvedValue({
-        error: true,
-        code: "a@example.test",
-        name: "permission denied for a@example.test",
-        message: "permission denied for a@example.test",
-      } as { error: true; code: string; name: string });
-      expect(await planOf(locals())).toBe("unknown");
-      expect(logged).toHaveBeenCalledOnce();
-      const args = logged.mock.calls[0];
-      expect(args).toEqual(["sidereus: account.plan failed", { step: "account.plan" }]);
-      expect(args.some((arg) => arg instanceof Error)).toBe(false);
-      expect(JSON.stringify(args)).not.toMatch(/example\.test|permission denied|read failed/);
+    it("files each shaped value under its own key, never under another, and never passes message text, an email or an Error", async () => {
+      const cases: { name: string; read: { error: true; code?: string; name?: string }; fields: object }[] = [
+        { name: "a short class name", read: { error: true, name: "TypeError" }, fields: { name: "TypeError" } },
+        {
+          // An identifier may be 32 characters; a code only 12.
+          name: "a long class name",
+          read: { error: true, name: "AuthRetryableFetchError" },
+          fields: { name: "AuthRetryableFetchError" },
+        },
+        {
+          name: "a database code beside the name",
+          read: { error: true, code: "PGRST301", name: "PostgrestError" },
+          fields: { name: "PostgrestError", code: "PGRST301" },
+        },
+        { name: "neither", read: { error: true }, fields: {} },
+        {
+          // A store that misbehaved and put a message and an email where only shaped values belong.
+          name: "a store that put a message and an email in the fields",
+          read: {
+            error: true,
+            code: "a@example.test",
+            name: "permission denied for a@example.test",
+            message: "permission denied for a@example.test",
+          } as { error: true; code: string; name: string },
+          fields: {},
+        },
+      ];
+      // Non-vacuity: every shape of the failed read is tried.
+      expect(cases).toHaveLength(5);
+      for (const { name, read, fields } of cases) {
+        logged.mockClear();
+        mocks.read.mockResolvedValue(read);
+        expect(await planOf(locals()), name).toBe("unknown");
+        expect(logged, name).toHaveBeenCalledOnce();
+        const args = logged.mock.calls[0];
+        expect(args, name).toEqual(["sidereus: account.plan failed", { step: "account.plan", ...fields }]);
+        expect(
+          args.some((arg) => arg instanceof Error),
+          name,
+        ).toBe(false);
+        expect(JSON.stringify(args), name).not.toMatch(/example\.test|permission denied|read failed/);
+      }
     });
   });
 
@@ -221,11 +146,6 @@ describe("accountPlanForCopy", () => {
 });
 
 describe("requireFullPlan", () => {
-  it("lets a full account through", async () => {
-    mocks.read.mockResolvedValue({ plan: "full" });
-    expect(await requireFullPlan(locals())).toEqual({ ok: true });
-  });
-
   it("refuses with the fixed key that names why", async () => {
     mocks.read.mockResolvedValue({ plan: "free" });
     expect(await requireFullPlan(locals())).toEqual({

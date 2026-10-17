@@ -29,16 +29,6 @@ function manualTask() {
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 describe("createCoalescer", () => {
-  it("runs a call straight away when the key is idle", async () => {
-    const { task, started, finish } = manualTask();
-    const run = createCoalescer(task);
-    const done = run("plan", "A");
-    expect(started).toEqual(["A"]);
-    finish(0);
-    await done;
-    expect(started).toEqual(["A"]);
-  });
-
   it("re-runs once, for the latest value, after the run in flight (not dropped, not stacked)", async () => {
     const { task, started, finish } = manualTask();
     const run = createCoalescer(task);
@@ -54,44 +44,26 @@ describe("createCoalescer", () => {
     expect(started).toEqual(["A", "C"]);
   });
 
-  it("resolves a joined call only when the re-run has finished", async () => {
-    const { task, finish } = manualTask();
+  it("resolves a joined call only when the re-run has finished, and keeps keys apart", async () => {
+    const { task, started, finish } = manualTask();
     const run = createCoalescer(task);
     void run("plan", "A");
     let joinedDone = false;
     const joined = run("plan", "B").then(() => {
       joinedDone = true;
     });
+    // Another key starts at once, beside the run in flight.
+    const other = run("other", "X");
+    expect(started).toEqual(["A", "X"]);
     finish(0);
     await tick();
     expect(joinedDone).toBe(false);
-    finish(1);
+    finish(2);
     await joined;
     expect(joinedDone).toBe(true);
-  });
-
-  it("starts a fresh run once the key is idle again", async () => {
-    const { task, started, finish } = manualTask();
-    const run = createCoalescer(task);
-    const first = run("plan", "A");
-    finish(0);
-    await first;
-    const second = run("plan", "B");
-    expect(started).toEqual(["A", "B"]);
     finish(1);
-    await second;
-  });
-
-  it("keeps keys apart", async () => {
-    const { task, started, finish } = manualTask();
-    const run = createCoalescer(task);
-    const a = run("one", "A");
-    const b = run("two", "B");
-    expect(started).toEqual(["A", "B"]);
-    finish(0);
-    finish(1);
-    await Promise.all([a, b]);
-    expect(started).toEqual(["A", "B"]);
+    await other;
+    expect(started).toEqual(["A", "X", "B"]);
   });
 
   it("still runs the queued re-run after a failure, then rethrows the first error and frees the key", async () => {

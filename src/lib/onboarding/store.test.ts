@@ -17,43 +17,35 @@ const OPTIONS = { siteName: "Home" };
 const failing = (code: string) => fakeClient({ error: leakyPostgrestError(code) });
 
 describe("completeOnboarding", () => {
-  it("returns ok when the function succeeds", async () => {
+  it("returns ok, and a failed save carries a sanitized fault or a reason of its own", async () => {
     expect(await completeOnboarding(fakeClient({}), INPUT, OPTIONS)).toEqual({ ok: true });
-  });
 
-  it("a server fault keeps only its code next to the fixed key", async () => {
-    const result = await completeOnboarding(failing("XX000"), INPUT, OPTIONS);
-    expect(result).toEqual({
+    const server = await completeOnboarding(failing("XX000"), INPUT, OPTIONS);
+    expect(server).toEqual({
       ok: false,
       reason: "failed",
       message: "errors.save.setup",
       fault: { kind: "server", code: "XX000" },
     });
-    expect(JSON.stringify(result)).not.toMatch(LEAK);
-  });
+    expect(JSON.stringify(server)).not.toMatch(LEAK);
 
-  it("an RLS refusal is `refused`", async () => {
     expect(await completeOnboarding(failing("42501"), INPUT, OPTIONS)).toEqual({
       ok: false,
       reason: "failed",
       message: "errors.save.setup",
       fault: { kind: "refused", code: "42501" },
     });
-  });
 
-  it("an out-of-range value is the user's input: its own key, no fault", async () => {
-    const result = await completeOnboarding(failing("23514"), INPUT, OPTIONS);
-    expect(result).toEqual({ ok: false, reason: "failed", message: "errors.outOfRange" });
-    expect(result).not.toHaveProperty("fault");
-  });
-
-  it("an already-onboarded user is its own reason, with no fault", async () => {
-    const result = await completeOnboarding(
+    // The user's input and an already-onboarded user are not faults.
+    const outOfRange = await completeOnboarding(failing("23514"), INPUT, OPTIONS);
+    expect(outOfRange).toEqual({ ok: false, reason: "failed", message: "errors.outOfRange" });
+    expect(outOfRange).not.toHaveProperty("fault");
+    const already = await completeOnboarding(
       fakeClient({ error: { ...leakyPostgrestError("P0001"), message: "already_onboarded" } }),
       INPUT,
       OPTIONS,
     );
-    expect(result).toEqual({ ok: false, reason: "alreadyOnboarded" });
+    expect(already).toEqual({ ok: false, reason: "alreadyOnboarded" });
   });
 
   it("an unresolvable time zone returns its key with a fault instead of dropping the error", async () => {
@@ -65,12 +57,10 @@ describe("completeOnboarding", () => {
 });
 
 describe("hasAnyGear", () => {
-  it("answers from the rows", async () => {
+  it("answers from the rows, and throws its key with a StoreFault cause holding only the code, from either read", async () => {
     expect(await hasAnyGear(fakeClient({ data: [{ id: "x" }] }))).toBe(true);
     expect(await hasAnyGear(fakeClient({ data: [] }))).toBe(false);
-  });
 
-  it("throws its key with a StoreFault cause holding only the code, from either read", async () => {
     const sitesFail = fakeClient((table) =>
       table === "sites" ? { error: leakyPostgrestError("XX000") } : { data: [] },
     );

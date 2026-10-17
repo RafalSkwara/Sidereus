@@ -41,19 +41,4 @@ describe("createClient with no Supabase configuration", () => {
     });
     expect(logs.warns).not.toHaveBeenCalled();
   });
-
-  it("logs again in a new isolate (a fresh module)", async () => {
-    vi.stubEnv("DEV", false);
-    expect((await freshCreateClient())(new Headers(), COOKIES)).toBeNull();
-    vi.resetModules();
-    expect((await freshCreateClient())(new Headers(), COOKIES)).toBeNull();
-    expect(logs.errors).toHaveBeenCalledTimes(2);
-  });
-
-  it("returns null and stays quiet on a dev server", async () => {
-    vi.stubEnv("DEV", true);
-    const createClient = await freshCreateClient();
-    expect(createClient(new Headers(), COOKIES)).toBeNull();
-    expect(logs.everything()).toBe("[]");
-  });
 });

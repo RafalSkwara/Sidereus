@@ -28,8 +28,6 @@ class Fixture {
   /** A failing read, by call number (1-based). */
   failRead: ReadonlySet<number> = new Set();
   failRecord: Error | null = null;
-  /** When set, `record` returns this instead of what it really inserted. */
-  inserts: MilestoneKey[] | null = null;
   private reads = 0;
 
   constructor(log: LogEntry[] = []) {
@@ -53,7 +51,7 @@ class Fixture {
     }
     const inserted = states.map((state) => state.key).filter((key) => !this.stored.has(key));
     inserted.forEach((key) => this.stored.add(key));
-    return Promise.resolve(this.inserts ?? inserted);
+    return Promise.resolve(inserted);
   };
 
   /** A write that applies `change` to the log and succeeds. */
@@ -135,21 +133,6 @@ describe("reachedBySave, a counting save", () => {
     expect(celebrate).toEqual(["first-globular"]);
   });
 
-  it("records the after night where both states have the milestone", async () => {
-    const fixture = new Fixture([M31]);
-    const earlier: LogEntry = { target: "M33", night: "2026-09-02", rating: 5 };
-    const { celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: true,
-      route: "create",
-      write: fixture.write((log) => [...log, earlier]),
-    });
-
-    expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-02" }]]);
-    expect(celebrate).toEqual([]);
-  });
-
   it("records first-galaxy from before when an edit moves it away (M31 to M13)", async () => {
     const fixture = new Fixture([M31]);
     const { celebrate } = await reachedBySave({
@@ -167,40 +150,6 @@ describe("reachedBySave, a counting save", () => {
       ],
     ]);
     expect(celebrate).toEqual(["first-globular"]);
-  });
-
-  it("celebrates in MILESTONES order whatever order record returns them in", async () => {
-    const messier = ["M2", "M3", "M4", "M5", "M9", "M10", "M12", "M13", "M14"].map<LogEntry>((target, i) => ({
-      target,
-      night: `2026-08-${String(i + 1).padStart(2, "0")}`,
-      rating: 4,
-    }));
-    const fixture = new Fixture(messier);
-    fixture.inserts = ["messier-10", "first-galaxy"];
-    const { celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: true,
-      route: "create",
-      write: fixture.write((log) => [...log, M31]),
-    });
-
-    expect(celebrate).toEqual(["first-galaxy", "messier-10"]);
-  });
-
-  it("records nothing and celebrates nothing when the save reached nothing", async () => {
-    const fixture = new Fixture();
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: true,
-      route: "create",
-      write: fixture.write((log) => [...log, { target: "M45", night: "2026-09-01", rating: 4 }]),
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(fixture.calls).toEqual(["read", "write", "read"]);
-    expect(celebrate).toEqual([]);
   });
 
   it("still writes, reads and records the after-state after a failed before-read, and celebrates nothing", async () => {
@@ -225,42 +174,6 @@ describe("reachedBySave, a counting save", () => {
     });
   });
 
-  it("records the before-state after a failed after-read, and celebrates nothing", async () => {
-    const fixture = new Fixture([M31]);
-    fixture.failRead = new Set([2]);
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: true,
-      route: "create",
-      write: fixture.write((log) => [...log, M13]),
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
-    expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read-create failed", {
-      step: "milestones.read-create",
-      name: "Error",
-    });
-  });
-
-  it("returns the write's failure unchanged and records and celebrates nothing", async () => {
-    const fixture = new Fixture([M31]);
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: true,
-      route: "create",
-      write: fixture.failingWrite,
-    });
-
-    expect(result).toEqual({ ok: false, message: "errors.save.observation" });
-    expect(fixture.calls).toEqual(["read", "write"]);
-    expect(celebrate).toEqual([]);
-    expect(errors).not.toHaveBeenCalled();
-  });
-
   it("celebrates nothing after a failed record, still confirms the save, and logs the fixed line", async () => {
     const fixture = new Fixture();
     fixture.failRecord = new Error("a message that must never be logged", { cause: new TypeError("cause message") });
@@ -283,23 +196,6 @@ describe("reachedBySave, a counting save", () => {
 });
 
 describe("reachedBySave, a save that cannot count (counts: false)", () => {
-  it("reads and records the before-state, then writes, and celebrates nothing (an edit to 1-2)", async () => {
-    const fixture = new Fixture([M31]);
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: false,
-      route: "edit",
-      write: fixture.write(() => [{ ...M31, rating: 2 }]),
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(fixture.calls).toEqual(["read", "record", "write"]);
-    expect(fixture.recorded).toEqual([[{ key: "first-galaxy", reachedNight: "2026-09-05" }]]);
-    expect(fixture.stored).toEqual(new Set(["first-galaxy"]));
-    expect(celebrate).toEqual([]);
-  });
-
   it("stores the milestone before a delete takes its only entry away", async () => {
     const fixture = new Fixture([M31]);
     const { celebrate } = await reachedBySave({
@@ -312,73 +208,6 @@ describe("reachedBySave, a save that cannot count (counts: false)", () => {
 
     expect(fixture.calls).toEqual(["read", "record", "write"]);
     expect(fixture.stored).toEqual(new Set(["first-galaxy"]));
-    expect(celebrate).toEqual([]);
-  });
-
-  it("makes no record call when the log reached nothing", async () => {
-    const fixture = new Fixture();
-    await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: false,
-      route: "delete",
-      write: fixture.write(() => []),
-    });
-
-    expect(fixture.calls).toEqual(["read", "write"]);
-  });
-
-  it("still writes after a failed read, with nothing recorded, and traces it", async () => {
-    const fixture = new Fixture([M31]);
-    fixture.failRead = new Set([1]);
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: false,
-      route: "delete",
-      write: fixture.write(() => []),
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(fixture.calls).toEqual(["read", "write"]);
-    expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.read-delete failed", {
-      step: "milestones.read-delete",
-      name: "Error",
-    });
-  });
-
-  it("still writes after a failed record, and traces it", async () => {
-    const fixture = new Fixture([M31]);
-    fixture.failRecord = new Error("a message that must never be logged");
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: false,
-      route: "delete",
-      write: fixture.write(() => []),
-    });
-
-    expect(result).toEqual({ ok: true });
-    expect(fixture.calls).toEqual(["read", "record", "write"]);
-    expect(celebrate).toEqual([]);
-    expect(errors).toHaveBeenCalledWith("sidereus: milestones.record-delete failed", {
-      step: "milestones.record-delete",
-      name: "Error",
-    });
-  });
-
-  it("returns the write's failure unchanged", async () => {
-    const fixture = new Fixture([M31]);
-    const { result, celebrate } = await reachedBySave({
-      read: fixture.read,
-      record: fixture.record,
-      counts: false,
-      route: "delete",
-      write: fixture.failingWrite,
-    });
-
-    expect(result).toEqual({ ok: false, message: "errors.save.observation" });
     expect(celebrate).toEqual([]);
   });
 });

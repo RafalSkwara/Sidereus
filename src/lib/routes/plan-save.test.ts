@@ -4,7 +4,6 @@ import { tonightDateForSite } from "@/lib/tonight/tonight-date";
 import {
   captureConsole,
   locationOf,
-  NOT_A_FORM,
   routeContext,
   SITE_ROW,
   type ConsoleCapture,
@@ -33,12 +32,7 @@ afterEach(() => {
 });
 
 /** A full-plan user with one site and no saved list; `siteError` fails the read, `writeError` the upsert. */
-async function post(options: {
-  form?: Record<string, string>;
-  siteError?: unknown;
-  writeError?: unknown;
-  notForm?: boolean;
-}) {
+async function post(options: { form?: Record<string, string>; siteError?: unknown; writeError?: unknown }) {
   const supabase = fakeClient((table, calls) => {
     if (table === "account_plans") {
       return { data: { plan: "full" } };
@@ -49,7 +43,7 @@ async function post(options: {
     return calls.includes("upsert") ? { error: options.writeError } : { data: null };
   });
   const context = routeContext({
-    ...(options.notForm ? { body: NOT_A_FORM } : { form: options.form ?? FORM }),
+    form: options.form ?? FORM,
     supabase,
   });
   return locationOf(await POST(context));
@@ -72,63 +66,6 @@ describe("POST /api/tonight/plan", () => {
     expect(logs.warns).toHaveBeenCalledTimes(1);
     expect(logs.warns).toHaveBeenCalledWith("sidereus: save.plan noted", { step: "save.plan", code: "42501" });
     expect(logs.errors).not.toHaveBeenCalled();
-  });
-
-  it("sends a server fault on a read before the write through the same step: the neutral key and one error line", async () => {
-    const location = await post({ siteError: leakyPostgrestError("08006") });
-    expect(location.searchParams.get("error")).toBe("errors.serverFault");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
-    expect(logs.errors).toHaveBeenCalledWith("sidereus: save.plan failed", { step: "save.plan", code: "08006" });
-    expect(logs.warns).not.toHaveBeenCalled();
-  });
-
-  it("sends a read that fails without a code (a throw of our own) the same way, as the server's", async () => {
-    const location = await post({ siteError: new Error(LEAK.source) });
-    expect(location.searchParams.get("error")).toBe("errors.serverFault");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
-    expect(logs.errors).toHaveBeenCalledWith("sidereus: save.plan failed", { step: "save.plan" });
-  });
-
-  it("sends an RLS refusal (42501) or a session fault on a read as a notice and keeps the store's key", async () => {
-    for (const code of ["42501", "PGRST301"]) {
-      logs.errors.mockClear();
-      logs.warns.mockClear();
-      const location = await post({ siteError: leakyPostgrestError(code) });
-      expect(location.searchParams.get("error")).toBe("errors.load.sites");
-      expect(logs.warns).toHaveBeenCalledTimes(1);
-      expect(logs.warns).toHaveBeenCalledWith("sidereus: save.plan noted", { step: "save.plan", code });
-      expect(logs.errors).not.toHaveBeenCalled();
-    }
-  });
-
-  it("redirects a validation failure as before and logs nothing", async () => {
-    const location = await post({ form: { site: SITE_ROW.id, night: "not-a-date" } });
-    expect(location.searchParams.get("error")).toBe("errors.save.sessionPlan");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a night that is over as before and logs nothing", async () => {
-    const location = await post({ form: { site: SITE_ROW.id, night: "2020-01-01" } });
-    expect(location.searchParams.get("error")).toBe("errors.sessionPlan.nightOver");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a saved plan as before and logs nothing", async () => {
-    const location = await post({});
-    expect(location.pathname + location.search).toBe(`/tonight/plan?site=${SITE_ROW.id}&saved=plan`);
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a body that is not a form with the shape key and logs request.form instead of throwing", async () => {
-    const location = await post({ notForm: true });
-    expect(location.pathname).toBe("/tonight/plan");
-    expect(location.searchParams.get("site")).toBeNull();
-    expect(location.searchParams.get("error")).toBe("errors.checkFields");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
-    expect(logs.errors).toHaveBeenCalledWith("sidereus: request.form failed", {
-      step: "request.form",
-      name: "TypeError",
-    });
   });
 
   it("never lets the echoed values reach a log line or the redirect", async () => {

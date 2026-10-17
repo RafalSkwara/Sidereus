@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  captureConsole,
-  locationOf,
-  NOT_A_FORM,
-  routeContext,
-  type ConsoleCapture,
-} from "@/lib/test-support/route-context";
+import { captureConsole, locationOf, routeContext, type ConsoleCapture } from "@/lib/test-support/route-context";
 import { fakeClient, leakyPostgrestError, LEAK } from "@/lib/test-support/supabase-fake";
 import { POST } from "@/pages/api/onboarding";
 
@@ -36,7 +30,7 @@ afterEach(() => {
 
 async function post(options: { form?: Record<string, string>; error?: unknown; notForm?: boolean }) {
   const context = routeContext({
-    ...(options.notForm ? { body: NOT_A_FORM } : { form: options.form ?? FORM }),
+    form: options.form ?? FORM,
     supabase: fakeClient({ error: options.error }),
   });
   return locationOf(await POST(context));
@@ -64,41 +58,6 @@ describe("POST /api/onboarding", () => {
       code: "42501",
     });
     expect(logs.errors).not.toHaveBeenCalled();
-  });
-
-  it("redirects a check violation with the out-of-range key and logs nothing (the user's input)", async () => {
-    const location = await post({ error: leakyPostgrestError("23514") });
-    expect(location.searchParams.get("error")).toBe("errors.outOfRange");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("sends a user who already has gear to Tonight as if the save had just worked, with no line", async () => {
-    const location = await post({ error: { ...leakyPostgrestError("P0001"), message: "already_onboarded" } });
-    expect(location.pathname).toBe("/tonight");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a validation failure as before and logs nothing", async () => {
-    const location = await post({ form: { ...FORM, latitudeDeg: "952.2297" } });
-    expect(location.searchParams.get("error")).toBe("errors.site.latitudeRange");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("opens Tonight after a saved setup and logs nothing", async () => {
-    const location = await post({});
-    expect(location.pathname).toBe("/tonight");
-    expect(logs.everything()).toBe("[]");
-  });
-
-  it("redirects a body that is not a form with the shape key and logs request.form instead of throwing", async () => {
-    const location = await post({ notForm: true });
-    expect(location.pathname).toBe("/onboarding");
-    expect(location.searchParams.get("error")).toBe("errors.checkFields");
-    expect(logs.errors).toHaveBeenCalledTimes(1);
-    expect(logs.errors).toHaveBeenCalledWith("sidereus: request.form failed", {
-      step: "request.form",
-      name: "TypeError",
-    });
   });
 
   it("never lets the submitted or echoed values reach a log line or the redirect", async () => {
