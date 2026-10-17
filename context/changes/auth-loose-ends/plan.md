@@ -310,10 +310,10 @@ None: no schema, no data, no environment change. Rollback is reverting the PR; n
 
 #### Automated
 
-- [x] 3.1 The new spec passes on its own: `BASE_URL=http://localhost:4339 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test auth-continue`
-- [x] 3.2 The whole e2e suite passes against a fresh `npm run build` and a local production preview (started with `FORECAST_BASE_URL` pointing at the forecast fixture on 4407), as CI runs it, with the counts reported: `BASE_URL=http://localhost:4339 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e`
-- [x] 3.3 The full smoke walk passes: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=http://localhost:4339 npm run smoke`
-- [x] 3.4 Lint, type check and both Vitest projects (including the `guards` project, with the e2e clock guard) pass: `npm run lint && npx astro check && npm test`
+- [x] 3.1 The new spec passes on its own: `BASE_URL=http://localhost:4339 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npx playwright test auth-continue` — 5530ec1
+- [x] 3.2 The whole e2e suite passes against a fresh `npm run build` and a local production preview (started with `FORECAST_BASE_URL` pointing at the forecast fixture on 4407), as CI runs it, with the counts reported: `BASE_URL=http://localhost:4339 SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> npm run test:e2e` — 5530ec1
+- [x] 3.3 The full smoke walk passes: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=http://localhost:4339 npm run smoke` — 5530ec1
+- [x] 3.4 Lint, type check and both Vitest projects (including the `guards` project, with the e2e clock guard) pass: `npm run lint && npx astro check && npm test` — 5530ec1
 
 #### Manual
 

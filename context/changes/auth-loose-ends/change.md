@@ -1,7 +1,7 @@
 ---
 change_id: auth-loose-ends
 title: Auth loose ends: signed-in auth pages and sign-up next
-status: implementing
+status: implemented
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null
