@@ -4,12 +4,13 @@ What Sidereus looks like now, and what the next session should do. Read this fir
 
 ## Update 2026-10-17 (owner polish)
 
-- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` merged (#220, GitHub #214) and archived; S-11 `ui-progress-rewards` (#215) is in planning, waiting on the owner's approval of the badge art.
+- S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` merged (#220, GitHub #214) and archived; S-11 `ui-progress-rewards` merged (#224, GitHub #215) and archived. All four owner UI requests (S-09 to S-12) are done. The badge-art generator lives in `scripts/badge-art/` (`npm run badge-art:port` ports the art into `src/components/progress/badge-art`, `npm run badge-art:render` renders it).
 
 ### Open owner checks
 
 - ui-quick-nav, iPhone Safari swipe (archived plan rows 3.4, 3.5): each bottom sheet follows the finger, snaps back, closes on a flick; the quick-nav list scrolls without moving the sheet and a drag from its top closes it; with Reduce motion on, no follow and a long swipe closes at once.
 - ui-quick-nav, VoiceOver (archived plan row 2.7): "Szybka nawigacja", collapsed and expanded, "bieżąca strona" on the current row.
+- ui-progress-rewards (S-11), on devices: red mode at night on a phone (badges and tiles told apart by shape); VoiceOver on a tile and on the new Caldwell heading and its toggle; the live celebration dialog after a real save, including the smaller names in a multi-milestone dialog; and the open question whether a tile with no common name should show its type as its name.
 
 ---
 
