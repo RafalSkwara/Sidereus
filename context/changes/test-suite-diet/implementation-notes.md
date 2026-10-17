@@ -68,3 +68,44 @@ Restored after review: small-scope G2, the Tromso noon rule, planet-ranking's ti
 - Fixtures: every `fixtures/` file is still imported by a kept test. The `moon` and `objects` sections of the three Stellarium JSONs, and `MoonSample`/`ObjectSample` and their parse code in `fixtures/index.ts`, are read by no test now; left in place (no fixture data deleted, plan rule). `fixtures/README.md`: the "Reading the Moon" and "Reading objects" capture protocols retired, `planets.test.ts` -> `planet-ranking.test.ts`.
 - Docs grep: `grep -rnE '(contrast|night|evening-showpieces|moon-disc|moonlight|planets)\.test\.ts|determinism|events\.test|ALLOWED_DISABLES' CLAUDE.md context/foundation context/deployment` found only `test-plan.md` §6.2/§6.3 lines (updated: night-boundaries two zones, visibility-invariants shape), the generic `ALLOWED_DISABLES` mentions in lessons.md and test-plan §6.4 (still true), and CLAUDE.md's `small-scope.test.ts (G1-G6)` (still true, G2 restored).
 - `npm run lint`, `npx astro check` green.
+
+## Phase 2: Tonight, forecast, finder and components, including the S-07 files (2026-10-17)
+
+Branch `test-diet/phase-2`, stacked on `test-diet/phase-1` (PR #199). Four Sonnet subagents (high) cut four groups; the implementer reviewed every report, ran the break checks and edited the docs.
+
+| Measure                                                                          | Before                  | After                              |
+| -------------------------------------------------------------------------------- | ----------------------- | ---------------------------------- |
+| slice files / tests (components, finder, moon-disc, sky-view, forecast, tonight) | 40 / 659                | 27 / 192 (targets: <= 30 / <= 230) |
+| whole suite                                                                      | 150 files / 2,427 tests | 137 files / 1,960 tests            |
+| `reference` project cold                                                         | 5.4 s                   | 4.3 s                              |
+| `guards` project                                                                 | 188 tests, 8.5 s        | 188 tests, 9.1 s                   |
+
+Per file (before -> after): `tonight/build` 133 -> 40, `tonight/load` 22 -> 9, `forecast/service` 38 -> 24 (`cache` 2 absorbed and deleted), `forecast/open-meteo` 9 -> 2, `forecast/kv-cache` 4 -> 2, `forecast/night-in-progress` 2 -> 1, `forecast/degraded-forecast` 18 unchanged, `finder/load` 25 -> 10, `finder/chart-svg` 15 -> 5, `finder/steps` 10 -> 3, `finder/example-chart` 5 -> 2, `moon-disc/geometry` 14 -> 6, `moon-disc/label` 4 -> 2, `sky-view` 21 -> 3, `tonight/visibility-invariants` 100 -> 7, `tonight/night-boundaries` 30 -> 8, `tonight/sky-events` 28 -> 10, `tonight/format` 26 -> 6, `tonight/plan-editor` 21 -> 4, `tonight/plan-window` 12 -> 9, `tonight/all-objects` 5 -> 2, `gear-choice` 4 -> 2, `expectation` 7 -> 1, `requested-gear` 2 -> 1, `session-plan` 7 -> 1, `forecast-honesty` 11 unchanged. Deleted: `design/finder-samples`, `nav-type-roles`, `tonight/subnav`, `ui/fact-icons`, `finder/from`, `moon-disc/state`, `tonight/altitude-curve`, `plan-editor-view`, `plan-order`, `plan-edits`, `forecast/cache`. Merged into the new `src/components/island-imports.test.ts` (3 tests): `MoonTimeSlider`, `TonightSkyView`, `fact-islands` (20 -> 3).
+
+### Ledger rows of this phase
+
+- forecast/night-in-progress "judges the verdict on the evening hours that a past_days=1 response carries": kept. forecast/service describe "getForecast with a 200 that is not a complete series" (8 tests because three are `it.each` rows) and "falls back to a stale copy of any age when the fetch fails, flagged as a fallback": kept, titles unchanged. forecast/degraded-forecast and tonight/forecast-honesty: whole files kept.
+- tonight/night-boundaries (a)-(c): kept in two zones of opposite sign (`America/Los_Angeles`, `Pacific/Kiritimati`), one looping test per rule with the counts asserted first.
+- tonight/build, the eight ledger titles (civil-dawn rollover, no planet in the clear hours, cloudy no-go night with no faint line, moonless 2026-10-10, below-the-bar finder link, "Tomorrow, 11:22", 2027-08-02 morning, "ends the night at the civil dawn after it"): kept, titles unchanged. The five S-07 catch lines are one case each (`tonight.planets`, `.moon`, `.sky-view`, `.session-plan`, `.sky-events`: one fixed line with `{step, name}`, no coordinate, the rest of the view equal to the healthy one).
+- tonight/plan-order "flags a row whose window ends before the previous row's best time": replaced by `plan-editor.test.ts` `editorAnnouncement` "adds the order hint when the moved row now ends before the previous target is at its best" (with the boundary: a window ending exactly at the previous best time is not flagged). tonight/visibility-invariants describe "An edited Session plan never draws a target outside its window (adjustable-session-plan)": kept as its own folded test, which replaces `plan-edits.test.ts` (it also checks the rows-only-from-suggested-or-reachable rule against the independent oracle).
+- tonight/sky-events: the four pins (F3, F2 / decision A, F6, F10b): kept. tonight/format: both pins and the DST describe: kept. tonight/load: three ledger pins kept (the failure-lines describe has one case per fixed line). tonight/requested-gear "reads but never remembers the site of a next-night request": kept.
+- finder/load "answers a failed plan read like a free account", describe "loadFinderFor from the Session plan (adjustable-session-plan F9)", describe "loadFinderFor's failed state leaves a line (error-visibility, Phase 5)": kept (the F9 describe holds 1 of its 3 tests, the failed-state describe 2 of 7).
+- components/ui/fact-icons "keeps the solar eclipse's own Eclipse icon (owner decision D4)": dropped (owner, presentational; `/design` shows it).
+
+### Judgement calls
+
+Not restored (rubric, or the plan names the deletion): `finder/from` `finderHref` cases (`from=plan`, `night=next` only when the page shows the next night; the plan deletes the file, so that link rule is held only by e2e and `tonight/build`'s below-the-bar link test), `finder/load`'s "asks Tonight for the reachable list only with from=plan" (mock choreography (d); the wiring is exercised by the plan spec), `sky-events`' i18n colon invariant (b), `tonight/build`'s "lists the ranking's best three by best time" (a), `plan-editor`'s `savedKeys`/`isUnchanged`/Polish announcement (the plan's target of 4; `session-plan-edit.spec` covers them). `finder/example-chart` stays at 2 tests: the opt-in regeneration test (`EXAMPLE_CHART_REGENERATE=1`) stays because `example-chart.ts` comments name that command; moving it to `scripts/` is left to a later pass. Three files land under target (format 6, night-boundaries 8, visibility-invariants 7) without dropping a pin.
+
+### Break checks (each red, then restored with `git checkout --` of the staged file)
+
+- Session plan row clamped past its window (`session-plan.ts` `to: at(window.end + 2 h)`): both visibility-invariants row tests red.
+- Solar-safety line behind "+N more" (`sky-events.ts` safety rows sorted last): "names the eclipse with 'eclipse glasses only' and '+1 more' when a pairing comes before it on the night" red.
+- An island importing `@/lib/catalogue` (`TonightSkyView.tsx`): `island-imports.test.ts` test 1 red.
+- A 200 ending 60 h after now replacing a usable copy (`FORECAST_COMPLETE_AFTER_MS` 96 h -> 48 h): "keeps a usable stored copy over a 200 that ends about 60 h after now, short of the 96 h verdict nights need" red.
+- The subagents also ran: the dawn rollover, the "Tomorrow" wording, the no-planet clear-spell line, the `orderHints` boundary and the service cache-write line.
+
+### Docs and the rest
+
+- Docs grep (`grep -rnE 'nav-type-roles|fact-islands|TonightSkyView\.test|MoonTimeSlider\.test|subnav\.test|fact-icons\.test|finder-samples\.test|plan-edits\.test|plan-order\.test|altitude-curve\.test|cache\.test\.ts' CLAUDE.md context/foundation context/deployment src scripts .claude`) found CLAUDE.md three places (the nav-type-roles parenthesis removed; `fact-islands.test.ts` and `TonightSkyView.test.ts` -> `island-imports.test.ts`) and one source comment in `TonightSkyView.tsx` (updated). test-plan.md names none of the deleted files.
+- Fixtures and helpers: nothing became unused. Production exports now referenced only inside their own module: `isLit` (`moon-disc/geometry.ts`), `frameTime` (`sky-view/frames.ts`), `altitude-curve.ts` has no unit test any more (still used by `SessionTimeline`); left in place (no `src/` change in this phase).
+- `npm run lint`, `npx astro check` (0 errors) green; `npm run test:guards` green.

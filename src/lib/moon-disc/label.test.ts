@@ -14,19 +14,23 @@ import { moonDiscLabel, moonPhaseLine } from "./label";
 describe("moonPhaseLine", () => {
   const fractions = [0, 0.01, 0.07, 0.5, 0.63, 0.99, 1];
 
-  it.each(LOCALES)("matches the server's phase text in %s for every band and fraction", (locale) => {
-    const m = getMessages(locale).tonight.moon;
-    const format = createFormatter(locale);
-    for (const { band } of MOON_PHASE_BANDS) {
-      for (const illuminatedFraction of fractions) {
-        expect(moonPhaseLine(m, { band, illuminatedFraction })).toBe(format.moonPhaseText(band, illuminatedFraction));
+  it("matches the server's phase text in every locale for every band and fraction", () => {
+    let compared = 0;
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).tonight.moon;
+      const format = createFormatter(locale);
+      for (const { band } of MOON_PHASE_BANDS) {
+        for (const illuminatedFraction of fractions) {
+          expect(
+            moonPhaseLine(m, { band, illuminatedFraction }),
+            `${locale} ${band} ${String(illuminatedFraction)}`,
+          ).toBe(format.moonPhaseText(band, illuminatedFraction));
+          compared += 1;
+        }
       }
     }
-  });
-
-  it("words a state as the phase and the whole percent lit", () => {
-    const m = getMessages("en").tonight.moon;
-    expect(moonPhaseLine(m, { band: "waxing-gibbous", illuminatedFraction: 0.63 })).toBe("Waxing gibbous · 63% lit");
+    expect(compared).toBe(LOCALES.length * MOON_PHASE_BANDS.length * fractions.length);
+    expect(compared).toBeGreaterThan(50);
   });
 });
 

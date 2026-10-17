@@ -5,7 +5,7 @@ import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import type { DarkWindow, Verdict } from "@/lib/engine";
 
-import { createFormatter, zoneLabel, type MoonUp, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
+import { createFormatter, type SkyHeadlineId, type SkyHeadlineKey } from "./format";
 
 const { darkSpanText, formatShortNightDate, formatTime, noDarknessCauseText, seenLine } = createFormatter("en");
 
@@ -40,15 +40,6 @@ describe("times in the site's zone (NFR daylight-saving)", () => {
   });
 });
 
-describe("formatShortDate", () => {
-  it("writes a calendar date as day, short month and year in each locale, never shifted by a zone", () => {
-    expect(createFormatter("en").formatShortDate("2026-12-31")).toBe("31 Dec 2026");
-    expect(createFormatter("en").formatShortDate("2026-03-01")).toBe("1 Mar 2026");
-    expect(createFormatter("pl").formatShortDate("2026-12-31")).toBe("31 gru 2026");
-    expect(createFormatter("pl").formatShortDate("2026-03-01")).toBe("1 mar 2026");
-  });
-});
-
 describe("noDarknessCauseText", () => {
   it("truncates the sun's depth so a near miss always reads short of the threshold", () => {
     expect(noDarknessCauseText({ latitudeDeg: 55, minSunAltitudeDeg: -17.8, thresholdDeg: -18, bortle: 1 })).toBe(
@@ -58,29 +49,8 @@ describe("noDarknessCauseText", () => {
 });
 
 describe("the Moon's wording (M-2 S-02)", () => {
-  const polish = createFormatter("pl");
   const english = createFormatter("en");
   const peak = { time: new Date("2026-10-26T21:53:00Z"), altitudeDeg: 57.6 };
-
-  it("names the phase band and the illumination in whole percent, in each locale", () => {
-    expect(english.moonPhaseText("waxing-gibbous", 0.784)).toBe("Waxing gibbous · 78% lit");
-    expect(english.moonPhaseText("waning-crescent", 0.05)).toBe("Waning crescent · 5% lit");
-    expect(polish.moonPhaseText("waxing-gibbous", 0.784)).toBe("Garbaty przybywający · oświetlony w 78%");
-    expect(polish.moonPhaseText("full", 0.995)).toBe("Pełnia · oświetlony w 100%");
-  });
-
-  it("gives the highest point and timing, with the low wording below the low altitude", () => {
-    expect(english.moonReasonLine({ placement: "high", timing: "night", peak }, "Europe/Warsaw")).toBe(
-      "Highest 58° at 22:53 — best in the middle of the night",
-    );
-    const low = { placement: "low" as const, timing: "evening" as const, peak: { ...peak, altitudeDeg: 22.2 } };
-    expect(english.moonReasonLine(low, "Europe/Warsaw")).toBe(
-      "Highest only 22° at 22:53 — best early in the night; this low, the view may shimmer",
-    );
-    expect(polish.moonReasonLine(low, "Europe/Warsaw")).toBe(
-      "Najwyżej tylko 22° o 22:53 — najlepiej wieczorem; tak nisko obraz może falować",
-    );
-  });
 
   it("rounds the low wording down, so a peak just under the low line never reads as the line itself", () => {
     const justUnder = { placement: "low" as const, timing: "evening" as const, peak: { ...peak, altitudeDeg: 29.6 } };
@@ -94,46 +64,6 @@ describe("the Moon's wording (M-2 S-02)", () => {
         "Europe/Warsaw",
       ),
     ).toBe("Highest 31° at 22:53 — best in the middle of the night");
-  });
-});
-
-describe("the Moon card's lines (moonlight-and-the-verdict)", () => {
-  const english = createFormatter("en");
-  const polish = createFormatter("pl");
-  const zone = "Europe/Warsaw";
-  // 22:10 and 06:58 CEST, 01:30 and 03:40 CEST on the night of 10-11 October.
-  const at = (hhmm: string, day = 11) => new Date(`2026-10-${day}T${hhmm}:00+02:00`);
-  const rising: MoonUp = { kind: "part", spans: [{ start: at("22:10", 10), end: at("06:58") }], upAtStart: false };
-  const setting: MoonUp = { kind: "part", spans: [{ start: at("19:05", 10), end: at("01:30") }], upAtStart: true };
-  const twice: MoonUp = {
-    kind: "part",
-    spans: [
-      { start: at("19:05", 10), end: at("20:10", 10) },
-      { start: at("04:30"), end: at("06:58") },
-    ],
-    upAtStart: true,
-  };
-
-  it("says when the Moon is up: all night, when it sets, its spans, or not at all", () => {
-    expect(english.moonUpText({ kind: "all" }, zone)).toBe("Up all night");
-    expect(english.moonUpText({ kind: "never" }, zone)).toBe("Not up tonight");
-    expect(english.moonUpText(rising, zone)).toBe("Up 22:10–06:58");
-    expect(english.moonUpText(setting, zone)).toBe("Sets 01:30");
-    expect(english.moonUpText(twice, zone)).toBe("Up 19:05–20:10 and 04:30–06:58");
-    expect(polish.moonUpText(setting, zone)).toBe("Zachodzi o 01:30");
-    expect(polish.moonUpText(twice, zone)).toBe("Nad horyzontem w godz. 19:05–20:10 i 04:30–06:58");
-  });
-
-  it("words the faint-objects line by the washed-out count first, then by the Moon's up time", () => {
-    expect(english.moonFaintText({ kind: "all" }, 4, zone)).toBe("Bright Moon: 4 faint objects washed out tonight");
-    expect(english.moonFaintText({ kind: "all" }, 1, zone)).toBe("Bright Moon: 1 faint object washed out tonight");
-    expect(english.moonFaintText({ kind: "all" }, 0, zone)).toBe("Moonlit sky · no faint objects lost");
-    expect(english.moonFaintText(rising, 0, zone)).toBe("Moon up 22:10–06:58 · no faint objects washed out");
-    expect(english.moonFaintText({ kind: "never" }, 0, zone)).toBe("Dark night: no Moon");
-    expect(polish.moonFaintText({ kind: "all" }, 5, zone)).toBe(
-      "Jasny Księżyc: 5 słabych obiektów ginie dziś w jego blasku",
-    );
-    expect(polish.moonFaintText({ kind: "never" }, 0, zone)).toBe("Ciemna noc: bez Księżyca");
   });
 });
 
@@ -209,83 +139,15 @@ describe("the sky headline (moonlight-and-the-verdict)", () => {
     ],
   ];
 
-  it.each(rows)("words a %s night in English and Polish", (_label, verdict, id, key, englishText, polishText) => {
-    expect(english.skyHeadline(verdict)).toEqual({ id, key, text: englishText });
-    expect(polish.skyHeadline(verdict)).toEqual({ id, key, text: polishText });
-    // The key names the catalogue entry the text comes from.
-    expect(translateKey(en, key, "errors.generic")).toBe(englishText);
-    expect(translateKey(pl, key, "errors.generic")).toBe(polishText);
-  });
-
-  it("names the next clearer night by its short date and its headline in lowercase", () => {
-    const marginal: Verdict = { level: "marginal", reason: { kind: "clear-run", runHours: 1, cloudPct: 30 } };
-    const next = { kind: "found" as const, date: "2026-10-09", verdict: marginal };
-    expect(english.nextNightText(next)).toBe("Next clearer night: Fri 9 Oct (partly clear)");
-    expect(polish.nextNightText(next)).toBe("Następna pogodniejsza noc: pt., 9 paź (częściowo pogodnie)");
-    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
-    expect(english.nextNightText({ ...next, verdict: damp })).toBe("Next clearer night: Fri 9 Oct (clear, but damp)");
-  });
-
-  it("leads the planet weather line with the headline words", () => {
-    const damp: Verdict = { level: "marginal", reason: { kind: "humidity-cap", maxHumidityPct: 95 } };
-    expect(english.planetWeatherText(damp, null)).toBe(
-      "For planets: clear, but damp — clear enough between dusk and dawn, but humidity reaches 95%, so expect dew and haze",
-    );
-    const none: Verdict = { level: "marginal", reason: { kind: "no-weather-data" } };
-    expect(polish.planetWeatherText(none, null)).toBe("Dla planet: brak prognozy — brak danych pogodowych");
-  });
-});
-
-describe("listOf (tonight-nightfall)", () => {
-  it("joins names as a locale conjunction list", () => {
-    expect(createFormatter("en").listOf(["Jupiter", "Saturn", "Mars"])).toBe("Jupiter, Saturn and Mars");
-    expect(createFormatter("pl").listOf(["Jowisz", "Saturn", "Mars"])).toBe("Jowisz, Saturn i Mars");
-  });
-});
-
-describe("zoneLabel (ui-user-adjustments)", () => {
-  it("names the zone by its abbreviation where it has one, in every locale's wording alike", () => {
-    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Europe/Warsaw")).toBe("CEST");
-    expect(zoneLabel(new Date("2026-12-10T12:00:00Z"), "Europe/Warsaw")).toBe("CET");
-    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Europe/London")).toBe("BST");
-    expect(zoneLabel(new Date("2026-12-10T12:00:00Z"), "Europe/London")).toBe("GMT");
-    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "America/New_York")).toBe("EDT");
-  });
-
-  it("falls back to a GMT offset where the zone has no abbreviation", () => {
-    expect(zoneLabel(new Date("2026-10-10T12:00:00Z"), "Asia/Tokyo")).toBe("GMT+9");
-  });
-});
-
-describe("formatNightSpan", () => {
-  it("writes the night an evening starts as 12/13 Aug, naming both months across a month end and a year end", () => {
-    expect(createFormatter("en").formatNightSpan("2027-08-12")).toBe("12/13 Aug");
-    expect(createFormatter("en").formatNightSpan("2026-10-31")).toBe("31 Oct/1 Nov");
-    expect(createFormatter("en").formatNightSpan("2026-12-31")).toBe("31 Dec/1 Jan");
-    expect(createFormatter("pl").formatNightSpan("2027-08-12")).toBe("12/13 sie");
-    expect(createFormatter("pl").formatNightSpan("2026-12-31")).toBe("31 gru/1 sty");
-  });
-});
-
-describe("reasonLine (evening-showpieces)", () => {
-  const window = { start: new Date("2026-10-10T18:00:00Z"), end: new Date("2026-10-11T01:00:00Z") };
-  const components = { duration: 1, moon: 1, brightness: 1, sky: 1 };
-  const context = { apertureMm: 150, bortle: 6 };
-  const entry = (secondComponent: "brightness" | null) => ({
-    object: { vMag: 5 },
-    score: { window: { ...window, peak: undefined as never }, components },
-    leadComponent: "duration" as const,
-    secondComponent,
-  });
-
-  it("joins the lead and the runner-up with a separator", () => {
-    expect(createFormatter("en").reasonLine(entry("brightness"), context)).toBe(
-      "Up for 7 h of the dark window · bright for your 150 mm",
-    );
-  });
-
-  it("prints the lead phrase alone when only one reason is named, in both languages", () => {
-    expect(createFormatter("en").reasonLine(entry(null), context)).toBe("Up for 7 h of the dark window");
-    expect(createFormatter("pl").reasonLine(entry(null), context)).toBe("Na niebie przez 7 godz. w oknie ciemności");
+  it("words each line of the plan's headline table in English and Polish", () => {
+    // Non-vacuity: the table lists all eight lines, so a shorter sample can never pass.
+    expect(rows).toHaveLength(8);
+    for (const [label, verdict, id, key, englishText, polishText] of rows) {
+      expect(english.skyHeadline(verdict), `${label} (en)`).toEqual({ id, key, text: englishText });
+      expect(polish.skyHeadline(verdict), `${label} (pl)`).toEqual({ id, key, text: polishText });
+      // The key names the catalogue entry the text comes from.
+      expect(translateKey(en, key, "errors.generic"), `${label} (en key)`).toBe(englishText);
+      expect(translateKey(pl, key, "errors.generic"), `${label} (pl key)`).toBe(polishText);
+    }
   });
 });

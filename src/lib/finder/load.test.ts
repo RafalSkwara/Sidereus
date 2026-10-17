@@ -100,24 +100,10 @@ beforeEach(() => {
 });
 
 describe("loadFinderFor's plan guard", () => {
-  it("answers a free account with locked before Tonight, the star file or the engine is touched", async () => {
-    mocks.planRead.mockResolvedValue({ plan: "free" });
-    expect(await loadFinderFor(locals(), { target: "M31" })).toEqual({ kind: "locked" });
-    expect(mocks.loadTonightFor).not.toHaveBeenCalled();
-    expect(mocks.loadFinderStars).not.toHaveBeenCalled();
-  });
-
   it("answers a failed plan read like a free account", async () => {
     mocks.planRead.mockResolvedValue({ error: true, code: "PGRST000" });
     expect(await loadFinderFor(locals(), { target: "M31" })).toEqual({ kind: "locked" });
     expect(mocks.loadTonightFor).not.toHaveBeenCalled();
-  });
-
-  it("answers a signed-out request with locked without reading the plan, Tonight or the stars", async () => {
-    expect(await loadFinderFor(locals({ user: null }), { target: "M31" })).toEqual({ kind: "locked" });
-    expect(mocks.planRead).not.toHaveBeenCalled();
-    expect(mocks.loadTonightFor).not.toHaveBeenCalled();
-    expect(mocks.loadFinderStars).not.toHaveBeenCalled();
   });
 
   it("answers not-configured, and never builds a chart, when there is no database", async () => {
@@ -129,6 +115,8 @@ describe("loadFinderFor's plan guard", () => {
   it("checks the plan before looking at an object that does not parse", async () => {
     mocks.planRead.mockResolvedValue({ plan: "free" });
     expect(await loadFinderFor(locals(), { target: null })).toEqual({ kind: "locked" });
+    expect(mocks.loadTonightFor).not.toHaveBeenCalled();
+    expect(mocks.loadFinderStars).not.toHaveBeenCalled();
   });
 });
 
@@ -163,35 +151,9 @@ describe("loadFinderFor from the Session plan (adjustable-session-plan F9)", () 
     expect(load.labels.time).toBe(reached?.bestTime);
     expect(load.labels.direction).toBe(reached?.bestDirection);
   });
-
-  it("asks Tonight for the reachable list only with from=plan", async () => {
-    await loadFinderFor(locals(), { target: "M31", from: "plan" });
-    expect(mocks.loadTonightFor).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({ withReachable: true }),
-    );
-    await loadFinderFor(locals(), { target: "M31", from: "targets" });
-    expect(mocks.loadTonightFor.mock.lastCall?.[1]).not.toHaveProperty("withReachable");
-  });
-
-  it("stays locked for a free account, before Tonight is read", async () => {
-    mocks.planRead.mockResolvedValue({ plan: "free" });
-    expect(await loadFinderFor(locals(), { target: "NGC7000", from: "plan" })).toEqual({ kind: "locked" });
-    expect(mocks.loadTonightFor).not.toHaveBeenCalled();
-  });
 });
 
 describe("loadFinderFor for a full account", () => {
-  it("loads every cleared object for the picked site, telescope and night", async () => {
-    await loadFinderFor(locals(), { target: "M31", siteId: "s", telescopeId: "t", night: "next" });
-    expect(mocks.loadTonightFor).toHaveBeenCalledWith(expect.anything(), {
-      siteId: "s",
-      telescopeId: "t",
-      night: "next",
-      limit: Number.POSITIVE_INFINITY,
-    });
-  });
-
   it("draws a chart for a ranked deep-sky object, with the widest eyepiece when none fits it", async () => {
     const ranked = viewFor(WIDE_KIT).ranking?.entries.find((entry) => entry.id === "M31");
     expect(ranked?.pair?.kind).toBe("none-fit");
@@ -207,31 +169,29 @@ describe("loadFinderFor for a full account", () => {
     expect(load.labels.time).toBe(ranked?.bestTime);
   });
 
-  it("gives a deep-sky chart its expectation key and phrase for the site's Bortle class and the aperture", async () => {
+  it("gives a deep-sky chart its expectation key and phrase for the site's Bortle class and the aperture, and a planet's chart its own note", async () => {
     const key = expectationKeyFor("M31", WARSAW.bortle, TELESCOPE.apertureMm);
     if (key === null) {
       throw new Error("expected M31 in the catalogue");
     }
-    const load = await loadFinderFor(locals(), { target: "M31" });
-    if (load.kind !== "chart") {
-      throw new Error(`expected a chart, got ${load.kind}`);
+    const deepSky = await loadFinderFor(locals(), { target: "M31" });
+    if (deepSky.kind !== "chart") {
+      throw new Error(`expected a chart, got ${deepSky.kind}`);
     }
-    expect(load.expectation).toEqual({ key, text: en.tonight.expect.phrase[key] });
-  });
+    expect(deepSky.expectation).toEqual({ key, text: en.tonight.expect.phrase[key] });
 
-  it("gives a planet's chart the planet's own note under its key", async () => {
     const planet = viewFor(WIDE_KIT).solarSystem?.entries[0];
     if (planet === undefined) {
       throw new Error("expected a planet on this night");
     }
-    const load = await loadFinderFor(locals(), { target: planet.key });
-    if (load.kind !== "chart") {
-      throw new Error(`expected a chart, got ${load.kind}`);
+    const planetLoad = await loadFinderFor(locals(), { target: planet.key });
+    if (planetLoad.kind !== "chart") {
+      throw new Error(`expected a chart, got ${planetLoad.kind}`);
     }
-    expect(load.expectation).toEqual({ key: planet.key, text: planet.note });
+    expect(planetLoad.expectation).toEqual({ key: planet.key, text: planet.note });
   });
 
-  it("draws a planet's chart with the finding eyepiece of a kit that fits everything", async () => {
+  it("draws a planet's chart with the finding eyepiece of a kit that fits everything, and no eyepiece circle for an empty kit", async () => {
     const planet = viewFor(WIDE_KIT).solarSystem?.entries[0];
     if (planet === undefined) {
       throw new Error("expected a planet on this night");
@@ -242,51 +202,23 @@ describe("loadFinderFor for a full account", () => {
     }
     expect(load.labels.target).toBe(planet.name);
     expect(load.labels.eyepiece?.name).toBe("25 mm Plössl");
-  });
 
-  it("draws no eyepiece circle for a kit with no eyepieces", async () => {
     mocks.loadTonightFor.mockResolvedValue(tonightLoad([]));
-    const load = await loadFinderFor(locals(), { target: "M31" });
-    if (load.kind !== "chart") {
-      throw new Error(`expected a chart, got ${load.kind}`);
+    const bare = await loadFinderFor(locals(), { target: "M31" });
+    if (bare.kind !== "chart") {
+      throw new Error(`expected a chart, got ${bare.kind}`);
     }
-    expect(load.labels.eyepiece).toBeNull();
-    expect(load.chart.finder.circles.some((circle) => circle.kind === "eyepiece")).toBe(false);
+    expect(bare.labels.eyepiece).toBeNull();
+    expect(bare.chart.finder.circles.some((circle) => circle.kind === "eyepiece")).toBe(false);
   });
 
-  it("says not-ranked for an object missing from tonight's ranking, the Moon and an unparsed object", async () => {
-    const unknown = await loadFinderFor(locals(), { target: "NGC9999" });
-    expect(unknown.kind).toBe("not-ranked");
+  it("says not-ranked for an object missing from tonight's ranking, the Moon and an unparsed object, and no-gear without a site, logging nothing for either", async () => {
+    expect((await loadFinderFor(locals(), { target: "NGC9999" })).kind).toBe("not-ranked");
     expect((await loadFinderFor(locals(), { target: "moon" })).kind).toBe("not-ranked");
     expect(await loadFinderFor(locals(), { target: null })).toEqual({ kind: "not-ranked", view: null });
-  });
-
-  it("says no-gear without a site or a telescope, and logs nothing for it", async () => {
     mocks.loadTonightFor.mockResolvedValue(tonightLoad([], { site: undefined, view: null, needsSetup: true }));
     expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("no-gear");
     expect(logged).not.toHaveBeenCalled();
-  });
-
-  it("logs a failed star load as a fixed line with the error's name only, and answers failed", async () => {
-    const secret = new RangeError("52.23,21.01 could not be read");
-    mocks.loadFinderStars.mockRejectedValueOnce(secret);
-    const load = await loadFinderFor(locals(), { target: "M31" });
-    expect(load.kind).toBe("failed");
-    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.stars failed", {
-      step: "finder.stars",
-      name: "RangeError",
-    });
-    expect(JSON.stringify(logged.mock.calls)).not.toContain("52.23");
-  });
-
-  it("logs a failed chart the same way", async () => {
-    mocks.loadFinderStars.mockResolvedValueOnce(null);
-    const load = await loadFinderFor(locals(), { target: "M31" });
-    expect(load.kind).toBe("failed");
-    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
-      step: "finder.chart",
-      name: "TypeError",
-    });
   });
 });
 
@@ -294,19 +226,17 @@ describe("loadFinderFor's failed state leaves a line (error-visibility, Phase 5)
   /** The cause of a swallowed list read or build is already logged by the Tonight loader; this line says the finder fell. */
   const FELL = ["sidereus: finder.tonight failed", { step: "finder.tonight" }] as const;
 
-  it("logs finder.tonight once for a null load, which is never a chart", async () => {
+  it("logs finder.tonight once for a null load, an unbuilt Tonight and a failed site read, none of them a chart", async () => {
     mocks.loadTonightFor.mockResolvedValue(null);
     expect(await loadFinderFor(locals(), { target: "M31" })).toEqual({ kind: "failed", view: null });
     expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
-  });
 
-  it("logs finder.tonight once when Tonight could not be built (no view)", async () => {
+    logged.mockClear();
     mocks.loadTonightFor.mockResolvedValue(tonightLoad([], { view: null, tonightError: "tonight.failed" }));
     expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
     expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
-  });
 
-  it("logs finder.tonight once when the site read failed (an error key and no site)", async () => {
+    logged.mockClear();
     mocks.loadTonightFor.mockResolvedValue(
       tonightLoad([], { site: undefined, view: null, sitesError: "gear.load.failed" as never }),
     );
@@ -314,58 +244,34 @@ describe("loadFinderFor's failed state leaves a line (error-visibility, Phase 5)
     expect(logged).toHaveBeenCalledExactlyOnceWith(...FELL);
   });
 
-  it("logs nothing at all for the other states: locked, not-ranked, no-gear and a chart", async () => {
-    await loadFinderFor(locals(), { target: "NGC9999" });
-    await loadFinderFor(locals(), { target: null });
-    await loadFinderFor(locals(), { target: "M31" });
-    mocks.planRead.mockResolvedValue({ plan: "free" });
-    await loadFinderFor(locals(), { target: "M31" });
-    expect(logged).not.toHaveBeenCalled();
-  });
+  it("logs a failed star load and a failed chart as fixed lines with the error's name only, never a coordinate or an email", async () => {
+    mocks.loadFinderStars.mockRejectedValueOnce(new RangeError(`${COORDS} ${EMAIL}`));
+    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.stars failed", {
+      step: "finder.stars",
+      name: "RangeError",
+    });
 
-  it("does not add a finder.tonight line to the star and chart failures it already logs", async () => {
-    mocks.loadFinderStars.mockRejectedValueOnce(new RangeError("x"));
-    await loadFinderFor(locals(), { target: "M31" });
+    logged.mockClear();
     mocks.loadFinderStars.mockResolvedValueOnce(null);
-    await loadFinderFor(locals(), { target: "M31" });
-    expect(logged.mock.calls.map((call) => String(call[0]))).toEqual([
-      "sidereus: finder.stars failed",
-      "sidereus: finder.chart failed",
-    ]);
-  });
+    expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
+    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
+      step: "finder.chart",
+      name: "TypeError",
+    });
 
-  it("reaches failed, with a finder.chart line, when a call that used to sit outside the try throws", async () => {
     // `findingEyepiece` reads the kit before the star file or the engine is touched; its throw used to fail the island.
+    logged.mockClear();
     const poisoned = new Proxy([] as EyepieceRecord[], {
       get() {
         throw new RangeError(`${COORDS} ${EMAIL}`);
       },
     });
     mocks.loadTonightFor.mockResolvedValue(tonightLoad(WIDE_KIT, { eyepieces: poisoned }));
-    const load = await loadFinderFor(locals(), { target: "M31" });
-    expect(load.kind).toBe("failed");
-    expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
-      step: "finder.chart",
-      name: "RangeError",
-    });
-    expect(JSON.stringify(logged.mock.calls)).not.toMatch(LEAK);
-  });
-
-  it("reaches failed when the planet or ranking row itself cannot be read", async () => {
-    const view = viewFor(WIDE_KIT);
-    const broken = {
-      ...view,
-      ranking: {
-        get entries(): never {
-          throw new TypeError(COORDS);
-        },
-      },
-    };
-    mocks.loadTonightFor.mockResolvedValue(tonightLoad(WIDE_KIT, { view: broken as unknown as TonightView }));
     expect((await loadFinderFor(locals(), { target: "M31" })).kind).toBe("failed");
     expect(logged).toHaveBeenCalledExactlyOnceWith("sidereus: finder.chart failed", {
       step: "finder.chart",
-      name: "TypeError",
+      name: "RangeError",
     });
     expect(JSON.stringify(logged.mock.calls)).not.toMatch(LEAK);
   });
