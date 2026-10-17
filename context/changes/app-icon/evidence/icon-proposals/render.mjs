@@ -3,6 +3,7 @@
 // Run from the worktree root (Node from .nvmrc):
 //   node context/changes/app-icon/evidence/icon-proposals/render.mjs        (round 1 -> comparison.png)
 //   node context/changes/app-icon/evidence/icon-proposals/render.mjs r2     (round 2 -> comparison-r2.png)
+//   node context/changes/app-icon/evidence/icon-proposals/render.mjs final  (the owner's pick -> final/final-sheet.png)
 // Colours on the sheet are the Nightfall --background of each theme (dark #070a12, light #fbfcfd, red #080000); the
 // red view also runs the icon through the app's #red-only luminance filter (Layout.astro), as red mode does to <img>.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -12,7 +13,7 @@ import sharp from "sharp";
 import { chromium } from "playwright";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const round = process.argv[2] === "r2" ? "r2" : "r1";
+const round = ["r2", "final"].includes(process.argv[2]) ? process.argv[2] : "r1";
 const rounds = {
   r1: [
     { dir: "1-star", name: "1 · Star" },
@@ -25,9 +26,10 @@ const rounds = {
     { dir: "r2-3-rising-star", name: "R2-3 · Rising star" },
     { dir: "r2-4-gold-star-dusk", name: "R2-4 · Gold star, dusk" },
   ],
+  final: [{ dir: "final", name: "Final · White star, dusk" }],
 };
 const proposals = rounds[round];
-const sheet = round === "r2" ? "comparison-r2.png" : "comparison.png";
+const sheet = { r1: "comparison.png", r2: "comparison-r2.png", final: "final/final-sheet.png" }[round];
 // favicon.svg serves the small sizes, icon.svg the home-screen sizes; maskable.svg is rendered at 512.
 const renders = [
   { file: "favicon.svg", size: 16, out: "favicon-16.png" },
@@ -100,7 +102,7 @@ ${grounds
 </body></html>`;
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1220, height: 800 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: 1220, height: 200 }, deviceScaleFactor: 1 });
 await page.setContent(html);
 await page.screenshot({ path: join(here, sheet), fullPage: true });
 await browser.close();

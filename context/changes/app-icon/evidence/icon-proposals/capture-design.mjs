@@ -1,13 +1,15 @@
 // One-off capture for the app-icon change: screenshots the "App icon proposals" band of /design (dev only) in the
 // dark, light and red themes, stacked into design-specimen.png. Needs `npx astro dev --port 4413` running.
-//   node context/changes/app-icon/evidence/icon-proposals/capture-design.mjs [r2]   (r2 -> design-specimen-r2.png)
+//   node context/changes/app-icon/evidence/icon-proposals/capture-design.mjs [r2|final]
+//   (r2 -> design-specimen-r2.png; final -> final/design-specimen.png, the "App icon" band read from public/)
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { chromium } from "playwright";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = process.argv[2] === "r2" ? "design-specimen-r2.png" : "design-specimen.png";
+const out =
+  { r2: "design-specimen-r2.png", final: "final/design-specimen.png" }[process.argv[2]] ?? "design-specimen.png";
 const base = process.env.BASE_URL ?? "http://localhost:4413";
 
 const browser = await chromium.launch();
@@ -19,6 +21,8 @@ for (const theme of ["dark", "light", "red"]) {
   await page.goto(`${base}/design`, { waitUntil: "load", timeout: 120_000 });
   const band = page.locator("section", { has: page.locator("#app-icon-heading") }).first();
   await band.locator("img").first().waitFor();
+  // Every image decoded (the final band loads files from public/); a missing file rejects and fails the capture.
+  await band.evaluate((node) => Promise.all([...node.querySelectorAll("img")].map((img) => img.decode())));
   // The band sits within the tall viewport, so nothing scrolls: a live control lower down can move the scroll
   // position after load and blank an element screenshot that relies on scrolling.
   await page.addStyleTag({ content: "astro-dev-toolbar { display: none !important; }" });

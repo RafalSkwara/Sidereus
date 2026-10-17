@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Sidereus maskable icon: the sky and ground full bleed (a launcher crop only trims them); the star scaled to 0.8 about the centre, inside the safe circle r = 204.8. Colours as icon.svg. -->
+  <defs>
+    <linearGradient id="sm-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050916"/><stop offset="0.55" stop-color="#1b2a55"/><stop offset="0.76" stop-color="#6a3226"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sm-sky)"/>
+  <path fill="#070a12" d="M0 400Q128 336 272 364T512 350V512H0Z"/>
+  <path fill="#f2f4f8" transform="translate(256 256) scale(0.8) translate(-256 -256)" d="M236 64Q236 206 348 206Q236 206 236 348Q236 206 124 206Q236 206 236 64Z"/>
+</svg>
