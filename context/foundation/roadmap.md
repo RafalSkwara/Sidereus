@@ -64,7 +64,7 @@ A beginner with a first telescope can't tell whether tonight is worth setting up
 | S-05 | evening-showpieces   | see short evening showpieces ranked where beginners expect them, with windows that open on time, in a top 5 re-checked against references           | S-04          | MS-02, FR-013, FR-015       | done        |
 | S-06 | auth-loose-ends      | land on Tonight when opening sign-in or sign-up while signed in, and continue to the requested page after signing up from a gated link              | —             | MS-04                       | ready       |
 | S-07 | error-visibility     | (operator) see every failure in the critical flows with its cause, and be alerted, with no private data in the reports                              | —             | MS-03                       | in-progress |
-| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done |
+| S-08 | star-source-switch   | (operator) ship star files that come from Hipparcos V1 directly, with designations from CC0 and IAU sources, so ESA's authorisation can cover them  | —             | MS-05, PRD Open Question 21 | done        |
 
 ## Streams
 
@@ -209,7 +209,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - ESA's answer on the direct use of Hipparcos V1 (assessment aimed at the end of November 2026; ESA may attach conditions or a fee). — Owner: user. Block: no. This slice does not wait for it: V1 is CC BY-NC 3.0 IGO, fine while the app is free.
   - Whether the Wikidata and IAU designation sources cover the 3,342 stars that HYG names today, and how many stars ≤ 7.5 the V1 file yields (the assessment estimates about 25,713 against 25,791). — Owner: team. Block: no; the research settles it.
 - **Risk:**
-  - Both star pairs, the count guards, `stars.test.ts` and `finder-stars.test.ts` provenance assertions, the fixtures, `Attribution.astro` (new i18n keys in `en.ts` and `pl.ts`), `LICENSE-DATA.md` and the CLAUDE.md star tripwires all move together; the files stop being CC BY-SA and become NC under ESA's terms.
+  - Both star pairs, the count guards, `stars.test.ts` and `finder-stars.test.ts` provenance assertions, the fixtures, `Attribution.astro` (new i18n keys in `en.ts` and `pl.ts`), `LICENSE-DATA.md` and the CLAUDE.md star tripwires all move together; the files stop being CC BY-SA and become NC under ESA's terms. (Note 2026-10-17, test-suite-diet Phase 5: `stars.test.ts` and `finder-stars.test.ts` now hold only the provenance and licence pins and run in the `guards` project; the shape and count checks are the generators'.)
   - The positions are J1991.25 and must be propagated to J2000 with the proper motions; the bright file is expected to stay unchanged (in the end it went from 925 to 921 stars).
   - If ESA refuses or prices it out, the files revert or migrate to SAO in a change of their own.
   - **No payment is taken until ESA authorises in writing.** Outside the cut order: the owner mandated it on 2026-10-16.
@@ -217,16 +217,16 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID            | Suggested issue title                                             | Ready for `/10x-plan` | Notes                                                                       |
-| ---------- | -------------------- | ----------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
-| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                      | done                  | Merged in #177, archived · GitHub #169                                      |
-| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination          | done                  | Done: #182 merged, archived · GitHub #170                                   |
-| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                            | no                    | After S-02 · GitHub #171                                                    |
-| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)       | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178)     |
-| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check         | no                    | After S-04 · GitHub #173                                                    |
-| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)   | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174      |
-| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)              | yes                   | Run `/10x-observability-audit` first · GitHub #175                          |
-| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | done                  | Done: #193 + #195 merged, archived · GitHub #185                            |
+| Roadmap ID | Change ID            | Suggested issue title                                             | Ready for `/10x-plan` | Notes                                                                   |
+| ---------- | -------------------- | ----------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
+| S-01       | ui-dashboard-tiles   | M-4 S-01 · Dashboard tiles in the new rhythm                      | done                  | Merged in #177, archived · GitHub #169                                  |
+| S-02       | ui-tonight-nav       | M-4 S-02 · Tonight sub-nav and Progress as a destination          | done                  | Done: #182 merged, archived · GitHub #170                               |
+| S-03       | ui-log-progress-gear | M-4 S-03 · Log, progress and gear rows                            | no                    | After S-02 · GitHub #171                                                |
+| S-04       | small-scope-galaxies | M-4 S-04 · Galaxies in a small telescope (#159, #21 item 3)       | done                  | North star · Done: #179 merged, archived · GitHub #172 (follow-up #178) |
+| S-05       | evening-showpieces   | M-4 S-05 · Evening showpieces, window edges, PRD re-check         | no                    | After S-04 · GitHub #173                                                |
+| S-06       | auth-loose-ends      | M-4 S-06 · Auth loose ends (signed-in auth pages, sign-up next)   | yes                   | First in the cut order · Run `/10x-plan auth-loose-ends` · GitHub #174  |
+| S-07       | error-visibility     | M-4 S-07 · Production error visibility (first-party)              | yes                   | Run `/10x-observability-audit` first · GitHub #175                      |
+| S-08       | star-source-switch   | M-4 S-08 · Star source switch: Hipparcos V1 direct (ESA decision) | done                  | Done: #193 + #195 merged, archived · GitHub #185                        |
 
 ## Open Roadmap Questions
 

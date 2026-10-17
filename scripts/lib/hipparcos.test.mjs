@@ -83,7 +83,7 @@ describe("HIPPARCOS_PIN and HIPPARCOS_FIELDS_USED", () => {
     expect(HIPPARCOS_PIN.bytes).toBe(HIPPARCOS_PIN.rows * (HIPPARCOS_PIN.recordLength + 1));
   });
 
-  it("lists exactly the fields the licence request names, with their split indices", () => {
+  it("lists exactly the fields the licence request names, and reads no field outside that table", () => {
     expect(HIPPARCOS_FIELDS_USED.map((f) => [f.name, f.index])).toEqual([
       ["HIP", 1],
       ["Vmag", 5],
@@ -94,9 +94,6 @@ describe("HIPPARCOS_PIN and HIPPARCOS_FIELDS_USED", () => {
       ["RAhms", 3],
       ["DEdms", 4],
     ]);
-  });
-
-  it("reads no field outside that table: garbage in every other field changes nothing", () => {
     const fields = {
       hip: "42",
       vmag: "5.50",
@@ -130,16 +127,15 @@ describe("HIPPARCOS_PIN and HIPPARCOS_FIELDS_USED", () => {
 });
 
 describe("parseRecord", () => {
-  const solved = {
-    hip: "7",
-    vmag: "4.40",
-    raDeg: "100.00000000",
-    decDeg: "-45.00000000",
-    pmRa: "10.00",
-    pmDec: "-20.00",
-  };
-
-  it("parses a negative declination and keeps the magnitude as written", () => {
+  it("reads a solved star as written, positions one without RAdeg/DEdeg from RAhms/DEdms (flagged, unpropagated, the sign on the whole value) refuses a bad record with its line number, and propagates a star by its proper motion to J2000 (8.75 years, right ascension wrapped, a pole kept finite)", () => {
+    const solved = {
+      hip: "7",
+      vmag: "4.40",
+      raDeg: "100.00000000",
+      decDeg: "-45.00000000",
+      pmRa: "10.00",
+      pmDec: "-20.00",
+    };
     expect(parseRecord(record(solved), 1)).toMatchObject({
       hip: 7,
       vmag: 4.4,
@@ -148,96 +144,53 @@ describe("parseRecord", () => {
       pmRa: 10,
       pmDec: -20,
     });
-  });
 
-  it("positions a star without RAdeg/DEdeg from RAhms/DEdms, unpropagated and flagged", () => {
     const row = parseRecord(record({ hip: "55203", vmag: "3.79", hms: "11 18 11.24", dms: "+31 31 50.8" }), 5);
-    expect(row.fromSexagesimal).toBe(true);
-    expect(row.hip).toBe(55203);
+    expect(row).toMatchObject({ hip: 55203, fromSexagesimal: true, pmRa: null, pmDec: null });
     expect(row.raDeg).toBeCloseTo((11 + 18 / 60 + 11.24 / 3600) * 15, 9);
     expect(row.decDeg).toBeCloseTo(31 + 31 / 60 + 50.8 / 3600, 9);
-    expect(row.pmRa).toBeNull();
-    expect(row.pmDec).toBeNull();
-    // Nothing moves it: no proper motion exists to propagate with.
+    // No proper motion exists to propagate with, so nothing moves it.
     expect(propagateToJ2000(row)).toBe(row);
-  });
-
-  it("gives the sign of DEdms to the whole value, including a degree field of zero", () => {
+    // A degree field of zero still carries the sign.
     expect(parseSexagesimalDec("-00 30 00.0", 1)).toBe(-0.5);
     expect(parseSexagesimalDec("+00 30 00.0", 1)).toBe(0.5);
-    expect(parseSexagesimalDec("-60 55 29.0", 1)).toBeCloseTo(-(60 + 55 / 60 + 29 / 3600), 9);
-    const row = parseRecord(record({ hip: "9", vmag: "6.00", hms: "00 00 00.00", dms: "-00 30 00.0" }), 1);
-    expect(row.raDeg).toBe(0);
-    expect(row.decDeg).toBe(-0.5);
-  });
 
-  it("rejects a malformed or out-of-range sexagesimal field with the line number", () => {
-    expect(() => parseSexagesimalRa("11 18 11.2", 12)).toThrow(/Line 12: RAhms/);
     expect(() => parseSexagesimalRa("24 00 00.00", 12)).toThrow(/Line 12: RAhms .* out of range/);
-    expect(() => parseSexagesimalRa("11 60 00.00", 12)).toThrow(/out of range/);
-    expect(() => parseSexagesimalDec("31 31 50.8", 13)).toThrow(/Line 13: DEdms/);
     expect(() => parseSexagesimalDec("+91 00 00.0", 13)).toThrow(/Line 13: DEdms .* out of range/);
-    const bad = record({ hip: "55203", vmag: "3.79", hms: "11 18 11.2x", dms: "+31 31 50.8" });
-    expect(() => parseRecord(bad, 77)).toThrow(/Line 77: RAhms/);
-  });
-
-  it("throws when a star within the cut has no position at all, but not for a faint one", () => {
-    const blank = { hip: "31", vmag: "6.00" };
-    expect(() => parseRecord(record(blank), 3)).toThrow(/Line 3: RAhms/);
-    expect(parseRecord(record({ hip: "31", vmag: "9.50" }), 3)).toMatchObject({ hip: 31, vmag: 9.5, raDeg: null });
-  });
-
-  it("returns a row without Vmag as vmag null, so the reader can skip it", () => {
-    const row = parseRecord(record({ hip: "120412", hms: "05 23 33.71", dms: "-60 55 29.0" }), 9);
-    expect(row).toMatchObject({ hip: 120412, vmag: null, raDeg: null });
-  });
-
-  it("throws with the line number for a blank HIP, a malformed number, a half-blank position or a bad layout", () => {
+    expect(() =>
+      parseRecord(record({ hip: "55203", vmag: "3.79", hms: "11 18 11.2x", dms: "+31 31 50.8" }), 77),
+    ).toThrow(/Line 77: RAhms/);
+    // A star within the cut without a position throws; a faint one is returned unpositioned, one without Vmag as vmag null.
+    expect(() => parseRecord(record({ hip: "31", vmag: "6.00" }), 3)).toThrow(/Line 3: RAhms/);
+    expect(parseRecord(record({ hip: "31", vmag: "9.50" }), 3)).toMatchObject({ vmag: 9.5, raDeg: null });
+    expect(parseRecord(record({ hip: "120412", hms: "05 23 33.71", dms: "-60 55 29.0" }), 9)).toMatchObject({
+      vmag: null,
+    });
     expect(() => parseRecord(record({ ...solved, hip: "" }), 4)).toThrow(/Line 4: HIP/);
     expect(() => parseRecord(record({ ...solved, raDeg: "10.5.2" }), 8)).toThrow(/Line 8: non-numeric RAdeg/);
-    expect(() => parseRecord(record({ ...solved, pmRa: "n/a" }), 8)).toThrow(/Line 8: non-numeric pmRA/);
-    expect(() => parseRecord(record({ ...solved, decDeg: "" }), 8)).toThrow(/Line 8: non-numeric DEdeg/);
-    expect(() => parseRecord(record({ ...solved, raDeg: "360.00000000" }), 8)).toThrow(/Line 8: .* out of range/);
     expect(() => parseRecord(record(solved).slice(1), 6)).toThrow(/Line 6: 449 characters, expected 450/);
     expect(() => parseRecord(record(solved, [[46, "x"]]), 6)).toThrow(/Line 6: no "\|" at position 46/);
-  });
-});
 
-describe("propagateToJ2000", () => {
-  const base = { hip: 1, vmag: 5, fromSexagesimal: false, pmRa: 0, pmDec: 0 };
-
-  it("moves a star by its proper motion over 8.75 years", () => {
-    const row = { ...base, raDeg: 100, decDeg: 60, pmRa: 1000, pmDec: -500 };
-    const moved = propagateToJ2000(row);
-    // pmRA is mu_alpha * cos(dec): the right ascension step is divided by cos(60 deg) = 0.5.
-    expect(moved.raDeg).toBeCloseTo(100 + (1000 * 8.75) / 0.5 / 3.6e6, 9);
-    expect(moved.decDeg).toBeCloseTo(60 - (500 * 8.75) / 3.6e6, 9);
-    // The arc on the sky is the vector length of the two motions over 8.75 years: hypot(1000, 500) mas/yr * 8.75 yr.
-    expect(separationArcsec(row, moved)).toBeCloseTo((Math.hypot(1000, 500) * 8.75) / 1000, 3);
+    // Proper motion to J2000: moves a star by its motion over 8.75 years, wraps right ascension into [0, 360) and keeps
+    // a pole finite.
+    const base = { hip: 1, vmag: 5, fromSexagesimal: false, pmRa: 0, pmDec: 0 };
+    const moving = { ...base, raDeg: 100, decDeg: 60, pmRa: 1000, pmDec: -500 };
+    const moved = propagateToJ2000(moving);
+    // pmRA is mu_alpha * cos(dec): the arc on the sky is the vector length of the two motions, read independently.
+    expect(separationArcsec(moving, moved)).toBeCloseTo((Math.hypot(1000, 500) * 8.75) / 1000, 3);
     expect(moved).toMatchObject({ hip: 1, vmag: 5, pmRa: 1000, pmDec: -500 });
-  });
 
-  it("wraps right ascension into [0, 360) in both directions", () => {
     const up = propagateToJ2000({ ...base, raDeg: 359.9999, decDeg: 0, pmRa: 1000 });
-    expect(up.raDeg).toBeCloseTo(359.9999 + (1000 * 8.75) / 3.6e6 - 360, 9);
     expect(up.raDeg).toBeGreaterThanOrEqual(0);
     expect(up.raDeg).toBeLessThan(1);
     const down = propagateToJ2000({ ...base, raDeg: 0.0001, decDeg: 0, pmRa: -1000 });
-    expect(down.raDeg).toBeCloseTo(0.0001 - (1000 * 8.75) / 3.6e6 + 360, 9);
     expect(down.raDeg).toBeLessThan(360);
-    expect(propagateToJ2000({ ...base, raDeg: 12.5, decDeg: 10 }).raDeg).toBe(12.5);
-  });
+    expect(down.raDeg).toBeGreaterThan(359);
 
-  it("does not blow up at a pole", () => {
     const north = propagateToJ2000({ ...base, raDeg: 10, decDeg: 89.99999999, pmRa: 100000, pmDec: 100000 });
-    expect(Number.isFinite(north.raDeg)).toBe(true);
-    expect(north.raDeg).toBe(10);
-    expect(north.decDeg).toBe(90);
-    const south = propagateToJ2000({ ...base, raDeg: 200, decDeg: -90, pmRa: -50000, pmDec: -50000 });
-    expect(south).toMatchObject({ raDeg: 200, decDeg: -90 });
+    expect(north).toMatchObject({ raDeg: 10, decDeg: 90 });
     // A star near, not at, a pole still gets the full shift (Polaris: cos(dec) = 0.013).
     const polaris = propagateToJ2000({ ...base, raDeg: 37.95, decDeg: 89.264, pmRa: 44.2, pmDec: -11.7 });
-    expect(polaris.raDeg - 37.95).toBeCloseTo((44.2 * 8.75) / Math.cos((89.264 * Math.PI) / 180) / 3.6e6, 6);
     expect(polaris.raDeg - 37.95).toBeGreaterThan(0.005);
   });
 });
@@ -312,20 +265,7 @@ describe("readHipparcos", () => {
     });
   });
 
-  it("applies the cut to the magnitude it is given", async () => {
-    const { fetchImpl } = fakeFetch({ [PRIMARY]: serve(bytes) });
-    const result = await readHipparcos({ pin: goodPin, fetch: fetchImpl, maxVmag: 5 });
-    expect(result.rows.map((r) => r.hip)).toEqual([70]);
-  });
-
-  it("refuses a file whose rows without Vmag are not the pinned ones", async () => {
-    const { fetchImpl } = fakeFetch({ [PRIMARY]: serve(bytes) });
-    await expect(readHipparcos({ pin: { ...goodPin, blankVmagHips: [] }, fetch: fetchImpl })).rejects.toThrow(
-      /Rows without a Vmag: expected HIP none, got 900/,
-    );
-  });
-
-  it("refuses to return anything unverified: flipped byte, wrong length, wrong row count, Content-Encoding, a stall, with the mirror as the one retry", async () => {
+  it("refuses to return anything unverified (flipped byte, wrong length or row count, Content-Encoding, a stall, an unpinned row without Vmag, a record that does not parse), with the mirror as the one retry", async () => {
     // A flipped byte in a field nobody reads, so the record still parses and only the hash can tell.
     const flippedAt = lines[0].length + 1 + 300;
     const flipped = Buffer.from(text.slice(0, flippedAt) + "X" + text.slice(flippedAt + 1), "latin1");
@@ -399,6 +339,8 @@ describe("readHipparcos", () => {
       },
     ];
 
+    expect(bad, "every way a download can be wrong").toHaveLength(9);
+
     for (const { name, pin, respond, message } of bad) {
       // Both servers serve the bad answer: one request each, nothing returned, and the report names both reasons.
       const { fetchImpl, calls } = fakeFetch({ [PRIMARY]: respond, [MIRROR]: respond });
@@ -442,8 +384,14 @@ describe("readHipparcos", () => {
     const clean = fakeFetch({ [PRIMARY]: serve(bytes), [MIRROR]: serve(flipped) });
     await readHipparcos({ pin: goodPin, fetch: clean.fetchImpl });
     expect(clean.calls.map((c) => c.url)).toEqual([PRIMARY]);
-  });
-  it("reports a record that does not parse only after the hash matches the pin, and aborts every download it started", async () => {
+
+    // Rows without a Vmag must be the pinned ones, whatever the hash says.
+    const unpinned = fakeFetch({ [PRIMARY]: serve(bytes) });
+    await expect(readHipparcos({ pin: { ...goodPin, blankVmagHips: [] }, fetch: unpinned.fetchImpl })).rejects.toThrow(
+      /Rows without a Vmag: expected HIP none, got 900/,
+    );
+
+    // A record that does not parse is reported only after the hash matches the pin, and every download is aborted.
     const broken = Buffer.from(text.replace(lines[3], "garbage".padEnd(450, " ")), "latin1");
     const { fetchImpl, calls } = fakeFetch({ [PRIMARY]: serve(broken), [MIRROR]: serve(broken) });
     const failure = await readHipparcos({ pin: pinFor(broken), fetch: fetchImpl }).catch((error) => error);

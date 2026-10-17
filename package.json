@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "smoke": "node scripts/smoke.mjs",
+    "capture:landing": "node scripts/capture-landing.mjs",
     "account:plan": "node scripts/account-plan.mjs",
     "test:e2e": "playwright test",
     "test": "vitest run",
