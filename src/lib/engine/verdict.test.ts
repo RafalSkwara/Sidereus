@@ -56,10 +56,6 @@ describe("verdict", () => {
     });
   });
 
-  it("is marginal when the only clear hour is too short a run for go", () => {
-    expect(verdict(sixHours, forecast([100, 20, 100, 100, 100, 100])).level).toBe("marginal");
-  });
-
   it("is no-go when everything is overcast", () => {
     expect(verdict(sixHours, forecast([100, 90, 80, 95, 100, 70]))).toEqual({
       level: "no-go",
@@ -70,14 +66,6 @@ describe("verdict", () => {
   it("treats the cloud thresholds as strict upper bounds", () => {
     expect(verdict(sixHours, forecast([30, 30, 65, 65, 65, 65])).level).toBe("marginal");
     expect(verdict(sixHours, forecast([65, 65, 65, 65, 65, 65])).level).toBe("no-go");
-  });
-
-  it("is go for a 40-minute dark window overlapping one clear hour", () => {
-    const short = windowBetween(new Date(BASE + 10 * 60_000), new Date(BASE + 50 * 60_000));
-    expect(verdict(short, forecast([10, 100]))).toEqual({
-      level: "go",
-      reason: { kind: "clear-run", runHours: 1, cloudPct: 10 },
-    });
   });
 
   it("counts every hour the window touches, so a 40-minute window across an hour boundary needs both", () => {
@@ -110,15 +98,6 @@ describe("verdict", () => {
     });
   });
 
-  it("still breaks a run at a missing hour when the series spans the window", () => {
-    // Three clear hours split by gaps: the longest run below 30 % is 1 h, short of a go, so a marginal on its run
-    // (not the missing-hours reason, which needs a go-length run).
-    expect(verdict(sixHours, forecast([20, null, 20, null, 20, null, 100]))).toEqual({
-      level: "marginal",
-      reason: { kind: "clear-run", runHours: 1, cloudPct: 20 },
-    });
-  });
-
   it("is never a go with a dark hour missing, even with a long enough clear run elsewhere", () => {
     // testing-forecast-honesty (plan review F1): the missing hour could hide a humid hour the cap would catch.
     expect(verdict(sixHours, forecast([20, 20, null, 20, null, 20]))).toEqual({
@@ -134,21 +113,17 @@ describe("verdict", () => {
     });
   });
 
-  it("has no weather data when the series starts after the window starts", () => {
-    expect(verdict(sixHours, forecast([10, 10, 10, 10], 60, 2))).toEqual({
-      level: "marginal",
-      reason: { kind: "no-weather-data" },
-    });
-  });
-
-  it("has no weather data when the series is empty", () => {
-    expect(verdict(sixHours, { hours: [] })).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
-  });
-
-  it("has no weather data when the series lies entirely after the window", () => {
-    expect(verdict(sixHours, forecast([10, 10], 60, 24))).toEqual({
-      level: "marginal",
-      reason: { kind: "no-weather-data" },
+  it("has no weather data when the series starts after the window starts, is empty, lies after the window or is absent", () => {
+    const noData = { level: "marginal", reason: { kind: "no-weather-data" } };
+    const cases = [
+      { label: "starts after the window starts", series: forecast([10, 10, 10, 10], 60, 2) },
+      { label: "empty", series: { hours: [] } },
+      { label: "entirely after the window", series: forecast([10, 10], 60, 24) },
+      { label: "no forecast", series: null },
+    ];
+    expect(cases).toHaveLength(4);
+    cases.forEach(({ label, series }, i) => {
+      expect(verdict(sixHours, series), `case ${i}: ${label}`).toEqual(noData);
     });
   });
 
@@ -183,10 +158,6 @@ describe("verdict", () => {
     });
   });
 
-  it("is marginal with no weather data when the forecast is null", () => {
-    expect(verdict(sixHours, null)).toEqual({ level: "marginal", reason: { kind: "no-weather-data" } });
-  });
-
   it("is no-go with no darkness when there is no dark window, whatever the weather", () => {
     const none: DarkWindow = { kind: "none", thresholdDeg: -18, minSunAltitudeDeg: -12.3, at: at(5) };
     expect(verdict(none, forecast([0, 0, 0, 0, 0, 0]))).toEqual({ level: "no-go", reason: { kind: "no-darkness" } });
@@ -204,10 +175,6 @@ describe("cloudOutlook", () => {
     });
   });
 
-  it("ignores forecast hours outside the dark window", () => {
-    expect(cloudOutlook(window(2, 4), forecast([0, 0, 40, 60, 0, 0]))).toEqual({ meanCloudPct: 50, minCloudPct: 40 });
-  });
-
   it("counts every hour the window touches, as the verdict does", () => {
     const straddling = windowBetween(new Date(BASE + 40 * 60_000), new Date(BASE + 80 * 60_000));
     expect(cloudOutlook(straddling, forecast([20, 60]))).toEqual({ meanCloudPct: 40, minCloudPct: 20 });
@@ -221,12 +188,9 @@ describe("cloudOutlook", () => {
     expect(cloudOutlook(window(1, 3), forecast([0, null, null, 0]))).toBeNull();
   });
 
-  it("is null when there is no dark window, whatever the weather", () => {
+  it("is null without a dark window, whatever the weather, and without a forecast", () => {
     const none: DarkWindow = { kind: "none", thresholdDeg: -18, minSunAltitudeDeg: -12.3, at: at(5) };
     expect(cloudOutlook(none, forecast([0, 0, 0, 0, 0, 0]))).toBeNull();
-  });
-
-  it("is null when the forecast is null or empty", () => {
     expect(cloudOutlook(eightHours, null)).toBeNull();
     expect(cloudOutlook(eightHours, { hours: [] })).toBeNull();
   });

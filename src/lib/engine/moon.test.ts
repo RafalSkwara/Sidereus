@@ -1,39 +1,25 @@
 import { Body, EquatorFromVector, GeoVector } from "astronomy-engine";
-import { describe, expect, it, test } from "vitest";
+import { describe, expect, it } from "vitest";
 
+import { MESSIER } from "@/lib/catalogue";
+
+import { MOON_REFERENCES, TROMSO, WARSAW, circularDeltaDeg, fixtureTimeMs, messierTarget, siteOf } from "./fixtures";
 import {
-  FIXTURES,
-  MOON_REFERENCES,
-  TROMSO,
-  WARSAW,
-  circularDeltaDeg,
-  fixtureTimeMs,
-  messierTarget,
-  siteOf,
-} from "./fixtures";
-import { moonElongationDeg, moonFreeMinutes, moonPhaseBand, moonSeparationDeg, moonState, moonTrack } from "./moon";
+  moonElongationDeg,
+  moonFreeMinutes,
+  moonPhaseBand,
+  moonSeparationDeg,
+  moonSeparationsDeg,
+  moonState,
+} from "./moon";
+import { moonDiscState } from "./moon-disc";
+import { moonBrighteningMag, skyBrightnessNL } from "./moonlight";
+import type { SkyBrightnessInput } from "./moonlight";
 import { observingNight } from "./night";
-import { ALTITUDE_TOLERANCE_DEG, MOON_PHASE_BANDS, TIME_TOLERANCE_MINUTES } from "./parameters";
+import { EXTINCTION_V, TIME_TOLERANCE_MINUTES, darkSkyZenithMagForBortle } from "./parameters";
 import type { MoonPhaseBand } from "./parameters";
 import { darkWindow } from "./sun";
 import type { EquatorialJ2000, Interval, Site } from "./types";
-
-const ILLUMINATION_TOLERANCE = 0.02;
-
-describe("moonState (synthetic)", () => {
-  // 2026-10-10 is a new-moon night (new moon 15:50 UTC) and is never used for moon assertions.
-  // 2026-10-24 is waxing gibbous, two nights before the 2026-10-26 full moon.
-  const night = observingNight("2026-10-24", WARSAW.timeZone);
-  const track = moonTrack(WARSAW, night);
-
-  it("waxes strictly across the 2026-10-24 night (waxing gibbous toward the 2026-10-26 full moon)", () => {
-    for (let i = 1; i < track.length; i++) {
-      expect(track[i].illuminatedFraction).toBeGreaterThan(track[i - 1].illuminatedFraction);
-      expect(track[i].phaseAngleDeg).toBeLessThan(track[i - 1].phaseAngleDeg);
-    }
-    expect(track[0].illuminatedFraction).toBeGreaterThan(0.9);
-  });
-});
 
 describe("moonSeparationDeg (synthetic)", () => {
   const time = new Date("2026-10-24T20:00:00Z");
@@ -45,15 +31,14 @@ describe("moonSeparationDeg (synthetic)", () => {
     { raHours: 12, decDeg: -89.9 },
   ];
 
-  it("is symmetric: a target and its antipode sum to 180°", () => {
-    for (const target of targets) {
+  it("is symmetric (a target and its antipode sum to 180°) and zero at the Moon's own geocentric J2000 position", () => {
+    expect(targets).toHaveLength(5);
+    targets.forEach((target, i) => {
       const antipode: EquatorialJ2000 = { raHours: (target.raHours + 12) % 24, decDeg: -target.decDeg };
       // 4 decimal places = 5e-5° (0.2 arcsec): loose enough for trig round-trips to agree across CPUs.
-      expect(moonSeparationDeg(time, target) + moonSeparationDeg(time, antipode)).toBeCloseTo(180, 4);
-    }
-  });
+      expect(moonSeparationDeg(time, target) + moonSeparationDeg(time, antipode), `target ${i}`).toBeCloseTo(180, 4);
+    });
 
-  it("is zero for a target at the Moon's own geocentric J2000 position", () => {
     const moon = EquatorFromVector(GeoVector(Body.Moon, time, true));
     // Vector → RA/Dec → vector leaves ~1e-6° of float residual that differs between CPUs (CI on
     // x86 measured 1.2e-6°); 4 decimal places (5e-5°, 0.2 arcsec) is the physically meaningful bound.
@@ -103,18 +88,26 @@ describe("moonFreeMinutes (synthetic)", () => {
     { name: "Tromsø with moonset inside the window", site: TROMSO, date: "2026-10-20", crossings: 1 },
   ];
 
-  for (const { name, site, date, crossings } of cases) {
-    it(`${name} (${date}): within ${TIME_TOLERANCE_MINUTES} min of a 1-minute moonState sampling`, () => {
+  it(`is within ${TIME_TOLERANCE_MINUTES} min of a 1-minute moonState sampling on a new-moon, a full-moon, a moonrise and two moonset nights`, () => {
+    // Non-vacuity: the three crossing nights must really have the Moon up for part of the window.
+    expect(cases).toHaveLength(5);
+    let partial = 0;
+    cases.forEach(({ name, site, date, crossings }, i) => {
+      const label = `case ${i}: ${name} (${date})`;
       const window = windowOf(site, date);
       const oracle = sampled(site, window);
-      expect(oracle.changes).toBe(crossings);
+      expect(oracle.changes, label).toBe(crossings);
+      if (oracle.freeMinutes > 0 && oracle.freeMinutes < windowMinutes(window)) {
+        partial++;
+      }
       const free = moonFreeMinutes(site, window);
-      expect(Number.isInteger(free)).toBe(true);
-      expect(Math.abs(free - oracle.freeMinutes)).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
-      expect(free).toBeGreaterThanOrEqual(0);
-      expect(free).toBeLessThanOrEqual(windowMinutes(window));
+      expect(Number.isInteger(free), label).toBe(true);
+      expect(Math.abs(free - oracle.freeMinutes), label).toBeLessThanOrEqual(TIME_TOLERANCE_MINUTES);
+      expect(free, label).toBeGreaterThanOrEqual(0);
+      expect(free, label).toBeLessThanOrEqual(windowMinutes(window));
     });
-  }
+    expect(partial).toBe(3);
+  });
 
   it("is the whole window near new moon and zero near full moon", () => {
     const newMoon = windowOf(WARSAW, "2026-10-10");
@@ -123,31 +116,9 @@ describe("moonFreeMinutes (synthetic)", () => {
   });
 });
 
-describe("moon vs Stellarium fixtures", () => {
-  for (const fixture of FIXTURES) {
-    if (fixture.moon.status !== "captured") {
-      test.todo(`${fixture.name}: moon values ${fixture.moon.status} — see src/lib/engine/fixtures/README.md`);
-      continue;
-    }
-    const moon = fixture.moon;
-    const site = siteOf(fixture);
-
-    it(`${fixture.name}: ${moon.samples.length} moon samples within ${ALTITUDE_TOLERANCE_DEG}° and ${ILLUMINATION_TOLERANCE} illumination`, () => {
-      for (const sample of moon.samples) {
-        const state = moonState(site, new Date(fixtureTimeMs(sample.time)));
-        expect(Math.abs(state.altitudeDeg - sample.altitudeDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
-        expect(circularDeltaDeg(state.azimuthDeg, sample.azimuthDeg)).toBeLessThanOrEqual(ALTITUDE_TOLERANCE_DEG);
-        expect(Math.abs(state.illuminatedFraction - sample.illuminatedFraction)).toBeLessThanOrEqual(
-          ILLUMINATION_TOLERANCE,
-        );
-      }
-    });
-  }
-});
-
 /**
  * Refraction models differ near the horizon (Skyfield's depends on temperature and pressure, astronomy-engine's
- * "normal" is fixed), so positions are compared only above this altitude, as in `planets.test.ts`.
+ * "normal" is fixed), so positions are compared only above this altitude, as in the planet checks.
  */
 const REFERENCE_MIN_ALTITUDE_DEG = 5;
 
@@ -206,14 +177,6 @@ describe("moonElongationDeg", () => {
 });
 
 describe("moonPhaseBand", () => {
-  it("covers [0, 360) in order without gaps", () => {
-    expect(MOON_PHASE_BANDS[0].fromDeg).toBe(0);
-    expect(MOON_PHASE_BANDS[MOON_PHASE_BANDS.length - 1].toDeg).toBe(360);
-    for (let i = 1; i < MOON_PHASE_BANDS.length; i++) {
-      expect(MOON_PHASE_BANDS[i].fromDeg).toBe(MOON_PHASE_BANDS[i - 1].toDeg);
-    }
-  });
-
   // Each edge belongs to the band above it (upper bounds are exclusive).
   const edges: [number, MoonPhaseBand, MoonPhaseBand][] = [
     [80, "waxing-crescent", "first-quarter"],
@@ -223,22 +186,21 @@ describe("moonPhaseBand", () => {
     [250, "waning-gibbous", "last-quarter"],
     [280, "last-quarter", "waning-crescent"],
   ];
-  for (const [edge, below, above] of edges) {
-    it(`puts ${edge}° in ${above} and just below it in ${below}`, () => {
-      expect(moonPhaseBand(edge - 1e-9)).toBe(below);
-      expect(moonPhaseBand(edge)).toBe(above);
-    });
-  }
 
-  it("wraps around at 0/360: new moon is a waxing crescent, just before it a waning crescent", () => {
+  it("puts every band edge in the band above it and just below it in the band under it, wraps at 0/360 and rejects a non-finite elongation", () => {
+    expect(edges).toHaveLength(6);
+    edges.forEach(([edge, below, above], i) => {
+      expect(moonPhaseBand(edge - 1e-9), `edge ${i}: just below ${edge}°`).toBe(below);
+      expect(moonPhaseBand(edge), `edge ${i}: ${edge}°`).toBe(above);
+    });
+
+    // New moon is a waxing crescent, just before it a waning crescent.
     expect(moonPhaseBand(0)).toBe("waxing-crescent");
     expect(moonPhaseBand(360)).toBe("waxing-crescent");
     expect(moonPhaseBand(359.999)).toBe("waning-crescent");
     expect(moonPhaseBand(-0.001)).toBe("waning-crescent");
     expect(moonPhaseBand(370)).toBe("waxing-crescent");
-  });
 
-  it("rejects a non-finite elongation", () => {
     expect(() => moonPhaseBand(Number.NaN)).toThrow(RangeError);
   });
 
@@ -252,9 +214,103 @@ describe("moonPhaseBand", () => {
     ["2026-11-01T12:00:00Z", "last-quarter"], // 265°
     ["2026-11-05T04:00:00Z", "waning-crescent"], // 311°
   ];
-  for (const [iso, band] of instants) {
-    it(`gives ${band} at ${iso}`, () => {
-      expect(moonPhaseBand(moonElongationDeg(new Date(iso)))).toBe(band);
+
+  it("gives the band of the elongation at each of seven instants, one per band", () => {
+    expect(new Set(instants.map(([, band]) => band)).size).toBe(7);
+    instants.forEach(([iso, band], i) => {
+      expect(moonPhaseBand(moonElongationDeg(new Date(iso))), `instant ${i}: ${band} at ${iso}`).toBe(band);
     });
-  }
+  });
+});
+
+/** The plan's illumination bar against Skyfield: the state's 0.01 rounding plus the engine's own error. */
+const DISC_ILLUMINATION_TOLERANCE = 0.01;
+
+/** Bright-limb angles computed on the engine during plan review (rev 2), degrees. */
+const ANGLE_TOLERANCE_DEG = 0.5;
+
+describe("moonDiscState", () => {
+  it("rounds the illuminated fraction to 0.01 and stays within 0.01 of the Skyfield reference", () => {
+    for (const reference of MOON_REFERENCES) {
+      for (const s of reference.samples) {
+        const state = moonDiscState(new Date(fixtureTimeMs(s.time)));
+        expect(Math.round(state.illuminatedFraction * 100) / 100).toBe(state.illuminatedFraction);
+        expect(Math.abs(state.illuminatedFraction - s.illuminatedFraction)).toBeLessThanOrEqual(
+          DISC_ILLUMINATION_TOLERANCE,
+        );
+        expect(state.waxing).toBe(s.elongationDeg < 180);
+      }
+    }
+  });
+
+  it("puts the bright limb on lunar east (right) when waxing and west (left) when waning", () => {
+    const crescent = moonDiscState(new Date("2026-10-12T18:00:00Z"));
+    expect(crescent.waxing).toBe(true);
+    expect(circularDeltaDeg(crescent.brightLimbAngleDeg, 281.0)).toBeLessThanOrEqual(ANGLE_TOLERANCE_DEG);
+    expect(crescent.librationLonDeg).toBeCloseTo(4.07, 1);
+    expect(crescent.librationLatDeg).toBeCloseTo(6.49, 1);
+
+    const waning = moonDiscState(new Date("2026-11-02T04:00:00Z"));
+    expect(waning.waxing).toBe(false);
+    expect(circularDeltaDeg(waning.brightLimbAngleDeg, 91.6)).toBeLessThanOrEqual(ANGLE_TOLERANCE_DEG);
+  });
+});
+
+const BASE: SkyBrightnessInput = {
+  moonPhaseAngleDeg: 0,
+  moonAltitudeDeg: 40,
+  objectAltitudeDeg: 50,
+  separationDeg: 45,
+  darkZenithMag: darkSkyZenithMagForBortle(3),
+  extinction: EXTINCTION_V,
+};
+
+const brightening = (overrides: Partial<SkyBrightnessInput>) =>
+  moonBrighteningMag(skyBrightnessNL({ ...BASE, ...overrides }));
+
+describe("moonlit sky (Krisciunas & Schaefer)", () => {
+  it("falls monotonically with separation (within 10° and from 10° to 90°) and with phase angle (full → new), stays finite at the Moon's centre, and is large for a full Moon and small for a thin crescent", () => {
+    // K&S is piecewise at 10° and its Rayleigh term rises again past 90°; each stretch is monotonic.
+    const stretches = [
+      [0.5, 1, 2, 5, 9.9],
+      [10, 20, 45, 70, 90],
+    ];
+    expect(stretches.map((s) => s.length)).toEqual([5, 5]);
+    stretches.forEach((separations, k) => {
+      const values = separations.map((separationDeg) => brightening({ separationDeg }));
+      for (let i = 1; i < values.length; i++) {
+        expect(values[i], `separation stretch ${k}, step ${i}`).toBeLessThan(values[i - 1]);
+      }
+    });
+    expect(brightening({ separationDeg: 2 })).toBeGreaterThan(brightening({ separationDeg: 45 }));
+
+    const angles = [0, 6.9, 7, 30, 60, 90, 120, 150, 179];
+    expect(angles).toHaveLength(9);
+    const byPhase = angles.map((moonPhaseAngleDeg) => brightening({ moonPhaseAngleDeg }));
+    for (let i = 1; i < byPhase.length; i++) {
+      expect(byPhase[i], `phase step ${i}: ${angles[i]}°`).toBeLessThan(byPhase[i - 1]);
+    }
+
+    expect(Number.isFinite(brightening({ separationDeg: 0 }))).toBe(true);
+    expect(brightening({ moonPhaseAngleDeg: 0 })).toBeGreaterThan(2);
+    expect(brightening({ moonPhaseAngleDeg: 150 })).toBeLessThan(0.5);
+  });
+
+  it("adds nothing when the Moon or the object is below the horizon", () => {
+    expect(brightening({ moonAltitudeDeg: -0.5 })).toBe(0);
+    expect(brightening({ objectAltitudeDeg: -1 })).toBe(0);
+  });
+});
+
+describe("moonSeparationsDeg", () => {
+  it("matches moonSeparationDeg for every target and instant", () => {
+    const times = [new Date("2026-10-24T20:00:00Z"), new Date("2026-10-25T02:00:00Z")];
+    const targets = MESSIER.filter((_, i) => i % 11 === 0);
+    const batch = moonSeparationsDeg(times, targets);
+    targets.forEach((target, i) => {
+      times.forEach((time, j) => {
+        expect(batch[i][j]).toBeCloseTo(moonSeparationDeg(time, target), 6);
+      });
+    });
+  });
 });

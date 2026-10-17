@@ -18,18 +18,18 @@ Two Vitest projects: `reference` (about 680-800 tests: engine reference suites, 
 
 ## Key Decisions Made
 
-| Decision | Choice | Why (1 sentence) | Source |
-| --- | --- | --- | --- |
-| D1 Guards and reference suites | Keep; the author's cut (about 700-820 on the new base), F6's ≤ 450 declined; projects named `reference` / `guards` | Only protection of PRD Success Criterion 2, the 1°/5 min, determinism and coordinates NFRs, FR-024 | Owner 2026-10-17 |
-| D2 Hook | `vitest run --project reference` + ESLint on changed files | Slow guards leave the loop; a red feature test still stops a turn | Owner |
-| D3 S-07 tests | Cut now, same rubric, fixed per-file targets (about 450 → about 110) | S-07 is merged; its privacy and server-fault pins stay, mock choreography goes | Owner |
-| D4 Smoke | 12 tuples, every refusal with a read-back; auth steps aligned with the paused S-06 | Smoke already pins exact `Location`s with `absent:` | Owner |
-| D5 E2E | About 18 trims/merges + 4 moves to smoke; keep `landing.spec` ESA footer tests; compass test dropped as a recorded decision; `landing-screenshot` after #195 | Duplicates of smoke and presentation detail | Owner, F4, F7 |
-| D6 DB | `account-plan-command` 21 → about 6; grammar tables to a few rows | An operator CLI test; smoke and e2e run the script every CI run | Owner |
-| D7 Provenance | No CI regeneration step; keep about 8 licence/provenance tests; shape checks go | The generators hold the shape at regeneration (accepted gap) | Owner |
-| D8 Order | Phase 0 now; 1-4 incl. S-07 files; 5 after #195; 6 e2e/db; 7 docs | No more waiting on merged branches; #195 is the one open conflict | Orchestrator, F1 |
-| D9 Rounding and longitude echo | Product rule, no separate test; error-key construction prevents an echo (accepted gap) | Messages are catalogue keys; smoke pins `absent:` on the URL side | Owner, F7 |
-| F8 Runner zones | Two zones of opposite sign (`America/Los_Angeles`, `Pacific/Kiritimati`) | The static guard misses `toLocaleString()`, implicit `${date}`, zoneless literals | Reviewer |
+| Decision                       | Choice                                                                                                                                                       | Why (1 sentence)                                                                                   | Source           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------- |
+| D1 Guards and reference suites | Keep; the author's cut (about 700-820 on the new base), F6's ≤ 450 declined; projects named `reference` / `guards`                                           | Only protection of PRD Success Criterion 2, the 1°/5 min, determinism and coordinates NFRs, FR-024 | Owner 2026-10-17 |
+| D2 Hook                        | `vitest run --project reference` + ESLint on changed files                                                                                                   | Slow guards leave the loop; a red feature test still stops a turn                                  | Owner            |
+| D3 S-07 tests                  | Cut now, same rubric, fixed per-file targets (about 450 → about 110)                                                                                         | S-07 is merged; its privacy and server-fault pins stay, mock choreography goes                     | Owner            |
+| D4 Smoke                       | 12 tuples, every refusal with a read-back; auth steps aligned with the paused S-06                                                                           | Smoke already pins exact `Location`s with `absent:`                                                | Owner            |
+| D5 E2E                         | About 18 trims/merges + 4 moves to smoke; keep `landing.spec` ESA footer tests; compass test dropped as a recorded decision; `landing-screenshot` after #195 | Duplicates of smoke and presentation detail                                                        | Owner, F4, F7    |
+| D6 DB                          | `account-plan-command` 21 → about 6; grammar tables to a few rows                                                                                            | An operator CLI test; smoke and e2e run the script every CI run                                    | Owner            |
+| D7 Provenance                  | No CI regeneration step; keep about 8 licence/provenance tests; shape checks go                                                                              | The generators hold the shape at regeneration (accepted gap)                                       | Owner            |
+| D8 Order                       | Phase 0 now; 1-4 incl. S-07 files; 5 after #195; 6 e2e/db; 7 docs                                                                                            | No more waiting on merged branches; #195 is the one open conflict                                  | Orchestrator, F1 |
+| D9 Rounding and longitude echo | Product rule, no separate test; error-key construction prevents an echo (accepted gap)                                                                       | Messages are catalogue keys; smoke pins `absent:` on the URL side                                  | Owner, F7        |
+| F8 Runner zones                | Two zones of opposite sign (`America/Los_Angeles`, `Pacific/Kiritimati`)                                                                                     | The static guard misses `toLocaleString()`, implicit `${date}`, zoneless literals                  | Reviewer         |
 
 ## Scope
 
@@ -43,26 +43,27 @@ One rubric per test (delete only as a named duplicate, restatement, replaced sch
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| --- | --- | --- |
-| 0. Two projects, lighter hook | `reference` / `guards`, hook runs `reference`; no deletions | The hook proof must assert the new flag |
-| 1. Engine | 929 → about 300; reference suites intact; zones of opposite sign | `ALLOWED_DISABLES` coupling |
-| 2. Tonight / forecast / finder / components + S-07 files | about 655 → about 215 | Folded invariants must keep count preconditions; `orderHints` keeps one case |
-| 3. Leaf modules + S-07 routes and stores + 10 smoke steps | about 1,000 → about 240 | Local Supabase needed; S-06 rebase |
-| 4. Guards + observability + OpenNGC provenance | about 400 → about 70; `guards` ≤ 25 | None beyond the file floor |
-| 5. After #195: stars, scripts/lib, landing capture | about 106 → about 18, licence pins kept | Timing of #195 |
-| 6. E2E + db | 88 → about 65-70; 118 → about 95; 2 smoke steps | A merge that introduces a flake |
-| 7. Test-plan refresh + lesson | Docs and the rule | none |
+| Phase                                                     | What it delivers                                                                                                               | Key risk                                                                     |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| 0. Two projects, lighter hook                             | `reference` / `guards`, hook runs `reference`; no deletions                                                                    | The hook proof must assert the new flag                                      |
+| 1. Engine                                                 | 929 → about 300; reference suites intact; zones of opposite sign                                                               | `ALLOWED_DISABLES` coupling                                                  |
+| 2. Tonight / forecast / finder / components + S-07 files  | about 655 → about 215                                                                                                          | Folded invariants must keep count preconditions; `orderHints` keeps one case |
+| 3. Leaf modules + S-07 routes and stores + 10 smoke steps | about 1,000 → about 240                                                                                                        | Local Supabase needed; S-06 rebase                                           |
+| 4. Guards + observability + OpenNGC provenance            | about 400 → about 70; `guards` ≤ 25                                                                                            | None beyond the file floor                                                   |
+| 5. After #195: stars, scripts/lib, landing capture        | about 106 → about 18, licence pins kept                                                                                        | Timing of #195                                                               |
+| 6. Clock-pinned e2e (amendment 2026-10-17)                | `pinClock` helper, a loopback-only server clock seam (cookie), no date-conditional skips, a guard; e2e green at 3 pinned hours | The seam is a product-code change; needs plan review                         |
+| 7. E2E + db                                               | 88 → about 65-70; 118 → about 95; 2 smoke steps                                                                                | A merge that introduces a flake                                              |
+| 8. Test-plan refresh + lesson                             | Docs and the rule                                                                                                              | none                                                                         |
 
 **Prerequisites:** Node 24.21 via `nvm use`; Docker + local Supabase for Phases 3, 5, 6; #195 merged before Phase 5.
-**Estimated effort:** 7 PRs; Phases 0, 4, 7 about half a session each; Phases 1, 2, 5 about one session; Phase 3 one to two sessions (smoke steps need the local stack); Phase 6 one session plus a full local e2e run.
+**Estimated effort:** 9 PRs; Phases 0, 4, 8 about half a session each; Phases 1, 2, 5 about one session; Phase 3 one to two sessions (smoke steps need the local stack); Phases 6 and 7 one session each plus a full local e2e run.
 
 ## Open Risks & Assumptions
 
 - After-counts are per-file targets, not measurements; each phase re-measures.
 - The interview did not run; D1-D9 come from the owner's written decisions as relayed by the orchestrator.
 - S-06 and Phase 3 both touch auth tests and smoke auth steps; whichever lands second rebases.
-- Owner-accepted gaps (test-plan §7 in Phase 7): the compass mapping, Accept-Language negotiation, a longitude echo in a schema message, the committed catalogue JSON's shape.
+- Owner-accepted gaps (test-plan §7 in Phase 8): the compass mapping, Accept-Language negotiation, a longitude echo in a schema message, the committed catalogue JSON's shape.
 
 ## Success Criteria (Summary)
 

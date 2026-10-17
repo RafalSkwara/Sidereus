@@ -17,9 +17,7 @@ import type { Interval, Site } from "./types";
  * latitude and the bright-Moon flag.
  *
  * Reference facts. NASA's shower pages (science.nasa.gov, a US government work) give the Geminids' peak night of
- * 2026 as Dec. 13-14 and the Perseids' as Aug. 12-13, which fixes the nights below; the Quadrantids' radiant is
- * high in a northern sky and out of reach of a southern one (RA 15h20m, Dec +50: at 30° S it never gets above
- * 10°). The Moon was full on 2025-08-09, so the Perseids' peak of 2025-08-12/13 had a bright waning Moon rising
+ * 2026 as Dec. 13-14 and the Perseids' as Aug. 12-13, which fixes the nights below. The Moon was full on 2025-08-09, so the Perseids' peak of 2025-08-12/13 had a bright waning Moon rising
  * in the evening, while the Moon was new at the peak of 2026-08-12/13 (the total solar eclipse of 2026-08-12).
  */
 
@@ -27,8 +25,6 @@ const WARSAW: Site = { latitudeDeg: 52.23, longitudeDeg: 21.01, elevationM: 110,
 const MADRID: Site = { latitudeDeg: 40.42, longitudeDeg: -3.7, elevationM: 650, timeZone: "Europe/Madrid" };
 /** About 60° N: in August the Sun gets no lower than about -15°, so there is no astronomical darkness. */
 const HELSINKI: Site = { latitudeDeg: 60.17, longitudeDeg: 24.94, timeZone: "Europe/Helsinki" };
-const PRAGUE: Site = { latitudeDeg: 50.08, longitudeDeg: 14.44, timeZone: "Europe/Prague" };
-const SOUTHERN: Site = { latitudeDeg: -30, longitudeDeg: 25, timeZone: "Africa/Johannesburg" };
 
 function windowOf(site: Site, fromNight: string, nights: number): Interval {
   return {
@@ -102,33 +98,6 @@ describe("the Sun's J2000 longitude search", () => {
     expect(gapDays).toBeGreaterThan(365);
     expect(gapDays).toBeLessThan(366);
   });
-
-  it("returns nothing when the window holds no crossing, and respects the window's ends", () => {
-    const geminids = shower("geminids");
-    const window = windowOf(WARSAW, "2026-12-20", 30);
-    expect(sunLongitudeCrossings(geminids.peakSolarLongitudeJ2000Deg, window)).toEqual([]);
-    const [peak] = sunLongitudeCrossings(geminids.peakSolarLongitudeJ2000Deg, windowOf(WARSAW, "2026-12-10", 10));
-    // The search is good to about a second, so the edges are probed a minute either side of the peak.
-    const MINUTE = 60_000;
-    const around = sunLongitudeCrossings(geminids.peakSolarLongitudeJ2000Deg, {
-      start: new Date(peak.getTime() - MINUTE),
-      end: new Date(peak.getTime() + MINUTE),
-    });
-    expect(around).toHaveLength(1);
-    expect(Math.abs(around[0].getTime() - peak.getTime())).toBeLessThan(5000);
-    expect(
-      sunLongitudeCrossings(geminids.peakSolarLongitudeJ2000Deg, {
-        start: new Date(peak.getTime() + MINUTE),
-        end: new Date(peak.getTime() + 86_400_000),
-      }),
-    ).toEqual([]);
-    expect(
-      sunLongitudeCrossings(geminids.peakSolarLongitudeJ2000Deg, {
-        start: new Date(peak.getTime() - 86_400_000),
-        end: new Date(peak.getTime() - MINUTE),
-      }),
-    ).toEqual([]);
-  });
 });
 
 describe("peak nights", () => {
@@ -142,60 +111,22 @@ describe("peak nights", () => {
     }
   });
 
-  it("puts the Perseids of 2027 on the night of 2027-08-12/13, as NASA's page pattern does", () => {
-    const events = skyEvents(WARSAW, "2027-08-05");
-    expect(showerEvent(events, "perseids").night).toBe("2027-08-12");
-  });
-
   it("lists the shower in the window only once its peak is in it", () => {
     const events = skyEvents(WARSAW, "2026-12-01", 5);
     expect(events.filter((e) => e.kind === "meteor-shower")).toHaveLength(0);
   });
-
-  it("finds a peak the night it falls on and orders showers in time", () => {
-    const events = meteorEvents(MADRID, windowOf(MADRID, "2026-10-01", 80));
-    expect(events.map((e) => e.shower)).toEqual(["orionids", "leonids", "geminids"]);
-    expect(events.map((e) => e.moment.getTime())).toEqual(
-      [...events.map((e) => e.moment.getTime())].sort((a, b) => a - b),
-    );
-  });
 });
 
 describe("radiant visibility", () => {
-  it("shows the Quadrantids from 50° N and says they are too low from 30° S", () => {
-    const north = showerEvent(skyEvents(PRAGUE, "2027-01-01", 6), "quadrantids");
-    expect(north.visibility.visible).toBe(true);
-    if (north.visibility.visible) {
-      expect(north.visibility.altitudeDeg).toBeGreaterThanOrEqual(EVENT_MIN_ALTITUDE_DEG);
-    }
-    const south = showerEvent(skyEvents(SOUTHERN, "2027-01-01", 6), "quadrantids");
-    expect(south.visibility.visible).toBe(false);
-    if (!south.visibility.visible) {
-      expect(["too-low", "below-horizon"]).toContain(south.visibility.reason);
-    }
-  });
-
-  it("keeps the Perseids (Dec +58) out of a southern sky", () => {
-    const south = showerEvent(skyEvents(SOUTHERN, "2026-08-08", 8), "perseids");
-    expect(south.visibility.visible).toBe(false);
-  });
-
-  it("judges a night with no dark window on the twilight span and says so: the Perseids at 60° N are a short night", () => {
+  it("judges a night with no dark window on the twilight span and says so: the Perseids at 60° N are a short night, unless the caller's threshold gives Helsinki a dark window", () => {
     const perseids = showerEvent(skyEvents(HELSINKI, "2026-08-08", 8), "perseids");
     expect(perseids.visibility.visible).toBe(true);
     expect(perseids.visibility.shortNight).toBe(true);
     // The same shower from Madrid has real darkness, so it is no short night.
     expect(showerEvent(skyEvents(MADRID, "2026-08-08", 8), "perseids").visibility.shortNight).toBeUndefined();
-  });
-
-  it("uses the Bortle threshold of the caller for the dark window", () => {
     // A brighter-sky threshold (-12°) gives Helsinki a dark window in August, so no short night there.
     const events = meteorEvents(HELSINKI, windowOf(HELSINKI, "2026-08-08", 8), -12);
     expect(showerEvent(events, "perseids").visibility.shortNight).toBeUndefined();
-  });
-
-  it("is deterministic", () => {
-    expect(skyEvents(WARSAW, "2026-12-01")).toEqual(skyEvents(WARSAW, "2026-12-01"));
   });
 });
 
@@ -272,15 +203,12 @@ describe("the night before or after a peak", () => {
     expect(event.bestNight).toBe(event.night);
   });
 
-  it("lists the shower as not visible, with the peak night's reason, when no night clears the minimum", () => {
-    const [event] = meteorEvents(WARSAW, window, undefined, [invented(255, 0)]);
-    expect(event.visibility).toEqual({ visible: false, reason: "too-low" });
-    expect(event.bestNight).toBe(event.night);
-  });
-
-  it("says below-horizon when the radiant never gets above the horizon", () => {
-    const [event] = meteorEvents(WARSAW, window, undefined, [invented(113, -80)]);
-    expect(event.visibility).toEqual({ visible: false, reason: "below-horizon" });
+  it("lists the shower as not visible when no night clears the minimum: too-low with the peak night's reason, below-horizon when the radiant never rises", () => {
+    const [low] = meteorEvents(WARSAW, window, undefined, [invented(255, 0)]);
+    expect(low.visibility).toEqual({ visible: false, reason: "too-low" });
+    expect(low.bestNight).toBe(low.night);
+    const [never] = meteorEvents(WARSAW, window, undefined, [invented(113, -80)]);
+    expect(never.visibility).toEqual({ visible: false, reason: "below-horizon" });
   });
 });
 

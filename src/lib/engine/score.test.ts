@@ -10,12 +10,11 @@ import {
   GALAXY_LIMIT_BRIGHTNESS_CAP,
   LOW_INTEREST_PENALTY,
   MIN_OBJECT_SCORE,
-  SCORE_WEIGHTS,
   WELL_PLACED_ALTITUDE_DEG,
   bortlePenaltyForBortle,
   nakedEyeLimitingMagForBortle,
 } from "./parameters";
-import { SCORE_COMPONENTS, scoreObject } from "./score";
+import { scoreObject } from "./score";
 import type { ScoreInput, ScoredObject } from "./score";
 import type { HorizontalPosition } from "./types";
 
@@ -77,25 +76,13 @@ function score(overrides: Partial<ScoreInput> = {}) {
   return result;
 }
 
-describe("S-02 parameters", () => {
-  it("maps Bortle to a penalty of 0 at 1-2 rising linearly to 0.40 at 8 and 9", () => {
-    expect(bortlePenaltyForBortle(1)).toBe(0);
-    expect(bortlePenaltyForBortle(2)).toBe(0);
-    expect(bortlePenaltyForBortle(5)).toBeCloseTo(0.2, 12);
-    expect(bortlePenaltyForBortle(8)).toBe(0.4);
-    expect(bortlePenaltyForBortle(9)).toBe(0.4);
-    for (let b = 2; b < 9; b++) {
-      expect(bortlePenaltyForBortle(b + 1)).toBeGreaterThanOrEqual(bortlePenaltyForBortle(b));
-    }
-  });
-});
-
 describe("scoreObject", () => {
-  it("returns null when the object never reaches the minimum altitude in the dark window", () => {
+  it("scores nothing it cannot place: null below the minimum altitude or past the telescope's limit, a RangeError for a moon grid that differs", () => {
     expect(scoreObject(input({ track: track([14.9, 10, 5, 14]) }))).toBeNull();
-  });
-
-  it("rejects a moon track or separations on a different grid", () => {
+    const limit = nakedEyeLimitingMagForBortle(6);
+    expect(scoreObject(input({ object: { ...CLUSTER, vMag: limit + 0.01 } }))).toBeNull();
+    // A larger aperture reaches it.
+    expect(scoreObject(input({ object: { ...CLUSTER, vMag: limit + 5 }, apertureMm: 70 }))).not.toBeNull();
     expect(() => scoreObject(input({ track: track([40, 40]), moonTrack: NO_MOON(3) }))).toThrow(RangeError);
     expect(() =>
       scoreObject(input({ track: track([40, 40]), moonTrack: NO_MOON(2), moonSeparationsDeg: apart(3, 90) })),
@@ -103,28 +90,26 @@ describe("scoreObject", () => {
   });
 
   describe("duration", () => {
-    it("is 1 when the object is well placed for the whole useful span", () => {
-      // 13 samples at 40° are 120 minutes (DURATION_USEFUL_SPAN_MINUTES) of full placement.
-      expect(DURATION_USEFUL_SPAN_MINUTES).toBe(120);
-      expect(score({ track: track(Array.from({ length: 13 }, () => 40)) }).components.duration).toBe(1);
-    });
-
-    it("credits each best-window sample by its altitude between the minimum and WELL_PLACED_ALTITUDE_DEG", () => {
-      expect(WELL_PLACED_ALTITUDE_DEG).toBe(40);
-      // Longest run above 15° is samples 4..7: 30°, 40°, 35°, 16° → 0.6 + 1 + 0.8 + 0.04 over a 25° span, averaged
-      // over the run's 4 samples and scaled by its 30 minutes of the useful span.
-      const result = score({ track: track([20, 20, 5, 5, 30, 40, 35, 16, 10, 20]) });
-      expect(result.components.duration).toBeCloseTo(
-        (30 / DURATION_USEFUL_SPAN_MINUTES) * ((0.6 + 1 + 0.8 + 0.04) / 4),
+    it("credits a pass by its altitude: 0 hugging the minimum, rising towards WELL_PLACED_ALTITUDE_DEG, 1 from there up, from the longest run", () => {
+      // Thirteen samples are the full useful span, so only the placement is left.
+      const held = (altitudeDeg: number) =>
+        score({ track: track(Array.from({ length: 13 }, () => altitudeDeg)) }).components.duration;
+      expect(held(15)).toBe(0);
+      const climbing = [20, 25, 30, 35].map(held);
+      climbing.forEach((value, i) => {
+        expect(value, `altitude ${20 + 5 * i}°`).toBeGreaterThan(i === 0 ? 0 : climbing[i - 1]);
+        expect(value, `altitude ${20 + 5 * i}°`).toBeLessThan(1);
+      });
+      for (const altitudeDeg of [WELL_PLACED_ALTITUDE_DEG, 60, 85, 90]) {
+        expect(held(altitudeDeg), `altitude ${altitudeDeg}°`).toBe(1);
+      }
+      // Two runs above the minimum: the longer one is the window, the shorter one earlier on counts for nothing.
+      const twoRuns = score({ track: track([20, 20, 5, 5, 30, 40, 35, 16, 10, 20]) });
+      expect(twoRuns.components.duration).toBeCloseTo(
+        score({ track: track([30, 40, 35, 16]) }).components.duration,
         12,
       );
-      expect(result.window.peak.altitudeDeg).toBe(40);
-    });
-
-    it("scores a whole-night pass hugging the minimum altitude near 0, and caps samples above the reference at 1", () => {
-      expect(score({ track: track([15, 15, 15, 15]) }).components.duration).toBe(0);
-      // Thirteen samples, so the pass is the full useful span and only the placement is left.
-      expect(score({ track: track([80, 85, 90, 85, 80, 85, 90, 85, 80, 85, 90, 85, 80]) }).components.duration).toBe(1);
+      expect(twoRuns.window.peak.altitudeDeg).toBe(40);
     });
 
     // evening-showpieces (M-4 S-05): duration saturates at a useful span instead of dividing by the whole night.
@@ -190,21 +175,13 @@ describe("scoreObject", () => {
     const GALAXY: ScoredObject = { ...CLUSTER, id: "M101", type: "galaxy" };
     const moonOf = (overrides: Partial<ScoreInput>) => score(overrides).components.moon;
 
-    it("is 1 when the Moon is below the horizon throughout", () => {
+    it("hides nothing with the Moon down or new, and weighs it by closeness, fullness and type, over the best window only", () => {
       expect(moonOf({ object: GALAXY, moonTrack: steadyMoon(5, -5, FULL), moonSeparationsDeg: apart(5, 5) })).toBe(1);
-    });
-
-    it("is close to 1 at new moon even with the Moon up", () => {
       expect(
         moonOf({ object: GALAXY, moonTrack: steadyMoon(5, 30, NEW), moonSeparationsDeg: apart(5, 20) }),
       ).toBeCloseTo(1, 2);
-    });
-
-    it("is 0 for a galaxy beside a full Moon", () => {
       expect(moonOf({ object: GALAXY, moonTrack: steadyMoon(5, 40, FULL), moonSeparationsDeg: apart(5, 5) })).toBe(0);
-    });
 
-    it("drops as the Moon gets closer and fuller", () => {
       const at = (separationDeg: number, phaseAngleDeg: number) =>
         moonOf({
           object: GALAXY,
@@ -216,9 +193,8 @@ describe("scoreObject", () => {
       expect(at(60, 90)).toBeGreaterThan(at(25, 90));
       expect(at(60, 120)).toBeGreaterThan(at(60, 90));
       expect(at(60, 90)).toBeGreaterThan(at(60, 30));
-    });
 
-    it("weighs the same moonlight by type: a cluster holds up better than a galaxy, a double star best", () => {
+      // The same moonlight: a cluster holds up better than a galaxy, a double star best.
       const sameSky = { moonTrack: steadyMoon(5, 40, 60), moonSeparationsDeg: apart(5, 40), bortle: 3 };
       const galaxy = moonOf({ ...sameSky, object: GALAXY });
       const globular = moonOf({ ...sameSky, object: { ...CLUSTER, type: "globular-cluster" } });
@@ -227,17 +203,15 @@ describe("scoreObject", () => {
       expect(galaxy).toBeLessThan(globular);
       expect(globular).toBeLessThan(open);
       expect(open).toBeLessThan(double);
-    });
 
-    it("averages over the best-window samples only", () => {
       // Window is samples 1..4; sample 0 has the Moon up beside the galaxy but is outside the window.
-      const result = score({
+      const windowOnly = score({
         object: GALAXY,
         track: track([5, 20, 50, 30, 20]),
         moonTrack: [{ altitudeDeg: 40, phaseAngleDeg: FULL }, ...steadyMoon(4, -10, FULL)],
         moonSeparationsDeg: apart(5, 5),
       });
-      expect(result.components.moon).toBe(1);
+      expect(windowOnly.components.moon).toBe(1);
     });
   });
 
@@ -264,33 +238,24 @@ describe("scoreObject", () => {
     };
     const washedOut = (overrides: Partial<ScoreInput>) => score({ ...fullMoonNight, ...overrides }).washedOut;
 
-    it("hides a faint (24 mag/arcsec²) galaxy 30° from a full Moon, but not a bright (18) one", () => {
-      expect(washedOut({ object: coreGalaxy(24) })).toBe(true);
-      expect(washedOut({ object: coreGalaxy(18) })).toBe(false);
-    });
-
-    it("never hides it without the Moon", () => {
-      expect(washedOut({ object: coreGalaxy(24), moonTrack: NO_MOON(5) })).toBe(false);
-    });
-
-    it("leaves it to light pollution when the moonless sky already hides it", () => {
+    it("hides a faint galaxy near a full Moon only: never a bright one, without the Moon, under a sky that already hides it, a cluster, M16 or a sizeless object", () => {
+      expect(washedOut({ object: coreGalaxy(24) }), "faint (24 mag/arcsec²) galaxy 30° from a full Moon").toBe(true);
+      expect(washedOut({ object: coreGalaxy(18) }), "bright (18) galaxy").toBe(false);
+      expect(washedOut({ object: coreGalaxy(24), moonTrack: NO_MOON(5) }), "no Moon").toBe(false);
       // Under Bortle 8 the moonless sky alone is within 3.5 mag of the core nowhere: not the Moon's fault. A 300 mm
       // telescope keeps the galaxy above the limiting magnitude there.
-      expect(washedOut({ object: coreGalaxy(24), bortle: 8, apertureMm: 300 })).toBe(false);
-    });
+      expect(washedOut({ object: coreGalaxy(24), bortle: 8, apertureMm: 300 }), "light pollution").toBe(false);
+      expect(washedOut({ object: { ...coreGalaxy(24), type: "open-cluster" } }), "open cluster").toBe(false);
+      expect(washedOut({ object: { ...coreGalaxy(24), type: "globular-cluster" } }), "globular cluster").toBe(false);
+      expect(washedOut({ object: { ...coreGalaxy(24), id: "M16", type: "nebula" } }), "M16").toBe(false);
+      expect(
+        washedOut({ object: { ...coreGalaxy(24), majorAxisArcmin: null, minorAxisArcmin: null } }),
+        "no size",
+      ).toBe(false);
+      expect(washedOut({ object: { ...coreGalaxy(24), minorAxisArcmin: null } }), "missing minor axis is round").toBe(
+        true,
+      );
 
-    it("never hides a cluster, M16, or an object without a size", () => {
-      expect(washedOut({ object: { ...coreGalaxy(24), type: "open-cluster" } })).toBe(false);
-      expect(washedOut({ object: { ...coreGalaxy(24), type: "globular-cluster" } })).toBe(false);
-      expect(washedOut({ object: { ...coreGalaxy(24), id: "M16", type: "nebula" } })).toBe(false);
-      expect(washedOut({ object: { ...coreGalaxy(24), majorAxisArcmin: null, minorAxisArcmin: null } })).toBe(false);
-    });
-
-    it("takes a missing minor axis as round", () => {
-      expect(washedOut({ object: { ...coreGalaxy(24), minorAxisArcmin: null } })).toBe(true);
-    });
-
-    it("only counts an object a moonless night would list", () => {
       // Lost in the moonlight, but up for three samples at 30° (a pass of 20 minutes, placement 0.6 over 15° to 40°,
       // so duration is 20 / DURATION_USEFUL_SPAN_MINUTES × 0.6 = 0.1; evening-showpieces: the old one-sample pass
       // now scores 0, which keeps no galaxy of this brightness on the list at any aperture). In a 70 mm telescope
@@ -309,34 +274,6 @@ describe("scoreObject", () => {
   });
 
   describe("brightness", () => {
-    const limit = nakedEyeLimitingMagForBortle(6);
-
-    it("is 0 at the limiting magnitude", () => {
-      expect(score({ object: { ...CLUSTER, vMag: limit } }).components.brightness).toBe(0);
-    });
-
-    it("returns null for an object fainter than the telescope's limiting magnitude, so it never ranks", () => {
-      expect(scoreObject(input({ object: { ...CLUSTER, vMag: limit + 0.01 } }))).toBeNull();
-      expect(scoreObject(input({ object: { ...CLUSTER, vMag: limit + 5 }, apertureMm: 70 }))).not.toBeNull();
-    });
-
-    it("ramps linearly over BRIGHTNESS_RAMP_MAG and is clamped at 1 beyond it", () => {
-      expect(
-        score({ object: { ...CLUSTER, vMag: limit - BRIGHTNESS_RAMP_MAG / 2 } }).components.brightness,
-      ).toBeCloseTo(0.5, 12);
-      expect(score({ object: { ...CLUSTER, vMag: limit - BRIGHTNESS_RAMP_MAG } }).components.brightness).toBeCloseTo(
-        1,
-        12,
-      );
-      expect(score({ object: { ...CLUSTER, vMag: limit - 10 } }).components.brightness).toBe(1);
-    });
-
-    it("adds 5·log10(aperture ÷ 7 mm) to the limit", () => {
-      // 70 mm gains exactly 5 magnitudes.
-      const vMag = limit + 5 - BRIGHTNESS_RAMP_MAG / 4;
-      expect(score({ object: { ...CLUSTER, vMag }, apertureMm: 70 }).components.brightness).toBeCloseTo(0.25, 12);
-    });
-
     // small-scope-galaxies: a galaxy's credit follows its contrast band (the line), never more than it allows.
     describe("for a galaxy", () => {
       // A 10' round galaxy under a Bortle 2 sky in a 200 mm telescope; its core surface brightness is vMag + 12.13.
@@ -351,7 +288,7 @@ describe("scoreObject", () => {
         Math.min(1, (telescopeLimitingMag(night.bortle, night.apertureMm) - object.vMag) / BRIGHTNESS_RAMP_MAG);
       const brightnessOf = (object: ScoredObject) => score({ object, ...night }).components.brightness;
 
-      it("keeps the whole headroom ramp in the bright and smudge bands", () => {
+      it("keeps the headroom ramp for a galaxy in the bright and smudge bands and for every other type, whatever its band", () => {
         for (const [coreMag, band] of [
           [21, "bright"],
           [23, "smudge"],
@@ -359,8 +296,11 @@ describe("scoreObject", () => {
           const object = galaxyAt(coreMag);
           expect(contrastBand(object, night.bortle, night.apertureMm)).toBe(band);
           expect(ramp(object)).toBeGreaterThan(GALAXY_FAINT_BRIGHTNESS_CAP);
-          expect(brightnessOf(object)).toBeCloseTo(ramp(object), 12);
+          expect(brightnessOf(object), band).toBeCloseTo(ramp(object), 12);
         }
+        const nebula: ScoredObject = { ...galaxyAt(24), id: "M1", type: "nebula" };
+        expect(contrastBand(nebula, night.bortle, night.apertureMm)).toBe("faint");
+        expect(brightnessOf(nebula)).toBeCloseTo(ramp(nebula), 12);
       });
 
       it("takes at most GALAXY_FAINT_BRIGHTNESS_CAP in the faint band when the ramp is higher", () => {
@@ -375,34 +315,6 @@ describe("scoreObject", () => {
         expect(contrastBand(object, night.bortle, night.apertureMm)).toBe("limit");
         expect(ramp(object)).toBeGreaterThan(0);
         expect(brightnessOf(object)).toBe(GALAXY_LIMIT_BRIGHTNESS_CAP);
-      });
-
-      it("leaves every other type on the headroom ramp, whatever its band", () => {
-        const nebula: ScoredObject = { ...galaxyAt(24), id: "M1", type: "nebula" };
-        expect(contrastBand(nebula, night.bortle, night.apertureMm)).toBe("faint");
-        expect(brightnessOf(nebula)).toBeCloseTo(ramp(nebula), 12);
-      });
-
-      it("never lowers with a larger aperture, for every catalogue galaxy under every Bortle class", () => {
-        const apertures = [60, 70, 80, 100, 130, 150, 200, 300];
-        const drops: string[] = [];
-        for (const object of DEEP_SKY.filter((o) => o.type === "galaxy")) {
-          for (let bortle = 1; bortle <= 9; bortle++) {
-            let previous = -1;
-            for (const apertureMm of apertures) {
-              // A galaxy fainter than the telescope's limit has no score yet; a larger aperture reaches it.
-              const result = scoreObject(input({ object, bortle, apertureMm }));
-              if (result === null) {
-                continue;
-              }
-              if (result.components.brightness < previous) {
-                drops.push(`${object.id} Bortle ${bortle} ${apertureMm} mm`);
-              }
-              previous = result.components.brightness;
-            }
-          }
-        }
-        expect(drops).toEqual([]);
       });
 
       it("never rises under a worse sky, for every catalogue galaxy at every aperture (impl review F5)", () => {
@@ -428,61 +340,24 @@ describe("scoreObject", () => {
     });
   });
 
-  describe("sky", () => {
-    it("penalises a known surface brightness fainter than the threshold", () => {
-      const faint: ScoredObject = { ...CLUSTER, surfaceBrightness: 22, type: "globular-cluster" };
-      expect(score({ object: faint, bortle: 8 }).components.sky).toBeCloseTo(0.6, 12);
-      expect(score({ object: faint, bortle: 2 }).components.sky).toBe(1);
-    });
-
-    it("does not penalise a known surface brightness at or brighter than the threshold, whatever the type", () => {
-      expect(score({ object: { ...CLUSTER, surfaceBrightness: 21, type: "galaxy" }, bortle: 8 }).components.sky).toBe(
-        1,
-      );
-      expect(score({ object: { ...CLUSTER, surfaceBrightness: 13, type: "galaxy" }, bortle: 8 }).components.sky).toBe(
-        1,
-      );
-    });
-
-    it("falls back to the type when the surface brightness is unknown", () => {
-      for (const type of ["galaxy", "nebula", "emission-nebula", "reflection-nebula", "supernova-remnant"] as const) {
-        expect(score({ object: { ...CLUSTER, type }, bortle: 9 }).components.sky).toBeCloseTo(0.6, 12);
-      }
-      for (const type of ["open-cluster", "globular-cluster", "planetary-nebula", "double-star"] as const) {
-        expect(score({ object: { ...CLUSTER, type }, bortle: 9 }).components.sky).toBe(1);
-      }
-    });
-  });
-
-  it("totals the weighted components", () => {
-    const result = score({
-      object: { ...CLUSTER, vMag: 3.1, type: "galaxy" },
-      track: track([5, 20, 50, 30, 20]),
-      moonTrack: steadyMoon(5, 30, 90),
-      moonSeparationsDeg: apart(5, 60),
-    });
-    const { duration, moon: moonValue, brightness, sky } = result.components;
-    // Window samples 1..4 at 20°, 50°, 30°, 20° → (0.2 + 1 + 0.6 + 0.2) / 4 = 0.5 placed, over 30 minutes of the span.
-    expect(duration).toBeCloseTo((30 / DURATION_USEFUL_SPAN_MINUTES) * 0.5, 12);
-    expect(moonValue).toBeGreaterThan(0);
-    expect(moonValue).toBeLessThan(1);
-    // Limit 5.1 at Bortle 6 with a 7 mm aperture; 2 magnitudes inside it over the ramp.
-    expect(brightness).toBeCloseTo(2 / BRIGHTNESS_RAMP_MAG, 12);
-    expect(sky).toBeCloseTo(1 - bortlePenaltyForBortle(6), 12);
-    expect(result.total).toBeCloseTo(
-      SCORE_WEIGHTS.duration * duration +
-        SCORE_WEIGHTS.moon * moonValue +
-        SCORE_WEIGHTS.brightness * brightness +
-        SCORE_WEIGHTS.sky * sky,
-      12,
-    );
-    for (const c of SCORE_COMPONENTS) {
-      expect(result.components[c]).toBeGreaterThanOrEqual(0);
-      expect(result.components[c]).toBeLessThanOrEqual(1);
+  it("penalises a faint or nebulous object under a bright sky and a double star or asterism for its low interest, never below 0", () => {
+    const faint: ScoredObject = { ...CLUSTER, surfaceBrightness: 22, type: "globular-cluster" };
+    expect(score({ object: faint, bortle: 8 }).components.sky).toBeCloseTo(1 - bortlePenaltyForBortle(8), 12);
+    expect(score({ object: faint, bortle: 8 }).components.sky).toBeLessThan(1);
+    expect(score({ object: faint, bortle: 2 }).components.sky).toBe(1);
+    // At or brighter than the threshold nothing is penalised, whatever the type.
+    for (const surfaceBrightness of [21, 13]) {
+      const galaxy: ScoredObject = { ...CLUSTER, surfaceBrightness, type: "galaxy" };
+      expect(score({ object: galaxy, bortle: 8 }).components.sky, `surface brightness ${surfaceBrightness}`).toBe(1);
     }
-  });
+    // With no surface brightness the type decides.
+    for (const type of ["galaxy", "nebula", "emission-nebula", "reflection-nebula", "supernova-remnant"] as const) {
+      expect(score({ object: { ...CLUSTER, type }, bortle: 9 }).components.sky, type).toBeLessThan(1);
+    }
+    for (const type of ["open-cluster", "globular-cluster", "planetary-nebula", "double-star"] as const) {
+      expect(score({ object: { ...CLUSTER, type }, bortle: 9 }).components.sky, type).toBe(1);
+    }
 
-  it("subtracts LOW_INTEREST_PENALTY from a double star or asterism, floored at 0", () => {
     const cluster = score();
     for (const type of ["double-star", "asterism"] as const) {
       const lowInterest = score({ object: { ...CLUSTER, type } });

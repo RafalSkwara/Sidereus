@@ -2,9 +2,10 @@
 
 Hand-read values from Stellarium that the engine tests assert against, within the candidate
 tolerance in `src/lib/engine/parameters.ts` (1° of altitude, 5 minutes of time, 0.02 of
-illuminated fraction). One JSON file per (site, night) under `stellarium/`. A fixture section whose
-`status` is `pending` shows up in `npm test` as a **todo**, never as a silent pass; flip it to
-`captured` once its values are filled in.
+illuminated fraction). One JSON file per (site, night) under `stellarium/`. Only the `sun` sections are asserted
+(`sun.test.ts`); the Moon and object positions are checked against Skyfield (`skyfield/`), so the Moon and objects
+capture protocols were retired with the test-suite diet. A section whose `status` is `pending` registers a todo,
+never a silent pass; flip it to `captured` once its values are filled in.
 
 ## Fixtures
 
@@ -60,30 +61,11 @@ The coordinates are public reference points, not anyone's home.
    altitude never goes below `-18°`. Leave the four times `null`, keep `expectNoDarkness: true`.
 6. Set `sun.status` to `captured`.
 
-## Reading the Moon (`moon` section)
-
-Skip fixtures whose `moon.status` is `not-applicable`.
-
-1. Select the Moon (`F3`, `Moon`). For each sample row: set the time (`F5`), then copy **Az.** and
-   **Alt.** from the info panel and the **Illuminated** percentage as a 0–1 fraction. Write the
-   `time` you set, ISO with offset.
-2. Warsaw 2026-10-24 needs at least two instants inside the dark window (e.g. 22:00 and 02:30 local);
-   Tromsø needs one (its Moon may be below the horizon; a negative altitude is a valid sample).
-3. Set `moon.status` to `captured`.
-
-## Reading objects (`objects` section)
-
-1. For each placeholder row, select the object (`F3`, e.g. `M31`), set the time, and copy **Az.** and
-   **Alt.**. Prefer instants where the object is above 20°. In October at Warsaw, M31, M13, M42 and
-   M45 are convenient; in June at Tromsø M13, M57 and M81. You may change the `id`s to whatever is up,
-   as long as every row is fully filled in and there are at least three per Warsaw night.
-2. Set `objects.status` to `captured`.
-
 ## Finish
 
 1. Fill `source.version` (Help → About), `source.capturedBy` (initials are fine) and
    `source.capturedAt` (`YYYY-MM-DD`).
-2. Run `npm test`. The fixture assertions turn from _todo_ into real checks. A deviation beyond the
+2. Run `npm test`. A sun assertion turns from _todo_ into a real check. A deviation beyond the
    tolerance is a real finding (engine bug, protocol slip, or a tolerance that needs revisiting via
    PRD Open Question 9), not something to paper over.
 
@@ -133,7 +115,7 @@ comment for the rules (engine calls inside `it`, assert the switch first).
 `planets.ts`, which uses astronomy-engine. `provenance` records the Skyfield version, the ephemeris,
 the refraction settings (10 °C, 1010 mbar) and the generation date.
 
-`planets.test.ts` asserts every sample above 5° within 0.05° in altitude and azimuth (refraction
+`planet-ranking.test.ts` asserts every sample above 5° within 0.05° in altitude and azimuth (refraction
 models differ near the horizon, so lower samples are not compared). That is far tighter than
 `ALTITUDE_TOLERANCE_DEG` (1°, sized for hand-read Stellarium values): the libraries agree to ~0.005°,
 and a 1° tolerance could not tell a refracted position from an unrefracted one. Every diameter is checked within 1″, or 2% where that is tighter.

@@ -42,9 +42,10 @@ import type { HorizontalPosition, Interval } from "./types";
  *
  * A run of a single sample is the accepted rule: the object is listed and still has to meet (a) to (c). A planet's or
  * the Moon's window then has start === end (the grid edges), while a deep-sky window has true edges (`refinedWindow`):
- * a positive length around its sample, still inside the dark window. Both are pinned in their own tests. Failure messages
+ * a positive length around its sample, still inside the dark window. Both are held in the kind's looping test below. Failure messages
  * name the case index and its inputs, so a case replays from the seed. The case array is built here from the seed
- * alone; every engine call runs in `beforeAll`.
+ * alone; every engine call runs in `beforeAll`. One looping test per kind (deep sky, planets, the Moon) follows the count
+ * preconditions, which come first so an empty or short sample can never pass.
  */
 
 const SEED = 20261008;
@@ -74,11 +75,10 @@ interface CaseResult {
   deepSkyEntries: number;
   planetEntries: number;
   moonEntries: number;
-  /** Every violation of (a) to (c), one line each. */
-  violations: string[];
-  /** The planet and Moon entries with `window.start === window.end` (one sample), and the violations among them. */
+  /** Every violation of (a) to (c), one line each, by the kind of entry that broke it. */
+  violations: Record<Listed["kind"], string[]>;
+  /** The planet and Moon entries with `window.start === window.end` (one sample). Their violations are in `violations`. */
   shortWindows: number;
-  shortViolations: string[];
   /** The deep-sky entries whose best run is one track sample, and the violations among them. */
   deepSkyShortRuns: number;
   deepSkyShortViolations: string[];
@@ -101,9 +101,8 @@ function analyse(c: IndexedCase): CaseResult {
     deepSkyEntries: 0,
     planetEntries: 0,
     moonEntries: 0,
-    violations: [],
+    violations: { "deep-sky": [], planet: [], moon: [] },
     shortWindows: 0,
-    shortViolations: [],
     deepSkyShortRuns: 0,
     deepSkyShortViolations: [],
   };
@@ -171,10 +170,9 @@ function analyse(c: IndexedCase): CaseResult {
     altitudeAt: (time: Date) => number,
   ): string[] => {
     const violations = check(entry, interval, thresholdDeg, altitudeAt);
-    result.violations.push(...violations);
+    result.violations[entry.kind].push(...violations);
     if (entry.kind !== "deep-sky" && entry.window.start.getTime() === entry.window.end.getTime()) {
       result.shortWindows += 1;
-      result.shortViolations.push(...violations);
     }
     return violations;
   };
@@ -258,6 +256,12 @@ describe("visibility invariants over generated sites, nights, skies and telescop
   const countCases = (pick: (c: IndexedCase, r: CaseResult) => boolean): number =>
     CASES.filter((c, i) => pick(c, results[i])).length;
 
+  /** Every violation of one kind over all cases, each named by its case index and inputs. */
+  const failuresOf = (kind: Listed["kind"], extra: (r: CaseResult) => string[] = () => []): string[] =>
+    CASES.flatMap((c, i) =>
+      [...results[i].violations[kind], ...extra(results[i])].map((v) => `${describeCase(c)}: ${v}`),
+    );
+
   // First: a property that checks nothing passes for the wrong reason, so the run has to be big enough and varied.
   it("generates enough cases with enough entries to prove something", () => {
     expect(CASES).toHaveLength(CASE_COUNT);
@@ -281,38 +285,36 @@ describe("visibility invariants over generated sites, nights, skies and telescop
       total((r) => r.planetEntries),
       "planet entries checked",
     ).toBeGreaterThanOrEqual(50);
-  });
-
-  it.each(CASES)("case $index: $site.label, night $date, Bortle $bortle", (c) => {
-    const { violations } = results[c.index];
-    expect(violations.slice(0, 10), `${violations.length} violations; ${describeCase(c)}`).toEqual([]);
-  });
-
-  it("keeps a planet or the Moon listed for a single sample (start === end) inside the same guarantees", () => {
-    // About 1% of entries are up for one 10-minute sample and still clear the bar (19 planet and Moon entries and
-    // 111 deep-sky ones for seed 20261008). That rule is accepted: a planet or the Moon keeps the grid edges, so its
-    // window has start === end, and it is held to (a) to (c) at that one instant, like every other.
+    expect(
+      total((r) => r.moonEntries),
+      "Moon entries checked",
+    ).toBeGreaterThan(0);
+    // The accepted one-sample rule is exercised: about 1% of entries are up for one 10-minute sample (19 planet and
+    // Moon entries and 111 deep-sky ones for seed 20261008) and are held to (a) to (c) like every other.
     expect(
       total((r) => r.shortWindows),
       "single-sample planet and Moon windows seen",
     ).toBeGreaterThan(0);
-    const failing = CASES.flatMap((c, i) =>
-      results[i].shortViolations.map((violation) => `${describeCase(c)}: ${violation}`),
-    );
-    expect(failing.slice(0, 10), `${failing.length} single-sample violations`).toEqual([]);
-  });
-
-  it("gives a deep-sky object listed for a single sample a window of positive length around it (true edges)", () => {
-    // The same accepted rule (an object up for one sample still clears), but a deep-sky window is the true crossings
-    // of the minimum altitude (`refinedWindow`), so a one-sample run is no longer start === end: it has a length, holds
-    // its sample, stays inside the dark window and is held to (a) to (c) at its start, end and best time.
     expect(
       total((r) => r.deepSkyShortRuns),
       "single-sample deep-sky runs seen",
     ).toBeGreaterThan(0);
-    const failing = CASES.flatMap((c, i) =>
-      results[i].deepSkyShortViolations.map((violation) => `${describeCase(c)}: ${violation}`),
-    );
-    expect(failing.slice(0, 10), `${failing.length} single-sample deep-sky violations`).toEqual([]);
+  });
+
+  it("lists no deep-sky object outside its dark window or under the minimum altitude, a one-sample run included (true edges)", () => {
+    // A deep-sky window is the true crossings of the minimum altitude (`refinedWindow`), so an object up for one
+    // sample is no longer start === end: its window has a length, holds its sample and stays inside the dark window.
+    const failing = failuresOf("deep-sky", (r) => r.deepSkyShortViolations);
+    expect(failing.slice(0, 10), `${failing.length} deep-sky violations`).toEqual([]);
+  });
+
+  it("lists no planet outside the planet window or under the minimum altitude, a single sample (start === end) included", () => {
+    const failing = failuresOf("planet");
+    expect(failing.slice(0, 10), `${failing.length} planet violations`).toEqual([]);
+  });
+
+  it("lists the Moon only inside the planet window and above the minimum altitude, a single sample (start === end) included", () => {
+    const failing = failuresOf("moon");
+    expect(failing.slice(0, 10), `${failing.length} Moon violations`).toEqual([]);
   });
 });

@@ -90,17 +90,16 @@ describe("a small telescope's ranking follows the what-to-expect line", () => {
     });
   });
 
-  // G2: a pin against regression. M31 keeps a high rank with a line that agrees with "bright for your 60 mm".
-  it.each([WARSAW_JULY, WARSAW_OCTOBER])(
-    "G2: M31 is in the top 5 with a smudge or better line at Warsaw $date, Bortle 6, 60 mm",
-    (night) => {
-      const ranking = rank(night, 6, 60);
-      const place = rankOf(ranking, "M31");
-      expect(place, "M31 is not listed").not.toBeNull();
-      expect(place ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(5);
-      expect(["galaxySmudge", "galaxyBright"]).toContain(expectationFor(object("M31"), 6, 60));
-    },
-  );
+  // G2: a pin against regression, the opposite end of G6. M31 keeps a high rank with a line that agrees with "bright
+  // for your 60 mm" (one test over both nights).
+  it("G2: M31 is in the top 5 with a smudge or better line at Warsaw 2026-07-15 and 2026-10-15, Bortle 6, 60 mm", () => {
+    expect(["galaxySmudge", "galaxyBright"]).toContain(expectationFor(object("M31"), 6, 60));
+    for (const night of [WARSAW_JULY, WARSAW_OCTOBER]) {
+      const place = rankOf(rank(night, 6, 60), "M31");
+      expect(place, `M31 is not listed on ${night.date}`).not.toBeNull();
+      expect(place ?? Number.POSITIVE_INFINITY, `M31 is #${place} on ${night.date}`).toBeLessThanOrEqual(5);
+    }
+  });
 
   // G3 (#21 item 3 and the research probe): M33's low surface brightness keeps it out of a suburban top ten.
   it("G3: M33 is not in the top 10 at Warsaw 2026-10-15, Bortle 6, 60 mm", () => {
@@ -123,26 +122,45 @@ describe("a small telescope's ranking follows the what-to-expect line", () => {
 
   // G5 (plan review F2): the reason line never says "bright for your N mm" beside a faint line. Every galaxy on the
   // unlimited list is checked, and both reasons the list shows (`leadComponent` and `secondComponent`).
-  describe("G5: a galaxy whose reason is brightness has a bright or smudge line", () => {
+  it("G5: a galaxy whose reason is brightness has a bright or smudge line", () => {
     const allowed: readonly ExpectationKey[] = ["galaxyBright", "galaxySmudge"];
-    const nights = [...WARSAW_NIGHTS, BIESZCZADY_NIGHT];
-    for (const night of nights) {
+    let rankings = 0;
+    let galaxiesChecked = 0;
+    let brightnessReasons = 0;
+    const offenders: string[] = [];
+    for (const night of [...WARSAW_NIGHTS, BIESZCZADY_NIGHT]) {
       for (const apertureMm of [60, 80, 150]) {
         for (const bortle of [3, 5, 6, 8]) {
           // A combination with no dark window (Warsaw 2026-07-15 at Bortle 3, where the Sun never reaches -18 degrees)
           // has no ranking to check; it is skipped here, never through a caught error.
-          const hasWindow = darkOf(night, bortle).kind === "window";
-          it.skipIf(!hasWindow)(`${night.place} ${night.date}, Bortle ${bortle}, ${apertureMm} mm`, () => {
-            const offenders = rank(night, bortle, apertureMm)
-              .entries.filter((e) => e.object.type === "galaxy")
-              .filter((e) => e.leadComponent === "brightness" || e.secondComponent === "brightness")
-              .map((e) => ({ id: e.object.id, key: expectationFor(e.object, bortle, apertureMm) }))
-              .filter(({ key }) => !allowed.includes(key));
-            expect(offenders).toEqual([]);
-          });
+          if (darkOf(night, bortle).kind !== "window") {
+            continue;
+          }
+          rankings += 1;
+          for (const e of rank(night, bortle, apertureMm).entries) {
+            if (e.object.type !== "galaxy") {
+              continue;
+            }
+            galaxiesChecked += 1;
+            if (e.leadComponent !== "brightness" && e.secondComponent !== "brightness") {
+              continue;
+            }
+            brightnessReasons += 1;
+            const key = expectationFor(e.object, bortle, apertureMm);
+            if (!allowed.includes(key)) {
+              offenders.push(
+                `${night.place} ${night.date}, Bortle ${bortle}, ${apertureMm} mm: ${e.object.id} reads ${key}`,
+              );
+            }
+          }
         }
       }
     }
+    // A property over an empty or short sample passes for the wrong reason: the counts come first.
+    expect(rankings, "rankings checked").toBeGreaterThanOrEqual(50);
+    expect(galaxiesChecked, "galaxy entries checked").toBeGreaterThanOrEqual(2000);
+    expect(brightnessReasons, "galaxies with brightness as a reason").toBeGreaterThanOrEqual(150);
+    expect(offenders).toEqual([]);
   });
 
   // G6 (owner, plan review F6): under city skies a 60 mm sees M31 as very faint, and it leaves the top 5.

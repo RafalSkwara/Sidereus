@@ -22,15 +22,6 @@ function majorAxis(messier: number): number | null {
   return object.majorAxisArcmin;
 }
 
-describe("eyepieceOptics", () => {
-  it("derives magnification, exit pupil and true field", () => {
-    const optics = eyepieceOptics(NEWTONIAN, PLOSSL_25);
-    expect(optics.magnification).toBe(30);
-    expect(optics.exitPupilMm).toBe(5);
-    expect(optics.trueFovDeg).toBeCloseTo(50 / 30, 12);
-  });
-});
-
 describe("pairEyepieces", () => {
   it("picks the 25 mm to find and the 10 mm for detail on a 150/750 with a small object", () => {
     expect(pairEyepieces(NEWTONIAN, [PLOSSL_25, PLOSSL_10], 10)).toEqual({
@@ -44,10 +35,6 @@ describe("pairEyepieces", () => {
       finding: PLOSSL_25,
       detail: PLOSSL_10,
     });
-  });
-
-  it("lets a single eyepiece fill both roles", () => {
-    expect(pairEyepieces(NEWTONIAN, [PLOSSL_10], 10)).toEqual({ kind: "pair", finding: PLOSSL_10, detail: PLOSSL_10 });
   });
 
   it("skips a detail eyepiece below the exit-pupil floor and falls back to the finding one when none is left", () => {
@@ -96,67 +83,26 @@ describe("pairEyepieces", () => {
       widest: PLOSSL_25,
     });
   });
-
-  it("treats M40, which has no size, as fitting every eyepiece", () => {
-    expect(majorAxis(40)).toBeNull();
-    expect(pairEyepieces(NEWTONIAN, [PLOSSL_25, PLOSSL_10], majorAxis(40))).toEqual({
-      kind: "pair",
-      finding: PLOSSL_25,
-      detail: PLOSSL_10,
-    });
-  });
-
-  it("returns null for an empty kit", () => {
-    expect(pairEyepieces(NEWTONIAN, [], 10)).toBeNull();
-    expect(pairEyepieces(NEWTONIAN, [], null)).toBeNull();
-  });
-
-  it("breaks ties by the order the kit is given in", () => {
-    const first = eyepiece("a", 25);
-    const second = eyepiece("b", 25);
-    expect(pairEyepieces(NEWTONIAN, [first, second], 10)).toEqual({ kind: "pair", finding: first, detail: first });
-    expect(pairEyepieces(NEWTONIAN, [second, first], 10)).toEqual({ kind: "pair", finding: second, detail: second });
-    expect(pairEyepieces(NEWTONIAN, [first, second], 1000)).toEqual({ kind: "none-fit", widest: first });
-  });
 });
 
 describe("planetEyepiece", () => {
-  it("picks the highest magnification that keeps the exit pupil at or above the floor", () => {
-    // On 150/750: 6 mm is 125× (1.2 mm), 4 mm 187.5× (0.8 mm), 3 mm 250× (0.6 mm, below the floor).
+  it("picks the highest magnification inside the exit-pupil floor and the magnification ceiling, else the lowest", () => {
+    // Floor, on 150/750: 6 mm is 125× (1.2 mm), 4 mm 187.5× (0.8 mm), 3 mm 250× (0.6 mm, below the floor).
     const six = eyepiece("e6", 6);
     const four = eyepiece("e4", 4);
     const three = eyepiece("e3", 3);
-    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, six, three, four, PLOSSL_10])).toBe(four);
-    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, PLOSSL_10])).toBe(PLOSSL_10);
-  });
+    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, six, three, four, PLOSSL_10]), "floor").toBe(four);
+    expect(planetEyepiece(NEWTONIAN, [PLOSSL_25, PLOSSL_10]), "floor, no short eyepiece").toBe(PLOSSL_10);
 
-  it("stays at or below the magnification ceiling even when the exit pupil would allow more", () => {
-    // On 300/1500 the ceiling is 250×: 6 mm is exactly 250×, 5 mm 300× with a 1 mm exit pupil.
+    // Ceiling, on 300/1500 it is 250×: 6 mm is exactly 250×, 5 mm 300× with a 1 mm exit pupil.
     const dobsonian = { apertureMm: 300, focalLengthMm: 1500 };
-    const six = eyepiece("e6", 6);
     const five = eyepiece("e5", 5);
-    expect(planetEyepiece(dobsonian, [five, six])).toBe(six);
-    expect(planetEyepiece(dobsonian, [five, PLOSSL_25])).toBe(PLOSSL_25);
-  });
+    expect(planetEyepiece(dobsonian, [five, six]), "ceiling").toBe(six);
+    expect(planetEyepiece(dobsonian, [five, PLOSSL_25]), "ceiling, only the 25 mm is inside").toBe(PLOSSL_25);
 
-  it("falls back to the lowest magnification when every eyepiece breaks the limits", () => {
-    const three = eyepiece("e3", 3);
+    // Every eyepiece breaks the limits: the lowest magnification.
     const two = eyepiece("e2", 2);
-    expect(planetEyepiece(NEWTONIAN, [two, three])).toBe(three);
-  });
-
-  it("returns null for an empty kit", () => {
-    expect(planetEyepiece(NEWTONIAN, [])).toBeNull();
-  });
-
-  it("breaks ties by the order the kit is given in", () => {
-    const first = eyepiece("a", 10);
-    const second = eyepiece("b", 10);
-    expect(planetEyepiece(NEWTONIAN, [first, second])).toBe(first);
-    expect(planetEyepiece(NEWTONIAN, [second, first])).toBe(second);
-    const tinyFirst = eyepiece("c", 2);
-    const tinySecond = eyepiece("d", 2);
-    expect(planetEyepiece(NEWTONIAN, [tinyFirst, tinySecond])).toBe(tinyFirst);
+    expect(planetEyepiece(NEWTONIAN, [two, three]), "every eyepiece breaks the limits").toBe(three);
   });
 });
 
@@ -177,12 +123,6 @@ describe("wholeDiscEyepiece", () => {
     });
   });
 
-  it("counts a field exactly at the bar as showing the whole disc", () => {
-    // 750 / 15 = 50×, so a 35° field gives exactly 0.7°.
-    const edge = eyepiece("edge", 15, MOON_WHOLE_DISC_FIELD_DEG * 50);
-    expect(wholeDiscEyepiece(NEWTONIAN, [PLOSSL_25, edge])).toMatchObject({ eyepiece: edge, fits: true });
-  });
-
   it("falls back to the widest field, marked as not fitting, when nothing shows the whole disc", () => {
     const six = eyepiece("e6", 6);
     expect(wholeDiscEyepiece(NEWTONIAN, [six, PLOSSL_10])).toEqual({
@@ -191,41 +131,62 @@ describe("wholeDiscEyepiece", () => {
       fits: false,
     });
   });
-
-  it("returns null for an empty kit", () => {
-    expect(wholeDiscEyepiece(NEWTONIAN, [])).toBeNull();
-  });
-
-  it("breaks ties by the order the kit is given in", () => {
-    const first = eyepiece("a", 25);
-    const second = eyepiece("b", 25);
-    expect(wholeDiscEyepiece(NEWTONIAN, [first, second])?.eyepiece).toBe(first);
-    expect(wholeDiscEyepiece(NEWTONIAN, [second, first])?.eyepiece).toBe(second);
-    const narrowFirst = eyepiece("c", 10);
-    const narrowSecond = eyepiece("d", 10);
-    expect(wholeDiscEyepiece(NEWTONIAN, [narrowFirst, narrowSecond])).toMatchObject({
-      eyepiece: narrowFirst,
-      fits: false,
-    });
-  });
 });
 
 describe("findingEyepiece (finder chart)", () => {
-  it("is the pairing's finding eyepiece with its true field, for a deep-sky object that fits", () => {
+  it("is the pairing's finding eyepiece with its true field, the widest when none fits, and takes an unknown size as fitting", () => {
     const found = findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], majorAxis(31));
-    expect(found?.eyepiece).toBe(PLOSSL_25);
+    expect(found?.eyepiece, "a deep-sky object that fits").toBe(PLOSSL_25);
     expect(found?.trueFovDeg).toBeCloseTo(eyepieceOptics(NEWTONIAN, PLOSSL_25).trueFovDeg, 12);
-  });
-
-  it("is the widest eyepiece when none fits the object", () => {
     // 600 arcmin is wider than any field of this kit.
-    const found = findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], 600);
-    expect(found?.eyepiece).toBe(PLOSSL_25);
+    expect(findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], 600)?.eyepiece, "none fits").toBe(PLOSSL_25);
+    // A planet passes null: it fits every eyepiece (M40, which has no size, reads the same way).
+    expect(findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], null)?.eyepiece, "unknown size").toBe(PLOSSL_25);
   });
+});
 
-  it("takes an unknown size (a planet passes null) as fitting every eyepiece, and is null for an empty kit", () => {
-    expect(findingEyepiece(NEWTONIAN, [PLOSSL_10, PLOSSL_25], null)?.eyepiece).toBe(PLOSSL_25);
+describe("every chooser", () => {
+  it("returns null for an empty kit and breaks ties by the order the kit is given in", () => {
+    expect(pairEyepieces(NEWTONIAN, [], 10)).toBeNull();
+    expect(pairEyepieces(NEWTONIAN, [], null)).toBeNull();
+    expect(planetEyepiece(NEWTONIAN, [])).toBeNull();
+    expect(wholeDiscEyepiece(NEWTONIAN, [])).toBeNull();
     expect(findingEyepiece(NEWTONIAN, [], null)).toBeNull();
     expect(findingEyepiece(NEWTONIAN, [], majorAxis(31))).toBeNull();
+
+    // Ties: the first of two equal eyepieces wins, whatever the order.
+    const first = eyepiece("a", 25);
+    const second = eyepiece("b", 25);
+    expect(pairEyepieces(NEWTONIAN, [first, second], 10), "pair").toEqual({
+      kind: "pair",
+      finding: first,
+      detail: first,
+    });
+    expect(pairEyepieces(NEWTONIAN, [second, first], 10), "pair, reversed").toEqual({
+      kind: "pair",
+      finding: second,
+      detail: second,
+    });
+    expect(pairEyepieces(NEWTONIAN, [first, second], 1000), "pair, none fit").toEqual({
+      kind: "none-fit",
+      widest: first,
+    });
+    expect(wholeDiscEyepiece(NEWTONIAN, [first, second])?.eyepiece, "whole disc").toBe(first);
+    expect(wholeDiscEyepiece(NEWTONIAN, [second, first])?.eyepiece, "whole disc, reversed").toBe(second);
+    const narrowFirst = eyepiece("c", 10);
+    const narrowSecond = eyepiece("d", 10);
+    expect(wholeDiscEyepiece(NEWTONIAN, [narrowFirst, narrowSecond]), "whole disc, none fits").toMatchObject({
+      eyepiece: narrowFirst,
+      fits: false,
+    });
+    const planetFirst = eyepiece("e", 10);
+    const planetSecond = eyepiece("f", 10);
+    expect(planetEyepiece(NEWTONIAN, [planetFirst, planetSecond]), "planet").toBe(planetFirst);
+    expect(planetEyepiece(NEWTONIAN, [planetSecond, planetFirst]), "planet, reversed").toBe(planetSecond);
+    const tinyFirst = eyepiece("g", 2);
+    const tinySecond = eyepiece("h", 2);
+    expect(planetEyepiece(NEWTONIAN, [tinyFirst, tinySecond]), "planet, every eyepiece breaks the limits").toBe(
+      tinyFirst,
+    );
   });
 });

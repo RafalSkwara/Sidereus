@@ -272,13 +272,6 @@ describe("ranking invariants as relations (Risk #4)", () => {
     }
   });
 
-  it("lists every cleared object when the limit is Infinity", () => {
-    for (const { scenario, base, allSeen } of runs) {
-      expect(base.entries.length, scenario.label).toBe(base.clearedCount);
-      expect(allSeen.entries.length, scenario.label).toBe(allSeen.clearedCount);
-    }
-  });
-
   it("(a) ratings 1 and 2 are inert: such a log ranks exactly like an empty one (FR-018)", () => {
     for (const { scenario, base, lowRatings } of runs) {
       expect(idsOf(lowRatings), scenario.label).toEqual(idsOf(base));

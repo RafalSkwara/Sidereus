@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { DEEP_SKY, findDeepSky } from "@/lib/catalogue";
 
-import { contrastBand, telescopeLimitingMag } from "./contrast";
+import { contrastBand } from "./contrast";
 import type { ContrastBand } from "./contrast";
 import { EXPECTATION_KEYS, expectationFor } from "./expectation";
-import type { ExpectationKey, ExpectationObject } from "./expectation";
+import type { ExpectationKey } from "./expectation";
 import { EXPECT_REFERENCES, KNOWN_DIVERGENCES } from "./fixtures/expect-reference";
-import { EXPECT_STARLIKE_ARCMIN, EXPECT_WIDE_ARCMIN } from "./parameters";
+import { BULGE_HUBBLE_TYPES } from "./parameters";
 
 /**
  * The "what to expect" rule (M-3 S-04, what-to-expect D-2, D-3, D-6): which of 22 phrase keys an object takes from
@@ -24,10 +24,6 @@ const GLOBULAR_RANK: Partial<Record<ExpectationKey, number>> = {
   globularResolved: 2,
 };
 
-function object(over: Partial<ExpectationObject> & Pick<ExpectationObject, "type">): ExpectationObject {
-  return { vMag: 8, majorAxisArcmin: 5, minorAxisArcmin: null, hubble: null, ...over };
-}
-
 function catalogued(id: string): NonNullable<ReturnType<typeof findDeepSky>> {
   const found = findDeepSky(id);
   if (found === undefined) {
@@ -37,24 +33,30 @@ function catalogued(id: string): NonNullable<ReturnType<typeof findDeepSky>> {
 }
 
 describe("expectationFor: the invariants (D-3)", () => {
-  it("has 22 distinct keys", () => {
-    expect(EXPECTATION_KEYS).toHaveLength(22);
-    expect(new Set(EXPECTATION_KEYS).size).toBe(22);
-  });
-
-  it("is total and deterministic over every catalogue object, Bortle class and aperture", () => {
+  it("is total and deterministic over every catalogue object, Bortle class and aperture, and reaches every key", () => {
+    // Non-vacuity: the whole catalogue over the full grid, so a short sample can never pass.
+    expect(DEEP_SKY.length).toBeGreaterThanOrEqual(150);
+    const reached = new Set<ExpectationKey>();
+    let cases = 0;
     for (const o of DEEP_SKY) {
       for (const bortle of BORTLES) {
         for (const aperture of APERTURES) {
           const key = expectationFor(o, bortle, aperture);
           expect(EXPECTATION_KEYS, `${o.id} B${bortle} ${aperture} mm`).toContain(key);
-          expect(expectationFor(o, bortle, aperture)).toBe(key);
+          expect(expectationFor(o, bortle, aperture), `${o.id} B${bortle} ${aperture} mm: second call`).toBe(key);
+          reached.add(key);
+          cases += 1;
         }
       }
     }
+    expect(cases).toBe(DEEP_SKY.length * BORTLES.length * APERTURES.length);
+    const unreachable = EXPECTATION_KEYS.filter((key) => !reached.has(key));
+    expect(unreachable).toEqual([]);
   });
 
-  it("never brightens the band at a worse sky, for every object", () => {
+  it("never brightens the band at a worse sky, and never fades it at a bigger aperture, for every object", () => {
+    expect(DEEP_SKY.length).toBeGreaterThanOrEqual(150);
+    let steps = 0;
     for (const o of DEEP_SKY) {
       for (const aperture of APERTURES) {
         let previous = -1;
@@ -62,22 +64,20 @@ describe("expectationFor: the invariants (D-3)", () => {
           const rank = BAND_RANK[contrastBand(o, bortle, aperture)];
           expect(rank, `${o.id} ${aperture} mm, Bortle ${bortle}`).toBeGreaterThanOrEqual(previous);
           previous = rank;
+          steps += 1;
         }
       }
-    }
-  });
-
-  it("never fades the band at a bigger aperture, for every object", () => {
-    for (const o of DEEP_SKY) {
       for (const bortle of BORTLES) {
         let previous = Number.POSITIVE_INFINITY;
         for (const aperture of APERTURES) {
           const rank = BAND_RANK[contrastBand(o, bortle, aperture)];
           expect(rank, `${o.id} Bortle ${bortle}, ${aperture} mm`).toBeLessThanOrEqual(previous);
           previous = rank;
+          steps += 1;
         }
       }
     }
+    expect(steps).toBe(DEEP_SKY.length * APERTURES.length * BORTLES.length * 2);
   });
 
   it("never regresses a globular cluster's resolution as the aperture grows", () => {
@@ -94,60 +94,6 @@ describe("expectationFor: the invariants (D-3)", () => {
         }
       }
     }
-  });
-
-  it("reaches every key through some catalogue object at some setting", () => {
-    const reached = new Set<ExpectationKey>();
-    for (const o of DEEP_SKY) {
-      for (const bortle of BORTLES) {
-        for (const aperture of APERTURES) {
-          reached.add(expectationFor(o, bortle, aperture));
-        }
-      }
-    }
-    const unreachable = EXPECTATION_KEYS.filter((key) => !reached.has(key));
-    expect(unreachable).toEqual([]);
-  });
-});
-
-describe("expectationFor: the table's boundaries", () => {
-  it("calls a planetary nebula under the star-like size star-like, and one at it a disc or fainter", () => {
-    const small = object({ type: "planetary-nebula", vMag: 9, majorAxisArcmin: EXPECT_STARLIKE_ARCMIN - 0.01 });
-    const sized = object({ type: "planetary-nebula", vMag: 9, majorAxisArcmin: EXPECT_STARLIKE_ARCMIN });
-    expect(expectationFor(small, 4, 150)).toBe("planetaryStarLike");
-    expect(expectationFor(sized, 4, 150)).not.toBe("planetaryStarLike");
-  });
-
-  it("calls an open cluster of 60 arcminutes wide, and one just under it not wide", () => {
-    const wide = object({ type: "open-cluster", vMag: 2, majorAxisArcmin: EXPECT_WIDE_ARCMIN });
-    const narrower = object({ type: "open-cluster", vMag: 2, majorAxisArcmin: EXPECT_WIDE_ARCMIN - 1 });
-    expect(expectationFor(wide, 4, 150)).toBe("openClusterWide");
-    expect(expectationFor(narrower, 4, 150)).not.toBe("openClusterWide");
-  });
-
-  it("applies the near-limit floor: a compact object at the telescope's limit is at least faint", () => {
-    const limit = telescopeLimitingMag(4, 150);
-    const nearLimit = object({ type: "planetary-nebula", vMag: limit - 0.5, majorAxisArcmin: 0.1 });
-    const clear = object({ type: "planetary-nebula", vMag: limit - 4, majorAxisArcmin: 0.1 });
-    expect(contrastBand(clear, 4, 150)).toBe("bright");
-    expect(contrastBand(nearLimit, 4, 150)).toBe("faint");
-  });
-
-  it("gives the objects without a major axis their fixed keys", () => {
-    const m40 = catalogued("M40");
-    const m73 = catalogued("M73");
-    expect(m40.majorAxisArcmin).toBeNull();
-    expect(m73.majorAxisArcmin).toBeNull();
-    for (const bortle of BORTLES) {
-      for (const aperture of APERTURES) {
-        expect(expectationFor(m40, bortle, aperture)).toBe("doubleStar");
-        expect(expectationFor(m73, bortle, aperture)).toBe("other");
-      }
-    }
-  });
-
-  it("takes the asterism key for an asterism", () => {
-    expect(expectationFor(object({ type: "asterism", majorAxisArcmin: 30 }), 4, 150)).toBe("asterism");
   });
 });
 
@@ -233,6 +179,40 @@ describe("expectationFor: the reference fixture (D-6)", () => {
       expect(computed, `${entry.id}: computed key`).toBe(entry.computed);
       expect(entry.computed, `${entry.id}: still diverges`).not.toBe(entry.expected);
       expect(entry.reason, entry.id).not.toBe("");
+    }
+  });
+});
+
+/**
+ * The OpenNGC `Hubble` values of the catalogue's galaxies that are NOT in `BULGE_HUBBLE_TYPES`: discs, ellipticals,
+ * irregulars and the one unclassified (`S?`). An unknown value after a catalogue pin bump fails the coverage test
+ * below, so the new type is put in one list or the other on purpose.
+ */
+const DISC_OR_OTHER_HUBBLE_TYPES: readonly string[] = [
+  "E",
+  "Sbc",
+  "Sc",
+  "SABc",
+  "SBbc",
+  "SBcd",
+  "SBd",
+  "SBm",
+  "IB",
+  "I",
+  "S?",
+];
+
+describe("Hubble coverage", () => {
+  it("puts every catalogue galaxy's Hubble type in the bulge list or the explicit disc-or-other list, and keeps them apart", () => {
+    const galaxies = DEEP_SKY.filter((o) => o.type === "galaxy");
+    expect(galaxies).toHaveLength(68);
+    for (const o of galaxies) {
+      const known =
+        o.hubble !== null && (BULGE_HUBBLE_TYPES.includes(o.hubble) || DISC_OR_OTHER_HUBBLE_TYPES.includes(o.hubble));
+      expect(known, `${o.id}: hubble ${String(o.hubble)} is in neither list`).toBe(true);
+    }
+    for (const type of DISC_OR_OTHER_HUBBLE_TYPES) {
+      expect(BULGE_HUBBLE_TYPES, type).not.toContain(type);
     }
   });
 });
