@@ -1,10 +1,10 @@
 ---
 change_id: ui-sky-mode-trigger
 title: One fixed "change the sky view" icon on the sky-mode trigger
-status: implemented
+status: archived
 created: 2026-10-17
 updated: 2026-10-17
-archived_at: null
+archived_at: 2026-10-17T18:42:28Z
 ---
 
 ## Notes
