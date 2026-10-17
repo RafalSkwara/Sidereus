@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * Mark observed from the Targets page, end to end (S-06, FR-016 / FR-018; the Targets page since tonight-dashboard),

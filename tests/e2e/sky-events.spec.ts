@@ -1,11 +1,11 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { EVENT_WINDOW_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid } from "./helpers";
+import { onboardInMadrid, test } from "./helpers";
 
 /*
  * The sky events page, end to end (M-3 S-07, sky-events Phase 4): a fresh user in Madrid on the all-clear forecast

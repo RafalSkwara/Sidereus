@@ -1,9 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The telescope selector and the gear-deletion empty states on Tonight, end to end (S-08, FR-019 / FR-021),

@@ -1,9 +1,9 @@
-import { expect, test, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForServiceWorker } from "./helpers";
+import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, test, waitForServiceWorker } from "./helpers";
 import { Proxy } from "./offline-proxy";
 
 /*
@@ -80,14 +80,19 @@ interface Opened {
   keys: string[];
 }
 
+// clock: real (the service worker compares each copy's `preparedAt` with its own real clock to expire it, and `page.clock`
+// does not reach the worker's scope); the expectations come from page data (`data-night-date`, `html[data-from-device]`).
+test.use({ clock: "real" });
+
 /**
- * A fresh full-plan user on the proxy's origin with the suggested plan opened and its pair stored; skips the test when
- * tonight's plan is not editable. The caller closes the context and stops the proxy.
+ * A fresh full-plan user on the proxy's origin with the suggested plan opened and its pair stored; fails when the plan
+ * is not editable. The caller closes the context and stops the proxy.
  */
 async function openSuggestedPlan(browser: Browser, testInfo: TestInfo, prefix: string): Promise<Opened> {
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
   await proxy.start();
   // Its own context on the proxy's origin, so the service worker registers there.
+  // clock: real (the worker's own clock decides expiry; see the `test.use` above)
   const context = await browser.newContext({ baseURL: proxy.origin });
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: proxy.origin }]);
   try {
@@ -98,8 +103,9 @@ async function openSuggestedPlan(browser: Browser, testInfo: TestInfo, prefix: s
 
     // Online: the suggested plan is drawn and its pair stored.
     await page.goto(PLAN_PAGE);
-    const editable = await planEditable(page);
-    test.skip(!editable, "tonight's plan is not editable (the night does not pass)");
+    // A fresh full-plan user has saved nothing, so tonight's plan is `suggested` at every hour (`held` needs a saved list
+    // for a night that does not pass): asserted from the page, never skipped.
+    expect(await planEditable(page), "a fresh full-plan user's plan is editable").toBe(true);
     await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "suggested");
     const rows = page.locator("[data-session-plan-row]");
     expect(await rows.count(), "the fixture's clear night recommends several targets").toBeGreaterThan(1);
@@ -115,7 +121,7 @@ async function openSuggestedPlan(browser: Browser, testInfo: TestInfo, prefix: s
     await expect.poll(() => storedPlanState(page), { timeout: 30_000 }).toBe("suggested");
     return { page, context, proxy, site: site ?? "", night: night ?? "", keys };
   } catch (error) {
-    // A skip or a failed step: nothing returned, so the caller cannot close these; the error itself carries on.
+    // A failed step: nothing returned, so the caller cannot close these; the error itself carries on.
     await context.close();
     await proxy.stop();
     throw error;

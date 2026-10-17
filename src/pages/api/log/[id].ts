@@ -1,3 +1,4 @@
+import { requestNow } from "@/lib/clock";
 import type { APIRoute } from "astro";
 import { CHECK_FIELDS, NOT_CONFIGURED, issueKey, readForm } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
@@ -48,7 +49,7 @@ export const POST: APIRoute = async (context) => {
     record: (states) => milestoneStore.record(supabase, states),
     counts: parsed.data.rating >= LOG_PENALTY_MIN_RATING,
     route: "edit",
-    write: () => observationStore.update(supabase, id, parsed.data, new Date()),
+    write: () => observationStore.update(supabase, id, parsed.data, requestNow(context.locals)),
   });
   if (!result.ok) {
     return fail(saveFailureKey("save.log", result));

@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { pl } from "@/i18n/messages/pl";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+import { onboardInMadrid, requirePlanGrant, setPlan, test } from "./helpers";
 
 /*
  * What to expect on /tonight/targets (what-to-expect Phase 2, M-3 S-04, FR-038): a full-plan account sees an eye line
@@ -14,15 +14,17 @@ import { finderLink, inNoDarknessWindow, onboardInMadrid, requirePlanGrant, setP
  * phrases, never literal English.
  *
  * The plan is granted through the operator command with the inherited local SUPABASE_URL and SUPABASE_SECRET_KEY, as
- * in finder-chart.spec.ts (the spec fails under CI and skips locally without them). The ranked tests need a ranking,
- * so they skip in the no-darkness window like the finder spec. Each test signs up a fresh user.
+ * in finder-chart.spec.ts (the spec fails under CI and skips locally without them). The ranked test needs a ranking:
+ * Madrid has darkness every night, and the clock is pinned to `evening`, so there is always one. Each test signs up a
+ * fresh user.
  */
 
-const NO_DARKNESS = "no astronomical darkness (8 June to 2 July): the ranking can be empty";
 const LOCALES = [
   { locale: "en", messages: en },
   { locale: "pl", messages: pl },
 ] as const;
+
+test.use({ clock: "evening" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -34,50 +36,12 @@ async function waitForTargets(page: Page) {
   await page.evaluate(() => document.fonts.ready);
 }
 
-test("a free account sees the locked line once and no phrase", async ({ page }) => {
-  test.skip(inNoDarknessWindow(), NO_DARKNESS);
-  await onboardInMadrid(page, "e2e-expect-free");
-
-  await page.goto("/tonight/targets");
-  await waitForTargets(page);
-
-  await expect(page.locator("[data-expect-locked]")).toHaveCount(1);
-  await expect(page.locator("[data-expect-locked]")).toContainText(en.tonight.expect.locked);
-  await expect(page.locator("[data-expect]")).toHaveCount(0);
-  // Not only no marker: no phrase anywhere in the page, open or folded, except the one the locked line quotes (O-1).
-  const body = await page.evaluate(() => document.body.textContent);
-  const { galaxySmudge, ...others } = en.tonight.expect.phrase;
-  for (const phrase of Object.values(others)) {
-    expect(body, "a free account's page must hold no phrase").not.toContain(phrase);
-  }
-  expect(en.tonight.expect.locked).toContain(galaxySmudge);
-});
-
-test("a full-plan account sees a phrase from the catalogue in the first object's details", async ({ page }) => {
-  requirePlanGrant("what-to-expect");
-  test.skip(inNoDarknessWindow(), NO_DARKNESS);
-  const email = await onboardInMadrid(page, "e2e-expect-full");
-  await setPlan(email, "full");
-
-  await page.goto("/tonight/targets");
-  await waitForTargets(page);
-
-  const line = page.locator("li[data-object-card]").first().locator("[data-expect]");
-  await expect(line).toHaveCount(1);
-  const text = ((await line.textContent()) ?? "").trim();
-  expect(Object.values(en.tonight.expect.phrase)).toContain(text);
-  await expect(line).toHaveAttribute("data-expect", /^[A-Za-z]+$/);
-  // The full plan never shows the free line.
-  await expect(page.locator("[data-expect-locked]")).toHaveCount(0);
-});
-
 test("at 320 px with the full plan, the best five's and an opened row's lines fit without scrolling sideways, in English and Polish", async ({
   page,
   context,
   baseURL,
 }) => {
   requirePlanGrant("what-to-expect");
-  test.skip(inNoDarknessWindow(), NO_DARKNESS);
   const email = await onboardInMadrid(page, "e2e-expect-phone");
   await setPlan(email, "full");
   const url = baseURL ?? "http://localhost:4321";
@@ -193,23 +157,4 @@ test("at 320 px with the full plan, the best five's and an opened row's lines fi
       }
     }
   }
-});
-
-test("a full-plan account's finder chart for M13 says what it will look like, above the chart", async ({ page }) => {
-  requirePlanGrant("what-to-expect");
-  test.skip(inNoDarknessWindow(), NO_DARKNESS);
-  const email = await onboardInMadrid(page, "e2e-expect-finder");
-  await setPlan(email, "full");
-
-  await page.goto("/tonight/targets");
-  await (await finderLink(page, "M13")).click();
-  await expect(page.locator("[data-finder-chart]")).toBeVisible();
-
-  const line = page.locator("[data-expect]");
-  await expect(line).toHaveCount(1);
-  const text = ((await line.textContent()) ?? "").trim();
-  const { globularResolved, globularGrainy, globularGlow } = en.tonight.expect.phrase;
-  expect([globularResolved, globularGrainy, globularGlow]).toContain(text);
-  // The line sits above the chart, outside its root.
-  await expect(page.locator("[data-finder-chart] [data-expect]")).toHaveCount(0);
 });

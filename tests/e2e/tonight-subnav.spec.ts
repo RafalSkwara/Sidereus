@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { TONIGHT_NAV } from "@/lib/navigation";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, requirePlanGrant, setPlan } from "./helpers";
+import { onboardInMadrid, requirePlanGrant, setPlan, test } from "./helpers";
 
 /*
  * The Tonight sub-nav, end to end (ui-tonight-nav Phase 2, 4A): the six focused pages carry one row of seven chips in

@@ -1,8 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { THEME_COOKIE } from "@/lib/preferences";
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * Red night mode (S-10, FR-024) through the top bar's theme button (nav-motion-theme-cycle): each tap moves to the

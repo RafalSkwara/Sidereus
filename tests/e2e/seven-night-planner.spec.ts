@@ -1,11 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { translateKey } from "@/i18n";
 import { en } from "@/i18n/messages/en";
 import { OUTLOOK_NIGHTS } from "@/lib/engine/parameters";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The seven-night strip and site switching, end to end (S-05, US-03, FR-011 / FR-012), walked by one user from the

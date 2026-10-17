@@ -1,14 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
 import {
   finderLink,
-  inNoDarknessWindow,
+  firstTargetKey,
   onboardInMadrid,
   requirePlanGrant,
   setPlan,
+  test,
   waitForServiceWorker,
 } from "./helpers";
 import { Proxy } from "./offline-proxy";
@@ -32,10 +33,6 @@ import { Proxy } from "./offline-proxy";
 const TONIGHT_CACHE = "sidereus-tonight-v1";
 const INDEX_KEY = "/__offline/index.json";
 
-/** M13 is a pinned target: a bright globular cluster that Madrid's all-clear fixture night ranks for most of the year. */
-const TARGET = "M13";
-const FINDER_TITLE = en.tonight.finder.title({ target: TARGET });
-
 /** The pages (and chart targets) the worker's index holds right now: "<page> <target or -> <kind>", sorted. */
 function storedCopies(page: Page) {
   return page.evaluate(
@@ -54,6 +51,10 @@ async function storedCharts(page: Page) {
   return (await storedCopies(page)).filter((copy) => copy.startsWith("/tonight/finder "));
 }
 
+// clock: real (the service worker compares the copy's `preparedAt` with its own real clock to expire it, and `page.clock`
+// does not reach the worker); the expectations come from page data, the first Targets row and the copy's own markers.
+test.use({ clock: "real" });
+
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
 });
@@ -62,11 +63,11 @@ test("a chart opened online opens from the device offline, and is gone once the 
   browser,
 }, testInfo) => {
   requirePlanGrant("finder-offline");
-  test.skip(inNoDarknessWindow(), "no astronomical darkness (8 June to 2 July): the ranking can be empty");
   test.setTimeout(240_000);
   const proxy = new Proxy(new URL(testInfo.project.use.baseURL ?? "http://localhost:4321"));
   await proxy.start();
   // Its own context on the proxy's origin, so the service worker registers there.
+  // clock: real (the worker's own clock decides expiry; see the `test.use` above)
   const context = await browser.newContext({ baseURL: proxy.origin });
   try {
     await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: proxy.origin }]);
@@ -75,9 +76,13 @@ test("a chart opened online opens from the device offline, and is gone once the 
     await setPlan(email, "full");
     await waitForServiceWorker(page);
 
-    // Online: Targets, then M13's chart from its link; both pairs are committed.
+    // Online: Targets, then the first row's chart from its link; both pairs are committed. The object is read from the
+    // page (whatever ranks first tonight), never a literal: no season or date decides the test.
     await page.goto("/tonight/targets");
     await expect(page.locator("[data-offline-copy]")).toBeAttached();
+    const TARGET = await firstTargetKey(page);
+    const FINDER_TITLE = en.tonight.finder.title({ target: TARGET });
+    const NEVER_OPENED = TARGET === "NGC7000" ? "M31" : "NGC7000";
     await (await finderLink(page, TARGET)).click();
     await expect(page.locator("[data-finder-chart]")).toBeVisible();
     await expect(page.locator("[data-offline-copy]")).toHaveAttribute("data-plan", "full");
@@ -114,7 +119,7 @@ test("a chart opened online opens from the device offline, and is gone once the 
     await expect(page.locator("html")).toHaveAttribute("data-from-device");
 
     // A chart never opened online is not on the device: its URL lands on /offline.
-    await page.goto("/tonight/finder?object=NGC7000");
+    await page.goto(`/tonight/finder?object=${NEVER_OPENED}`);
     await expect(page.locator("html")).toHaveAttribute("data-from-device");
     await expect(page.getByRole("heading", { level: 1, name: en.offline.page.title })).toBeVisible();
     await expect(page.locator("[data-finder-chart]")).toHaveCount(0);

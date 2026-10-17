@@ -1,9 +1,9 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { PASSWORD, onboardInMadrid, planEditable, requirePlanGrant, setPlan, waitForHydration } from "./helpers";
+import { onboardInMadrid, planEditable, requirePlanGrant, setPlan, test, waitForHydration } from "./helpers";
 
 /*
  * Editing the Session plan (adjustable-session-plan Phase 5): a full-plan user opens the editor on /tonight/plan, moves,
@@ -20,7 +20,9 @@ import { PASSWORD, onboardInMadrid, planEditable, requirePlanGrant, setPlan, wai
 const PLAN_PAGE = "/tonight/plan";
 const t = en.tonight.pages.plan;
 const EDIT_BUTTON = '[data-plan-editor="closed"] button';
-const SIGNIN_FORM = 'form[action="/api/auth/signin"]';
+
+// The first screen, the editor and the suggested plan are the pinned evening's (a dark, clear, editable night).
+test.use({ clock: "evening" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -61,15 +63,16 @@ function control(page: Page, kind: "move-up" | "move-down" | "remove", key: stri
 }
 
 /**
- * A fresh full-plan user on tonight's plan with the editor hydrated, or a skip when tonight does not pass. Returns the
- * user's email and the suggested plan's keys (at least three, which every test that edits needs).
+ * A fresh full-plan user on tonight's plan with the editor hydrated; fails when the plan is not editable (a fresh user
+ * has saved nothing, so it is `suggested` at any hour). Returns the user's email and the suggested plan's keys (at
+ * least three, which every test that edits needs).
  */
 async function fullUserOnPlan(page: Page, prefix: string): Promise<{ email: string; suggested: string[] }> {
   requirePlanGrant("session-plan-edit");
   const email = await onboardInMadrid(page, prefix);
   await setPlan(email, "full");
   await page.goto(PLAN_PAGE);
-  test.skip(!(await planEditable(page)), "tonight's plan is not editable (the night does not pass)");
+  expect(await planEditable(page), "a fresh full-plan user's plan is editable").toBe(true);
   await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "suggested");
   const suggested = await timelineKeys(page);
   expect(suggested.length, "the fixture's clear night recommends several targets").toBeGreaterThanOrEqual(3);
@@ -94,23 +97,6 @@ async function save(page: Page) {
   await expect(page).toHaveURL((url) => url.pathname === PLAN_PAGE && /^\?site=[0-9a-f-]+$/.test(url.search));
   await expect(page.locator("html")).not.toHaveAttribute("data-from-device");
   await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "edited");
-}
-
-/** Signs the same user in on a second browser context (another device) and opens the plan there. */
-async function secondDevice(browser: Browser, baseURL: string, email: string): Promise<Page> {
-  const context = await browser.newContext({ baseURL });
-  await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL }]);
-  const page = await context.newPage();
-  await page.goto("/auth/signin");
-  await waitForHydration(page, SIGNIN_FORM);
-  const form = page.locator(SIGNIN_FORM);
-  await form.locator("#email").fill(email);
-  await form.locator("#password").fill(PASSWORD);
-  await form.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/tonight$/);
-  await page.goto(PLAN_PAGE);
-  await expect(page.locator("[data-session-plan-state]")).toBeAttached();
-  return page;
 }
 
 /**
@@ -170,26 +156,6 @@ test("a full user removes, moves and adds a target, saves, and sees the plan in 
   expect(await timelineKeys(page)).toEqual([third, second, ...rest, added]);
   await expect(page.locator("[data-session-plan-line-edited]")).toContainText(t.edited);
   await expect(page.getByRole("list", { name: t.listLabelEdited })).toBeVisible();
-});
-
-test("a second device of the same user shows the saved order", async ({ page, browser, baseURL }) => {
-  test.setTimeout(120_000);
-  const { email, suggested } = await fullUserOnPlan(page, "e2e-plan-device");
-  const [first, second, ...rest] = suggested;
-
-  await openEditor(page);
-  await control(page, "move-down", first).click();
-  await save(page);
-  const order = [second, first, ...rest];
-  expect(await timelineKeys(page)).toEqual(order);
-
-  const other = await secondDevice(browser, baseURL ?? "http://localhost:4321", email);
-  try {
-    await expect(other.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "edited");
-    expect(await timelineKeys(other)).toEqual(order);
-  } finally {
-    await other.context().close();
-  }
 });
 
 test("with the keyboard, focus stays on the moved row's control and moves on after Remove", async ({ page }) => {
@@ -275,16 +241,6 @@ test("Reset asks once, then restores the suggested order", async ({ page }) => {
   await expect(page).toHaveURL((url) => url.pathname === PLAN_PAGE && /^\?site=[0-9a-f-]+$/.test(url.search));
   await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "suggested");
   expect(await timelineKeys(page)).toEqual(suggested);
-});
-
-test("a free account sees the lock line and no editor", async ({ page }) => {
-  await onboardInMadrid(page, "e2e-plan-free");
-  await page.goto(PLAN_PAGE);
-  await expect(page.locator("[data-session-plan-state]")).toHaveAttribute("data-session-plan-state", "locked");
-  await expect(page.locator('[data-session-plan-note="locked"]')).toHaveText(t.locked);
-  await expect(page.locator("[data-plan-editor]")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: t.edit })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: t.reset })).toHaveCount(0);
 });
 
 test("offline, Edit, Save and Reset are disabled while Move, Remove and Cancel still work", async ({

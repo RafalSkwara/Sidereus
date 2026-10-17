@@ -1,3 +1,4 @@
+import { requestNow } from "@/lib/clock";
 import type { APIRoute } from "astro";
 import { CHECK_FIELDS, NOT_CONFIGURED, issueKey, readForm } from "@/lib/api-errors";
 import type { MessageKey } from "@/i18n";
@@ -46,7 +47,7 @@ export const POST: APIRoute = async (context) => {
     return fail("errors.observation.objectInvalid");
   }
 
-  const write = () => observationStore.create(supabase, parsed.data, new Date());
+  const write = () => observationStore.create(supabase, parsed.data, requestNow(context.locals));
   // The create short-circuit: a rating below the bar skips the milestone reads and the record entirely.
   const { result, celebrate } =
     parsed.data.rating >= LOG_PENALTY_MIN_RATING

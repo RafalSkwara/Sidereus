@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import type { TelescopeEntry } from "@/lib/gear/catalogue/types";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The gear catalogue on the telescope form, end to end (gear-catalogue): typing a model and pressing Enter fills the

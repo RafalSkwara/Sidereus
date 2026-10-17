@@ -1,10 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 import { createFormatter } from "@/lib/tonight/format";
 
-import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The observation log, end to end (S-07, FR-017 / FR-021 / FR-022), walked by one user from the shared

@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
@@ -6,7 +6,7 @@ import type { MilestoneKey } from "@/lib/progress/milestones";
 import { createFormatter } from "@/lib/tonight/format";
 import { TOAST_MS } from "@/lib/toasts";
 
-import { madridDateDaysAgo, onboardInMadrid, waitForHydration } from "./helpers";
+import { madridDateDaysAgo, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * Observing milestones (M-3 S-06, FR-041, US-06): the record half and the celebration. A milestone is stored at save,
@@ -157,7 +157,7 @@ test("records a milestone once, at save, and keeps it listed", async ({ page }) 
   await expectAhead(page, "messier-10", copy.progress({ seen: "0", total: "10" }));
 });
 
-test("celebrates a milestone once, at save", async ({ page }) => {
+test("celebrates a milestone once, at save", async ({ page, pinnedNow }) => {
   test.setTimeout(180_000);
   await onboardInMadrid(page, "e2e-milestones-celebration");
   const celebrationCopy = copy.celebration;
@@ -171,8 +171,8 @@ test("celebrates a milestone once, at save", async ({ page }) => {
   const form = await openEntry(page, "M31");
   await expect(form.getByRole("radio", { name: "2", exact: true })).toBeChecked();
   await rate(form, 4);
-  // A fake clock from here on, so the toast's 10 s timer can be run past while the dialog covers it (impl review F1).
-  await page.clock.install();
+  // The clock fixture's fake clock (helpers.ts) lets the toast's 10 s timer be run past while the dialog covers it
+  // (impl review F1).
   await form.locator('button[type="submit"]').click();
   await expect(page).toHaveURL(/\/log(\?|$)/);
   await expect(celebration(page)).toHaveCount(1);
@@ -232,8 +232,14 @@ test("celebrates a milestone once, at save", async ({ page }) => {
   await page.getByRole("button", { name: en.log.delete }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: en.log.delete }).click();
   await expect(page).toHaveURL(/\/log(\?|$)/);
-  const night = await logEntry(page, "/log/new?object=M31&from=log", 5, /\/log(\?|$)/, madridDateDaysAgo(3));
-  expect(night).toBe(madridDateDaysAgo(3));
+  const night = await logEntry(
+    page,
+    "/log/new?object=M31&from=log",
+    5,
+    /\/log(\?|$)/,
+    madridDateDaysAgo(3, pinnedNow()),
+  );
+  expect(night).toBe(madridDateDaysAgo(3, pinnedNow()));
   await expect(page.locator("[data-toast]")).toContainText(en.log.list.saved({ object: "M31" }));
   await expectNoCelebration(page);
 });

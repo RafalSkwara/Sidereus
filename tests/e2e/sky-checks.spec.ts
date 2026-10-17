@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { madridDateDaysAgo, onboardInMadrid, seedSkyCheck } from "./helpers";
+import { madridDateDaysAgo, onboardInMadrid, seedSkyCheck, test } from "./helpers";
 
 /*
  * The verdict check end to end (verdict-check, roadmap M-2 S-07): a past night Tonight judged "Clear" is asked about
@@ -23,9 +23,10 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 test("a past night is asked about on Tonight, answered, tallied and changed on the sky checks page", async ({
   page,
+  pinnedNow,
 }) => {
   const email = await onboardInMadrid(page, "e2e-sky");
-  const night = madridDateDaysAgo(2);
+  const night = madridDateDaysAgo(2, pinnedNow());
   await seedSkyCheck(email, { night, headline: "go" });
 
   await page.goto("/tonight");

@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./helpers";
+import { dismissCelebrationIfOpen, onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * The Moon as a target, end to end (M-2 S-02, moved into the Moon card by moonlight-and-the-verdict and onto the Moon
@@ -12,13 +12,15 @@ import { dismissCelebrationIfOpen, onboardInMadrid, waitForHydration } from "./h
  * FORECAST_BASE_URL pointing at `tests/e2e/forecast-fixture.mjs` (an all-clear sky), and place search stubbed with
  * Madrid.
  *
- * The Moon card shows every night, but the clock is real, so on roughly half of all nights the Moon is not a target
- * (not up between dusk and dawn, or too thin a crescent) and the spec skips. It proves the logging flow when it runs;
- * what the card says on a given night, faint-objects line included, is pinned on fixed nights by the build's unit
- * tests.
+ * The clock is pinned to `evening` (17 October at Madrid: a waxing Moon, up and lit in the dark window), so the Moon is
+ * a target at any real date and hour. What the card says on a given night, faint-objects line included, is pinned on
+ * fixed nights by the build's unit tests.
  */
 
 const LOG_FORM = 'form[action="/api/log"]';
+
+// The Moon and the planet are the pinned evening's (17 October at Madrid), whatever the real date or hour.
+test.use({ clock: "evening" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -34,10 +36,8 @@ test("marking the Moon observed on the Moon page saves it, tags the card and lis
   await expect(moonCard.getByRole("heading", { level: 2 })).toBeVisible();
   const name = en.targets.moon;
   const markObserved = moonCard.getByRole("link", { name: en.tonight.moon.markObserved({ name }) });
-  if ((await markObserved.count()) === 0) {
-    test.skip(true, "the Moon is not a target in Madrid between dusk and dawn tonight");
-  }
-
+  // On the pinned evening the Moon is up and lit in the dark window, so it is a target; none is a regression.
+  await expect(markObserved, "the Moon is a target on the pinned evening").toHaveCount(1);
   await markObserved.click();
 
   // The form arrives prefilled with the Moon's target key and tonight's night, site and telescope.

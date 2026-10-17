@@ -1,3 +1,4 @@
+import { requestNow } from "@/lib/clock";
 import type { APIRoute } from "astro";
 import type { MessageKey } from "@/i18n";
 import { requireFullPlan } from "@/lib/account-plan";
@@ -58,7 +59,7 @@ export const POST: APIRoute = async (context) => {
     if (own === null) {
       return fail("errors.notFound.site");
     }
-    if (night !== tonightDateForSite(own, new Date())) {
+    if (night !== tonightDateForSite(own, requestNow(context.locals))) {
       return fail("errors.sessionPlan.nightOver");
     }
     const stored = await sessionPlanStore.get(supabase, siteId, night);

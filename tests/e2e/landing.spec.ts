@@ -1,8 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
-import { signUp } from "./helpers";
+import { signUp, test } from "./helpers";
 
 /*
  * The landing page (ui-landing): `/` is for signed-out visitors only. Its look is checked by screenshots; this pins

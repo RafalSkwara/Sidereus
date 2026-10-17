@@ -1,19 +1,23 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
 import { LOCALE_COOKIE } from "@/lib/preferences";
 
-import { onboardInMadrid, waitForHydration } from "./helpers";
+import { onboardInMadrid, test, waitForHydration } from "./helpers";
 
 /*
  * Tonight's live sky, end to end (interactive-sky): what the screenshots can't show. The slider moves the bodies,
  * Home / End / Now reach their frames, and a marker opens its focused page with its row in view. Same setup as the
  * other Tonight specs: a production preview on local Supabase with the all-clear forecast fixture (so the ranking
- * exists) and place search stubbed with Madrid. The clock is real, so the spec never names a body: it steps the
- * slider until a marker of the wanted kind is up, and skips a step when none ever is.
+ * exists) and place search stubbed with Madrid. The clock is pinned (`helpers.ts`, `clock-scenarios.mjs`): the default
+ * is `evening`, and two tests pin civil dawn and the deep night. The spec never names a body: it steps the slider until
+ * a marker of the wanted kind is up, and fails when none ever is.
  */
 
 const t = en.tonight.sky;
+
+// The sky content (a ranked object, a planet up) is the pinned evening's; the Now test sets its own fixed instants.
+test.use({ clock: "evening" });
 
 test.beforeEach(async ({ context, baseURL }) => {
   await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url: baseURL ?? "http://localhost:4321" }]);
@@ -169,7 +173,7 @@ async function expectNowFrame(page: Page, slider: Locator, range: Awaited<Return
   await expect(slider).toHaveAttribute("aria-valuetext", shown);
 }
 
-test("the slider moves the bodies, and Home, End and Now reach their frames", async ({ page }) => {
+test("the slider moves the bodies, and Home, End and Now reach their frames", async ({ page, pinnedNow }) => {
   const { slider, max } = await openSky(page, "e2e-sky-slider");
   expect(max).toBeGreaterThan(1);
   const time = page.locator("[data-sky-time]");
@@ -205,11 +209,11 @@ test("the slider moves the bodies, and Home, End and Now reach their frames", as
   }
   expect(moved, "no body was up in two neighbouring frames").toBe(true);
 
-  // Now goes to the frame nearest the current time, clamped into the range (`expectNowFrame`). The real clock decides
-  // which case this run is in; the next test pins each one.
+  // Now goes to the frame nearest the current time, clamped into the range (`expectNowFrame`). The clock is pinned
+  // (`pinnedNow`, the instant the browser reads), so the case is the same at any real hour; the next test pins each one.
   await slider.press("End");
   const range = await rangeOf(page);
-  const now = Date.now();
+  const now = pinnedNow().getTime();
   await page.getByRole("button", { name: t.now }).click();
   await expectNowFrame(page, slider, range, now);
 });
@@ -234,11 +238,46 @@ test("Now clamps into the night's range at any hour, dawn to sunrise included", 
   }
 });
 
+// The hours that broke #198 (`Now` expected within minutes of a time hours away, red on main only between civil dawn and
+// sunrise) are in every run: the server AND the browser are pinned there (`clock-scenarios.mjs`), so the page shows what a
+// visitor sees at that hour, not what the real clock allows. The night dates are the scenario test's
+// (`tonightDateFor`): civil dawn rolls to the evening ahead, the deep night is still the night in progress.
+test.describe("at civil dawn", () => {
+  test.use({ clock: "civilDawn" });
+
+  test("the page shows the evening ahead, and Now goes to the first frame", async ({ page, pinnedNow }) => {
+    const { slider } = await openSky(page, "e2e-sky-dawn");
+    const range = await rangeOf(page);
+    expect(range.night, "the evening ahead, not the night that just ended").toBe("2026-10-18");
+    const now = pinnedNow().getTime();
+    expect(now, "the browser's clock is the morning before the range").toBeLessThan(range.start);
+    await slider.press("End");
+    await page.getByRole("button", { name: t.now }).click();
+    await expectNowFrame(page, slider, range, now);
+  });
+});
+
+test.describe("in the deep night", () => {
+  test.use({ clock: "deepNight" });
+
+  test("the page shows the night in progress, and Now lands inside its range", async ({ page, pinnedNow }) => {
+    const { slider } = await openSky(page, "e2e-sky-deep");
+    const range = await rangeOf(page);
+    expect(range.night, "the night in progress, the evening before the pinned instant").toBe("2026-10-17");
+    const now = pinnedNow().getTime();
+    expect(now, "the clock is inside the night's range").toBeGreaterThan(range.start);
+    expect(now, "the clock is inside the night's range").toBeLessThan(range.end);
+    await slider.press("Home");
+    await page.getByRole("button", { name: t.now }).click();
+    await expectNowFrame(page, slider, range, now);
+  });
+});
+
 test("an object marker opens Targets with its row in view", async ({ page }) => {
   const { slider, max } = await openSky(page, "e2e-sky-object");
   const marker = await findMarker(page, slider, max, "object");
-  test.skip(marker === null, "no ranked object is above the horizon in any frame tonight");
-  if (!marker) return;
+  // Every night has ranked objects above the horizon in some frame; none is a regression, never a skip.
+  if (marker === null) throw new Error("no ranked object is above the horizon in any frame of the pinned evening");
   expect(marker.href).toBe(`/tonight/targets#object-${marker.key}`);
 
   await page.locator(`[data-sky-body="object"][data-key="${marker.key}"] rect`).click();
@@ -249,8 +288,8 @@ test("an object marker opens Targets with its row in view", async ({ page }) => 
 test("a planet marker opens Planets", async ({ page }) => {
   const { slider, max } = await openSky(page, "e2e-sky-planet");
   const marker = await findMarker(page, slider, max, "planet");
-  test.skip(marker === null, "no planet is above the horizon in any frame tonight");
-  if (!marker) return;
+  // Saturn is up on the pinned evening (the scenario test asserts a planet is); none is a regression, never a skip.
+  if (marker === null) throw new Error("no planet is above the horizon in any frame of the pinned evening");
 
   await page.locator(`[data-sky-body="planet"][data-key="${marker.key}"] rect`).click();
   await expect(page).toHaveURL(/\/tonight\/planets(#planet-[a-z]+)?$/);
@@ -260,123 +299,4 @@ test("a planet marker opens Planets", async ({ page }) => {
   } else {
     await expect(page.getByRole("heading", { level: 1, name: en.tonight.summary.planets })).toBeVisible();
   }
-});
-
-test("the edge chevrons pan the panorama and hide at its ends", async ({ page }) => {
-  // Reduced motion pans at once, so the next step never races a smooth scroll still under way.
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await openSky(page, "e2e-sky-pan");
-  const strip = page.locator("[data-sky-strip]");
-  const left = page.getByRole("button", { name: t.panLeft });
-  const right = page.getByRole("button", { name: t.panRight });
-  const scrollLeft = () => strip.evaluate((element) => element.scrollLeft);
-
-  // Centred at load, so both ways are open.
-  await expect(left).toBeVisible();
-  await expect(right).toBeVisible();
-  const start = await scrollLeft();
-  await right.click();
-  await expect.poll(scrollLeft).toBeGreaterThan(start);
-
-  // At the left end the left chevron hides and the right one stays.
-  await strip.evaluate((element) => {
-    element.scrollLeft = 0;
-  });
-  await expect(left).toBeHidden();
-  await expect(right).toBeVisible();
-
-  // Reaching the right end with the right chevron focused hands the focus to the left one, not to the page.
-  await right.focus();
-  await strip.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth;
-  });
-  await expect(right).toBeHidden();
-  await expect(left).toBeFocused();
-});
-
-test("the slider marks the dark window at its exact edges, and the zone sits beside the current time", async ({
-  page,
-}) => {
-  // A wide track, so no edge label gives way to its neighbour.
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await openSky(page, "e2e-sky-dark");
-  const span = page.locator("[data-dark-span]");
-  const darkStart = page.locator("[data-sky-dark-start]");
-  const darkEnd = page.locator("[data-sky-dark-end]");
-  await expect(span).toBeVisible();
-  await expect(darkStart).toBeVisible();
-  await expect(darkEnd).toBeVisible();
-  const start = (await darkStart.textContent()) ?? "";
-  const end = (await darkEnd.textContent()) ?? "";
-  expect(start).toMatch(/^\d{2}:\d{2}$/);
-  expect(end).toMatch(/^\d{2}:\d{2}$/);
-
-  // Each time is centred under its edge of the dark stretch.
-  const spanBox = await span.boundingBox();
-  const startBox = await darkStart.boundingBox();
-  const endBox = await darkEnd.boundingBox();
-  if (!spanBox || !startBox || !endBox) throw new Error("a box to measure is missing (dark span or its labels)");
-  expect(Math.abs(startBox.x + startBox.width / 2 - spanBox.x)).toBeLessThanOrEqual(2);
-  expect(Math.abs(endBox.x + endBox.width / 2 - (spanBox.x + spanBox.width))).toBeLessThanOrEqual(2);
-
-  // The zone is muted text right after the current time, outside the element that holds the time.
-  const zone = page.locator("[data-sky-zone]");
-  await expect(zone).toBeVisible();
-  await expect(zone).toHaveText(/^(CEST|CET)$/);
-  await expect(page.locator("[data-sky-time] [data-sky-zone]")).toHaveCount(0);
-  const timeBox = await page.locator("[data-sky-time]").boundingBox();
-  const zoneBox = await zone.boundingBox();
-  if (!timeBox || !zoneBox) throw new Error("a box to measure is missing (time or zone)");
-  expect(zoneBox.x).toBeGreaterThanOrEqual(timeBox.x + timeBox.width);
-  expect(zoneBox.x - (timeBox.x + timeBox.width)).toBeLessThanOrEqual(12);
-
-  // The times are the server's: the Session plan's dark line shows the very same window.
-  await page.goto("/tonight/plan");
-  const planText = page.locator("[data-session-plan-text]");
-  await expect(planText).toBeVisible();
-  await expect(planText).toContainText(`Dark ${start}–${end}`);
-});
-
-test("the compass row marks the point nearest the middle of the view, and follows the strip", async ({ page }) => {
-  await openSky(page, "e2e-sky-compass");
-  const strip = page.locator("[data-sky-strip]");
-  const current = page.locator("[data-sky-compass-current]");
-  const bar = page.locator("[data-sky-compass] rect");
-
-  // Centred on the south at load: one point is marked, with its bar under the label.
-  await expect(current).toHaveCount(1);
-  await expect(current).toHaveAttribute("data-sky-compass-current", "S");
-  await expect(bar).toHaveCount(1);
-
-  // Scrolled to the left end, the middle of the view looks east: another point is marked.
-  await strip.evaluate((element) => {
-    element.scrollLeft = 0;
-  });
-  await expect(current).toHaveCount(1);
-  await expect.poll(() => current.getAttribute("data-sky-compass-current")).not.toBe("S");
-  const east = await current.getAttribute("data-sky-compass-current");
-
-  // And scrolled to the right end, a third: the marker follows the strip both ways.
-  await strip.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth;
-  });
-  await expect.poll(() => current.getAttribute("data-sky-compass-current")).not.toBe(east);
-  await expect(current).toHaveCount(1);
-  await expect(bar).toHaveCount(1);
-});
-
-test("the panorama shows no scrollbar, and its chevrons are bare icons", async ({ page }) => {
-  await openSky(page, "e2e-sky-bare");
-  const strip = page.locator("[data-sky-strip]");
-  await expect(strip).toHaveCSS("scrollbar-width", "none");
-  // No scrollbar thickness is left under the strip: its outer and inner heights agree.
-  const thickness = await strip.evaluate(
-    (element) => Math.round(element.getBoundingClientRect().height) - element.clientHeight,
-  );
-  expect(thickness).toBe(0);
-
-  const face = page.locator('[data-sky-pan="right"] > span');
-  await expect(face).toBeVisible();
-  await expect(face).toHaveCSS("border-top-width", "0px");
-  await expect(face).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });

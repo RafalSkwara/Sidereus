@@ -108,3 +108,13 @@
   - A store returns a sanitized `fault` (or throws with a `StoreFault` as `cause`), never a PostgREST message; a server fault redirects with `errors.serverFault`.
   - Search Workers Logs and write every alert by message text (`sidereus: <step> failed`), never by field; the runbook is `context/deployment/error-visibility.md`.
 - **Applies to**: plan, implement, impl-review
+
+## An e2e test never reads the real clock: pin the browser and the server, or read the page's own date
+
+- **Context**: Any Sidereus e2e spec or smoke step whose result depends on the hour, the date, the Moon, a planet or "tonight" (`tests/e2e`, `scripts/smoke.mjs`).
+- **Problem**: A test on the real clock is green on most nights and red on a few. #198 went red on main only between civil dawn and sunrise (06:16 UTC): the slider's "Now" was compared with a time hours away. Skips by date or by sky (`inNoDarknessWindow`, "no planet is up tonight", "the plan is not editable") turned the same dependence into silent non-runs. `page.clock` alone cannot fix it: the server renders every Tonight answer from its own clock, and the forecast fixture built its hours from `Date.now()`.
+- **Rule**:
+  - Every spec imports `test` from `tests/e2e/helpers.ts`, whose automatic `clock` fixture pins the browser (`context.clock.install`) and the server (the cookie `sidereus-test-now`, read by `src/lib/clock.ts`, honoured only when `SUPABASE_URL` is an exact loopback host) to one named moment of `tests/e2e/clock-scenarios.mjs` before any `goto`. A test that needs a moment names it (`test.use({ clock: "civilDawn" })`); `E2E_CLOCK` changes only the default.
+  - A hand-made context (`browser.newContext`) calls `pinContext`; the service worker specs, whose worker compares a copy's `preparedAt` with its own real clock, opt out with `test.use({ clock: "real" })` and a reason, and read their expectations from page data (`data-night-date`, `html[data-from-device]`).
+  - Never skip on a date, a Moon, a planet or a night state: assert the precondition and fail. `src/lib/e2e-clock-guard.test.ts` fails on a skip, `Date.now(`, `new Date()`, `waitForTimeout`, a `test` import from `@playwright/test`, an unexplained `clock: "real"` and a `newContext` that neither pins nor says why.
+- **Applies to**: plan, implement, impl-review
