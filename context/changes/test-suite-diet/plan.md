@@ -698,11 +698,11 @@ Not applicable. Rollback of any phase is `git revert` of its PR; Phase 5 depends
 
 #### Automated
 
-- [x] 6.1 Whole e2e suite green by default and with `E2E_CLOCK` = `evening`, `deepNight`, `civilDawn` (explicit pins win), each with `--repeat-each 2 --workers 4`
-- [x] 6.2 Only the environmental skips left (exact grep output in the note); `inNoDarknessWindow` removed
-- [x] 6.3 `e2e-clock-guard.test.ts` and the scenario-range test in `guards`; six break checks red then reverted
-- [x] 6.4 `serverNow` unit test (exact loopback hostname) and smoke green at the real hour, `civilDawn` and `noDarkness`
-- [x] 6.5 `npm run lint`, `npx astro check` green
+- [x] 6.1 Whole e2e suite green by default and with `E2E_CLOCK` = `evening`, `deepNight`, `civilDawn` (explicit pins win), each with `--repeat-each 2 --workers 4` — 68e12ae
+- [x] 6.2 Only the environmental skips left (exact grep output in the note); `inNoDarknessWindow` removed — 68e12ae
+- [x] 6.3 `e2e-clock-guard.test.ts` and the scenario-range test in `guards`; six break checks red then reverted — 68e12ae
+- [x] 6.4 `serverNow` unit test (exact loopback hostname) and smoke green at the real hour, `civilDawn` and `noDarkness` — 68e12ae
+- [x] 6.5 `npm run lint`, `npx astro check` green — 68e12ae
 
 #### Manual
 
