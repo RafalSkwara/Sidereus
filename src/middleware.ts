@@ -3,7 +3,7 @@ import { SUPABASE_URL } from "astro:env/server";
 import { sessionUser } from "@/lib/auth/session-user";
 import { createClient } from "@/lib/supabase";
 import { LOCALE_COOKIE, THEME_COOKIE, resolveLocale, resolveTheme } from "@/lib/preferences";
-import { signInUrl } from "@/lib/auth-redirect";
+import { isAuthEntryPath, safeNextPath, signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 import { readTestNow } from "@/lib/clock";
 
@@ -27,6 +27,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = supabase;
 
   context.locals.user = supabase ? await sessionUser(supabase) : null;
+
+  // A signed-in visitor has no use for the sign-in and sign-up pages: continue to `next`, else Tonight. `safeNextPath`
+  // refuses `/auth*`, so the target is never an auth page and cannot loop. A stale cookie resolves to no user above.
+  if (context.locals.user && context.request.method === "GET" && isAuthEntryPath(context.url.pathname)) {
+    return context.redirect(safeNextPath(context.url.searchParams.get("next")) ?? "/tonight");
+  }
 
   if (isProtectedPath(context.url.pathname)) {
     if (!context.locals.user) {

@@ -309,6 +309,23 @@ const steps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "//evil.example" } }),
     { status: 302, location: "/tonight", exact: true },
   ],
+  [
+    // auth-loose-ends D1: the session above is still held, so a signed-in visitor must not be left on an auth page.
+    "signed-in sign-in page redirects to tonight",
+    () => request("/auth/signin"),
+    { status: 302, location: "/tonight", exact: true },
+  ],
+  [
+    "signed-in sign-up page continues to the requested page",
+    () => request("/auth/signup?next=%2Fgear"),
+    { status: 302, location: "/gear", exact: true },
+  ],
+  [
+    // The new reader of `next` must refuse an off-site target like the sign-in route does (no open redirect).
+    "signed-in auth page ignores an off-site next",
+    () => request("/auth/signin?next=%2F%2Fevil.example"),
+    { status: 302, location: "/tonight", exact: true },
+  ],
   ["gear renders", () => request("/gear"), { status: 200 }],
   [
     "create site redirects to gear",

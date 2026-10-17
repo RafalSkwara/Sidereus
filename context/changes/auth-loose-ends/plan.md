@@ -282,9 +282,9 @@ None: no schema, no data, no environment change. Rollback is reverting the PR; n
 
 #### Automated
 
-- [ ] 1.1 Type check and lint pass: `npx astro check` and `npm run lint`
-- [ ] 1.2 Unit suites pass: `npm test`
-- [ ] 1.3 The three D1 smoke steps and the rest of the walk pass against a local production preview: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=http://localhost:4339 npm run smoke`
+- [x] 1.1 Type check and lint pass: `npx astro check` and `npm run lint`
+- [x] 1.2 Unit suites pass: `npm test`
+- [x] 1.3 The three D1 smoke steps and the rest of the walk pass against a local production preview: `SUPABASE_URL=<API_URL> SUPABASE_SECRET_KEY=<SECRET_KEY> BASE_URL=http://localhost:4339 npm run smoke`
 
 #### Manual
 
