@@ -55,9 +55,8 @@ export type ClientStep = (typeof CLIENT_STEPS)[number];
  * Not network (a fault there is always reported): `sw.index` (the index's read, parse and write), `sw.shell` (reading
  * a stored or recorded shell, where a network body cut off mid-read can add a `TypeError`, and the stored copy at the
  * navigation timeout), `sw.asset-note` (the client lookup and the index write), `sw.island-commit` (the pair's
- * commit), `sw.sweep` and `sw.purge` (cache deletes and index writes; `purgeSignedOut` ends with a
- * `storeOfflinePage`, so a weak signal can add one `sw.purge` `TypeError` per wake-up, bounded by the dedupe and the
- * cap).
+ * commit), `sw.sweep` and `sw.purge` (cache deletes and index writes; the one fetch in the purge path, the trailing
+ * `storeOfflinePage` of `purgeSignedOut`, has its own handler and reports as `sw.offline-page`, a network step).
  */
 export const NETWORK_STEPS: readonly ClientStep[] = [
   "sw.precache",

@@ -60,10 +60,12 @@ test("Tonight pages opened online are there offline, and signing out removes the
     // Online: the worker controls the page, then both pages are opened and their pairs committed.
     await waitForServiceWorker(page);
 
-    // The worker's reports reach the server and nothing in the worker intercepts them (error-visibility Phase 8): with
-    // the worker controlling the page, a report posted by `fetch` answers 204 from the endpoint, and a beacon (a
-    // `text/plain` body, the page's own `Origin`) is accepted. Only a navigation takes the worker's routes, and neither
-    // request is one. Two valid reports spend two of the limiter's 30 per minute.
+    // Nothing in the worker intercepts a report (error-visibility Phase 8): with the worker controlling the page, a
+    // report posted by `fetch` answers 204 from the endpoint, since only a navigation takes the worker's routes. The
+    // beacon half is the transport the page's own reporter will use (Phase 9): a `text/plain` body with the page's
+    // `Origin` is accepted too. The worker's own POST is a `fetch` from the worker and never meets its fetch handler;
+    // what a real browser does with it is the owner's check 8.7. Two valid reports spend two of the limiter's 30 per
+    // minute.
     const reported = await page.evaluate(async (path) => {
       const body = JSON.stringify({ step: "sw.sweep" });
       const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body });

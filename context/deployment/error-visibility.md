@@ -127,7 +127,9 @@ The Version URL probe (an uploaded version with a dead forecast address) did not
 
 ## 8. Client reporting
 
-**Planned, a separate PR (Phases 7-9, a cuttable block with a deadline of 2026-11-04).** Nothing in the browser (the service worker, the React islands) reaches these logs today; the allowlist in `src/lib/observability/silent-catch-guard.test.ts` lists those catches with that reason. When built, client reports arrive as warn-level `sidereus: client.<step> noted` lines, never as Issues, because the endpoint is public. A real burst is then found by a saved Workers Logs query that **counts those lines by message text** (`sidereus: client.`), with a threshold; the same rule as section 1. Whether a query can alert is unverified.
+**Built in separate PRs (Phases 7-9, a cuttable block with a deadline of 2026-11-04): Phase 7 the endpoint and the limiter, Phase 8 the service worker's reports, Phase 9 (the React islands and the page's global handlers) still to come; the allowlist in `src/lib/observability/silent-catch-guard.test.ts` lists the island catches with that reason until it lands.** Client reports arrive as warn-level `sidereus: client.<step> noted` lines, never as Issues, because the endpoint is public. A real burst is then found by a saved Workers Logs query that **counts those lines by message text** (`sidereus: client.`), with a threshold; the same rule as section 1. Whether a query can alert is unverified (check 7.9).
+
+**Two known noise sources in the service worker's reports, both accepted and bounded by the per-wake-up cap of 10 and the dedupe:** a single `client.sw.shell noted { name: 'TypeError' }` is usually a network response cut off mid-read (`recordShell` reads a body under a step that is not a network step), not a bug; and a `client.sw.index` and a `client.sw.shell` line together are one failure of the worker's scope lookup (`currentScope`), reported by two sites that await it. A network failure at a network step (`sw.precache`, `sw.offline-page`, `sw.next-night`, `sw.store-page`, `sw.navigation`) is never reported: those steps stay silent in the field on purpose (D14).
 
 ## 9. Follow-ups
 

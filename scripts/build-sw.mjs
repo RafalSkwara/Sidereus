@@ -73,13 +73,14 @@ if (/map-panel|leaflet/.test(swText)) {
   process.exit(1);
 }
 // The worker reports failures through src/lib/offline/report.ts, which imports only the leaf modules of the client
-// reporter, so no page or logger code is in the worker. Reaching for `log-failure` (or a module that imports it) would
-// put the logger there. `over_request_rate_limit` is an auth-js code that only that logger's allowlist (and the auth
-// error map, which no worker file imports) holds, so finding it in sw.js means one of them was bundled.
+// reporter, so the logger is not in the worker. Reaching for `log-failure` (or a module that imports it) would put it
+// there. `over_request_rate_limit` is an auth-js code that only that logger's allowlist (and the auth error map, which
+// no worker file imports) holds, so finding it in sw.js means one of them was bundled. This does not see page code that
+// has no such marker (the barrel gains `browser.ts` in Phase 9): that rule is an import test, not this check.
 const LOGGER_MARKER = "over_request_rate_limit";
 if (swText.includes(LOGGER_MARKER)) {
   console.error(
-    `build-sw: dist/client/sw.js holds page or logger code (found \`${LOGGER_MARKER}\`); the worker must import only the leaf modules of src/lib/observability/client, never log-failure`,
+    `build-sw: dist/client/sw.js holds logger code (found \`${LOGGER_MARKER}\`); the worker must import only the leaf modules of src/lib/observability/client, never log-failure`,
   );
   process.exit(1);
 }

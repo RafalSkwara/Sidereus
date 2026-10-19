@@ -161,7 +161,7 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/sw.ts": {
     count: 6,
     reason:
-      "two things. Four catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14). And the index queue's two sites (serial's `.then(task, task)` and its `.catch`) swallow nothing: the same `run` is returned and awaited by nine callers that each report, so the rejection reaches a site that reports (a report at the `.catch` would send a second report of one failure under another step), and `indexQueue` is never rejected, so the `.then` rejection handler is unreachable",
+      "two things. Four catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14). And the index queue's two sites (serial's `.then(task, task)` and its `.catch`) swallow nothing: the same `run` is returned and awaited by its callers, which report in nearly every case (the one exception, `purge()` awaited at the auth route, escapes to Workbox, as before this change), so the rejection reaches a site that reports (a report at the `.catch` would send a second report of one failure under another step), and `indexQueue` is never rejected, so the `.then` rejection handler is unreachable",
   },
   "src/lib/offline/register.ts": {
     count: 1,
