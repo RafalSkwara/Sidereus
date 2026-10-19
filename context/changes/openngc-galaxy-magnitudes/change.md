@@ -1,7 +1,7 @@
 ---
 change_id: openngc-galaxy-magnitudes
 title: Correct implausible OpenNGC V magnitudes of 12 galaxies
-status: plan_reviewed
+status: implementing
 created: 2026-10-19
 updated: 2026-10-19
 archived_at: null

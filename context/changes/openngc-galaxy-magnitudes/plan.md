@@ -318,10 +318,10 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [ ] 1.1 The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle), output saved to evidence/phase1-red.txt
-- [ ] 1.2 Deliberate-break check: the guard on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle on a copy with M106 at 9.29 names M106
-- [ ] 1.3 Lint and format pass on the two new files
-- [ ] 1.4 Every other test still passes (npm run test:reference has no failure outside galaxy-colour.test.ts)
+- [x] 1.1 The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle), output saved to evidence/phase1-red.txt
+- [x] 1.2 Deliberate-break check: the guard on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle on a copy with M106 at 9.29 names M106
+- [x] 1.3 Lint and format pass on the two new files
+- [x] 1.4 Every other test still passes (npm run test:reference has no failure outside galaxy-colour.test.ts)
 
 #### Manual
 
