@@ -813,13 +813,13 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 7.1 Reporter tests fail first, then pass (sanitizing: only step and name, no code; dedupe, caps, never throws, routine network faults dropped and cache, storage and unknown names reported) (red shown by deliberate breaks of the production code, 2026-10-19: tests were written with the code in one pass, not red first)
-- [x] 7.2 Route tests fail first, then pass (one success path as a warn-level `noted` line that carries the sent name, 400 including a `code`, 413 including a chunked body without `Content-Length`, 403, 429, no Supabase use) (red shown by deliberate breaks of the production code, 2026-10-19: tests were written with the code in one pass, not red first)
-- [x] 7.3 Middleware test: `/api/client-error` (any method) creates no Supabase client, calls no `getClaims` and sets no `locals` field
-- [x] 7.4 Wrangler config is valid (`ratelimits` entry with a string `namespace_id`, pinned in `wrangler-config.test.ts`; `worker-configuration.d.ts` left as is) and a limiter test shows one `config.rate-limit` line for a missing binding
-- [x] 7.5 Silent-catch guard and no-console guard pass
-- [x] 7.6 Full unit suite, lint, types and build pass
-- [x] 7.7 Smoke walk passes against the local stack, including the endpoint's refusals
+- [x] 7.1 Reporter tests fail first, then pass (sanitizing: only step and name, no code; dedupe, caps, never throws, routine network faults dropped and cache, storage and unknown names reported) (red shown by deliberate breaks of the production code, 2026-10-19: tests were written with the code in one pass, not red first) — a182d6e
+- [x] 7.2 Route tests fail first, then pass (one success path as a warn-level `noted` line that carries the sent name, 400 including a `code`, 413 including a chunked body without `Content-Length`, 403, 429, no Supabase use) (red shown by deliberate breaks of the production code, 2026-10-19: tests were written with the code in one pass, not red first) — a182d6e
+- [x] 7.3 Middleware test: `/api/client-error` (any method) creates no Supabase client, calls no `getClaims` and sets no `locals` field — a182d6e
+- [x] 7.4 Wrangler config is valid (`ratelimits` entry with a string `namespace_id`, pinned in `wrangler-config.test.ts`; `worker-configuration.d.ts` left as is) and a limiter test shows one `config.rate-limit` line for a missing binding — a182d6e
+- [x] 7.5 Silent-catch guard and no-console guard pass — a182d6e
+- [x] 7.6 Full unit suite, lint, types and build pass — a182d6e
+- [x] 7.7 Smoke walk passes against the local stack, including the endpoint's refusals — a182d6e
 
 #### Manual
 
