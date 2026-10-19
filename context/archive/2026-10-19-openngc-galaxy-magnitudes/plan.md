@@ -381,4 +381,4 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Manual
 
-- [ ] 4.6 The owner reads the PR description, the 12 corrections and the decisions taken, and merges
+- [x] 4.6 The owner reads the PR description, the 12 corrections and the decisions taken, and merges — dd58f55
