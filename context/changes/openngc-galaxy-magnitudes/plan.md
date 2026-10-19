@@ -20,7 +20,15 @@ The owner answered the five questions of the first draft on 2026-10-19 (relayed 
 
 ## Divergence cap log
 
-Empty until a new reference diverges. One divergence is expected from the start: M106 at 150 mm / Bortle 6 (plan review F4), cap 3 → 4. If Phase 3 raises the cap in `src/lib/engine/expectation.test.ts` (`expect(KNOWN_DIVERGENCES.length).toBeLessThanOrEqual(3)`), the implementer appends here, in the same commit: the entry id and setting, the key the sources support, the key the rule computes, the sources, and the new cap.
+Empty until a new reference diverges. One divergence is expected from the start: M106 at 150 mm / Bortle 6 (plan review F4), cap 3 → 4.
+
+**2026-10-19, Phase 3: cap 3 → 4 (owner's permission, Q5).**
+- Entry: M106, 150 mm, Bortle 6, `kind: "hard"`, in `KNOWN_DIVERGENCES` (`src/lib/engine/fixtures/expect-reference.ts`). Its Bortle 5 twin lands in `EXPECT_REFERENCES` and passes.
+- The key the sources support, decided before the rule was run: `galaxySmudge`. Skyhound (6-inch, "rather like M31 as seen in binoculars", "Look for a bright core and hints of structure. Averted vision will show a faint outer envelope", 4-inch and suburban skies as the minimum) and Astronomy Now (150 mm: "a slightly mottled, oval-shaped core extending to perhaps 10' x 7', with a well-defined nucleus surrounded by a faint outer halo of nebulosity"). Quotes re-checked on both pages on 2026-10-19. Counter-evidence is in the entry: "a very nice bright spiral galaxy" could be read as `galaxyBright`.
+- The key the rule computes: `galaxyFaint` (deficit 1.61 against the 1.5 edge, V 8.56 from the colour rule; the published V 8.4 would give 1.45).
+- Why the rule is not changed: the two pages name no Bortle class ("suburban"), so they do not separate Bortle 5 from 6, and moving the edge 0.11 mag to fit one entry would be fitting noise.
+- New cap: 4 (`expectation.test.ts`, `toBeLessThanOrEqual(4)`).
+- Not added: M61. The web check found no 4-8 inch view of it with a stated sky, and what it did find (O'Meara's "intensely bright core ... much fainter disk that swells into view with 70-150x and averted vision", Davies's 8-inch "quite a challenging target") does not settle `galaxySmudge` against `galaxyFaint`. The plan's "at least one more of the 12" is therefore not met; reported to the owner. If Phase 3 raises the cap in `src/lib/engine/expectation.test.ts` (`expect(KNOWN_DIVERGENCES.length).toBeLessThanOrEqual(3)`), the implementer appends here, in the same commit: the entry id and setting, the key the sources support, the key the rule computes, the sources, and the new cap.
 
 ## Plan review (2026-10-19, `reviews/plan-review.md`, verdict NEEDS ATTENTION: 0 critical, 4 warnings, 2 observations)
 
@@ -331,15 +339,15 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [x] 2.1 Phase 1's tests are green
-- [x] 2.2 The helper's unit tests pass (guards project: npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs)
-- [x] 2.3 Regeneration is reproducible: a second npm run catalogue:build leaves git diff identical
-- [x] 2.4 The data diff is only vMag of 12 objects (scratch comparison prints exactly the 12 ids)
-- [x] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test (guards command), the guard or the build's count check red
-- [x] 2.6 The provenance pins pass (npm run test:guards)
-- [x] 2.7 Lint passes (npm run lint)
-- [x] 2.10 The provenance pins are extended and hold: vMagColour entries match the JSON, the 12 ids exactly, the reasons name the doubts; a doctored meta turns them red
-- [x] 2.11 The four oracles are green on the regenerated catalogue before the corrections are accepted, or the implementer stopped and asked the owner
+- [x] 2.1 Phase 1's tests are green — 82fc710
+- [x] 2.2 The helper's unit tests pass (guards project: npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs) — 82fc710
+- [x] 2.3 Regeneration is reproducible: a second npm run catalogue:build leaves git diff identical — 82fc710
+- [x] 2.4 The data diff is only vMag of 12 objects (scratch comparison prints exactly the 12 ids) — 82fc710
+- [x] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test (guards command), the guard or the build's count check red — 82fc710
+- [x] 2.6 The provenance pins pass (npm run test:guards) — 82fc710
+- [x] 2.7 Lint passes (npm run lint) — 82fc710
+- [x] 2.10 The provenance pins are extended and hold: vMagColour entries match the JSON, the 12 ids exactly, the reasons name the doubts; a doctored meta turns them red — 82fc710
+- [x] 2.11 The four oracles are green on the regenerated catalogue before the corrections are accepted, or the implementer stopped and asked the owner — 82fc710
 
 #### Manual
 
@@ -350,11 +358,11 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [ ] 3.1 The four oracles still pass unedited after the references land (they first ran in Phase 2)
-- [ ] 3.2 git diff shows no assertion edit in those files except the extended HARD list and, only for a diverging new reference, the logged cap raise
-- [ ] 3.3 The new references pass (expectation.test.ts)
-- [ ] 3.4 Deliberate-break check: on an in-memory M106 with V back at 9.29 expectationFor gives galaxyFaint at Bortle 5 and Phase 1's oracle names M106
-- [ ] 3.5 evidence/before-after.md exists with the 12 rows and the M106 totals from one named call
+- [x] 3.1 The four oracles still pass unedited after the references land (they first ran in Phase 2)
+- [x] 3.2 git diff shows no assertion edit in those files except the extended HARD list and, only for a diverging new reference, the logged cap raise
+- [x] 3.3 The new references pass (expectation.test.ts)
+- [x] 3.4 Deliberate-break check: on an in-memory M106 with V back at 9.29 expectationFor gives galaxyFaint at Bortle 5 and Phase 1's oracle names M106
+- [x] 3.5 evidence/before-after.md exists with the 12 rows and the M106 totals from one named call
 
 #### Manual
 
