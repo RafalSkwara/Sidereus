@@ -606,7 +606,7 @@ The worker stops swallowing its failures: each of its ~20 silent sites reports a
 
 **File**: `src/sw.ts`, 26 sites as the guard counts them (checked against `main` 3f75fc7, 2026-10-19; `sw.ts` is unchanged since adjustable-session-plan): 17 `.catch(() => undefined)` at 79, 254, 340, 402, 685, 703, 711, 715, 716, 737, 748, 774, 778, 782, 789, 792 and 798, the `.catch(() => null)` at 85, the `.then(task, task)` at 78 (and the `.catch` at 79: both are the index queue, left allowlisted, see §1) and the `.then(resolve, () => …)` at 617, the two bare `catch {}` at 507 and 585, and the four conditional-rethrow catches at 607, 627, 719 and 759 (`networkFirst`, the navigation route and `networkOrOffline`)
 
-**Intent**: Give every site its step, and mark which of them are network-dependent (`NETWORK_STEPS`: the precache fetch, the offline-page and next-night fetches, the page copy and navigation settle that wrap a `fetch`; the implementer reads each site and records the assignment in `steps.ts`): index write and read, precache fetch, shell read, offline page, next-night copy, page copy (`store-page`), asset note, navigation settle, island commit, sweep and purge. `networkOrOffline` keeps rethrowing as it does.
+**Intent**: Give every site its step, and mark which of them are network-dependent (`NETWORK_STEPS`: the precache fetch, the offline-page and next-night fetches, the page copy and navigation settle that wrap a `fetch`; the implementer reads each site and records the assignment in `steps.ts`): index write and read, precache fetch, shell read, offline page, next-night copy, page copy (`store-page`), asset note, navigation settle, island commit, sweep and purge. `networkOrOffline` keeps rethrowing as it does. Implemented 2026-10-19: `NETWORK_STEPS` confirmed unchanged (precache, offline-page, next-night, store-page, navigation; the reason per step is in the comment above it), and `purgeSignedOut`'s trailing `storeOfflinePage()`, the one fetch in the purge path, gets its own `.catch(reportAnd("sw.offline-page", undefined))` so an offline fault there is routine and not a `sw.purge` report (21 sites change, 6 stay allowlisted).
 
 **Contract**: the steps are the `sw.*` family from Phase 7; no step is added without a `CLIENT_STEPS` entry. `scripts/build-sw.mjs` keeps passing (no new precache entry, no server import in the bundle).
 
@@ -843,16 +843,16 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 8.1 Report tests fail first, then pass (a failing commit reports once, outcomes unchanged, a timeout while `onLine` is not reported, a storage error is, the cap and dedupe hold)
-- [ ] 8.2 Silent-catch allowlist: the `src/sw.ts` entry drops from 26 to 6 (four conditional rethrows under D14, the index queue's two), `offline/report.ts` has its one `send` entry, guard green
-- [ ] 8.3 Build and the worker bundle check pass
-- [ ] 8.4 Offline e2e specs stay green with no retries added
-- [ ] 8.5 A `POST` to `/api/client-error` passes through the worker untouched (an e2e step in `offline.spec.ts`: 204 from a controlled page, `sendBeacon` returns `true`)
-- [ ] 8.6 Full unit suite, lint and types pass
+- [x] 8.1 Report tests fail first, then pass (a failing commit reports once, outcomes unchanged, a timeout while `onLine` is not reported, a storage error is, the cap and dedupe hold) (red first for 6 of 7 report tests against a stub; the offline case lives in the Phase 7 core test; breaks listed in `implementation-notes.md`)
+- [x] 8.2 Silent-catch allowlist: the `src/sw.ts` entry drops from 26 to 6 (four conditional rethrows under D14, the index queue's two), `offline/report.ts` has its one `send` entry, guard green
+- [x] 8.3 Build and the worker bundle check pass
+- [x] 8.4 Offline e2e specs stay green with no retries added
+- [x] 8.5 A `POST` to `/api/client-error` passes through the worker untouched (an e2e step in `offline.spec.ts`: 204 from a controlled page, `sendBeacon` returns `true`)
+- [x] 8.6 Full unit suite, lint and types pass
 
 #### Manual
 
-- [ ] 8.7 A forced store failure in the preview produces a `sidereus: client.sw.* noted` warn line, a broken network produces none, and the page and stored copies behave as before
+- [ ] 8.7 A forced store failure in the preview produces a `sidereus: client.sw.* noted` warn line, a broken network produces none, and the page and stored copies behave as before (agent probe on a local preview, 2026-10-19: with the worker controlling a page, a fetch that fails with a `TypeError` while a plan-page store is asked for left no line, and one that fails with `QuotaExceededError` left exactly one `sidereus: client.sw.store-page noted { name: 'QuotaExceededError' }` line; the full e2e and smoke left only the deliberate reports; owner to confirm)
 
 ### Phase 9: Island and browser reporting
 

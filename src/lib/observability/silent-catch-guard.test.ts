@@ -159,8 +159,9 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   // The browser side (service worker and islands), where no server line can be written. The client reporting of
   // Phases 7-9 (planned, a separate PR) is to report these and delete the entries; if that block is cut they stay.
   "src/sw.ts": {
-    count: 26,
-    reason: `${CLIENT}: 18 .catch handlers, the two .then rejection handlers (the index queue's and the timeout fallback's) and two bare catch blocks would report through Phase 8's reportAnd and report. Four more catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14)`,
+    count: 6,
+    reason:
+      "two things. Four catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14). And the index queue's two sites (serial's `.then(task, task)` and its `.catch`) swallow nothing: the same `run` is returned and awaited by nine callers that each report, so the rejection reaches a site that reports (a report at the `.catch` would send a second report of one failure under another step), and `indexQueue` is never rejected, so the `.then` rejection handler is unreachable",
   },
   "src/lib/offline/register.ts": {
     count: 1,
