@@ -2,6 +2,20 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-19 (openngc-galaxy-magnitudes, #178)
+
+**Shipped:** PR #227 merged and deployed (main `dd58f55`), archived in `context/archive/2026-10-19-openngc-galaxy-magnitudes/`. Twelve galaxies (M58, M61, M88, M91, M98, M106, IC 342, NGC 4449, NGC 5005, NGC 4565, NGC 6822, NGC 4039) had an impossible V (B−V below 0.2: OpenNGC's V is HyperLEDA's `vt`, or the generator copied B). `catalogue:build` now sets `V = B − the median B−V of the catalogue's own credible galaxies of the same Hubble group` (no new source), and lists each correction as an `overrides` entry (`vMagColour`) in the two metas; pins and a no-galaxy-below-0.2 guard keep it honest. The four engine oracles were not edited. The `KNOWN_DIVERGENCES` cap went 3 → 4 for one new entry (M106 at 150 mm / Bortle 6), by the owner's permission.
+
+**#178 stays open, the owner decides whether to close it:**
+
+- M106 at 150 mm / Bortle 6 (the issue's own case) is still `faint`: the deficit is 1.61 against the 1.5 edge, the brightness credit stays at 0.1, and its rank and total did not move. At Bortle 5 it is now `smudge` (rank 60 → 42 on 2026-10-10). The published V (8.4) would give 1.45 and the rule gives 8.56.
+- #178 asks for galaxy references at 150 mm / Bortle 5-6; only M106 was added. M61 has no source that settles `galaxySmudge` against `galaxyFaint`.
+- The NGC 4449 and NGC 4565 corrections rest on a B that may itself be about 0.5 and 0.4 mag too bright (NED's magnitude is fainter); the metas say so.
+
+**Open owner checks** (archived plan rows, left unchecked on purpose): 1.5 the six published V values against their SEDS and SIMBAD pages; 2.8 and 2.9 the 12 `vMagColour` entries and the `LICENSE-DATA.md` paragraph; 3.6 the new M106 references and the divergence cap log; 3.7 M106's line on `/tonight/targets` at 150 mm, Bortle 5 (April evening) and Bortle 6 (2026-10-10).
+
+---
+
 ## Update 2026-10-17 (owner polish)
 
 - S-09 `ui-sky-modes` merged (#212, GitHub #213) and archived; S-12 app-icon merged (#217, GitHub #216) and archived; S-10 `ui-quick-nav` merged (#220, GitHub #214) and archived; S-11 `ui-progress-rewards` merged (#224, GitHub #215) and archived. All four owner UI requests (S-09 to S-12) are done. The badge-art generator lives in `scripts/badge-art/` (`npm run badge-art:port` ports the art into `src/components/progress/badge-art`, `npm run badge-art:render` renders it).
