@@ -100,6 +100,31 @@ if (!astroFiles.some((file) => file.startsWith("map-panel.") && file.endsWith(".
   console.error("build-sw: no _astro/map-panel.*.js chunk; did the map's lazy import or its file name change?");
   process.exit(1);
 }
+// The page's error reporting (error-visibility Phase 9, D15) reports only errors whose file name is under `/_astro/`,
+// and Astro inlines a small script with no imports into the page, where an error carries the page's URL instead. The
+// Layout's script imports the offline modules and the reporter, so it is a chunk (`Layout.astro_astro_type_script_*`)
+// that imports the chunk holding the reporter; if a change ever made the script small enough to inline, or dropped its
+// import, every report from it would be silently dropped. Both must be files under `_astro`.
+const layoutScripts = astroFiles.filter((file) =>
+  /^Layout\.astro_astro_type_script_index_\d+_lang\..+\.js$/.test(file),
+);
+const reporterFiles = [];
+for (const file of astroFiles) {
+  if (!file.endsWith(".js")) continue;
+  const text = await readFile(path.join(clientDir, "_astro", file), "utf8");
+  if (text.includes("unhandledrejection") && text.includes("island.unhandled-rejection")) reporterFiles.push(file);
+}
+let layoutReports = false;
+for (const file of layoutScripts) {
+  const text = await readFile(path.join(clientDir, "_astro", file), "utf8");
+  if (reporterFiles.includes(file) || reporterFiles.some((reporter) => text.includes(reporter))) layoutReports = true;
+}
+if (!layoutReports) {
+  console.error(
+    "build-sw: the Layout's script is not an _astro chunk that imports the page's error reporter (installErrorReporting); was it inlined into the page, or did Astro rename its chunk? An inlined script's errors carry the page URL and the own-script filter would drop them (D15)",
+  );
+  process.exit(1);
+}
 for (const file of astroFiles) {
   if (!file.endsWith(".css") || file.startsWith("leaflet") || file.startsWith("map-panel")) continue;
   const css = await readFile(path.join(clientDir, "_astro", file), "utf8");

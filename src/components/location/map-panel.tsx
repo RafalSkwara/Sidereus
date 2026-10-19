@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import L from "leaflet";
 import leafletCssUrl from "leaflet/dist/leaflet.css?url";
 import { getMessages } from "@/i18n";
+import { report } from "@/lib/observability/client";
 import { POINT_ZOOM, pickFromMap, type MapPoint, type MapView } from "@/lib/location/map-view";
 import type { Locale } from "@/lib/preferences";
 
@@ -49,8 +50,11 @@ function loadLeafletCss(): Promise<void> {
     });
     document.head.appendChild(link);
   });
-  leafletCss.catch(() => {
+  // Reported here (island.import) and not in the effect's catch below, which leaves LEAFLET_CSS_FAILED to this handler
+  // so the one failure is not reported twice; the reporter drops the repeat when a second call re-attaches this handler.
+  leafletCss.catch((error: unknown) => {
     leafletCss = undefined;
+    report("island.import", error);
   });
   return leafletCss;
 }

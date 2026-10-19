@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, plural, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import { report } from "@/lib/observability/client";
 import { roundCoordinate } from "@/lib/gear/coordinates";
 import { parseCurrent } from "@/lib/location/map-view";
 import { AFOV_PRESET_OPTIONS, type AfovPreset } from "@/lib/gear/eyepiece-presets";
@@ -203,7 +204,9 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
         setTelescopeCatalogue(entries);
         setTelescopeState("ready");
       },
-      () => {
+      (error: unknown) => {
+        // The wizard keeps working on its own fields; the failed chunk is reported whether or not it is still mounted.
+        report("island.import", error);
         if (!cancelled) setTelescopeState("unavailable");
       },
     );
@@ -213,7 +216,9 @@ export default function OnboardingWizard({ action, serverError, locale }: Props)
         setEyepieceCatalogue(entries);
         setEyepieceState("ready");
       },
-      () => {
+      (error: unknown) => {
+        // The wizard keeps working on its own fields; the failed chunk is reported whether or not it is still mounted.
+        report("island.import", error);
         if (!cancelled) setEyepieceState("unavailable");
       },
     );

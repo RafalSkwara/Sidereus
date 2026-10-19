@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/preferences";
 import { GEOCODING_FAILED, PLACE_QUERY_MIN_LENGTH, searchPlaces, type PlaceResult } from "@/lib/location/geocode";
 import { geolocationAlreadyGranted, locateDevice } from "@/lib/location/locate";
 import { DEVICE_RECENTRE_TIMEOUT_MS, initialMapView, type MapPoint, type MapView } from "@/lib/location/map-view";
+import { report } from "@/lib/observability/client";
 import { cn } from "@/lib/utils";
 
 /*
@@ -130,7 +131,9 @@ export default function LocationPicker({
         setMapPanel(() => component);
         setMapStatus((status) => (status === "loading" && mapOpening.current === opening ? "open" : status));
       },
-      () => {
+      (error: unknown) => {
+        // Reported whether or not this opening is still current: the chunk failed to load either way.
+        report("island.import", error);
         if (mapOpening.current === opening) failMap();
       },
     );
@@ -201,9 +204,11 @@ export default function LocationPicker({
           setResults(found);
           setSearchStatus("done");
         },
-        () => {
-          // A cancelled (stale) search rejects too; only the current one may show an error.
+        (error: unknown) => {
+          // A cancelled (stale) search rejects too; only the current one may show an error, and only it is reported
+          // (every keystroke aborts the previous request, so a report above this line would fire while the user types).
           if (controller.signal.aborted) return;
+          report("island.geocode", error);
           setResults([]);
           setSearchStatus("failed");
         },

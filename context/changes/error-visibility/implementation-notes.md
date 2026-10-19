@@ -45,3 +45,29 @@ Breaks (worktree-only, restored after each):
 Site assignment (all by the alias `@/lib/offline/report`): `sw.index` (readIndex parse, currentScope at 703), `sw.precache` (keepAssets fetch), `sw.shell` (recordShell, the stored-copy read at the network timeout), `sw.offline-page` (afterCommit, auth POST, install, purge's trailing store), `sw.next-night` and `sw.store-page` (the two bare catches, `storePageNow`), `sw.navigation` (afterNavigation, the late network promise), `sw.asset-note`, `sw.island-commit`, `sw.sweep` (four sites), `sw.purge`. Network steps: precache, offline-page, next-night, store-page, navigation. Known trade-offs: a real `TypeError` from a cache call at a network step goes unreported (D14); `sw.shell` reads a network body in `recordShell`, so a mid-stream cut can report one `sw.shell` `TypeError`; a `currentScope()` failure can be reported twice (at 703 as `sw.index` and by `recordShell` as `sw.shell`), bounded by the dedupe and the cap of 10 per wake-up.
 
 Not unit-testable: `sw.ts` registers its routes at import time over Workbox, so the conversions are held by the guard, the build and the offline e2e specs, and the pass-through of `POST /api/client-error` by a step in `offline.spec.ts`.
+
+## Phase 9 (2026-10-19)
+
+Red first: `browser.test.ts` was written against a no-op stub of `browser.ts` and all 9 tests went red for behavioural reasons (nothing sent, no listeners) before the code; the guard allowlist was lowered first and failed with exactly the 6 expected sites before the island sites were converted. `client-imports.test.ts` and `gear/catalogue/load.test.ts` could not go red before the code (nothing to break), so they were proved by mutation.
+
+Breaks (restored per file after each):
+
+| Broken                                                                                                                                                   | Test that went red                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| own-script filter dropped; null-error check dropped; hydration detection off; idempotence guard removed; cap 5 -> 6; a `false` from `sendBeacon` ignored | `client/browser.test.ts` (each)                                        |
+| `../log-failure` imported by `client/steps.ts` (or `browser.ts`)                                                                                         | `client/client-imports.test.ts`, naming the offender                   |
+| the memo reset removed in `gear/catalogue/load.ts`                                                                                                       | `gear/catalogue/load.test.ts` (telescopes and eyepieces)               |
+| `report.ts` (the worker's reporter) imports the barrel                                                                                                   | `client/client-imports.test.ts`                                        |
+| own-script filter -> always true (in the built site)                                                                                                     | `tests/e2e/client-errors.spec.ts` case 3 (console-style input reports) |
+| the `island.import` report removed from `TelescopeForm.tsx` (in the built site)                                                                          | `tests/e2e/client-errors.spec.ts` case 5 (the chunk case)              |
+| `installErrorReporting()` removed from `Layout.astro` (in the built site)                                                                                | all 5 cases of `tests/e2e/client-errors.spec.ts`                       |
+
+Known gap, accepted: the island reports in `EyepieceForm`, `TelescopeForm`, `OnboardingWizard`, `LocationPicker` and `map-panel` have no unit test (no DOM test stack, and none was added); the guard counts hold that every site reports or is allowlisted, and case 5 proves the `TelescopeForm` one in the browser. In particular nothing pins that the place search reports **after** its `aborted` check (round 3 F7): moving the report above the early return passes every test. It is held by the code comment and review only.
+
+Environment note: a CI-mode e2e run (`CI=1`) writes `playwright-report/` and `test-results/` into the worktree. Their generated JS joins TypeScript's program: type-aware ESLint then fails with "Unsafe call of a type that could not be resolved" on `map-panel.tsx` (`setPrefix`) and `astro check` reports hundreds of hints. Move or delete both directories after an e2e run before linting; both are gitignored.
+
+### Phase 9 after the impl review (2026-10-19)
+
+Red first: the throwing-`message` getter test failed on the unguarded `messageOf` (the handler threw) before the guard; the place-search case in `client-errors.spec.ts` was shown red with the report moved above the `aborted` check (the one break that no unit test can show), and green with the order restored. The new build check was shown to fail (`build-sw: the Layout's script is not an _astro chunk that imports the page's error reporter`) when the Layout's import and call were removed, and to pass on the real build, where the Layout script is `Layout.astro_astro_type_script_index_0_lang.<hash>.js` and imports the shared `client.<hash>.js` that holds the reporter.
+
+Known gap, now written down (D15, runbook, lesson, follow-up #230): the five scripts Astro inlines into the page are not covered by the own-script filter.

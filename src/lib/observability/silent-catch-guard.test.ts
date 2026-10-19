@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
  *   (`@/lib/observability/read-failure`, the pages' read failures, which picks one of the two by the fault) or
  *   `saveFailureKey` (`@/lib/observability/save-failure`, the save routes' one step: it logs a server fault, a refusal
  *   and a session fault, and stays silent only for the user's own input mistake), or
- * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters of Phases 7-9, recognised by
+ * - calls `report` / `reportAnd` / `<reporter>.report`, the browser-side reporters (the page's `@/lib/observability/client`, the worker's `@/lib/offline/report`), recognised by
  *   name and only when the file imports them from `@/lib/observability/client` or `@/lib/offline/report` (for a
  *   `.catch(...)` or `.then(ok, ...)` the argument may itself be the call, `.catch(reportAnd("sw.index", undefined))`),
  *   or
@@ -47,24 +47,25 @@ const EXCLUDED_FILES = new Set(["src/lib/database.types.ts"]);
 const EXCLUDED_DIRS = ["src/lib/test-support/"];
 
 const LOG_NAMES = new Set(["logFailure", "logNotice", "logReadFailure", "saveFailureKey"]);
-/** The modules the browser-side reporters are imported from (they do not exist before Phase 7). */
+/** The modules the browser-side reporters are imported from: the page's barrel and the service worker's module. */
 const REPORTER_MODULES = new Set(["@/lib/observability/client", "@/lib/offline/report"]);
 const REPORTER_NAMES = new Set(["report", "reportAnd"]);
 
 /** Reasons shared by many entries. */
-const CLIENT = "reported by Phases 7-9, or out of scope if that block is cut";
 const INPUT =
   "an unparsable or invalid value from outside is an expected outcome, not a fault: the caller gets null, false or a validation issue";
 const GEOLOCATION = "a denied or unavailable geolocation is the user's choice and would be noise";
+const MEMO_RESET =
+  "resets the memo only; the same rejection still reaches every awaiting caller, which reports it (island.import)";
 const STORE_FAULT =
   "audit finding F8: the catch returns { ok: false, message, fault } with the sanitized fault built by faultFrom, and the route's saveFailureKey logs it, so the catch itself stays allowlisted";
 
 /**
  * Every file with silent sites, the exact number of them and why they are tolerated. A catch, a `.catch(...)` or the
- * second argument of a `.then(ok, fail)` counts as one site. The "Permanent" entries stay for good; the browser-side
- * ones are reported by the client reporting of Phases 7-9 (planned, a separate PR) and leave the list when each of
- * those phases lands, or stay with their reason if that block is cut. Reasons carry no line numbers: the guard's
- * failure message names the lines.
+ * second argument of a `.then(ok, fail)` counts as one site. Every entry stays for a reason: the browser side is
+ * reported by the client reporters (Phases 7-9), so what is left there either cannot report (the reporter's own
+ * failure), is routine by design (D14, geolocation, the install prompt), or reaches a site that reports. Reasons carry no
+ * line numbers: the guard's failure message names the lines.
  */
 const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: string }>> = {
   // Permanent: justified and staying.
@@ -86,6 +87,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/lib/observability/client-report.ts": {
     count: 2,
     reason: `${INPUT} (a client report that is not JSON, or a body the client broke off mid-upload, is refused with 400; the route logs nothing for a refused report, so a forged or aborted request cannot leave a line, D13)`,
+  },
+  "src/lib/observability/client/browser.ts": {
+    count: 1,
+    reason:
+      "the hydration test reads the message of whatever the page threw, which can throw (a getter) and cannot be reported anywhere else: the read falls back to no message and the error is still reported, as island.uncaught",
   },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
@@ -135,7 +141,7 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
   "src/lib/location/geocode.ts": {
     count: 1,
     reason:
-      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the failure surfaces in the place search's rejection handler in LocationPicker.tsx, which Phase 9 reports as island.geocode, or is out of scope if that block is cut",
+      "throws a fixed-message error without a cause on purpose (the cause can quote the request URL, which carries the search text); the failure surfaces in the place search's rejection handler in LocationPicker.tsx, which reports it as island.geocode",
   },
   "src/lib/gear/store.ts": {
     count: 1,
@@ -156,40 +162,24 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
       "a refused or already-used install prompt is the user's choice, not a failure (owner, 2026-10-15: stays silent for good, no island.install step)",
   },
 
-  // The browser side (service worker and islands), where no server line can be written. The client reporting of
-  // Phases 7-9 (planned, a separate PR) is to report these and delete the entries; if that block is cut they stay.
+  // The browser side (service worker and islands), where no server line can be written.
   "src/sw.ts": {
     count: 6,
     reason:
       "two things. Four catches (network-first, the navigation route and networkOrOffline) fall back to the stored copy and rethrow only when there is none: a returned fallback swallows the failure, and that fallback is the feature, so a routine network fault there stays unreported (D14). And the index queue's two sites (serial's `.then(task, task)` and its `.catch`) swallow nothing: the same `run` is returned and awaited by its callers, which report in nearly every case (the one exception, `purge()` awaited at the auth route, escapes to Workbox, as before this change), so the rejection reaches a site that reports (a report at the `.catch` would send a second report of one failure under another step), and `indexQueue` is never rejected, so the `.then` rejection handler is unreachable",
   },
-  "src/lib/offline/register.ts": {
-    count: 1,
-    reason: `${CLIENT}: service worker registration, island.sw-register (Phase 9)`,
-  },
   "src/components/location/LocationPicker.tsx": {
-    count: 5,
-    reason: `${CLIENT}: the map import's memo reset, the map-open rejection (island.import) and the place search's rejection (island.geocode), all Phase 9; and two geolocation sites that stay silent, the "Use my location" rejection and the recentre lookup (${GEOLOCATION})`,
+    count: 3,
+    reason: `three silent sites that stay: the map chunk's memo reset (${MEMO_RESET}: the map-open rejection and the failed-import consumers above it report island.import), and two geolocation sites, the "Use my location" rejection and the recentre lookup (${GEOLOCATION})`,
   },
   "src/components/location/map-panel.tsx": {
-    count: 2,
-    reason: `${CLIENT}: a failed stylesheet load resets its memo (island.import, Phase 9); the other catch forwards to the browser's reportError, which Phase 9's global handler reports`,
+    count: 1,
+    reason:
+      "forwards to the browser's reportError, which the global handler reports (as island.uncaught: Leaflet and the panel are /_astro/ chunks); the guard does not know reportError as a reporter, and a failed stylesheet load is reported by the memo's own handler as island.import",
   },
   "src/lib/gear/catalogue/load.ts": {
     count: 2,
-    reason: `${CLIENT}: a failed catalogue import resets its memo (island.import, Phase 9)`,
-  },
-  "src/components/gear/EyepieceForm.tsx": {
-    count: 1,
-    reason: `${CLIENT}: a failed catalogue import sets "unavailable" (island.import, Phase 9)`,
-  },
-  "src/components/gear/TelescopeForm.tsx": {
-    count: 1,
-    reason: `${CLIENT}: a failed catalogue import sets "unavailable" (island.import, Phase 9)`,
-  },
-  "src/components/onboarding/OnboardingWizard.tsx": {
-    count: 2,
-    reason: `${CLIENT}: the failed telescope and eyepiece catalogue imports set "unavailable" (island.import, Phase 9)`,
+    reason: `${MEMO_RESET}: the telescope and eyepiece catalogue loaders`,
   },
 };
 

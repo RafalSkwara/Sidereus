@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { getMessages, plural, translateKey, type Messages } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import { report } from "@/lib/observability/client";
 import { eyepieceFill } from "@/lib/gear/catalogue/fill";
 import { loadEyepieces } from "@/lib/gear/catalogue/load";
 import { searchCatalogue } from "@/lib/gear/catalogue/search";
@@ -67,7 +68,9 @@ export default function EyepieceForm({ action, initial, serverError, locale }: P
         setCatalogue(entries);
         setCatalogueState("ready");
       },
-      () => {
+      (error: unknown) => {
+        // The form keeps working on its own fields; the failed chunk is reported whether or not it is still mounted.
+        report("island.import", error);
         if (!cancelled) setCatalogueState("unavailable");
       },
     );

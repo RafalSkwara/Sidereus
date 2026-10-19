@@ -6,6 +6,7 @@ import { ServerError } from "@/components/forms/ServerError";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getMessages, plural, translateKey } from "@/i18n";
 import type { Locale } from "@/lib/preferences";
+import { report } from "@/lib/observability/client";
 import { telescopeFill } from "@/lib/gear/catalogue/fill";
 import { loadTelescopes } from "@/lib/gear/catalogue/load";
 import { searchCatalogue } from "@/lib/gear/catalogue/search";
@@ -66,7 +67,9 @@ export default function TelescopeForm({ action, initial, serverError, locale }: 
         setCatalogue(entries);
         setCatalogueState("ready");
       },
-      () => {
+      (error: unknown) => {
+        // The form keeps working on its own fields; the failed chunk is reported whether or not it is still mounted.
+        report("island.import", error);
         if (!cancelled) setCatalogueState("unavailable");
       },
     );
