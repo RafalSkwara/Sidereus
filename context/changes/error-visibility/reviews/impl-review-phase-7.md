@@ -129,3 +129,35 @@ Werdykt REJECTED wynika z reguły „każdy krytyczny FAIL w Safety”, ale popr
 
 - 7.8 i 7.9 są `[ ]` i należą do właściciela po pierwszym wdrożeniu, tak jak przewiduje plan. Nic nie jest odhaczone bez dowodu.
 - Po poprawce F1 warto dopisać do 7.8 jedno sprawdzenie: zerwany upload (`curl` z ciałem chunked przerwanym Ctrl-C) nie zostawia w Workers Logs linii poziomu error.
+
+## Re-check (2026-10-19, `ffd4502`, diff `bbcd8d3..ffd4502`)
+
+- **Re-check verdict**: APPROVED (0 critical, 0 warnings; F1-F7 zamknięte)
+- **Bramki przy `ffd4502`** (Node 24.21.0, worktree czysty przed i po): `npm test` 128 plików, 836 zaliczonych, 1 pominięty; `npm run lint` czysto; `npx astro check` 0 błędów, 0 ostrzeżeń; `npm run build` OK.
+- **Sonda HTTP na podglądzie** (`astro preview --port 4337`, ta sama sonda co wyżej, podgląd zatrzymany po sondzie):
+
+| Żądanie | Przed (`bbcd8d3`) | Teraz (`ffd4502`) |
+|---|---|---|
+| upload chunked przerwany przez klienta | 500 i `[ERROR] Network connection lost` ze stosem | **400, bez żadnej linii** |
+| `POST /api/client-error/` | 204, ale middleware przeszło pełną ścieżkę | 204, middleware nie robi nic (brak linii z pełnej ścieżki) |
+| JSON z `Origin` / sam `Sec-Fetch-Site` | 204 / 204 | 204 / 204 |
+| `text/plain` z samym `Sec-Fetch-Site` | 403 od Astro | 403 od Astro (teraz opisane w trasie i w planie) |
+| strumień 700 B bez `Content-Length` | 413 | 413 |
+
+**F1.** Zamknięte. `readBoundedBody` łapie odrzucony odczyt i zwraca `{ refused: "broken" }`, trasa odpowiada wtedy 400 bez linii i przed limiterem. W allowliście `client-report.ts` jest teraz 2 z powodem `INPUT`, tak jak przy `JSON.parse`. Test ze strumieniem kończącym się `controller.error(...)` przy `limit: 1` sprawdza trzy rzeczy: 400, brak warn i error oraz to, że następny poprawny raport dostaje 204, czyli token nie został zużyty. `implementation-notes.md` zapisuje parę łamanie–czerwień („re-throwing in `readBoundedBody`'s catch”). Na podglądzie potwierdzone: 400 i żadnej linii. Sprawdzenie z `curl` doszło też do 7.8.
+
+**F2.** Zamknięte, ze zmianą kolejności: 403 → 413/400 (broken) → 415 → 400 (schemat) → 429. Ta kolejność jest lepsza od planowanej: śmieci nie palą wspólnego budżetu 30/min, a token zużywa tylko poprawnie zbudowany raport (podrabiane poprawne raporty nadal mogą go wyczerpać; ta reszta jest zaakceptowana w D9). Test `limit: 1` przypina 403, 413, 415 i dwa razy 400 jako darmowe, a potem 204 i 429. Para łamanie–czerwień: „calling the limiter before the schema”. Plan 7 §2 i komentarz trasy opisują nową kolejność.
+
+**Fail-closed limitera (Fable 1).** Poprawne. `limiter.limit()` jest w `try/catch`. Gdy binding rzuca, raport jest odrzucany (`false`, trasa zwraca 429) i powstaje jedna linia `config.rate-limit failed` na izolat. Flaga `reported` jest wspólna z linią o brakującym bindingu, więc izolat nigdy nie zostawi dwóch takich linii. `logFailure` dostaje błąd, ale wypisuje tylko ukształtowaną nazwę (test: `name: "Error"`), nigdy treść. Tego zdarzenia nie da się podrobić, bo wywołuje je platforma, a nie żądanie, więc poziom error jest właściwy. Zaakceptowany koszt: dopóki binding w danym izolacie jest zepsuty, wszystkie raporty klienta przepadają przy jednej linii na izolat. To świadomy wybór „nigdy bez limitu” i operator widzi go jako Issue.
+
+**F5.** Zamknięte. `isClientErrorPath` obcina końcowe ukośniki, a test middleware obejmuje `/`, `//`, `POST` i `GET`, z `locals` równym `{}` i bez klienta Supabase. Para łamanie–czerwień jest zapisana. Na podglądzie przy `/api/client-error/` nie ma już śladu pełnej ścieżki middleware.
+
+**F3-F7.** Zamknięte:
+- F3: `implementation-notes.md` wymienia łamania z pierwszego przejścia i parę łamanie–czerwień dla każdej poprawki; Progress 7.1/7.2 odsyła do tej listy. Usunięcie `reader.cancel()` zostaje świadomie bez testu.
+- F4: test beacona niesie `Origin`, a osobny przypadek JSON sprawdza sam `Sec-Fetch-Site`. Trasa i plan nazywają `checkOrigin` pierwszą bramką dla `text/plain`.
+- F6: `log-failure.ts` importuje `NAME_SHAPE` ze `steps.ts`, więc jest jedna kopia. Moduł `steps.ts` nie ma importów i jest bezpieczny dla przeglądarki, więc kierunek zależności jest w porządku.
+- F7: `now?` zniknął z kontraktu, każda odpowiedź ma `no-store`, a test 405 obejmuje `GET`, `PUT` i `DELETE`.
+
+Drobiazg bez wpływu, nie jest to nowe znalezisko: `reader.cancel()` stoi teraz wewnątrz `try`, więc gdyby samo anulowanie rzuciło, za duże ciało dostałoby 400 zamiast 413. W obu przypadkach to odmowa bez linii i bez tokenu.
+
+7.8 i 7.9 zostają u właściciela po pierwszym wdrożeniu.
