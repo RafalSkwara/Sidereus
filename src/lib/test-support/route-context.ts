@@ -14,8 +14,17 @@ type RouteContext = Parameters<APIRoute>[0];
 export interface RouteContextOptions {
   /** The posted form: a field with several values (`targets`) is an array. Ignored when `body` is set. */
   form?: Record<string, string | string[]>;
-  /** A raw body with its content type, for the request a browser would never send from a form. */
-  body?: { content: string; type: string };
+  /**
+   * A raw body with its content type, for the request a browser would never send from a form. A `ReadableStream` has no
+   * `Content-Length`, as a chunked upload has none.
+   */
+  body?: { content: string | ReadableStream<Uint8Array>; type: string };
+  /** The request's URL; default `http://localhost/api/test`. */
+  url?: string;
+  /** Extra request headers (`Origin`, `Sec-Fetch-Site`, `Content-Length`); they win over the body's content type. */
+  headers?: Record<string, string>;
+  /** Default `POST`; a `GET` or `HEAD` carries no body. */
+  method?: string;
   params?: Record<string, string>;
   supabase?: TypedSupabaseClient | null;
   user?: { id: string } | null;
@@ -23,14 +32,29 @@ export interface RouteContextOptions {
 
 /** A context with the `request`, `url`, `params`, `redirect` and the `locals` the routes read; every other field is absent. */
 export function routeContext(options: RouteContextOptions = {}): RouteContext {
-  const { form = {}, body, params = {}, supabase = null, user = { id: "user-1" } } = options;
-  const request = body
-    ? new Request("http://localhost/api/test", {
-        method: "POST",
-        body: body.content,
-        headers: { "content-type": body.type },
-      })
-    : new Request("http://localhost/api/test", { method: "POST", body: formBody(form) });
+  const {
+    form = {},
+    body,
+    url = "http://localhost/api/test",
+    headers = {},
+    method = "POST",
+    params = {},
+    supabase = null,
+    user = { id: "user-1" },
+  } = options;
+  const init: RequestInit & { duplex?: "half" } = { method, headers };
+  if (method !== "GET" && method !== "HEAD") {
+    if (body) {
+      init.body = body.content;
+      init.headers = { "content-type": body.type, ...headers };
+      if (typeof body.content !== "string") {
+        init.duplex = "half";
+      }
+    } else {
+      init.body = formBody(form);
+    }
+  }
+  const request = new Request(url, init);
   return {
     request,
     url: new URL(request.url),

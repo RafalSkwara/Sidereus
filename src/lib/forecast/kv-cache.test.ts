@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 /**
- * `kvForecastCache` is the one module that imports `cloudflare:workers`, which Vitest cannot resolve, so the binding
+ * `kvForecastCache` is one of two modules that import `cloudflare:workers`, which Vitest cannot resolve, so the binding
  * object is supplied through the shared seam; each case sets what the mock's `env` holds before the module loads.
  */
 const binding = vi.hoisted((): { env: Record<string, unknown> } => ({ env: {} }));

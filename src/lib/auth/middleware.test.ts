@@ -1,6 +1,7 @@
 import { AuthRetryableFetchError } from "@supabase/supabase-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { CLIENT_ERROR_PATH } from "@/lib/observability/client/steps";
 import { captureConsole, type ConsoleCapture } from "@/lib/test-support/route-context";
 import { EMAIL, LEAK } from "@/lib/test-support/supabase-fake";
 
@@ -18,9 +19,12 @@ vi.mock("astro:env/server", async () =>
   }),
 );
 
-const mocks = vi.hoisted(() => ({ getClaims: vi.fn<() => Promise<unknown>>() }));
+const mocks = vi.hoisted(() => {
+  const getClaims = vi.fn<() => Promise<unknown>>();
+  return { getClaims, createServerClient: vi.fn(() => ({ auth: { getClaims } })) };
+});
 vi.mock("@supabase/ssr", () => ({
-  createServerClient: () => ({ auth: { getClaims: mocks.getClaims } }),
+  createServerClient: mocks.createServerClient,
   parseCookieHeader: () => [],
 }));
 
@@ -30,6 +34,7 @@ let logs: ConsoleCapture;
 beforeEach(() => {
   logs = captureConsole();
   mocks.getClaims.mockReset();
+  mocks.createServerClient.mockClear();
 });
 afterEach(() => {
   logs.restore();
@@ -99,5 +104,30 @@ describe("onRequest", () => {
     expect(response.status).toBe(200);
     expect(next).toHaveBeenCalledTimes(1);
     expect(logs.errors).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("onRequest for the client-error endpoint", () => {
+  it("passes the path on at once, any method, with no Supabase client, no session read and no locals, while another path still resolves the user", async () => {
+    withUser();
+    // The route also answers under a trailing slash (`trailingSlash` is `ignore`), so that spelling skips the session too.
+    for (const [path, method] of [
+      [CLIENT_ERROR_PATH, "POST"],
+      [CLIENT_ERROR_PATH, "GET"],
+      [`${CLIENT_ERROR_PATH}/`, "POST"],
+      [`${CLIENT_ERROR_PATH}//`, "POST"],
+    ]) {
+      const { response, next, locals } = await run(path, method);
+      expect(response.status, `${method} ${path}`).toBe(200);
+      expect(next, `${method} ${path}`).toHaveBeenCalledTimes(1);
+      expect(locals, `${method} ${path}`).toEqual({});
+    }
+    expect(mocks.createServerClient).not.toHaveBeenCalled();
+    expect(mocks.getClaims).not.toHaveBeenCalled();
+
+    const other = await run("/tonight");
+    expect(other.locals.user).toEqual({ id: SUB, email: EMAIL });
+    expect(mocks.createServerClient).toHaveBeenCalledTimes(1);
+    expect(mocks.getClaims).toHaveBeenCalledTimes(1);
   });
 });

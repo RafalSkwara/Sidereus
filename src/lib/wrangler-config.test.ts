@@ -42,3 +42,19 @@ describe("wrangler.jsonc pins the observability settings", () => {
     expect(config.preview_urls).toBe(false);
   });
 });
+
+describe("wrangler.jsonc pins the client-error limiter", () => {
+  it("keeps the CLIENT_ERROR_LIMITER binding at 30 per 60 s, so the public endpoint cannot flood the logs", () => {
+    // Without the binding the route falls back to a per-isolate bucket and leaves a `config.rate-limit` line. The
+    // namespace id is the account's own and is not pinned, only that it is a string of digits (Wrangler's schema).
+    const limiters = (readWranglerConfig().ratelimits ?? []) as {
+      name: string;
+      namespace_id: unknown;
+      simple: { limit: number; period: number };
+    }[];
+    const limiter = limiters.find((entry) => entry.name === "CLIENT_ERROR_LIMITER");
+    expect(limiter).toBeDefined();
+    expect(limiter?.simple).toEqual({ limit: 30, period: 60 });
+    expect(limiter?.namespace_id).toMatch(/^\d+$/);
+  });
+});

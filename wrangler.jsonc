@@ -12,6 +12,9 @@
   // Per-site Open-Meteo forecast cache (src/lib/forecast/kv-cache.ts). After changing bindings,
   // rerun `npm run cf:types` and commit worker-configuration.d.ts.
   "kv_namespaces": [{ "binding": "FORECAST_CACHE", "id": "61441b2363ea41fca5731cfbc735b006" }],
+  // POST /api/client-error's log-flood limit (src/lib/observability/rate-limit.ts): one constant key, 30 reports per 60 s
+  // per Cloudflare location. The namespace id is unused elsewhere in the account (owner, 2026-10-19).
+  "ratelimits": [{ "name": "CLIENT_ERROR_LIMITER", "namespace_id": "947310", "simple": { "limit": 30, "period": 60 } }],
   "observability": {
     "enabled": true,
     // The Open-Meteo request's query string carries site coordinates; keep it out of logs and traces.

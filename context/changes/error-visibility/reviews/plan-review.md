@@ -174,3 +174,152 @@ Komentarze w `sw.ts:507-508` i `:585-586` („Offline or timed out”) opisują 
   bezpieczniejszy i powinien być jedyną opcją.
 - **Fix**: Poprawić cztery zdania jak wyżej.
 - **Decision**: Taken: (a) Key Discoveries now cites `sw.ts:766-767` (`GET` and `POST`) and the `mode: "navigate"` reason; (b) the smoke foreign-`Origin` step uses JSON so it proves the route, and the text says Astro's `checkOrigin` answers the `text/plain` variant (covered by the route test); (c) "a fake context" now names the virtual-module mocks; (d) §7 states the probe never changes the production variable, even briefly (the current 1.10 text only offers Version URL, Preview and a separate Worker, so no production-variable option remained to delete).
+
+---
+
+<!-- PLAN-REVIEW-REPORT -->
+# Plan Review: Production Error Visibility (M-4 S-07) — runda 3 (fazy 7-9)
+
+- **Plan**: context/changes/error-visibility/plan.md (commit 653df06, gałąź `feat/error-visibility-client`)
+- **Mode**: Focused (tylko fazy 7-9; fazy 1-6 scalone i wdrożone), weryfikacja w kodzie worktree bezpośrednio
+- **Date**: 2026-10-19
+- **Reviewer**: herdr agent `reviewer` (tylko ten plik; `plan.md` i `change.md` bez zmian, nic nie commitowane)
+- **Verdict**: REVISE (lekko: cztery poprawki kontraktu i kryteriów, bez zmiany architektury; po nich faza 7 może ruszać)
+- **Findings**: 0 critical, 4 warnings, 3 observations
+
+## Verdicts
+
+| Dimension | Verdict |
+|-----------|---------|
+| End-State Alignment | PASS |
+| Lean Execution | PASS |
+| Architectural Fitness | PASS |
+| Blind Spots | WARNING (F2, F3, F4) |
+| Plan Completeness | WARNING (F1) |
+
+## Grounding
+
+Sprawdzone w worktree (HEAD 653df06, `node_modules` obecne):
+
+- `src/sw.ts`: dokładnie 26 miejsc, jak podaje tabela dryfu: 17 × `.catch(() => undefined)` (79, 254, 340, 402, 685, 703, 711, 715, 716, 737, 748, 774, 778, 782, 789, 792, 798), `.catch(() => null)` w 85, `.then(task, task)` w 78, `.then(resolve, () => …)` w 617, gołe `catch {}` w 507 i 585, cztery warunkowe rethrow w 607, 627, 719, 759; `isNavigation` i rejestracja `GET`/`POST` w 765-767 ✓. Wpis allowlisty `src/sw.ts` ma `count: 26` ✓.
+- Strażnik: `REPORTER_MODULES` = `@/lib/observability/client`, `@/lib/offline/report`, dopasowanie po dokładnym specyfikatorze (test z `./elsewhere` jest czerwony) ✓; stała `CLIENT` z powodem „reported by Phases 7-9” ✓.
+- `log-failure.ts`: `CODE_SHAPE` nie istnieje, jest `isLoggableCode` (SQLSTATE, PGRST, cztery kroki prognozy, 88 kodów auth-js); `nameOf` czyta nazwę tylko z instancji `Error`; `NAME_SHAPE` jest lokalny (nieeksportowany) — plan każe zdefiniować własny w `client/steps.ts` ✓; komentarz nad `FAILURE_STEPS` zapowiada `client.<ClientStep>` jako typ szablonowy ✓.
+- `middleware.ts`: cienki wrapper (preferencje, zegar testowy, `createClient`, `sessionUser`) ✓; `middleware.test.ts` ma harness `run(path, method)` ✓.
+- `test-support/route-context.ts`: tylko stały `http://localhost/api/test`, bez nagłówków i strumienia ✓ (tabela dryfu ma rację). `virtual-modules.ts` eksportuje `cloudflareWorkers(env)` ✓.
+- `scripts/smoke.mjs` `request()`: stały `Origin: BASE_URL`, tylko formularz ✓.
+- Astro 7.3.2 `origin-check.js`: 403 dla nie-same-origin `POST` z `text/plain`, formularzem albo bez `content-type`; JSON przechodzi do trasy ✓ (podstawa §4 smoke).
+- Wrangler 4.145.0, `@cloudflare/vite-plugin` 1.62.3 (override), miniflare 5.20260930.0-alpha. `RateLimit` / `RateLimitOptions` są już w `worker-configuration.d.ts` (linie 13525-13537).
+- Wyspy: `map-panel.tsx:52` i `:162` (z `reportError`, pomija `LEAFLET_CSS_FAILED`), `LocationPicker.tsx:64, 74, 128, 168, 198`, `gear/catalogue/load.ts:15, 23`, `offline/register.ts:8`, `EyepieceForm.tsx:64`, `TelescopeForm.tsx:63`, `OnboardingWizard.tsx:200, 210`, `geocode.ts:98`, `install.ts:82`, `locate.ts:60` ✓. `Layout.astro`: skrypt `is:inline` w head (52) i moduł na dole (111, importuje `install`, `page-state`, `register`) ✓.
+- Brief↔plan: `plan-brief.md:64` nadal mówi „`namespace_id` must be an int…” (zob. F5).
+- Progress↔fazy 7-9: 8 + 7 + 7 kryteriów zgodnych z sekcjami Success Criteria; brak checkboxów poza Progress ✓.
+
+## Weryfikacja poprawek z rundy 2 (F1-F7, nigdy wcześniej nie sprawdzonych)
+
+| Uwaga | Status | Gdzie w planie |
+| --- | --- | --- |
+| F1 podrobione zgłoszenia → Issues | ✅ D13: `logNotice`, linie `noted`; 7.2, 7.8, 8.7, 9.7 mówią „noted” i „no Issue”; rezydualne ryzyko zapisane w D9/D13. ⚠️ Jedna część nie trafiła do żadnego kryterium: „the runbook verifies whether such a query can alert” (zob. F4) | D9, D13, 7 §2 |
+| F2 rutynowe błędy sieci w SW | ✅ D14, `isRoutineNetworkFault` w `classify.ts`, `NETWORK_STEPS` przypisywane w 8 §2, „per wake-up” w D9/D14/7 §1/8 §1, przypadek „timeout przy `onLine`” w 8.1. Pozostałość: „per lifetime” w Performance Considerations (F5) | D14, 7 §1, 8 §1-2 |
+| F3 rozszerzenia i hydratacja | ✅ D15 z filtrem `/_astro/`, `island.hydration`, odrzucenia bez filtra; świadome odstępstwo od `/design` uzasadnione (404 poza dev); dowód z sondy Chromium/WebKit dopisany w 9 §1 | D15, 9 §1, 9.3, 9.7 |
+| F4 strażnik nie zna `report`/`reportAnd` | ✅ Zrobione już w fazie 1 i potwierdzone w kodzie (`REPORTER_MODULES`, `REPORTER_NAMES`, szósta próbka) | Faza 1 §3, 8 §1, 9 §1 |
+| F5 limit 512 B bez metody odczytu | ✅ Najpierw `Content-Length`, potem strumień z licznikiem do 513. bajtu; przypadek chunked w 7.2 | 7 §2, 7.2 |
+| F6 pola `cf` za późno | ✅ Przeniesione do 1.9 i wykonane (1.9 FAILED → hotfix #187) | 1.9 |
+| F7 drobiazgi (a-d) | ✅ (a) `sw.ts:766-767` i powód `mode: "navigate"`; (b) smoke wysyła JSON, `text/plain` pokrywa test trasy — potwierdzone w `origin-check.js`; (c) Key Discoveries nazywa mocki; (d) sonda nigdy nie zmienia zmiennej produkcyjnej | Key Discoveries, 7 §4, 1 §7 |
+
+## Edycje prowadzącego po dryfie (tabela z 2026-10-19)
+
+Wszystkie wiersze zweryfikowane w kodzie i trafne, z dwoma wyjątkami: wiersz „Held without change … `npm run cf:types`” jest sprzeczny z ustaleniem fazy 1 (F1), a wiersz o `sw.ts` liczy 22 miejsca do zgłaszania, choć dwa z nich nie połykają błędu (F2).
+
+## Trzy otwarte punkty prowadzącego
+
+1. **Usunięcie `code` ze zgłoszeń klienta — POTWIERDZAM.** D9 w obecnym brzmieniu w ogóle nie wymienia `code` (mówi o zamkniętej liście kroków, 512 B, limiterze); „name and code” było tylko w starym 7 §2. Uzasadnienie trzyma się kodu: `isLoggableCode` przepuszcza wyłącznie słownictwo Postgresa, PostgREST, prognozy i auth-js, którego żaden błąd przeglądarki nie niesie (`DOMException.code` to liczba), a import do bundla workera wciągnąłby logger i 88 kodów. Endpoint jest nowy, więc nie ma starych klientów do zepsucia. Jedna uwaga na przyszłość: schemat jest ścisły (nieznany klucz → 400), a strony i worker żyją w przeglądarkach dłużej niż jedno wdrożenie, więc każde przyszłe rozszerzenie kontraktu musi najpierw wdrożyć serwer akceptujący nowe pole, a dopiero potem klienta (warto jedno zdanie w runbooku, Faza 9 §3).
+2. **Cichy fallback przy braku `CLIENT_ERROR_LIMITER` w produkcji — dodać linię raz na izolat.** Zob. F3: lokalnie wiązanie istnieje (miniflare je symuluje), więc fallback działa tylko w Vitest i przy zepsutym wdrożeniu — a to jest dokładnie przypadek `forecast.cache-missing` / `config.supabase`.
+3. **Czy lokalny `npm run preview` (workerd) honoruje `ratelimits` — tak, prawie na pewno.** miniflare 5.20260930 ma wtyczkę `ratelimit` (`node_modules/miniflare/dist/src/workers/ratelimit/`: Durable Object z kubełkami w SQLite, okna wyrównane do zegara, okresy 10/60 s), wrangler 4.145 mapuje `ratelimits` z konfiguracji na opcje miniflare (`cli.js:178966`), a `@cloudflare/vite-plugin` 1.62.3 buduje opcje miniflare z tej samej konfiguracji. Nie uruchamiałem podglądu, więc to wniosek z kodu, nie obserwacja. Skutki: (a) lokalny smoke i e2e trafiają w prawdziwy (symulowany) limit 30/min na jeden stały klucz — suma zgłoszeń z 7 §4, 8.5 i 9.3 to około 10, więc mieści się, ale implementer nie powinien dziwić się 429 przy powtarzanych lokalnych przebiegach w tej samej minucie; (b) gałąź „brak wiązania” nie jest w ogóle ćwiczona lokalnie, co wzmacnia F3.
+
+## Findings
+
+### F1 — `npm run cf:types` „bez diffu” jest sprzeczne z ustaleniem fazy 1
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Faza 7 §3 („`npm run cf:types` regenerates `worker-configuration.d.ts`, committed”), kryterium 7.4 i Automated „`npm run cf:types` leave no diff”, tabela dryfu („Held without change … `npm run cf:types`”)
+- **Detail**: Faza 1 §5 zapisała: „`worker-configuration.d.ts` is left as is: `wrangler types --check` reports it stale, but regenerating needs the repo's `.dev.vars` and is not CI-neutral”. Plik w worktree nadal ma nagłówek `workerd@1.20260911.1` (sprzed podbicia do 4.145), a jego `Env` zawiera `SUPABASE_URL` / `SUPABASE_KEY` z `.dev.vars` maszyny, która go generowała. Regeneracja Wranglerem 4.145 przepisze więc tysiące linii typów runtime i wciągnie zmienne z lokalnego `.dev.vars` implementera (u właściciela bywa tam np. `FORECAST_BASE_URL` do symulowania awarii) — kryterium „no diff” nie da się spełnić powtarzalnie, a commit takiego pliku to szum w PR. Tymczasem typ `RateLimit` już jest w pliku (linie 13525-13537).
+- **Fix**: Nie regenerować. `rate-limit.ts` czyta wiązanie wzorem `kv-cache.ts`: `(env as Partial<Cloudflare.Env> & { CLIENT_ERROR_LIMITER?: RateLimit }).CLIENT_ERROR_LIMITER` — i tak potrzebny jest test `undefined` dla fallbacku. Z 7 §3 usunąć `worker-configuration.d.ts` i `cf:types`; 7.4 i Automated: tylko `npx wrangler deploy --dry-run` plus pin w `wrangler-config.test.ts`; poprawić wiersz tabeli dryfu. (Regeneracja pliku to osobny, mechaniczny chore, jeśli w ogóle.)
+  - Strength: brak zależności od lokalnego `.dev.vars`, kryterium powtarzalne, zero szumu w diffie.
+  - Tradeoff: jeden lokalny typ zamiast wygenerowanego.
+  - Confidence: HIGH — zapis fazy 1 i nagłówek pliku mówią to samo; pliku `.dev.vars` celowo nie czytałem.
+  - Blind spot: nie uruchamiałem `wrangler types --check` (czyta `.dev.vars`).
+
+### F2 — `serial()` w `sw.ts:78-79` to nie połykanie błędu; zgłaszanie tam podwaja raporty, a przebudowa `.then(task, task)` dodaje martwy kod
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Blind Spots
+- **Location**: Faza 8 §1 (ostatnie zdania o `indexQueue.then(task, task)`), 8 §2 (lista 26 miejsc), kryterium 8.2 i Automated „drops from 26 sites to the four”
+- **Detail**: `serial(task)` robi `run = indexQueue.then(task, task); indexQueue = run.catch(() => undefined); return run;`. (1) `.catch` w 79 nie gubi błędu: ten sam `run` jest zwracany i każdy z dziewięciu wywołujących (`sw.ts:105, 136, 144, 166, 194, 271, 353, 379, 554`) go `await`uje, więc odrzucenie dociera do łańcucha, który kończy się w jednym ze zgłaszanych miejsc (np. `commitIsland(...).catch(...)` w 737). Zgłoszenie w 79 jako `sw.index` daje drugi raport tej samej awarii pod innym krokiem — deduplikacja „ten sam krok i nazwa” go nie złapie, a limit to 10 na wybudzenie. (2) Handler odrzucenia w 78 jest nieosiągalny: `indexQueue` to zawsze `Promise.resolve()` albo `run.catch(() => undefined)`, więc nigdy nie jest odrzucony. Plan każe go „przebudować na inline handler, który zgłasza” — to kod, który nigdy się nie wykona.
+- **Fix**: Zostawić 78 i 79 na allowliście z powodem „kolejka indeksu: odrzucenie dociera do wywołującego przez `return run`, który je zgłasza; `indexQueue` nigdy nie jest odrzucony”. 8 §1: usunąć zdanie o przebudowie; 8 §2: z 22 miejsc do zgłoszenia zostaje 20; 8.2 i Automated: wpis `src/sw.ts` spada z 26 do 6 (4 rethrow pod D14 + 2 kolejki), z dwoma powodami w jednym `reason`. Zaktualizować wiersz tabeli dryfu i opis wpisu w strażniku.
+  - Strength: jeden raport na awarię, żadnego martwego kodu, kryterium zgodne z kodem.
+  - Tradeoff: dwa wpisy więcej na allowliście, oba z prawdziwym powodem.
+  - Confidence: HIGH — wynika wprost z `sw.ts:76-81` i listy wywołań.
+  - Blind spot: brak.
+
+### F3 — Brak wiązania limitera w produkcji jest cichy; lokalnie wiązanie istnieje, więc ta gałąź to tylko zepsute wdrożenie
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Blind Spots
+- **Location**: Faza 7 §3 („A missing binding (local dev, tests) falls back to the in-memory bucket”), `log-failure.ts` `FAILURE_STEPS`
+- **Detail**: Kontrakt zakłada, że wiązania brak „lokalnie i w testach”. Lokalnie (miniflare, punkt 3 wyżej) ono jest, więc w praktyce fallback działa tylko w Vitest i wtedy, gdy wdrożenie zgubiło `ratelimits` (np. wygenerowana konfiguracja go nie przeniosła, albo ktoś użyje `env` w Wranglerze, gdzie `ratelimits` jest „notInheritable”). Wtedy limit po cichu staje się 30/min **na izolat** zamiast na lokalizację — wciąż ograniczony, ale słabszy i niewidoczny. To ta sama klasa awarii co `forecast.cache-missing` i `config.supabase`, które faza 1 i 3 logują raz na izolat (`kv-cache.ts:7-23`, `supabase.ts:30-37`). Linia nie jest podrabialna (wyzwala ją brak konfiguracji, nie treść żądania) i jest ograniczona do jednej na izolat, więc może być na poziomie error (Issue).
+- **Fix**: W `rate-limit.ts` przy pierwszym braku wiązania w izolacie `logFailure("config.rate-limit")` (krok dopisany do `FAILURE_STEPS`, wiersz w tabeli runbooka), potem fallback jak w planie; test w `client-error`/`rate-limit` z mockiem `cloudflare:workers` bez wiązania: jedna linia na dwa wywołania. 7.8 dodatkowo: „no `sidereus: config.rate-limit failed` line after the deploy”. Komentarz w `kv-cache.ts` („the only module that imports `cloudflare:workers`”) i zdanie w CLAUDE.md o tym samym poprawić (zob. F5).
+  - Strength: domyka jedyny cichy fallback, wzorem już przyjętym w projekcie.
+  - Tradeoff: jeden krok więcej w słowniku.
+  - Confidence: HIGH dla wzorca; MEDIUM co do tego, jak często to wystąpi (raczej nigdy — i o to chodzi).
+  - Blind spot: nie zweryfikowałem, że `dist/server/wrangler.json` przenosi `ratelimits` (7.4 `--dry-run` i 7.8 to pokażą).
+
+### F4 — Weryfikacja „czy zapytanie Workers Logs może alarmować” (decyzja z rundy 2, F1) nie ma kryterium; strona klienta może zostać bez ścieżki alarmu bez niczyjej decyzji
+
+- **Severity**: ⚠️ WARNING
+- **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
+- **Dimension**: Blind Spots
+- **Location**: D13, Faza 9 §3 (runbook: „client step table and the endpoint's limits”), kryteria 7.8 i 9.7; runbook `error-visibility.md:129` („Whether a query can alert is unverified”)
+- **Detail**: Decyzja rundy 2 brzmiała: „the runbook verifies whether such a query can alert”. Żadne kryterium faz 7-9 tego nie zleca: 7.8 sprawdza tylko, że linia `noted` się pojawia i nie tworzy Issue, 9 §3 dopisuje tabelę kroków i limity. Jeśli Workers Logs nie umie alarmować na zapisane zapytanie, wszystkie zgłoszenia przeglądarki (D5: cel całych faz 7-9) są widoczne tylko wtedy, gdy operator sam zajrzy — a to jest dokładnie stan „cicho”, z którym walczy S-07. To może być akceptowalne, ale powinno być decyzją właściciela, nie skutkiem pominięcia.
+- **Fix**: Dodać do 7.8 (pierwsze wdrożenie z endpointem): właściciel sprawdza w panelu, czy zapisane zapytanie Workers Logs (`sidereus: client.`) może mieć alert z progiem; wynik do runbooka §client. Jeśli nie może: D13 dostaje dopisek „brak alarmu dla strony klienta; przegląd ręczny raz w tygodniu (albo follow-up)”, a 6.8-podobny follow-up trafia na tablicę.
+  - Strength: zamyka otwarty punkt rundy 2 i zmusza do jawnej decyzji.
+  - Tradeoff: jeden krok więcej dla właściciela przy 7.8.
+  - Confidence: MEDIUM — nie znam aktualnych możliwości alertów Workers Observability; dlatego to kryterium, nie założenie.
+  - Blind spot: możliwości alertów w panelu Cloudflare (nie sprawdzane w tej rundzie).
+
+### F5 — Resztki starego brzmienia poza fazami 7-9
+
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Performance Considerations (plan.md:683), Migration Notes (:687), `plan-brief.md:64`, `src/lib/forecast/kv-cache.ts:11-12` i CLAUDE.md („only `kv-cache.ts` imports `cloudflare:workers`”)
+- **Detail**: Performance mówi „the worker at most 10 per lifetime” (runda 2 F2 zmieniła to na „per wake-up”); Migration Notes i brief mówią, że `namespace_id` „must be an integer” (tabela dryfu: string cyfr). Po fazie 7 `rate-limit.ts` będzie drugim importerem `cloudflare:workers`, a komentarz w `kv-cache.ts` i opis projektu w CLAUDE.md twierdzą, że jedynym jest `kv-cache.ts`.
+- **Fix**: Poprawić dwa zdania w planie i jedno w briefie; do 9 §3 (albo 7 §3) dopisać aktualizację komentarza `kv-cache.ts` i zdania w CLAUDE.md.
+
+### F6 — Kontrakt trasy: `source` niezdefiniowany i nielogowany; zgłoszenie bez nazwy zaloguje `name: "Error"`
+
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Plan Completeness
+- **Location**: Faza 7 §1 (`{ source, step, name? }`), 7 §2 (`logNotice("client.<step>", namedError(name))`), 9.3
+- **Detail**: (a) Plan nigdzie nie podaje wartości `source` ani reguły jego zgodności z rodziną kroku, a linia logu niesie tylko `step` i `name` — `source` jest więc nadmiarowe (rodzina `sw.*` / `island.*` już to mówi) i otwiera przypadek „`source: "page"` z krokiem `sw.index`”. (b) `nameOf` zwraca `"Error"` dla świeżego `new Error()`; jeśli trasa zbuduje błąd także dla zgłoszenia bez `name`, linia pokaże `name: "Error"`, czyli informację, której klient nie wysłał.
+- **Fix**: Usunąć `source` z kontraktu (schemat `{ step, name? }`, 9.3 „only `step` and `name`”), albo zdefiniować `"sw" | "page"` i wymagać zgodności z prefiksem kroku (400 inaczej). Trasa przekazuje błąd tylko wtedy, gdy `name` jest obecne; bez niego `logNotice(step)`. Przypadek „bez nazwy → linia bez `name`” do 7.2.
+
+### F7 — Wyspy: `island.geocode` zgłaszać dopiero po sprawdzeniu `aborted`; nazwa zawsze `Error`
+
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Blind Spots
+- **Location**: Faza 9 §2 (`LocationPicker.tsx:198`, `geocode.ts:98`), 9 §2 o `catalogue/load.ts:15,23` i `LocationPicker.tsx:64`
+- **Detail**: (a) Handler odrzucenia wyszukiwania (`LocationPicker.tsx:204-209`) najpierw wychodzi, gdy `controller.signal.aborted` — każde kolejne naciśnięcie klawisza anuluje poprzednie zapytanie. Zgłoszenie postawione przed tym `return` wysyłałoby raport przy zwykłym pisaniu. (b) `geocode.ts:98` celowo rzuca `new Error(GEOCODING_FAILED)` bez `cause`, więc każdy `island.geocode` ma `name: "Error"` (timeout, sieć, HTTP i schemat wyglądają tak samo), a po deduplikacji to jeden raport na stronę bez diagnozy; do tego D14 (rutynowe błędy sieci) dotyczy tylko kroków `sw.*`, więc słaba sieć w terenie trafi tu jako szum. (c) Memo-resety w `catalogue/load.ts:15,23` i `LocationPicker.tsx:64` widzą to samo odrzucenie co konsumenci (`EyepieceForm`, `TelescopeForm`, `OnboardingWizard`, `LocationPicker:128`); wspólny reporter i deduplikacja to scalą, ale wzorzec projektu (`finder-stars.ts`: „resets the memo only; the same rejection still reaches every awaiting caller”) to raczej zostawić memo-resety na allowliście i zgłaszać u konsumenta. Wyjątek: `map-panel.tsx:52`, bo `:162` celowo pomija `LEAFLET_CSS_FAILED` — tam zgłoszenie musi zostać.
+- **Fix**: 9 §2: „report after the `aborted` check”; rozważyć nazwane etapy w `geocode.ts` (np. `name` = `GeocodeHttp` / `GeocodeNetwork` / `GeocodeSchema`, zgodne z `NAME_SHAPE`, bez treści), albo zapisać, że `island.geocode` to tylko licznik. Memo-resety: decyzja implementera, z powodem jak w `finder-stars.ts`.
+
+## Daty odcięcia
+
+Trzymają się. Warunek „faza 6 scalona do 2026-10-28” spełniony (#194, 2026-10-17). Do „faza 7 wdrożona do 2026-10-30” zostaje 11 dni na jedną sesję implementacji plus przegląd, merge i deploy — realne. Jedyny element na ścieżce krytycznej poza agentem to `namespace_id`: właściciel powinien potwierdzić wolny numer (albo podać go) **przed** otwarciem PR fazy 7, nie przy deployu, bo bez niego 7.4 i 7.8 stoją. 8 i 9 do 2026-11-02 są niezależne i każda to jedna sesja; F2 i F7 ich nie wydłużają.
+
+## Podsumowanie
+
+Poprawki z rundy 2 są zastosowane poprawnie (F1 z jedną niedokończoną częścią, zob. F4), a edycje po dryfie zgadzają się z kodem poza F1 i F2. Usunięcie `code` potwierdzone. Po F1-F4 (tekst planu i kryteriów, bez zmiany architektury) faza 7 może ruszać.

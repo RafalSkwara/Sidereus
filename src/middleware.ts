@@ -13,9 +13,16 @@ import {
 import { isAuthEntryPath, safeNextPath, signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 import { readTestNow } from "@/lib/clock";
+import { isClientErrorPath } from "@/lib/observability/client/steps";
 
 // A thin wrapper: the session read and its failure trace are `sessionUser` (src/lib/auth/session-user.ts).
 export const onRequest = defineMiddleware(async (context, next) => {
+  // The client-error endpoint (error-visibility, Phase 7) is public and reads no session: a beacon from the service
+  // worker or a signed-out page must not cost a Supabase Auth call. Any method, so a probing GET costs none either.
+  if (isClientErrorPath(context.url.pathname)) {
+    return next();
+  }
+
   // Preferences resolve for every request, with or without Supabase, so Layout can theme the first paint.
   context.locals.theme = resolveTheme(context.cookies.get(THEME_COOKIE)?.value);
   context.locals.locale = resolveLocale(
