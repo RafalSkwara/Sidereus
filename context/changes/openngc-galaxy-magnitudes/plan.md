@@ -358,11 +358,11 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [x] 3.1 The four oracles still pass unedited after the references land (they first ran in Phase 2)
-- [x] 3.2 git diff shows no assertion edit in those files except the extended HARD list and, only for a diverging new reference, the logged cap raise
-- [x] 3.3 The new references pass (expectation.test.ts)
-- [x] 3.4 Deliberate-break check: on an in-memory M106 with V back at 9.29 expectationFor gives galaxyFaint at Bortle 5 and Phase 1's oracle names M106
-- [x] 3.5 evidence/before-after.md exists with the 12 rows and the M106 totals from one named call
+- [x] 3.1 The four oracles still pass unedited after the references land (they first ran in Phase 2) — 3e85240
+- [x] 3.2 git diff shows no assertion edit in those files except the extended HARD list and, only for a diverging new reference, the logged cap raise — 3e85240
+- [x] 3.3 The new references pass (expectation.test.ts) — 3e85240
+- [x] 3.4 Deliberate-break check: on an in-memory M106 with V back at 9.29 expectationFor gives galaxyFaint at Bortle 5 and Phase 1's oracle names M106 — 3e85240
+- [x] 3.5 evidence/before-after.md exists with the 12 rows and the M106 totals from one named call — 3e85240
 
 #### Manual
 
@@ -373,11 +373,11 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [ ] 4.1 astro sync and astro check have 0 errors; npm run lint is clean
-- [ ] 4.2 npm test (both projects) is green, counts reported
-- [ ] 4.3 A fresh npm run build succeeds
-- [ ] 4.4 npm run test:e2e and npm run smoke pass against the local preview, counts reported
-- [ ] 4.5 Only the intended files changed (git diff --stat origin/main)
+- [x] 4.1 astro sync and astro check have 0 errors; npm run lint is clean
+- [x] 4.2 npm test (both projects) is green, counts reported
+- [x] 4.3 A fresh npm run build succeeds
+- [x] 4.4 npm run test:e2e and npm run smoke pass against the local preview, counts reported
+- [x] 4.5 Only the intended files changed (git diff --stat origin/main)
 
 #### Manual
 
