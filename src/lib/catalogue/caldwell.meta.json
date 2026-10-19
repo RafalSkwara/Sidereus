@@ -80,7 +80,7 @@
       "group": "late",
       "medianBV": 0.47,
       "groupCount": 3,
-      "reason": "OpenNGC's V-Mag 9.64 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 9.5 it gives a B-V of -0.14, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.47) of the 3 credible galaxies of Hubble group late. B-Mag may itself be too bright: NED's single unfiltered magnitude (9.99) is about 0.5 mag fainter, so this V may be about 0.4 mag too bright. The group is thin: the median of 3 galaxies is the minimum the build accepts.",
+      "reason": "OpenNGC's V-Mag 9.64 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 9.5 it gives a B-V of -0.14, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.47) of the 3 credible galaxies of Hubble group late. B-Mag may itself be too bright: NED's single main-table magnitude (9.99, no filter given; https://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=NGC4449&extend=no&of=ascii_bar, read 2026-10-19) is about 0.5 mag fainter than the B-Mag, so this V may be about 0.5 mag too bright. The group is thin: the median of 3 galaxies is the minimum the build accepts.",
       "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
     },
     {
@@ -106,7 +106,7 @@
       "group": "Sa-Sb",
       "medianBV": 0.81,
       "groupCount": 18,
-      "reason": "OpenNGC's V-Mag 10.86 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.05 it gives a B-V of -0.81, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb. B-Mag may itself be too bright: NED's single unfiltered magnitude (10.42) is about 0.4 mag fainter, so this V may be about 0.4 mag too bright.",
+      "reason": "OpenNGC's V-Mag 10.86 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.05 it gives a B-V of -0.81, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb. B-Mag may itself be too bright: NED's single main-table magnitude (10.42, no filter given; https://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=NGC4565&extend=no&of=ascii_bar, read 2026-10-19) is about 0.4 mag fainter than the B-Mag, so this V may be about 0.4 mag too bright.",
       "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
     },
     {

@@ -20,7 +20,7 @@ The owner answered the five questions of the first draft on 2026-10-19 (relayed 
 
 ## Divergence cap log
 
-Empty until a new reference diverges. One divergence is expected from the start: M106 at 150 mm / Bortle 6 (plan review F4), cap 3 → 4.
+Rule: when a new reference diverges and the cap is raised (owner's permission, Q5), the entry is logged here in the same commit with the entry and setting, the key the sources support, the key the rule computes, the sources and the new cap.
 
 **2026-10-19, Phase 3: cap 3 → 4 (owner's permission, Q5).**
 - Entry: M106, 150 mm, Bortle 6, `kind: "hard"`, in `KNOWN_DIVERGENCES` (`src/lib/engine/fixtures/expect-reference.ts`). Its Bortle 5 twin lands in `EXPECT_REFERENCES` and passes.
@@ -28,7 +28,7 @@ Empty until a new reference diverges. One divergence is expected from the start:
 - The key the rule computes: `galaxyFaint` (deficit 1.61 against the 1.5 edge, V 8.56 from the colour rule; the published V 8.4 would give 1.45).
 - Why the rule is not changed: the two pages name no Bortle class ("suburban"), so they do not separate Bortle 5 from 6, and moving the edge 0.11 mag to fit one entry would be fitting noise.
 - New cap: 4 (`expectation.test.ts`, `toBeLessThanOrEqual(4)`).
-- Not added: M61. The web check found no 4-8 inch view of it with a stated sky, and what it did find (O'Meara's "intensely bright core ... much fainter disk that swells into view with 70-150x and averted vision", Davies's 8-inch "quite a challenging target") does not settle `galaxySmudge` against `galaxyFaint`. The plan's "at least one more of the 12" is therefore not met; reported to the owner. If Phase 3 raises the cap in `src/lib/engine/expectation.test.ts` (`expect(KNOWN_DIVERGENCES.length).toBeLessThanOrEqual(3)`), the implementer appends here, in the same commit: the entry id and setting, the key the sources support, the key the rule computes, the sources, and the new cap.
+- Not added: M61. The web check found no 4-8 inch view of it with a stated sky, and what it did find (O'Meara's "intensely bright core ... much fainter disk that swells into view with 70-150x and averted vision", Davies's 8-inch "quite a challenging target") does not settle `galaxySmudge` against `galaxyFaint`. The plan's "at least one more of the 12" is therefore not met; reported to the owner.
 
 ## Plan review (2026-10-19, `reviews/plan-review.md`, verdict NEEDS ATTENTION: 0 critical, 4 warnings, 2 observations)
 

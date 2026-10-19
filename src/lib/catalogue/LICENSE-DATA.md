@@ -24,7 +24,7 @@ The V magnitude of 12 galaxies (6 Messier: M58, M61, M88, M91, M98, M106; 6 Cald
 NGC 5005, NGC 4565, NGC 6822, NGC 4039) is a **derived value**, not OpenNGC's: for these galaxies OpenNGC's V
 magnitude, or the B magnitude the generator used in its place, gives a colour (B minus V) below 0.2, which no
 galaxy has. The generator replaces it by the B magnitude minus the median B-V of the catalogue's own credible
-galaxies of the same Hubble group, computed from the same pinned OpenNGC files; no other source is used. It is
+galaxies of the same Hubble group, computed from the same pinned OpenNGC files; no other source is used for the value (the reasons of the NGC 4449 and NGC 4565 entries quote NED's main-table magnitude, with the page it was read from, only to say that their B magnitude may itself be too bright). It is
 covered by the same CC BY-SA 4.0 as the rest of the four files, and each correction is listed per object under
 `overrides` (action `vMagColour`) in `messier.meta.json` and `caldwell.meta.json`, with the original value, the
 group, the median and the reason.

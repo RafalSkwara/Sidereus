@@ -457,9 +457,14 @@ function buildCaldwell(rows) {
 }
 
 /**
- * NED's single unfiltered magnitude for the two galaxies whose B-Mag may itself be too bright (a V computed from it
- * inherits the error). NED's values are read from its object pages (2026-10-19); they are not in OpenNGC's files.
+ * NED's single main-table magnitude (the filter column is empty) for the two galaxies whose B-Mag may itself be too
+ * bright, so that a V computed from it inherits the error. It is quoted only in the doubt sentence of the two
+ * corrections' `reason` (with the page it was read from), never used to compute a V: no other source is used for the
+ * values. Read from NED's object search (`NED_SEARCH`, ascii_bar output, magnitude column) on 2026-10-19; the values are
+ * not in OpenNGC's files.
  */
+const NED_SEARCH = "https://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=";
+const NED_READ_ON = "2026-10-19";
 const B_MAG_DOUBT = {
   NGC4449: 9.99,
   NGC4565: 10.42,
@@ -470,8 +475,9 @@ function colourCaveats(id, bMag, groupCount) {
   const caveats = [];
   const ned = B_MAG_DOUBT[id];
   if (ned !== undefined) {
+    const gap = round(ned - bMag, 1);
     caveats.push(
-      `B-Mag may itself be too bright: NED's single unfiltered magnitude (${ned}) is about ${round(ned - bMag, 1)} mag fainter, so this V may be about 0.4 mag too bright.`,
+      `B-Mag may itself be too bright: NED's single main-table magnitude (${ned}, no filter given; ${NED_SEARCH}${id}&extend=no&of=ascii_bar, read ${NED_READ_ON}) is about ${gap} mag fainter than the B-Mag, so this V may be about ${gap} mag too bright.`,
     );
   }
   if (groupCount === MIN_GROUP_SIZE) {

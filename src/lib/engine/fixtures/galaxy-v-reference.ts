@@ -31,8 +31,8 @@ export interface PublishedV {
 
 /**
  * How far the catalogue's V may sit from a published V before the oracle names the galaxy. 0.3 mag is above the
- * largest gap the colour rule is expected to leave (0.17 mag, M106) and below the smallest error the catalogue has
- * today (0.55 mag, M58 at 10.30 against 9.7).
+ * largest gap the colour rule is expected to leave (0.17 mag, M88 at 9.43 against 9.6) and below the smallest error the
+ * catalogue had before the correction (0.55 mag, M61 at 10.25 against 9.7).
  */
 export const PUBLISHED_V_TOLERANCE_MAG = 0.3;
 
