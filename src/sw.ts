@@ -5,7 +5,8 @@
 // replay offline or when the network times out; a finder chart opened online is stored the same way (per target, with
 // no next-night copy) and dropped when the account loses the full plan. Every decision lives in
 // src/lib/offline/copies.ts; this file only wires it to Workbox routes and the Cache API. It holds site ids, names and
-// target keys, never coordinates, and logs nothing.
+// target keys, never coordinates, and logs nothing: a failure it would otherwise swallow goes to the reporter
+// (src/lib/offline/report.ts), which posts only a step and an error name to /api/client-error.
 import { clientsClaim } from "workbox-core";
 import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
@@ -45,6 +46,7 @@ import {
   type CopyMeta,
   type StoredPage,
 } from "@/lib/offline/copies";
+import { report, reportAnd } from "@/lib/offline/report";
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (string | { url: string; revision: string | null })[] };
 
@@ -82,7 +84,7 @@ function serial<T>(task: () => Promise<T>): Promise<T> {
 
 async function readIndex(cache: Cache): Promise<CopyIndex | undefined> {
   const stored = await cache.match(INDEX_KEY);
-  return stored ? parseIndex(await stored.json().catch(() => null)) : undefined;
+  return stored ? parseIndex(await stored.json().catch(reportAnd("sw.index", null))) : undefined;
 }
 
 async function writeIndex(cache: Cache, index: CopyIndex): Promise<void> {
@@ -150,7 +152,9 @@ async function purgeSignedOut(): Promise<void> {
     await dropCaches();
     return true;
   });
-  if (purged) await storeOfflinePage();
+  // Its fetch is the one network call here: a failure of it is routine like any other `sw.offline-page`, and as before
+  // it never fails the purge itself.
+  if (purged) await storeOfflinePage().catch(reportAnd("sw.offline-page", undefined));
 }
 
 let lastSweep = 0;
@@ -251,7 +255,7 @@ async function keepAssets(paths: Iterable<string>): Promise<void> {
   await Promise.all(
     [...paths].map(async (path) => {
       if (await cache.match(path, MATCH)) return;
-      const response = (await matchPrecache(path)) ?? (await fetch(path).catch(() => undefined));
+      const response = (await matchPrecache(path)) ?? (await fetch(path).catch(reportAnd("sw.precache", undefined)));
       if (response?.ok) await cache.put(path, withoutVary(response));
     }),
   );
@@ -337,7 +341,7 @@ function recordShell(
       at: now,
     });
     return islandUrl;
-  })().catch(() => undefined);
+  })().catch(reportAnd("sw.shell", undefined));
   shellReads.add(read);
   void read.finally(() => shellReads.delete(read));
   return read;
@@ -399,7 +403,7 @@ function commit(
 
 async function afterCommit(assets: readonly string[]): Promise<void> {
   await keepAssets(assets);
-  await storeOfflinePage().catch(() => undefined);
+  await storeOfflinePage().catch(reportAnd("sw.offline-page", undefined));
   await sweep();
 }
 
@@ -504,8 +508,10 @@ async function storeNextCopy(tonight: CopyMeta, scope: string, client: TonightCl
     if (!index) return;
     client?.islands.add(islandUrl);
     await afterCommit(meta.assets);
-  } catch {
-    // Offline or timed out: tonight's copy is stored; the next visit tries again.
+  } catch (error) {
+    // Offline or timed out: tonight's copy is stored; the next visit tries again. A network fault is routine here and
+    // not reported (D14); a failed cache write is.
+    report("sw.next-night", error);
   } finally {
     nextCopiesInFlight.delete(key);
   }
@@ -582,8 +588,10 @@ async function storePageRun(url: URL, clientId: string): Promise<void> {
     if (!index) return;
     client?.islands.add(islandUrl);
     await afterCommit(meta.assets);
-  } catch {
-    // Offline or timed out: the stored copy stays, and the next visit replaces it.
+  } catch (error) {
+    // Offline or timed out: the stored copy stays, and the next visit replaces it. A network fault is routine here and
+    // not reported (D14); a failed cache write is.
+    report("sw.store-page", error);
   }
 }
 
@@ -614,7 +622,8 @@ async function networkFirst(
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timedOut = new Promise<Response | undefined>((resolve) => {
     timer = setTimeout(() => {
-      stored().then(resolve, () => {
+      stored().then(resolve, (error: unknown) => {
+        report("sw.shell", error);
         resolve(undefined);
       });
     }, NETWORK_TIMEOUT_MS);
@@ -682,7 +691,9 @@ async function storedPage(
 registerRoute(
   ({ url, sameOrigin }: RouteMatchCallbackOptions) => sameOrigin && url.pathname.startsWith("/_astro/"),
   async ({ request, url, event }: RouteHandlerCallbackOptions) => {
-    event.waitUntil(noteAsset((event as FetchEvent).clientId, url.pathname).catch(() => undefined));
+    event.waitUntil(
+      noteAsset((event as FetchEvent).clientId, url.pathname).catch(reportAnd("sw.asset-note", undefined)),
+    );
     const kept = await (await caches.open(ASSETS_CACHE)).match(url.pathname, MATCH);
     return kept ?? (await matchPrecache(url.pathname)) ?? fetch(request);
   },
@@ -700,7 +711,7 @@ registerRoute(
     if (fetchEvent.resultingClientId) trackClient(fetchEvent.resultingClientId);
     // Before the network answers (impl review F3); a rejection only means nothing is stored from this navigation.
     const scope = currentScope();
-    void scope.catch(() => undefined);
+    void scope.catch(reportAnd("sw.index", undefined));
     try {
       const { response, fromNetwork, network } = await networkFirst(
         request,
@@ -708,12 +719,14 @@ registerRoute(
         awaitsNetwork(url),
       );
       const settle = (answer: Response, late: boolean) =>
-        afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(() => undefined);
+        afterNavigation(url, target.page, answer, scope, fetchEvent.resultingClientId, late).catch(
+          reportAnd("sw.navigation", undefined),
+        );
       if (fromNetwork) {
         event.waitUntil(settle(response.type === "opaqueredirect" ? response : response.clone(), false));
       } else {
-        event.waitUntil(sweepSoon().catch(() => undefined));
-        event.waitUntil(network.then((late) => settle(late, true)).catch(() => undefined));
+        event.waitUntil(sweepSoon().catch(reportAnd("sw.sweep", undefined)));
+        event.waitUntil(network.then((late) => settle(late, true)).catch(reportAnd("sw.navigation", undefined)));
       }
       return response;
     } catch (error) {
@@ -734,7 +747,11 @@ registerRoute(
     const stored = await (await caches.open(TONIGHT_CACHE)).match(islandUrl, MATCH);
     if (stored) return stored;
     const response = await fetch(request);
-    event.waitUntil(commitIsland(islandUrl, response.clone(), (event as FetchEvent).clientId).catch(() => undefined));
+    event.waitUntil(
+      commitIsland(islandUrl, response.clone(), (event as FetchEvent).clientId).catch(
+        reportAnd("sw.island-commit", undefined),
+      ),
+    );
     return response;
   },
 );
@@ -745,7 +762,7 @@ registerRoute(
     await purge();
     const response = await fetch(request);
     // The new session's (or no session's) language and theme.
-    event.waitUntil(storeOfflinePage().catch(() => undefined));
+    event.waitUntil(storeOfflinePage().catch(reportAnd("sw.offline-page", undefined)));
     return response;
   },
   "POST",
@@ -771,31 +788,31 @@ precacheAndRoute(self.__WB_MANIFEST);
 // --- Lifecycle and messages ------------------------------------------------------------------------------------------
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(storeOfflinePage().catch(() => undefined));
+  event.waitUntil(storeOfflinePage().catch(reportAnd("sw.offline-page", undefined)));
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(sweep().catch(() => undefined));
+  event.waitUntil(sweep().catch(reportAnd("sw.sweep", undefined)));
 });
 
 // A worker started after a while (the browser stops idle ones) expires what is due, even with no page opened online.
-void sweepSoon().catch(() => undefined);
+void sweepSoon().catch(reportAnd("sw.sweep", undefined));
 
 // Three messages: a page rendered signed out asks for a purge; the plan page asks for its own fresh copy after a save
 // (`store-page`, validated by `storeRequestFrom`, no reply); the /offline page lists the stored pages (the copy each
 // would serve now, one per site and page).
 self.addEventListener("message", (event) => {
   const data: unknown = event.data;
-  event.waitUntil(sweepSoon().catch(() => undefined));
+  event.waitUntil(sweepSoon().catch(reportAnd("sw.sweep", undefined)));
   const type = typeof data === "object" && data !== null ? (data as { type?: unknown }).type : undefined;
   if (type === "purge") {
-    event.waitUntil(purgeSignedOut().catch(() => undefined));
+    event.waitUntil(purgeSignedOut().catch(reportAnd("sw.purge", undefined)));
     return;
   }
   const request = storeRequestFrom(data, self.location.origin);
   if (request) {
     const clientId = event.source && "id" in event.source ? event.source.id : "";
-    event.waitUntil(storePageNow(request, clientId).catch(() => undefined));
+    event.waitUntil(storePageNow(request, clientId).catch(reportAnd("sw.store-page", undefined)));
     return;
   }
   const port = event.ports.at(0);

@@ -39,8 +39,24 @@ export type ClientStep = (typeof CLIENT_STEPS)[number];
 
 /**
  * The `sw.*` steps whose guarded operation is a network `fetch`: a `TypeError`, `AbortError` or `TimeoutError` there is
- * the normal case in the field and is not reported (D14, `isRoutineNetworkFault`). Phase 8 confirms the assignment site
- * by site as it wires the worker.
+ * the normal case in the field and is not reported (D14, `isRoutineNetworkFault`). Assigned site by site in Phase 8
+ * (`src/sw.ts`); the other six steps guard cache, index or storage work, where every error is reported. A cache or
+ * storage error (`QuotaExceededError`, `InvalidStateError`) at a network step is still reported, since only those three
+ * names are routine; the accepted cost is that a real `TypeError` from a cache call at a network step goes unreported.
+ *
+ * - `sw.precache`: the `fetch` of an asset the precache does not hold (`keepAssets`); only the fetch is guarded.
+ * - `sw.offline-page`: `storeOfflinePage`'s `fetch` of `/offline` (install, after a commit, after an auth POST); its
+ *   cache write after the fetch is mixed in, and a storage fault there still reports.
+ * - `sw.next-night`: `storeNextCopy`, two fetches (shell, island) before the commit; mixed, same reason.
+ * - `sw.store-page`: `storePageRun`, two fetches before the commit, and the message handler around it; mixed.
+ * - `sw.navigation`: `afterNavigation`, which fetches the island of a late answer, and the network answer that lost
+ *   the race to the stored copy (the stored copy wins because the network failed: the routine case itself); mixed.
+ *
+ * Not network (a fault there is always reported): `sw.index` (the index's read, parse and write), `sw.shell` (reading
+ * a stored or recorded shell, where a network body cut off mid-read can add a `TypeError`, and the stored copy at the
+ * navigation timeout), `sw.asset-note` (the client lookup and the index write), `sw.island-commit` (the pair's
+ * commit), `sw.sweep` and `sw.purge` (cache deletes and index writes; the one fetch in the purge path, the trailing
+ * `storeOfflinePage` of `purgeSignedOut`, has its own handler and reports as `sw.offline-page`, a network step).
  */
 export const NETWORK_STEPS: readonly ClientStep[] = [
   "sw.precache",

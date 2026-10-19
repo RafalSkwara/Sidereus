@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { en } from "@/i18n/messages/en";
+import { CLIENT_ERROR_PATH } from "@/lib/observability/client/steps";
 import { LOCALE_COOKIE, THEME_COOKIE } from "@/lib/preferences";
 
 import { onboardInMadrid, signOut, test, waitForServiceWorker } from "./helpers";
@@ -58,6 +59,21 @@ test("Tonight pages opened online are there offline, and signing out removes the
 
     // Online: the worker controls the page, then both pages are opened and their pairs committed.
     await waitForServiceWorker(page);
+
+    // Nothing in the worker intercepts a report (error-visibility Phase 8): with the worker controlling the page, a
+    // report posted by `fetch` answers 204 from the endpoint, since only a navigation takes the worker's routes. The
+    // beacon half is the transport the page's own reporter will use (Phase 9): a `text/plain` body with the page's
+    // `Origin` is accepted too. The worker's own POST is a `fetch` from the worker and never meets its fetch handler;
+    // what a real browser does with it is the owner's check 8.7. Two valid reports spend two of the limiter's 30 per
+    // minute.
+    const reported = await page.evaluate(async (path) => {
+      const body = JSON.stringify({ step: "sw.sweep" });
+      const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body });
+      const beacon = navigator.sendBeacon(path, new Blob([body], { type: "text/plain" }));
+      return { status: response.status, beacon, controlled: navigator.serviceWorker.controller !== null };
+    }, CLIENT_ERROR_PATH);
+    expect(reported).toEqual({ status: 204, beacon: true, controlled: true });
+
     await page.goto("/tonight");
     await expect(page.locator("#verdict-heading [data-sky-headline]")).toBeVisible();
     await page.goto("/tonight/plan");
