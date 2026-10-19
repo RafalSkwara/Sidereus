@@ -88,6 +88,11 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     count: 2,
     reason: `${INPUT} (a client report that is not JSON, or a body the client broke off mid-upload, is refused with 400; the route logs nothing for a refused report, so a forged or aborted request cannot leave a line, D13)`,
   },
+  "src/lib/observability/client/browser.ts": {
+    count: 1,
+    reason:
+      "the hydration test reads the message of whatever the page threw, which can throw (a getter) and cannot be reported anywhere else: the read falls back to no message and the error is still reported, as island.uncaught",
+  },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
   "src/lib/tonight/hash-scroll.ts": { count: 1, reason: INPUT },

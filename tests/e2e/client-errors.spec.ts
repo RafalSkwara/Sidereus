@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 
 import { expect, onboardInMadrid, test, waitForHydration } from "./helpers";
 
@@ -141,5 +141,38 @@ test.describe("page error reporting", () => {
     ]);
     // The form keeps its own fields (the failure only drops the catalogue's suggestions).
     await expect(page.locator('form[action="/api/gear/telescopes"] #name')).toBeEditable();
+  });
+
+  test("a place search the next keystroke cancelled reports nothing, and the current one that fails reports once", async ({
+    page,
+  }) => {
+    const capture = await captureReports(page);
+    await onboardInMadrid(page, "client-errors-geocode");
+    // Open-Meteo's geocoding is held by hand (no timer: the browser clock is pinned), so the test decides when each
+    // search answers. Every keystroke aborts the previous request, which rejects too; only the current one may report.
+    const held: Route[] = [];
+    await page.route("https://geocoding-api.open-meteo.com/**", (route) => {
+      held.push(route);
+    });
+    await page.goto("/gear/sites/new");
+    await waitForHydration(page, 'form[action="/api/gear/sites"]');
+    const search = page.locator("#place-search");
+    await search.fill("ma");
+    await expect.poll(() => held.length).toBe(1);
+    await search.fill("mad");
+    await expect.poll(() => held.length).toBe(2);
+
+    // The first search was cancelled by the second: its rejection is not a failed place search.
+    expect((await capture.settle()).filter((report) => report.step === "island.geocode")).toEqual([]);
+
+    // The current search fails (HTTP 500): exactly one report, with the name only.
+    await held[1].fulfill({ status: 500, contentType: "application/json", body: "{}" });
+    await expect.poll(() => capture.reports().some((report) => report.step === "island.geocode")).toBe(true);
+    const reports = await capture.settle();
+    expect(reports.filter((report) => report.step === "island.geocode")).toEqual([
+      { step: "island.geocode", name: "Error" },
+    ]);
+    expectOnlyStepAndName(capture.bodies().filter((body) => !body.includes(MARKER)));
+    await held[0].abort().catch(() => undefined);
   });
 });

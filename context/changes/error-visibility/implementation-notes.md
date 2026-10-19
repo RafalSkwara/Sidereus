@@ -65,3 +65,9 @@ Breaks (restored per file after each):
 Known gap, accepted: the island reports in `EyepieceForm`, `TelescopeForm`, `OnboardingWizard`, `LocationPicker` and `map-panel` have no unit test (no DOM test stack, and none was added); the guard counts hold that every site reports or is allowlisted, and case 5 proves the `TelescopeForm` one in the browser. In particular nothing pins that the place search reports **after** its `aborted` check (round 3 F7): moving the report above the early return passes every test. It is held by the code comment and review only.
 
 Environment note: a CI-mode e2e run (`CI=1`) writes `playwright-report/` and `test-results/` into the worktree. Their generated JS joins TypeScript's program: type-aware ESLint then fails with "Unsafe call of a type that could not be resolved" on `map-panel.tsx` (`setPrefix`) and `astro check` reports hundreds of hints. Move or delete both directories after an e2e run before linting; both are gitignored.
+
+### Phase 9 after the impl review (2026-10-19)
+
+Red first: the throwing-`message` getter test failed on the unguarded `messageOf` (the handler threw) before the guard; the place-search case in `client-errors.spec.ts` was shown red with the report moved above the `aborted` check (the one break that no unit test can show), and green with the order restored. The new build check was shown to fail (`build-sw: the Layout's script is not an _astro chunk that imports the page's error reporter`) when the Layout's import and call were removed, and to pass on the real build, where the Layout script is `Layout.astro_astro_type_script_index_0_lang.<hash>.js` and imports the shared `client.<hash>.js` that holds the reporter.
+
+Known gap, now written down (D15, runbook, lesson, follow-up #230): the five scripts Astro inlines into the page are not covered by the own-script filter.

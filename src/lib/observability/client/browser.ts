@@ -58,10 +58,19 @@ function isOwnScript(filename: unknown): boolean {
   return typeof filename === "string" && filename.startsWith(`${window.location.origin}/_astro/`);
 }
 
+/**
+ * The message of a thrown value, for the hydration test only. The value is whatever the page threw, so reading it can
+ * throw (a getter): that must not cost the report, and nothing can be reported about a failing read, so it reads as no
+ * message and the error goes out as `island.uncaught`.
+ */
 function messageOf(error: unknown): string {
-  if (typeof error !== "object" || error === null) return "";
-  const message = (error as { message?: unknown }).message;
-  return typeof message === "string" ? message : "";
+  try {
+    if (typeof error !== "object" || error === null) return "";
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : "";
+  } catch {
+    return "";
+  }
 }
 
 /** The windows that already carry the handlers, so installing twice (a second script, a hot reload) adds none. */

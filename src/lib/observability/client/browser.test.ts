@@ -136,6 +136,22 @@ describe("installErrorReporting: the window error handler", () => {
     for (const body of await page.bodies())
       expect(body).not.toMatch(/server rendered|while hydrating|52\.2297|ada\.lovelace|example\.test/);
   });
+
+  it("does not let an error object whose message getter throws break the handler: the report still goes out", async () => {
+    // An event's error is whatever the page threw, so the hydration check that reads its message runs on untrusted input.
+    const page = setup();
+    const { installErrorReporting } = await freshModule();
+    installErrorReporting();
+    const hostile = Object.defineProperty(new TypeError("x"), "message", {
+      get() {
+        throw new RangeError("the getter ran");
+      },
+    });
+    expect(() => {
+      page.dispatch("error", errorEvent(hostile));
+    }).not.toThrow();
+    expect(await page.sent()).toEqual([{ step: "island.uncaught", name: "TypeError" }]);
+  });
 });
 
 describe("installErrorReporting: the unhandledrejection handler", () => {
