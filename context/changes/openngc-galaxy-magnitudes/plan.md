@@ -20,7 +20,18 @@ The owner answered the five questions of the first draft on 2026-10-19 (relayed 
 
 ## Divergence cap log
 
-Empty until a new reference diverges. If Phase 3 raises the cap in `src/lib/engine/expectation.test.ts` (`expect(KNOWN_DIVERGENCES.length).toBeLessThanOrEqual(3)`), the implementer appends here, in the same commit: the entry id and setting, the key the sources support, the key the rule computes, the sources, and the new cap.
+Empty until a new reference diverges. One divergence is expected from the start: M106 at 150 mm / Bortle 6 (plan review F4), cap 3 → 4. If Phase 3 raises the cap in `src/lib/engine/expectation.test.ts` (`expect(KNOWN_DIVERGENCES.length).toBeLessThanOrEqual(3)`), the implementer appends here, in the same commit: the entry id and setting, the key the sources support, the key the rule computes, the sources, and the new cap.
+
+## Plan review (2026-10-19, `reviews/plan-review.md`, verdict NEEDS ATTENTION: 0 critical, 4 warnings, 2 observations)
+
+| # | Finding | Decision | Where applied |
+|---|---|---|---|
+| F1 | The helper's test belongs to the `guards` project; the `reference` command finds nothing | **Applied.** Keep it in `guards` (like the other `scripts/lib` tests), run it with `--project guards`, rely on the Phase 1 guard for hook-time protection | Critical Implementation Details; Phase 2 criteria and rows 2.2, 2.5 |
+| F2 | The provenance pins do not check the new overrides or tie them to the data | **Applied.** `messier.test.ts` and `caldwell.test.ts` check every `vMagColour` entry against the JSON and the exact 6 + 6 ids; reasons name the doubts | Phase 2 change 4, criterion and new row 2.10 |
+| F3 | The calibration oracle runs only in Phase 3, with no path for red | **Applied.** The four oracles run in Phase 2 before the pause, with a stop rule (evidence file, "QUESTION FOR OWNER:", no edits); Phase 3 re-runs them after the references | Phase 2 criterion and new row 2.11; Phase 3 row 3.1 |
+| F4 | At 150 mm / Bortle 6 M106 stays `faint`; the issue's own example does not change | **Applied.** Written into Desired End State, the cap log and the PR body; the M106 / Bortle 6 reference is an expected divergence (cap 3 → 4); manual check covers Bortle 6 | Desired End State; Divergence cap log; Phase 3 §2 and row 3.7; Phase 4 |
+| F5 | `colourGroupOf` contract is self-contradictory; the late group has exactly 3 credible galaxies | **Applied.** Four explicit lists, anything else throws; the late-type entries' `reason` names the three-galaxy median | Phase 2 change 1; Critical Implementation Details |
+| F6 | Deliberate breaks on generated JSON are forbidden; Phase 3's bullet disagrees with row 3.2 | **Applied.** Guard, oracle and pins are pure functions run on doctored in-memory copies; Phase 3's bullet and row 3.2 now read the same | Critical Implementation Details; Phase 1 and 3 criteria |
 
 ## Current State Analysis
 
@@ -37,7 +48,8 @@ Empty until a new reference diverges. If Phase 3 raises the cap in `src/lib/engi
 - The corrected values of the six Messier galaxies are within 0.3 mag of the published V values in a test-only reference.
 - `npm run catalogue:build` regenerates the files byte-identically; the diff of the data files is only `vMag` of 12 objects.
 - `calibration.test.ts`, `small-scope.test.ts` and `expectation.test.ts` stay green without being edited or regenerated.
-- Galaxy references at 150 mm / Bortle 5-6 exist for M106 and at least one more of the 12, each with at least two published sources, or the report says which ones diverged and why none was added.
+- Galaxy references at 150 mm / Bortle 5-6 exist for M106 and at least one more of the 12, each with at least two published sources; a reference the rule gets wrong is listed in `KNOWN_DIVERGENCES` with the cap raised and the reason logged.
+- **What this does not fix, said plainly (plan review F4):** at 150 mm / Bortle 6 M106 stays `faint` under rule C (deficit 1.61 against the 1.5 edge), so its brightness credit stays capped at `GALAXY_FAINT_BRIGHTNESS_CAP` (0.1) and its score and rank at the issue's own setting (Warsaw, 2026-10-10, 150 mm / Bortle 6) barely move. The published V (8.4) would make it `smudge` there. The M106 / Bortle 6 reference is therefore expected to diverge (sources: `smudge`; rule: `faint`) and to raise the cap from 3 to 4, which the owner allowed (Q5). The PR description and the closing comment on #178 say this in so many words.
 
 ### Key Discoveries:
 
@@ -64,7 +76,9 @@ Red first, then the cause, then the evidence. Phase 1 adds the two tests and the
 - **A red tree between Phase 1 and Phase 2.** Phase 1's tests are red on purpose and live in the `reference` project, which the end-of-turn hook runs. Commit Phase 1 on its own, then start Phase 2 in the same turn run; if the hook sends a turn back, it is the expected red, not a new failure (record the red output as evidence first).
 - **The criterion and the rule use one constant.** `MIN_GALAXY_BV = 0.2` (the issue's V > B − 0.2) lives in the helper; the guard test spells `0.2` as a literal on purpose, so the two cannot drift together unnoticed.
 - **The medians come from the pinned file, not from a table in the repo.** The credible set is the catalogue's own galaxies that have both magnitudes and B−V ≥ 0.2; a group with fewer than 3 credible galaxies fails the build, and an unknown Hubble string fails the build (as an unknown type code does today).
-- **The deliberate-break check per phase** is part of each phase's automated criteria (the owner's rule for this change).
+- **The deliberate-break check per phase** is part of each phase's automated criteria (the owner's rule for this change). Breaks are never made by editing the generated JSON (the tripwire): the guard, the oracle and the provenance pins are written as small pure functions (`implausibleGalaxies(objects)`, `publishedVGaps(objects, reference)`, `vMagColourProblems(meta, objects)`) that the same test runs on the real catalogue (must be clean) and on a doctored in-memory copy (must name the planted fault). Breaks of the helper or the generator are edits to that non-generated code, reverted afterwards.
+- **Where the helper's test runs.** `vitest.config.ts` lists `scripts/lib/*.test.mjs` in `GUARD_FILES`, so `scripts/lib/galaxy-colour.test.mjs` belongs to the `guards` project, like the other `scripts/lib` tests: CI runs it in `npm test`, the end-of-turn hook does not. Decision (plan review F1): keep it there for consistency, run it explicitly with `npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs` in Phase 2, and rely on the Phase 1 guard (a `reference` test over the generated data) for the hook-time protection of the outcome.
+- **The late group is thin.** Only 3 credible galaxies (B−V 0.29, 0.47, 0.65) set the late-type median of 0.47, and it fixes V for NGC 4449, NGC 6822 and NGC 4039; the minimum of 3 is exactly met, so a pin bump that removes one fails the build on purpose. The correction entries of those three say so in their `reason`.
 
 ## Phase 1: Failing regression tests (no production change)
 
@@ -78,7 +92,7 @@ Pin the bad case before touching the generator: a guard that says no galaxy has 
 
 **File**: `src/lib/catalogue/galaxy-colour.test.ts` (new, `reference` project)
 
-**Intent**: Protect against a galaxy shipping a V that no galaxy has, which dims its own advice (the risk named by lessons, "Name the risk a test is the only protection of"). Two tests. The guard: over every catalogue galaxy, B−V is at least 0.2; it asserts the galaxy count (68) first and names every failing id with its V and B, so an empty sample cannot pass. The oracle: for the six Messier galaxies in the published table, the catalogue's V is within `PUBLISHED_V_TOLERANCE_MAG` of the published value.
+**Intent**: Protect against a galaxy shipping a V that no galaxy has, which dims its own advice (the risk named by lessons, "Name the risk a test is the only protection of"). Tests built on two small pure functions kept in the test file. The guard `implausibleGalaxies(objects)` returns the galaxies whose B−V is below 0.2; the test asserts the galaxy count (68) first, expects an empty result on `DEEP_SKY` and names every failing id with its V and B, so an empty sample cannot pass. The oracle `publishedVGaps(objects, reference)` returns the reference galaxies whose catalogue V is further than `PUBLISHED_V_TOLERANCE_MAG` from the published value. A third test feeds both functions a doctored in-memory copy of the catalogue (one of the 12 corrected; M106's V put back at 9.29) and expects exactly the planted fault to be named: the deliberate-break checks never edit the generated JSON.
 
 **Contract**: reads `DEEP_SKY` from `@/lib/catalogue`; the tolerance is a named constant in the fixture (0.3 mag: above the rule's largest observed gap to the published values, 0.17, below the smallest current error, 0.55). The guard is the only place that states the floor as a literal `0.2`. It accepts no exceptions: Q3 and Q4 are settled so that every one of the 12 is corrected.
 
@@ -95,7 +109,7 @@ Pin the bad case before touching the generator: a guard that says no galaxy has 
 #### Automated Verification:
 
 - The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle): `npx vitest run --project reference src/lib/catalogue/galaxy-colour.test.ts` exits non-zero; the output is saved to `context/changes/openngc-galaxy-magnitudes/evidence/phase1-red.txt`.
-- Deliberate-break check: with one of the 12 corrected in a scratch copy of the catalogue the guard lists 11 ids, so the failure message is not vacuous (scratch copy deleted afterwards).
+- Deliberate-break check: the guard run on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle run on a copy with M106 at 9.29 names M106, so the failure messages are not vacuous (the test itself holds these cases; the generated JSON is never edited).
 - Lint and format pass on the two new files: `npx eslint --max-warnings 0 src/lib/catalogue/galaxy-colour.test.ts src/lib/engine/fixtures/galaxy-v-reference.ts`
 - Every other test still passes: `npm run test:reference` has no failure outside `galaxy-colour.test.ts`.
 
@@ -121,7 +135,7 @@ Add the colour rule as a tested pure helper, apply it in the generator to Messie
 
 **Intent**: One pure, deterministic rule: which galaxies have an impossible colour, which Hubble group each belongs to, the median colour of each group from the credible galaxies, and the corrected V.
 
-**Contract**: exports `MIN_GALAXY_BV` (0.2), `colourGroupOf(hubble)` (four groups: early `E E-S0 S0 S0-a`; Sa-Sb `Sa SABa SBa Sab SABab SBab S? Sb SABb SBb`; Sbc-Sc `Sbc SBbc SABbc Sc SABc SBc Scd SBcd SABcd`; late everything else that is a galaxy type; unknown or empty Hubble throws), `groupMedians(galaxies)` (median of B−V over galaxies with both magnitudes and B−V ≥ `MIN_GALAXY_BV`, rounded to 0.01; fewer than 3 in a group throws), and `correctedV(bMag, median)` = round(B − median, 2). The unit test covers the median, the thin-group and unknown-type refusals, the boundary (B−V exactly 0.2 is credible), and a sign check that the corrected V is fainter than B.
+**Contract**: exports `MIN_GALAXY_BV` (0.2), `colourGroupOf(hubble)` (four groups, each an explicit list: early `E E-S0 S0 S0-a`; Sa-Sb `Sa SABa SBa Sab SABab SBab S? Sb SABb SBb`; Sbc-Sc `Sbc SBbc SABbc Sc SABc SBc Scd SBcd SABcd`; late `I IB IBm Im Sd SBd SABd Sm SBm`; any other string, and an empty or null one, throws, so a new OpenNGC value after a pin bump is classed on purpose), `groupMedians(galaxies)` (median of B−V over galaxies with both magnitudes and B−V ≥ `MIN_GALAXY_BV`, rounded to 0.01; fewer than 3 in a group throws), and `correctedV(bMag, median)` = round(B − median, 2). The unit test covers the median, the thin-group and unknown-type refusals (a string in none of the four lists must throw), that every Hubble string of the 68 catalogue galaxies has a group, the boundary (B−V exactly 0.2 is credible), and a sign check that the corrected V is fainter than B.
 
 #### 2. Apply it in the generator
 
@@ -139,7 +153,15 @@ Add the colour rule as a tested pure helper, apply it in the generator to Messie
 
 **Contract**: the data diff changes only `vMag` of the 12 objects; the meta diffs add the correction entries and drop the two fallback lines; nothing else moves.
 
-#### 4. Licence note
+#### 4. Provenance pins
+
+**File**: `src/lib/catalogue/messier.test.ts`, `src/lib/catalogue/caldwell.test.ts` (guards project)
+
+**Intent**: Pin the corrections the way the commit and licence are pinned, so a meta entry cannot drift from the data it describes. The checks are pure functions on `(meta, objects)`, run on the real files and on doctored copies.
+
+**Contract**: for each `action: "vMagColour"` entry: https `source`, `vMag` equal to the object's `vMag`, `bMag` equal to the object's `bMag`, the ids exactly the 6 + 6 of the criterion below; the NGC4449 and NGC4565 entries name the doubt about B, and the three late-type entries name the three-galaxy median.
+
+#### 5. Licence note
 
 **File**: `src/lib/catalogue/LICENSE-DATA.md`
 
@@ -152,11 +174,13 @@ Add the colour rule as a tested pure helper, apply it in the generator to Messie
 #### Automated Verification:
 
 - Phase 1's tests are green: `npx vitest run --project reference src/lib/catalogue/galaxy-colour.test.ts`
-- The helper's unit tests pass: `npx vitest run --project reference scripts/lib/galaxy-colour.test.mjs`
+- The helper's unit tests pass (they run in the `guards` project, not in the hook): `npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs`
 - Regeneration is reproducible: running `npm run catalogue:build` twice leaves `git diff` identical the second time.
 - The data diff is only `vMag` of 12 objects: a scratch script compares the old and new JSON key by key and prints the changed object ids and keys (exactly the 12 ids, only `vMag`).
-- Deliberate-break check: flipping the helper's sign (V = B + median) turns the helper test and Phase 1's guard red; removing one object from the correction list fails the build's count check (both reverted afterwards).
+- Deliberate-break check: flipping the helper's sign (V = B + median) turns the helper test (run with the `guards` command above, the hook does not run it) and the regenerated data's Phase 1 guard red; removing one object from the correction list fails the build's count check (both are edits to non-generated code, reverted afterwards).
 - The provenance pins pass: `npm run test:guards`
+- The provenance pins are extended and hold (plan review F2): `messier.test.ts` and `caldwell.test.ts` check every `action: "vMagColour"` override (an https `source`, a `vMag` equal to the object's `vMag` in the JSON, the id set exactly the six Messier galaxies M58, M61, M88, M91, M98, M106 and the six Caldwell galaxies IC342, NGC4449, NGC5005, NGC4565, NGC6822, NGC4039, a `reason` naming the doubt about B for NGC4449 and NGC4565 and the three-galaxy median for the late-type ones). Run `npm run test:guards`; a deliberate break (the same check run by a pure function on a doctored in-memory meta whose `vMag` differs from the data, and on one with a missing id) is red.
+- The four oracles are run on the regenerated catalogue **before the corrections are accepted** (plan review F3): `npx vitest run --project reference src/lib/engine/calibration.test.ts src/lib/engine/small-scope.test.ts src/lib/engine/expectation.test.ts src/lib/engine/ranking-invariants.test.ts` is green without any edit. **Stop rule:** if any of them is red, the implementer stops, writes the night, the top 5 and the failing assertion to `evidence/oracle-red.md`, ends the turn with "QUESTION FOR OWNER:" and changes nothing else: no assertion edit, no rule change, no `CALIBRATION_SNAPSHOT` used as an oracle.
 - Lint passes: `npm run lint`
 
 #### Manual Verification:
@@ -164,7 +188,7 @@ Add the colour rule as a tested pure helper, apply it in the generator to Messie
 - The reviewer reads the 12 `overrides` entries and the group medians and confirms the reasons, especially for NGC 4449 and NGC 4565.
 - The reviewer reads the `LICENSE-DATA.md` paragraph.
 
-**Implementation Note**: Pause for the reviewer's confirmation before Phase 3; the corrections are the part the owner cares about.
+**Implementation Note**: The oracle run and its stop rule come before the pause. Pause for the reviewer's confirmation before Phase 3; the corrections, now seen together with their effect on the ranking, are the part the owner cares about.
 
 ---
 
@@ -186,6 +210,8 @@ Show that the rule, the caps and the oracles stand on the corrected catalogue wi
 
 #### 2. Galaxy references at 150 mm / Bortle 5-6
 
+(Expected from the start: the M106 / Bortle 6 entry diverges, plan review F4; decide its expected key from the sources first, then raise the cap 3 → 4 and log it.)
+
 **File**: `src/lib/engine/fixtures/expect-reference.ts` and the `HARD` list in `src/lib/engine/expectation.test.ts`
 
 **Intent**: Add `hard` references for M106 and at least one more of the 12 (M61 or M88 first) at 150 mm / Bortle 5 and 6, each with at least two published visual reports read in this phase (a subagent reads the pages; no personal data in any request) and the expected key decided from the sources before the rule is run. The `HARD` list in the test is extended by the new ids: adding the plan's new cases, not editing an assertion to fit.
@@ -204,16 +230,16 @@ Show that the rule, the caps and the oracles stand on the corrected catalogue wi
 
 #### Automated Verification:
 
-- The three oracles pass unedited: `npx vitest run --project reference src/lib/engine/calibration.test.ts src/lib/engine/small-scope.test.ts src/lib/engine/expectation.test.ts src/lib/engine/ranking-invariants.test.ts`
-- `git diff` shows no edit to any assertion in those four files except the extended `HARD` list: `git diff --stat -- src/lib/engine/*.test.ts` lists only `expectation.test.ts` and the added lines are ids and settings.
+- The four oracles still pass unedited after the references land (they first ran in Phase 2): `npx vitest run --project reference src/lib/engine/calibration.test.ts src/lib/engine/small-scope.test.ts src/lib/engine/expectation.test.ts src/lib/engine/ranking-invariants.test.ts`
+- `git diff` shows no assertion edit in those files except the extended `HARD` list and, for a diverging new reference (expected: M106 / Bortle 6), the logged cap raise: `git diff --stat -- src/lib/engine/*.test.ts` lists only `expectation.test.ts`, and the added or changed lines are ids, settings and the cap.
 - The new references pass: `npx vitest run --project reference src/lib/engine/expectation.test.ts`
-- Deliberate-break check: setting M106's V back to 9.29 in a scratch copy turns Phase 1's oracle and the M106 reference red (both restored afterwards).
+- Deliberate-break check: `expectationFor` on an in-memory copy of M106 with V back at 9.29 gives `galaxyFaint` where the Bortle 5 reference expects `galaxySmudge`, and Phase 1's oracle names M106 on the same copy (the generated JSON is never edited).
 - `evidence/before-after.md` exists and holds the 12 rows and the M106 totals from one named call.
 
 #### Manual Verification:
 
 - The reviewer reads the new references' sources and notes, the evidence table and the "Divergence cap log", and confirms no diverging entry was hidden.
-- The reviewer (or the lead) opens `/tonight/targets` locally at 150 mm and Bortle 5 on an April evening (pinned clock) and reads M106's line.
+- The reviewer (or the lead) opens `/tonight/targets` locally and reads M106's line twice: at 150 mm and Bortle 5 on an April evening (the case that improves: `smudge`), and at 150 mm and Bortle 6 on 2026-10-10 (the issue's own case: still `faint`, expected, and written in the PR description).
 
 ---
 
@@ -229,7 +255,7 @@ Run everything the way CI does and open the one PR.
 
 **File**: none (commands); the PR description
 
-**Intent**: Lint, type check, both Vitest projects, a fresh build, the whole e2e suite and smoke against a local production preview and the local Supabase (never reset), as `lessons.md` ("Run the whole e2e suite before a PR, the way CI runs it") says; then push the branch and open one PR against `main` that reports the counts, the 12 corrections, the evidence and the owner decisions taken. The merge is the owner's.
+**Intent**: Lint, type check, both Vitest projects, a fresh build, the whole e2e suite and smoke against a local production preview and the local Supabase (never reset), as `lessons.md` ("Run the whole e2e suite before a PR, the way CI runs it") says; then push the branch and open one PR against `main` that reports the counts, the 12 corrections, the evidence and the owner decisions taken, and says in so many words that at 150 mm / Bortle 6 M106 stays `faint` (brightness credit capped at 0.1), that the M106 / Bortle 6 reference is a logged divergence and the cap went 3 → 4 by the owner's permission. The merge is the owner's.
 
 **Contract**: ports 4335 (preview) and 4402 (forecast fixture); the keys inline on the commands, never exported; servers stopped by port; `dist/server/.dev.vars` pointed at the local stack.
 
@@ -293,7 +319,7 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 #### Automated
 
 - [ ] 1.1 The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle), output saved to evidence/phase1-red.txt
-- [ ] 1.2 Deliberate-break check: with one of the 12 corrected in a scratch copy the guard lists 11 ids
+- [ ] 1.2 Deliberate-break check: the guard on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle on a copy with M106 at 9.29 names M106
 - [ ] 1.3 Lint and format pass on the two new files
 - [ ] 1.4 Every other test still passes (npm run test:reference has no failure outside galaxy-colour.test.ts)
 
@@ -306,12 +332,14 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 #### Automated
 
 - [ ] 2.1 Phase 1's tests are green
-- [ ] 2.2 The helper's unit tests pass
+- [ ] 2.2 The helper's unit tests pass (guards project: npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs)
 - [ ] 2.3 Regeneration is reproducible: a second npm run catalogue:build leaves git diff identical
 - [ ] 2.4 The data diff is only vMag of 12 objects (scratch comparison prints exactly the 12 ids)
-- [ ] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test, the guard or the build's count check red
+- [ ] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test (guards command), the guard or the build's count check red
 - [ ] 2.6 The provenance pins pass (npm run test:guards)
 - [ ] 2.7 Lint passes (npm run lint)
+- [ ] 2.10 The provenance pins are extended and hold: vMagColour entries match the JSON, the 12 ids exactly, the reasons name the doubts; a doctored meta turns them red
+- [ ] 2.11 The four oracles are green on the regenerated catalogue before the corrections are accepted, or the implementer stopped and asked the owner
 
 #### Manual
 
@@ -322,16 +350,16 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [ ] 3.1 The four oracles pass unedited (calibration, small-scope, expectation, ranking-invariants)
+- [ ] 3.1 The four oracles still pass unedited after the references land (they first ran in Phase 2)
 - [ ] 3.2 git diff shows no assertion edit in those files except the extended HARD list and, only for a diverging new reference, the logged cap raise
 - [ ] 3.3 The new references pass (expectation.test.ts)
-- [ ] 3.4 Deliberate-break check: M106's V back at 9.29 in a scratch copy turns Phase 1's oracle and the M106 reference red
+- [ ] 3.4 Deliberate-break check: on an in-memory M106 with V back at 9.29 expectationFor gives galaxyFaint at Bortle 5 and Phase 1's oracle names M106
 - [ ] 3.5 evidence/before-after.md exists with the 12 rows and the M106 totals from one named call
 
 #### Manual
 
 - [ ] 3.6 The reviewer reads the new references' sources and notes, the evidence table and the divergence cap log and confirms no diverging entry was hidden
-- [ ] 3.7 M106's line on /tonight/targets at 150 mm and Bortle 5 on an April evening is read locally
+- [ ] 3.7 M106's line on /tonight/targets is read locally at 150 mm / Bortle 5 (April evening) and at 150 mm / Bortle 6 (2026-10-10)
 
 ### Phase 4: Gates and PR
 

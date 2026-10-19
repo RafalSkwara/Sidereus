@@ -13,7 +13,7 @@ OpenNGC's V for ten of them is HyperLEDA's `vt` (uncertainty 1 to 1.6 mag); for 
 
 ## Desired End State
 
-Every galaxy in the catalogue has B−V of at least 0.2; the 12 carry a corrected V, each listed in the metas with what it was, what it is and why; the six Messier ones sit within 0.3 mag of independently published V values. Calibration, small-scope and expectation tests stay green untouched. M106 reads "smudge" instead of "faint" at 150 mm / Bortle 5.
+Every galaxy in the catalogue has B−V of at least 0.2; the 12 carry a corrected V, each listed in the metas with what it was, what it is and why; the six Messier ones sit within 0.3 mag of independently published V values. Calibration, small-scope and expectation tests stay green untouched. M106 reads "smudge" instead of "faint" at 150 mm / Bortle 5. At 150 mm / Bortle 6 it stays "faint" (rule C, brightness credit still capped at 0.1), so the issue's own example does not change there; the PR says so.
 
 ## Key Decisions Made
 
@@ -42,14 +42,16 @@ Red first (Phase 1), then a pure helper applied in `scripts/build-catalogue.mjs`
 | Phase | What it delivers | Key risk |
 |---|---|---|
 | 1. Failing tests | Guard and published oracle, red on the 12 | The tree is red until Phase 2 (hook feedback) |
-| 2. Generator rule | Helper, regenerated data, metas, licence note | The corrected V of NGC 4449 and NGC 4565 may be 0.4 mag too bright |
-| 3. Engine and references | Oracles green unedited, evidence, new references | A new reference may diverge, which raises the cap (logged) |
+| 2. Generator rule | Helper, regenerated data, metas, extended pins, licence note, the four oracles run before acceptance | The corrected V of NGC 4449 and NGC 4565 may be 0.4 mag too bright |
+| 3. Engine and references | Evidence, new references, oracles re-run | The M106 / Bortle 6 reference is expected to diverge: cap 3 → 4, logged |
 | 4. Gates and PR | Lint, check, tests, e2e, smoke, PR | CI-way e2e run is long |
 
 **Prerequisites:** the owner's answers to Q1 to Q5 (settled 2026-10-19); local Supabase running for e2e and smoke.
 **Estimated effort:** about 2 sessions across 4 phases.
 
 ## Open Risks & Assumptions
+
+- Plan review (2026-10-19) applied in full (F1 to F6, table in the plan); if an oracle goes red in Phase 2 the implementer stops and asks the owner.
 
 - M106 at 150 mm / Bortle 6 stays `faint` under the rule (deficit 1.61 against the 1.5 edge) while published V 8.4 would make it `smudge`: the issue's own example may not move at Bortle 6.
 - The review's M106 figures (0.490 → 0.438) were not reproduced; the plan records its own before and after.
