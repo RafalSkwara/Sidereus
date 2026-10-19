@@ -11,10 +11,11 @@
  * throws, whatever it is given. No identifier, coordinate, email, URL or form value ever reaches a line (D4).
  */
 
+import type { ClientStep } from "@/lib/observability/client/steps";
+
 /**
- * Every step a line can name, dotted and grouped by flow. One entry per trace site, added as the phases need them.
- * A later phase that adds the `client.<ClientStep>` family widens `FailureStep` with a template literal type below
- * instead of listing those words here.
+ * Every server step a line can name, dotted and grouped by flow. One entry per trace site, added as the phases need
+ * them. The `client.<ClientStep>` family is not listed here: `FailureStep` below widens with a template literal type.
  */
 export const FAILURE_STEPS = [
   "forecast.fetch",
@@ -62,14 +63,18 @@ export const FAILURE_STEPS = [
   "auth.signup",
   "auth.signout",
   "config.supabase",
+  "config.rate-limit",
   "finder.tonight",
 ] as const;
 
 /** The steps listed in `FAILURE_STEPS`. */
 export type ListedFailureStep = (typeof FAILURE_STEPS)[number];
 
-/** A step a line may name: a closed vocabulary, so a free-text value can never become the step. */
-export type FailureStep = ListedFailureStep;
+/**
+ * A step a line may name: a closed vocabulary, so a free-text value can never become the step. The client family is
+ * the closed `CLIENT_STEPS` list of `POST /api/client-error`, logged as `client.<step>` notices only.
+ */
+export type FailureStep = ListedFailureStep | `client.${ClientStep}`;
 
 /**
  * Postgres's SQLSTATE: five digits or capitals with a real class (`42501`, `XX000`). A class starts with a digit, or is

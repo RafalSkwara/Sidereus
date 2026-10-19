@@ -67,7 +67,9 @@ function storeCookies(response) {
   }
 }
 
-async function request(path, { method = "GET", form, body = false } = {}) {
+// `headers` override the defaults (a foreign Origin); `raw` is a string body with its own content type, for the
+// requests a form cannot make (the client-error endpoint's JSON).
+async function request(path, { method = "GET", form, raw, headers = {}, body = false } = {}) {
   const response = await fetch(BASE_URL + path, {
     method,
     redirect: "manual",
@@ -75,8 +77,10 @@ async function request(path, { method = "GET", form, body = false } = {}) {
       Cookie: cookieHeader(),
       Origin: BASE_URL,
       ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      ...(raw ? { "Content-Type": raw.type } : {}),
+      ...headers,
     },
-    body: form ? new URLSearchParams(form).toString() : undefined,
+    body: form ? new URLSearchParams(form).toString() : raw?.content,
   });
   storeCookies(response);
   return {
@@ -226,6 +230,12 @@ function savedListMarker(body) {
   return dataAttribute(body, "session-plan-state") === "held" ? HELD : EDITED;
 }
 
+// The client-error endpoint (error-visibility Phase 7). Its limiter allows about 30 reports a minute on one key, so only
+// the two steps that reach it (the valid report and the schema refusal) spend a token; the rest are refused earlier.
+const CLIENT_ERROR_PATH = "/api/client-error";
+const clientReport = (content, headers) =>
+  request(CLIENT_ERROR_PATH, { method: "POST", raw: { content, type: "application/json" }, headers });
+
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   [
@@ -264,6 +274,28 @@ const steps = [
     () => request("/tonight"),
     { status: 302, location: "/auth/signin?next=%2Ftonight", exact: true },
   ],
+  [
+    "client-error: a valid report is accepted with 204",
+    () => clientReport('{"step":"sw.index","name":"QuotaExceededError"}'),
+    { status: 204 },
+  ],
+  [
+    "client-error: a report with a message field is refused with 400",
+    () => clientReport('{"step":"sw.index","message":"boom"}'),
+    { status: 400 },
+  ],
+  [
+    "client-error: a body over 512 bytes is refused with 413",
+    () => clientReport(`{"step":"sw.index"}${" ".repeat(600)}`),
+    { status: 413 },
+  ],
+  [
+    // The JSON body keeps this the route's own origin check: Astro's checkOrigin refuses only cross-site form types.
+    "client-error: a foreign Origin is refused with 403",
+    () => clientReport('{"step":"sw.index"}', { Origin: "https://evil.example" }),
+    { status: 403 },
+  ],
+  ["client-error: a GET is not answered with a 2xx", () => request(CLIENT_ERROR_PATH), { statusOutside2xx: true }],
   [
     // auth-loose-ends D2: the walk's own sign-up carries `next`, so a new user still goes through first-run setup, with
     // the page they asked for kept for its end. Without `next` the e2e `signUp` helper expects bare `/onboarding`.
@@ -834,7 +866,7 @@ for (const [name, run, expected] of steps) {
   const missingIncludes = includes.filter((text) => !actual.body.includes(text));
   const presentExcludes = (expected.bodyExcludes ?? []).filter((text) => actual.body.includes(text));
   const ok =
-    actual.status === expected.status &&
+    (expected.statusOutside2xx ? actual.status < 200 || actual.status >= 300 : actual.status === expected.status) &&
     (expectedLocation === undefined ||
       (expected.exact ? actual.location === expectedLocation : actual.location.startsWith(expectedLocation))) &&
     // A submitted value (here a coordinate) must never come back in the redirect.
@@ -848,7 +880,9 @@ for (const [name, run, expected] of steps) {
   console.log(`${label}  ${name}  -> ${actual.status} ${actual.location}${cookieNote}`);
   if (!ok) {
     failed++;
-    console.log(`      expected ${expected.status} ${expectedLocation ?? ""}`);
+    console.log(
+      `      expected ${expected.statusOutside2xx ? "a non-2xx status" : expected.status} ${expectedLocation ?? ""}`,
+    );
     if (expected.absent !== undefined) console.log(`      and no "${expected.absent}" in the location`);
     for (const text of missingIncludes) console.log(`      and the body to include ${text}`);
     for (const text of presentExcludes) console.log(`      and the body not to include ${text}`);

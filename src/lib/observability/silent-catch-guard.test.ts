@@ -78,6 +78,15 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
     reason:
       "faultFrom runs in a failure path and must never throw: a getter or proxy that fails while its code, status or cause is read cannot be reported anywhere else, so the read falls back to no field",
   },
+  "src/lib/observability/client/reporter.ts": {
+    count: 1,
+    reason:
+      "the client reporter must never throw and cannot report its own failure anywhere else (it would recurse): a send that throws or rejects, or a value that defeats a read, is absorbed in the one handler",
+  },
+  "src/lib/observability/client-report.ts": {
+    count: 1,
+    reason: `${INPUT} (a client report that is not JSON is refused with 400; the route logs nothing for a refused report)`,
+  },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
   "src/lib/tonight/hash-scroll.ts": { count: 1, reason: INPUT },

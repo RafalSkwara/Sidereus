@@ -9,8 +9,8 @@ let reportedMissingBinding = false;
 
 /**
  * The `FORECAST_CACHE` Workers KV namespace as a `ForecastCache`, or a no-op cache when the binding
- * is absent. This is the only module that imports `cloudflare:workers` (Vitest cannot resolve it),
- * and only the page imports it; everything else takes the cache as a parameter. A missing binding is a deploy fault
+ * is absent. With `observability/rate-limit.ts` this is one of the two modules that import `cloudflare:workers`
+ * (Vitest cannot resolve it), and only the page imports this one; everything else takes the cache as a parameter. A missing binding is a deploy fault
  * (every request would then refetch), so the first call of an isolate leaves a `forecast.cache-missing` line; the
  * rest stay quiet, since the same fault on every Tonight request would only repeat it.
  */
