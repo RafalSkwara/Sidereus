@@ -843,12 +843,12 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [x] 8.1 Report tests fail first, then pass (a failing commit reports once, outcomes unchanged, a timeout while `onLine` is not reported, a storage error is, the cap and dedupe hold) (red first for 6 of 7 report tests against a stub; the offline case lives in the Phase 7 core test; breaks listed in `implementation-notes.md`)
-- [x] 8.2 Silent-catch allowlist: the `src/sw.ts` entry drops from 26 to 6 (four conditional rethrows under D14, the index queue's two), `offline/report.ts` has its one `send` entry, guard green
-- [x] 8.3 Build and the worker bundle check pass
-- [x] 8.4 Offline e2e specs stay green with no retries added
-- [x] 8.5 A `POST` to `/api/client-error` passes through the worker untouched (an e2e step in `offline.spec.ts`: 204 from a controlled page, `sendBeacon` returns `true`)
-- [x] 8.6 Full unit suite, lint and types pass
+- [x] 8.1 Report tests fail first, then pass (a failing commit reports once, outcomes unchanged, a timeout while `onLine` is not reported, a storage error is, the cap and dedupe hold) (red first for 6 of 7 report tests against a stub; the offline case lives in the Phase 7 core test; breaks listed in `implementation-notes.md`) — 3921f3f
+- [x] 8.2 Silent-catch allowlist: the `src/sw.ts` entry drops from 26 to 6 (four conditional rethrows under D14, the index queue's two), `offline/report.ts` has its one `send` entry, guard green — 3921f3f
+- [x] 8.3 Build and the worker bundle check pass — 3921f3f
+- [x] 8.4 Offline e2e specs stay green with no retries added — 3921f3f
+- [x] 8.5 A `POST` to `/api/client-error` passes through the worker untouched (an e2e step in `offline.spec.ts`: 204 from a controlled page, `sendBeacon` returns `true`) — 3921f3f
+- [x] 8.6 Full unit suite, lint and types pass — 3921f3f
 
 #### Manual
 
