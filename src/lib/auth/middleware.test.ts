@@ -110,11 +110,17 @@ describe("onRequest", () => {
 describe("onRequest for the client-error endpoint", () => {
   it("passes the path on at once, any method, with no Supabase client, no session read and no locals, while another path still resolves the user", async () => {
     withUser();
-    for (const method of ["POST", "GET"]) {
-      const { response, next, locals } = await run(CLIENT_ERROR_PATH, method);
-      expect(response.status, method).toBe(200);
-      expect(next, method).toHaveBeenCalledTimes(1);
-      expect(locals, method).toEqual({});
+    // The route also answers under a trailing slash (`trailingSlash` is `ignore`), so that spelling skips the session too.
+    for (const [path, method] of [
+      [CLIENT_ERROR_PATH, "POST"],
+      [CLIENT_ERROR_PATH, "GET"],
+      [`${CLIENT_ERROR_PATH}/`, "POST"],
+      [`${CLIENT_ERROR_PATH}//`, "POST"],
+    ]) {
+      const { response, next, locals } = await run(path, method);
+      expect(response.status, `${method} ${path}`).toBe(200);
+      expect(next, `${method} ${path}`).toHaveBeenCalledTimes(1);
+      expect(locals, `${method} ${path}`).toEqual({});
     }
     expect(mocks.createServerClient).not.toHaveBeenCalled();
     expect(mocks.getClaims).not.toHaveBeenCalled();

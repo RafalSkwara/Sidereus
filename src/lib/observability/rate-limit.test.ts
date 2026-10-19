@@ -45,6 +45,21 @@ describe("allowClientError", () => {
     expect(logs.warns).not.toHaveBeenCalled();
   });
 
+  it("fails closed when the binding itself errors, and says so once per isolate", async () => {
+    const limit = vi
+      .fn<(options: { key: string }) => Promise<{ success: boolean }>>()
+      .mockRejectedValue(new Error("down"));
+    binding.env = { CLIENT_ERROR_LIMITER: { limit } };
+    const { allowClientError } = await import("./rate-limit");
+    expect(await allowClientError()).toBe(false);
+    expect(await allowClientError()).toBe(false);
+    expect(limit).toHaveBeenCalledTimes(2);
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: config.rate-limit failed", {
+      step: "config.rate-limit",
+      name: "Error",
+    });
+  });
+
   it("with the binding calls it under the one constant key, answers what it answers and logs nothing", async () => {
     const limit = vi.fn<(options: { key: string }) => Promise<{ success: boolean }>>();
     limit.mockResolvedValueOnce({ success: true }).mockResolvedValueOnce({ success: false });

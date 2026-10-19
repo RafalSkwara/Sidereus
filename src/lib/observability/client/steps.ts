@@ -6,6 +6,11 @@
 /** Where a browser posts a report; shared by the route, the middleware's short-circuit, the reporters and the tests. */
 export const CLIENT_ERROR_PATH = "/api/client-error";
 
+/** Whether `pathname` is the endpoint, with or without a trailing slash (`trailingSlash` is `ignore`, so both reach the route). */
+export function isClientErrorPath(pathname: string): boolean {
+  return pathname.replace(/\/+$/, "") === CLIENT_ERROR_PATH;
+}
+
 /**
  * Every step a client may report, in two families that say where the failure happened: `sw.*` (the service worker,
  * `src/sw.ts`) and `island.*` (the page and its React islands). A step outside this list is refused by the route.
@@ -46,7 +51,8 @@ export const NETWORK_STEPS: readonly ClientStep[] = [
 ];
 
 /**
- * What an error's name may look like to travel in a report: a short identifier (`QuotaExceededError`), never a sentence
- * or a value. The reporter filters with it and the route's schema refuses anything else, so the two cannot drift.
+ * What an error's name may look like to travel in a report, or to be logged as a line's `name`: a short identifier
+ * (`QuotaExceededError`, `PostgrestError`), never a sentence or a value. The reporter filters with it, the route's schema
+ * refuses anything else and `log-failure.ts` reads names through it, so the three cannot drift.
  */
 export const NAME_SHAPE = /^[A-Za-z][A-Za-z0-9_]{0,31}$/;

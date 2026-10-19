@@ -6,6 +6,9 @@ import { logFailure } from "@/lib/observability/log-failure";
 /** This isolate's in-memory limiter, made on the first call without the binding. */
 let fallback: RateLimit | undefined;
 
+/** Whether this isolate has already said the limiter is broken or missing: once per isolate is enough. */
+let reported = false;
+
 /**
  * Whether one more client report may be logged now. With `kv-cache.ts` this is one of the two modules that import
  * `cloudflare:workers` (Vitest cannot resolve it; tests supply the binding object through the shared seam). The
@@ -18,12 +21,23 @@ export async function allowClientError(): Promise<boolean> {
   const binding = (env as Partial<Cloudflare.Env> & { CLIENT_ERROR_LIMITER?: RateLimit }).CLIENT_ERROR_LIMITER;
   let limiter = binding;
   if (limiter === undefined) {
-    if (fallback === undefined) {
+    if (!reported) {
+      reported = true;
       logFailure("config.rate-limit");
-      fallback = createMemoryLimiter();
     }
+    fallback ??= createMemoryLimiter();
     limiter = fallback;
   }
-  const { success } = await limiter.limit({ key: CLIENT_ERROR_LIMIT_KEY });
-  return success;
+  try {
+    const { success } = await limiter.limit({ key: CLIENT_ERROR_LIMIT_KEY });
+    return success;
+  } catch (error) {
+    // The binding itself failed (a server fault nobody can forge, unlike a bad request): refuse the report, so a broken
+    // limiter never leaves the route unlimited, and leave the one line.
+    if (!reported) {
+      reported = true;
+      logFailure("config.rate-limit", error);
+    }
+    return false;
+  }
 }

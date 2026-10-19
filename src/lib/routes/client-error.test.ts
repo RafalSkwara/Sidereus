@@ -68,16 +68,21 @@ describe("POST /api/client-error", () => {
     });
     expect(logs.errors).not.toHaveBeenCalled();
 
-    // A beacon sends text/plain, and a Sec-Fetch-Site header alone is enough; a report without a name has no name field.
+    // A beacon sends text/plain with its page's Origin (Astro's checkOrigin refuses a text/plain POST whose Origin is not
+    // the site's before the route runs, so Sec-Fetch-Site alone never reaches it); a report without a name has no name field.
     logs.warns.mockClear();
     const beacon = await post(report({ step: "island.import" }), {
       type: "text/plain;charset=UTF-8",
-      headers: { "sec-fetch-site": "same-origin" },
+      headers: { ...SAME_ORIGIN, "sec-fetch-site": "same-origin" },
     });
     expect(beacon.status).toBe(204);
     expect(logs.warns).toHaveBeenCalledExactlyOnceWith("sidereus: client.island.import noted", {
       step: "client.island.import",
     });
+
+    // For JSON, which Astro does not origin-check, the route's own check accepts Sec-Fetch-Site alone.
+    const fetched = await post(report({ step: "sw.sweep" }), { headers: { "sec-fetch-site": "same-origin" } });
+    expect(fetched.status).toBe(204);
   });
 
   it("refuses a body that is not exactly a step and an optional shaped name, with 400 and no line", async () => {
@@ -135,6 +140,37 @@ describe("POST /api/client-error", () => {
     expect(logs.warns).not.toHaveBeenCalled();
   });
 
+  it("answers 400 and leaves no line for a body the client broke off, and spends no limiter token on it", async () => {
+    binding.env = { CLIENT_ERROR_LIMITER: createMemoryLimiter({ limit: 1 }) };
+    // A client that drops the connection mid-upload makes the body stream error (workerd: "Network connection lost").
+    const broken = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"step":'));
+        controller.error(new Error("Network connection lost."));
+      },
+    });
+    expect((await post(broken)).status).toBe(400);
+    expect(logs.warns).not.toHaveBeenCalled();
+    expect(logs.errors).not.toHaveBeenCalled();
+    expect((await post(report({ step: "sw.index" }))).status).toBe(204);
+  });
+
+  it("spends a limiter token only on a request that is well formed: every refusal before the limiter leaves the budget alone", async () => {
+    binding.env = { CLIENT_ERROR_LIMITER: createMemoryLimiter({ limit: 1 }) };
+    const body = report({ step: "sw.index" });
+    const refused = [
+      await post(body, { headers: { origin: "https://evil.example" } }),
+      await post(body.padEnd(600, " ")),
+      await post(body, { type: "application/x-www-form-urlencoded" }),
+      await post(report({ step: "sw.nope" })),
+      await post("not json"),
+    ];
+    expect(refused.map((response) => response.status)).toEqual([403, 413, 415, 400, 400]);
+    // The one token is still there for a real report, and only then is the budget gone.
+    expect((await post(body)).status).toBe(204);
+    expect((await post(body)).status).toBe(429);
+  });
+
   it("answers 429 over the limit and logs nothing for the refused report", async () => {
     binding.env = { CLIENT_ERROR_LIMITER: createMemoryLimiter({ limit: 2 }) };
     const body = report({ step: "sw.index" });
@@ -148,7 +184,9 @@ describe("POST /api/client-error", () => {
   });
 
   it("refuses every other method itself", () => {
-    const response = ALL(routeContext({ url: URL_, method: "GET" }));
-    expect(response).toMatchObject({ status: 405 });
+    for (const method of ["GET", "PUT", "DELETE"]) {
+      const response = ALL(routeContext({ url: URL_, method }));
+      expect(response, method).toMatchObject({ status: 405 });
+    }
   });
 });

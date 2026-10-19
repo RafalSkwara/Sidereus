@@ -13,33 +13,43 @@ import { logNotice } from "@/lib/observability/log-failure";
 /** The most a report may weigh: a step and a name are far below it, so anything larger is not a report. */
 export const MAX_REPORT_BYTES = 512;
 
+/** What reading a bounded body gave: its text, a body over the limit, or a body the client broke off. */
+export type BodyRead = { text: string } | { refused: "too-large" | "broken" };
+
 /**
- * The body as text, or `null` when it is over `maxBytes`. A `Content-Length` over the limit is refused without reading;
- * the stream is then read with a running byte count that stops at the first byte past the limit, so a chunked body
- * with no `Content-Length` is bounded the same way and a large forgery is never held in memory.
+ * The body as text, or why not. A `Content-Length` over the limit is refused without reading; the stream is then read
+ * with a running byte count that stops at the first byte past the limit, so a chunked body with no `Content-Length` is
+ * bounded the same way and a large forgery is never held in memory. A client that drops the connection mid-upload makes
+ * the stream error (workerd: "Network connection lost"); that is the client's own input, not a fault: it comes back as
+ * `broken` (the route answers 400 and logs nothing), because an error thrown here would be an error-level line anyone
+ * could produce without limit, before the limiter.
  */
-export async function readBoundedBody(request: Request, maxBytes: number): Promise<string | null> {
+export async function readBoundedBody(request: Request, maxBytes: number): Promise<BodyRead> {
   const declared = request.headers.get("content-length");
   if (declared !== null && Number(declared) > maxBytes) {
-    return null;
+    return { refused: "too-large" };
   }
   if (request.body === null) {
-    return "";
+    return { text: "" };
   }
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return { refused: "too-large" };
+      }
+      chunks.push(value);
     }
-    total += value.byteLength;
-    if (total > maxBytes) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
+  } catch {
+    return { refused: "broken" };
   }
   const bytes = new Uint8Array(total);
   let offset = 0;
@@ -47,7 +57,7 @@ export async function readBoundedBody(request: Request, maxBytes: number): Promi
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(bytes);
+  return { text: new TextDecoder().decode(bytes) };
 }
 
 /**

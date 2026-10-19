@@ -84,8 +84,8 @@ const ALLOWED_SILENT_CATCHES: Partial<Record<string, { count: number; reason: st
       "the client reporter must never throw and cannot report its own failure anywhere else (it would recurse): a send that throws or rejects, or a value that defeats a read, is absorbed in the one handler",
   },
   "src/lib/observability/client-report.ts": {
-    count: 1,
-    reason: `${INPUT} (a client report that is not JSON is refused with 400; the route logs nothing for a refused report)`,
+    count: 2,
+    reason: `${INPUT} (a client report that is not JSON, or a body the client broke off mid-upload, is refused with 400; the route logs nothing for a refused report, so a forged or aborted request cannot leave a line, D13)`,
   },
   "src/lib/auth-redirect.ts": { count: 1, reason: INPUT },
   "src/lib/offline/copies.ts": { count: 1, reason: INPUT },
