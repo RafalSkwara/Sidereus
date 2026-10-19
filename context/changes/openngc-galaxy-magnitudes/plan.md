@@ -373,11 +373,11 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [x] 4.1 astro sync and astro check have 0 errors; npm run lint is clean
-- [x] 4.2 npm test (both projects) is green, counts reported
-- [x] 4.3 A fresh npm run build succeeds
-- [x] 4.4 npm run test:e2e and npm run smoke pass against the local preview, counts reported
-- [x] 4.5 Only the intended files changed (git diff --stat origin/main)
+- [x] 4.1 astro sync and astro check have 0 errors; npm run lint is clean — c2cd94b
+- [x] 4.2 npm test (both projects) is green, counts reported — c2cd94b
+- [x] 4.3 A fresh npm run build succeeds — c2cd94b
+- [x] 4.4 npm run test:e2e and npm run smoke pass against the local preview, counts reported — c2cd94b
+- [x] 4.5 Only the intended files changed (git diff --stat origin/main) — c2cd94b
 
 #### Manual
 
