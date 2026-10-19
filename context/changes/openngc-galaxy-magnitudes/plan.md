@@ -318,10 +318,10 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [x] 1.1 The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle), output saved to evidence/phase1-red.txt
-- [x] 1.2 Deliberate-break check: the guard on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle on a copy with M106 at 9.29 names M106
-- [x] 1.3 Lint and format pass on the two new files
-- [x] 1.4 Every other test still passes (npm run test:reference has no failure outside galaxy-colour.test.ts)
+- [x] 1.1 The new tests fail on the current catalogue and name exactly the 12 ids (guard) and the six Messier galaxies (oracle), output saved to evidence/phase1-red.txt — c6c6964
+- [x] 1.2 Deliberate-break check: the guard on an in-memory copy with one of the 12 corrected lists 11 ids, and the oracle on a copy with M106 at 9.29 names M106 — c6c6964
+- [x] 1.3 Lint and format pass on the two new files — c6c6964
+- [x] 1.4 Every other test still passes (npm run test:reference has no failure outside galaxy-colour.test.ts) — c6c6964
 
 #### Manual
 
@@ -331,15 +331,15 @@ No data migration. The corrected values change the advice of the 12 galaxies for
 
 #### Automated
 
-- [ ] 2.1 Phase 1's tests are green
-- [ ] 2.2 The helper's unit tests pass (guards project: npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs)
-- [ ] 2.3 Regeneration is reproducible: a second npm run catalogue:build leaves git diff identical
-- [ ] 2.4 The data diff is only vMag of 12 objects (scratch comparison prints exactly the 12 ids)
-- [ ] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test (guards command), the guard or the build's count check red
-- [ ] 2.6 The provenance pins pass (npm run test:guards)
-- [ ] 2.7 Lint passes (npm run lint)
-- [ ] 2.10 The provenance pins are extended and hold: vMagColour entries match the JSON, the 12 ids exactly, the reasons name the doubts; a doctored meta turns them red
-- [ ] 2.11 The four oracles are green on the regenerated catalogue before the corrections are accepted, or the implementer stopped and asked the owner
+- [x] 2.1 Phase 1's tests are green
+- [x] 2.2 The helper's unit tests pass (guards project: npx vitest run --project guards scripts/lib/galaxy-colour.test.mjs)
+- [x] 2.3 Regeneration is reproducible: a second npm run catalogue:build leaves git diff identical
+- [x] 2.4 The data diff is only vMag of 12 objects (scratch comparison prints exactly the 12 ids)
+- [x] 2.5 Deliberate-break check: a flipped sign and a removed correction turn the helper test (guards command), the guard or the build's count check red
+- [x] 2.6 The provenance pins pass (npm run test:guards)
+- [x] 2.7 Lint passes (npm run lint)
+- [x] 2.10 The provenance pins are extended and hold: vMagColour entries match the JSON, the 12 ids exactly, the reasons name the doubts; a doctored meta turns them red
+- [x] 2.11 The four oracles are green on the regenerated catalogue before the corrections are accepted, or the implementer stopped and asked the owner
 
 #### Manual
 

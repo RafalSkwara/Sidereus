@@ -17,8 +17,17 @@ objects (NGC 5866 is listed as M102, because OpenNGC treats M102 as a duplicate 
 `caldwell.json` is filtered to the rows of OpenNGC's `NGC.csv` and `addendum.csv` that carry a Caldwell
 identifier, are not Messier objects and lie at declination -23 degrees or north (61 objects, with the
 Double Cluster's two rows NGC 869 and NGC 884 merged into one entry; a missing V magnitude is taken
-from the B magnitude); in both, sexagesimal coordinates are converted to decimal and the Serpens
-constellation codes are merged.
+from the B magnitude, except for galaxies, see below); in both, sexagesimal coordinates are converted to decimal and the Serpens
+constellation codes are merged; the V magnitude of 12 galaxies is derived as described below.
+
+The V magnitude of 12 galaxies (6 Messier: M58, M61, M88, M91, M98, M106; 6 Caldwell: IC 342, NGC 4449,
+NGC 5005, NGC 4565, NGC 6822, NGC 4039) is a **derived value**, not OpenNGC's: for these galaxies OpenNGC's V
+magnitude, or the B magnitude the generator used in its place, gives a colour (B minus V) below 0.2, which no
+galaxy has. The generator replaces it by the B magnitude minus the median B-V of the catalogue's own credible
+galaxies of the same Hubble group, computed from the same pinned OpenNGC files; no other source is used. It is
+covered by the same CC BY-SA 4.0 as the rest of the four files, and each correction is listed per object under
+`overrides` (action `vMagColour`) in `messier.meta.json` and `caldwell.meta.json`, with the original value, the
+group, the median and the reason.
 
 OpenNGC asks that the following acknowledgements accompany derived work:
 
