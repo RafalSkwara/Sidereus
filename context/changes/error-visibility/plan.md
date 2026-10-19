@@ -858,12 +858,12 @@ No database migration. The new `errors.serverFault` key ships with both locales.
 
 #### Automated
 
-- [ ] 9.1 Browser reporter tests fail first, then pass (only the name is sent, no error object sends nothing, the own-script filter, hydration step, rejection unfiltered, page cap, idempotent install)
-- [ ] 9.2 Import guard passes: the client module imports no server code
-- [ ] 9.3 `client-errors.spec.ts` fails first, then passes (an error thrown from a served `/_astro/` script, a `reportError` from one and a rejection each produce one report with only `step` and `name`; the same error thrown from console-style input produces none; service workers blocked in the spec)
-- [ ] 9.4 Silent-catch guard passes with only reasoned entries
-- [ ] 9.5 Existing island e2e stay green
-- [ ] 9.6 Full unit suite, lint, types and build pass
+- [x] 9.1 Browser reporter tests fail first, then pass (only the name is sent, no error object sends nothing, the own-script filter, hydration step, rejection unfiltered, page cap, idempotent install) (red first against a stub, 9 tests; mutations listed in `implementation-notes.md`)
+- [x] 9.2 Import guard passes: the client module imports no server code (`client-imports.test.ts`; red when the logger or the barrel is imported by the worker side)
+- [x] 9.3 `client-errors.spec.ts` fails first, then passes (an error thrown from a served `/_astro/` script, a `reportError` from one and a rejection each produce one report with only `step` and `name`; the same error thrown from console-style input produces none; service workers blocked in the spec) (5 cases in Chromium: a throw and a `reportError` from `/_astro/` scripts, console-style input (none), a rejection, a failed catalogue chunk as `island.import`; red when the filter or the Layout install is removed)
+- [x] 9.4 Silent-catch guard passes with only reasoned entries (the client part of the allowlist is `client/reporter.ts`, the four rethrows and the index queue in `sw.ts`, `map-panel.tsx:162`, the three memo resets, the geolocation sites and the install prompt)
+- [x] 9.5 Existing island e2e stay green (`site-location site-map onboarding` are inside the full run below)
+- [x] 9.6 Full unit suite, lint, types and build pass (full run on the current state, 2026-10-19, fresh build, forecast fixture, local stack, keys inline, `CI=1`: unit 134 files / 867 passed, 1 skipped; `npm run test:e2e` 69 passed, no flaky, no skips; smoke all steps passed)
 
 #### Manual
 

@@ -107,6 +107,7 @@
   - A new swallowed catch fails `src/lib/observability/silent-catch-guard.test.ts` unless it logs, rethrows with a cause, or has an allowlist entry with a real reason.
   - A store returns a sanitized `fault` (or throws with a `StoreFault` as `cause`), never a PostgREST message; a server fault redirects with `errors.serverFault`.
   - Search Workers Logs and write every alert by message text (`sidereus: <step> failed`), never by field; the runbook is `context/deployment/error-visibility.md`.
+  - In the browser the same rule runs through `report` / `reportAnd` from `@/lib/observability/client` (the page and its islands) or `@/lib/offline/report` (the service worker), imported by that exact alias (the guard matches the specifier), and a client never calls `console`. The worker never imports the page's barrel (`client-imports.test.ts` pins it). The window `error` handler reports only a script under `location.origin + "/_astro/"`, because a script's file name is what tells our code from an extension's or the console's (probe 2026-10-19, Chromium and WebKit: a throw and a `reportError` from `/_astro/` carry that URL, console input carries none); a rejection has no file name, so it is reported unfiltered. The place search reports only after its `aborted` check, since every keystroke aborts the previous request.
 - **Applies to**: plan, implement, impl-review
 
 ## An e2e test never reads the real clock: pin the browser and the server, or read the page's own date

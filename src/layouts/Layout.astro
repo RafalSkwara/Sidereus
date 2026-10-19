@@ -110,11 +110,14 @@ const { title = m.common.appName, skyModeScope = false } = Astro.props;
 
 <script>
   // S-06: the service worker, an early listener for the install prompt (the settings entry offers it later), and the
-  // page's offline state (notices on stored copies, network-only controls disabled while offline).
+  // page's offline state (notices on stored copies, network-only controls disabled while offline). Error reporting
+  // (error-visibility Phase 9) goes first, so a failure while the worker registers is already caught.
   import "@/lib/offline/install";
+  import { installErrorReporting } from "@/lib/observability/client";
   import { startOfflinePageState } from "@/lib/offline/page-state";
   import { registerServiceWorker } from "@/lib/offline/register";
 
+  installErrorReporting();
   registerServiceWorker();
   startOfflinePageState();
 </script>
