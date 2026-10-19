@@ -1,0 +1,75 @@
+npm warn Unknown user config "scripts-prepend-node-path". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v5.0.1 /Users/rafalskwara/projects/sidereus/.claude/worktrees/openngc-galaxy-magnitudes
+
+ ❯ |reference| src/lib/catalogue/galaxy-colour.test.ts (3 tests | 2 failed) 5ms
+   ❯ galaxy colour in the shipped catalogue (3)
+     × no galaxy ships a B-V below 0.2 4ms
+     × the six Messier galaxies sit within the tolerance of their published V 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |reference| src/lib/catalogue/galaxy-colour.test.ts > galaxy colour in the shipped catalogue > no galaxy ships a B-V below 0.2
+AssertionError: galaxies with an impossible colour (12): expected [ 'M58 V 10.3 B 10.44', …(11) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "M58 V 10.3 B 10.44",
++   "M61 V 10.25 B 10.16",
++   "M88 V 10.33 B 10.24",
++   "M91 V 10.96 B 10.94",
++   "M98 V 10.84 B 10.82",
++   "M106 V 9.29 B 9.12",
++   "IC342 V 9.68 B 9.68",
++   "NGC4449 V 9.64 B 9.5",
++   "NGC5005 V 10.71 B 10.54",
++   "NGC4565 V 10.86 B 10.05",
++   "NGC6822 V 10.05 B 9.36",
++   "NGC4039 V 11.04 B 11.04",
++ ]
+
+ ❯ src/lib/catalogue/galaxy-colour.test.ts:59:83
+     57|
+     58|     const offenders = implausibleGalaxies(DEEP_SKY).map(describeColour…
+     59|     expect(offenders, `galaxies with an impossible colour (${offenders…
+       |                                                                                   ^
+     60|   });
+     61|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |reference| src/lib/catalogue/galaxy-colour.test.ts > galaxy colour in the shipped catalogue > the six Messier galaxies sit within the tolerance of their published V
+AssertionError: galaxies further than 0.3 mag from the published V: expected [ …(6) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "M58 catalogue V 10.3 published V 9.7",
++   "M61 catalogue V 10.25 published V 9.7",
++   "M88 catalogue V 10.33 published V 9.6",
++   "M91 catalogue V 10.96 published V 10.2",
++   "M98 catalogue V 10.84 published V 10.1",
++   "M106 catalogue V 9.29 published V 8.4",
++ ]
+
+ ❯ src/lib/catalogue/galaxy-colour.test.ts:69:97
+     67|       return `${entry.id} catalogue V ${catalogueV} published V ${entr…
+     68|     });
+     69|     expect(gaps, `galaxies further than ${PUBLISHED_V_TOLERANCE_MAG} m…
+       |                                                                                                 ^
+     70|   });
+     71|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  10:25:16
+   Duration  151ms (import 60%, transform 33%, tests 6%, worker 2%)
+

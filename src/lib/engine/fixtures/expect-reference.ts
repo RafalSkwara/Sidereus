@@ -59,6 +59,9 @@ const ACCESSED = "2026-10-14";
 /** Pages added by the small-scope-galaxies change were verified by its plan review on this day. */
 const ACCESSED_SMALL_SCOPE = "2026-10-15";
 
+/** Pages added by the openngc-galaxy-magnitudes change (#178) were fetched and their quotes checked on this day. */
+const ACCESSED_GALAXY_V = "2026-10-19";
+
 function source(title: string, publisher: string, url: string, accessed: string = ACCESSED): ExpectSource {
   return { title, publisher, url, accessed };
 }
@@ -234,6 +237,18 @@ const SRC = {
     "Astronomy magazine",
     "https://www.astronomy.com/observing/explore-deep-sky-delights/",
     ACCESSED_SMALL_SCOPE,
+  ),
+  SKYHOUND_M106: source(
+    "M 106",
+    "Skyhound (CapellaSoft)",
+    "https://observing.skyhound.com/archives/apr/M_106.html",
+    ACCESSED_GALAXY_V,
+  ),
+  ASTRONOMY_NOW_M106: source(
+    "Focus on Messier 106 (Steve Kelly, 25 March 2024)",
+    "Astronomy Now",
+    "https://astronomynow.com/2024/03/25/focus-on-messier-106/",
+    ACCESSED_GALAXY_V,
   ),
   TELESCOPE_ADVISOR_FIND_ANDROMEDA: source(
     "How to find the Andromeda Galaxy",
@@ -542,6 +557,15 @@ export const EXPECT_REFERENCES: readonly ExpectReference[] = [
     sources: [SRC.TELESCOPE_ADVISOR_LIGHT_POLLUTION, SRC.TELESCOPE_ADVISOR_M101, SRC.FREE_STAR_CHARTS_M101],
     note: "Small-scope entry (small-scope-galaxies, issue 21 item 3). Telescope Advisor's table: faint galaxies (M101, Leo Triplet) 'need Bortle 4 or better' and are 'Difficult' at Bortle 5-6. Telescope Advisor, M101: 'M101 is strongly affected by light pollution'. freestarcharts: in light-polluted areas it is sometimes difficult to spot even with 200 mm scopes. At the edge of what the sky allows: 'galaxyLimit'.",
   },
+  {
+    id: "M106",
+    apertureMm: 150,
+    bortle: 5,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [SRC.SKYHOUND_M106, SRC.ASTRONOMY_NOW_M106],
+    note: "Galaxy-magnitudes entry (openngc-galaxy-magnitudes, issue 178). The key was decided from the two pages before the rule was run. Skyhound: 'Minimum requirements to view: 4-inch scope and suburban skies'; in a 6-inch it is 'rather like M31 as seen in binoculars'; 'Look for a bright core and hints of structure. Averted vision will show a faint outer envelope.' Astronomy Now, at 150 mm: 'a slightly mottled, oval-shaped core extending to perhaps 10' x 7', with a well-defined nucleus surrounded by a faint outer halo of nebulosity'. A core clearly seen inside a halo that needs averted vision, which is the brighter middle of a faint smudge: 'galaxySmudge'. Counter-evidence: Skyhound also calls it 'a very nice bright spiral galaxy' with a 'bright core', which could be read as 'galaxyBright'; neither page says it is easy straight on. Neither page names a Bortle class: 'suburban' is read as Bortle 5 to 6, so the two entries rest on the same two pages and the sources do not separate them.",
+  },
 ];
 
 /**
@@ -584,5 +608,17 @@ export const KNOWN_DIVERGENCES: readonly ExpectDivergence[] = [
     computed: "galaxyFaint",
     reason:
       "The deficit is 2.47 against the `limit` threshold `EXPECT_FAINT_BELOW` of 2.5. The disc-type core is calibrated on the 150 mm entries (M33 and M101 at Bortle 4 and 7), and moving it 0.03 mag to fit one entry would be fitting noise.",
+  },
+  {
+    id: "M106",
+    apertureMm: 150,
+    bortle: 6,
+    kind: "hard",
+    expected: "galaxySmudge",
+    sources: [SRC.SKYHOUND_M106, SRC.ASTRONOMY_NOW_M106],
+    note: "Galaxy-magnitudes entry (openngc-galaxy-magnitudes, issue 178). The key was decided from the two pages before the rule was run. Skyhound: 'Minimum requirements to view: 4-inch scope and suburban skies'; in a 6-inch it is 'rather like M31 as seen in binoculars'; 'Look for a bright core and hints of structure. Averted vision will show a faint outer envelope.' Astronomy Now, at 150 mm: 'a slightly mottled, oval-shaped core extending to perhaps 10' x 7', with a well-defined nucleus surrounded by a faint outer halo of nebulosity'. A core clearly seen inside a halo that needs averted vision, which is the brighter middle of a faint smudge: 'galaxySmudge'. Counter-evidence: Skyhound also calls it 'a very nice bright spiral galaxy' with a 'bright core', which could be read as 'galaxyBright'; neither page says it is easy straight on. Neither page names a Bortle class: 'suburban' is read as Bortle 5 to 6, so the two entries rest on the same two pages and the sources do not separate them.",
+    computed: "galaxyFaint",
+    reason:
+      "The deficit is 1.61 against the `smudge` threshold `EXPECT_SMUDGE_BELOW` of 1.5, with V 8.56 from the catalogue's colour rule (the published V 8.4 would give 1.45 and the rule would agree). The two pages do not separate Bortle 5 from Bortle 6, and the galaxy-core calibration sits on the other galaxy entries, so moving the edge 0.11 mag to fit one entry would be fitting noise. Owner decision 2026-10-19 (issue 178, Q5): the cap on this list is raised from 3 to 4 for this entry.",
   },
 ];

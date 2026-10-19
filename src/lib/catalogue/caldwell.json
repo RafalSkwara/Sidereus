@@ -79,7 +79,7 @@
     "constellation": "Cam",
     "majorAxisArcmin": 19.77,
     "minorAxisArcmin": 18.79,
-    "vMag": 9.68,
+    "vMag": 9.12,
     "bMag": 9.68,
     "surfaceBrightness": 24.85,
     "hubble": "SABc"
@@ -334,7 +334,7 @@
     "constellation": "CVn",
     "majorAxisArcmin": 4.66,
     "minorAxisArcmin": 2.71,
-    "vMag": 9.64,
+    "vMag": 9.03,
     "bMag": 9.5,
     "surfaceBrightness": 21.1,
     "hubble": "IB"
@@ -470,7 +470,7 @@
     "constellation": "CVn",
     "majorAxisArcmin": 4.82,
     "minorAxisArcmin": 1.52,
-    "vMag": 10.71,
+    "vMag": 9.73,
     "bMag": 10.54,
     "surfaceBrightness": 21.82,
     "hubble": "SABb"
@@ -623,7 +623,7 @@
     "constellation": "Com",
     "majorAxisArcmin": 16.75,
     "minorAxisArcmin": 2.89,
-    "vMag": 10.86,
+    "vMag": 9.24,
     "bMag": 10.05,
     "surfaceBrightness": 23.75,
     "hubble": "Sb"
@@ -929,7 +929,7 @@
     "constellation": "Sgr",
     "majorAxisArcmin": 17.38,
     "minorAxisArcmin": 16.75,
-    "vMag": 10.05,
+    "vMag": 8.89,
     "bMag": 9.36,
     "surfaceBrightness": 24.25,
     "hubble": "IB"
@@ -997,7 +997,7 @@
     "constellation": "Crv",
     "majorAxisArcmin": 5.36,
     "minorAxisArcmin": 2.73,
-    "vMag": 11.04,
+    "vMag": 10.57,
     "bMag": 11.04,
     "surfaceBrightness": 22.82,
     "hubble": "SBm"

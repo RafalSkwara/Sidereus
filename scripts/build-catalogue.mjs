@@ -17,12 +17,23 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  colourGroupOf,
+  colourOf,
+  correctedV,
+  groupMedians,
+  MIN_GALAXY_BV,
+  MIN_GROUP_SIZE,
+} from "./lib/galaxy-colour.mjs";
+
 const PINNED_SHA = "da90466031b0372c896588b85be6016c617e205b";
 const PINNED_COMMIT_DATE = "2026-07-26";
 const SOURCE_REPO = "https://github.com/mattiaverga/OpenNGC";
 const RAW_BASE = `https://raw.githubusercontent.com/mattiaverga/OpenNGC/${PINNED_SHA}/database_files/`;
 const SOURCE_FILES = ["NGC.csv", "addendum.csv"];
 const EXPECTED_COUNT = 110;
+/** Galaxies whose B-V is below MIN_GALAXY_BV (V from HyperLEDA's `vt`) or that have no V-Mag (B copied into V): 6 Messier, 6 Caldwell. */
+const EXPECTED_COLOUR_CORRECTIONS = 12;
 
 /**
  * Caldwell selection: a Caldwell object is reachable from the PRD's 52° N reference latitude when it
@@ -63,6 +74,9 @@ const TYPE_MAP = {
   "**": "double-star",
   Other: "other",
 };
+
+/** One `normalisations` line, in both metas, for the galaxy V-Mag rule (the per-object record is under `overrides`). */
+const COLOUR_NORMALISATION = `Galaxy V-Mag: where B-V would be below ${MIN_GALAXY_BV}, or OpenNGC has no V-Mag, V is B-Mag minus the median B-V of the catalogue's own credible galaxies of the same Hubble group (per object: overrides, action vMagColour)`;
 
 /** Constellation codes OpenNGC splits that the catalogue keeps as one IAU abbreviation. */
 const CONSTELLATION_MAP = { Se1: "Ser", Se2: "Ser" };
@@ -386,12 +400,13 @@ function buildCaldwell(rows) {
       );
     }
     let vMag = nullableNumber(row["V-Mag"]);
+    let fallbackText = null;
     if (vMag === null) {
       const bMag = nullableNumber(row["B-Mag"]);
       const override = overrides.get(idFromDesignation(designationFor(row.Name)));
       if (bMag !== null) {
         vMag = bMag;
-        bMagFallbacks.push(`${row.Name} (C ${caldwell}): vMag taken from B-Mag ${row["B-Mag"]} (V-Mag empty)`);
+        fallbackText = `${row.Name} (C ${caldwell}): vMag taken from B-Mag ${row["B-Mag"]} (V-Mag empty)`;
       } else if (override) {
         vMag = override.vMag;
         usedOverrides.add(override.id);
@@ -410,6 +425,9 @@ function buildCaldwell(rows) {
       usedRenames.add(caldwell);
     }
     objects.push(object);
+    if (fallbackText !== null) {
+      bMagFallbacks.push({ id: object.id, text: fallbackText });
+    }
   }
   const unusedRenames = [...renames.keys()].filter((n) => !usedRenames.has(n));
   if (unusedRenames.length > 0) {
@@ -438,6 +456,86 @@ function buildCaldwell(rows) {
   return { objects, bMagFallbacks, belowDecLimit };
 }
 
+/**
+ * NED's single main-table magnitude (the filter column is empty) for the two galaxies whose B-Mag may itself be too
+ * bright, so that a V computed from it inherits the error. It is quoted only in the doubt sentence of the two
+ * corrections' `reason` (with the page it was read from), never used to compute a V: no other source is used for the
+ * values. Read from NED's object search (`NED_SEARCH`, ascii_bar output, magnitude column) on 2026-10-19; the values are
+ * not in OpenNGC's files.
+ */
+const NED_SEARCH = "https://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=";
+const NED_READ_ON = "2026-10-19";
+const B_MAG_DOUBT = {
+  NGC4449: 9.99,
+  NGC4565: 10.42,
+};
+
+/** The sentences that follow the rule in a correction's reason, for the galaxies it needs them for. */
+function colourCaveats(id, bMag, groupCount) {
+  const caveats = [];
+  const ned = B_MAG_DOUBT[id];
+  if (ned !== undefined) {
+    const gap = round(ned - bMag, 1);
+    caveats.push(
+      `B-Mag may itself be too bright: NED's single main-table magnitude (${ned}, no filter given; ${NED_SEARCH}${id}&extend=no&of=ascii_bar, read ${NED_READ_ON}) is about ${gap} mag fainter than the B-Mag, so this V may be about ${gap} mag too bright.`,
+    );
+  }
+  if (groupCount === MIN_GROUP_SIZE) {
+    caveats.push(`The group is thin: the median of ${groupCount} galaxies is the minimum the build accepts.`);
+  }
+  return caveats;
+}
+
+/**
+ * Corrects the V-Mag of every galaxy whose colour is impossible, in place (no other field and no key order changes):
+ * B-V below MIN_GALAXY_BV (OpenNGC's V-Mag is HyperLEDA's `vt`, uncertainty about 1 mag), or no V-Mag at all (the
+ * Caldwell B fallback, B-V 0 by construction). V = B-Mag minus the median B-V of the credible galaxies of the same
+ * Hubble group, where the credible ones are the catalogue's own galaxies with an OpenNGC V-Mag and B-V of
+ * MIN_GALAXY_BV or more. Returns the `overrides` entries (action "vMagColour") for each meta, in catalogue order.
+ */
+function applyColourCorrections(messierObjects, caldwellObjects, fallbackIds) {
+  const galaxies = [...messierObjects, ...caldwellObjects].filter((o) => o.type === "galaxy");
+  const medians = groupMedians(galaxies.filter((o) => !fallbackIds.has(o.id)));
+  const source = `${SOURCE_REPO}/blob/${PINNED_SHA}/database_files/NGC.csv`;
+  const entries = { messier: [], caldwell: [] };
+  let count = 0;
+  for (const galaxy of galaxies) {
+    const fromFallback = fallbackIds.has(galaxy.id);
+    const bv = colourOf(galaxy);
+    if (!fromFallback && (bv === null || bv >= MIN_GALAXY_BV)) {
+      continue;
+    }
+    const group = colourGroupOf(galaxy.hubble);
+    const { median, count: groupCount } = medians[group];
+    const fromVMag = fromFallback ? null : galaxy.vMag;
+    const vMag = correctedV(galaxy.bMag, median);
+    const rule = `V = B-Mag minus the median B-V (${median}) of the ${groupCount} credible galaxies of Hubble group ${group}.`;
+    const was = fromFallback
+      ? `OpenNGC has no V-Mag for this galaxy, so the B-Mag ${galaxy.bMag} was used as V (B-V of 0.00), which is impossible for a galaxy.`
+      : `OpenNGC's V-Mag ${fromVMag} is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag ${galaxy.bMag} it gives a B-V of ${bv.toFixed(2)}, which is impossible for a galaxy.`;
+    const reason = [was, rule, ...colourCaveats(galaxy.id, galaxy.bMag, groupCount)].join(" ");
+    galaxy.vMag = vMag;
+    count++;
+    (galaxy.messier !== null ? entries.messier : entries.caldwell).push({
+      id: galaxy.id,
+      action: "vMagColour",
+      fromVMag,
+      vMag,
+      bMag: galaxy.bMag,
+      hubble: galaxy.hubble,
+      group,
+      medianBV: median,
+      groupCount,
+      reason,
+      source,
+    });
+  }
+  if (count !== EXPECTED_COLOUR_CORRECTIONS) {
+    throw new Error(`Expected ${EXPECTED_COLOUR_CORRECTIONS} colour corrections, got ${count}`);
+  }
+  return { entries, medians };
+}
+
 function assertDisjoint(messierObjects, caldwellObjects) {
   const messierDesignations = new Set(messierObjects.map((o) => o.designation.replace(/\s+/g, "")));
   for (const o of caldwellObjects) {
@@ -453,6 +551,8 @@ async function main() {
   const objects = buildCatalogue(rows);
   const { objects: caldwellObjects, bMagFallbacks, belowDecLimit } = buildCaldwell(rows);
   assertDisjoint(objects, caldwellObjects);
+  const fallbackIds = new Set(bMagFallbacks.map((f) => f.id));
+  const { entries: colourEntries, medians } = applyColourCorrections(objects, caldwellObjects, fallbackIds);
 
   const meta = {
     source: SOURCE_REPO,
@@ -461,13 +561,14 @@ async function main() {
     retrievedAt: PINNED_COMMIT_DATE,
     licence: "CC BY-SA 4.0",
     count: objects.length,
-    overrides: OVERRIDES,
+    overrides: [...OVERRIDES, ...colourEntries.messier],
     normalisations: [
       "RA HH:MM:SS.ss -> decimal hours (6 dp); Dec ±DD:MM:SS.s -> decimal degrees (6 dp), sign taken from the string",
       "Constellation codes Se1/Se2 -> Ser",
       "Empty numeric fields -> null",
       "Designations: NGC0224 -> NGC 224, IC4715 -> IC 4715, Mel022 -> Mel 22, M040 -> M40",
       "commonName: first entry of the Common names column, or null",
+      COLOUR_NORMALISATION,
     ],
     typeMap: TYPE_MAP,
   };
@@ -488,20 +589,26 @@ async function main() {
       ...CALDWELL_EXCLUDED,
       { reason: `Below dec ${MIN_DEC_DEG} deg, not reachable from 52 N`, count: belowDecLimit },
     ],
-    overrides: CALDWELL_OVERRIDES,
+    overrides: [...CALDWELL_OVERRIDES, ...colourEntries.caldwell],
     normalisations: [
       "RA HH:MM:SS.ss -> decimal hours (6 dp); Dec ±DD:MM:SS.s -> decimal degrees (6 dp), sign taken from the string",
       "Constellation codes Se1/Se2 -> Ser",
       "Empty numeric fields -> null",
       "Designations: NGC0224 -> NGC 224, IC4715 -> IC 4715; ids drop the space: NGC7000, IC405",
       "commonName: first entry of the Common names column, or null",
-      "vMag: the V-Mag column, else the B-Mag column (listed below), else a documented override",
-      ...bMagFallbacks,
+      "vMag: the V-Mag column, else the B-Mag column (listed below), else a documented override (galaxies: see overrides, action vMagColour)",
+      COLOUR_NORMALISATION,
+      ...bMagFallbacks.filter((f) => !colourEntries.caldwell.some((e) => e.id === f.id)).map((f) => f.text),
     ],
     typeMap: TYPE_MAP,
   };
   await writeFile(path.join(OUT_DIR, "caldwell.json"), JSON.stringify(caldwellObjects, null, 2) + "\n");
   await writeFile(path.join(OUT_DIR, "caldwell.meta.json"), JSON.stringify(caldwellMeta, null, 2) + "\n");
+  console.log(
+    `Colour corrections: ${Object.entries(medians)
+      .map(([group, m]) => `${group} median B-V ${m.median} (${m.count} galaxies)`)
+      .join(", ")}`,
+  );
   console.log(
     `Wrote ${objects.length} Messier and ${caldwellObjects.length} Caldwell objects to ${path.relative(process.cwd(), OUT_DIR)}/`,
   );

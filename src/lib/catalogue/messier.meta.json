@@ -20,6 +20,84 @@
       "action": "assign",
       "sourceName": "NGC5866",
       "reason": "NGC 5866 is listed as M102, matching Stellarium and most observing guides."
+    },
+    {
+      "id": "M58",
+      "action": "vMagColour",
+      "fromVMag": 10.3,
+      "vMag": 9.63,
+      "bMag": 10.44,
+      "hubble": "Sb",
+      "group": "Sa-Sb",
+      "medianBV": 0.81,
+      "groupCount": 18,
+      "reason": "OpenNGC's V-Mag 10.3 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.44 it gives a B-V of 0.14, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "id": "M61",
+      "action": "vMagColour",
+      "fromVMag": 10.25,
+      "vMag": 9.6,
+      "bMag": 10.16,
+      "hubble": "Sbc",
+      "group": "Sbc-Sc",
+      "medianBV": 0.56,
+      "groupCount": 16,
+      "reason": "OpenNGC's V-Mag 10.25 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.16 it gives a B-V of -0.09, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.56) of the 16 credible galaxies of Hubble group Sbc-Sc.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "id": "M88",
+      "action": "vMagColour",
+      "fromVMag": 10.33,
+      "vMag": 9.43,
+      "bMag": 10.24,
+      "hubble": "Sb",
+      "group": "Sa-Sb",
+      "medianBV": 0.81,
+      "groupCount": 18,
+      "reason": "OpenNGC's V-Mag 10.33 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.24 it gives a B-V of -0.09, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "id": "M91",
+      "action": "vMagColour",
+      "fromVMag": 10.96,
+      "vMag": 10.13,
+      "bMag": 10.94,
+      "hubble": "Sb",
+      "group": "Sa-Sb",
+      "medianBV": 0.81,
+      "groupCount": 18,
+      "reason": "OpenNGC's V-Mag 10.96 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.94 it gives a B-V of -0.02, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "id": "M98",
+      "action": "vMagColour",
+      "fromVMag": 10.84,
+      "vMag": 10.01,
+      "bMag": 10.82,
+      "hubble": "SABb",
+      "group": "Sa-Sb",
+      "medianBV": 0.81,
+      "groupCount": 18,
+      "reason": "OpenNGC's V-Mag 10.84 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 10.82 it gives a B-V of -0.02, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.81) of the 18 credible galaxies of Hubble group Sa-Sb.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
+    },
+    {
+      "id": "M106",
+      "action": "vMagColour",
+      "fromVMag": 9.29,
+      "vMag": 8.56,
+      "bMag": 9.12,
+      "hubble": "Sbc",
+      "group": "Sbc-Sc",
+      "medianBV": 0.56,
+      "groupCount": 16,
+      "reason": "OpenNGC's V-Mag 9.29 is HyperLEDA's vt (uncertainty about 1 mag); with B-Mag 9.12 it gives a B-V of -0.17, which is impossible for a galaxy. V = B-Mag minus the median B-V (0.56) of the 16 credible galaxies of Hubble group Sbc-Sc.",
+      "source": "https://github.com/mattiaverga/OpenNGC/blob/da90466031b0372c896588b85be6016c617e205b/database_files/NGC.csv"
     }
   ],
   "normalisations": [
@@ -27,7 +105,8 @@
     "Constellation codes Se1/Se2 -> Ser",
     "Empty numeric fields -> null",
     "Designations: NGC0224 -> NGC 224, IC4715 -> IC 4715, Mel022 -> Mel 22, M040 -> M40",
-    "commonName: first entry of the Common names column, or null"
+    "commonName: first entry of the Common names column, or null",
+    "Galaxy V-Mag: where B-V would be below 0.2, or OpenNGC has no V-Mag, V is B-Mag minus the median B-V of the catalogue's own credible galaxies of the same Hubble group (per object: overrides, action vMagColour)"
   ],
   "typeMap": {
     "G": "galaxy",
