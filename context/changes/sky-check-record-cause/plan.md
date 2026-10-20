@@ -266,11 +266,11 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [x] 2.1 The Phase 1 tests pass with no assertion edited: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts`
-- [x] 2.2 The whole fast project passes: `npm run test:reference`
-- [x] 2.3 The static guards pass (no-console, silent-catch, hooks proof): `npm run test:guards`
-- [x] 2.4 Types pass: `npx astro check`
-- [x] 2.5 Lint passes on the whole project (playwright-report and test-results moved aside first if present): `npm run lint`
+- [x] 2.1 The Phase 1 tests pass with no assertion edited: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts` — fa85ada
+- [x] 2.2 The whole fast project passes: `npm run test:reference` — fa85ada
+- [x] 2.3 The static guards pass (no-console, silent-catch, hooks proof): `npm run test:guards` — fa85ada
+- [x] 2.4 Types pass: `npx astro check` — fa85ada
+- [x] 2.5 Lint passes on the whole project (playwright-report and test-results moved aside first if present): `npm run lint` — fa85ada
 
 #### Manual
 
@@ -280,8 +280,8 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [ ] 3.1 Formatting passes on the changed Markdown: `npx prettier --check context/deployment/error-visibility.md CLAUDE.md context/changes/sky-check-record-cause`
-- [ ] 3.2 Lint and the fast project still pass: `npm run lint && npm run test:reference`
+- [x] 3.1 Formatting passes on the changed Markdown: `npx prettier --check context/deployment/error-visibility.md CLAUDE.md context/changes/sky-check-record-cause`
+- [x] 3.2 Lint and the fast project still pass: `npm run lint && npm run test:reference`
 
 #### Manual
 

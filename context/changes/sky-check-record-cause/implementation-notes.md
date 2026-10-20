@@ -33,3 +33,9 @@ Deliberate-break checks (worktree-only edits on top of the staged files, each re
 | `TRANSPORT_CODE` renamed to `"req"` (forecast vocabulary drift, plan review F4) | 2 tests red in `fault.test.ts`                       |
 
 No adaptation of the plan was needed. One reading of the plan that the implementer should know: the response argument is consulted only when the error has no usable code, and the status it contributes is the error's own, else the response's.
+
+## Phase 3: runbook and tripwire (2026-10-20)
+
+`context/deployment/error-visibility.md`: the `tonight.sky-check-record` row now reads `failed` by `code` (`request`, `http` with a status, a class 22/23 code with the benign `23503` race named, any other code) and §2 gets one paragraph on what `request` and `http` do and do not say, with the pointer to issue #233. Prettier re-aligned the whole step table (the row grew), so the diff of that file is wide but only that row and the new paragraph changed in content. `CLAUDE.md`: one sentence in the Observability tripwire. `npx prettier --check`, `npm run lint` and `npm run test:reference` (821 passed) are green.
+
+Manual rows 1.3 and 2.6 (reviewer) and 3.3 to 3.6 (owner) stay open; the change stays `implementing`, not `implemented`, until they are done.
