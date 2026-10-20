@@ -2,6 +2,25 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-20 (error-visibility, S-07 #175)
+
+**Shipped:** M-4 S-07 is done: nine phases merged and deployed (#183, #194, #226, #228, #231; main `7e9d65b`), archived in `context/archive/2026-10-20-error-visibility/`. The roadmap's S-07 row is `done`; the milestone is not closed here (the orchestrator closes M-4 with the owner). Runbook: `context/deployment/error-visibility.md`.
+
+**Owner's production checks, 2026-10-20** (live Worker version `6aa032a5`, `wrangler tail`):
+
+- 7.8 PASS: the rate-limit binding exists (30 requests/60s); a hand-posted valid report left exactly one warn line `sidereus: client.island.geocode noted`, no `config.rate-limit` line, no Issue; a chunked upload cut off client-side never reached the Worker.
+- 7.9 answer NO: a saved Workers Logs query cannot alert. Recorded in runbook section 8 and D13: **no automatic alert for client-side reports; the owner reviews the saved query `sidereus: client.` (Count) by hand once a week.** Cloudflare's custom alerts (beta) are untested: follow-up #232.
+- 8.7 PASS (Chrome, simulated storage quota): one `sidereus: client.sw.island-commit noted` line; the worker's POST answered 204, same-origin, not cancelled; an offline reload sent nothing.
+- 9.7 PASS (live console): a rejected promise left exactly one `client.island.unhandled-rejection noted {name}` line with no message text; a thrown error typed in the console left none.
+
+**Open owner to-dos** (archived plan rows, left unchecked on purpose): 6.5 create the Issues automation (a deliberate forecast failure reaches the target as an Issue, a second step is its own Issue, a stale-id update leaves a warn line and no Issue); 6.6 one line per flow and a console line's own metadata hold no coordinate, email, key or form value; 6.7 if a line does not become an Issue, use the fallback query and record the gap.
+
+**Open follow-ups:** #189 (release identity in logs, D6), #190 (failure UI: island fallback, 404/500, plan-unknown, finder eyepiece notice, D7), #191 (GDPR position of Workers traces), #230 (errors from Astro-inlined scripts), #232 (alert on client reports via Cloudflare custom alerts, beta).
+
+**Found by the live tail during the checks:** a bare `tonight.sky-check-record failed` line. It is being fixed in the separate change `sky-check-record-cause` (branch `fix/sky-check-record-cause`).
+
+---
+
 ## Update 2026-10-19 (openngc-galaxy-magnitudes, #178)
 
 **Shipped:** PR #227 merged and deployed (main `dd58f55`), archived in `context/archive/2026-10-19-openngc-galaxy-magnitudes/`. Twelve galaxies (M58, M61, M88, M91, M98, M106, IC 342, NGC 4449, NGC 5005, NGC 4565, NGC 6822, NGC 4039) had an impossible V (B−V below 0.2: OpenNGC's V is HyperLEDA's `vt`, or the generator copied B). `catalogue:build` now sets `V = B − the median B−V of the catalogue's own credible galaxies of the same Hubble group` (no new source), and lists each correction as an `overrides` entry (`vMagColour`) in the two metas; pins and a no-galaxy-below-0.2 guard keep it honest. The four engine oracles were not edited. The `KNOWN_DIVERGENCES` cap went 3 → 4 for one new entry (M106 at 150 mm / Bortle 6), by the owner's permission.
