@@ -1,0 +1,75 @@
+# Frame Brief: sky-check-record failure with no cause
+
+> Framing step before /10x-plan. Observation kept apart from cause. The orchestrator's brief fixes two questions; this frame keeps them apart and rates each on its own.
+
+## Reported Observation
+
+Production (version 6aa032a5), 2026-10-20 08:45:00 UTC: one signed-in `GET /_server-islands/TonightContent` answered 200 with `wallTime` 6308 ms (the other Tonight islands in the capture: 0.7-1.8 s, cpu 0.39-0.70 s; this one cpu 524 ms). At 08:45:06.864 UTC, 6301 ms after the event began and 7 ms before it ended, it logged at error level `["sidereus: tonight.sky-check-record failed", {"step": "tonight.sky-check-record"}]`. No `code`, `status` or `name`. One occurrence; frequency unknown.
+
+## Initial Framing (preserved)
+
+- **Stated cause or approach**: two open questions, no stated cause. (1) The line has no cause: which branch of `recordSkyVerdict` yields no fields. (2) The record write failed or took about 6 s: Supabase RPC timeout, fetch timeout, or the `waitUntil` budget.
+- **Proposed direction**: investigate; plan with a failing regression test first; do not guess (2) from the line alone.
+- **Pre-dispatch narrowing**: skipped (the orchestrator forbids asking; the brief already separates the two questions). The two questions stay separate below.
+
+## Dimension Map
+
+Question 1, where a line with only `{step}` can come from (`src/lib/sky-checks/record.ts:39-52`, `src/lib/observability/log-failure.ts`):
+
+1. **Rejection branch** (`record.ts:49-51`): `logFailure(step, error)` with the thrown value.
+2. **`fault === undefined`** (`record.ts:43-46`): a not-ok result whose `fault` was dropped.
+3. **`fault` present, server kind, no code, no status** (`record.ts:45-46`): a `WriteFault` that holds nothing loggable.
+4. **Helper drops fields** (`log-failure.ts` `fieldsOf`): `nameOf` only reads an `Error`; a `WriteFault` is a plain object.
+
+Question 2, where a ~6.3 s record can come from:
+
+A. **Client-side 5 s fetch guard** (`src/lib/supabase.ts:19,45`, `fetch-timeout.ts`): `AbortSignal.timeout(5000)` on every Supabase fetch.
+B. **Slow or blocked RPC** in Postgres (`supabase/migrations/20261003120000_sky_checks.sql` `record_sky_verdict`: lock wait on the conflicting row, slow RLS, DB stall).
+C. **`waitUntil` budget** (`island.ts:34-38`): the platform limit for deferred work.
+D. **Slow before the fetch**: the record starts only after the view is built; a stall in `getSession`/token refresh inside supabase-js before the PostgREST call.
+
+## Hypothesis Investigation
+
+| Hypothesis                 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Verdict                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Q1.1 Rejection branch      | Reproduced locally (scratch test, deleted): a rejected `TypeError` logs `{step, name:"TypeError"}`. The observed line has no `name`, so a rejected `Error` is not what happened. postgrest-js 2.116 never rejects without `throwOnError()` (`index.cjs:418` turns a fetch rejection into an `{error}` result).                                                                                                                                                                                                                                                                                                     | NONE                                                      |
+| Q1.2 `fault === undefined` | `withFault` returns `{}` for class 22/23 codes (`fault.ts:164-167`, "the entity's own message key says it"), so `record` returns `{ok:false}` with no fault and `recordSkyVerdict` calls `logFailure(step, undefined, {status: undefined})`. Reproduced: code 23514 gives the bare line. For this RPC every argument is server-derived (headline id from the engine, night, own site id), so a class 22/23 result is our bug (a headline id not yet in the check constraint, say), not user input, and it is the one case where the code is known and thrown away.                                                 | STRONG as a gap; cannot be what production hit (see Q2-A) |
+| Q1.3 Server kind, no code  | A transport failure comes back as `{error:{code:"", message:"TimeoutError: ..."}}` with `status: 0` on the response (Node run against real supabase-js 2.116, `exp/abort.mjs`, scratchpad). `faultFrom` drops `""` (`isLoggableCode`), `classifyFault` makes it `server` (`fault.ts:129-131`), so `withFault` yields `{kind:"server"}`. The line then has nothing: `WriteFault` is not an `Error`, so no `name`; the response's `status: 0` is never read by the store (`store.ts:59-66`) and is not a valid 100-599 status anyway. Reproduced: timeout and network failure both give exactly the production line. | STRONG: the observed line                                 |
+| Q1.4 Helper drops fields   | Not a bug in the helper: it logs what it is given. The loss is upstream (Q1.2, Q1.3). Side effect: a `WriteFault` never carries `name`, so write traces never show a name; a read trace shows `StoreFault`, which says nothing either.                                                                                                                                                                                                                                                                                                                                                                             | WEAK (contributing)                                       |
+| Q2-A Client 5 s guard      | `SUPABASE_TIMEOUT_MS = 5000`, applied to the fetch of every client call (`supabase.ts:45`); the timer starts when the PostgREST fetch is issued. Event timing: log at +6301 ms, the event ends at +6308 ms, so the record was the last deferred work. 6301 - 5000 = about 1.3 s, which is where a record starts (view built; other islands finish in 0.7-1.8 s). Both a timeout and a network drop give the same bare line, so the line cannot tell them apart.                                                                                                                                                    | STRONG for timing; the line alone cannot prove it         |
+| Q2-B Slow RPC              | The function is one `select` plus `insert ... on conflict do update` with no explicit lock (`migration:88-110`); a lock wait would need a concurrent writer to the same (user, site, night) row. In the capture the previous island was 34 s earlier and the next 38 s later, and no other request touched Tonight in that window. A DB stall long enough to reach 5 s while the same request's earlier reads succeeded is possible but not shown.                                                                                                                                                                 | WEAK (not excluded)                                       |
+| Q2-C `waitUntil` budget    | Cloudflare gives deferred work far longer than 6 s; the Worker's own event closed at 6.3 s.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | NONE                                                      |
+| Q2-D Slow before the fetch | An auth refresh would carry its own 5 s guard and would show as an `auth.*` line or another event; none in the capture. The record cannot start before the load finishes, which is already inside the ~1.3 s.                                                                                                                                                                                                                                                                                                                                                                                                      | NONE (weak)                                               |
+
+## Narrowing Signals
+
+- The Workers tail event's `wallTime` includes `waitUntil` work, so "the request took 6308 ms" is not the user's wait. The response was probably sent at about 1.3 s. Unverified: the owner's browser timing (`/_server-islands/TonightContent` in DevTools) would show it. Only the deferred record ran 6 s.
+- The earlier reads of the same request (sites, telescopes, sky checks, ...) succeeded, so Supabase answered about 1.3 s before the record stalled.
+- `fault === undefined` needs a response from the database (a code); a response arriving after 5 s would already have been aborted. So the production line is Q1.3 (transport), and Q1.2 is a second, separate hole found on the way.
+
+## Cross-System Convention
+
+The repo's own rule is "unknown is not benign" (`fault.ts:129`), so a no-code failure is alerted, yet it is logged with nothing, which is the opposite of the runbook's promise (`error-visibility.md` §3 `tonight.sky-check-record`: "check the record RPC after a migration, a permission change or an outage"; a bare line points at none of them). The same gap sits in every store-backed trace (`save.*`, `read.*`, `account.plan` ...), because the carrier cannot represent a transport failure at all; sky-check-record is only where it was seen. `auth.claims` lines do show `name` and `status` for an Auth timeout.
+
+## Reframed (or Confirmed) Problem Statement
+
+> **The actual problem to plan around is**: the fault carrier (`WriteFault`/`withFault`) cannot say "the request never completed" and discards a class 22/23 code, so a timed-out or dropped record, and a malformed one, both log an empty line; the 6 s itself is consistent with the 5 s Supabase fetch guard firing about 1.3 s into the request, but only one occurrence exists and nothing in it proves the cause.
+
+Two separate findings, kept apart: (1) a certain observability gap with a reproduced fix target; (2) a likely, not proven, timeout of the RPC fetch whose root (network to Supabase or the database) the line can never reveal without more evidence. The initial two questions were right; the "no fields" answer is two branches (3 observed, 2 latent), not the one the code comment suggests.
+
+## Confidence
+
+- **HIGH** for (1): reproduced locally; both branches and the shape of a transport failure (status 0, code `""`, Node and workerd).
+- **MEDIUM** for (2): timing fits the 5 s guard exactly; no direct evidence of abort vs. other transport failure vs. slow RPC. Extra evidence that settles it: Supabase Dashboard -> Logs -> API Gateway for `POST /rest/v1/rpc/record_sky_verdict` at 2026-10-20 08:45:01-08:45:07 UTC (no entry = never arrived; entry with a 499/long duration = the client gave up on a slow DB; 2xx within ms = abort before the response); Postgres logs and Database report (CPU, locks) for that minute; the owner's count in Workers Logs of the exact text `sidereus: tonight.sky-check-record failed` over 7 days (one in how many Tonight loads?). A deploy with a timeout line (this change's fix) turns any later occurrence into a self-describing one.
+
+## What Changes for /10x-plan
+
+Plan two things: the failing regression tests that pin the bare lines (transport failure, class 22/23 result) and a leak-free way to keep them on the line; and the decision, for the owner, of how far the shared carrier change goes (the record step only, or every store). Do not plan a fix for (2): there is no verified cause, only evidence to collect.
+
+## References
+
+- `src/lib/sky-checks/record.ts:39-52`, `store.ts:55-66`, `src/lib/observability/fault.ts:87-167`, `log-failure.ts` (`fieldsOf`, `nameOf`), `src/lib/supabase.ts:19-46`, `src/lib/fetch-timeout.ts`, `supabase/migrations/20261003120000_sky_checks.sql:82-110`, `node_modules/@supabase/postgrest-js/dist/index.cjs:211-220,418-460`
+- Raw tail: `/private/tmp/claude-501/-Users-rafalskwara-projects/117401aa-bae0-4735-ad55-856cc50008c9/scratchpad/skycheck-prod-tail.jsonl`
+- Experiments: `/private/tmp/claude-501/-Users-rafalskwara-projects/cb804f90-0b08-46f3-a743-ab56b5bf152b/scratchpad/exp/` (`abort.mjs`, `workerd.mjs`, `worker.mjs`)
+- Audit F7: `context/audits/observability/2026-10-15_tonight-save-routes-auth-finder-plan.md`
+- Investigation tasks: none (read and ran the checks directly; no sub-agents)
