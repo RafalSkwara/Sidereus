@@ -47,3 +47,17 @@ Manual rows 1.3 and 2.6 (reviewer) and 3.3 to 3.6 (owner) stay open; the change 
 - **F3 taken.** The PR body states why e2e and smoke were left to CI (nothing but a log line on a Supabase failure changes; no page, route, markup or worker).
 
 Gates after the follow-up: `npm run test:reference` 822 passed (1 skipped), `npm run test:guards` 60 passed, `npx astro check` 0 errors, `npm run lint` clean.
+
+## Shipped, and open at archive (2026-10-20)
+
+PR #235 merged into `main` (merge commit `a257f6c`; the implementation commits `5d4ac8c`, `fa85ada`, `51ed3df`, `1c638be` are in its history). Follow-up #233 (thread the response status through the other 35 call sites of `faultFrom` / `withFault`, 9 files) stays open.
+
+**Archived with these rows unchecked on purpose** (plan Progress, Manual):
+
+- **3.3** the owner reads the new `tonight.sky-check-record` row of `context/deployment/error-visibility.md`.
+- **3.4** the owner reads **Supabase Dashboard -> Logs -> API Gateway** for `POST /rest/v1/rpc/record_sky_verdict` on **2026-10-20 between 08:45:01 and 08:45:07 UTC** (10:45:01-10:45:07 local), and the Postgres logs for that minute: did the request arrive, how long did it take? This is the only evidence that settles question 2 (why about 6 s): no entry means it never arrived, a long duration or a 499 means the database was slow and the client gave up, a gateway 5xx means `code: http`.
+- **3.5** the owner counts the exact text `sidereus: tonight.sky-check-record failed` in Workers Logs over the 7-day retention against the number of `/_server-islands/TonightContent` loads (one in how many?).
+- **3.6** after the deploy, a later occurrence, if any, carries `code: request`, `code: http` with a status, or a database code.
+- **1.3** and **2.6** (reviewer rows) were confirmed by the impl review (`reviews/impl-review.md`, "Manual verification") but not ticked by the owner; they stay unchecked like the rest.
+
+The 6 s question stays open until 3.4 and 3.5 are answered; nothing here proves the 5 s fetch guard was the cause, only that its timing fits.
