@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { gatewayError, transportError } from "@/lib/test-support/supabase-fake";
 import { classifyFault, faultFrom, noRowsFault, StoreFault, withFault, type FaultKind } from "./fault";
+import { HTTP_CODE, isLoggableCode, TRANSPORT_CODE } from "./log-failure";
 
 /**
  * The fault carrier keeps `code` and `status` and nothing a database error could echo (a coordinate, an email), and
@@ -163,5 +165,57 @@ describe("withFault", () => {
       fault: { kind: "refused", code: "42501" },
     });
     expect(noRowsFault()).toEqual({ kind: "no-rows" });
+  });
+});
+
+describe("the response's status, for a request that gave no PostgREST code (sky-check-record-cause)", () => {
+  it("names the words after the ones the runbook defines, and keeps them loggable", () => {
+    expect([TRANSPORT_CODE, HTTP_CODE]).toEqual(["request", "http"]);
+    expect(isLoggableCode(TRANSPORT_CODE)).toBe(true);
+    expect(isLoggableCode(HTTP_CODE)).toBe(true);
+  });
+
+  it("gives a request that never completed (status 0) the code `request`, a server fault with no status", () => {
+    expect(faultFrom(transportError(), { status: 0 })).toMatchObject({ code: "request" });
+    expect(faultFrom(transportError(), { status: 0 }).status).toBeUndefined();
+    expect(withFault(transportError(), { status: 0 })).toEqual({ fault: { kind: "server", code: "request" } });
+    expect(withFault(new TypeError("fetch failed"), { status: 0 })).toEqual({
+      fault: { kind: "server", code: "request" },
+    });
+  });
+
+  it("gives any other status without a code the code `http` and that status, a 2xx whose body was not JSON included", () => {
+    for (const status of [502, 503, 520, 404, 429, 304, 200, 204, 299]) {
+      expect(faultFrom(gatewayError(), { status }), String(status)).toMatchObject({ code: "http", status });
+      expect(withFault(gatewayError(), { status }), String(status)).toEqual({
+        fault: { kind: "server", code: "http", status },
+      });
+    }
+  });
+
+  it("leaves a call without a response argument as it was, and never reads a status that is not a status", () => {
+    expect(faultFrom(transportError()).code).toBeUndefined();
+    expect(withFault(transportError())).toEqual({ fault: { kind: "server" } });
+    for (const status of [undefined, 99, 600, 502.5, Number.NaN, "502", null]) {
+      const fault = faultFrom(gatewayError(), { status: status as number });
+      expect([fault.code, fault.status], String(status)).toEqual([undefined, undefined]);
+    }
+  });
+
+  it("keeps a code the error already has and adds no status to it, whatever the response says", () => {
+    for (const status of [0, 400, 502]) {
+      const fault = faultFrom(postgrestError({ code: "42501" }), { status });
+      expect([fault.code, fault.status], String(status)).toEqual(["42501", undefined]);
+      expect(withFault(postgrestError({ code: "XX000" }), { status })).toEqual({
+        fault: { kind: "server", code: "XX000" },
+      });
+    }
+    expect(withFault(postgrestError({ code: "23514" }), { status: 400 })).toEqual({});
+  });
+
+  it("leaves no trace of the message, details or hint on the carrier", () => {
+    expect(everythingShown(faultFrom(transportError(), { status: 0 }))).not.toMatch(LEAK);
+    expect(everythingShown(faultFrom(gatewayError(), { status: 502 }))).not.toMatch(LEAK);
+    expect(JSON.stringify(withFault(gatewayError(), { status: 502 }))).not.toMatch(LEAK);
   });
 });

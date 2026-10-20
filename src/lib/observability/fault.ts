@@ -1,4 +1,4 @@
-import { isLoggableCode } from "./log-failure";
+import { HTTP_CODE, isLoggableCode, TRANSPORT_CODE } from "./log-failure";
 
 /**
  * The sanitized carrier for "what went wrong" in the data layer (error-visibility, Phase 2). A store keeps the
@@ -11,6 +11,12 @@ import { isLoggableCode } from "./log-failure";
  * response, which the stores do not thread through), so for a database request `status` is never set and
  * `classifyFault` decides by `code` alone (impl review F6). `status` stays for the values that do carry one, such as
  * a `ForecastError` or an auth-js error, so `classifyFault`'s "500 or more is the server" rule applies to them.
+ *
+ * The one exception is a request that gave no PostgREST code: a store that passes the response's `status` to
+ * `faultFrom` / `withFault` keeps what the status says instead of nothing (sky-check-record-cause). Status 0 (no HTTP
+ * answer at all: a timeout, a dropped connection) is the code `request`; any other status (a gateway's 502 with an HTML
+ * body, a 2xx whose body was not JSON) is the code `http` with that status. Never from any text: the message is not
+ * read.
  *
  * `classifyFault` is the one rule that says whose fault a failure is. Server is the default, because an unknown code
  * is not benign: only the codes known to be the user's request, the session or a missing row are told apart. This
@@ -83,16 +89,35 @@ function statusOf(source: unknown): number | undefined {
 }
 
 /**
+ * What a request's response says when the error carries no code: no answer at all (`request`), or an answer with a
+ * status (`http`). The store asks only for a request that has an error, so a 2xx here is an answer whose body was not
+ * JSON (a proxy's HTML page), which is as much a failure as a 502.
+ */
+function codeFromResponse(response: unknown): { code: string; status?: number } | undefined {
+  const status = read(response, "status");
+  if (status === 0) {
+    return { code: TRANSPORT_CODE };
+  }
+  if (isStatus(status)) {
+    return { code: HTTP_CODE, status };
+  }
+  return undefined;
+}
+
+/**
  * Builds a `StoreFault` from a PostgREST error or any thrown value, keeping only `code` and, if the value has one,
  * `status` (the error's own, else its `cause`'s: a store that threw a keyed error leaves its fault there). It never
  * copies `message`, `details`, `hint` or `stack`, and never throws.
+ *
+ * `response` is what the store has next to the error (supabase-js's `status`): consulted only when the error has no
+ * usable code, so an error with a code never gains a status from it. See the module comment.
  */
-export function faultFrom(error: unknown): StoreFault {
+export function faultFrom(error: unknown, response?: { status?: number }): StoreFault {
   const cause = read(error, "cause");
-  return new StoreFault({
-    code: codeOf(error) ?? codeOf(cause),
-    status: statusOf(error) ?? statusOf(cause),
-  });
+  const code = codeOf(error) ?? codeOf(cause);
+  const status = statusOf(error) ?? statusOf(cause);
+  const fromResponse = code === undefined ? codeFromResponse(response) : undefined;
+  return new StoreFault({ code: code ?? fromResponse?.code, status: status ?? fromResponse?.status });
 }
 
 /** Class 22 (data exception) and class 23 (integrity constraint violation): the user's input, not the database. */
@@ -145,10 +170,11 @@ export function noRowsFault(): WriteFault {
 /**
  * The `fault` field of a failed write, as `{ fault }` to spread into the result, or `{}` for a user-input failure
  * (`22P02`, `23514`, `23505`: the entity's own message key says it, and nothing is alertable). Takes a PostgREST
- * error, a `StoreFault` or any thrown value; only its `code` and, if it has one, `status` are read.
+ * error, a `StoreFault` or any thrown value; only its `code` and, if it has one, `status` are read, and the optional
+ * `response` only when the error has no code (see `faultFrom`).
  */
-export function withFault(error: unknown): { fault?: WriteFault } {
-  const { code, status } = faultFrom(error);
+export function withFault(error: unknown, response?: { status?: number }): { fault?: WriteFault } {
+  const { code, status } = faultFrom(error, response);
   const kind = classifyFault({ code, status });
   if (kind === "input") {
     return {};

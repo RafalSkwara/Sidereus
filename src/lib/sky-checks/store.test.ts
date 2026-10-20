@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { StoreFault } from "@/lib/observability/fault";
-import { fakeClient, leakyPostgrestError, LEAK } from "@/lib/test-support/supabase-fake";
+import { fakeClient, gatewayError, leakyPostgrestError, LEAK, transportError } from "@/lib/test-support/supabase-fake";
 import { skyCheckStore } from "./store";
 
 // What talks to Supabase is covered by tests/db; here a fake client answers with an error that echoes submitted
@@ -24,7 +24,7 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typ
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it("keeps only its code for a server fault, is `refused` or `session` by code, and has no fault for user input, in every write", async () => {
+  it("keeps only its code for a server fault and is `refused` or `session` by code in every write; has no fault for user input in answer and skip", async () => {
     expect(WRITES).toHaveLength(3);
     for (const [name, run] of WRITES) {
       const server = await run(failing("XX000"));
@@ -44,6 +44,10 @@ describe("a failed write carries a sanitized fault", () => {
         message: "errors.save.skyCheck",
         fault: { kind: "session", code: "PGRST301" },
       });
+      if (name === "record") {
+        // `record`'s arguments are built by the server, so a class 22 or 23 result is our bug and keeps its fault (below).
+        continue;
+      }
       for (const code of ["22P02", "23514"]) {
         const result = await run(failing(code));
         expect(result.ok, `${name}: ${code}`).toBe(false);
@@ -51,6 +55,28 @@ describe("a failed write carries a sanitized fault", () => {
         expect(result, `${name}: ${code}`).not.toHaveProperty("fault");
       }
     }
+  });
+
+  it("keeps a fault for every failed record: a class 22 or 23 code and a request without a PostgREST code included", async () => {
+    for (const code of ["22P02", "23514"]) {
+      const result = await skyCheckStore.record(failing(code), RECORD);
+      expect(result, code).toEqual({ ok: false, message: "errors.save.skyCheck", fault: { kind: "server", code } });
+      expect(JSON.stringify(result), code).not.toMatch(LEAK);
+    }
+    const transport = await skyCheckStore.record(fakeClient({ error: transportError(), status: 0 }), RECORD);
+    expect(transport).toEqual({
+      ok: false,
+      message: "errors.save.skyCheck",
+      fault: { kind: "server", code: "request" },
+    });
+    const gateway = await skyCheckStore.record(fakeClient({ error: gatewayError(), status: 502 }), RECORD);
+    expect(gateway).toEqual({
+      ok: false,
+      message: "errors.save.skyCheck",
+      fault: { kind: "server", code: "http", status: 502 },
+    });
+    expect(JSON.stringify([transport, gateway])).not.toMatch(LEAK);
+    expect(await skyCheckStore.record(fakeClient({}), RECORD)).toEqual({ ok: true });
   });
 
   it("answers a malformed id as not found, a zero-row update as `no-rows`, and a changed row as ok, in answer and skip", async () => {
