@@ -9,18 +9,18 @@ main_goal: quality
 top_blocker: skills # advice judged without an observer; the owner kept it for M-4 (2026-10-15)
 milestone_id: finished-and-trustworthy
 milestone_seq: 4
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: Sidereus
 
 > Derived from the owner's description of M-4 (MS-01 to MS-04, 2026-10-15) with PRD v3 references (`context/foundation/prd.md`), plus a codebase baseline re-checked on 2026-10-15. There is no PRD change: every PRD v3 functional requirement is delivered except FR-003, which stays parked.
-> Edit-in-place; archive when superseded. M-3's closure check is in git history (commit 9a2cdc6) and in Milestone History below.
+> **M-4 closed 2026-10-20.** No next milestone is open: the owner will decide later (for example after ESA's answer, about the end of November 2026). Edit-in-place; archive when superseded. M-3's closure check is in git history (commit 9a2cdc6) and in Milestone History below.
 > Slices below are listed in dependency order. The "At a glance" table is the index.
 
 ## Milestone
 
-**M-4: Finished and trustworthy** — Status: open
+**M-4: Finished and trustworthy** — Status: done (closed 2026-10-20)
 
 - **Intent:** Finish the look the owner asked for on 2026-10-14, make the advice agree with itself and with published references, and let the operator see production failures, before any new feature or payment.
 - **Source materials:**
@@ -45,6 +45,36 @@ milestone_status: open
     - Tonight's focused pages are one tap away from every screen (S-10);
     - progress rewards: milestone badges and Messier / Caldwell tile checklists on /log/progress (S-11, superseding the progress part of S-03);
     - an app icon chosen by the owner from three proposals (S-12).
+
+### Closure check (2026-10-20)
+
+Every S-NN is `done` except S-03, which the owner dropped on 2026-10-17 (the milestone's own "Done when" allows it). Their GitHub issues #169, #170, #172 to #175, #185 and #213 to #216 are closed; #171 (S-03) is still open. Main's last full run, at 7e9d65b, passed `ci`; main at a257f6c (#234 and #235 merged) passed `ci`, `smoke`, `migrate` and `deploy`.
+
+- **The intent, clause by clause:**
+  - Finish the look the owner asked for on 2026-10-14: S-01 (#177), S-02 (#182), S-10 quick nav (#220), S-09 sky modes (#212), S-11 progress rewards (#224) and S-12 app icon (#217). S-03's gear and log row icons were dropped and parked.
+  - The advice agrees with itself and with published references: S-04 (#179) and S-05 (#188, 4-night top-5 oracle overlap 3 to 4 and a Skyfield + DE421 window check on 171 objects). **PRD Primary criterion 2 re-run:** done inside S-05; known divergence OD-1 kept (October M13, M15, M57 outside the top 5). #178 left M106 at 150 mm / Bortle 6 still `faint` (see placement).
+  - Operators see production failures with their cause: S-07 (#183, #194, #226, #228, #231; archive #234; sky-check fix #235). Server-side failures reach Workers Logs and Issues with a fixed message and a shaped cause; client-side reports arrive as warn-level `noted` lines through a rate-limited endpoint. Owner's live checks of 2026-10-20 passed (7.8, 8.7, 9.7). **Not met as written:** "and be alerted" holds for the server side only (Issues automation, 6.5, is still the owner's to create); client-side reports have no automatic alert (7.9 answered no), only a weekly manual review of a saved query.
+  - Auth loose ends: S-06 (#211).
+  - Star data ready for payment: S-08 (#193, #195) switched the star files to Hipparcos V1 directly. ESA's authorisation is still pending.
+- **PRD v3:** no PRD change in M-4 and no FR was added. Coverage of the guardrails and criteria:
+  - Primary criterion 1 (landing to a top 5 in under a minute): untouched by M-4, and its e2e path stayed green.
+  - Primary criterion 2 (cross-check of the top 5): re-run in S-05, see above.
+  - Guardrail "coordinates stay private": held. Every client report is a step and a shaped name only; the endpoint refuses a coordinate, message or URL by schema, and Workers invocation events are off because they stored `request.cf` (IP-derived location). **Open:** Workers traces still carry city-level geo attributes by platform design (owner kept them on, 2026-10-16); the GDPR position is research #191.
+  - Guardrail "never the physically impossible": held (S-05's true window edges, pinned against Skyfield).
+  - Guardrail "forecast outage degrades, never blanks": held; M-4 added logging to those paths, not behaviour.
+  - FR-003 (password reset) stays parked.
+- **What M-4 leaves open** (placement decided by the owner, 2026-10-20):
+  - Owner to-dos, not issues: S-07 6.5 (create the Issues automation and prove a deliberate failure reaches it), 6.6 and 6.7; the sky-check lookups (judging advice without an observer, Open Roadmap Question 1); ESA's answer (about the end of November 2026; no payment before it, and one lawyer check of its wording); the moonlight post-merge checks (due after 2026-10-22); the IAU MDC courtesy email; the device checks of the 2026-10-17 handoff (iPhone Safari bottom-sheet swipe, VoiceOver on quick nav and on the progress tiles, red mode at night on a phone, the live celebration dialog, tiles without a common name); S-12's manual rows (Delta Optical has no entries).
+  - **Placement of the open issues (owner, 2026-10-20):**
+    - **#171** (S-03, dropped 2026-10-17): closed as not planned; its content is already in Parked.
+    - **#178** (M106 at 150 mm / Bortle 6 still `faint`, deficit 1.61 against the 1.5 edge): parked, kept open as a known divergence; it needs an owner decision on the rule, not a data fix.
+    - **#189** (release identity in logs, D6): carried to the next milestone; it makes post-deploy checks faster, a cheap enabler.
+    - **#190** (failure UI: island fallback, 404 and 500 pages, plan-unknown state, finder eyepiece notice): carried to the next milestone as a user-visible slice; it needs a design pass.
+    - **#191** (GDPR position of Workers observability data): carried; it must be answered before payments or any wider launch.
+    - **#230** (reports from Astro-inlined scripts): parked; low volume, revisit if a field gap shows up.
+    - **#232** (custom alerts for client reports, beta): parked; the weekly manual review is the recorded decision, and the feature is beta.
+    - **#233** (response status through 36 store call sites): carried as a small hygiene slice with #189; it removes the remaining empty log lines.
+    - **#19** (Stellarium fixtures): parked; it needs values the owner reads by hand and has been open since F-01.
 
 ## Vision recap
 
@@ -320,7 +350,8 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 
    — Owner: user, or team. Block: none.
 
-4. **PRD v4** opens with the next milestone that adds scope (payments or new observing features), not in M-4. — Owner: user. Block: none.
+4. **The next milestone (M-5) is not opened** (owner, 2026-10-20). Candidates carried from M-4: #189 (release identity), #190 (failure UI), #191 (GDPR position of Workers observability data), #233 (store faults carry the response status). The owner decides the scope later, for example after ESA's answer (about the end of November 2026). — Owner: user. Block: none.
+5. **PRD v4** opens with the next milestone that adds scope (payments or new observing features), not in M-4. — Owner: user. Block: none.
 
 ## Parked
 
@@ -343,6 +374,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **Preview environments with a separate database** — Why parked: deferred until payments are on the table.
 - **Forecast caching by grid cell shared between nearby users** — Why parked: only needed beyond the target scale.
 - **Gear and log rows labelled with fact icons, and the Log header's last link (the rest of S-03 `ui-log-progress-gear`, #171)** — Why parked: the owner dropped S-03 on 2026-10-17; its progress part became S-11.
+- **Open issues parked by M-4's close (owner, 2026-10-20), kept open:** #178 (M106 at 150 mm / Bortle 6 still `faint`: a rule decision), #230 (reports from Astro-inlined scripts), #232 (alert on client reports via Cloudflare custom alerts, beta), #19 (Stellarium fixtures, values read by hand) — Why parked: low volume or needs an owner decision; revisit when a field gap shows up.
 
 ## Milestone History
 
@@ -359,6 +391,14 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
   - full plan: an editable session plan, saved to the account and carried into the offline copy.
 
   Carried over: #159 (M31's core brightness at small apertures), ESA's licence reply (PRD Open Question 21), and the rest of the ui-refine split (`ui-dashboard-tiles`, `ui-tonight-nav`, `ui-log-progress-gear`).
+- **M-4: Finished and trustworthy** (`finished-and-trustworthy`) — closed 2026-10-20. All 11 remaining slices shipped and deployed (S-01, S-02, S-04 to S-12; S-03 dropped by the owner and parked). Delivered:
+  - the finished look: dashboard tiles, Tonight's sub-nav, a quick nav on every screen, sky modes (hidden, default, expanded; mouse drag), progress badges and tile checklists, the owner's app icon;
+  - advice that agrees with itself: galaxies in small telescopes, evening showpieces, true window edges, the top 5 re-checked against references;
+  - auth loose ends: signed-in visitors skip sign-in and sign-up, sign-up continues to the page asked for;
+  - production error visibility on first-party tools only: Workers Logs and Issues for the server side, a rate-limited client report endpoint, a runbook, and a guard test against silent catches;
+  - star files from Hipparcos V1 directly, pending ESA's written authorisation.
+
+  Carried over: see the closure check above (owner to-dos; issues #189, #190, #191, #233 carried to the next milestone, which is not open yet; #178, #230, #232 and #19 parked and kept open; #171 closed).
 
 ## Done
 
