@@ -1,10 +1,10 @@
 ---
 change_id: error-visibility
 title: Production error visibility with first-party tools
-status: implementing
+status: archived
 created: 2026-10-15
-updated: 2026-10-19
-archived_at: null
+updated: 2026-10-20
+archived_at: 2026-10-20T09:04:02Z
 ---
 
 ## Notes

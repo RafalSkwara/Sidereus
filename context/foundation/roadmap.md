@@ -3,7 +3,7 @@ project: Sidereus
 version: 4
 status: draft
 created: 2026-09-30
-updated: 2026-10-17
+updated: 2026-10-20
 prd_version: 3
 main_goal: quality
 top_blocker: skills # advice judged without an observer; the owner kept it for M-4 (2026-10-15)
@@ -370,6 +370,7 @@ None. Every layer M-4 touches is present. Observability is partial, and S-07 com
 - **S-05: user can see the short evening showpieces (M13, M15, M57) ranked where beginners expect them, with each window opening on time and no reason line that distinguishes nothing. Tonight's top 5 is re-checked against a planetarium and an observation planner on 2-3 fixed nights.** — Archived 2026-10-16 → `context/archive/2026-10-16-evening-showpieces/`. The owner's manual rows 1.6, 2.5, 3.3, 4.5 (including the M39 July P3 non-pass, a twilight-definition difference) and 4.6 were covered by the owner's merge of PR #188. Known divergence kept: October M13/M15/M57 rank outside the top 5 (OD-1, duration saturation only). Lesson: —.
 - **S-08: user (the operator) can ship star files that come from the Hipparcos Catalogue, Version 1 directly instead of through HYG, with designations from CC0 and IAU sources, so ESA's authorisation can cover them.** — Archived 2026-10-17 → `context/archive/2026-10-16-star-source-switch/`. The owner's manual rows were covered by the owner's merge of PRs #193 and #195. F1 accepted: reference positions cite SIMBAD only. F5: the Gould numbers were dropped from the Flamsteed values. ESA's authorisation is still pending: no payments are taken until it arrives in writing. Lesson: —.
 - **S-06: user who opens sign-in or sign-up while signed in lands on Tonight, and a visitor who signs up from a gated link continues to that page afterwards.** — Archived 2026-10-17 → `context/archive/2026-10-17-auth-loose-ends/`. The owner's manual rows 1.4, 1.5, 2.4-2.7 and 3.6 were covered by the owner's merge of PR #211. Lesson: —.
+- **S-07: user (the operator) can see every failure in the critical flows with its cause, and is alerted on it for the server side, with no private data in the reports.** — Archived 2026-10-20 → `context/archive/2026-10-15-error-visibility/`. Lesson: —.
 - **S-09: user can drag the live sky sideways with a mouse and show it hidden, as today or expanded, with every star in its true place and the choice remembered on the device.** — Archived 2026-10-17 → `context/archive/2026-10-17-ui-sky-modes/`. The owner's manual rows 1.5, 1.6, 2.4, 3.3, 3.4, 4.5, 4.6, 5.3 and 5.4 were covered by the owner's merge of PR #212 (GitHub #213). Lesson: —.
 - **S-10: user can open any of Tonight's focused pages from every screen through one icon button in the top bar, and swipe down to close every bottom sheet.** — Archived 2026-10-17 → `context/archive/2026-10-17-ui-quick-nav/`. The owner's manual rows 1.5, 2.5, 2.6, 4.3, 4.4 and 4.5 were covered by the owner's merge of PR #220 (GitHub #214); rows 2.7, 3.4 and 3.5 (VoiceOver, iPhone Safari swipe) stay open and are carried to `context/handoff.md`. Lesson: —.
 - **S-12: user can recognise Sidereus by an app icon the owner picked from three proposals, used for the favicon, the installed app's icon and the install prompt.** — Archived 2026-10-17 → `context/archive/2026-10-17-app-icon/`. The owner's manual row 3.3 (the post-deploy PWA icon check) was covered by the owner's merge of PR #217 (GitHub #216). Lesson: —.
