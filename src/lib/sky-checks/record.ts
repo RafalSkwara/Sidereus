@@ -31,10 +31,13 @@ export function recordableVerdict(
 
 /**
  * Records the headline the way Tonight does, fire and forget, and traces both ways it can fail
- * (error-visibility): a result that is not ok logs `tonight.sky-check-record` with the fault's code and status
- * (`logFailure` for a server fault or one without a code, `logNotice` for a refusal, a stale session or a zero-row
- * outcome: the user's request or session, not an outage), and a rejection logs the error's name. It never rejects, so
- * the caller can hand it to the Worker's `waitUntil` as is, and nothing it logs can cost Tonight its render.
+ * (error-visibility): a result that is not ok logs `tonight.sky-check-record` with the fault's code and status, and a
+ * rejection logs the error's name. The fault comes from the store: a database code, `request` when the request never
+ * completed (a timeout, a dropped connection), `http` with the status when a gateway answered without a PostgREST
+ * error body, and a class 22 or 23 code, which is our bug here. `logFailure` is for a server fault (or none at all:
+ * unknown is not benign), `logNotice` for a refusal, a stale session or a zero-row outcome: the user's request or
+ * session, not an outage. It never rejects, so the caller can hand it to the Worker's `waitUntil` as is, and nothing it
+ * logs can cost Tonight its render.
  */
 export function recordSkyVerdict(client: TypedSupabaseClient, input: RecordableVerdict): Promise<void> {
   return skyCheckStore.record(client, input).then(

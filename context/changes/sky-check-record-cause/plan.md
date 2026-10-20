@@ -255,8 +255,8 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [x] 1.1 The new tests fail, and each for its stated reason (a bare `{ step }` line, a missing `fault`, a missing `code`), with the other tests of the same files passing: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts` (the red output is kept in `implementation-notes.md`)
-- [x] 1.2 Lint passes on the changed test files: `npx eslint --max-warnings 0 --no-warn-ignored src/lib/sky-checks src/lib/test-support src/lib/observability/fault.test.ts`
+- [x] 1.1 The new tests fail, and each for its stated reason (a bare `{ step }` line, a missing `fault`, a missing `code`), with the other tests of the same files passing: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts` (the red output is kept in `implementation-notes.md`) — 5d4ac8c
+- [x] 1.2 Lint passes on the changed test files: `npx eslint --max-warnings 0 --no-warn-ignored src/lib/sky-checks src/lib/test-support src/lib/observability/fault.test.ts` — 5d4ac8c
 
 #### Manual
 
@@ -266,11 +266,11 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [ ] 2.1 The Phase 1 tests pass with no assertion edited: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts`
-- [ ] 2.2 The whole fast project passes: `npm run test:reference`
-- [ ] 2.3 The static guards pass (no-console, silent-catch, hooks proof): `npm run test:guards`
-- [ ] 2.4 Types pass: `npx astro check`
-- [ ] 2.5 Lint passes on the whole project (playwright-report and test-results moved aside first if present): `npm run lint`
+- [x] 2.1 The Phase 1 tests pass with no assertion edited: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts`
+- [x] 2.2 The whole fast project passes: `npm run test:reference`
+- [x] 2.3 The static guards pass (no-console, silent-catch, hooks proof): `npm run test:guards`
+- [x] 2.4 Types pass: `npx astro check`
+- [x] 2.5 Lint passes on the whole project (playwright-report and test-results moved aside first if present): `npm run lint`
 
 #### Manual
 

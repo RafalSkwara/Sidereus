@@ -86,8 +86,21 @@ const SQLSTATE_SHAPE = /^(?:[0-9][0-9A-Z]|F0|HV|P0|XX)[0-9A-Z]{3}$/;
 /** PostgREST's own codes (`PGRST301`). */
 const POSTGREST_SHAPE = /^PGRST\d{3}$/;
 
-/** The four steps of a `ForecastError`, which travels as the line's `code` (`open-meteo.ts`). */
-const FORECAST_STEPS: ReadonlySet<string> = new Set(["request", "http", "parse", "schema"]);
+/**
+ * The code of a database request that never completed (response status 0: a timeout, a dropped connection), which is
+ * also the forecast client's `request` step. Named here, next to the set that accepts it, so a rename of the forecast
+ * steps cannot switch the store code off unseen (`fault.test.ts` pins both words).
+ */
+export const TRANSPORT_CODE = "request";
+
+/**
+ * The code of a request answered with a status that is not a success and no PostgREST error body (a gateway's 502
+ * with an HTML page), which is also the forecast client's `http` step. It travels with the status.
+ */
+export const HTTP_CODE = "http";
+
+/** The four steps of a `ForecastError`, which travels as the line's `code` (`open-meteo.ts`), and the two store codes. */
+const FORECAST_STEPS: ReadonlySet<string> = new Set([TRANSPORT_CODE, HTTP_CODE, "parse", "schema"]);
 
 /**
  * The members of `@supabase/auth-js`'s `ErrorCode` union (`error-codes.d.ts`, 2.116.0), copied as an explicit

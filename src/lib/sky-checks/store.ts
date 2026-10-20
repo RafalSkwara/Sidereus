@@ -1,7 +1,7 @@
 import type { MessageKey } from "@/i18n";
 import type { Tables } from "@/lib/database.types";
 import type { WriteResult } from "@/lib/gear/store";
-import { faultFrom, noRowsFault, withFault } from "@/lib/observability/fault";
+import { faultFrom, noRowsFault, withFault, type WriteFault } from "@/lib/observability/fault";
 import type { TypedSupabaseClient } from "@/lib/supabase";
 import { CHECKABLE_HEADLINES, type RecordedHeadline, type SkyAnswer, type TallyRow } from "./claim";
 
@@ -50,23 +50,38 @@ function toSkyCheckRecord(row: Tables<"sky_checks">): SkyCheckRecord {
   };
 }
 
+/**
+ * The fault of a failed record. Every argument of the RPC is built by the server (the engine's headline, the night, the
+ * user's own site), so a class 22 or 23 result is our bug, not user input: it keeps its fault, as a server fault with its
+ * code, where `withFault` would drop it. The response's `status` says what a request without a code was (a timeout, a
+ * gateway answer).
+ */
+function recordFault(error: unknown, status: number): WriteFault {
+  const { fault } = withFault(error, { status });
+  if (fault) {
+    return fault;
+  }
+  const { code } = faultFrom(error);
+  return code === undefined ? { kind: "server" } : { kind: "server", code };
+}
+
 export const skyCheckStore = {
   /**
    * Records the headline Tonight showed for the caller's site and night. Before `darkStart` a later view overwrites
    * it; after that the first record stands; an answered night never changes. A site that is not the caller's is
-   * silently skipped by the function. The result's `fault` is traced by `recordSkyVerdict` (`record.ts`).
+   * silently skipped by the function. The result's `fault` is always set on a failure and traced by `recordSkyVerdict` (`record.ts`).
    */
   async record(
     client: TypedSupabaseClient,
     input: { siteId: string; night: string; headline: RecordedHeadline; darkStart: Date },
   ): Promise<WriteResult> {
-    const { error } = await client.rpc("record_sky_verdict", {
+    const { error, status } = await client.rpc("record_sky_verdict", {
       site_id: input.siteId,
       night: input.night,
       headline: input.headline,
       dark_start: input.darkStart.toISOString(),
     });
-    return error ? { ok: false, message: SAVE_FAILED, ...withFault(error) } : { ok: true };
+    return error ? { ok: false, message: SAVE_FAILED, fault: recordFault(error, status) } : { ok: true };
   },
 
   /**

@@ -19,3 +19,17 @@ The `fault.test.ts` cases for a call without a response argument, a real code th
 The narrowing of `store.test.ts` (loop title "…in answer and skip", `record` skipped in the 22/23 loop) and `record`'s own opposite case are in the same commit, as plan review F2 asked.
 
 Lint passes on the changed files; `astro check` is not a Phase 1 criterion (the new tests call a signature that does not exist yet).
+
+## Phase 2: green run (2026-10-20)
+
+`npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts`: 33 of 33 green, no assertion edited beyond the narrowing named in Phase 1. Whole fast project 821 passed (1 skipped, as before), guards 60 passed, `astro check` 0 errors, `npm run lint` clean. No e2e or smoke run: the only visible effect is a log line, and no page, route or markup changed.
+
+Deliberate-break checks (worktree-only edits on top of the staged files, each restored with `git checkout -- <file>`; the staged diff stayed intact):
+
+| Break                                                                           | Result                                               |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `faultFrom` ignores the response argument                                       | 8 tests red (record, store, fault, record-transport) |
+| `skyCheckStore.record` drops the input-class fault                              | 2 tests red (store, record)                          |
+| `TRANSPORT_CODE` renamed to `"req"` (forecast vocabulary drift, plan review F4) | 2 tests red in `fault.test.ts`                       |
+
+No adaptation of the plan was needed. One reading of the plan that the implementer should know: the response argument is consulted only when the error has no usable code, and the status it contributes is the error's own, else the response's.
