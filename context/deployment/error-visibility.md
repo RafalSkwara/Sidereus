@@ -95,7 +95,7 @@ Unusual library lines are not ours: auth-js writes its own `console.warn` for a 
 
 The docs do not document a filter field, so an automation fires for every Issue of the Worker: no per-step filter exists. Limits from the docs: 50 automations per account.
 
-If a logged error does not become an Issue, use a saved Workers Logs query on the message text (section 1) and record the gap as a follow-up. **Unverified**: whether Workers Logs can alert on a saved query. The Workers Logs page of the docs does not say so.
+If a logged error does not become an Issue, use a saved Workers Logs query on the message text (section 1) and record the gap as a follow-up. **Checked 2026-10-20 (7.9): no.** A saved Workers Logs query offers only rename and edit, no alert. Cloudflare's separate custom alerts (beta; on Workers events / SQL, with a threshold, a window and a webhook) are untested: follow-up #232.
 
 ## 6. What the invocation event held (removed by PR #187)
 
@@ -127,7 +127,7 @@ The Version URL probe (an uploaded version with a dead forecast address) did not
 
 ## 8. Client reporting
 
-**Built in three PRs (Phases 7-9, a cuttable block with a deadline of 2026-11-04): Phase 7 the endpoint and the limiter, Phase 8 the service worker's reports, Phase 9 the React islands and the page's global handlers. Phase 9 is built; with it every browser-side catch either reports or has a reason in the allowlist of `src/lib/observability/silent-catch-guard.test.ts`.** Client reports arrive as warn-level `sidereus: client.<step> noted` lines, never as Issues, because the endpoint is public and `curl` can send any report. A real burst is then found by a saved Workers Logs query that **counts those lines by message text** (`sidereus: client.`), with a threshold; the same rule as section 1. Whether a query can alert is unverified (check 7.9).
+**Built in three PRs (Phases 7-9, a cuttable block with a deadline of 2026-11-04): Phase 7 the endpoint and the limiter, Phase 8 the service worker's reports, Phase 9 the React islands and the page's global handlers. Phase 9 is built; with it every browser-side catch either reports or has a reason in the allowlist of `src/lib/observability/silent-catch-guard.test.ts`.** Client reports arrive as warn-level `sidereus: client.<step> noted` lines, never as Issues, because the endpoint is public and `curl` can send any report. A real burst is then found by a saved Workers Logs query that **counts those lines by message text** (`sidereus: client.`), with a threshold; the same rule as section 1. **No automatic alert for client-side reports** (checked 2026-10-20, 7.9: a saved query cannot alert): the owner reviews the saved query `sidereus: client.` (Count) by hand once a week. Cloudflare custom alerts (beta) are untested: follow-up #232.
 
 A report is a step and, when the error had a shaped name, that name (`{ step, name? }`): never a message, stack, file name, line, URL or value. The line has the name only when the client sent one, so a report without a name reads `sidereus: client.island.geocode noted` with no `name` field.
 
@@ -184,7 +184,7 @@ After a deploy, `Promise.reject(new RangeError("x"))` in the browser console of 
 
 - **Release identity (D6, audit F27):** a `version_metadata` binding and a release field in the line. Today only the script version Workers Logs attaches is used.
 - **Island, 404, 500 and plan-unknown UI (D7, audit F12, F13, F15, F28):** a failed server island leaves the skeleton on screen, there is no 404 or 500 page, a failed plan read has no neutral state, and the finder never shows a failed eyepieces read. The server side of each is logged; the user-visible copy needs its own design pass.
-- **Client reporting (D5, Phases 7-9):** built, section 8.
+- **Client reporting (D5, Phases 7-9):** built, section 8. Alert on client reports through Cloudflare custom alerts (beta): #232.
 - **Traces:** kept on by owner decision (2026-10-16); they carry city, region, country, time zone and the user agent by platform design and are under GDPR review (#191), section 6.
 - **#187 post-deploy checks:** section 6.
 - **Owner checks still open:** the Issues automation and a second step's own Issue (6.5), one line per flow and a console line's own metadata (6.6; there is no invocation event after #187), the fallback query if a line does not become an Issue (6.7).
