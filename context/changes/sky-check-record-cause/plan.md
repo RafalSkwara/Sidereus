@@ -255,8 +255,8 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [ ] 1.1 The new tests fail, and each for its stated reason (a bare `{ step }` line, a missing `fault`, a missing `code`), with the other tests of the same files passing: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts` (the red output is kept in `implementation-notes.md`)
-- [ ] 1.2 Lint passes on the changed test files: `npx eslint --max-warnings 0 --no-warn-ignored src/lib/sky-checks src/lib/test-support src/lib/observability/fault.test.ts`
+- [x] 1.1 The new tests fail, and each for its stated reason (a bare `{ step }` line, a missing `fault`, a missing `code`), with the other tests of the same files passing: `npm run test:reference -- src/lib/sky-checks src/lib/observability/fault.test.ts` (the red output is kept in `implementation-notes.md`)
+- [x] 1.2 Lint passes on the changed test files: `npx eslint --max-warnings 0 --no-warn-ignored src/lib/sky-checks src/lib/test-support src/lib/observability/fault.test.ts`
 
 #### Manual
 
