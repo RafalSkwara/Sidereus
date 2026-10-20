@@ -280,8 +280,8 @@ Progress rows are unchanged on purpose (titles are immutable once reviewed); the
 
 #### Automated
 
-- [x] 3.1 Formatting passes on the changed Markdown: `npx prettier --check context/deployment/error-visibility.md CLAUDE.md context/changes/sky-check-record-cause`
-- [x] 3.2 Lint and the fast project still pass: `npm run lint && npm run test:reference`
+- [x] 3.1 Formatting passes on the changed Markdown: `npx prettier --check context/deployment/error-visibility.md CLAUDE.md context/changes/sky-check-record-cause` — 51ed3df
+- [x] 3.2 Lint and the fast project still pass: `npm run lint && npm run test:reference` — 51ed3df
 
 #### Manual
 
