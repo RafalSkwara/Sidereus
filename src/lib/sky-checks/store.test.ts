@@ -24,7 +24,7 @@ const WRITES: [string, (client: ReturnType<typeof fakeClient>) => ReturnType<typ
 ];
 
 describe("a failed write carries a sanitized fault", () => {
-  it("keeps only its code for a server fault, is `refused` or `session` by code, and has no fault for user input, in answer and skip", async () => {
+  it("keeps only its code for a server fault and is `refused` or `session` by code in every write; has no fault for user input in answer and skip", async () => {
     expect(WRITES).toHaveLength(3);
     for (const [name, run] of WRITES) {
       const server = await run(failing("XX000"));

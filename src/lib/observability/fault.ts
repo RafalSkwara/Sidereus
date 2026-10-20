@@ -14,8 +14,9 @@ import { HTTP_CODE, isLoggableCode, TRANSPORT_CODE } from "./log-failure";
  *
  * The one exception is a request that gave no PostgREST code: a store that passes the response's `status` to
  * `faultFrom` / `withFault` keeps what the status says instead of nothing (sky-check-record-cause). Status 0 (no HTTP
- * answer at all: a timeout, a dropped connection) is the code `request`; another status that is not a success (a
- * gateway's 502 with an HTML body) is the code `http` with that status. Never from any text: the message is not read.
+ * answer at all: a timeout, a dropped connection) is the code `request`; any other status (a gateway's 502 with an HTML
+ * body, a 2xx whose body was not JSON) is the code `http` with that status. Never from any text: the message is not
+ * read.
  *
  * `classifyFault` is the one rule that says whose fault a failure is. Server is the default, because an unknown code
  * is not benign: only the codes known to be the user's request, the session or a missing row are told apart. This
@@ -87,13 +88,17 @@ function statusOf(source: unknown): number | undefined {
   return isStatus(status) ? status : undefined;
 }
 
-/** What a request's response says when the error carries no code: no answer at all, or an answer that is no success. */
+/**
+ * What a request's response says when the error carries no code: no answer at all (`request`), or an answer with a
+ * status (`http`). The store asks only for a request that has an error, so a 2xx here is an answer whose body was not
+ * JSON (a proxy's HTML page), which is as much a failure as a 502.
+ */
 function codeFromResponse(response: unknown): { code: string; status?: number } | undefined {
   const status = read(response, "status");
   if (status === 0) {
     return { code: TRANSPORT_CODE };
   }
-  if (isStatus(status) && (status < 200 || status > 299)) {
+  if (isStatus(status)) {
     return { code: HTTP_CODE, status };
   }
   return undefined;

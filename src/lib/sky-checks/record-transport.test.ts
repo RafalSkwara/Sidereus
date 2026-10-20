@@ -39,6 +39,14 @@ const gatewayFetch: typeof fetch = () =>
     }),
   );
 
+const htmlOkFetch: typeof fetch = () =>
+  Promise.resolve(
+    new Response(`<html><body><p>${COORDS} ${EMAIL}</p></body></html>`, {
+      status: 200,
+      headers: { "content-type": "text/html" },
+    }),
+  );
+
 function clientOver(fetchFn: typeof fetch) {
   return createClient<Database>("http://127.0.0.1:1", "test-key", {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -68,6 +76,7 @@ describe("a failed record against the real supabase-js client", () => {
     ["a fetch that never answers (the guard fires)", hangingFetch, 0, { code: "request" }],
     ["a fetch that is dropped", droppedFetch, 0, { code: "request" }],
     ["a gateway 502 with an HTML body", gatewayFetch, 502, { code: "http", status: 502 }],
+    ["a 200 whose body is HTML, not JSON", htmlOkFetch, 200, { code: "http", status: 200 }],
   ];
 
   it.each(CASES)(

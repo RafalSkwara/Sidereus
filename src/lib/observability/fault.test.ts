@@ -184,8 +184,8 @@ describe("the response's status, for a request that gave no PostgREST code (sky-
     });
   });
 
-  it("gives any other non-2xx status without a code the code `http` and that status", () => {
-    for (const status of [502, 503, 520, 404, 429, 304]) {
+  it("gives any other status without a code the code `http` and that status, a 2xx whose body was not JSON included", () => {
+    for (const status of [502, 503, 520, 404, 429, 304, 200, 204, 299]) {
       expect(faultFrom(gatewayError(), { status }), String(status)).toMatchObject({ code: "http", status });
       expect(withFault(gatewayError(), { status }), String(status)).toEqual({
         fault: { kind: "server", code: "http", status },
@@ -196,7 +196,7 @@ describe("the response's status, for a request that gave no PostgREST code (sky-
   it("leaves a call without a response argument as it was, and never reads a status that is not a status", () => {
     expect(faultFrom(transportError()).code).toBeUndefined();
     expect(withFault(transportError())).toEqual({ fault: { kind: "server" } });
-    for (const status of [undefined, 200, 204, 299, 99, 600, 502.5, Number.NaN, "502", null]) {
+    for (const status of [undefined, 99, 600, 502.5, Number.NaN, "502", null]) {
       const fault = faultFrom(gatewayError(), { status: status as number });
       expect([fault.code, fault.status], String(status)).toEqual([undefined, undefined]);
     }
