@@ -49,6 +49,13 @@ describe("verdict", () => {
     });
   });
 
+  it("reports the first of two equally long runs", () => {
+    expect(verdict(sixHours, forecast([10, 10, 100, 25, 25, 100]))).toEqual({
+      level: "go",
+      reason: { kind: "clear-run", runHours: 2, cloudPct: 10 },
+    });
+  });
+
   it("is marginal on a 1 h run at 50%", () => {
     expect(verdict(sixHours, forecast([100, 100, 50, 100, 100, 100]))).toEqual({
       level: "marginal",
