@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Stop and SubagentStop (test rollout Phase 5, testing-quality-gates-wiring): before an agent finishes, run the whole
 # fast suite (the `reference` Vitest project; the slow static guards are the `guards` project and run in CI only,
-# test-suite-diet D2) and lint the changed files of every Sidereus checkout this agent changed, and send it back once with
-# what failed. Rules: the 10x-configure-hook skill (references/anthropic.md). Exit 2 + stderr is the only signal that
+# test-suite-diet D2), lint the changed files and, when a TS/TSX/Astro file changed, run `astro check` (~30 s) in every
+# Sidereus checkout this agent changed, and send it back once with what failed. Rules: the 10x-configure-hook skill (references/anthropic.md). Exit 2 + stderr is the only signal that
 # reaches the agent; on the retry pass (`stop_hook_active`, or Cursor's `loop_count`) it may finish, and a run that
 # is still red is reported to the user as a systemMessage instead. SubagentStop carries the same `stop_hook_active`
 # plus `agent_id`/`agent_type`, and the parent's `session_id` (live hooks doc, checked 2026-10-09).
@@ -74,15 +74,19 @@ while IFS= read -r ROOT; do
   } 2>/dev/null | sort -u)
   [ -n "$CHANGED" ] || continue
 
-  # What this root needs: lint for the changed files the linter covers (eslint.config.js: TS, TSX, Astro, JS), and the
-  # whole unit suite (seconds) unless only documentation changed; the suite also runs the guards that read files
-  # instead of importing them (no-console, runner zone, colours, this hook's own proof).
+  # What this root needs: lint for the changed files the linter covers (eslint.config.js: TS, TSX, Astro, JS), the
+  # typecheck when a TS, TSX or Astro file changed (a deleted one too: its importers break), and the whole unit suite
+  # (seconds) unless only documentation changed.
   LINT_FILES=""
   NEEDS_TESTS=0
+  NEEDS_TYPES=0
   while IFS= read -r f; do
     case "$f" in
       *.ts | *.tsx | *.astro | *.js | *.mjs | *.cjs) [ -f "$f" ] && LINT_FILES="$LINT_FILES
 $f" ;;
+    esac
+    case "$f" in
+      *.ts | *.tsx | *.astro) NEEDS_TYPES=1 ;;
     esac
     case "$f" in
       *.md | context/*) ;;
@@ -105,6 +109,7 @@ EOF
   for tool in eslint vitest; do
     [ -x "node_modules/.bin/$tool" ] || MISSING="$MISSING $tool"
   done
+  [ "$NEEDS_TYPES" = 0 ] || [ -x node_modules/.bin/astro ] || MISSING="$MISSING astro"
   if [ -n "$MISSING" ]; then
     add_report "Tools missing ($ROOT):" "not installed:$MISSING; run npm ci in this checkout."
     continue
@@ -128,6 +133,13 @@ EOF
   if [ "$NEEDS_TESTS" = 1 ]; then
     OUT=$(node_modules/.bin/vitest run --project reference 2>&1 </dev/null) || add_report "Unit tests fail ($ROOT):" "$OUT"
     SUMMARY="$SUMMARY vitest reference;"
+  fi
+  # The same command as CI `ci` (it syncs the generated types itself), showing errors only; it colours its output
+  # whatever NO_COLOR says, so the escape codes are stripped.
+  if [ "$NEEDS_TYPES" = 1 ]; then
+    OUT=$(node_modules/.bin/astro check --minimumSeverity error 2>&1 </dev/null) ||
+      add_report "astro check fails ($ROOT):" "$(printf '%s\n' "$OUT" | sed "s/$(printf '\033')\[[0-9;]*m//g")"
+    SUMMARY="$SUMMARY astro check;"
   fi
 done <<EOF
 $ROOTS

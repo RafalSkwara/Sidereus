@@ -18,8 +18,8 @@ import { afterAll, describe, expect, it } from "vitest";
 /**
  * Proof of the Claude Code agent hooks in .claude/hooks (test rollout Phase 5, testing-quality-gates-wiring; rules in
  * the 10x-configure-hook skill, Step 7). Each case pipes a hook payload into the real script inside a throwaway git
- * repository whose `node_modules/.bin/eslint` and `vitest` are stubs: they log their calls and fail on a `BROKEN`
- * marker in a source file, so a case asserts the exit code and the channel (stderr reaches the agent on exit 2, a
+ * repository whose `node_modules/.bin/eslint`, `vitest` and `astro` are stubs: they log their calls and fail on a
+ * marker in a source file (`BROKEN` for lint and tests, `TYPE_ERROR` for `astro check`), so a case asserts the exit code and the channel (stderr reaches the agent on exit 2, a
  * `systemMessage` on stdout reaches the user) without running the real tools.
  *
  * The stubs are written once and symlinked into each repository: macOS scans every newly written executable on its
@@ -30,7 +30,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 const REPO_ROOT = realpathSync(fileURLToPath(new URL("../../", import.meta.url)));
 const HOOKS_DIR = join(REPO_ROOT, ".claude", "hooks");
-const SCRIPTS = ["lib.sh", "turn-start.sh", "register-checkout.sh", "end-of-turn.sh"];
+const SCRIPTS = ["lib.sh", "turn-start.sh", "register-checkout.sh", "end-of-turn.sh", "lint-edited-file.sh"];
 const BASH = "/bin/bash";
 const SANDBOX = realpathSync(mkdtempSync(join(tmpdir(), "agent-hooks-")));
 const STUBS = join(SANDBOX, "stubs");
@@ -64,10 +64,18 @@ if grep -rl BROKEN src 2>/dev/null; then echo "stub vitest: a test fails"; exit 
 exit 0
 `;
 
+// Typecheck stub: `astro check` fails when any file under src carries the TYPE_ERROR marker.
+const ASTRO_STUB = `#!/bin/sh
+echo "astro $*" >> "$STUB_LOG"
+if [ "$1" = "check" ] && grep -rl TYPE_ERROR src 2>/dev/null; then echo "stub astro: a type error"; exit 1; fi
+exit 0
+`;
+
 mkdirSync(STUBS);
 for (const [name, body] of [
   ["eslint", ESLINT_STUB],
   ["vitest", VITEST_STUB],
+  ["astro", ASTRO_STUB],
 ] as const) {
   writeFileSync(join(STUBS, name), body);
   chmodSync(join(STUBS, name), 0o755);
@@ -127,11 +135,12 @@ async function git(cwd: string, ...args: string[]): Promise<void> {
   expect(result, `git ${args.join(" ")}`).toMatchObject({ code: 0 });
 }
 
-/** The stubbed eslint and vitest, and generated types, in a checkout (a fresh worktree has neither). */
+/** The stubbed eslint, vitest and astro, and generated types, in a checkout (a fresh worktree has neither). */
 function installTools(checkout: string): void {
   mkdirSync(join(checkout, "node_modules", ".bin"), { recursive: true });
   mkdirSync(join(checkout, ".astro"), { recursive: true });
-  for (const name of ["eslint", "vitest"]) symlinkSync(join(STUBS, name), join(checkout, "node_modules", ".bin", name));
+  for (const name of ["eslint", "vitest", "astro"])
+    symlinkSync(join(STUBS, name), join(checkout, "node_modules", ".bin", name));
 }
 
 /** A git repo with the hooks committed, stubbed tools, a clean `src/a.ts` and a README. */
@@ -247,11 +256,77 @@ describe("end-of-turn.sh", () => {
     expect(noJq.stderr).toContain("jq");
   });
 
+  it("sends the agent back on a type error that lint does not see", async () => {
+    const box = await sandbox();
+    writeFileSync(join(box.repo, "src", "a.ts"), "export const a: number = '1'; // TYPE_ERROR\n");
+    const result = await hook(box, "end-of-turn.sh", stop(box));
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain("astro check fails");
+    expect(result.stderr).toContain("src/a.ts");
+  });
+
+  it("runs astro check only when a TS, TSX or Astro file changed", async () => {
+    const box = await sandbox();
+    writeFileSync(join(box.repo, "src", "b.mjs"), "export const b = 1;\n");
+    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(0);
+    expect(calls(box)).not.toContain("astro check");
+
+    rmSync(join(box.repo, "src", "a.ts"));
+    expect((await hook(box, "end-of-turn.sh", stop(box))).code).toBe(0);
+    expect(calls(box)).toContain("astro check");
+  });
+
   it("treats a SubagentStop payload like Stop", async () => {
     const box = await sandbox();
     writeFileSync(join(box.repo, "src", "a.ts"), "// BROKEN by a subagent\n");
     const payload = stop(box, { hook_event_name: "SubagentStop", ...subagent("def456") });
     expect((await hook(box, "end-of-turn.sh", payload)).code).toBe(2);
+  });
+});
+
+describe("lint-edited-file.sh", () => {
+  it("sends the agent back at once when the edited file fails lint, linting only that file", async () => {
+    const box = await sandbox();
+    writeFileSync(join(box.repo, "src", "b.ts"), "export const b = 1;\n");
+    writeFileSync(join(box.repo, "src", "a.ts"), "export const a = 1; // BROKEN\n");
+    const file = join(box.repo, "src", "a.ts");
+    const result = await hook(box, "lint-edited-file.sh", edit(file));
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain(`ESLint fails on ${file}`);
+    expect(calls(box)).toBe(`eslint --max-warnings 0 --no-warn-ignored -- ${file}`);
+  });
+
+  it("stays silent on a clean file and resolves a relative path against the payload's cwd", async () => {
+    const box = await sandbox();
+    const result = await hook(box, "lint-edited-file.sh", edit("src/a.ts", { cwd: box.repo }), box.tmp);
+    expect(result).toMatchObject({ code: 0, stdout: "", stderr: "" });
+    expect(calls(box)).toContain(join(box.repo, "src", "a.ts"));
+  });
+
+  it("skips what ESLint does not cover: other file types, a deleted file, an empty payload", async () => {
+    const box = await sandbox();
+    writeFileSync(join(box.repo, "README.md"), "BROKEN\n");
+    for (const payload of [edit(join(box.repo, "README.md")), edit(join(box.repo, "src", "gone.ts")), "", "{}"]) {
+      expect(await hook(box, "lint-edited-file.sh", payload)).toMatchObject({ code: 0, stderr: "" });
+    }
+    expect(calls(box)).toBe("");
+  });
+
+  it("leaves a repository without these hooks alone", async () => {
+    const box = await sandbox();
+    const other = await sandbox(false);
+    writeFileSync(join(other.repo, "src", "a.ts"), "// BROKEN in another repository\n");
+    const result = await hook(box, "lint-edited-file.sh", edit(join(other.repo, "src", "a.ts")));
+    expect(result).toMatchObject({ code: 0, stderr: "" });
+    expect(calls(box)).toBe("");
+  });
+
+  it("fails visibly when ESLint is missing, never passing silently", async () => {
+    const box = await sandbox();
+    rmSync(join(box.repo, "node_modules", ".bin", "eslint"));
+    const result = await hook(box, "lint-edited-file.sh", edit(join(box.repo, "src", "a.ts")));
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain("npm ci");
   });
 });
 
@@ -308,7 +383,7 @@ describe("hook scripts and registration", () => {
     const commands = Object.values(settings.hooks).flatMap((groups) =>
       groups.flatMap((group) => group.hooks.map((entry) => entry.command)),
     );
-    expect(commands.length).toBeGreaterThanOrEqual(5);
+    expect(commands.length).toBeGreaterThanOrEqual(6);
     for (const command of commands) {
       const env = { ...box.env, CLAUDE_PROJECT_DIR: join(box.tmp, "does-not-exist") };
       const result = await run("/bin/sh", ["-c", command], { cwd: wt, env, input: "{}" });

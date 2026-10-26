@@ -30,6 +30,11 @@
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")\"/.claude/hooks/register-checkout.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")\"/.claude/hooks/lint-edited-file.sh",
+            "timeout": 30
           }
         ]
       }
@@ -40,7 +45,7 @@
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")\"/.claude/hooks/end-of-turn.sh",
-            "timeout": 120
+            "timeout": 180
           }
         ]
       }
@@ -51,7 +56,7 @@
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")\"/.claude/hooks/end-of-turn.sh",
-            "timeout": 120
+            "timeout": 180
           }
         ]
       }
