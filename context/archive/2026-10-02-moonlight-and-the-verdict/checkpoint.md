@@ -33,4 +33,4 @@
 
 ## Screenshots
 
-Local preview on the real clock (2026-10-02, Moon about 58% lit and waning): see Progress 1.4. Bright-Moon states are covered by the fixed-date tests (2026-10-26 in `build.test.ts`, `ranking.test.ts` and `determinism.test.ts`). A bright-Moon screenshot check follows merge, after 2026-10-22 (review rev 2, F4).
+Local preview on the real clock (2026-10-02, Moon about 58% lit and waning): see Progress 1.4. Bright-Moon states are covered by the fixed-date tests (2026-10-26 in `build.test.ts`, `ranking.test.ts` and `determinism.test.ts`). A bright-Moon screenshot check follows merge, after 2026-10-22 (review rev 2, F4). Done by the owner on 2026-10-26.

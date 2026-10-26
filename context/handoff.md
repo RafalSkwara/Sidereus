@@ -2,6 +2,14 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-26 (M-4 closed and cleaned up)
+
+**M-4 is closed:** #236 (sky-check-record-cause archive) and #237 (M-4 close-out) merged 2026-10-26. No M-5 is open; the owner decides later (about the end of November, after ESA). The worktrees `archive-error-visibility` and `sky-check-record` and their local branches are removed.
+
+**Owner checks done 2026-10-26:** the moonlight post-merge (bright-Moon) checks; ui-progress-rewards red mode at night on a phone; the live celebration dialog after a real save.
+
+**Still open (owner):** S-07 6.5-6.7 (Issues automation); the sky-check lookups; iPhone Safari bottom-sheet swipe and VoiceOver (quick nav, progress tiles); tiles without a common name; the #178 data checks; ESA's answer; the IAU MDC email.
+
 ## Update 2026-10-20 (sky-check-record-cause, #235)
 
 **Shipped:** the bare `tonight.sky-check-record failed` line now carries its cause: PR #235 merged (main `a257f6c`), archived in `context/archive/2026-10-20-sky-check-record-cause/`. A request that never completed logs `code: request`, a response with a status and no PostgREST body logs `code: http` and its status, a class 22/23 result keeps its code; only `skyCheckStore.record` threads the response. **#233 stays open** (the same hole in the other 35 call sites, 9 files). **Owner lookups pending, they settle why the record took about 6 s** (nothing proves the 5 s fetch guard yet): Supabase Dashboard -> Logs -> API Gateway for `POST /rest/v1/rpc/record_sky_verdict` on 2026-10-20 08:45:01-08:45:07 UTC (and the Postgres logs of that minute), and the 7-day Workers Logs count of `sidereus: tonight.sky-check-record failed` against the `TonightContent` loads; after the deploy a later occurrence should carry a `code`. The archived plan's manual rows 3.3-3.6 are left unchecked on purpose.
@@ -47,7 +55,7 @@ What Sidereus looks like now, and what the next session should do. Read this fir
 
 - ui-quick-nav, iPhone Safari swipe (archived plan rows 3.4, 3.5): each bottom sheet follows the finger, snaps back, closes on a flick; the quick-nav list scrolls without moving the sheet and a drag from its top closes it; with Reduce motion on, no follow and a long swipe closes at once.
 - ui-quick-nav, VoiceOver (archived plan row 2.7): "Szybka nawigacja", collapsed and expanded, "bieżąca strona" on the current row.
-- ui-progress-rewards (S-11), on devices: red mode at night on a phone (badges and tiles told apart by shape); VoiceOver on a tile and on the new Caldwell heading and its toggle; the live celebration dialog after a real save, including the smaller names in a multi-milestone dialog; and the open question whether a tile with no common name should show its type as its name.
+- ui-progress-rewards (S-11), on devices: ~~red mode at night on a phone (badges and tiles told apart by shape)~~ done 2026-10-26; VoiceOver on a tile and on the new Caldwell heading and its toggle; ~~the live celebration dialog after a real save, including the smaller names in a multi-milestone dialog~~ done 2026-10-26; and the open question whether a tile with no common name should show its type as its name.
 
 ---
 
@@ -113,7 +121,7 @@ What changed:
 
 - ESA's answer to the follow-up on direct use of Hipparcos V1 (PRD Open Question 21; the owner sent it 2026-10-16);
 - the IAU MDC courtesy email;
-- the moonlight post-merge checks after 2026-10-22.
+- ~~the moonlight post-merge checks after 2026-10-22~~ done by the owner 2026-10-26.
 
 ---
 
