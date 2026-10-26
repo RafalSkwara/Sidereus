@@ -51,3 +51,9 @@ scripts/badge-art/out/
 # Stryker mutation testing
 reports/mutation/
 .stryker-tmp/
+
+# Playwright (10x-e2e-setup; test-results/ and playwright-report/ are listed above)
+playwright/.auth/
+blob-report/
+playwright/.cache/
+.playwright-cli/
