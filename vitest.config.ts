@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
 
 // The static guards (ESLint, the whole source tree, the hook scripts) cost far more than the rest of the suite together.
-const GUARD_FILES = [
+export const GUARD_FILES = [
   "src/lib/no-console-guard.test.ts",
   "src/lib/agent-hooks.test.ts",
   "src/lib/runner-zone-guard.test.ts",
