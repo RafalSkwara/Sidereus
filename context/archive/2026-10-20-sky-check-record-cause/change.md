@@ -1,10 +1,10 @@
 ---
 change_id: sky-check-record-cause
 title: Sky-check record failure leaves no cause in the log
-status: implementing
+status: archived
 created: 2026-10-20
 updated: 2026-10-20
-archived_at: null
+archived_at: 2026-10-20T19:21:11Z
 ---
 
 ## Notes

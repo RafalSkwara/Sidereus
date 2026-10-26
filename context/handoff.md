@@ -2,6 +2,10 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-20 (sky-check-record-cause, #235)
+
+**Shipped:** the bare `tonight.sky-check-record failed` line now carries its cause: PR #235 merged (main `a257f6c`), archived in `context/archive/2026-10-20-sky-check-record-cause/`. A request that never completed logs `code: request`, a response with a status and no PostgREST body logs `code: http` and its status, a class 22/23 result keeps its code; only `skyCheckStore.record` threads the response. **#233 stays open** (the same hole in the other 35 call sites, 9 files). **Owner lookups pending, they settle why the record took about 6 s** (nothing proves the 5 s fetch guard yet): Supabase Dashboard -> Logs -> API Gateway for `POST /rest/v1/rpc/record_sky_verdict` on 2026-10-20 08:45:01-08:45:07 UTC (and the Postgres logs of that minute), and the 7-day Workers Logs count of `sidereus: tonight.sky-check-record failed` against the `TonightContent` loads; after the deploy a later occurrence should carry a `code`. The archived plan's manual rows 3.3-3.6 are left unchecked on purpose.
+
 ## Update 2026-10-20 (error-visibility, S-07 #175)
 
 **Shipped:** M-4 S-07 is done: nine phases merged and deployed (#183, #194, #226, #228, #231; main `7e9d65b`), archived in `context/archive/2026-10-20-error-visibility/`. The roadmap's S-07 row is `done`; the milestone is not closed here (the orchestrator closes M-4 with the owner). Runbook: `context/deployment/error-visibility.md`.
