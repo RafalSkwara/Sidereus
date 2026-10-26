@@ -47,3 +47,7 @@ yarn-error.log*
 
 # Badge-art sheets rendered by scripts/badge-art/render.mjs (PNGs never go into git)
 scripts/badge-art/out/
+
+# Stryker mutation testing
+reports/mutation/
+.stryker-tmp/
