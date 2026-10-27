@@ -14,23 +14,34 @@ export function guardStream(
   extra?: FailureExtra,
 ): ReadableStream<Uint8Array> {
   const reader = source.getReader();
+  let cancelled = false;
   // Nothing is read ahead (a high-water mark of 0): a read of the source happens only when the client reads.
   return new ReadableStream<Uint8Array>(
     {
       async pull(controller) {
+        let result: ReadableStreamReadResult<Uint8Array>;
+        // Only the source read is a failure of the source: closing or enqueuing after a cancel throws, and is not.
         try {
-          const { done, value } = await reader.read();
-          if (done) {
-            controller.close();
-          } else {
-            controller.enqueue(value);
-          }
+          result = await reader.read();
         } catch (error) {
-          logFailure(step, error, extra);
-          controller.error(error);
+          // A read that settles after the client left is not a failure the user saw, and the stream is closed already.
+          if (!cancelled) {
+            logFailure(step, error, extra);
+            controller.error(error);
+          }
+          return;
+        }
+        if (cancelled) {
+          return;
+        }
+        if (result.done) {
+          controller.close();
+        } else {
+          controller.enqueue(result.value);
         }
       },
       cancel(reason) {
+        cancelled = true;
         return reader.cancel(reason);
       },
     },

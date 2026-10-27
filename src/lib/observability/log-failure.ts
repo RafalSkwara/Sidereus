@@ -285,6 +285,14 @@ const TEMPLATE_SEGMENT = /^(?:[A-Za-z_-]+|\[(?:\.\.\.)?[A-Za-z_-]+\])$/;
 
 const ROUTE_MAX_LENGTH = 80;
 
+/**
+ * The error pages' own templates, the one place a digit may stand in a fixed segment (#190 adds them): exact values,
+ * so a number from a pathname still never passes.
+ */
+const NOT_FOUND_ROUTE = "/404";
+const SERVER_ERROR_ROUTE = "/500";
+const ERROR_PAGE_ROUTES: readonly string[] = [NOT_FOUND_ROUTE, SERVER_ERROR_ROUTE];
+
 /** The route of a server island's request, whose name is the one place a digit may appear (`TonightContent2`). */
 const ISLAND_ROUTE_PREFIX = "/_server-islands/";
 const ISLAND_PATTERN = `${ISLAND_ROUTE_PREFIX}[name]`;
@@ -298,7 +306,7 @@ function isRouteTemplate(value: unknown): value is string {
   if (typeof value !== "string" || value.length > ROUTE_MAX_LENGTH || !value.startsWith("/")) {
     return false;
   }
-  if (value === "/") {
+  if (value === "/" || ERROR_PAGE_ROUTES.includes(value)) {
     return true;
   }
   if (value.startsWith(ISLAND_ROUTE_PREFIX) && NAME_SHAPE.test(value.slice(ISLAND_ROUTE_PREFIX.length))) {

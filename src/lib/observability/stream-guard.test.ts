@@ -67,4 +67,63 @@ describe("guardStream", () => {
     expect(onCancel).toHaveBeenCalledExactlyOnceWith("gone");
     expect(errors).not.toHaveBeenCalled();
   });
+
+  it("logs nothing and throws nothing when the consumer cancels while a read of the source is pending", async () => {
+    // The second pull never settles, as an island waiting on the forecast: the cancel then resolves the guard's pending
+    // read as done, and the guard must not try to close a stream the client already cancelled.
+    let sent = false;
+    const pending = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          if (!sent) {
+            sent = true;
+            controller.enqueue(bytes("head"));
+            return undefined;
+          }
+          return new Promise<void>(() => undefined);
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    try {
+      const reader = guardStream(pending, "request.stream", { route: "/tonight" }).getReader();
+      await reader.read();
+      const waiting = reader.read();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await reader.cancel("gone");
+      expect((await waiting).done).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(errors).not.toHaveBeenCalled();
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off("unhandledRejection", unhandled);
+    }
+  });
+
+  it("logs nothing when the pending read of the source rejects because the consumer cancelled", async () => {
+    // A source whose cancel rejects the read it has pending (not every runtime resolves it as done): that rejection is
+    // the client leaving, not a failure the user saw.
+    let rejectRead: (error: unknown) => void = () => undefined;
+    const fake = {
+      getReader: () => ({
+        read: () =>
+          new Promise<never>((_, reject) => {
+            rejectRead = reject;
+          }),
+        cancel: () => {
+          rejectRead(new RangeError("aborted by cancel"));
+          return Promise.resolve();
+        },
+      }),
+    } as unknown as ReadableStream<Uint8Array>;
+    const reader = guardStream(fake, "request.stream", { route: "/tonight" }).getReader();
+    const waiting = reader.read();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await reader.cancel("gone");
+    expect((await waiting).done).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(errors).not.toHaveBeenCalled();
+  });
 });

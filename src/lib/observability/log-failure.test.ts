@@ -434,6 +434,16 @@ describe("route", () => {
     }
     expect(errors.mock.calls.flat().join("")).not.toMatch(/123e4567|52\.2297|21\.0122/);
   });
+
+  it("keeps the two error-page templates /404 and /500 by name, and no other number", () => {
+    expect(routeOf("/404")).toBe("/404");
+    expect(routeOf("/500")).toBe("/500");
+    for (const value of ["/403", "/4040", "/50", "/404/x", "/log/404", "/500?x=1"]) {
+      expect(routeOf(value), JSON.stringify(value)).toBeUndefined();
+    }
+    expect(requestRoute("/404", {})).toBe("/404");
+    expect(requestRoute("/500", {})).toBe("/500");
+  });
 });
 
 describe("requestRoute", () => {

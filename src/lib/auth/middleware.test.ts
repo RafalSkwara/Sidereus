@@ -46,6 +46,7 @@ async function run(
   method = "GET",
   respond: () => Promise<Response> = () =>
     Promise.resolve(new Response("page", { headers: { "content-type": "text/html" } })),
+  astro: { routePattern?: string; params?: Record<string, string> } = {},
 ) {
   const { onRequest } = await import("@/middleware");
   const url = new URL(`http://localhost${path}`);
@@ -57,6 +58,7 @@ async function run(
     locals,
     cookies: { get: () => undefined, set: () => undefined },
     redirect: (location: string) => new Response(null, { status: 302, headers: { Location: location } }),
+    ...astro,
   };
   const response = await (onRequest as unknown as (c: unknown, n: () => Promise<Response>) => Promise<Response>)(
     context,
@@ -156,5 +158,58 @@ describe("onRequest as the error boundary", () => {
       step: "request.stream",
       name: "RangeError",
     });
+  });
+
+  it("puts the route template on the stream line, with a server island's name filled in", async () => {
+    withUser();
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new RangeError("render failed"));
+      },
+    });
+    const { response } = await run(
+      "/_server-islands/TonightContent?p=secret",
+      "GET",
+      () => Promise.resolve(new Response(body, { headers: { "content-type": "text/html" } })),
+      { routePattern: "/_server-islands/[name]", params: { name: "TonightContent" } },
+    );
+    await expect(response.text()).rejects.toThrow("render failed");
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: request.stream failed", {
+      step: "request.stream",
+      name: "RangeError",
+      route: "/_server-islands/TonightContent",
+    });
+    expect(logs.everything()).not.toMatch(/secret/);
+  });
+
+  it("logs one request.uncaught line with the route when next() throws, and rethrows the same error", async () => {
+    withUser();
+    const error = new TypeError("page failed");
+    await expect(
+      run("/log/3f2b", "GET", () => Promise.reject(error), { routePattern: "/log/[id]", params: { id: "3f2b" } }),
+    ).rejects.toBe(error);
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: request.uncaught failed", {
+      step: "request.uncaught",
+      name: "TypeError",
+      route: "/log/[id]",
+    });
+    expect(logs.everything()).not.toMatch(/3f2b|page failed/);
+  });
+
+  it("logs a resolved 5xx once as the safety net, except for the /500 page itself, and wraps no body that is not HTML", async () => {
+    withUser();
+    const failed = () =>
+      Promise.resolve(new Response("down", { status: 503, headers: { "content-type": "text/html" } }));
+    const { response } = await run("/tonight", "GET", failed, { routePattern: "/tonight" });
+    expect(response.status).toBe(503);
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: request.uncaught failed", {
+      step: "request.uncaught",
+      status: 503,
+      route: "/tonight",
+    });
+
+    logs.errors.mockClear();
+    await run("/500", "GET", failed, { routePattern: "/500" });
+    expect(logs.errors).not.toHaveBeenCalled();
   });
 });
