@@ -9,7 +9,7 @@ tags: [research, codebase, tonight, server-islands, middleware, forecast, engine
 status: complete
 last_updated: 2026-10-27
 last_updated_by: Claude Code (claude-opus-5-5)
-last_updated_note: "ast-grep verification of 25 structural claims (section 5); sections 2.2, 2.3, 2.4, 2.6, 2.8 and step 18 corrected in place"
+last_updated_note: "2026-10-27: rebased onto 2e028e5 (#245); addendum section 6, middleware anchors moved, 2.6 / 4.1 / 4.3 G4 G8 / V21 V22 corrected. Earlier: ast-grep verification of 25 claims (section 5)"
 ---
 
 # Research: the Tonight request flow, end to end
@@ -24,7 +24,7 @@ last_updated_note: "ast-grep verification of 25 structural claims (section 5); s
 
 How does one `GET /tonight` travel through the system and back? The path runs through `src/middleware.ts`, the page shell `src/pages/tonight.astro` and the `TonightContent` server island (`server:defer`, served at `/_server-islands/*`). It continues through `src/lib/tonight/island.ts`, `load.ts` and `build.ts` (the forecast, the engine, gear, the session plan and sky checks), produces the rendered verdict and tiles, and returns to the browser and the service worker's stored copy.
 
-This is the repo map's risk zone #1 (`context/map/repo-map.md:114-124`). Three parallel strands examined it:
+This is the repo map's risk zone #1 (`context/map/repo-map.md:115-125`). Three parallel strands examined it:
 1. an end-to-end trace;
 2. test gaps;
 3. blast radius (the static graph plus git co-change).
@@ -36,13 +36,18 @@ This document describes the current state only and changes no code.
 - **[I] inference**: reasoning from evidence;
 - **[U] unknown**: not observable statically, or not checked.
 
-**Scope of the snapshot.** All anchors are at `3104370`. `main` has moved since: PR #245 (stream-error-boundary, merged as `2e028e5`, archived `98ad923`) changes `src/middleware.ts` by +28 lines and adds `src/lib/observability/stream-guard.ts` [E: `git diff --stat 3104370 98ad923 -- src`]. The repo's `CLAUDE.md` on `main` already describes that guard. Middleware findings below are therefore about this snapshot, and section 2.6 notes where #245 changes them.
+**Scope of the snapshot.** The research was first written at `3104370`. On 2026-10-27 the branch was rebased onto `origin/main` at `2e028e5`, the merge of PR #245 (stream-error-boundary).
+- #245 changes 7 files outside `context/`: `src/middleware.ts`, `src/lib/observability/{log-failure,stream-guard}.ts` with their tests, and `CLAUDE.md` [E: `git diff --stat 3104370 2e028e5 -- . ':!context'`].
+- Every other anchor in this document is therefore unchanged at the new HEAD.
+- The `src/middleware.ts` anchors were moved to the new HEAD.
+- Section 6 (addendum) describes what #245 changes in the flow.
 
 ## Summary
 
 - **The flow is two HTTP requests, not one** [E].
   - The page shell (`tonight.astro`) renders an HTML skeleton and an encrypted island URL. A browser script then fetches `/_server-islands/TonightContent?e&p&s`, and that second request does all the data work.
-  - **Both requests run the middleware** and pay a Supabase Auth `getClaims` round trip (`middleware.ts:45`). Only the shell is gated by `PROTECTED_ROUTES`.
+  - **Both requests run the middleware** and pay a Supabase Auth `getClaims` round trip (`middleware.ts:47`). Only the shell is gated by `PROTECTED_ROUTES`.
+  - Since #245 the middleware is also both requests' error boundary: `request.uncaught` for a throw from `next()`, `request.stream` for a throw while the HTML body streams. Each line carries the route template (section 6).
   - The island therefore guards itself: `locals.user ? locals.supabase : null` (`island.ts:47`).
 - **Data assembly happens in one place.**
   - `loadTonight` (`load.ts:127-243`) runs five list reads in parallel. It then picks the site and telescope, computes one night date, overlaps the saved-plan read with `getForecast`, and calls `buildTonight` [E].
@@ -73,14 +78,18 @@ This document describes the current state only and changes no code.
 1. **Browser → service worker.**
    - When a worker controls the page, `GET /tonight` matches `storedPageOf(url)` (`src/sw.ts:704-706`, `src/lib/offline/copies.ts:170-178`).
    - It is served network-first, with a ~4 s timeout before a stored copy answers (`sw.ts:707-737`) [E].
-2. **Middleware** (`src/middleware.ts:19-68`):
-   - the client-error path bypasses everything (`:22-24`);
-   - theme, locale and sky mode come from cookies (`:27-33`), plus the e2e clock seam (`:36-39`);
-   - one per-request Supabase client goes on `locals.supabase` (`:41-43`);
-   - `await sessionUser(supabase)` sets `locals.user` (`:45`);
-   - a signed-in user on an auth entry page is redirected (`:49-51`);
-   - `isProtectedPath` sends a signed-out visitor to sign-in with `?next=` (`:53-60`; `/tonight` is in `src/lib/protected-routes.ts:5-15`);
-   - after `next()`, `Vary: Cookie, Accept-Language` is appended to any HTML response (`:62-67`) [E].
+2. **Middleware** (`src/middleware.ts:21-94`, anchors at `2e028e5`):
+   - the client-error path bypasses everything (`:24-26`);
+   - theme, locale and sky mode come from cookies (`:29-35`), plus the e2e clock seam (`:38-41`);
+   - one per-request Supabase client goes on `locals.supabase` (`:43-45`);
+   - `await sessionUser(supabase)` sets `locals.user` (`:47`);
+   - a signed-in user on an auth entry page is redirected (`:51-53`);
+   - `isProtectedPath` sends a signed-out visitor to sign-in with `?next=` (`:55-62`; `/tonight` is in `src/lib/protected-routes.ts:5-15`);
+   - **since #245:**
+     - `requestRoute(context.routePattern, context.params)` gives the route template (`:65`);
+     - `next()` runs inside a `try` that logs `request.uncaught` and rethrows (`:68-74`);
+     - a resolved status ≥ 500 other than `/500` logs `request.uncaught` with the status (`:77-79`);
+   - `Vary: Cookie, Accept-Language` is appended to any HTML response (`:81-82`), and since #245 its body is re-wrapped in `guardStream(…, "request.stream", { route })` (`:85-91`) [E].
 3. **Page shell** (`src/pages/tonight.astro:16-39`).
    - It resolves the page notices from `?logged`, `?skyChecked` and `?error` to catalogue text, because "inside the server island … Astro.url is the island's own request" (`:19-34`).
    - It reads `?site` and `?telescope` or the remembered cookies (`requestedGear`, `:37`; `requested-gear.ts:11-28`; the cookie is not written for `?night=next`, `:16`) and `?night` (`:39`) [E].
@@ -194,7 +203,8 @@ sequenceDiagram
   SW->>M: network first (~4 s, then stored copy)
   M->>DB: sessionUser (Auth getClaims)
   M->>P: next() (gated: /tonight is protected)
-  P-->>SW: shell + skeleton + preload link (props encrypted in URL)
+  P-->>M: shell + skeleton + preload link (props encrypted in URL)
+  M-->>SW: + Vary, body wrapped by guardStream
   SW-->>B: shell (recordShell keeps it pending)
   B->>SW: GET /_server-islands/TonightContent?e&p&s
   SW->>M: network
@@ -220,7 +230,8 @@ sequenceDiagram
   BT-->>L: TonightView
   L-->>TC: TonightLoad
   TC--)DB: waitUntil: rpc record_sky_verdict (night = tonight only)
-  TC-->>SW: island HTML (+ data-offline-copy)
+  TC-->>M: island HTML (+ data-offline-copy), streamed
+  M-->>SW: + Vary, body wrapped by guardStream (request.stream on a mid-body throw; request.uncaught if next() throws)
   SW-->>B: island (commitIsland stores the pair)
   B->>B: swap skeleton, hydrate TonightSkyView
   SW->>M: background GET /tonight?site=…&night=next (storeNextCopy)
@@ -278,7 +289,7 @@ Ordered by how much each one costs the next change. Each item says what is evide
 - **[E, ast-grep V9; added by verification]** Every one of the six focused islands also calls `getAccountPlan`: `EventsPageContent:37`, `MoonPageContent:37`, `NightsPageContent:36`, `PlanetsPageContent:38`, `TargetsPageContent:60` and `PlanPageContent` via `accountPlanForCopy:57`. The shell's `Topbar.astro:11` reads the plan on every signed-in page.
 - **[I]** The memo is keyed by `locals`, which is per request. A Tonight view is therefore two plan queries: one in the shell (Topbar) and one in the island.
 - **[E] Docs drift.** Three places say `/_server-islands/*` "is not behind the middleware": `context/foundation/lessons.md:71`, `CLAUDE.md` (finder and session-plan sections) and `src/components/tonight/PlanPageContent.astro:9`.
-  - The Astro source says the middleware runs and only the gate is missing. The repo map was already corrected (`3104370`, `repo-map.md:146`).
+  - The Astro source says the middleware runs and only the gate is missing. The repo map was already corrected (`3104370`, `repo-map.md:147`).
   - `island.ts:42-44` has it right ("outside PROTECTED_ROUTES").
 - **[I]** The risk is a new island that forgets its guard. The rule lives in a lesson and in smoke steps, not in code that a new island inherits.
 
@@ -317,7 +328,11 @@ Ordered by how much each one costs the next change. Each item says what is evide
   - The plan page reads it (`PlanPageContent.astro:77`).
 - **[E]** The island returns 200 with an empty body when signed out (`:134`).
 - **[I]** This is consistent and privacy-safe, but which block is missing from a page is visible only in Workers Logs.
-- **[E] `main` delta.** At this snapshot the middleware has no boundary for an exception out of `next()` or a stream that errors mid-body. PR #245 on `main` adds one (`stream-guard.ts`, `request.uncaught` and `request.stream` lines, per `CLAUDE.md` on `main`).
+- **[E] Unforeseen throws: corrected after #245.** At `3104370` a throw nobody caught had no line of its own:
+  - a child component of the island throwing after streaming had started gave a blank 200;
+  - the island's own frontmatter throwing gave only Astro's unstructured `[ERROR]`.
+  
+  Since #245 the middleware logs both cases (`middleware.ts:68-74, :85-91`; section 6), with the route template `/_server-islands/TonightContent`. The user-facing result is unchanged by owner decision D1 (`context/changes/stream-error-boundary/plan.md:47`): still a blank 200, or a 500 that leaves the skeleton. A visible fallback is issue #190, still open.
 
 ### 2.7 An incomplete forecast can be served as fresh for an hour
 
@@ -332,7 +347,7 @@ Ordered by how much each one costs the next change. Each item says what is evide
   
   `TonightContent` has its own variant (`addSite` / `addTelescope`, `:123-124`).
 - **[E, ast-grep V13] A write inside a GET.** Among `.astro` pages and islands, the only database write is `recordSkyVerdict` at `TonightContent.astro:114`. No `.astro` frontmatter calls `insert`, `update`, `upsert`, `delete` or `rpc` directly. GET API routes (`.ts`) were not in scope. `record_sky_verdict` runs on every dashboard island render for tonight. It is safe because the RPC is idempotent per (user, site, night) (`store.ts:14`). Every extra island fetch costs one RPC, for example the worker's late re-fetch (`sw.ts:666-671`).
-- **[E] The shell comment overstates its independence.** `tonight.astro:44` says the shell "responds without waiting on Supabase", but `middleware.ts:45` awaits Auth `getClaims` before any HTML [I: one Auth round trip is on the critical path of both requests].
+- **[E] The shell comment overstates its independence.** `tonight.astro:44` says the shell "responds without waiting on Supabase", but `middleware.ts:47` awaits Auth `getClaims` before any HTML [I: one Auth round trip is on the critical path of both requests].
 - **[E] Unguarded duplicate page lists.**
   - `src/pages/offline.astro:19-30` (titles) and `tests/e2e/tonight-phone.spec.ts:41-49` (a literal `TONIGHT_PAGES`) are not compared with `copies.ts:15-23` by any test found.
   - `TONIGHT_NAV` is compared (`navigation.test.ts:9-10`).
@@ -354,7 +369,7 @@ Counted as distinct importing files, with `rg` on the import specifiers plus rel
 | `TonightView` type | 12 | 7 | plus field-level readers that never import the type: the 8 islands read `load.view.*` through the return value |
 
 - **[I]** The import graph undercounts a `TonightView` field change: `astro check` reaches all 8 islands, `rg` on the type name does not.
-- **[E]** `middleware.ts` imports nothing from `src/lib/tonight` (`:1-16`). It reaches the flow only through `Astro.locals` (`src/env.d.ts`) and `PROTECTED_ROUTES`. This runtime wiring is invisible to the graph, as the map's `graph_coverage` already says.
+- **[E]** `middleware.ts` imports nothing from `src/lib/tonight` (`:1-18`; since #245 also `log-failure` and `stream-guard`). It reaches the flow only through `Astro.locals` (`src/env.d.ts`) and `PROTECTED_ROUTES`. This runtime wiring is invisible to the graph, as the map's `graph_coverage` already says.
 
 ### 3.2 Static fan-out
 
@@ -434,13 +449,21 @@ Static analysis only: no coverage provider is installed (`@vitest/coverage-*` ab
   - the single night date (`:93-106`);
   - the build throw (`:194-205`);
   - the forecast outage (`:86-91`).
-- **Middleware** (`src/lib/auth/middleware.test.ts`, 4 `it`): client-error bypass, protected redirects, Auth down, `Vary`.
+- **Middleware** (`src/lib/auth/middleware.test.ts`, 8 `it` at `2e028e5`, was 4):
+  - client-error bypass, protected redirects, Auth down, `Vary`;
+  - since #245, the boundary:
+    - one `request.stream` line on a mid-stream failure, keeping the status and `Vary` (`:143`);
+    - the island's name in the route (`:163`);
+    - one `request.uncaught` line plus a rethrow when `next()` throws (`:185`);
+    - the resolved-5xx safety net and its `/500` exception (`:199`).
+  
+  `guardStream` has its own 5 `it` (`src/lib/observability/stream-guard.test.ts:44-105`: one line, a clean end, and three cancel cases that log nothing). `requestRoute` and the `route` field are tested in `log-failure.test.ts:406-…`.
 - **Offline pure rules**: `copies.test.ts`, about 45 `it`.
 - **The RPC's semantics**: `tests/db/sky-checks.test.ts:94-165`.
 
 ### 4.2 Verdict on the map's claim
 
-The map says: "The island loaders (`island.ts`, `load.ts`) have no unit test reaching them and rely on e2e and smoke" (`repo-map.md:120`, from `evidence/3-structure.md:118`).
+The map says: "The island loaders (`island.ts`, `load.ts`) have no unit test reaching them and rely on e2e and smoke" (`repo-map.md:121` before the 2026-10-27 correction, from `evidence/3-structure.md:118`).
 
 **Refined.**
 - For `load.ts` it is **refuted** [E]: `load.test.ts` runs `loadTonight` for real.
@@ -460,6 +483,10 @@ The map says: "The island loaders (`island.ts`, `load.ts`) have no unit test rea
 4. **G4: the failure UI is never rendered.**
    - The loader's error keys are unit-tested.
    - Their rendering is not: `TonightContent.astro:220-225, :268, :273` and the static band after a sky-view failure (`:159-188`; `data-sky-mode-frame="static"` has 0 hits in `tests/e2e`). There is no component render harness in the repo.
+   - **Since #245:**
+     - an unforeseen throw in the island is logged, unit-tested at the middleware level (section 4.1) and proven at runtime once by manual probes (P10b, P10a-island, P10c-island in `context/changes/stream-error-boundary/implementation-notes.md:14-39`, with route `/_server-islands/TonightContent`);
+     - no automated e2e or smoke step reproduces it [I from the plan's runtime-proof phase; not re-run here];
+     - what the user sees on such a throw (a blank 200 or the skeleton left in place) is still untested and unchanged (#190 open).
 5. **G5: forecast degradation is unit-only.**
    - The e2e fixture is all-clear (`tests/e2e/forecast-fixture.mjs`).
    - The smoke step that claims "renders even when the forecast is unreachable" asserts only the shell's 200 (`smoke.mjs:438-439`); the island is not fetched there.
@@ -471,7 +498,9 @@ The map says: "The island loaders (`island.ts`, `load.ts`) have no unit test rea
    - `readPlanEditsFor` (strong smoke coverage of its gate);
    - `pickTonightNotice` (`notice.ts:14`), `selectorKind` (`gear-choice.ts:32`), `openSkyChecksSince` (`pending.ts:25`);
    - `finderHref` (`load.ts:268`), `islandDefer`;
-   - the middleware's `supabase === null` branch and its non-HTML `Vary` case.
+   - the middleware's `supabase === null` branch and its non-HTML case (no `Vary`, no stream guard). Still true at `2e028e5`:
+     - every fake response in `middleware.test.ts` is `text/html` (`:48, :151, :173, :202`), although the title at `:199` says "wraps no body that is not HTML";
+     - no test runs `onRequest` with a null client.
 
 ---
 
@@ -507,8 +536,8 @@ Lesson m4l3-2. Every structural claim above (call-site counts, "only here", "alw
 | V18 | One unit test imports `loadTonight` (4.2) | `import { $$$A } from "$M"`, filtered by name | `island.ts:8` and `load.test.ts:9` only; `load.test.ts` has 3 `vi.mock` calls (`:28, :38, :44`), the stores and the build hook | **confirmed** |
 | V19 | Fan-in: `island.ts` 8, `load.ts` 10 (4 tests), `build.ts` 24 (5 tests), `TonightView` 12 (3.1) | `import $$$ from "$M"` / `import { $$$A }` / `import type { $$$A }` | 8 / 10 (4) / 24 (5) / 12 (`import { … }` alone finds 6; with `import type { … }`, 12; `rg` multiline also 12) | **confirmed**. Pattern lesson: `import type` needs its own pattern |
 | V20 | 13 `tonight.*` steps in `FAILURE_STEPS` (3.5) | `"$S"` string literals in `log-failure.ts` | 13; `rg -c '"tonight\.'` gives 13 | **confirmed** |
-| V21 | `middleware.ts` imports nothing from `src/lib/tonight` (3.1) | `import $$$ from "$M"` in `middleware.ts` | 9 specifiers, none under `@/lib/tonight` | **confirmed** |
-| V22 | `/_server-islands` is not in `PROTECTED_ROUTES`; the middleware awaits `sessionUser` once (1.1 steps 2, 6) | `"$S"` in `protected-routes.ts`; `await sessionUser($$$)` | 9 routes, no `_server-islands` (`rg`: 0 hits); `await sessionUser` at `middleware.ts:45` only in production | **confirmed** |
+| V21 | `middleware.ts` imports nothing from `src/lib/tonight` (3.1) | `import $$$ from "$M"` in `middleware.ts` | 9 specifiers at `3104370`; 11 at `2e028e5` (adds `log-failure`, `stream-guard`); none under `@/lib/tonight` | **confirmed** (re-run after #245) |
+| V22 | `/_server-islands` is not in `PROTECTED_ROUTES`; the middleware awaits `sessionUser` once (1.1 steps 2, 6) | `"$S"` in `protected-routes.ts`; `await sessionUser($$$)` | 9 routes, no `_server-islands` (`rg`: 0 hits); `await sessionUser` only at `middleware.ts:47` in production (`:45` before #245) | **confirmed** (re-run after #245) |
 | V23 | `recordableVerdict` has 1 of 3 branches tested (4.3 G3) | `recordableVerdict($$$)` | one test call, `record.test.ts:10` (the no-dark-start case); production `TonightContent:112` | **confirmed** |
 | V24 | 6 message-key constants in `load.ts` (3.5) | `const $N: MessageKey = $V` | 6 at `load.ts:33-38` | **confirmed** |
 | V25 | 8 `server:defer` islands, each renders `OfflineCopy` (1.3) | none (template, no Astro grammar) | `rg "server:defer" src/pages`: 8; `rg -l "<OfflineCopy"`: the 8 island components (7 Tonight + `FinderContent`) | **confirmed (rg only)** |
@@ -525,10 +554,56 @@ Three pattern pitfalls surfaced. In each, a first zero or undercount was a patte
 
 ---
 
+## 6. Addendum, 2026-10-27: after #245 (stream-error-boundary)
+
+The branch was rebased onto `origin/main` at `2e028e5` (merge of PR #245, closing issue #244 on 2026-10-27). All anchors below are at `2e028e5`; the only flow files #245 changes are listed in Scope of the snapshot.
+
+**What changed in steps 1-2 of the flow (both requests)** [E]:
+- **Route template.** After the gate, the middleware computes `route = requestRoute(context.routePattern, context.params)` (`src/middleware.ts:65`).
+  - `requestRoute` (`src/lib/observability/log-failure.ts:326-335`) returns Astro's route pattern only when it has a template shape (`isRouteTemplate`, `:305-324`; segments `:284`), so a pathname, id or coordinate can never pass.
+  - For the island route `/_server-islands/[name]` (Astro's own constant, `node_modules/astro/dist/core/server-islands/endpoint.js:11`) it fills in the island's name. The Tonight island's lines therefore read `route: "/_server-islands/TonightContent"`, and the shell's `route: "/tonight"`.
+- **`next()` is wrapped** (`middleware.ts:68-74`): a throw logs one `request.uncaught` line with `name` and `route`, then rethrows, so Astro still logs its own `[ERROR]` and renders the 500.
+- **Safety net** (`middleware.ts:77-79`): a resolved status ≥ 500 logs `request.uncaught` with `status` and `route`, except on `/500` itself.
+- **The HTML body is re-wrapped** after `Vary` is appended (`middleware.ts:81-91`): `guardStream(response.body, "request.stream", { route })`.
+  - The guard reads the source only when the client reads (`highWaterMark: 0`, `stream-guard.ts:48`).
+  - On a rejected source read it logs one `request.stream` line and errors the stream with the same value (`:24-32`).
+  - A client cancel logs nothing (`:34-36, :43-46`).
+- **New steps.** `request.stream` and `request.uncaught` are the two new `FAILURE_STEPS` (`log-failure.ts:69-70`). A line may now carry `route` beside `step`, `name`, `code` and `status` (`FailureExtra`, `log-failure.ts` header and `fieldsOf`).
+
+**The error path through the Tonight flow, after #245.** Runtime behaviour is from the change's probe run (`context/changes/stream-error-boundary/implementation-notes.md:14-39`); the mechanism is from the code above.
+
+| Where the throw happens | HTTP result | Line(s) | What the user sees |
+|---|---|---|---|
+| A child component of `TonightContent` (e.g. `VerdictCard`, `TonightTiles`), after streaming began | 200, body cut | one `request.stream`, `route: /_server-islands/TonightContent` (probes P10a-island, P10c-island) | the skeleton is replaced by an empty or partial island (Astro swaps on any 200 `text/html`, `server-islands.js:188`) |
+| `TonightContent.astro`'s own frontmatter, outside `loadTonight`'s `try` | 500 | one `request.uncaught` with the same route (P10b), plus Astro's `[ERROR]` | the skeleton stays: the swap is skipped for a non-200 (`server-islands.js:188`) |
+| Inside `loadTonight` / `buildTonight` / `getForecast` | 200, full island | unchanged: the foreseen `tonight.*` / `forecast.*` step (sections 1.1 and 2.6) | the degraded view (error notice, dropped block, marginal verdict) |
+| The shell's own frontmatter or a shell child component | 500 / 200 cut | `request.uncaught` / `request.stream`, `route: /tonight` | the same pattern, on the page |
+| Middleware code before `next()` (preferences, `createClient`, `sessionUser`) | 500 | **no** `request.*` line by design (`stream-error-boundary/plan.md:48`); Astro's `[ERROR]` only; an Auth failure still leaves `auth.claims` | Astro's 500 |
+
+**Statements in this research corrected by #245:**
+- 2.6: "no boundary" is replaced by the logged-but-unchanged behaviour above.
+- 4.1: the middleware tests went from 4 to 8 `it`.
+- 4.3 G4: an unforeseen island throw is now logged; the user-facing fallback is still untested and still #190.
+- 4.3 G8: the non-HTML and null-client branches are still untested; re-checked at `2e028e5`.
+- All `middleware.ts` anchors are moved.
+- The verification rows V21 and V22 were re-run.
+- Unchanged by #245: the island trust boundary (2.3, a gate is still missing for `/_server-islands/*`), every loader, forecast and offline finding, and the blast-radius numbers (computed before #245; #245 touches no Tonight file).
+
+**ast-grep re-check at `2e028e5`** (V26):
+- `logFailure("request.uncaught", $$$)` matches `middleware.ts:72, :78`.
+- `guardStream($S, "request.stream", $$$)` matches `middleware.ts:86`.
+- `requestRoute($$$)` matches `middleware.ts:65`; production only, tests excluded.
+- `logFailure("request.stream", $$$)` gives **0**. This zero is real, not a bad pattern: the step reaches `logFailure` as the variable `step` inside `guardStream` (`stream-guard.ts:29`). `rg '"request\.(stream|uncaught)"' src --glob '!*.test.ts'` finds only `middleware.ts:72, :78, :86` and `log-failure.ts:69-70`.
+
+---
+
 ## Code References
 
-- `src/middleware.ts:41-45` — per-request Supabase client and `sessionUser` (both requests)
-- `src/middleware.ts:53-60` — the only gate; `/_server-islands` is not in `src/lib/protected-routes.ts:5-15`
+- `src/middleware.ts:43-47` — per-request Supabase client and `sessionUser` (both requests)
+- `src/middleware.ts:55-62` — the only gate; `/_server-islands` is not in `src/lib/protected-routes.ts:5-15`
+- `src/middleware.ts:65-91` — since #245: `requestRoute`, the `request.uncaught` catch and 5xx safety net, the `guardStream` wrap
+- `src/lib/observability/stream-guard.ts:11-50` — `guardStream`: one `logFailure` on a rejected source read, none on cancel
+- `src/lib/observability/log-failure.ts:69-70, :283-340` — the `request.*` steps, `isRouteTemplate`, `requestRoute`
 - `src/pages/tonight.astro:43-47` — `<TonightContent server:defer …>` with `TonightSkeleton` fallback
 - `node_modules/astro/dist/runtime/server/render/server-islands.js:132-155` — encrypted island URL and preload link
 - `src/lib/tonight/island.ts:46-71` — `loadTonightFor`: self-guard, Worker wiring, option copy
