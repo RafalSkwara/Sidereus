@@ -2,6 +2,10 @@
 
 What Sidereus looks like now, and what the next session should do. Read this first. The sections below the first one are older context, and their "next steps" are superseded.
 
+## Update 2026-10-27 (stream-error-boundary, #244)
+
+**Shipped:** a throw after Astro starts streaming now leaves a line: PR #245 merged and deployed (main `2e028e5`), archived in `context/archive/2026-10-27-stream-error-boundary/`. The middleware leaves one `request.uncaught` line for a throw out of `next()` and one `request.stream` line for a body that errors while read, both with a `route` template. **Owner post-deploy checks** (archived plan rows 2.8 and 2.9, left unchecked on purpose): a Workers Logs search for `sidereus: request.` over the first day shows no client-disconnect noise; the first real `request.stream` or `request.uncaught` line appears as an Issue with a readable `route`.
+
 ## Update 2026-10-26 (M-4 closed and cleaned up)
 
 **M-4 is closed:** #236 (sky-check-record-cause archive) and #237 (M-4 close-out) merged 2026-10-26. No M-5 is open; the owner decides later (about the end of November, after ESA). The worktrees `archive-error-visibility` and `sky-check-record` and their local branches are removed.

@@ -1,10 +1,10 @@
 ---
 change_id: stream-error-boundary
 title: Log throws that happen after Astro starts streaming a page or island
-status: implemented
+status: archived
 created: 2026-10-27
 updated: 2026-10-27
-archived_at: null
+archived_at: 2026-10-27T12:31:26Z
 ---
 
 ## Notes
