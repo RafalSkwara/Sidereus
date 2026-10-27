@@ -277,13 +277,13 @@ None. No schema, no data, no configuration change.
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm test`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 Production build succeeds: `npm run build`
-- [x] 2.5 The probe suite after the change shows one `request.stream failed` line per child probe, exactly one `request.uncaught failed` line for P1, P3 and P10b, and none for P0
-- [x] 2.6 Smoke passes against a local production preview and local Supabase, run the way CI does
-- [x] 2.7 The whole e2e suite passes the same way
+- [x] 2.1 Unit tests pass: `npm test` — dd9e181
+- [x] 2.2 Type check passes: `npx astro check` — dd9e181
+- [x] 2.3 Lint passes: `npm run lint` — dd9e181
+- [x] 2.4 Production build succeeds: `npm run build` — dd9e181
+- [x] 2.5 The probe suite after the change shows one `request.stream failed` line per child probe, exactly one `request.uncaught failed` line for P1, P3 and P10b, and none for P0 — dd9e181
+- [x] 2.6 Smoke passes against a local production preview and local Supabase, run the way CI does — dd9e181
+- [x] 2.7 The whole e2e suite passes the same way — dd9e181
 
 #### Manual
 
