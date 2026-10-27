@@ -9,6 +9,7 @@ tags: [research, codebase, tonight, server-islands, middleware, forecast, engine
 status: complete
 last_updated: 2026-10-27
 last_updated_by: Claude Code (claude-opus-5-5)
+last_updated_note: "ast-grep verification of 25 structural claims (section 5); sections 2.2, 2.3, 2.4, 2.6, 2.8 and step 18 corrected in place"
 ---
 
 # Research: the Tonight request flow, end to end
@@ -50,12 +51,12 @@ This document describes the current state only and changes no code.
   1. The `buildTonight` god function.
   2. Option flags declared and copied by hand across three layers.
   3. The island's auth and plan guards are a convention, not a rule.
-  4. The `night: "next"` side-effect rule is spread over five files.
+  4. The `night: "next"` side-effect rule is spread over six server files.
   5. The offline pairing depends on Astro's internal preload-link markup.
   6. An incomplete forecast can be cached and served as fresh for up to an hour.
 - **Test gaps.**
   - Strong: `getForecast` and `buildTonight` have strong unit tests. `loadTonight` has a real unit test (`load.test.ts`), which refutes the map's "no unit test reaches the island loaders" for `load.ts`.
-  - Missing: `island.ts` is never executed by a unit test. `TonightContent.astro` has no render test. The dashboard island is never replayed signed out. The `night: "next"` isolation (no sky check, no saved-plan read) and the one DB write from a GET (`record_sky_verdict`) have no asserting test.
+  - Missing: `island.ts` is never executed by a unit test. `TonightContent.astro` has no render test. The dashboard island is never replayed signed out. The `night: "next"` isolation (no sky check, no saved-plan read) and `record_sky_verdict`, the only DB write among `.astro` pages and islands, have no asserting test.
 - **Blast radius.**
   - `TonightView` changes reach 19 production importers of `build.ts`, plus the 8 islands that read `load.view` untyped [E].
   - `build.ts` co-changes with `build.test.ts` (36 of 49 commits) and with the en/pl catalogues (36 and 37 of 49), more than with any production module [E].
@@ -154,7 +155,7 @@ This document describes the current state only and changes no code.
 
 **F. Rendering and the side effect**
 
-18. **The one database write from a GET.**
+18. **The only database write among `.astro` pages and islands** (ast-grep V13).
     - `recordableVerdict(view)` (`src/lib/sky-checks/record.ts:19-30`) is computed only when `supabase && night === "tonight"` (`TonightContent.astro:112`).
     - `islandDefer(locals)(recordSkyVerdict(...))` then calls the `record_sky_verdict` RPC after the response (`:113-115`; `src/lib/sky-checks/store.ts:74-84`; migration `supabase/migrations/20261003120000_sky_checks.sql:73`) [E].
 19. **Render** (`TonightContent.astro:134-278`): nothing at all when `load` is `null` (`:134`). Otherwise, in order:
@@ -250,11 +251,15 @@ Ordered by how much each one costs the next change. Each item says what is evide
 
 ### 2.2 Option flags are declared three times and copied twice by hand
 
-- **[E]** The same options exist in three places:
-  - `TonightIslandLoad` (`island.ts:10-32`);
-  - `LoadTonightInput` (`load.ts:46-84`);
-  - `buildTonight`'s options type (`build.ts:693-718`).
-- **[E]** They are copied field by field twice: `island.ts:51-70` and `load.ts:206-216`. The flags are `limit`, `withSkyView`, `withSessionPlan`, `withSkyEvents`, `withPlanCandidates`, `withReachable` and `night`, plus `readPlanEdits`. `nightDate` and `planEdits` are added by `load.ts`.
+- **[E, ast-grep V7]** The same options exist in three places:
+  - `TonightIslandLoad` (`island.ts:10-32`, 11 fields);
+  - `LoadTonightInput` (`load.ts:46-84`, 18 fields: those 11 plus the 7 infrastructure inputs `supabase`, `locale`, `now`, `cache`, `forecastBaseUrl`, `defer` and `fetchFn`);
+  - `buildTonight`'s inline options type (`build.ts:692-702`, 9 fields).
+- **[E, ast-grep V7]** They are copied field by field twice:
+  - `island.ts:51-70` builds a 17-property object, 11 of them forwarded one by one from `options`;
+  - `load.ts:206-216` builds a 9-property object, 7 forwarded plus the computed `nightDate` and `planEdits`.
+  
+  The flags are `limit`, `withSkyView`, `withSessionPlan`, `withSkyEvents`, `withPlanCandidates`, `withReachable` and `night`, plus `readPlanEdits`.
 - **[E]** The 8 call sites pick different combinations (section 1.3), and no type names a page's combination.
 - **[I]** A new optional block costs three type edits plus two copy edits. A flag added to one layer and forgotten in the copy compiles fine, because every flag is optional, and is silently dropped.
 
@@ -264,26 +269,30 @@ Ordered by how much each one costs the next change. Each item says what is evide
   - `island.ts:47` (user);
   - `session-plans/read.ts:15` (user and full plan);
   - `finder/load.ts:130` (`requireFullPlan`).
-- **[E]** The account plan is read up to three times per dashboard island:
+- **[E, ast-grep V9]** The account plan is asked for at three call sites in one dashboard island request:
   - `TonightContent.astro:82`;
   - `read.ts:15`;
   - `OfflineCopy.astro:41` (`accountPlanForCopy`).
   
   Only the `WeakMap` memo keeps that to one query (`account-plan/index.ts:33`).
+- **[E, ast-grep V9; added by verification]** Every one of the six focused islands also calls `getAccountPlan`: `EventsPageContent:37`, `MoonPageContent:37`, `NightsPageContent:36`, `PlanetsPageContent:38`, `TargetsPageContent:60` and `PlanPageContent` via `accountPlanForCopy:57`. The shell's `Topbar.astro:11` reads the plan on every signed-in page.
+- **[I]** The memo is keyed by `locals`, which is per request. A Tonight view is therefore two plan queries: one in the shell (Topbar) and one in the island.
 - **[E] Docs drift.** Three places say `/_server-islands/*` "is not behind the middleware": `context/foundation/lessons.md:71`, `CLAUDE.md` (finder and session-plan sections) and `src/components/tonight/PlanPageContent.astro:9`.
   - The Astro source says the middleware runs and only the gate is missing. The repo map was already corrected (`3104370`, `repo-map.md:146`).
   - `island.ts:42-44` has it right ("outside PROTECTED_ROUTES").
 - **[I]** The risk is a new island that forgets its guard. The rule lives in a lesson and in smoke steps, not in code that a new island inherits.
 
-### 2.4 The `night: "next"` rule is spread over five files
+### 2.4 The `night: "next"` rule is spread over six server files
 
-- **[E]** The rule is that the background copy records no sky check, reads no sky checks and reads no saved plan. It is enforced in five files:
+- **[E, ast-grep V12; corrected from "five files"]** The rule is that the background copy records no sky check, reads no sky checks and reads no saved plan. It is enforced by `night` comparisons in six server files:
   - `island.ts:62` (`withSkyChecks` forced off);
   - `load.ts:177, :180` (date + 1, no plan read);
-  - `build.ts:758-768, :1282, :1284, :1413`;
+  - `build.ts:760, :766, :1282, :1284`;
   - `TonightContent.astro:112, :117` (no record, no question);
-  - `requested-gear.ts:16` (no cookie);
-  - and it is triggered from `sw.ts:471-518`.
+  - `PlanPageContent.astro:66, :91` (no candidates, no reset);
+  - `requested-gear.ts:16, :47` (no cookie).
+  
+  It is triggered and read on the worker side in `sw.ts:458, :492, :564`, `copies.ts:287, :438, :523, :608` and `page-state.ts:33`. The earlier anchor `build.ts:1413` (`heldEdits`) is not a `night` check.
 - **[I]** A new side-effecting feature must remember to check `night` in the right layer. Section 4 (G1) shows that none of these guards is asserted end to end.
 
 ### 2.5 The offline pairing parses Astro's internal markup
@@ -303,7 +312,9 @@ Ordered by how much each one costs the next change. Each item says what is evide
   - the build (`:219-222`);
   - each optional block (section 1.1, step 17);
   - the forecast outage (`service.ts:237-241`).
-- **[E]** `planEditsError` is set by `load.ts:185` but `TonightContent.astro:94-107` never reads it, by design: the dashboard keeps the suggested plan (comment at `:7-9`).
+- **[E, ast-grep V14]** `planEditsError` is set by `load.ts:185`.
+  - `TonightContent.astro` never reads it, by design: the dashboard keeps the suggested plan (comment at `:7-9`). It appears only as `null` in the empty load at `:79`.
+  - The plan page reads it (`PlanPageContent.astro:77`).
 - **[E]** The island returns 200 with an empty body when signed out (`:134`).
 - **[I]** This is consistent and privacy-safe, but which block is missing from a page is visible only in Workers Logs.
 - **[E] `main` delta.** At this snapshot the middleware has no boundary for an exception out of `next()` or a stream that errors mid-body. PR #245 on `main` adds one (`stream-guard.ts`, `request.uncaught` and `request.stream` lines, per `CLAUDE.md` on `main`).
@@ -315,8 +326,12 @@ Ordered by how much each one costs the next change. Each item says what is evide
 
 ### 2.8 Smaller items
 
-- **[E] Duplicated "no gear" test.** The expression `load.needsSetup || (!sitesError && !site) || (!telescopesError && !telescope)` appears in six `*PageContent.astro` islands and in `finder/load.ts:150`. See the ast-grep verification for the exact count.
-- **[E] A write inside a GET.** `record_sky_verdict` runs on every dashboard island render for tonight. It is safe because the RPC is idempotent per (user, site, night) (`store.ts:14`). Every extra island fetch costs one RPC, for example the worker's late re-fetch (`sw.ts:666-671`).
+- **[E, ast-grep V11] Duplicated "no gear" test.** The expression `load.needsSetup || (!sitesError && !site) || (!telescopesError && !telescope)` appears at exactly 7 sites:
+  - six `*PageContent.astro` islands: `Events:47`, `Moon:46`, `Nights:45`, `Planets:47`, `Plan:75`, `Targets:70`;
+  - `finder/load.ts:150`.
+  
+  `TonightContent` has its own variant (`addSite` / `addTelescope`, `:123-124`).
+- **[E, ast-grep V13] A write inside a GET.** Among `.astro` pages and islands, the only database write is `recordSkyVerdict` at `TonightContent.astro:114`. No `.astro` frontmatter calls `insert`, `update`, `upsert`, `delete` or `rpc` directly. GET API routes (`.ts`) were not in scope. `record_sky_verdict` runs on every dashboard island render for tonight. It is safe because the RPC is idempotent per (user, site, night) (`store.ts:14`). Every extra island fetch costs one RPC, for example the worker's late re-fetch (`sw.ts:666-671`).
 - **[E] The shell comment overstates its independence.** `tonight.astro:44` says the shell "responds without waiting on Supabase", but `middleware.ts:45` awaits Auth `getClaims` before any HTML [I: one Auth round trip is on the critical path of both requests].
 - **[E] Unguarded duplicate page lists.**
   - `src/pages/offline.astro:19-30` (titles) and `tests/e2e/tonight-phone.spec.ts:41-49` (a literal `TONIGHT_PAGES`) are not compared with `copies.ts:15-23` by any test found.
@@ -457,6 +472,56 @@ The map says: "The island loaders (`island.ts`, `load.ts`) have no unit test rea
    - `pickTonightNotice` (`notice.ts:14`), `selectorKind` (`gear-choice.ts:32`), `openSkyChecksSince` (`pending.ts:25`);
    - `finderHref` (`load.ts:268`), `islandDefer`;
    - the middleware's `supabase === null` branch and its non-HTML `Vary` case.
+
+---
+
+## 5. Verification of structural claims (ast-grep)
+
+Lesson m4l3-2. Every structural claim above (call-site counts, "only here", "always via X", and repeated call shapes) was re-checked with **ast-grep 0.51.0**. Every zero was backed with plain `rg`, to tell a real absence from a bad pattern. Run on `3104370`, 2026-10-27.
+
+**Method and tool limits.**
+- **Astro.** ast-grep has no Astro grammar. Each `.astro` file's frontmatter was therefore mirrored into a `.ts` file with the same line numbers: the fences were blanked and the template dropped (110 files; `evidence/extract-fm.sh`, run as `extract-fm.sh $SP/astro-fm $(git ls-files "src/**/*.astro")`; queries ran through `evidence/sg.sh`). Matches were mapped back to the `.astro` path.
+- **Template-only claims.** `server:defer` and `<OfflineCopy>` live outside the frontmatter, so they were checked with `rg` only.
+- **Call counts.** A count is distinct `file:line` pairs of the pattern's match.
+- **Patterns** use `-l ts`; tests are included unless the claim says "production".
+
+| # | Claim (section) | ast-grep pattern | Result | Verdict |
+|---|---|---|---|---|
+| V1 | `loadTonightFor` has 8 call sites, all islands (1.3) | `loadTonightFor($$$)` | 8: `TonightContent:83`, `Targets:62`, `Plan:60`, `Events:39`, `Nights:38`, `Planets:40`, `Moon:39` (all `*PageContent.astro`), `finder/load.ts:138` | **confirmed** |
+| V2 | `loadTonight` has one production caller (1.3) | `loadTonight($$$)` | `island.ts:51` + the test helper `load.test.ts:66` | **confirmed** |
+| V3 | `buildTonight` has 3 production runtime callers (1.3) | `buildTonight($$$)` | 47 call lines: production `load.ts:203`, `plan-samples.ts:81`, `design.astro:629`; the other 44 in 5 test files | **confirmed** |
+| V4 | `buildTonight` has six block-level `try/catch` (2.1) | `try { $$$ } catch ($E) { $$$ }` in `build.ts` | 7: `:904, :923, :985, :988, :1089, :1186, :1428`; `:988` is nested in `:985` | **refined** (anchors corrected: six + one nested) |
+| V5 | 7 `logFailure` sites in `build.ts`, 3 in `load.ts` (1.1 step 17, 2.6) | `logFailure($$$)` | `build.ts:916, 967, 1019, 1067, 1178, 1419, 1441`; `load.ts:122, 184, 220` | **confirmed** |
+| V6 | `loadTonight` reads 5 lists in one `Promise.all`, each via `load()` except the optional sky checks' empty branch (1.1 step 9) | `load($STEP, $$$)`; `await Promise.all([$$$E])` | 5 `load(` calls at `load.ts:141-147`; one `Promise.all` at `:140` with 5 elements (the 6th match is a comment) | **confirmed** |
+| V7 | Option flags declared three times, copied twice by hand (2.2) | `interface $N { $$$P }`; `loadTonight({ $$$P })`; `buildTonight($I, $L, { $$$P })` | declarations of 11 / 18 / 9 fields; copies of 17 properties (11 forwarded) and 9 (7 forwarded) | **refined** (exact counts added; the options anchor moved to `build.ts:692-702`) |
+| V8 | Only `island.ts` holds the user guard `locals.user ? locals.supabase : null` (2.3) | `$L.user ? $L.supabase : null` | 1: `island.ts:47` | **confirmed** |
+| V9 | The plan is read at three call sites per dashboard island (2.3) | `getAccountPlan($$$)`, `accountPlanForCopy($$$)`, `requireFullPlan($$$)` | dashboard: `TonightContent:82`, `read.ts:15`, `OfflineCopy:41`; also all six focused islands, `Topbar.astro:11` (shell, every signed-in page), and `requireFullPlan` at `finder/load.ts:130`, `finder.astro:38` and the two plan POST routes | **refined** (Topbar's shell read and the focused islands' reads added) |
+| V10 | The island guards live in `island.ts`, `read.ts`, `finder/load.ts` (2.3) | V8 + `requireFullPlan($$$)` + `readPlanEditsFor($$$)` | `readPlanEditsFor` is called only at `TonightContent:91` and `PlanPageContent:65` | **confirmed** |
+| V11 | The "no gear" expression is duplicated in 6 islands + `finder/load.ts` (2.8) | `$L.needsSetup \|\| (!$SE && !$S) \|\| (!$TE && !$T)` | 7 sites, listed in 2.8; the looser `$A.needsSetup \|\| $$$B` finds the same 7 | **confirmed** |
+| V12 | The `night: "next"` rule is spread over five files (2.4) | `$X === "next"`, `$X !== "next"`, `$X === "tonight"` | 23 matches; server side in 6 files (incl. `PlanPageContent.astro`, `requested-gear.ts:47`), worker side in `sw.ts`, `copies.ts`, `page-state.ts`; `build.ts:1413` has no `night` check | **refuted as stated, corrected** to six server files |
+| V13 | `record_sky_verdict` is the one write from a GET (1.1 step 18, 2.8) | `$C.rpc("record_sky_verdict", $$$)`; `recordSkyVerdict($$$)`; `$C.insert/update/upsert/delete/rpc($$$)` over all `.astro` frontmatter | the RPC only at `sky-checks/store.ts:78` (+ `record-transport.test.ts:85`); `recordSkyVerdict` in production only at `TonightContent:114`; 0 direct writes in `.astro`. **Zero backed by rg**: `rg "\.(insert\|update\|upsert\|delete\|rpc)\(" --glob '*.astro'` gives 0; `rg "Store\.(record\|save\|…)\(\|recordSkyVerdict\("` over `.astro` gives only `TonightContent.astro:114` | **refined** (scoped to `.astro` pages and islands; GET `.ts` routes not checked) |
+| V14 | `TonightContent` never reads `planEditsError` (2.6) | `$X.planEditsError`, then `$X?.planEditsError` | the first pattern finds only tests; the optional-chain pattern finds `PlanPageContent.astro:77`; `rg` confirms TonightContent has only the `null` initialiser `:79` | **confirmed for TonightContent; refined** (the plan page reads it). Pattern lesson: `a.b` does not match `a?.b` |
+| V15 | `islandDefer` / `waitUntil` only in the island wiring (1.1 step 8) | `islandDefer($$$)`; `$L.cfContext.waitUntil($$$)` | `islandDefer`: `island.ts:59`, `TonightContent:114`; `waitUntil`: `island.ts:37` only | **confirmed** |
+| V16 | Only `kv-cache.ts` (and `rate-limit.ts`) import `cloudflare:workers` (3.2, CLAUDE.md) | `import $$$ from "cloudflare:workers"` | 2: `forecast/kv-cache.ts:1`, `observability/rate-limit.ts:1` | **confirmed** |
+| V17 | No unit test executes `island.ts`; only `finder/load.test.ts` mocks it (4.2) | import pattern over `@/lib/tonight/island`; `vi.mock("@/lib/tonight/island", $$$)` | 8 importers, 0 tests (`rg` cross-check: 8 files); 1 mock at `finder/load.test.ts:28` | **confirmed** |
+| V18 | One unit test imports `loadTonight` (4.2) | `import { $$$A } from "$M"`, filtered by name | `island.ts:8` and `load.test.ts:9` only; `load.test.ts` has 3 `vi.mock` calls (`:28, :38, :44`), the stores and the build hook | **confirmed** |
+| V19 | Fan-in: `island.ts` 8, `load.ts` 10 (4 tests), `build.ts` 24 (5 tests), `TonightView` 12 (3.1) | `import $$$ from "$M"` / `import { $$$A }` / `import type { $$$A }` | 8 / 10 (4) / 24 (5) / 12 (`import { … }` alone finds 6; with `import type { … }`, 12; `rg` multiline also 12) | **confirmed**. Pattern lesson: `import type` needs its own pattern |
+| V20 | 13 `tonight.*` steps in `FAILURE_STEPS` (3.5) | `"$S"` string literals in `log-failure.ts` | 13; `rg -c '"tonight\.'` gives 13 | **confirmed** |
+| V21 | `middleware.ts` imports nothing from `src/lib/tonight` (3.1) | `import $$$ from "$M"` in `middleware.ts` | 9 specifiers, none under `@/lib/tonight` | **confirmed** |
+| V22 | `/_server-islands` is not in `PROTECTED_ROUTES`; the middleware awaits `sessionUser` once (1.1 steps 2, 6) | `"$S"` in `protected-routes.ts`; `await sessionUser($$$)` | 9 routes, no `_server-islands` (`rg`: 0 hits); `await sessionUser` at `middleware.ts:45` only in production | **confirmed** |
+| V23 | `recordableVerdict` has 1 of 3 branches tested (4.3 G3) | `recordableVerdict($$$)` | one test call, `record.test.ts:10` (the no-dark-start case); production `TonightContent:112` | **confirmed** |
+| V24 | 6 message-key constants in `load.ts` (3.5) | `const $N: MessageKey = $V` | 6 at `load.ts:33-38` | **confirmed** |
+| V25 | 8 `server:defer` islands, each renders `OfflineCopy` (1.3) | none (template, no Astro grammar) | `rg "server:defer" src/pages`: 8; `rg -l "<OfflineCopy"`: the 8 island components (7 Tonight + `FinderContent`) | **confirmed (rg only)** |
+
+**Tally:** 25 claims checked.
+- 19 confirmed, V25 by `rg` only;
+- 5 refined, with the report corrected in place: V4, V7, V9, V13 and V14 (V14 is confirmed for TonightContent and refined for the plan page);
+- 1 refuted as stated and corrected: V12, the "five files" count.
+
+Three pattern pitfalls surfaced. In each, a first zero or undercount was a pattern problem, not an absence:
+- optional chaining (V14);
+- `import type` (V19);
+- a comment counted inside a `$$$` list (V6).
 
 ---
 
