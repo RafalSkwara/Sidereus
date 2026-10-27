@@ -99,7 +99,7 @@ C = confirms, R = refines, X = contradicts, U = unknown (not re-derivable). Anch
 | 27 | Cloudflare bindings and `astro:env` edges dropped (3s:171, rm:217) | dropped by default; visible with an `-I` override as 7 unresolved imports in 6 files | **R** |
 | 28 | "dependency-cruiser … is not installed … `.astro` files would need a custom extractor" (rm:199, 3s:176) | installed and configured; the native run covers 43% of runtime edges, the shim 100% of the map's | **R** |
 | 29 | "Tool worth installing: … declarative, whole-repo rules (every `.tsx` island) and cycle checks in CI" (3s:176) | the rules exist in `.dependency-cruiser.cjs` and pass except the 1 error and 3 warnings below; not wired into CI or `npm` scripts | **C** in part (CI not done) |
-| 30 | Capability-level figures: the Mermaid edge counts (rm:24-47, 3s:44-67), the capability Ca/Ce/instability table (3s:22-40), "imports `shared`" counts (3s:42), the 15-capability SCC (3s:91), tonight Ca 11 and 169/69 edges (rm:60, rm:121), ≈36 foundation edges (3s:106) | not re-derivable: they fold files through `context/map/.work/capabilities.tsv`, which is not in the repo or any worktree | **U**. Inference: the file graph under them reproduces exactly at `321427c` (1,293 / 254 edges), so a re-fold with the same TSV would give the same numbers |
+| 30 | Capability-level figures: the Mermaid edge counts (rm:24-47, 3s:44-67), the capability Ca/Ce/instability table (3s:22-40), "imports `shared`" counts (3s:42), the 15-capability SCC (3s:91), tonight Ca 11 and 169/69 edges (rm:60, rm:121), ≈36 foundation edges (3s:106) | not re-derivable: they fold files through `context/map/.work/capabilities.tsv`, which is not in the repo or any worktree | **U**. Inference: the file graph under them reproduces exactly at `321427c` (1,293 / 254 edges), so a re-fold with the same TSV would give the same numbers. **Update (same day):** the footprint was rebuilt as `evidence/capabilities.tsv` and fitted to the table and diagram (134 of 134 figures match, conventions in its header). Figures not used in the fit also match: 93 pairs excl. /design, 48 shared → other edges from `design.astro`, the 15-capability SCC, the top type-only pairs. The fitted figures show the TSV is consistent with them, not an independent check; ≈36 foundation edges (3s:106) was not re-counted |
 
 **Tally:** 30 rows covering about 80 numeric claims. **20 confirm** (rows 1–20; row 1 with a one-file refinement), **9 refine** (rows 21–29, row 29 confirming in part), **1 contradicts** (row 4), **1 group is unknown** (row 30).
 
@@ -155,7 +155,7 @@ The native run (`rules-head-native.txt`) reports the same error and warnings, pl
 
 ## Still unknown
 
-- **Capability-level numbers** (row 30) until `capabilities.tsv` is recovered or recommitted.
+- **Capability-level numbers** (row 30): `capabilities.tsv` is a reconstruction fitted to them (see row 30), so only the held-out figures check them independently. The history-side attribution (tests, docs, CI) was not rebuilt.
 - **The reach convention** (map N = importers + 1) is inferred from 21 consistent cases, not from the map's script.
 - **`.astro` edges that are not static imports.** None were found (no glob imports), but dependency-cruiser alone cannot prove that. The shim is a second custom extractor, written to the same rule as the map's.
 - **Runtime wiring outside imports**: `Astro.locals` (104 files), the `/_server-islands/*` URL surface, SQL/RLS/RPCs, CI, `wrangler.jsonc`, the service-worker build by path, Python oracles → JSON fixtures, HTTP callers. Unchanged from `3-structure.md`.
@@ -172,7 +172,7 @@ The native run (`rules-head-native.txt`) reports the same error and warnings, pl
 
 ## Proposed edits to repo-map.md
 
-For the owner's decision; none is applied.
+The owner approved all seven on 2026-10-27, and they are applied to `repo-map.md`, each with its anchor into this file. E3's refinement is also noted in Signal 2 (rm:121), and E4 also updates the front matter `graph_coverage`.
 
 | # | Section | Old statement | New statement | Evidence anchor |
 |---|---|---|---|---|
@@ -186,4 +186,4 @@ For the owner's decision; none is applied.
 
 Not map edits, for the owner to decide separately:
 - add an `npm run depcruise` script and a CI step, with the one error either fixed or baselined (`--baseline`);
-- recommit `capabilities.tsv`, so the capability-level numbers (row 30) can be re-verified.
+- recommit `capabilities.tsv`, so the capability-level numbers (row 30) can be re-verified (done: `evidence/capabilities.tsv`, a reconstruction).

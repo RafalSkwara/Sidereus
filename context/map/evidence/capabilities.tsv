@@ -1,0 +1,155 @@
+# File -> capability footprint for the repo map (context/map/repo-map.md), graph scope: src/ and scripts/.
+# Format (10x-repo-map / graph-metrics.mjs --modules): <pattern><TAB><capability>. A pattern is a path prefix
+# matched on whole segments, or a glob with * (no slash) or ** (anything). Globs win, then the longest prefix.
+#
+# Reconstructed 2026-10-27: the original context/map/.work/capabilities.tsv was git-ignored and lost. Rebuilt from
+# the map's "Where it lives" column and the attributions the evidence names, then checked by folding the
+# dependency-cruiser file graph at 321427c (astro shim, evidence/depcruise/) through it:
+# - all 102 figures of the capability table in evidence/3-structure.md:22-40 (prod files, Ca, Ce, intra runtime
+#   edges, cross-capability in/out excl. /design) and the 32 edge counts at 3-structure.md:42-67 (the 21 diagram
+#   edges and the 11 "into shared" counts): 134 of 134 match;
+# - not used for fitting, also matching: 93 capability pairs excl. /design, 48 shared -> other edges from
+#   design.astro, design.astro Ce 78, the 15-capability SCC, the top type-only pairs (incl. engine -> catalogue 6).
+# Counting conventions that reproduce those figures: runtime edges only; scripts -> scripts edges are build edges
+# (excluded); src/env.d.ts and src/styles/global.css are not counted as production files, but the
+# Layout.astro -> global.css edge counts as a shared intra edge.
+# Not reconstructed: the history-side attribution of tests, docs, CI, Supabase and other non-imported paths
+# (evidence/1-history.md); those figures stay as reported.
+# The known misattributions are kept on purpose (repo-map.md, Limitations): components/tonight/Plan* also catches
+# the Planet components, GearShell.astro sits in sites-gear, Welcome.astro in onboarding.
+
+# Catch-alls
+src	shared
+scripts	platform
+src/lib/config-status.ts	platform
+scripts/capture-landing.mjs	shared
+
+# tonight
+src/lib/tonight	tonight
+src/lib/targets	tonight
+src/lib/moon-disc	tonight
+src/components/tonight	tonight
+src/pages/tonight	tonight
+src/pages/tonight.astro	tonight
+src/pages/dashboard.astro	tonight
+
+# engine
+src/lib/engine	engine
+src/lib/clock.ts	engine
+scripts/*-reference.py	engine
+
+# catalogue
+src/lib/catalogue	catalogue
+scripts/build-catalogue.mjs	catalogue
+scripts/build-stars.mjs	catalogue
+scripts/build-star-designations.mjs	catalogue
+scripts/hipparcos-source-check.mjs	catalogue
+scripts/lib	catalogue
+
+# observation-log
+src/lib/observations	observation-log
+src/lib/sky-checks	observation-log
+src/components/observations	observation-log
+src/components/sky-checks	observation-log
+src/components/tonight/*Seen*	observation-log
+src/components/tonight/not-seen-tip.ts	observation-log
+src/components/tonight/SkyCheckCard.astro	observation-log
+src/pages/log	observation-log
+src/pages/api/log	observation-log
+
+# sites-gear
+src/lib/gear	sites-gear
+src/lib/location	sites-gear
+src/lib/tonight/gear-choice.ts	sites-gear
+src/lib/tonight/requested-gear.ts	sites-gear
+src/components/gear	sites-gear
+src/components/location	sites-gear
+src/components/tonight/GearCard.astro	sites-gear
+src/components/tonight/GearSelectField.tsx	sites-gear
+src/components/tonight/EyepiecesPrompt.astro	sites-gear
+src/pages/gear	sites-gear
+src/pages/api/gear	sites-gear
+
+# accounts
+src/middleware.ts	accounts
+src/lib/auth	accounts
+src/lib/account-plan	accounts
+src/lib/supabase.ts	accounts
+src/lib/session-cookie.ts	accounts
+src/lib/protected-routes.ts	accounts
+src/lib/auth-redirect.ts	accounts
+src/components/auth	accounts
+src/components/AuthShell.astro	accounts
+src/components/finder/FinderLocked.astro	accounts
+src/pages/auth	accounts
+src/pages/api/auth	accounts
+scripts/account-plan.mjs	accounts
+
+# session-plan
+src/lib/session-plans	session-plan
+src/lib/tonight/plan-*	session-plan
+src/lib/tonight/session-plan.ts	session-plan
+src/components/tonight/Plan*	session-plan
+src/components/tonight/SessionTimeline.astro	session-plan
+src/components/design/plan-samples.ts	session-plan
+src/pages/tonight/plan.astro	session-plan
+src/pages/api/tonight	session-plan
+
+# error-visibility
+src/lib/observability	error-visibility
+src/lib/api-errors.ts	error-visibility
+src/lib/fetch-timeout.ts	error-visibility
+src/pages/api/client-error.ts	error-visibility
+
+# offline
+src/lib/offline	offline
+src/sw.ts	offline
+scripts/build-sw.mjs	offline
+src/pages/offline.astro	offline
+src/components/tonight/OfflineCopy.astro	offline
+
+# sky-view
+src/lib/sky-view	sky-view
+src/lib/compass.ts	sky-view
+src/lib/ui/sheet-swipe.ts	sky-view
+src/components/tonight/TonightSky*	sky-view
+src/components/tonight/TonightPageSky.astro	sky-view
+src/components/tonight/sky-band.ts	sky-view
+src/components/tonight/sky-mode-control.tsx	sky-view
+
+# forecast
+src/lib/forecast	forecast
+
+# finder
+src/lib/finder	finder
+src/lib/engine/finder.ts	finder
+src/lib/catalogue/finder-stars.ts	finder
+src/components/finder	finder
+src/components/design/finder-samples.ts	finder
+src/pages/tonight/finder.astro	finder
+
+# progress
+src/lib/progress	progress
+src/lib/observations/milestone-store.ts	progress
+src/lib/observations/celebrate.ts	progress
+src/components/progress	progress
+src/components/design/progress-samples.ts	progress
+src/pages/log/progress.astro	progress
+scripts/badge-art	progress
+
+# onboarding
+src/lib/onboarding	onboarding
+src/components/onboarding	onboarding
+src/components/Welcome.astro	onboarding
+src/pages/onboarding.astro	onboarding
+src/pages/api/onboarding.ts	onboarding
+
+# sky-events
+src/lib/engine/events.ts	sky-events
+src/lib/engine/meteors.ts	sky-events
+src/lib/engine/pairings.ts	sky-events
+src/lib/tonight/sky-events.ts	sky-events
+src/lib/catalogue/meteor-showers.ts	sky-events
+src/components/tonight/*Event*	sky-events
+src/components/design/event-samples.ts	sky-events
+src/pages/tonight/events.astro	sky-events
