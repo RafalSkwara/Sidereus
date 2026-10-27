@@ -268,22 +268,22 @@ None. No schema, no data, no configuration change.
 
 #### Automated
 
-- [x] 1.1 The new guard, route and middleware tests fail before the change and pass after
-- [x] 1.2 Unit tests pass, the guards project included: `npm test`
-- [x] 1.3 Type check passes: `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 The new guard, route and middleware tests fail before the change and pass after — 1fcdba0
+- [x] 1.2 Unit tests pass, the guards project included: `npm test` — 1fcdba0
+- [x] 1.3 Type check passes: `npx astro check` — 1fcdba0
+- [x] 1.4 Lint passes: `npm run lint` — 1fcdba0
 
 ### Phase 2: Runtime proof, runbook and the PR gates
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm test`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Production build succeeds: `npm run build`
-- [ ] 2.5 The probe suite after the change shows one `request.stream failed` line per child probe, exactly one `request.uncaught failed` line for P1, P3 and P10b, and none for P0
-- [ ] 2.6 Smoke passes against a local production preview and local Supabase, run the way CI does
-- [ ] 2.7 The whole e2e suite passes the same way
+- [x] 2.1 Unit tests pass: `npm test`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 Production build succeeds: `npm run build`
+- [x] 2.5 The probe suite after the change shows one `request.stream failed` line per child probe, exactly one `request.uncaught failed` line for P1, P3 and P10b, and none for P0
+- [x] 2.6 Smoke passes against a local production preview and local Supabase, run the way CI does
+- [x] 2.7 The whole e2e suite passes the same way
 
 #### Manual
 
