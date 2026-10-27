@@ -1,0 +1,227 @@
+# dependency-cruiser analysis of the native run at HEAD (.astro files are nodes without outgoing edges)
+local modules: 354 {".mjs":14,".astro":110,".tsx":32,".ts":198} | pages/routes: 49
+local file edges: runtime 562 | type-only 204 | dynamic import() edges 1
+external packages (distinct specifiers, excl. node core): 23 | unresolved: 0
+isolates (no runtime/type edge in or out): 123
+   scripts/account-plan.mjs
+   scripts/build-sw.mjs
+   scripts/capture-landing.mjs
+   scripts/smoke.mjs
+   src/components/AuthShell.astro
+   src/components/Banner.astro
+   src/components/NavIcon.astro
+   src/components/QuickNav.astro
+   src/components/TabBar.astro
+   src/components/Topbar.astro
+   src/components/Welcome.astro
+   src/components/finder/FinderChart.astro
+   src/components/finder/FinderContent.astro
+   src/components/finder/FinderLocked.astro
+   src/components/finder/FinderPanel.astro
+   src/components/finder/FinderSteps.astro
+   src/components/gear/DatabaseMissing.astro
+   src/components/gear/GearShell.astro
+   src/components/progress/ChecklistGrid.astro
+   src/components/progress/ChecklistLegend.astro
+   src/components/progress/MilestoneBadge.astro
+   src/components/progress/MilestoneCelebration.astro
+   src/components/progress/MilestoneList.astro
+   src/components/progress/ObjectTypeSprite.astro
+   src/components/progress/SeenList.astro
+   src/components/progress/badge-art/AllPlanetsArt.astro
+   src/components/progress/badge-art/CaldwellAllArt.astro
+   src/components/progress/badge-art/FirstGalaxyArt.astro
+   src/components/progress/badge-art/FirstGlobularArt.astro
+   src/components/progress/badge-art/FirstMoonArt.astro
+   src/components/progress/badge-art/FirstNebulaArt.astro
+   src/components/progress/badge-art/FirstPlanetArt.astro
+   src/components/progress/badge-art/Messier10Art.astro
+   src/components/progress/badge-art/Messier110Art.astro
+   src/components/progress/badge-art/Messier25Art.astro
+   src/components/progress/badge-art/Messier50Art.astro
+   src/components/sky-checks/SkyAnswerForm.astro
+   src/components/sky-checks/SkyTally.astro
+   src/components/tonight/Attribution.astro
+   src/components/tonight/EventsPageContent.astro
+   src/components/tonight/EventsTile.astro
+   src/components/tonight/EyepiecesPrompt.astro
+   src/components/tonight/GearCard.astro
+   src/components/tonight/MoonCard.astro
+   src/components/tonight/MoonPageContent.astro
+   src/components/tonight/NightStrip.astro
+   src/components/tonight/NightsPageContent.astro
+   src/components/tonight/NotSeenLegend.astro
+   src/components/tonight/NotSeenMark.astro
+   src/components/tonight/NotSeenTip.astro
+   src/components/tonight/ObjectCard.astro
+   src/components/tonight/ObjectDetails.astro
+   src/components/tonight/ObjectRow.astro
+   src/components/tonight/OfflineCopy.astro
+   src/components/tonight/PlanEditRow.astro
+   src/components/tonight/PlanNote.astro
+   src/components/tonight/PlanPageContent.astro
+   src/components/tonight/PlanetCard.astro
+   src/components/tonight/PlanetsPageContent.astro
+   src/components/tonight/SeenTag.astro
+   src/components/tonight/SessionTimeline.astro
+   src/components/tonight/SkyCheckCard.astro
+   src/components/tonight/SkyEventList.astro
+   src/components/tonight/SolarSystemSection.astro
+   src/components/tonight/TargetDetails.astro
+   src/components/tonight/TargetsPageContent.astro
+   src/components/tonight/TonightContent.astro
+   src/components/tonight/TonightPageSkeleton.astro
+   src/components/tonight/TonightPageSky.astro
+   src/components/tonight/TonightSkeleton.astro
+   src/components/tonight/TonightSky.astro
+   src/components/tonight/TonightSubNav.astro
+   src/components/tonight/TonightTiles.astro
+   src/components/tonight/VerdictCard.astro
+   src/components/tonight/not-seen-tip.ts
+   src/components/tonight/subnav.ts
+   src/components/ui/BackLink.astro
+   src/components/ui/Band.astro
+   src/components/ui/Fact.astro
+   src/components/ui/FactList.astro
+   src/components/ui/Notice.astro
+   src/components/ui/PageHeader.astro
+   src/components/ui/Pager.astro
+   src/components/ui/StatCard.astro
+   src/components/ui/StatPair.astro
+   src/components/ui/Tile.astro
+   src/components/ui/ToastRegion.astro
+   src/components/ui/disclosure.ts
+   src/layouts/Layout.astro
+   src/lib/catalogue/vmag-colour-pins.ts
+   src/lib/navigation.ts
+   src/lib/offline/owner.ts
+   src/lib/tonight/altitude-curve.ts
+   src/lib/tonight/hash-scroll.ts
+   src/lib/tonight/notice.ts
+   src/pages/auth/confirm-email.astro
+   src/pages/auth/signin.astro
+   src/pages/auth/signup.astro
+   src/pages/dashboard.astro
+   src/pages/design.astro
+   src/pages/gear/eyepieces/[id].astro
+   src/pages/gear/eyepieces/new.astro
+   src/pages/gear/index.astro
+   src/pages/gear/sites/[id].astro
+   src/pages/gear/sites/new.astro
+   src/pages/gear/telescopes/[id].astro
+   src/pages/gear/telescopes/new.astro
+   src/pages/index.astro
+   src/pages/log/[id].astro
+   src/pages/log/index.astro
+   src/pages/log/new.astro
+   src/pages/log/progress.astro
+   src/pages/log/sky.astro
+   src/pages/offline.astro
+   src/pages/onboarding.astro
+   src/pages/tonight.astro
+   src/pages/tonight/events.astro
+   src/pages/tonight/finder.astro
+   src/pages/tonight/moon.astro
+   src/pages/tonight/nights.astro
+   src/pages/tonight/plan.astro
+   src/pages/tonight/planets.astro
+   src/pages/tonight/targets.astro
+runtime cycles (strongly connected components): 1
+   src/lib/engine/events.ts <-> src/lib/engine/meteors.ts <-> src/lib/engine/pairings.ts
+
+## Hubs: runtime Ca / Ce / reach (files, pages)
+src/lib/tonight/build.ts Ca 2 Ce 15 reach 4 files / 0 pages
+src/lib/tonight/load.ts Ca 1 Ce 10 reach 2 files / 0 pages
+src/lib/tonight/island.ts Ca 1 Ce 3 reach 1 files / 0 pages
+src/lib/engine/index.ts Ca 17 Ce 21 reach 25 files / 5 pages
+src/lib/catalogue/index.ts Ca 9 Ce 0 reach 20 files / 5 pages
+src/lib/gear/store.ts Ca 17 Ce 2 reach 23 files / 14 pages
+src/lib/auth/session-user.ts Ca 2 Ce 1 reach 24 files / 19 pages
+src/lib/observability/log-failure.ts Ca 19 Ce 1 reach 51 files / 20 pages
+src/lib/api-errors.ts Ca 20 Ce 3 reach 22 files / 19 pages
+src/lib/account-plan/index.ts Ca 4 Ce 3 reach 4 files / 2 pages
+src/lib/targets/index.ts Ca 15 Ce 0 reach 33 files / 5 pages
+src/lib/tonight/format.ts Ca 7 Ce 2 reach 11 files / 0 pages
+src/lib/engine/parameters.ts Ca 23 Ce 0 reach 59 files / 12 pages
+src/lib/clock.ts Ca 7 Ce 0 reach 8 files / 5 pages
+src/lib/observations/store.ts Ca 5 Ce 4 reach 7 files / 3 pages
+src/lib/sky-checks/store.ts Ca 3 Ce 2 reach 5 files / 1 pages
+src/lib/offline/copies.ts Ca 2 Ce 4 reach 2 files / 0 pages
+src/lib/forecast/service.ts Ca 1 Ce 2 reach 3 files / 0 pages
+src/lib/supabase.ts Ca 4 Ce 3 reach 4 files / 3 pages
+src/components/gear/GearShell.astro Ca 0 Ce 0 reach 0 files / 0 pages
+src/lib/session-plans/store.ts Ca 3 Ce 2 reach 3 files / 2 pages
+
+## Top 15 runtime Ca
+src/i18n/index.ts Ca 28 Ce 2
+src/lib/engine/parameters.ts Ca 23 Ce 0
+src/lib/utils.ts Ca 21 Ce 0
+src/lib/api-errors.ts Ca 20 Ce 3
+src/lib/observability/log-failure.ts Ca 19 Ce 1
+src/lib/engine/index.ts Ca 17 Ce 21
+src/lib/gear/store.ts Ca 17 Ce 2
+src/lib/observability/save-failure.ts Ca 16 Ce 1
+src/lib/targets/index.ts Ca 15 Ce 0
+src/lib/gear/schemas.ts Ca 10 Ce 4
+src/lib/catalogue/index.ts Ca 9 Ce 0
+src/lib/engine/sun.ts Ca 9 Ce 1
+src/components/ui/button.tsx Ca 9 Ce 1
+src/lib/observability/fault.ts Ca 9 Ce 1
+src/components/forms/FormField.tsx Ca 8 Ce 3
+
+## Top 10 runtime Ce
+src/lib/engine/index.ts Ce 21 Ca 17
+src/components/onboarding/OnboardingWizard.tsx Ce 20 Ca 0
+src/components/tonight/TonightSkyView.tsx Ce 18 Ca 0
+src/lib/tonight/build.ts Ce 15 Ca 2
+src/components/gear/EyepieceForm.tsx Ce 13 Ca 0
+src/pages/api/tonight/plan.ts Ce 12 Ca 0
+src/pages/api/tonight/plan/reset.ts Ce 11 Ca 0
+src/components/gear/SiteForm.tsx Ce 10 Ca 0
+src/components/location/LocationPicker.tsx Ce 10 Ca 2
+src/components/gear/TelescopeForm.tsx Ce 10 Ca 0
+
+## Boundary counts (runtime edges)
+lib -> components: 0
+non-page -> pages: 0
+engine -> outside engine: 1
+   src/lib/engine/meteors.ts -> src/lib/catalogue/meteor-showers.ts
+api-errors -> auth: 1
+   src/lib/api-errors.ts -> src/lib/auth/session-user.ts
+scripts -> scripts runtime edges: 8
+scripts -> src: 0
+page/route -> *store.ts: 21
+.tsx files: 32 | .tsx that transitively reach a server-only or non-parameters engine module: 0
+sw.ts runtime closure: 10 files; reaches observability/client barrel or log-failure: 0
+
+## Folder-level runtime edges (src/<lib|components|pages>/<folder>), top 30 cross-folder pairs
+30 pages/api -> src/lib
+20 pages/api -> lib/observability
+17 pages/api -> lib/gear
+14 pages/api -> lib/observations
+11 components/gear -> components/forms
+10 components/gear -> lib/gear
+8 components/ui -> src/lib
+8 components/tonight -> src/lib
+8 components/tonight -> lib/sky-view
+8 pages/api -> lib/session-plans
+7 scripts -> scripts/lib
+7 components/design -> lib/tonight
+6 components/auth -> components/forms
+6 lib/tonight -> lib/engine
+6 components/gear -> components/ui
+6 components/tonight -> components/ui
+5 components/forms -> components/ui
+5 lib/observations -> lib/targets
+5 components/onboarding -> lib/gear
+5 components/tonight -> src/i18n
+5 src -> src/lib
+4 lib/tonight -> src/i18n
+4 lib/finder -> lib/tonight
+4 components/location -> lib/location
+4 components/observations -> components/forms
+4 components/onboarding -> components/forms
+4 components/onboarding -> components/ui
+4 lib/observations -> lib/progress
+3 components/forms -> src/lib
+3 components/design -> src/i18n

@@ -1,0 +1,10 @@
+# dependency-cruiser --reaches per hub (HEAD, astro shim; follows runtime AND type-only edges)
+# columns: hub | modules that reach it (excl. itself) | pages/routes among them
+src/lib/tonight/build.ts | 38 | 9
+src/lib/tonight/load.ts | 19 | 8
+src/lib/tonight/island.ts | 17 | 8
+src/lib/engine/index.ts | 187 | 46
+src/lib/catalogue/index.ts | 215 | 46
+src/lib/gear/store.ts | 74 | 33
+src/lib/auth/session-user.ts | 66 | 46
+src/lib/observability/log-failure.ts | 113 | 47

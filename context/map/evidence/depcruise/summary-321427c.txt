@@ -1,0 +1,110 @@
+# dependency-cruiser analysis of the astro-shim run at 321427c (the map's HEAD)
+local modules: 354 {".mjs":14,".astro":110,".ts":197,".tsx":32,".css":1} | pages/routes: 49
+local file edges: runtime 1293 | type-only 254 | dynamic import() edges 1
+external packages (distinct specifiers, excl. node core): 0 | unresolved: 0
+isolates (no runtime/type edge in or out): 6
+   scripts/account-plan.mjs
+   scripts/build-sw.mjs
+   scripts/capture-landing.mjs
+   scripts/smoke.mjs
+   src/lib/catalogue/vmag-colour-pins.ts
+   src/pages/dashboard.astro
+runtime cycles (strongly connected components): 1
+   src/lib/engine/events.ts <-> src/lib/engine/meteors.ts <-> src/lib/engine/pairings.ts
+
+## Hubs: runtime Ca / Ce / reach (files, pages)
+src/lib/tonight/build.ts Ca 3 Ce 15 reach 21 files / 9 pages
+src/lib/tonight/load.ts Ca 4 Ce 10 reach 18 files / 8 pages
+src/lib/tonight/island.ts Ca 8 Ce 3 reach 17 files / 8 pages
+src/lib/engine/index.ts Ca 20 Ce 21 reach 50 files / 18 pages
+src/lib/catalogue/index.ts Ca 9 Ce 0 reach 53 files / 28 pages
+src/lib/gear/store.ts Ca 23 Ce 2 reach 48 files / 31 pages
+src/lib/auth/session-user.ts Ca 2 Ce 1 reach 63 files / 45 pages
+src/lib/observability/log-failure.ts Ca 18 Ce 1 reach 90 files / 47 pages
+src/lib/api-errors.ts Ca 20 Ce 3 reach 61 files / 45 pages
+src/lib/account-plan/index.ts Ca 15 Ce 3 reach 43 files / 28 pages
+src/lib/targets/index.ts Ca 24 Ce 0 reach 73 files / 32 pages
+src/lib/tonight/format.ts Ca 22 Ce 2 reach 56 files / 24 pages
+src/lib/engine/parameters.ts Ca 32 Ce 0 reach 94 files / 33 pages
+src/lib/clock.ts Ca 10 Ce 0 reach 27 files / 16 pages
+src/lib/observations/store.ts Ca 8 Ce 4 reach 27 files / 15 pages
+src/lib/sky-checks/store.ts Ca 4 Ce 2 reach 22 files / 10 pages
+src/lib/offline/copies.ts Ca 2 Ce 4 reach 32 files / 27 pages
+src/lib/forecast/service.ts Ca 1 Ce 2 reach 19 files / 8 pages
+src/lib/supabase.ts Ca 4 Ce 3 reach 4 files / 3 pages
+src/components/gear/GearShell.astro Ca 22 Ce 6 reach 22 files / 22 pages
+src/lib/session-plans/store.ts Ca 3 Ce 2 reach 7 files / 4 pages
+
+## Top 15 runtime Ca
+src/i18n/index.ts Ca 106 Ce 2
+src/lib/utils.ts Ca 51 Ce 0
+src/components/ui/button.tsx Ca 39 Ce 1
+src/lib/engine/parameters.ts Ca 32 Ce 0
+src/components/forms/ServerError.tsx Ca 25 Ce 0
+src/lib/targets/index.ts Ca 24 Ce 0
+src/components/ui/Band.astro Ca 24 Ce 2
+src/lib/gear/store.ts Ca 23 Ce 2
+src/lib/tonight/format.ts Ca 22 Ce 2
+src/components/gear/DatabaseMissing.astro Ca 22 Ce 2
+src/components/gear/GearShell.astro Ca 22 Ce 6
+src/components/ui/PageHeader.astro Ca 21 Ce 0
+src/lib/engine/index.ts Ca 20 Ce 21
+src/lib/api-errors.ts Ca 20 Ce 3
+src/lib/observability/log-failure.ts Ca 18 Ce 1
+
+## Top 10 runtime Ce
+src/pages/design.astro Ce 78 Ca 0
+src/pages/log/sky.astro Ce 22 Ca 0
+src/lib/engine/index.ts Ce 21 Ca 20
+src/components/tonight/TonightContent.astro Ce 21 Ca 1
+src/components/onboarding/OnboardingWizard.tsx Ce 20 Ca 1
+src/components/tonight/TargetsPageContent.astro Ce 20 Ca 1
+src/pages/log/progress.astro Ce 20 Ca 0
+src/components/tonight/TonightSkyView.tsx Ce 18 Ca 2
+src/pages/log/[id].astro Ce 18 Ca 0
+src/pages/log/new.astro Ce 18 Ca 0
+
+## Boundary counts (runtime edges)
+lib -> components: 0
+non-page -> pages: 0
+engine -> outside engine: 1
+   src/lib/engine/meteors.ts -> src/lib/catalogue/meteor-showers.ts
+api-errors -> auth: 1
+   src/lib/api-errors.ts -> src/lib/auth/session-user.ts
+scripts -> scripts runtime edges: 8
+scripts -> src: 0
+page/route -> *store.ts: 33
+.tsx files: 32 | .tsx that transitively reach a server-only or non-parameters engine module: 0
+sw.ts runtime closure: 10 files; reaches observability/client barrel or log-failure: 0
+
+## Folder-level runtime edges (src/<lib|components|pages>/<folder>), top 30 cross-folder pairs
+60 components/tonight -> components/ui
+37 components/tonight -> src/i18n
+33 pages/tonight -> components/tonight
+30 pages/api -> src/lib
+28 src/pages -> components/tonight
+24 components/tonight -> lib/tonight
+23 pages/gear -> components/gear
+22 src/pages -> components/ui
+22 pages/gear -> components/ui
+21 pages/log -> components/ui
+20 pages/api -> lib/observability
+19 components/tonight -> src/lib
+17 pages/api -> lib/gear
+16 components/ui -> src/lib
+16 pages/tonight -> lib/tonight
+14 pages/api -> lib/observations
+14 pages/tonight -> components/gear
+12 pages/log -> lib/observations
+12 pages/tonight -> lib/targets
+11 components/gear -> components/forms
+11 pages/log -> components/gear
+10 components/gear -> lib/gear
+8 src/components -> components/ui
+8 components/tonight -> lib/account-plan
+8 components/tonight -> lib/sky-view
+8 pages/api -> lib/session-plans
+8 src/pages -> components/progress
+8 pages/log -> src/lib
+7 scripts -> scripts/lib
+7 components/design -> lib/tonight

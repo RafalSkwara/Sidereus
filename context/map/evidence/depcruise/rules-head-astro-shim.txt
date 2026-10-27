@@ -1,0 +1,24 @@
+
+  info no-orphans: src/lib/catalogue/vmag-colour-pins.ts
+  info no-circular-type-only: src/lib/engine/pairings.ts → src/lib/engine/events.ts
+  info no-circular-type-only: src/lib/engine/meteors.ts → src/lib/engine/events.ts
+  info no-circular-type-only: src/i18n/messages/pl.ts → src/i18n/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/score.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/ranking.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/parameters.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/moonlight.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/moon-disc.ts → src/lib/moon-disc/state.ts
+  info engine-no-type-imports-outside: src/lib/engine/meteors.ts → src/lib/catalogue/meteor-showers.ts
+  info engine-no-type-imports-outside: src/lib/engine/index.ts → src/lib/moon-disc/state.ts
+  info engine-no-type-imports-outside: src/lib/engine/expectation.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/events.ts → src/lib/catalogue/meteor-showers.ts
+  info engine-no-type-imports-outside: src/lib/engine/contrast.ts → src/lib/catalogue/index.ts
+  warn no-circular: src/lib/engine/pairings.ts → src/lib/engine/events.ts
+  warn no-circular: src/lib/engine/meteors.ts → src/lib/engine/events.ts
+  warn no-circular: src/lib/engine/events.ts → src/lib/engine/pairings.ts
+  warn no-circular: src/lib/engine/events.ts → src/lib/engine/meteors.ts
+  warn error-shape-not-accounts: src/lib/api-errors.ts → src/lib/auth/session-user.ts
+  error engine-purity: src/lib/engine/meteors.ts → src/lib/catalogue/meteor-showers.ts
+
+x 20 dependency violations (1 errors, 5 warnings). 355 modules, 1588 dependencies cruised.
+

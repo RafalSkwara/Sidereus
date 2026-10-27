@@ -1,0 +1,122 @@
+
+  info no-orphans: src/lib/tonight/notice.ts
+  info no-orphans: src/lib/tonight/hash-scroll.ts
+  info no-orphans: src/lib/tonight/altitude-curve.ts
+  info no-orphans: src/lib/offline/owner.ts
+  info no-orphans: src/lib/navigation.ts
+  info no-orphans: src/lib/catalogue/vmag-colour-pins.ts
+  info no-orphans: src/layouts/Layout.astro
+  info no-orphans: src/components/Welcome.astro
+  info no-orphans: src/components/ui/ToastRegion.astro
+  info no-orphans: src/components/ui/Tile.astro
+  info no-orphans: src/components/ui/StatPair.astro
+  info no-orphans: src/components/ui/StatCard.astro
+  info no-orphans: src/components/ui/Pager.astro
+  info no-orphans: src/components/ui/PageHeader.astro
+  info no-orphans: src/components/ui/Notice.astro
+  info no-orphans: src/components/ui/FactList.astro
+  info no-orphans: src/components/ui/Fact.astro
+  info no-orphans: src/components/ui/disclosure.ts
+  info no-orphans: src/components/ui/Band.astro
+  info no-orphans: src/components/ui/BackLink.astro
+  info no-orphans: src/components/Topbar.astro
+  info no-orphans: src/components/tonight/VerdictCard.astro
+  info no-orphans: src/components/tonight/TonightTiles.astro
+  info no-orphans: src/components/tonight/TonightSubNav.astro
+  info no-orphans: src/components/tonight/TonightSky.astro
+  info no-orphans: src/components/tonight/TonightSkeleton.astro
+  info no-orphans: src/components/tonight/TonightPageSky.astro
+  info no-orphans: src/components/tonight/TonightPageSkeleton.astro
+  info no-orphans: src/components/tonight/TonightContent.astro
+  info no-orphans: src/components/tonight/TargetsPageContent.astro
+  info no-orphans: src/components/tonight/TargetDetails.astro
+  info no-orphans: src/components/tonight/subnav.ts
+  info no-orphans: src/components/tonight/SolarSystemSection.astro
+  info no-orphans: src/components/tonight/SkyEventList.astro
+  info no-orphans: src/components/tonight/SkyCheckCard.astro
+  info no-orphans: src/components/tonight/SessionTimeline.astro
+  info no-orphans: src/components/tonight/SeenTag.astro
+  info no-orphans: src/components/tonight/PlanPageContent.astro
+  info no-orphans: src/components/tonight/PlanNote.astro
+  info no-orphans: src/components/tonight/PlanetsPageContent.astro
+  info no-orphans: src/components/tonight/PlanetCard.astro
+  info no-orphans: src/components/tonight/PlanEditRow.astro
+  info no-orphans: src/components/tonight/OfflineCopy.astro
+  info no-orphans: src/components/tonight/ObjectRow.astro
+  info no-orphans: src/components/tonight/ObjectDetails.astro
+  info no-orphans: src/components/tonight/ObjectCard.astro
+  info no-orphans: src/components/tonight/NotSeenTip.astro
+  info no-orphans: src/components/tonight/NotSeenMark.astro
+  info no-orphans: src/components/tonight/NotSeenLegend.astro
+  info no-orphans: src/components/tonight/not-seen-tip.ts
+  info no-orphans: src/components/tonight/NightStrip.astro
+  info no-orphans: src/components/tonight/NightsPageContent.astro
+  info no-orphans: src/components/tonight/MoonPageContent.astro
+  info no-orphans: src/components/tonight/MoonCard.astro
+  info no-orphans: src/components/tonight/GearCard.astro
+  info no-orphans: src/components/tonight/EyepiecesPrompt.astro
+  info no-orphans: src/components/tonight/EventsTile.astro
+  info no-orphans: src/components/tonight/EventsPageContent.astro
+  info no-orphans: src/components/tonight/Attribution.astro
+  info no-orphans: src/components/TabBar.astro
+  info no-orphans: src/components/sky-checks/SkyTally.astro
+  info no-orphans: src/components/sky-checks/SkyAnswerForm.astro
+  info no-orphans: src/components/QuickNav.astro
+  info no-orphans: src/components/progress/SeenList.astro
+  info no-orphans: src/components/progress/ObjectTypeSprite.astro
+  info no-orphans: src/components/progress/MilestoneList.astro
+  info no-orphans: src/components/progress/MilestoneCelebration.astro
+  info no-orphans: src/components/progress/MilestoneBadge.astro
+  info no-orphans: src/components/progress/ChecklistLegend.astro
+  info no-orphans: src/components/progress/ChecklistGrid.astro
+  info no-orphans: src/components/progress/badge-art/Messier50Art.astro
+  info no-orphans: src/components/progress/badge-art/Messier25Art.astro
+  info no-orphans: src/components/progress/badge-art/Messier110Art.astro
+  info no-orphans: src/components/progress/badge-art/Messier10Art.astro
+  info no-orphans: src/components/progress/badge-art/FirstPlanetArt.astro
+  info no-orphans: src/components/progress/badge-art/FirstNebulaArt.astro
+  info no-orphans: src/components/progress/badge-art/FirstMoonArt.astro
+  info no-orphans: src/components/progress/badge-art/FirstGlobularArt.astro
+  info no-orphans: src/components/progress/badge-art/FirstGalaxyArt.astro
+  info no-orphans: src/components/progress/badge-art/CaldwellAllArt.astro
+  info no-orphans: src/components/progress/badge-art/AllPlanetsArt.astro
+  info no-orphans: src/components/NavIcon.astro
+  info no-orphans: src/components/gear/GearShell.astro
+  info no-orphans: src/components/gear/DatabaseMissing.astro
+  info no-orphans: src/components/finder/FinderSteps.astro
+  info no-orphans: src/components/finder/FinderPanel.astro
+  info no-orphans: src/components/finder/FinderLocked.astro
+  info no-orphans: src/components/finder/FinderContent.astro
+  info no-orphans: src/components/finder/FinderChart.astro
+  info no-orphans: src/components/Banner.astro
+  info no-orphans: src/components/AuthShell.astro
+  info no-circular-type-only: src/lib/engine/pairings.ts → 
+      src/lib/engine/events.ts →
+      src/lib/engine/pairings.ts
+  info no-circular-type-only: src/lib/engine/meteors.ts → 
+      src/lib/engine/events.ts →
+      src/lib/engine/meteors.ts
+  info no-circular-type-only: src/i18n/messages/pl.ts → 
+      src/i18n/index.ts →
+      src/i18n/messages/pl.ts
+  info engine-no-type-imports-outside: src/lib/engine/score.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/ranking.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/parameters.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/moonlight.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/moon-disc.ts → src/lib/moon-disc/state.ts
+  info engine-no-type-imports-outside: src/lib/engine/meteors.ts → src/lib/catalogue/meteor-showers.ts
+  info engine-no-type-imports-outside: src/lib/engine/index.ts → src/lib/moon-disc/state.ts
+  info engine-no-type-imports-outside: src/lib/engine/expectation.ts → src/lib/catalogue/index.ts
+  info engine-no-type-imports-outside: src/lib/engine/events.ts → src/lib/catalogue/meteor-showers.ts
+  info engine-no-type-imports-outside: src/lib/engine/contrast.ts → src/lib/catalogue/index.ts
+  warn no-circular: src/lib/engine/events.ts → 
+      src/lib/engine/pairings.ts →
+      src/lib/engine/events.ts
+  warn no-circular: src/lib/engine/events.ts → 
+      src/lib/engine/meteors.ts →
+      src/lib/engine/events.ts
+  warn error-shape-not-accounts: src/lib/api-errors.ts → src/lib/auth/session-user.ts
+  error engine-purity: src/lib/engine/meteors.ts → src/lib/catalogue/meteor-showers.ts
+
+x 108 dependency violations (1 errors, 3 warnings). 377 modules, 925 dependencies cruised.
+

@@ -94,6 +94,13 @@ const scriptsConfig = defineConfig({
   rules: { "no-console": "off" },
 });
 
+// Root CommonJS tool configs (dependency-cruiser) sit outside tsconfig's project service; lint them without types.
+const cjsConfig = defineConfig({
+  files: ["*.cjs"],
+  extends: [tseslint.configs.disableTypeChecked],
+  languageOptions: { sourceType: "commonjs", parserOptions: { projectService: false, project: null } },
+});
+
 // Coordinate privacy (PRD NFR): a site's coordinates must never reach a log. Any module may come to carry them, so
 // no source file under src may log; a deliberate log needs an inline disable that src/lib/no-console-guard.test.ts
 // allowlists by file and count. The guard also fails when this scope narrows for any file.
@@ -131,6 +138,7 @@ export default defineConfig(
   eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
   scriptsConfig,
+  cjsConfig,
   noConsoleConfig,
   eslintPluginPrettier,
   astroScriptsConfig,
