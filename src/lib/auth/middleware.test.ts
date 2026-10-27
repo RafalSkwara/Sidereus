@@ -41,11 +41,16 @@ afterEach(() => {
 });
 
 /** Runs the real middleware over a fake context and reports what it did. */
-async function run(path: string, method = "GET") {
+async function run(
+  path: string,
+  method = "GET",
+  respond: () => Promise<Response> = () =>
+    Promise.resolve(new Response("page", { headers: { "content-type": "text/html" } })),
+) {
   const { onRequest } = await import("@/middleware");
   const url = new URL(`http://localhost${path}`);
   const locals: Record<string, unknown> = {};
-  const next = vi.fn(() => Promise.resolve(new Response("page", { headers: { "content-type": "text/html" } })));
+  const next = vi.fn(respond);
   const context = {
     request: new Request(url, { method }),
     url,
@@ -129,5 +134,27 @@ describe("onRequest for the client-error endpoint", () => {
     expect(other.locals.user).toEqual({ id: SUB, email: EMAIL });
     expect(mocks.createServerClient).toHaveBeenCalledTimes(1);
     expect(mocks.getClaims).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("onRequest as the error boundary", () => {
+  it("logs one request.stream line when an HTML body fails mid-stream, keeps the Vary header and the status, and the body still fails for the client", async () => {
+    withUser();
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new RangeError("render failed"));
+      },
+    });
+    const { response } = await run("/tonight", "GET", () =>
+      Promise.resolve(new Response(body, { status: 200, headers: { "content-type": "text/html" } })),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Vary")).toBe("Cookie, Accept-Language");
+    expect(logs.errors).not.toHaveBeenCalled();
+    await expect(response.text()).rejects.toThrow("render failed");
+    expect(logs.errors).toHaveBeenCalledExactlyOnceWith("sidereus: request.stream failed", {
+      step: "request.stream",
+      name: "RangeError",
+    });
   });
 });
