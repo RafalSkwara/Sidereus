@@ -14,6 +14,11 @@ import { describe, expect, it } from "vitest";
  * drawing, moonlight-and-the-verdict), excluding test files and the test-only fixtures directory
  * (which legitimately use fs and the clock). The Moon-disc module must also stay browser-safe: it
  * imports neither astronomy-engine nor the engine, except the island-safe `@/lib/engine/parameters`.
+ *
+ * Imports: the engine's runtime imports are pinned to an allowlist (astronomy-engine, its own files, and the pure
+ * meteor-shower table), so it cannot silently gain a dependency whose own code the scan above never reads. Type-only
+ * imports are exempt, as erased at build. The `engine-purity` rule of `.dependency-cruiser.cjs` states the same
+ * allowlist and backs this test up in CI; this test runs in the agents' end-of-turn loop.
  */
 
 const ENGINE_DIR = fileURLToPath(new URL(".", import.meta.url));
@@ -40,6 +45,31 @@ const FORBIDDEN: { name: string; pattern: RegExp }[] = [
 /** Module specifiers of every static import, re-export and dynamic import in `source`. */
 function importSpecifiers(source: string): string[] {
   return [...source.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g)].map((m) => m[1]);
+}
+
+/**
+ * Module specifiers of every runtime import, re-export and dynamic import in `source`: type-only ones
+ * (`import type`, `export type ... from`) are left out. `import X, { type Y }` still counts, as a runtime import.
+ */
+function runtimeImportSpecifiers(source: string): string[] {
+  return [
+    ...source.matchAll(/\b(?:(?:import|export)\s+(type\s+)?(?:[^;"']*?\bfrom\s*)?|import\s*\(\s*)["']([^"']+)["']/g),
+  ]
+    .filter((m) => !m[1])
+    .map((m) => m[2]);
+}
+
+/**
+ * Whether an engine file may import `specifier` at runtime: astronomy-engine, a sibling engine file, an engine module
+ * by alias, or the meteor-shower table (`src/lib/catalogue/meteor-showers.ts`, a hand-entered table with no imports).
+ */
+function isAllowedEngineImport(specifier: string): boolean {
+  return (
+    specifier === "astronomy-engine" ||
+    specifier === "@/lib/catalogue/meteor-showers" ||
+    specifier.startsWith("./") ||
+    specifier.startsWith("@/lib/engine/")
+  );
 }
 
 /**
@@ -87,6 +117,17 @@ describe("engine purity guard", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("imports nothing at runtime in any engine source but astronomy-engine, the engine itself and the meteor-shower table", () => {
+    const files = engineSourceFiles(ENGINE_DIR);
+    expect(files.some((f) => f.endsWith("meteors.ts"))).toBe(true);
+    const offenders = files.flatMap((file) =>
+      runtimeImportSpecifiers(readFileSync(file, "utf8"))
+        .filter((specifier) => !isAllowedEngineImport(specifier))
+        .map((specifier) => `${relative(LIB_DIR, file)}: imports ${specifier}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps the Moon-disc module browser-safe: no astronomy-engine and no engine import but parameters", () => {
     const files = engineSourceFiles(MOON_DISC_DIR);
     expect(files.some((f) => f.endsWith("state.ts"))).toBe(true);
@@ -96,6 +137,39 @@ describe("engine purity guard", () => {
         .map((specifier) => `${relative(LIB_DIR, file)}: imports ${specifier}`),
     );
     expect(offenders).toEqual([]);
+  });
+
+  it("recognises the runtime imports the engine allowlist forbids", () => {
+    const source = [
+      'import { a } from "astronomy-engine";',
+      'import type { T } from "@/lib/catalogue";',
+      "import type {",
+      "  U,",
+      '} from "@/lib/supabase";',
+      'import { b } from "./sun";',
+      'import { M } from "@/lib/catalogue/meteor-showers";',
+      'import C, { type D } from "@/lib/catalogue";',
+      'export * from "../elsewhere";',
+      'export type { E } from "@/lib/gear/store";',
+      'await import("node:fs");',
+      'import "side-effect";',
+    ].join("\n");
+    expect(runtimeImportSpecifiers(source)).toEqual([
+      "astronomy-engine",
+      "./sun",
+      "@/lib/catalogue/meteor-showers",
+      "@/lib/catalogue",
+      "../elsewhere",
+      "node:fs",
+      "side-effect",
+    ]);
+    expect(isAllowedEngineImport("astronomy-engine")).toBe(true);
+    expect(isAllowedEngineImport("./sun")).toBe(true);
+    expect(isAllowedEngineImport("@/lib/engine/parameters")).toBe(true);
+    expect(isAllowedEngineImport("@/lib/catalogue/meteor-showers")).toBe(true);
+    expect(isAllowedEngineImport("@/lib/catalogue")).toBe(false);
+    expect(isAllowedEngineImport("../catalogue/meteor-showers")).toBe(false);
+    expect(isAllowedEngineImport("@/lib/supabase")).toBe(false);
   });
 
   it("recognises the imports the Moon-disc guard forbids", () => {
