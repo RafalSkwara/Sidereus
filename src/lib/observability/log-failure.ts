@@ -4,9 +4,10 @@
  * expected-but-countable condition (`console.warn`, never an Issue).
  *
  * What a line may hold is the privacy rule, kept in this one file: a fixed message per step and the structured fields
- * `{ step, name?, code?, status? }`. `name` is an error's (or its cause's) name when it looks like an identifier,
+ * `{ step, name?, code?, status?, route? }`. `name` is an error's (or its cause's) name when it looks like an identifier,
  * `code` is one of a few closed shapes (`isLoggableCode`: a SQLSTATE, a PostgREST code, a forecast step or an auth-js
- * error code), `status` is an integer 100-599. The helper never reads
+ * error code), `status` is an integer 100-599, `route` is a route template (`/log/[id]`, never a pathname: see
+ * `isRouteTemplate`). The helper never reads
  * `message` or `stack`, never passes an `Error` (or any object other than the fields) to the console, and never
  * throws, whatever it is given. No identifier, coordinate, email, URL or form value ever reaches a line (D4).
  */
@@ -65,6 +66,8 @@ export const FAILURE_STEPS = [
   "config.supabase",
   "config.rate-limit",
   "finder.tonight",
+  "request.stream",
+  "request.uncaught",
 ] as const;
 
 /** The steps listed in `FAILURE_STEPS`. */
@@ -226,11 +229,13 @@ interface LogFields {
   name?: string;
   code?: string;
   status?: number;
+  route?: string;
 }
 
-/** What the caller may add; only `status` is read. */
+/** What the caller may add; only `status` and `route` are read. */
 export interface FailureExtra {
   status?: number;
+  route?: string;
 }
 
 // The reads below sit behind try/catch because a getter, a proxy or a revoked proxy can throw, and a logger must
@@ -275,6 +280,65 @@ function statusOf(extra: unknown): number | undefined {
   return typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599 ? status : undefined;
 }
 
+/** One segment of a template: a fixed word (letters, `_`, `-`) or a parameter written `[x]` / `[...x]`. */
+const TEMPLATE_SEGMENT = /^(?:[A-Za-z_-]+|\[(?:\.\.\.)?[A-Za-z_-]+\])$/;
+
+const ROUTE_MAX_LENGTH = 80;
+
+/**
+ * The error pages' own templates, the one place a digit may stand in a fixed segment (#190 adds them): exact values,
+ * so a number from a pathname still never passes.
+ */
+const NOT_FOUND_ROUTE = "/404";
+const SERVER_ERROR_ROUTE = "/500";
+const ERROR_PAGE_ROUTES: readonly string[] = [NOT_FOUND_ROUTE, SERVER_ERROR_ROUTE];
+
+/** The route of a server island's request, whose name is the one place a digit may appear (`TonightContent2`). */
+const ISLAND_ROUTE_PREFIX = "/_server-islands/";
+const ISLAND_PATTERN = `${ISLAND_ROUTE_PREFIX}[name]`;
+
+/**
+ * Whether a value has the template shape of a route: it starts with `/`, every segment is a fixed word or a parameter
+ * in brackets, and it is at most 80 characters. A pathname never has it (a uuid, a number or a coordinate has digits
+ * or dots), so no value can travel as a route. A server island's `/_server-islands/<name>` also passes, by `NAME_SHAPE`.
+ */
+function isRouteTemplate(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > ROUTE_MAX_LENGTH || !value.startsWith("/")) {
+    return false;
+  }
+  if (value === "/" || ERROR_PAGE_ROUTES.includes(value)) {
+    return true;
+  }
+  if (value.startsWith(ISLAND_ROUTE_PREFIX) && NAME_SHAPE.test(value.slice(ISLAND_ROUTE_PREFIX.length))) {
+    return true;
+  }
+  return value
+    .slice(1)
+    .split("/")
+    .every((segment) => TEMPLATE_SEGMENT.test(segment));
+}
+
+/**
+ * The route to put on a request-level line: Astro's `routePattern` when it is a template, with a server island's
+ * name filled in when `params.name` is an identifier (the pattern alone would not say which island broke). Reads no
+ * URL, so a pathname can never get here. `undefined` for anything else. Never throws.
+ */
+export function requestRoute(routePattern: unknown, params: unknown): string | undefined {
+  if (!isRouteTemplate(routePattern)) {
+    return undefined;
+  }
+  if (routePattern === ISLAND_PATTERN) {
+    const name = read(params, "name");
+    return typeof name === "string" && NAME_SHAPE.test(name) ? `${ISLAND_ROUTE_PREFIX}${name}` : routePattern;
+  }
+  return routePattern;
+}
+
+function routeOf(extra: unknown): string | undefined {
+  const route = read(extra, "route");
+  return isRouteTemplate(route) ? route : undefined;
+}
+
 function fieldsOf(step: FailureStep, error: unknown, extra: unknown): LogFields {
   const fields: LogFields = { step };
   const cause = read(error, "cause");
@@ -290,6 +354,10 @@ function fieldsOf(step: FailureStep, error: unknown, extra: unknown): LogFields 
   const status = statusOf(extra);
   if (status !== undefined) {
     fields.status = status;
+  }
+  const route = routeOf(extra);
+  if (route !== undefined) {
+    fields.route = route;
   }
   return fields;
 }

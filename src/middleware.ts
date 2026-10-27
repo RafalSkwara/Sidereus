@@ -14,6 +14,8 @@ import { isAuthEntryPath, safeNextPath, signInUrl } from "@/lib/auth-redirect";
 import { isProtectedPath } from "@/lib/protected-routes";
 import { readTestNow } from "@/lib/clock";
 import { isClientErrorPath } from "@/lib/observability/client/steps";
+import { logFailure, requestRoute } from "@/lib/observability/log-failure";
+import { guardStream } from "@/lib/observability/stream-guard";
 
 // A thin wrapper: the session read and its failure trace are `sessionUser` (src/lib/auth/session-user.ts).
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -59,10 +61,34 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  const response = await next();
+  // The route template names the page or island that broke on a request-level line, never a pathname or a value.
+  const route = requestRoute(context.routePattern, context.params);
+
+  // The boundary for every page and island: a throw from `next()` is logged once and rethrown, as it was before.
+  let response: Response;
+  try {
+    response = await next();
+  } catch (error) {
+    logFailure("request.uncaught", error, { route });
+    throw error;
+  }
+  // A safety net: production rejects `next()` when a page or an endpoint throws (the catch above), and renders the
+  // `/500` page through this middleware again (`renderDefaultError`, #190), so the page itself is skipped here.
+  if (response.status >= 500 && context.routePattern !== "/500") {
+    logFailure("request.uncaught", undefined, { status: response.status, route });
+  }
   // HTML depends on the theme/language cookies and Accept-Language: no cache may share it across visitors.
   if (response.headers.get("content-type")?.includes("text/html")) {
     response.headers.append("Vary", "Cookie, Accept-Language");
+    // The body is sent as it renders, so a render error after the 200 is a rejected read: guard it. Astro re-attaches
+    // `context.cookies` after the middleware, so building a new Response loses no cookie; no length is ever set.
+    if (response.body) {
+      return new Response(guardStream(response.body, "request.stream", { route }), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    }
   }
   return response;
 });

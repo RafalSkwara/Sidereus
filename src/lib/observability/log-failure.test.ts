@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { ForecastError } from "@/lib/forecast/open-meteo";
 
-import { AUTH_ERROR_CODES, FAILURE_STEPS, isLoggableCode, logFailure, logNotice } from "./log-failure";
+import { AUTH_ERROR_CODES, FAILURE_STEPS, isLoggableCode, logFailure, logNotice, requestRoute } from "./log-failure";
 
 /**
  * The helper is the one place the app writes a failure to the console, and what it may write is the privacy rule:
@@ -396,7 +396,66 @@ describe("FAILURE_STEPS", () => {
         "auth.signout",
         "config.supabase",
         "finder.tonight",
+        "request.stream",
+        "request.uncaught",
       ]),
     );
+  });
+});
+
+describe("route", () => {
+  const routeOf = (route: unknown) => {
+    errors.mockClear();
+    logFailure("request.stream", undefined, { route: route as string });
+    return (only(errors)[1] as { route?: string }).route;
+  };
+
+  it("keeps only a template: a pathname with a uuid, a number, coordinates, a dot or a query, or an over-long value, never reaches a line", () => {
+    expect(routeOf("/tonight/targets")).toBe("/tonight/targets");
+    expect(routeOf("/log/[id]")).toBe("/log/[id]");
+    expect(routeOf("/[...slug]")).toBe("/[...slug]");
+    expect(routeOf("/_server-islands/Island2")).toBe("/_server-islands/Island2");
+    expect(routeOf("/log/Island2")).toBeUndefined();
+    const dropped = [
+      "/log/123e4567-e89b-12d3-a456-426614174000",
+      "/52.2297/21.0122",
+      "/tonight/targets?site=3f2b",
+      "/tonight?x=1",
+      "/log/42",
+      `/${"a".repeat(80)}`,
+      "tonight",
+      "",
+      42,
+      null,
+      {},
+    ];
+    for (const value of dropped) {
+      expect(routeOf(value), JSON.stringify(value)).toBeUndefined();
+    }
+    expect(errors.mock.calls.flat().join("")).not.toMatch(/123e4567|52\.2297|21\.0122/);
+  });
+
+  it("keeps the two error-page templates /404 and /500 by name, and no other number", () => {
+    expect(routeOf("/404")).toBe("/404");
+    expect(routeOf("/500")).toBe("/500");
+    for (const value of ["/403", "/4040", "/50", "/404/x", "/log/404", "/500?x=1"]) {
+      expect(routeOf(value), JSON.stringify(value)).toBeUndefined();
+    }
+    expect(requestRoute("/404", {})).toBe("/404");
+    expect(requestRoute("/500", {})).toBe("/500");
+  });
+});
+
+describe("requestRoute", () => {
+  it("returns a template pattern, substitutes a server island's identifier name, and gives nothing for anything else", () => {
+    expect(requestRoute("/tonight/[page]", { page: "targets" })).toBe("/tonight/[page]");
+    expect(requestRoute("/_server-islands/[name]", { name: "TonightContent" })).toBe("/_server-islands/TonightContent");
+    expect(requestRoute("/_server-islands/[name]", { name: "Island2" })).toBe("/_server-islands/Island2");
+    for (const params of [{ name: "52.2297,21.0122" }, { name: "../x" }, { name: 7 }, {}, undefined, null]) {
+      expect(requestRoute("/_server-islands/[name]", params), JSON.stringify(params)).toBe("/_server-islands/[name]");
+    }
+    expect(requestRoute(undefined, { name: "x" })).toBeUndefined();
+    expect(requestRoute("/log/123e4567-e89b-12d3-a456-426614174000", {})).toBeUndefined();
+    expect(requestRoute("/52.2297/21.0122", {})).toBeUndefined();
   });
 });
