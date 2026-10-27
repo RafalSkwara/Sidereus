@@ -4,6 +4,37 @@
 
 A modern, opinionated starter template for building fast, accessible web applications.
 
+## Demo accounts (10xDevs certification)
+
+Two accounts on production (https://sidereus.sidereus.workers.dev) exist only for the 10xDevs certification review.
+They will be removed from this README once the certification tests have completed.
+
+**What they are.** Ordinary user accounts on the **full (paid) plan**, so a reviewer can sign in and use the paid
+parts without signing up or being granted a plan:
+
+- finder charts;
+- what-to-expect lines on Tonight's targets;
+- the editable Session plan.
+
+Each comes with its own sites, gear and observing log, entered through the app's own forms, so every page shows
+lived-in data from the first visit.
+
+**Why two.** They show the app at the two ends of its audience. The pages change with the user's sky and kit, so the
+same night reads differently for each:
+
+- the verdict;
+- what the telescope can reach;
+- the targets ranked for tonight;
+- the progress checklists and milestones.
+
+| Account                             | Profile it represents                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sidereus.demo.city@example.com`    | **City beginner.** <ul><li>One site: Pole Mokotowskie in Warsaw, a light-polluted Bortle 8 sky.</li><li>An 80 mm f/5 refractor and three eyepieces.</li><li>A short first-autumn log (Sep–Oct 2026): the Moon, Saturn, Jupiter and bright Messier objects, with the faint ones (M31, M57) rated low.</li><li>Shows the single-site card, an early checklist and the first 4 milestones.</li></ul>                                                                                                                                                                                                                               |
+| `sidereus.demo.darksky@example.com` | **Experienced dark-sky observer.** <ul><li>Three sites: the Bieszczady Dark Sky Park (Bortle 2), a city spot in Kraków (Bortle 7) and Roque de los Muchachos on La Palma (Bortle 1, another time zone).</li><li>A 200 mm Dobsonian, a 102 mm Maksutov and five eyepieces.</li><li>36 log entries (Jun–Oct 2026) across sites and telescopes: all seven planets, 22 Messier objects, several Caldwell objects, and a washed-out city entry rated 1.</li><li>Shows the site and telescope selects, a well-filled checklist and 7 of the 11 milestones (all planets and 10 Messier reached; 25 Messier is the next one).</li></ul> |
+
+The data is invented, and the sites are public observing spots, not anyone's address. The password is shared with the
+reviewers directly and is not kept in this public repository.
+
 ## Tech Stack
 
 - [Astro](https://astro.build/) v7 - Modern web framework with server-first rendering
