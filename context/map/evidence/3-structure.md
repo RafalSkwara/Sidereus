@@ -163,7 +163,9 @@ Thin entry points (evidence): the Tonight pages (`tonight.astro` and `tonight/*.
 ## Unknowns
 
 - **Runtime coupling via `Astro.locals`** (unknown): 104 production files mention `locals` (tonight 23, sites-gear 20, observation-log 14, session-plan 10, shared 8, accounts 6, …). The Supabase client, user, locale, theme, sky mode and test clock reach features through it, so `supabase.ts`'s static reach (5 files) understates its real reach.
-- **Server islands** (`server:defer`, 9 files): `/_server-islands/*` is a second, unauthenticated entry to each island; the graph shows the import, not the URL surface.
+- **Server islands** (`server:defer`, 9 files): `/_server-islands/*` is a second URL entry to each island; the graph shows the import, not the URL surface.
+  - Corrected 2026-10-27: an earlier wording called this an "unauthenticated" entry. The island route does run through `src/middleware.ts`: Astro registers it as a `page` route (`node_modules/astro/dist/core/server-islands/endpoint.js:13-35`), and middleware is skipped only when `skipMiddleware` is set, which only the error handlers do (`core/middleware/astro-middleware.js:35-40`, `core/fetch/fetch-state.js:115`). So `locals.user` is set (`src/middleware.ts:45`).
+  - What the islands lack is the protected-path redirect: `/_server-islands` is not in `PROTECTED_ROUTES` (`src/lib/protected-routes.ts:5-15`; redirect at `src/middleware.ts:53-59`), so each island loader guards itself (`src/lib/finder/load.ts:130`, `src/lib/session-plans/read.ts:15`, `src/lib/tonight/island.ts:47`).
 - **Service worker**: `scripts/build-sw.mjs` bundles `src/sw.ts` by path, not by import (no edge); worker ↔ page messaging (`store-page`) is a runtime contract.
 - **Database**: RPCs (`record_sky_verdict`, `complete_onboarding`), RLS and migrations couple stores to `supabase/migrations` outside the import graph; only 4 production files import `database.types.ts` (all type-only).
 - **Cloudflare bindings** (`env` from `cloudflare:workers` in `kv-cache.ts`, `rate-limit.ts`) and `astro:env/server` — external virtual modules, edges dropped.

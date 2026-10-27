@@ -105,7 +105,7 @@ Folders do not match capabilities in these places:
 | migrations ⇄ `database.types.ts` ⇄ `tests/db/tables.ts` | contract (CI drift check per CLAUDE.md) | **mechanical by regeneration**, guarded by CI; not visible in co-change because the types are noise |
 | `scripts/*-reference.py` → engine JSON fixtures → reference tests | data coupling | **unknown** to the graph; lockstep not measurable (fixtures excluded as recorded data) |
 | `Astro.locals` (Supabase client, user, locale, test clock; 104 files) | none | **unknown**: runtime wiring the import graph cannot see |
-| `/_server-islands/*` (9 `server:defer` islands) | none | **unknown**: a second, middleware-free URL surface for every island |
+| `/_server-islands/*` (9 `server:defer` islands) | code read (Astro route registration, `PROTECTED_ROUTES`); no graph | a second URL surface for every island. It runs through the middleware (`locals.user` is set) but is outside `PROTECTED_ROUTES`, so each loader guards itself (see Watch: accounts) |
 | `scripts/build-sw.mjs` bundles `src/sw.ts` by path; worker ⇄ page `store-page` messages | none | **unknown** (runtime contract) |
 | `POST /api/client-error` and HTTP routes called by browsers, the worker and `scripts/smoke.mjs` | none | **unknown (external)** |
 
@@ -143,7 +143,11 @@ The galaxy-brightness and visibility rules have needed repeated second attempts,
 - **accounts: entitlement and session boundary.** Criticality is high and reach is high:
   - `session-user.ts` is reachable from 45 pages through one layering break in `api-errors.ts`;
   - `account-plan/index.ts` reaches 28 pages (`3-structure.md:80,103`);
-  - `/_server-islands/*` bypasses the middleware, which is why the plan is checked twice.
+  - `/_server-islands/*` is outside `PROTECTED_ROUTES`, so every island loader has to guard itself. The islands do run through the middleware, which sets `locals.user`. What they lack is the protected-path redirect. So each loader checks the user or plan on its own, and the plan is checked twice (in the page shell and again in the island).
+    - Evidence: Astro 7.3.2 registers the island route as an ordinary `page` route (`node_modules/astro/dist/core/server-islands/endpoint.js:13-35`), and user middleware runs unless `skipMiddleware` is set (`core/middleware/astro-middleware.js:35-40`). `skipMiddleware` defaults to `false` (`core/fetch/fetch-state.js:115`) and only the error handlers set it.
+    - The middleware sets the user at `src/middleware.ts:45` and redirects only on `isProtectedPath` (`src/middleware.ts:53-59`; the list is `src/lib/protected-routes.ts:5-15`, no `/_server-islands`).
+    - The self-guards: `src/lib/finder/load.ts:130` (`requireFullPlan`), `src/lib/session-plans/read.ts:15`, `src/lib/tonight/island.ts:47`.
+    - The risk is a new island loader that forgets its own guard.
 
   Change, friction and attention are only medium. There are 0 open issues (`2-discussion.md:27`). The audit's critical F3, an auth outage that looks like a mass sign-out, sits here (`2-discussion.md:39`). It was likely addressed by `e88e804 feat(error-visibility): Sign-in, session and the finder leave a line (p5)`, but that is an inference from the commit subject and was not verified in the code.
 - **error-visibility: open follow-ups.** Criticality is medium. Friction is high: 7 of the 9 open issues, including #191 (GDPR of Workers observability data) and #233 (store fault status). It is the only change with fixes after its first merge, and its phase 7 impl review was REJECTED (`2-discussion.md:29,39`). Reach is high: `log-failure.ts` reaches 91 files (`3-structure.md:85`). Attention (the audit, runbook and lessons) has the same cause as friction, the 9-phase campaign (rule 4). That leaves 2 independent families where a medium capability needs 3. Its open items land in other capabilities' files: forecast, tonight, accounts and the save routes.
@@ -202,7 +206,7 @@ No PR has a human forge review (0 of 183). Review happened before each PR, in 12
 - **What the map does NOT say.** It does not say whether the code is correct, how fast it runs, or how users actually use it. Criticality comes from fixed criteria, not from traffic or revenue: there is no payment flow, and payments are parked.
 - **Unknowns worth a focused investigation:**
   - whether an engine rule change can silently misstate Tonight wording (engine + tonight co-change is only 0.41);
-  - the server-island surface (`/_server-islands/*`) and plan checks outside the middleware;
+  - the server-island surface (`/_server-islands/*`): it is outside `PROTECTED_ROUTES`, so whether every island loader guards itself (user and plan) is checked per loader, not by one rule;
   - the data lockstep between the Python oracles, the engine fixtures and the reference tests;
   - the runtime reach of `Astro.locals` and the Supabase RPCs (`record_sky_verdict`, `complete_onboarding`) and RLS;
   - the open error-visibility follow-ups (#191 GDPR of Workers traces, #233 store fault status, #244 stream errors);
