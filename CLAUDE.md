@@ -55,6 +55,7 @@ npm run preview      # serve the production build
 npm run lint         # ESLint (type-checked, .astro client scripts without types), fails on any warning; lint:fix to auto-fix
 npm run format       # Prettier (astro + tailwind plugins)
 npx astro check      # TS/Astro type check — CI runs this, `npm run lint` does not
+npm run depcruise    # dependency-cruiser over src (.dependency-cruiser.cjs; CI runs it after lint): fails on `error` rules only (engine purity, island and sky-view import boundaries), reports cycles and the api-errors→auth break as warnings; .astro files are nodes but their own imports are not parsed natively
 npx astro sync       # regenerate .astro/types.d.ts (CI runs it before lint)
 npm test             # Vitest, single run, both projects (vitest.config.ts: plain config with the @/* alias, no Astro/Cloudflare plugin)
 npm run test:reference  # the fast `reference` project: what the end-of-turn hook runs
